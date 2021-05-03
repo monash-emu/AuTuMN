@@ -1,49 +1,37 @@
-from autumn.tool_kit.model_register import App
+from autumn.utils.model_register import App
 
-from .regions.philippines import philippines_region
-from .regions.manila import manila_region
+from .regions.belgium import belgium_region
 from .regions.calabarzon import calabarzon_region
 from .regions.central_visayas import central_visayas_region
 from .regions.davao_city import davao_city_region
+from .regions.france import france_region
+from .regions.italy import italy_region
+from .regions.johor import johor_region
+from .regions.kuala_lumpur import kuala_lumpur_region
 from .regions.malaysia import malaysia_region
+from .regions.manila import manila_region
+from .regions.penang import penang_region
+from .regions.philippines import philippines_region
 from .regions.sabah import sabah_region
 from .regions.selangor import selangor_region
-from .regions.united_kingdom import united_kingdom_region
-from .regions.sweden import sweden_region
 from .regions.spain import spain_region
-from .regions.italy import italy_region
-from .regions.france import france_region
-from .regions.belgium import belgium_region
-from .regions.north_metro import north_metro_region
-from .regions.south_east_metro import south_east_metro_region
-from .regions.south_metro import south_metro_region
-from .regions.west_metro import west_metro_region
-from .regions.barwon_south_west import barwon_south_west_region
-from .regions.gippsland import gippsland_region
-from .regions.hume import hume_region
-from .regions.loddon_mallee import loddon_mallee_region
-from .regions.grampians import grampians_region
+from .regions.sweden import sweden_region
+from .regions.united_kingdom import united_kingdom_region
 from .regions.victoria import victoria_region
 
 # Used by each region to register its model.
 app = App("covid_19")
 
 # Australia
-app.register(north_metro_region)
-app.register(south_east_metro_region)
-app.register(south_metro_region)
-app.register(west_metro_region)
-app.register(barwon_south_west_region)
-app.register(gippsland_region)
-app.register(hume_region)
-app.register(loddon_mallee_region)
-app.register(grampians_region)
 app.register(victoria_region)
 
 # Malaysia
 app.register(malaysia_region)
 app.register(sabah_region)
 app.register(selangor_region)
+app.register(johor_region)
+app.register(penang_region)
+app.register(kuala_lumpur_region)
 
 # Philippines regions
 app.register(philippines_region)

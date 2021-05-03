@@ -1,10 +1,10 @@
-from autumn.inputs.demography.queries import get_iso3_from_country_name
-from apps.covid_19.model.preprocess.mixing_matrix.mixing_matrix import build_dynamic_mixing_matrix
 from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME
-
-from .mixing_opti import (
-    build_params_for_phases_2_and_3,
+from apps.covid_19.model.preprocess.mixing_matrix.mixing_matrix import (
+    build_dynamic_mixing_matrix,
 )
+from autumn.inputs.demography.queries import get_iso3_from_country_name
+
+from .mixing_opti import build_params_for_phases_2_and_3
 
 
 # FIXME this is broken

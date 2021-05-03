@@ -1,0 +1,12 @@
+clinical_stratification.icu_prop: 0.1729636936539674
+clinical_stratification.non_sympt_infect_multiplier: 0.3644079926767666
+clinical_stratification.props.hospital.multiplier: 0.872072006304083
+clinical_stratification.props.symptomatic.multiplier: 1.3632597003385558
+contact_rate: 0.020928654451097102
+icu_occupancy_dispersion_param: 10.467914638881682
+infectious_seed: 169.64929559504543
+mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.07026628691370763
+notifications_dispersion_param: 642.5345785966101
+sojourn.compartment_periods_calculated.active.total_period: 7.244405532678716
+sojourn.compartment_periods_calculated.exposed.total_period: 6.8231449019140324
+testing_to_detection.assumed_cdr_parameter: 0.09543268276622335

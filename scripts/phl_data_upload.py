@@ -2,19 +2,21 @@
 This is where the scripts to prepross the data go
 save files in data/targets/
 """
+import itertools
+import json
 import os
 import sys
-import pandas as pd
 from datetime import datetime
+
 import numpy as np
-import itertools
+import pandas as pd
 from google_drive_downloader import GoogleDriveDownloader as gdd
-import json
+
 from settings import APPS_PATH
 
 # shareable google drive links
-PHL_doh_link = "1IzDpd40vWGy_UGJJUlhV-by2hLXlZXUn"  # sheet 05 daily report
-PHL_fassster_link = "1Rf_W7oH7bYWxnKUN4Iq1Qn-3Cjz5RwpY"
+PHL_doh_link = "1Fn4-mbjXpYrBPxRGvRaBVqe5VyMRDRPB"  # sheet 05 daily report
+PHL_fassster_link = "15C4wcQqw-BG7OHMCjyofIZ6hg_nLGiPG"
 
 # destination folders filepaths
 PHL_doh_dest = "./data/targets/PHL_icu.csv"
@@ -48,7 +50,11 @@ def fassster_data_filepath():
 def rename_regions(filePath, regionSpelling, ncrName, calName, cenVisName):
     df = pd.read_csv(filePath)
     df[regionSpelling] = df[regionSpelling].replace(
-        {ncrName: "manila", calName: "calabarzon", cenVisName: "central_visayas"}
+        {
+            ncrName: "manila",
+            calName: "calabarzon",
+            cenVisName: "central_visayas"
+        }
     )
     df.to_csv(filePath)
 
@@ -63,7 +69,7 @@ def duplicate_data(filePath, regionSpelling):
 
 def filter_df_by_regions(filePath, regionSpelling):
     df = pd.read_csv(filePath)
-    regions = ["calabarzon", "central_visayas", "manila", "philippines"]
+    regions = ["calabarzon", "central_visayas", "manila", "davao_city", "philippines"]
     df_regional = df[df[regionSpelling].isin(regions)]
     df_regional.to_csv(filePath)
 
@@ -109,7 +115,7 @@ def process_notifications_data(filePath):
     timeIndex = np.arange(
         min(fassster_data_agg["times"]), max(fassster_data_agg["times"]), 1.0
     ).tolist()
-    regions = ["calabarzon", "central_visayas", "manila", "philippines"]
+    regions = ["calabarzon", "central_visayas", "manila", "davao_city", "philippines"]
     all_regions_x_times = pd.DataFrame(
         list(itertools.product(regions, timeIndex)), columns=["Region", "times"]
     )
@@ -140,7 +146,7 @@ def process_notifications_data(filePath):
 
 
 def update_calibration_phl():
-    phl_regions = ["calabarzon", "central_visayas", "manila", "philippines"]
+    phl_regions = ["calabarzon", "central_visayas", "manila", "davao_city", "philippines"]
     # read in csvs
     icu = pd.read_csv(icu_dest)
     deaths = pd.read_csv(deaths_dest)
@@ -173,15 +179,30 @@ def remove_files(filePath1):
     os.remove(deaths_dest)
     os.remove(notifications_dest)
 
+def copy_davao_city_to_region(filePath):
+    df = pd.read_csv(filePath)
+    if filePath is PHL_doh_dest:
+        df.loc[df.city_mun == 'DAVAO CITY',['region']] =  'davao_city'
+    elif filePath is fassster_filename:
+        df.loc[df.CityMunicipality == 'DAVAO CITY', ['Region']] = 'davao_city'
+    else:
+        return 0
+    df.to_csv(filePath)
+
 
 fetch_phl_data()
 fassster_filename = fassster_data_filepath()
+
+copy_davao_city_to_region(PHL_doh_dest)
+copy_davao_city_to_region(fassster_filename)
+
+
 rename_regions(
     PHL_doh_dest,
     "region",
     "NATIONAL CAPITAL REGION (NCR)",
     "REGION IV-A (CALABAR ZON)",
-    "REGION VII (CENTRAL VISAYAS)",
+    "REGION VII (CENTRAL VISAYAS)"
 )
 rename_regions(fassster_filename, "Region", "NCR", "4A", "07")
 duplicate_data(PHL_doh_dest, "region")

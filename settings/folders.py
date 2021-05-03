@@ -12,3 +12,4 @@ APPS_PATH = os.path.join(BASE_PATH, "apps")
 
 
 REMOTE_BASE_DIR = os.path.join(OUTPUT_DATA_PATH, "remote")
+LOGGING_DIR = os.path.join(BASE_PATH, "log")

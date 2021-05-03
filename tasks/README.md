@@ -12,7 +12,7 @@ python -m tasks
 ### Run a calibration
 
 ```bash
-RUN_ID="covid_19/malaysia/111111111/aaaaaaa"
+RUN_ID="covid_19/malaysia/111111111/bbbbbbb"
 RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
 
 
@@ -20,13 +20,10 @@ RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
 python -m tasks calibrate --run  $RUN_ID --chains 1 --runtime 120 --verbose
 
 # Run full models
-python -m tasks full --run  $RUN_ID --burn 1 --verbose
+python -m tasks full --run  $RUN_ID --burn 30 --sample 16 --verbose
 
 # Run PowerBI processing
 python -m tasks powerbi --run $RUN_ID
-
-# Run DHHS processing
-python -m tasks dhhs --commit bbbbbbb
 ```
 
 ### Clean up test task
@@ -43,7 +40,7 @@ aws --profile autumn s3 rm --quiet --recursive "s3://autumn-data/tuberculosis/ma
 
 The test run data can be viewed at
 
-- http://www.autumn-data.com/app/covid_19/region/manila/run/111111111-aaaaaaa.html
+- http://www.autumn-data.com/app/covid_19/region/malaysia/run/111111111-bbbbbbb.html
 - http://www.autumn-data.com/app/covid_19/region/marshall-islands/run/111111111-aaaaaaa.html
 
 But you may need to rebuild the website first:

@@ -1,5 +1,6 @@
-import apps.covid_19.mixing_optimisation.outputs.plots.calibration.figure_code as fc
 import matplotlib as mpl
+
+import apps.covid_19.mixing_optimisation.outputs.plots.calibration.figure_code as fc
 
 
 def main():
@@ -29,7 +30,9 @@ def main():
     fc.make_calibration_fits_figure(
         calibration_outputs
     )  # uncertainty figure for all calibration targets
-    fc.make_calibration_fits_figure(calibration_outputs, seroprevalence=True)  # for seroprevalence only
+    fc.make_calibration_fits_figure(
+        calibration_outputs, seroprevalence=True
+    )  # for seroprevalence only
     fc.make_all_sero_by_age_fits_figures(calibration_outputs)
 
 

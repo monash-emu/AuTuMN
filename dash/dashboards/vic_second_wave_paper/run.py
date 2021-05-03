@@ -1,15 +1,15 @@
 """
 Streamlit web UI for plotting MCMC outputs
 """
-import streamlit as st
 import os
 
-from autumn.tool_kit.params import load_targets
+import streamlit as st
+
 from autumn import db
-from autumn.plots.plotter import StreamlitPlotter, FilePlotter
-
-
+from autumn.plots.plotter import FilePlotter, StreamlitPlotter
+from autumn.utils.params import load_targets
 from dash import selectors
+
 from .plots import PLOT_FUNCS
 
 
@@ -53,10 +53,7 @@ def run_dashboard():
     if not os.path.exists(path_name):
         os.makedirs(path_name)
     with st.spinner("Saving files..."):
-        file_plotter = FilePlotter(
-            path_name,
-            targets
-        )
+        file_plotter = FilePlotter(path_name, targets)
         plot_func(
             file_plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name
         )

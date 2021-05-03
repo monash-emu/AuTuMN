@@ -4,10 +4,10 @@ import os
 import random
 
 from autumn.db import Database
+from autumn.db.uncertainty import calculate_mcmc_uncertainty
+from autumn.plots.calibration import plot_post_calibration
 from autumn.plots.plotter.file_plotter import FilePlotter
 from autumn.plots.uncertainty import plot_uncertainty
-from autumn.plots.calibration import plot_post_calibration
-from autumn.db.uncertainty import calculate_mcmc_uncertainty
 from tests.utils import build_synthetic_calibration
 
 
@@ -63,6 +63,7 @@ def test_plot_post_calibration(tmp_path):
         "calibration-fit",
         "params-vs-loglikelihood",
         "posteriors",
+        "autocorrelations"
     ]
     for fname in expected_files:
         p = os.path.join(plot_dir, fname)

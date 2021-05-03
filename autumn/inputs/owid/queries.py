@@ -1,8 +1,8 @@
 from datetime import date, datetime
 
-from autumn.inputs.database import get_input_db
-from autumn.tool_kit.utils import apply_moving_average
 from autumn.inputs.covid_au.queries import COVID_BASE_DATETIME
+from autumn.inputs.database import get_input_db
+from autumn.utils.utils import apply_moving_average
 
 
 def get_international_testing_numbers(iso3):

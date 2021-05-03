@@ -1,10 +1,10 @@
-import yaml
 import os
+
+import yaml
 from matplotlib import pyplot
 
-from settings import BASE_PATH
-
 from apps.covid_19.mixing_optimisation.mixing_opti import DURATIONS
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

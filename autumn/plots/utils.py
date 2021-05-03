@@ -1,8 +1,8 @@
+import datetime
+from typing import List, Dict
+
 import matplotlib.ticker as ticker
 from matplotlib import colors
-import datetime
-from typing import List
-
 
 PLOT_TEXT_DICT = {
     "contact_rate": "infection risk per contact",
@@ -10,13 +10,13 @@ PLOT_TEXT_DICT = {
     "compartment_periods.icu_early": "pre-ICU period",
     "testing_to_detection.assumed_cdr_parameter": "CDR at base testing rate",
     "microdistancing.parameters.max_effect": "max effect microdistancing",
-    "icu_occupancy": "ICU occupancy",
+    "icu_occupancy": "ICU beds occupied",
     # TB model parameters
     "start_population_size": "initial population size",
     "progression_multiplier": "progression multiplier",
-    "time_variant_tb_screening_rate.maximum_gradient": "screening profile (shape)",
-    "time_variant_tb_screening_rate.max_change_time": "screening profile (inflection time), year",
-    "time_variant_tb_screening_rate.end_value": "screening profile (final rate), per year",
+    "time_variant_tb_screening_rate.shape": "screening profile (max gradient)",
+    "time_variant_tb_screening_rate.inflection_time": "screening profile (inflection time), year",
+    "time_variant_tb_screening_rate.upper_asymptote": "screening profile (final rate), per year",
     "user_defined_stratifications.location.adjustments.detection_rate.ebeye": "rel. screening rate (Ebeye)",
     "user_defined_stratifications.location.adjustments.detection_rate.other": "rel. screening rate (Other Isl.)",
     "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
@@ -27,13 +27,12 @@ PLOT_TEXT_DICT = {
     "self_recovery_rate_dict.smear_positive": "Self cure rate (smear-pos)",
     "self_recovery_rate_dict.smear_negative": "Self cure rate (smear-neg)",
     "proportion_seropositive": "seropositive percentage",
-    "infection_deaths": "deaths per day",
-    "notifications": "notifications per day",
+    "infection_deaths": "deaths",
     "incidence": "incident episodes per day",
     "accum_deaths": "cumulative deaths",
     "new_hospital_admissions": "new hospitalisations per day",
     "new_icu_admissions": "new ICU admissions per day",
-    "hospital_occupancy": "hospital occupancy",
+    "hospital_occupancy": "hospital beds occupied",
     "sojourn.compartment_periods_calculated.exposed.total_period": "incubation period",
     "sojourn.compartment_periods_calculated.active.total_period": "duration active",
     "seasonal_force": "seasonal forcing",
@@ -50,10 +49,10 @@ PLOT_TEXT_DICT = {
     "clinical_stratification.non_sympt_infect_multiplier": "asympt infect multiplier",
     "infection_fatality.multiplier": "IFR adjuster",
     "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect": "physical distancing",
-    "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect": "face coverings"
+    "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect": "face coverings",
 }
 
-ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)
+ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)
 # https://matplotlib.org/3.1.0/gallery/color/named_colors.html
 COLORS = (
     # Blues
@@ -78,7 +77,9 @@ COLORS = (
 REF_DATE = datetime.date(2019, 12, 31)
 
 
-def get_plot_text_dict(param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True):
+def get_plot_text_dict(
+    param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True
+):
     """
     Get standard text for use in plotting as title, y-label, etc.
     """
@@ -113,13 +114,75 @@ def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b", rotation=30):
     axis.xaxis.set_tick_params(rotation=rotation)
 
 
+def add_vertical_lines_to_plot(axis, lines: Dict):
+    """
+    Add labelled vertical lines to the plot axis according to a dictionary with standard attributes.
+    All attributes of the line and text are currently hard-coded.
+    """
+
+    for text, position in lines.items():
+
+        # Add the line itself
+        axis.axvline(
+            x=position,
+            linestyle="--",
+            alpha=0.7
+        )
+
+        # Add the text to accompany it
+        upper_ylim = axis.get_ylim()[1]
+        axis.text(
+            x=position,
+            y=upper_ylim * 0.97,
+            s=text,
+            rotation=90,
+            ha="right",
+            va="top"
+        )
+
+
+def add_horizontal_lines_to_plot(axis, lines: Dict):
+    """
+    Add labelled horizontal lines to the plot axis according to a dictionary with standard attributes.
+    All attributes of the line and text are currently hard-coded.
+    """
+
+    for text, position in lines.items():
+
+        # Add the line itself
+        axis.axhline(
+            y=position,
+            linestyle="--",
+            alpha=0.7
+        )
+
+        # Add the text to accompany it
+        lower_xlim = axis.get_xlim()[0]
+        axis.text(
+            x=lower_xlim,
+            y=position,
+            s=text,
+            ha="left",
+            va="bottom"
+        )
+
+
 def _apply_transparency(color_list: List[str], alphas: List[str]):
     """Make a list of colours transparent, based on a list of alphas"""
+
+    #+++FIXME
+    #This will fail if len(color_list) > len(alphas)
+    #Should move to generative colours rather than fixed lists
+
+    out_colors = []
+
     for i in range(len(color_list)):
+        out_colors.append([])
         for j in range(len(color_list[i])):
             rgb_color = list(colors.colorConverter.to_rgb(color_list[i][j]))
-            color_list[i][j] = rgb_color + [alphas[i]]
-    return color_list
+            out_colors[i].append(rgb_color + [alphas[i]])
+    
+    return out_colors
 
 
 def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):

@@ -1,15 +1,17 @@
-from matplotlib import pyplot
 import os
 
-from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, PHASE_2_DURATION
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
-from apps.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows import (
-    get_output_data,
-    apply_scenario_mask,
+from matplotlib import pyplot
+
+from apps.covid_19.mixing_optimisation.constants import (
+    PHASE_2_DURATION,
+    PHASE_2_START_TIME,
 )
-
+from apps.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
+from apps.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows import (
+    apply_scenario_mask,
+    get_output_data,
+)
 from settings import BASE_PATH
-
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

@@ -1,11 +1,10 @@
 from typing import Callable, Dict, List
 
+from apps.covid_19.constants import BASE_DATETIME
+from apps.covid_19.model.parameters import Country, MixingLocation
 from autumn.curve import scale_up_function
 from autumn.inputs import get_mobility_data
-from autumn.tool_kit.utils import apply_moving_average
-from apps.covid_19.model.parameters import Country, MixingLocation
-
-from apps.covid_19.constants import BASE_DATETIME
+from autumn.utils.utils import apply_moving_average
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
 
@@ -206,6 +205,11 @@ def close_gap_to_1(prev_vals: List[float], fraction: float):
     return (1.0 - prev_val) * fraction + prev_val
 
 
+def max_last_period(prev_vals: List[float], period: int):
+    last_n_values = min(len(prev_vals), period)
+    return max(prev_vals[-last_n_values:])
+
+
 PARSE_FUNCS = {
     "repeat_prev": repeat_prev,
     "add_to_prev": add_to_prev,
@@ -213,4 +217,5 @@ PARSE_FUNCS = {
     "scale_prev": scale_prev,
     "scale_prev_up_to_1": scale_prev_up_to_1,
     "close_gap_to_1": close_gap_to_1,
+    "max_last_period": max_last_period,
 }

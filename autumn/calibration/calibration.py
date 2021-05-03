@@ -1,44 +1,44 @@
-import yaml
-import os
-import logging
-from time import time
-from itertools import chain
-from datetime import datetime
-from typing import List, Callable
-import shutil
-
-import math
-import pandas as pd
-import numpy as np
 import copy
-from scipy.optimize import Bounds, minimize
-from scipy import stats, special
+import logging
+import math
+import os
+import shutil
+from datetime import datetime
+from itertools import chain
+from time import time
+from typing import Callable, List
 
-from summer.model import StratifiedModel
+import numpy as np
+import pandas as pd
+import yaml
+from scipy import special, stats
+from scipy.optimize import Bounds, minimize
+from summer.legacy.model import StratifiedModel
+
+import settings
 from autumn import db, plots
 from autumn.region import Region
-from autumn.tool_kit.scenarios import Scenario
+from autumn.utils.params import (
+    load_targets,
+    read_param_value_from_string,
+    update_params,
+)
+from autumn.utils.scenarios import Scenario
+from autumn.utils.utils import get_git_branch, get_git_hash
 from utils.timer import Timer
-import settings
-from autumn.tool_kit.params import update_params, read_param_value_from_string, load_targets
-from autumn.tool_kit.utils import (
-    get_git_branch,
-    get_git_hash,
+
+from .constants import ADAPTIVE_METROPOLIS
+from .transformations import (
+    make_transform_func_with_lower_bound,
+    make_transform_func_with_two_bounds,
+    make_transform_func_with_upper_bound,
 )
 from .utils import (
     calculate_prior,
-    specify_missing_prior_params,
     raise_error_unsupported_prior,
     sample_starting_params_from_lhs,
+    specify_missing_prior_params,
 )
-
-from .transformations import (
-    make_transform_func_with_lower_bound,
-    make_transform_func_with_upper_bound,
-    make_transform_func_with_two_bounds,
-)
-
-from .constants import ADAPTIVE_METROPOLIS
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,8 @@ class Calibration:
         region_name: str,
         adaptive_proposal: bool = True,
         initialisation_type: str = InitialisationTypes.LHS,
-        metropolis_init_rel_step_size: float = 0.25,
+        metropolis_init_rel_step_size: float = 0.1,
+        n_steps_fixed_proposal: int = 50,
     ):
         self.app_name = app_name
         self.model_builder = model_builder  # a function that builds a new model without running it
@@ -86,6 +87,7 @@ class Calibration:
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.adaptive_proposal = adaptive_proposal
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
+        self.n_steps_fixed_proposal = n_steps_fixed_proposal
 
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         # A list of dictionaries. Each dictionary describes a target
@@ -151,8 +153,6 @@ class Calibration:
         self.transform = {}
         self.build_transformations()
 
-        self.iter_num = 0
-
         self.latest_scenario = None
         self.run_mode = None
         self.main_table = {}
@@ -173,8 +173,7 @@ class Calibration:
         """
         Run the model with a set of params.
         """
-        logger.info(f"Running iteration {self.iter_num}...")
-
+        logger.info(f"Running iteration {self.run_num}...")
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for i, param_name in enumerate(self.param_list):
@@ -214,25 +213,31 @@ class Calibration:
             else:
                 if "loglikelihood_distri" not in target:  # default distribution
                     target["loglikelihood_distri"] = "normal"
-                if target["loglikelihood_distri"] == "normal":
+                if target["loglikelihood_distri"] in ["normal", "trunc_normal"]:
+                    # Retrieve the value of the standard deviation
                     if key + "_dispersion_param" in self.param_list:
                         normal_sd = params[self.param_list.index(key + "_dispersion_param")]
-                    elif self.is_vic_super_model:
-                        output_name = target["output_key"].split("_for_cluster_")[0]
-                        cluster = target["output_key"].split("_for_cluster_")[1]
-
-                        if cluster.replace("_", "-") in Region.VICTORIA_METRO:
-                            cluster_group = "metro"
-                        else:
-                            cluster_group = "rural"
-                        param_name = f"{output_name}_{cluster_group}_dispersion_param"
-                        normal_sd = params[self.param_list.index(param_name)]
+                    elif "target_output_ratio" in self.param_list:
+                        normal_sd = params[self.param_list.index("target_output_ratio")] * max(
+                            target["values"]
+                        )
                     else:
                         normal_sd = target["sd"]
-                    squared_distance = (data - model_output) ** 2
-                    ll += -(0.5 / normal_sd ** 2) * np.sum(
-                        [w * d for (w, d) in zip(time_weigths, squared_distance)]
-                    )
+
+                    if target["loglikelihood_distri"] == "normal":
+                        squared_distance = (data - model_output) ** 2
+                        ll += -(0.5 / normal_sd ** 2) * np.sum(
+                            [w * d for (w, d) in zip(time_weigths, squared_distance)]
+                        )
+                    else:  # this is a truncated normal likelihood
+                        for i in range(len(data)):
+                            ll += stats.truncnorm.logpdf(
+                                x=data[i],
+                                a=target["trunc_range"][0],
+                                b=target["trunc_range"][1],
+                                loc=model_output[i],
+                                scale=normal_sd
+                            ) * time_weigths[i]
                 elif target["loglikelihood_distri"] == "poisson":
                     for i in range(len(data)):
                         ll += (
@@ -369,9 +374,7 @@ class Calibration:
 
     def run_fitting_algorithm(
         self,
-        run_mode=CalibrationMode.AUTUMN_MCMC,
-        n_iterations=100,
-        n_burned=10,
+        run_mode: str,
         n_chains=1,
         available_time=None,
         haario_scaling_factor=2.4,
@@ -381,10 +384,9 @@ class Calibration:
 
         :param run_mode: string
             either 'autumn_mcmc' or 'lsm' (for least square minimisation using scipy.minimize function)
-        :param n_iterations: number of iterations requested for sampling (excluding burn-in phase)
-        :param n_burned: number of burned iterations before effective sampling
         :param n_chains: number of chains to be run
         :param available_time: maximal simulation time allowed (in seconds)
+        :param haario_scaling_factor: multiplies the covariance matrix used during adaptive sampling
         """
         self.run_mode = run_mode
         if run_mode not in CalibrationMode.MODES:
@@ -397,9 +399,7 @@ class Calibration:
         try:
             # Run the selected fitting algorithm.
             if run_mode == CalibrationMode.AUTUMN_MCMC:
-                self.run_autumn_mcmc(
-                    n_iterations, n_burned, n_chains, available_time, haario_scaling_factor
-                )
+                self.run_autumn_mcmc(n_chains, available_time, haario_scaling_factor)
             elif run_mode == CalibrationMode.LEAST_SQUARES:
                 self.run_least_squares()
         finally:
@@ -444,12 +444,17 @@ class Calibration:
         return in_support
 
     def run_autumn_mcmc(
-        self, n_iterations: int, n_burned: int, n_chains: int, available_time, haario_scaling_factor
+        self,
+        n_chains: int,
+        available_time,
+        haario_scaling_factor,
+        start_time=None,
     ):
         """
         Run our hand-rolled MCMC algoruthm to calibrate model parameters.
         """
-        start_time = time()
+        if start_time is None:
+            start_time = time()
         if n_chains > 1:
             msg = "Autumn MCMC method does not support multiple-chain runs at the moment."
             raise ValueError(msg)
@@ -458,7 +463,11 @@ class Calibration:
 
         last_accepted_params_trans = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
-        for i_run in range(int(n_iterations + n_burned)):
+        n_accepted = 0
+        n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
+        self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
+        while True:
+            logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
             # Propose new paramameter set.
             proposed_params_trans = self.propose_new_params_trans(
                 last_accepted_params_trans, haario_scaling_factor
@@ -508,6 +517,7 @@ class Calibration:
             if accept:
                 last_accepted_params_trans = proposed_params_trans
                 last_acceptance_quantity = proposed_acceptance_quantity
+                n_accepted += 1
 
             self.update_mcmc_trace(last_accepted_params_trans)
 
@@ -518,22 +528,45 @@ class Calibration:
                 proposed_loglike,
                 proposed_log_posterior,
                 accept,
-                i_run,
+                self.run_num,
             )
             if accept:
-                self.output.store_model_outputs(self.latest_scenario, self.iter_num)
+                self.output.store_model_outputs(self.latest_scenario, self.run_num)
 
-            self.iter_num += 1
-            iters_completed = i_run + 1
-            logger.info(f"{iters_completed} MCMC iterations completed.")
-
+            logging.info("Finished MCMC iteration %s, run %s", n_iters_real, self.run_num)
+            self.run_num += 1
+            n_iters_real += 1
             if available_time:
                 # Stop iterating if we have run out of time.
                 elapsed_time = time() - start_time
                 if elapsed_time > available_time:
-                    msg = f"Stopping MCMC simulation after {iters_completed} iterations because of {available_time}s time limit"
+                    msg = f"Stopping MCMC simulation after {n_iters_real} iterations because of {available_time}s time limit"
                     logger.info(msg)
                     break
+
+            # Check that the pre-adaptive phase ended with a decent acceptance ratio
+            if self.adaptive_proposal and self.run_num == self.n_steps_fixed_proposal:
+                acceptance_ratio = n_accepted / self.run_num
+                logger.info(
+                    "Pre-adaptive phase completed at %s iterations after %s runs with an acceptance ratio of %s.",
+                    n_iters_real,
+                    self.run_num,
+                    acceptance_ratio,
+                )
+                if acceptance_ratio < ADAPTIVE_METROPOLIS["MIN_ACCEPTANCE_RATIO"]:
+                    logger.info("Acceptance ratio too low, restart sampling from scratch.")
+                    self.run_num, n_accepted, last_accepted_params_trans, last_acceptance_quantity = 0, 0, None, None
+                    self.reduce_proposal_step_size()
+                    self.output.delete_stored_iterations()
+                else:
+                    logger.info("Acceptance ratio acceptable, continue sampling.")
+
+    def reduce_proposal_step_size(self):
+        """
+        Halve the "jumping_sd" associated with each parameter during the pre-adaptive phase
+        """
+        for i in range(len(self.priors)):
+            self.priors[i]["jumping_sd"] /= 2.0
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(self.priors)  # from Haario et al. 2001
@@ -646,7 +679,7 @@ class Calibration:
 
         new_params_trans = []
         use_adaptive_proposal = (
-            self.adaptive_proposal and self.iter_num > ADAPTIVE_METROPOLIS["N_STEPS_FIXED_PROPOSAL"]
+            self.adaptive_proposal and self.run_num > self.n_steps_fixed_proposal
         )
 
         if use_adaptive_proposal:
@@ -659,8 +692,7 @@ class Calibration:
                 new_params_trans = sample_from_adaptive_gaussian(
                     prev_params_trans, adaptive_cov_matrix
                 )
-
-        if not use_adaptive_proposal:
+        else:
             for i, prior_dict in enumerate(self.priors):
                 sample = np.random.normal(
                     loc=prev_params_trans[i], scale=prior_dict["jumping_sd"], size=1
@@ -703,14 +735,9 @@ class CalibrationOutputs:
 
     def __init__(self, chain_id: int, app_name: str, region_name: str):
         self.chain_id = chain_id
-        # Track last accepted run for weight calculations.
-        self.last_accepted_run = 0
         # List of dicts for tracking MCMC progress.
         self.mcmc_runs = []
         self.mcmc_params = []
-        # Model output data - list of DataFrames.
-        self.outputs = []
-        self.derived_outputs = []
 
         # Setup output directory
         project_dir = os.path.join(settings.OUTPUT_DATA_PATH, "calibrate", app_name, region_name)
@@ -728,11 +755,18 @@ class CalibrationOutputs:
 
         logger.info("Created data directory at %s", self.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
+        self.db = db.ParquetDatabase(self.output_db_path)
 
     def write_metadata(self, filename, data):
         file_path = os.path.join(self.output_dir, filename)
         with open(file_path, "w") as f:
             yaml.dump(data, f)
+
+    def delete_stored_iterations(self):
+        self.db.close()
+        self.db.delete_everything()
+        self.mcmc_runs = []
+        self.mcmc_params = []
 
     def store_model_outputs(self, scenario: Scenario, iter_num: int):
         """
@@ -744,8 +778,8 @@ class CalibrationOutputs:
         derived_outputs_df = db.store.build_derived_outputs_table(
             [model], run_id=iter_num, chain_id=self.chain_id
         )
-        self.outputs.append(outputs_df)
-        self.derived_outputs.append(derived_outputs_df)
+        self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
+        self.db.append_df(db.store.Table.DERIVED, derived_outputs_df)
 
     def store_mcmc_iteration(
         self,
@@ -791,17 +825,13 @@ class CalibrationOutputs:
             logger.info("No data to write to disk")
             return
 
+        # Close Parquet writer used to write data for outputs / derived outputs.
+        self.db.close()
+
         with Timer("Writing calibration data to disk."):
-            # try:
-            outputs_db = db.FeatherDatabase(self.output_db_path)
-            # Consolidate outputs and write to disk
-            outputs_df = pd.concat(self.outputs, copy=False, ignore_index=True)
-            derived_outputs_df = pd.concat(self.derived_outputs, copy=False, ignore_index=True)
-            outputs_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
-            outputs_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
             # Write parameters
             mcmc_params_df = pd.DataFrame.from_dict(self.mcmc_params)
-            outputs_db.dump_df(db.store.Table.PARAMS, mcmc_params_df)
+            self.db.dump_df(db.store.Table.PARAMS, mcmc_params_df)
             # Calculate iterations weights, then write to disk
             weight = 0
             for mcmc_run in reversed(self.mcmc_runs):
@@ -811,7 +841,7 @@ class CalibrationOutputs:
                     weight = 0
 
             mcmc_runs_df = pd.DataFrame.from_dict(self.mcmc_runs)
-            outputs_db.dump_df(db.store.Table.MCMC, mcmc_runs_df)
+            self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df)
 
 
 def get_random_seed(chain_index: int):

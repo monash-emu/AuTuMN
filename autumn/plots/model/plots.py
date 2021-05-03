@@ -1,23 +1,26 @@
 """
 Plots for a model that has been run.
 """
-import os
 import logging
-import pandas as pd
-from typing import List, Callable
+import os
+from math import ceil
+from typing import Callable, List
 
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot
-from math import ceil
 
-from autumn.tool_kit.scenarios import Scenario
-from autumn.plots.utils import _plot_targets_to_axis, get_plot_text_dict
-from autumn.plots.utils import change_xaxis_to_date, REF_DATE
-
-from autumn.plots.plotter import Plotter, COLOR_THEME
-from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
 from autumn.inputs.demography.queries import get_population_by_agegroup
+from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
+from autumn.plots.plotter import COLOR_THEME, Plotter
+from autumn.plots.utils import (
+    REF_DATE,
+    _plot_targets_to_axis,
+    change_xaxis_to_date,
+    get_plot_text_dict,
+)
+from autumn.utils.scenarios import Scenario
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +116,10 @@ def plot_mixing_matrix_2(plotter: Plotter, iso3: str):
 
 
 def plot_agg_compartments_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_names: List[str], is_logscale=False,
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_names: List[str],
+    is_logscale=False,
 ):
     """
     Plot multiple compartments with values aggregated for a multiple scenarios.
@@ -138,7 +144,10 @@ def plot_agg_compartments_multi_scenario(
 
 
 def plot_single_compartment_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_name: str, is_logscale=False,
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_name: str,
+    is_logscale=False,
 ):
     """
     Plot the selected output compartment for a multiple scenarios.
@@ -225,13 +234,13 @@ def plot_outputs_multi(
 
 
 def plot_outputs_single(
-        plotter: Plotter,
-        scenario: Scenario,
-        output_config: dict,
-        is_logscale=False,
-        axis=None,
-        single_panel=True,
-        xaxis_date=False,
+    plotter: Plotter,
+    scenario: Scenario,
+    output_config: dict,
+    is_logscale=False,
+    axis=None,
+    single_panel=True,
+    xaxis_date=False,
 ):
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
@@ -326,7 +335,10 @@ def plot_time_varying_input(
 
 
 def plot_time_varying_multi_input(
-    plotter: Plotter, tv_key: str, times: List[float], is_logscale: bool,
+    plotter: Plotter,
+    tv_key: str,
+    times: List[float],
+    is_logscale: bool,
 ):
     """
     Plot single simple plot of a function over time

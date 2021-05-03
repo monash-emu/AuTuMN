@@ -4,41 +4,14 @@ Processing data from the output database.
 import logging
 from typing import List
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
+from autumn.db.database import BaseDatabase, get_database
+from autumn.utils.params import load_params, load_targets
 from utils.runs import read_run_id
-from autumn.tool_kit.params import load_targets, load_params
-from autumn.db.database import get_database, BaseDatabase
-
 
 logger = logging.getLogger(__name__)
-
-
-def apply_burn_in(src_db: BaseDatabase, dest_db: BaseDatabase, burn_in: int):
-    """
-    Copy mcmc_run and mcmc_params table from src_db to dest_db with a burn in applied.
-    """
-    logger.info(
-        "Copying burnt-in mcmc_run and mcmc_params tables from %s to  %s",
-        src_db.database_path,
-        dest_db.database_path,
-    )
-
-    mcmc_run_df = src_db.query("mcmc_run")
-    num_runs = len(mcmc_run_df)
-    assert num_runs > burn_in, f"Tried to burn {burn_in} runs, but there are only {num_runs}"
-    burn_mask = mcmc_run_df["run"] >= burn_in
-    mcmc_run_burned_df = mcmc_run_df[burn_mask]
-    burned_runs_str = ", ".join([str(i) for i in mcmc_run_df[~burn_mask].run])
-    logger.info("Burned MCMC runs %s", burned_runs_str)
-
-    mcmc_params_df = src_db.query("mcmc_params")
-    burn_mask = mcmc_params_df["run"] >= burn_in
-    mcmc_params_burned_df = mcmc_params_df[burn_mask]
-
-    dest_db.dump_df("mcmc_run", mcmc_run_burned_df)
-    dest_db.dump_df("mcmc_params", mcmc_params_burned_df)
 
 
 def collate_databases(src_db_paths: List[str], target_db_path: str, tables=None):

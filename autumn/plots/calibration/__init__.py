@@ -1,17 +1,17 @@
 """
 Utilities to plot data from existing databases.
 """
-import os
-import yaml
 import logging
+import os
 from typing import List
 
-from autumn.tool_kit.params import load_targets
+import yaml
+
 from autumn import db
 from autumn.plots.plotter import FilePlotter
+from autumn.utils.params import load_targets
 
 from . import plots
-
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     subplotter = _get_sub_plotter(plot_dir, "posteriors")
     for chosen_param in param_options:
         plots.plot_posterior(
-            subplotter, mcmc_params, mcmc_tables, 0, chosen_param, num_bins, priors[0]
+            subplotter, mcmc_params, mcmc_tables, 0, chosen_param, num_bins, priors
         )
 
     logger.info("Plotting loglikelihood vs params")
@@ -70,6 +70,11 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     for chosen_param in param_options:
         plots.plot_mcmc_parameter_trace(subplotter, mcmc_params, 0, chosen_param)
 
+    logger.info("Plotting autocorrelations")
+    subplotter = _get_sub_plotter(plot_dir, "autocorrelations")
+    for chosen_param in param_options:
+        plots.plot_autocorrelation(subplotter, mcmc_params, mcmc_tables, 0, chosen_param)
+
     logger.info("Plotting acceptance ratios")
     plots.plot_acceptance_ratio(plotter, mcmc_tables, 0)
 
@@ -77,6 +82,9 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     num_iters = len(mcmc_tables[0])
     plots.plot_burn_in(plotter, num_iters, PLOT_BURN_IN)
     plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN)
+
+    for mle_only in [True, False]:
+        plots.plot_parallel_coordinates_flat(plotter, mcmc_params, mcmc_tables, priors, mle_only)
 
     logger.info("MCMC plots complete")
 

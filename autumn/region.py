@@ -1,13 +1,9 @@
 class Region:
-    AUSTRALIA = "australia"
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     VICTORIA = "victoria"
-    NSW = "nsw"
-    LIBERIA = "liberia"
     MANILA = "manila"
     CALABARZON = "calabarzon"
-    BICOL = "bicol"
     CENTRAL_VISAYAS = "central-visayas"
     UNITED_KINGDOM = "united-kingdom"
     BELGIUM = "belgium"
@@ -28,17 +24,16 @@ class Region:
     SABAH = "sabah"
     SELANGOR = "selangor"
     DAVAO_CITY = "davao-city"
+    JOHOR = "johor"
+    PENANG = "penang"
+    KUALA_LUMPUR = "kuala-lumpur"
 
     REGIONS = [
-        AUSTRALIA,
         PHILIPPINES,
         MALAYSIA,
         VICTORIA,
-        NSW,
-        LIBERIA,
         MANILA,
         CALABARZON,
-        BICOL,
         CENTRAL_VISAYAS,
         UNITED_KINGDOM,
         BELGIUM,
@@ -58,7 +53,18 @@ class Region:
         MARSHALL_ISLANDS,
         SABAH,
         SELANGOR,
+        JOHOR,
+        PENANG,
+        KUALA_LUMPUR,
         DAVAO_CITY,
+    ]
+
+    MALAYSIA_REGIONS = [
+        MALAYSIA,
+        SELANGOR,
+        JOHOR,
+        PENANG,
+        KUALA_LUMPUR,
     ]
 
     MIXING_OPTI_REGIONS = [

@@ -8,10 +8,12 @@ country:
 
 metropolis_initialisation_type: "current_params"
 metropolis_init_rel_step_size: 0.05
+n_steps_fixed_proposal: 500
+target_output_ratio: 0.2
 
 time:
-  start: 135 # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
-  end: 275 # 1st October
+  start: 135  # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
+  end: 275  # 1st October
 
 testing_to_detection: # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
@@ -43,8 +45,6 @@ victorian_clusters:
           - grocery_and_pharmacy
           - parks
           - transit_stations
-        home:
-          - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:
@@ -63,20 +63,19 @@ victorian_clusters:
             - 0.393
             - 1. # 9th June
             - 1.
-            - 0. # 9th July
+            - 0.1 # 9th July
       microdistancing:
         behaviour:
           function_type: tanh
           parameters:
-            b: 0.262764
-            c: 197. # 15th July
-            sigma: 0.2803973
+            shape: 0.262764
+            inflection_time: 197. # 15th July
+            lower_asymptote: 0.2803973
             upper_asymptote: 0.4421819
           locations:
             - other_locations
             - school
             - work
-            - home
         behaviour_adjuster:
           function_type: constant
           parameters:
@@ -85,13 +84,12 @@ victorian_clusters:
             - other_locations
             - school
             - work
-            - home
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
-            b: 0.5261693
-            c: 205.  # 23rd July
-            sigma: 0.130469
+            shape: 0.5261693
+            inflection_time: 205.  # 23rd July
+            lower_asymptote: 0.130469
             upper_asymptote: 0.9143849
           locations:
             - other_locations
@@ -120,8 +118,6 @@ victorian_clusters:
           - grocery_and_pharmacy
           - parks
           - transit_stations
-        home:
-          - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:
@@ -146,15 +142,14 @@ victorian_clusters:
         behaviour:
           function_type: tanh
           parameters:
-            b: 0.262764
-            c: 197.  # 15th July
-            sigma: 0.2803973
+            shape: 0.262764
+            inflection_time: 197.  # 15th July
+            lower_asymptote: 0.2803973
             upper_asymptote: 0.4421819
           locations:
             - other_locations
             - school
             - work
-            - home
         behaviour_adjuster:
           function_type: constant
           parameters:
@@ -163,13 +158,12 @@ victorian_clusters:
             - other_locations
             - school
             - work
-            - home
         face_coverings:
           function_type: tanh
           parameters:
-            b: 0.5261693
-            c: 215.  # 2nd August
-            sigma: 0.130469
+            shape: 0.5261693
+            inflection_time: 215.  # 2nd August
+            lower_asymptote: 0.130469
             upper_asymptote: 0.9143849
           locations:
             - other_locations

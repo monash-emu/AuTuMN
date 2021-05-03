@@ -1,9 +1,14 @@
 from typing import List
 
+from apps.covid_19.model.parameters import (
+    CaseDetection,
+    Country,
+    Population,
+    TestingToDetection,
+)
+from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 from autumn import inputs
 from autumn.curve import tanh_based_scaleup
-from apps.covid_19.model.parameters import TestingToDetection, CaseDetection, Country, Population
-from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 
 
 def get_testing_pop(agegroup_strata: List[str], country: Country, pop: Population):
@@ -48,10 +53,10 @@ def build_detected_proportion_func(
     else:
         # Approach based on a hyperbolic tan function
         detected_proportion = tanh_based_scaleup(
-            case_detection.maximum_gradient,
-            case_detection.max_change_time,
-            case_detection.start_value,
-            case_detection.end_value,
+            case_detection.shape,
+            case_detection.inflection_time,
+            case_detection.lower_asymptote,
+            case_detection.upper_asymptote,
         )
 
     return detected_proportion

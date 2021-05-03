@@ -7,8 +7,8 @@ from importlib import import_module
 import streamlit as st
 
 from autumn.plots.plotter import StreamlitPlotter
-
 from dash import selectors
+
 from .plots import PLOT_FUNCS
 
 

@@ -1,20 +1,21 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 from numpy.testing import assert_allclose
 
 from apps.covid_19.constants import BASE_DATE
+from apps.covid_19.model.parameters import Country, Mobility
+from apps.covid_19.model.preprocess.mixing_matrix import (
+    build_dynamic_mixing_matrix,
+    mobility,
+)
+from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import (
+    location_adjuster,
+)
 from autumn.inputs import get_country_mixing_matrix
-from apps.covid_19.model.preprocess.mixing_matrix import mobility
-from apps.covid_19.model.preprocess.mixing_matrix import build_dynamic_mixing_matrix
-from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import location_adjuster
-
-from apps.covid_19.model.parameters import Mobility, Country
-
-
 from autumn.inputs.social_mixing.queries import (
-    get_mixing_matrix_specific_agegroups,
     get_country_mixing_matrix,
+    get_mixing_matrix_specific_agegroups,
 )
 
 MM = np.ones([16, 16])
@@ -149,8 +150,7 @@ def test_build_dynamic__with_microdistancing(monkeypatch):
                     "times": [0, 365],
                     "values": [0, 0.1],
                 },
-                "locations":
-                    ["work"],
+                "locations": ["work"],
             }
         },
         "square_mobility_effect": False,
@@ -211,8 +211,7 @@ def test_build_dynamic__with_everything(monkeypatch):
                     "times": [0, 1, 2, 3],
                     "values": [0, 0.1, 0.2, 0.3],
                 },
-                "locations":
-                    ["work"],
+                "locations": ["work"],
             }
         },
         "square_mobility_effect": True,

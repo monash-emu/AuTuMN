@@ -1,1 +1,9 @@
-from . import calibrate, full, powerbi, trigger_philippines, trigger_victoria, dhhs, trigger_europe
+from . import (
+    calibrate,
+    full,
+    powerbi,
+    trigger_europe,
+    trigger_malaysia,
+    trigger_philippines,
+    trigger_victoria,
+)

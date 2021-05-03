@@ -1,14 +1,16 @@
-description: Scenario 2, All current offsite workers return onsite
-parent: apps/covid_19/regions/malaysia/params/default.yml
+description: Scenario 2, current mobility, 50% vaccine roll-out
+parent: apps/covid_19/regions/selangor/params/default.yml
 
 time:
-  start: 418.
+  start: 457
 
-mobility:
-  mixing:
-    work:
-      append: true
-      times:
-        - 2020-02-22
-      values:
-        - 1.
+vaccination:
+  infection_efficacy: 0.75
+  severity_efficacy: 0.
+
+  # Eleven months from 1st April 2021
+  roll_out_components:
+  - supply_period_coverage:
+      coverage: 0.5
+      start_time: 457.
+      end_time: 791.

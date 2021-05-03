@@ -3,12 +3,12 @@ Builds a mixing matrix for the Victorian multi-cluster model.
 """
 from copy import deepcopy
 
-from numba import jit
 import numpy as np
-from summer.model import StratifiedModel
+from numba import jit
+from summer.legacy.model import StratifiedModel
 
-from autumn.region import Region
 from apps.covid_19.model.preprocess.mixing_matrix import build_dynamic_mixing_matrix
+from autumn.region import Region
 
 
 def build_victorian_mixing_matrix_func(

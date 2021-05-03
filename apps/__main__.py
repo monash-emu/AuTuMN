@@ -8,4 +8,6 @@ import os
 # and it makes our models run way more slowly.
 os.environ["OMP_NUM_THREADS"] = "1"
 
-from apps import cli
+from apps.cli import cli
+
+cli()

@@ -4,6 +4,7 @@ import numpy as np
 
 from apps.covid_19.model.parameters import Country
 from autumn.inputs import get_country_mixing_matrix
+
 from .base_adjuster import BaseMixingAdjuster
 
 # Locations that can be used for mixing

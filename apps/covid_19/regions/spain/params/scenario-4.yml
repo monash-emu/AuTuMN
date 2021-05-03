@@ -179,11 +179,11 @@ mobility:
   microdistancing:
     behaviour:
       parameters:
-        sigma: 0.1
+        lower_asymptote: 0.1
         upper_asymptote: 0.1
     behaviour_adjuster:
       parameters:
-        sigma: 1.0
+        lower_asymptote: 1.0
         upper_asymptote: 1.0
   mixing:
     other_locations:

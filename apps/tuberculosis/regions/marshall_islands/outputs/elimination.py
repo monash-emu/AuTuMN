@@ -1,20 +1,18 @@
-from matplotlib import pyplot
 import os
 
+from matplotlib import pyplot
 
-from settings import BASE_PATH
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
+    INTERVENTION_TITLES,
+    OUTPUT_TITLES,
+    get_format,
+    make_output_directories,
+    save_figure,
+)
 from autumn.db.load import load_uncertainty_table
 from autumn.plots.uncertainty.plots import _plot_uncertainty
 from autumn.plots.utils import COLORS, _apply_transparency
-
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
-    OUTPUT_TITLES,
-    INTERVENTION_TITLES,
-    save_figure,
-    get_format,
-    make_output_directories,
-)
-
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,
@@ -113,7 +111,7 @@ def plot_elimination(uncertainty_df, is_logscale=False):
 
             if output in ["incidence", "mortality"]:
                 for year, value in end_tb_targets[output].items():
-                    ax.plot(float(year), value, marker="o", color=target_colours[year])
+                    ax.plot(float(year), value, marker="o", color=target_colours[year], zorder=10)
 
             if is_logscale:
                 ax.set_yscale("log")

@@ -1,25 +1,29 @@
 """
 Calibration plots
 """
-import os
 import logging
+import os
 from math import log
-from typing import List
 from random import choices
+from typing import List
 
-import pandas as pd
-import seaborn as sns
-import numpy as np
-from matplotlib import pyplot
 import matplotlib.ticker as mtick
-from scipy import stats
+import numpy as np
+import pandas as pd
 import plotly.express as px
+import seaborn as sns
+from matplotlib import pyplot
+from scipy import stats
 
-from autumn.plots.utils import get_plot_text_dict
 from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
-from autumn.plots.plotter import Plotter, COLOR_THEME
-from autumn.plots.utils import change_xaxis_to_date, _plot_targets_to_axis, REF_DATE
+from autumn.plots.plotter import COLOR_THEME, Plotter
+from autumn.plots.utils import (
+    REF_DATE,
+    _plot_targets_to_axis,
+    change_xaxis_to_date,
+    get_plot_text_dict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +50,9 @@ def get_epi_params(mcmc_params, strings_to_ignore=("dispersion_param",)):
     """
 
     return [
-        param for
-        param in mcmc_params[0].loc[:, "name"].unique().tolist() if not
-        any(string in param for string in strings_to_ignore)
+        param
+        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
+        if not any(string in param for string in strings_to_ignore)
     ]
 
 
@@ -113,7 +117,11 @@ def plot_prior(i: int, prior_dict: dict, path: str):
 
     if "distri_mean" in prior_dict:
         pyplot.axvline(
-            x=prior_dict["distri_mean"], ymin=0, ymax=100 * max(y_values), linewidth=1, color="red",
+            x=prior_dict["distri_mean"],
+            ymin=0,
+            ymax=100 * max(y_values),
+            linewidth=1,
+            color="red",
         )
     if "distri_ci" in prior_dict:
         pyplot.axvline(
@@ -209,16 +217,104 @@ def plot_mcmc_parameter_trace(
     plotter.save_figure(fig, filename=f"{param_name}-traces", title_text=f"{param_name}-traces")
 
 
+def plot_autocorrelation(
+    plotter: Plotter, mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFrame], burn_in: int, param_name: str
+):
+    """
+    Plot each chain's autocorrelogram.
+    """
+    fig, axis, _, n_rows, n_cols, indices = plotter.get_figure()
+
+    for idx, table_df in enumerate(mcmc_params):
+        # Retrieve the full chain's posterior distribution
+        posterior_chain = get_posterior([table_df], [mcmc_tables[idx]], param_name, burn_in)
+        # Plot autocorrelogram
+        pd.plotting.autocorrelation_plot(posterior_chain, ax=axis)
+
+    # Plot details
+    axis.set_ylabel(f"autocorrelation")
+    axis.set_xlabel("lag")
+    axis.set_title(param_name)
+
+    # Save figure
+    plotter.save_figure(fig, filename=f"{param_name}-autocorrelation", title_text="")
+
+
+def plot_parallel_coordinates_flat(
+    plotter: Plotter,
+    mcmc_params: List[pd.DataFrame],
+    mcmc_tables: List[pd.DataFrame],
+    priors,
+    map_only=False
+):
+
+    fig, axis, _, n_rows, n_cols, indices = plotter.get_figure()
+
+    # select parameter values for all chains
+    parameters = [
+        param
+        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
+        if "dispersion_param" not in param
+    ]
+    combined_mcmc_df = merge_and_pivot_mcmc_parameters_loglike(
+        mcmc_tables, mcmc_params, parameters, n_samples_per_chain=10, map_only=map_only
+    )
+    labels = {}
+    for param in parameters:
+        labels[param] = get_plot_text_dict(param)
+
+    # drop some columns
+    combined_mcmc_df = combined_mcmc_df[
+        parameters + ["fitness", "chain"]
+    ]
+
+    # rescale the parameters
+    for var in parameters + ["fitness"]:
+        a = min(combined_mcmc_df[var])
+        b = max(combined_mcmc_df[var])
+        if priors:
+            if priors != [None]:
+                prior = [p for p in priors if p["param_name"] == var]
+                if len(prior) > 0:
+                    prior = prior[0]
+                    x_range = workout_plot_x_range(prior)
+                    a = x_range[0]
+                    b = x_range[1]
+
+        if b > a:
+            combined_mcmc_df[var] = (combined_mcmc_df[var] - a) / (b - a)
+
+    # set chain colours
+    chain_ids = combined_mcmc_df["chain"].unique()
+    colours = [COLOR_THEME[i + 1] for i in chain_ids]
+
+    # main plot
+    _lw = 1. if map_only else .4
+    pd.plotting.parallel_coordinates(combined_mcmc_df, 'chain', ax=axis, color=colours, lw=_lw)
+    axis.set_ylabel("normalised value (rel. to prior range)")
+    axis.tick_params(axis='x', labelrotation=20)
+
+    # figure width
+    w = len(parameters) * 2
+    fig.set_figwidth(w)
+
+    if map_only:
+        plotter.save_figure(fig, filename="parallel_map", title_text="MAP per chain")
+    else:
+        plotter.save_figure(fig, filename="parallel_coord", title_text="parallel coordinates")
+
+
 def plot_multiple_param_traces(
-        plotter: Plotter,
-        mcmc_params: List[pd.DataFrame],
-        burn_in: int,
-        title_font_size: int,
-        label_font_size: int,
-        capitalise_first_letter: bool,
-        dpi_request: int,
-        optional_param_request=None,
-        file_name="all_traces"
+    plotter: Plotter,
+    mcmc_params: List[pd.DataFrame],
+    burn_in: int,
+    title_font_size: int,
+    label_font_size: int,
+    capitalise_first_letter: bool,
+    dpi_request: int,
+    optional_param_request=None,
+    file_name="all_traces",
+    x_ticks_on=True,
 ):
 
     # Except not the dispersion parameters - only the epidemiological ones
@@ -248,7 +344,9 @@ def plot_multiple_param_traces(
                 fontsize=title_font_size,
             )
 
-            if indices[i][0] == n_rows - 1:
+            if not x_ticks_on:
+                axis.set_xticks([])
+            elif indices[i][0] == n_rows - 1:
                 x_label = "Iterations" if capitalise_first_letter else "iterations"
                 axis.set_xlabel(x_label, fontsize=label_font_size)
             pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
@@ -369,7 +467,7 @@ def plot_posterior(
     burn_in: int,
     param_name: str,
     num_bins: int,
-    prior,
+    priors,
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -378,32 +476,36 @@ def plot_posterior(
     fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis, density=True)
 
-    if prior:
-        x_range = workout_plot_x_range(prior)
-        x_values = np.linspace(x_range[0], x_range[1], num=1000)
-        y_values = [calculate_prior(prior, x, log=False) for x in x_values]
+    if priors:
+        if priors != [None]:
+            prior = [p for p in priors if p["param_name"] == param_name]
+            if len(prior) > 0:
+                prior = prior[0]
+                x_range = workout_plot_x_range(prior)
+                x_values = np.linspace(x_range[0], x_range[1], num=1000)
+                y_values = [calculate_prior(prior, x, log=False) for x in x_values]
 
-        # Plot the prior
-        axis.plot(x_values, y_values)
+                # Plot the prior
+                axis.plot(x_values, y_values)
 
     plotter.save_figure(
-        fig, filename=f"{param_name}-posterior", title_text=f"{param_name} posterior"
+        fig, filename=f"{param_name}-posterior", title_text=""
     )
 
 
 def plot_multiple_posteriors(
-        plotter: Plotter,
-        mcmc_params: List[pd.DataFrame],
-        mcmc_tables: List[pd.DataFrame],
-        burn_in: int,
-        num_bins: int,
-        title_font_size: int,
-        label_font_size: int,
-        capitalise_first_letter: bool,
-        dpi_request: int,
-        priors: list,
-        parameters: list,
-        file_name="all_posteriors"
+    plotter: Plotter,
+    mcmc_params: List[pd.DataFrame],
+    mcmc_tables: List[pd.DataFrame],
+    burn_in: int,
+    num_bins: int,
+    title_font_size: int,
+    label_font_size: int,
+    capitalise_first_letter: bool,
+    dpi_request: int,
+    priors: list,
+    parameters: list,
+    file_name="all_posteriors",
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -458,7 +560,9 @@ def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis):
 
 
 def plot_parallel_coordinates(
-    plotter: Plotter, mcmc_tables: List[pd.DataFrame], mcmc_params: List[pd.DataFrame],
+    plotter: Plotter,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
 ):
     parameters = [
         param
@@ -489,19 +593,22 @@ def plot_parallel_coordinates(
 
 
 def merge_and_pivot_mcmc_parameters_loglike(
-    mcmc_tables, mcmc_params, parameters, n_samples_per_chain=None
+    mcmc_tables, mcmc_params, parameters, n_samples_per_chain=None, map_only=False
 ):
 
     combined_mcmc_df = None
     for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
         mask = mcmc_df["accept"] == 1
         mcmc_df = mcmc_df[mask]
-        n_iter = (
-            len(mcmc_df.index)
-            if n_samples_per_chain is None
-            else min(n_samples_per_chain, len(mcmc_df.index))
-        )
-        mcmc_df = mcmc_df.iloc[-n_iter:]
+        if not map_only:
+            n_iter = (
+                len(mcmc_df.index)
+                if n_samples_per_chain is None
+                else min(n_samples_per_chain, len(mcmc_df.index))
+            )
+            mcmc_df = mcmc_df.iloc[-n_iter:]
+        else:
+            mcmc_df = mcmc_df[mcmc_df.ap_loglikelihood == max(mcmc_df.ap_loglikelihood)]
         for param in parameters:
             param_vals = []
             for c, r in zip(mcmc_df["chain"], mcmc_df["run"]):
@@ -607,18 +714,18 @@ def plot_param_vs_param_by_chain(
 
 
 def plot_param_vs_param(
-        plotter: Plotter,
-        mcmc_params: List[pd.DataFrame],
-        parameters: list,
-        burn_in: int,
-        style: str,
-        bins: int,
-        label_font_size: int,
-        label_chars: int,
-        dpi_request: int,
-        label_param_string=True,
-        show_ticks=False,
-        file_name="parameter_correlation_matrix"
+    plotter: Plotter,
+    mcmc_params: List[pd.DataFrame],
+    parameters: list,
+    burn_in: int,
+    style: str,
+    bins: int,
+    label_font_size: int,
+    label_chars: int,
+    dpi_request: int,
+    label_param_string=True,
+    show_ticks=False,
+    file_name="parameter_correlation_matrix",
 ):
     """
     Plot the parameter correlation matrices for each parameter combination.
@@ -626,28 +733,29 @@ def plot_param_vs_param(
 
     # Prelims
     fig, axes, _, _, _, _ = plotter.get_figure(n_panels=len(parameters) ** 2)
-    x_data, y_data = {}, {}
+    row_data, col_data = {}, {}
 
     # Get x and y data separately and collate up over the chains
-    for x_idx, x_param_name in enumerate(parameters):
-        x_data[x_param_name] = []
+    for row_idx, row_param_name in enumerate(parameters):
+        row_data[row_param_name] = []
         for chain in range(len(mcmc_params)):
-            x_param_mask = (mcmc_params[chain]["name"] == x_param_name) & (
+            x_param_mask = (mcmc_params[chain]["name"] == row_param_name) & (
                 mcmc_params[chain]["run"] > burn_in
             )
-            x_data[x_param_name] += mcmc_params[chain][x_param_mask]["value"].to_list()
-    for y_idx, y_param_name in enumerate(parameters):
-        y_data[y_param_name] = []
+            row_data[row_param_name] += mcmc_params[chain][x_param_mask]["value"].to_list()
+    for col_idx, col_param_name in enumerate(parameters):
+        col_data[col_param_name] = []
         for chain in range(len(mcmc_params)):
-            y_param_mask = (mcmc_params[chain]["name"] == y_param_name) & (
+            y_param_mask = (mcmc_params[chain]["name"] == col_param_name) & (
                 mcmc_params[chain]["run"] > burn_in
             )
-            y_data[y_param_name] += mcmc_params[chain][y_param_mask]["value"].to_list()
+            col_data[col_param_name] += mcmc_params[chain][y_param_mask]["value"].to_list()
 
     # Loop over parameter combinations
-    for x_idx, x_param_name in enumerate(parameters):
-        for y_idx, y_param_name in enumerate(parameters):
-            axis = axes[x_idx, y_idx]
+    for row_idx, row_param_name in enumerate(parameters):
+        for col_idx, col_param_name in enumerate(parameters):
+
+            axis = axes[row_idx, col_idx]
             if not show_ticks:
                 axis.xaxis.set_ticks([])
                 axis.yaxis.set_ticks([])
@@ -655,39 +763,44 @@ def plot_param_vs_param(
                 axis.tick_params(labelsize=4)
 
             # Plot
-            if x_idx > y_idx:
+            if row_idx > col_idx:
                 if style == "Scatter":
                     axis.scatter(
-                        x_data[x_param_name], y_data[y_param_name], alpha=0.5, s=0.1, color="k"
+                        col_data[col_param_name],
+                        row_data[row_param_name],
+                        alpha=0.5,
+                        s=0.1,
+                        color="k",
                     )
                 elif style == "KDE":
                     sns.kdeplot(
-                        x_data[x_param_name],
-                        y_data[y_param_name],
+                        col_data[col_param_name],
+                        row_data[row_param_name],
                         ax=axis,
                         shade=True,
                         levels=5,
                         lw=1.0,
                     )
                 else:
-                    axis.hist2d(x_data[x_param_name], y_data[y_param_name], bins=bins)
-            elif x_idx == y_idx:
+                    axis.hist2d(col_data[col_param_name], row_data[row_param_name], bins=bins)
+            elif row_idx == col_idx:
                 axis.hist(
-                    x_data[x_param_name],
+                    row_data[row_param_name],
                     color=[0.2, 0.2, 0.6] if style == "Shade" else "k",
                     bins=bins,
                 )
-                axis.xaxis.set_ticks([])
                 axis.yaxis.set_ticks([])
             else:
                 axis.axis("off")
 
             # Axis labels (these have to be reversed for some reason)
-            x_param_label = y_param_name if label_param_string else str(y_idx + 1)
-            y_param_label = x_param_name if label_param_string else str(x_idx + 1)
-            if x_idx == len(parameters) - 1:
-                axis.set_xlabel(get_plot_text_dict(x_param_label), fontsize=label_font_size, labelpad=3)
-            if y_idx == 0:
+            x_param_label = col_param_name if label_param_string else str(col_idx + 1)
+            y_param_label = row_param_name if label_param_string else str(row_idx + 1)
+            if row_idx == len(parameters) - 1:
+                axis.set_xlabel(
+                    get_plot_text_dict(x_param_label), fontsize=label_font_size, labelpad=3
+                )
+            if col_idx == 0:
                 axis.set_ylabel(get_plot_text_dict(y_param_label), fontsize=label_font_size)
 
     # Save
@@ -740,7 +853,10 @@ def plot_all_params_vs_loglike(
 
 
 def sample_outputs_for_calibration_fit(
-    output_name: str, mcmc_tables: List[pd.DataFrame], do_tables: List[pd.DataFrame], burn_in: int,
+    output_name: str,
+    mcmc_tables: List[pd.DataFrame],
+    do_tables: List[pd.DataFrame],
+    burn_in: int,
 ):
     assert len(mcmc_tables) == len(do_tables)
     mcmc_df = db.load.append_tables(mcmc_tables)
@@ -826,7 +942,11 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
 
 
 def plot_calibration_fit(
-    plotter: Plotter, output_name: str, outputs: list, targets, is_logscale=False,
+    plotter: Plotter,
+    output_name: str,
+    outputs: list,
+    targets,
+    is_logscale=False,
 ):
     fig, axis, _, _, _, _ = plotter.get_figure()
     plot_calibration(axis, output_name, outputs, targets, is_logscale)
@@ -840,7 +960,14 @@ def plot_calibration_fit(
 
 
 def plot_cdr_curves(
-        plotter: Plotter, times, detected_proportion, end_date, rotation, start_date=1., alpha=1., line_width=0.7
+    plotter: Plotter,
+    times,
+    detected_proportion,
+    end_date,
+    rotation,
+    start_date=1.0,
+    alpha=1.0,
+    line_width=0.7,
 ):
     """
     Plot a single set of CDR curves to a one-panel figure
@@ -874,7 +1001,7 @@ def plot_multi_cdr_curves(
     plotter.save_figure(fig, filename=f"multi_cdr_curves")
 
 
-def plot_cdr_to_axis(axis, times, detected_proportions, alpha=1., line_width=0.7):
+def plot_cdr_to_axis(axis, times, detected_proportions, alpha=1.0, line_width=0.7):
     """
     Plot a set of CDR curves to an axis
     """

@@ -1,53 +1,50 @@
 import logging
 import os
-import shutil
 
 import pandas as pd
 
 from autumn import db
 from autumn.db.database import get_database
-from autumn.tool_kit.params import update_params
-from autumn.tool_kit.scenarios import Scenario, calculate_differential_outputs
-from utils.s3 import list_s3, download_from_run_s3, upload_to_run_s3
-from utils.parallel import run_parallel_tasks
-from utils.timer import Timer
+from autumn.db.store import Table
+from autumn.utils.params import update_params
 from settings import REMOTE_BASE_DIR
-from tasks.utils import get_app_region
 from tasks.calibrate import CALIBRATE_DATA_DIR
-
+from tasks.utils import get_app_region, set_logging_config
+from utils.fs import recreate_dir
+from utils.parallel import run_parallel_tasks
+from utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
+from utils.timer import Timer
 
 logger = logging.getLogger(__name__)
 
 
 FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
+TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
 
 
-def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
-
+def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool):
     # Set up directories for output data.
-    with Timer(f"Creating calibration directories"):
-        if os.path.exists(FULL_RUN_DATA_DIR):
-            shutil.rmtree(FULL_RUN_DATA_DIR)
+    recreate_dir(FULL_RUN_DATA_DIR)
 
-        os.makedirs(FULL_RUN_DATA_DIR)
+    s3_client = get_s3_client()
 
     # Find the calibration chain databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = list_s3(key_prefix, key_suffix=".feather")
+    chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".parquet")
+    chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
 
     # Download the calibration chain databases.
     with Timer(f"Downloading calibration data"):
-        args_list = [(run_id, src_key, quiet) for src_key in chain_db_keys]
-        run_parallel_tasks(download_from_run_s3, args_list)
+        for src_key in chain_db_keys:
+            download_from_run_s3(s3_client, run_id, src_key, quiet)
 
-    # Run the models for the full time period plus all scenarios for each accepted parameter
-    # set, while also applying burn-in.
+    # Run the models for the full time period plus all scenarios.
     db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
     chain_ids = [int(p.split("/")[-1].split("-")[-1]) for p in db_paths]
     num_chains = len(chain_ids)
     with Timer(f"Running full models for {num_chains} chains: {chain_ids}"):
         args_list = [
-            (run_id, db_path, chain_id, burn_in, quiet)
+            (run_id, db_path, chain_id, burn_in, sample_size, quiet)
             for chain_id, db_path in zip(chain_ids, db_paths)
         ]
         chain_ids = run_parallel_tasks(run_full_model_for_chain, args_list)
@@ -56,69 +53,131 @@ def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
     db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Uploading full model run data to AWS S3"):
         for db_path in db_paths:
-            upload_to_run_s3(run_id, db_path, quiet)
+            upload_to_run_s3(s3_client, run_id, db_path, quiet)
 
 
 def run_full_model_for_chain(
-    run_id: str, src_db_path: str, chain_id: int, burn_in: int, quiet: bool
+    run_id: str, src_db_path: str, chain_id: int, burn_in: int, sample_size: int, quiet: bool
 ):
-    if quiet:
-        logging.disable(logging.INFO)
+    """
+    Run the full model (all time steps, all scenarios) for a subset of accepted calibration runs.
+    It works like this:
+        - We start off with a calibration chain of length C
+        - We apply "burn in" by throwing away the first B iterations of the chain, leaving us with C - B iterations
+        - We then sample runs from the chain using a "sample size" parameter S by calculating N = floor(C - B / S)
+          once we know N, we then start from the end of the chain, working backwards, and select every Nth run
+              if a run is accepted then we select it
+              if a run is not accepted, we select the first accepted run that precedes it
 
-    app_region = get_app_region(run_id)
-    dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{chain_id}")
-    logger.info(
-        f"Running {app_region.app_name} {app_region.region_name} full model with burn-in of {burn_in}s"
-    )
-    src_db = get_database(src_db_path)
-    dest_db = get_database(dest_db_path)
-    db.process.apply_burn_in(src_db, dest_db, burn_in)
-    mcmc_run_df = dest_db.query("mcmc_run")
-    outputs = []
-    derived_outputs = []
+    Once we've sampled all the runs we need, then we re-run them in full, including all their scenarios.
+    """
+    set_logging_config(not quiet, chain_id)
+    msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
+    logger.info(msg, chain_id, burn_in, sample_size)
+    try:
+        app_region = get_app_region(run_id)
+        msg = f"Running the {app_region.app_name} {app_region.region_name} model"
+        logger.info(msg)
 
-    for _, mcmc_run in mcmc_run_df.iterrows():
-        run_id = mcmc_run["run"]
-        chain_id = mcmc_run["chain"]
-        if not mcmc_run["accept"]:
-            logger.info("Ignoring non-accepted MCMC run %s", run_id)
-            continue
+        dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{chain_id}")
+        src_db = get_database(src_db_path)
+        dest_db = get_database(dest_db_path)
 
-        logger.info("Running full model for MCMC run %s", run_id)
-        param_updates = db.load.load_mcmc_params(dest_db, run_id)
-        update_func = lambda ps: update_params(ps, param_updates)
-        with Timer("Running model scenarios"):
-            num_scenarios = 1 + len(app_region.params["scenarios"].keys())
-            scenarios = []
-            for scenario_idx in range(num_scenarios):
-                scenario = Scenario(app_region.build_model, scenario_idx, app_region.params)
-                scenarios.append(scenario)
+        # Burn in MCMC parameter history and copy it across so it can be used in visualizations downstream.
+        # Don't apply sampling to it - we want to see the whole parameter space that was explored.
+        mcmc_params_df = src_db.query(Table.PARAMS)
+        burn_mask = mcmc_params_df["run"] >= burn_in
+        dest_db.dump_df(Table.PARAMS, mcmc_params_df[burn_mask])
 
-            # Run the baseline scenario.
-            baseline_scenario = scenarios[0]
-            baseline_scenario.run(update_func=update_func)
-            baseline_model = baseline_scenario.model
+        # Add some extra columns to MCMC run history to track sampling.
+        mcmc_run_df = src_db.query(Table.MCMC)
+        num_runs = len(mcmc_run_df)
+        msg = f"Tried to burn {burn_in} runs with sample size {sample_size}, but there are only {num_runs}"
+        assert num_runs > (burn_in + sample_size), msg
 
-            # Run all the other scenarios
-            for scenario in scenarios[1:]:
-                scenario.run(base_model=baseline_model, update_func=update_func)
+        # Sampled column tells us whether a run will be sampled.
+        sampled = []
+        sample_step = max(1, (num_runs - burn_in) // sample_size)
+        logger.info("Using a sample step of %s", sample_step)
+        for idx, mcmc_run in mcmc_run_df.iterrows():
+            should_sample = 1 if (num_runs - idx - 1) % sample_step == 0 else 0
+            sampled.append(should_sample)
 
-        run_id = int(run_id)
-        chain_id = int(chain_id)
+        mcmc_run_df["sampled"] = sampled
 
-        with Timer("Processing model outputs"):
-            models = [s.model for s in scenarios]
-            models = calculate_differential_outputs(models, app_region.targets)
-            outputs_df = db.store.build_outputs_table(models, run_id, chain_id)
-            derived_outputs_df = db.store.build_derived_outputs_table(models, run_id, chain_id)
-            outputs.append(outputs_df)
-            derived_outputs.append(derived_outputs_df)
+        # Parent column tells us which accepted run precedes this run
+        parents = []
+        i_row = 0  # FIXME: This is a temporary patch.
+        for _, mcmc_run in mcmc_run_df.iterrows():
+            if mcmc_run["accept"] or i_row == 0:
+                parent = int(mcmc_run["run"])
 
-    with Timer("Saving model outputs to the database"):
-        outputs_df = pd.concat(outputs, copy=False, ignore_index=True)
-        derived_outputs_df = pd.concat(derived_outputs, copy=False, ignore_index=True)
-        dest_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
-        dest_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
+            parents.append(parent)
+            i_row += 1
 
-    logger.info("Finished running full models for all accepted MCMC runs.")
+        mcmc_run_df["parent"] = parents
+
+        # Burn in MCMC run history.
+        burn_mask = mcmc_run_df["run"] >= burn_in
+        burned_runs_str = ", ".join([str(i) for i in mcmc_run_df[~burn_mask].run])
+        mcmc_run_df = mcmc_run_df[burn_mask].copy()
+        num_remaining = len(mcmc_run_df)
+        logger.info(
+            "Burned %s of %s MCMC runs leaving %s remaining.", burn_in, num_runs, num_remaining
+        )
+
+        logger.info("Burned MCMC runs %s", burned_runs_str)
+        dest_db.dump_df(Table.MCMC, mcmc_run_df)
+
+        # Figure out which model runs to actually re-run.
+        sampled_run_ids = mcmc_run_df[mcmc_run_df["sampled"] == 1].parent.unique().tolist()
+
+        # Also include the MLE
+        mle_df = db.process.find_mle_run(mcmc_run_df)
+        mle_run_id = mle_df["run"].iloc[0]
+        logger.info("Including MLE run %s", mle_run_id)
+        sampled_run_ids.append(mle_run_id)
+        sampled_run_ids = sorted(list(set(sampled_run_ids)))
+        logger.info(
+            "Running full model for %s sampled runs %s", len(sampled_run_ids), sampled_run_ids
+        )
+
+        outputs = []
+        derived_outputs = []
+        for sampled_run_id in sampled_run_ids:
+            try:
+                mcmc_run = mcmc_run_df.loc[mcmc_run_df["run"] == sampled_run_id].iloc[0]
+            except IndexError:
+                # This happens when we try to sample a parent run that has been burned, we log this and ignore it.
+                logger.warn("Skipping (probably) burned parent run id %s", sampled_run_id)
+                continue
+
+            run_id = mcmc_run["run"]
+            chain_id = mcmc_run["chain"]
+            assert mcmc_run["accept"]
+            logger.info("Running full model for MCMC run %s", run_id)
+            param_updates = db.load.load_mcmc_params(dest_db, run_id)
+            update_func = lambda ps: update_params(ps, param_updates)
+            with Timer("Running model scenarios"):
+                scenarios = app_region.build_and_run_scenarios(update_func=update_func)
+
+            run_id = int(run_id)
+            chain_id = int(chain_id)
+
+            with Timer("Processing model outputs"):
+                processed_outputs = app_region.process_scenario_outputs(scenarios, run_id, chain_id)
+                outputs.append(processed_outputs[Table.OUTPUTS])
+                derived_outputs.append(processed_outputs[Table.DERIVED])
+
+        with Timer("Saving model outputs to the database"):
+            final_outputs = {}
+            final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
+            final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
+            db.store.save_model_outputs(dest_db, **final_outputs)
+
+    except Exception:
+        logger.exception("Full model run for chain %s failed", chain_id)
+        raise
+
+    logger.info("Finished running full models for chain %s.", chain_id)
     return chain_id

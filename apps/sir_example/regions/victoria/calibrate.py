@@ -1,10 +1,9 @@
 import logging
 
-from autumn.region import Region
-from autumn.calibration import Calibration
-from autumn.tool_kit.params import load_params, load_targets
-
 from apps.sir_example.model import build_model
+from autumn.calibration import Calibration
+from autumn.region import Region
+from autumn.utils.params import load_params, load_targets
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -32,8 +31,6 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     )
     calib.run_fitting_algorithm(
         run_mode="autumn_mcmc",
-        n_iterations=100000,
-        n_burned=0,
         n_chains=1,
         available_time=max_seconds,
     )

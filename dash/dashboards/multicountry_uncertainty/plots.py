@@ -1,9 +1,14 @@
-import streamlit as st
-from autumn import plots
-from dash.dashboards.calibration_results.plots import get_uncertainty_data, get_uncertainty_df
-from dash import selectors
 from math import ceil
+
 import matplotlib.pyplot as pyplot
+import streamlit as st
+
+from autumn import plots
+from dash import selectors
+from dash.dashboards.calibration_results.plots import (
+    get_uncertainty_data,
+    get_uncertainty_df,
+)
 
 PLOT_FUNCS = {}
 
@@ -22,7 +27,9 @@ def multi_country_uncertainty(
     uncertainty_df = []
 
     for i_region in range(len(mcmc_tables)):
-        uncertainty_df.append(get_uncertainty_df(calib_dir_path[i_region], mcmc_tables[i_region], targets))
+        uncertainty_df.append(
+            get_uncertainty_df(calib_dir_path[i_region], mcmc_tables[i_region], targets)
+        )
 
         if i_region == 0:
             available_outputs = [o["output_key"] for o in targets[i_region].values()]
@@ -50,4 +57,3 @@ def multi_country_uncertainty(
 
 
 PLOT_FUNCS["Multi-country uncertainty"] = multi_country_uncertainty
-

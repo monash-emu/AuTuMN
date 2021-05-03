@@ -1,10 +1,10 @@
 import os
+
 from matplotlib import pyplot
 from matplotlib.pyplot import figure
 
 from autumn.curve.tanh import tanh_based_scaleup
 from settings import BASE_PATH
-
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,
@@ -18,10 +18,10 @@ FIGURE_PATH = os.path.join(
 )
 
 PARAMS = {
-    "mobility.microdistancing.behaviour.parameters.c": 61,
+    "mobility.microdistancing.behaviour.parameters.inflection_time": 61,
     "mobility.microdistancing.behaviour.parameters.upper_asymptote": 0.4,
-    "mobility.microdistancing.behaviour_adjuster.parameters.c": 183,
-    "mobility.microdistancing.behaviour_adjuster.parameters.sigma": 0.75,
+    "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time": 183,
+    "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote": 0.75,
 }
 
 
@@ -32,16 +32,20 @@ def main():
 def make_microdistancing_plot(params=PARAMS):
 
     micro_emergence_func = tanh_based_scaleup(
-        b=0.05,
-        c=params["mobility.microdistancing.behaviour.parameters.c"],
-        sigma=0,
+        shape=0.05,
+        inflection_time=params["mobility.microdistancing.behaviour.parameters.inflection_time"],
+        lower_asymptote=0,
         upper_asymptote=params["mobility.microdistancing.behaviour.parameters.upper_asymptote"],
     )
 
     micro_wane_func = tanh_based_scaleup(
-        b=-0.05,
-        c=params["mobility.microdistancing.behaviour_adjuster.parameters.c"],
-        sigma=params["mobility.microdistancing.behaviour_adjuster.parameters.sigma"],
+        shape=-0.05,
+        inflection_time=params[
+            "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time"
+        ],
+        lower_asymptote=params[
+            "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote"
+        ],
         upper_asymptote=1,
     )
 

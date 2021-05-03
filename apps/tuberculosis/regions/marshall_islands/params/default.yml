@@ -75,10 +75,10 @@ time_variant_tsr: # should always be > 0
   2017.: 0.8
 
 time_variant_tb_screening_rate:
-  maximum_gradient: .1 # The shape parameter to the tanh-based curve
-  max_change_time: 1990. # Point at which curve inflects
-  start_value: 0. # Starting value - lower asymptote
-  end_value: 0.4057634920539735
+  shape: .1 # The shape parameter to the tanh-based curve
+  inflection_time: 1990. # Point at which curve inflects
+  lower_asymptote: 0. # Starting value - lower asymptote
+  upper_asymptote: 0.4057634920539735
 
 extra_params:
   prop_diabetes:
@@ -104,7 +104,8 @@ calculated_outputs:
     "mortality",
     "incidence",
     "cumulative_diseased",
-    "cumulative_deaths"
+    "cumulative_deaths",
+    "screening_rate"
   ]
 outputs_stratification:
   prevalence_infectious: ["location"]

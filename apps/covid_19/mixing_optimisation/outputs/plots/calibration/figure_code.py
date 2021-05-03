@@ -1,21 +1,19 @@
-from autumn.tool_kit.params import load_targets
-from autumn import db, plots
-from autumn.plots.calibration.plots import get_posterior, get_posterior_best_chain
-from autumn.curve import tanh_based_scaleup
-from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
-import pandas as pd
-
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, COUNTRY_TITLES
-from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import get_serosurvey_data
-from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
-
+import os
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-
-from numpy import mean, quantile
 import numpy as np
-import os
+from numpy import mean, quantile
+
+from apps.covid_19.mixing_optimisation.constants import COUNTRY_TITLES, OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import (
+    get_serosurvey_data,
+)
+from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
+from autumn import db, plots
+from autumn.curve import tanh_based_scaleup
+from autumn.plots.calibration.plots import get_posterior, get_posterior_best_chain
+from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
+from autumn.utils.params import load_targets
 
 
 # --------------  Load outputs from databases
@@ -88,10 +86,10 @@ param_info = {
     },
     "sojourn.compartment_periods.icu_late": {"name": "time in ICU", "range": [9.0, 13.0]},
     "infection_fatality.multiplier": {"name": "IFR multiplier", "range": [0.8, 1.2]},
-    "case_detection.maximum_gradient": {"name": "detection (shape)", "range": [0.05, 0.1]},
-    "case_detection.max_change_time": {"name": "detection (inflection)", "range": [100.0, 250.0]},
-    "case_detection.end_value": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
-    "case_detection.start_value": {"name": "detection (prop_start)", "range": [0.0, 0.10]},
+    "case_detection.shape": {"name": "detection (shape)", "range": [0.05, 0.1]},
+    "case_detection.inflection_time": {"name": "detection (inflection)", "range": [100.0, 250.0]},
+    "case_detection.upper_asymptote": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
+    "case_detection.lower_asymptote": {"name": "detection (prop_start)", "range": [0.0, 0.10]},
     "icu_prop": {"name": "prop ICU among hosp.", "range": [0.15, 0.20]},
     "compartment_periods.hospital_late": {"name": "hopital duration", "range": [17.7, 20.4]},
     "compartment_periods.icu_late": {"name": "time in ICU", "range": [9.0, 13.0]},
@@ -103,7 +101,7 @@ param_info = {
         "name": "sympt. prop. multiplier",
         "range": [0.6, 1.4],
     },
-    "mobility.microdistancing.behaviour.parameters.c": {
+    "mobility.microdistancing.behaviour.parameters.inflection_time": {
         "name": "microdist. (inflection)",
         "range": [80, 130],
     },
@@ -111,18 +109,18 @@ param_info = {
         "name": "microdist. (final)",
         "range": [0.25, 0.6],
     },
-    "mobility.microdistancing.behaviour_adjuster.parameters.c": {
+    "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time": {
         "name": "microdist. wane (inflection)",
         "range": [150, 250],
     },
-    "mobility.microdistancing.behaviour_adjuster.parameters.sigma": {
+    "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote": {
         "name": "microdist. wane (final)",
         "range": [0.5, 1],
     },
     "elderly_mixing_reduction.relative_reduction": {
         "name": "elderly mixing reduction",
         "range": [0, 0.5],
-    }
+    },
 }
 
 
@@ -176,7 +174,7 @@ def make_posterior_ranges_figure(param_values):
             if prior["distribution"] == "uniform":
                 x_range = prior["distri_params"]
         range_w = x_range[1] - x_range[0]
-        buffer = .1 * range_w
+        buffer = 0.1 * range_w
         x_range = [x_range[0] - buffer, x_range[1] + buffer]
 
         axs[i_row, i_col].set_xlim(x_range)
@@ -260,7 +258,7 @@ def plot_parameter_traces(param_values_by_chain, max_n_iter=2500):
                         y_range = prior["distri_params"]
 
                 range_w = y_range[1] - y_range[0]
-                buffer = .1 * range_w
+                buffer = 0.1 * range_w
                 y_range = [y_range[0] - buffer, y_range[1] + buffer]
 
                 ax.set_ylim(y_range)
@@ -298,15 +296,15 @@ def get_country_posterior_detection_percentiles(country_param_values):
     store_matrix = np.zeros((len(calculated_times), len(country_param_values["time.start"])))
 
     for i in range(len(country_param_values["time.start"])):
-        if "case_detection.start_value" in country_param_values:
-            sigma = country_param_values["case_detection.start_value"][i]
+        if "case_detection.lower_asymptote" in country_param_values:
+            lower_asymptote = country_param_values["case_detection.lower_asymptote"][i]
         else:
-            sigma = 0.0
+            lower_asymptote = 0.0
         my_func = tanh_based_scaleup(
-            country_param_values["case_detection.maximum_gradient"][i],
-            country_param_values["case_detection.max_change_time"][i],
-            sigma,
-            country_param_values["case_detection.end_value"][i],
+            country_param_values["case_detection.shape"][i],
+            country_param_values["case_detection.inflection_time"][i],
+            lower_asymptote,
+            country_param_values["case_detection.upper_asymptote"][i],
         )
         detect_vals = [my_func(float(t)) for t in calculated_times]
         store_matrix[:, i] = detect_vals
@@ -451,7 +449,7 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
     i_row = 1
     i_col = 0
 
-    ordered_countries = ['italy', 'united-kingdom', 'france', 'belgium', 'spain', 'sweden']
+    ordered_countries = ["italy", "united-kingdom", "france", "belgium", "spain", "sweden"]
     for country in ordered_countries:
         # write country name
         ax = fig.add_subplot(spec[i_row - 1, i_col : i_col + n_target_outputs])

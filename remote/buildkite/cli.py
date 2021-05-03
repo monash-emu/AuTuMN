@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import pprint
 
 import click
@@ -9,15 +9,13 @@ from remote.aws import cli as aws
 from utils.runs import read_run_id
 
 from .buildkite import trigger_pipeline
-from .pipelines import (
-    calibrate as calibrate_pipeline,
-    full as full_pipeline,
-    powerbi as powerbi_pipeline,
-    trigger_philippines as trigger_philippines_pipeline,
-    trigger_victoria as trigger_victoria_pipeline,
-    trigger_europe as trigger_europe_pipeline,
-    dhhs as dhhs_pipeline,
-)
+from .pipelines import calibrate as calibrate_pipeline
+from .pipelines import full as full_pipeline
+from .pipelines import powerbi as powerbi_pipeline
+from .pipelines import trigger_europe as trigger_europe_pipeline
+from .pipelines import trigger_philippines as trigger_philippines_pipeline
+from .pipelines import trigger_victoria as trigger_victoria_pipeline
+from .pipelines import trigger_malaysia as trigger_malaysia_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +36,8 @@ def update():
         powerbi_pipeline.pipeline,
         trigger_philippines_pipeline.pipeline,
         trigger_victoria_pipeline.pipeline,
-        dhhs_pipeline.pipeline,
         trigger_europe_pipeline.pipeline,
+        trigger_malaysia_pipeline.pipeline
     ]
     for pipeline in pipelines:
         pipeline.save()
@@ -54,6 +52,7 @@ def calibrate():
     chains = calibrate_pipeline.chains_field.get_value()
     runtime = calibrate_pipeline.runtime_field.get_value()
     burn_in = calibrate_pipeline.burn_in_field.get_value()
+    sample_size = calibrate_pipeline.sample_size_field.get_value()
     branch = calibrate_pipeline.branch_field.get_value()
     trigger_downstream = calibrate_pipeline.trigger_field.get_value()
     is_spot = calibrate_pipeline.spot_field.get_value()
@@ -88,6 +87,7 @@ def calibrate():
             meta={
                 fp.run_id_field.key: run_id,
                 fp.burn_in_field.key: burn_in,
+                fp.sample_size_field.key: sample_size,
                 fp.use_latest_code_field.key: fp.use_latest_code_field.default,
                 fp.trigger_field.key: fp.trigger_field.get_option(trigger_downstream),
                 fp.spot_field.key: fp.spot_field.get_option(is_spot),
@@ -105,6 +105,7 @@ def full():
     build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
     run_id = full_pipeline.run_id_field.get_value()
     burn_in = full_pipeline.burn_in_field.get_value()
+    sample_size = full_pipeline.sample_size_field.get_value()
     use_latest_code = full_pipeline.use_latest_code_field.get_value()
     trigger_downstream = full_pipeline.trigger_field.get_value()
     is_spot = full_pipeline.spot_field.get_value()
@@ -118,6 +119,7 @@ def full():
         job=job_name,
         run=run_id,
         burn_in=burn_in,
+        sample=sample_size,
         latest_code=use_latest_code,
         branch="master",
         is_spot=is_spot,
@@ -159,18 +161,6 @@ def powerbi():
     logger.info("Results available at %s", get_run_url(run_id))
 
 
-@buildkite_cli.command()
-def dhhs():
-    """Run a DHHS post-processing job in Buildkite"""
-    logger.info("Gathering data for DHHS post processing.")
-    build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
-    git_commit = dhhs_pipeline.commit_field.get_value()
-    is_spot = dhhs_pipeline.spot_field.get_value()
-    params_str = pprint.pformat({f.key: f.get_value() for f in dhhs_pipeline.fields}, indent=2)
-    logger.info("Running DHHS post processing job %s with params:\n%s\n", build_number, params_str)
-    aws.run_dhhs(job=build_number, commit=git_commit, branch="master", is_spot=is_spot)
-
-
 def get_run_url(run_id: str):
     app_name, region_name, timestamp, commit = read_run_id(run_id)
     return f"http://www.autumn-data.com/app/{app_name}/region/{region_name}/run/{timestamp}-{commit}.html"
@@ -210,6 +200,16 @@ def trigger_philippines():
     _trigger_models(Region.PHILIPPINES_REGIONS, trigger_philippines_pipeline)
 
 
+@trigger.command("malaysia")
+def trigger_malaysia():
+    """
+    Trigger all Malaysia models
+    """
+    logger.info("Triggering all Malaysia regional calibrations.")
+    _trigger_models(Region.MALAYSIA_REGIONS, trigger_malaysia_pipeline)
+
+
+
 def _trigger_models(regions, p):
 
     logger.info("Gathering data for calibration trigger.")
@@ -217,6 +217,7 @@ def _trigger_models(regions, p):
     chains = p.chains_field.get_value()
     runtime = p.runtime_field.get_value()
     burn_in = p.burn_in_field.get_value()
+    sample_size = p.sample_size_field.get_value()
     branch = p.branch_field.get_value()
     is_spot = p.spot_field.get_value()
     trigger_downstream = p.trigger_field.get_value()
@@ -239,6 +240,7 @@ def _trigger_models(regions, p):
                 cp.branch_field.key: branch,
                 cp.runtime_field.key: runtime / 3600.0,
                 cp.burn_in_field.key: burn_in,
+                cp.sample_size_field.key: sample_size,
                 cp.trigger_field.key: cp.trigger_field.get_option(trigger_downstream),
                 cp.spot_field.key: cp.spot_field.get_option(is_spot),
             },

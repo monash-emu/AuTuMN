@@ -1,7 +1,7 @@
 import numpy as np
 
 from autumn.inputs.database import get_input_db
-from autumn.tool_kit.utils import apply_moving_average
+from autumn.utils.utils import apply_moving_average
 
 
 def get_phl_subregion_testing_numbers(region):

@@ -1,28 +1,30 @@
-from summer2 import CompartmentalModel
-
-from autumn import inputs
-from autumn.environment.seasonality import get_seasonal_forcing
+from summer import CompartmentalModel
 
 from apps.covid_19.constants import (
-    Compartment,
     COMPARTMENTS,
-    INFECTIOUS_COMPARTMENTS,
     DISEASE_COMPARTMENTS,
+    INFECTIOUS_COMPARTMENTS,
+    Compartment,
 )
 from apps.covid_19.model import preprocess
-from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.model.stratifications.agegroup import get_agegroup_strat, AGEGROUP_STRATA
-from apps.covid_19.model.stratifications.history import get_history_strat
-from apps.covid_19.model.stratifications.cluster import (
-    get_cluster_strat,
-    apply_post_cluster_strat_hacks,
-)
-from apps.covid_19.model.stratifications.immunity import get_immunity_strat
-from apps.covid_19.model.stratifications.clinical import get_clinical_strat
 from apps.covid_19.model.outputs.standard import request_standard_outputs
 from apps.covid_19.model.outputs.victorian import request_victorian_outputs
-
-from apps.covid_19.model.preprocess.vaccination import get_vacc_roll_out_function
+from apps.covid_19.model.parameters import Parameters
+from apps.covid_19.model.preprocess.seasonality import get_seasonal_forcing
+from apps.covid_19.model.preprocess.vaccination import add_vaccination_flows
+from apps.covid_19.model.stratifications.agegroup import (
+    AGEGROUP_STRATA,
+    get_agegroup_strat,
+)
+from apps.covid_19.model.stratifications.clinical import get_clinical_strat
+from apps.covid_19.model.stratifications.cluster import (
+    apply_post_cluster_strat_hacks,
+    get_cluster_strat,
+)
+from apps.covid_19.model.stratifications.history import get_history_strat
+from apps.covid_19.model.stratifications.immunity import get_immunity_strat
+from autumn import inputs
+from autumn.curve.scale_up import scale_up_function
 
 
 def build_model(params: dict) -> CompartmentalModel:
@@ -65,6 +67,29 @@ def build_model(params: dict) -> CompartmentalModel:
     else:
         # Use a static contact rate.
         contact_rate = params.contact_rate
+
+    # Adjust contact rate for Variant of Concerns
+    if params.voc_emmergence:
+        voc_multiplier = scale_up_function(
+            x=[params.voc_emmergence.start_time, params.voc_emmergence.end_time],
+            y=[
+                1.0,
+                1.0
+                + params.voc_emmergence.final_proportion
+                * (params.voc_emmergence.contact_rate_multiplier - 1.0),
+            ],
+            method=4,
+        )
+        raw_contact_rate = contact_rate
+        if isinstance(contact_rate, float):
+
+            def contact_rate(t):
+                return raw_contact_rate * voc_multiplier(t)
+
+        else:
+
+            def contact_rate(t):
+                return raw_contact_rate(t) * voc_multiplier(t)
 
     model.add_infection_frequency_flow(
         name="infection",
@@ -114,18 +139,6 @@ def build_model(params: dict) -> CompartmentalModel:
             dest=Compartment.SUSCEPTIBLE,
         )
 
-    # Optionally add an importation flow, where we ship in infected people from overseas.
-    if params.importation:
-        get_importation_rate = preprocess.importation.build_importation_rate_func(
-            params, AGEGROUP_STRATA, total_pops
-        )
-        # Imported people are infectious (ie. late active).
-        model.add_importation_flow(
-            name="importation",
-            num_imported=get_importation_rate,
-            dest=Compartment.LATE_ACTIVE,
-        )
-
     # Stratify the model by age group.
     age_strat = get_agegroup_strat(params, total_pops)
     model.stratify_with(age_strat)
@@ -138,19 +151,10 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.stratify_by_immunity:
         immunity_strat = get_immunity_strat(params)
         model.stratify_with(immunity_strat)
-
         if params.vaccination:
-            vaccination_roll_out_function = \
-                get_vacc_roll_out_function(params.vaccination.roll_out_function)
-            for compartment in COMPARTMENTS:
-                model.add_fractional_flow(
-                    name="vaccination",
-                    fractional_rate=vaccination_roll_out_function,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata={"immunity": "unvaccinated"},
-                    dest_strata={"immunity": "vaccinated"},
-                )
+            vacc_params = params.vaccination
+            for roll_out_component in vacc_params.roll_out_components:
+                add_vaccination_flows(model, roll_out_component, age_strat.strata)
 
     # Infection history stratification
     if params.stratify_by_infection_history:

@@ -1,9 +1,9 @@
 import os
+
 import numpy as np
 
+from apps.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
 from autumn import inputs
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
-
 
 HOSPITAL_DATA_DIR = os.path.join("hospitalisation_data")
 country_mapping = {"united-kingdom": "The United Kingdom"}
@@ -39,22 +39,22 @@ def get_prior_distributions_for_opti():
             "distri_params": [0.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
         },
         {
-            "param_name": "case_detection.start_value",
+            "param_name": "case_detection.lower_asymptote",
             "distribution": "uniform",
             "distri_params": [0.0, 0.30],
         },
         {
-            "param_name": "case_detection.maximum_gradient",
+            "param_name": "case_detection.shape",
             "distribution": "uniform",
             "distri_params": [0.03, 0.15],
         },
         {
-            "param_name": "case_detection.max_change_time",
+            "param_name": "case_detection.inflection_time",
             "distribution": "uniform",
             "distri_params": [100, 250],
         },
         {
-            "param_name": "case_detection.end_value",
+            "param_name": "case_detection.upper_asymptote",
             "distribution": "uniform",
             "distri_params": [0.10, 0.99],
         },
@@ -89,7 +89,7 @@ def get_prior_distributions_for_opti():
         },
         # Micro-distancing
         {
-            "param_name": "mobility.microdistancing.behaviour.parameters.c",
+            "param_name": "mobility.microdistancing.behaviour.parameters.inflection_time",
             "distribution": "uniform",
             "distri_params": [60, 130],
         },
@@ -99,20 +99,20 @@ def get_prior_distributions_for_opti():
             "distri_params": [0.25, 0.80],
         },
         {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
             "distribution": "uniform",
             "distri_params": [130, 250],
         },
         {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.sigma",
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
             "distribution": "uniform",
             "distri_params": [0.4, 1.0],
         },
         {
             "param_name": "elderly_mixing_reduction.relative_reduction",
             "distribution": "uniform",
-            "distri_params": [0., 0.5],
-        }
+            "distri_params": [0.0, 0.5],
+        },
     ]
     return prior_list
 
@@ -139,9 +139,7 @@ def get_weekly_summed_targets(times, values):
 
 def get_country_population_size(country):
     iso_3 = inputs.demography.queries.get_iso3_from_country_name(country)
-    return sum(inputs.get_population_by_agegroup(
-            ["0"], iso_3, None, year=2020
-        ))
+    return sum(inputs.get_population_by_agegroup(["0"], iso_3, None, year=2020))
 
 
 def get_scenario_mapping():
@@ -170,7 +168,11 @@ def get_scenario_mapping_reverse(mode, duration, objective):
     scenario_mapping = get_scenario_mapping()
     found_sc_idx = False
     for _sc_idx, settings in scenario_mapping.items():
-        if settings["mode"] == mode and settings["duration"] == duration and settings["objective"] == objective:
+        if (
+            settings["mode"] == mode
+            and settings["duration"] == duration
+            and settings["objective"] == objective
+        ):
             found_sc_idx = True
             return _sc_idx
 
@@ -179,7 +181,7 @@ def get_scenario_mapping_reverse(mode, duration, objective):
 
 
 def get_wi_scenario_mapping(vary_final_mixing=False):
-    final_mixings = [1., .9, .8, .7] if vary_final_mixing else [1.]
+    final_mixings = [1.0, 0.9, 0.8, 0.7] if vary_final_mixing else [1.0]
     scenario_mapping = {}
     _sc_idx = 1
     for _final_mixing in final_mixings:
@@ -188,23 +190,26 @@ def get_wi_scenario_mapping(vary_final_mixing=False):
                 scenario_mapping[_sc_idx] = {
                     "duration": _duration,
                     "objective": _objective,
-                    "final_mixing": _final_mixing
+                    "final_mixing": _final_mixing,
                 }
                 _sc_idx += 1
 
     return scenario_mapping
 
 
-def get_wi_scenario_mapping_reverse(duration, objective, final_mixing=1.):
+def get_wi_scenario_mapping_reverse(duration, objective, final_mixing=1.0):
 
     wi_scenario_mapping = get_wi_scenario_mapping(vary_final_mixing=True)
 
     found_wi_sc_idx = False
     for _wi_sc_idx, settings in wi_scenario_mapping.items():
-        if settings["final_mixing"] == final_mixing and settings["duration"] == duration and settings["objective"] == objective:
+        if (
+            settings["final_mixing"] == final_mixing
+            and settings["duration"] == duration
+            and settings["objective"] == objective
+        ):
             found_wi_sc_idx = True
             return _wi_sc_idx
 
     if not found_wi_sc_idx:
         return None
-

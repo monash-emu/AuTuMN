@@ -1,28 +1,27 @@
-from matplotlib import pyplot
-import matplotlib.patches as patches
 import os
-import yaml
+
 import matplotlib as mpl
-import seaborn as sns
+import matplotlib.patches as patches
 import numpy as np
+import seaborn as sns
+import yaml
+from matplotlib import pyplot
 
 from apps.covid_19.mixing_optimisation.constants import (
-    PHASE_2_START_TIME,
-    PHASE_2_DURATION,
     DURATION_PHASES_2_AND_3,
     OPTI_REGIONS,
+    PHASE_2_DURATION,
+    PHASE_2_START_TIME,
 )
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
-from apps.covid_19.mixing_optimisation.utils import get_wi_scenario_mapping_reverse
-
+from apps.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
 from apps.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows import (
-    get_output_data,
     apply_scenario_mask,
+    get_output_data,
 )
-
-from settings import BASE_PATH
-from autumn.db.load import load_derived_output_tables, find_db_paths
+from apps.covid_19.mixing_optimisation.utils import get_wi_scenario_mapping_reverse
 from autumn.db import Database
+from autumn.db.load import find_db_paths, load_derived_output_tables
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

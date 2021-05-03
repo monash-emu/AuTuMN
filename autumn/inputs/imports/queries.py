@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 from autumn.region import Region
 from settings import INPUT_DATA_PATH

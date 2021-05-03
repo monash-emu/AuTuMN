@@ -1,11 +1,10 @@
 from remote.buildkite.buildkite import (
-    Pipeline,
+    BooleanInputField,
     CommandStep,
     InputStep,
+    Pipeline,
     TextInputField,
-    BooleanInputField,
 )
-
 
 run_id_field = TextInputField(
     key="run-id",

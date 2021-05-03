@@ -2,7 +2,7 @@ import os
 
 import yaml
 
-from autumn.tool_kit.params import update_params, merge_dicts, load_param_file
+from autumn.utils.params import load_param_file, merge_dicts, update_params
 
 
 def test_load_param_file__with_no_parent(tmpdir):

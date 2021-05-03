@@ -1,0 +1,17 @@
+description: BASELINE
+parent: apps/covid_19/regions/malaysia/params/default.yml
+
+contact_rate: 0.032
+
+time:
+  start: 290
+
+population:
+  region: Johor
+  year: 2019
+
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        upper_asymptote: 0.32

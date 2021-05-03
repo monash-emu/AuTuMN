@@ -1,18 +1,16 @@
 from types import MethodType
-from typing import List
 
 import numpy as np
+from summer import CompartmentalModel, Multiply, Stratification
 
-from summer2 import CompartmentalModel, Stratification, Multiply
-
-from autumn import inputs
-from autumn.mixing.mixing import create_assortative_matrix
-from autumn.region import Region
-
-from apps.covid_19.constants import Compartment, COMPARTMENTS
+from apps.covid_19.constants import COMPARTMENTS, Compartment
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.model.preprocess.victorian_mixing import build_victorian_mixing_matrix_func
+from apps.covid_19.model.preprocess.victorian_mixing import (
+    build_victorian_mixing_matrix_func,
+)
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from autumn import inputs
+from autumn.region import Region
 
 CLUSTER_STRATA = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 
@@ -60,6 +58,7 @@ def get_cluster_strat(params: Parameters) -> Stratification:
 
 
 def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel):
+    metro_clusters = [region.replace("-", "_") for region in Region.VICTORIA_METRO]
     regional_clusters = [region.replace("-", "_") for region in Region.VICTORIA_RURAL]
     vic = params.victorian_clusters
     country = params.country
@@ -70,6 +69,10 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
             [comp.has_stratum("cluster", cluster) for cluster in regional_clusters]
         ) and not comp.has_name(Compartment.SUSCEPTIBLE):
             model.initial_population[i_comp] = 0.0
+        elif any(
+            [comp.has_stratum("cluster", cluster) for cluster in metro_clusters]
+        ) and not comp.has_name(Compartment.SUSCEPTIBLE):
+            model.initial_population[i_comp] *= 9.0 / 4.0
 
     """
     Hack in a custom (144x144) mixing matrix where each region is adjusted individually
@@ -81,8 +84,11 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
 
     # Replace regional Victoria maximum effect calibration parameters with the metro values for consistency
     for microdist_process in ["face_coverings", "behaviour"]:
-        vic.regional.mobility.microdistancing[f"{microdist_process}_adjuster"].parameters.effect = \
-            vic.metro.mobility.microdistancing[f"{microdist_process}_adjuster"].parameters.effect
+        vic.regional.mobility.microdistancing[
+            f"{microdist_process}_adjuster"
+        ].parameters.effect = vic.metro.mobility.microdistancing[
+            f"{microdist_process}_adjuster"
+        ].parameters.effect
 
     # Get new mixing matrix
     static_mixing_matrix = inputs.get_country_mixing_matrix("all_locations", country.iso3)
@@ -94,3 +100,28 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
         intercluster_mixing_matrix,
     )
     setattr(model, "_get_mixing_matrix", MethodType(get_mixing_matrix, model))
+
+
+def create_assortative_matrix(off_diagonal_values, matrix_dimensions):
+    """
+    Create a matrix with all values the same except for the diagonal elements, which are greater, according to the
+    requested value to go in the off-diagonal elements. To be used for creating a standard assortative mixing matrix
+    according to any number of interacting groups.
+    """
+
+    assert 0.0 <= off_diagonal_values <= 1.0 / len(matrix_dimensions)
+    off_diagonal_elements = (
+        np.ones([len(matrix_dimensions), len(matrix_dimensions)]) * off_diagonal_values
+    )
+    diagonal_elements = np.eye(len(matrix_dimensions)) * (
+        1.0 - len(matrix_dimensions) * off_diagonal_values
+    )
+    assortative_matrix = off_diagonal_elements + diagonal_elements
+
+    # Ensure all rows and columns sum to one
+    for i_row in range(len(assortative_matrix)):
+        assert abs(sum(assortative_matrix[i_row, :]) - 1.0) <= 1e-6
+    for i_col in range(len(assortative_matrix)):
+        assert abs(sum(assortative_matrix[:, i_col]) - 1.0) <= 1e-6
+
+    return assortative_matrix

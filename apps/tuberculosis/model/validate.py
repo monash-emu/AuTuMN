@@ -1,4 +1,4 @@
-from autumn.tool_kit import schema_builder as sb
+from autumn.utils import schema_builder as sb
 
 validate_params = sb.build_validator(
     # Country info
@@ -55,7 +55,7 @@ validate_params = sb.build_validator(
     pt_efficacy=float,
     pt_destination_compartment=str,
     hh_contacts_pt=dict,
-    awareness_raising=dict,
+    awareness_raising=sb.Nullable(dict),
     # other
     inflate_reactivation_for_diabetes=bool,
     extra_params=dict,

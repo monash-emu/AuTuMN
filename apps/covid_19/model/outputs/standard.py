@@ -1,17 +1,19 @@
 from typing import List
+
 import numpy as np
+from summer import CompartmentalModel
 
-from summer2 import CompartmentalModel
-
-from autumn import inputs
-
-from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.constants import Compartment, Clinical, COMPARTMENTS, NOTIFICATION_STRATA
+from apps.covid_19.constants import (
+    COMPARTMENTS,
+    NOTIFICATION_STRATA,
+    Clinical,
+    Compartment,
+)
 from apps.covid_19.mixing_optimisation.constants import OPTI_ISO3S, Region
-from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
+from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
-
-from apps.covid_19.model.preprocess.importation import build_abs_detection_proportion_imported
+from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
+from autumn import inputs
 
 
 def request_standard_outputs(
@@ -62,46 +64,38 @@ def request_standard_outputs(
     hospital_sources = []
     icu_sources = []
     for agegroup in AGEGROUP_STRATA:
-        icu_sources.append(
-            f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}"
-        )
+        icu_sources.append(f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}")
         hospital_sources += [
             f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}",
-            f"progressXagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}"
+            f"progressXagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
         ]
 
     model.request_aggregate_output(
         name="new_hospital_admissions",
         sources=hospital_sources,
     )
-    model.request_aggregate_output(
-        name="new_icu_admissions", sources=icu_sources
-    )
+    model.request_aggregate_output(name="new_icu_admissions", sources=icu_sources)
 
     # Get notifications, which may included people detected in-country as they progress, or imported cases which are detected.
-    notification_sources = [f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_STRATA]
+    notification_sources = [
+        f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_STRATA
+    ]
     model.request_aggregate_output(name="local_notifications", sources=notification_sources)
-    if params.importation:
-        # Include *detected* imported cases in notifications.
-        model.request_output_for_flow(
-            name="_importation", flow_name="importation", save_results=False
-        )
-        get_abs_detection_proportion_imported = build_abs_detection_proportion_imported(
-            params, AGEGROUP_STRATA
-        )
-        props_imports_detected = np.array(
-            [get_abs_detection_proportion_imported(t) for t in model.times]
-        )
-        get_count_detected_imports = lambda imports: imports * props_imports_detected
-        notification_sources = [*notification_sources, "_importation_detected"]
-        model.request_function_output(
-            name="_importation_detected",
-            func=get_count_detected_imports,
-            sources=["_importation"],
-            save_results=False,
-        )
+    model.request_aggregate_output(
+        name="notifications", sources=notification_sources
+    )  # Used to be different coz we had imports.
 
-    model.request_aggregate_output(name="notifications", sources=notification_sources)
+    # Notification by age group
+    for agegroup in AGEGROUP_STRATA:
+        sympt_isolate_name = f"progressXagegroup_{agegroup}Xclinical_sympt_isolate"
+        hospital_non_icu_name = f"progressXagegroup_{agegroup}Xclinical_hospital_non_icu"
+        icu_name = f"progressXagegroup_{agegroup}Xclinical_icu"
+
+        model.request_function_output(
+            name=f"notificationsXagegroup_{agegroup}",
+            sources=[sympt_isolate_name, hospital_non_icu_name, icu_name],
+            func=lambda sympt, hosp, icu: sympt + hosp + icu,
+        )
 
     # Infection deaths.
     model.request_output_for_flow(name="infection_deaths", flow_name="infect_death")
@@ -193,7 +187,7 @@ def request_standard_outputs(
         ],
     )
 
-    # Proprotion seropositive
+    # Proportion seropositive
     model.request_output_for_compartments(
         name="_total_population", compartments=COMPARTMENTS, save_results=False
     )
@@ -226,3 +220,6 @@ def request_standard_outputs(
                 sources=[recovered_name, total_name],
                 func=lambda recovered, total: recovered / total,
             )
+
+    if params.stratify_by_immunity and params.vaccination:
+        model.request_output_for_flow(name="vaccination", flow_name="vaccination")

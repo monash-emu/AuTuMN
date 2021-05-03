@@ -1,20 +1,12 @@
-description: 30% return to normal (work and other locations)
-mobility:
-  mixing:
-    other_locations:
-      append: true
-      times:
-      - 426
-      values:
-      - - close_gap_to_1
-        - 0.3
-    work:
-      append: true
-      times:
-      - 426
-      values:
-      - - close_gap_to_1
-        - 0.3
+description: 13% coverage / 70% efficacy / infection-preventing vaccine
 parent: apps/covid_19/regions/philippines/params/default.yml
 time:
-  start: 424
+  start: 486
+vaccination:
+  infection_efficacy: 0.7
+  roll_out_components:
+  - supply_period_coverage:
+      coverage: 0.13
+      end_time: 756
+      start_time: 486
+  severity_efficacy: 0.0

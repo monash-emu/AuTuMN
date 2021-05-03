@@ -1,10 +1,10 @@
+import logging
 import os
 import subprocess
-import logging
 
 from fabric import Connection
 
-from utils.runs import read_run_id, build_run_id
+from utils.runs import build_run_id, read_run_id
 
 logger = logging.getLogger(__name__)
 
@@ -17,29 +17,13 @@ def cleanup_builds(instance):
         conn.run("sudo rm -rf /var/lib/buildkite-agent/builds/", echo=True)
 
 
-def run_dhhs(instance, commit: str, branch: str):
-    """Run DHHS processing on the remote server"""
-    msg = "Running DHHS processing for commit %s on AWS instance %s"
-    logger.info(msg, commit, instance["InstanceId"])
-    with get_connection(instance) as conn:
-        update_repo(conn, branch=branch)
-        install_requirements(conn)
-        read_secrets(conn)
-        build_input_db(conn)
-        pipeline_name = "dhhs"
-        pipeline_args = {
-            "commit": commit,
-        }
-        run_task_pipeline(conn, pipeline_name, pipeline_args)
-        logger.info("DHHS processing completed for commit %s", commit)
-
-
 def run_powerbi(instance, run_id: str, branch: str):
     """Run PowerBI processing on the remote server"""
     run_id = run_id.lower()
     msg = "Running PowerBI processing for run %s on AWS instance %s"
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
+        print_hostname(conn)
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
@@ -52,12 +36,15 @@ def run_powerbi(instance, run_id: str, branch: str):
         logger.info("PowerBI processing completed for %s", run_id)
 
 
-def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, branch: str):
+def run_full_model(
+    instance, run_id: str, burn_in: int, sample: int, use_latest_code: bool, branch: str
+):
     """Run full model job on the remote server"""
     run_id = run_id.lower()
     msg = "Running full models for run %s burn-in %s on AWS instance %s"
     logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:
+        print_hostname(conn)
         if use_latest_code:
             update_repo(conn, branch=branch)
         else:
@@ -70,6 +57,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
         pipeline_args = {
             "run": run_id,
             "burn": burn_in,
+            "sample": sample,
         }
         run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Full model runs completed for %s", run_id)
@@ -88,6 +76,7 @@ def run_calibration(
     logger.info(msg, app_name, region_name, num_chains, runtime, instance["InstanceId"])
     run_id = None
     with get_connection(instance) as conn:
+        print_hostname(conn)
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
@@ -114,6 +103,16 @@ def run_task_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict)
         conn.run(cmd_str, echo=True)
 
     logger.info("Finished running task pipleine %s", pipeline_name)
+
+
+LOGS_URL = "https://monashemu.grafana.net/explore?orgId=1&left=%5B%22now-1h%22,%22now%22,%22grafanacloud-monashemu-logs%22,%7B%22expr%22:%22%7Bjob%3D%5C%22app%5C%22%7D%20%7C%3D%20%5C%22${HOSTNAME}%5C%22%22%7D%5D"
+METRICS_URL = "https://monashemu.grafana.net/d/SkUUUHyMk/nodes?orgId=1&refresh=30s&var-datasource=grafanacloud-monashemu-prom&var-instance=${HOSTNAME}:12345"
+
+
+def print_hostname(conn: Connection):
+    conn.run('echo "Running on host $HOSTNAME"', echo=True)
+    conn.run(f'echo "METRICS: {METRICS_URL}"', echo=True)
+    conn.run(f'echo "LOGS: {LOGS_URL}"', echo=True)
 
 
 def set_run_id(conn: Connection, run_id: str):
@@ -162,7 +161,7 @@ def build_input_db(conn: Connection):
     """Builds autumn input database"""
     logger.info("Building input database.")
     with conn.cd(CODE_PATH):
-        conn.run("./env/bin/python -m autumn db build", echo=True)
+        conn.run("./env/bin/python -W ignore -m autumn db build", echo=True)
 
 
 def install_requirements(conn: Connection):

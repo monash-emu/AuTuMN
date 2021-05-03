@@ -1,19 +1,24 @@
-description: no physical distancing
+description: schools re-open
 parent: apps/covid_19/regions/victoria/params/default.yml
 
 time:
-  start: 189  # Day before stage 3 introduced in metro Melbourne and Mitchell (but after postcode restrictions)
+  start: 189
+  end: 426  # 1st March 2021
 
 victorian_clusters:
   metro:
     mobility:
-      microdistancing:
-        behaviour:
-          parameters:
-            upper_asymptote: 0.2803973
+      mixing:
+        school:
+          times:
+            - 2020-07-09
+          values:
+            - 1.
   regional:
     mobility:
-      microdistancing:
-        behaviour:
-          parameters:
-            upper_asymptote: 0.2803973
+      mixing:
+        school:
+          times:
+            - 2020-07-09
+          values:
+            - 1.

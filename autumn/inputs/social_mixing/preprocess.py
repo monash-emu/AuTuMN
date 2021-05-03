@@ -5,10 +5,8 @@ import os
 
 import pandas as pd
 
-
-from settings import INPUT_DATA_PATH
 from autumn.db import Database
-
+from settings import INPUT_DATA_PATH
 
 MIXING_DIRPATH = os.path.join(INPUT_DATA_PATH, "social-mixing")
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
@@ -47,20 +45,40 @@ def preprocess_social_mixing(input_db: Database, country_df):
                 input_db.dump_df("social_mixing", mix_df)
 
     # Next gen social mixing
+    original_mm = input_db.query("social_mixing")
+
     df = pd.read_csv(os.path.join(MIXING_DIRPATH, "synthetic_contacts_2020.csv"))
     df = df[df.setting == "overall"]
     df.drop(columns="setting", inplace=True)
+    df.replace(
+        {
+            "0 to 4": "00 to 04",
+            "5 to 9": "05 to 09",
+            "all": "all_locations",
+            "others": "other_locations",
+        },
+        inplace=True,
+    )
+
+    # The contactor is in j (columns) and the contactee is in i (rows)
     df = df.pivot_table(
-        index=["iso3c", "location_contact", "age_contactor"],
-        columns="age_cotactee",
+        index=["iso3c", "location_contact", "age_cotactee"],
+        columns="age_contactor",
         values="mean_number_of_contacts",
     )
     df = df.reset_index()
-    cols = list(df.columns[3:])
+    df.drop(columns="age_cotactee", inplace=True)
+
+    cols = list(df.columns[2:])
     new_col = ["X" + str(x) for x in range(1, len(cols) + 1)]
     replace_col = dict(zip(cols, new_col))
     df.rename(columns=replace_col, inplace=True)
     df.rename(columns={"iso3c": "iso3", "location_contact": "location"}, inplace=True)
+    
+    iso3_diff = set(original_mm.iso3).difference(df.iso3)
+    iso3_mask = original_mm.iso3.isin(iso3_diff)
+    df = df.append(original_mm[iso3_mask], ignore_index=True)
+
     input_db.dump_df("social_mixing_2020", df)
 
 

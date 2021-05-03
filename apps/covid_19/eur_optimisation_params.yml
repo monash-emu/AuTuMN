@@ -3,7 +3,7 @@ parent: apps/covid_19/params.yml
 
 time:
   start: 0.
-  end: 300.
+  end: 500.
 
 infectious_seed: 200
 
@@ -75,13 +75,13 @@ mobility:
     home: []
   smooth_google_data: true
   square_mobility_effect: true
-  microdistancing:   # increasing function, starting from sigma=0 (no microdistancing) ending at upper_asymptote
+  microdistancing:   # increasing function, starting from 0 (no microdistancing) ending at upper_asymptote
     behaviour:
       function_type: tanh
       parameters:
-        b: .05
-        c: 90.
-        sigma: 0.
+        shape: .05
+        inflection_time: 90.
+        lower_asymptote: 0.
         upper_asymptote: .4
       locations:
         - other_locations
@@ -90,9 +90,9 @@ mobility:
     behaviour_adjuster:
       function_type: tanh
       parameters:
-        b: -0.05
-        c: 200.
-        sigma: 0.6
+        shape: -0.05
+        inflection_time: 200.
+        lower_asymptote: 0.6
         upper_asymptote: 1.
       locations:
         - other_locations

@@ -1,8 +1,10 @@
-import streamlit as st
-from autumn.tool_kit.params import load_params
-from autumn import plots, inputs
-from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 import random
+
+import streamlit as st
+
+from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
+from autumn import inputs, plots
+from autumn.utils.params import load_params
 
 PLOT_FUNCS = {}
 
@@ -29,9 +31,16 @@ def multi_country_cdr(
         # Extract parameters relevant to this function
         region = region_name[i_region].replace("-", "_")
         params = load_params(app_name, region)
-        iso3, testing_year, assumed_tests_parameter, smoothing_period, agegroup_params, time_params, times, \
-        agegroup_strata = \
-            get_cdr_constants(params["default"])
+        (
+            iso3,
+            testing_year,
+            assumed_tests_parameter,
+            smoothing_period,
+            agegroup_params,
+            time_params,
+            times,
+            agegroup_strata,
+        ) = get_cdr_constants(params["default"])
         pop_region = params["default"]["population"]["region"]
         pop_year = params["default"]["population"]["year"]
 
@@ -58,7 +67,7 @@ def multi_country_cdr(
                     smoothing_period,
                     iso3,
                     testing_pops,
-                    subregion=testing_region
+                    subregion=testing_region,
                 )
             )
     plots.calibration.plots.plot_multi_cdr_curves(

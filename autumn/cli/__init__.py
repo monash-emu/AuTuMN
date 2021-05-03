@@ -8,7 +8,6 @@ You can access this script from your CLI by running:
 """
 import click
 
-
 from .database import db
 from .secrets import secrets
 
@@ -20,4 +19,3 @@ def cli():
 
 cli.add_command(db)
 cli.add_command(secrets)
-cli()

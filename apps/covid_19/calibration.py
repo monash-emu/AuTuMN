@@ -1,22 +1,20 @@
 import logging
-import numpy as np
 from itertools import accumulate
 
-from autumn.calibration import Calibration
-from autumn.tool_kit.params import load_params
-from autumn.calibration.utils import (
-    ignore_calibration_target_before_date,
-    add_dispersion_param_prior_for_gaussian,
-)
-from autumn.region import Region
+import numpy as np
 
 from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
-from autumn.tool_kit.params import load_targets
+from autumn.calibration import Calibration
+from autumn.calibration.utils import (
+    add_dispersion_param_prior_for_gaussian,
+    ignore_calibration_target_before_date,
+)
+from autumn.region import Region
+from autumn.utils.params import load_params, load_targets
 
 from .model import build_model
 
 N_ITERS = 100000
-N_BURNED = 0
 N_CHAINS = 1
 
 logger = logging.getLogger(__name__)
@@ -78,7 +76,7 @@ def run_calibration_chain(
     par_priors,
     target_outputs,
     mode="autumn_mcmc",
-    adaptive_proposal=False,
+    adaptive_proposal=True,
 ):
     """
     Run a calibration chain for the covid model
@@ -102,12 +100,11 @@ def run_calibration_chain(
         adaptive_proposal=adaptive_proposal,
         initialisation_type=params["default"]["metropolis_initialisation_type"],
         metropolis_init_rel_step_size=params["default"]["metropolis_init_rel_step_size"],
+        n_steps_fixed_proposal=params["default"]["n_steps_fixed_proposal"],
     )
     logger.info("Starting calibration.")
     calib.run_fitting_algorithm(
         run_mode=mode,
-        n_iterations=N_ITERS,
-        n_burned=N_BURNED,
         n_chains=N_CHAINS,
         available_time=max_seconds,
         haario_scaling_factor=params["default"]["haario_scaling_factor"],
@@ -225,7 +222,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
-            "distri_params": [10.0, 100.0],
+            "distri_params": [1.0, 100.0],
         },
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
@@ -242,8 +239,23 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
+        },
+        {
+            "param_name": "voc_emmergence.end_time",
+            "distribution": "uniform",
+            "distri_params": [426, 731],  # 1 Mar 2021 - 31 Dec 2021
+        },
+        {
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
+            "distribution": "uniform",
+            "distri_params": [0.8, 1.0],
+        },
+        {
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
+            "distribution": "uniform",
+            "distri_params": [367, 425],  # 1 Jan - 28 Feb
         },
     ]
 
@@ -253,12 +265,16 @@ def add_standard_philippines_targets(targets):
     # Ignore notification values before day 100
     notifications = ignore_calibration_target_before_date(targets["notifications"], 100)
 
+    n = len(notifications["times"])
+    notification_weights = [1. for _ in range(n - 60)] + [5. for _ in range(60)]  # last 60 days are weighted
+
     return [
         {
             "output_key": "notifications",
             "years": notifications["times"],
             "values": notifications["values"],
             "loglikelihood_distri": "negative_binomial",
+            "time_weights": notification_weights
         },
         {
             "output_key": "icu_occupancy",
@@ -309,11 +325,6 @@ def add_standard_victoria_params(params, region, include_micro=True):
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
             "distri_params": [0.2, 0.5],
-        },
-        {
-            "param_name": "importation.movement_prop",
-            "distribution": "uniform",
-            "distri_params": [0.05, 0.4],
         },
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
@@ -416,16 +427,16 @@ European countries for the optimisation project
 """
 
 
-def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
+def get_targets_and_priors_for_opti(country, likelihood_type="trunc_normal", latest_calibration_time=366):
     targets = load_targets("covid_19", country)
 
     hospital_targets = [t for t in list(targets.keys()) if "hospital" in t or "icu" in t]
     if len(hospital_targets) > 1:
         hospital_targets = [t for t in list(targets.keys()) if "new_" in t]
 
-    notifications = targets["notifications"]
-    deaths = targets["infection_deaths"]
-    hospitalisations = targets[hospital_targets[0]]
+    notifications = truncate_targets_before_time(targets["notifications"], latest_calibration_time)
+    deaths = truncate_targets_before_time(targets["infection_deaths"], latest_calibration_time)
+    hospitalisations = truncate_targets_before_time(targets[hospital_targets[0]], latest_calibration_time)
 
     par_priors = get_prior_distributions_for_opti()
 
@@ -450,6 +461,10 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
         },
     ]
 
+    if likelihood_type == "trunc_normal":
+        for target in target_outputs:
+            target["trunc_range"] = [0, np.inf]
+
     # Add seroprevalence data except for Italy where the survey occurred a long time after the peak and
     # where there is a high risk of participation bias (individuals in isolation if had a positive antibody test).
     if country != "italy":
@@ -459,12 +474,13 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
                 "output_key": "proportion_seropositive",
                 "years": prop_seropositive["times"],
                 "values": prop_seropositive["values"],
-                "loglikelihood_distri": "normal",
+                "loglikelihood_distri": "trunc_normal",
+                "trunc_range": [0., 1.],
                 "sd": 0.04,
             }
         )
 
-    if likelihood_type == "normal":
+    if likelihood_type == "trunc_normal":
         par_priors = add_dispersion_param_prior_for_gaussian(par_priors, target_outputs)
     else:
         for output_name in ["notifications", "infection_deaths", hospital_targets[0]]:
@@ -478,4 +494,14 @@ def truncate_targets_from_time(target, time):
     start_index = next(x[0] for x in enumerate(target["times"]) if x[1] > time)
     target["times"] = target["times"][start_index:]
     target["values"] = target["values"][start_index:]
+    return target
+
+
+def truncate_targets_before_time(target, time):
+    if time is None:
+        return target
+    elif time < max(target["times"]):
+        end_index = next(x[0] for x in enumerate(target["times"]) if x[1] > time)
+        target["times"] = target["times"][:end_index]
+        target["values"] = target["values"][:end_index]
     return target

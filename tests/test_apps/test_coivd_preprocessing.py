@@ -1,8 +1,7 @@
 import numpy as np
 
-
 from apps import covid_19
-from autumn.environment.seasonality import get_seasonal_forcing
+from apps.covid_19.model.preprocess.seasonality import get_seasonal_forcing
 
 
 def test_cdr_intercept():

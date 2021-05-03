@@ -1,11 +1,11 @@
 from copy import deepcopy
 
 import pytest
-from summer.model import StratifiedModel
-from summer2 import CompartmentalModel
+from summer import CompartmentalModel
+from summer.legacy.model import StratifiedModel
 
 from apps import covid_19
-from autumn.tool_kit.utils import merge_dicts
+from autumn.utils.utils import merge_dicts
 
 
 @pytest.mark.local_only

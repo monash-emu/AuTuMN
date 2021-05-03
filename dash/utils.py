@@ -1,11 +1,15 @@
-import streamlit as st
 import base64
+
 import numpy as np
+import streamlit as st
 
 
 def create_downloadable_csv(
-        data_frame_to_download, filename, include_row=True,
-        text="click here to download CSV containing the following data"):
+    data_frame_to_download,
+    filename,
+    include_row=True,
+    text="click here to download CSV containing the following data",
+):
     """
     Create a link for a downloadable CSV file available in the streamlit interface.
     """

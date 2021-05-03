@@ -2,8 +2,9 @@
 Type definition for model parameters
 """
 from datetime import date
-from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, validator, root_validator
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, root_validator, validator
 from pydantic.dataclasses import dataclass
 
 from apps.covid_19.constants import BASE_DATE
@@ -90,9 +91,9 @@ class EmpiricMicrodistancingParams(BaseModel):
 
 
 class TanhMicrodistancingParams(BaseModel):
-    b: float
-    c: float
-    sigma: float
+    shape: float
+    inflection_time: float
+    lower_asymptote: float
     upper_asymptote: float
 
 
@@ -102,8 +103,11 @@ class ConstantMicrodistancingParams(BaseModel):
 
 class MicroDistancingFunc(BaseModel):
     function_type: str
-    parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams]
+    parameters: Union[
+        EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams
+    ]
     locations: List[str]
+
 
 class Mobility(BaseModel):
     """Google mobility params"""
@@ -157,10 +161,10 @@ class InfectionFatality(BaseModel):
 class CaseDetection(BaseModel):
     """Time variant detection of cases"""
 
-    maximum_gradient: float  # The shape parameter to the tanh-based curve
-    max_change_time: float  # Point at which curve inflects
-    start_value: float  # Starting value - lower asymptote for increasing function
-    end_value: float  # End value - upper asymptote for increasing function
+    shape: float  # The shape parameter to the tanh-based curve
+    inflection_time: float  # Point at which curve inflects
+    lower_asymptote: float  # Starting value - lower asymptote for increasing function
+    upper_asymptote: float  # End value - upper asymptote for increasing function
 
 
 class TestingToDetection(BaseModel):
@@ -180,13 +184,6 @@ class SusceptibilityHeterogeneity(BaseModel):
     bins: int
     tail_cut: float
     coeff_var: float
-
-
-class Importation(BaseModel):
-    case_timeseries: TimeSeries
-    quarantine_timeseries: TimeSeries
-    props_by_age: Optional[Dict[str, float]]
-    movement_prop: Optional[float]
 
 
 class MetroClusterStratification(BaseModel):
@@ -209,18 +206,45 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
+class VocEmmergence(BaseModel):
+    """
+    Parameters defining the emergence profile of Variants of Concerns
+    """
+
+    final_proportion: float
+    start_time: float
+    end_time: float
+    contact_rate_multiplier: float
+
+
 class VaccCoveragePeriod(BaseModel):
     """
     Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
     """
+
     coverage: float
     start_time: float
     end_time: float
 
 
+class RollOutFunc(BaseModel):
+    age_min: Optional[float]
+    age_max: Optional[float]
+    supply_period_coverage: Optional[VaccCoveragePeriod]
+    supply_timeseries: Optional[TimeSeries]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_suppy(cls, values):
+        p, ts = values.get("supply_period_coverage"), values.get("supply_timeseries")
+        has_supply = bool(p) != bool(ts)
+        assert has_supply, "Roll out function must have a period or timeseries for supply."
+        return values
+
+
 class Vaccination(BaseModel):
-    efficacy: float
-    roll_out_function: VaccCoveragePeriod
+    infection_efficacy: float
+    severity_efficacy: float
+    roll_out_components: List[RollOutFunc]
 
 
 class ParamConfig:
@@ -238,6 +262,7 @@ class Parameters:
     universal_death_rate: float
     infectious_seed: float
     seasonal_force: Optional[float]  # Seasonal forcing factor
+    voc_emmergence: Optional[VocEmmergence]
     elderly_mixing_reduction: Optional[dict]
     waning_immunity_duration: Optional[float]
     stratify_by_immunity: bool
@@ -246,6 +271,7 @@ class Parameters:
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float
+    n_steps_fixed_proposal: int
     metropolis_initialisation_type: str
     # Modular parameters.
     time: Time
@@ -258,7 +284,6 @@ class Parameters:
     clinical_stratification: ClinicalStratification
     case_detection: CaseDetection
     testing_to_detection: Optional[TestingToDetection]
-    importation: Optional[Importation]
     victorian_clusters: Optional[VictorianClusterStratification]
     # Dummy parameters - not used
     notifications_dispersion_param: float
@@ -269,43 +294,4 @@ class Parameters:
     new_icu_admissions_dispersion_param: float
     infection_deaths_dispersion_param: float
     accum_deaths_dispersion_param: float
-
-    notifications_for_cluster_barwon_south_west_dispersion_param: float
-    notifications_for_cluster_gippsland_dispersion_param: float
-    notifications_for_cluster_hume_dispersion_param: float
-    notifications_for_cluster_loddon_mallee_dispersion_param: float
-    notifications_for_cluster_grampians_dispersion_param: float
-    notifications_for_cluster_north_metro_dispersion_param: float
-    notifications_for_cluster_south_east_metro_dispersion_param: float
-    notifications_for_cluster_south_metro_dispersion_param: float
-    notifications_for_cluster_west_metro_dispersion_param: float
-
-    accum_hospital_admissions_for_cluster_north_metro_dispersion_param: float
-    accum_hospital_admissions_for_cluster_south_east_metro_dispersion_param: float
-    accum_hospital_admissions_for_cluster_south_metro_dispersion_param: float
-    accum_hospital_admissions_for_cluster_west_metro_dispersion_param: float
-
-    accum_icu_admissions_for_cluster_north_metro_dispersion_param: float
-    accum_icu_admissions_for_cluster_south_east_metro_dispersion_param: float
-    accum_icu_admissions_for_cluster_south_metro_dispersion_param: float
-    accum_icu_admissions_for_cluster_west_metro_dispersion_param: float
-
-    accum_deaths_for_cluster_north_metro_dispersion_param: float
-    accum_deaths_for_cluster_south_east_metro_dispersion_param: float
-    accum_deaths_for_cluster_south_metro_dispersion_param: float
-    accum_deaths_for_cluster_west_metro_dispersion_param: float
-
-    notifications_metro_dispersion_param: float
-    notifications_rural_dispersion_param: float
-    hospital_admissions_metro_dispersion_param: float
-    hospital_admissions_rural_dispersion_param: float
-    icu_admissions_metro_dispersion_param: float
-    icu_admissions_rural_dispersion_param: float
-    accum_deaths_metro_dispersion_param: float
-    accum_deaths_rural_dispersion_param: float
-    accum_notifications_metro_dispersion_param: float
-    accum_notifications_rural_dispersion_param: float
-    hospital_occupancy_metro_dispersion_param: float
-    hospital_occupancy_rural_dispersion_param: float
-    icu_occupancy_metro_dispersion_param: float
-    icu_occupancy_rural_dispersion_param: float
+    target_output_ratio: Optional[float]

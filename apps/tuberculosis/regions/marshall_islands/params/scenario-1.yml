@@ -1,4 +1,6 @@
-awareness_raising: {}
+awareness_raising:
+  relative_screening_rate: 1.  # actually overwritten during uncertainty
+  scale_up_range: [3000, 3001]  # just to make sure awareness raising wont affect scenario 1
 parent: apps/tuberculosis/regions/marshall_islands/params/default.yml
 time:
   critical_ranges:

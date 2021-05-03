@@ -2,9 +2,8 @@ from typing import Dict
 
 import numpy as np
 
-from autumn.curve import scale_up_function
-
 from apps.covid_19.model.parameters import TimeSeries
+from autumn.curve import scale_up_function
 
 from .base_adjuster import BaseMixingAdjuster
 

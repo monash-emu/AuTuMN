@@ -1,16 +1,24 @@
 description: BASELINE
 parent: apps/covid_19/params.yml
 
-contact_rate: 0.0225
+contact_rate: 0.0231
 seasonal_force: 0.
 infectious_seed: 100.
 
+vaccination: null
+
 time:
-  start: 210.
-  end: 546.
+  start: 180
+  end: 822
 
 country:
   iso3: MYS
+
+clinical_stratification:
+  non_sympt_infect_multiplier: 0.25
+  props:
+    symptomatic:
+      multiplier: 1.5
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -22,10 +30,10 @@ mobility:
     behaviour:
       function_type: tanh
       parameters:
-        b: .05
-        c: 300.
-        sigma: 0.
-        upper_asymptote: 0.1
+        shape: .1
+        inflection_time: 398.  # 1st February 2021
+        lower_asymptote: 0.
+        upper_asymptote: 0.11
       locations:
         - other_locations
         - school
@@ -47,6 +55,10 @@ mobility:
         - 2020-10-14
         - 2020-11-08 # Schools fully close again
         - 2020-11-09
+        - 2021-03-06 # All but high schools re-open
+        - 2021-03-07
+        - 2021-04-03 # Full school re-openings
+        - 2021-04-04
       values:
         - 1.
         - 0.
@@ -60,5 +72,9 @@ mobility:
         - 0.64
         - 0.64
         - 0.
+        - 0.
+        - 0.5
+        - 0.5
+        - 1.
 
 stratify_by_immunity: true

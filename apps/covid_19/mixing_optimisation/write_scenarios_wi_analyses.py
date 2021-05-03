@@ -1,9 +1,10 @@
-
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.utils import get_wi_scenario_mapping
-
 from apps.covid_19.mixing_optimisation.write_scenarios import (
-    build_optimised_scenario_dictionary, read_opti_outputs, read_decision_vars, drop_all_yml_scenario_files
+    build_optimised_scenario_dictionary,
+    drop_all_yml_scenario_files,
+    read_decision_vars,
+    read_opti_outputs,
 )
 
 WI_SCENARIO_MAPPING = get_wi_scenario_mapping(vary_final_mixing=False)
@@ -25,8 +26,12 @@ def build_all_wi_scenario_dicts_from_outputs(output_filename):
             )
             if decision_vars is not None:
                 all_wi_sc_params[country][sc_idx] = build_optimised_scenario_dictionary(
-                    country, sc_idx, decision_vars, WI_SCENARIO_MAPPING, for_waning_immunity=True,
-                    final_mixing=settings["final_mixing"]
+                    country,
+                    sc_idx,
+                    decision_vars,
+                    WI_SCENARIO_MAPPING,
+                    for_waning_immunity=True,
+                    final_mixing=settings["final_mixing"],
                 )
     return all_wi_sc_params
 

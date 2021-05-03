@@ -1,7 +1,0 @@
-description: BASELINE
-parent: apps/covid_19/vic_submodel_params.yml
-
-population:
-  region: NORTH_METRO
-mobility:
-  region: NORTH_METRO

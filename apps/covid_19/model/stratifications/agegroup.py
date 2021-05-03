@@ -1,13 +1,12 @@
 from typing import List
 
-from summer2 import Stratification, Multiply
-
-from autumn import inputs
-from autumn.tool_kit.utils import normalise_sequence
+from summer import Multiply, Stratification
 
 from apps.covid_19.constants import COMPARTMENTS
 from apps.covid_19.model import preprocess
 from apps.covid_19.model.parameters import Parameters
+from autumn import inputs
+from autumn.utils.utils import normalise_sequence
 
 # Age groups match the Prem matrices
 AGEGROUP_STRATA = [
@@ -65,12 +64,4 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratificat
     age_strat.add_flow_adjustments(
         "infection", {s: Multiply(v) for s, v in params.age_stratification.susceptibility.items()}
     )
-    if params.importation:
-        importation_props_by_age = preprocess.importation.get_importation_props_by_age(
-            params.importation, AGEGROUP_STRATA
-        )
-        age_strat.add_flow_adjustments(
-            "importation", {s: Multiply(v) for s, v in importation_props_by_age.items()}
-        )
-
     return age_strat

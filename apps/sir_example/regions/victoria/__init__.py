@@ -1,7 +1,6 @@
-from autumn.region import Region
-from autumn.tool_kit.model_register import AppRegion
-
 from apps.sir_example.model import build_model
+from autumn.region import Region
+from autumn.utils.model_register import AppRegion
 
 from .calibrate import run_calibration_chain
 

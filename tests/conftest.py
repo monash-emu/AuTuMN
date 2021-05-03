@@ -9,16 +9,15 @@ import pickle
 os.environ["OMP_NUM_THREADS"] = "1"
 
 
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 
-
 import settings
-from autumn.db import database
 from autumn.calibration import calibration
+from autumn.db import database
 
-from .utils import in_memory_db_factory, get_deterministic_random_seed
+from .utils import get_deterministic_random_seed, in_memory_db_factory
 
 get_in_memory_db = in_memory_db_factory()
 

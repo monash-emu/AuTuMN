@@ -1,13 +1,14 @@
-from typing import List
-import numpy as np
+from summer import CompartmentalModel
 
-from summer2 import CompartmentalModel
-
-from autumn.region import Region
-
+from apps.covid_19.constants import (
+    COMPARTMENTS,
+    NOTIFICATION_STRATA,
+    Clinical,
+    Compartment,
+)
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.constants import Compartment, Clinical, NOTIFICATION_STRATA, COMPARTMENTS
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.region import Region
 
 
 def request_victorian_outputs(model: CompartmentalModel, params: Parameters):

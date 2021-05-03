@@ -1,14 +1,22 @@
-description: Scenario 1, Re-open schools
+description: Scenario 1, max mobility last 6 months
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 418.
+  start: 457
 
 mobility:
   mixing:
-    school:
-      append: false
+    other_locations:
+      append: true
       times:
-        - 2020-02-22
+        - 2020-04-01
       values:
-        - 1.
+        - - max_last_period
+          - 180
+    work:
+      append: true
+      times:
+        - 2020-04-01
+      values:
+        - - max_last_period
+          - 180

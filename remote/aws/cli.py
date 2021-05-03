@@ -1,17 +1,17 @@
-import time
+import functools
+import logging
 import os
 import sys
-import logging
-import functools
+import time
 from typing import List
 
 import click
 from botocore.exceptions import ClientError
 from invoke.exceptions import UnexpectedExit
 
-from . import aws
-from . import remote
-from settings import EC2InstanceType, EC2_INSTANCE_SPECS
+from settings import EC2_INSTANCE_SPECS, EC2InstanceState, EC2InstanceType
+
+from . import aws, remote
 
 logger = logging.getLogger(__name__)
 
@@ -152,14 +152,15 @@ def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
 @click.option("--burn-in", type=int, required=True)
+@click.option("--sample", type=int, required=True)
 @click.option("--latest-code", is_flag=True)
 @click.option("--branch", type=str, default="master")
 @click.option("--spot", is_flag=True)
-def run_full_model_cli(job, run, burn_in, latest_code, branch, spot):
-    run_full_model(job, run, burn_in, latest_code, branch, spot)
+def run_full_model_cli(job, run, burn_in, sample, latest_code, branch, spot):
+    run_full_model(job, run, burn_in, sample, latest_code, branch, spot)
 
 
-def run_full_model(job, run, burn_in, latest_code, branch, is_spot):
+def run_full_model(job, run, burn_in, sample, latest_code, branch, is_spot):
     """
     Run the full models based off an MCMC calibration on an AWS server.
     """
@@ -168,6 +169,7 @@ def run_full_model(job, run, burn_in, latest_code, branch, is_spot):
     kwargs = {
         "run_id": run,
         "burn_in": burn_in,
+        "sample": sample,
         "use_latest_code": latest_code,
         "branch": branch,
     }
@@ -198,26 +200,6 @@ def run_powerbi(job, run, branch, is_spot):
     kwargs = {"run_id": run, "branch": branch}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_types, is_spot, job_func)
-
-
-@run.command("dhhs")
-@click.option("--job", type=str, required=True)
-@click.option("--commit", type=str, required=True)
-@click.option("--branch", type=str, default="master")
-@click.option("--spot", is_flag=True)
-def run_dhhs_cli(job, commit, branch, spot):
-    run_dhhs(job, commit, branch, spot)
-
-
-def run_dhhs(job, commit, branch, is_spot):
-    """
-    Perform DHHS post processing.
-    """
-    job_id = f"dhhs-{job}"
-    instance_type = EC2InstanceType.m5_16xlarge
-    kwargs = {"commit": commit, "branch": branch}
-    job_func = functools.partial(remote.run_dhhs, **kwargs)
-    _run_job(job_id, [instance_type], is_spot, job_func)
 
 
 def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
@@ -268,8 +250,17 @@ def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
         logger.exception(f"Job {job_id} failed.")
         raise e
     finally:
-        # Always stop the job to prevent dangling jobs.
-        aws.stop_job(job_id)
+        instances = [i for i in aws.describe_instances() if i["name"] == job_id]
+        live = [i for i in instances if EC2InstanceState.is_live(i["State"]["Name"])]
+        dead = [i for i in instances if EC2InstanceState.is_dead(i["State"]["Name"])]
+        if live:
+            live_names = [i["name"] for i in live]
+            logger.info("Live jobs found, stopping: %s", live_names)
+            # Always stop the job to prevent dangling jobs.
+            aws.stop_job(job_id)
+        if dead:
+            dead_names = [(i["name"], i["State"]["Name"]) for i in dead]
+            logger.info("Jobs already dead, no need to stop: %s", dead_names)
 
     return return_value
 

@@ -24,7 +24,7 @@ class BasePlotter(ABC):
         room_for_legend=False,
         requested_grid=None,
         share_xaxis=False,
-            share_yaxis="none",
+        share_yaxis="none",
     ):
         """
         Initialise the subplots (or single plot) according to the number of panels required.

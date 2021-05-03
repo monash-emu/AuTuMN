@@ -1,10 +1,9 @@
 import logging
+import multiprocessing as mp
 import sys
 import traceback
-from typing import Callable, List, Any
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import multiprocessing as mp
-
+from typing import Any, Callable, List
 
 logger = logging.getLogger(__name__)
 

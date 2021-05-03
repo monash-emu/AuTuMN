@@ -1,18 +1,17 @@
-from matplotlib import pyplot
 import os
 
-
-from settings import BASE_PATH
-from autumn.db.load import load_uncertainty_table
-from autumn.plots.uncertainty.plots import _plot_uncertainty
-from autumn.plots.utils import COLORS, _apply_transparency
+from matplotlib import pyplot
 
 from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
     OUTPUT_TITLES,
-    save_figure,
     get_format,
     make_output_directories,
+    save_figure,
 )
+from autumn.db.load import load_uncertainty_table
+from autumn.plots.uncertainty.plots import _plot_uncertainty
+from autumn.plots.utils import COLORS, _apply_transparency
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,
@@ -47,29 +46,12 @@ def plot_diabetes_graph(uncertainty_df):
     heights = [panel_h] * len(outputs)
     fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
 
-    spec = fig.add_gridspec(ncols=1, nrows=len(outputs), width_ratios=widths,
-                            height_ratios=heights)
+    spec = fig.add_gridspec(ncols=1, nrows=len(outputs), width_ratios=widths, height_ratios=heights)
 
-    diabetes_colours = {
-        0: COLORS[6],
-        9: COLORS[2],
-        10: COLORS[7]
-    }
-    alphas = {
-        0: 1,
-        9: .6,
-        10: .4
-    }
-    start_quantiles = {
-        0: 2,
-        9: 1,
-        10: 1
-    }
-    linestyles = {
-        0: 'dashed',
-        9: 'solid',
-        10: 'solid'
-    }
+    diabetes_colours = {0: COLORS[6], 9: COLORS[2], 10: COLORS[7]}
+    alphas = {0: 1, 9: 0.6, 10: 0.4}
+    start_quantiles = {0: 2, 9: 1, 10: 1}
+    linestyles = {0: "dashed", 9: "solid", 10: "solid"}
 
     for i, output in enumerate(outputs):
         ax = fig.add_subplot(spec[i, 0])

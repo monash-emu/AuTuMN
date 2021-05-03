@@ -1,8 +1,9 @@
-import pandas as pd
 import os
 
-from autumn import constants
+import pandas as pd
 from requests import get
+
+from autumn import constants
 
 HOSPITAL_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "hospitalisation_data")
 SWEDEN_ICU_PREV = os.path.join(

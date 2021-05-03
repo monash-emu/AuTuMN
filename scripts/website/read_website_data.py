@@ -2,8 +2,8 @@
 """
 Reads data from AWS S3 and saves in a JSON that can be consumed by a website builder.
 """
-import os
 import json
+import os
 import sys
 
 import boto3

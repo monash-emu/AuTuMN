@@ -1,8 +1,9 @@
-description: no face coverings
+description: no face coverings policy change
 parent: apps/covid_19/regions/victoria/params/default.yml
 
 time:
   start: 189
+  end: 426
 
 victorian_clusters:
   metro:

@@ -1,16 +1,16 @@
 import networkx as nx
 import streamlit as st
 from matplotlib import pyplot
-
-from summer2.flows import (
-    DeathFlow,
+from summer.flows import (
     BaseEntryFlow,
     BaseExitFlow,
-    BaseTransitionFlow,
     BaseInfectionFlow,
+    BaseTransitionFlow,
+    DeathFlow,
 )
+
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.tool_kit.model_register import AppRegion
+from autumn.utils.model_register import AppRegion
 
 MARKERS = ".spP*D^vxH"
 FLOW_STYLES = [

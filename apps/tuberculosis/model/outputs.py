@@ -2,12 +2,15 @@
 FIXME: These all need tests.
 """
 from typing import List
-from summer.constants import Compartment
-from summer.model.derived_outputs import (
+
+import numpy as np
+from summer.legacy.constants import Compartment
+from summer.legacy.model.derived_outputs import (
     InfectionDeathFlowOutput,
     TransitionFlowOutput,
 )
-import numpy as np
+
+from autumn.curve import tanh_based_scaleup
 
 
 def make_infectious_prevalence_calculation_function(stratum_filters=[]):
@@ -271,6 +274,16 @@ def calculate_population_size(time_idx, model, compartment_values, derived_outpu
     return sum(compartment_values)
 
 
+def calculate_screening_rate(time_idx, model, compartment_values, derived_outputs):
+    screening_rate_func = tanh_based_scaleup(
+        model.parameters["time_variant_tb_screening_rate"]["shape"],
+        model.parameters["time_variant_tb_screening_rate"]["inflection_time"],
+        model.parameters["time_variant_tb_screening_rate"]["lower_asymptote"],
+        model.parameters["time_variant_tb_screening_rate"]["upper_asymptote"],
+    )
+    return screening_rate_func(model.times[time_idx])
+
+
 def calculate_stratum_population_size(compartment_values, model, stratum_filters):
     """
     Calculate the population size of a given stratum.
@@ -320,6 +333,7 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
         "population_size": calculate_population_size,
         "incidence": calculate_incidence,
         "mortality": calculate_tb_mortality,
+        "screening_rate": calculate_screening_rate,
     }
     factory_functions = {
         "prevalence_infectious": make_infectious_prevalence_calculation_function,

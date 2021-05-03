@@ -1,5 +1,7 @@
 import os
+
 from matplotlib import pyplot
+
 from settings import BASE_PATH
 
 OUTPUT_TITLES = {
@@ -13,6 +15,7 @@ OUTPUT_TITLES = {
     "notificationsXlocation_majuro": "Number of TB notifications in Majuro",
     "notificationsXlocation_ebeye": "Number of TB notifications in Ebeye",
     "population_size": "Population size",
+    "screening_rate": "Rate of passive TB screening (/year)",
 }
 
 REGION_TITLES = {
@@ -44,6 +47,8 @@ def get_format():
 
 def save_figure(filename, figure_path):
     png_path = os.path.join(figure_path, f"{filename}.png")
+    png_path_lowres = os.path.join(figure_path, f"{filename}_low_res.png")
     pdf_path = os.path.join(figure_path, f"{filename}.pdf")
     pyplot.savefig(png_path, dpi=300)
+    pyplot.savefig(png_path_lowres, dpi=200)
     pyplot.savefig(pdf_path)

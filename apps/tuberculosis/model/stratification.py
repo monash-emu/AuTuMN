@@ -1,18 +1,21 @@
+import copy
+import itertools
+from math import exp, log
+
+import numpy as np
+from summer.legacy.model import create_sloping_step_function
+from summer.legacy.model.utils.parameter_processing import (
+    get_parameter_dict_from_function,
+)
+
 from apps.tuberculosis.constants import Compartment, OrganStratum
 from apps.tuberculosis.model.preprocess.latency import (
-    get_adapted_age_parameters,
     edit_adjustments_for_diabetes,
+    get_adapted_age_parameters,
 )
+from autumn.curve import make_linear_curve, scale_up_function, tanh_based_scaleup
 from autumn.inputs import get_death_rates_by_agegroup
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
-from autumn.curve import scale_up_function, tanh_based_scaleup, make_linear_curve
-from summer.model.utils.parameter_processing import get_parameter_dict_from_function
-from summer.model import create_sloping_step_function
-
-from math import log, exp
-import numpy as np
-import itertools
-import copy
 
 
 def stratify_by_age(model, params, compartments):
@@ -205,7 +208,7 @@ def apply_user_defined_stratification(
                     for stratum in updated_int_adjustments.keys():
                         if stratum in exclude_age:
                             if int(age_group) in exclude_age[stratum]:
-                                updated_int_adjustments[stratum] = 0.
+                                updated_int_adjustments[stratum] = 0.0
                 flow_adjustments[stratified_param_name] = updated_int_adjustments
 
     # apply stratification
@@ -255,28 +258,29 @@ def stratify_by_organ(model, params):
 
     # define differential detection rates by organ status
     screening_rate_func = tanh_based_scaleup(
-        params["time_variant_tb_screening_rate"]["maximum_gradient"],
-        params["time_variant_tb_screening_rate"]["max_change_time"],
-        params["time_variant_tb_screening_rate"]["start_value"],
-        params["time_variant_tb_screening_rate"]["end_value"],
+        params["time_variant_tb_screening_rate"]["shape"],
+        params["time_variant_tb_screening_rate"]["inflection_time"],
+        params["time_variant_tb_screening_rate"]["lower_asymptote"],
+        params["time_variant_tb_screening_rate"]["upper_asymptote"],
     )
     if params["awareness_raising"]:
         awaireness_linear_scaleup = make_linear_curve(
             x_0=params["awareness_raising"]["scale_up_range"][0],
             x_1=params["awareness_raising"]["scale_up_range"][1],
             y_0=1,
-            y_1=params["awareness_raising"]["relative_screening_rate"]
+            y_1=params["awareness_raising"]["relative_screening_rate"],
         )
 
         def awaireness_multiplier(t):
             if t <= params["awareness_raising"]["scale_up_range"][0]:
-                return 1.
+                return 1.0
             elif t >= params["awareness_raising"]["scale_up_range"][1]:
                 return params["awareness_raising"]["relative_screening_rate"]
             else:
                 return awaireness_linear_scaleup(t)
+
     else:
-        awaireness_multiplier = lambda t: 1.
+        awaireness_multiplier = lambda t: 1.0
 
     combined_screening_rate_func = lambda t: screening_rate_func(t) * awaireness_multiplier(t)
 

@@ -1,16 +1,15 @@
 from typing import Dict
 
-from summer2 import Stratification, Multiply
+from summer import Multiply, Stratification
 
-
-from apps.covid_19.constants import Compartment, Clinical
+from apps.covid_19.constants import Clinical, Compartment
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
-from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.model.preprocess.clinical import (
     get_absolute_strata_proportions,
     get_proportion_symptomatic,
 )
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
 
 
 def get_history_strat(
@@ -34,7 +33,7 @@ def get_history_strat(
 
     # Get the proportion of people in each clinical stratum, relative to total people in compartment.
     clinical_params = params.clinical_stratification
-    symptomatic_props = get_proportion_symptomatic(params)
+    symptomatic_props = get_proportion_symptomatic(clinical_params)
     abs_props = get_absolute_strata_proportions(
         symptomatic_props=symptomatic_props,
         icu_props=clinical_params.icu_prop,

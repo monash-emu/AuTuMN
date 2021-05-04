@@ -4,6 +4,7 @@ from apps.covid_19.constants import COMPARTMENTS, Clinical
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.clinical import get_all_adjs
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from apps.covid_19.model.preprocess.vaccination import add_vaccine_infection_and_severity
 
 CLINICAL_STRATA = [
     Clinical.NON_SYMPT,
@@ -28,7 +29,7 @@ def get_immunity_strat(params: Parameters) -> Stratification:
 
     if params.vaccination:
 
-        infection_efficacy, severity_efficacy= (params.vaccination.vacc_prop_prevent_infection, params.vaccination.overall_efficacy)
+        infection_efficacy, severity_efficacy = add_vaccine_infection_and_severity(params.vaccination.vacc_prop_prevent_infection, params.vaccination.overall_efficacy)
         # Apply vaccination effect against severe disease given infection
         relative_severity_effect -= severity_efficacy
 

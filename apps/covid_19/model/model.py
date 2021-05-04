@@ -130,15 +130,6 @@ def build_model(params: dict) -> CompartmentalModel:
         source=Compartment.LATE_ACTIVE,
     )
 
-    # Waning immunity (if requested)
-    if params.waning_immunity_duration is not None:
-        model.add_fractional_flow(
-            name="waning_immunity",
-            fractional_rate=1.0 / params.waning_immunity_duration,
-            source=Compartment.RECOVERED,
-            dest=Compartment.SUSCEPTIBLE,
-        )
-
     # Stratify the model by age group.
     age_strat = get_agegroup_strat(params, total_pops)
     model.stratify_with(age_strat)
@@ -151,6 +142,17 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.stratify_by_infection_history:
         history_strat = get_history_strat(params)
         model.stratify_with(history_strat)
+
+    # Waning immunity (if requested)
+    if params.waning_immunity_duration is not None:
+        model.add_fractional_flow(
+            name="waning_immunity",
+            fractional_rate=1.0 / params.waning_immunity_duration,
+            source=Compartment.RECOVERED,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"history": "naive"},
+            dest_strata={"history": "experienced"}
+        )
 
     # Stratify by immunity - which will include vaccination and infection history
     # if params.stratify_by_immunity:

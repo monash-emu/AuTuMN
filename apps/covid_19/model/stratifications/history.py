@@ -1,20 +1,11 @@
-from summer import Multiply, Stratification
+from summer import Stratification
 
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.constants import COMPARTMENTS, Clinical
+from apps.covid_19.constants import COMPARTMENTS
 
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
 from apps.covid_19.model.preprocess.clinical import get_all_adjs
-
-
-CLINICAL_STRATA = [
-    Clinical.NON_SYMPT,
-    Clinical.SYMPT_NON_HOSPITAL,
-    Clinical.SYMPT_ISOLATE,
-    Clinical.HOSPITAL_NON_ICU,
-    Clinical.ICU,
-]
 
 HISTORY_STRATA = [
     "naive",
@@ -26,16 +17,14 @@ def get_history_strat(params: Parameters) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
     """
-    history_strat = Stratification("history", HISTORY_STRATA, COMPARTMENTS)
+    history_strat = Stratification(
+        "history",
+        HISTORY_STRATA,
+        COMPARTMENTS,
+    )
 
     # Everyone starts out infection-naive.
-    history_strat.set_population_split({"naive": 1.0, "experienced": 0.0})
-
-    # Waning immunity makes recovered individuals transition to the 'experienced' stratum.
-    if params.waning_immunity_duration is not None:
-        history_strat.add_flow_adjustments(
-            "waning_immunity", {"naive": Multiply(0.), "experienced": Multiply(1.)}
-        )
+    history_strat.set_population_split({"naive": 1., "experienced": 0.})
 
     # Placeholder parameters for the effect of past infection on protection against severe disease given infection.
     symptomatic_adjuster, hospital_adjuster, ifr_adjuster = 1., 1., 1.

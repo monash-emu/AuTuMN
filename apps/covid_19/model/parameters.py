@@ -242,8 +242,10 @@ class RollOutFunc(BaseModel):
 
 
 class Vaccination(BaseModel):
-    infection_efficacy: float
-    severity_efficacy: float
+    overall_efficacy: float
+    vacc_prop_prevent_infection: float
+    # infection_efficacy: float
+    # severity_efficacy: float
     roll_out_components: List[RollOutFunc]
 
 

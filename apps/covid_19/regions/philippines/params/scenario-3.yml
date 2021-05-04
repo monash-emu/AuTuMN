@@ -3,10 +3,11 @@ parent: apps/covid_19/regions/philippines/params/default.yml
 time:
   start: 486
 vaccination:
-  infection_efficacy: 0.0
+  overall_efficacy: 0.7
+  vacc_prop_prevent_infection: 1
   roll_out_components:
   - supply_period_coverage:
       coverage: 0.13
       end_time: 756
       start_time: 486
-  severity_efficacy: 0.7
+

@@ -27,11 +27,8 @@ def get_immunity_strat(params: Parameters) -> Stratification:
     immunity_strat.set_population_split({"unvaccinated": 1.0, "vaccinated": 0.0})
 
     if params.vaccination:
-        infection_efficacy = params.vaccination.vacc_prop_prevent_infection * params.vaccination.overall_efficacy
-        severity_efficacy = params.vaccination.overall_efficacy * (1 - params.vaccination.vacc_prop_prevent_infection) \
-                            / (1 - (
-                    params.vaccination.vacc_prop_prevent_infection * params.vaccination.overall_efficacy))
 
+        infection_efficacy, severity_efficacy= (params.vaccination.vacc_prop_prevent_infection, params.vaccination.overall_efficacy)
         # Apply vaccination effect against severe disease given infection
         relative_severity_effect -= severity_efficacy
 

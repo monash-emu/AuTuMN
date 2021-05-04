@@ -22,8 +22,8 @@ mobility:
 stratify_by_immunity: true
 
 vaccination:
-  infection_efficacy: .8
-  severity_efficacy: 0.
+  overall_efficacy: 0.8
+  vacc_prop_prevent_infection: 1
   roll_out_components:
     - age_min: 70
       supply_period_coverage:

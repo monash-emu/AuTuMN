@@ -24,7 +24,7 @@ def get_history_strat(params: Parameters) -> Stratification:
     history_strat.set_population_split({"naive": 1., "experienced": 0.})
 
     # Placeholder parameters for the effect of past infection on protection against severe disease given infection.
-    history_severity_effect = 1.
+    experience_severity_efficacy = 0.
 
     # Add the clinical adjustments parameters as overwrites in the same way as for vaccination.
     history_strat = add_clinical_adjustments_to_strat(
@@ -32,9 +32,9 @@ def get_history_strat(params: Parameters) -> Stratification:
         HISTORY_STRATA[0],
         HISTORY_STRATA[1],
         params,
-        history_severity_effect,
-        history_severity_effect,
-        history_severity_effect
+        1. - experience_severity_efficacy,
+        1. - experience_severity_efficacy,
+        1. - experience_severity_efficacy
     )
 
     return history_strat

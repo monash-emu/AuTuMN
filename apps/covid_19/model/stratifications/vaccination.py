@@ -20,16 +20,19 @@ VACCINATION_STRATA = [
 
 def get_vaccination_strat(params: Parameters) -> Stratification:
     immunity_strat = Stratification("vaccination", VACCINATION_STRATA, COMPARTMENTS)
-    relative_severity_effect = 1.
 
     # Everyone starts out unvaccinated.
     immunity_strat.set_population_split({"unvaccinated": 1., "vaccinated": 0.})
 
     # Sort out the parameters to be applied.
-    relative_severity_effect -= params.vaccination.severity_efficacy
-    symptomatic_adjuster = (params.clinical_stratification.props.symptomatic.multiplier * relative_severity_effect)
-    hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
-    ifr_adjuster = params.infection_fatality.multiplier * relative_severity_effect
+    severity_efficacy = params.vaccination.severity_efficacy
+    infection_efficacy = params.vaccination.infection_efficacy
+    symptomatic_adjuster, hospital_adjuster, ifr_adjuster = \
+        (1. - severity_efficacy,) * 3
+
+    # Apply the calibration adjustment parameters.
+    symptomatic_adjuster *= params.clinical_stratification.props.symptomatic.multiplier
+    ifr_adjuster *= params.infection_fatality.multiplier
 
     # Add the clinical adjustments parameters as overwrites in the same way as for vaccination.
     immunity_strat = add_clinical_adjustments_to_strat(
@@ -46,7 +49,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     immunity_strat.add_flow_adjustments(
         "infection",
         {
-            "vaccinated": Multiply(1. - params.vaccination.infection_efficacy),
+            "vaccinated": Multiply(1. - infection_efficacy),
             "unvaccinated": None,
         },
     )

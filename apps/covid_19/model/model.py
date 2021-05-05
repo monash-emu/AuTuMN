@@ -22,7 +22,7 @@ from apps.covid_19.model.stratifications.cluster import (
     get_cluster_strat,
 )
 from apps.covid_19.model.stratifications.history import get_history_strat
-from apps.covid_19.model.stratifications.immunity import get_immunity_strat
+from apps.covid_19.model.stratifications.vaccination import get_vaccination_strat
 from autumn import inputs
 from autumn.curve.scale_up import scale_up_function
 
@@ -144,7 +144,7 @@ def build_model(params: dict) -> CompartmentalModel:
         model.stratify_with(history_strat)
 
     # Waning immunity (if requested)
-    if params.waning_immunity_duration is not None:
+    if params.waning_immunity_duration:
         model.add_fractional_flow(
             name="waning_immunity",
             fractional_rate=1.0 / params.waning_immunity_duration,
@@ -154,14 +154,13 @@ def build_model(params: dict) -> CompartmentalModel:
             dest_strata={"history": "experienced"}
         )
 
-    # Stratify by immunity - which will include vaccination and infection history
-    # if params.stratify_by_immunity:
-    #     immunity_strat = get_immunity_strat(params)
-    #     model.stratify_with(immunity_strat)
-    #     if params.vaccination:
-    #         vacc_params = params.vaccination
-    #         for roll_out_component in vacc_params.roll_out_components:
-    #             add_vaccination_flows(model, roll_out_component, age_strat.strata)
+    # Stratify by vaccination status
+    if params.vaccination:
+        vaccination_strat = get_vaccination_strat(params)
+        model.stratify_with(vaccination_strat)
+        vacc_params = params.vaccination
+        for roll_out_component in vacc_params.roll_out_components:
+            add_vaccination_flows(model, roll_out_component, age_strat.strata)
 
     # Stratify model by Victorian subregion (used for Victorian cluster model).
     if params.victorian_clusters:

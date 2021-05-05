@@ -19,7 +19,7 @@ POWERBI_COLLATED_PATH = os.path.join(POWERBI_DATA_DIR, "collated")
 POWERBI_COLLATED_PRUNED_PATH = os.path.join(POWERBI_DATA_DIR, "collated-pruned")
 
 
-def powerbi_task(run_id: str, quiet: bool):
+def powerbi_task(run_id: str, urunid: str, quiet: bool):
     s3_client = get_s3_client()
 
     # Set up directories for plots and output data.
@@ -39,9 +39,13 @@ def powerbi_task(run_id: str, quiet: bool):
         for src_key in chain_db_keys:
             download_from_run_s3(s3_client, run_id, src_key, quiet)
 
-    # Select candidates for display in final db
-    n_candidates = 10
-    candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, n_candidates)
+    # No urun_id supplied; get a single candidate dataframe (ie the MLE run)
+    if urunid == 'mle':
+        candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, 1)
+    else:
+        c, r = (int(x) for x in urunid.split('_'))
+        candidates_df = pd.DataFrame(columns=['chain', 'run'])
+        candidates_df.append(dict(chain=c,run=r), ignore_index=True)
 
     # Remove unnecessary data from each full model run database.
     full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)

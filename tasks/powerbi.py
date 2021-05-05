@@ -47,7 +47,7 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
     else:
         c, r = (int(x) for x in urunid.split('_'))
         candidates_df = pd.DataFrame(columns=['chain', 'run'])
-        candidates_df.append(dict(chain=c,run=r), ignore_index=True)
+        candidates_df.loc[0] = dict(chain=c,run=r)
 
     # Remove unnecessary data from each full model run database.
     full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)

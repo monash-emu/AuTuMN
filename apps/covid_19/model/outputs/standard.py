@@ -1,6 +1,3 @@
-from typing import List
-
-import numpy as np
 from summer import CompartmentalModel
 
 from apps.covid_19.constants import (
@@ -50,7 +47,7 @@ def request_standard_outputs(
         name="notifications_at_sympt_onset", sources=notification_at_sympt_onset_sources
     )
 
-    # Disease progresssion
+    # Disease progression
     model.request_output_for_flow(name="progress", flow_name="progress")
     for agegroup in AGEGROUP_STRATA:
         for clinical in NOTIFICATION_STRATA:
@@ -153,7 +150,7 @@ def request_standard_outputs(
     compartment_periods = params.sojourn.compartment_periods
     icu_early_period = compartment_periods["icu_early"]
     hospital_early_period = compartment_periods["hospital_early"]
-    period_icu_patients_in_hospital = max(icu_early_period - hospital_early_period, 0.0)
+    period_icu_patients_in_hospital = max(icu_early_period - hospital_early_period, 0.)
     proportion_icu_patients_in_hospital = period_icu_patients_in_hospital / icu_early_period
     model.request_output_for_compartments(
         "_late_active_hospital",
@@ -191,35 +188,68 @@ def request_standard_outputs(
     model.request_output_for_compartments(
         name="_total_population", compartments=COMPARTMENTS, save_results=False
     )
-    model.request_output_for_compartments(
-        name="_recovered", compartments=[Compartment.RECOVERED], save_results=False
-    )
-    model.request_function_output(
-        name="proportion_seropositive",
-        sources=["_recovered", "_total_population"],
-        func=lambda recovered, total: recovered / total,
-    )
+    if params.stratify_by_infection_history:
+        model.request_output_for_compartments(
+            name="_recovered", compartments=[Compartment.RECOVERED], strata={"history": "naive"}, save_results=False
+        )
+        model.request_output_for_compartments(
+            name="_experienced", compartments=COMPARTMENTS, strata={"history": "experienced"}, save_results=False
+        )
+        model.request_function_output(
+            name="proportion_seropositive",
+            sources=["_recovered", "_experienced", "_total_population"],
+            func=lambda recovered, experienced, total: (recovered + experienced) / total,
+        )
+    else:
+        model.request_output_for_compartments(
+            name="_recovered", compartments=[Compartment.RECOVERED], save_results=False
+        )
+        model.request_function_output(
+            name="proportion_seropositive",
+            sources=["_recovered", "_total_population"],
+            func=lambda recovered, total: recovered / total,
+        )
     if not is_region_vic:
         for agegroup in AGEGROUP_STRATA:
-            total_name = f"_total_populationXagegroup_{agegroup}"
             recovered_name = f"_recoveredXagegroup_{agegroup}"
+            total_name = f"_total_populationXagegroup_{agegroup}"
             model.request_output_for_compartments(
                 name=total_name,
                 compartments=COMPARTMENTS,
                 strata={"agegroup": agegroup},
                 save_results=False,
             )
-            model.request_output_for_compartments(
-                name=recovered_name,
-                compartments=[Compartment.RECOVERED],
-                strata={"agegroup": agegroup},
-                save_results=False,
-            )
-            model.request_function_output(
-                name=f"proportion_seropositiveXagegroup_{agegroup}",
-                sources=[recovered_name, total_name],
-                func=lambda recovered, total: recovered / total,
-            )
+            if params.stratify_by_infection_history:
+                experienced_name = f"_experiencedXagegroup_{agegroup}"
+                model.request_output_for_compartments(
+                    name=recovered_name,
+                    compartments=[Compartment.RECOVERED],
+                    strata={"agegroup": agegroup, "history": "experienced"},
+                    save_results=False,
+                )
+                model.request_output_for_compartments(
+                    name=experienced_name,
+                    compartments=COMPARTMENTS,
+                    strata={"agegroup": agegroup, "history": "naive"},
+                    save_results=False,
+                )
+                model.request_function_output(
+                    name=f"proportion_seropositiveXagegroup_{agegroup}",
+                    sources=[recovered_name, experienced_name, total_name],
+                    func=lambda recovered, experienced, total: (recovered + experienced) / total,
+                )
+            else:
+                model.request_output_for_compartments(
+                    name=recovered_name,
+                    compartments=[Compartment.RECOVERED],
+                    strata={"agegroup": agegroup},
+                    save_results=False,
+                )
+                model.request_function_output(
+                    name=f"proportion_seropositiveXagegroup_{agegroup}",
+                    sources=[recovered_name, total_name],
+                    func=lambda recovered, total: recovered / total,
+                )
 
     if params.vaccination:
         model.request_output_for_flow(name="vaccination", flow_name="vaccination")

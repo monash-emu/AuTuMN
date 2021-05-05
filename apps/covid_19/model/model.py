@@ -143,16 +143,17 @@ def build_model(params: dict) -> CompartmentalModel:
         history_strat = get_history_strat(params)
         model.stratify_with(history_strat)
 
-    # Waning immunity (if requested)
-    if params.waning_immunity_duration:
-        model.add_fractional_flow(
-            name="waning_immunity",
-            fractional_rate=1.0 / params.waning_immunity_duration,
-            source=Compartment.RECOVERED,
-            dest=Compartment.SUSCEPTIBLE,
-            source_strata={"history": "naive"},
-            dest_strata={"history": "experienced"}
-        )
+        # Waning immunity (if requested)
+        # Note that this approach would mean that the recovered in the naive class have actually previously had Covid.
+        if params.waning_immunity_duration:
+            model.add_fractional_flow(
+                name="waning_immunity",
+                fractional_rate=1.0 / params.waning_immunity_duration,
+                source=Compartment.RECOVERED,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"history": "naive"},
+                dest_strata={"history": "experienced"}
+            )
 
     # Stratify by vaccination status
     if params.vaccination:

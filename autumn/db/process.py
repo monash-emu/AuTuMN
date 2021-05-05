@@ -3,6 +3,7 @@ Processing data from the output database.
 """
 import logging
 from typing import List
+from datetime import date
 
 import numpy as np
 import pandas as pd
@@ -68,7 +69,7 @@ def get_identifying_run_ids(table: pd.DataFrame) -> pd.Series:
     return table['chain'].astype(str) + ':' + table['run'].astype(str)
 
 
-def select_pruning_candidates(src_db_path: str, n_candidates: int) -> pd.DataFrame:
+def select_pruning_candidates(src_db_path: str, n_candidates: int, weighted = True) -> pd.DataFrame:
     """Select a random set of 'good enough' candidates for manual inspection
     The output set will be guaranteed to contain the highest
     MLE run from all the chains, in addition to randomly selected candidates
@@ -76,7 +77,7 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int) -> pd.DataFra
     Args:
         src_db_path (str): Base path of calibration run (containing subdirectories for each chain)
         n_candidates (int): Number of candidates to select.  If 1, then only the MLE run from all chains will be selected
-
+        weighted (bool): Weight candidates by 1.0/loglikelihood (False means uniform selection)
     Returns:
         candidates (pd.DataFrame): DataFrame containing unique identifiers (chain_id, run_id) of all candidates
 
@@ -104,6 +105,14 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int) -> pd.DataFra
     if max_ll_candidate in possible_candidates:
         possible_candidates.remove(max_ll_candidate)
 
+    if weighted:
+        # +++ FIXME Adding 10.0 to not overweight, should parameterise this
+        weights = 1.0 / (10.0 + np.abs(np.array(accepted_and_sampled.loc[possible_candidates].loglikelihood)))
+        weights = weights/weights.sum()
+    else:
+        weights = None
+    
+    candidates = list(np.random.choice(possible_candidates, n_candidates-1, replace=False, p=weights))
     candidates = random.sample(possible_candidates, k = n_candidates-1)
 
     # Ensure we have the max likelihood candidate
@@ -293,3 +302,24 @@ def sample_runs(mcmc_df: pd.DataFrame, num_samples: int):
     chosen_idxs = np.random.choice(idxs, size=num_samples, replace=False, p=sample_pr)
     chosen_runs = [run_choices[i] for i in chosen_idxs]
     return chosen_runs
+
+def select_outputs_from_candidates(output_name: str, derived_output_tables: pd.DataFrame, candidates_df: pd.DataFrame, ref_date: date):
+    out_df = pd.DataFrame()
+    for idx, c in candidates_df.iterrows():
+        chain = int(c['chain'])
+        run = int(c['run'])
+        ctable = derived_output_tables[chain]
+        run_mask = ctable["run"] == run
+        scenario_mask = ctable['scenario'] == 0
+        masked = ctable[run_mask & scenario_mask]
+        name = f"{chain}_{run}"
+        out_df[name] = pd.Series(index=timelist_to_dti(masked["times"],ref_date), data=masked[output_name].data)
+    return out_df
+
+def timelist_to_dti(times, ref_date):
+    datelist = [ref_date + pd.offsets.Day(t) for t in times]
+    return pd.DatetimeIndex(datelist)
+
+def target_to_series(target, ref_date):
+    index = timelist_to_dti(target['times'], ref_date)
+    return pd.Series(index=index, data=target['values'])

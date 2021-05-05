@@ -47,9 +47,9 @@ def get_vacc_roll_out_function_from_doses(
         num_indices = []
         deno_indices = []
         for i, compartment in enumerate(compartments):
-            if compartment.name in VACCINE_ELIGIBLE_COMPARTMENTS and compartment.strata['agegroup'] in eligible_age_groups and compartment.strata['immunity'] == "unvaccinated":
+            if compartment.name in VACCINE_ELIGIBLE_COMPARTMENTS and compartment.strata["agegroup"] in eligible_age_groups and compartment.strata["vaccination"] == "unvaccinated":
                 deno_indices.append(i)
-                if compartment.name == compartment_name and compartment.strata['agegroup'] == eligible_age_group:
+                if compartment.name == compartment_name and compartment.strata["agegroup"] == eligible_age_group:
                     num_indices.append(i)
 
         compartment_size = sum([compartment_values[i] for i in num_indices])

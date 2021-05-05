@@ -221,5 +221,5 @@ def request_standard_outputs(
                 func=lambda recovered, total: recovered / total,
             )
 
-    # if params.stratify_by_immunity and params.vaccination:
-    #     model.request_output_for_flow(name="vaccination", flow_name="vaccination")
+    if params.vaccination:
+        model.request_output_for_flow(name="vaccination", flow_name="vaccination")

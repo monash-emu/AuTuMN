@@ -12,7 +12,6 @@ ROOT_MODEL_PARAMS = {
     "time": {
         "end": SCENARIO_START_TIME + 1
     },
-    "stratify_by_immunity": True,
 }
 
 

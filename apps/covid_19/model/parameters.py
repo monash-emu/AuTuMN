@@ -266,7 +266,6 @@ class Parameters:
     elderly_mixing_reduction: Optional[dict]
     stratify_by_infection_history: bool
     waning_immunity_duration: Optional[float]
-    stratify_by_immunity: bool
     vaccination: Optional[Vaccination]
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float

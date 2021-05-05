@@ -145,10 +145,18 @@ def upload_folder_s3(client, folder_path, dest_folder_key):
 def upload_file_s3(client, src_path, dest_key):
     """Upload a file to S3"""
     logger.info("Uploading from %s to %s", src_path, dest_key)
+
+    # Enforce mime types for common cases; just png for now
+    if src_path.split('.')[-1] == "png":
+        extra_args = S3_UPLOAD_EXTRA_ARGS.copy()
+        extra_args["ContentType"] = 'image/png'
+    else:
+        extra_args = S3_UPLOAD_EXTRA_ARGS
+
     client.upload_file(
         src_path,
         settings.S3_BUCKET,
         dest_key,
-        ExtraArgs=S3_UPLOAD_EXTRA_ARGS,
+        ExtraArgs=extra_args,
         Config=S3_UPLOAD_CONFIG,
     )

@@ -113,7 +113,6 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int, weighted = Tr
         weights = None
     
     candidates = list(np.random.choice(possible_candidates, n_candidates-1, replace=False, p=weights))
-    candidates = random.sample(possible_candidates, k = n_candidates-1)
 
     # Ensure we have the max likelihood candidate
 

@@ -2,6 +2,8 @@ import logging
 import os
 import shutil
 
+import pandas as pd
+
 from autumn import db, plots
 from settings import REMOTE_BASE_DIR
 from tasks.full import FULL_RUN_DATA_DIR
@@ -39,7 +41,7 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
         for src_key in chain_db_keys:
             download_from_run_s3(s3_client, run_id, src_key, quiet)
 
-    # No urun_id supplied; get a single candidate dataframe (ie the MLE run)
+    # No urunid supplied; get a single candidate dataframe (ie the MLE run)
     if urunid == 'mle':
         candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, 1)
     else:

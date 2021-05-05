@@ -136,6 +136,7 @@ def full():
             env={"SKIP_INPUT": "true"},
             meta={
                 pp.run_id_field.key: run_id,
+                pp.urunid_field.key: 'mle',
                 pp.spot_field.key: pp.spot_field.get_option(is_spot),
             },
         )

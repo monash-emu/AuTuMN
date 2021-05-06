@@ -7,6 +7,7 @@ from autumn.inputs import get_mobility_data
 from autumn.utils.utils import apply_moving_average
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
+TRUNCATION_DATE = 398  # 1st February as arbitrary value
 
 
 def get_mobility_funcs(
@@ -25,6 +26,13 @@ def get_mobility_funcs(
     google_mobility_values, google_mobility_days = get_mobility_data(
         country.iso3, region, BASE_DATETIME, google_mobility_locations
     )
+
+    # ##### WARNING: Terrible patch to truncate the Google mobility data - do not merge back to master ######
+    truncation_date_index = google_mobility_days.index(TRUNCATION_DATE)
+    google_mobility_days = google_mobility_days[:truncation_date_index]
+    for location in google_mobility_values:
+        google_mobility_values[location] = google_mobility_values[location][:truncation_date_index]
+
     if smooth_google_data:
         for loc in google_mobility_values:
             google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)

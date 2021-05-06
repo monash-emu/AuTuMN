@@ -7,7 +7,7 @@ from autumn.inputs import get_mobility_data
 from autumn.utils.utils import apply_moving_average
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
-TRUNCATION_DATE = 398  # 1st February as arbitrary value
+TRUNCATION_DATE = 424  # scenario start time
 
 
 def get_mobility_funcs(

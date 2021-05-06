@@ -32,3 +32,5 @@ mobility:
         - school
         - work
         - home
+
+vaccination: null 

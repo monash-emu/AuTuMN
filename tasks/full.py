@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 
-from autumn import db
+from autumn import db, plots
 from autumn.db.database import get_database
 from autumn.db.store import Table
 from autumn.utils.params import update_params
@@ -17,14 +17,20 @@ from utils.timer import Timer
 
 logger = logging.getLogger(__name__)
 
+N_CANDIDATES = 15
 
 FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
+FULL_RUN_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
+FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR]
 TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
 
 
 def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool):
     # Set up directories for output data.
-    recreate_dir(FULL_RUN_DATA_DIR)
+    # Set up directories for plots and output data.
+    with Timer(f"Creating full run directories"):
+        for dirpath in FULL_RUN_DIRS:
+            recreate_dir(dirpath)
 
     s3_client = get_s3_client()
 
@@ -48,6 +54,20 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
             for chain_id, db_path in zip(chain_ids, db_paths)
         ]
         chain_ids = run_parallel_tasks(run_full_model_for_chain, args_list)
+
+    # Create candidate plots from full run outputs
+    with Timer(f"Creating candidate selection plots"):
+        app_region = get_app_region(run_id)
+
+        candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, N_CANDIDATES)
+
+        plots.model.plot_post_full_run(
+            app_region.targets, FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, candidates_df
+        )
+
+    # Upload the plots to AWS S3.
+    with Timer(f"Uploading plots to AWS S3"):
+        upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
 
     # Upload the full model run outputs of AWS S3.
     db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
@@ -127,7 +147,6 @@ def run_full_model_for_chain(
         )
 
         logger.info("Burned MCMC runs %s", burned_runs_str)
-        dest_db.dump_df(Table.MCMC, mcmc_run_df)
 
         # Figure out which model runs to actually re-run.
         sampled_run_ids = mcmc_run_df[mcmc_run_df["sampled"] == 1].parent.unique().tolist()
@@ -135,7 +154,13 @@ def run_full_model_for_chain(
         # Also include the MLE
         mle_df = db.process.find_mle_run(mcmc_run_df)
         mle_run_id = mle_df["run"].iloc[0]
+
         logger.info("Including MLE run %s", mle_run_id)
+
+        #Update sampled column to reflect inclusion of MLE run
+        mle_run_loc = mcmc_run_df.index[mcmc_run_df["run"]==mle_run_id][0]
+        mcmc_run_df.loc[mle_run_loc, "sampled"] = 1
+
         sampled_run_ids.append(mle_run_id)
         sampled_run_ids = sorted(list(set(sampled_run_ids)))
         logger.info(
@@ -173,6 +198,7 @@ def run_full_model_for_chain(
             final_outputs = {}
             final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
             final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
+            final_outputs[Table.MCMC] = mcmc_run_df
             db.store.save_model_outputs(dest_db, **final_outputs)
 
     except Exception:

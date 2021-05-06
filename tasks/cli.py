@@ -82,9 +82,10 @@ def run_full_models(run, burn, sample, verbose):
 
 @cli.command("powerbi")
 @click.option("--run", type=str, required=True)
+@click.option("--urunid", type=str, default="mle")
 @click.option("--verbose", is_flag=True)
-def run_powerbi(run, verbose):
-    powerbi_task(run, not verbose)
+def run_powerbi(run, urunid, verbose):
+    powerbi_task(run, urunid, not verbose)
 
 
 cli()

@@ -5,15 +5,17 @@ import logging
 import os
 from math import ceil
 from typing import Callable, List
+from datetime import date
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot
 
+
 from autumn.inputs.demography.queries import get_population_by_agegroup
 from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
-from autumn.plots.plotter import COLOR_THEME, Plotter
+from autumn.plots.plotter import COLOR_THEME, Plotter, FilePlotter
 from autumn.plots.utils import (
     REF_DATE,
     _plot_targets_to_axis,
@@ -631,3 +633,28 @@ def _plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title)
 
     for tick in ax.yaxis.get_major_ticks():
         tick.label.set_fontsize(12)
+
+
+
+def plot_candidates_for_output(subplotter, output_name, outputs, target: pd.Series = None):
+    fig = pyplot.figure(figsize=(12,8))
+    ax = fig.gca()
+
+    filename = f"full-run-candidates-{output_name}"
+    title_text = output_name
+
+    cm = pyplot.get_cmap('tab10')
+    target_color = (1.0,1.0,1.0,0.5)
+    linestyles = ['-', '--', '-.',':']
+    style_list = [linestyles[i%len(linestyles)] for i in range(len(outputs))]
+
+    if target is not None:
+        targets_patch = ax.scatter(target.index, target.data, marker="o", color=target_color, edgecolor="black", s=30,zorder=999)
+    
+    # Plot MLE candidate first, and in black
+    outputs.iloc[:,-1].plot(color='black')
+    df_patch = outputs.iloc[:,:-1].plot(ax=ax,style=style_list,lw=1.5,colormap=cm)
+
+    pyplot.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+
+    subplotter.save_figure(fig, filename=filename, title_text=title_text)

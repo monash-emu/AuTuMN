@@ -12,6 +12,13 @@ run_id_field = TextInputField(
     hint="Which calibration run should be used?",
     type=str,
 )
+urunid_field = TextInputField(
+    key="urunid",
+    title="Candidate run id",
+    hint="Which candidate run should be used? (format: chain_run)",
+    default="mle",
+    type=str,
+)
 spot_field = BooleanInputField(
     key="spot-instance",
     title="Use spot instances",
@@ -20,7 +27,7 @@ spot_field = BooleanInputField(
     type=bool,
 )
 
-fields = [run_id_field, spot_field]
+fields = [run_id_field, urunid_field, spot_field]
 input_step = InputStep(
     key="powerbi-processing-settings",
     run_condition='build.env("SKIP_INPUT") == null',

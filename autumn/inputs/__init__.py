@@ -15,6 +15,8 @@ from autumn.inputs.john_hopkins.queries import get_john_hopkins_data
 from autumn.inputs.mobility.fetch import fetch_mobility_data
 from autumn.inputs.mobility.queries import get_mobility_data
 from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
+from autumn.inputs.owid.fetch import fetch_owid_data
+
 from utils.timer import Timer
 
 
@@ -34,3 +36,6 @@ def fetch_input_data():
 
     with Timer("Fetching COVID PHL data."):
         fetch_covid_phl_data()
+
+    with Timer("Fetching OWID data."):
+        fetch_owid_data()

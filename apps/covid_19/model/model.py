@@ -22,7 +22,7 @@ from apps.covid_19.model.stratifications.cluster import (
     get_cluster_strat,
 )
 from apps.covid_19.model.stratifications.history import get_history_strat
-from apps.covid_19.model.stratifications.immunity import get_immunity_strat
+from apps.covid_19.model.stratifications.vaccination import get_vaccination_strat
 from autumn import inputs
 from autumn.curve.scale_up import scale_up_function
 
@@ -130,15 +130,6 @@ def build_model(params: dict) -> CompartmentalModel:
         source=Compartment.LATE_ACTIVE,
     )
 
-    if params.waning_immunity_duration is not None:
-        # Waning immunity (if requested)
-        model.add_transition_flow(
-            name="warning_immunity",
-            fractional_rate=1.0 / params.waning_immunity_duration,
-            source=Compartment.RECOVERED,
-            dest=Compartment.SUSCEPTIBLE,
-        )
-
     # Stratify the model by age group.
     age_strat = get_agegroup_strat(params, total_pops)
     model.stratify_with(age_strat)
@@ -147,19 +138,30 @@ def build_model(params: dict) -> CompartmentalModel:
     clinical_strat = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
 
-    # Stratify by immunity - which will include vaccination and infection history
-    if params.stratify_by_immunity:
-        immunity_strat = get_immunity_strat(params)
-        model.stratify_with(immunity_strat)
-        if params.vaccination:
-            vacc_params = params.vaccination
-            for roll_out_component in vacc_params.roll_out_components:
-                add_vaccination_flows(model, roll_out_component, age_strat.strata)
-
     # Infection history stratification
     if params.stratify_by_infection_history:
-        history_strat = get_history_strat(params, compartment_periods)
+        history_strat = get_history_strat(params)
         model.stratify_with(history_strat)
+
+        # Waning immunity (if requested)
+        # Note that this approach would mean that the recovered in the naive class have actually previously had Covid.
+        if params.waning_immunity_duration:
+            model.add_fractional_flow(
+                name="waning_immunity",
+                fractional_rate=1.0 / params.waning_immunity_duration,
+                source=Compartment.RECOVERED,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"history": "naive"},
+                dest_strata={"history": "experienced"}
+            )
+
+    # Stratify by vaccination status
+    if params.vaccination:
+        vaccination_strat = get_vaccination_strat(params)
+        model.stratify_with(vaccination_strat)
+        vacc_params = params.vaccination
+        for roll_out_component in vacc_params.roll_out_components:
+            add_vaccination_flows(model, roll_out_component, age_strat.strata)
 
     # Stratify model by Victorian subregion (used for Victorian cluster model).
     if params.victorian_clusters:

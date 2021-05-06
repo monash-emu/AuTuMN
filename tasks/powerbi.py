@@ -2,6 +2,8 @@ import logging
 import os
 import shutil
 
+import pandas as pd
+
 from autumn import db, plots
 from settings import REMOTE_BASE_DIR
 from tasks.full import FULL_RUN_DATA_DIR
@@ -19,7 +21,7 @@ POWERBI_COLLATED_PATH = os.path.join(POWERBI_DATA_DIR, "collated")
 POWERBI_COLLATED_PRUNED_PATH = os.path.join(POWERBI_DATA_DIR, "collated-pruned")
 
 
-def powerbi_task(run_id: str, quiet: bool):
+def powerbi_task(run_id: str, urunid: str, quiet: bool):
     s3_client = get_s3_client()
 
     # Set up directories for plots and output data.
@@ -39,12 +41,22 @@ def powerbi_task(run_id: str, quiet: bool):
         for src_key in chain_db_keys:
             download_from_run_s3(s3_client, run_id, src_key, quiet)
 
+    # No urunid supplied; get a single candidate dataframe (ie the MLE run)
+    if urunid == 'mle':
+        candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, 1)
+    else:
+        c, r = (int(x) for x in urunid.split('_'))
+        candidates_df = pd.DataFrame(columns=['chain', 'run'])
+        candidates_df.loc[0] = dict(chain=c,run=r)
+
     # Remove unnecessary data from each full model run database.
     full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Pruning chain databases"):
         get_dest_path = lambda p: os.path.join(POWERBI_PRUNED_DIR, os.path.basename(p))
         for full_db_path in full_db_paths:
-            db.process.prune_chain(full_db_path, get_dest_path(full_db_path))
+            chain_id = int(full_db_path.split('-')[-1])
+            chain_candidates = candidates_df[candidates_df["chain"] == chain_id]
+            db.process.prune_chain(full_db_path, get_dest_path(full_db_path), chain_candidates)
 
     # Collate data from each pruned full model run database into a single database.
     pruned_db_paths = db.load.find_db_paths(POWERBI_PRUNED_DIR)
@@ -58,7 +70,7 @@ def powerbi_task(run_id: str, quiet: bool):
 
     # Remove unnecessary data from the database.
     with Timer(f"Pruning final database"):
-        db.process.prune_final(POWERBI_COLLATED_PATH, POWERBI_COLLATED_PRUNED_PATH)
+        db.process.prune_final(POWERBI_COLLATED_PATH, POWERBI_COLLATED_PRUNED_PATH, candidates_df)
 
     # Unpivot database tables so that they're easier to process in PowerBI.
     run_slug = run_id.replace("/", "-")

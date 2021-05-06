@@ -3,11 +3,14 @@ Processing data from the output database.
 """
 import logging
 from typing import List
+from datetime import date
 
 import numpy as np
 import pandas as pd
+import random
 
 from autumn.db.database import BaseDatabase, get_database
+from autumn.db.load import load_mcmc_tables
 from autumn.utils.params import load_params, load_targets
 from utils.runs import read_run_id
 
@@ -54,8 +57,76 @@ def find_mle_params(mcmc_df: pd.DataFrame, param_df: pd.DataFrame) -> dict:
 
     return params
 
+def get_identifying_run_ids(table: pd.DataFrame) -> pd.Series:
+    """
+    Args:
+        table (pd.DataFrame): Table with 'run' and 'chain' columns
+    
+    Returns:
+        pd.Series: Combined run identifier of same length as table
+    
+    """
+    return table['chain'].astype(str) + ':' + table['run'].astype(str)
 
-def prune_chain(source_db_path: str, target_db_path: str):
+
+def select_pruning_candidates(src_db_path: str, n_candidates: int, weighted = True) -> pd.DataFrame:
+    """Select a random set of 'good enough' candidates for manual inspection
+    The output set will be guaranteed to contain the highest
+    MLE run from all the chains, in addition to randomly selected candidates
+
+    Args:
+        src_db_path (str): Base path of calibration run (containing subdirectories for each chain)
+        n_candidates (int): Number of candidates to select.  If 1, then only the MLE run from all chains will be selected
+        weighted (bool): Weight candidates by 1.0/loglikelihood (False means uniform selection)
+    Returns:
+        candidates (pd.DataFrame): DataFrame containing unique identifiers (chain_id, run_id) of all candidates
+
+    """
+
+    #+++ FIXME/TODO
+    # We just use a naive random selection, disregarding burn-in etc
+    # Could possibly use selection routine from sample_outputs_for_calibration_fit
+
+    # Load all MCMC run data to select from
+
+    all_mcmc_df = pd.concat(load_mcmc_tables(src_db_path), ignore_index=True)
+
+    all_accepted = all_mcmc_df[all_mcmc_df["accept"]==1]
+
+    # Find the MLE candidate
+    max_ll = all_accepted["loglikelihood"].max()
+    max_ll_candidate = all_accepted[all_accepted["loglikelihood"] == max_ll].iloc[0].name
+
+    # Ensure candidates have been sampled and that output data is available
+    accepted_and_sampled = all_accepted[all_accepted["sampled"] == 1]
+
+    # Sample random candidates
+    possible_candidates = list(accepted_and_sampled.index)
+    if max_ll_candidate in possible_candidates:
+        possible_candidates.remove(max_ll_candidate)
+
+    if weighted:
+        # +++ FIXME Adding 10.0 to not overweight, should parameterise this
+        weights = 1.0 / (10.0 + np.abs(np.array(accepted_and_sampled.loc[possible_candidates].loglikelihood)))
+        weights = weights/weights.sum()
+    else:
+        weights = None
+    
+    # Ensure we aren't sampling too many candidates (most likely to show up in testing)
+    n_candidates = min(n_candidates, len(possible_candidates))
+    
+    candidates = list(np.random.choice(possible_candidates, n_candidates-1, replace=False, p=weights))
+
+    # Ensure we have the max likelihood candidate
+
+    candidates.append(max_ll_candidate)
+
+    candidates_df = all_accepted.loc[candidates]
+
+    return candidates_df
+
+
+def prune_chain(source_db_path: str, target_db_path: str, chain_candidates: pd.DataFrame):
     """
     Read the model outputs from a database and removes output data that is not MLE.
     This is an operation applied to each chain's database.
@@ -64,30 +135,26 @@ def prune_chain(source_db_path: str, target_db_path: str):
     source_db = get_database(source_db_path)
     target_db = get_database(target_db_path)
 
-    # Find the maximum accepted loglikelihood for all runs
-    mcmc_run_df = source_db.query("mcmc_run")
-    mle_run_df = find_mle_run(mcmc_run_df)
-    mle_run_id = mle_run_df.run.iloc[0]
-    mle_chain_id = mle_run_df.chain.iloc[0]
     # Copy tables over, pruning some.
     tables_to_copy = source_db.table_names()
     for table_name in tables_to_copy:
         table_df = source_db.query(table_name)
         if table_name == "outputs":
             # Drop everything except the MLE run
-            logger.info("Pruning outputs so that it only contains max likelihood runs")
-            mle_mask = (table_df["run"] == mle_run_id) & (table_df["chain"] == mle_chain_id)
-            max_ll_table_df = table_df[mle_mask]
-            target_db.dump_df(table_name, max_ll_table_df)
+            logger.info("Pruning outputs so that it only contains candidate runs")
+            candidate_mask = table_df["run"].isin(chain_candidates["run"])
+            candidate_table_df = table_df[candidate_mask]
+            target_db.dump_df(table_name, candidate_table_df)
         elif table_name:
             # Copy table over (mcmc_run, mcmc_params, derived_outputs)
+            # We need to keep derived outputs here to be used by uncertainty calculations
             logger.info("Copying %s", table_name)
             target_db.dump_df(table_name, table_df)
 
     logger.info("Finished pruning %s into %s", source_db_path, target_db_path)
 
 
-def prune_final(source_db_path: str, target_db_path: str):
+def prune_final(source_db_path: str, target_db_path: str, candidates_df: pd.DataFrame):
     """
     Read the model outputs from a database and remove all run-related data that is not MLE.
     This is the final pruning for the collated database.
@@ -105,20 +172,17 @@ def prune_final(source_db_path: str, target_db_path: str):
     tables_to_copy = source_db.table_names()
     for table_name in tables_to_copy:
         table_df = source_db.query(table_name)
-        if table_name == "outputs":
-            # Drop everything except the MLE run
-            logger.info("Pruning outputs so that it only contains max likelihood runs")
-            mle_mask = (table_df["run"] == mle_run_id) & (table_df["chain"] == mle_chain_id)
-            max_ll_table_df = table_df[mle_mask]
-            target_db.dump_df(table_name, max_ll_table_df)
-        elif table_name == "derived_outputs":
-            # Drop everything except the MLE run
-            logger.info("Pruning derived_outputs so that it only contains max likelihood runs")
-            mle_mask = (table_df["run"] == mle_run_id) & (table_df["chain"] == mle_chain_id)
-            max_ll_table_df = table_df[mle_mask]
-            target_db.dump_df(table_name, max_ll_table_df)
+        if table_name == "derived_outputs":
+            # Drop everything except the candidate runs
+            logger.info("Pruning derived_outputs so that it only contains candidate runs")
+            candidate_iruns = get_identifying_run_ids(candidates_df)
+            table_df['irun_id'] = get_identifying_run_ids(table_df)
+            filtered_table_df = table_df[table_df['irun_id'].isin(candidate_iruns)]
+            final_df = filtered_table_df.drop(columns='irun_id')
+            target_db.dump_df(table_name, final_df)
         elif table_name:
-            # Copy table over (mcmc_run, mcmc_params)
+            # Copy table over (outputs, mcmc_run, mcmc_params)
+            # Note: Outputs has already been pruned to candidates in early prune_chains sweep
             logger.info("Copying %s", table_name)
             target_db.dump_df(table_name, table_df)
 
@@ -240,3 +304,24 @@ def sample_runs(mcmc_df: pd.DataFrame, num_samples: int):
     chosen_idxs = np.random.choice(idxs, size=num_samples, replace=False, p=sample_pr)
     chosen_runs = [run_choices[i] for i in chosen_idxs]
     return chosen_runs
+
+def select_outputs_from_candidates(output_name: str, derived_output_tables: pd.DataFrame, candidates_df: pd.DataFrame, ref_date: date):
+    out_df = pd.DataFrame()
+    for idx, c in candidates_df.iterrows():
+        chain = int(c['chain'])
+        run = int(c['run'])
+        ctable = derived_output_tables[chain]
+        run_mask = ctable["run"] == run
+        scenario_mask = ctable['scenario'] == 0
+        masked = ctable[run_mask & scenario_mask]
+        name = f"{chain}_{run}"
+        out_df[name] = pd.Series(index=timelist_to_dti(masked["times"],ref_date), data=masked[output_name].data)
+    return out_df
+
+def timelist_to_dti(times, ref_date):
+    datelist = [ref_date + pd.offsets.Day(t) for t in times]
+    return pd.DatetimeIndex(datelist)
+
+def target_to_series(target, ref_date):
+    index = timelist_to_dti(target['times'], ref_date)
+    return pd.Series(index=index, data=target['values'])

@@ -1,4 +1,4 @@
-description: Reduction in MHS by 50%
+description: End MHS 
 mobility:
   microdistancing:
     behaviour:
@@ -8,7 +8,7 @@ mobility:
         - 426
         values:
         - 1.0
-        - 0.5
-parent: apps/covid_19/regions/calabarzon/params/default.yml
+        - 0.0
+parent: apps/covid_19/regions/central_visayas/params/default.yml
 time:
   start: 424

@@ -14,6 +14,7 @@ from apps.tuberculosis.regions.marshall_islands.outputs.main_script import (
 
 from apps.covid_19.mixing_optimisation.sample_code import run_sample_code as run_sample_code_mixing
 from apps.covid_19.vaccine_optimisation.sample_code import run_sample_code as run_sample_code_vacc
+from apps.covid_19.vaccine_optimisation.utils import write_optimised_scenario
 
 
 from .calibrate import calibrate
@@ -41,6 +42,11 @@ def run_sample():
 def run_sample():
     """Run sample code for optimisation"""
     run_sample_code_vacc()
+
+
+@cli.command("run_vaccopti_scenario_write")
+def run_vaccopti_scenario_write():
+    write_optimised_scenario()
 
 
 cli.add_command(run)

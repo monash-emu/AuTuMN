@@ -1,7 +1,6 @@
 from apps.covid_19.vaccine_optimisation.vaccine_opti import (
     get_decision_vars_names,
     initialise_opti_object,
-    create_scenario_yml_file
 )
 
 import numpy as np

@@ -178,6 +178,13 @@ Philippines
 """
 
 
+"""
+Application-specific methods
+
+Philippines
+"""
+
+
 def accumulate_target(existing_targets, target_name, category=""):
     """
     Create a cumulative version of a target from the raw daily (annual) rates.
@@ -222,7 +229,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
-            "distri_params": [1.0, 100.0],
+            "distri_params": [10.0, 100.0],
         },
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
@@ -239,23 +246,8 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.4],
+            "distri_params": [1.0, 0.2],
             "trunc_range": [0.5, np.inf],
-        },
-        {
-            "param_name": "voc_emmergence.end_time",
-            "distribution": "uniform",
-            "distri_params": [426, 731],  # 1 Mar 2021 - 31 Dec 2021
-        },
-        {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
-            "distribution": "uniform",
-            "distri_params": [0.8, 1.0],
-        },
-        {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
-            "distribution": "uniform",
-            "distri_params": [367, 425],  # 1 Jan - 28 Feb
         },
     ]
 
@@ -265,16 +257,12 @@ def add_standard_philippines_targets(targets):
     # Ignore notification values before day 100
     notifications = ignore_calibration_target_before_date(targets["notifications"], 100)
 
-    n = len(notifications["times"])
-    notification_weights = [1. for _ in range(n - 60)] + [5. for _ in range(60)]  # last 60 days are weighted
-
     return [
         {
             "output_key": "notifications",
             "years": notifications["times"],
             "values": notifications["values"],
             "loglikelihood_distri": "negative_binomial",
-            "time_weights": notification_weights
         },
         {
             "output_key": "icu_occupancy",

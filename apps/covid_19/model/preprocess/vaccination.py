@@ -1,7 +1,10 @@
 import numpy as np
 
-from apps.covid_19.constants import Compartment, VACCINE_ELIGIBLE_COMPARTMENTS
+from apps.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS
 from autumn.curve.scale_up import scale_up_function
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
+from apps.covid_19.model.preprocess.clinical import get_all_adjs
 
 
 def get_vacc_roll_out_function_from_coverage(supply_params):
@@ -44,9 +47,9 @@ def get_vacc_roll_out_function_from_doses(
         num_indices = []
         deno_indices = []
         for i, compartment in enumerate(compartments):
-            if compartment.name in VACCINE_ELIGIBLE_COMPARTMENTS and compartment.strata['agegroup'] in eligible_age_groups and compartment.strata['immunity'] == "unvaccinated":
+            if compartment.name in VACCINE_ELIGIBLE_COMPARTMENTS and compartment.strata["agegroup"] in eligible_age_groups and compartment.strata["vaccination"] == "unvaccinated":
                 deno_indices.append(i)
-                if compartment.name == compartment_name and compartment.strata['agegroup'] == eligible_age_group:
+                if compartment.name == compartment_name and compartment.strata["agegroup"] == eligible_age_group:
                     num_indices.append(i)
 
         compartment_size = sum([compartment_values[i] for i in num_indices])
@@ -96,8 +99,8 @@ def add_vaccination_flows(model, roll_out_component, age_strata):
     eligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
     for eligible_age_group in eligible_age_groups:
-        _source_strata = {"immunity": "unvaccinated", "agegroup": eligible_age_group}
-        _dest_strata = {"immunity": "vaccinated", "agegroup": eligible_age_group}
+        _source_strata = {"vaccination": "unvaccinated", "agegroup": eligible_age_group}
+        _dest_strata = {"vaccination": "vaccinated", "agegroup": eligible_age_group}
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             if is_coverage:
                 # the roll-out function is applied as a rate that multiplies the source compartments
@@ -126,3 +129,58 @@ def add_vaccination_flows(model, roll_out_component, age_strata):
                     source_strata=_source_strata,
                     dest_strata=_dest_strata,
                 )
+
+
+def add_clinical_adjustments_to_strat(
+        strat,
+        unaffected_stratum,
+        affected_stratum,
+        params,
+        symptomatic_adjuster,
+        hospital_adjuster,
+        ifr_adjuster
+):
+    """
+    Get all the adjustments in the same way for both the history and vaccination stratifications.
+
+    """
+    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjs(
+        params.clinical_stratification,
+        params.country,
+        params.population,
+        params.infection_fatality.props,
+        params.sojourn,
+        params.testing_to_detection,
+        params.case_detection,
+        ifr_adjuster,
+        symptomatic_adjuster,
+        hospital_adjuster,
+    )
+
+    for i_age, agegroup in enumerate(AGEGROUP_STRATA):
+        for clinical_stratum in CLINICAL_STRATA:
+            relevant_strata = {
+                "agegroup": agegroup,
+                "clinical": clinical_stratum,
+            }
+            strat.add_flow_adjustments(
+                "infect_onset",
+                {unaffected_stratum: None, affected_stratum: entry_adjustments[agegroup][clinical_stratum]},
+                dest_strata=relevant_strata,  # Must be dest
+            )
+            strat.add_flow_adjustments(
+                "infect_death",
+                {unaffected_stratum: None, affected_stratum: death_adjs[agegroup][clinical_stratum]},
+                source_strata=relevant_strata,  # Must be source
+            )
+            strat.add_flow_adjustments(
+                "progress",
+                {unaffected_stratum: None, affected_stratum: progress_adjs[clinical_stratum]},
+                source_strata=relevant_strata,  # Either source or dest or both
+            )
+            strat.add_flow_adjustments(
+                "recovery",
+                {unaffected_stratum: None, affected_stratum: recovery_adjs[agegroup][clinical_stratum]},
+                source_strata=relevant_strata,  # Must be source
+            )
+    return strat

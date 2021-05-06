@@ -3,6 +3,7 @@ from summer import Multiply, Stratification
 from apps.covid_19.constants import COMPARTMENTS, Clinical
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.vaccination import add_clinical_adjustments_to_strat
+from apps.covid_19.model.preprocess.vaccination import add_vaccine_infection_and_severity
 
 CLINICAL_STRATA = [
     Clinical.NON_SYMPT,
@@ -25,8 +26,9 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     immunity_strat.set_population_split({"unvaccinated": 1., "vaccinated": 0.})
 
     # Sort out the parameters to be applied.
-    severity_efficacy = params.vaccination.severity_efficacy
-    infection_efficacy = params.vaccination.infection_efficacy
+
+    infection_efficacy, severity_efficacy = add_vaccine_infection_and_severity(
+        params.vaccination.vacc_prop_prevent_infection, params.vaccination.overall_efficacy)
     symptomatic_adjuster, hospital_adjuster, ifr_adjuster = \
         (1. - severity_efficacy,) * 3
 

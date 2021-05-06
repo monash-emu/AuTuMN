@@ -12,7 +12,6 @@ ROOT_MODEL_PARAMS = {
     "time": {
         "end": SCENARIO_START_TIME + 1
     },
-    "stratify_by_immunity": True,
 }
 
 
@@ -130,17 +129,4 @@ def make_objective_func():
     return objective_func
 
 
-def create_scenario_yml_file(country, decision_vars, sc_index=None):
-    """
-    Create a yml file for a scenario associated with a given decision vector
-    """
-    country_folder_name = country.replace("-", "_")
 
-    opti_object = initialise_opti_object(country)
-
-    sc_params = opti_object.scenario_func(decision_vars)
-    sc_params["parent"] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
-
-    param_file_path = f"../regions/{country_folder_name}/params/scenario-{sc_index}.yml"
-    with open(param_file_path, "w") as f:
-        yaml.dump(sc_params, f)

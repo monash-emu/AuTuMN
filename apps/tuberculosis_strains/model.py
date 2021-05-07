@@ -528,16 +528,43 @@ def _build_class_strat(params):
     )
     return strat
 
+# new straitifaction into private or not
+def _build_qualitycare_strat(params):
+    strat = Stratification("quality", ["public", "private"], [Compartment.DETECTED, Compartment.ON_TREATMENT])
+    strat.add_flow_adjustments(
+        "detection",
+        {"public": Multiply(1.0), "private": Multiply(0.65)},
+        source_strata={"strain": "ds"},
+    )
+    strat.add_flow_adjustments(
+        "treatment_commencement",
+        {"public": Multiply(1), "private": Multiply(0.5)},
+    )
+#''' [4] Emma 5th May 2021. Not sure why this flow is applied to the detected compartment '''
+    strat.add_flow_adjustments(
+        "failure_retreatment",
+        {"public": Multiply(1), "private": Multiply(0.5)},
+    )
+    return strat
+
 
 def _build_retention_strat(params):
-    strat = Stratification("retained", ["yes", "no"], [Compartment.DETECTED])
+    strat = Stratification("retained", ["yes", "no"], [Compartment.DETECTED, Compartment.ON_TREATMENT])
     strat.add_flow_adjustments(
         "detection",
         {
             "yes": Multiply(params["retention_prop"]),
-            "no": Multiply(1 - params["retention_prop"]),
-        },
+            "no": Multiply(1 - params["retention_prop"])},
+        source_strata={"quality": "public"}
     )
+    strat.add_flow_adjustments(
+        "detection",
+        {
+            "yes": Multiply(params["retention_prop_private"]),
+            "no": Multiply(1 - params["retention_prop_private"])},
+        source_strata={"quality": "private"}
+    )
+        
     strat.add_flow_adjustments(
         "missed_to_active",
         {"yes": Multiply(0), "no": Multiply(1)},
@@ -552,6 +579,8 @@ def _build_retention_strat(params):
         {"yes": Multiply(1), "no": Multiply(0)},
     )
     return strat
+
+
 
 def _get_derived_params(params):
     # set reinfection contact rate parameters

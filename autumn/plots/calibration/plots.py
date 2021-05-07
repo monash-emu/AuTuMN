@@ -24,6 +24,7 @@ from autumn.plots.utils import (
     change_xaxis_to_date,
     get_plot_text_dict,
 )
+from autumn.calibration.diagnostics import calculate_effective_sample_size
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +239,52 @@ def plot_autocorrelation(
 
     # Save figure
     plotter.save_figure(fig, filename=f"{param_name}-autocorrelation", title_text="")
+
+
+def make_ess_table(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFrame], burn_in: int):
+    """
+    Creates a table containing the effective sample size for each parameter and for each chain
+    :return: a pandas dataframe
+    """
+    param_options = mcmc_params[0]["name"].unique().tolist()
+
+    index_names = param_options + ["average ESS"]
+    col_names = [f"chain_{i}" for i in range(len(mcmc_tables))]
+    ess_table = pd.DataFrame(0, index=index_names, columns=col_names)
+
+    for i_chain, table_df in enumerate(mcmc_params):
+        for param_name in param_options:
+            posterior_chain = get_posterior([table_df], [mcmc_tables[i_chain]], param_name, burn_in)
+            ess = calculate_effective_sample_size(posterior_chain)
+            ess_table[f"chain_{i_chain}"][param_name] = ess
+
+        ess_table[f"chain_{i_chain}"]["average ESS"] = ess_table[f"chain_{i_chain}"][0: len(param_options)].mean()
+
+    ess_table["total_ESS"] = ess_table.sum(numeric_only=True, axis=1)
+
+    return ess_table
+
+
+def plot_effective_sample_size(
+    plotter: Plotter, mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFrame], burn_in: int
+):
+    fig, axis, _, n_rows, n_cols, indices = plotter.get_figure()
+
+    ess_table = make_ess_table(mcmc_params, mcmc_tables, burn_in)
+    colours = COLOR_THEME[1: len(mcmc_tables) + 1] + ["black"]  # AuTuMN color scheme and black for the sum of ESS
+    ess_table.plot.barh(ax=axis, color=colours)
+
+    axis.tick_params(axis='y', labelrotation=45)
+    axis.xaxis.set_tick_params(labeltop='on', top='on')
+    axis.set_xlabel("effective sample size")
+    axis.set_title("Effective sample size")
+
+    # figure height
+    h = (len(ess_table.index)) * 1.5
+    fig.set_figheight(h)
+
+    # Save figure
+    plotter.save_figure(fig, filename=f"effective_sample_size", title_text="")
 
 
 def plot_parallel_coordinates_flat(

@@ -271,14 +271,16 @@ def plot_effective_sample_size(
     fig, axis, _, n_rows, n_cols, indices = plotter.get_figure()
 
     ess_table = make_ess_table(mcmc_params, mcmc_tables, burn_in)
-    ess_table.plot.barh(ax=axis)
+    colours = COLOR_THEME[1: len(mcmc_tables) + 1] + ["black"]  # AuTuMN color scheme and black for the sum of ESS
+    ess_table.plot.barh(ax=axis, color=colours)
 
     axis.tick_params(axis='y', labelrotation=45)
-
+    axis.xaxis.set_tick_params(labeltop='on', top='on')
+    axis.set_xlabel("effective sample size")
     axis.set_title("Effective sample size")
 
     # figure height
-    h = (len(ess_table.index)) * 2
+    h = (len(ess_table.index)) * 1.5
     fig.set_figheight(h)
 
     # Save figure

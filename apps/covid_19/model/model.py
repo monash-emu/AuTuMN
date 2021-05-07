@@ -69,14 +69,14 @@ def build_model(params: dict) -> CompartmentalModel:
         contact_rate = params.contact_rate
 
     # Adjust contact rate for Variant of Concerns
-    if params.voc_emmergence:
+    if params.voc_emergence:
         voc_multiplier = scale_up_function(
-            x=[params.voc_emmergence.start_time, params.voc_emmergence.end_time],
+            x=[params.voc_emergence.start_time, params.voc_emergence.end_time],
             y=[
                 1.0,
                 1.0
-                + params.voc_emmergence.final_proportion
-                * (params.voc_emmergence.contact_rate_multiplier - 1.0),
+                + params.voc_emergence.final_proportion
+                * (params.voc_emergence.contact_rate_multiplier - 1.0),
             ],
             method=4,
         )

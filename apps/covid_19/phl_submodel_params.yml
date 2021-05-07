@@ -54,7 +54,7 @@ mobility:
         - 1.
         - 0.
 
-voc_emmergence:
+voc_emergence:
   final_proportion: 1.
   start_time: 336  # 1 Dec 2020
   end_time: 397  # 31 Jan 2021

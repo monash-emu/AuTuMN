@@ -2,21 +2,21 @@ description: BASELINE
 parent: apps/tuberculosis_strains/params.yml
 iso3: "PHL"
 
-
+# EM added the range below
 time:
-  start: 1950
-  end: 2025
+  start: 1800
+  end: 2035
   step: 1
-  critical_ranges: []
+  critical_ranges: [2010,2018]
 
 
-start_population_size: 2.1e+7
+start_population_size: 1.89e+6
 
-crude_birth_rate: 0.035
-
-initial_early_latent_population: 3000
-initial_late_latent_population: 5000000
-initial_infectious_population: 30000
+crude_birth_rate: 0.0264
+# need to add 0.024849 after 1900 to get to the right demography, or is this over-ridden ?
+initial_early_latent_population: 300
+initial_late_latent_population: 500000
+initial_infectious_population: 3000
 initial_on_treatment_population: 0
 
 calculated_outputs:

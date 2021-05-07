@@ -37,7 +37,7 @@ initial_detected_population: 0
 start_population_size: 500
 universal_death_rate: .014
 
-crude_birth_rate: 0.2
+crude_birth_rate: 0.02
 
 # basic infection and disease parameters
 contact_rate: 35
@@ -45,7 +45,8 @@ rr_infection_latent: 0.4
 rr_infection_recovered: 0.4
 
 # latency-related parameters
-preventive_treatment_rate: 1.0
+# EM changed from 1 to 0.01
+preventive_treatment_rate: 0.01
 preventive_treatment_rate_stratified:
   strain:
     ds: 1.0
@@ -73,7 +74,7 @@ late_activation_rate_stratified:
     "15": 0.600411
 
 # active-disease parameters
-
+# EM changes FOI for extra-pulmonary from 0.24 to 0 
 organ:
   props:
     smear_positive: 0.52
@@ -83,7 +84,7 @@ organ:
   foi:
     smear_positive: 1.0
     smear_negative: 0.24
-    extra_pulmonary: 0.24
+    extra_pulmonary: 0
 
 retention_prop: 0.8
 

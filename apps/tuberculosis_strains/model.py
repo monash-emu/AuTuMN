@@ -166,10 +166,11 @@ def build_model(params: dict) -> CompartmentalModel:
         Compartment.ON_TREATMENT,
         Compartment.DETECTED,
     )
+#''' [1] Emma changed this 4th May "from compartment was ON_TREATMENT 2021'''   
     model.add_fractional_flow(
         "spontaneous_recovery",
         params["spontaneous_recovery_rate"],
-        Compartment.ON_TREATMENT,
+        Compartment.INFECTIOUS,
         Compartment.LATE_LATENT,
     )
 
@@ -360,7 +361,15 @@ def _build_age_strat(params: dict, uni_death_flow_names: list):
 
     return age_strat
 
-
+''' [2] Emma changed 5th May 2021 no need to adjust latent treatment based on vaccination status. Was previously
+   vac_strat.add_flow_adjustments(
+        "treatment_early",
+        {"unvaccinated": Multiply(0.0), "vaccinated": Multiply(1.0)},
+    )
+    vac_strat.add_flow_adjustments(
+        "treatment_late", {"unvaccinated": Multiply(0.0), "vaccinated": Multiply(1.0)}
+    )
+'''
 def _build_vac_strat(params):
     vac_strat = Stratification("vac", ["unvaccinated", "vaccinated"], [Compartment.SUSCEPTIBLE])
     vac_strat.set_population_split({"unvaccinated": 1.0, "vaccinated": 0.0})
@@ -375,10 +384,10 @@ def _build_vac_strat(params):
     )
     vac_strat.add_flow_adjustments(
         "treatment_early",
-        {"unvaccinated": Multiply(0.0), "vaccinated": Multiply(1.0)},
+        {"unvaccinated": Multiply(1.0), "vaccinated": Multiply(1.0)},
     )
     vac_strat.add_flow_adjustments(
-        "treatment_late", {"unvaccinated": Multiply(0.0), "vaccinated": Multiply(1.0)}
+        "treatment_late", {"unvaccinated": Multiply(1.0), "vaccinated": Multiply(1.0)}
     )
 
     def time_varying_vaccination_coverage(t):
@@ -428,10 +437,17 @@ def _build_organ_strat(params):
     )
     return organ_strat
 
+'''Emma 5th May 2021, I would like this 0.8 to be coded inside parameters, rather than here. Also I changed the initial split 
+from  strat.set_population_split({"ds": 0.5, "mdr": 0.5}) 
+need to add in different detection rate below. Something like
+    strat.add_flow_adjustments(
+        "detection", _adjust_all_multiply(params["detection_rate"]["strain"]) need to find out what detection is called
+    )
 
+'''
 def _build_strain_strat(params):
     strat = StrainStratification("strain", ["ds", "mdr"], INFECTED_COMPS)
-    strat.set_population_split({"ds": 0.5, "mdr": 0.5})
+    strat.set_population_split({"ds": 0.95, "mdr": 0.05})
     for c in INFECTED_COMPS:
         strat.add_infectiousness_adjustments(c, {"ds": Multiply(1.0), "mdr": Multiply(0.8)})
 
@@ -503,7 +519,9 @@ def _build_class_strat(params):
         "spontaneous_recovery",
         _adjust_all_multiply(params["spontaneous_recovery_rate_stratified"]["classified"]),
     )
-
+#''' [3] Emma 5th May 2021. should make sure that this can lead to true detection in some failed treatments 
+#to reflect higher use of geneX with retreatment cases. Need to add a flow from misclassified undergoing 
+#treatment to properly classified diagnosed for MDR'''
     strat.add_flow_adjustments(
         "failure_retreatment",
         _adjust_all_multiply(params["failure_retreatment_rate_stratified"]["classified"]),
@@ -528,13 +546,12 @@ def _build_retention_strat(params):
         "treatment_commencement",
         {"yes": Multiply(1), "no": Multiply(0)},
     )
-
+#''' [4] Emma 5th May 2021. Not sure why this flow is applied to the detected compartment '''
     strat.add_flow_adjustments(
         "failure_retreatment",
         {"yes": Multiply(1), "no": Multiply(0)},
     )
     return strat
-
 
 def _get_derived_params(params):
     # set reinfection contact rate parameters
@@ -553,6 +570,7 @@ def _get_derived_params(params):
             * params["infect_death_rate_stratified"]["organ"]["smear_positive"]
         )
     )
+#'''[5] Emma 5th May 2021 I fully do not understand this'''        
     params["detection_rate_stratified"]["organ"]["smear_positive"] = 1.0
     params["detection_rate_stratified"]["organ"]["extra_pulmonary"] = (
         params["case_detection_prop_sp"]
@@ -605,13 +623,16 @@ def _get_derived_params(params):
     params["treatment_default_rate"] = (
         params["treatment_default_prop"] / params["treatment_duration"]
     )
+#    ''' [6] not really true. try this...
+#    params["treatment_default_rate_stratified"]["strain"]["ds"] = params["treatment_default_rate"] * (1 - params["amplification_prob"])
+#    '''
     params["treatment_default_rate_stratified"]["strain"]["ds"] = 1 - params["amplification_prob"]
     params["treatment_default_rate_stratified"]["strain"]["mdr"] = (
         params["treatment_default_prop"]
         * params["treatment_default_prop_stratified"]["strain"]["mdr"]
         / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"])
     ) / params["treatment_default_rate"]
-
+#'''[7] is this the multiplier or the final value ?'''
     params["treatment_default_rate_stratified"]["classified"]["correctly"] = 1.0
     params["treatment_default_rate_stratified"]["classified"]["incorrectly"] = params[
         "proportion_mdr_misdiagnosed_as_ds_transition_to_fail_lost"
@@ -619,7 +640,7 @@ def _get_derived_params(params):
         params["treatment_default_rate"]
         * params["treatment_default_rate_stratified"]["strain"]["mdr"]
     )
-
+#''' [8] check what romain does but I think we need to add failure to this'''
     params["amplification_rate"] = params["treatment_default_rate"] * params["amplification_prob"]
 
     params["reinfection_rate"] = params["contact_rate"] * params["rr_infection_latent"]

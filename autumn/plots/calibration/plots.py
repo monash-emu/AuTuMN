@@ -285,6 +285,8 @@ def plot_effective_sample_size(
 
     # Save figure
     plotter.save_figure(fig, filename=f"effective_sample_size", title_text="")
+    csv_filename = os.path.join(plotter.out_dir, "effective_sample_size.csv"")
+    ess_table.to_csv(csv_filename)
 
 
 def plot_parallel_coordinates_flat(

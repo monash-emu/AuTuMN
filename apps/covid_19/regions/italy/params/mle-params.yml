@@ -16,4 +16,4 @@ mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote: 0.473851
 notifications_dispersion_param: 440.03355918770865
 sojourn.compartment_periods_calculated.active.total_period: 4.216875434937197
 sojourn.compartment_periods_calculated.exposed.total_period: 5.13677525828449
-time.start: 21.54798673310632
+time.start: 22

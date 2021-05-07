@@ -12,4 +12,4 @@ notifications_dispersion_param: 4.056718915586696
 sojourn.compartment_periods_calculated.active.total_period: 6.449172196709958
 sojourn.compartment_periods_calculated.exposed.total_period: 7.884210853572683
 testing_to_detection.assumed_cdr_parameter: 0.19925565249588142
-voc_emmergence.end_time: 535.1276548114079
+voc_emergence.end_time: 535.1276548114079

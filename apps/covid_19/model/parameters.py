@@ -206,7 +206,7 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
-class VocEmmergence(BaseModel):
+class VocEmergence(BaseModel):
     """
     Parameters defining the emergence profile of Variants of Concerns
     """
@@ -264,7 +264,7 @@ class Parameters:
     universal_death_rate: float
     infectious_seed: float
     seasonal_force: Optional[float]  # Seasonal forcing factor
-    voc_emmergence: Optional[VocEmmergence]
+    voc_emergence: Optional[VocEmergence]
     elderly_mixing_reduction: Optional[dict]
     stratify_by_infection_history: bool
     waning_immunity_duration: Optional[float]

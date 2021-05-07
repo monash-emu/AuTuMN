@@ -16,4 +16,4 @@ new_hospital_admissions_dispersion_param: 290.2438989264564
 notifications_dispersion_param: 650.923582449093
 sojourn.compartment_periods_calculated.active.total_period: 6.148580832104281
 sojourn.compartment_periods_calculated.exposed.total_period: 6.26794431374348
-time.start: 17.228316417066477
+time.start: 17

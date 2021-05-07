@@ -264,10 +264,9 @@ class Parameters:
     seasonal_force: Optional[float]  # Seasonal forcing factor
     voc_emmergence: Optional[VocEmmergence]
     elderly_mixing_reduction: Optional[dict]
-    waning_immunity_duration: Optional[float]
-    stratify_by_immunity: bool
-    vaccination: Optional[Vaccination]
     stratify_by_infection_history: bool
+    waning_immunity_duration: Optional[float]
+    vaccination: Optional[Vaccination]
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float

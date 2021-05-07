@@ -17,7 +17,7 @@ def cleanup_builds(instance):
         conn.run("sudo rm -rf /var/lib/buildkite-agent/builds/", echo=True)
 
 
-def run_powerbi(instance, run_id: str, branch: str):
+def run_powerbi(instance, run_id: str, urunid: str, branch: str):
     """Run PowerBI processing on the remote server"""
     run_id = run_id.lower()
     msg = "Running PowerBI processing for run %s on AWS instance %s"
@@ -31,6 +31,7 @@ def run_powerbi(instance, run_id: str, branch: str):
         pipeline_name = "powerbi"
         pipeline_args = {
             "run": run_id,
+            "urunid": urunid
         }
         run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("PowerBI processing completed for %s", run_id)

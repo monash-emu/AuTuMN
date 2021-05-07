@@ -180,13 +180,13 @@ def run_full_model(job, run, burn_in, sample, latest_code, branch, is_spot):
 @run.command("powerbi")
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
+@click.option("--urunid", type=str, default="mle")
 @click.option("--branch", type=str, default="master")
 @click.option("--spot", is_flag=True)
-def run_powerbi_cli(job, run, branch, spot):
-    run_powerbi(job, run, branch, spot)
+def run_powerbi_cli(job, run, urunid, branch, spot):
+    run_powerbi(job, run, urunid, branch, spot)
 
-
-def run_powerbi(job, run, branch, is_spot):
+def run_powerbi(job, run, urunid, branch, is_spot):
     """
     Run the collate a PowerBI database from the full model run outputs.
     """
@@ -197,7 +197,7 @@ def run_powerbi(job, run, branch, is_spot):
         EC2InstanceType.r5a_8xlarge,
         EC2InstanceType.r5a_16xlarge,
     ]
-    kwargs = {"run_id": run, "branch": branch}
+    kwargs = {"run_id": run, "urunid": urunid, "branch": branch}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_types, is_spot, job_func)
 

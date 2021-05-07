@@ -9,6 +9,7 @@ from autumn.utils.params import load_targets
 
 targets = load_targets("covid_19", Region.MALAYSIA)
 
+
 # Truncate notifications from 1st August 2020
 notifications = truncate_targets_from_time(targets["notifications"], 210)
 
@@ -75,6 +76,8 @@ PAR_PRIORS += [
         "distri_params": [0.8, 2.0],
     },
 ]
+
+
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):

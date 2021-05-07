@@ -15,19 +15,48 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 from settings import APPS_PATH
 
 # shareable google drive links
-PHL_doh_link = "1IbuesfJwoTRzLLjIIviNdMEtPhz11GOk"  # sheet 05 daily report
+PHL_doh_link = "1Fn4-mbjXpYrBPxRGvRaBVqe5VyMRDRPB"  # sheet 05 daily report
 PHL_fassster_link = "15C4wcQqw-BG7OHMCjyofIZ6hg_nLGiPG"
 
 # destination folders filepaths
-PHL_doh_dest = "./data/targets/PHL_icu.csv"
-PHL_fassster_dest = "./data/targets/PHL_ConfirmedCases.zip"
-icu_dest = "./data/targets/PHL_icu_processed.csv"
-deaths_dest = "./data/targets/PHL_deaths_processed.csv"
-notifications_dest = "./data/targets/PHL_notifications_processed.csv"
-targets_dir = "./data/targets/"
+PHL_doh_dest = "./data/inputs/covid_phl/PHL_icu.csv"
+PHL_fassster_dest = "./data/inputs/covid_phl/PHL_ConfirmedCases.zip"
+icu_dest = "./data/inputs/covid_phl/PHL_icu_processed.csv"
+deaths_dest = "./data/inputs/covid_phl/PHL_deaths_processed.csv"
+notifications_dest = "./data/inputs/covid_phl/PHL_notifications_processed.csv"
+phl_inputs_dir = "./data/inputs/covid_phl/"
 
 # start date to calculate time since Dec 31, 2019
 COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
+
+
+def main():
+    fetch_phl_data()
+    fassster_filename = fassster_data_filepath()
+
+    # Process DoH data
+    working_df = copy_davao_city_to_region(PHL_doh_dest)
+    working_df = rename_regions(
+        working_df,
+        "region",
+        "NATIONAL CAPITAL REGION (NCR)",
+        "REGION IV-A (CALABAR ZON)",
+        "REGION VII (CENTRAL VISAYAS)",
+    )
+    working_df = duplicate_data(working_df, "region")
+    working_df = filter_df_by_regions(working_df, "region")
+    process_icu_data(working_df)
+
+    # Now fassster data
+    working_df = copy_davao_city_to_region(fassster_filename)
+    working_df = rename_regions(working_df, "Region", "NCR", "4A", "07")
+    working_df = duplicate_data(working_df, "Region")
+    working_df = filter_df_by_regions(working_df, "Region")
+    process_accumulated_death_data(working_df)
+    process_notifications_data(working_df)
+    update_calibration_phl()
+    remove_files(fassster_filename)
+
 
 # function to fetch data
 def fetch_phl_data():
@@ -40,42 +69,37 @@ def fetch_phl_data():
 def fassster_data_filepath():
     fassster_filename = [
         filename
-        for filename in os.listdir(targets_dir)
+        for filename in os.listdir(phl_inputs_dir)
         if filename.startswith("ConfirmedCases_Final_")
     ]
-    fassster_filename = targets_dir + str(fassster_filename[-1])
+    fassster_filename = phl_inputs_dir + str(fassster_filename[-1])
     return fassster_filename
 
 
-def rename_regions(filePath, regionSpelling, ncrName, calName, cenVisName):
-    df = pd.read_csv(filePath)
+def rename_regions(df: pd.DataFrame, regionSpelling, ncrName, calName, cenVisName):
+    # df = pd.read_csv(filePath)
     df[regionSpelling] = df[regionSpelling].replace(
-        {
-            ncrName: "manila",
-            calName: "calabarzon",
-            cenVisName: "central_visayas"
-        }
+        {ncrName: "manila", calName: "calabarzon", cenVisName: "central_visayas"}
     )
-    df.to_csv(filePath)
+    return df
 
 
-def duplicate_data(filePath, regionSpelling):
-    df = pd.read_csv(filePath)
+def duplicate_data(df: pd.DataFrame, regionSpelling):
+    # df = pd.read_csv(filePath)
     data_dup = df.copy()
     data_dup[regionSpelling] = "philippines"
     newdf = df.append(data_dup)
-    newdf.to_csv(filePath)
+    return newdf
 
 
-def filter_df_by_regions(filePath, regionSpelling):
-    df = pd.read_csv(filePath)
+def filter_df_by_regions(df: pd.DataFrame, regionSpelling):
+
     regions = ["calabarzon", "central_visayas", "manila", "davao_city", "philippines"]
     df_regional = df[df[regionSpelling].isin(regions)]
-    df_regional.to_csv(filePath)
+    return df_regional
 
 
-def process_icu_data():
-    df = pd.read_csv(PHL_doh_dest)
+def process_icu_data(df: pd.DataFrame):
     df.loc[:, "reportdate"] = pd.to_datetime(df["reportdate"])
     df["times"] = df.reportdate - COVID_BASE_DATETIME
     df["times"] = df["times"] / np.timedelta64(1, "D")
@@ -85,8 +109,7 @@ def process_icu_data():
     icu_occ.to_csv(icu_dest)
 
 
-def process_accumulated_death_data(filePath):
-    df = pd.read_csv(filePath)
+def process_accumulated_death_data(df: pd.DataFrame):
     fassster_data_deaths = df[df["Date_Died"].notna()]
     fassster_data_deaths.loc[:, "Date_Died"] = pd.to_datetime(fassster_data_deaths["Date_Died"])
     fassster_data_deaths.loc[:, "times"] = (
@@ -104,8 +127,7 @@ def process_accumulated_death_data(filePath):
     cumulative_deaths.to_csv(deaths_dest)
 
 
-def process_notifications_data(filePath):
-    df = pd.read_csv(filePath)
+def process_notifications_data(df: pd.DataFrame):
     fassster_data_agg = df.groupby(["Region", "Report_Date"]).size()
     fassster_data_agg = fassster_data_agg.to_frame(name="daily_notifications").reset_index()
     fassster_data_agg["Report_Date"] = pd.to_datetime(fassster_data_agg["Report_Date"])
@@ -179,38 +201,17 @@ def remove_files(filePath1):
     os.remove(deaths_dest)
     os.remove(notifications_dest)
 
-def copy_davao_city_to_region(filePath):
+
+def copy_davao_city_to_region(filePath) -> pd.DataFrame:
     df = pd.read_csv(filePath)
     if filePath is PHL_doh_dest:
-        df.loc[df.city_mun == 'DAVAO CITY',['region']] =  'davao_city'
-    elif filePath is fassster_filename:
-        df.loc[df.CityMunicipality == 'DAVAO CITY', ['Region']] = 'davao_city'
+        df.loc[df.city_mun == "DAVAO CITY", ["region"]] = "davao_city"
+    elif "ConfirmedCases_Final_" in filePath:
+        df.loc[df.CityMunicipality == "DAVAO CITY", ["Region"]] = "davao_city"
     else:
         return 0
-    df.to_csv(filePath)
+    return df
 
 
-fetch_phl_data()
-fassster_filename = fassster_data_filepath()
-
-copy_davao_city_to_region(PHL_doh_dest)
-copy_davao_city_to_region(fassster_filename)
-
-
-rename_regions(
-    PHL_doh_dest,
-    "region",
-    "NATIONAL CAPITAL REGION (NCR)",
-    "REGION IV-A (CALABAR ZON)",
-    "REGION VII (CENTRAL VISAYAS)"
-)
-rename_regions(fassster_filename, "Region", "NCR", "4A", "07")
-duplicate_data(PHL_doh_dest, "region")
-duplicate_data(fassster_filename, "Region")
-filter_df_by_regions(PHL_doh_dest, "region")
-filter_df_by_regions(fassster_filename, "Region")
-process_icu_data()
-process_accumulated_death_data(fassster_filename)
-process_notifications_data(fassster_filename)
-update_calibration_phl()
-remove_files(fassster_filename)
+if __name__ == "__main__":
+    main()

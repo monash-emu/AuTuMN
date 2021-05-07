@@ -19,19 +19,17 @@ mobility:
         - 0.1
         - 1.0
 
-stratify_by_immunity: true
-
-vaccination:
-  infection_efficacy: .8
-  severity_efficacy: 0.
-  roll_out_components:
-    - age_min: 70
-      supply_period_coverage:
-        coverage: 0.9
-        start_time: 100
-        end_time: 200
-    - age_min: 50
-      age_max: 69
-      supply_timeseries:
-        times: [199, 200, 300, 301]
-        values: [0, 100000, 100000, 0]
+#vaccination:
+#  infection_efficacy: .8
+#  severity_efficacy: 0.
+#  roll_out_components:
+#    - age_min: 70
+#      supply_period_coverage:
+#        coverage: 0.9
+#        start_time: 100
+#        end_time: 200
+#    - age_min: 50
+#      age_max: 69
+#      supply_timeseries:
+#        times: [199, 200, 300, 301]
+#        values: [0, 100000, 100000, 0]

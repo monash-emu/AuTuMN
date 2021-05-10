@@ -1,4 +1,4 @@
-description: GCQ from 16 May (70% onsite work)
+description: GCQ from 16 May (75% onsite work)
 mobility:
   mixing:
     work:
@@ -8,7 +8,7 @@ mobility:
       - 2021-05-18 # change in work policy
       values:
       - 0.55 # MECQ ends
-      - 0.70 # change in work policy
+      - 0.75 # change in work policy
 
 parent: apps/covid_19/regions/manila/params/default.yml
 time:

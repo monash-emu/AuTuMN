@@ -1,4 +1,4 @@
-description: MECQ until 31May followed by GCQ (70% onsite work)
+description: MECQ until 31May followed by GCQ (75% onsite work)
 mobility:
   mixing:
     other_locations:
@@ -18,7 +18,7 @@ mobility:
       - 2021-05-18 # change in work policy
       values:
       - 0.73
-      - 0.70 # change in work policy
+      - 0.75 # change in work policy
   microdistancing:
     behaviour:
       parameters:

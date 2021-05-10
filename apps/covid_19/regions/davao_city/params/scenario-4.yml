@@ -2,11 +2,18 @@ description: 65% coverage / 70% efficacy / severity-preventing vaccine
 parent: apps/covid_19/regions/davao_city/params/default.yml
 time:
   start: 500
-vaccination:
-  infection_efficacy: 0.0
-  roll_out_components:
-  - supply_period_coverage:
-      coverage: 0.65
-      end_time: 770
-      start_time: 500
-  severity_efficacy: 0.7
+#vaccination:
+#  overall_efficacy: 0.7
+#  vacc_prop_prevent_infection: 0
+#  roll_out_components:
+#  - supply_period_coverage:
+#      coverage: 0.65
+#<<<<<<< HEAD
+#      end_time: 756
+#      start_time: 486
+#
+#=======
+#      end_time: 770
+#      start_time: 500
+#  severity_efficacy: 0.7
+#>>>>>>> 3207cc13325dec56fc3f560dd41327fe9acf0c2a

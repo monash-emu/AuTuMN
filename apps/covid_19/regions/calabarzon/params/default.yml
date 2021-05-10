@@ -16,8 +16,8 @@ mobility:
         - 447  # 22/3 GCQ+ starts
         - 467  # 28/3 GCQ+ ends
         - 472  # 29/3 MECQ starts
-        - 486  # MECQ ends
-        - 490  # back to pre-ECQ MHS
+        - 501  # MECQ ends
+        - 504  # back to pre-ECQ MHS
         values:
         - 0.
         - 1.
@@ -31,24 +31,16 @@ mobility:
     other_locations:
       append: true
       times:
-      - 2021-04-11 # GCQ ends
-      - 2021-04-13 # MECQ starts
-      - 2021-04-30 # MECQ ends
-      - 2021-05-02 # back to pre-ECQ mobility
+      - 2021-05-15 # MECQ ends
+      - 2021-05-18 # back to GCQ mobility
       values:
-      - ["repeat_prev"]  # ECQ ends
-      - 0.4  # MECQ mobility based on Aug 4-18 2020
-      - 0.4
-      - 0.55
+      - 0.87
+      - 0.90 # back to GCQ mobility
     work:
       append: true
       times:
-      - 2021-04-11 # GCQ ends
-      - 2021-04-13 # MECQ starts
-      - 2021-04-30 # MECQ ends
-      - 2021-05-02 # back to pre-ECQ mobility
+      - 2021-05-15 # MECQ ends
+      - 2021-05-18 # back to GCQ mobility
       values:
-      - ["repeat_prev"]  # ECQ ends
-      - 0.4  # MECQ Work mobility based on Aug 4-18 2020
-      - 0.4
-      - 0.6 # back to pre-ECQ mobility
+      - 0.73  # MECQ ends
+      - 0.78 # back to GCQ mobility

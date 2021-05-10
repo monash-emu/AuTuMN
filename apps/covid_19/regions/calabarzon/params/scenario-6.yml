@@ -1,36 +1,15 @@
-description: MECQ extension until 16 May, then GCQ (70% onsite work)
+description: GCQ from 16 May (70% onsite work)
 mobility:
   mixing:
-    other_locations:
-      append: false
-      times:
-      - 2020-04-30
-      - 2020-05-16
-      - 2020-06-20
-      values:
-      - 0.4  # MECQ
-      - 0.4
-      - 0.55  # back to GCQ
     work:
-      append: false
+      append: true
       times:
-      - 2020-04-30
-      - 2020-05-03
+      - 2021-05-15 # MECQ ends
+      - 2021-05-18 # change in work policy
       values:
-      - 0.4  # MECQ Work mobility based on April 2020
-      - 0.7
-  microdistancing:
-    behaviour:
-      parameters:
-        times:
-        - 490  # Overwrite baseline change that ended MECQ
-        - 502  # MECQ ends 16 May
-        - 506  # GCQ
-        values:
-        - 2.  # assumed MECQ MHS compliance
-        - 2.
-        - 1.3
+      - 0.73 # MECQ ends
+      - 0.70 # change in work policy
 
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 time:
-  start: 486
+  start: 500

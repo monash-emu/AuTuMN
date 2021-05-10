@@ -22,5 +22,5 @@ def test_vaccine_params(overall_eff, vacc_prevention, infection_efficacy, severi
     """
     actual_infection_efficacy, actual_severity_efficacy = add_vaccine_infection_and_severity(vacc_prevention, overall_eff)
     assert round(actual_infection_efficacy, 3) == infection_efficacy
-    assert round (actual_severity_efficacy, 3) == severity_efficacy
+    assert round(actual_severity_efficacy, 3) == severity_efficacy
 

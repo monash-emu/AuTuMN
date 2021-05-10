@@ -6,7 +6,7 @@ import yaml
 
 from autumn.region import Region
 
-SCENARIO_START_TIME = 486  # 30 Apr 2021
+SCENARIO_START_TIME = 500  # 14 May 2021
 
 BACK_TO_NORMAL_FRACTIONS = []
 MHS_REDUCTION_FRACTIONS = []

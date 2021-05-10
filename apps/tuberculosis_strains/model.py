@@ -262,7 +262,9 @@ def build_model(params: dict) -> CompartmentalModel:
     # Apply classification stratification
     class_strat = _build_class_strat(params)
     model.stratify_with(class_strat)
-
+    
+    quality_strat = _build_quality_strat(params)
+    model.stratify_with(quality_strat)
     # Apply retention stratification
     retention_strat = _build_retention_strat(params)
     model.stratify_with(retention_strat)
@@ -529,24 +531,21 @@ def _build_class_strat(params):
     return strat
 
 # new straitifaction into private or not
-def _build_qualitycare_strat(params):
+def _build_quality_strat(params):
     strat = Stratification("quality", ["public", "private"], [Compartment.DETECTED, Compartment.ON_TREATMENT])
     strat.add_flow_adjustments(
         "detection",
         {"public": Multiply(1.0), "private": Multiply(0.65)},
-        source_strata={"strain": "ds"},
     )
     strat.add_flow_adjustments(
         "treatment_commencement",
         {"public": Multiply(1), "private": Multiply(0.5)},
     )
-#''' [4] Emma 5th May 2021. Not sure why this flow is applied to the detected compartment '''
     strat.add_flow_adjustments(
         "failure_retreatment",
-        {"public": Multiply(1), "private": Multiply(0.5)},
+        {"public": Multiply(1), "private": Multiply(1)},
     )
     return strat
-
 
 def _build_retention_strat(params):
     strat = Stratification("retained", ["yes", "no"], [Compartment.DETECTED, Compartment.ON_TREATMENT])

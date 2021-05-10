@@ -31,6 +31,12 @@ os.chdir("..")  # Make repo root the current directory
 app_region = tuberculosis_strains.app.get_region(Region.PHILIPPINES)
 app_region.calibrate_model(max_seconds=60, run_id=1, num_chains=1)
 
+# try something like this
+# app_region.run_model()
+### turn this into a summer model to inspect etc
+#  model = app_region.build_model(app_region.params['default'])
+
+
 # Used by Romain, please do not delete
 # for region in OPTI_REGIONS:
 #     app_region = covid_19.app.get_region(region)

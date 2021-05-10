@@ -16,11 +16,12 @@ def get_prior_distributions_for_opti():
             "distribution": "uniform",
             "distri_params": [0.02, 0.06],
         },
-        {
-            "param_name": "time.start",
-            "distribution": "uniform",
-            "distri_params": [0.0, 40.0],
-        },
+        # FIXME : Reimplement later, removing now to integrate with new code
+        # {
+        #     "param_name": "time.start",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.0, 40.0],
+        # },
         {
             "param_name": "sojourn.compartment_periods_calculated.exposed.total_period",
             "distribution": "trunc_normal",

@@ -139,11 +139,11 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
     if vacc_prop_prevent_infection == 1.:
         severity_efficacy = 0.
     else:
-        severity_efficacy = \
-            overall_efficacy * \
-            (1. - vacc_prop_prevent_infection) / \
-            (1. - (vacc_prop_prevent_infection * overall_efficacy))
+        prop_infected = 1. - vacc_prop_prevent_infection
+        prop_infect_prevented = 1. - (vacc_prop_prevent_infection * overall_efficacy)
+        severity_efficacy = overall_efficacy * prop_infected / prop_infect_prevented
     infection_efficacy = vacc_prop_prevent_infection * overall_efficacy
+
     return infection_efficacy, severity_efficacy
 
 

@@ -1,44 +1,26 @@
-from copy import deepcopy
 import pytest
-
-from apps import covid_19
-from autumn.utils.utils import merge_dicts
 from apps.covid_19.model.preprocess.vaccination import add_vaccine_infection_and_severity
 
-
-PARAMETER_VALUES = \
-    [0., 0.01, 0.2, 0.4, 0.5, 0.6, 0.8, 0.99, 1]
-
-
-@pytest.mark.local_only
-@pytest.mark.parametrize("region", covid_19.app.region_names)
-def test_vaccine_severity_infection_parameters(region):
-    """
-    Check that requests are being submitted correctly for all regions and all scenarios.
-
-    """
-    region_app = covid_19.app.get_region(region)
-    for idx, scenario_params in enumerate(region_app.params["scenarios"].values()):
-        default_params = deepcopy(region_app.params["default"])
-        params = merge_dicts(scenario_params, default_params)
-        if params["vaccination"] is not None:
-            assert params["vaccination"]["overall_efficacy"] <= 1, "Should belong to [0,1]"
-            assert params["vaccination"]["overall_efficacy"] >= 0, "Should belong to [0,1]"
-            assert params["vaccination"]["vacc_prop_prevent_infection"] <= 1, "Should belong to [0,1]"
-            assert params["vaccination"]["vacc_prop_prevent_infection"] >= 0, "Should belong to [0,1]"
+VACCINE_PARAM_TESTS = [
+    # overall_eff, vacc_prevention, infection_efficacy, severity_efficacy
+    (0.1, 0.5, 0.05, 0.053),
+    (0.77, 0.2, 0.154, 0.728),
+    (0, 0, 0, 0),
+    (0.3, 0.65, 0.195, 0.130),
+    (0.98, 0.76, 0.745, 0.922),
+    (0.01, 0.75, 0.007, 0.003),
+    (0.78, 0.99, 0.772, 0.034),
+    (1, 1, 1, 0)
+]
 
 
-@pytest.mark.parametrize("vacc_prevention", PARAMETER_VALUES)
-@pytest.mark.parametrize("overall_eff", PARAMETER_VALUES)
-def test_vaccine_params(overall_eff, vacc_prevention):
+@pytest.mark.parametrize("overall_eff, vacc_prevention, infection_efficacy, severity_efficacy", VACCINE_PARAM_TESTS)
+def test_vaccine_params(overall_eff, vacc_prevention, infection_efficacy, severity_efficacy):
     """
     Checking that converted parameters end up in the correct range, given sensible requests.
 
     """
-    infection_efficacy, severity_efficacy = add_vaccine_infection_and_severity(vacc_prevention, overall_eff)
-    assert infection_efficacy <= 1, "Should belong to [0, 1]"
-    assert infection_efficacy >= 0, "Should belong to [0, 1]"
-    assert severity_efficacy <= 1, "Should belong to [0, 1]"
-    assert severity_efficacy >= 0, "Should belong to [0, 1]"
-    assert infection_efficacy >= 0, "Should belong to [0, Ve]"
-    assert infection_efficacy <= overall_eff, "Should belong to [0, Ve]"
+    actual_infection_efficacy, actual_severity_efficacy = add_vaccine_infection_and_severity(vacc_prevention, overall_eff)
+    assert round(actual_infection_efficacy, 3) == infection_efficacy
+    assert round (actual_severity_efficacy, 3) == severity_efficacy
+

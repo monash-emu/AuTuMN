@@ -244,9 +244,17 @@ class RollOutFunc(BaseModel):
 class Vaccination(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
-    # infection_efficacy: float
-    # severity_efficacy: float
     roll_out_components: List[RollOutFunc]
+
+    @validator("overall_efficacy", pre=True, allow_reuse=True)
+    def check_overall_efficacy(val):
+        assert 0 <= val <= 1, "Overall efficacy should be in [0, 1]"
+        return val
+
+    @validator("vacc_prop_prevent_infection", pre=True, allow_reuse=True)
+    def check_vacc_prop_prevent_infection(val):
+        assert 0 <= val <= 1, "vacc_prop_prevent_infection should be in [0, 1]"
+        return val
 
 
 class ParamConfig:

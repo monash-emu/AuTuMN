@@ -85,10 +85,10 @@ class Calibration:
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
 
-        # Distinguish LHS params from standard calibration parameters
-        lhs_param_indices = [idx for idx in range(len(priors)) if priors[idx].get("sampling") == "lhs"]
-        self.priors = [param_dict for i_param, param_dict in enumerate(priors) if i_param not in lhs_param_indices]
-        self.lhs_params = [param_dict for i_param, param_dict in enumerate(priors) if i_param in lhs_param_indices]
+        # Distinguish direct sampling parameters from standard calibration parameters
+        direct_sample_idxs = [idx for idx in range(len(priors)) if priors[idx].get("sampling") == "lhs"]
+        self.priors = [param_dict for i_param, param_dict in enumerate(priors) if i_param not in direct_sample_idxs]
+        self.direct_params = [param_dict for i_param, param_dict in enumerate(priors) if i_param in direct_sample_idxs]
 
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.adaptive_proposal = adaptive_proposal
@@ -96,7 +96,7 @@ class Calibration:
         self.n_steps_fixed_proposal = n_steps_fixed_proposal
 
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
-        self.lhs_param_list = [self.lhs_params[i]["param_name"] for i in range(len(self.lhs_params))]
+        self.direct_param_list = [self.direct_params[i]["param_name"] for i in range(len(self.direct_params))]
         # A list of dictionaries. Each dictionary describes a target
         self.targeted_outputs = targeted_outputs
 
@@ -176,7 +176,7 @@ class Calibration:
             if self.model_parameters["default"]["victorian_clusters"]:
                 self.is_vic_super_model = True
 
-    def run_model_with_params(self, proposed_params: dict, lhs_params=[]):
+    def run_model_with_params(self, proposed_params: dict, direct_params=[]):
         """
         Run the model with a set of params.
         """
@@ -186,9 +186,9 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             param_updates[param_name] = proposed_params[i]
 
-        # Update LHS params in same was as for calibration parameters
-        for i, param_name in enumerate(self.lhs_param_list):
-            param_updates[param_name] = lhs_params[i]
+        # Update direct sampling parameters in same was as for calibration parameters
+        for i, param_name in enumerate(self.direct_param_list):
+            param_updates[param_name] = direct_params[i]
 
         params = copy.deepcopy(self.model_parameters)
         update_func = lambda ps: update_params(ps, param_updates)
@@ -199,11 +199,11 @@ class Calibration:
         self.latest_scenario = scenario
         return scenario
 
-    def loglikelihood(self, params, lhs_params=[]):
+    def loglikelihood(self, params, direct_params=[]):
         """
         Calculate the loglikelihood for a set of parameters
         """
-        scenario = self.run_model_with_params(params, lhs_params)
+        scenario = self.run_model_with_params(params, direct_params)
         model = scenario.model
 
         ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
@@ -480,7 +480,7 @@ class Calibration:
         while True:
 
             # Not actually LHS sampling - just sampling directly from prior.
-            lhs_samples = [sample_prior(i, np.random.uniform()) for i in self.lhs_params]
+            direct_samples = [sample_prior(i, np.random.uniform()) for i in self.direct_params]
 
             logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
             # Propose new parameter set.
@@ -495,7 +495,7 @@ class Calibration:
 
             if is_within_prior_support:
                 # Evaluate log-likelihood.
-                proposed_loglike = self.loglikelihood(proposed_params, lhs_samples)
+                proposed_loglike = self.loglikelihood(proposed_params, direct_samples)
 
                 # Evaluate log-prior.
                 proposed_logprior = self.logprior(proposed_params)

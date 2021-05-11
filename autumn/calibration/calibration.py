@@ -17,7 +17,6 @@ from summer.legacy.model import StratifiedModel
 
 import settings
 from autumn import db, plots
-from autumn.region import Region
 from autumn.utils.params import (
     load_targets,
     read_param_value_from_string,
@@ -38,6 +37,7 @@ from .utils import (
     raise_error_unsupported_prior,
     sample_starting_params_from_lhs,
     specify_missing_prior_params,
+    sample_prior,
 )
 
 logger = logging.getLogger(__name__)
@@ -479,14 +479,8 @@ class Calibration:
         self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
         while True:
 
-            # Not actually LHS sampling - just uniform sampling and no checks included.
-            lhs_samples = [
-                np.random.uniform(
-                    self.lhs_params[i_param]["distri_params"][0],
-                    self.lhs_params[i_param]["distri_params"][1]
-                ) for
-                i_param in range(len(self.lhs_params))
-            ]
+            # Not actually LHS sampling - just sampling directly from prior.
+            lhs_samples = [sample_prior(i, np.random.uniform()) for i in self.lhs_params]
 
             logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
             # Propose new parameter set.

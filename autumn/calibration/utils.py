@@ -3,7 +3,6 @@ import os
 from typing import Any, Dict, List
 
 import numpy as np
-import pandas as pd
 import yaml
 from pyDOE import lhs
 from scipy import special, stats
@@ -31,6 +30,44 @@ def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
     return par_priors
 
 
+def sample_prior(prior_dict, quantile):
+    """
+    Sample a particular prior, specified with prior_dict using the quantile specified with prop.
+
+    """
+    if prior_dict["distribution"] == "uniform":
+        sample = prior_dict["distri_params"][0] + \
+                 quantile * (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
+    elif prior_dict["distribution"] == "lognormal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        sample = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * quantile - 1))
+    elif prior_dict["distribution"] == "trunc_normal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        bounds = prior_dict["trunc_range"]
+        sample = stats.truncnorm.ppf(
+            quantile, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+        )
+    elif prior_dict["distribution"] == "beta":
+        sample = stats.beta.ppf(
+            quantile,
+            prior_dict["distri_params"][0],
+            prior_dict["distri_params"][1],
+        )[0]
+    elif prior_dict["distribution"] == "gamma":
+        sample = stats.gamma.ppf(
+            quantile,
+            prior_dict["distri_params"][0],
+            0.0,
+            prior_dict["distri_params"][1],
+        )[0]
+    else:
+        raise_error_unsupported_prior(prior_dict["distribution"])
+
+    return sample
+
+
 def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples: int):
     """
     Use Latin Hypercube Sampling to define MCMC starting points
@@ -45,37 +82,7 @@ def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples:
     for j, prior_dict in enumerate(par_priors):
         for i in range(n_samples):
             prop = hypercube[i, j]
-            if prior_dict["distribution"] == "uniform":
-                quantile = prior_dict["distri_params"][0] + prop * (
-                    prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
-                )
-            elif prior_dict["distribution"] == "lognormal":
-                mu = prior_dict["distri_params"][0]
-                sd = prior_dict["distri_params"][1]
-                quantile = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * prop - 1))
-            elif prior_dict["distribution"] == "trunc_normal":
-                mu = prior_dict["distri_params"][0]
-                sd = prior_dict["distri_params"][1]
-                bounds = prior_dict["trunc_range"]
-                quantile = stats.truncnorm.ppf(
-                    prop, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
-                )
-            elif prior_dict["distribution"] == "beta":
-                quantile = stats.beta.ppf(
-                    prop,
-                    prior_dict["distri_params"][0],
-                    prior_dict["distri_params"][1],
-                )[0]
-            elif prior_dict["distribution"] == "gamma":
-                quantile = stats.gamma.ppf(
-                    prop,
-                    prior_dict["distri_params"][0],
-                    0.0,
-                    prior_dict["distri_params"][1],
-                )[0]
-            else:
-                raise_error_unsupported_prior(prior_dict["distribution"])
-
+            quantile = sample_prior(prior_dict, prop)
             list_of_starting_params[i][prior_dict["param_name"]] = quantile
 
     return list_of_starting_params

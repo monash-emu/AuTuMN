@@ -12,6 +12,32 @@
       0.975
     ]
   },
+  "accum_incidence": {
+    "title": "Cumulative incidence",
+    "output_key": "accum_incidence",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "accum_notifications": {
+    "title": "Cumulative notifications",
+    "output_key": "accum_notifications",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "proportion_seropositive": {
     "title": "Proportion seropositive",
     "output_key": "proportion_seropositive",

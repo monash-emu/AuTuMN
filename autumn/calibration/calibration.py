@@ -85,7 +85,7 @@ class Calibration:
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
 
-        #
+        # Distinguish LHS params from standard calibration parameters
         lhs_param_indices = [idx for idx in range(len(priors)) if priors[idx].get("sampling") == "lhs"]
         self.priors = [param_dict for i_param, param_dict in enumerate(priors) if i_param not in lhs_param_indices]
         self.lhs_params = [param_dict for i_param, param_dict in enumerate(priors) if i_param in lhs_param_indices]
@@ -474,10 +474,17 @@ class Calibration:
         self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
         while True:
 
-
+            # Not actually LHS sampling - just uniform sampling and no checks included.
+            lhs_samples = [
+                np.random.uniform(
+                    self.lhs_params[i_param]["distri_params"][0],
+                    self.lhs_params[i_param]["distri_params"][1]
+                ) for
+                i_param in range(len(self.lhs_params))
+            ]
 
             logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
-            # Propose new paramameter set.
+            # Propose new parameter set.
             proposed_params_trans = self.propose_new_params_trans(
                 last_accepted_params_trans, haario_scaling_factor
             )

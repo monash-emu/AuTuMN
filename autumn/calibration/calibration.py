@@ -84,6 +84,12 @@ class Calibration:
         self.app_name = app_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
+
+        #
+        lhs_param_indices = [idx for idx in range(len(priors)) if priors[idx].get("sampling") == "lhs"]
+        self.priors = [param_dict for i_param, param_dict in enumerate(priors) if i_param not in lhs_param_indices]
+        self.lhs_params = [param_dict for i_param, param_dict in enumerate(priors) if i_param in lhs_param_indices]
+
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.adaptive_proposal = adaptive_proposal
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
@@ -101,7 +107,7 @@ class Calibration:
         # Validate target output start time.
         model_start = model_parameters["default"]["time"]["start"]
         max_prior_start = None
-        for p in priors:
+        for p in self.priors:
             if p["param_name"] == "time.start":
                 max_prior_start = max(p["distri_params"])
 
@@ -451,7 +457,7 @@ class Calibration:
         start_time=None,
     ):
         """
-        Run our hand-rolled MCMC algoruthm to calibrate model parameters.
+        Run our hand-rolled MCMC algorithm to calibrate model parameters.
         """
         if start_time is None:
             start_time = time()
@@ -467,6 +473,9 @@ class Calibration:
         n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
         self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
         while True:
+
+
+
             logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
             # Propose new paramameter set.
             proposed_params_trans = self.propose_new_params_trans(

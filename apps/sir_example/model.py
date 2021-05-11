@@ -23,7 +23,7 @@ def build_model(params: dict) -> CompartmentalModel:
     )
     # Add flows
     model.add_infection_frequency_flow("infection", params["contact_rate"], "S", "I")
-    model.add_fractional_flow("recovery", params["recovery_rate"], "I", "R")
+    model.add_transition_flow("recovery", params["recovery_rate"], "I", "R")
 
     # Request derived outputs
     model.request_output_for_compartments("prevalence_susceptible", compartments=["S"])

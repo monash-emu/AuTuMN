@@ -158,5 +158,5 @@ class MockAppRegion(AppRegion):
         )
         model.set_initial_population(distribution={"S": 1000, "I": 1000})
         model.add_crude_birth_flow("birth", params["birth_rate"], "S")
-        model.add_fractional_flow("recovery", params["recovery_rate"], "I", "R")
+        model.add_transition_flow("recovery", params["recovery_rate"], "I", "R")
         return model

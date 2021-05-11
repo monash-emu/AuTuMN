@@ -98,26 +98,26 @@ def build_model(params: dict) -> CompartmentalModel:
         dest=Compartment.EARLY_EXPOSED,
     )
     # Infection progress flows.
-    model.add_fractional_flow(
+    model.add_transition_flow(
         name="infect_onset",
         fractional_rate=1.0 / compartment_periods[Compartment.EARLY_EXPOSED],
         source=Compartment.EARLY_EXPOSED,
         dest=Compartment.LATE_EXPOSED,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         name="incidence",
         fractional_rate=1.0 / compartment_periods[Compartment.LATE_EXPOSED],
         source=Compartment.LATE_EXPOSED,
         dest=Compartment.EARLY_ACTIVE,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         name="progress",
         fractional_rate=1.0 / compartment_periods[Compartment.EARLY_ACTIVE],
         source=Compartment.EARLY_ACTIVE,
         dest=Compartment.LATE_ACTIVE,
     )
     # Recovery flows
-    model.add_fractional_flow(
+    model.add_transition_flow(
         name="recovery",
         fractional_rate=1.0 / compartment_periods[Compartment.LATE_ACTIVE],
         source=Compartment.LATE_ACTIVE,
@@ -146,7 +146,7 @@ def build_model(params: dict) -> CompartmentalModel:
         # Waning immunity (if requested)
         # Note that this approach would mean that the recovered in the naive class have actually previously had Covid.
         if params.waning_immunity_duration:
-            model.add_fractional_flow(
+            model.add_transition_flow(
                 name="waning_immunity",
                 fractional_rate=1.0 / params.waning_immunity_duration,
                 source=Compartment.RECOVERED,

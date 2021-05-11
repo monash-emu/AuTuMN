@@ -78,8 +78,6 @@ PAR_PRIORS += [
 ]
 
 
-
-
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
         max_seconds,

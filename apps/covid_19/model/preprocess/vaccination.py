@@ -131,6 +131,22 @@ def add_vaccination_flows(model, roll_out_component, age_strata):
                 )
 
 
+def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_efficacy):
+    """
+    Calculating the vaccine efficacy in preventing infection and leading to severe infection.
+
+    """
+    if vacc_prop_prevent_infection == 1.:
+        severity_efficacy = 0.
+    else:
+        prop_infected = 1. - vacc_prop_prevent_infection
+        prop_infect_prevented = 1. - (vacc_prop_prevent_infection * overall_efficacy)
+        severity_efficacy = overall_efficacy * prop_infected / prop_infect_prevented
+    infection_efficacy = vacc_prop_prevent_infection * overall_efficacy
+
+    return infection_efficacy, severity_efficacy
+
+
 def add_clinical_adjustments_to_strat(
         strat,
         unaffected_stratum,
@@ -184,3 +200,4 @@ def add_clinical_adjustments_to_strat(
                 source_strata=relevant_strata,  # Must be source
             )
     return strat
+

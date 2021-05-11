@@ -5,8 +5,9 @@ time:
   start: 457
 
 vaccination:
-  infection_efficacy: 0.75
-  severity_efficacy: 0.
+
+  overall_efficacy: 0.75
+  vacc_prop_prevent_infection: 1
 
   # Eleven months from 1st April 2021
   roll_out_components:

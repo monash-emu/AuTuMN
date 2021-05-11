@@ -282,6 +282,7 @@ class Parameters:
     metropolis_init_rel_step_size: float
     n_steps_fixed_proposal: int
     metropolis_initialisation_type: str
+    cumul_incidence_start_time: Optional[float]
     # Modular parameters.
     time: Time
     country: Country

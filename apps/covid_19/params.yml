@@ -189,6 +189,11 @@ metropolis_init_rel_step_size: .1
 n_steps_fixed_proposal: 50
 metropolis_initialisation_type: "lhs"
 
+
+# Time from which cumulative cases should start (incidence and notification), if null, the output is not calculated
+cumul_incidence_start_time: null
+
+
 # Fake parameters used in calibration for negative binomial (need to be listed for validation to pass)
 # Not used by model.
 notifications_dispersion_param: 1.

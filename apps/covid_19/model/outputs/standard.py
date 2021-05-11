@@ -82,6 +82,12 @@ def request_standard_outputs(
         name="notifications", sources=notification_sources
     )  # Used to be different coz we had imports.
 
+    # cumulative incidence and notifications
+    if params.cumul_incidence_start_time:
+        for existing_output in ["incidence", "notifications"]:
+            model.request_cumulative_output(name=f"accum_{existing_output}", source=existing_output,
+                                            start_time=params.cumul_incidence_start_time)
+
     # Notification by age group
     for agegroup in AGEGROUP_STRATA:
         sympt_isolate_name = f"progressXagegroup_{agegroup}Xclinical_sympt_isolate"

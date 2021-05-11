@@ -59,3 +59,5 @@ voc_emergence:
   start_time: 336  # 1 Dec 2020
   end_time: 397  # 31 Jan 2021
   contact_rate_multiplier: 1.56  # LSHTM's estimate
+
+cumul_incidence_start_time: 501  # 15 May 2021

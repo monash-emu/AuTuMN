@@ -3,92 +3,122 @@ import os
 import sqlite3
 import boto3
 
-
+s3 = boto3.client("s3")
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 DATA_PATH = "M:\Documents\@Projects\Covid_consolidate\output"
-phl = ["calabarzon", "central-visayas", "davao-city", "manila", "philippines"]
-mys = ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"]
+phl = {
+    "region": ["calabarzon", "central-visayas", "davao-city", "manila", "philippines"],
+    "columns": [
+        "incidence",
+        "notifications",
+        "icu_occupancy",
+        "accum_deaths",
+        "accum_incidence",
+        "accum_notifications",
+        "infection_deaths",
+    ],
+}
+mys = {
+    "region": ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"],
+    "columns": [
+        "incidence",
+        "notifications",
+        "hospital_occupancy",
+        "icu_occupancy",
+        "accum_deaths",
+        "infection_deaths",
+    ],
+}
 os.chdir(DATA_PATH)
 
+
 list_of_files = os.listdir(DATA_PATH)
-dict_of_files = {city: each  for city in phl + mys for each in list_of_files if city in each}
-dict_of_files = {each: os.path.join(DATA_PATH, dict_of_files[each]) for each in dict_of_files}
 
-df_mle = pd.DataFrame()
-df_un = pd.DataFrame()
-query_do = "SELECT scenario,times,notifications,incidence,icu_occupancy,hospital_occupancy FROM derived_outputs;"
-query_un = "SELECT scenario,time,type, value FROM uncertainty WHERE quantile=0.5 AND type in ('incidence','notifications','icu_occupancy','accum_deaths', 'infection_deaths');"
-for region in dict_of_files:
-    conn = sqlite3.connect(dict_of_files[region])
-    if df_mle.empty:
-        df_mle = pd.read_sql_query(query_do, conn)
-        df_mle["Region"] = region
-    else:
-        df_temp = pd.read_sql_query(query_do, conn)
-        df_temp["Region"] = region
-        df_mle = df_mle.append(df_temp)
-    if df_un.empty:
-        df_un = pd.read_sql_query(query_un, conn)
-        df_un["Region"] = region
-    else:
-        df_temp = pd.read_sql_query(query_un, conn)
-        df_temp["Region"] = region
-        df_un = df_un.append(df_temp)
-
-df_un = pd.pivot_table(
-    df_un, values="value", index=["Region", "time", "scenario"], columns=["type"]
-)
-df_un.reset_index(inplace=True)
-df = df_mle.merge(
-    df_un,
-    how="outer",
-    left_on=["Region", "scenario", "times"],
-    right_on=["Region", "scenario", "time"],
-)
-
-col_dict = {
-    "hospital_occupancy": "mle_hospital_occupancy",
-    "notifications_x": "mle_notifications",
-    "incidence_x": "mle_incidence",
-    "icu_occupancy_x": "mle_icu_occupancy",
-    "accum_deaths": "median__accum_deaths",
-    "icu_occupancy_y": "median__icu_occupancy",
-    "incidence_y": "median__incidence",
-    "notifications_y": "median__notifications",
-    "infection_deaths": "median_infection_deaths",
+phl["region"] = {
+    region: os.path.join(DATA_PATH, each)
+    for region in phl["region"]
+    for each in list_of_files
+    if region in each
+}
+mys["region"] = {
+    region: os.path.join(DATA_PATH, each)
+    for region in mys["region"]
+    for each in list_of_files
+    if region in each
 }
 
-df["Date"] = pd.to_timedelta(df.times, unit="days") + (COVID_BASE_DATE)
+country = {"phl": phl, "mys": mys}
 
-df.rename(
-    columns=col_dict,
-    inplace=True,
-)
+query_do = "SELECT scenario,times,notifications,incidence,icu_occupancy,hospital_occupancy,accum_deaths FROM derived_outputs;"
+query_un = "SELECT scenario,time,type, value FROM uncertainty WHERE quantile=0.5 AND type in ('incidence','notifications','icu_occupancy','accum_deaths','accum_incidence','accum_notifications', 'infection_deaths');"
 
 
-df = df[
-    [
-        "Region",
-        "Date",
-        "times",
-        "scenario",
-        "mle_notifications",
-        "mle_incidence",
-        "mle_icu_occupancy",
-        "mle_hospital_occupancy",
-        "median__accum_deaths",
-        "median__icu_occupancy",
-        "median__incidence",
-        "median_infection_deaths",
-        "median__notifications",
-    ]
-]
+for ctry in country:
 
-s3 = boto3.client("s3")
-for  k,v in {'mys': mys, 'phl': phl}.items():
-    
-    df[df.Region.isin(v)].to_csv(f"{k}_data.csv")
-    s3.upload_file(f"{k}_data.csv", "autumn-files", f"{k}_data.csv", ExtraArgs={"ACL": "public-read"})
-    os.remove(f"{k}_data.csv")
+    df_mle = pd.DataFrame()
+    df_un = pd.DataFrame()
 
+    query_do = (
+        "SELECT scenario, times, "
+        + "".join({each + ", " for each in country[ctry]["columns"]})[:-2]
+        + " FROM derived_outputs;"
+    )
+    query_un = (
+        "SELECT scenario,time,type, value FROM uncertainty WHERE quantile=0.5 AND type in ("
+        + "".join({"'" + each + "', " for each in country[ctry]["columns"]})[:-2]
+        + ");"
+    )
 
+    for app_name in country[ctry]["region"]:
+        reg_file = country[ctry]["region"][app_name]
+
+        conn = sqlite3.connect(reg_file)
+        if df_mle.empty:
+            df_mle = pd.read_sql_query(query_do, conn)
+            df_mle["Region"] = app_name
+        else:
+            df_temp = pd.read_sql_query(query_do, conn)
+            df_temp["Region"] = app_name
+            df_mle = df_mle.append(df_temp)
+        if df_un.empty:
+            df_un = pd.read_sql_query(query_un, conn)
+            df_un["Region"] = app_name
+        else:
+            df_temp = pd.read_sql_query(query_un, conn)
+            df_temp["Region"] = app_name
+            df_un = df_un.append(df_temp)
+    df_un = pd.pivot_table(
+        df_un, values="value", index=["Region", "time", "scenario"], columns=["type"]
+    )
+    df_un.reset_index(inplace=True)
+
+    df = df_mle.merge(
+        df_un,
+        how="outer",
+        left_on=["Region", "scenario", "times"],
+        right_on=["Region", "scenario", "time"],
+        suffixes=("_mle", "_median"),
+    )
+
+    df["Date"] = pd.to_timedelta(df.times, unit="days") + (COVID_BASE_DATE)
+
+    df.rename(
+        columns={
+            "hospital_occupancy": "hospital_occupancy_mle",
+            "infection_deaths": "infection_deaths_mle",
+        },
+        inplace=True,
+    )
+
+    col_set1 = ["Region", "scenario", "Date", "times", "time"]
+    col_set2 = [col for col in list(df.columns) if col not in col_set1]
+    col_set2.sort()
+
+    col_set1 = col_set1[:-1]
+    df = df[col_set1 + col_set2]
+
+    df.to_csv(f"{ctry}_data.csv")
+    s3.upload_file(
+        f"{ctry}_data.csv", "autumn-files", f"{ctry}_data.csv", ExtraArgs={"ACL": "public-read"}
+    )
+    # os.remove(f"{k}_data.csv")

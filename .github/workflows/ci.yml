@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - summer_tracking
   pull_request:
     branches:
       - master

@@ -438,6 +438,11 @@ def get_targets_and_priors_for_opti(country, likelihood_type="trunc_normal", lat
     deaths = truncate_targets_before_time(targets["infection_deaths"], latest_calibration_time)
     hospitalisations = truncate_targets_before_time(targets[hospital_targets[0]], latest_calibration_time)
 
+    start_target_time = 100
+    notifications = truncate_targets_from_time(notifications, start_target_time)
+    deaths = truncate_targets_from_time(deaths, start_target_time)
+    hospitalisations = truncate_targets_from_time(hospitalisations, start_target_time)
+
     par_priors = get_prior_distributions_for_opti()
 
     target_outputs = [

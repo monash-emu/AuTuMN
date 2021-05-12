@@ -66,6 +66,12 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.8, 2.0],
     },
+    {
+        "param_name": "vaccination.vacc_prop_prevent_infection",
+        "distribution": "uniform",
+        "distri_params": [0., 1.0],
+        "sampling": "lhs",
+    },
 ]
 
 

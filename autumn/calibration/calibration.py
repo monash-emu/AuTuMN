@@ -17,7 +17,6 @@ from summer.legacy.model import StratifiedModel
 
 import settings
 from autumn import db, plots
-from autumn.region import Region
 from autumn.utils.params import (
     load_targets,
     read_param_value_from_string,
@@ -38,6 +37,7 @@ from .utils import (
     raise_error_unsupported_prior,
     sample_starting_params_from_lhs,
     specify_missing_prior_params,
+    sample_prior,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,12 +84,19 @@ class Calibration:
         self.app_name = app_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
+
+        # Distinguish direct sampling parameters from standard calibration parameters
+        direct_sample_idxs = [idx for idx in range(len(priors)) if priors[idx].get("sampling") == "lhs"]
+        self.priors = [param_dict for i_param, param_dict in enumerate(priors) if i_param not in direct_sample_idxs]
+        self.direct_params = [param_dict for i_param, param_dict in enumerate(priors) if i_param in direct_sample_idxs]
+
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.adaptive_proposal = adaptive_proposal
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
         self.n_steps_fixed_proposal = n_steps_fixed_proposal
 
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
+        self.direct_param_list = [self.direct_params[i]["param_name"] for i in range(len(self.direct_params))]
         # A list of dictionaries. Each dictionary describes a target
         self.targeted_outputs = targeted_outputs
 
@@ -101,7 +108,7 @@ class Calibration:
         # Validate target output start time.
         model_start = model_parameters["default"]["time"]["start"]
         max_prior_start = None
-        for p in priors:
+        for p in self.priors:
             if p["param_name"] == "time.start":
                 max_prior_start = max(p["distri_params"])
 
@@ -169,7 +176,7 @@ class Calibration:
             if self.model_parameters["default"]["victorian_clusters"]:
                 self.is_vic_super_model = True
 
-    def run_model_with_params(self, proposed_params: dict):
+    def run_model_with_params(self, proposed_params: dict, direct_params=[]):
         """
         Run the model with a set of params.
         """
@@ -178,6 +185,10 @@ class Calibration:
         param_updates = {"time.end": self.end_time}
         for i, param_name in enumerate(self.param_list):
             param_updates[param_name] = proposed_params[i]
+
+        # Update direct sampling parameters in same was as for calibration parameters
+        for i, param_name in enumerate(self.direct_param_list):
+            param_updates[param_name] = direct_params[i]
 
         params = copy.deepcopy(self.model_parameters)
         update_func = lambda ps: update_params(ps, param_updates)
@@ -188,11 +199,11 @@ class Calibration:
         self.latest_scenario = scenario
         return scenario
 
-    def loglikelihood(self, params):
+    def loglikelihood(self, params, direct_params=[]):
         """
         Calculate the loglikelihood for a set of parameters
         """
-        scenario = self.run_model_with_params(params)
+        scenario = self.run_model_with_params(params, direct_params)
         model = scenario.model
 
         ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
@@ -451,7 +462,7 @@ class Calibration:
         start_time=None,
     ):
         """
-        Run our hand-rolled MCMC algoruthm to calibrate model parameters.
+        Run our hand-rolled MCMC algorithm to calibrate model parameters.
         """
         if start_time is None:
             start_time = time()
@@ -467,8 +478,12 @@ class Calibration:
         n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
         self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
         while True:
+
+            # Not actually LHS sampling - just sampling directly from prior.
+            direct_samples = [sample_prior(i, np.random.uniform()) for i in self.direct_params]
+
             logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
-            # Propose new paramameter set.
+            # Propose new parameter set.
             proposed_params_trans = self.propose_new_params_trans(
                 last_accepted_params_trans, haario_scaling_factor
             )
@@ -480,7 +495,7 @@ class Calibration:
 
             if is_within_prior_support:
                 # Evaluate log-likelihood.
-                proposed_loglike = self.loglikelihood(proposed_params)
+                proposed_loglike = self.loglikelihood(proposed_params, direct_samples)
 
                 # Evaluate log-prior.
                 proposed_logprior = self.logprior(proposed_params)

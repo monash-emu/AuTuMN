@@ -4,7 +4,7 @@ parent: apps/covid_19/params.yml
 country:
   iso3: PHL
 
-metropolis_initialisation_type: 'current_params'
+metropolis_initialisation_type: 'lhs'
 
 time:
   end: 731.

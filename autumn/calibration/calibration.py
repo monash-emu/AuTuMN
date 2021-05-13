@@ -40,6 +40,8 @@ from .utils import (
     sample_prior,
 )
 
+import sys
+
 logger = logging.getLogger(__name__)
 
 
@@ -279,6 +281,9 @@ class Calibration:
             pass
 
         self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
+
+        msg = ll
+        assert isinstance(ll, (int, float)), msg
 
         return ll
 
@@ -521,6 +526,12 @@ class Calibration:
                 if is_auto_accept:
                     accept = True
                 else:
+                    try:
+                        accept_prob = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
+                    except:
+                        msg = proposed_acceptance_quantity
+                        sys.exit(msg)
+
                     accept_prob = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
                     accept = (np.random.binomial(n=1, p=accept_prob, size=1) > 0)[0]
             else:

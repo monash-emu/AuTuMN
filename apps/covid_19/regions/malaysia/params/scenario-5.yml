@@ -33,6 +33,7 @@ mobility:
           - 180
 
 voc_emergence:
+  dual_strain: false
   final_proportion: 1.
   start_time: 458  # 1 Dec 2020
   end_time: 610  # 31 Jan 2021

@@ -1,9 +1,8 @@
 from summer import StrainStratification, Multiply
 
 from apps.covid_19.constants import (
-    INFECTIOUS_COMPARTMENTS,
+    DISEASE_COMPARTMENTS,
     Strain,
-    Compartment,
 )
 
 
@@ -11,7 +10,7 @@ def get_strain_strat(params):
     strain_strat = StrainStratification(
         "strain",
         [Strain.WILD_TYPE, Strain.VARIANT_OF_CONCERN],
-        INFECTIOUS_COMPARTMENTS + [Compartment.EARLY_EXPOSED]
+        DISEASE_COMPARTMENTS,
     )
     strain_strat.set_population_split(
         {Strain.WILD_TYPE: 1., Strain.VARIANT_OF_CONCERN: 0.}

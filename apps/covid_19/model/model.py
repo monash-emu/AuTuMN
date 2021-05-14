@@ -21,6 +21,7 @@ from apps.covid_19.model.stratifications.cluster import (
     apply_post_cluster_strat_hacks,
     get_cluster_strat,
 )
+from apps.covid_19.model.stratifications.strains import get_strain_strat
 from apps.covid_19.model.stratifications.history import get_history_strat
 from apps.covid_19.model.stratifications.vaccination import get_vaccination_strat
 from autumn import inputs
@@ -137,6 +138,10 @@ def build_model(params: dict) -> CompartmentalModel:
     # Stratify the model by clinical status
     clinical_strat = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
+
+    # Stratify the model by strain
+    strain_strat = get_strain_strat()
+    model.stratify_with(strain_strat)
 
     # Infection history stratification
     if params.stratify_by_infection_history:

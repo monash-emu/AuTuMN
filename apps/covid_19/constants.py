@@ -45,6 +45,11 @@ class Clinical:
     ICU = "icu"
 
 
+class Strain:
+    WILD_TYPE = "wild"
+    VARIANT_OF_CONCERN = "voc"
+
+
 NOTIFICATION_STRATA = [
     Clinical.SYMPT_ISOLATE,
     Clinical.HOSPITAL_NON_ICU,

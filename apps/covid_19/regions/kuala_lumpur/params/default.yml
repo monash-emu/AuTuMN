@@ -15,3 +15,11 @@ mobility:
     behaviour:
       parameters:
         upper_asymptote: 0.32
+
+
+voc_emergence:
+  dual_strain: false
+  final_proportion: 1.
+  start_time: 458  # 1 April 2021
+  end_time: 610  # 31 August 2021
+  contact_rate_multiplier: 1.56  # LSHTM's estimate

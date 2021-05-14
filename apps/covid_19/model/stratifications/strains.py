@@ -1,18 +1,26 @@
-from summer import StrainStratification
+from summer import StrainStratification, Multiply
 
 from apps.covid_19.constants import (
     INFECTIOUS_COMPARTMENTS,
+    Strain,
     Compartment,
 )
 
 
-def get_strain_strat():
-    strat = StrainStratification(
+def get_strain_strat(params):
+    strain_strat = StrainStratification(
         "strain",
-        ["wild", "voc"],
+        [Strain.WILD_TYPE, Strain.VARIANT_OF_CONCERN],
         INFECTIOUS_COMPARTMENTS + [Compartment.EARLY_EXPOSED]
     )
-    strat.set_population_split(
+    strain_strat.set_population_split(
         {"wild": 1., "voc": 0.}
     )
-    return strat
+    strain_strat.add_flow_adjustments(
+        "infection",
+        {
+            Strain.WILD_TYPE: None,
+            Strain.VARIANT_OF_CONCERN: Multiply(params.voc_emergence.contact_rate_multiplier)
+        }
+    )
+    return strain_strat

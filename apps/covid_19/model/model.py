@@ -140,8 +140,9 @@ def build_model(params: dict) -> CompartmentalModel:
     model.stratify_with(clinical_strat)
 
     # Stratify the model by strain
-    strain_strat = get_strain_strat(params)
-    model.stratify_with(strain_strat)
+    if params.voc_emergence:
+        strain_strat = get_strain_strat(params)
+        model.stratify_with(strain_strat)
 
     # Infection history stratification
     if params.stratify_by_infection_history:

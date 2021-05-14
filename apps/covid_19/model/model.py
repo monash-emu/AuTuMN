@@ -5,6 +5,7 @@ from apps.covid_19.constants import (
     DISEASE_COMPARTMENTS,
     INFECTIOUS_COMPARTMENTS,
     Compartment,
+    Strain
 )
 from apps.covid_19.model import preprocess
 from apps.covid_19.model.outputs.standard import request_standard_outputs
@@ -69,28 +70,36 @@ def build_model(params: dict) -> CompartmentalModel:
         # Use a static contact rate.
         contact_rate = params.contact_rate
 
-    # Adjust contact rate for Variant of Concerns
-    if params.voc_emergence and not params.voc_emergence.dual_strain:
-        voc_multiplier = scale_up_function(
-            x=[params.voc_emergence.start_time, params.voc_emergence.end_time],
-            y=[
-                1.0,
-                1.0
-                + params.voc_emergence.final_proportion
-                * (params.voc_emergence.contact_rate_multiplier - 1.0),
-            ],
-            method=4,
-        )
-        raw_contact_rate = contact_rate
-        if isinstance(contact_rate, float):
+    # Adjust contact rate for Variant of Concerns.
+    if params.voc_emergence:
+        voc_start_time = params.voc_emergence.start_time
 
-            def contact_rate(t):
-                return raw_contact_rate * voc_multiplier(t)
+        # Work out the seeding function for later.
+        if params.voc_emergence.dual_strain:
+            voc_seed = lambda time: 1. if voc_start_time < time < voc_start_time + 10. else 0.
 
+        # Otherwise adjust the contact rate parameter.
         else:
+            voc_multiplier = scale_up_function(
+                x=[voc_start_time, params.voc_emergence.end_time],
+                y=[
+                    1.0,
+                    1.0
+                    + params.voc_emergence.final_proportion
+                    * (params.voc_emergence.contact_rate_multiplier - 1.0),
+                    ],
+                method=4,
+            )
+            raw_contact_rate = contact_rate
+            if isinstance(contact_rate, float):
 
-            def contact_rate(t):
-                return raw_contact_rate(t) * voc_multiplier(t)
+                def contact_rate(t):
+                    return raw_contact_rate * voc_multiplier(t)
+
+            else:
+
+                def contact_rate(t):
+                    return raw_contact_rate(t) * voc_multiplier(t)
 
     model.add_infection_frequency_flow(
         name="infection",
@@ -143,6 +152,14 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.voc_emergence and params.voc_emergence.dual_strain:
         strain_strat = get_strain_strat(params)
         model.stratify_with(strain_strat)
+
+        # Seed the VoC
+        model.add_importation_flow(
+            "seed_voc",
+            voc_seed,
+            dest=Compartment.EARLY_ACTIVE,
+            dest_strata={"strain": Strain.VARIANT_OF_CONCERN}
+        )
 
     # Infection history stratification
     if params.stratify_by_infection_history:

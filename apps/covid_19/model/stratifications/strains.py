@@ -14,7 +14,7 @@ def get_strain_strat(params):
         INFECTIOUS_COMPARTMENTS + [Compartment.EARLY_EXPOSED]
     )
     strain_strat.set_population_split(
-        {"wild": 1., "voc": 0.}
+        {Strain.WILD_TYPE: 1., Strain.VARIANT_OF_CONCERN: 0.}
     )
     strain_strat.add_flow_adjustments(
         "infection",

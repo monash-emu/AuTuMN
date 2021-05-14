@@ -70,7 +70,7 @@ def build_model(params: dict) -> CompartmentalModel:
         contact_rate = params.contact_rate
 
     # Adjust contact rate for Variant of Concerns
-    if params.voc_emergence:
+    if params.voc_emergence and not params.voc_emergence.dual_strain:
         voc_multiplier = scale_up_function(
             x=[params.voc_emergence.start_time, params.voc_emergence.end_time],
             y=[
@@ -140,7 +140,7 @@ def build_model(params: dict) -> CompartmentalModel:
     model.stratify_with(clinical_strat)
 
     # Stratify the model by strain
-    if params.voc_emergence:
+    if params.voc_emergence and params.voc_emergence.dual_strain:
         strain_strat = get_strain_strat(params)
         model.stratify_with(strain_strat)
 

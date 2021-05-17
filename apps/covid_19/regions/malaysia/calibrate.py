@@ -12,6 +12,20 @@ targets = load_targets("covid_19", Region.MALAYSIA)
 
 # Truncate notifications from 1st August 2020
 notifications = truncate_targets_from_time(targets["notifications"], 210)
+icu_occupancy = truncate_targets_from_time(targets["icu_occupancy"], 210)
+infection_deaths = truncate_targets_from_time(targets["infection_deaths"], 210)
+
+icu_times = icu_occupancy["times"]
+icu_times = icu_times[::7]
+
+icu_values = icu_occupancy["values"]
+icu_values = icu_values[::7]
+
+deaths_times = infection_deaths["times"]
+deaths_times = deaths_times[::7]
+
+deaths_values = infection_deaths["values"]
+deaths_values = deaths_values[::7]
 
 TARGET_OUTPUTS = [
     {
@@ -20,13 +34,22 @@ TARGET_OUTPUTS = [
         "values": notifications["values"],
         "loglikelihood_distri": "normal",
     },
+
     {
         "output_key": "icu_occupancy",
-        "years": [targets["icu_occupancy"]["times"][-1]],
-        "values": [targets["icu_occupancy"]["values"][-1]],
+        "years": icu_times,
+        "values": icu_values,
+        "loglikelihood_distri": "normal",
+    },
+
+    {
+        "output_key": "infection_deaths",
+        "years": deaths_times,
+        "values": deaths_values,
         "loglikelihood_distri": "normal",
     },
 ]
+
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)

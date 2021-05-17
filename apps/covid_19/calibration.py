@@ -243,11 +243,6 @@ def add_standard_philippines_params(params, region):
             "trunc_range": [0.5, np.inf],
         },
         {
-            "param_name": "voc_emergence.end_time",
-            "distribution": "uniform",
-            "distri_params": [426, 731],  # 1 Mar 2021 - 31 Dec 2021
-        },
-        {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
             "distribution": "uniform",
             "distri_params": [0.8, 1.0],

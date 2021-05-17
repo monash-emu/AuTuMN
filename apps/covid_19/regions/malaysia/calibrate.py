@@ -104,8 +104,45 @@ PAR_PRIORS += [
         "distri_params": [0., 1.0],
         "sampling": "lhs",
     },
-]
+    {
+        "param_name": "vaccination.overall_efficacy",
+        "distribution": "uniform",
+        "distri_params": [0., 1.0],
+        "sampling": "lhs",
+    },
 
+    {
+        "param_name": "vaccination.coverage",
+        "distribution": "uniform",
+        "distri_params": [0., 1.0],
+        "sampling": "lhs",
+    },
+    {
+        "param_name": "vaccination.start_time",
+        "distribution": "uniform",
+        "distri_params": [367., 547.],
+        "sampling": "lhs",
+    },
+
+    {
+        "param_name": "vaccination.end_time",
+        "distribution": "uniform",
+        "distri_params": [701., 881.],
+        "sampling": "lhs",
+    },
+
+    {
+        "param_name": "voc_emergence.contact_rate_multiplier",
+        "distribution": "uniform",
+        "distri_params": [1.2, 2.1],
+    },
+
+    {
+        "param_name": "voc_emergence.start_time",
+        "distribution": "uniform",
+        "distri_params": [426, 486],
+    },
+]
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(

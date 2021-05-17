@@ -69,12 +69,11 @@ def build_model(params: dict) -> CompartmentalModel:
         )
     else:
         # Use a static contact rate.
-        raw_contact_rate = params.contact_rate
-    contact_rate = None
+        contact_rate = params.contact_rate
 
     model.add_infection_frequency_flow(
         name="infection",
-        contact_rate=final_contact_rate,
+        contact_rate=contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.EARLY_EXPOSED,
     )

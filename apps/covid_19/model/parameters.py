@@ -213,6 +213,7 @@ class VocEmergence(BaseModel):
 
     start_time: float
     entry_rate: float
+    seed_duration: float
     contact_rate_multiplier: float
 
 

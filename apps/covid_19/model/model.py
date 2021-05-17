@@ -122,11 +122,12 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.voc_emergence:
         voc_start_time = params.voc_emergence.start_time
         voc_entry_rate = params.voc_emergence.entry_rate
+        seed_duration = params.voc_emergence.seed_duration
         strain_strat = get_strain_strat(params.voc_emergence.contact_rate_multiplier)
         model.stratify_with(strain_strat)
 
         # Work out the seeding function and seed the VoC stratum.
-        voc_seed = lambda time: voc_entry_rate if 0. < time - voc_start_time < 10. else 0.
+        voc_seed = lambda time: voc_entry_rate if 0. < time - voc_start_time < seed_duration else 0.
 
         model.add_importation_flow(
             "seed_voc",

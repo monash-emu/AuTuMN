@@ -112,7 +112,7 @@ def app_name(run_type) -> Tuple[str, str]:
         return chosen_dirname, os.path.join(run_outputs_path, chosen_dirname)
 
 
-def output_region_name(app_output_path: str, name: str) -> Tuple[str, str]:
+def output_region_name(app_output_path: str, name: str, default_index=0) -> Tuple[str, str]:
     """
     Selector for users to choose which parameter set they want to select
     for a given application
@@ -122,7 +122,7 @@ def output_region_name(app_output_path: str, name: str) -> Tuple[str, str]:
     if not param_sets:
         return None, None
 
-    chosen_param_set = st.sidebar.selectbox(name, param_sets)
+    chosen_param_set = st.sidebar.selectbox(name, param_sets, default_index)
     return chosen_param_set, os.path.join(app_output_path, chosen_param_set)
 
 
@@ -199,7 +199,7 @@ def calibration_run(param_set_dirpath: str, name: str) -> str:
         return dirname, dirpath
 
 
-def model_run(param_set_dirpath: str) -> Tuple[str, str]:
+def model_run(param_set_dirpath: str, multi_country_run_number=None) -> Tuple[str, str]:
     """
     Allows a user to select what model run they want, given an app
     Returns the directory name selected.
@@ -221,7 +221,10 @@ def model_run(param_set_dirpath: str) -> Tuple[str, str]:
         model_run_dir_lookup[label] = idx
         labels.append(label)
 
-    label = st.sidebar.selectbox("Select app model run", labels)
+    if multi_country_run_number is None:
+        label = st.sidebar.selectbox("Select app model run", labels)
+    else:
+        label = st.sidebar.selectbox(f"Select app model run {multi_country_run_number}", labels)
     if not label:
         return None, None
     else:

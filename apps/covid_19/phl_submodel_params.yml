@@ -55,10 +55,8 @@ mobility:
         - 0.
 
 voc_emergence:
-  dual_strain: true
-  final_proportion: 1.
   start_time: 336  # 1 Dec 2020
-  end_time: 397  # 31 Jan 2021
+  entry_rate: 1.
   contact_rate_multiplier: 1.56  # LSHTM's estimate
 
 cumul_incidence_start_time: 501  # 15 May 2021

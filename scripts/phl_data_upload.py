@@ -15,8 +15,8 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 from settings import APPS_PATH
 
 # shareable google drive links
-PHL_doh_link = "16wsCkNDzP959N2YUxzGSAGPJ8y3p0bMC"  # sheet 05 daily report
-PHL_fassster_link = "1kmyY9nwGP8Wy4WXKBn-zgZp2BrhKlo6f"
+PHL_doh_link = "1CKhdiPsgpel5UU_epwYt6xo7SJWmYmI_"  # sheet 05 daily report
+PHL_fassster_link = "1Kq93R2qxGPIBRQnBsn2XcU3jfgbeuvYg"
 
 # destination folders filepaths
 PHL_doh_dest = "./data/inputs/covid_phl/PHL_icu.csv"
@@ -215,3 +215,4 @@ def copy_davao_city_to_region(filePath) -> pd.DataFrame:
 
 if __name__ == "__main__":
     main()
+

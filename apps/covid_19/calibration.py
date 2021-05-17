@@ -243,6 +243,11 @@ def add_standard_philippines_params(params, region):
             "trunc_range": [0.5, np.inf],
         },
         {
+            "param_name": "voc_emergence.contact_rate_multiplier",
+            "distribution": "uniform",
+            "distri_params": [1.2, 2.1],  # using reported 95 CI from Pearson et al.
+        },
+        {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
             "distribution": "uniform",
             "distri_params": [0.8, 1.0],

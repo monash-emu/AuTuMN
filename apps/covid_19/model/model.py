@@ -69,11 +69,12 @@ def build_model(params: dict) -> CompartmentalModel:
         )
     else:
         # Use a static contact rate.
-        contact_rate = params.contact_rate
+        raw_contact_rate = params.contact_rate
+    contact_rate = None
 
     model.add_infection_frequency_flow(
         name="infection",
-        contact_rate=contact_rate,
+        contact_rate=final_contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.EARLY_EXPOSED,
     )
@@ -127,6 +128,7 @@ def build_model(params: dict) -> CompartmentalModel:
 
         # Work out the seeding function and seed the VoC stratum.
         voc_seed = lambda time: voc_entry_rate if 0. < time - voc_start_time < 10. else 0.
+
         model.add_importation_flow(
             "seed_voc",
             voc_seed,

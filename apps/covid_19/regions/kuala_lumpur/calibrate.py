@@ -9,12 +9,40 @@ from autumn.utils.params import load_targets
 
 targets = load_targets("covid_19", Region.KUALA_LUMPUR)
 notifications = truncate_targets_from_time(targets["notifications"], 300)
+# icu_occupancy = truncate_targets_from_time(targets["icu_occupancy"], 300)
+infection_deaths = truncate_targets_from_time(targets["infection_deaths"], 300)
+
+# icu_times = icu_occupancy["times"]
+# icu_times = icu_times[::7]
+#
+# icu_values = icu_occupancy["values"]
+# icu_values = icu_values[::7]
+
+deaths_times = infection_deaths["times"]
+deaths_times = deaths_times[::7]
+
+deaths_values = infection_deaths["values"]
+deaths_values = deaths_values[::7]
 
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
         "years": notifications["times"],
         "values": notifications["values"],
+        "loglikelihood_distri": "normal",
+    },
+
+    # {
+    #     "output_key": "icu_occupancy",
+    #     "years": icu_times,
+    #     "values": icu_values,
+    #     "loglikelihood_distri": "normal",
+    # },
+
+    {
+        "output_key": "infection_deaths",
+        "years": deaths_times,
+        "values": deaths_values,
         "loglikelihood_distri": "normal",
     },
 ]

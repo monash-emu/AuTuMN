@@ -51,6 +51,11 @@ mobility:
         - school
         - work
 
+testing_to_detection:
+  assumed_tests_parameter: 1.e-4
+  assumed_cdr_parameter: 0.2
+  smoothing_period: 14
+
 elderly_mixing_reduction:
   age_categories: ["60", "65", "70", "75"]
   drop_time_range: [92, 152]

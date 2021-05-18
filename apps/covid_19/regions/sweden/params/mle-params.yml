@@ -16,4 +16,3 @@ new_icu_admissions_dispersion_param: 4.060582934531244
 notifications_dispersion_param: 95.42461233971278
 sojourn.compartment_periods_calculated.active.total_period: 6.765516070288523
 sojourn.compartment_periods_calculated.exposed.total_period: 4.815923618831112
-time.start: 34

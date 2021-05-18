@@ -2,7 +2,7 @@
 parent: apps/covid_19/params.yml
 
 time:
-  start: 0.
+  start: 30.
   end: 500.
 
 infectious_seed: 200

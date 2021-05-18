@@ -43,24 +43,6 @@ def get_prior_distributions_for_opti():
             "distribution": "uniform",
             "distri_params": [0.02, 0.20],
         },
-        # {
-        #     "param_name": "clinical_stratification.icu_prop",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.15, 0.20],
-        # },
-        # vary hospital durations
-        # {
-        #     "param_name": "sojourn.compartment_periods.hospital_late",
-        #     "distribution": "trunc_normal",
-        #     "distri_params": [18.4, 2.0],
-        #     "trunc_range": [3.0, np.inf],
-        # },
-        # {
-        #     "param_name": "sojourn.compartment_periods.icu_late",
-        #     "distribution": "trunc_normal",
-        #     "distri_params": [10.8, 4.0],
-        #     "trunc_range": [3.0, np.inf],
-        # },
         # vary symptomatic and hospitalised proportions
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
@@ -83,21 +65,21 @@ def get_prior_distributions_for_opti():
             "distribution": "uniform",
             "distri_params": [0.25, 0.80],
         },
-        {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
-            "distribution": "uniform",
-            "distri_params": [130, 250],
-        },
-        {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
-            "distribution": "uniform",
-            "distri_params": [0.4, 1.0],
-        },
-        {
-            "param_name": "elderly_mixing_reduction.relative_reduction",
-            "distribution": "uniform",
-            "distri_params": [0.0, 0.5],
-        },
+        # {
+        #     "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
+        #     "distribution": "uniform",
+        #     "distri_params": [130, 250],
+        # },
+        # {
+        #     "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.4, 1.0],
+        # },
+        # {
+        #     "param_name": "elderly_mixing_reduction.relative_reduction",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.0, 0.5],
+        # },
     ]
     return prior_list
 

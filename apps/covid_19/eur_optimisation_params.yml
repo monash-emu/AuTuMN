@@ -7,6 +7,9 @@ time:
 
 infectious_seed: 200
 
+contact_rate: 0.04
+
+
 vaccination: null
 
 haario_scaling_factor: 3. # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
@@ -39,24 +42,24 @@ mobility:
         - other_locations
         - school
         - work
-    behaviour_adjuster:
-      function_type: tanh
-      parameters:
-        shape: -0.05
-        inflection_time: 200.
-        lower_asymptote: 0.6
-        upper_asymptote: 1.
-      locations:
-        - other_locations
-        - school
-        - work
+#    behaviour_adjuster:
+#      function_type: tanh
+#      parameters:
+#        shape: -0.05
+#        inflection_time: 200.
+#        lower_asymptote: 0.6
+#        upper_asymptote: 1.
+#      locations:
+#        - other_locations
+#        - school
+#        - work
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-4
   assumed_cdr_parameter: 0.2
   smoothing_period: 14
 
-elderly_mixing_reduction:
-  age_categories: ["60", "65", "70", "75"]
-  drop_time_range: [92, 152]
-  relative_reduction: .4
+#elderly_mixing_reduction:
+#  age_categories: ["60", "65", "70", "75"]
+#  drop_time_range: [92, 152]
+#  relative_reduction: .4

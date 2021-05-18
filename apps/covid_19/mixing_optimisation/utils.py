@@ -39,24 +39,9 @@ def get_prior_distributions_for_opti():
             "distri_params": [0.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
         },
         {
-            "param_name": "case_detection.lower_asymptote",
+            "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.30],
-        },
-        {
-            "param_name": "case_detection.shape",
-            "distribution": "uniform",
-            "distri_params": [0.03, 0.15],
-        },
-        {
-            "param_name": "case_detection.inflection_time",
-            "distribution": "uniform",
-            "distri_params": [100, 250],
-        },
-        {
-            "param_name": "case_detection.upper_asymptote",
-            "distribution": "uniform",
-            "distri_params": [0.10, 0.99],
+            "distri_params": [0.02, 0.20],
         },
         # {
         #     "param_name": "clinical_stratification.icu_prop",

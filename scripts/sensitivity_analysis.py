@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 # Don't ask me why sigh ...
 sys.path.append("C:\\Users\\maba0001\\AuTuMN")
-from settings import OUTPUT_DATA_PATH
+from autumn.settings import OUTPUT_DATA_PATH
 
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 RUN_ID = "covid_19/malaysia/1621579054/07755e9"

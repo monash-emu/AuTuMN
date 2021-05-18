@@ -3,7 +3,7 @@ from datetime import datetime
 import numpy as np
 import pytest
 
-from autumn.inputs import (
+from autumn.tools.inputs import (
     build_input_database,
     get_country_mixing_matrix,
     get_crude_birth_rate,
@@ -12,7 +12,7 @@ from autumn.inputs import (
     get_mobility_data,
     get_population_by_agegroup,
 )
-from autumn.inputs.demography.queries import downsample_quantity, downsample_rate
+from autumn.tools.inputs.demography.queries import downsample_quantity, downsample_rate
 from scripts.read_who_covid_data import read_who_data_from_csv
 
 

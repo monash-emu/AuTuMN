@@ -41,3 +41,12 @@ moto[s3]  # Mock out AWS S3 storage
 
 # Cloud computing jobs
 sentry-sdk
+
+# AWS / buildkite infra
+boto3
+timeago
+click
+tabulate
+awscli
+fabric
+pyyaml

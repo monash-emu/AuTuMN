@@ -13,7 +13,7 @@ from botocore.exceptions import ProfileNotFound
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(BASE_DIR)
 
-from utils.runs import read_run_id
+from autumn.tools.utils.runs import read_run_id
 
 BUCKET = "autumn-data"
 AWS_PROFILE = "autumn"

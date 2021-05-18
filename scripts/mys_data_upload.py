@@ -12,8 +12,8 @@ import regex as re
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
-import settings
-from autumn.region import Region
+from autumn import settings
+from autumn.settings import Region
 
 # From WHO google drive folder
 CASE_DATA_URL = "https://docs.google.com/spreadsheets/d/1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA/export?format=xlsx&id=1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA"  # shareable link

@@ -1,8 +1,8 @@
 import numpy as np
 from numpy.testing import assert_allclose
 
-from apps.covid_19.model.parameters import Country
-from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import (
+from autumn.models.covid_19.parameters import Country
+from autumn.models.covid_19.preprocess.mixing_matrix.mixing_adjusters import (
     LocationMixingAdjuster,
     location_adjuster,
 )

@@ -30,21 +30,25 @@ python -m autumn --help
 ## Project structure
 
 ```
-├── .github                 GitHub config
-├── apps                    Specific applications of the framework
-├── autumn                  AuTuMN framework module
-├── dash                    Streamlit dashboards
+├── .github                 GitHub Actions config
+|
+├── autumn                  Main project Python codebase
+|   ├─ command_line             Command line interface
+|   ├─ dashboards               Streamlit dashboards
+|   ├─ models                   Generic disease models
+|   ├─ projects                 Region specifc projects that use disease models
+|   ├─ remote                   Remote server orchestration tasks
+|   ├─ settings                 Globally shared constants
+|   ├─ tasks                    Remote server pipeline tasks with Luigi
+|   └─ tools                    Globally shared utilities
+|
 ├── data                    Data to be used by the models
 |   ├─ inputs                   Input data for the models
 |   └─ outputs                  Module run outputs (not in source control)
 |
 ├── docs                    Documentation
-├── remote                  Remote server orchestration tasks
 ├── scripts                 Utility scripts
-├── settings                Globally shared constants
-├── tasks                   Remote server pipeline tasks with Luigi
 ├── tests                   Automated tests
-├── utils                   Globally shared utilities
 ├── .gitignore              Files for Git to ignore
 ├── plots.py                Streamlit entrypoint
 ├── pyproject.toml          Configuration for tools (eg. Black, pytest)

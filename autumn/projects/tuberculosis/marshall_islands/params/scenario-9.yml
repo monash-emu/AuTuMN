@@ -1,0 +1,7 @@
+extra_params:
+  future_diabetes_multiplier: 0.8
+time:
+  critical_ranges:
+    - - 2017.0
+      - 2049.0
+  start: 2016

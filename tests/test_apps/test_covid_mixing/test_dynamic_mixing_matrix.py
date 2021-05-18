@@ -3,17 +3,17 @@ from datetime import datetime, timedelta
 import numpy as np
 from numpy.testing import assert_allclose
 
-from apps.covid_19.constants import BASE_DATE
-from apps.covid_19.model.parameters import Country, Mobility
-from apps.covid_19.model.preprocess.mixing_matrix import (
+from autumn.models.covid_19.constants import BASE_DATE
+from autumn.models.covid_19.parameters import Country, Mobility
+from autumn.models.covid_19.preprocess.mixing_matrix import (
     build_dynamic_mixing_matrix,
     mobility,
 )
-from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import (
+from autumn.models.covid_19.preprocess.mixing_matrix.mixing_adjusters import (
     location_adjuster,
 )
-from autumn.inputs import get_country_mixing_matrix
-from autumn.inputs.social_mixing.queries import (
+from autumn.tools.inputs import get_country_mixing_matrix
+from autumn.tools.inputs.social_mixing.queries import (
     get_country_mixing_matrix,
     get_mixing_matrix_specific_agegroups,
 )

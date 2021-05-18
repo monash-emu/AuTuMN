@@ -12,8 +12,8 @@ vaccination: null
 haario_scaling_factor: 3. # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
 metropolis_initialisation_type: 'current_params'
 
-#waning_immunity_duration: 180
-#rel_prop_symptomatic_experienced: 0.
+stratify_by_infection_history: true
+waning_immunity_duration: 526  # to get 50% immune after 1 year (Faria et al, Science 2021)
 
 mobility:
   google_mobility_locations:

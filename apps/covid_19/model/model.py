@@ -138,9 +138,7 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Infection history stratification
     if params.stratify_by_infection_history:
-        history_strat = get_history_strat(
-            params.voc_emergence.contact_rate_multiplier
-        )
+        history_strat = get_history_strat(params)
         model.stratify_with(history_strat)
 
         # Waning immunity (if requested)

@@ -427,7 +427,7 @@ European countries for the optimisation project
 """
 
 
-def get_targets_and_priors_for_opti(country, likelihood_type="trunc_normal", latest_calibration_time=366):
+def get_targets_and_priors_for_opti(country, likelihood_type="trunc_normal", latest_calibration_time=244):
     targets = load_targets("covid_19", country)
 
     hospital_targets = [t for t in list(targets.keys()) if "hospital" in t or "icu" in t]

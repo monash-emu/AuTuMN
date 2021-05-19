@@ -508,11 +508,13 @@ class Calibration:
                 for i, prior_dict in enumerate(
                     self.priors
                 ):  # multiply the density with the determinant of the Jacobian
-                    proposed_acceptance_quantity += math.log(
-                        self.transform[prior_dict["param_name"]]["inverse_derivative"](
-                            proposed_params_trans[i]
-                        )
+                    inv_derivative = self.transform[prior_dict["param_name"]]["inverse_derivative"](
+                        proposed_params_trans[i]
                     )
+                    if inv_derivative > 0:
+                        proposed_acceptance_quantity += math.log(inv_derivative)
+                    else:
+                        proposed_acceptance_quantity += math.log(1.e-100)
 
                 is_auto_accept = (
                     last_acceptance_quantity is None

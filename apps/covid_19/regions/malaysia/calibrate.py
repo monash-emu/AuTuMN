@@ -130,7 +130,13 @@ PAR_PRIORS += [
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
-        "distri_params": [350, 410],
+        "distri_params": [350, 450],
+    },
+
+    {
+        "param_name": "voc_emergence.seed_duration",
+        "distribution": "uniform",
+        "distri_params": [1, 10],
     },
 
 ]

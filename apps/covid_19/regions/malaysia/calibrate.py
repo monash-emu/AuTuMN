@@ -7,6 +7,7 @@ from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from autumn.region import Region
 from autumn.utils.params import load_targets
 
+
 targets = load_targets("covid_19", Region.MALAYSIA)
 
 
@@ -26,6 +27,7 @@ deaths_times = deaths_times[::7]
 
 deaths_values = infection_deaths["values"]
 deaths_values = deaths_values[::7]
+
 
 TARGET_OUTPUTS = [
     {
@@ -75,13 +77,13 @@ PAR_PRIORS += [
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.05, 0.22],
+        "distri_params": [0.05, 0.3],
     },
     # Health system-related
     {
         "param_name": "clinical_stratification.props.hospital.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.7, 1.3],
+        "distri_params": [0.7, 1.5],
     },
     {
         "param_name": "clinical_stratification.icu_prop",
@@ -96,12 +98,13 @@ PAR_PRIORS += [
     {
         "param_name": "clinical_stratification.props.symptomatic.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.8, 2.0],
+        "distri_params": [0.7, 1.5],
     },
     {
         "param_name": "vaccination.vacc_prop_prevent_infection",
-        "distribution": "uniform",
-        "distri_params": [0., 1.0],
+        "distribution": "beta",
+        "distri_mean": 0.7,
+        "distri_ci": [0.5, 0.9],
         "sampling": "lhs",
     },
     {
@@ -114,34 +117,28 @@ PAR_PRIORS += [
     {
         "param_name": "vaccination.coverage",
         "distribution": "uniform",
-        "distri_params": [0., 1.0],
-        "sampling": "lhs",
-    },
-    {
-        "param_name": "vaccination.start_time",
-        "distribution": "uniform",
-        "distri_params": [367., 547.],
-        "sampling": "lhs",
-    },
-
-    {
-        "param_name": "vaccination.end_time",
-        "distribution": "uniform",
-        "distri_params": [701., 881.],
+        "distri_params": [0.4, 0.8],
         "sampling": "lhs",
     },
 
     {
         "param_name": "voc_emergence.contact_rate_multiplier",
         "distribution": "uniform",
-        "distri_params": [1.2, 2.1],
+        "distri_params": [1.2, 2.0],
     },
 
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
-        "distri_params": [380, 430],
+        "distri_params": [350, 450],
     },
+
+    {
+        "param_name": "voc_emergence.seed_duration",
+        "distribution": "uniform",
+        "distri_params": [1, 10],
+    },
+
 ]
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):

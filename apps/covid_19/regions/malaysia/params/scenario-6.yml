@@ -1,5 +1,5 @@
-description: Scenario 3, max mobility six months + 50% vaccine roll-out
-parent: apps/covid_19/regions/johor/params/default.yml
+description: Scenario 6, in between max mobility six months and most recent mobility value + 50% vaccine roll-out
+parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
   start: 457
@@ -8,32 +8,34 @@ vaccination:
   overall_efficacy: 0.75
   vacc_prop_prevent_infection: 1
 
-  # Eleven months from 1st April 2021
+  # Eleven months from 18th May 2021
   roll_out_components:
   - supply_period_coverage:
       coverage: 0.5
-      start_time: 457.
-      end_time: 791.
+      start_time: 504.
+      end_time: 838.
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2020-04-01
+        - 2020-03-07
       values:
-        - - max_last_period
+        - - close_to_max_last_period
           - 180
+          - -0.5
     work:
       append: true
       times:
-        - 2020-04-01
+        - 2020-03-07
       values:
-        - - max_last_period
+        - - close_to_max_last_period
           - 180
+          - 0.5
 
 voc_emergence:
-  start_time: 458  # 1 Dec 2020
+  start_time: 381   #15 Jan 2021
   entry_rate: 1.
   seed_duration: 1.
   contact_rate_multiplier: 1.56  # LSHTM's estimate

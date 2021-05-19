@@ -57,6 +57,8 @@ mobility:
         - 2021-03-07
         - 2021-04-03 # Full school re-openings
         - 2021-04-04
+        - 2021-05-01
+        - 2021-05-02 # Schools fully close again
       values:
         - 1.
         - 0.
@@ -74,9 +76,11 @@ mobility:
         - 0.5
         - 0.5
         - 1.
+        - 1.
+        - 0.
 
 voc_emergence:
-  start_time: 458  # 1 Dec 2020
+  start_time: 381   #15 Jan 2021
   entry_rate: 1.
-  seed_duration: 10.
+  seed_duration: 1.
   contact_rate_multiplier: 1.56  # LSHTM's estimate

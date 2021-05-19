@@ -8,7 +8,7 @@ from pyDOE import lhs
 from scipy import special, stats
 from scipy.optimize import minimize
 
-from autumn.db import Database
+# from autumn.db import Database
 
 
 def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
@@ -54,14 +54,14 @@ def sample_prior(prior_dict, quantile):
             quantile,
             prior_dict["distri_params"][0],
             prior_dict["distri_params"][1],
-        )[0]
+        )
     elif prior_dict["distribution"] == "gamma":
         sample = stats.gamma.ppf(
             quantile,
             prior_dict["distri_params"][0],
             0.0,
             prior_dict["distri_params"][1],
-        )[0]
+        )
     else:
         raise_error_unsupported_prior(prior_dict["distribution"])
 
@@ -246,28 +246,6 @@ def print_reformated_map_parameters(map_estimates):
             i += 1
         str_to_print += "]"
         print(str_to_print)
-
-
-if __name__ == "__main__":
-    PARAMS_PATH = "../../apps/tuberculosis/regions/marshall_islands/params/mle-params.yml"
-
-    with open(PARAMS_PATH, "r") as f:
-        map_estimates = yaml.safe_load(f)
-    print_reformated_map_parameters(map_estimates)
-
-    # calib_dir = os.path.join(
-    #     "../../data",
-    #     "outputs",
-    #     "calibrate",
-    #     "covid_19",
-    #     "belgium",
-    #     "ef2ee497-2020-07-17",  #   "Final-2020-07-17"
-    # )
-    # map_estimates, best_chain_index = collect_map_estimate(calib_dir)
-    # print_reformated_map_parameters(map_estimates)
-    #
-    # print()
-    # print("Obtained from chain " + str(best_chain_index))
 
 
 def specify_missing_prior_params(priors: dict):

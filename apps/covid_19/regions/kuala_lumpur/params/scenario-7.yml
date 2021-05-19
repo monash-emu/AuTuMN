@@ -1,5 +1,5 @@
-description: Scenario 7, in between max mobility six months and most recent mobility value + 80% vaccine roll-out
-parent: apps/covid_19/regions/malaysia/params/default.yml
+description: Scenario 7, In between max mobility six months and most recent mobility value + 80% vaccine roll-out
+parent: apps/covid_19/regions/kuala_lumpur/params/default.yml
 
 time:
   start: 457
@@ -8,7 +8,7 @@ vaccination:
   overall_efficacy: 0.75
   vacc_prop_prevent_infection: 1
 
-  # Eleven months from 18th May 2021
+  # Eleven months from 18th April 2021
   roll_out_components:
   - supply_period_coverage:
       coverage: 0.8
@@ -24,7 +24,7 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - -0.5
+          - 0.5
     work:
       append: true
       times:

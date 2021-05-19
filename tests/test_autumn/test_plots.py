@@ -19,8 +19,8 @@ def test_plot_post_calibration(tmp_path):
         "incidence": {
             "output_key": "incidence",
             "title": "incidence",
-            "times": [],
-            "values": [],
+            "times": [0],
+            "values": [0],
             "quantiles": [0.25, 0.5, 0.75],
         },
         "foo": {

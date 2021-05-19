@@ -6,7 +6,7 @@ from apps.covid_19.calibration import (
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from autumn.region import Region
 from autumn.utils.params import load_targets
-from autumn.calibration.utils import find_distribution_params_from_mean_and_ci
+
 
 targets = load_targets("covid_19", Region.MALAYSIA)
 
@@ -28,8 +28,7 @@ deaths_times = deaths_times[::7]
 deaths_values = infection_deaths["values"]
 deaths_values = deaths_values[::7]
 
-beta_parms = find_distribution_params_from_mean_and_ci("beta", 7, 2)
-print(beta_parms)
+
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
@@ -104,7 +103,8 @@ PAR_PRIORS += [
     {
         "param_name": "vaccination.vacc_prop_prevent_infection",
         "distribution": "beta",
-        "distri_params": [0.035, 0.015],
+        "distri_mean": 0.7,
+        "distri_ci": [0.5, 0.9],
         "sampling": "lhs",
     },
     {
@@ -132,7 +132,6 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [350, 410],
     },
-
 
 ]
 

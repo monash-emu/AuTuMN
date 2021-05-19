@@ -1,4 +1,5 @@
-from math import exp, log
+from math import log
+from numpy import exp
 
 
 def logit(u):

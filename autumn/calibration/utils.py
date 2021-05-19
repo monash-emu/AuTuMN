@@ -65,7 +65,7 @@ def sample_prior(prior_dict, quantile):
     else:
         raise_error_unsupported_prior(prior_dict["distribution"])
 
-    return sample
+    return float(sample)
 
 
 def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples: int):

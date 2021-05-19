@@ -16,6 +16,4 @@ mobility:
       parameters:
         upper_asymptote: 0.2
 
-voc_emergence:
-  start_time: 458  # 1 Dec 2020
-  seed_duration: 10.  # FIXME: Check you definitely want this to be different for this one region
+

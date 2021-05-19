@@ -32,8 +32,3 @@ mobility:
         - - max_last_period
           - 180
 
-voc_emergence:
-  start_time: 381   #15 Jan 2021
-  entry_rate: 1.
-  seed_duration: 1.
-  contact_rate_multiplier: 1.56  # LSHTM's estimate

@@ -69,8 +69,9 @@ PAR_PRIORS += [
     },
     {
         "param_name": "vaccination.vacc_prop_prevent_infection",
-        "distribution": "uniform",
-        "distri_params": [0., 1.0],
+        "distribution": "beta",
+        "distri_mean": 0.7,
+        "distri_ci": [0.5, 0.9],
         "sampling": "lhs",
     },
     {
@@ -109,7 +110,13 @@ PAR_PRIORS += [
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
-        "distri_params": [380, 430],
+        "distri_params": [350, 450],
+    },
+
+    {
+        "param_name": "voc_emergence.seed_duration",
+        "distribution": "uniform",
+        "distri_params": [1, 10],
     },
 ]
 

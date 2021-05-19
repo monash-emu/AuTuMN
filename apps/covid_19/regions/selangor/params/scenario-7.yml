@@ -1,5 +1,5 @@
 description: Scenario 7, in between max mobility six months and most recent mobility value + 80% vaccine roll-out
-parent: apps/covid_19/regions/malaysia/params/default.yml
+parent: apps/covid_19/regions/selangor/params/default.yml
 
 time:
   start: 457
@@ -24,7 +24,7 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - -0.5
+          - 0.5
     work:
       append: true
       times:

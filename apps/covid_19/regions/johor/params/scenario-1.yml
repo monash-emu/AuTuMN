@@ -2,7 +2,7 @@ description: Scenario 1, max mobility last 6 months
 parent: apps/covid_19/regions/johor/params/default.yml
 
 time:
-  start: 457
+  start: 504 # 18th May 2021
 
 mobility:
   mixing:

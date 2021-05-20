@@ -2,7 +2,7 @@ description: Scenario 6, In between max mobility six months and most recent mobi
 parent: apps/covid_19/regions/johor/params/default.yml
 
 time:
-  start: 457
+  start: 504 # 18th May 2021
 
 vaccination:
   overall_efficacy: 0.75

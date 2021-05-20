@@ -2,7 +2,7 @@ description: Scenario 3, max mobility six months + 50% vaccine roll-out
 parent: apps/covid_19/regions/johor/params/default.yml
 
 time:
-  start: 457
+  start: 504 # 18th May 2021
 
 vaccination:
   overall_efficacy: 0.75

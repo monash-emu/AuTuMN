@@ -2,7 +2,7 @@ description: Scenario 4, current mobility + 80% vaccine roll-out
 parent: apps/covid_19/regions/penang/params/default.yml
 
 time:
-  start: 457
+  start: 504 # 18th May 2021
 
 vaccination:
 

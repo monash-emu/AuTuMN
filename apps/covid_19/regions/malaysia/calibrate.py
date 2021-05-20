@@ -77,7 +77,7 @@ MALAYSIA_PARAMS = [
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0., 0.4],
+        "distri_params": [0.05, 0.4],
     },
     # Health system-related
     {

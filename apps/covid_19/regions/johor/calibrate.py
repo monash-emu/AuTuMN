@@ -38,13 +38,13 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.03, 0.12],
+        "distri_params": [0.03, 0.15],
     },
     # Microdistancing
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.18, 0.5],
+        "distri_params": [0.03, 0.4],
     },
     # Health system-related
     {
@@ -84,34 +84,16 @@ PAR_PRIORS += [
     {
         "param_name": "vaccination.coverage",
         "distribution": "uniform",
-        "distri_params": [0., 1.0],
-        "sampling": "lhs",
-    },
-    {
-        "param_name": "vaccination.start_time",
-        "distribution": "uniform",
-        "distri_params": [367., 547.],
-        "sampling": "lhs",
-    },
-
-    {
-        "param_name": "vaccination.end_time",
-        "distribution": "uniform",
-        "distri_params": [701., 881.],
+        "distri_params": [0.4, 0.8],
         "sampling": "lhs",
     },
 
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
-        "distri_params": [350, 450],
+        "distri_params": [370, 400],
     },
 
-    {
-        "param_name": "voc_emergence.seed_duration",
-        "distribution": "uniform",
-        "distri_params": [1, 10],
-    },
 ]
 
 

@@ -19,7 +19,7 @@ mobility:
     other_locations:
       append: true
       times:
-        - 2020-03-07
+        - 2021-03-07
       values:
         - - close_to_max_last_period
           - 180
@@ -27,7 +27,7 @@ mobility:
     work:
       append: true
       times:
-        - 2020-03-07
+        - 2021-03-07
       values:
         - - close_to_max_last_period
           - 180

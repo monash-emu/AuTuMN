@@ -71,13 +71,13 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.03, 0.12],
+        "distri_params": [0.03, 0.15],
     },
     # Microdistancing
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.05, 0.3],
+        "distri_params": [0.05, 0.4],
     },
     # Health system-related
     {
@@ -98,7 +98,7 @@ PAR_PRIORS += [
     {
         "param_name": "clinical_stratification.props.symptomatic.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.7, 1.5],
+        "distri_params": [0.01, 1.5],
     },
     {
         "param_name": "vaccination.vacc_prop_prevent_infection",
@@ -130,13 +130,7 @@ PAR_PRIORS += [
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
-        "distri_params": [350, 450],
-    },
-
-    {
-        "param_name": "voc_emergence.seed_duration",
-        "distribution": "uniform",
-        "distri_params": [1, 10],
+        "distri_params": [370, 400],
     },
 
 ]

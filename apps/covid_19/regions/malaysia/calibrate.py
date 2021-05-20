@@ -77,7 +77,7 @@ MALAYSIA_PARAMS = [
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0., 0.3],
+        "distri_params": [0., 0.4],
     },
     # Health system-related
     {
@@ -128,12 +128,6 @@ MALAYSIA_PARAMS = [
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
         "distri_params": [350, 450],
-    },
-
-    {
-        "param_name": "voc_emergence.seed_duration",
-        "distribution": "uniform",
-        "distri_params": [1, 10],
     },
 ]
 

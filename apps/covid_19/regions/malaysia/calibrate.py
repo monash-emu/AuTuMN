@@ -71,13 +71,13 @@ MALAYSIA_PARAMS = [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.03, 0.12],
+        "distri_params": [0.03, 0.15],
     },
     # Microdistancing
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.05, 0.3],
+        "distri_params": [0., 0.3],
     },
     # Health system-related
     {
@@ -113,20 +113,17 @@ MALAYSIA_PARAMS = [
         "distri_params": [0., 1.0],
         "sampling": "lhs",
     },
-
     {
         "param_name": "vaccination.coverage",
         "distribution": "uniform",
         "distri_params": [0.4, 0.8],
         "sampling": "lhs",
     },
-
     {
         "param_name": "voc_emergence.contact_rate_multiplier",
         "distribution": "uniform",
         "distri_params": [1.2, 2.0],
     },
-
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
@@ -138,7 +135,6 @@ MALAYSIA_PARAMS = [
         "distribution": "uniform",
         "distri_params": [1, 10],
     },
-
 ]
 
 PAR_PRIORS += MALAYSIA_PARAMS

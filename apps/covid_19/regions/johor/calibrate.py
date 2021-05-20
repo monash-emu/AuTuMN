@@ -50,7 +50,7 @@ PAR_PRIORS += [
     {
         "param_name": "clinical_stratification.props.hospital.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.7, 1.3],
+        "distri_params": [0.7, 1.5],
     },
     {
         "param_name": "clinical_stratification.icu_prop",
@@ -65,7 +65,7 @@ PAR_PRIORS += [
     {
         "param_name": "clinical_stratification.props.symptomatic.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.8, 2.0],
+        "distri_params": [0.7, 1.5],
     },
     {
         "param_name": "vaccination.vacc_prop_prevent_infection",
@@ -80,20 +80,22 @@ PAR_PRIORS += [
         "distri_params": [0., 1.0],
         "sampling": "lhs",
     },
-
     {
         "param_name": "vaccination.coverage",
         "distribution": "uniform",
         "distri_params": [0.4, 0.8],
         "sampling": "lhs",
     },
-
+    {
+        "param_name": "voc_emergence.contact_rate_multiplier",
+        "distribution": "uniform",
+        "distri_params": [1.2, 2.0],
+    },
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
         "distri_params": [370, 400],
     },
-
 ]
 
 

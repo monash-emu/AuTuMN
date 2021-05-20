@@ -32,7 +32,7 @@ MALAYSIA_PRIORS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.015, 0.03]
+        "distri_params": [0.015, 0.05]
     },
     {
         "param_name": "infectious_seed",
@@ -49,7 +49,7 @@ MALAYSIA_PRIORS = [
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.05, 0.4],
+        "distri_params": [0.03, 0.4],
     },
     # Health system-related
     {
@@ -111,14 +111,12 @@ TARGET_OUTPUTS = [
         "values": notifications["values"],
         "loglikelihood_distri": "normal",
     },
-
     {
         "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_values,
         "loglikelihood_distri": "normal",
     },
-
     {
         "output_key": "infection_deaths",
         "years": deaths_times,

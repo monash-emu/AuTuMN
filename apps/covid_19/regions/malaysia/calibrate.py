@@ -56,7 +56,7 @@ TARGET_OUTPUTS = [
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
-PAR_PRIORS += [
+MALAYSIA_PRIORS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
@@ -134,6 +134,9 @@ PAR_PRIORS += [
     },
 
 ]
+
+PAR_PRIORS += MALAYSIA_PRIORS
+
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(

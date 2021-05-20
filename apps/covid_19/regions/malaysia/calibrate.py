@@ -28,35 +28,7 @@ deaths_times = deaths_times[::7]
 deaths_values = infection_deaths["values"]
 deaths_values = deaths_values[::7]
 
-
-TARGET_OUTPUTS = [
-    {
-        "output_key": "notifications",
-        "years": notifications["times"],
-        "values": notifications["values"],
-        "loglikelihood_distri": "normal",
-    },
-
-    {
-        "output_key": "icu_occupancy",
-        "years": icu_times,
-        "values": icu_values,
-        "loglikelihood_distri": "normal",
-    },
-
-    {
-        "output_key": "infection_deaths",
-        "years": deaths_times,
-        "values": deaths_values,
-        "loglikelihood_distri": "normal",
-    },
-]
-
-
-PAR_PRIORS = provide_default_calibration_params()
-PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
-
-PAR_PRIORS += [
+MALAYSIA_PRIORS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
@@ -113,27 +85,52 @@ PAR_PRIORS += [
         "distri_params": [0., 1.0],
         "sampling": "lhs",
     },
-
     {
         "param_name": "vaccination.coverage",
         "distribution": "uniform",
         "distri_params": [0.4, 0.8],
         "sampling": "lhs",
     },
-
     {
         "param_name": "voc_emergence.contact_rate_multiplier",
         "distribution": "uniform",
         "distri_params": [1.2, 2.0],
     },
-
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
         "distri_params": [370, 400],
     },
-
 ]
+
+
+TARGET_OUTPUTS = [
+    {
+        "output_key": "notifications",
+        "years": notifications["times"],
+        "values": notifications["values"],
+        "loglikelihood_distri": "normal",
+    },
+
+    {
+        "output_key": "icu_occupancy",
+        "years": icu_times,
+        "values": icu_values,
+        "loglikelihood_distri": "normal",
+    },
+
+    {
+        "output_key": "infection_deaths",
+        "years": deaths_times,
+        "values": deaths_values,
+        "loglikelihood_distri": "normal",
+    },
+]
+
+PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
+PAR_PRIORS += MALAYSIA_PRIORS
+
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(

@@ -22,7 +22,7 @@ TARGET_OUTPUTS = [
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
-PAR_PRIORS = MALAYSIA_PARAMS
+PAR_PRIORS += MALAYSIA_PARAMS
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):

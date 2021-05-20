@@ -141,7 +141,7 @@ MALAYSIA_PARAMS = [
 
 ]
 
-PAR_PRIORS = MALAYSIA_PARAMS
+PAR_PRIORS += MALAYSIA_PARAMS
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):

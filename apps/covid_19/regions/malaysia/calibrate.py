@@ -70,7 +70,7 @@ MALAYSIA_PRIORS = [
     {
         "param_name": "clinical_stratification.props.symptomatic.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.01, 1.5],
+        "distri_params": [0.7, 1.5],
     },
     {
         "param_name": "vaccination.vacc_prop_prevent_infection",

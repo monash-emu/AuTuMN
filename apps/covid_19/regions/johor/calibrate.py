@@ -23,7 +23,6 @@ TARGET_OUTPUTS = [
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
-
 PAR_PRIORS += MALAYSIA_PRIORS
 
 

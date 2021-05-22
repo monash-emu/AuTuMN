@@ -59,6 +59,11 @@ data/sir_example_*
 # Models runs and calibrations
 data/outputs
 
+# TeX stuff (log already mentioned above)
+*.aux
+*.gz
+*.blg
+
 # Random stuff
 projects
 saved_*

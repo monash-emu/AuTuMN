@@ -85,6 +85,9 @@ class Scenario:
                 # Ensure start time cannot be overwritten for a scenario
                 params["time"]["start"] = start_time
 
+                # FIXME
+                # This section is now handled in model.set_baseline, but still needs to be calculated
+                # manually for legacy models
                 base_times = base_model.times
                 base_outputs = base_model.outputs
 
@@ -97,7 +100,7 @@ class Scenario:
                 # ensuring the initial conditions are the same for the given start time.
                 self.model = self.model_builder(params)
                 if type(self.model) is CompartmentalModel:
-                    self.model.initial_population = init_compartments
+                    self.model.set_baseline(base_model)
                 else:
                     self.model.compartment_values = init_compartments
 

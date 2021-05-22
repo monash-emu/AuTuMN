@@ -65,6 +65,7 @@ data/outputs
 *.blg
 *.bst
 *.bbl
+apps/*/tex/*.pdf
 
 # Random stuff
 projects

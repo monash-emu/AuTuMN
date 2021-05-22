@@ -63,6 +63,7 @@ data/outputs
 *.aux
 *.gz
 *.blg
+*.bst
 
 # Random stuff
 projects

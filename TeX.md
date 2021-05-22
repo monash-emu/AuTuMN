@@ -10,7 +10,10 @@ I suggest the following steps to getting started with documenting our code using
    * Then set Quick Build to the second bulleted option
 4. Open the .tex file needed in Texmaker and run Quick Build
    * Install any packages needed, which Texmaker can be set to do automatically
-5.
+5. When updating references, sync the shared EndNote library (owned by Milinda)
+   * Export using "BibTeX Export using EN Label Field"
+   * This should ensure that the bib libraries retain the same citations keys,
+     which should be "RN**" where ** is the EndNote library record number.
 
 The idea is that all the automatically generated files that are stored locally should be gitignored.
 However, the core tex, bib and image files, etc. should be managed through VCS.

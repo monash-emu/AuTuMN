@@ -64,6 +64,7 @@ data/outputs
 *.gz
 *.blg
 *.bst
+*.bbl
 
 # Random stuff
 projects

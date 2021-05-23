@@ -17,6 +17,8 @@ Using the base framework of an SEIR model (susceptible, exposed, infectious, rem
 
 \begin{figure}[h]
     \includegraphics[width=\textwidth]{../model/covid_19_seeiir.pdf}
-    \caption{\textbf{Unstratified compartmental model structure.} S = susceptible, E = exposed, I = active, R = recovered/removed. Depth of pink/red shading indicates the infectiousness of the compartment.}
+    \caption{Unstratified compartmental model structure. S = susceptible, E = exposed, I = active, R = recovered/removed. Depth of pink/red shading indicates the infectiousness of the compartment.}
     \label{fig:seeiir}
 \end{figure}
+
+The latently infected and infectious presymptomatic periods together comprise the incubation period, with the incubation period and the proportion of this period for which patients are infectious defined by input parameters described below. In general, two sequential compartments can be used to form a gamma-distributed profile of transition to infectiousness following exposure if the progression rates for these two compartments are equal, although in implementing this model the relative sojourn times in the two sequential compartments usually differed. Nevertheless, the profiles implemented are broadly consistent with the empirically observed log-normal distribution of individual incubation periods \cite{RN51}.

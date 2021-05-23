@@ -66,6 +66,7 @@ data/outputs
 *.bst
 *.bbl
 apps/*/tex/*.pdf
+*.synctex*
 
 # Random stuff
 projects

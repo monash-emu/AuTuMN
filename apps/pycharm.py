@@ -9,29 +9,49 @@ from autumn.region import Region
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 os.chdir("..")  # Make repo root the current directory
 
-# Run a COVID model manually.
-app_region = covid_19.app.get_region(Region.FRANCE)
-app_region.run_model(run_scenarios=False)
 
-# Simple SIR model for demonstration
-# app_region = sir_example.app.get_region(Region.AUSTRALIA)
-# app_region.run_model()M
+class Mode:
+    RUN = "run"
+    CALIBRATE = "calibrate"
 
 
-# app_region = tuberculosis.app.get_region(Region.LODDON_MALLEE)
-# app_region.run_model(run_scenarios=True)
-# app_region.calibrate_model(max_seconds=20, run_id=0, num_chains=1)
+class App:
+    COVID_19 = "covid_19"
+    TUBERCULOSIS = "tuberculosis"
+    TUBERCULOSIS_STRAINS = "tuberculosis_strains"
+    SIR_EXAMPLE = "sir_example"
 
 
-# # Run a calibration
-# app_region = covid_19.app.get_region(Region.VICTORIA)
-# app_region.calibrate_model(max_seconds=60, run_id=1, num_chains=1)
+def run(app, regions, mode, run_scenarios=False, calibration_time=None):
+    for region in regions:
+        if app == App.COVID_19:
+            app_region = covid_19.app.get_region(region)
+        elif app == App.TUBERCULOSIS:
+            app_region = tuberculosis.app.get_region(region)
+        elif app == App.TUBERCULOSIS_STRAINS:
+            app_region = tuberculosis_strains.app.get_region(region)
+        elif app == App.SIR_EXAMPLE:
+            app_region = sir_example.app.get_region(region)
+        else:
+            msg = f"The requested app {app} does not exist or has not been imported."
+            raise ValueError(msg)
 
-# # Run a calibration
-# app_region = tuberculosis_strains.app.get_region(Region.PHILIPPINES)
-# app_region.calibrate_model(max_seconds=60, run_id=1, num_chains=1)
+        if mode == Mode.RUN:
+            app_region.run_model(run_scenarios=run_scenarios)
+        elif mode == Mode.CALIBRATE:
+            app_region.calibrate_model(max_seconds=calibration_time, run_id=0, num_chains=1)
+        else:
+            msg = f"The requested mode {mode} is not supported."
+            raise ValueError(msg)
 
-# Used by Romain, please do not delete
-# for region in OPTI_REGIONS:
-#     app_region = covid_19.app.get_region(region)
-#     app_region.calibrate_model(max_seconds=5, run_id=1, num_chains=1)
+
+##################################
+#       User's configuration
+_app = App.COVID_19
+_regions = [Region.MALAYSIA]  # e.g. [Region.MALAYSIA],  OPTI_REGIONS, Region.MALAYSIA_REGIONS, Region.PHILIPPINES_REGIONS
+_mode = Mode.RUN
+_run_scenarios = False
+_calibration_time = 5  # calibration duration (only required for calibration mode)
+
+# run the models
+run(_app, _regions, _mode, _run_scenarios, _calibration_time)

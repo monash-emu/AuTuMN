@@ -210,6 +210,17 @@ def max_last_period(prev_vals: List[float], period: int):
     return max(prev_vals[-last_n_values:])
 
 
+def close_to_max_last_period(prev_vals: List[float], period: int, fraction: float):
+    """
+    Partial return from last mobility estimate to the highest level observed over the recent period specified.
+    """
+
+    last_n_values = min(len(prev_vals), period)
+    max_val_last_period = max(prev_vals[-last_n_values:])
+    prev_val = prev_vals[-1]
+    return (max_val_last_period - prev_val) * fraction + prev_val
+
+
 PARSE_FUNCS = {
     "repeat_prev": repeat_prev,
     "add_to_prev": add_to_prev,
@@ -218,4 +229,5 @@ PARSE_FUNCS = {
     "scale_prev_up_to_1": scale_prev_up_to_1,
     "close_gap_to_1": close_gap_to_1,
     "max_last_period": max_last_period,
+    "close_to_max_last_period": close_to_max_last_period,
 }

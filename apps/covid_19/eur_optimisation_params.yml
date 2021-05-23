@@ -2,66 +2,21 @@
 parent: apps/covid_19/params.yml
 
 time:
-  start: 0.
+  start: 30.
   end: 500.
 
 infectious_seed: 200
+
+contact_rate: 0.04
+
 
 vaccination: null
 
 haario_scaling_factor: 3. # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
 metropolis_initialisation_type: 'current_params'
 
-#waning_immunity_duration: 180
-#rel_prop_symptomatic_experienced: 0.
-
-clinical_stratification:
-  # Infectiousness adjustments, including the effect of isolation following detection
-  non_sympt_infect_multiplier: .7
-  late_infect_multiplier:
-    sympt_isolate: 0.2
-    hospital_non_icu: 0.2
-    icu: 0.2
-  props:
-    hospital:
-      props:  # Earlier values from the 21st July Dutch GGD report
-        - 0.087  # 0-4
-        - 0.009  # 5-9
-        - 0.005  # 10-14
-        - 0.008  # 15-19
-        - 0.011  # 20-24
-        - 0.011  # 25-29
-        - 0.013  # 30-34
-        - 0.015  # 35-39
-        - 0.018  # 40-44
-        - 0.040  # 45-49
-        - 0.047  # 50-54
-        - 0.070  # 55-59
-        - 0.071  # 60-64
-        - 0.114  # 65-69
-        - 0.113  # 70-74
-        - 0.071  # 75+
-
-infection_fatality:
-  # Infection fatality proportions - last column of Table S4 (Mendeley citation key RibeiroDosSantos2020)
-  props:
-    - 0.00002  # 0-4
-    - 0.000005  # 5-9
-    - 0.000005  # 10-14
-    - 0.000015  # 15-19
-    - 0.00004  # 20-24
-    - 0.00009  # 25-29
-    - 0.00017  # 30-34
-    - 0.00029  # 35-39
-    - 0.00053  # 40-44
-    - 0.00086  # 45-49
-    - 0.00154  # 50-54
-    - 0.00241  # 55-59
-    - 0.00359  # 60-64
-    - 0.00642  # 65-69
-    - 0.01076  # 70-74
-    - 0.02276  # 75-79
-    - 0.07274  # 80+
+stratify_by_infection_history: true
+waning_immunity_duration: 526  # to get 50% immune after 1 year (Faria et al, Science 2021)
 
 mobility:
   google_mobility_locations:
@@ -75,7 +30,6 @@ mobility:
     # This is now needed because there is an entry in the master parameters file and dictionaries overwite recursively
     home: []
   smooth_google_data: true
-  square_mobility_effect: true
   microdistancing:   # increasing function, starting from 0 (no microdistancing) ending at upper_asymptote
     behaviour:
       function_type: tanh
@@ -88,19 +42,24 @@ mobility:
         - other_locations
         - school
         - work
-    behaviour_adjuster:
-      function_type: tanh
-      parameters:
-        shape: -0.05
-        inflection_time: 200.
-        lower_asymptote: 0.6
-        upper_asymptote: 1.
-      locations:
-        - other_locations
-        - school
-        - work
+#    behaviour_adjuster:
+#      function_type: tanh
+#      parameters:
+#        shape: -0.05
+#        inflection_time: 200.
+#        lower_asymptote: 0.6
+#        upper_asymptote: 1.
+#      locations:
+#        - other_locations
+#        - school
+#        - work
 
-elderly_mixing_reduction:
-  age_categories: ["60", "65", "70", "75"]
-  drop_time_range: [92, 152]
-  relative_reduction: .4
+testing_to_detection:
+  assumed_tests_parameter: 1.e-4
+  assumed_cdr_parameter: 0.2
+  smoothing_period: 14
+
+#elderly_mixing_reduction:
+#  age_categories: ["60", "65", "70", "75"]
+#  drop_time_range: [92, 152]
+#  relative_reduction: .4

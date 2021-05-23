@@ -243,9 +243,9 @@ def add_standard_philippines_params(params, region):
             "trunc_range": [0.5, np.inf],
         },
         {
-            "param_name": "voc_emergence.end_time",
+            "param_name": "voc_emergence.contact_rate_multiplier",
             "distribution": "uniform",
-            "distri_params": [426, 731],  # 1 Mar 2021 - 31 Dec 2021
+            "distri_params": [1.2, 2.1],  # using reported 95 CI from Pearson et al.
         },
         {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
@@ -427,7 +427,7 @@ European countries for the optimisation project
 """
 
 
-def get_targets_and_priors_for_opti(country, likelihood_type="trunc_normal", latest_calibration_time=366):
+def get_targets_and_priors_for_opti(country, likelihood_type="trunc_normal", latest_calibration_time=244):
     targets = load_targets("covid_19", country)
 
     hospital_targets = [t for t in list(targets.keys()) if "hospital" in t or "icu" in t]

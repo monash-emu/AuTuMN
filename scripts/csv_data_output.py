@@ -49,10 +49,6 @@ mys["region"] = {
 
 country = {"phl": phl, "mys": mys}
 
-query_do = "SELECT scenario,times,notifications,incidence,icu_occupancy,hospital_occupancy,accum_deaths FROM derived_outputs;"
-query_un = "SELECT scenario,time,type, value FROM uncertainty WHERE quantile=0.5 AND type in ('incidence','notifications','icu_occupancy','accum_deaths','accum_incidence','accum_notifications', 'infection_deaths');"
-
-
 for ctry in country:
 
     df_mle = pd.DataFrame()
@@ -121,4 +117,4 @@ for ctry in country:
     s3.upload_file(
         f"{ctry}_data.csv", "autumn-files", f"{ctry}_data.csv", ExtraArgs={"ACL": "public-read"}
     )
-    # os.remove(f"{k}_data.csv")
+    os.remove(f"{ctry}_data.csv")

@@ -2,19 +2,19 @@ Feedback Type:
 Frown (Error)
 
 Timestamp:
-2021-05-10T02:56:15.1641097Z
+2021-05-17T04:09:46.5124892Z
 
 Local Time:
-2021-05-10T12:56:15.1641097+10:00
+2021-05-17T14:09:46.5124892+10:00
 
 Session ID:
-6faa6f0a-c04c-4638-94b6-7902b43f4aa0
+91e4e5c9-da6c-48d1-a27f-8d5052dfaa6e
 
 Release:
-April 2021
+May 2021
 
 Product Version:
-2.92.1067.0 (21.04) (x64)
+2.93.641.0 (21.05) (x64)
 
 OS Version:
 Microsoft Windows NT 10.0.17763.0 (x64 en-GB)
@@ -23,13 +23,13 @@ CLR Version:
 4.7 or later [Release Number = 528049]
 
 Peak Virtual Memory:
-40.1 GB
+39.2 GB
 
 Private Memory:
-1.88 GB
+1.32 GB
 
 Peak Working Set:
-2.05 GB
+1.5 GB
 
 IE Version:
 11.1790.17763.0
@@ -38,13 +38,13 @@ User ID:
 bba3e10e-bf65-455b-b5ce-ad1c3b84a97c
 
 Workbook Package Info:
-1* - en-AU, Query Groups: 7, fastCombine: Enabled, runBackgroundAnalysis: True.
+1* - en-AU, Query Groups: 6, fastCombine: Enabled, runBackgroundAnalysis: True.
 
 Telemetry Enabled:
 False
 
 Snapshot Trace Logs:
-C:\Users\maba0001\Microsoft\Power BI Desktop Store App\FrownSnapShot5754be46-becb-4c38-8ce1-5d9ff8262f97.zip
+C:\Users\maba0001\Microsoft\Power BI Desktop Store App\FrownSnapShotd55e173a-a10c-4259-b75c-01701d85e560.zip
 
 Model Default Mode:
 Import
@@ -64,16 +64,14 @@ PBI_ExcelTableInference
 PBI_eimInformationProtectionForDesktop
 PBI_azureMapVisual
 PBI_compositeModelsOverAS
-PBI_narrativeTextBox
 PBI_dynamicParameters
-PBI_newFieldList
+PBI_cartesianMultiplesAuthoring
 
 Disabled Preview Features:
 PBI_SpanishLinguisticsEnabled
 PBI_qnaLiveConnect
 PBI_dataPointLassoSelect
-PBI_anomalyDetection
-PBI_cartesianMultiplesAuthoring
+PBI_enhancedTooltips
 
 Disabled DirectQuery Options:
 TreatHanaAsRelationalSource
@@ -106,31 +104,7 @@ shared base_build_index = let
     #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","manila","national capital region",Replacer.ReplaceText,{"region_name"})
 in
     #"Replaced Value1"
-/*
-let
-Source = Folder.Files("\\ad.monash.edu\home\User056\maba0001\Documents\@Projects\Covid_consolidate\output"),
-#"Removed Other Columns" = Table.SelectColumns(Source,{"Folder Path", "Name"}),
-#"Inserted Merged Column" = Table.AddColumn(#"Removed Other Columns", "Full_Path", each Text.Combine({[Folder Path], [Name]}, "\"), type text),
-#"Inserted Text After Delimiter" = Table.AddColumn(#"Inserted Merged Column", "git_commit", each Text.AfterDelimiter([Name], "-", {0, RelativePosition.FromEnd}), type text),
-#"Extracted Text Before Delimiter" = Table.TransformColumns(#"Inserted Text After Delimiter", {{"git_commit", each Text.BeforeDelimiter(_, "."), type text}}),
-#"Inserted Text Before Delimiter" = Table.AddColumn(#"Extracted Text Before Delimiter", "dim_region", each Text.BeforeDelimiter([Name], "-", {1, RelativePosition.FromEnd}), type text),
-#"Extracted Text After Delimiter" = Table.TransformColumns(#"Inserted Text Before Delimiter", {{"dim_region", each Text.AfterDelimiter(_, "-", 1), type text}}),
-#"Inserted Text Between Delimiters" = Table.AddColumn(#"Extracted Text After Delimiter", "unix_epoch_time", each Text.BetweenDelimiters([Name], "-", "-", {1, RelativePosition.FromEnd}, 0), type text),
-#"Changed Type" = Table.TransformColumnTypes(#"Inserted Text Between Delimiters",{{"unix_epoch_time", Int64.Type}}),
-#"Inserted Division" = Table.AddColumn(#"Changed Type", "build_time", each 25569+([unix_epoch_time] / (60*60*24)), type number),
-#"Changed Type1" = Table.TransformColumnTypes(#"Inserted Division",{{"build_time", type datetime}}),
-#"Inserted Date" = Table.AddColumn(#"Changed Type1", "build_date", each DateTime.Date([build_time]), type date),
-#"Sorted Rows" = Table.Sort(#"Inserted Date",{{"unix_epoch_time", Order.Ascending}}),
-#"Added Index" = Table.AddIndexColumn(#"Sorted Rows", "build_index", 1, 1, Int64.Type),
-#"Added Custom" = Table.AddColumn(#"Added Index", "calibration_file", each "https://raw.githubusercontent.com/monash-emu/AuTuMN/master/apps/covid_19/regions/"&[dim_region]&"/targets.json", type text),
-#"Added Custom1" = Table.AddColumn(#"Added Custom", "build_autumn_web", each "http://www.autumn-data.com/app/covid_19/region/"&[dim_region]&"/run/"&[Name], type text),
-#"Replaced Value2" = Table.ReplaceValue(#"Added Custom1","powerbi-covid_19-","",Replacer.ReplaceText,{"build_autumn_web"}),
-#"Replaced Value1" = Table.ReplaceValue(#"Replaced Value2",".db",".html",Replacer.ReplaceText,{"build_autumn_web"}),
-#"Replaced Value3" = Table.ReplaceValue(#"Replaced Value1",each [dim_region]&"-","",Replacer.ReplaceText,{"build_autumn_web"}),
-#"Replaced Value" = Table.ReplaceValue(#"Replaced Value3","-","_",Replacer.ReplaceText,{"dim_region"})
-in
-#"Replaced Value"
-*/;
+;
 
 shared base_powerbi_output = let
     Source = base_build_index,
@@ -170,51 +144,7 @@ shared base_build_scenario = let
     #"Inserted Merged Column" = Table.AddColumn(#"Changed Type", "bld_scn", each Text.Combine({Text.From([build_index], "en-AU"), Text.From([scenario], "en-AU")}, "_"), type text) //base_covid_region
 in
     #"Inserted Merged Column"
-
-/*
-    Custom1 = Table.TransformColumns(FixStartTime,{"file_name", each "https://github.com/monash-emu/AuTuMN/tree/master/apps/covid_19/regions/"&_&"/params",type text}),
-    GetScenarioFiles = 
-        let
-            Source1 = (folder_path) => 
-                let
-                    Source = Web.BrowserContents(folder_path),
-                    #"Extracted Table From Html" = Html.Table(Source, {{"Column1", ".link-gray-dark.js-navigation-open"}, {"Column2", ".py-2 .issue-link"}, {"Column3", "TIME-AGO"}, {"Column4", ".css-truncate .link-gray:nth-child(1)"}}, [RowSelector=".Box-row + *"]),
-                    #"Changed Type" = Table.TransformColumnTypes(#"Extracted Table From Html",{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}}),
-                    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"Column1"})
-                in
-                    #"Removed Other Columns"
-        in
-            Source1,
-    #"Invoked Custom Function" = Table.AddColumn(Custom1, "GetScenarioFiles", each GetScenarioFiles([file_name])),
-    #"Expanded GetScenarioFiles" = Table.ExpandTableColumn(#"Invoked Custom Function", "GetScenarioFiles", {"Column1"}, {"Column1"}),
-    #"Replaced Value" = Table.ReplaceValue(#"Expanded GetScenarioFiles","https://github.com/monash-emu/AuTuMN/tree/","https://raw.githubusercontent.com/monash-emu/AuTuMN/",Replacer.ReplaceText,{"file_name"}),
-    #"Merged Columns" = Table.CombineColumns(#"Replaced Value",{"file_name","Column1"},Combiner.CombineTextByDelimiter("/", QuoteStyle.None),"scenario_file"),
-    GetScenarioDescription = 
-        let
-            a_function = (file_path) =>
-            let
-                Source = Csv.Document(Web.Contents(file_path),[Delimiter=":", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.None]),
-                #"Filtered Rows" = Table.SelectRows(Source, each Text.StartsWith([Column1], "# SCENARIO")),
-                #"Removed Other Columns" = Table.SelectColumns(#"Filtered Rows",{"Column2"}),
-                #"Trimmed Text" = Table.TransformColumns(#"Removed Other Columns",{{"Column2", Text.Trim, type text}})
-            in
-                #"Trimmed Text"
-        in
-            a_function,
-    Custom2 = Table.AddColumn(#"Merged Columns", "scenario_table", each GetScenarioDescription([scenario_file])),
-    #"Expanded scenario_description" = Table.ExpandTableColumn(Custom2, "scenario_table", {"Column2"}, {"scenario_description"}),
-    #"Changed Type" = Table.TransformColumnTypes(#"Expanded scenario_description",{{"scenario_description", type text}}),
-    #"Inserted Text Between Delimiters" = Table.AddColumn(#"Changed Type", "region", each Text.BetweenDelimiters([scenario_file], "regions/", "/params"), type text),
-    #"Inserted Text Between Delimiters1" = Table.AddColumn(#"Inserted Text Between Delimiters", "scenario", each Text.BetweenDelimiters([scenario_file], "params/", ".yml"), type text),
-    #"Removed Columns" = Table.RemoveColumns(#"Inserted Text Between Delimiters1",{"scenario_file"}),
-    #"Replaced Value1" = Table.ReplaceValue(#"Removed Columns","default","0",Replacer.ReplaceText,{"scenario"}),
-    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1","scenario-","",Replacer.ReplaceText,{"scenario"}),
-    #"Changed Type1" = Table.TransformColumnTypes(#"Replaced Value2",{{"scenario", Int64.Type}}),
-    Custom3 = Table.SelectRows(#"Changed Type1", each List.Contains(dim_region, [region]))
-in
-    Custom3
-
-    */;
+;
 
 shared GetPowerbiOutputs = let
     Source2 = (pbidbpath as text) => let
@@ -224,7 +154,7 @@ shared GetPowerbiOutputs = let
 
         start_time = GetStartTime(pbidbpath),
         #"Removed Columns" = Table.RemoveColumns(FixBinary,{"chain", "run"}),
-        Replicate = ReplicateBaseline(#"Removed Columns", start_time),
+        Replicate = try ReplicateBaseline(#"Removed Columns", start_time) otherwise #"Removed Columns",
         #"Added Covid start date" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
         #"Extracted Text After Delimiter" = Table.TransformColumns(#"Added Covid start date", {{"agegroup", each Text.AfterDelimiter(_, "_", {0, RelativePosition.FromEnd}), type text}}),
         #"Changed Type1" = Table.TransformColumnTypes(#"Extracted Text After Delimiter",{{"agegroup", Int64.Type}, {"times", type date}}),
@@ -252,8 +182,7 @@ shared GetDerivedOutputs = let
         Source_2 = Odbc.Query("database="&pbidbpath&";dsn=SQLite3 Datasource", "select cast(scenario as int) as scenario, cast(times as int) as times, *#(lf)from derived_outputs"),
         start_time = GetStartTime(pbidbpath),
         all_good = Table.RemoveColumns(Source_2,{"chain", "run", "scenario2", "times2"}),
-        //Custom = FixInterventionStartValues(all_good, start_time),
-        Replicate = ReplicateBaseline(all_good, start_time),
+        Replicate = try ReplicateBaseline(all_good, start_time) otherwise all_good,
         #"Added to Column" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
         #"Changed Type" = Table.TransformColumnTypes(#"Added to Column",{{"times", type date}}),
         #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Changed Type", {"scenario", "times"}, "stratification_name", "do_value"),
@@ -279,12 +208,7 @@ shared GetUncertainty = let
         Source = Odbc.Query("database="&pbidbpath&";dsn=SQLite3 Datasource", "select cast(scenario as int) as scenario, cast(time as int) as times, *#(lf)from uncertainty"),
         start_time = GetStartTime(pbidbpath),
         fix_accum = Table.RemoveColumns(Source,{"scenario2", "time"}),
-        //accum_deaths = Table.SelectRows(fix_accum, each [times] = start_time and [scenario] = 0 and [#"type"]="accum_deaths"),
-        //#"Merged Queries" = Table.NestedJoin(fix_accum, {"quantile", "type"},accum_deaths , {"quantile", "type"}, "accum_death", JoinKind.LeftOuter),
-        //#"Expanded accum_death" = Table.ExpandTableColumn(#"Merged Queries", "accum_death", {"value"}, {"accum_death"}),
-        //all_good = Table.AddColumn(#"Expanded accum_death", "un_value", each if [scenario] <> 0 and [times] >= start_time and [#"type"] = "accum_deaths" then [accum_death]+[value] else [value], type number )[[scenario],[times],[quantile],[#"type"],[un_value]],
-        //Custom1 = FixInterventionStartValues(all_good, start_time),
-        Replicate = ReplicateBaseline(fix_accum, start_time),
+        Replicate = try ReplicateBaseline(fix_accum, start_time) otherwise fix_accum,
         #"Added Covid start date" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
         #"Rename Columns" = Table.RenameColumns( #"Added Covid start date",{{"scenario", "un_scenario"}, {"quantile", "un_quantile"}, {"times", "un_date"}, {"type", "stratification_name"}, {"value", "un_value"}}),
         #"Added to Column" = Table.TransformColumns(#"Rename Columns", {{"stratification_name", each DimStratification{[stratification_name = _]}[stratification_id] , Int64.Type}}),
@@ -353,14 +277,6 @@ shared #"Key Measures" = let
     #"Removed Columns" = Table.RemoveColumns(Source,{"Measures"})
 in
     #"Removed Columns";
-
-shared john_hopkins_data = let
-    Source = PowerBI.Dataflows(null),
-    #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e" = Source{[workspaceId="d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"]}[Data],
-    #"54e82e7b-6c12-4f7d-a631-69cd553c9d59" = #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"{[dataflowId="54e82e7b-6c12-4f7d-a631-69cd553c9d59"]}[Data],
-    jh_data1 = #"54e82e7b-6c12-4f7d-a631-69cd553c9d59"{[entity="jh_data"]}[Data]
-in
-    jh_data1;
 
 shared social_mixing = let
     Source = PowerBI.Dataflows(null),
@@ -603,7 +519,7 @@ shared ReplicateBaseline = (a_table as table, start_time as number) as table => 
     #"Merged Queries" = Table.NestedJoin(holding_table, {"temp scenario"}, baseline, {"scenario.1"}, "baseline", JoinKind.LeftOuter)[[scenario],[baseline]],
     columns_to_expand = List.RemoveMatchingItems(Table.ColumnNames(baseline),{"scenario.1"}),
     exapand_table = Table.ExpandTableColumn(#"Merged Queries", "baseline", columns_to_expand),
-    all_done = Table.Combine({a_table,exapand_table})
+    all_done = try Table.Combine({a_table,exapand_table}) otherwise a_table
     in
     all_done;
 
@@ -632,45 +548,6 @@ shared Query1 = let
 in
     Source;
 
-shared malaysia_hospitals = let
-    Source = PowerBI.Dataflows(null),
-    #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e" = Source{[workspaceId="d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"]}[Data],
-    #"54e82e7b-6c12-4f7d-a631-69cd553c9d59" = #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"{[dataflowId="54e82e7b-6c12-4f7d-a631-69cd553c9d59"]}[Data],
-    malaysia_hospitals1 = #"54e82e7b-6c12-4f7d-a631-69cd553c9d59"{[entity="malaysia_hospitals"]}[Data]
-in
-    malaysia_hospitals1;
-
-shared malaysia_death_linelisted = let
-    Source = PowerBI.Dataflows(null),
-    #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e" = Source{[workspaceId="d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"]}[Data],
-    #"54e82e7b-6c12-4f7d-a631-69cd553c9d59" = #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"{[dataflowId="54e82e7b-6c12-4f7d-a631-69cd553c9d59"]}[Data],
-    malaysia_death_linelisted1 = #"54e82e7b-6c12-4f7d-a631-69cd553c9d59"{[entity="malaysia_death_linelisted"]}[Data],
-    #"Merged Queries" = Table.FuzzyNestedJoin(malaysia_death_linelisted1, {"Hospital"}, malaysia_hospitals, {"Description"}, "malaysia_hospitals", JoinKind.LeftOuter, [IgnoreCase=true, IgnoreSpace=true, NumberOfMatches=1]),
-    #"Expanded malaysia_hospitals" = Table.ExpandTableColumn(#"Merged Queries", "malaysia_hospitals", {"Hospital ID"}, {"Hospital_ID"}),
-    #"Cap age to 75" = Table.TransformColumns(#"Expanded malaysia_hospitals", {{"agegroup", each if _ > 75 then 75 else _, Int64.Type}})
-in
-    #"Cap age to 75";
-
-shared comorbidities = let
-    Source = malaysia_death_linelisted,
-    #"Removed Other Columns" = Table.SelectColumns(Source,{"HT", "DM", "HC", "CKD", "IHD", "Death #"}),
-    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Removed Other Columns", {"Death #"}, "Comorbidities", "Value")
-in
-    #"Unpivoted Other Columns";
-
-shared DimComorbidities = let
-    Source = comorbidities,
-    #"Removed Other Columns" = Table.SelectColumns(Source,{"Comorbidities"}),
-    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
-    #"Duplicated Column" = Table.DuplicateColumn(#"Removed Duplicates", "Comorbidities", "description"),
-    #"Replaced Value" = Table.ReplaceValue(#"Duplicated Column","HT","Hypertension",Replacer.ReplaceValue,{"description"}),
-    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","DM","Diabetes Mellitus",Replacer.ReplaceValue,{"description"}),
-    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1","CKD","Chronic Kidney Disease",Replacer.ReplaceValue,{"description"}),
-    #"Replaced Value3" = Table.ReplaceValue(#"Replaced Value2","IHD","Ischemic Heart Disease",Replacer.ReplaceValue,{"description"}),
-    #"Replaced Value4" = Table.ReplaceValue(#"Replaced Value3","HC","Hypercholesterolemia",Replacer.ReplaceText,{"description"})
-in
-    #"Replaced Value4";
-
 shared DimWith = let
     Source = List.Generate(() => 0, each _ <=75, each _+5),
     #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
@@ -681,12 +558,20 @@ in
     #"Added Conditional Column";
 
 shared Query2 = let
-    pbidbpath = "M:\Documents\@Projects\Covid_consolidate\output\powerbi-covid_19-calabarzon-1619430919-1255853.db",
-    scenario_Table = GetScenario(pbidbpath),
-    #"Filtered Rows" = Table.SelectRows(scenario_Table, each ([scenario] <> "0")),
-    #"Removed Duplicates" = Table.Distinct(#"Filtered Rows"[[start_time]], {"start_time"}){0}[start_time]
-in
-        #"Removed Duplicates";
+    pbidbpath = "M:\Documents\@Projects\Covid_consolidate\output\powerbi-covid_19-philippines-1620628794-bd24237.db",
 
+        Source = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
+        powerbi_Table = Source{[Name="powerbi_outputs",Kind="Table"]}[Data],
+        FixBinary = Table.TransformColumns(powerbi_Table,{{"scenario", ConvertBinary, Int64.Type}}),
 
-Table.AddIndexColumn
+        start_time = GetStartTime(pbidbpath),
+        #"Removed Columns" = Table.RemoveColumns(FixBinary,{"chain", "run"}),
+        Replicate = try ReplicateBaseline(#"Removed Columns", start_time) otherwise #"Removed Columns",
+        #"Added Covid start date" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
+        #"Extracted Text After Delimiter" = Table.TransformColumns(#"Added Covid start date", {{"agegroup", each Text.AfterDelimiter(_, "_", {0, RelativePosition.FromEnd}), type text}}),
+        #"Changed Type1" = Table.TransformColumnTypes(#"Extracted Text After Delimiter",{{"agegroup", Int64.Type}, {"times", type date}}),
+        #"Renamed Columns" = Table.RenameColumns(#"Changed Type1",{{"times", "pbi_date"}, {"scenario", "pbi_scenario"}, {"value", "pbi_value"}, {"agegroup", "dim_age"}, {"clinical", "pbi_clinical"}, {"compartment", "pbi_compartment"}}),
+        remove_clinical = Table.TransformColumns(#"Renamed Columns", {{"pbi_clinical", each Text.AfterDelimiter(_, "clinical_"), type text}}),
+        #"Replaced Value" = Table.ReplaceValue(remove_clinical,null,"-1",Replacer.ReplaceValue,{"pbi_clinical"})
+    in
+        #"Replaced Value";

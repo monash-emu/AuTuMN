@@ -211,9 +211,9 @@ class VocEmergence(BaseModel):
     Parameters defining the emergence profile of Variants of Concerns
     """
 
-    final_proportion: float
     start_time: float
-    end_time: float
+    entry_rate: float
+    seed_duration: float
     contact_rate_multiplier: float
 
 

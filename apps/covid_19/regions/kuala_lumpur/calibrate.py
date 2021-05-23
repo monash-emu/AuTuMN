@@ -17,6 +17,7 @@ TARGET_OUTPUTS = [
         "values": notifications["values"],
         "loglikelihood_distri": "normal",
     },
+
 ]
 
 PAR_PRIORS = provide_default_calibration_params()
@@ -37,13 +38,13 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.04, 0.12],
+        "distri_params": [0.03, 0.15],
     },
     # Microdistancing
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.1, 0.4],
+        "distri_params": [0.03, 0.4],
     },
     # Health system-related
     {
@@ -68,10 +69,37 @@ PAR_PRIORS += [
     },
     {
         "param_name": "vaccination.vacc_prop_prevent_infection",
+        "distribution": "beta",
+        "distri_mean": 0.7,
+        "distri_ci": [0.5, 0.9],
+        "sampling": "lhs",
+    },
+    {
+        "param_name": "vaccination.overall_efficacy",
         "distribution": "uniform",
         "distri_params": [0., 1.0],
         "sampling": "lhs",
     },
+
+    {
+        "param_name": "vaccination.coverage",
+        "distribution": "uniform",
+        "distri_params": [0.4, 0.8],
+        "sampling": "lhs",
+    },
+
+    {
+        "param_name": "voc_emergence.contact_rate_multiplier",
+        "distribution": "uniform",
+        "distri_params": [1.2, 2.1],
+    },
+
+    {
+        "param_name": "voc_emergence.start_time",
+        "distribution": "uniform",
+        "distri_params": [370, 400],
+    },
+
 ]
 
 

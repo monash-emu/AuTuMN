@@ -9,7 +9,7 @@ Our repository allows for the rapid and robust creation and stratification of mo
 and includes pluggable modules to simulate heterogeneous population mixing, demographic processes, multiple circulating
 pathogen strains, repeated stratification and other dynamics relevant to infectious disease transmission.
 The platform was created to simulate TB dynamics, being an infectious disease whose epidemiology differs markedly
-by setting, such that considerable flexibility is desirable \cite{RN58}.
+by setting, such that considerable flexibility is desirable \cite{RN18}.
 We have progressively developed the structures of our platform over recent years,
 and further adapted it to be sufficiently flexible
 to permit simulation of other infectious diseases for the purpose of this project.
@@ -23,6 +23,6 @@ Using the base framework of an SEIR model (susceptible, exposed, infectious, rem
     \label{fig:seeiir}
 \end{figure}
 
-The latently infected and infectious presymptomatic periods together comprise the incubation period, with the incubation period and the proportion of this period for which patients are infectious defined by input parameters described below. In general, two sequential compartments can be used to form a gamma-distributed profile of transition to infectiousness following exposure if the progression rates for these two compartments are equal, although in implementing this model the relative sojourn times in the two sequential compartments usually differed. Nevertheless, the profiles implemented are broadly consistent with the empirically observed log-normal distribution of individual incubation periods \cite{RN51}.
+The latently infected and infectious presymptomatic periods together comprise the incubation period, with the incubation period and the proportion of this period for which patients are infectious defined by input parameters described below. In general, two sequential compartments can be used to form a gamma-distributed profile of transition to infectiousness following exposure if the progression rates for these two compartments are equal, although in implementing this model the relative sojourn times in the two sequential compartments usually differed. Nevertheless, the profiles implemented are broadly consistent with the empirically observed log-normal distribution of individual incubation periods \cite{RN13}.
 
 The transition from early active to late active represents the point at which patients are detected (for those persons for whom detection does eventually occur) and isolation then occurs from this point forward (i.e. applies during the late disease phase only. This transition point is also intended to represent the point of admission to hospital or transition from hospital ward to intensive care for patients for whom this occurs (see Section \ref{clin}).

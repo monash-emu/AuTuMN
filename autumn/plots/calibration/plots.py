@@ -83,7 +83,8 @@ def plot_acceptance_ratio(
 
     fig, axis, _, _, _, _ = plotter.get_figure()
     full_df = db.load.append_tables(mcmc_tables)
-    n_chains = max(full_df["chain"])
+    # Chain index starts at 0
+    n_chains = max(full_df["chain"]) + 1
     for chain in range(n_chains):
         chain_mask = full_df["chain"] == chain
         chain_df = full_df[chain_mask]

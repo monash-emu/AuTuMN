@@ -27,6 +27,8 @@ class Region:
     JOHOR = "johor"
     PENANG = "penang"
     KUALA_LUMPUR = "kuala-lumpur"
+    NEPAL = "nepal"
+    SRI_LANKA = "sri_lanka"
 
     REGIONS = [
         PHILIPPINES,
@@ -57,6 +59,8 @@ class Region:
         PENANG,
         KUALA_LUMPUR,
         DAVAO_CITY,
+        NEPAL,
+        SRI_LANKA,
     ]
 
     MALAYSIA_REGIONS = [

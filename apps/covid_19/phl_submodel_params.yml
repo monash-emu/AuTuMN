@@ -61,3 +61,16 @@ voc_emergence:
   contact_rate_multiplier: 1.56  # LSHTM's estimate
 
 cumul_incidence_start_time: 501  # 15 May 2021
+
+# Vaccination-related
+vaccination:
+  overall_efficacy: 0.7
+  vacc_prop_prevent_infection: 1
+  roll_out_components:
+  - supply_timeseries:
+      times:
+        - 425  # no vaccine before 1 Mar 2021
+        - 426  # vaccination starts 1 Mar 2021
+      values:
+        - 0
+        - 27000  # average daily number of people vaccinated during March-April 2021 (Our World in Data)

@@ -243,6 +243,11 @@ def add_standard_philippines_params(params, region):
             "trunc_range": [0.5, np.inf],
         },
         {
+            "param_name": "voc_emergence.start_time",
+            "distribution": "uniform",
+            "distri_params": [336, 547],  # Between 1 Dec 2020 and 30 June 2021
+        },
+        {
             "param_name": "voc_emergence.contact_rate_multiplier",
             "distribution": "uniform",
             "distri_params": [1.2, 2.1],  # using reported 95 CI from Pearson et al.

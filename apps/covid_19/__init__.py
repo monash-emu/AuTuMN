@@ -18,6 +18,8 @@ from .regions.spain import spain_region
 from .regions.sweden import sweden_region
 from .regions.united_kingdom import united_kingdom_region
 from .regions.victoria import victoria_region
+from .regions.nepal import nepal_region
+from .regions.sri_lanka import sri_lanka_region
 
 # Used by each region to register its model.
 app = App("covid_19")
@@ -47,3 +49,7 @@ app.register(italy_region)
 app.register(france_region)
 app.register(sweden_region)
 app.register(spain_region)
+
+
+app.register(nepal_region)
+app.register(sri_lanka_region)

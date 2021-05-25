@@ -14,7 +14,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "contact_rate",
             "distribution": "uniform",
-            "distri_params": [0.01, 0.1],
+            "distri_params": [0.03, 0.07],
         },
         {
             "param_name": "infectious_seed",

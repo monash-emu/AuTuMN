@@ -14,12 +14,12 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "contact_rate",
             "distribution": "uniform",
-            "distri_params": [0.02, 0.06],
+            "distri_params": [0.01, 0.1],
         },
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
-            "distri_params": [100., 400.],
+            "distri_params": [50., 600.],
         },
         {
             "param_name": "sojourn.compartment_periods_calculated.exposed.total_period",

@@ -29,12 +29,6 @@ POPULATION = {
 }
 
 
-start_reporting = {
-    Region.FRANCE: 79,
-    Region.UNITED_KINGDOM: 83,
-}
-
-
 def convert_year_week_to_day(year_week):
     """
     return a day representing the 4th week defined by year_week
@@ -89,12 +83,6 @@ def write_hospital_data_to_targets(
     if country != Region.UNITED_KINGDOM:
         population = POPULATION[country]
         values = [v / 7 * population / 1.e5 for v in values]
-
-    if country in list(start_reporting.keys()):
-        min_time = start_reporting[country]
-        first_idx_to_keep = next(x[0] for x in enumerate(times) if x[1] >= min_time)
-        times = times[first_idx_to_keep:]
-        values = values[first_idx_to_keep:]
 
     with open(target_path, mode="r") as f:
         targets = json.load(f)

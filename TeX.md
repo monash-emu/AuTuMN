@@ -15,7 +15,9 @@ I suggest the following steps to getting started with documenting our code using
 5. When updating references, sync the shared EndNote library (owned by Milinda)
    * Export using "BibTeX Export using EN Label Field"
    * This should ensure that the bib libraries retain the same citations keys,
-     which should be "RN**" where ** is the EndNote library record number.
+     which should be "RN**" where ** is the EndNote library record number
+6. Current plan for file structures is to keep one app-specific library in apps/<app_name>/tex, 
+   which would be an export of all the files from the shared library group set for the respective pathogen (app) 
 
 The idea is that all the automatically generated files that are stored locally should be gitignored.
 However, the core tex, bib and image files, etc. should be managed through VCS.

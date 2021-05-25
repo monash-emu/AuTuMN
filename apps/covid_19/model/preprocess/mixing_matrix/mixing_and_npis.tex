@@ -1,0 +1,60 @@
+\section{Implementation of non-pharmaceutical interventions} \label{npi}
+A major part of the rationale for the development of this model was to capture the past impact of non-pharmaceutical interventions (NPIs) and produce future scenarios projections with the implementation or release of such interventions.
+
+\subsection{Isolation and quarantine}
+For persons who are identified with symptomatic disease and enter clinical stratum 3, self-isolation is assumed to occur and their infectiousness is modified as described above. The proportion of ambulatory symptomatic persons effectively identified through the public health response by any means is determined by the case detection rate as described above.
+
+\subsection{Community quarantine or ``lockdown" measures}
+For all NPIs relating to reduction of human mobility or “lockdown” (i.e. all NPIs other than isolation and quarantine), these interventions are implemented through dynamic adjustments to the age-assortative mixing matrix. The baseline mixing matrices of Prem et al. \cite{RN19} are synthetic and do not represent direct observations or reports from surveys (in the case of the 144 countries to which they were extrapolated from observations in the eight ``POLYMOD” countries of Western Europe). Although synthetic, the matrices are contextualised to national demographic information, including country-specific data that include household size, workforce participation and school enrolment. Further, the matrices presented are easily machine-readable and appear to be plausible representations of contact structures within these countries.
+
+The matrices also have the major advantage of allowing for disaggregation of total contact rates by location, i.e. home, work, school and other locations. This disaggregation allows for the simulation of various NPIs in the local context by dynamically varying the contribution of each location to reflect the historical implementation of the interventions.
+
+The corresponding mixing matrix (denoted \(C_{0}\)) is presented using the standard convention that a row represents the average number of age-specific contacts per day for a contact recipient of a given age-group. In other words, the element \(C_{0i,j}\) is the average number of contacts per day that an individual of age-group \(_{j}\) makes with individuals of age-group \(_{i}\).
+
+This matrix results from the summation of the four location-specific contact matrices provided by Prem et al.: \(C_{0}=C_{H}+C_{S}+C_{W}+C_{L}\), where \(C_{H}\), \(C_{S}\), \(C_{W}\) and \(C_{L}\) are the age-specific contact matrices associated with households, schools, workplaces and other locations, respectively.
+
+In our model, the contributions of the matrices \(C_{S}\), \(C_{W}\) and \(C_{L}\) vary with time such that the input contact matrix can be written:
+\[C(t)= C_{H}+ s(t)^{2}C_{S}+ w(t)^{2}C_{W}+l(t)^{2}C_{L}\]
+
+The modifying functions are each squared to capture the effect of the mobility changes on both the infector and the infectee in any given interaction that could potentially result in transmission. The modifying functions incorporate both macro-distancing and microdistancing effects, depending on the location.
+
+\subsection{School closures/re-openings}
+Reduced attendance at schools is represented through the function \(s(t)\), which represents the proportion of all school students currently attending on-site teaching. If schools are fully closed, \(s(t)=0\) and \(C_{S}\) does not contribute to the overall mixing matrix \(C(t)\). \(s(t)\) is calculated through a series of estimates of the proportion of students attending schools, to which a smoothed step function is fitted. Note that the dramatic changes in this contribution to the mixing matrix with school closures/re-openings is a more marked change than is seen with the simulation of policy changes in workplaces and other locations (which are determined by empiric data and so do not vary so abruptly and do not fall to zero).
+
+\subsection{Workplace closures}
+Workplace closures are represented by quadratically reducing the contribution of workplace contacts to the total mixing matrix over time. This is achieved through the scaling term \(w(t)^{2}\) which modifies the contribution of \(C_{W}\) to the overall mixing matrix \(C(t)\). The profile of the function \(w(t)\) is set by fitting a polynomial spline function to Google mobility data for workplace attendance (Table \ref{tab:mobility_map}).
+
+\subsection{Community-wide movement restriction}
+Community-wide movement restriction (or ``lockdown") measures are represented by proportionally reducing the contribution of the other locations contacts to the total mixing matrix over time. This is achieved through the scaling term \(l(t)^{2}\) which modifies the contribution of \(C_{L}\) to the overall mixing matrix \(C(t)\). The profile of the function \(l(t)\) is set by fitting a polynomial spline function to an average of Google mobility data for various locations, as indicated in Table \ref{tab:mobility_map}.
+
+\subsection{Household contacts}
+The contribution of household contacts to the overall mixing matrix \(C(t)\) is fixed over time. Although Google provides mobility estimates for residential contacts, the nature of these data are different from those for each of the other Google mobility types in that they represent the time spent in that location rather than the duration. The daily frequency with which people attend their residence is likely to be close to one and we considered that household members likely have a daily opportunity for infection with each other household member. Therefore, we did not implement a function to scale the contribution of household contacts to the mixing matrix with time.
+
+\begin{table}[h]
+\renewcommand{\baselinestretch}{1}
+    \begin{tabular}{|p{3.2cm}|p{3.2cm}|p{4.5cm}|}
+        \hline
+        \textbf{Prem ``location"} & \textbf{Approach} & \textbf{Google mobility types} \\
+        \hline
+        School & Policy response & Not applicable \\
+      \hline
+      Household & Constant & Not applicable \\
+      \hline
+      Workplace & Google mobility & Workplace \\
+      \hline
+      Other locations & Google mobility & 
+      Unweighted average of: \begin{itemize}
+			\item Retail and recreation
+          \item Grocery and pharmacy
+          \item Parks
+          \item Transit stations
+      \end{itemize}\\
+      \hline
+    \end{tabular}
+    \caption{Mapping of Google mobility data to contact locations (as defined by Prem et al.)}
+    \label{tab:mobility_map}
+\end{table}
+
+\subsection{Microdistancing}
+\label{microdist}
+Interventions other than those that prevent people coming into contact with one another are thought to be important to COVID-19 transmission and epidemiology, such as maintaining interpersonal physical distance and the wearing of face coverings. We therefore implemented a ``microdistancing” function to represent reductions in the rate of effective contact that is not attributable to persons visiting specific locations and so is not captured through Google mobility data. This microdistancing function reduces the values of all elements of the mixing matrices by a certain proportion. These time-varying functions multiplicatively scale the location-specific contact rate modifiers \(s(t)\), \(w(t)\) and \(l(t)\).

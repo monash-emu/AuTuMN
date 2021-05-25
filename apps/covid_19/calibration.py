@@ -85,7 +85,6 @@ def run_calibration_chain(
     available_time: Maximum time, in seconds, to run the calibration.
     mode is either 'lsm' or 'autumn_mcmc'
     """
-
     logger.info(f"Preparing to run covid model calibration for region {region}")
     params = load_params("covid_19", region)
     calib = Calibration(
@@ -490,7 +489,7 @@ def get_targets_and_priors_for_opti(country, likelihood_type="trunc_normal", lat
             }
         )
 
-    if likelihood_type == "trunc_normal":
+    if likelihood_type in ["trunc_normal", "normal"]:
         par_priors = add_dispersion_param_prior_for_gaussian(par_priors, target_outputs)
     else:
         for output_name in ["notifications", "infection_deaths", hospital_targets[0]]:

@@ -4,43 +4,27 @@ parent: apps/covid_19/phl_submodel_params.yml
 population:
   region: Calabarzon
 
-mobility:
-  region: Calabarzon
-  microdistancing:
-    behaviour:
-      parameters:
-        times:
-        - 75  # copy default values
-        - 314  # copy default values
-        - 446  # 21/3
-        - 447  # 22/3 GCQ+ starts
-        - 467  # 28/3 GCQ+ ends
-        - 472  # 29/3 MECQ starts
-        - 501  # MECQ ends
-        - 504  # back to pre-ECQ MHS
-        values:
-        - 0.
-        - 1.
-        - 1.0
-        - 1.3
-        - 1.3
-        - 2.
-        - 2.
-        - 1.3
-  mixing:
-    other_locations:
-      append: true
-      times:
-      - 2021-05-15 # MECQ ends
-      - 2021-05-18 # back to GCQ mobility
-      values:
-      - 0.87
-      - 0.90 # back to GCQ mobility
-    work:
-      append: true
-      times:
-      - 2021-05-15 # MECQ ends
-      - 2021-05-18 # back to GCQ mobility
-      values:
-      - 0.73  # MECQ ends
-      - 0.78 # back to GCQ mobility
+#mobility:
+#  region: Calabarzon
+#  microdistancing:
+#    behaviour:
+#      parameters:
+#        times:
+#        - 75  # copy default values
+#        - 314  # copy default values
+#        - 446  # 21/3
+#        - 447  # 22/3 GCQ+ starts
+#        - 467  # 28/3 GCQ+ ends
+#        - 472  # 29/3 MECQ starts
+#        - 501  # MECQ ends
+#        - 504  # back to pre-ECQ MHS
+#        values:
+#        - 0.
+#        - 1.
+#        - 1.0
+#        - 1.3
+#        - 1.3
+#        - 2.
+#        - 2.
+#        - 1.3
+

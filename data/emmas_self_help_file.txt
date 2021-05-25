@@ -1,0 +1,106 @@
+to get things started for autumn covid, have the following programs on your computer
+
+conemu -useful for using all sorts of bash, cmd and gitbash type environments
+anaconda3 -make sure it is on the system path. this is crucial
+anaconda prompt, should come with the anaconda3 package
+open anaconda promtp -after installing anaconda3, you get this from the program file dropdown, or from a quick search/(or powershell etc if this is easier for you) use python to load all of the requirements by
+
+navigating to the file AuTuMN
+pip install -r requirements.txt
+otherwise this can be done one by one in the spyder console
+
+also pip install streamlit
+open anaconda navigator
+set up an environment in the environment tab, and give it a name; I called mine autmnenv
+launch spyder
+set folder to AuTuMN\apps
+open  "run_pycharm.py"
+within file "run_pycharm.py" there is a choice of models to run
+uncomment the one you want to run and run the file
+
+go to AuTuMN/data to find your outputs ***
+
+when wanting to modify parameters for the scenarios:
+the hierarchy starts with AuTuMN/apps/COVID-19/params/base.yml
+this can be overwritten for each country inside the file ~/params/[country name]
+default is the baseline scenario then they are named scenario1, 2, 3 etc.
+
+when you run_pycharm.py, it points to the base.yml then is overwritten by country default (for country baseline) then the scenarios one by one.
+
+to conduct uncertainty runs there is another.py file
+AuTuMN/apps/process_mcmc_outputs.py, which I don't know how to run yet
+
+
+
+
+*** output is found in  AuTuMN/data 
+
+these can be viewed directly as jpeg files but you can also see them in streamlit
+
+open a powershell (using conemu)
+
+THIS IS NOW DONE AUTOMATICALLY AS AN OPENING COMMAND
+	write conda activate autmnenv  (for james this is conda activate summer (he must have called the environment by this name)
+	navigate to directory AuTuMN
+
+enter
+	streamlit run plots.py (this sits at AuTuMN/plots.py)
+
+if you just finished a calibration and MCMC using for example
+streamlit run plots.py mcmc (this sits at AuTuMN/plots.py)
+
+
+
+to run an MCMC go to the calibration folder C:\Users\jc343421\Documents\GitHub\AuTuMN\apps\covid_19\calibration
+
+%% before committing:
+go to github gui and look for conflicts
+in order to commit only some files
+goto the right environment
+$ git add file1 file3
+
+$ git commit -m 'my commit message'
+
+open conemu: to test the code I have changed, before I commit the code, from there I can run the 
+pytest
+
+
+to check if my new commits might crash ou thte system
+
+tests are automatically done on all new commits and this takes about 20 minutes, so check it out on github online.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+Adding a new COVID model
+How to add a new COVID model
+
+Add your region's name to autumn.constants.Region
+Add your region's default parameters to apps/covid_19/params/{region_name}/default.yml (see other similar files for an example)
+Add your region's plotting config to apps/covid_19/plots/{region_name}.yml (see other similar files for an example)
+open .autumn.demography.social_mixing and map the new country to the mixing matrix you want to use e.g. "nsw": "australia"   #this was suggested by Milinda when I got an error
+Create and register a RegionApp for your region in apps.covid_19.__init__
+You can now run your model from the command line
+
+python -m apps run region-name
+or you can open apps.run_pycharm and run by putting your region name after REGION = Region.
+
+
+Registering a COVID model for calibration
+Add your calibration script to apps.covid_19.calibration under your region's name (snake case)
+Update apps.covid_19.calibration.__init__ to register your calibration script
+You can now run a calibration
+
+
+#################### BUT first 
+add this to the end of the app.covid_19.calibration.(region_name)
+if __name__ == "__main__":
+    run_calibration_chain(
+        15 * 60 * 60, 1
+    )  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
+
+in order to run the calibration chain
+
+
+python -m apps calibrate regionname

@@ -18,3 +18,6 @@ mobility:
         - 0.1
         - 0.1
         - 1.0
+
+infectious_seed: 400
+contact_rate: 0.055

@@ -12,3 +12,6 @@ mobility:
         - 2020-08-25 # google mobility data update, pls review
       values:
         - 1.0
+
+infectious_seed: 100
+contact_rate: 0.03

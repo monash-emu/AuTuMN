@@ -9,14 +9,14 @@ sys.path.append("C:\\Users\\maba0001\\AuTuMN")
 from settings import OUTPUT_DATA_PATH
 
 
-RUN_ID = "covid_19/malaysia/1620718118/dd02423"
+RUN_ID = "covid_19/malaysia/1621579054/07755e9"
 RUN_ID = RUN_ID.split(sep="/")
 
 
 ts = datetime.datetime.fromtimestamp(int(RUN_ID[2]))
 RUN_ID[2] = ts.strftime("%Y-%m-%d")
 
-FEATHER_PATH = os.path.join(OUTPUT_DATA_PATH, "full", RUN_ID[0], RUN_ID[1])
+FEATHER_PATH = os.path.join(OUTPUT_DATA_PATH, "full", RUN_ID[0], RUN_ID[1],RUN_ID[2])
 FEATHER_PATH = [x[0] for x in os.walk(FEATHER_PATH)][2:]
 
 DERIVED_OUTPUT = [os.path.join(each, "derived_outputs.feather") for each in FEATHER_PATH]

@@ -11,7 +11,7 @@ SCENARIO_START_TIME = 517  # 31 May 2021
 BACK_TO_NORMAL_FRACTIONS = []
 MHS_REDUCTION_FRACTIONS = []
 SCHOOL_REOPEN_FRACTIONS = []
-VACCINE_SCENARIOS = {"vacc_prop_prevent_infection": [1], "efficacy": [0.7], "coverage": [.25, .50, .75]}
+VACCINE_SCENARIOS = {"efficacy": [0.7], "coverage": [.25, .50, .75]}
 
 
 def clear_all_scenarios(region):
@@ -57,13 +57,12 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
         all_scenarios_dict[sc_index] = make_school_reopen_sc_dict(fraction, scenario_start_time)
 
     # Vaccination
-    for vacc_prop_prevent_infection in VACCINE_SCENARIOS["vacc_prop_prevent_infection"]:
-        for coverage in VACCINE_SCENARIOS["coverage"]:
-            for efficacy in VACCINE_SCENARIOS["efficacy"]:
-                sc_index += 1
-                all_scenarios_dict[sc_index] = make_vaccination_sc_dict(
-                    vacc_prop_prevent_infection, coverage, efficacy, scenario_start_time
-                )
+    for coverage in VACCINE_SCENARIOS["coverage"]:
+        for efficacy in VACCINE_SCENARIOS["efficacy"]:
+            sc_index += 1
+            all_scenarios_dict[sc_index] = make_vaccination_sc_dict(
+                coverage, efficacy, scenario_start_time
+            )
 
     # dump scenario files
     for sc_i, scenario_dict in all_scenarios_dict.items():
@@ -141,7 +140,7 @@ def make_school_reopen_sc_dict(fraction, scenario_start_time):
     return sc_dict
 
 
-def make_vaccination_sc_dict(vacc_prop_prevent_infection, coverage, efficacy, scenario_start_time):
+def make_vaccination_sc_dict(coverage, efficacy, scenario_start_time):
     sc_dict = initialise_sc_dict(scenario_start_time)
     perc_coverage = int(100 * coverage)
     perc_efficacy = int(100 * efficacy)
@@ -151,7 +150,6 @@ def make_vaccination_sc_dict(vacc_prop_prevent_infection, coverage, efficacy, sc
 
     sc_dict["vaccination"] = {
         "overall_efficacy": efficacy,
-        "vacc_prop_prevent_infection": vacc_prop_prevent_infection,
         "roll_out_components": [
             {
                 "supply_period_coverage": {

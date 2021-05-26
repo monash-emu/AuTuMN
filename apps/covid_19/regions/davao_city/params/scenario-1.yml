@@ -9,4 +9,3 @@ vaccination:
       coverage: 0.25
       end_time: 731
       start_time: 517
-  vacc_prop_prevent_infection: 1

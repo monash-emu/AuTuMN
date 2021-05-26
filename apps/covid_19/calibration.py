@@ -261,6 +261,11 @@ def add_standard_philippines_params(params, region):
             "distribution": "uniform",
             "distri_params": [367, 425],  # 1 Jan - 28 Feb
         },
+        {
+            "param_name": "vaccination.vacc_prop_prevent_infection",
+            "distribution": "uniform",
+            "distri_params": [0, 1],
+        },
     ]
 
 

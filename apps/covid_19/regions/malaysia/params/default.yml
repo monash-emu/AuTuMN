@@ -19,7 +19,6 @@ clinical_stratification:
       multiplier: 1.5
 
 vaccination:
-  coverage: 0.5
   overall_efficacy: 0.75
   vacc_prop_prevent_infection: 1
 

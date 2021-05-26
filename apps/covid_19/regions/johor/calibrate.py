@@ -82,13 +82,6 @@ PAR_PRIORS += [
     },
 
     {
-        "param_name": "vaccination.coverage",
-        "distribution": "uniform",
-        "distri_params": [0.4, 0.8],
-        "sampling": "lhs",
-    },
-
-    {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
         "distri_params": [370, 400],

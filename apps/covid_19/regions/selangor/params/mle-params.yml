@@ -10,10 +10,7 @@ notifications_dispersion_param: 375.26399767052294
 sojourn.compartment_periods_calculated.active.total_period: 6.004703141899681
 sojourn.compartment_periods_calculated.exposed.total_period: 6.006230021215919
 testing_to_detection.assumed_cdr_parameter: 0.05448889693271057
-vaccination.coverage: 0.34800273163700857
-vaccination.end_time: 753.31390923953
 vaccination.overall_efficacy: 0.6814748231046784
-vaccination.start_time: 512.9513996835599
 vaccination.vacc_prop_prevent_infection: 0.40432343200598125
 voc_emergence.contact_rate_multiplier: 1.791051176759775
 voc_emergence.start_time: 470.50789794346076

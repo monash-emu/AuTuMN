@@ -4,11 +4,13 @@ Type definition for model parameters
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, root_validator, validator
+from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
 from apps.covid_19.constants import BASE_DATE
 
+# Forbid additional arguments to prevent extraneous parameter specification
+BaseModel.Config.extra = Extra.forbid
 
 class Time(BaseModel):
     """

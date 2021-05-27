@@ -25,7 +25,7 @@ MCMC_RUN = [os.path.join(each, "mcmc_run.feather") for each in FEATHER_PATH]
 
 BASE_COL = ["chain", "run", "scenario", "times"]
 REQ_COL = ["incidence", "notifications"]
-TIME = 60  # number of days to look forward after the intervention start
+TIME = 180  # number of days to look forward after the intervention start
 
 pd_list = [pd.read_feather(each) for each in DERIVED_OUTPUT]
 mcmc_param_list = [pd.read_feather(each) for each in MCMC_PARAM]
@@ -88,19 +88,19 @@ do_df = do_df.merge(
 do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=["chain", "run"])
 
 
-# Not ideal, will fix
-for each_param in params:
-    for output in REQ_COL:
-
-        output = f"{output}_rel"
-        fig, ax = plt.subplots()
-        ax.scatter(do_df[each_param], do_df[output], c=do_df["chain"], alpha=0.5)
-
-        ax.set_xlabel(f"{each_param}", fontsize=15)
-        ax.set_ylabel(f"{output}", fontsize=15)
-        ax.set_title(f"{output} by {each_param}")
-
-        ax.grid(True)
-        fig.tight_layout()
-
-plt.show()
+# # Not ideal, will fix
+# for each_param in params:
+#     for output in REQ_COL:
+#
+#         output = f"{output}_rel"
+#         fig, ax = plt.subplots()
+#         ax.scatter(do_df[each_param], do_df[output], c=do_df["chain"], alpha=0.5)
+#
+#         ax.set_xlabel(f"{each_param}", fontsize=15)
+#         ax.set_ylabel(f"{output}", fontsize=15)
+#         ax.set_title(f"{output} by {each_param}")
+#
+#         ax.grid(True)
+#         fig.tight_layout()
+#
+# plt.show()

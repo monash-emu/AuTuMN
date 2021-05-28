@@ -101,7 +101,7 @@ PAR_PRIORS += [
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
-        "distri_params": [350, 400],
+        "distri_params": [300, 400],
     },
 
 ]

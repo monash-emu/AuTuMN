@@ -15,8 +15,8 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 from settings import APPS_PATH
 
 # shareable google drive links
-PHL_doh_link = "12a4HQYnBdSkFk8XjrUxmKxG_gB4rgIrr"  # sheet 05 daily report
-PHL_fassster_link = "1ARyI9KPqNYgeZdMQBsIHyF7fOFk9hJgS"
+PHL_doh_link = "1FnIfncrzAMbUxkqv5OqIMVucJ2C91s0s"  # sheet 05 daily report
+PHL_fassster_link = "1ZycNslDQQxBJdDkzRkbeyVDUB44j-BXX"
 
 # destination folders filepaths
 PHL_doh_dest = "./data/inputs/covid_phl/PHL_icu.csv"

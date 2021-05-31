@@ -37,7 +37,7 @@ from .utils import (
     raise_error_unsupported_prior,
     sample_starting_params_from_lhs,
     specify_missing_prior_params,
-    sample_prior,
+    draw_independent_samples,
 )
 
 logger = logging.getLogger(__name__)
@@ -85,18 +85,18 @@ class Calibration:
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
 
-        # Distinguish direct sampling parameters from standard calibration parameters
+        # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
         direct_sample_idxs = [idx for idx in range(len(priors)) if priors[idx].get("sampling") == "lhs"]
-        self.priors = [param_dict for i_param, param_dict in enumerate(priors) if i_param not in direct_sample_idxs]
-        self.direct_params = [param_dict for i_param, param_dict in enumerate(priors) if i_param in direct_sample_idxs]
+        self.iterative_sampling_priors = [param_dict for i_param, param_dict in enumerate(priors) if i_param not in direct_sample_idxs]
+        self.independent_sampling_priors = [param_dict for i_param, param_dict in enumerate(priors) if i_param in direct_sample_idxs]
 
-        self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
+        self.iterative_sampling_param_names = [self.iterative_sampling_priors[i]["param_name"] for i in range(len(self.iterative_sampling_priors))]
+        self.independent_sampling_param_names = [self.independent_sampling_priors[i]["param_name"] for i in range(len(self.independent_sampling_priors))]
+
         self.adaptive_proposal = adaptive_proposal
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
         self.n_steps_fixed_proposal = n_steps_fixed_proposal
 
-        self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
-        self.direct_param_list = [self.direct_params[i]["param_name"] for i in range(len(self.direct_params))]
         # A list of dictionaries. Each dictionary describes a target
         self.targeted_outputs = targeted_outputs
 
@@ -108,7 +108,7 @@ class Calibration:
         # Validate target output start time.
         model_start = model_parameters["default"]["time"]["start"]
         max_prior_start = None
-        for p in self.priors:
+        for p in priors:
             if p["param_name"] == "time.start":
                 max_prior_start = max(p["distri_params"])
 
@@ -128,11 +128,13 @@ class Calibration:
         self.chain_index = chain_index
 
         # work out missing distribution params for priors
-        specify_missing_prior_params(self.priors)
+        specify_missing_prior_params(self.iterative_sampling_priors)
+        specify_missing_prior_params(self.independent_sampling_priors)
 
         # Select starting params
         self.starting_point = set_initial_point(
-            self.priors, model_parameters, chain_index, total_nb_chains, initialisation_type
+            self.iterative_sampling_priors + self.independent_sampling_priors, model_parameters, chain_index,
+            total_nb_chains, initialisation_type
         )
 
         # Save metadata output dir.
@@ -166,29 +168,25 @@ class Calibration:
         self.mcmc_trace_matrix = None  # will store the results of the MCMC model calibration
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
-        self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
+        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
 
         if self.chain_index == 0:
-            plots.calibration.plot_pre_calibration(self.priors, self.output.output_dir)
+            plots.calibration.plot_pre_calibration(self.all_priors, self.output.output_dir)
 
         self.is_vic_super_model = False
         if "victorian_clusters" in self.model_parameters["default"]:
             if self.model_parameters["default"]["victorian_clusters"]:
                 self.is_vic_super_model = True
 
-    def run_model_with_params(self, proposed_params: dict, direct_params=[]):
+    def run_model_with_params(self, proposed_params: dict):
         """
         Run the model with a set of params.
         """
         logger.info(f"Running iteration {self.run_num}...")
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
-        for i, param_name in enumerate(self.param_list):
-            param_updates[param_name] = proposed_params[i]
-
-        # Update direct sampling parameters in same was as for calibration parameters
-        for i, param_name in enumerate(self.direct_param_list):
-            param_updates[param_name] = direct_params[i]
+        for param_name, value in proposed_params.items():
+            param_updates[param_name] = value
 
         params = copy.deepcopy(self.model_parameters)
         update_func = lambda ps: update_params(ps, param_updates)
@@ -199,11 +197,11 @@ class Calibration:
         self.latest_scenario = scenario
         return scenario
 
-    def loglikelihood(self, params, direct_params=[]):
+    def loglikelihood(self, all_params_dict):
         """
         Calculate the loglikelihood for a set of parameters
         """
-        scenario = self.run_model_with_params(params, direct_params)
+        scenario = self.run_model_with_params(all_params_dict)
         model = scenario.model
 
         ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
@@ -226,10 +224,10 @@ class Calibration:
                     target["loglikelihood_distri"] = "normal"
                 if target["loglikelihood_distri"] in ["normal", "trunc_normal"]:
                     # Retrieve the value of the standard deviation
-                    if key + "_dispersion_param" in self.param_list:
-                        normal_sd = params[self.param_list.index(key + "_dispersion_param")]
+                    if key + "_dispersion_param" in all_params_dict:
+                        normal_sd = all_params_dict[key + "_dispersion_param"]
                     elif "target_output_ratio" in self.param_list:
-                        normal_sd = params[self.param_list.index("target_output_ratio")] * max(
+                        normal_sd = all_params_dict["target_output_ratio"] * max(
                             target["values"]
                         )
                     else:
@@ -257,13 +255,9 @@ class Calibration:
                             - math.log(math.factorial(round(data[i])))
                         ) * time_weigths[i]
                 elif target["loglikelihood_distri"] == "negative_binomial":
-                    assert key + "_dispersion_param" in self.param_list
+                    assert key + "_dispersion_param" in all_params_dict
                     # the dispersion parameter varies during the MCMC. We need to retrieve its value
-                    n = [
-                        params[i]
-                        for i in range(len(params))
-                        if self.param_list[i] == key + "_dispersion_param"
-                    ][0]
+                    n = all_params_dict[key + "_dispersion_param"]
                     for i in range(len(data)):
                         # We use the parameterisation based on mean and variance and assume define var=mean**delta
                         mu = model_output[i]
@@ -277,8 +271,6 @@ class Calibration:
             # FIXME: Store a record of the MCMC run.
             logger.error("No data stored for least squares")
             pass
-
-        self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
 
         return ll
 
@@ -327,7 +319,7 @@ class Calibration:
                 target["time_weights"] = [w / s for w in target["time_weights"]]
 
     def workout_unspecified_jumping_sds(self):
-        for i, prior_dict in enumerate(self.priors):
+        for i, prior_dict in enumerate(self.iterative_sampling_priors):
             if "jumping_sd" not in prior_dict.keys():
                 if prior_dict["distribution"] == "uniform":
                     prior_width = prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
@@ -381,7 +373,7 @@ class Calibration:
                 relative_prior_width = (
                     self.metropolis_init_rel_step_size  # fraction of prior_width in which 95% of samples should fall
                 )
-                self.priors[i]["jumping_sd"] = relative_prior_width * prior_width / 4.0
+                self.iterative_sampling_priors[i]["jumping_sd"] = relative_prior_width * prior_width / 4.0
 
     def run_fitting_algorithm(
         self,
@@ -423,7 +415,7 @@ class Calibration:
         lower_bounds = []
         upper_bounds = []
         x0 = []
-        for prior in self.priors:
+        for prior in self.all_priors:
             lower_bound, upper_bound = get_parameter_bounds_from_priors(prior)
             lower_bounds.append(lower_bound)
             upper_bounds.append(upper_bound)
@@ -442,13 +434,14 @@ class Calibration:
 
         logger.info("Best solution: %s", self.mle_estimates)
 
-    def test_in_prior_support(self, params):
+    def test_in_prior_support(self, iterative_params):
         in_support = True
-        for i, prior_dict in enumerate(self.priors):
+        for i, prior_dict in enumerate(self.iterative_sampling_priors):
+            param_name = prior_dict["param_name"]
             # Work out bounds for acceptable values, using the support of the prior distribution
-            lower_bound = self.param_bounds[i, 0]
-            upper_bound = self.param_bounds[i, 1]
-            if params[i] < lower_bound or params[i] > upper_bound:
+            lower_bound = self.param_bounds[param_name][0]
+            upper_bound = self.param_bounds[param_name][1]
+            if iterative_params[i] < lower_bound or iterative_params[i] > upper_bound:
                 in_support = False
                 break
 
@@ -472,33 +465,38 @@ class Calibration:
 
         self.mcmc_trace_matrix = None  # will store param trace and loglikelihood evolution
 
-        last_accepted_params_trans = None
+        last_accepted_iterative_params_trans = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
         n_accepted = 0
         n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
         self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
         while True:
+            logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
 
             # Not actually LHS sampling - just sampling directly from prior.
-            direct_samples = [sample_prior(i, np.random.uniform()) for i in self.direct_params]
+            independent_samples = draw_independent_samples(self.independent_sampling_priors)
 
-            logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
             # Propose new parameter set.
-            proposed_params_trans = self.propose_new_params_trans(
-                last_accepted_params_trans, haario_scaling_factor
+            proposed_iterative_params_trans = self.propose_new_iterative_params_trans(
+                last_accepted_iterative_params_trans, haario_scaling_factor
             )
-            proposed_params = self.get_original_params(proposed_params_trans)
+            proposed_iterative_params = self.get_original_params(proposed_iterative_params_trans)
 
             is_within_prior_support = self.test_in_prior_support(
-                proposed_params
-            )  # should always be true with transformed params
+                proposed_iterative_params
+            )  # should always be true but this is a good safety check
+
+            # combine all sampled params into a single dictionary
+            iterative_samples_dict = {self.iterative_sampling_param_names[i]: proposed_iterative_params[i] for i in range(len(proposed_iterative_params))}
+            all_params_dict = {**iterative_samples_dict, **independent_samples}
 
             if is_within_prior_support:
+
                 # Evaluate log-likelihood.
-                proposed_loglike = self.loglikelihood(proposed_params, direct_samples)
+                proposed_loglike = self.loglikelihood(all_params_dict)
 
                 # Evaluate log-prior.
-                proposed_logprior = self.logprior(proposed_params)
+                proposed_logprior = self.logprior(all_params_dict)
 
                 # posterior distribution
                 proposed_log_posterior = proposed_loglike + proposed_logprior
@@ -506,10 +504,10 @@ class Calibration:
                 # transform the density
                 proposed_acceptance_quantity = proposed_log_posterior
                 for i, prior_dict in enumerate(
-                    self.priors
+                    self.iterative_sampling_priors
                 ):  # multiply the density with the determinant of the Jacobian
                     inv_derivative = self.transform[prior_dict["param_name"]]["inverse_derivative"](
-                        proposed_params_trans[i]
+                        proposed_iterative_params_trans[i]
                     )
                     if inv_derivative > 0:
                         proposed_acceptance_quantity += math.log(inv_derivative)
@@ -532,16 +530,15 @@ class Calibration:
 
             # Update stored quantities.
             if accept:
-                last_accepted_params_trans = proposed_params_trans
+                last_accepted_iterative_params_trans = proposed_iterative_params_trans
                 last_acceptance_quantity = proposed_acceptance_quantity
                 n_accepted += 1
 
-            self.update_mcmc_trace(last_accepted_params_trans)
+            self.update_mcmc_trace(last_accepted_iterative_params_trans)
 
             # Store model outputs
             self.output.store_mcmc_iteration(
-                self.param_list,
-                proposed_params,
+                all_params_dict,
                 proposed_loglike,
                 proposed_log_posterior,
                 accept,
@@ -582,119 +579,116 @@ class Calibration:
         """
         Halve the "jumping_sd" associated with each parameter during the pre-adaptive phase
         """
-        for i in range(len(self.priors)):
-            self.priors[i]["jumping_sd"] /= 2.0
+        for i in range(len(self.iterative_sampling_priors)):
+            self.iterative_sampling_priors[i]["jumping_sd"] /= 2.0
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
-        scaling_factor = haario_scaling_factor ** 2 / len(self.priors)  # from Haario et al. 2001
+        scaling_factor = haario_scaling_factor ** 2 / len(self.iterative_sampling_priors)  # from Haario et al. 2001
         cov_matrix = np.cov(self.mcmc_trace_matrix, rowvar=False)
         adaptive_cov_matrix = scaling_factor * cov_matrix + scaling_factor * ADAPTIVE_METROPOLIS[
             "EPSILON"
-        ] * np.eye(len(self.priors))
+        ] * np.eye(len(self.iterative_sampling_priors))
         return adaptive_cov_matrix
 
     def get_parameter_bounds(self):
-        param_bounds = None
-        for i, prior_dict in enumerate(self.priors):
+        param_bounds = {}
+        for i, prior_dict in enumerate(self.iterative_sampling_priors + self.independent_sampling_priors):
             # Work out bounds for acceptable values, using the support of the prior distribution
             lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)
-            if i == 0:
-                param_bounds = np.array([[lower_bound, upper_bound]])
-            else:
-                param_bounds = np.concatenate(
-                    (param_bounds, np.array([[lower_bound, upper_bound]]))
-                )
+            param_bounds[prior_dict["param_name"]] = [lower_bound, upper_bound]
+
         return param_bounds
 
     def build_transformations(self):
         """
         Build transformation functions between the parameter space and R^n.
         """
-        for i, prior_dict in enumerate(self.priors):
-            self.transform[prior_dict["param_name"]] = {
+        for i, prior_dict in enumerate(self.iterative_sampling_priors):
+            param_name = prior_dict["param_name"]
+            self.transform[param_name] = {
                 "direct": None,  # param support to R
                 "inverse": None,  # R to param space
                 "inverse_derivative": None,  # R to R
             }
-            lower_bound = self.param_bounds[i, 0]
-            upper_bound = self.param_bounds[i, 1]
+            lower_bound = self.param_bounds[param_name][0]
+            upper_bound = self.param_bounds[param_name][1]
 
-            original_sd = self.priors[i]["jumping_sd"]  # we will need to transform the jumping step
+            original_sd = self.iterative_sampling_priors[i]["jumping_sd"]  # we will need to transform the jumping step
 
             # trivial case of an unbounded parameter
             if lower_bound == -float("inf") and upper_bound == float("inf"):
-                self.transform[prior_dict["param_name"]]["direct"] = lambda x: x
-                self.transform[prior_dict["param_name"]]["inverse"] = lambda x: x
-                self.transform[prior_dict["param_name"]]["inverse_derivative"] = lambda x: 1.0
+                self.transform[param_name]["direct"] = lambda x: x
+                self.transform[param_name]["inverse"] = lambda x: x
+                self.transform[param_name]["inverse_derivative"] = lambda x: 1.0
 
                 representative_point = None
             # case of a lower-bounded parameter with infinite support
             elif upper_bound == float("inf"):
                 for func_type in ["direct", "inverse", "inverse_derivative"]:
-                    self.transform[prior_dict["param_name"]][
+                    self.transform[param_name][
                         func_type
                     ] = make_transform_func_with_lower_bound(lower_bound, func_type)
                 representative_point = lower_bound + 10 * original_sd
-                if self.starting_point[prior_dict["param_name"]] <= lower_bound:
-                    self.starting_point[prior_dict["param_name"]] = lower_bound + original_sd / 10
+                if self.starting_point[param_name] <= lower_bound:
+                    self.starting_point[param_name] = lower_bound + original_sd / 10
 
             # case of an upper-bounded parameter with infinite support
             elif lower_bound == -float("inf"):
                 for func_type in ["direct", "inverse", "inverse_derivative"]:
-                    self.transform[prior_dict["param_name"]][
+                    self.transform[param_name][
                         func_type
                     ] = make_transform_func_with_upper_bound(upper_bound, func_type)
 
                 representative_point = upper_bound - 10 * original_sd
-                if self.starting_point[prior_dict["param_name"]] >= upper_bound:
-                    self.starting_point[prior_dict["param_name"]] = upper_bound - original_sd / 10
+                if self.starting_point[param_name] >= upper_bound:
+                    self.starting_point[param_name] = upper_bound - original_sd / 10
             # case of a lower- and upper-bounded parameter
             else:
                 for func_type in ["direct", "inverse", "inverse_derivative"]:
-                    self.transform[prior_dict["param_name"]][
+                    self.transform[param_name][
                         func_type
                     ] = make_transform_func_with_two_bounds(lower_bound, upper_bound, func_type)
 
                 representative_point = 0.5 * (lower_bound + upper_bound)
-                if self.starting_point[prior_dict["param_name"]] <= lower_bound:
-                    self.starting_point[prior_dict["param_name"]] = lower_bound + original_sd / 10
-                elif self.starting_point[prior_dict["param_name"]] >= upper_bound:
-                    self.starting_point[prior_dict["param_name"]] = upper_bound - original_sd / 10
+                if self.starting_point[param_name] <= lower_bound:
+                    self.starting_point[param_name] = lower_bound + original_sd / 10
+                elif self.starting_point[param_name] >= upper_bound:
+                    self.starting_point[param_name] = upper_bound - original_sd / 10
 
             if representative_point is not None:
-                transformed_low = self.transform[prior_dict["param_name"]]["direct"](
+                transformed_low = self.transform[param_name]["direct"](
                     representative_point - original_sd / 2
                 )
-                transformed_up = self.transform[prior_dict["param_name"]]["direct"](
+                transformed_up = self.transform[param_name]["direct"](
                     representative_point + original_sd / 2
                 )
-                self.priors[i]["jumping_sd"] = abs(transformed_up - transformed_low)
+                self.iterative_sampling_priors[i]["jumping_sd"] = abs(transformed_up - transformed_low)
 
-    def get_original_params(self, transformed_params):
-        original_params = []
-        for i, prior_dict in enumerate(self.priors):
-            original_params.append(
-                self.transform[prior_dict["param_name"]]["inverse"](transformed_params[i])
+    def get_original_params(self, transformed_iterative_params):
+        original_iterative_params = []
+        for i, prior_dict in enumerate(self.iterative_sampling_priors):
+            original_iterative_params.append(
+                self.transform[prior_dict["param_name"]]["inverse"](transformed_iterative_params[i])
             )
-        return original_params
+        return original_iterative_params
 
-    def propose_new_params_trans(self, prev_params_trans, haario_scaling_factor=2.4):
+    def propose_new_iterative_params_trans(self, prev_iterative_params_trans, haario_scaling_factor=2.4):
         """
         calculated the joint log prior
-        :param prev_params: last accepted parameter values as a list ordered using the order of self.priors
+        :param prev_iterative_params_trans: last accepted parameter values as a list ordered using the order of
+         self.iterative_sampling_priors
         :return: a new list of parameter values
         """
-        # prev_params assumed to be the manually calibrated parameters for first step
-        if prev_params_trans is None:
-            prev_params_trans = []
-            for prior_dict in self.priors:
+        new_iterative_params_trans = []
+        # if this is the initial step
+        if prev_iterative_params_trans is None:
+            for prior_dict in self.iterative_sampling_priors:
                 start_point = self.starting_point[prior_dict["param_name"]]
-                prev_params_trans.append(
+                new_iterative_params_trans.append(
                     self.transform[prior_dict["param_name"]]["direct"](start_point)
                 )
-            return prev_params_trans
+            return new_iterative_params_trans
 
-        new_params_trans = []
         use_adaptive_proposal = (
             self.adaptive_proposal and self.run_num > self.n_steps_fixed_proposal
         )
@@ -706,35 +700,36 @@ class Calibration:
                     False  # we can't use the adaptive method for this step as the covariance is 0.
                 )
             else:
-                new_params_trans = sample_from_adaptive_gaussian(
-                    prev_params_trans, adaptive_cov_matrix
+                new_iterative_params_trans = sample_from_adaptive_gaussian(
+                    prev_iterative_params_trans, adaptive_cov_matrix
                 )
-        else:
-            for i, prior_dict in enumerate(self.priors):
+
+        if not use_adaptive_proposal:
+            for i, prior_dict in enumerate(self.iterative_sampling_priors):
                 sample = np.random.normal(
-                    loc=prev_params_trans[i], scale=prior_dict["jumping_sd"], size=1
+                    loc=prev_iterative_params_trans[i], scale=prior_dict["jumping_sd"], size=1
                 )[0]
-                new_params_trans.append(sample)
+                new_iterative_params_trans.append(sample)
 
-        return new_params_trans
+        return new_iterative_params_trans
 
-    def logprior(self, params):
+    def logprior(self, all_params_dict):
         """
         calculated the joint log prior
-        :param params: model parameters as a list of values ordered using the order of self.priors
+        :param all_params_dict: model parameters as a dictionary
         :return: the natural log of the joint prior
         """
         logp = 0.0
-        for i, param_name in enumerate(self.param_list):
-            prior_dict = [d for d in self.priors if d["param_name"] == param_name][0]
-            logp += calculate_prior(prior_dict, params[i], log=True)
+        for param_name, value in all_params_dict.items():
+            prior_dict = [d for d in self.all_priors if d["param_name"] == param_name][0]
+            logp += calculate_prior(prior_dict, value, log=True)
 
         return logp
 
     def update_mcmc_trace(self, params_to_store):
         """
         store mcmc iteration into param_trace
-        :param params_to_store: model parameters as a list of values ordered using the order of self.priors
+        :param params_to_store: model parameters as a list of values ordered using the order of self.iterative_sampling_priors
         :param loglike_to_store: current loglikelihood value
         """
         if self.mcmc_trace_matrix is None:
@@ -800,8 +795,7 @@ class CalibrationOutputs:
 
     def store_mcmc_iteration(
         self,
-        param_list: list,
-        proposed_params: list,
+        all_params_dict: dict,
         proposed_loglike: float,
         proposed_acceptance_quantity: float,
         accept: bool,
@@ -825,11 +819,11 @@ class CalibrationOutputs:
         self.mcmc_runs.append(mcmc_run)
         if accept:
             # Write run parameters.
-            for name, value in zip(param_list, proposed_params):
+            for param_name, value in all_params_dict.items():
                 mcmc_params = {
                     "chain": self.chain_id,
                     "run": i_run,
-                    "name": name,
+                    "name": param_name,
                     "value": value,
                 }
                 self.mcmc_params.append(mcmc_params)

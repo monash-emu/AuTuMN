@@ -68,6 +68,18 @@ def sample_prior(prior_dict, quantile):
     return float(sample)
 
 
+def draw_independent_samples(independent_priors):
+    """
+    :param priors: list of prior dictionaries
+    :return: a dictionary of sampled values
+    """
+    independent_samples = {}
+    for prior_dict in independent_priors:
+        independent_samples[prior_dict["param_name"]] = sample_prior(prior_dict, np.random.uniform())
+
+    return independent_samples
+
+
 def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples: int):
     """
     Use Latin Hypercube Sampling to define MCMC starting points

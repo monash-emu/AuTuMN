@@ -10,7 +10,7 @@ time:
   end: 822
 
 country:
-  iso3: MYS
+  iso3: NPL
 
 clinical_stratification:
   non_sympt_infect_multiplier: 0.25

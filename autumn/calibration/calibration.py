@@ -226,7 +226,7 @@ class Calibration:
                     # Retrieve the value of the standard deviation
                     if key + "_dispersion_param" in all_params_dict:
                         normal_sd = all_params_dict[key + "_dispersion_param"]
-                    elif "target_output_ratio" in self.param_list:
+                    elif "target_output_ratio" in all_params_dict:
                         normal_sd = all_params_dict["target_output_ratio"] * max(
                             target["values"]
                         )

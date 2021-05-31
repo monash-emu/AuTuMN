@@ -247,6 +247,7 @@ class Vaccination(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
     roll_out_components: List[RollOutFunc]
+    coverage_override: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):

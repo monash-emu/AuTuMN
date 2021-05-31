@@ -159,7 +159,11 @@ def build_model(params: dict) -> CompartmentalModel:
         model.stratify_with(vaccination_strat)
         vacc_params = params.vaccination
         for roll_out_component in vacc_params.roll_out_components:
-            add_vaccination_flows(model, roll_out_component, age_strat.strata)
+            if vacc_params.coverage_override:
+                coverage_override = vacc_params.coverage_override
+            else:
+                coverage_override = None
+            add_vaccination_flows(model, roll_out_component, age_strat.strata, coverage_override)
 
     # Stratify model by Victorian subregion (used for Victorian cluster model).
     if params.victorian_clusters:

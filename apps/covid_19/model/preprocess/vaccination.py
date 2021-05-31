@@ -7,13 +7,13 @@ from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
 from apps.covid_19.model.preprocess.clinical import get_all_adjs
 
 
-def get_vacc_roll_out_function_from_coverage(supply_params):
+def get_vacc_roll_out_function_from_coverage(supply_params, coverage_override=None):
     """
     Work out the time-variant vaccination rate based on a requested coverage and roll-out window.
     Return a function of time.
     """
     # Get vaccination parameters
-    coverage = supply_params.coverage
+    coverage = supply_params.coverage if coverage_override is None else coverage_override
     start_time = supply_params.start_time
     end_time = supply_params.end_time
     duration = end_time - start_time
@@ -80,14 +80,16 @@ def get_eligible_age_groups(roll_out_component, age_strata):
     return eligible_age_groups
 
 
-def add_vaccination_flows(model, roll_out_component, age_strata):
+def add_vaccination_flows(model, roll_out_component, age_strata, coverage_override=None):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = bool(roll_out_component.supply_period_coverage)
     if is_coverage:
-        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(roll_out_component.supply_period_coverage)
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+            roll_out_component.supply_period_coverage, coverage_override
+        )
     else:
         time_variant_supply = scale_up_function(
             roll_out_component.supply_timeseries.times,

@@ -5,8 +5,7 @@ time:
   start: 504 # 18th May 2021
 
 vaccination:
-  overall_efficacy: 0.75
-  vacc_prop_prevent_infection: 1
+  coverage_override: 0.8
 
   # Eleven months from 18th May 2021
   roll_out_components:

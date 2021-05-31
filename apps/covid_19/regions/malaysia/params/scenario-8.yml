@@ -1,4 +1,4 @@
-description: Scenario 8, example of sensitivity analysis for the coverage parameter
+description: Scenario 8, sensitivity analysis for the coverage parameter and maximum mobility in the past 6 months
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
@@ -11,3 +11,20 @@ vaccination:
       coverage: 0.8  # this value does not matter. It will be overriden by the coverage_override parameter
       start_time: 504.
       end_time: 838.
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-04-01
+      values:
+        - - max_last_period
+          - 180
+    work:
+      append: true
+      times:
+        - 2021-04-01
+      values:
+        - - max_last_period
+          - 180

@@ -5,7 +5,7 @@ time:
   start: 504 # 18th May 2021
 
 vaccination:
-
+  coverage_override: 0.8
 # Eleven months from 18th May 2021
   roll_out_components:
   - supply_period_coverage:

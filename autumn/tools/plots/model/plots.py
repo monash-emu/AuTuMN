@@ -643,7 +643,7 @@ def plot_candidates_for_output(subplotter, output_name, outputs, target: pd.Seri
     style_list = [linestyles[i % len(linestyles)] for i in range(len(outputs))]
 
     if target is not None:
-        targets_patch = ax.scatter(
+        ax.scatter(
             target.index,
             target.data,
             marker="o",
@@ -655,7 +655,7 @@ def plot_candidates_for_output(subplotter, output_name, outputs, target: pd.Seri
 
     # Plot MLE candidate first, and in black
     outputs.iloc[:, -1].plot(color="black")
-    df_patch = outputs.iloc[:, :-1].plot(ax=ax, style=style_list, lw=1.5, colormap=cm)
+    outputs.iloc[:, :-1].plot(ax=ax, style=style_list, lw=1.5, colormap=cm)
 
     pyplot.legend(loc="center left", bbox_to_anchor=(1.0, 0.5))
 

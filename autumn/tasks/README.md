@@ -6,7 +6,7 @@ This module requires AWS access to run.
 You can access these tasks via the CLI:
 
 ```
-python -m tasks
+python -m autumn tasks
 ```
 
 ### Run a calibration
@@ -17,13 +17,13 @@ RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
 
 
 # Run a calibration
-python -m tasks calibrate --run  $RUN_ID --chains 1 --runtime 120 --verbose
+python -m autumn tasks calibrate --run  $RUN_ID --chains 1 --runtime 240 --verbose
 
 # Run full models
-python -m tasks full --run  $RUN_ID --burn 30 --sample 16 --verbose
+python -m autumn tasks full --run  $RUN_ID --burn 10 --sample 16 --verbose
 
 # Run PowerBI processing
-python -m tasks powerbi --run $RUN_ID
+python -m autumn tasks powerbi --run $RUN_ID
 ```
 
 ### Clean up test task

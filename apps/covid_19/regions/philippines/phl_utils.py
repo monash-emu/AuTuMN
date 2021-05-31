@@ -6,12 +6,13 @@ import yaml
 
 from autumn.region import Region
 
-SCENARIO_START_TIME = 517  # 31 May 2021
+SCENARIO_START_TIME = 532  # 15 June 2021
 
+WORKFORCE_PROP = [.7, .8, .9]
 BACK_TO_NORMAL_FRACTIONS = []
 MHS_REDUCTION_FRACTIONS = []
 SCHOOL_REOPEN_FRACTIONS = []
-VACCINE_SCENARIOS = {"coverage": [.25, .50, .75]}
+VACCINE_SCENARIOS = {"coverage": [.2, .5]}
 
 
 def clear_all_scenarios(region):
@@ -58,10 +59,11 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
 
     # Vaccination
     for coverage in VACCINE_SCENARIOS["coverage"]:
-        sc_index += 1
-        all_scenarios_dict[sc_index] = make_vaccination_sc_dict(
-            coverage, scenario_start_time
-        )
+        for prop_workforce in WORKFORCE_PROP:
+            sc_index += 1
+            all_scenarios_dict[sc_index] = make_vaccination_and_workforce_sc_dict(
+                coverage, prop_workforce, scenario_start_time
+            )
 
     # dump scenario files
     for sc_i, scenario_dict in all_scenarios_dict.items():
@@ -139,12 +141,14 @@ def make_school_reopen_sc_dict(fraction, scenario_start_time):
     return sc_dict
 
 
-def make_vaccination_sc_dict(coverage, scenario_start_time):
+def make_vaccination_and_workforce_sc_dict(coverage, prop_workforce, scenario_start_time):
     sc_dict = initialise_sc_dict(scenario_start_time)
     perc_coverage = int(100 * coverage)
+    perc_workforce = int(100 * prop_workforce)
+
     sc_dict[
         "description"
-    ] = f"{perc_coverage}% coverage"
+    ] = f"{perc_coverage}% vaccine coverage / {perc_workforce}% onsite workers"
 
     sc_dict["vaccination"] = {
         "roll_out_components": [
@@ -156,6 +160,16 @@ def make_vaccination_sc_dict(coverage, scenario_start_time):
                 }
             }
         ],
+    }
+
+    sc_dict["mobility"] = {
+        "mixing": {
+            "work": {
+                "append": True,
+                "times": [scenario_start_time - 1, scenario_start_time + 1],
+                "values": [["repeat_prev"], prop_workforce],
+            },
+        }
     }
 
     return sc_dict

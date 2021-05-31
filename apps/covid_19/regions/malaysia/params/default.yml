@@ -21,7 +21,7 @@ clinical_stratification:
 vaccination:
   overall_efficacy: 0.75
   vacc_prop_prevent_infection: 1
-  coverage_override: 0.
+  coverage_override: 0.75
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

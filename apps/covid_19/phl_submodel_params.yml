@@ -64,7 +64,7 @@ cumul_incidence_start_time: 517  # 31 May 2021
 
 # Vaccination-related
 vaccination:
-  overall_efficacy: 0.7
+  overall_efficacy: 0.7 # now varied
   vacc_prop_prevent_infection: 1  # now varied
   roll_out_components:
   - supply_period_coverage:

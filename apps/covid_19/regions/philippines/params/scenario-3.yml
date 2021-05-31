@@ -1,9 +1,8 @@
-description: 75% coverage / 70% efficacy
+description: 75% coverage
 parent: apps/covid_19/regions/philippines/params/default.yml
 time:
   start: 517
 vaccination:
-  overall_efficacy: 0.7
   roll_out_components:
   - supply_period_coverage:
       coverage: 0.75

@@ -4,7 +4,7 @@ import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 from autumn.settings import Models, Region
-from autumn.tools.project import register_project
+from autumn.tools.registry import register_project
 
 
 # TB projects

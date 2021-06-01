@@ -23,6 +23,7 @@ from autumn.tools.db.database import FeatherDatabase
 from autumn.tools.utils.timer import Timer
 from autumn.tools.utils.utils import get_git_branch, get_git_hash
 from autumn.settings import OUTPUT_DATA_PATH
+from autumn.tools.registry import _PROJECTS
 
 from .params import ParameterSet, Params
 
@@ -30,9 +31,6 @@ logger = logging.getLogger(__name__)
 
 CompModel = Union[CompartmentalModel, StratifiedModel]
 ModelBuilder = Callable[[dict], CompartmentalModel]
-
-# A global registry of projects, managed by Project.
-_PROJECTS = {}
 
 
 class Project:
@@ -161,15 +159,6 @@ def get_registered_project_names():
             projects.add(project_name)
 
     return projects
-
-
-def register_project(model_name: str, project_name: str, import_path: str):
-    if model_name not in _PROJECTS:
-        _PROJECTS[model_name] = {}
-    if project_name not in _PROJECTS[model_name]:
-        _PROJECTS[model_name][project_name] = import_path
-    else:
-        raise ValueError(f"Project {project_name} using model {model_name} already exists.")
 
 
 def build_rel_path(path):

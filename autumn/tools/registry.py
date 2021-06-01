@@ -1,0 +1,15 @@
+"""
+A global registry of projects.
+
+This lives separately from tools.projects so that importing it has no imported dependencies.
+"""
+_PROJECTS = {}
+
+
+def register_project(model_name: str, project_name: str, import_path: str):
+    if model_name not in _PROJECTS:
+        _PROJECTS[model_name] = {}
+    if project_name not in _PROJECTS[model_name]:
+        _PROJECTS[model_name][project_name] = import_path
+    else:
+        raise ValueError(f"Project {project_name} using model {model_name} already exists.")

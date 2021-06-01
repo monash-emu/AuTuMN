@@ -11,10 +11,10 @@ from autumn.utils.params import load_targets
 targets = load_targets("covid_19", Region.SRI_LANKA)
 
 
-# Truncate notifications from 1st August 2020
-notifications = truncate_targets_from_time(targets["notifications"], 210)
-icu_occupancy = truncate_targets_from_time(targets["icu_occupancy"], 210)
-infection_deaths = truncate_targets_from_time(targets["infection_deaths"], 210)
+# Truncate notifications from 15th December 2020
+notifications = truncate_targets_from_time(targets["notifications"], 350)
+icu_occupancy = truncate_targets_from_time(targets["icu_occupancy"], 350)
+infection_deaths = truncate_targets_from_time(targets["infection_deaths"], 350)
 
 icu_times = icu_occupancy["times"]
 icu_times = icu_times[::7]

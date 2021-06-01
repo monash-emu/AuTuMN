@@ -6,8 +6,8 @@ seasonal_force: 0.
 infectious_seed: 100.
 
 time:
-  start: 180
-  end: 822
+  start: 457
+  end: 731
 
 country:
   iso3: LKA

@@ -17,6 +17,9 @@ export async function getStaticPaths() {
   for (let appName of Object.keys(apps)) {
     for (let regionName of Object.keys(apps[appName])) {
       for (let uuid of Object.keys(apps[appName][regionName])) {
+        // weird uuids for some reason
+        // eg. 1622502753-003079g\\data\\calibration_outputs\\chain-0\\mcmc_run.parquet
+        if (uuid.includes('\\')) continue
         paths.push({ params: { appName, regionName, uuid } })
       }
     }

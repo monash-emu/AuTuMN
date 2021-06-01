@@ -13,3 +13,16 @@ def register_project(model_name: str, project_name: str, import_path: str):
         _PROJECTS[model_name][project_name] = import_path
     else:
         raise ValueError(f"Project {project_name} using model {model_name} already exists.")
+
+
+def get_registered_model_names():
+    return set(_PROJECTS.keys())
+
+
+def get_registered_project_names():
+    projects = set()
+    for model_name in get_registered_model_names():
+        for project_name in _PROJECTS[model_name].keys():
+            projects.add(project_name)
+
+    return projects

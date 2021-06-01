@@ -148,19 +148,6 @@ def get_project(model_name: str, project_name: str) -> Project:
     return project
 
 
-def get_registered_model_names():
-    return set(_PROJECTS.keys())
-
-
-def get_registered_project_names():
-    projects = set()
-    for model_name in get_registered_model_names():
-        for project_name in _PROJECTS[model_name].keys():
-            projects.add(project_name)
-
-    return projects
-
-
 def build_rel_path(path):
     """
     Returns the absolute path of a file, relative to the file

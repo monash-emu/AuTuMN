@@ -3,7 +3,6 @@ from getpass import getpass
 
 import click
 
-from autumn.tools.utils import secrets as secrets_module
 from autumn.settings import PASSWORD_ENVAR
 
 
@@ -17,6 +16,8 @@ def read_secrets():
     """
     Decrypt all secrets into secret files.
     """
+    from autumn.tools.utils import secrets as secrets_module
+
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
         password = getpass(prompt="Enter the encryption password:")
@@ -30,6 +31,8 @@ def write_secret(file_path: str):
     """
     Encrypt a secret
     """
+    from autumn.tools.utils import secrets as secrets_module
+
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
         password = getpass(prompt="Enter the encryption password:")

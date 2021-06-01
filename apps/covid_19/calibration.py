@@ -261,18 +261,18 @@ def add_standard_philippines_params(params, region):
             "distribution": "uniform",
             "distri_params": [367, 425],  # 1 Jan - 28 Feb
         },
-        # Vaccination parameters
+        # Vaccination parameters (independent sampling)
         {
             "param_name": "vaccination.vacc_prop_prevent_infection",
-            "distribution": "beta",
-            "distri_mean": 0.7,
-            "distri_ci": [0.5, 0.9],
+            "distribution": "uniform",
+            "distri_params": [0., 1.0],
             "sampling": "lhs",
         },
         {
             "param_name": "vaccination.overall_efficacy",
-            "distribution": "uniform",
-            "distri_params": [0., 1.0],
+            "distribution": "beta",
+            "distri_mean": 0.7,
+            "distri_ci": [0.5, 0.9],
             "sampling": "lhs",
         },
     ]

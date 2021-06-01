@@ -4,7 +4,7 @@ These scripts allow you to run AuTuMN tasks in AWS. You will need to either set 
 
 ```bash
 # Install requirements
-pip install -r remote/requirements.txt
+pip install -r requirements.infra.txt
 
 # View CLI options
 python -m remote

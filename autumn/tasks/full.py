@@ -6,7 +6,7 @@ import pandas as pd
 from autumn.tools import db, plots
 from autumn.tools.db.database import get_database
 from autumn.tools.db.store import Table
-from autumn.settings import REMOTE_BASE_DIR
+from autumn.settings import REMOTE_BASE_DIR, Region
 from autumn.tasks.calibrate import CALIBRATE_DATA_DIR
 from autumn.tasks.utils import get_project_from_run_id, set_logging_config
 from autumn.tools.utils.fs import recreate_dir
@@ -58,11 +58,12 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
         chain_ids = run_parallel_tasks(run_full_model_for_chain, args_list)
 
     # Create candidate plots from full run outputs
-    with Timer(f"Creating candidate selection plots"):
-        candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, N_CANDIDATES)
-        plots.model.plot_post_full_run(
-            project.plots, FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, candidates_df
-        )
+    if project.region_name in Region.PHILIPPINES_REGIONS:
+        with Timer(f"Creating candidate selection plots"):
+            candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, N_CANDIDATES)
+            plots.model.plot_post_full_run(
+                project.plots, FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, candidates_df
+            )
 
     # Upload the plots to AWS S3.
     with Timer(f"Uploading plots to AWS S3"):
@@ -205,7 +206,9 @@ def run_full_model_for_chain(
             run_id = int(run_id)
             chain_id = int(chain_id)
             with Timer("Processing model outputs"):
-                processed_outputs = post_process_scenario_outputs(models, project)
+                processed_outputs = post_process_scenario_outputs(
+                    models, project, run_id=run_id, chain_id=chain_id
+                )
                 outputs.append(processed_outputs[Table.OUTPUTS])
                 derived_outputs.append(processed_outputs[Table.DERIVED])
 

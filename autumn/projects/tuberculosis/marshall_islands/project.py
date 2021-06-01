@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, DiffOutput
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import (
@@ -73,5 +73,10 @@ with open(plot_spec_filepath) as f:
 
 
 project = Project(
-    Region.MARSHALL_ISLANDS, Models.TB, build_model, param_set, calibration, plots=plot_spec
+    Region.MARSHALL_ISLANDS,
+    Models.TB,
+    build_model,
+    param_set,
+    calibration,
+    plots=plot_spec,
 )

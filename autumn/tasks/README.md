@@ -13,18 +13,23 @@ python -m autumn tasks
 
 ```bash
 RUN_ID="covid_19/malaysia/111111111/bbbbbbb"
+RUN_ID="covid_19/philippines/111111111/bbbbbbb"
 RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
-
+```
 
 # Run a calibration
-python -m autumn tasks calibrate --run  $RUN_ID --chains 1 --runtime 240 --verbose
+
+python -m autumn tasks calibrate --run $RUN_ID --chains 1 --runtime 120 --verbose
 
 # Run full models
-python -m autumn tasks full --run  $RUN_ID --burn 10 --sample 16 --verbose
+
+python -m autumn tasks full --run $RUN_ID --burn 0 --sample 12 --verbose
 
 # Run PowerBI processing
+
 python -m autumn tasks powerbi --run $RUN_ID
-```
+
+````
 
 ### Clean up test task
 
@@ -34,7 +39,7 @@ Clean up everything
 rm -rf data/outputs/remote
 aws --profile autumn s3 rm --quiet --recursive "s3://autumn-data/covid_19/manila/111111111/aaaaaaa"
 aws --profile autumn s3 rm --quiet --recursive "s3://autumn-data/tuberculosis/marshall-islands/111111111/aaaaaaa"
-```
+````
 
 ### Rebuild the website
 

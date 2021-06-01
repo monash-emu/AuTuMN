@@ -2,7 +2,7 @@ import os
 import logging
 import inspect
 from datetime import datetime
-from typing import List, Union, Callable, Optional, Dict
+from typing import List, Union, Callable, Optional, Dict, Tuple
 from importlib import import_module
 
 import yaml
@@ -13,7 +13,13 @@ from summer.legacy.model import StratifiedModel
 from summer.legacy.constants import IntegrationType
 from summer.derived_outputs import DerivedOutputRequest
 
-from autumn.tools import db
+from autumn.tools.db.store import (
+    save_model_outputs,
+    build_outputs_table,
+    build_derived_outputs_table,
+    Table,
+)
+from autumn.tools.db.database import FeatherDatabase
 from autumn.tools.utils.timer import Timer
 from autumn.tools.utils.utils import get_git_branch, get_git_hash
 from autumn.settings import OUTPUT_DATA_PATH
@@ -42,7 +48,7 @@ class Project:
         param_set: ParameterSet,
         calibration,  # A Calibration instance
         plots: dict = {},  # Previously, targets JSON.
-        diff_output_requests: Dict[str, str] = {},
+        diff_output_requests: List[Tuple[str, str]] = [],
     ):
         self.region_name = region_name
         self.model_name = model_name
@@ -245,9 +251,9 @@ def run_project_locally(project: Project, run_scenarios=True):
         sc_models = []
 
     with Timer("Saving model outputs to the database"):
-        outputs_db = db.FeatherDatabase(output_db_path)
+        outputs_db = FeatherDatabase(output_db_path)
         all_outputs = post_process_scenario_outputs([baseline_model, *sc_models], project)
-        db.store.save_model_outputs(outputs_db, **all_outputs)
+        save_model_outputs(outputs_db, **all_outputs)
 
 
 class DiffOutput:
@@ -276,13 +282,11 @@ def post_process_scenario_outputs(
     fix_cumulative_output_times(models)
 
     # Build outputs for storage in a database.
-    outputs_df = db.store.build_outputs_table(models, run_id=run_id, chain_id=chain_id)
-    derived_outputs_df = db.store.build_derived_outputs_table(
-        models, run_id=run_id, chain_id=chain_id
-    )
+    outputs_df = build_outputs_table(models, run_id=run_id, chain_id=chain_id)
+    derived_outputs_df = build_derived_outputs_table(models, run_id=run_id, chain_id=chain_id)
     return {
-        db.store.Table.OUTPUTS: outputs_df,
-        db.store.Table.DERIVED: derived_outputs_df,
+        Table.OUTPUTS: outputs_df,
+        Table.DERIVED: derived_outputs_df,
     }
 
 
@@ -290,14 +294,18 @@ def fix_cumulative_output_times(models: List[CompModel]):
     """
     Fix a bug with summer's cumulative outputs
     FIXME: Accessing private member of model class; prefer not to modify summer code just for this
-    FIXME: Nasty import but I'd prefer this file lives here.
     """
     baseline_model = models[0]
-    cum_out_keys = [
-        k
-        for k, req in baseline_model._derived_output_requests.items()
-        if req["request_type"] == DerivedOutputRequest.CUMULATIVE and req["save_results"] == True
-    ]
+    if type(baseline_model) is CompartmentalModel:
+        cum_out_keys = [
+            k
+            for k, req in baseline_model._derived_output_requests.items()
+            if req["request_type"] == DerivedOutputRequest.CUMULATIVE
+            and req["save_results"] == True
+        ]
+    else:
+        cum_out_keys = [k for k in baseline_model.derived_outputs.keys() if k.startswith("cum")]
+
     for scenario_model in models[1:]:
         baseline_start_index = get_scenario_start_index(
             baseline_model.times, scenario_model.times[0]
@@ -308,7 +316,9 @@ def fix_cumulative_output_times(models: List[CompModel]):
             scenario_model.derived_outputs[output_key] += baseline_offset
 
 
-def calculate_differential_outputs(models: List[CompModel], diff_output_requests: Dict[str, str]):
+def calculate_differential_outputs(
+    models: List[CompModel], diff_output_requests: List[Tuple[str, str]]
+):
     """
     Calculate the difference in derived outputs between scenarios.
     For example, how many lives saved between Scenario 1 and baseline.
@@ -325,7 +335,7 @@ def calculate_differential_outputs(models: List[CompModel], diff_output_requests
     }
     """
     baseline_model = models[0]
-    for output_name, request in diff_output_requests.items():
+    for request, output_name in diff_output_requests:
         assert request in DiffOutput.REQUEST_TYPES, f"Request {request} unknown."
         # Evaluate each request.
         for model in models:

@@ -49,7 +49,7 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
     with Timer(f"Creating post-calibration plots"):
         project = get_project_from_run_id(run_id)
         plots.calibration.plot_post_calibration(
-            project.plots, CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, priors=[None]
+            project.plots, CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, priors=[]
         )
 
     # Upload the plots to AWS S3.

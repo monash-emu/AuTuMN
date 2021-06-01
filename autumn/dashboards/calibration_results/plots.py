@@ -18,7 +18,7 @@ from autumn.tools.plots.calibration.plots import (
     get_posterior,
 )
 from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.utils.params import load_params
+from autumn.tools.project import get_project
 from autumn.models.tuberculosis.model import get_model_times_from_inputs
 from dash import selectors
 from dash.utils import create_downloadable_csv, round_sig_fig
@@ -182,7 +182,8 @@ def plot_cdr_curves(
     label_rotation = st.sidebar.slider("Label rotation", 0, 90, 0)
 
     # Extract parameters relevant to this function
-    params = load_params(app_name, region_name)
+    project = get_project(app_name, region_name)
+    params = project.param_set.baseline.to_dict()
     (
         iso3,
         testing_year,
@@ -192,7 +193,7 @@ def plot_cdr_curves(
         time_params,
         times,
         agegroup_strata,
-    ) = get_cdr_constants(params["default"])
+    ) = get_cdr_constants(params)
 
     # Collate parameters into one structure
     testing_to_detection_values = []

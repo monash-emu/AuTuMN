@@ -198,6 +198,8 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     that is readable by our PowerBI dashboard.
     Save the converted data into its own database.
     """
+    from autumn.tools.project import get_project
+
     source_db = get_database(source_db_path)
     target_db = get_database(target_db_path)
     tables_to_copy = [t for t in source_db.table_names() if t != "outputs"]
@@ -222,18 +224,22 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
 
     # Add scenario metadata table
     logger.info("Adding 'scenario' metadata table")
-    params = load_params(app_name, region_name)
+
+    project = get_project(app_name, region_name)
+    basline_params = project.param_set.baseline.to_dict()
+    sc_params = [sc.to_dict() for sc in project.param_set.scenarios]
+
     # Add default scenario
     scenario_data = [
         {
             "scenario": 0,
-            "start_time": int(params["default"]["time"]["start"]),
-            "description": params["default"].get("description", ""),
+            "start_time": int(basline_params["time"]["start"]),
+            "description": basline_params.get("description", ""),
         }
     ]
-    for sc_idx, sc_params in params["scenarios"].items():
+    for sc_idx, sc_params in enumerate(sc_params):
         sc_datum = {
-            "scenario": int(sc_idx),
+            "scenario": int(sc_idx + 1),
             "start_time": int(sc_params["time"]["start"]),
             "description": sc_params.get("description", ""),
         }
@@ -244,10 +250,9 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
 
     # Add calibration targets
     logger.info("Adding 'targets' table")
-    targets = load_targets(app_name, region_name)
     targets_data = []
-    for target in targets.values():
-        for t, v in zip(target["times"], target["values"]):
+    for target in project.calibration.targets:
+        for t, v in zip(target["years"], target["values"]):
             t_datum = {
                 "key": target["output_key"],
                 "times": t,

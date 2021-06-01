@@ -71,7 +71,7 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.03, 0.15],
+        "distri_params": [0.02, 0.1],
     },
     # Microdistancing
     {

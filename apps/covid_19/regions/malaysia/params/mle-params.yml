@@ -10,7 +10,7 @@ mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.228815925502740
 notifications_dispersion_param: 817.166277273559
 sojourn.compartment_periods_calculated.active.total_period: 6.019598518859482
 sojourn.compartment_periods_calculated.exposed.total_period: 4.281236490063498
-testing_to_detection.assumed_cdr_parameter: 0.10609245672490371
+testing_to_detection.assumed_cdr_parameter: 0.08
 vaccination.overall_efficacy: 0.04026238167502851
 vaccination.vacc_prop_prevent_infection: 0.6489561104865617
 voc_emergence.contact_rate_multiplier: 1.9801284555846084

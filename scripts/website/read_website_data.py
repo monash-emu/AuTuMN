@@ -13,7 +13,29 @@ from botocore.exceptions import ProfileNotFound
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(BASE_DIR)
 
-from autumn.tools.utils.runs import read_run_id
+
+# from autumn.tools.utils.runs import read_run_id
+def read_run_id(run_id: str):
+    """Read data from run id"""
+    parts = run_id.split("/")
+    if len(parts) < 2:
+        # It's an old style path
+        # central-visayas-1600644750-9fdd80c
+        parts = run_id.split("-")
+        git_commit = parts[-1]
+        timestamp = parts[-2]
+        region_name = "-".join(parts[:-2])
+        app_name = "covid_19"
+    else:
+        # It's an new style path
+        # covid_19/central-visayas/1600644750/9fdd80c
+        app_name = parts[0]
+        region_name = parts[1]
+        timestamp = parts[2]
+        git_commit = parts[3]
+
+    return app_name, region_name, timestamp, git_commit
+
 
 BUCKET = "autumn-data"
 AWS_PROFILE = "autumn"

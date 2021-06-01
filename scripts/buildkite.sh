@@ -11,13 +11,13 @@ then
     time virtualenv --quiet -p python3 env
     . env/bin/activate
     echo ">>> Installing infra deps for Autumn scripts"
-    time pip3 install --quiet -r remote/requirements.txt
+    time pip3 install --quiet -r requirements.infra.txt
 
 fi
 . env/bin/activate
 
 echo ">>> Start running Autumn scripts"
 
-time python3 -m remote buildkite $@
+time python3 -m autumn remote buildkite $@
 
 echo ">>> Finished running Autumn scripts"

@@ -2,11 +2,78 @@ from copy import deepcopy
 from itertools import chain, combinations
 
 import pytest
-from summer.legacy.constants import Flow, IntegrationType
 from summer.legacy.model import StratifiedModel
 
-from apps import tuberculosis
-from autumn.utils.utils import merge_dicts
+from autumn.settings import Models
+from autumn.tools.project.project import _PROJECTS, get_project
+
+TB_PROJECTS = list(_PROJECTS[Models.TB].keys())
+
+
+@pytest.mark.local_only
+@pytest.mark.parametrize("project_name", TB_PROJECTS)
+def test_tb_run_models_partial(project_name):
+    """
+    Smoke test: ensure we can build and run each default model with various stratification requests with nothing crashing.
+    Does not include scenarios, plotting, etc.
+    """
+    project = get_project(Models.TB, project_name)
+    # Only run model for 5 timesteps.
+    baseline_params = project.param_set.baseline
+    baseline_params_dict = baseline_params.to_dict()
+    original_stratify_by = baseline_params_dict["stratify_by"]
+    for stratify_by in powerset(original_stratify_by):
+        params = baseline_params.update(
+            {
+                "stratify_by": list(stratify_by),
+                "time": {
+                    "critical_ranges": [],
+                    "end": baseline_params_dict["time"]["start"] + 5,
+                },
+            }
+        )
+        model = project.run_baseline_model(params)
+        assert type(model) is StratifiedModel
+
+
+@pytest.mark.run_models
+@pytest.mark.github_only
+@pytest.mark.parametrize("project_name", TB_PROJECTS)
+def test_tb_build_scenario_models(project_name):
+    """
+    Smoke test: ensure we can build the each model with nothing crashing.
+    """
+    project = get_project(Models.TB, project_name)
+    for param in project.param_set.scenarios:
+        model = project.build_model(param.to_dict())
+        assert type(model) is StratifiedModel
+
+
+@pytest.mark.run_models
+@pytest.mark.github_only
+@pytest.mark.parametrize("project_name", TB_PROJECTS)
+@pytest.mark.parametrize("stratify_by", [[], ["organ"]])
+def test_tb_run_models_full(project_name, stratify_by):
+    """
+    Smoke test: ensure our models run to completion for any stratification request without crashing.
+    This takes ~30s per model.
+    """
+    project = get_project(Models.TB, project_name)
+    params = project.param_set.baseline.update({"stratify_by": stratify_by})
+    baseline_model = project.run_baseline_model(params)
+    assert type(baseline_model) is StratifiedModel
+    assert baseline_model.outputs is not None
+
+    start_times = [
+        sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
+    ]
+    scenario_params = [p.update({"stratify_by": stratify_by}) for p in project.param_set.scenarios]
+    sc_models = project.run_scenario_models(
+        baseline_model, scenario_params, start_times=start_times
+    )
+    for sc_model in sc_models:
+        assert type(sc_model) is StratifiedModel
+        assert sc_model.outputs is not None
 
 
 def powerset(iterable):
@@ -16,54 +83,3 @@ def powerset(iterable):
     """
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
-
-
-@pytest.mark.local_only
-@pytest.mark.parametrize("region", tuberculosis.app.region_names)
-def test_tb_run_models_partial(region):
-    """
-    Smoke test: ensure we can build and run each default model with various stratification requests with nothing crashing.
-    Does not include scenarios, plotting, etc.
-    """
-    region_app = tuberculosis.app.get_region(region)
-    ps = deepcopy(region_app.params["default"])
-    original_stratify_by = deepcopy(ps["stratify_by"])
-    for stratify_by in powerset(original_stratify_by):
-        ps = deepcopy(region_app.params["default"])
-        ps["stratify_by"] = list(stratify_by)
-        # Only run model for ~10 epochs.
-        ps["time"]["end"] = ps["time"]["start"] + 10
-        ps["time"]["critical_ranges"] = []
-        model = region_app.build_model(ps)
-        model.run_model()
-
-
-@pytest.mark.run_models
-@pytest.mark.github_only
-@pytest.mark.parametrize("region", tuberculosis.app.region_names)
-def test_tb_build_scenario_models(region):
-    """
-    Smoke test: ensure we can build the each model with nothing crashing.
-    """
-    region_app = tuberculosis.app.get_region(region)
-    for idx, scenario_params in enumerate(region_app.params["scenarios"].values()):
-        default_params = deepcopy(region_app.params["default"])
-        params = merge_dicts(scenario_params, default_params)
-        model = region_app.build_model(params)
-        assert type(model) is StratifiedModel
-
-
-@pytest.mark.run_models
-@pytest.mark.github_only
-@pytest.mark.parametrize("region", tuberculosis.app.region_names)
-def test_tb_run_models_full(region):
-    """
-    Smoke test: ensure our models run to completion for any stratification request without crashing.
-    This takes ~30s per model.
-    """
-    for stratify_by in ([], ["organ"]):
-        region_app = tuberculosis.app.get_region(region)
-        ps = deepcopy(region_app.params["default"])
-        ps["stratify_by"] = stratify_by
-        model = region_app.build_model(ps)
-        model.run_model()

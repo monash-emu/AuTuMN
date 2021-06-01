@@ -5,21 +5,22 @@ import numpy as np
 import pytest
 from summer.model import CompartmentalModel
 
-# from apps.covid_19.mixing_optimisation import mixing_opti as opti
-# from apps.covid_19.mixing_optimisation import write_scenarios
-# from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
-from autumn.region import Region
+# from autumn.projects.covid_19.mixing_optimisation import mixing_opti as opti
+# from autumn.projects.covid_19.mixing_optimisation import write_scenarios
+# from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
+from autumn.settings import Region
 
 
 @pytest.mark.mixing_optimisation
 def test_dummy_placeholder():
     pass
 
+
 #
 #
 # @pytest.mark.local_only
 # @pytest.mark.parametrize("region", Region.MIXING_OPTI_REGIONS)
-# @mock.patch("apps.covid_19.mixing_optimisation.mixing_opti.PHASE_2_START_TIME", 100)
+# @mock.patch("models.covid_19.mixing_optimisation.mixing_opti.PHASE_2_START_TIME", 100)
 # def test_run_root_models_partial(region):
 #     """
 #     Smoke test: ensure we can build and run each root model with nothing crashing.
@@ -91,7 +92,7 @@ def test_dummy_placeholder():
 #     )
 #
 #
-# @mock.patch("apps.covid_19.mixing_optimisation.mixing_opti.Scenario")
+# @mock.patch("models.covid_19.mixing_optimisation.mixing_opti.Scenario")
 # def test_objective_function_calculations(mock_scenario_cls):
 #     root_model = mock.Mock()
 #     sc_model = mock.Mock()

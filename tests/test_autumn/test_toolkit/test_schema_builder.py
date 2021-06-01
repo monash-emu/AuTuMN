@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from autumn.utils import schema_builder as sb
+from autumn.tools.utils import schema_builder as sb
 
 
 def test_schema_builder():

@@ -1,0 +1,38 @@
+description: Scenario 5, max mobility six months + 80% vaccine roll-out
+
+time:
+  start: 457
+
+vaccination:
+  overall_efficacy: 0.75
+  vacc_prop_prevent_infection: 1
+
+  # Eleven months from 1st April 2021
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.8
+        start_time: 457.
+        end_time: 791.
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2020-03-07
+      values:
+        - - max_last_period
+          - 180
+    work:
+      append: true
+      times:
+        - 2020-03-07
+      values:
+        - - max_last_period
+          - 180
+
+voc_emergence:
+  start_time: 458 # 1 Dec 2020
+  entry_rate: 1.
+  seed_duration: 10.
+  contact_rate_multiplier: 1.56 # LSHTM's estimate

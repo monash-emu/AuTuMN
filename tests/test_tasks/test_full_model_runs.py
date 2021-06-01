@@ -1,18 +1,19 @@
 import os
 
+import pytest
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from moto import mock_s3
-from summer import CompartmentalModel
 
-from autumn.db import ParquetDatabase, FeatherDatabase
-from autumn.db.store import Table
-from autumn.utils.model_register import AppRegion
-from tasks import full
-from tasks.full import full_model_run_task
-from utils.s3 import settings as s3_settings
-from utils.s3 import get_s3_client, upload_to_run_s3, list_s3, download_from_run_s3
-from utils.fs import recreate_dir
+from autumn.tools.db import ParquetDatabase, FeatherDatabase
+from autumn.tools.db.store import Table
+from autumn.tasks import full
+from autumn.tasks.full import full_model_run_task
+from autumn import settings as s3_settings
+from autumn.tools.utils.s3 import get_s3_client, upload_to_run_s3, list_s3, download_from_run_s3
+from autumn.tools.utils.fs import recreate_dir
+
+from tests.test_tasks.project import get_test_project
 
 BUCKET_NAME = "autumn-test-bucket"
 TEST_RUN_ID = "test_app/test_region/111111111/zzzzzzz"
@@ -84,11 +85,11 @@ def test_full_model_run_task(monkeypatch, tmpdir):
     recreate_dir(test_calibration_data_dir)
 
     # Ensure our test model is being run.
-    def get_app_region(run_id):
+    def get_project_from_run_id(run_id):
         assert run_id == TEST_RUN_ID
-        return MockAppRegion()
+        return get_test_project()
 
-    monkeypatch.setattr(full, "get_app_region", get_app_region)
+    monkeypatch.setattr(full, "get_project_from_run_id", get_project_from_run_id)
 
     # Run the full model task
     full_model_run_task(run_id=TEST_RUN_ID, burn_in=2, sample_size=3, quiet=True)
@@ -136,27 +137,3 @@ def test_full_model_run_task(monkeypatch, tmpdir):
     ]
     expected_full_mcmc_run_df = pd.DataFrame(full_mcmc_run_rows, columns=full_mcmc_run_columns)
     assert_frame_equal(full_mcmc_run_df, expected_full_mcmc_run_df)
-
-
-class MockAppRegion(AppRegion):
-    region_name = "test_region"
-    app_name = "test_app"
-    targets = {}
-    params = {
-        "default": {"time": {"start": 0}, "birth_rate": 0.1, "recovery_rate": 0.1},
-        "scenarios": {1: {"time": {"start": 2}, "birth_rate": 0.2}},
-    }
-
-    def __init__(self):
-        pass
-
-    def _build_model(self, params):
-        model = CompartmentalModel(
-            times=[params["time"]["start"], 5],
-            compartments=["S", "I", "R"],
-            infectious_compartments=["I"],
-        )
-        model.set_initial_population(distribution={"S": 1000, "I": 1000})
-        model.add_crude_birth_flow("birth", params["birth_rate"], "S")
-        model.add_transition_flow("recovery", params["recovery_rate"], "I", "R")
-        return model

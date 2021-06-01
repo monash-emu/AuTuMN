@@ -1,29 +1,21 @@
 import pytest
 
-import autumn
-from apps import covid_19, tuberculosis
+from autumn.settings import Models
+from autumn.tools.project.project import _PROJECTS, get_project
+
+COVID_PROJECTS = list(_PROJECTS[Models.COVID_19].keys())
+COVID_CALIBS = list(zip(COVID_PROJECTS, [Models.COVID_19] * len(COVID_PROJECTS)))
+TB_PROJECTS = list(_PROJECTS[Models.TB].keys())
+TB_CALIBS = list(zip(TB_PROJECTS, [Models.TB] * len(TB_PROJECTS)))
+CALIBS = COVID_CALIBS + TB_CALIBS
 
 
-@pytest.mark.calibrate_models
 @pytest.mark.github_only
-@pytest.mark.parametrize("region", covid_19.app.region_names)
-def test_covid_calibration(region):
+@pytest.mark.calibrate_models
+@pytest.mark.parametrize("project_name, model_name", CALIBS)
+def test_calibration(project_name, model_name):
     """
     Calibration smoke test - make sure everything can run for 10 seconds without exploding.
     """
-    if region == "victoria":
-        return
-
-    region_app = covid_19.app.get_region(region)
-    region_app.calibrate_model(10, 1, 1)
-
-
-@pytest.mark.calibrate_models
-@pytest.mark.github_only
-@pytest.mark.parametrize("region", tuberculosis.app.region_names)
-def test_tuberculosis_calibration(region):
-    """
-    Calibration smoke test - make sure everything can run for 15 seconds without exploding.
-    """
-    region_app = tuberculosis.app.get_region(region)
-    region_app.calibrate_model(10, 1, 1)
+    project = get_project(model_name, project_name)
+    project.calibrate(max_seconds=10, chain_idx=1, num_chains=1)

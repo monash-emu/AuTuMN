@@ -16,4 +16,4 @@ then
 fi
 . env/bin/activate
 
-python3 -m remote aws $@
+python3 -m autumn remote aws $@

@@ -24,25 +24,29 @@ Docs: https://docs.streamlit.io/
 """
 import streamlit as st
 
-from dash.dashboards.calibration_results.run import (
+from autumn.dashboards.calibration_results.run import (
     run_dashboard as calibration_results_dashboard,
 )
-from dash.dashboards.dhhs import run_dashboard as run_dhhs_dashboard
-from dash.dashboards.ensemble import run_dashboard as run_ensemble_dashboard
-from dash.dashboards.inspect_model.run import run_dashboard as inspect_model_dashboard
-from dash.dashboards.model_results.run import run_dashboard as run_scenario_dashboard
-from dash.dashboards.multicountry_inputs import run_dashboard as run_multicountry_inputs
-from dash.dashboards.multicountry_manual import run_dashboard as run_multicountry_manual
-from dash.dashboards.multicountry_plots import (
+from autumn.dashboards.dhhs import run_dashboard as run_dhhs_dashboard
+from autumn.dashboards.ensemble import run_dashboard as run_ensemble_dashboard
+from autumn.dashboards.inspect_model.run import run_dashboard as inspect_model_dashboard
+from autumn.dashboards.model_results.run import run_dashboard as run_scenario_dashboard
+from autumn.dashboards.multicountry_inputs import (
+    run_dashboard as run_multicountry_inputs,
+)
+from autumn.dashboards.multicountry_manual import (
+    run_dashboard as run_multicountry_manual,
+)
+from autumn.dashboards.multicountry_plots import (
     run_dashboard as run_multicountry_dashboard,
 )
-from dash.dashboards.multicountry_uncertainty import (
+from autumn.dashboards.multicountry_uncertainty import (
     run_dashboard as run_multicountry_uncertainty,
 )
-from dash.dashboards.philippines import run_dashboard as run_philippines
-from dash.dashboards.run_calibrate import run_dashboard as run_calibrate_dashboard
-from dash.dashboards.run_model import run_dashboard as run_model_dashboard
-from dash.dashboards.vic_second_wave_paper import run_dashboard as run_vic_paper
+from autumn.dashboards.philippines import run_dashboard as run_philippines
+from autumn.dashboards.run_calibrate import run_dashboard as run_calibrate_dashboard
+from autumn.dashboards.run_model import run_dashboard as run_model_dashboard
+from autumn.dashboards.vic_second_wave_paper import run_dashboard as run_vic_paper
 
 DASHBOARDS = {
     "Home": None,

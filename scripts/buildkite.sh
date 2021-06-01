@@ -18,6 +18,6 @@ fi
 
 echo ">>> Start running Autumn scripts"
 
-time python3 -m remote buildkite $@
+time python3 -m autumn remote buildkite $@
 
 echo ">>> Finished running Autumn scripts"

@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
-from settings import APPS_PATH
+from autumn.settings import APPS_PATH
 
 # shareable google drive links
 PHL_doh_link = "1FnIfncrzAMbUxkqv5OqIMVucJ2C91s0s"  # sheet 05 daily report
@@ -215,4 +215,3 @@ def copy_davao_city_to_region(filePath) -> pd.DataFrame:
 
 if __name__ == "__main__":
     main()
-

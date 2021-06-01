@@ -68,12 +68,10 @@ apps/*/tex/*.pdf
 *.synctex*
 
 # Random stuff
-projects
 saved_*
 saved_optimisation_analyses/
 saved_uncertainty_analyses/
 saved_*
-projects
 autumn_from_summer/databases/outputs*
 autumn_from_summer/mongolia/mcmc_chistmas_2019/
 dummy/

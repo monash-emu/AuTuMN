@@ -1,0 +1,10 @@
+awareness_raising:
+  relative_screening_rate: 1. # actually overwritten during uncertainty
+  scale_up_range: [3000, 3001] # just to make sure awareness raising wont affect scenario 1
+time:
+  critical_ranges:
+    - - 2017.0
+      - 2049.0
+  start: 2016
+time_variant_acf: []
+time_variant_ltbi_screening: []

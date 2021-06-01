@@ -1,9 +1,0 @@
-description: BASELINE
-parent: apps/covid_19/phl_submodel_params.yml
-
-population:
-  region: Davao City
-  year: 2015
-
-mobility:
-  region: Davao City

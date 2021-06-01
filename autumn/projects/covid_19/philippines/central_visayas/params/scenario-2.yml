@@ -1,0 +1,9 @@
+description: 50% coverage
+time:
+  start: 517
+vaccination:
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.5
+        end_time: 731
+        start_time: 517

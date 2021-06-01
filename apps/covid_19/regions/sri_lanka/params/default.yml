@@ -6,7 +6,7 @@ seasonal_force: 0.
 infectious_seed: 100.
 
 time:
-  start: 457
+  start: 320
   end: 731
 
 country:

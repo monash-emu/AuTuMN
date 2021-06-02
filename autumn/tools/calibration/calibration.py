@@ -92,9 +92,9 @@ class Calibration:
         """
         Defines a new calibration.
         """
-        self.priors = [p.to_dict() for p in priors]
+        self.all_priors = [p.to_dict() for p in priors]
         self.targets = [t.to_dict() for t in targets]
-        self.targets = remove_early_points_to_prevent_crash(self.targets, self.priors)
+        self.targets = remove_early_points_to_prevent_crash(self.targets, self.all_priors)
 
         self.haario_scaling_factor = haario_scaling_factor
         self.adaptive_proposal = adaptive_proposal
@@ -104,16 +104,16 @@ class Calibration:
 
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
         direct_sample_idxs = [
-            idx for idx in range(len(self.priors)) if self.priors[idx].get("sampling") == "lhs"
+            idx for idx in range(len(self.all_priors)) if self.all_priors[idx].get("sampling") == "lhs"
         ]
         self.iterative_sampling_priors = [
             param_dict
-            for i_param, param_dict in enumerate(self.priors)
+            for i_param, param_dict in enumerate(self.all_priors)
             if i_param not in direct_sample_idxs
         ]
         self.independent_sampling_priors = [
             param_dict
-            for i_param, param_dict in enumerate(self.priors)
+            for i_param, param_dict in enumerate(self.all_priors)
             if i_param in direct_sample_idxs
         ]
         self.iterative_sampling_param_names = [
@@ -140,25 +140,6 @@ class Calibration:
         # A list of dictionaries. Each dictionary describes a target
         self.targeted_outputs = self.targets
 
-        # Separate direct sampling parameters from standard calibration parameters
-        priors = self.priors
-        direct_sample_idxs = [
-            idx for idx in range(len(priors)) if priors[idx].get("sampling") == "lhs"
-        ]
-        self.priors = [
-            param_dict
-            for i_param, param_dict in enumerate(priors)
-            if i_param not in direct_sample_idxs
-        ]
-        self.direct_params = [
-            param_dict for i_param, param_dict in enumerate(priors) if i_param in direct_sample_idxs
-        ]
-
-        self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
-        self.direct_param_list = [
-            self.direct_params[i]["param_name"] for i in range(len(self.direct_params))
-        ]
-
         # Figure out which derived outputs we have to calculate.
         derived_outputs_to_plot = derived_outputs_to_plot or []
         target_names = [t["output_key"] for t in self.targets]
@@ -167,7 +148,7 @@ class Calibration:
         # Validate target output start time.
         model_start = model_parameters_data["time"]["start"]
         max_prior_start = None
-        for p in priors:
+        for p in self.all_priors:
             if p["param_name"] == "time.start":
                 max_prior_start = max(p["distri_params"])
 
@@ -190,10 +171,12 @@ class Calibration:
         specify_missing_prior_params(self.iterative_sampling_priors)
         specify_missing_prior_params(self.independent_sampling_priors)
 
+        # rebuild self.all_priors, following changes to the two sets of priors
+        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
+
         # Select starting params
-        init_priors = self.iterative_sampling_priors + self.independent_sampling_priors
         self.starting_point = set_initial_point(
-            init_priors, model_parameters_data, chain_idx, num_chains, self.initialisation_type
+            self.all_priors, model_parameters_data, chain_idx, num_chains, self.initialisation_type
         )
 
         # Save metadata output dir.
@@ -207,7 +190,7 @@ class Calibration:
         }
         self.output.write_metadata(f"meta-{chain_idx}.yml", metadata)
         self.output.write_metadata(f"params-{chain_idx}.yml", model_parameters_data)
-        self.output.write_metadata(f"priors-{chain_idx}.yml", priors)
+        self.output.write_metadata(f"priors-{chain_idx}.yml", self.all_priors)
         self.output.write_metadata(f"targets-{chain_idx}.yml", self.targeted_outputs)
 
         self.data_as_array = None  # will contain all targeted data points in a single array
@@ -226,8 +209,6 @@ class Calibration:
         self.main_table = {}
         self.mcmc_trace_matrix = None  # will store the results of the MCMC model calibration
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
-
-        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
 
         if self.chain_idx == 0:
             plots.calibration.plot_pre_calibration(self.all_priors, self.output.output_dir)

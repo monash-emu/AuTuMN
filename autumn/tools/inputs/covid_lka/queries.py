@@ -1,12 +1,11 @@
 import numpy as np
 
 from autumn.tools.inputs.database import get_input_db
-from autumn.tools.utils.utils import apply_moving_average
 
 
-def get_lka_testing_numbers(region):
+def get_lka_testing_numbers():
     """
-    Returns daily PCR test numbers
+    Returns daily PCR test numbers for Sri lanka
     """
 
     input_db = get_input_db()

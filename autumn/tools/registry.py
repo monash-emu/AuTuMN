@@ -16,13 +16,18 @@ def register_project(model_name: str, project_name: str, import_path: str):
 
 
 def get_registered_model_names():
-    return set(_PROJECTS.keys())
+    return sorted(list(set(_PROJECTS.keys())))
 
 
-def get_registered_project_names():
+def get_registered_project_names(model_name=None):
     projects = set()
-    for model_name in get_registered_model_names():
+    if model_name:
+        model_names = [model_name]
+    else:
+        model_names = get_registered_model_names()
+
+    for model_name in model_names:
         for project_name in _PROJECTS[model_name].keys():
             projects.add(project_name)
 
-    return projects
+    return sorted(list(projects))

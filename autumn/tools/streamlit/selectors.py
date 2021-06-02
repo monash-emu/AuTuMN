@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 from summer.legacy.model import StratifiedModel
 
+from autumn.settings import OUTPUT_DATA_PATH
 from autumn import settings
 
 
@@ -84,31 +85,46 @@ def multi_compartment(model: StratifiedModel) -> List[str]:
     return chosen_compartment_names
 
 
-def app_name(run_type) -> Tuple[str, str]:
-    """
-    Selector for users to choose which app they want to select
-    from the model output data directory.
-    Returns app dir and path to app dir
-    """
-    if run_type == "model":
-        apps = sorted(
-            [
-                d
-                for d in os.listdir(settings.APPS_PATH)
-                if os.path.isdir(os.path.join(settings.APPS_PATH, d))
-                and d not in ["cli", "legacy", "__pycache__"]
-            ]
-        )
-        chosen_dirname = st.sidebar.selectbox("Select app", apps)
-        return chosen_dirname, os.path.join(settings.APPS_PATH, chosen_dirname)
-    else:
-        run_outputs_path = os.path.join(settings.OUTPUT_DATA_PATH, run_type)
-        if not os.path.exists(run_outputs_path):
-            return None, None
+from autumn.tools.registry import get_registered_model_names, get_registered_project_names
+from autumn.tools.project import Project, get_project
 
-        apps = os.listdir(run_outputs_path)
-        chosen_dirname = st.sidebar.selectbox("Select app", apps)
-        return chosen_dirname, os.path.join(run_outputs_path, chosen_dirname)
+
+def project() -> Project:
+    model = model_name()
+    if not model:
+        st.write("No model has been selected.")
+        return
+
+    region = region_name(model)
+    if not region:
+        st.write("No region has been selected.")
+        return
+
+    try:
+        project = get_project(model, region)
+    except AssertionError:
+        st.write(f"Cannot find a project for {model} {region}.")
+        return
+
+    return project
+
+
+def region_name(model: str) -> str:
+    """
+    Selector for users to choose which model they want to select.
+    """
+    regions = get_registered_project_names(model)
+    region = st.sidebar.selectbox("Select region", regions)
+    return region
+
+
+def model_name() -> str:
+    """
+    Selector for users to choose which model they want to select.
+    """
+    models = get_registered_model_names()
+    model = st.sidebar.selectbox("Select model ", models)
+    return model
 
 
 def output_region_name(app_output_path: str, name: str, default_index=0) -> Tuple[str, str]:
@@ -140,37 +156,49 @@ def app_region_name(app_name: str) -> Tuple[str, str]:
     return chosen_region, os.path.join(region_path, chosen_region.replace("-", "_"))
 
 
-def scenarios(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
-    """
-    Get user to select the scenario that they want.
-    User may select "All", which includes all Scenarios.
-    Returns a list of Scenarios.
-    """
-    if include_all:
-        options = ["All", "Baseline"]
-        offset = 1
-    else:
-        options = ["Baseline"]
-        offset = 0
+# def scenarios(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
+#     """
+#     Get user to select the scenario that they want.
+#     User may select "All", which includes all Scenarios.
+#     Returns a list of Scenarios.
+#     """
+#     if include_all:
+#         options = ["All", "Baseline"]
+#         offset = 1
+#     else:
+#         options = ["Baseline"]
+#         offset = 0
 
-    for s in scenarios[1:]:
-        options.append(f"Scenario {s.idx}")
+#     for s in scenarios[1:]:
+#         options.append(f"Scenario {s.idx}")
 
-    scenario_name = st.sidebar.selectbox("Select scenario", options)
-    if scenario_name == "All":
-        return scenarios
-    else:
-        idx = options.index(scenario_name) - offset
-        return [scenarios[idx]]
+#     scenario_name = st.sidebar.selectbox("Select scenario", options)
+#     if scenario_name == "All":
+#         return scenarios
+#     else:
+#         idx = options.index(scenario_name) - offset
+#         return [scenarios[idx]]
 
 
-def calibration_run(param_set_dirpath: str, name: str) -> str:
+def _get_calibration_dir(project: Project) -> str:
+    project_calib_dir = os.path.join(
+        OUTPUT_DATA_PATH, "calibrate", project.model_name, project.region_name
+    )
+    if os.path.exists(project_calib_dir):
+        return project_calib_dir
+
+
+def calibration_path(project: Project) -> str:
     """
     Allows a user to select what model run they want, given an app
     Returns the directory name selected.
     """
+    project_calib_dir = _get_calibration_dir(project)
+    if not project_calib_dir:
+        return None
+
     # Read model runs from filesystem
-    model_run_dirs = os.listdir(param_set_dirpath)
+    model_run_dirs = os.listdir(project_calib_dir)
 
     # Parse model run folder names
     model_runs = []
@@ -189,13 +217,13 @@ def calibration_run(param_set_dirpath: str, name: str) -> str:
         model_run_dir_lookup[run_datestr] = dirname
         labels.append(run_datestr)
 
-    label = st.sidebar.selectbox(name, labels)
+    label = st.sidebar.selectbox("Calibration run", labels)
     if not label:
-        return None, None
+        return None
     else:
         dirname = model_run_dir_lookup[label]
-        dirpath = os.path.join(param_set_dirpath, dirname)
-        return dirname, dirpath
+        dirpath = os.path.join(project_calib_dir, dirname)
+        return dirpath
 
 
 def model_run(param_set_dirpath: str, multi_country_run_number=None) -> Tuple[str, str]:

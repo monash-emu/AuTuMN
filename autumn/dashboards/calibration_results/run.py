@@ -1,49 +1,40 @@
 """
 Streamlit web UI for plotting MCMC outputs
 """
-import os
-
 import streamlit as st
 
 from autumn.tools import db
 from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.utils.params import load_targets
-from dash import selectors
+from autumn.tools.streamlit import selectors
 
 from .plots import PLOT_FUNCS
 
 
 def run_dashboard():
-    app_name, app_dirpath = selectors.app_name(run_type="calibrate")
-    if not app_name:
-        st.write("No calibrations have been run yet")
+    project = selectors.project()
+    if not project:
         return
 
-    region_name, region_dirpath = selectors.output_region_name(app_dirpath, app_name)
-    if not region_name:
-        st.write("No region folder found")
-        return
-
-    calib_name, calib_dirpath = selectors.calibration_run(region_dirpath, region_name)
-    if not calib_name:
-        st.write("No model run folder found")
+    calib_path = selectors.calibration_path(project)
+    if not calib_path:
+        msg = f"No calibration outputs folder found for {project.model_name} {project.region_name}"
+        st.write(msg)
         return
 
     # Load MCMC tables
-    mcmc_tables = db.load.load_mcmc_tables(calib_dirpath)
-    mcmc_params = db.load.load_mcmc_params_tables(calib_dirpath)
-    targets = load_targets(app_name, region_name)
+    mcmc_tables = db.load.load_mcmc_tables(calib_path)
+    mcmc_params = db.load.load_mcmc_params_tables(calib_path)
 
-    plotter = StreamlitPlotter(targets)
+    plotter = StreamlitPlotter(project.plots)
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
 
     plot_func(
         plotter,
-        calib_dirpath,
+        calib_path,
         mcmc_tables,
         mcmc_params,
-        targets,
-        app_name,
-        region_name,
+        project.plots,
+        project.model_name,
+        project.region_name,
     )

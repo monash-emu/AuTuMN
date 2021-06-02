@@ -69,14 +69,18 @@ class FileDatabase(BaseDatabase, ABC):
     @classmethod
     def is_compatible(cls, database_path: str) -> bool:
         """Returns True if the database is compatible with the given path"""
-        if not os.path.exists(database_path):
+        path_exists = os.path.exists(database_path)
+        if not path_exists:
+            # Non existent database compatible with all types.
             return True
-        elif not os.path.isdir(database_path):
+
+        is_path_dir = os.path.isdir(database_path)
+        if not is_path_dir:
+            # Only works with directorys with files inside.
             return False
-        elif not all(f.endswith(cls.extension) for f in os.listdir(database_path)):
-            return False
-        else:
-            return True
+
+        is_correct_extension = all(f.endswith(cls.extension) for f in os.listdir(database_path))
+        return is_correct_extension
 
     def table_names(self):
         """Returns a list of table names"""

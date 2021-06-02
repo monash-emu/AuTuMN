@@ -10,7 +10,7 @@ from summer.flows import (
 )
 
 from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.utils.model_register import AppRegion
+from autumn.tools.project import Project
 
 MARKERS = ".spP*D^vxH"
 FLOW_STYLES = [
@@ -41,12 +41,12 @@ FLOW_STYLES = [
 ]
 
 
-def plot_flow_graph(plotter: StreamlitPlotter, app: AppRegion):
+def plot_flow_graph(plotter: StreamlitPlotter, project: Project):
     """
     Plot a graph of the model's compartments and flows
     See NetworkX documentation: https://networkx.org/documentation/stable/index.html
     """
-    model = app.build_model(app.params["default"])
+    model = project.build_model(project.param_set.baseline.to_dict())
 
     flow_types = st.multiselect(
         "Flow types", ["Transition", "Entry", "Exit"], default=["Transition"]

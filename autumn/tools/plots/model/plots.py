@@ -234,7 +234,7 @@ def plot_outputs_multi(
 
 def plot_outputs_single(
     plotter: Plotter,
-    scenario,
+    model,
     output_config: dict,
     is_logscale=False,
     axis=None,
@@ -253,7 +253,7 @@ def plot_outputs_single(
     output_name = output_config["output_key"]
     target_values = output_config["values"]
     target_times = output_config["times"]
-    _plot_outputs_to_axis(axis, scenario, output_name)
+    _plot_outputs_to_axis(axis, model, output_name)
     _plot_targets_to_axis(axis, target_values, target_times)
 
     if xaxis_date:
@@ -266,7 +266,7 @@ def plot_outputs_single(
         plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
 
 
-def plot_multi_targets(plotter: Plotter, scenario, output_configs: list, is_logscale=False):
+def plot_multi_targets(plotter: Plotter, model, output_configs: list, is_logscale=False):
     if len(output_configs) == 0:
         return
 
@@ -282,7 +282,7 @@ def plot_multi_targets(plotter: Plotter, scenario, output_configs: list, is_logs
     i_row = 0
     for output_config in output_configs:
         ax = fig.add_subplot(spec[i_row, i_col])
-        plot_outputs_single(plotter, scenario, output_config, is_logscale, ax, single_panel=False)
+        plot_outputs_single(plotter, model, output_config, is_logscale, ax, single_panel=False)
         ax.set_title(output_config["title"])
         i_col += 1
         if i_col == max_n_col:
@@ -291,11 +291,10 @@ def plot_multi_targets(plotter: Plotter, scenario, output_configs: list, is_logs
     plotter.save_figure(fig, filename="multi_targets", subdir="outputs", title_text="")
 
 
-def _plot_outputs_to_axis(axis, scenario, name: str, color_idx=0, alpha=1):
+def _plot_outputs_to_axis(axis, model, name: str, color_idx=0, alpha=1):
     """
     Plot outputs requested by output_config from scenario to the provided axis.
     """
-    model = scenario.model
     plot_values = model.derived_outputs[name]
     # Plot the values as a line.
     axis.plot(model.times, plot_values, color=COLOR_THEME[color_idx], alpha=alpha)

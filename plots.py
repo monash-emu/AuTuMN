@@ -25,10 +25,10 @@ Docs: https://docs.streamlit.io/
 import streamlit as st
 
 from autumn.dashboards.calibration_results.run import run_dashboard as calibration_results_dashboard
+from autumn.dashboards.inspect_model.run import run_dashboard as inspect_model_dashboard
 
 # from autumn.dashboards.dhhs import run_dashboard as run_dhhs_dashboard
 # from autumn.dashboards.ensemble import run_dashboard as run_ensemble_dashboard
-# from autumn.dashboards.inspect_model.run import run_dashboard as inspect_model_dashboard
 # from autumn.dashboards.model_results.run import run_dashboard as run_scenario_dashboard
 # from autumn.dashboards.multicountry_inputs import (
 #     run_dashboard as run_multicountry_inputs,
@@ -49,7 +49,7 @@ from autumn.dashboards.calibration_results.run import run_dashboard as calibrati
 
 DASHBOARDS = {
     "Home": None,
-    # "Model internals": inspect_model_dashboard,
+    "Model internals": inspect_model_dashboard,
     # "Run a model": run_model_dashboard,
     # "Model results": run_scenario_dashboard,
     # "Calibrate a model": run_calibrate_dashboard,
@@ -75,9 +75,9 @@ else:
     st.write("Select a dashboard from the sidebar. Your options are:")
     st.markdown(
         """
+    - **Model internals**: Inspect the values inside a model before it is run
     - **Calibration results**: Inspect the outputs of a model calibration
     """
-        # - **Model internals**: Inspect the values inside a model before it is run
         # - **Run**: Run a model
         # - **Model results**: Inspect the model outputs after it has been run
         # - **Calibrate**: Calibrate a model

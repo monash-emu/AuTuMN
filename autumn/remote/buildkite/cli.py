@@ -159,7 +159,7 @@ def powerbi():
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Running PowerBI post processing job %s with params:\n%s\n", job_name, params_str)
     # FIXME +++ Nasty hack to get powerbi job running temporarily during refactor
-    aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, branch="old-code-branch", is_spot=is_spot)
+    aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, branch="master", is_spot=is_spot)
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
 

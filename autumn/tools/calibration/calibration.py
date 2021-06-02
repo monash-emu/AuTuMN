@@ -1,4 +1,4 @@
-import copy, logging, math, os, shutil
+import logging, math, os, shutil
 from datetime import datetime
 from itertools import chain
 from time import time
@@ -8,7 +8,6 @@ import yaml
 import numpy as np
 import pandas as pd
 from scipy import special, stats
-from scipy.optimize import Bounds, minimize
 from summer import CompartmentalModel
 
 from autumn import settings
@@ -44,8 +43,7 @@ class CalibrationMode:
     """Different ways to run the calibration."""
 
     AUTUMN_MCMC = "autumn_mcmc"
-    LEAST_SQUARES = "lsm"
-    MODES = [AUTUMN_MCMC, LEAST_SQUARES]
+    MODES = [AUTUMN_MCMC]
 
 
 class MetroInit:
@@ -205,10 +203,8 @@ class Calibration:
         self.build_transformations()
 
         self.latest_model = None
-        self.run_mode = None
         self.main_table = {}
         self.mcmc_trace_matrix = None  # will store the results of the MCMC model calibration
-        self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
         if self.chain_idx == 0:
             plots.calibration.plot_pre_calibration(self.all_priors, self.output.output_dir)
@@ -247,7 +243,7 @@ class Calibration:
         """
         model = self.run_model_with_params(all_params_dict)
 
-        ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
+        ll = 0  # loglikelihood if using bayesian approach.
         for target in self.targeted_outputs:
             key = target["output_key"]
             data = np.array(target["values"])
@@ -259,10 +255,7 @@ class Calibration:
                 indices.append(time_idx)
 
             model_output = model.derived_outputs[key][indices]
-            if self.run_mode == CalibrationMode.LEAST_SQUARES:
-                squared_distance = (data - model_output) ** 2
-                ll += np.sum([w * d for (w, d) in zip(time_weigths, squared_distance)])
-            else:
+            if self.run_mode == CalibrationMode.AUTUMN_MCMC:
                 if "loglikelihood_distri" not in target:  # default distribution
                     target["loglikelihood_distri"] = "normal"
                 if target["loglikelihood_distri"] in ["normal", "trunc_normal"]:
@@ -310,11 +303,6 @@ class Calibration:
                         ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weigths[i]
                 else:
                     raise ValueError("Distribution not supported in loglikelihood_distri")
-
-        if self.run_mode == CalibrationMode.LEAST_SQUARES:
-            # FIXME: Store a record of the MCMC run.
-            logger.error("No data stored for least squares")
-            pass
 
         return ll
 
@@ -431,7 +419,7 @@ class Calibration:
         master method to run model calibration.
 
         :param run_mode: string
-            either 'autumn_mcmc' or 'lsm' (for least square minimisation using scipy.minimize function)
+            only 'autumn_mcmc' is currently supported
         :param n_chains: number of chains to be run
         :param available_time: maximal simulation time allowed (in seconds)
         """
@@ -447,36 +435,9 @@ class Calibration:
             # Run the selected fitting algorithm.
             if run_mode == CalibrationMode.AUTUMN_MCMC:
                 self.run_autumn_mcmc(n_chains, available_time, self.haario_scaling_factor)
-            elif run_mode == CalibrationMode.LEAST_SQUARES:
-                self.run_least_squares()
+
         finally:
             self.output.write_data_to_disk()
-
-    def run_least_squares(self):
-        """
-        Run least squares minimization algorithm to calibrate model parameters.
-        """
-        lower_bounds = []
-        upper_bounds = []
-        x0 = []
-        for prior in self.all_priors:
-            lower_bound, upper_bound = get_parameter_bounds_from_priors(prior)
-            lower_bounds.append(lower_bound)
-            upper_bounds.append(upper_bound)
-            if not any([math.isinf(lower_bound), math.isinf(upper_bound)]):
-                x0.append(0.5 * (lower_bound + upper_bound))
-            elif all([math.isinf(lower_bound), math.isinf(upper_bound)]):
-                x0.append(0.0)
-            elif math.isinf(lower_bound):
-                x0.append(upper_bound)
-            else:
-                x0.append(lower_bound)
-        bounds = Bounds(lower_bounds, upper_bounds)
-
-        sol = minimize(self.loglikelihood, x0, bounds=bounds)
-        self.mle_estimates = sol.x
-
-        logger.info("Best solution: %s", self.mle_estimates)
 
     def test_in_prior_support(self, iterative_params):
         in_support = True

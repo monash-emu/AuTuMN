@@ -101,7 +101,7 @@ def project() -> Project:
         return
 
     try:
-        project = get_project(model, region)
+        project = get_project(model, region, reload=True)
     except AssertionError:
         st.write(f"Cannot find a project for {model} {region}.")
         return
@@ -180,22 +180,16 @@ def app_region_name(app_name: str) -> Tuple[str, str]:
 #         return [scenarios[idx]]
 
 
-def _get_calibration_dir(project: Project) -> str:
-    project_calib_dir = os.path.join(
-        OUTPUT_DATA_PATH, "calibrate", project.model_name, project.region_name
-    )
-    if os.path.exists(project_calib_dir):
-        return project_calib_dir
-
-
 def calibration_path(project: Project) -> str:
     """
     Allows a user to select what model run they want, given an app
     Returns the directory name selected.
     """
-    project_calib_dir = _get_calibration_dir(project)
-    if not project_calib_dir:
-        return None
+    project_calib_dir = os.path.join(
+        OUTPUT_DATA_PATH, "calibrate", project.model_name, project.region_name
+    )
+    if not os.path.exists(project_calib_dir):
+        return
 
     # Read model runs from filesystem
     model_run_dirs = os.listdir(project_calib_dir)
@@ -226,13 +220,19 @@ def calibration_path(project: Project) -> str:
         return dirpath
 
 
-def model_run(param_set_dirpath: str, multi_country_run_number=None) -> Tuple[str, str]:
+def model_run_path(project: Project, multi_country_run_number=None) -> str:
     """
     Allows a user to select what model run they want, given an app
     Returns the directory name selected.
     """
     # Read model runs from filesystem
-    model_run_dirs = list(reversed(sorted(os.listdir(param_set_dirpath))))
+    model_run_dir = os.path.join(OUTPUT_DATA_PATH, "run", project.model_name, project.region_name)
+    if not os.path.exists(model_run_dir):
+        return
+
+    model_run_dirs = list(reversed(sorted(os.listdir(model_run_dir))))
+    if not model_run_dirs:
+        return
 
     # Parse model run folder names
     model_runs = []
@@ -253,12 +253,12 @@ def model_run(param_set_dirpath: str, multi_country_run_number=None) -> Tuple[st
     else:
         label = st.sidebar.selectbox(f"Select app model run {multi_country_run_number}", labels)
     if not label:
-        return None, None
+        return None
     else:
         idx = model_run_dir_lookup[label]
         dirname = model_run_dirs[idx]
-        dirpath = os.path.join(param_set_dirpath, dirname)
-        return dirname, dirpath
+        dirpath = os.path.join(model_run_dir, dirname)
+        return dirpath
 
 
 def burn_in(mcmc_tables: List[pd.DataFrame]):

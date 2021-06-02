@@ -3,7 +3,8 @@ import logging
 import inspect
 from datetime import datetime
 from typing import List, Union, Callable, Optional, Dict, Tuple
-from importlib import import_module
+from importlib import import_module, reload as reload_module
+
 
 import yaml
 import pandas as pd
@@ -129,10 +130,10 @@ class Project:
             model.run_model(IntegrationType.SOLVE_IVP)
 
 
-LOADED_PROJECTS = {}
+LOADED_PROJECTS = set()
 
 
-def get_project(model_name: str, project_name: str) -> Project:
+def get_project(model_name: str, project_name: str, reload=False) -> Project:
     """
     Returns a registered project
     """
@@ -140,11 +141,11 @@ def get_project(model_name: str, project_name: str) -> Project:
     msg = f"Project {project_name} not registered as a project using model {model_name}."
     assert project_name in _PROJECTS[model_name], msg
     import_path = _PROJECTS[model_name][project_name]
-    project = LOADED_PROJECTS.get(import_path)
-    if project:
-        return project
 
     project_module = import_module(import_path)
+    if import_path in LOADED_PROJECTS and reload:
+        reload_module(project_module)
+
     try:
         project = project_module.project
         assert type(project) is Project
@@ -152,7 +153,7 @@ def get_project(model_name: str, project_name: str) -> Project:
         msg = f"Cannot find a Project instance named 'project' in {import_path}"
         raise ImportError(msg)
 
-    LOADED_PROJECTS[import_path] = project
+    LOADED_PROJECTS.add(import_path)
     return project
 
 

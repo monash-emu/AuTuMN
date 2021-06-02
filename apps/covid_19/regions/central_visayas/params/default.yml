@@ -1,0 +1,8 @@
+description: BASELINE
+parent: apps/covid_19/phl_submodel_params.yml
+
+population:
+  region: Central Visayas
+
+mobility:
+  region: Central Visayas

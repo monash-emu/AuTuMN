@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 import numpy as np
 
-from autumn.tools import db
-from autumn.tools.calibration import Calibration, CalibrationMode
-from autumn.tools.calibration.utils import (
+from autumn import db
+from autumn.calibration import Calibration, CalibrationMode
+from autumn.calibration.utils import (
     sample_starting_params_from_lhs,
     specify_missing_prior_params,
 )
@@ -111,25 +111,38 @@ def _prepare_params(l):
     return set([tuple(sorted(ps.items())) for ps in l])
 
 
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import PoissonTarget
-from autumn.tools.project import TimeSeries, Project, ParameterSet, Params
-
-
-def test_calibrate_autumn_mcmc(temp_data_dir):
-    priors = [UniformPrior("ice_cream_sales", [1, 5])]
-    target_outputs = [
-        PoissonTarget(
-            TimeSeries(
-                "shark_attacks", times=[2000, 2001, 2002, 2003, 2004], values=[3, 6, 9, 12, 15]
-            )
-        ),
+@patch("autumn.calibration.calibration.load_targets")
+def test_calibrate_autumn_mcmc(mock_load_targets, temp_data_dir):
+    # Import autumn stuff inside function so we can mock out the database.
+    priors = [
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        }
     ]
-    calib = Calibration(priors, target_outputs)
-    params = ParameterSet(Params({"ice_cream_sales": 0, "time": {"start": 2000}}))
-    project = Project("hawaii", "sharks", _build_mock_model, params, calib)
-    calib.run(project, 1, 1, 1)
+    mock_load_targets.return_value = {"shark_attacks": {"output_key": "shark_attacks"}}
+    target_outputs = [
+        {
+            "output_key": "shark_attacks",
+            "years": [2000, 2001, 2002, 2003, 2004],
+            "values": [3, 6, 9, 12, 15],
+            "loglikelihood_distri": "poisson",
+        }
+    ]
 
+    params = {
+        "default": {"time": {"start": 2000}},
+        "scenarios": {},
+    }
+    calib = Calibration(
+        "sharks", _build_mock_model, params, priors, target_outputs, 1, 1, region_name="hawaii"
+    )
+    calib.run_fitting_algorithm(
+        run_mode=CalibrationMode.AUTUMN_MCMC,
+        n_chains=1,
+        available_time=1,
+    )
     app_dir = os.path.join(temp_data_dir, "outputs", "calibrate", "sharks", "hawaii")
     run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])
     db_paths = db.load.find_db_paths(run_dir)

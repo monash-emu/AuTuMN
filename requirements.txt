@@ -41,6 +41,3 @@ moto[s3]  # Mock out AWS S3 storage
 
 # Cloud computing jobs
 sentry-sdk
-
-# AWS / buildkite infrastructure
--r requirements.infra.txt

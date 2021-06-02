@@ -12,20 +12,19 @@ import numpy as np
 import pandas as pd
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
+from settings import APPS_PATH
 
 # shareable google drive links
-PHL_doh_link = "1OgvABaGnv-CuF-abCL8VBOu3wdNxIN0q"  # sheet 05 daily report
+PHL_doh_link = "1FnIfncrzAMbUxkqv5OqIMVucJ2C91s0s"  # sheet 05 daily report
 PHL_fassster_link = "1ZycNslDQQxBJdDkzRkbeyVDUB44j-BXX"
 
 # destination folders filepaths
-phl_inputs_dir = os.path.join(INPUT_DATA_PATH,"covid_phl")
-PHL_doh_dest = os.path.join(phl_inputs_dir,"PHL_icu.csv")
-PHL_fassster_dest = os.path.join(phl_inputs_dir,"PHL_ConfirmedCases.zip")
-icu_dest = os.path.join(phl_inputs_dir,"PHL_icu_processed.csv")
-deaths_dest = os.path.join(phl_inputs_dir,"PHL_deaths_processed.csv")
-notifications_dest = os.path.join(phl_inputs_dir,"PHL_notifications_processed.csv")
+PHL_doh_dest = "./data/inputs/covid_phl/PHL_icu.csv"
+PHL_fassster_dest = "./data/inputs/covid_phl/PHL_ConfirmedCases.zip"
+icu_dest = "./data/inputs/covid_phl/PHL_icu_processed.csv"
+deaths_dest = "./data/inputs/covid_phl/PHL_deaths_processed.csv"
+notifications_dest = "./data/inputs/covid_phl/PHL_notifications_processed.csv"
+phl_inputs_dir = "./data/inputs/covid_phl/"
 
 # start date to calculate time since Dec 31, 2019
 COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
@@ -73,7 +72,7 @@ def fassster_data_filepath():
         for filename in os.listdir(phl_inputs_dir)
         if filename.startswith("ConfirmedCases_Final_")
     ]
-    fassster_filename = os.path.join(phl_inputs_dir ,fassster_filename[0])
+    fassster_filename = phl_inputs_dir + str(fassster_filename[-1])
     return fassster_filename
 
 
@@ -178,7 +177,7 @@ def update_calibration_phl():
         icu_tmp = icu.loc[icu["region"] == region]
         deaths_tmp = deaths.loc[deaths["Region"] == region]
         notifications_tmp = notifications.loc[notifications["Region"] == region]
-        file_path = os.path.join(PROJECTS_PATH, "covid_19", "philippines", region, "timeseries.json")
+        file_path = os.path.join(APPS_PATH, "covid_19", "regions", region, "targets.json")
 
         with open(file_path, mode="r") as f:
             targets = json.load(f)
@@ -216,3 +215,4 @@ def copy_davao_city_to_region(filePath) -> pd.DataFrame:
 
 if __name__ == "__main__":
     main()
+

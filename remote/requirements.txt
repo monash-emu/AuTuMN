@@ -1,0 +1,8 @@
+# AWS / buildkite infra
+boto3
+timeago
+click
+tabulate
+awscli
+fabric
+pyyaml

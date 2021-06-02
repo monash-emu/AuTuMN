@@ -4,8 +4,8 @@ import os
 
 import pandas as pd
 
-from autumn.projects.covid_19.mixing_optimisation.utils import get_weekly_summed_targets
-from autumn.settings import Region
+from apps.covid_19.mixing_optimisation.utils import get_weekly_summed_targets
+from autumn.region import Region
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
 WHO_DATA_FILE = os.path.join(base_dir, "data", "who_covid", "WHO-COVID-19-global-data.csv")
@@ -52,7 +52,7 @@ def read_who_data_from_csv(
     return times, values
 
 
-def drop_who_data_to_timeseries(
+def drop_who_data_to_targets(
     country="australia", data_start_time=0, data_end_time=365, weekly_average=True
 ):
     data = {}
@@ -64,14 +64,7 @@ def drop_who_data_to_timeseries(
         data[variable] = {"times": times, "values": values}
 
     region = country if country != "united-kingdom" else "united_kingdom"
-    target_path = os.path.join(
-        "../autumn/projects",
-        "covid_19",
-        "mixing_optimisation",
-        "regions",
-        region,
-        "timeseries.json",
-    )
+    target_path = os.path.join("../apps", "covid_19", "regions", region, "targets.json")
 
     with open(target_path, mode="r") as f:
         targets = json.load(f)
@@ -84,4 +77,4 @@ def drop_who_data_to_timeseries(
 
 if __name__ == "__main__":
     for country in Region.MIXING_OPTI_REGIONS:
-        drop_who_data_to_timeseries(country, data_end_time=470)  # t_max=275 is 1st October 2020
+        drop_who_data_to_targets(country, data_end_time=470)  # t_max=275 is 1st October 2020

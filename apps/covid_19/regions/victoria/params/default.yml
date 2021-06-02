@@ -1,0 +1,182 @@
+description: BASELINE
+parent: apps/covid_19/params.yml
+
+population:
+  region: Victoria
+country:
+  iso3: AUS
+
+vaccination: null
+
+metropolis_initialisation_type: "current_params"
+metropolis_init_rel_step_size: 0.05
+n_steps_fixed_proposal: 500
+target_output_ratio: 0.2
+
+time:
+  start: 135  # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
+  end: 275  # 1st October
+
+testing_to_detection: # Need to mention these parameters in the Supplement somewhere
+  assumed_tests_parameter: 1.e-03
+  smoothing_period: 7
+
+# Tiny adjustment for consistency with observations (0.16 instead of 0.17)
+clinical_stratification:
+  icu_prop: 0.16
+
+# VAHI, 1st July to 30th September
+sojourn:
+  compartment_periods:
+    hospital_late: 11.6  # VAHI hospital mean duration, all COVID
+    icu_late: 7.4  # VAHI ICU mean duration, all COVID (177.6 hours)
+
+# Cluster stratification.
+victorian_clusters:
+  # *** METRO ***
+  metro:
+    mobility:
+      region: null
+      age_mixing: null
+      npi_effectiveness: {}
+      google_mobility_locations:
+        work:
+          - workplaces
+        other_locations:
+          - retail_and_recreation
+          - grocery_and_pharmacy
+          - parks
+          - transit_stations
+      smooth_google_data: false # Whether to apply a 7-day moving average
+      square_mobility_effect: true
+      mixing:
+        school:
+          append: false
+          times:
+            - 2020-05-25
+            - 2020-05-26 # 400,000 students return
+            - 2020-06-08
+            - 2020-06-09 # Remaining 618,000 students return
+            - 2020-07-08
+            - 2020-07-09 # Schools close for stage 3
+          values:
+            - 0.
+            - 0.393 # 26th May
+            - 0.393
+            - 1. # 9th June
+            - 1.
+            - 0.1 # 9th July
+      microdistancing:
+        behaviour:
+          function_type: tanh
+          parameters:
+            shape: 0.262764
+            inflection_time: 197. # 15th July
+            lower_asymptote: 0.2803973
+            upper_asymptote: 0.4421819
+          locations:
+            - other_locations
+            - school
+            - work
+        behaviour_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.3
+          locations:
+            - other_locations
+            - school
+            - work
+        face_coverings: # Mandatory face coverings
+          function_type: tanh
+          parameters:
+            shape: 0.5261693
+            inflection_time: 205.  # 23rd July
+            lower_asymptote: 0.130469
+            upper_asymptote: 0.9143849
+          locations:
+            - other_locations
+            - school
+            - work
+        face_coverings_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.3
+          locations:
+            - other_locations
+            - school
+            - work
+
+  # *** REGIONAL ***
+  regional:
+    mobility:
+      region: null
+      age_mixing: null
+      npi_effectiveness: {}
+      google_mobility_locations:
+        work:
+          - workplaces
+        other_locations:
+          - retail_and_recreation
+          - grocery_and_pharmacy
+          - parks
+          - transit_stations
+      smooth_google_data: false # Whether to apply a 7-day moving average
+      square_mobility_effect: true
+      mixing:
+        school:
+          append: false
+          times:
+            - 2020-05-25
+            - 2020-05-26 # 400,000 students return
+            - 2020-06-08
+            - 2020-06-09 # Remaining 618,000 students return
+            - 2020-07-08
+            - 2020-07-09 # Schools close for stage 3
+          values:
+            - 0.1
+            - 0.393  # 26th May
+            - 0.393
+            - 1.  # 9th June
+            - 1.
+            - 0.1  # 9th July
+      # Regional Victoria clusters microdistancing function
+      microdistancing:
+        behaviour:
+          function_type: tanh
+          parameters:
+            shape: 0.262764
+            inflection_time: 197.  # 15th July
+            lower_asymptote: 0.2803973
+            upper_asymptote: 0.4421819
+          locations:
+            - other_locations
+            - school
+            - work
+        behaviour_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.
+          locations:
+            - other_locations
+            - school
+            - work
+        face_coverings:
+          function_type: tanh
+          parameters:
+            shape: 0.5261693
+            inflection_time: 215.  # 2nd August
+            lower_asymptote: 0.130469
+            upper_asymptote: 0.9143849
+          locations:
+            - other_locations
+            - school
+            - work
+        face_coverings_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.  # Doesn't matter because over-written by the metro value
+          locations:
+            - other_locations
+            - school
+            - work
+

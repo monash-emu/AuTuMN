@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.tools.utils.utils import apply_odds_ratio_to_proportion
+from autumn.utils.utils import apply_odds_ratio_to_proportion
 
 
 def test_apply_odds_ratio_to_prop(n_props_to_test=100, n_ratios_to_test=100, error=1e-6):

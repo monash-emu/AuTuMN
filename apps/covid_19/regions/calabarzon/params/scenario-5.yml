@@ -1,0 +1,20 @@
+description: 50% vaccine coverage / 80% onsite workers
+mobility:
+  mixing:
+    work:
+      append: true
+      times:
+      - 531
+      - 533
+      values:
+      - - repeat_prev
+      - 0.8
+parent: apps/covid_19/regions/calabarzon/params/default.yml
+time:
+  start: 532
+vaccination:
+  roll_out_components:
+  - supply_period_coverage:
+      coverage: 0.5
+      end_time: 731
+      start_time: 532

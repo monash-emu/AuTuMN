@@ -1,23 +1,21 @@
 import pytest
 
-from autumn.settings import Models
-from autumn.tools.project.project import _PROJECTS, get_project
-
-COVID_PROJECTS = list(_PROJECTS[Models.COVID_19].keys())
+from apps import covid_19
 
 
 @pytest.mark.benchmark
 @pytest.mark.github_only
-@pytest.mark.parametrize("project_name", COVID_PROJECTS)
-def test_benchmark_covid_models(project_name, benchmark):
+@pytest.mark.parametrize("region", covid_19.app.region_names)
+def test_benchmark_covid_models(region, benchmark):
     """
     Performance benchmark: check how long our models take to run.
     See: https://pytest-benchmark.readthedocs.io/en/stable/
     Run these with pytest -vv -m benchmark --benchmark-json benchmark.json
     """
-    project = get_project(Models.COVID_19, project_name)
-    benchmark(_run_model, project=project)
+    benchmark(_run_covid_model, region=region)
 
 
-def _run_model(project):
-    project.run_baseline_model(project.param_set.baseline)
+def _run_covid_model(region):
+    region_app = covid_19.app.get_region(region)
+    model = region_app.build_model(region_app.params["default"])
+    model.run()

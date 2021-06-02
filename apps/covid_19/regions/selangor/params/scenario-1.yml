@@ -1,0 +1,22 @@
+description: Scenario 1, max mobility last 6 months
+parent: apps/covid_19/regions/selangor/params/default.yml
+
+time:
+  start: 504 # 18th May 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-04-01
+      values:
+        - - max_last_period
+          - 180
+    work:
+      append: true
+      times:
+        - 2021-04-01
+      values:
+        - - max_last_period
+          - 180

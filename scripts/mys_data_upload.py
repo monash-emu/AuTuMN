@@ -1,5 +1,4 @@
 """
-
 Script for loading MYS data into calibration targets and default.yml
 
 """
@@ -13,8 +12,8 @@ import regex as re
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
-from autumn import settings
-from autumn.settings import Region
+import settings
+from autumn.region import Region
 
 # From WHO google drive folder
 CASE_DATA_URL = "https://docs.google.com/spreadsheets/d/1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA/export?format=xlsx&id=1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA"  # shareable link
@@ -30,7 +29,7 @@ COVID_REGIONAL_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_REGIONAL.csv")
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 REGION = ["malaysia", "sabah", "selangor", "johor", "kuala_lumpur", "penang"]
 REGION_PATH = {
-    region: os.path.join(settings.folders.PROJECTS_PATH, "covid_19", "malaysia", region)
+    region: os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", region)
     for region in REGION
 }
 
@@ -54,7 +53,7 @@ def main():
 
     for region in REGION:
 
-        file_path = os.path.join(REGION_PATH[region], "timeseries.json")
+        file_path = os.path.join(REGION_PATH[region], "targets.json")
         with open(file_path, mode="r") as f:
             targets = json.load(f)
         for key, val in TARGETS[region].items():

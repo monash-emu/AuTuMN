@@ -1,0 +1,20 @@
+description: no face coverings policy change
+parent: apps/covid_19/regions/victoria/params/default.yml
+
+time:
+  start: 189
+  end: 426
+
+victorian_clusters:
+  metro:
+    mobility:
+      microdistancing:
+        face_coverings:
+          parameters:
+            upper_asymptote: 0.130469
+  regional:
+    mobility:
+      microdistancing:
+        face_coverings:
+          parameters:
+            upper_asymptote: 0.130469

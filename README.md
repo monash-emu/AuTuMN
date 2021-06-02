@@ -14,37 +14,37 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 All of Autumn's features can be accessed from the command line. You can run commands as follows:
 
 ```bash
+# Run applications
+python -m apps <YOUR COMMANDS HERE>
+# Run utilities
 python -m autumn <YOUR COMMANDS HERE>
 ```
 
 To see a list of options, try the help prompt:
 
 ```bash
+python -m apps --help
 python -m autumn --help
 ```
 
 ## Project structure
 
 ```
-├── .github                 GitHub Actions config
-|
-├── autumn                  Main project Python codebase
-|   ├─ command_line             Command line interface
-|   ├─ dashboards               Streamlit dashboards
-|   ├─ models                   Generic disease models
-|   ├─ projects                 Region specifc projects that use disease models
-|   ├─ remote                   Remote server orchestration tasks
-|   ├─ settings                 Globally shared constants
-|   ├─ tasks                    Remote server pipeline tasks with Luigi
-|   └─ tools                    Globally shared utilities
-|
+├── .github                 GitHub config
+├── apps                    Specific applications of the framework
+├── autumn                  AuTuMN framework module
+├── dash                    Streamlit dashboards
 ├── data                    Data to be used by the models
 |   ├─ inputs                   Input data for the models
 |   └─ outputs                  Module run outputs (not in source control)
 |
 ├── docs                    Documentation
+├── remote                  Remote server orchestration tasks
 ├── scripts                 Utility scripts
+├── settings                Globally shared constants
+├── tasks                   Remote server pipeline tasks with Luigi
 ├── tests                   Automated tests
+├── utils                   Globally shared utilities
 ├── .gitignore              Files for Git to ignore
 ├── plots.py                Streamlit entrypoint
 ├── pyproject.toml          Configuration for tools (eg. Black, pytest)
@@ -56,7 +56,7 @@ python -m autumn --help
 You can run all the scenarios for specific application using the `run` command. For example, to run the "malaysia" region of the "covid" model, you can run:
 
 ```bash
-python -m autumn project run covid_19 malaysia
+python -m apps run covid malaysia
 ```
 
 Model run outputs are written to `data/outputs/run` and can be viewed in Streamlit (see below).
@@ -69,8 +69,7 @@ For example, the run time of a COVID-19 model with simulation of a single scenar
 You can run a model MCMC calibration as follows
 
 ```bash
-python -m autumn project calibrate covid_19 malaysia 30 1
-python -m autumn project calibrate calibrate MODEL_NAME REGION_NAME MAX_SECONDS RUN_ID
+python -m apps calibrate MODEL_NAME REGION_NAME MAX_SECONDS RUN_ID
 ```
 
 For example, to calibrate the malaysia COVID model for 30 seconds you can run:

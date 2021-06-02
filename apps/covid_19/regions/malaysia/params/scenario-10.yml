@@ -1,0 +1,33 @@
+description: Scenario 10, 25% of the max mobility + 50% vaccine roll-out
+parent: apps/covid_19/regions/malaysia/params/default.yml
+
+time:
+  start: 504 # 18th May 2021
+
+vaccination:
+  coverage_override: 0.5
+  # Eleven months from 18th May 2021
+  roll_out_components:
+  - supply_period_coverage:
+      coverage: 0.5
+      start_time: 504.
+      end_time: 838.
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-03-07
+      values:
+        - - close_to_max_last_period
+          - 180
+          - -0.25
+    work:
+      append: true
+      times:
+        - 2021-03-07
+      values:
+        - - close_to_max_last_period
+          - 180
+          - 0.25

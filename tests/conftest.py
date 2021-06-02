@@ -3,13 +3,19 @@
 import os
 import pickle
 
+# Ensure NumPy only uses 1 thread for matrix multiplication,
+# because numpy is stupid and tries to use heaps of threads which is quite wasteful
+# and it makes our models run way more slowly.
+os.environ["OMP_NUM_THREADS"] = "1"
+
+
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from autumn import settings
-from autumn.tools.calibration import calibration
-from autumn.tools.db import database
+import settings
+from autumn.calibration import calibration
+from autumn.db import database
 
 from .utils import get_deterministic_random_seed, in_memory_db_factory
 

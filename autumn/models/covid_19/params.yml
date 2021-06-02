@@ -141,7 +141,7 @@ infection_fatality:
     - 0.08292 # 80+
 
 # Parameters relating to adjusting the mixing matrix to reflect interventions
-elderly_mixing_reduction: null
+age_specific_risk_multiplier: null
 mobility:
   region: null
   mixing: {}

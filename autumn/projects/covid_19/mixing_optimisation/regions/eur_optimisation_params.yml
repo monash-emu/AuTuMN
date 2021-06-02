@@ -56,7 +56,3 @@ testing_to_detection:
   assumed_cdr_parameter: 0.1
   smoothing_period: 14
 
-#elderly_mixing_reduction:
-#  age_categories: ["60", "65", "70", "75"]
-#  drop_time_range: [92, 152]
-#  relative_reduction: .4

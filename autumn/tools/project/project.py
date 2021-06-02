@@ -129,6 +129,9 @@ class Project:
             model.run_model(IntegrationType.SOLVE_IVP)
 
 
+LOADED_PROJECTS = {}
+
+
 def get_project(model_name: str, project_name: str) -> Project:
     """
     Returns a registered project
@@ -137,6 +140,10 @@ def get_project(model_name: str, project_name: str) -> Project:
     msg = f"Project {project_name} not registered as a project using model {model_name}."
     assert project_name in _PROJECTS[model_name], msg
     import_path = _PROJECTS[model_name][project_name]
+    project = LOADED_PROJECTS.get(import_path)
+    if project:
+        return project
+
     project_module = import_module(import_path)
     try:
         project = project_module.project
@@ -145,6 +152,7 @@ def get_project(model_name: str, project_name: str) -> Project:
         msg = f"Cannot find a Project instance named 'project' in {import_path}"
         raise ImportError(msg)
 
+    LOADED_PROJECTS[import_path] = project
     return project
 
 

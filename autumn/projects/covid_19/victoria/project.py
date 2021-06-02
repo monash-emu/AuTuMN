@@ -68,7 +68,7 @@ priors = [
         mean=1.0,
         stdev=0.5,
         trunc_range=[0.5, np.inf],
-        jumping_sd=0.05,
+        jumping_stdev=0.05,
     ),
     # Shouldn't be too peaked with these values
     TruncNormalPrior(
@@ -76,7 +76,7 @@ priors = [
         mean=1.0,
         stdev=0.5,
         trunc_range=[0.5, np.inf],
-        jumping_sd=0.05,
+        jumping_stdev=0.05,
     ),
     UniformPrior(
         "contact_rate",
@@ -123,6 +123,12 @@ priors = [
         jumping_stdev=0.005,
     ),
     UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
+    # UniformPrior(
+    #     "age_specific_risk_multiplier.contact_rate_multiplier",
+    #     [1., 2.],  # FIXME: James needs to review this
+    #     jumping_stdev=0.01
+    # )
+
 ]
 calibration = Calibration(
     priors,

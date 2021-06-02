@@ -16,6 +16,7 @@ time:
 
 testing_to_detection: # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
+  assumed_cdr_parameter: .3  # calibrated
   smoothing_period: 7
 
 # Tiny adjustment for consistency with observations (0.16 instead of 0.17)
@@ -30,6 +31,13 @@ sojourn:
 
 # Cluster stratification.
 victorian_clusters:
+  intercluster_mixing: 0.02 # calibrated
+  contact_rate_multiplier_north_metro: 1. # calibrated
+  contact_rate_multiplier_west_metro: 1. # calibrated
+  contact_rate_multiplier_south_metro: 1. # calibrated
+  contact_rate_multiplier_south_east_metro: 1. # calibrated
+  contact_rate_multiplier_barwon_south_west: 1. # calibrated
+  contact_rate_multiplier_regional: 1. # calibrated
   # *** METRO ***
   metro:
     mobility:
@@ -176,3 +184,9 @@ victorian_clusters:
             - other_locations
             - school
             - work
+
+#age_specific_risk_multiplier:
+#  age_categories: ["65", "70", "75"]
+#  contact_rate_multiplier: 1.5
+#  adjustment_start_time: 0  # this is optional and currently dummy value
+#  adjustment_end_time: 100  # this is optional and currently dummy value

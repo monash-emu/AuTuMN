@@ -7,6 +7,7 @@ from autumn.tools.utils.timer import Timer
 
 from .covid_au.preprocess import preprocess_covid_au
 from .covid_phl.preprocess import preprocess_covid_phl
+from .covid_lka.preprocess import preprocess_covid_lka
 from .demography.preprocess import preprocess_demography
 from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data
@@ -51,7 +52,10 @@ def build_input_database(force: bool = False, rebuild: bool = False):
             preprocess_covid_au(input_db)
 
         with Timer("Ingesting COVID PHL data."):
-            preprocess_covid_phl(input_db)
+            preprocess_covid_phl(input_db)\
+
+        with Timer("Ingesting COVID LKA data."):
+            preprocess_covid_lka(input_db)
 
         with Timer("Ingesting Our World in Data data."):
             preprocess_our_world_in_data(input_db)

@@ -38,7 +38,7 @@ class BetaPrior(BasePrior):
             "param_name": self.name,
             "distribution": "beta",
             "distri_mean": self.mean,
-            "distri_params": self.ci,
+            "distri_ci": self.ci,
         }
 
 

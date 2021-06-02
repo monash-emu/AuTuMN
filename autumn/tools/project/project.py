@@ -3,7 +3,8 @@ import logging
 import inspect
 from datetime import datetime
 from typing import List, Union, Callable, Optional, Dict, Tuple
-from importlib import import_module
+from importlib import import_module, reload as reload_module
+
 
 import yaml
 import pandas as pd
@@ -23,6 +24,7 @@ from autumn.tools.db.database import FeatherDatabase
 from autumn.tools.utils.timer import Timer
 from autumn.tools.utils.utils import get_git_branch, get_git_hash
 from autumn.settings import OUTPUT_DATA_PATH
+from autumn.tools.registry import _PROJECTS
 
 from .params import ParameterSet, Params
 
@@ -30,9 +32,6 @@ logger = logging.getLogger(__name__)
 
 CompModel = Union[CompartmentalModel, StratifiedModel]
 ModelBuilder = Callable[[dict], CompartmentalModel]
-
-# A global registry of projects, managed by Project.
-_PROJECTS = {}
 
 
 class Project:
@@ -131,7 +130,10 @@ class Project:
             model.run_model(IntegrationType.SOLVE_IVP)
 
 
-def get_project(model_name: str, project_name: str) -> Project:
+LOADED_PROJECTS = set()
+
+
+def get_project(model_name: str, project_name: str, reload=False) -> Project:
     """
     Returns a registered project
     """
@@ -139,7 +141,11 @@ def get_project(model_name: str, project_name: str) -> Project:
     msg = f"Project {project_name} not registered as a project using model {model_name}."
     assert project_name in _PROJECTS[model_name], msg
     import_path = _PROJECTS[model_name][project_name]
+
     project_module = import_module(import_path)
+    if import_path in LOADED_PROJECTS and reload:
+        reload_module(project_module)
+
     try:
         project = project_module.project
         assert type(project) is Project
@@ -147,29 +153,8 @@ def get_project(model_name: str, project_name: str) -> Project:
         msg = f"Cannot find a Project instance named 'project' in {import_path}"
         raise ImportError(msg)
 
+    LOADED_PROJECTS.add(import_path)
     return project
-
-
-def get_registered_model_names():
-    return set(_PROJECTS.keys())
-
-
-def get_registered_project_names():
-    projects = set()
-    for model_name in get_registered_model_names():
-        for project_name in _PROJECTS[model_name].keys():
-            projects.add(project_name)
-
-    return projects
-
-
-def register_project(model_name: str, project_name: str, import_path: str):
-    if model_name not in _PROJECTS:
-        _PROJECTS[model_name] = {}
-    if project_name not in _PROJECTS[model_name]:
-        _PROJECTS[model_name][project_name] = import_path
-    else:
-        raise ValueError(f"Project {project_name} using model {model_name} already exists.")
 
 
 def build_rel_path(path):

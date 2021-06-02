@@ -7,6 +7,7 @@ from autumn.tools.inputs.testing.eur_testing_data import (
 from autumn.tools.curve import scale_up_function
 from autumn.tools.inputs.covid_au.queries import get_dhhs_testing_numbers
 from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
+from autumn.tools.inputs.covid_lka.queries import get_lka_testing_numbers
 from autumn.tools.inputs.owid.queries import get_international_testing_numbers
 from autumn.tools.utils.utils import apply_moving_average
 
@@ -56,6 +57,9 @@ def find_cdr_function_from_test_data(
         test_dates, test_values = get_uk_testing_numbers()
     elif country_iso3 in ["BEL", "ITA", "SWE", "FRA", "ESP"]:
         test_dates, test_values = get_eu_testing_numbers(country_iso3)
+    elif country_iso3 == "LKA":
+        test_dates, test_values = get_lka_testing_numbers()
+
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
 

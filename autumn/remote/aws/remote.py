@@ -96,7 +96,7 @@ def run_task_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict)
     """Run a task pipeline on the remote machine"""
     logger.info("Running task pipleine %s", pipeline_name)
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
-    cmd_str = f"./env/bin/python -m tasks {pipeline_name} {pipeline_args_str}"
+    cmd_str = f"./env/bin/python -m autumn tasks {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
         conn.run(cmd_str, echo=True)
 

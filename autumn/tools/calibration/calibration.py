@@ -1,4 +1,4 @@
-import copy, logging, math, os, shutil
+import logging, math, os, shutil
 from datetime import datetime
 from itertools import chain
 from time import time
@@ -8,7 +8,6 @@ import yaml
 import numpy as np
 import pandas as pd
 from scipy import special, stats
-from scipy.optimize import Bounds, minimize
 from summer import CompartmentalModel
 
 from autumn import settings
@@ -44,8 +43,7 @@ class CalibrationMode:
     """Different ways to run the calibration."""
 
     AUTUMN_MCMC = "autumn_mcmc"
-    LEAST_SQUARES = "lsm"
-    MODES = [AUTUMN_MCMC, LEAST_SQUARES]
+    MODES = [AUTUMN_MCMC]
 
 
 class MetroInit:
@@ -92,9 +90,9 @@ class Calibration:
         """
         Defines a new calibration.
         """
-        self.priors = [p.to_dict() for p in priors]
+        self.all_priors = [p.to_dict() for p in priors]
         self.targets = [t.to_dict() for t in targets]
-        self.targets = remove_early_points_to_prevent_crash(self.targets, self.priors)
+        self.targets = remove_early_points_to_prevent_crash(self.targets, self.all_priors)
 
         self.haario_scaling_factor = haario_scaling_factor
         self.adaptive_proposal = adaptive_proposal
@@ -104,16 +102,16 @@ class Calibration:
 
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
         direct_sample_idxs = [
-            idx for idx in range(len(self.priors)) if self.priors[idx].get("sampling") == "lhs"
+            idx for idx in range(len(self.all_priors)) if self.all_priors[idx].get("sampling") == "lhs"
         ]
         self.iterative_sampling_priors = [
             param_dict
-            for i_param, param_dict in enumerate(self.priors)
+            for i_param, param_dict in enumerate(self.all_priors)
             if i_param not in direct_sample_idxs
         ]
         self.independent_sampling_priors = [
             param_dict
-            for i_param, param_dict in enumerate(self.priors)
+            for i_param, param_dict in enumerate(self.all_priors)
             if i_param in direct_sample_idxs
         ]
         self.iterative_sampling_param_names = [
@@ -140,25 +138,6 @@ class Calibration:
         # A list of dictionaries. Each dictionary describes a target
         self.targeted_outputs = self.targets
 
-        # Separate direct sampling parameters from standard calibration parameters
-        priors = self.priors
-        direct_sample_idxs = [
-            idx for idx in range(len(priors)) if priors[idx].get("sampling") == "lhs"
-        ]
-        self.priors = [
-            param_dict
-            for i_param, param_dict in enumerate(priors)
-            if i_param not in direct_sample_idxs
-        ]
-        self.direct_params = [
-            param_dict for i_param, param_dict in enumerate(priors) if i_param in direct_sample_idxs
-        ]
-
-        self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
-        self.direct_param_list = [
-            self.direct_params[i]["param_name"] for i in range(len(self.direct_params))
-        ]
-
         # Figure out which derived outputs we have to calculate.
         derived_outputs_to_plot = derived_outputs_to_plot or []
         target_names = [t["output_key"] for t in self.targets]
@@ -167,7 +146,7 @@ class Calibration:
         # Validate target output start time.
         model_start = model_parameters_data["time"]["start"]
         max_prior_start = None
-        for p in priors:
+        for p in self.all_priors:
             if p["param_name"] == "time.start":
                 max_prior_start = max(p["distri_params"])
 
@@ -190,10 +169,12 @@ class Calibration:
         specify_missing_prior_params(self.iterative_sampling_priors)
         specify_missing_prior_params(self.independent_sampling_priors)
 
+        # rebuild self.all_priors, following changes to the two sets of priors
+        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
+
         # Select starting params
-        init_priors = self.iterative_sampling_priors + self.independent_sampling_priors
         self.starting_point = set_initial_point(
-            init_priors, model_parameters_data, chain_idx, num_chains, self.initialisation_type
+            self.all_priors, model_parameters_data, chain_idx, num_chains, self.initialisation_type
         )
 
         # Save metadata output dir.
@@ -207,7 +188,7 @@ class Calibration:
         }
         self.output.write_metadata(f"meta-{chain_idx}.yml", metadata)
         self.output.write_metadata(f"params-{chain_idx}.yml", model_parameters_data)
-        self.output.write_metadata(f"priors-{chain_idx}.yml", priors)
+        self.output.write_metadata(f"priors-{chain_idx}.yml", self.all_priors)
         self.output.write_metadata(f"targets-{chain_idx}.yml", self.targeted_outputs)
 
         self.data_as_array = None  # will contain all targeted data points in a single array
@@ -222,12 +203,8 @@ class Calibration:
         self.build_transformations()
 
         self.latest_model = None
-        self.run_mode = None
         self.main_table = {}
         self.mcmc_trace_matrix = None  # will store the results of the MCMC model calibration
-        self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
-
-        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
 
         if self.chain_idx == 0:
             plots.calibration.plot_pre_calibration(self.all_priors, self.output.output_dir)
@@ -266,7 +243,7 @@ class Calibration:
         """
         model = self.run_model_with_params(all_params_dict)
 
-        ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
+        ll = 0  # loglikelihood if using bayesian approach.
         for target in self.targeted_outputs:
             key = target["output_key"]
             data = np.array(target["values"])
@@ -278,10 +255,7 @@ class Calibration:
                 indices.append(time_idx)
 
             model_output = model.derived_outputs[key][indices]
-            if self.run_mode == CalibrationMode.LEAST_SQUARES:
-                squared_distance = (data - model_output) ** 2
-                ll += np.sum([w * d for (w, d) in zip(time_weigths, squared_distance)])
-            else:
+            if self.run_mode == CalibrationMode.AUTUMN_MCMC:
                 if "loglikelihood_distri" not in target:  # default distribution
                     target["loglikelihood_distri"] = "normal"
                 if target["loglikelihood_distri"] in ["normal", "trunc_normal"]:
@@ -329,11 +303,6 @@ class Calibration:
                         ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weigths[i]
                 else:
                     raise ValueError("Distribution not supported in loglikelihood_distri")
-
-        if self.run_mode == CalibrationMode.LEAST_SQUARES:
-            # FIXME: Store a record of the MCMC run.
-            logger.error("No data stored for least squares")
-            pass
 
         return ll
 
@@ -450,7 +419,7 @@ class Calibration:
         master method to run model calibration.
 
         :param run_mode: string
-            either 'autumn_mcmc' or 'lsm' (for least square minimisation using scipy.minimize function)
+            only 'autumn_mcmc' is currently supported
         :param n_chains: number of chains to be run
         :param available_time: maximal simulation time allowed (in seconds)
         """
@@ -466,36 +435,9 @@ class Calibration:
             # Run the selected fitting algorithm.
             if run_mode == CalibrationMode.AUTUMN_MCMC:
                 self.run_autumn_mcmc(n_chains, available_time, self.haario_scaling_factor)
-            elif run_mode == CalibrationMode.LEAST_SQUARES:
-                self.run_least_squares()
+
         finally:
             self.output.write_data_to_disk()
-
-    def run_least_squares(self):
-        """
-        Run least squares minimization algorithm to calibrate model parameters.
-        """
-        lower_bounds = []
-        upper_bounds = []
-        x0 = []
-        for prior in self.all_priors:
-            lower_bound, upper_bound = get_parameter_bounds_from_priors(prior)
-            lower_bounds.append(lower_bound)
-            upper_bounds.append(upper_bound)
-            if not any([math.isinf(lower_bound), math.isinf(upper_bound)]):
-                x0.append(0.5 * (lower_bound + upper_bound))
-            elif all([math.isinf(lower_bound), math.isinf(upper_bound)]):
-                x0.append(0.0)
-            elif math.isinf(lower_bound):
-                x0.append(upper_bound)
-            else:
-                x0.append(lower_bound)
-        bounds = Bounds(lower_bounds, upper_bounds)
-
-        sol = minimize(self.loglikelihood, x0, bounds=bounds)
-        self.mle_estimates = sol.x
-
-        logger.info("Best solution: %s", self.mle_estimates)
 
     def test_in_prior_support(self, iterative_params):
         in_support = True

@@ -31,7 +31,7 @@ priors = [
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Other regional priors
-    UniformPrior("contact_rate", [0.015, 0.03]),
+    UniformPrior("contact_rate", [0.015, 0.06]),
     UniformPrior("infectious_seed", [30.0, 200.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.1]),
@@ -43,6 +43,7 @@ priors = [
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.8, 2.0]),
     UniformPrior("vaccination.vacc_prop_prevent_infection", [0.0, 1.0]),
+    UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.start_time", [300, 400]),

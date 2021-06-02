@@ -1,4 +1,5 @@
 """
+
 Script for loading MYS data into calibration targets and default.yml
 
 """
@@ -29,7 +30,7 @@ COVID_REGIONAL_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_REGIONAL.csv")
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 REGION = ["malaysia", "sabah", "selangor", "johor", "kuala_lumpur", "penang"]
 REGION_PATH = {
-    region: os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", region)
+    region: os.path.join(settings.folders.PROJECTS_PATH, "covid_19", "malaysia", region)
     for region in REGION
 }
 
@@ -53,7 +54,7 @@ def main():
 
     for region in REGION:
 
-        file_path = os.path.join(REGION_PATH[region], "targets.json")
+        file_path = os.path.join(REGION_PATH[region], "timeseries.json")
         with open(file_path, mode="r") as f:
             targets = json.load(f)
         for key, val in TARGETS[region].items():

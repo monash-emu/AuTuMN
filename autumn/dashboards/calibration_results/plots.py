@@ -7,9 +7,6 @@ import pandas as pd
 import streamlit as st
 import yaml
 
-# from autumn.projects.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import (
-#     get_serosurvey_data,
-# )
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.tools import db, inputs, plots
 from autumn.tools.plots.calibration.plots import (
@@ -20,8 +17,8 @@ from autumn.tools.plots.calibration.plots import (
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.project import get_project
 from autumn.models.tuberculosis.model import get_model_times_from_inputs
-from dash import selectors
-from dash.utils import create_downloadable_csv, round_sig_fig
+from autumn.tools.streamlit import selectors
+from autumn.tools.streamlit.utils import create_downloadable_csv, round_sig_fig
 
 
 PLOT_FUNCS = {}

@@ -4,55 +4,57 @@ Streamlit web UI for plotting model outputs
 import os
 
 import streamlit as st
+from typing import List
+from summer import CompartmentalModel
 
 from autumn.tools import db, plots
 from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.utils.model_register import AppRegion
-from dash import selectors
+from autumn.tools.streamlit import selectors
+from autumn.tools.project import Project
 
 PLOT_FUNCS = {}
 
 
-def plot_outputs_multi(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
-    chosen_scenarios = selectors.scenarios(scenarios)
-    if chosen_scenarios:
-        output_config = model_output_selector(chosen_scenarios, app.targets)
+def plot_outputs_multi(
+    plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
+):
+    chosen_models = selectors.scenarios(models)
+    if chosen_models:
+        output_config = model_output_selector(chosen_models, project.plots)
 
         is_logscale = st.sidebar.checkbox("Log scale")
         is_custom_xrange = st.sidebar.checkbox("Use custom x axis range.")
         if is_custom_xrange:
             x_low, x_up = selectors.create_xrange_selector(0, 700)
         else:
-            x_low = min(scenarios[0].model.times)
-            x_up = max(scenarios[0].model.times)
+            x_low = min(models[0].times)
+            x_up = max(models[0].times)
 
         plots.model.plots.plot_outputs_multi(
-            plotter, chosen_scenarios, output_config, is_logscale, x_low, x_up
+            plotter, chosen_models, output_config, is_logscale, x_low, x_up
         )
 
 
 PLOT_FUNCS["Scenario outputs"] = plot_outputs_multi
 
 
-def plot_compartment(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
-    chosen_scenarios = selectors.scenarios(scenarios)
-    if chosen_scenarios:
+def plot_compartment(plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]):
+    chosen_models = selectors.scenarios(models)
+    if chosen_models:
         is_logscale = st.sidebar.checkbox("Log scale")
-        if len(chosen_scenarios) == 1:
+        if len(chosen_models) == 1:
             # Plot many compartments for one scenario
-            scenario = chosen_scenarios[0]
-            compartment_options = scenario.model.compartment_names
-            compartments = selectors.multi_compartment(scenario.model)
+            model = chosen_models[0]
+            compartments = selectors.multi_compartment(model)
             plots.model.plots.plot_multi_compartments_single_scenario(
-                plotter, scenario, compartments, is_logscale
+                plotter, model, compartments, is_logscale
             )
         else:
             # Plot one compartment for many scenarios
-            compartment_options = chosen_scenarios[0].model.compartment_names
-            compartment = selectors.single_compartment(chosen_scenarios[0].model)
+            compartment = selectors.single_compartment(chosen_models[0])
             if compartment:
                 plots.model.plots.plot_single_compartment_multi_scenario(
-                    plotter, chosen_scenarios, compartment, is_logscale
+                    plotter, chosen_models, compartment, is_logscale
                 )
             else:
                 st.write("Compartment does not exist")
@@ -61,10 +63,12 @@ def plot_compartment(plotter: StreamlitPlotter, app: AppRegion, scenarios: list)
 PLOT_FUNCS["Compartment sizes"] = plot_compartment
 
 
-def plot_compartment_aggregate(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
+def plot_compartment_aggregate(
+    plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
+):
     is_logscale = st.sidebar.checkbox("Log scale")
-    names = selectors.multi_compartment(scenarios[0].model)
-    plots.model.plots.plot_agg_compartments_multi_scenario(plotter, scenarios, names, is_logscale)
+    names = selectors.multi_compartment(models[0])
+    plots.model.plots.plot_agg_compartments_multi_scenario(plotter, models, names, is_logscale)
     st.write(names)
 
 
@@ -72,13 +76,13 @@ PLOT_FUNCS["Compartments aggregate"] = plot_compartment_aggregate
 
 
 def plot_stacked_compartments_by_stratum(
-    plotter: StreamlitPlotter, app: AppRegion, scenarios: list
+    plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
-    chosen_scenarios = selectors.scenarios(scenarios)
-    compartment = selectors.single_compartment(chosen_scenarios[0].model).split("X")[0]
+    chosen_models = selectors.scenarios(models)
+    compartment = selectors.single_compartment(chosen_models[0]).split("X")[0]
     stratify_by = "agegroup"
     plots.model.plots.plot_stacked_compartments_by_stratum(
-        plotter, chosen_scenarios, compartment, stratify_by
+        plotter, chosen_models, compartment, stratify_by
     )
     st.write(compartment)
 
@@ -87,14 +91,14 @@ PLOT_FUNCS["Stacked outputs by stratum"] = plot_stacked_compartments_by_stratum
 
 
 def plot_stacked_derived_outputs_by_stratum(
-    plotter: StreamlitPlotter, app: AppRegion, scenarios: list
+    plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
-    chosen_scenarios = selectors.scenarios(scenarios)
-    output_config = model_output_selector(chosen_scenarios, app.targets)
+    chosen_models = selectors.scenarios(models)
+    output_config = model_output_selector(chosen_models, project.plots)
     derived_output = output_config["output_key"].split("X")[0]
     stratify_by = "agegroup"
     plots.model.plots.plot_stacked_compartments_by_stratum(
-        plotter, chosen_scenarios, derived_output, stratify_by
+        plotter, chosen_models, derived_output, stratify_by
     )
     st.write(derived_output)
 
@@ -102,7 +106,9 @@ def plot_stacked_derived_outputs_by_stratum(
 PLOT_FUNCS["Stacked derived by stratum"] = plot_stacked_derived_outputs_by_stratum
 
 
-def plot_multicountry_rainbow(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
+def plot_multicountry_rainbow(
+    plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
+):
     countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     root_path = os.path.join("data", "outputs", "run", "covid_19")
 
@@ -141,7 +147,9 @@ def plot_multicountry_rainbow(plotter: StreamlitPlotter, app: AppRegion, scenari
 PLOT_FUNCS["Multicountry rainbow"] = plot_multicountry_rainbow
 
 
-def plot_multicounty_hospital(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
+def plot_multicounty_hospital(
+    plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
+):
     countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     root_path = os.path.join("data", "outputs", "run", "covid_19")
 
@@ -175,7 +183,7 @@ def plot_multicounty_hospital(plotter: StreamlitPlotter, app: AppRegion, scenari
 PLOT_FUNCS["Multicountry hospital"] = plot_multicounty_hospital
 
 
-def model_output_selector(scenarios, targets):
+def model_output_selector(models, targets):
     """
     Allow user to select the output that they want to select.
     Returns an output config dictionary.
@@ -184,12 +192,10 @@ def model_output_selector(scenarios, targets):
     outputs_to_plot = list(targets.values())
 
     # Get a list of all possible output names
-    base_scenario = scenarios[0]
-    output_names = base_scenario.model.derived_outputs.keys()
-    output_names = [n for n in output_names if n not in ["chain", "run", "scenario"]]
+    base_scenario = models[0]
+    output_names = base_scenario.derived_outputs.keys()
 
     # Find the names of all the output types and get user to select one
-
     if any("for_cluster" in o for o in output_names):
         # Handle Victorian multi cluster model
         cluster_options = ["All"] + sorted(

@@ -194,14 +194,14 @@ def plot_multi_compartments_single_scenario(
 
 def plot_outputs_multi(
     plotter: Plotter,
-    scenarios: List,
+    models: List,
     output_config: dict,
     is_logscale=False,
     x_low=0.0,
     x_up=1e6,
 ):
     """
-    Plot the model derived/generated outputs requested by the user for multiple single scenarios, on one plot.
+    Plot the model derived/generated outputs requested by the user for multiple single models, on one plot.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
     output_name = output_config["output_key"]
@@ -210,10 +210,10 @@ def plot_outputs_multi(
 
     legend = []
 
-    for idx, scenario in enumerate(reversed(scenarios)):
-        color_idx = len(scenarios) - idx - 1
-        _plot_outputs_to_axis(axis, scenario, output_name, color_idx=color_idx, alpha=0.7)
-        legend.append(scenario.name)
+    for idx, model in enumerate(reversed(models)):
+        color_idx = len(models) - idx - 1
+        _plot_outputs_to_axis(axis, model, output_name, color_idx=color_idx, alpha=0.7)
+        legend.append(idx)
 
     axis.legend(legend)
 

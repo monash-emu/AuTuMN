@@ -5,39 +5,56 @@ import logging
 import os
 from typing import List
 
-import numpy
+import numpy as np
 import pandas as pd
+
+from summer.model import CompartmentalModel
 
 from ..db.database import BaseDatabase, get_database
 
 logger = logging.getLogger(__name__)
 
 
-def load_model_scenarios(database_path: str, model_params: dict) -> List:
+ID_COLS = ["chain", "run", "scenario", "times"]
+
+
+def load_models_from_database(project, database_path: str) -> List[CompartmentalModel]:
     """
-    Load model scenarios from an output database.
-    Will apply post processing if the post processing config is supplied.
-    Will store model params in the database if suppied.
+    Attemps to load baseline model and scenario models from a databse file.
+    Assumes only 1 run present in database.
+    Assumes the model code has not changed.
     """
     out_db = get_database(database_path=database_path)
-    scenarios = []
+    models = []
     out_df = out_db.query("outputs")
     do_df = out_db.query("derived_outputs")
     run_names = sorted(out_df["run"].unique().tolist())
-    for run_name in run_names:
-        # Load scenarios from the database for this run
-        run_mask = out_df["run"] == run_name
-        scenario_names = sorted(out_df[run_mask]["scenario"].unique().tolist())
-        for scenario_name in scenario_names:
-            # Load model outputs from database, build Scenario instance
-            scenario_mask = (out_df["scenario"] == scenario_name) & run_mask
-            outputs = out_df[scenario_mask].to_dict()
-            derived_outputs = do_df[scenario_mask].to_dict()
-            model = LoadedModel(outputs=outputs, derived_outputs=derived_outputs)
-            scenario = Scenario.load_from_db(scenario_name, model, params=model_params)
-            scenarios.append(scenario)
+    assert len(run_names) == 1, "Expect only 1 run to be present in database."
+    scenario_idxs = sorted(out_df["scenario"].unique().tolist())
+    scenario_idxs = [int(sc) for sc in scenario_idxs]
+    for scenario_idx in scenario_idxs:
+        scenario_mask = out_df["scenario"] == scenario_idx
+        if scenario_idx == 0:
+            # Baseline model
+            params = project.param_set.baseline.to_dict()
+        else:
+            params = project.param_set.scenarios[scenario_idx - 1].to_dict()
 
-    return scenarios
+        model = project.build_model(params)
+        outputs_data = out_df[scenario_mask].to_dict()
+        do_data = do_df[scenario_mask].to_dict()
+        model.times = np.array(list(outputs_data["times"].values()))
+        model.outputs = np.column_stack(
+            [list(column.values()) for key, column in outputs_data.items() if key not in ID_COLS]
+        )
+        model.derived_outputs = {
+            key: np.array(list(value.values()))
+            for key, value in do_data.items()
+            if key not in ID_COLS
+        }
+        models.append(model)
+
+    return models
 
 
 def load_mcmc_params(db: BaseDatabase, run_id: int):
@@ -108,46 +125,3 @@ def find_db_paths(dirpath: str):
             db_paths.append(fpath)
 
     return sorted(db_paths)
-
-
-ID_COLS = ["chain", "run", "scenario", "times"]
-
-
-class LoadedModel:
-    """
-    A model placeholder, used to store the outputs of a previous model run.
-    """
-
-    def __init__(self, outputs, derived_outputs):
-        self.compartment_names = [name for name in outputs.keys() if name not in ID_COLS]
-
-        self.outputs = numpy.column_stack(
-            [list(column.values()) for name, column in outputs.items() if name not in ID_COLS]
-        )
-        self.derived_outputs = (
-            {
-                key: list(value.values())
-                for key, value in derived_outputs.items()
-                if key not in ID_COLS
-            }
-            if derived_outputs is not None
-            else None
-        )
-
-        self.times = list(outputs["times"].values())
-        self.all_stratifications = {}
-        # lateXagegroup_75Xclinical_sympt_non_hospital
-        for compartment_name in self.compartment_names:
-            # ['late', 'agegroup_75', 'clinical_sympt_non_hospital']
-            parts = compartment_name.split("X")
-            # ['agegroup_75', 'clinical_sympt_non_hospital']
-            strats = parts[1:]
-            for strat in strats:
-                # clinical_sympt_non_hospital
-                parts = strat.split("_")
-                strat_name = parts[0]
-                strata = "_".join(parts[1:])
-                if strat_name not in self.all_stratifications:
-                    self.all_stratifications[strat_name] = []
-                if strata not in self.all_stratifications[strat_name]:
-                    self.all_stratifications[strat_name].append(strata)

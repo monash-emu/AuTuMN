@@ -100,19 +100,23 @@ class Calibration:
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
         self.n_steps_fixed_proposal = fixed_proposal_steps
 
+        self.split_priors_by_type()
+
+    def split_priors_by_type(self):
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
-        direct_sample_idxs = [
+        independent_sample_idxs = [
             idx for idx in range(len(self.all_priors)) if self.all_priors[idx].get("sampling") == "lhs"
         ]
+
         self.iterative_sampling_priors = [
             param_dict
             for i_param, param_dict in enumerate(self.all_priors)
-            if i_param not in direct_sample_idxs
+            if i_param not in independent_sample_idxs
         ]
         self.independent_sampling_priors = [
             param_dict
             for i_param, param_dict in enumerate(self.all_priors)
-            if i_param in direct_sample_idxs
+            if i_param in independent_sample_idxs
         ]
         self.iterative_sampling_param_names = [
             self.iterative_sampling_priors[i]["param_name"]
@@ -133,10 +137,8 @@ class Calibration:
     ):
         self.project = project
         self.model_parameters = project.param_set.baseline
+        self.chain_idx = chain_idx
         model_parameters_data = self.model_parameters.to_dict()
-
-        # A list of dictionaries. Each dictionary describes a target
-        self.targeted_outputs = self.targets
 
         # Figure out which derived outputs we have to calculate.
         derived_outputs_to_plot = derived_outputs_to_plot or []
@@ -144,26 +146,11 @@ class Calibration:
         self.derived_outputs_whitelist = list(set(target_names + derived_outputs_to_plot))
 
         # Validate target output start time.
-        model_start = model_parameters_data["time"]["start"]
-        max_prior_start = None
-        for p in self.all_priors:
-            if p["param_name"] == "time.start":
-                max_prior_start = max(p["distri_params"])
-
-        for t in self.targeted_outputs:
-            t_name = t["output_key"]
-            min_year = min(t["years"])
-            msg = f"Target {t_name} has time {min_year} before model start {model_start}."
-            assert min_year >= model_start, msg
-            if max_prior_start:
-                msg = f"Target {t_name} has time {min_year} before prior start {max_prior_start}."
-                assert min_year >= max_prior_start, msg
+        self.validate_target_start_time(model_parameters_data)
 
         # Set a custom end time for all model runs - there is no point running
         # the models after the last calibration targets.
-        self.end_time = 2 + max([max(t["years"]) for t in self.targeted_outputs])
-
-        self.chain_idx = chain_idx
+        self.end_time = 2 + max([max(t["years"]) for t in self.targets])
 
         # work out missing distribution params for priors
         specify_missing_prior_params(self.iterative_sampling_priors)
@@ -177,33 +164,18 @@ class Calibration:
             self.all_priors, model_parameters_data, chain_idx, num_chains, self.initialisation_type
         )
 
-        # Save metadata output dir.
+        # initialise output and save metadata
         self.output = CalibrationOutputs(chain_idx, project.model_name, project.region_name)
-        metadata = {
-            "app_name": project.model_name,
-            "region_name": project.region_name,
-            "start_time": datetime.now().strftime("%Y-%m-%d--%H-%M-%S"),
-            "git_branch": get_git_branch(),
-            "git_commit": get_git_hash(),
-        }
-        self.output.write_metadata(f"meta-{chain_idx}.yml", metadata)
-        self.output.write_metadata(f"params-{chain_idx}.yml", model_parameters_data)
-        self.output.write_metadata(f"priors-{chain_idx}.yml", self.all_priors)
-        self.output.write_metadata(f"targets-{chain_idx}.yml", self.targeted_outputs)
+        self.save_metadata(chain_idx, project, model_parameters_data)
 
-        self.data_as_array = None  # will contain all targeted data points in a single array
-        self.format_data_as_array()
         self.workout_unspecified_target_sds()  # for likelihood definition
         self.workout_unspecified_time_weights()  # for likelihood weighting
         self.workout_unspecified_jumping_sds()  # for proposal function definition
-
         self.param_bounds = self.get_parameter_bounds()
 
-        self.transform = {}
         self.build_transformations()
 
         self.latest_model = None
-        self.main_table = {}
         self.mcmc_trace_matrix = None  # will store the results of the MCMC model calibration
 
         if self.chain_idx == 0:
@@ -220,6 +192,35 @@ class Calibration:
             n_chains=num_chains,
             available_time=max_seconds,
         )
+
+    def validate_target_start_time(self, model_parameters_data):
+        model_start = model_parameters_data["time"]["start"]
+        max_prior_start = None
+        for p in self.all_priors:
+            if p["param_name"] == "time.start":
+                max_prior_start = max(p["distri_params"])
+
+        for t in self.targets:
+            t_name = t["output_key"]
+            min_year = min(t["years"])
+            msg = f"Target {t_name} has time {min_year} before model start {model_start}."
+            assert min_year >= model_start, msg
+            if max_prior_start:
+                msg = f"Target {t_name} has time {min_year} before prior start {max_prior_start}."
+                assert min_year >= max_prior_start, msg
+
+    def save_metadata(self, chain_idx, project, model_parameters_data):
+        metadata = {
+            "app_name": project.model_name,
+            "region_name": project.region_name,
+            "start_time": datetime.now().strftime("%Y-%m-%d--%H-%M-%S"),
+            "git_branch": get_git_branch(),
+            "git_commit": get_git_hash(),
+        }
+        self.output.write_metadata(f"meta-{chain_idx}.yml", metadata)
+        self.output.write_metadata(f"params-{chain_idx}.yml", model_parameters_data)
+        self.output.write_metadata(f"priors-{chain_idx}.yml", self.all_priors)
+        self.output.write_metadata(f"targets-{chain_idx}.yml", self.targets)
 
     def run_model_with_params(self, proposed_params: dict):
         """
@@ -244,7 +245,7 @@ class Calibration:
         model = self.run_model_with_params(all_params_dict)
 
         ll = 0  # loglikelihood if using bayesian approach.
-        for target in self.targeted_outputs:
+        for target in self.targets:
             key = target["output_key"]
             data = np.array(target["values"])
             time_weigths = target["time_weights"]
@@ -306,33 +307,22 @@ class Calibration:
 
         return ll
 
-    def format_data_as_array(self):
-        """
-        create a list of data values based on the target outputs
-        """
-        data = []
-        for target in self.targeted_outputs:
-            data.append(target["values"])
-
-        data = list(chain(*data))  # create a simple list from a list of lists
-        self.data_as_array = np.asarray(data)
-
     def workout_unspecified_target_sds(self):
         """
         If the sd parameter of the targeted output is not specified, it will automatically be calculated such that the
         95% CI of the associated normal distribution covers 50% of the mean value of the target.
         :return:
         """
-        for i, target in enumerate(self.targeted_outputs):
+        for i, target in enumerate(self.targets):
             if "sd" not in target.keys():
                 if (
                     "cis" in target.keys()
                 ):  # match normal likelihood 95% width with data 95% CI with
-                    self.targeted_outputs[i]["sd"] = (
+                    self.targets[i]["sd"] = (
                         target["cis"][0][1] - target["cis"][0][0]
                     ) / 4.0
                 else:
-                    self.targeted_outputs[i]["sd"] = 0.25 / 4.0 * max(target["values"])
+                    self.targets[i]["sd"] = 0.25 / 4.0 * max(target["values"])
 
     def workout_unspecified_time_weights(self):
         """
@@ -340,7 +330,7 @@ class Calibration:
         1/n for each time point, where n is the number of time points.
         If a list of weights was specified, it will be rescaled so the weights sum to 1.
         """
-        for i, target in enumerate(self.targeted_outputs):
+        for i, target in enumerate(self.targets):
             if "time_weights" not in target.keys():
                 target["time_weights"] = [1.0 / len(target["years"])] * len(target["years"])
             else:
@@ -620,6 +610,7 @@ class Calibration:
         """
         Build transformation functions between the parameter space and R^n.
         """
+        self.transform = {}
         for i, prior_dict in enumerate(self.iterative_sampling_priors):
             param_name = prior_dict["param_name"]
             self.transform[param_name] = {

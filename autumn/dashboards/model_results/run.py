@@ -2,48 +2,38 @@
 Streamlit web UI for plotting model outputs
 """
 import os
-from importlib import import_module
 
 import streamlit as st
 
-import dash.selectors as selectors
 from autumn.tools import db
+from autumn.tools.streamlit import selectors
 from autumn.tools.plots.plotter import StreamlitPlotter
 
 from .plots import PLOT_FUNCS
 
 
 def run_dashboard():
-    app_name, app_dirpath = selectors.app_name(run_type="run")
-    if not app_name:
-        st.write("No applications have been run yet")
+    project = selectors.project()
+    if not project:
         return
 
-    region_name, region_dirpath = selectors.output_region_name(app_dirpath, app_name)
-    if not region_name:
-        st.write("No parameter set folder found")
+    model_run_path = selectors.model_run_path(project)
+    if not model_run_path:
+        msg = f"No model run outputs folder found for {project.model_name} {project.region_name}"
+        st.write(msg)
         return
-
-    run_datestr, run_dirpath = selectors.model_run(region_dirpath)
-    if not run_datestr:
-        st.write("No model run folder found")
-        return
-
-    # Import the app so we can re-build the model if we need to
-    app_module = import_module(f"apps.{app_name}")
-    app_region = app_module.app.get_region(region_name)
 
     # Get database from model data dir.
-    db_path = os.path.join(run_dirpath, "outputs.db")
+    db_path = os.path.join(model_run_path, "outputs.db")
     if not os.path.exists(db_path):
-        db_path = os.path.join(run_dirpath, "outputs")
+        db_path = os.path.join(model_run_path, "outputs")
 
-    scenarios = db.load.load_model_scenarios(db_path, app_region.params)
+    models = db.load.load_models_from_database(project, db_path)
 
     # Create plotter which will write to streamlit UI.
-    plotter = StreamlitPlotter(app_region.targets)
+    plotter = StreamlitPlotter(project.plots)
 
     # Get user to select plot type / scenario
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, app_region, scenarios)
+    plot_func(plotter, project, models)

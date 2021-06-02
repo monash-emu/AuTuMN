@@ -12,48 +12,6 @@ from autumn.tools.project import Project
 BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)
 PLOT_FUNCS = {}
 
-iso3_map = {
-    "barwon-south-west": "AUS",
-    "belgium": "BEL",
-    "calabarzon": "PHL",
-    "central-visayas": "PHL",
-    "france": "FRA",
-    "gippsland": "AUS",
-    "grampians": "AUS",
-    "hume": "AUS",
-    "italy": "ITA",
-    "loddon-mallee": "AUS",
-    "malaysia": "MYS",
-    "manila": "PHL",
-    "north-metro": "AUS",
-    "philippines": "PHL",
-    "sabah": "MYS",
-    "south-east-metro": "AUS",
-    "south-metro": "AUS",
-    "spain": "ESP",
-    "sweden": "SWE",
-    "united-kingdom": "GBR",
-    "victoria": "AUS",
-    "west-metro": "AUS",
-}
-
-sub_region_map = {
-    "barwon-south-west": "BARWON_SOUTH_WEST",
-    "calabarzon": "Calabarzon",
-    "central-visayas": "Central Visayas",
-    "gippsland": "GIPPSLAND",
-    "grampians": "GRAMPIANS",
-    "hume": "HUME",
-    "loddon-mallee": "LODDON_MALLEE",
-    "manila": "Metro Manila",
-    "north-metro": "NORTH_METRO",
-    "sabah": "Sabah",
-    "south-east-metro": "SOUTH_METRO",
-    "south-metro": "SOUTH_METRO",
-    "victoria": "Victoria",
-    "west-metro": "WEST_METRO",
-}
-
 
 def plot_flow_params(plotter: StreamlitPlotter, project: Project):
     # Assume a COVID model
@@ -92,7 +50,7 @@ PLOT_FUNCS["Flow graph"] = plot_flow_graph
 
 
 def plot_multi_age_distribution(plotter: StreamlitPlotter, project: Project):
-    iso3 = iso3_map[project.region_name]
+    iso3 = ISO3_MAP[project.region_name]
     if project.region_name is "philippines":
         sub_region = [None, "Metro Manila", "Calabarzon", "Central Visayas"]
         plots.model.plots.plot_multi_age_distribution(plotter, sub_region, iso3)
@@ -105,10 +63,10 @@ PLOT_FUNCS["Multi age distribution"] = plot_multi_age_distribution
 
 def plot_age_distribution(plotter: StreamlitPlotter, project: Project):
 
-    iso3 = iso3_map[project.region_name]
+    iso3 = ISO3_MAP[project.region_name]
 
-    if project.region_name in sub_region_map.keys():
-        sub_region = sub_region_map[project.region_name]
+    if project.region_name in SUB_REGION_MAP.keys():
+        sub_region = SUB_REGION_MAP[project.region_name]
     else:
         sub_region = None
     plots.model.plots.plot_age_distribution(plotter, sub_region, iso3)
@@ -234,3 +192,45 @@ PLOT_FUNCS["Calibration targets"] = plot_model_targets
 
 
 PLOT_FUNCS["Calibration multi-targets"] = plot_model_multi_targets
+
+ISO3_MAP = {
+    "barwon-south-west": "AUS",
+    "belgium": "BEL",
+    "calabarzon": "PHL",
+    "central-visayas": "PHL",
+    "france": "FRA",
+    "gippsland": "AUS",
+    "grampians": "AUS",
+    "hume": "AUS",
+    "italy": "ITA",
+    "loddon-mallee": "AUS",
+    "malaysia": "MYS",
+    "manila": "PHL",
+    "north-metro": "AUS",
+    "philippines": "PHL",
+    "sabah": "MYS",
+    "south-east-metro": "AUS",
+    "south-metro": "AUS",
+    "spain": "ESP",
+    "sweden": "SWE",
+    "united-kingdom": "GBR",
+    "victoria": "AUS",
+    "west-metro": "AUS",
+}
+
+SUB_REGION_MAP = {
+    "barwon-south-west": "BARWON_SOUTH_WEST",
+    "calabarzon": "Calabarzon",
+    "central-visayas": "Central Visayas",
+    "gippsland": "GIPPSLAND",
+    "grampians": "GRAMPIANS",
+    "hume": "HUME",
+    "loddon-mallee": "LODDON_MALLEE",
+    "manila": "Metro Manila",
+    "north-metro": "NORTH_METRO",
+    "sabah": "Sabah",
+    "south-east-metro": "SOUTH_METRO",
+    "south-metro": "SOUTH_METRO",
+    "victoria": "Victoria",
+    "west-metro": "WEST_METRO",
+}

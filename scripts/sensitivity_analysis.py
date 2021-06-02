@@ -1,4 +1,3 @@
-from scripts.phl_data_upload import COVID_BASE_DATETIME
 import pandas as pd
 import numpy as np
 import os
@@ -7,11 +6,11 @@ import datetime
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import matplotlib.pyplot as plt
 
-# Don't ask me why sigh ...
-sys.path.append("C:\\Users\\maba0001\\AuTuMN")
-from autumn.settings import OUTPUT_DATA_PATH
 
-COVID_BASE_DATE = pd.datetime(2019, 12, 31)
+from scripts.phl_data_upload import COVID_BASE_DATETIME
+from autumn.settings import OUTPUT_DATA_PATH
+from autumn.settings import INPUT_DATA_PATH
+
 RUN_ID = "covid_19/malaysia/1621579054/07755e9"
 RUN_ID = RUN_ID.split(sep="/")
 REGION = [
@@ -46,9 +45,10 @@ do_df = do_df[BASE_COL + REQ_COL]
 start_time = do_df[["scenario", "times"]].groupby(["scenario"]).min().max()[0]
 
 MLE_RUN = mcmc_run_df.sort_values(["accept", "loglikelihood"], ascending=[False, False])[0:1]
-
-
 MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo/export?format=xlsx&id=15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo"
+
+MYS_NOTIFICATIONS = os.path.join(INPUT_DATA_PATH,"covid_mys","MALAYSIA_ORIGINAL SHEET_EW52__who-weekly-aggregate-COVID19reportingform.xlsx")
+
 
 
 def get_mys_deaths():
@@ -75,38 +75,35 @@ def get_mys_deaths():
     groups.age = groups.index
     return groups
 
-
-mys_death = get_mys_deaths()
-
-
-def get_do_deaths():
-    do_deaths = pd.concat(pd_list)
-    do_deaths = do_deaths[
-        (do_deaths.chain == MLE_RUN.chain.values[0]) & (do_deaths.run == MLE_RUN.run.values[0])
+def get_do_notif():
+    do_notif = pd.concat(pd_list)
+    do_notif = do_notif[
+        (do_notif.chain == MLE_RUN.chain.values[0]) & (do_notif.run == MLE_RUN.run.values[0])
     ]
-    cols = [col for col in do_deaths.columns if "infection_deathsXagegroup_" in col]
+    cols = [col for col in do_notif.columns if "notificationsXagegroup_" in col]
     cols = BASE_COL + cols
-    do_deaths = do_deaths[cols]
+    do_notif = do_notif[cols]
 
-    do_deaths = pd.melt(do_deaths, id_vars=BASE_COL, var_name="age", value_name="do_death")
-    do_deaths.age = do_deaths.age.str.split("X").str.get(1).str.split("_").str.get(1)
+    do_notif = pd.melt(do_notif, id_vars=BASE_COL, var_name="age", value_name="do_notif")
+    do_notif.age = do_notif.age.str.split("X").str.get(1).str.split("_").str.get(1)
 
-    cutoff_date = (pd.to_datetime('today') - COVID_BASE_DATE).days
-    do_deaths = do_deaths[do_deaths.times < cutoff_date]
+    cutoff_date = (pd.to_datetime('today') - COVID_BASE_DATETIME).days
+    do_notif = do_notif[do_notif.times < cutoff_date]
 
-    do_deaths = do_deaths.groupby(by=["scenario", "age"]).sum()
-    do_deaths.reset_index()[["scenario", "age", "do_death"]]
-    do_deaths = do_deaths.reset_index()[["scenario", "age", "do_death"]]
+    do_notif = do_notif.groupby(by=["scenario", "age"]).sum()
     
-    return do_deaths.astype({'age': 'int32'})
+    do_notif = do_notif.reset_index()[["scenario", "age", "do_notif"]]
+    do_notif = do_notif.astype({'age': 'int32'})
 
+    bins = [-1,4,14,24,34,44,54,64,74,129]
 
-do_deaths = get_do_deaths()
-
-
-do_deaths = do_deaths.merge(mys_death, how='left', on=['age'])
-
-
+    groups = do_notif.groupby(by=['scenario',pd.cut(do_notif.age, bins)]).sum()
+    groups = groups['do_notif'].reset_index()
+    groups.age = groups.age.astype(str)
+    groups.age = groups.age.replace({'(-1, 4]':'0','(4, 14]':'5', '(14, 24]':'15', '(24, 34]':'25', '(34, 44]':'35',
+       '(44, 54]':'45', '(54, 64]':'55', '(64, 74]':'65', '(74, 129]':'75'})
+    
+    return groups
 
 
 def perform_calculation(df):
@@ -135,6 +132,23 @@ def perform_calculation(df):
     ]
 
 
+
+mys_notif = pd.read_excel(MYS_NOTIFICATIONS,header=4, usecols="B,J:T")
+mys_notif = pd.melt(mys_notif, id_vars='week_start_date', var_name="age", value_name="notif")
+mys_notif.fillna(0, inplace =True)
+mys_notif.age = mys_notif.age.str.split("_").str.get(1)
+mys_notif.age.replace(['85above'],['75'], inplace=True) # compare with derived outputs 75+
+mys_notif = mys_notif.groupby(by='age').sum().reset_index()
+
+do_notif = get_do_notif()
+
+do_notif.merge(mys_notif, how='outer', on='age')
+
+
+
+mys_death = get_mys_deaths()
+do_notif = get_do_notif()
+do_notif = do_notif.merge(mys_death, how='left', on=['age'])
 do_df = perform_calculation(do_df)
 
 
@@ -172,9 +186,9 @@ do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=
 
 
 # Got here finally
-for each_scenario in do_deaths.scenario.unique():
+for each_scenario in do_notif.scenario.unique():
     
-    plt_df = do_deaths[do_deaths.scenario==each_scenario]
+    plt_df = do_notif[do_notif.scenario==each_scenario]
     plt_df = plt_df.sort_values(by=['age'])
 
     labels = plt_df.age

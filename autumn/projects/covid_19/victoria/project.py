@@ -3,7 +3,7 @@ import numpy as np
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.tools.calibration.targets import NormalTarget, PoissonTarget
+from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
@@ -42,6 +42,7 @@ targets = [
     PoissonTarget(ts_set.get("infection_deaths").truncate_times(*TARGETS_RANGE).moving_average(7)),
     PoissonTarget(ts_set.get("hospital_admissions").truncate_times(*TARGETS_RANGE)),
     PoissonTarget(ts_set.get("icu_admissions").truncate_times(*TARGETS_RANGE)),
+    TruncNormalTarget(ts_set.get("prop_notifications_elderly"), trunc_range=[0., 1.], stdev=.1),  # FIXME, needs review
     *cluster_targets,
 ]
 

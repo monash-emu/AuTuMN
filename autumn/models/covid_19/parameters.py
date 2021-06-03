@@ -260,6 +260,13 @@ class Vaccination(BaseModel):
         return val
 
 
+class AgeSpecificRiskMultiplier(BaseModel):
+    age_categories: List[str]
+    adjustment_start_time: Optional[int]
+    adjustment_end_time: Optional[int]
+    contact_rate_multiplier: float
+
+
 class ParamConfig:
     """Config for parameter models"""
 
@@ -275,7 +282,7 @@ class Parameters:
     infectious_seed: float
     seasonal_force: Optional[float]  # Seasonal forcing factor
     voc_emergence: Optional[VocEmergence]
-    elderly_mixing_reduction: Optional[dict]
+    age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
     stratify_by_infection_history: bool
     waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]

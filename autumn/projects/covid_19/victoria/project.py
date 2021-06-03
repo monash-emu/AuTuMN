@@ -3,7 +3,7 @@ import numpy as np
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.tools.calibration.targets import NormalTarget, PoissonTarget
+from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
@@ -42,6 +42,8 @@ targets = [
     PoissonTarget(ts_set.get("infection_deaths").truncate_times(*TARGETS_RANGE).moving_average(7)),
     PoissonTarget(ts_set.get("hospital_admissions").truncate_times(*TARGETS_RANGE)),
     PoissonTarget(ts_set.get("icu_admissions").truncate_times(*TARGETS_RANGE)),
+    # FIXME: The target below may need to be included for the revised analysis
+    # TruncNormalTarget(ts_set.get("prop_notifications_elderly"), trunc_range=[0., 1.], stdev=.1),
     *cluster_targets,
 ]
 
@@ -68,7 +70,7 @@ priors = [
         mean=1.0,
         stdev=0.5,
         trunc_range=[0.5, np.inf],
-        jumping_sd=0.05,
+        jumping_stdev=0.05,
     ),
     # Shouldn't be too peaked with these values
     TruncNormalPrior(
@@ -76,7 +78,7 @@ priors = [
         mean=1.0,
         stdev=0.5,
         trunc_range=[0.5, np.inf],
-        jumping_sd=0.05,
+        jumping_stdev=0.05,
     ),
     UniformPrior(
         "contact_rate",
@@ -123,6 +125,13 @@ priors = [
         jumping_stdev=0.005,
     ),
     UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
+    # FIXME: The prior below will need to be included to vary the increased risk in the elderly
+    # UniformPrior(
+    #     "age_specific_risk_multiplier.contact_rate_multiplier",
+    #     [1., 2.],
+    #     jumping_stdev=0.01
+    # )
+
 ]
 calibration = Calibration(
     priors,

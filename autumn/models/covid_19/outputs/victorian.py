@@ -67,6 +67,46 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             source=f"notifications_for_cluster_{cluster}",
         )
 
+    # notifications stratified by young/old
+    notifications_young_sources = []
+    notifications_old_sources = []
+    for agegroup in AGEGROUP_STRATA:
+        name = f"progressX{agegroup}"
+        if agegroup in ["65", "70", "75"]:
+            notifications_old_sources.append(name)
+        else:
+            notifications_young_sources.append(name)
+        model.request_output_for_flow(
+            name=name,
+            flow_name="progress",
+            dest_strata={"agegroup": agegroup},
+            save_results=False,
+        )
+
+    model.request_aggregate_output(
+        name="notifications_young",
+        sources=notifications_young_sources,
+        save_results=False
+    )
+    model.request_aggregate_output(
+        name="notifications_old",
+        sources=notifications_old_sources,
+        save_results=False
+    )
+
+    for age_class in ["young", "old"]:
+        model.request_cumulative_output(
+            name=f"accum_notifications_{age_class}",
+            source=f"notifications_{age_class}",
+            save_results=False
+        )
+
+    model.request_function_output(
+        name="prop_notifications_elderly",
+        func=lambda young, old: old / (young + old),
+        sources=["accum_notifications_young", "accum_notifications_old"],
+    )
+
     # Track non-ICU hospital admissions (transition from early to late active in hospital, non-ICU stratum)
     model.request_output_for_flow(
         name="non_icu_admissions",

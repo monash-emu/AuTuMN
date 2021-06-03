@@ -42,7 +42,8 @@ targets = [
     PoissonTarget(ts_set.get("infection_deaths").truncate_times(*TARGETS_RANGE).moving_average(7)),
     PoissonTarget(ts_set.get("hospital_admissions").truncate_times(*TARGETS_RANGE)),
     PoissonTarget(ts_set.get("icu_admissions").truncate_times(*TARGETS_RANGE)),
-    TruncNormalTarget(ts_set.get("prop_notifications_elderly"), trunc_range=[0., 1.], stdev=.1),  # FIXME, needs review
+    # FIXME: The target below may need to be included for the revised analysis
+    # TruncNormalTarget(ts_set.get("prop_notifications_elderly"), trunc_range=[0., 1.], stdev=.1),
     *cluster_targets,
 ]
 
@@ -124,11 +125,12 @@ priors = [
         jumping_stdev=0.005,
     ),
     UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
-    UniformPrior(
-        "age_specific_risk_multiplier.contact_rate_multiplier",
-        [1., 2.],  # FIXME: James needs to review this
-        jumping_stdev=0.01
-    )
+    # FIXME: The prior below will need to be included to vary the increased risk in the elderly
+    # UniformPrior(
+    #     "age_specific_risk_multiplier.contact_rate_multiplier",
+    #     [1., 2.],
+    #     jumping_stdev=0.01
+    # )
 
 ]
 calibration = Calibration(

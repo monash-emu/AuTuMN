@@ -8,6 +8,7 @@ from typing import List, Tuple
 import pandas as pd
 import streamlit as st
 from summer.legacy.model import StratifiedModel
+from summer import CompartmentalModel
 
 from autumn.settings import OUTPUT_DATA_PATH
 from autumn import settings
@@ -156,28 +157,28 @@ def app_region_name(app_name: str) -> Tuple[str, str]:
     return chosen_region, os.path.join(region_path, chosen_region.replace("-", "_"))
 
 
-# def scenarios(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
-#     """
-#     Get user to select the scenario that they want.
-#     User may select "All", which includes all Scenarios.
-#     Returns a list of Scenarios.
-#     """
-#     if include_all:
-#         options = ["All", "Baseline"]
-#         offset = 1
-#     else:
-#         options = ["Baseline"]
-#         offset = 0
+def scenarios(models: List[CompartmentalModel], include_all=True) -> List[CompartmentalModel]:
+    """
+    Get user to select the scenario that they want.
+    User may select "All", which includes all Scenarios.
+    Returns a list of modelled scenarios.
+    """
+    if include_all:
+        options = ["All", "Baseline"]
+        offset = 1
+    else:
+        options = ["Baseline"]
+        offset = 0
 
-#     for s in scenarios[1:]:
-#         options.append(f"Scenario {s.idx}")
+    for i in range(1, len(models) + 2):
+        options.append(f"Scenario {i}")
 
-#     scenario_name = st.sidebar.selectbox("Select scenario", options)
-#     if scenario_name == "All":
-#         return scenarios
-#     else:
-#         idx = options.index(scenario_name) - offset
-#         return [scenarios[idx]]
+    scenario_name = st.sidebar.selectbox("Select scenario", options)
+    if scenario_name == "All":
+        return models
+    else:
+        idx = options.index(scenario_name) - offset
+        return [models[idx]]
 
 
 def calibration_path(project: Project) -> str:

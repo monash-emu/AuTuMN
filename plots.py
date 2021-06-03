@@ -24,12 +24,12 @@ Docs: https://docs.streamlit.io/
 """
 import streamlit as st
 
-from autumn.dashboards.calibration_results.run import run_dashboard as calibration_results_dashboard
-from autumn.dashboards.inspect_model.run import run_dashboard as inspect_model_dashboard
+from autumn.dashboards.calibration_results.run import run_dashboard as calibration_results
+from autumn.dashboards.inspect_model.run import run_dashboard as inspect_model
+from autumn.dashboards.model_results.run import run_dashboard as model_results
 
 # from autumn.dashboards.dhhs import run_dashboard as run_dhhs_dashboard
 # from autumn.dashboards.ensemble import run_dashboard as run_ensemble_dashboard
-# from autumn.dashboards.model_results.run import run_dashboard as run_scenario_dashboard
 # from autumn.dashboards.multicountry_inputs import (
 #     run_dashboard as run_multicountry_inputs,
 # )
@@ -49,11 +49,11 @@ from autumn.dashboards.inspect_model.run import run_dashboard as inspect_model_d
 
 DASHBOARDS = {
     "Home": None,
-    "Model internals": inspect_model_dashboard,
+    "Calibration results": calibration_results,
+    "Model internals": inspect_model,
+    "Model results": model_results,
     # "Run a model": run_model_dashboard,
-    # "Model results": run_scenario_dashboard,
     # "Calibrate a model": run_calibrate_dashboard,
-    "Calibration results": calibration_results_dashboard,
     # "Multi-country manual": run_multicountry_manual,
     # "Multi-country plots": run_multicountry_dashboard,
     # "Multi-country inputs": run_multicountry_inputs,
@@ -75,11 +75,11 @@ else:
     st.write("Select a dashboard from the sidebar. Your options are:")
     st.markdown(
         """
-    - **Model internals**: Inspect the values inside a model before it is run
     - **Calibration results**: Inspect the outputs of a model calibration
+    - **Model internals**: Inspect the values inside a model before it is run
+    - **Model results**: Inspect the model outputs after it has been run
     """
         # - **Run**: Run a model
-        # - **Model results**: Inspect the model outputs after it has been run
         # - **Calibrate**: Calibrate a model
         # - **Multi-country**: Multi-country plots
         # - **DHHS results**: Inspect results which will be sent to DHHS

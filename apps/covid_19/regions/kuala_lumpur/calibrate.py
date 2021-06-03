@@ -84,7 +84,7 @@ PAR_PRIORS += [
     {
         "param_name": "voc_emergence.contact_rate_multiplier",
         "distribution": "uniform",
-        "distri_params": [1.2, 2.1],
+        "distri_params": [1, 2.75],
     },
 
     {

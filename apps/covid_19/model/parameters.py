@@ -224,7 +224,7 @@ class VaccCoveragePeriod(BaseModel):
     Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
     """
 
-    coverage: float
+    coverage: Optional[float]
     start_time: float
     end_time: float
 

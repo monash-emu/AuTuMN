@@ -6,10 +6,9 @@ time:
 
 vaccination:
   # Eleven months from 18th May 2021
-
+  # coverage will be obtained from the calibrated parameter "coverage_override"
   roll_out_components:
   - supply_period_coverage:
-      coverage: 0.8  # this value does not matter. It will be overriden by the coverage_override parameter
       start_time: 504.
       end_time: 838.
 

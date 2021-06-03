@@ -24,7 +24,13 @@ def run_powerbi(instance, run_id: str, urunid: str, branch: str):
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
         print_hostname(conn)
-        update_repo(conn, branch=branch)
+        #update_repo(conn, branch=branch)
+        # FIXME +++
+        # Just trying to get Pavithra's runs going... hideous hack
+        commit = "d335890b8e66a32379e5ab65faea1084508da792"
+        with conn.cd(CODE_PATH):
+            conn.run("git fetch --quiet", echo=True)
+            conn.run(f"git checkout --quiet {commit}", echo=True)
         install_requirements(conn)
         read_secrets(conn)
         build_input_db(conn)

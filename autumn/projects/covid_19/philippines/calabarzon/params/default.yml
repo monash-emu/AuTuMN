@@ -2,6 +2,7 @@ description: BASELINE
 
 population:
   region: Calabarzon
-  mobility:
-    region: Calabarzon
+
+mobility:
+  region: Calabarzon
 

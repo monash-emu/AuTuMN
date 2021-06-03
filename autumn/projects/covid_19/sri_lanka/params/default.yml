@@ -4,7 +4,7 @@ contact_rate: 0.0188
 infectious_seed: 200
 
 time:
-  start: 380
+  start: 350
   end: 550
 
 country:

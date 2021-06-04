@@ -84,8 +84,8 @@ class Region:
         PHILIPPINES,
         MANILA,
         CALABARZON,
-        CENTRAL_VISAYAS,
-        DAVAO_CITY,
+        # CENTRAL_VISAYAS,
+        # DAVAO_CITY,
     ]
 
     VICTORIA_RURAL = [

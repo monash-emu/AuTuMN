@@ -1,3 +1,4 @@
+from numpy.lib.shape_base import column_stack
 import pandas as pd
 import numpy as np
 import os
@@ -42,21 +43,52 @@ mcmc_param_df = pd.concat(mcmc_param_list)
 params = mcmc_param_df.name.unique()
 mcmc_run_df = pd.concat(mcmc_run_list)
 do_df = do_df[BASE_COL + REQ_COL]
-start_time = do_df[["scenario", "times"]].groupby(["scenario"]).min().max()[0]
+intervention_start = do_df[["scenario", "times"]].groupby(["scenario"]).min().max()[0]
+
+# Establish model start time
+model_start = do_df[["times"]].min()[0]
+
+# Establish last date
+cutoff_date = (pd.to_datetime("today") - COVID_BASE_DATETIME).days
 
 MLE_RUN = mcmc_run_df.sort_values(["accept", "loglikelihood"], ascending=[False, False])[0:1]
 MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo/export?format=xlsx&id=15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo"
 
-MYS_NOTIFICATIONS = os.path.join(INPUT_DATA_PATH,"covid_mys","MALAYSIA_ORIGINAL SHEET_EW52__who-weekly-aggregate-COVID19reportingform.xlsx")
+MYS_NOTIFICATIONS = os.path.join(
+    INPUT_DATA_PATH,
+    "covid_mys",
+    "MALAYSIA_ORIGINAL SHEET_EW52__who-weekly-aggregate-COVID19reportingform.xlsx",
+)
 
+
+def get_date_range(df):
+
+    df.times = pd.to_datetime(
+        df.times, errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
+    )
+
+    df["date_index"] = (df.times - COVID_BASE_DATETIME).dt.days
+
+    # Filter for start and end
+    df = df[(df.date_index >= model_start) & (df.date_index <= cutoff_date)]
+    return df
 
 
 def get_mys_deaths():
     mys_death = pd.read_excel(MYS_DEATH_URL)
     mys_death.rename(
-        columns={"State where death occurred": "state", "Age": "age", "Sex": "sex"}, inplace=True
+        columns={
+            "State where death occurred": "state",
+            "Age": "age",
+            "Sex": "sex",
+            "Date case reported to media": "times",
+        },
+        inplace=True,
     )
-    mys_death = mys_death[["age", "sex", "state"]]
+
+    mys_death = mys_death[["times", "age", "sex", "state"]]
+    mys_death = get_date_range(mys_death)
+
     mys_death.age.replace(["4 Bulan"], [4], inplace=True)
     mys_death.state = mys_death.state.str.strip().str.lower()
     mys_death.dropna(subset=["age"], inplace=True)
@@ -73,40 +105,38 @@ def get_mys_deaths():
     groups = mys_death.groupby(pd.cut(mys_death.age, bins)).sum()
     groups.index = bins[:-1]
     groups.age = groups.index
-    return groups
 
-def get_do_notif():
-    do_notif = pd.concat(pd_list)
-    do_notif = do_notif[
-        (do_notif.chain == MLE_RUN.chain.values[0]) & (do_notif.run == MLE_RUN.run.values[0])
+    return groups[["age", "death"]]
+
+
+def get_do_feature(feature):
+
+    do_df = pd.concat(pd_list)
+    do_df = do_df[
+        (do_df.chain == MLE_RUN.chain.values[0])
+        & (do_df.run == MLE_RUN.run.values[0])
+        & (do_df.scenario == 0)
     ]
-    cols = [col for col in do_notif.columns if "notificationsXagegroup_" in col]
+
+    feature_map = {"notification": "notificationsXagegroup_", "death": "infection_deathsXagegroup_"}
+
+    cols = [col for col in do_df.columns if feature_map[feature] in col]
     cols = BASE_COL + cols
-    do_notif = do_notif[cols]
+    do_df = do_df[cols]
+    do_df = do_df[(do_df.times >= model_start) & (do_df.times <= cutoff_date)]
 
-    do_notif = pd.melt(do_notif, id_vars=BASE_COL, var_name="age", value_name="do_notif")
-    do_notif.age = do_notif.age.str.split("X").str.get(1).str.split("_").str.get(1)
+    do_df = pd.melt(do_df, id_vars=BASE_COL, var_name="age", value_name=f"do_{feature}")
+    do_df.age = do_df.age.str.split("X").str.get(1).str.split("_").str.get(1)
 
-    cutoff_date = (pd.to_datetime('today') - COVID_BASE_DATETIME).days
-    do_notif = do_notif[do_notif.times < cutoff_date]
+    do_df = do_df.groupby(by=["age"]).sum()
 
-    do_notif = do_notif.groupby(by=["scenario", "age"]).sum()
-    
-    do_notif = do_notif.reset_index()[["scenario", "age", "do_notif"]]
-    do_notif = do_notif.astype({'age': 'int32'})
+    do_df = do_df.reset_index()[["age", f"do_{feature}"]]
+    do_df = do_df.astype({"age": "int32"})
 
-    bins = [-1,4,14,24,34,44,54,64,74,129]
-
-    groups = do_notif.groupby(by=['scenario',pd.cut(do_notif.age, bins)]).sum()
-    groups = groups['do_notif'].reset_index()
-    groups.age = groups.age.astype(str)
-    groups.age = groups.age.replace({'(-1, 4]':'0','(4, 14]':'5', '(14, 24]':'15', '(24, 34]':'25', '(34, 44]':'35',
-       '(44, 54]':'45', '(54, 64]':'55', '(64, 74]':'65', '(74, 129]':'75'})
-    
-    return groups
+    return do_df
 
 
-def perform_calculation(df):
+def create_sensitivity_df(df):
     df_baseline = df.loc[
         df.scenario == 0,
     ]
@@ -128,28 +158,76 @@ def perform_calculation(df):
     df.drop(["scenario_baseline"], axis=1, inplace=True)
 
     return df.loc[
-        df.times == (start_time + TIME),
+        df.times == (intervention_start + TIME),
     ]
 
 
+def group_by_age(df, bin):
 
-mys_notif = pd.read_excel(MYS_NOTIFICATIONS,header=4, usecols="B,J:T")
-mys_notif = pd.melt(mys_notif, id_vars='week_start_date', var_name="age", value_name="notif")
-mys_notif.fillna(0, inplace =True)
-mys_notif.age = mys_notif.age.str.split("_").str.get(1)
-mys_notif.age.replace(['85above'],['75'], inplace=True) # compare with derived outputs 75+
-mys_notif = mys_notif.groupby(by='age').sum().reset_index()
+    df = df.groupby(by=[pd.cut(df.age, bin)]).sum()
+    df.drop(columns="age", inplace=True)
+    df = df.reset_index()
 
-do_notif = get_do_notif()
+    df.age = df.age.astype(str)
+    df.age = df.age.replace(
+        {
+            "(-1, 4]": 0,
+            "(4, 9]": 5,
+            "(9, 14]": 10,
+            "(14, 19]": 15,
+            "(19, 24]": 20,
+            "(24, 29]": 25,
+            "(29, 34]": 30,
+            "(34, 39]": 35,
+            "(39, 44]": 40,
+            "(44, 49]": 45,
+            "(49, 54]": 50,
+            "(54, 59]": 55,
+            "(59, 64]": 60,
+            "(64, 69]": 65,
+            "(69, 74]": 70,
+            "(74, 129]": 75,
+        }
+    )
 
-do_notif.merge(mys_notif, how='outer', on='age')
+    return df
 
 
+def plot_do_feature(plt_df, feature):
 
+    plt_df = plt_df.sort_values(by=["age"])
+
+    labels = plt_df.age
+    local = plt_df[f"{feature}"]
+    modelled = plt_df[f"do_{feature}"]
+
+    x = np.arange(len(labels))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width / 2, local, width, label=f"{feature}")
+    rects2 = ax.bar(x + width / 2, modelled, width, label=f"Modelled {feature}")
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel(f"{feature}")
+    ax.set_title(f"{REGION} {feature} by age")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+
+    ax.legend()
+
+    fig.tight_layout()
+    plt.show()
+
+
+do_deaths_df = get_do_feature("death")
 mys_death = get_mys_deaths()
-do_notif = get_do_notif()
-do_notif = do_notif.merge(mys_death, how='left', on=['age'])
-do_df = perform_calculation(do_df)
+
+death_bin = [-1, 4, 9, 14, 19, 24, 29, 34, 39, 44, 49, 54, 59, 64, 69, 74, 129]
+mys_death = group_by_age(mys_death, death_bin)
+
+do_deaths = do_deaths_df.merge(mys_death, how="left", on="age")
+plot_do_feature(do_deaths, "death")
 
 
 mcmc_param_df = mcmc_param_df.pivot_table(
@@ -186,33 +264,22 @@ do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=
 
 
 # Got here finally
-for each_scenario in do_notif.scenario.unique():
-    
-    plt_df = do_notif[do_notif.scenario==each_scenario]
-    plt_df = plt_df.sort_values(by=['age'])
 
-    labels = plt_df.age
-    deaths = plt_df.death
-    modelled_deaths = plt_df.do_death
-
-    x = np.arange(len(labels))  # the label locations
-    width = 0.35  # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width/2, deaths, width, label='Deaths')
-    rects2 = ax.bar(x + width/2, modelled_deaths, width, label='Modelled deaths')
-
-    # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('Deaths')
-    ax.set_title(f'{REGION} deaths by scenario {each_scenario}')
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels)
-       
-    ax.legend()
-
-    fig.tight_layout()
-    
-
-plt.show()
-
-
+#
+# mys_notif = pd.read_excel(MYS_NOTIFICATIONS, header=4, usecols="B,J:T")
+# mys_notif.rename(columns={"week_start_date": "times"}, inplace=True)
+# mys_notif = pd.melt(mys_notif, id_vars="times", var_name="age", value_name="notif")
+# mys_notif.fillna(0, inplace=True)
+# get_date_range(mys_notif)
+# mys_notif.age = mys_notif.age.str.split("_").str.get(1)
+# mys_notif.age.replace(["85above"], ["75"], inplace=True)  # compare with derived outputs 75+
+# mys_notif = mys_notif.groupby(by="age").sum().reset_index()
+#
+# df = get_do_feature()
+#
+# df.merge(mys_notif, how="outer", on="age")
+#
+#
+# df = get_do_feature()
+# df = df.merge(mys_death, how="left", on=["age"])
+# do_df = create_sensitivity_df(do_df)

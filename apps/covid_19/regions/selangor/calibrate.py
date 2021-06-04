@@ -32,7 +32,7 @@ PAR_PRIORS += [
     {
         "param_name": "infectious_seed",
         "distribution": "uniform",
-        "distri_params": [30.0, 200.0],
+        "distri_params": [20.0, 200.0],
     },
     # Detection
     {
@@ -55,7 +55,7 @@ PAR_PRIORS += [
     {
         "param_name": "clinical_stratification.icu_prop",
         "distribution": "uniform",
-        "distri_params": [0.12, 0.25],
+        "distri_params": [0.1, 0.25],
     },
     {
         "param_name": "clinical_stratification.non_sympt_infect_multiplier",
@@ -90,7 +90,7 @@ PAR_PRIORS += [
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
-        "distri_params": [300, 400],
+        "distri_params": [300, 410],
     },
 
 ]

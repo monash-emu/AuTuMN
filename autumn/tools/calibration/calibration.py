@@ -424,7 +424,7 @@ class Calibration:
         try:
             # Run the selected fitting algorithm.
             if run_mode == CalibrationMode.AUTUMN_MCMC:
-                self.run_autumn_mcmc(n_chains, available_time, self.haario_scaling_factor)
+                self.run_autumn_mcmc(1, available_time, self.haario_scaling_factor)
 
         finally:
             self.output.write_data_to_disk()

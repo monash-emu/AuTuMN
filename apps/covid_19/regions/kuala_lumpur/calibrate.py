@@ -65,7 +65,7 @@ PAR_PRIORS += [
     {
         "param_name": "clinical_stratification.props.symptomatic.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.8, 2.0],
+        "distri_params": [0.8, 2.5],
     },
     {
         "param_name": "vaccination.vacc_prop_prevent_infection",
@@ -90,7 +90,7 @@ PAR_PRIORS += [
     {
         "param_name": "voc_emergence.start_time",
         "distribution": "uniform",
-        "distri_params": [300, 400],
+        "distri_params": [300, 430],
     },
 
 ]

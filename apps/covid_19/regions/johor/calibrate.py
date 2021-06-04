@@ -32,13 +32,13 @@ PAR_PRIORS += [
     {
         "param_name": "infectious_seed",
         "distribution": "uniform",
-        "distri_params": [30.0, 200.0],
+        "distri_params": [30.0, 230.0],
     },
     # Detection
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.02, 0.1],
+        "distri_params": [0.02, 0.25],
     },
     # Microdistancing
     {

@@ -105,29 +105,12 @@ def verify(*args, **kwargs):
 @pytest.fixture
 def verify_model(verify):
     """
-    Approval test for a StratifiedModel that has already been run.
+    Approval test for a model that has already been run.
     """
 
-    def _verify(model, region):
+    def _verify(model, region: str):
         assert model.outputs, f"Model for {region} has not been run yet."
-        verify(model.parameters, f"parameters-{region}")
         verify(model.times, f"times-{region}")
-        verify(model.compartment_names, f"compartment_names-{region}")
-        verify(list(model.time_variants.keys()), f"time_variants-{region}")
-        verify(model.mixing_categories, f"mixing_categories-{region}")
-        flows = []
-        for f in model.flows:
-            flow_data = [f.param_name]
-            if getattr(f, "source", ""):
-                flow_data.append(str(f.source))
-            if getattr(f, "dest", ""):
-                flow_data.append(str(f.dest))
-
-            adjs = "x".join(["=".join([str(i) for i in a]) for a in f.adjustments])
-            flow_data.append(adjs)
-            flows.append("-".join(flow_data))
-
-        verify(flows, f"flows-{region}")
         verify(model.outputs, f"outputs-{region}")
         for output, arr in model.derived_outputs.items():
             verify(arr, f"do-{output}-{region}")

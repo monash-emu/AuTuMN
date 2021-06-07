@@ -109,7 +109,7 @@ def verify_model(verify):
     """
 
     def _verify(model, region: str):
-        assert model.outputs, f"Model for {region} has not been run yet."
+        assert model.outputs is not None, f"Model for {region} has not been run yet."
         verify(model.times, f"times-{region}")
         verify(model.outputs, f"outputs-{region}")
         for output, arr in model.derived_outputs.items():

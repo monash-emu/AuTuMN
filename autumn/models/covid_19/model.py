@@ -125,9 +125,6 @@ def build_model(params: dict) -> CompartmentalModel:
     clinical_strat = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
 
-    tracing_strat = get_tracing_strat(params)
-    # model.stratify_with(tracing_strat)
-
     # Apply the VoC stratification and adjust contact rate for Variant of Concerns.
     if params.voc_emergence:
         voc_start_time = params.voc_emergence.start_time
@@ -147,6 +144,10 @@ def build_model(params: dict) -> CompartmentalModel:
             dest=Compartment.EARLY_ACTIVE,
             dest_strata={"strain": Strain.VARIANT_OF_CONCERN},
         )
+
+    # Contact tracing stratification
+    tracing_strat = get_tracing_strat(params)
+    model.stratify_with(tracing_strat)
 
     # Infection history stratification
     if params.stratify_by_infection_history:

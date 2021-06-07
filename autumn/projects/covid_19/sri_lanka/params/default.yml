@@ -1,10 +1,10 @@
 description: BASELINE
 
-contact_rate: 0.0188
+contact_rate: 0.0215
 infectious_seed: 200
 
 time:
-  start: 350
+  start: 240
   end: 550
 
 country:
@@ -19,6 +19,19 @@ clinical_stratification:
   icu_prop: 0.04
 
 mobility:
+  microdistancing:
+    behaviour:
+      function_type: tanh
+      parameters:
+        shape: .02
+        inflection_time: 380. # 1st February 2021
+        lower_asymptote: 0.
+        upper_asymptote: 0.4
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
   mixing:
     school:
       append: false
@@ -60,3 +73,9 @@ mobility:
         - 1
         - 1
         - 0
+
+voc_emergence:
+  start_time: 410
+  entry_rate: 1.
+  seed_duration: 10.
+  contact_rate_multiplier: 2.45

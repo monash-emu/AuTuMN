@@ -12,6 +12,7 @@ from autumn.models.covid_19.constants import BASE_DATE
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
 
+
 class Time(BaseModel):
     """
     Model time period
@@ -276,6 +277,9 @@ class ParamConfig:
 
 @dataclass(config=ParamConfig)
 class Parameters:
+    # Metadata
+    description: str
+    # Values
     contact_rate: float
     infect_death: float
     universal_death_rate: float

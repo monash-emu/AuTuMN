@@ -1,3 +1,4 @@
+from numpy.core.arrayprint import _guarded_repr_or_str
 from numpy.lib.shape_base import column_stack
 import pandas as pd
 import numpy as np
@@ -49,7 +50,8 @@ intervention_start = do_df[["scenario", "times"]].groupby(["scenario"]).min().ma
 model_start = do_df[["times"]].min()[0]
 
 # Establish last date
-cutoff_date = (pd.to_datetime("today") - COVID_BASE_DATETIME).days
+deaths_cutoff_date = (pd.to_datetime("today") - COVID_BASE_DATETIME).days
+notification_cutoff_date = 365
 
 MLE_RUN = mcmc_run_df.sort_values(["accept", "loglikelihood"], ascending=[False, False])[0:1]
 MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo/export?format=xlsx&id=15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo"
@@ -61,7 +63,7 @@ MYS_NOTIFICATIONS = os.path.join(
 )
 
 
-def get_date_range(df):
+def get_date_range(df, cutoff_date):
 
     df.times = pd.to_datetime(
         df.times, errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
@@ -75,8 +77,8 @@ def get_date_range(df):
 
 
 def get_mys_deaths():
-    mys_death = pd.read_excel(MYS_DEATH_URL)
-    mys_death.rename(
+    df = pd.read_excel(MYS_DEATH_URL)
+    df.rename(
         columns={
             "State where death occurred": "state",
             "Age": "age",
@@ -86,30 +88,45 @@ def get_mys_deaths():
         inplace=True,
     )
 
-    mys_death = mys_death[["times", "age", "sex", "state"]]
-    mys_death = get_date_range(mys_death)
+    df = df[["times", "age", "sex", "state"]]
+    df = get_date_range(df, deaths_cutoff_date)
 
-    mys_death.age.replace(["4 Bulan"], [4], inplace=True)
-    mys_death.state = mys_death.state.str.strip().str.lower()
-    mys_death.dropna(subset=["age"], inplace=True)
-    mys_death = mys_death.groupby(by=["age", "state"]).count().reset_index()
+    df.age.replace(["4 Bulan"], [4], inplace=True)
+    df.state = df.state.str.strip().str.lower()
+    df.dropna(subset=["age"], inplace=True)
+    df = df.groupby(by=["age", "state"]).count().reset_index()
 
-    mys_national_death = mys_death.groupby(by=["age"]).count().reset_index()
+    mys_national_death = df.groupby(by=["age"]).count().reset_index()
     mys_national_death["state"] = "malaysia"
 
-    mys_death = mys_death.append(mys_national_death)
-    mys_death.rename(columns={"sex": "death"}, inplace=True)
-    mys_death = mys_death[mys_death.state == REGION]
-    bins = list(range(0, 130, 5))
+    df = df.append(mys_national_death)
+    df.rename(columns={"sex": "death"}, inplace=True)
+    df = df[df.state == REGION]
+    bins = list(range(-1, 130, 5)) # -1 to ensure the bins intervals are correct
 
-    groups = mys_death.groupby(pd.cut(mys_death.age, bins)).sum()
-    groups.index = bins[:-1]
+    groups = df.groupby(pd.cut(df.age, bins)).sum()
+    groups.index = [ each +1 for each in bins[:-1] ]
     groups.age = groups.index
 
     return groups[["age", "death"]]
 
 
-def get_do_feature(feature):
+def get_mys_notif():
+
+    df = pd.read_excel(MYS_NOTIFICATIONS, header=4, usecols="B,J:T")
+    df.rename(columns={"week_start_date": "times"}, inplace=True)
+    df = pd.melt(df, id_vars="times", var_name="age", value_name="notification")
+    df.fillna(0, inplace=True)
+    df = get_date_range(df, notification_cutoff_date)
+    df.age = df.age.str.split("_").str.get(1)
+    df.age.replace(
+        {"85above": "75", "unk": np.nan}, inplace=True
+    )  # compare with derived outputs 75+
+    df = df.groupby(by="age").sum().reset_index()
+    df = df.astype({"age": "int32"})
+    return df
+
+def get_do_feature(feature, cutoff_date):
 
     do_df = pd.concat(pd_list)
     do_df = do_df[
@@ -187,6 +204,14 @@ def group_by_age(df, bin):
             "(64, 69]": 65,
             "(69, 74]": 70,
             "(74, 129]": 75,
+            # These map the non-standard notification age groups.
+            "(4, 14]": 5,
+            "(14, 24]": 15,
+            "(24, 34]": 25,
+            "(34, 44]": 35,
+            "(44, 54]": 45,
+            "(54, 64]": 55,
+            "(64, 74]": 65,
         }
     )
 
@@ -220,14 +245,27 @@ def plot_do_feature(plt_df, feature):
     plt.show()
 
 
-do_deaths_df = get_do_feature("death")
+do_deaths_df = get_do_feature("death", deaths_cutoff_date)
 mys_death = get_mys_deaths()
 
 death_bin = [-1, 4, 9, 14, 19, 24, 29, 34, 39, 44, 49, 54, 59, 64, 69, 74, 129]
 mys_death = group_by_age(mys_death, death_bin)
 
-do_deaths = do_deaths_df.merge(mys_death, how="left", on="age")
-plot_do_feature(do_deaths, "death")
+do_deaths_df = do_deaths_df.merge(mys_death, how="left", on="age")
+plot_do_feature(do_deaths_df, "death")
+
+
+mys_notif = get_mys_notif()
+do_notif_df = get_do_feature("notification", notification_cutoff_date)
+notif_bin = [-1, 4, 14, 24, 34, 44, 54, 64, 74, 129]
+
+do_notif_df = group_by_age(do_notif_df, notif_bin)
+
+do_notif_df =  do_notif_df.merge(mys_notif, how='left', on= 'age')
+plot_do_feature(do_notif_df, "notification")
+
+
+
 
 
 mcmc_param_df = mcmc_param_df.pivot_table(
@@ -265,15 +303,8 @@ do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=
 
 # Got here finally
 
-#
-# mys_notif = pd.read_excel(MYS_NOTIFICATIONS, header=4, usecols="B,J:T")
-# mys_notif.rename(columns={"week_start_date": "times"}, inplace=True)
-# mys_notif = pd.melt(mys_notif, id_vars="times", var_name="age", value_name="notif")
-# mys_notif.fillna(0, inplace=True)
-# get_date_range(mys_notif)
-# mys_notif.age = mys_notif.age.str.split("_").str.get(1)
-# mys_notif.age.replace(["85above"], ["75"], inplace=True)  # compare with derived outputs 75+
-# mys_notif = mys_notif.groupby(by="age").sum().reset_index()
+
+
 #
 # df = get_do_feature()
 #
@@ -283,3 +314,4 @@ do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=
 # df = get_do_feature()
 # df = df.merge(mys_death, how="left", on=["age"])
 # do_df = create_sensitivity_df(do_df)
+

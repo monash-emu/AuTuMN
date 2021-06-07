@@ -33,7 +33,7 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
         UniformPrior("contact_rate", [0.02, 0.04]),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.20]),
         UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.6]),
-        UniformPrior("infectious_seed", [1.0, 100.0]),
+        UniformPrior("infectious_seed", [1.0, 300.0]),
         TruncNormalPrior(
             "clinical_stratification.props.symptomatic.multiplier",
             mean=1.0,

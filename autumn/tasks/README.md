@@ -1,4 +1,4 @@
-### Luigi tasks
+### Remote tasks
 
 Runs AuTuMN tasks, which are large jobs to be run on remote servers.
 This module requires AWS access to run.

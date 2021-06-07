@@ -318,12 +318,4 @@ class Parameters:
     contact_tracing: Optional[ContactTracing]
     victorian_clusters: Optional[VictorianClusterStratification]
     # Dummy parameters - not used
-    notifications_dispersion_param: float
-    icu_occupancy_dispersion_param: float
-    proportion_seropositive_dispersion_param: float
-    hospital_occupancy_dispersion_param: float
-    new_hospital_admissions_dispersion_param: float
-    new_icu_admissions_dispersion_param: float
-    infection_deaths_dispersion_param: float
-    accum_deaths_dispersion_param: float
     target_output_ratio: Optional[float]

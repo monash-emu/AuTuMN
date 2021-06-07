@@ -87,6 +87,12 @@ class Params:
             if k not in final_params:
                 final_params[k] = None
 
+        # Remove dispersion param keys
+        keys = list(final_params.keys())
+        for k in keys:
+            if k.endswith("dispersion_param"):
+                del final_params[k]
+
         return final_params
 
     def _load_path_or_dict(self, new_params: PathOrDict) -> dict:

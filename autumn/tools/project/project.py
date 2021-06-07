@@ -125,7 +125,7 @@ class Project:
         Run the model.
         """
         if type(model) is CompartmentalModel:
-            model.run()
+            model.run(max_step=1)
         else:
             model.run_model(IntegrationType.SOLVE_IVP)
 

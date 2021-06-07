@@ -4,6 +4,24 @@ import numpy as np
 import streamlit as st
 
 
+class Dashboard:
+    def __init__(self):
+        self.plot_funcs = {}
+
+    def register(self, name):
+        def wrapper(func):
+            self.plot_funcs[name] = func
+            return func
+
+        return wrapper
+
+    def select_plot(self, *args, **kwargs):
+        plot_type = st.sidebar.selectbox("Select plot type", list(self.plot_funcs.keys()))
+        plot_func = self.plot_funcs[plot_type]
+        plot_func(*args, **kwargs)
+        return plot_type
+
+
 def create_downloadable_csv(
     data_frame_to_download,
     filename,

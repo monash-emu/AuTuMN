@@ -76,10 +76,16 @@ class Params:
                 raise ValueError(f"Unknown parameter format {fmt}")
 
         # Remove parent key, from old implementation.
-        _old_meta_keys = ["parent"]
-        for k in _old_meta_keys:
+        old_meta_keys = ["parent"]
+        for k in old_meta_keys:
             if k in final_params:
                 del final_params[k]
+
+        # Add default key if not exists
+        default_keys = ["description"]
+        for k in default_keys:
+            if k not in final_params:
+                final_params[k] = None
 
         return final_params
 

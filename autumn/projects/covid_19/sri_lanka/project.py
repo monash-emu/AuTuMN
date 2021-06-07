@@ -20,12 +20,8 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(350)
-icu_occupancy_ts = ts_set.get("icu_occupancy").truncate_start_time(350).downsample(7)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(350).downsample(7)
 targets = [
     NormalTarget(notifications_ts),
-    NormalTarget(icu_occupancy_ts),
-    NormalTarget(infection_deaths_ts),
 ]
 
 priors = [
@@ -34,11 +30,12 @@ priors = [
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.015, 0.024]),
+    UniformPrior("contact_rate", [0.018, 0.028]),
     UniformPrior("infectious_seed", [150., 300.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.12]),
-    UniformPrior("clinical_stratification.icu_prop", [0.03, 0.1])
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.04, 0.14]),
+    UniformPrior("voc_emergence.start_time", [380, 440]),
+    UniformPrior("voc_emergence.contact_rate_multiplier", [1.5, 3.])
 ]
 
 

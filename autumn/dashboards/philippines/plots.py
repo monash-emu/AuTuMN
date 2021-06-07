@@ -2,34 +2,26 @@ import os
 from typing import List
 
 import pandas as pd
-import streamlit as st
-import yaml
 from matplotlib import pyplot
-from numpy import random
 
-from autumn import plots
-from autumn.tools.plots.calibration.plots import get_epi_params
-from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.tools.plots.utils import get_plot_text_dict
 from autumn.settings import Region
-from dash.dashboards.calibration_results.plots import (
-    get_uncertainty_df,
-    write_mcmc_centiles,
-)
-from dash.utils import create_downloadable_csv
+from autumn.dashboards.calibration_results.plots import get_uncertainty_df
+from autumn.tools.plots.plotter import StreamlitPlotter
+from autumn.tools import plots
+from autumn.tools.streamlit.utils import Dashboard
+from autumn.tools.project import Project
 
 STANDARD_X_LIMITS = 153, 275
-PLOT_FUNCS = {}
+dash = Dashboard()
 
 
+@dash.register("Seroprevalence by age")
 def plot_seroprevalence_by_age(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
+    project: Project,
 ):
 
     n_columns = 2
@@ -41,7 +33,7 @@ def plot_seroprevalence_by_age(
     i_col = 0
     for region in Region.PHILIPPINES_REGIONS:
         calib_dir_path = calib_dir_path.replace("philippines", region)
-        uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+        uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, project.plots)
         # available_scenarios = uncertainty_df["scenario"].unique()
         # selected_scenario = st.sidebar.selectbox("Select scenario", available_scenarios, key=str())
         selected_scenario = 0
@@ -62,6 +54,3 @@ def plot_seroprevalence_by_age(
             i_col = 0
             i_row += 1
     plotter.save_figure(fig, filename="sero_by_age", subdir="outputs", title_text="")
-
-
-PLOT_FUNCS["Seroprevalence by age"] = plot_seroprevalence_by_age

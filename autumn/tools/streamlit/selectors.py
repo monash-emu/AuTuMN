@@ -12,6 +12,8 @@ from summer import CompartmentalModel
 
 from autumn.settings import OUTPUT_DATA_PATH
 from autumn import settings
+from autumn.tools.registry import get_registered_model_names, get_registered_project_names
+from autumn.tools.project import Project, get_project
 
 
 def get_original_compartments(model: StratifiedModel) -> List[str]:
@@ -84,10 +86,6 @@ def multi_compartment(model: StratifiedModel) -> List[str]:
             chosen_compartment_names.append(compartment_name)
 
     return chosen_compartment_names
-
-
-from autumn.tools.registry import get_registered_model_names, get_registered_project_names
-from autumn.tools.project import Project, get_project
 
 
 def project() -> Project:

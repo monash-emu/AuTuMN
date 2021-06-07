@@ -25,6 +25,7 @@ from .stratifications.cluster import (
     apply_post_cluster_strat_hacks,
     get_cluster_strat,
 )
+from .stratifications.tracing import get_tracing_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
@@ -123,6 +124,9 @@ def build_model(params: dict) -> CompartmentalModel:
     # Stratify the model by clinical status
     clinical_strat = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
+
+    tracing_strat = get_tracing_strat(params)
+    # model.stratify_with(tracing_strat)
 
     # Apply the VoC stratification and adjust contact rate for Variant of Concerns.
     if params.voc_emergence:

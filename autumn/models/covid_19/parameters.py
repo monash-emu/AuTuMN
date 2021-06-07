@@ -278,7 +278,7 @@ class ParamConfig:
 @dataclass(config=ParamConfig)
 class Parameters:
     # Metadata
-    description: str
+    description: Optional[str]
     # Values
     contact_rate: float
     infect_death: float

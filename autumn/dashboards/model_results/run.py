@@ -9,7 +9,7 @@ from autumn.tools import db
 from autumn.tools.streamlit import selectors
 from autumn.tools.plots.plotter import StreamlitPlotter
 
-from .plots import PLOT_FUNCS
+from .plots import dash
 
 
 def run_dashboard():
@@ -34,6 +34,4 @@ def run_dashboard():
     plotter = StreamlitPlotter(project.plots)
 
     # Get user to select plot type / scenario
-    plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
-    plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, project, models)
+    dash.select_plot(plotter, project, models)

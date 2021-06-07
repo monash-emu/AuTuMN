@@ -6,13 +6,16 @@ from matplotlib import pyplot
 from autumn.tools import plots
 from autumn.tools.inputs import get_mobility_data
 from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.dashboards.inspect_model.flow_graph import plot_flow_graph
+from autumn.dashboards.model_internals.flow_graph import plot_flow_graph
 from autumn.tools.project import Project
+from autumn.tools.streamlit.utils import Dashboard
 
 BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)
-PLOT_FUNCS = {}
+
+dash = Dashboard()
 
 
+@dash.register("Flow weights")
 def plot_flow_params(plotter: StreamlitPlotter, project: Project):
     # Assume a COVID model
     model = project.build_model(project.param_set.baseline.to_dict())
@@ -43,116 +46,7 @@ def plot_flow_params(plotter: StreamlitPlotter, project: Project):
     st.write(init_dict)
 
 
-PLOT_FUNCS["Flow weights"] = plot_flow_params
-
-
-PLOT_FUNCS["Flow graph"] = plot_flow_graph
-
-
-def plot_multi_age_distribution(plotter: StreamlitPlotter, project: Project):
-    iso3 = ISO3_MAP[project.region_name]
-    if project.region_name is "philippines":
-        sub_region = [None, "Metro Manila", "Calabarzon", "Central Visayas"]
-        plots.model.plots.plot_multi_age_distribution(plotter, sub_region, iso3)
-    else:
-        st.write("This region has no sub  regions")
-
-
-PLOT_FUNCS["Multi age distribution"] = plot_multi_age_distribution
-
-
-def plot_age_distribution(plotter: StreamlitPlotter, project: Project):
-
-    iso3 = ISO3_MAP[project.region_name]
-
-    if project.region_name in SUB_REGION_MAP.keys():
-        sub_region = SUB_REGION_MAP[project.region_name]
-    else:
-        sub_region = None
-    plots.model.plots.plot_age_distribution(plotter, sub_region, iso3)
-
-
-PLOT_FUNCS["Age distribution"] = plot_age_distribution
-
-
-def plot_dynamic_mixing_matrix(plotter: StreamlitPlotter, project: Project):
-    model = project.build_model(project.param_set.baseline.to_dict())
-    t = st.slider("Time", min_value=0, max_value=int(model.times[-1]))
-    mixing_matrix = model._get_mixing_matrix(t)
-    fig, _, _, _, _, _ = plotter.get_figure()
-    pyplot.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
-    plotter.save_figure(fig, filename="mixing-matrix", title_text="Mixing matrix")
-    st.write(mixing_matrix)
-
-
-PLOT_FUNCS["Dynamic mixing matrix"] = plot_dynamic_mixing_matrix
-
-
-def plot_mixing_matrix(plotter: StreamlitPlotter, project: Project):
-    iso3 = project.param_set.baseline.to_dict()["country"]["iso3"]
-    param_names = sorted(list(("all_locations", "home", "other_locations", "school", "work")))
-    param_name = st.sidebar.selectbox("Select parameter", param_names)
-    plots.model.plots.plot_mixing_matrix(plotter, param_name, iso3)
-
-
-PLOT_FUNCS["Static mixing matrix"] = plot_mixing_matrix
-
-
-def plot_all_mixing_matrices(plotter: StreamlitPlotter, project: Project):
-
-    iso3 = project.param_set.baseline.to_dict()["country"]["iso3"]
-    plots.model.plots.plot_mixing_matrix_2(plotter, iso3)
-
-
-PLOT_FUNCS["All mixing matrices"] = plot_all_mixing_matrices
-
-
-def plot_dynamic_inputs(plotter: StreamlitPlotter, project: Project):
-    # Assume a COVID model
-    model = project.build_model(project.param_set.baseline.to_dict())
-    tvs = model.time_variants
-    tv_options = sorted(list(tvs.keys()))
-    tv_key = st.sidebar.selectbox("Select function", tv_options)
-    is_logscale = st.sidebar.checkbox("Log scale")
-    tv_func = tvs[tv_key]
-    plots.model.plots.plot_time_varying_input(plotter, tv_key, tv_func, model.times, is_logscale)
-
-
-PLOT_FUNCS["Time variant functions"] = plot_dynamic_inputs
-
-
-def plot_mobility_raw(plotter: StreamlitPlotter, project: Project):
-    params = project.param_set.baseline.to_dict()
-    values, days = get_mobility_data(
-        params["country"]["iso3"],
-        params["mobility"]["region"],
-        BASE_DATE,
-        params["mobility"]["google_mobility_locations"],
-    )
-    options = list(params["mobility"]["google_mobility_locations"].keys())
-    loc_key = st.sidebar.selectbox("Select location", options)
-    values_lookup = {days[i]: values[loc_key][i] for i in range(len(days))}
-    loc_func = lambda t: values_lookup[t]
-    plots.model.plots.plot_time_varying_input(plotter, loc_key, loc_func, days, is_logscale=False)
-
-
-PLOT_FUNCS["Google Mobility Raw"] = plot_mobility_raw
-
-
-def plot_multilocation_mobility(plotter: StreamlitPlotter, project: Project):
-    params = project.param_set.baseline.to_dict()
-    values, days = get_mobility_data(
-        params["country"]["iso3"],
-        params["mobility"]["region"],
-        BASE_DATE,
-        params["mobility"]["google_mobility_locations"],
-    )
-    plots.model.plots.plot_time_varying_multi_input(plotter, values, days, is_logscale=False)
-
-
-PLOT_FUNCS["Google Mobility multi-location"] = plot_multilocation_mobility
-
-
+@dash.register("Calibration targets")
 def plot_model_targets(plotter: StreamlitPlotter, project: Project):
     # Assume a COVID model
     with st.spinner("Running model..."):
@@ -173,6 +67,7 @@ def plot_model_targets(plotter: StreamlitPlotter, project: Project):
     )
 
 
+@dash.register("Calibration multi-targets")
 def plot_model_multi_targets(plotter: StreamlitPlotter, project: Project):
     target_name_lookup = {t["title"]: t for t in project.plots.values()}
     title_options = sorted(list(target_name_lookup.keys()))
@@ -188,10 +83,96 @@ def plot_model_multi_targets(plotter: StreamlitPlotter, project: Project):
         plots.model.plots.plot_multi_targets(plotter, model, target_list, is_logscale)
 
 
-PLOT_FUNCS["Calibration targets"] = plot_model_targets
+dash.register("Flow graph")(plot_flow_graph)
 
 
-PLOT_FUNCS["Calibration multi-targets"] = plot_model_multi_targets
+@dash.register("Multi age distribution")
+def plot_multi_age_distribution(plotter: StreamlitPlotter, project: Project):
+    iso3 = ISO3_MAP[project.region_name]
+    if project.region_name is "philippines":
+        sub_region = [None, "Metro Manila", "Calabarzon", "Central Visayas"]
+        plots.model.plots.plot_multi_age_distribution(plotter, sub_region, iso3)
+    else:
+        st.write("This region has no sub  regions")
+
+
+@dash.register("Age distribution")
+def plot_age_distribution(plotter: StreamlitPlotter, project: Project):
+
+    iso3 = ISO3_MAP[project.region_name]
+
+    if project.region_name in SUB_REGION_MAP.keys():
+        sub_region = SUB_REGION_MAP[project.region_name]
+    else:
+        sub_region = None
+    plots.model.plots.plot_age_distribution(plotter, sub_region, iso3)
+
+
+@dash.register("Dynamic mixing matrix")
+def plot_dynamic_mixing_matrix(plotter: StreamlitPlotter, project: Project):
+    model = project.build_model(project.param_set.baseline.to_dict())
+    t = st.slider("Time", min_value=0, max_value=int(model.times[-1]))
+    mixing_matrix = model._get_mixing_matrix(t)
+    fig, _, _, _, _, _ = plotter.get_figure()
+    pyplot.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
+    plotter.save_figure(fig, filename="mixing-matrix", title_text="Mixing matrix")
+    st.write(mixing_matrix)
+
+
+@dash.register("Static mixing matrix")
+def plot_mixing_matrix(plotter: StreamlitPlotter, project: Project):
+    iso3 = project.param_set.baseline.to_dict()["country"]["iso3"]
+    param_names = sorted(list(("all_locations", "home", "other_locations", "school", "work")))
+    param_name = st.sidebar.selectbox("Select parameter", param_names)
+    plots.model.plots.plot_mixing_matrix(plotter, param_name, iso3)
+
+
+@dash.register("All mixing matrices")
+def plot_all_mixing_matrices(plotter: StreamlitPlotter, project: Project):
+
+    iso3 = project.param_set.baseline.to_dict()["country"]["iso3"]
+    plots.model.plots.plot_mixing_matrix_2(plotter, iso3)
+
+
+@dash.register("Time variant functions")
+def plot_dynamic_inputs(plotter: StreamlitPlotter, project: Project):
+    # Assume a COVID model
+    model = project.build_model(project.param_set.baseline.to_dict())
+    tvs = model.time_variants
+    tv_options = sorted(list(tvs.keys()))
+    tv_key = st.sidebar.selectbox("Select function", tv_options)
+    is_logscale = st.sidebar.checkbox("Log scale")
+    tv_func = tvs[tv_key]
+    plots.model.plots.plot_time_varying_input(plotter, tv_key, tv_func, model.times, is_logscale)
+
+
+@dash.register("Google Mobility Raw")
+def plot_mobility_raw(plotter: StreamlitPlotter, project: Project):
+    params = project.param_set.baseline.to_dict()
+    values, days = get_mobility_data(
+        params["country"]["iso3"],
+        params["mobility"]["region"],
+        BASE_DATE,
+        params["mobility"]["google_mobility_locations"],
+    )
+    options = list(params["mobility"]["google_mobility_locations"].keys())
+    loc_key = st.sidebar.selectbox("Select location", options)
+    values_lookup = {days[i]: values[loc_key][i] for i in range(len(days))}
+    loc_func = lambda t: values_lookup[t]
+    plots.model.plots.plot_time_varying_input(plotter, loc_key, loc_func, days, is_logscale=False)
+
+
+@dash.register("Google Mobility multi-location")
+def plot_multilocation_mobility(plotter: StreamlitPlotter, project: Project):
+    params = project.param_set.baseline.to_dict()
+    values, days = get_mobility_data(
+        params["country"]["iso3"],
+        params["mobility"]["region"],
+        BASE_DATE,
+        params["mobility"]["google_mobility_locations"],
+    )
+    plots.model.plots.plot_time_varying_multi_input(plotter, values, days, is_logscale=False)
+
 
 ISO3_MAP = {
     "barwon-south-west": "AUS",

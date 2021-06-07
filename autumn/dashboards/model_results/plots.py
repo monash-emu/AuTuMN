@@ -10,11 +10,13 @@ from summer import CompartmentalModel
 from autumn.tools import db, plots
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.streamlit import selectors
+from autumn.tools.streamlit.utils import Dashboard
 from autumn.tools.project import Project
 
-PLOT_FUNCS = {}
+dash = Dashboard()
 
 
+@dash.register("Scenario outputs")
 def plot_outputs_multi(
     plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
@@ -35,9 +37,7 @@ def plot_outputs_multi(
         )
 
 
-PLOT_FUNCS["Scenario outputs"] = plot_outputs_multi
-
-
+@dash.register("Compartment sizes")
 def plot_compartment(plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]):
     chosen_models = selectors.scenarios(models)
     if chosen_models:
@@ -60,9 +60,7 @@ def plot_compartment(plotter: StreamlitPlotter, project: Project, models: List[C
                 st.write("Compartment does not exist")
 
 
-PLOT_FUNCS["Compartment sizes"] = plot_compartment
-
-
+@dash.register("Compartments aggregate")
 def plot_compartment_aggregate(
     plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
@@ -72,9 +70,7 @@ def plot_compartment_aggregate(
     st.write(names)
 
 
-PLOT_FUNCS["Compartments aggregate"] = plot_compartment_aggregate
-
-
+@dash.register("Stacked outputs by stratum")
 def plot_stacked_compartments_by_stratum(
     plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
@@ -87,9 +83,7 @@ def plot_stacked_compartments_by_stratum(
     st.write(compartment)
 
 
-PLOT_FUNCS["Stacked outputs by stratum"] = plot_stacked_compartments_by_stratum
-
-
+@dash.register("Stacked derived by stratum")
 def plot_stacked_derived_outputs_by_stratum(
     plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
@@ -103,9 +97,7 @@ def plot_stacked_derived_outputs_by_stratum(
     st.write(derived_output)
 
 
-PLOT_FUNCS["Stacked derived by stratum"] = plot_stacked_derived_outputs_by_stratum
-
-
+@dash.register("Multicountry rainbow")
 def plot_multicountry_rainbow(
     plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
@@ -144,9 +136,7 @@ def plot_multicountry_rainbow(
                 )
 
 
-PLOT_FUNCS["Multicountry rainbow"] = plot_multicountry_rainbow
-
-
+@dash.register("Multicountry hospital")
 def plot_multicounty_hospital(
     plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
@@ -178,9 +168,6 @@ def plot_multicounty_hospital(
 
             print("Plotting multicountry hospital for: " + mode + "_" + objective)
             plots.model.plots.plot_multicountry_hospital(all_scenarios, mode, objective)
-
-
-PLOT_FUNCS["Multicountry hospital"] = plot_multicounty_hospital
 
 
 def model_output_selector(models, targets):

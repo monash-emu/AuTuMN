@@ -7,53 +7,35 @@ import streamlit as st
 
 from autumn.tools import db
 from autumn.tools.plots.plotter import FilePlotter, StreamlitPlotter
-from autumn.utils.params import load_targets
-from dash import selectors
+from autumn.tools.streamlit import selectors
+from autumn.tools.project import get_project
+from autumn.settings import Models, Region
 
-from .plots import PLOT_FUNCS
+from .plots import dash
 
 
 def run_dashboard():
-    app_name, app_dirpath = "covid_19", os.path.join(os.getcwd(), "data\outputs\calibrate\covid_19")
-    if not app_name:
-        st.write("No calibrations have been run yet")
+    project = get_project(Models.COVID_19, Region.PHILIPPINES)
+    if not project:
         return
 
-    region_name = "philippines"
-    region_dirpath = os.path.join(app_dirpath, region_name)
-    if not region_name:
-        st.write("No region folder found")
-        return
-
-    calib_name, calib_dirpath = selectors.calibration_run(region_dirpath, region_name)
-    if not calib_name:
-        st.write("No model run folder found")
+    calib_dirpath = selectors.calibration_path(project)
+    if not calib_dirpath:
+        st.write("No calibration run folder found")
         return
 
     # Load MCMC tables
     mcmc_tables = db.load.load_mcmc_tables(calib_dirpath)
     mcmc_params = db.load.load_mcmc_params_tables(calib_dirpath)
-    targets = load_targets(app_name, region_name)
 
-    plotter = StreamlitPlotter(targets)
-    plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
-    plot_func = PLOT_FUNCS[plot_type]
+    # Plot in streamlit.
+    plotter = StreamlitPlotter(project.plots)
+    plot_name = dash.select_plot(plotter, calib_dirpath, mcmc_tables, mcmc_params, project)
 
-    plot_func(
-        plotter,
-        calib_dirpath,
-        mcmc_tables,
-        mcmc_params,
-        targets,
-        app_name,
-        region_name,
-    )
-
+    # Plot to filesystem
     path_name = os.path.join(calib_dirpath, "saved_plots")
     if not os.path.exists(path_name):
         os.makedirs(path_name)
     with st.spinner("Saving files..."):
-        file_plotter = FilePlotter(path_name, targets)
-        plot_func(
-            file_plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name
-        )
+        file_plotter = FilePlotter(path_name, project.plots)
+        dash.plot_funcs[plot_name](file_plotter, calib_dirpath, mcmc_tables, mcmc_params, project)

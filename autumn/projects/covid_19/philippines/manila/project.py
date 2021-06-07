@@ -10,7 +10,7 @@ from autumn.projects.covid_19.philippines.calibration import get_philippies_cali
 phl_base_path = build_rel_path("../phl_submodel_params.yml")
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 4)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 7)]
 baseline_params = (
     base_params.update(phl_base_path).update(default_path).update(mle_path, calibration_format=True)
 )

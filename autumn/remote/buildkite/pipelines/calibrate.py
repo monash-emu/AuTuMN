@@ -8,21 +8,21 @@ from autumn.remote.buildkite.buildkite import (
 )
 
 from .full import burn_in_field, sample_size_field
+from autumn.tools.registry import get_registered_model_names, get_registered_project_names
 
 
 def get_region_options():
     """Dynamically fetch region options from COVID app"""
-    from apps import covid_19, tuberculosis
+    options = []
+    for model_name in get_registered_model_names():
+        for region_name in get_registered_project_names(model_name):
+            o = {
+                "label": region_name.replace("-", " ").title() + f" ({model_name})",
+                "value": f"{model_name}:{region_name}",
+            }
+            options.append(o)
 
-    covid_options = [
-        {"label": n.replace("-", " ").title() + " (COVID)", "value": f"covid_19:{n}"}
-        for n in sorted(covid_19.app.region_names)
-    ]
-    tb_options = [
-        {"label": n.replace("-", " ").title() + " (TB)", "value": f"tuberculosis:{n}"}
-        for n in sorted(tuberculosis.app.region_names)
-    ]
-    return covid_options + tb_options
+    return options
 
 
 model_field = SelectInputField(

@@ -35,7 +35,7 @@ python -m autumn --help
 |   ├─ projects                 Region specifc projects that use disease models
 |   ├─ remote                   Remote server orchestration tasks
 |   ├─ settings                 Globally shared constants
-|   ├─ tasks                    Remote server pipeline tasks with Luigi
+|   ├─ tasks                    Remote server pipeline tasks
 |   └─ tools                    Globally shared utilities
 |
 ├── data                    Data to be used by the models

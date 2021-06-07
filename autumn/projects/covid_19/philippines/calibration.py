@@ -33,7 +33,7 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
         UniformPrior("contact_rate", [0.02, 0.04]),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.20]),
         UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.6]),
-        UniformPrior("infectious_seed", [1.0, 100.0]),
+        UniformPrior("infectious_seed", [1.0, 300.0]),
         TruncNormalPrior(
             "clinical_stratification.props.symptomatic.multiplier",
             mean=1.0,
@@ -43,14 +43,14 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
         TruncNormalPrior(
             "clinical_stratification.props.hospital.multiplier",
             mean=1.0,
-            stdev=0.2,
+            stdev=0.5,
             trunc_range=[0.5, np.inf],
         ),
         TruncNormalPrior(
             "infection_fatality.multiplier", mean=1.0, stdev=0.4, trunc_range=[0.5, np.inf]
         ),
         # Between 1 Dec 2020 and 30 June 2021
-        UniformPrior("voc_emergence.start_time", [336, 547]),
+        UniformPrior("voc_emergence.start_time", [280, 547]),
         # Using reported 95 CI from Pearson et al.
         UniformPrior("voc_emergence.contact_rate_multiplier", [1.2, 2.1]),
         UniformPrior(

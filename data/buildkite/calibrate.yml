@@ -4,45 +4,53 @@ steps:
   - hint: Which model do you want to run?
     key: model-name
     options:
-    - label: Belgium (COVID)
+    - label: Belgium (covid_19)
       value: covid_19:belgium
-    - label: Calabarzon (COVID)
+    - label: Calabarzon (covid_19)
       value: covid_19:calabarzon
-    - label: Central Visayas (COVID)
+    - label: Central Visayas (covid_19)
       value: covid_19:central-visayas
-    - label: Davao City (COVID)
+    - label: Davao City (covid_19)
       value: covid_19:davao-city
-    - label: France (COVID)
+    - label: France (covid_19)
       value: covid_19:france
-    - label: Italy (COVID)
+    - label: Italy (covid_19)
       value: covid_19:italy
-    - label: Johor (COVID)
+    - label: Johor (covid_19)
       value: covid_19:johor
-    - label: Kuala Lumpur (COVID)
+    - label: Kuala Lumpur (covid_19)
       value: covid_19:kuala-lumpur
-    - label: Malaysia (COVID)
+    - label: Malaysia (covid_19)
       value: covid_19:malaysia
-    - label: Manila (COVID)
+    - label: Manila (covid_19)
       value: covid_19:manila
-    - label: Penang (COVID)
+    - label: Nepal (covid_19)
+      value: covid_19:nepal
+    - label: Penang (covid_19)
       value: covid_19:penang
-    - label: Philippines (COVID)
+    - label: Philippines (covid_19)
       value: covid_19:philippines
-    - label: Sabah (COVID)
+    - label: Sabah (covid_19)
       value: covid_19:sabah
-    - label: Selangor (COVID)
+    - label: Selangor (covid_19)
       value: covid_19:selangor
-    - label: Spain (COVID)
+    - label: Spain (covid_19)
       value: covid_19:spain
-    - label: Sweden (COVID)
+    - label: Sri_Lanka (covid_19)
+      value: covid_19:sri_lanka
+    - label: Sweden (covid_19)
       value: covid_19:sweden
-    - label: United Kingdom (COVID)
+    - label: United Kingdom (covid_19)
       value: covid_19:united-kingdom
-    - label: Victoria (COVID)
+    - label: Victoria (covid_19)
       value: covid_19:victoria
-    - label: Marshall Islands (TB)
+    - label: Philippines (sir_example)
+      value: sir_example:philippines
+    - label: Victoria (sir_example)
+      value: sir_example:victoria
+    - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
-    - label: Philippines (TB)
+    - label: Philippines (tuberculosis)
       value: tuberculosis:philippines
     required: true
     select: Model Region

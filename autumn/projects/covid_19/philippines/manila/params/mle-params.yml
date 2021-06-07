@@ -1,16 +1,18 @@
-accum_deaths_dispersion_param: 4.329420512898146
-clinical_stratification.props.hospital.multiplier: 1.18132712626398
-clinical_stratification.props.symptomatic.multiplier: 1.0388804923076025
-contact_rate: 0.0301888501561497
-icu_occupancy_dispersion_param: 4.877634052844483
-infection_fatality.multiplier: 1.323091138574458
-infectious_seed: 98.33958480979264
-mobility.microdistancing.behaviour.parameters.max_effect: 0.13059820316716247
-mobility.microdistancing.behaviour_adjuster.parameters.inflection_time: 386.3935100871299
-mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote: 0.9759550443342282
-notifications_dispersion_param: 4.277279997975619
-sojourn.compartment_periods_calculated.active.total_period: 7.421724758781576
-sojourn.compartment_periods_calculated.exposed.total_period: 5.799139328838662
-testing_to_detection.assumed_cdr_parameter: 0.03748576923964591
-voc_emergence.contact_rate_multiplier: 1.7184307928421
-voc_emergence.start_time: 336.56631400580227
+accum_deaths_dispersion_param: 4.050698588814419
+clinical_stratification.props.hospital.multiplier: 2.  # 1.282807010783093
+clinical_stratification.props.symptomatic.multiplier: 0.9476212245179099
+contact_rate: 0.034 # 0.030116365124676622
+icu_occupancy_dispersion_param: 2.9659688355138085
+infection_fatality.multiplier: 1.2 # 1.5130371015133341
+infectious_seed: 30 #129.65461163895026
+mobility.microdistancing.behaviour.parameters.max_effect: 0.25 # 0.1487335593845597
+mobility.microdistancing.behaviour_adjuster.parameters.inflection_time: 395.43668170588376
+mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote: 0.9905667852653697
+notifications_dispersion_param: 3.0988903868714535
+sojourn.compartment_periods_calculated.active.total_period: 7.30656682318997
+sojourn.compartment_periods_calculated.exposed.total_period: 6.427122888885482
+testing_to_detection.assumed_cdr_parameter: 0.042072194682492695
+vaccination.overall_efficacy: 0.7895775672145173
+vaccination.vacc_prop_prevent_infection: 0.9050656276193965
+voc_emergence.contact_rate_multiplier: 1.89  #8201791001709133
+voc_emergence.start_time: 300 #336.3016840410229

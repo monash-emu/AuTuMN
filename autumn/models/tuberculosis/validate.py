@@ -1,6 +1,7 @@
 from autumn.tools.utils import schema_builder as sb
 
 validate_params = sb.build_validator(
+    description=sb.Nullable(str),
     # Country info
     crude_birth_rate=float,
     iso3=str,

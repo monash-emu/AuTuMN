@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from tempfile import TemporaryDirectory
 
 
@@ -36,7 +37,19 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
         args_list = [
             (run_id, runtime, chain_id, num_chains, verbose) for chain_id in range(num_chains)
         ]
-        chain_ids = run_parallel_tasks(run_calibration_chain, args_list)
+        try:
+            chain_ids = run_parallel_tasks(run_calibration_chain, args_list)
+            cal_success = True
+        except Exception as e:
+            # Calibration failed, but we still want to store some results
+            cal_success = False
+    
+    with Timer("Uploading metadata"):
+        upload_to_run_s3(s3_client, run_id, CALIBRATE_DATA_DIR, quiet=not verbose)
+        upload_to_run_s3(s3_client, run_id, 'log', quiet=not verbose)
+
+    if not cal_success:
+        sys.exit(-1)
 
     # Upload the calibration outputs of AWS S3.
     with Timer(f"Uploading calibration data to AWS S3"):
@@ -69,6 +82,9 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
     # Upload the MLE parameter set to AWS S3.
     with Timer(f"Uploading max likelihood esitmate params to AWS S3"):
         upload_to_run_s3(s3_client, run_id, MLE_PARAMS_PATH, quiet=not verbose)
+
+    with Timer(f"Uploading final logs to AWS S3"):
+        upload_to_run_s3(s3_client, run_id, 'log', quiet=not verbose)
 
 
 def run_calibration_chain(

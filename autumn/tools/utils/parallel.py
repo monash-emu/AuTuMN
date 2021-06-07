@@ -24,7 +24,7 @@ def run_parallel_tasks(func: Callable, arg_list: List[Any]):
         if exception:
             logger.info("Parallel task failed.")
             failure_exceptions.append(exception)
-            continue
+            break
 
         result = future.result()
         logger.info("Parallel task completed: %s", result)
@@ -44,6 +44,7 @@ def run_parallel_tasks(func: Callable, arg_list: List[Any]):
         logger.error(
             "%s / %s parallel tasks failed - exiting.", len(failure_exceptions), len(arg_list)
         )
-        sys.exit(-1)
+        raise Exception("Parallel tasks failed")
+        #sys.exit(-1)
 
     return success_results

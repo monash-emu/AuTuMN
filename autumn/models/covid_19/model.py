@@ -190,7 +190,7 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
-    prop_traced = 0.1
+    prop_traced = 0.1  # Should be a parameter, of course
 
     early_exposed_untraced_comps = \
         [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]

@@ -6,7 +6,7 @@ def trace_function(prop_traced, incidence_flow_rate, untraced_comp):
             model, compartments, compartment_values, flows, flow_rates, time, source=untraced_comp
     ):
 
-        # Currently unused, but proof of concept
+        # Currently unused, but proof of concept - unfortunately adds ridiculously to run-time
         active_comps = \
             [idx for idx, comp in enumerate(compartments) if
              comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)]

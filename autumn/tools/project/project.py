@@ -247,6 +247,22 @@ class DiffOutput:
     REQUEST_TYPES = [RELATIVE, ABSOLUTE]
 
 
+def get_all_available_scenario_paths(scenario_dir_path):
+    """
+    Automatically lists the paths of all the yml files starting with 'scenario-' available in a given directory.
+    :param scenario_dir_path: path to the directory
+    :return: a list of paths
+    """
+    all_files = os.listdir(scenario_dir_path)
+    scenario_file_list = []
+    for filename in all_files:
+        if filename.startswith("scenario-") and filename.endswith(".yml"):
+            scenario_file_list.append(
+                os.path.join(scenario_dir_path, filename)
+            )
+    return scenario_file_list
+
+
 def post_process_scenario_outputs(
     models: List[CompModel], project: Project, run_id: int = 0, chain_id: int = None
 ) -> Dict[str, pd.DataFrame]:

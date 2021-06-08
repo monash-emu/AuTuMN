@@ -1,10 +1,10 @@
-description: Scenario 7, in between max mobility six months and most recent mobility value + 80% vaccine roll-out
+description: Scenario 7, 50%  return to the max mobility  + 80% vaccine roll-out
 
 time:
   start: 504 # 18th May 2021
 
 vaccination:
-  coverage_override: 0.8
+
   # Eleven months from 18th May 2021
   roll_out_components:
     - supply_period_coverage:

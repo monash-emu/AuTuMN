@@ -1,4 +1,4 @@
-description: Scenario 9, sensitivity analysis for the coverage parameter and 50% return to the max mobility
+description: Scenario 12, sensitivity analysis for the coverage parameter and 25% return to the max mobility
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
@@ -20,7 +20,7 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - -0.5
+          - -0.25
     work:
       append: true
       times:
@@ -28,4 +28,4 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - 0.5
+          - 0.25

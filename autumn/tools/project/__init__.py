@@ -5,6 +5,7 @@ from .project import (
     run_project_locally,
     post_process_scenario_outputs,
     DiffOutput,
+    get_all_available_scenario_paths,
 )
 from .params import ParameterSet, Params
 from .timeseries import TimeSeriesSet, TimeSeries

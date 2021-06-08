@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
@@ -10,7 +10,9 @@ from autumn.projects.covid_19.philippines.calibration import get_philippies_cali
 phl_base_path = build_rel_path("../phl_submodel_params.yml")
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 2)]
+scenario_dir_path = build_rel_path("params/")
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+
 baseline_params = (
     base_params.update(phl_base_path).update(default_path).update(mle_path, calibration_format=True)
 )

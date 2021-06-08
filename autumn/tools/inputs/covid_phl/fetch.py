@@ -15,8 +15,11 @@ COVID_PHL_CSV_PATH = os.path.join(COVID_PHL_DIRPATH, "COVID_Phl_testing.csv")
 
 
 def fetch_covid_phl_data():
-    try:
-        os.remove(COVID_PHL_CSV_PATH)
-    except:
-        print("File not found, unable to delete.")
-    gdd.download_file_from_google_drive(file_id=DATA_URL, dest_path=COVID_PHL_CSV_PATH)
+
+    gdd.download_file_from_google_drive(
+        file_id=DATA_URL, dest_path=COVID_PHL_CSV_PATH, overwrite=True, showsize=True
+    )
+    file_size = os.path.getsize(COVID_PHL_CSV_PATH)
+    assert (
+        file_size > 10000
+    ), "File size is too small. Please check PHL google drive link for testing numbers"

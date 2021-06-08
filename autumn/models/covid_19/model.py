@@ -1,3 +1,5 @@
+import copy
+
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
@@ -16,6 +18,7 @@ from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.vaccination import add_vaccination_flows
+from .preprocess.tracing import trace_function
 from .stratifications.agegroup import (
     AGEGROUP_STRATA,
     get_agegroup_strat,
@@ -130,18 +133,6 @@ def build_model(params: dict) -> CompartmentalModel:
     tracing_strat = get_tracing_strat(params)
     model.stratify_with(tracing_strat)
 
-    # *** Need to change this to a function flow dependent on prevalence ***
-    prop_traced = 0.0
-    rate = incidence_flow_rate * prop_traced
-    model.add_transition_flow(
-        "tracing",
-        rate,
-        Compartment.LATE_EXPOSED,
-        Compartment.LATE_EXPOSED,
-        source_strata={"tracing": "untraced"},
-        dest_strata={"tracing": "traced"}
-    )
-
     # Apply the VoC stratification and adjust contact rate for Variant of Concerns.
     if params.voc_emergence:
         voc_start_time = params.voc_emergence.start_time
@@ -196,6 +187,27 @@ def build_model(params: dict) -> CompartmentalModel:
         cluster_strat = get_cluster_strat(params)
         model.stratify_with(cluster_strat)
         apply_post_cluster_strat_hacks(params, model)
+
+    # **** THIS MUST BE THE LAST STRATIFICATION ****
+    # Apply the process of contact tracing
+    prop_traced = 0.1
+
+    early_exposed_untraced_comps = \
+        [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]
+    early_exposed_traced_comps = \
+        [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
+
+    for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
+        trace_func = trace_function(prop_traced, incidence_flow_rate, untraced)
+        model.add_function_flow(
+            "tracing",
+            trace_func,
+            Compartment.EARLY_EXPOSED,
+            Compartment.EARLY_EXPOSED,
+            source_strata=untraced.strata,
+            dest_strata=traced.strata,
+            expected_flow_count=1,
+        )
 
     # Set up derived output functions
     if not params.victorian_clusters:

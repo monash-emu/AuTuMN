@@ -1,27 +1,17 @@
+import numpy as np
 from summer import CompartmentalModel
 
 from autumn.models.tuberculosis.parameters import Parameters
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.curve import scale_up_function, tanh_based_scaleup
+from autumn.tools import inputs
 
-from .constants import Compartment
+from .constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
+from .stratifications.age import get_age_strat
 
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
 )
-
-COMPARTMENTS = [
-    Compartment.SUSCEPTIBLE,
-    Compartment.EARLY_LATENT,
-    Compartment.LATE_LATENT,
-    Compartment.INFECTIOUS,
-    Compartment.ON_TREATMENT,
-    Compartment.RECOVERED,
-]
-INFECTIOUS_COMPS = [
-    Compartment.INFECTIOUS,
-    Compartment.ON_TREATMENT,
-]
 
 
 def build_model(params: dict) -> CompartmentalModel:
@@ -29,13 +19,16 @@ def build_model(params: dict) -> CompartmentalModel:
     Build the compartmental model from the provided parameters.
     """
     params = Parameters(**params)
+    time = params.time
     model = CompartmentalModel(
-        # FIXME: critical_ranges missing
-        times=[params.time.start, params.time.end],
+        times=[time.start, time.end],
         compartments=COMPARTMENTS,
         infectious_compartments=INFECTIOUS_COMPS,
-        timestep=params.time.step,
+        timestep=time.step,
     )
+
+    # Overwrite times for backwards-compatibility
+    model.times = get_model_times_from_inputs(time.start, time.end, time.step, time.critical_ranges)
 
     # Add initial population
     init_pop = {
@@ -44,68 +37,68 @@ def build_model(params: dict) -> CompartmentalModel:
     }
     model.set_initial_population(init_pop)
 
-    # FIXME: DO THIS NEXT
-    # PT in household contacts
-    contact_rate_functions = {}
-    if params["hh_contacts_pt"]:
-        scaleup_screening_prop = scale_up_function(
-            x=[params["hh_contacts_pt"]["start_time"], params["hh_contacts_pt"]["start_time"] + 1],
-            y=[0, params["hh_contacts_pt"]["prop_hh_contacts_screened"]],
-            method=4,
-        )
+    contact_rate = params.contact_rate
+    contact_rate_latent = (params.contact_rate * params.rr_infection_latent,)
+    contact_rate_recovered = (params.contact_rate * params.rr_infection_recovered,)
+    if params.hh_contacts_pt:
+        # PT in household contacts
+        times = [params.hh_contacts_pt["start_time"], params.hh_contacts_pt["start_time"] + 1]
+        vals = [0, params.hh_contacts_pt["prop_hh_contacts_screened"]]
+        scaleup_screening_prop = scale_up_function(x=times, y=vals, method=4)
 
-        def make_contact_rate_func(raw_contact_rate_value):
-            def contact_rate_func(t):
+        def get_contact_rate_factory(contact_rate):
+            def get_contact_rate(t):
                 rel_reduction = (
-                    params["hh_contacts_pt"]["prop_smearpos_among_prev_tb"]
-                    * params["hh_contacts_pt"]["prop_hh_transmission"]
+                    params.hh_contacts_pt["prop_smearpos_among_prev_tb"]
+                    * params.hh_contacts_pt["prop_hh_transmission"]
                     * scaleup_screening_prop(t)
                     * params["ltbi_screening_sensitivity"]
-                    * params["hh_contacts_pt"]["prop_pt_completion"]
+                    * params.hh_contacts_pt["prop_pt_completion"]
                 )
-                return raw_contact_rate_value * (1 - rel_reduction)
+                return contact_rate * (1 - rel_reduction)
 
-            return contact_rate_func
+            return get_contact_rate
 
-        for suffix in ["", "_from_latent", "_from_recovered"]:
-            param_name = f"contact_rate{suffix}"
-            raw_value = params[param_name]
-            params[param_name] = param_name
-            contact_rate_functions[param_name] = make_contact_rate_func(raw_value)
+        contact_rate = get_contact_rate_factory(contact_rate)
+        contact_rate_latent = get_contact_rate_factory(contact_rate_latent)
+        contact_rate_recovered = get_contact_rate_factory(contact_rate_recovered)
 
     # Infection flows.
     model.add_infection_frequency_flow(
-        "infection", params.contact_rate, Compartment.SUSCEPTIBLE, Compartment.EARLY_LATENT
+        "infection", contact_rate, Compartment.SUSCEPTIBLE, Compartment.EARLY_LATENT
     )
     model.add_infection_frequency_flow(
         "infection_from_latent",
-        params.contact_rate * params.rr_infection_latent,
+        contact_rate_latent,
         Compartment.LATE_LATENT,
         Compartment.EARLY_LATENT,
     )
     model.add_infection_frequency_flow(
         "infection_from_recovered",
-        params.contact_rate * params.rr_infection_recovered,
+        contact_rate_recovered,
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
 
     # Transition flows.
+    stabilisation_rate = 1.0
+    early_activation_rate = 1.0
+    late_activation_rate = 1.0
     model.add_transition_flow(
         "stabilisation",
-        params.stabilisation_rate,
+        stabilisation_rate,
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
     )
     model.add_transition_flow(
         "early_activation",
-        params.early_activation_rate,
+        early_activation_rate,
         Compartment.EARLY_LATENT,
         Compartment.INFECTIOUS,
     )
     model.add_transition_flow(
         "late_activation",
-        params.late_activation_rate,
+        late_activation_rate,
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
     )
@@ -141,44 +134,20 @@ def build_model(params: dict) -> CompartmentalModel:
     )
 
     # Treatment recovery, releapse, death flows.
-    # Set unstratified treatment-outcome-related parameters
-    if "age" in params["stratify_by"]:
-        # Relapse and treatment death need to be adjusted by age later.
-        treatment_recovery_rate = 1.0
-        treatment_death_rate = 1.0
-        relapse_rate = 1.0
-    else:
-        times = list(params.time_variant_tsr.keys())
-        vals = list(params.time_variant_tsr.values())
-        time_variant_tsr = scale_up_function(times, vals, method=4)
-
-        def treatment_recovery_rate(t):
-            return max(
-                1 / params.treatment_duration,
-                params.universal_death_rate
-                / params.prop_death_among_negative_tx_outcome
-                * (1.0 / (1.0 - time_variant_tsr(t)) - 1.0),
-            )
-
-        def treatment_death_rate(t):
-            return (
-                params.prop_death_among_negative_tx_outcome
-                * treatment_recovery_rate(t)
-                * (1.0 - time_variant_tsr(t))
-                / time_variant_tsr(t)
-                - params.universal_death_rate
-            )
-
-        def relapse_rate(t):
-            return (treatment_death_rate(t) + params.universal_death_rate) * (
-                1.0 / params.prop_death_among_negative_tx_outcome - 1.0
-            )
-
+    # Relapse and treatment death need to be adjusted by age later.
+    treatment_recovery_rate = 1.0
+    treatment_death_rate = 1.0
+    relapse_rate = 1.0
     model.add_transition_flow(
         "treatment_recovery",
         treatment_recovery_rate,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
+    )
+    model.add_death_flow(
+        "treatment_death",
+        treatment_death_rate,
+        Compartment.ON_TREATMENT,
     )
     model.add_transition_flow(
         "relapse",
@@ -186,27 +155,19 @@ def build_model(params: dict) -> CompartmentalModel:
         Compartment.ON_TREATMENT,
         Compartment.INFECTIOUS,
     )
-    model.add_death_flow(
-        "treatment_death",
-        treatment_death_rate,
-        Compartment.ON_TREATMENT,
-    )
 
     # Entry flows
+    birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
+    birth_rates = [b / 1000.0 for b in birth_rates]  # Birth rates are provided / 1000 population
+    crude_birth_rate = scale_up_function(years, birth_rates, smoothness=0.2, method=5)
     model.add_crude_birth_flow(
         "birth",
-        params.crude_birth_rate,
+        crude_birth_rate,
         Compartment.SUSCEPTIBLE,
     )
 
-    # Death flows
-    if "age" in params["stratify_by"]:
-        # If age-stratification is used, the baseline mortality rate is set to 1
-        # so it can get multiplied by a time-variant
-        universal_death_rate = 1.0
-    else:
-        universal_death_rate = params.universal_death_rate
-
+    # Death flows - later modified by age stratification
+    universal_death_rate = 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
     # Infection death
@@ -283,47 +244,8 @@ def build_model(params: dict) -> CompartmentalModel:
             to_compartment,
         )
 
+    # SOME PRE STRAT STYFFF
     # ==================================================
-
-    # adjust late reactivation parameters using multiplier
-    for latency_stage in ["early", "late"]:
-        param_name = f"{latency_stage}_activation_rate"
-        for key in params["age_specific_latency"][param_name]:
-            params["age_specific_latency"][param_name][key] *= params["progression_multiplier"]
-
-    # load unstratified latency parameters
-    # get parameter values from Ragonnet et al., Epidemics 2017
-    for param_name in ["stabilisation_rate", "early_activation_rate", "late_activation_rate"]:
-        params[param_name] = (
-            365.25 * params["age_specific_latency"][param_name]["unstratified"]
-            if "age" not in params["stratify_by"]
-            else 1.0
-        )
-
-    # =============================================
-
-    # Create the model.
-    tb_model = StratifiedModel(
-        times=integration_times,
-        compartment_names=compartments,
-        initial_conditions=init_conditions,
-        parameters=params,
-        requested_flows=flows,
-        infectious_compartments=infectious_comps,
-        birth_approach=BirthApproach.ADD_CRUDE,
-        entry_compartment=Compartment.SUSCEPTIBLE,
-        starting_population=int(params["start_population_size"]),
-    )
-
-    # register acf_detection_func
-    if acf_detection_rate_func is not None:
-        tb_model.time_variants["acf_detection_rate"] = acf_detection_rate_func
-    # register preventive_treatment_func
-    if preventive_treatment_func is not None:
-        tb_model.time_variants["preventive_treatment_rate"] = preventive_treatment_func
-    # register time-variant contact-rate functions:
-    for param_name, func in contact_rate_functions.items():
-        tb_model.time_variants[param_name] = func
 
     # prepare infectiousness adjustment for individuals on treatment
     treatment_infectiousness_adjustment = [
@@ -336,3 +258,44 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Apply infectiousness adjustment for individuals on treatment
     tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
+
+    # =============================================
+
+    age_strat = get_age_strat(params)
+    model.stratify_with(age_strat)
+
+    # User defined stratifications
+
+    # Organ stratifications
+
+    # Derived outputs
+
+
+def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges=[]):
+    """
+    Find the time steps for model integration from the submitted requests, ensuring the time points are evenly spaced.
+    Use a refined time-step within critical ranges.
+    NB: this doesn't affect solver behavior.
+    """
+    times = []
+    interval_start = start_time
+    for critical_range in critical_ranges:
+        # add regularly-spaced points up until the start of the critical range
+        interval_end = critical_range[0]
+        if interval_end > interval_start:
+            times += list(np.arange(interval_start, interval_end, time_step))
+        # add points over the critical range with smaller time step
+        interval_start = interval_end
+        interval_end = critical_range[1]
+        if interval_end > interval_start:
+            times += list(np.arange(interval_start, interval_end, time_step / 10.0))
+        interval_start = interval_end
+
+    if end_time > interval_start:
+        times += list(np.arange(interval_start, end_time, time_step))
+    times.append(end_time)
+
+    # clean up time values ending .9999999999
+    times = [round(t, 5) for t in times]
+
+    return np.array(times)

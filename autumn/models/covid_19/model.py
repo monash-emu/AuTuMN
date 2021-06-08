@@ -91,9 +91,10 @@ def build_model(params: dict) -> CompartmentalModel:
         source=Compartment.EARLY_EXPOSED,
         dest=Compartment.LATE_EXPOSED,
     )
+    incidence_flow_rate = 1.0 / compartment_periods[Compartment.LATE_EXPOSED]
     model.add_transition_flow(
         name="incidence",
-        fractional_rate=1.0 / compartment_periods[Compartment.LATE_EXPOSED],
+        fractional_rate=incidence_flow_rate,
         source=Compartment.LATE_EXPOSED,
         dest=Compartment.EARLY_ACTIVE,
     )
@@ -128,6 +129,18 @@ def build_model(params: dict) -> CompartmentalModel:
     # Contact tracing stratification
     tracing_strat = get_tracing_strat(params)
     model.stratify_with(tracing_strat)
+
+    # *** Need to change this to a function flow dependent on prevalence ***
+    prop_traced = 0.0
+    rate = incidence_flow_rate * prop_traced
+    model.add_transition_flow(
+        "tracing",
+        rate,
+        Compartment.LATE_EXPOSED,
+        Compartment.LATE_EXPOSED,
+        source_strata={"tracing": "untraced"},
+        dest_strata={"tracing": "traced"}
+    )
 
     # Apply the VoC stratification and adjust contact rate for Variant of Concerns.
     if params.voc_emergence:

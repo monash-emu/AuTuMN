@@ -1,6 +1,6 @@
 from summer import Stratification, Multiply
 
-from autumn.models.covid_19.constants import INFECTIOUS_COMPARTMENTS
+from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS
 from autumn.models.covid_19.parameters import Parameters
 
 
@@ -8,7 +8,7 @@ def get_tracing_strat(params: Parameters) -> Stratification:
     tracing_strat = Stratification(
         "tracing",
         ["traced", "untraced"],
-        INFECTIOUS_COMPARTMENTS
+        DISEASE_COMPARTMENTS
     )
 
     # Current default for everyone to start out untraced
@@ -19,16 +19,12 @@ def get_tracing_strat(params: Parameters) -> Stratification:
         }
     )
 
-    # This thing needs to be a function that depends on incidence (as it emerges from the model) and CDR
-    prop_traced = lambda t: 0.
-    prop_not_traced = lambda t: 1. - prop_traced(t)
-
     # Apply the contact tracing
     tracing_strat.add_flow_adjustments(
-        "infect_onset",
+        "infection",
         {
-            "traced": Multiply(prop_traced),
-            "untraced": Multiply(prop_not_traced),
+            "traced": Multiply(0.),
+            "untraced": Multiply(1.),
         }
     )
 
@@ -36,7 +32,7 @@ def get_tracing_strat(params: Parameters) -> Stratification:
     rel_infectiousness_traced = 0.2
 
     # Adjust infectiousness of those traced
-    for comp in INFECTIOUS_COMPARTMENTS:
+    for comp in DISEASE_COMPARTMENTS:
         tracing_strat.add_infectiousness_adjustments(
             comp,
             {

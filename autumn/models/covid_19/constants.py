@@ -27,9 +27,10 @@ INFECTIOUS_COMPARTMENTS = [
     Compartment.EARLY_ACTIVE,
     Compartment.LATE_ACTIVE,
 ]
-# People who are infected, but may or may not be infectuous.
+# People who are infected, but may or may not be infectious.
 DISEASE_COMPARTMENTS = [Compartment.EARLY_EXPOSED, *INFECTIOUS_COMPARTMENTS]
-# People who are eligible to receive vaccinaiton
+
+# People who are eligible to receive vaccination
 VACCINE_ELIGIBLE_COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED]
 
 # All model compartments

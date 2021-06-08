@@ -1,4 +1,4 @@
-description: Scenario 8, sensitivity and max mobility
+description: Scenario 9, sensitivity + 25% return to the max mobiltiy
 parent: apps/covid_19/regions/johor/params/default.yml
 
 time:
@@ -16,14 +16,16 @@ mobility:
     other_locations:
       append: true
       times:
-        - 2021-04-01
+        - 2021-03-07
       values:
-        - - max_last_period
+        - - close_to_max_last_period
           - 180
+          - -0.25
     work:
       append: true
       times:
-        - 2021-04-01
+        - 2021-03-07
       values:
-        - - max_last_period
+        - - close_to_max_last_period
           - 180
+          - 0.25

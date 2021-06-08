@@ -1,5 +1,5 @@
-description: Scenario 8, sensitivity and max mobility
-parent: apps/covid_19/regions/johor/params/default.yml
+description: Scenario 7, sensitivity analysis and 25%return to the max mobility
+parent: apps/covid_19/regions/kuala_lumpur/params/default.yml
 
 time:
   start: 504 # 18th May 2021
@@ -16,14 +16,16 @@ mobility:
     other_locations:
       append: true
       times:
-        - 2021-04-01
+        - 2021-03-07
       values:
-        - - max_last_period
+        - - close_to_max_last_period
           - 180
+          - -0.25
     work:
       append: true
       times:
-        - 2021-04-01
+        - 2021-03-07
       values:
-        - - max_last_period
+        - - close_to_max_last_period
           - 180
+          - 0.25

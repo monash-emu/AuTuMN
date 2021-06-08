@@ -5,7 +5,6 @@ time:
   start: 504 # 18th May 2021
 
 vaccination:
-  coverage_override: 0.5
 
   # Eleven months from 18th April 2021
   roll_out_components:
@@ -19,14 +18,14 @@ mobility:
     other_locations:
       append: true
       times:
-        - 2021-04-01
+        - 2021-03-07
       values:
         - - max_last_period
           - 180
     work:
       append: true
       times:
-        - 2021-04-01
+        - 2021-03-07
       values:
         - - max_last_period
           - 180

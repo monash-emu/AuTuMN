@@ -67,7 +67,8 @@ def pre_task_setup():
 
 def setup_sentry():
     """
-    Setup Sentry error reporting - https://sentry.io/welcome/
+    Setup Sentry error reporting
+    https://sentry.io/organizations/monash-emu/issues/?project=5807435
     """
     import sentry_sdk
 

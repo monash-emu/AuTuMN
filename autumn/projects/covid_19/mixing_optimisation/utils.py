@@ -24,7 +24,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "sojourn.compartment_periods_calculated.exposed.total_period",
             "distribution": "trunc_normal",
-            "distri_params": [5.5, 0.97],
+            "distri_params": [6., 1.],
             "trunc_range": [1.0, np.inf],
         },
         {

@@ -62,7 +62,7 @@ sojourn:
   # Mean time spent in each compartment, defined via proportions
   compartment_periods_calculated:
     exposed:
-      total_period: 5.5 # Routinely calibrated, see calibration file
+      total_period: 6. # Routinely calibrated, see calibration file
       proportions:
         early: 0.5 # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
         late: 0.5

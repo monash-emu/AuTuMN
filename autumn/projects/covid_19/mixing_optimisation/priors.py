@@ -7,8 +7,8 @@ PRIORS = [
     UniformPrior("infectious_seed", [50, 600]),
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",
-        mean=5.5,
-        stdev=0.97,
+        mean=6.,
+        stdev=1.,
         trunc_range=[1.0, np.inf],
     ),
     TruncNormalPrior(

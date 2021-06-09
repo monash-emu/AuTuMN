@@ -11,8 +11,8 @@ https://docs.google.com/document/d/1Uhzqm1CbIlNXjowbpTlJpIphxOm34pbx8au2PeqpRXs/
 """
 EXPOSED_PERIOD_PRIOR = TruncNormalPrior(
     "sojourn.compartment_periods_calculated.exposed.total_period",
-    mean=5.5,
-    stdev=0.97,
+    mean=6,
+    stdev=1,
     trunc_range=[1.0, np.inf],
 )
 ACTIVE_PERIOD_PRIOR = TruncNormalPrior(

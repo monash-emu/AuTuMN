@@ -197,7 +197,7 @@ def build_model(params: dict) -> CompartmentalModel:
     early_exposed_traced_comps = \
         [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
 
-    model.add_derived_value_process("prevalence", PrevalenceProc)
+    model.add_derived_value_process("prevalence", PrevalenceProc())
     for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
         trace_func = trace_function(prop_traced, incidence_flow_rate)
         model.add_function_flow(

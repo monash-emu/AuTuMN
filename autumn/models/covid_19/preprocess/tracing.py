@@ -7,7 +7,11 @@ from summer.compute import DerivedValueProcessor, find_sum
 
 
 class PrevalenceProc(DerivedValueProcessor):
-    def __init__(self, compartments, flows):
+    def __init__(self):
+        # Initialise this with any additional parameters or data required (add arguments as necessary)
+        pass
+    
+    def prepare_to_run(self, compartments, flows):
         # Anything relating to model structure (indices etc) should be computed in here
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
             comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)

@@ -74,7 +74,7 @@ def setup_sentry():
 
     SENTRY_DSN = os.environ.get("SENTRY_DSN")
     if SENTRY_DSN:
-        sentry_sdk.init(SENTRY_DSN)
+        sentry_sdk.init(SENTRY_DSN, in_app_include=["autumn", "summer"])
 
 
 def setup_matplotlib():

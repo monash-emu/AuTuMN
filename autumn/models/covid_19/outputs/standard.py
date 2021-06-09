@@ -266,5 +266,5 @@ def request_standard_outputs(
                     func=lambda recovered, total: recovered / total,
                 )
 
-    if params.vaccination:
+    if params.vaccination and len(params.vaccination.roll_out_components) > 0:
         model.request_output_for_flow(name="vaccination", flow_name="vaccination")

@@ -1,4 +1,4 @@
-description: Scenario 7, sensitivity analysis and 25%return to the max mobility
+description: Scenario 7, sensitivity analysis and 25% return to the max mobility
 parent: apps/covid_19/regions/kuala_lumpur/params/default.yml
 
 time:

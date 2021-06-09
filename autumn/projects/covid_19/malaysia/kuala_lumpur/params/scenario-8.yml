@@ -1,4 +1,4 @@
-description: Scenario 7, In between max mobility six months and most recent mobility value + 80% vaccine roll-out
+description: Scenario 8, sensitivity with max mobility
 parent: apps/covid_19/regions/kuala_lumpur/params/default.yml
 
 time:

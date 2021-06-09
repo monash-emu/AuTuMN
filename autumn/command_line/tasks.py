@@ -11,13 +11,6 @@ import warnings
 import logging
 
 import click
-import sentry_sdk
-
-# Setup Sentry error reporting
-# https://sentry.io/organizations/monash-emu/issues/?project=5807435
-SENTRY_DSN = os.environ.get("SENTRY_DSN")
-if SENTRY_DSN:
-    sentry_sdk.init(SENTRY_DSN)
 
 
 @click.group()
@@ -67,8 +60,21 @@ def run_powerbi(run, urunid, verbose):
 
 def pre_task_setup():
     setup_warnings()
+    setup_sentry()
     setup_matplotlib()
     setup_logging()
+
+
+def setup_sentry():
+    """
+    Setup Sentry error reporting
+    https://sentry.io/organizations/monash-emu/issues/?project=5807435
+    """
+    import sentry_sdk
+
+    SENTRY_DSN = os.environ.get("SENTRY_DSN")
+    if SENTRY_DSN:
+        sentry_sdk.init(SENTRY_DSN)
 
 
 def setup_matplotlib():

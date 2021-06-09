@@ -13,10 +13,7 @@ def get_vacc_roll_out_function_from_coverage(supply_params, coverage_override=No
     Return a function of time.
     """
     # Get vaccination parameters
-    if supply_params.coverage:
-        coverage = supply_params.coverage
-    else:
-        coverage = coverage_override
+    coverage = supply_params.coverage if coverage_override is None else coverage_override
     start_time = supply_params.start_time
     end_time = supply_params.end_time
     duration = end_time - start_time

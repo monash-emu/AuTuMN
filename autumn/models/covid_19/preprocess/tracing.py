@@ -19,12 +19,13 @@ class TracingProc(DerivedValueProcessor):
         # Anything relating to model structure (indices etc) should be computed in here
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
             comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)
+        self.get_detected_proportion = build_detected_proportion_func(
+            self.agegroup_strata, self.country, self.pop, self.testing_to_detection, self.case_detection
+        )
 
     def process(self, comp_vals, flow_rates, time):
         # This is the actual calculation performed at each timestep
-        get_detected_proportion = build_detected_proportion_func(
-            self.agegroup_strata, self.country, self.pop, self.testing_to_detection, self.case_detection
-        )
+        print(self.get_detected_proportion(time))
         return
 
 

@@ -6,11 +6,15 @@ from autumn.models.covid_19.preprocess.case_detection import build_detected_prop
 from summer.compute import DerivedValueProcessor, find_sum
 
 
-class PrevalenceProc(DerivedValueProcessor):
-    def __init__(self):
+class TracingProc(DerivedValueProcessor):
+    def __init__(self, agegroup_strata, country, pop, testing_to_detection, case_detection):
         # Initialise this with any additional parameters or data required (add arguments as necessary)
-        pass
-    
+        self.agegroup_strata = agegroup_strata
+        self.country = country
+        self.pop = pop
+        self.testing_to_detection = testing_to_detection
+        self.case_detection = case_detection
+
     def prepare_to_run(self, compartments, flows):
         # Anything relating to model structure (indices etc) should be computed in here
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
@@ -18,14 +22,16 @@ class PrevalenceProc(DerivedValueProcessor):
 
     def process(self, comp_vals, flow_rates, time):
         # This is the actual calculation performed at each timestep
-        return find_sum(comp_vals[self.active_comps]) / find_sum(comp_vals)
+        get_detected_proportion = build_detected_proportion_func(
+            self.agegroup_strata, self.country, self.pop, self.testing_to_detection, self.case_detection
+        )
+        return
 
 
 def trace_function(prop_traced, incidence_flow_rate):
     def contact_tracing_func(
             flow, compartments, compartment_values, flows, flow_rates, derived_values, time
     ):
-        prevalence = derived_values["prevalence"]
         return incidence_flow_rate * prop_traced * compartment_values[flow.source.idx]
 
     return contact_tracing_func

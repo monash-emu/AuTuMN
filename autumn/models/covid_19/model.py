@@ -18,7 +18,7 @@ from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.vaccination import add_vaccination_flows
-from .preprocess.tracing import trace_function, PrevalenceProc
+from .preprocess.tracing import trace_function, TracingProc
 from .stratifications.agegroup import (
     AGEGROUP_STRATA,
     get_agegroup_strat,
@@ -197,7 +197,10 @@ def build_model(params: dict) -> CompartmentalModel:
     early_exposed_traced_comps = \
         [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
 
-    model.add_derived_value_process("prevalence", PrevalenceProc())
+    model.add_derived_value_process(
+        "detected_prop",
+        TracingProc(AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection)
+    )
     for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
         trace_func = trace_function(prop_traced, incidence_flow_rate)
         model.add_function_flow(

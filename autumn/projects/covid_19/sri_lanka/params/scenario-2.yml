@@ -1,4 +1,4 @@
-description: Scenario 2, closing schoolh
+description: Scenario 2, closing schools
 parent: apps/covid_19/regions/sri_lanka/params/default.yml
 
 time:

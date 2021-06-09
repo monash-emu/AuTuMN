@@ -1,0 +1,62 @@
+description: Scenario 1, max mobility last 6 months
+parent: apps/covid_19/regions/sri_lanka/params/default.yml
+
+time:
+  start: 504 # 18th May 2021
+
+
+mobility:
+  microdistancing:
+    behaviour:
+      function_type: tanh
+      parameters:
+        shape: .02
+        inflection_time: 380. # 1st February 2021
+        lower_asymptote: 0.
+        upper_asymptote: 0.4
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-13 # All schools close
+        - 2020-03-14
+        - 2020-07-06 # schools partial re-open
+        - 2020-07-07
+        - 2020-07-12 # Full schools close again
+        - 2020-07-13
+        - 2020-07-27 # Schools partial reopen
+        - 2020-07-28
+        - 2020-08-10 # Schools fully open again
+        - 2020-08-11
+        - 2020-11-03 # Schools fully close again
+        - 2020-11-04
+        - 2020-12-14 # All but western province re-open
+        - 2020-12-15
+        - 2021-01-11 # All but high isolated schools re-open
+        - 2021-01-12
+        - 2021-05-05 # All schools close
+        - 2021-05-06
+      values:
+        - 1.
+        - 0.
+        - 0.
+        - 0.2
+        - 0.2
+        - 0
+        - 0
+        - 0.5
+        - 0.5
+        - 1
+        - 1
+        - 0.
+        - 0.
+        - 0.5
+        - 0.5
+        - 1
+        - 1
+        - 0

@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, write_params_to_tex
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
@@ -25,7 +25,6 @@ scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 5
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
-
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
@@ -151,3 +150,9 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.VICTORIA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
+
+# Write parameter table to tex file
+params_list = [
+    "sojourn.compartment_periods_calculated.exposed.total_period",
+]
+write_params_to_tex(project, params_list, project_path=build_rel_path(''))

@@ -1,10 +1,12 @@
 import os
 import logging
 import inspect
+import json
 from datetime import datetime
 from typing import List, Union, Callable, Optional, Dict, Tuple
 from importlib import import_module, reload as reload_module
 
+from autumn.tools.project.params import read_param_value_from_string
 
 import yaml
 import pandas as pd
@@ -23,7 +25,7 @@ from autumn.tools.db.store import (
 from autumn.tools.db.database import FeatherDatabase
 from autumn.tools.utils.timer import Timer
 from autumn.tools.utils.utils import get_git_branch, get_git_hash
-from autumn.settings import OUTPUT_DATA_PATH
+from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH
 from autumn.tools.registry import _PROJECTS
 
 from .params import ParameterSet, Params
@@ -261,6 +263,47 @@ def get_all_available_scenario_paths(scenario_dir_path):
     return scenario_file_list
 
 
+def write_params_to_tex(project, params_list, project_path):
+    """
+    Write a parameter table as a tex file
+    :param project: Project object
+    :param params_list: ordered list of parameters to be included
+    :param project_path: path of the project's directory
+    """
+    base_params_descriptions_path = os.path.join(MODELS_PATH, project.model_name, "params_descriptions.json")
+    with open(base_params_descriptions_path, mode="r") as f:
+        params_descriptions = json.load(f)
+
+    updated_descriptions_path = os.path.join(project_path, "params_descriptions.json")
+    if os.path.isfile(updated_descriptions_path):
+        with open(updated_descriptions_path, mode="r") as f:
+            updated_params_descriptions = json.load(f)
+        params_descriptions.update(updated_params_descriptions)
+
+    tex_file_path = os.path.join(project_path, "parameters.tex")
+    with open(tex_file_path, "w") as tex_file:
+        # Write the table header
+        tex_file.write("\\begin{longtable}[ht]{| >{\\raggedright}p{4cm} | >{\\raggedright}p{3cm} | p{6.8cm} |} \n")
+        tex_file.write("\t \hline \n")
+        tex_file.write("\t Parameter & Value & Rationale \\\ \n")
+        tex_file.write("\t \endfirsthead \n")
+        tex_file.write("\t \\multicolumn{3}{c}{continuation of parameters table} \\\ \n ")
+        tex_file.write("\t \endhead \n \n")
+
+        # Write one row per parameter
+        for param in params_list:
+            value = read_param_value_from_string(project.param_set.baseline.to_dict(), param)
+            table_row = f"\hline {params_descriptions[param]['full_name']} & {value} & "
+            if "rationale" in params_descriptions[param]:
+                table_row += params_descriptions[param]["rationale"]
+
+            tex_file.write("\t " + table_row)
+            tex_file.write("\n")
+
+        # Finish the table
+        tex_file.write("\end{longtable}")
+
+
 def post_process_scenario_outputs(
     models: List[CompModel], project: Project, run_id: int = 0, chain_id: int = None
 ) -> Dict[str, pd.DataFrame]:
@@ -374,6 +417,7 @@ def calc_absolute_diff_output(output_name, output_arr, baseline_output, sc_outpu
 
     new_output_name = f"abs_diff_{output_name}"
     return new_output_name
+
 
 
 OUTPUT_CALCS = {

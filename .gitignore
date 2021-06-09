@@ -70,6 +70,7 @@ docs/papers/tex/*.pdf
 
 # Random stuff
 saved_*
+*marshall-islands*.pickle
 saved_optimisation_analyses/
 saved_uncertainty_analyses/
 saved_*

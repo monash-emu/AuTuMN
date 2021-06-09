@@ -1,14 +1,45 @@
-import logging
-import multiprocessing as mp
 import sys
-import traceback
+import time
+import os
+import logging
+import functools
+import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import Any, Callable, List
+from typing import List, Callable, Any
+
+import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
 
 MAX_WORKERS = mp.cpu_count() - 1
+SENTRY_ERROR_DELAY = 10  # seconds
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+
+
+def report_errors(func):
+    """
+    Decorator that ensures that errors found inside parallel tasks
+    are captured by Sentry, rather than being buried by the parent process.
+    """
+
+    @functools.wraps(func)
+    def error_handler_wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            return result
+        except Exception as e:
+            if SENTRY_DSN:
+                # Sentry uses an async model to send exceptions to their server,
+                # so we need to wait for Sentry to send the message or else the parent process
+                # will kill the child before it can log the error
+                logger.info("Waiting %s seconds for Sentry to upload an error.", SENTRY_ERROR_DELAY)
+                sentry_sdk.capture_exception(e)
+                time.sleep(SENTRY_ERROR_DELAY)
+
+            raise e
+
+    return error_handler_wrapper
 
 
 def run_parallel_tasks(func: Callable, arg_list: List[Any]):
@@ -33,12 +64,6 @@ def run_parallel_tasks(func: Callable, arg_list: List[Any]):
     logger.info("Successfully ran %s parallel tasks: %s", len(success_results), success_results)
     if failure_exceptions:
         logger.info("Failed to run %s parallel tasks", len(failure_exceptions))
-
-    for e in failure_exceptions:
-        start = "\n\n===== Exception when running a parallel task =====\n"
-        end = "\n================ End of error message ================\n"
-        error_message = "".join(traceback.format_exception(e.__class__, e, e.__traceback__))
-        logger.error(start + error_message + end)
 
     if failure_exceptions:
         logger.error(

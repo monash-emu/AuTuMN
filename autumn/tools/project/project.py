@@ -257,9 +257,7 @@ def get_all_available_scenario_paths(scenario_dir_path):
     scenario_file_list = []
     for filename in all_files:
         if filename.startswith("scenario-") and filename.endswith(".yml"):
-            scenario_file_list.append(
-                os.path.join(scenario_dir_path, filename)
-            )
+            scenario_file_list.append(os.path.join(scenario_dir_path, filename))
     return scenario_file_list
 
 

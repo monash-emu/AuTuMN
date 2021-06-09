@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 from autumn.tools import db, plots
 from autumn.settings import REMOTE_BASE_DIR
-from autumn.tools.utils.parallel import run_parallel_tasks
+from autumn.tools.utils.parallel import run_parallel_tasks, report_errors
 from autumn.tools.utils.fs import recreate_dir
 from autumn.tools.utils.s3 import upload_to_run_s3, get_s3_client
 from autumn.tools.utils.timer import Timer
@@ -71,6 +71,7 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
         upload_to_run_s3(s3_client, run_id, MLE_PARAMS_PATH, quiet=not verbose)
 
 
+@report_errors
 def run_calibration_chain(
     run_id: str, runtime: float, chain_id: int, num_chains: int, verbose: bool
 ):

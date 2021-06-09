@@ -15,7 +15,7 @@ class Time(BaseModel):
     start: float
     end: float
     step: float
-    critical_ranges: List[float]
+    critical_ranges: List[List[float]]
 
 
 class ParamConfig:

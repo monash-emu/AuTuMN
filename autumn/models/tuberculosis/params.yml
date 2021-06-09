@@ -33,9 +33,9 @@ user_defined_stratifications: {} # this specifies user-defined  stratifications
 #      rural: .2
 #      urban: .8
 #    adjustments:
-#      contact_rate:
+#      infection:
 #        rural: 1.2
-#      detection_rate:
+#      detection:
 #        rural: .65
 
 # demographics

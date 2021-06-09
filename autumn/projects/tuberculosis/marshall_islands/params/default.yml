@@ -24,11 +24,11 @@ user_defined_stratifications: # this specifies user-defined  stratifications
       - [0.025, 0.95, 0.025]
       - [0.025, 0.025, 0.95]
     adjustments:
-      contact_rate:
+      infection:
         majuro: 1.
         ebeye: 1.
         other: 1.
-      detection_rate:
+      detection:
         majuro: 1.
         ebeye: 1.495354866232787
         other: 1.2325688858220845

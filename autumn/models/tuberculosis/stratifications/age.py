@@ -1,31 +1,23 @@
-from summer import Stratification, Multiply
+from summer import AgeStratification, Multiply
 from math import exp, log
 
-from autumn.models.tuberculosis.constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
-from autumn.models.tuberculosis.parameters import Parameters
-from autumn.tools.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
-
-
-from summer.legacy.model import create_sloping_step_function
-from summer.legacy.model.utils.parameter_processing import (
-    get_parameter_dict_from_function,
-)
 
 from autumn.tools.curve import make_linear_curve, scale_up_function, tanh_based_scaleup
 from autumn.tools.inputs import get_death_rates_by_agegroup
+from autumn.tools.utils.utils import change_parameter_unit
 from autumn.tools.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
-
-from summer.legacy.model.utils.parameter_processing import (
-    create_step_function_from_dict,
+from autumn.models.tuberculosis.constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
+from autumn.models.tuberculosis.parameters import Parameters
+from autumn.tools.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
+from autumn.models.tuberculosis.utils import (
+    create_sloping_step_function,
     get_parameter_dict_from_function,
+    create_step_function_from_dict,
 )
 
-from autumn.tools.curve import make_linear_curve, tanh_based_scaleup
-from autumn.tools.utils.utils import change_parameter_unit
 
-
-def get_age_strat(params: Parameters) -> Stratification:
-    strat = Stratification("agegroup", params.age_breakpoints, COMPARTMENTS)
+def get_age_strat(params: Parameters) -> AgeStratification:
+    strat = AgeStratification("age", params.age_breakpoints, COMPARTMENTS)
 
     mixing_matrix = get_mixing_matrix_specific_agegroups(params.iso3, params.age_breakpoints)
     strat.set_mixing_matrix(mixing_matrix)
@@ -34,13 +26,16 @@ def get_age_strat(params: Parameters) -> Stratification:
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(
         params.age_breakpoints, params.iso3
     )
-    death_adjs = {}
+    universal_death_funcs = {}
     for age in params.age_breakpoints:
-        death_adjs[age] = scale_up_function(
+        universal_death_funcs[age] = scale_up_function(
             death_rate_years, death_rates_by_age[age], smoothness=0.2, method=5
         )
 
-    strat.add_flow_adjustments("universal_death", death_adjs)
+    death_adjs = {str(k): Multiply(v) for k, v in universal_death_funcs.items()}
+    for comp in COMPARTMENTS:
+        flow_name = f"universal_death_for_{comp}"
+        strat.add_flow_adjustments(flow_name, death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
     for flow_name, latency_params in params.age_specific_latency.items():
@@ -73,7 +68,7 @@ def get_age_strat(params: Parameters) -> Stratification:
                 def get_latency_with_diabetes(
                     t,
                     prop_diabetes=params.extra_params["prop_diabetes"][age],
-                    previous_progression_rate=adjs[age],
+                    previous_progression_rate=adjs[str(age)],
                     rr_progression_diabetes=params.extra_params["rr_progression_diabetes"],
                 ):
                     return (
@@ -85,7 +80,7 @@ def get_age_strat(params: Parameters) -> Stratification:
 
                 adjs[age] = get_latency_with_diabetes
 
-        adjs = {k: Multiply(v) for k, v in adjs.items()}
+        adjs = {str(k): Multiply(v) for k, v in adjs.items()}
         strat.add_flow_adjustments(flow_name, adjs)
 
     # Set age-specific infectiousness
@@ -106,7 +101,11 @@ def get_age_strat(params: Parameters) -> Stratification:
                 # Set infectiousness to 1. for the oldest age group
                 average_infectiousness = 1.0
 
-            inf_adjs[age_low] = Multiply(average_infectiousness)
+            if comp == Compartment.ON_TREATMENT:
+                # Apply infectiousness multiplier for people on treatment,
+                average_infectiousness *= params.on_treatment_infect_multiplier
+
+            inf_adjs[str(age_low)] = Multiply(average_infectiousness)
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
 
@@ -116,61 +115,92 @@ def get_age_strat(params: Parameters) -> Stratification:
     )
 
     # Set treatment_recovery
-    def make_treatment_recovery_func(age_group, model, params, time_variant_tsr):
-        def treatment_recovery_func(t):
-            return max(
-                1 / params["treatment_duration"],
-                model.time_variants["universal_death_rate_" + str(age_group)](t)
-                / params["prop_death_among_negative_tx_outcome"]
-                * (1.0 / (1.0 - time_variant_tsr(t)) - 1.0),
+    treatment_recovery_funcs = {}
+    treatment_death_funcs = {}
+    treatment_relapse_funcs = {}
+    for age in params.age_breakpoints:
+
+        def get_treatment_recovery_rate(t, age=age):
+            death_rate = universal_death_funcs[age](t)
+            floor_val = 1 / params.treatment_duration
+            dynamic_val = (
+                death_rate
+                / params.prop_death_among_negative_tx_outcome
+                * (1.0 / (1.0 - time_variant_tsr(t)) - 1.0)
+            )
+            return max(floor_val, dynamic_val)
+
+        def get_treatment_death_rate(t, age=age):
+            death_rate = universal_death_funcs[age](t)
+            recovery_rate = get_treatment_recovery_rate(t, age=age)
+            return (
+                params.prop_death_among_negative_tx_outcome
+                * recovery_rate
+                * (1.0 - time_variant_tsr(t))
+                / time_variant_tsr(t)
+                - death_rate
             )
 
-        return treatment_recovery_func
-
-    # Set treatment_death
-    # Set relapse
-
-    factory_functions = {
-        "treatment_recovery_rate": make_treatment_recovery_func,
-        "treatment_death_rate": make_treatment_death_func,
-        "relapse_rate": make_relapse_rate_func,
-    }
-    for param_stem in factory_functions:
-        flow_adjustments[param_stem] = {}
-        for age_group in params["age_breakpoints"]:
-            flow_adjustments[param_stem][str(age_group)] = param_stem + "_" + str(age_group)
-
-            model.time_variants[param_stem + "_" + str(age_group)] = factory_functions[param_stem](
-                age_group, model, params, time_variant_tsr
+        def get_treatment_relapse_rate(t, age=age):
+            recovery_rate = get_treatment_recovery_rate(t, age=age)
+            return (
+                recovery_rate
+                * (1.0 / time_variant_tsr(t) - 1.0)
+                * (1.0 - params.prop_death_among_negative_tx_outcome)
             )
-            model.parameters[param_stem + "_" + str(age_group)] = param_stem + "_" + str(age_group)
 
-    # ================================
+        treatment_recovery_funcs[age] = get_treatment_recovery_rate
+        treatment_death_funcs[age] = get_treatment_death_rate
+        treatment_relapse_funcs[age] = get_treatment_relapse_rate
 
-    # add BCG effect without stratifying for BCG
+    treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
+    treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}
+    treatment_relapse_adjs = {str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()}
+    strat.add_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
+    strat.add_flow_adjustments("treatment_death", treatment_death_adjs)
+    strat.add_flow_adjustments("relapse", treatment_relapse_adjs)
+
+    # Add BCG effect without stratifying for BCG
     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
     bcg_susceptibility_multilier_dict = get_parameter_dict_from_function(
-        lambda value: bcg_wane(value), params["age_breakpoints"]
+        bcg_wane, params.age_breakpoints
     )
     bcg_coverage_func = scale_up_function(
-        list(params["time_variant_bcg_perc"].keys()),
-        list(params["time_variant_bcg_perc"].values()),
+        list(params.time_variant_bcg_perc.keys()),
+        list(params.time_variant_bcg_perc.values()),
         method=5,
         bound_low=0,
         bound_up=100,
         smoothness=1.5,
     )
-    for agegroup, multiplier in bcg_susceptibility_multilier_dict.items():
+    infections_adjs = {}
+    for age, multiplier in bcg_susceptibility_multilier_dict.items():
         if multiplier < 1.0:
-            average_age = get_average_age_for_bcg(agegroup, params["age_breakpoints"])
-            name = "contact_rate_" + agegroup
-            bcg_susceptibility_multilier_dict[agegroup] = name
-            model.time_variants[name] = make_bcg_multiplier_func(
+            average_age = get_average_age_for_bcg(age, params.age_breakpoints)
+            infections_adjs[age] = make_bcg_multiplier_func(
                 bcg_coverage_func, multiplier, average_age
             )
-            model.parameters[name] = name
-    flow_adjustments.update({"contact_rate": bcg_susceptibility_multilier_dict})
+        else:
+            infections_adjs[age] = None
 
-    # ================================
+    infections_adjs = {str(k): Multiply(v) for k, v in infections_adjs.items()}
+    strat.add_flow_adjustments("infection", infections_adjs)
 
     return strat
+
+
+def get_average_age_for_bcg(agegroup, age_breakpoints):
+    agegroup_idx = age_breakpoints.index(int(agegroup))
+    if agegroup_idx == len(age_breakpoints) - 1:
+        # We should normally never be in this situation because the last agegroup is not affected by BCG anyway.
+        print("Warning: the agegroup name is being used to represent the average age of the group")
+        return float(agegroup)
+    else:
+        return 0.5 * (age_breakpoints[agegroup_idx] + age_breakpoints[agegroup_idx + 1])
+
+
+def make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age):
+    def bcg_multiplier_func(t):
+        return 1.0 - bcg_coverage_func(t - average_age) / 100.0 * (1.0 - multiplier)
+
+    return bcg_multiplier_func

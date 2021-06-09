@@ -8,6 +8,8 @@ from autumn.tools import inputs
 
 from .constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
 from .stratifications.age import get_age_strat
+from .stratifications.user_defined import get_user_defined_strat
+from .stratifications.organ import get_organ_strat
 
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
@@ -38,8 +40,8 @@ def build_model(params: dict) -> CompartmentalModel:
     model.set_initial_population(init_pop)
 
     contact_rate = params.contact_rate
-    contact_rate_latent = (params.contact_rate * params.rr_infection_latent,)
-    contact_rate_recovered = (params.contact_rate * params.rr_infection_recovered,)
+    contact_rate_latent = params.contact_rate * params.rr_infection_latent
+    contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
     if params.hh_contacts_pt:
         # PT in household contacts
         times = [params.hh_contacts_pt["start_time"], params.hh_contacts_pt["start_time"] + 1]
@@ -52,7 +54,7 @@ def build_model(params: dict) -> CompartmentalModel:
                     params.hh_contacts_pt["prop_smearpos_among_prev_tb"]
                     * params.hh_contacts_pt["prop_hh_transmission"]
                     * scaleup_screening_prop(t)
-                    * params["ltbi_screening_sensitivity"]
+                    * params.ltbi_screening_sensitivity
                     * params.hh_contacts_pt["prop_pt_completion"]
                 )
                 return contact_rate * (1 - rel_reduction)
@@ -244,31 +246,29 @@ def build_model(params: dict) -> CompartmentalModel:
             to_compartment,
         )
 
-    # SOME PRE STRAT STYFFF
-    # ==================================================
-
-    # prepare infectiousness adjustment for individuals on treatment
-    treatment_infectiousness_adjustment = [
-        {
-            "comp_name": Compartment.ON_TREATMENT,
-            "comp_strata": {},
-            "value": params["on_treatment_infect_multiplier"],
-        }
-    ]
-
-    # Apply infectiousness adjustment for individuals on treatment
-    tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
-
-    # =============================================
-
+    # Age stratification.
     age_strat = get_age_strat(params)
     model.stratify_with(age_strat)
 
-    # User defined stratifications
+    # Custom, user-defined stratifications
+    user_defined_strats = [
+        s for s in params.user_defined_stratifications.keys() if s in params.stratify_by
+    ]
+    for strat_name in user_defined_strats:
+        assert "_" not in strat_name, "Stratification name should not include '_'"
+        strat_details = params.user_defined_stratifications[strat_name]
+        user_defined_strat = get_user_defined_strat(strat_name, strat_details, params)
+        model.stratify_with(user_defined_strat)
 
     # Organ stratifications
+    if "organ" in params.stratify_by:
+        organ_strat = get_organ_strat(params)
+        model.stratify_with(organ_strat)
 
     # Derived outputs
+    # TODO
+
+    return model
 
 
 def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges=[]):

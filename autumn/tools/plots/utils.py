@@ -17,8 +17,8 @@ PLOT_TEXT_DICT = {
     "time_variant_tb_screening_rate.shape": "screening profile (max gradient)",
     "time_variant_tb_screening_rate.inflection_time": "screening profile (inflection time), year",
     "time_variant_tb_screening_rate.upper_asymptote": "screening profile (final rate), per year",
-    "user_defined_stratifications.location.adjustments.detection_rate.ebeye": "rel. screening rate (Ebeye)",
-    "user_defined_stratifications.location.adjustments.detection_rate.other": "rel. screening rate (Other Isl.)",
+    "user_defined_stratifications.location.adjustments.detection.ebeye": "rel. screening rate (Ebeye)",
+    "user_defined_stratifications.location.adjustments.detection.other": "rel. screening rate (Other Isl.)",
     "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
     "rr_infection_recovered": "RR infection (recovered)",
     "pt_efficacy": "PT efficacy",
@@ -122,22 +122,11 @@ def add_vertical_lines_to_plot(axis, lines: Dict):
     for text, position in lines.items():
 
         # Add the line itself
-        axis.axvline(
-            x=position,
-            linestyle="--",
-            alpha=0.7
-        )
+        axis.axvline(x=position, linestyle="--", alpha=0.7)
 
         # Add the text to accompany it
         upper_ylim = axis.get_ylim()[1]
-        axis.text(
-            x=position,
-            y=upper_ylim * 0.97,
-            s=text,
-            rotation=90,
-            ha="right",
-            va="top"
-        )
+        axis.text(x=position, y=upper_ylim * 0.97, s=text, rotation=90, ha="right", va="top")
 
 
 def add_horizontal_lines_to_plot(axis, lines: Dict):
@@ -149,29 +138,19 @@ def add_horizontal_lines_to_plot(axis, lines: Dict):
     for text, position in lines.items():
 
         # Add the line itself
-        axis.axhline(
-            y=position,
-            linestyle="--",
-            alpha=0.7
-        )
+        axis.axhline(y=position, linestyle="--", alpha=0.7)
 
         # Add the text to accompany it
         lower_xlim = axis.get_xlim()[0]
-        axis.text(
-            x=lower_xlim,
-            y=position,
-            s=text,
-            ha="left",
-            va="bottom"
-        )
+        axis.text(x=lower_xlim, y=position, s=text, ha="left", va="bottom")
 
 
 def _apply_transparency(color_list: List[str], alphas: List[str]):
     """Make a list of colours transparent, based on a list of alphas"""
 
-    #+++FIXME
-    #This will fail if len(color_list) > len(alphas)
-    #Should move to generative colours rather than fixed lists
+    # +++FIXME
+    # This will fail if len(color_list) > len(alphas)
+    # Should move to generative colours rather than fixed lists
 
     out_colors = []
 
@@ -180,7 +159,7 @@ def _apply_transparency(color_list: List[str], alphas: List[str]):
         for j in range(len(color_list[i])):
             rgb_color = list(colors.colorConverter.to_rgb(color_list[i][j]))
             out_colors[i].append(rgb_color + [alphas[i]])
-    
+
     return out_colors
 
 

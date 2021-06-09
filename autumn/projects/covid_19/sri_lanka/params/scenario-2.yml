@@ -1,8 +1,8 @@
-description: Scenario 1, max mobility last 6 months
+description: Scenario 2, closing schoolh
 parent: apps/covid_19/regions/sri_lanka/params/default.yml
 
 time:
-  start: 504 # 18th May 2021
+  start: 529 # 12th June 2021
 
 
 mobility:
@@ -41,6 +41,7 @@ mobility:
         - 2021-01-12
         - 2021-05-05 # All schools close
         - 2021-05-06
+        - 2021-06-12 # All schools open
       values:
         - 1.
         - 0.
@@ -60,3 +61,4 @@ mobility:
         - 1
         - 1
         - 0
+        - 1

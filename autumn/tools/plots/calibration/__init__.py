@@ -44,6 +44,11 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
             continue
 
         output_name = target["output_key"]
+
+        if not output_name in derived_output_tables[0].columns:
+            # Not a current calibration target.
+            continue
+
         # need to bypass the differential output targets because these outputs are not computed yet.
         if output_name.startswith("rel_diff") or output_name.startswith("abs_diff"):
             continue

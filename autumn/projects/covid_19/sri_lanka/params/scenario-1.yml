@@ -1,5 +1,4 @@
 description: Scenario 1, return to the max mobility last 3 months
-parent: apps/covid_19/regions/sri_lanka/params/default.yml
 
 time:
   start: 529 # 12th June 2021

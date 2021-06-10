@@ -153,7 +153,9 @@ project = Project(
 )
 
 # Write parameter table to tex file
-params_list = [
+main_table_params_list = [
+    "clinical_stratification.icu_prop",
     "sojourn.compartment_periods_calculated.exposed.total_period",
+    "contact_rate"
 ]
-write_params_to_tex(project, params_list, project_path=build_rel_path(''))
+write_params_to_tex(project, main_table_params_list, project_path=build_rel_path(''))

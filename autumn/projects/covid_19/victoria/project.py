@@ -158,4 +158,4 @@ main_table_params_list = [
     "sojourn.compartment_periods_calculated.exposed.total_period",
     "contact_rate"
 ]
-write_params_to_tex(project, main_table_params_list, project_path=build_rel_path(''))
+# write_params_to_tex(project, main_table_params_list, project_path=build_rel_path(''))

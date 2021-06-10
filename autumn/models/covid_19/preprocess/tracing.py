@@ -22,8 +22,17 @@ def trace_function(incidence_flow_rate):
         """
         Calculate the transition flow as the product of the size of the source compartment, the only outflow and the
         proportion of all new cases traced.
+
+        Solving the following equation:
+
+        traced_prop = traced_flow_rate / (traced_flow_rate + incidence_flow_rate)
+
+        for traced_flow_rate gives the following equation:
         """
-        return compartment_values[flow.source.idx] * incidence_flow_rate * derived_values["traced_prop"]
+        traced_flow_rate = incidence_flow_rate * derived_values["traced_prop"] / (1. - derived_values["traced_prop"])
+
+        # Multiply through by the source compartment to get the final absolute rate
+        return traced_flow_rate * compartment_values[flow.source.idx]
 
     return contact_tracing_func
 

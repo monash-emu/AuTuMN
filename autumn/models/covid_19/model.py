@@ -189,35 +189,35 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
-    trace_param = 1e4
+    if params.contact_tracing:
+        trace_param = params.contact_tracing.exponent_param
 
-    early_exposed_untraced_comps = \
-        [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]
-    early_exposed_traced_comps = \
-        [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
+        early_exposed_untraced_comps = \
+            [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]
+        early_exposed_traced_comps = \
+            [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
 
-    # Create the CDR function in exactly the same way as what is used in calculating the flow rates
-    get_detected_proportion = build_detected_proportion_func(
-        AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
-    )
-
-    model.add_derived_value_process(
-        "traced_prop",
-        TracingProc(trace_param, get_detected_proportion)
-    )
-
-    for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
-        trace_func = trace_function(incidence_flow_rate)
-        model.add_function_flow(
-            "tracing",
-            trace_func,
-            Compartment.EARLY_EXPOSED,
-            Compartment.EARLY_EXPOSED,
-            source_strata=untraced.strata,
-            dest_strata=traced.strata,
-            expected_flow_count=1,
+        # Create the CDR function in exactly the same way as what is used in calculating the flow rates
+        get_detected_proportion = build_detected_proportion_func(
+            AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
         )
 
+        model.add_derived_value_process(
+            "traced_prop",
+            TracingProc(trace_param, get_detected_proportion)
+        )
+
+        for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
+            trace_func = trace_function(incidence_flow_rate)
+            model.add_function_flow(
+                "tracing",
+                trace_func,
+                Compartment.EARLY_EXPOSED,
+                Compartment.EARLY_EXPOSED,
+                source_strata=untraced.strata,
+                dest_strata=traced.strata,
+                expected_flow_count=1,
+            )
     # Set up derived output functions
     if not params.victorian_clusters:
         request_standard_outputs(model, params)

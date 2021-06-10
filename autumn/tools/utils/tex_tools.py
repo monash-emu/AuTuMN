@@ -74,7 +74,7 @@ def write_main_param_table(project, main_table_params_list, params_descriptions,
             tex_file.write("\t " + table_row + " \n")
 
         # Finish up the table
-        tex_file.write("\\end{longtable}")
+        tex_file.write("\n \\hline \n \\end{longtable}")
 
 
 def write_priors_table(params_descriptions, all_priors, output_dir_path):
@@ -100,7 +100,7 @@ def write_priors_table(params_descriptions, all_priors, output_dir_path):
             tex_file.write("\t " + table_row + " \n")
 
         # Finish up the table
-        tex_file.write("\\end{longtable}")
+        tex_file.write("\n \\hline \n \\end{longtable}")
 
 
 def write_param_table_header(tex_file, table_type="main_table"):

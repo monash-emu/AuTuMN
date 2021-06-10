@@ -1,18 +1,15 @@
 import numpy as np
 
 from autumn.models.covid_19.constants import Compartment
-from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
 
 from summer.compute import DerivedValueProcessor, find_sum
 
 
-def get_traced_prop_factory(trace_param):
+def get_traced_prop(trace_param, prev):
     """
-    Create function for the proportion of detected people who are traced.
+    Function for the proportion of detected people who are traced.
     """
-    def get_traced_prop(prev):
-        return np.exp(-prev * trace_param)
-    return get_traced_prop
+    return np.exp(-prev * trace_param)
 
 
 def trace_function(incidence_flow_rate):
@@ -27,7 +24,7 @@ def trace_function(incidence_flow_rate):
 
         traced_prop = traced_flow_rate / (traced_flow_rate + incidence_flow_rate)
 
-        for traced_flow_rate gives the following equation:
+        for traced_flow_rate gives the following:
         """
         traced_flow_rate = incidence_flow_rate * derived_values["traced_prop"] / (1. - derived_values["traced_prop"])
 
@@ -38,18 +35,13 @@ def trace_function(incidence_flow_rate):
 
 
 class TracingProc(DerivedValueProcessor):
-    def __init__(self, trace_param, agegroup_strata, country, pop, testing_to_detection, case_detection):
+    def __init__(self, trace_param, detected_prop_func):
         """
         Arguments needed to calculate running quantities during run-time.
         """
         self.trace_param = trace_param
-        self.agegroup_strata = agegroup_strata
-        self.country = country
-        self.pop = pop
-        self.testing_to_detection = testing_to_detection
-        self.case_detection = case_detection
+        self.detected_prop_func = detected_prop_func
         self.active_comps = None
-        self.get_detected_proportion = None
         self.get_traced_prop = None
 
     def prepare_to_run(self, compartments, flows):
@@ -62,13 +54,8 @@ class TracingProc(DerivedValueProcessor):
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
             comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)
 
-        # Create the CDR function in exactly the same way as what is used in calculating the flow rates
-        self.get_detected_proportion = build_detected_proportion_func(
-            self.agegroup_strata, self.country, self.pop, self.testing_to_detection, self.case_detection
-        )
-
         # Get the function for the proportion of contacts of detected cases who are traced
-        self.get_traced_prop = get_traced_prop_factory(self.trace_param)
+        self.get_traced_prop = get_traced_prop
 
     def process(self, comp_vals, flow_rates, time):
         """
@@ -76,6 +63,6 @@ class TracingProc(DerivedValueProcessor):
         Calculate the actual proportion of detected cases detected
         """
         prev = find_sum(comp_vals[self.active_comps]) / find_sum(comp_vals)
-        prop_detected_traced = self.get_traced_prop(prev)
-        prop_traced = prop_detected_traced * self.get_detected_proportion(time)
+        prop_detected_traced = self.get_traced_prop(self.trace_param, prev)
+        prop_traced = prop_detected_traced * self.detected_prop_func(time)
         return prop_traced

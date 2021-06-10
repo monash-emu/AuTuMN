@@ -1,9 +1,8 @@
-import copy
-
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
+from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
 
 from .constants import (
     COMPARTMENTS,
@@ -197,10 +196,16 @@ def build_model(params: dict) -> CompartmentalModel:
     early_exposed_traced_comps = \
         [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
 
+    # Create the CDR function in exactly the same way as what is used in calculating the flow rates
+    get_detected_proportion = build_detected_proportion_func(
+        AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
+    )
+
     model.add_derived_value_process(
         "traced_prop",
-        TracingProc(trace_param, AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection)
+        TracingProc(trace_param, get_detected_proportion)
     )
+
     for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
         trace_func = trace_function(incidence_flow_rate)
         model.add_function_flow(

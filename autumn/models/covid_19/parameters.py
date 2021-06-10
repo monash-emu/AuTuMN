@@ -261,6 +261,13 @@ class Vaccination(BaseModel):
         return val
 
 
+class ContactTracing(BaseModel):
+    """
+
+    """
+    exponent_param: float
+
+
 class AgeSpecificRiskMultiplier(BaseModel):
     age_categories: List[str]
     adjustment_start_time: Optional[int]
@@ -307,6 +314,7 @@ class Parameters:
     clinical_stratification: ClinicalStratification
     case_detection: CaseDetection
     testing_to_detection: Optional[TestingToDetection]
+    contact_tracing: Optional[ContactTracing]
     victorian_clusters: Optional[VictorianClusterStratification]
     # Dummy parameters - not used
     notifications_dispersion_param: float

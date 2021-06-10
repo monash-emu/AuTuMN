@@ -2,6 +2,7 @@ from summer import CompartmentalModel
 
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
+from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
 
 from .constants import (
     COMPARTMENTS,
@@ -16,6 +17,7 @@ from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.vaccination import add_vaccination_flows
+from .preprocess.tracing import trace_function, TracingProc
 from .stratifications.agegroup import (
     AGEGROUP_STRATA,
     get_agegroup_strat,
@@ -25,6 +27,7 @@ from .stratifications.cluster import (
     apply_post_cluster_strat_hacks,
     get_cluster_strat,
 )
+from .stratifications.tracing import get_tracing_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
@@ -90,9 +93,10 @@ def build_model(params: dict) -> CompartmentalModel:
         source=Compartment.EARLY_EXPOSED,
         dest=Compartment.LATE_EXPOSED,
     )
+    incidence_flow_rate = 1.0 / compartment_periods[Compartment.LATE_EXPOSED]
     model.add_transition_flow(
         name="incidence",
-        fractional_rate=1.0 / compartment_periods[Compartment.LATE_EXPOSED],
+        fractional_rate=incidence_flow_rate,
         source=Compartment.LATE_EXPOSED,
         dest=Compartment.EARLY_ACTIVE,
     )
@@ -123,6 +127,10 @@ def build_model(params: dict) -> CompartmentalModel:
     # Stratify the model by clinical status
     clinical_strat = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
+
+    # Contact tracing stratification
+    tracing_strat = get_tracing_strat(params)
+    model.stratify_with(tracing_strat)
 
     # Apply the VoC stratification and adjust contact rate for Variant of Concerns.
     if params.voc_emergence:
@@ -179,6 +187,37 @@ def build_model(params: dict) -> CompartmentalModel:
         model.stratify_with(cluster_strat)
         apply_post_cluster_strat_hacks(params, model)
 
+    # **** THIS MUST BE THE LAST STRATIFICATION ****
+    # Apply the process of contact tracing
+    if params.contact_tracing:
+        trace_param = params.contact_tracing.exponent_param
+
+        early_exposed_untraced_comps = \
+            [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]
+        early_exposed_traced_comps = \
+            [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
+
+        # Create the CDR function in exactly the same way as what is used in calculating the flow rates
+        get_detected_proportion = build_detected_proportion_func(
+            AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
+        )
+
+        model.add_derived_value_process(
+            "traced_prop",
+            TracingProc(trace_param, get_detected_proportion)
+        )
+
+        for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
+            trace_func = trace_function(incidence_flow_rate)
+            model.add_function_flow(
+                "tracing",
+                trace_func,
+                Compartment.EARLY_EXPOSED,
+                Compartment.EARLY_EXPOSED,
+                source_strata=untraced.strata,
+                dest_strata=traced.strata,
+                expected_flow_count=1,
+            )
     # Set up derived output functions
     if not params.victorian_clusters:
         request_standard_outputs(model, params)

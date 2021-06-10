@@ -1,0 +1,8 @@
+{
+  "sojourn.compartment_periods_calculated.exposed.total_period": {
+    "full_name": "Incubation period",
+    "unit": "days",
+    "n_digits": 1,
+    "rationale": "To be completed"
+  }
+}

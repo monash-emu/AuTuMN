@@ -4,6 +4,8 @@ from os.path import dirname
 # Filesystem paths
 BASE_PATH = os.path.abspath(dirname(dirname(dirname(__file__))))
 DATA_PATH = os.path.join(BASE_PATH, "data")
+DOCS_PATH = os.path.join(BASE_PATH, "docs")
+MODELS_PATH = os.path.join(BASE_PATH, "autumn", "models")
 PROJECTS_PATH = os.path.join(BASE_PATH, "autumn", "projects")
 INPUT_DATA_PATH = os.path.join(DATA_PATH, "inputs")
 OUTPUT_DATA_PATH = os.path.join(DATA_PATH, "outputs")

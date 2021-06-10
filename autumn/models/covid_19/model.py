@@ -190,7 +190,7 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
-    prop_traced = 0.1  # Should be a parameter, of course
+    trace_param = 1e4
 
     early_exposed_untraced_comps = \
         [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]
@@ -198,11 +198,11 @@ def build_model(params: dict) -> CompartmentalModel:
         [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
 
     model.add_derived_value_process(
-        "detected_prop",
-        TracingProc(AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection)
+        "traced_prop",
+        TracingProc(trace_param, AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection)
     )
     for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
-        trace_func = trace_function(prop_traced, incidence_flow_rate)
+        trace_func = trace_function(incidence_flow_rate)
         model.add_function_flow(
             "tracing",
             trace_func,

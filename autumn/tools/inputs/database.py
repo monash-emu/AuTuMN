@@ -78,6 +78,8 @@ def build_input_database(force: bool = False, rebuild: bool = False):
         saved_db_hash = read_file_hash(input_db_hash_path)
         is_hash_mismatch = current_db_hash != saved_db_hash
         if rebuild and is_hash_mismatch:
+            log_msg = f"Canonical hash : {saved_db_hash}\nCurrent hash : {current_db_hash}"
+            logger.error(log_msg)
             msg = "Input database does not match canonical version."
             raise ValueError(msg)
         elif is_hash_mismatch:

@@ -15,6 +15,19 @@ def get_traced_prop_factory(trace_param):
     return get_traced_prop
 
 
+def trace_function(incidence_flow_rate):
+    def contact_tracing_func(
+            flow, compartments, compartment_values, flows, flow_rates, derived_values, time
+    ):
+        """
+        Calculate the transition flow as the product of the size of the source compartment, the only outflow and the
+        proportion of all new cases traced.
+        """
+        return compartment_values[flow.source.idx] * incidence_flow_rate * derived_values["traced_prop"]
+
+    return contact_tracing_func
+
+
 class TracingProc(DerivedValueProcessor):
     def __init__(self, trace_param, agegroup_strata, country, pop, testing_to_detection, case_detection):
         """
@@ -28,6 +41,7 @@ class TracingProc(DerivedValueProcessor):
         self.case_detection = case_detection
         self.active_comps = None
         self.get_detected_proportion = None
+        self.get_traced_prop = None
 
     def prepare_to_run(self, compartments, flows):
         """
@@ -56,16 +70,3 @@ class TracingProc(DerivedValueProcessor):
         prop_detected_traced = self.get_traced_prop(prev)
         prop_traced = prop_detected_traced * self.get_detected_proportion(time)
         return prop_traced
-
-
-def trace_function(incidence_flow_rate):
-    def contact_tracing_func(
-            flow, compartments, compartment_values, flows, flow_rates, derived_values, time
-    ):
-        """
-        Calculate the transition flow as the product of the size of the source compartment, the only outflow and the
-        proportion of all new cases traced.
-        """
-        return compartment_values[flow.source.idx] * incidence_flow_rate * derived_values["traced_prop"]
-
-    return contact_tracing_func

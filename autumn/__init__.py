@@ -97,6 +97,12 @@ register_project(Models.COVID_19, Region.NEPAL, "autumn.projects.covid_19.nepal.
 # Sri Lanka
 register_project(Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.project")
 
+# Timor Leste
+register_project(Models.COVID_19, Region.TIMOR_LESTE, "autumn.projects.covid_19.timor_leste.project")
+
+
+
+
 # COVID: Victoria project
 # FIXME: Parameter validation issues
 # register_project(Models.COVID_19, Region.VICTORIA, "autumn.projects.covid_19.victoria.project")

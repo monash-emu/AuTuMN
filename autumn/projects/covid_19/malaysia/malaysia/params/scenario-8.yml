@@ -9,7 +9,6 @@ vaccination:
 
   roll_out_components:
   - supply_period_coverage:
-      coverage: 0.8  # this value does not matter. It will be overriden by the coverage_override parameter
       start_time: 504.
       end_time: 838.
 
@@ -18,14 +17,14 @@ mobility:
     other_locations:
       append: true
       times:
-        - 2021-04-01
+        - 2021-03-07
       values:
         - - max_last_period
           - 180
     work:
       append: true
       times:
-        - 2021-04-01
+        - 2021-03-07
       values:
         - - max_last_period
           - 180

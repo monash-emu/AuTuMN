@@ -6,6 +6,7 @@ from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
+from autumn.tools.utils.tex_tools import write_params_to_tex
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
@@ -25,7 +26,6 @@ scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 5
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
-
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
@@ -151,3 +151,11 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.VICTORIA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
+
+# Write parameter table to tex file
+main_table_params_list = [
+    "clinical_stratification.icu_prop",
+    "sojourn.compartment_periods_calculated.exposed.total_period",
+    "contact_rate"
+]
+# write_params_to_tex(project, main_table_params_list, project_path=build_rel_path(''))

@@ -2,13 +2,13 @@
 The age-stratified late exposed/incubation and both the early and late active disease compartments were further stratified into five ``clinical" categories: \textit{1)} asymptomatic, \textit{2)} symptomatic ambulatory, never detected, \textit{3)} symptomatic ambulatory, ever detected, \textit{4)} ever hospitalised, never critical and \textit{5)} ever critically unwell (Figure \ref{fig:clinical_strat}).
 The proportion of new infectious persons entering stratum 1 (asymptomatic) is age-dependent. The proportion of symptomatic patients (strata 2 to 5) ever detected (strata 3 to 5) is set through a parameter that represents the time-varying proportion of all symptomatic patients who are ever detected (the case detection rate). Of those ever symptomatic (strata 2 to 5), a time-constant but age-specific proportion is considered to be hospitalised (entering strata 4 or 5). Of those hospitalised (entering strata 4 or 5), a fixed proportion was considered to be critically unwell (entering stratum 5, Figure \ref{fig:clinical_rationale}).
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \includegraphics[width=\textwidth]{../covid_19/stratifications/covid_19_clinical_strat.pdf}
     \caption{Illustration of the implementation of the clinical stratification. Depth of pink/red shading indicates the infectiousness of the compartment. Typical parameter values represented, although the infectiousness of asymptomatic persons is varied in calibration.}
     \label{fig:clinical_strat}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \includegraphics[width=\textwidth]{../covid_19/stratifications/covid_19_clinical_rationale.pdf}
 	\caption{Illustration of the rationale for the clinical stratification.}
     \label{fig:clinical_rationale}
@@ -23,10 +23,10 @@ Asymptomatic persons are assumed to be less infectious per unit time active than
 \subsection{Application of COVID-19-related death}
 Age-specific infection fatality rates (IFRs) were applied and distributed across strata 4 and 5, with no deaths typically applied to the first three strata. A ceiling of 50\% is set on the proportion of those admitted to ICU (entering stratum 5) who die. If the infection fatality rate is greater than this ceiling, the proportion of critically unwell persons dying was set to 50\%, with the remainder of the infection fatality rate then applied to the hospitalised proportion. Otherwise, if the infection fatality rate is less than half of the absolute proportion of persons critically unwell, the infection fatality rate is applied entirely through stratum 5 (such that the proportion of critically unwell persons dying in that age group becomes \textless 50\% and the proportion of stratum 4 dying is set to zero). In the event that the infection fatality rate for an age group is greater than the total proportion hospitalised (which is unusual, but could occur for the oldest age group under certain parameter configurations), the remaining deaths are assigned to the asymptomatic stratum. This approach was adopted for computational ease and is valid because the duration active for persons entering this stratum is the same as for the other non-hospitalised strata, such that the dynamics are identical to assigning the deaths to any of the first three strata. We used the age-specific IFRs previously estimated from age-specific death data from 45 countries and results from national-level seroprevalence surveys \cite{RN6}. We allowed IFRs to vary around the previously published point estimates in order to incorporate uncertainty and to allow the IFRs to differ from the settings in which they were estimated (see Calibration section).
 
-\begin{table}[h]
+\begin{table}[ht]
 \renewcommand{\baselinestretch}{1}
-    \begin{tabular}{|p{1.5cm}|p{4.2cm}|p{2.4cm}|c|c|}
-        \hline
+    \begin{tabular}{| p{2cm} | p{6.6cm} | p{2.5cm} | l | l |}
+    	\hline
         \textbf{Clinical stratum} & \textbf{Stratum name} & \textbf{Pre-symptomatic} &\textbf{Early} & \textbf{Late}\\
         \hline
         1 & Asymptomatic & \cellcolor[HTML]{DC6464}\textcolor[HTML]{FFFFFF}{0.5} & 
@@ -39,6 +39,6 @@ Age-specific infection fatality rates (IFRs) were applied and distributed across
         \hline
     \end{tabular}
     
-    \caption{\small Illustration of the relative infectiousness of disease compartments by clinical stratification and stage of infection. Typical parameter values displayed.}
+    \caption{Illustration of the relative infectiousness of disease compartments by clinical stratification and stage of infection. Typical parameter values displayed.}
     \label{tab:clinical}
 \end{table}

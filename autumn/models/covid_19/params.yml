@@ -178,11 +178,7 @@ victorian_clusters: null
 vaccination:
   overall_efficacy: 0
   vacc_prop_prevent_infection: 0
-  roll_out_components:
-  - supply_period_coverage:
-      coverage: 0.
-      start_time: 0.
-      end_time: 1.
+  roll_out_components: []
 
 # Contact tracing-related
 contact_tracing: null

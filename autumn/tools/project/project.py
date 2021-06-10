@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import List, Union, Callable, Optional, Dict, Tuple
 from importlib import import_module, reload as reload_module
 
-
 import yaml
 import pandas as pd
 import numpy as np
@@ -247,6 +246,20 @@ class DiffOutput:
     REQUEST_TYPES = [RELATIVE, ABSOLUTE]
 
 
+def get_all_available_scenario_paths(scenario_dir_path):
+    """
+    Automatically lists the paths of all the yml files starting with 'scenario-' available in a given directory.
+    :param scenario_dir_path: path to the directory
+    :return: a list of paths
+    """
+    all_files = os.listdir(scenario_dir_path)
+    scenario_file_list = []
+    for filename in all_files:
+        if filename.startswith("scenario-") and filename.endswith(".yml"):
+            scenario_file_list.append(os.path.join(scenario_dir_path, filename))
+    return scenario_file_list
+
+
 def post_process_scenario_outputs(
     models: List[CompModel], project: Project, run_id: int = 0, chain_id: int = None
 ) -> Dict[str, pd.DataFrame]:
@@ -360,6 +373,7 @@ def calc_absolute_diff_output(output_name, output_arr, baseline_output, sc_outpu
 
     new_output_name = f"abs_diff_{output_name}"
     return new_output_name
+
 
 
 OUTPUT_CALCS = {

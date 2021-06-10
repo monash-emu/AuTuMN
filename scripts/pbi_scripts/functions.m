@@ -2,19 +2,19 @@ Feedback Type:
 Frown (Error)
 
 Timestamp:
-2021-05-17T04:09:46.5124892Z
+2021-06-09T04:53:35.0474465Z
 
 Local Time:
-2021-05-17T14:09:46.5124892+10:00
+2021-06-09T14:53:35.0474465+10:00
 
 Session ID:
-91e4e5c9-da6c-48d1-a27f-8d5052dfaa6e
+e199ec05-183c-42cd-a7c0-b4fde857f8a5
 
 Release:
 May 2021
 
 Product Version:
-2.93.641.0 (21.05) (x64)
+2.93.981.0 (21.05) (x64)
 
 OS Version:
 Microsoft Windows NT 10.0.17763.0 (x64 en-GB)
@@ -23,13 +23,13 @@ CLR Version:
 4.7 or later [Release Number = 528049]
 
 Peak Virtual Memory:
-39.2 GB
+40.1 GB
 
 Private Memory:
-1.32 GB
+0.99 GB
 
 Peak Working Set:
-1.5 GB
+1.19 GB
 
 IE Version:
 11.1790.17763.0
@@ -38,13 +38,13 @@ User ID:
 bba3e10e-bf65-455b-b5ce-ad1c3b84a97c
 
 Workbook Package Info:
-1* - en-AU, Query Groups: 6, fastCombine: Enabled, runBackgroundAnalysis: True.
+1* - en-AU, Query Groups: 6, fastCombine: Enabled, runBackgroundAnalysis: False.
 
 Telemetry Enabled:
 False
 
 Snapshot Trace Logs:
-C:\Users\maba0001\Microsoft\Power BI Desktop Store App\FrownSnapShotd55e173a-a10c-4259-b75c-01701d85e560.zip
+C:\Users\maba0001\Microsoft\Power BI Desktop Store App\FrownSnapShot716b9662-7807-4246-bd9b-b64043d4362b.zip
 
 Model Default Mode:
 Import
@@ -80,7 +80,7 @@ Cloud:
 GlobalCloud
 
 DPI Scale:
-100%
+125%
 
 Supported Services:
 Power BI
@@ -103,8 +103,7 @@ shared base_build_index = let
     #"Replaced Value" = Table.ReplaceValue(Custom1,"-"," ",Replacer.ReplaceText,{"region_name"}),
     #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","manila","national capital region",Replacer.ReplaceText,{"region_name"})
 in
-    #"Replaced Value1"
-;
+    #"Replaced Value1";
 
 shared base_powerbi_output = let
     Source = base_build_index,
@@ -143,8 +142,7 @@ shared base_build_scenario = let
     #"Changed Type" = Table.TransformColumnTypes(#"Merged Columns",{{"scenario", Int64.Type}, {"start_time", Int64.Type}, {"description", type text}}),
     #"Inserted Merged Column" = Table.AddColumn(#"Changed Type", "bld_scn", each Text.Combine({Text.From([build_index], "en-AU"), Text.From([scenario], "en-AU")}, "_"), type text) //base_covid_region
 in
-    #"Inserted Merged Column"
-;
+    #"Inserted Merged Column";
 
 shared GetPowerbiOutputs = let
     Source2 = (pbidbpath as text) => let
@@ -171,24 +169,31 @@ shared base_derived_output = let
     #"Invoked Custom Function" = Table.AddColumn(Source, "GetDerivedOutputs", each GetDerivedOutputs([Full_Path])),
     #"Removed Other Columns1" = Table.SelectColumns(#"Invoked Custom Function",{"build_index", "GetDerivedOutputs"}),
     #"Removed Errors" = Table.RemoveRowsWithErrors(#"Removed Other Columns1", {"GetDerivedOutputs"}),
-    #"Expanded GetDerivedOutputs" = Table.ExpandTableColumn(#"Removed Errors", "GetDerivedOutputs", {"do_scenario", "do_date", "stratification_name", "do_value"}, {"do_scenario", "do_date", "stratification_name", "do_value"}),
-    #"Changed Type" = Table.TransformColumnTypes(#"Expanded GetDerivedOutputs",{{"do_scenario", type text}, {"do_date", type date}, {"stratification_name", type text}, {"do_value", type number}}),
+    #"Added Custom1" = List.Combine(Table.AddColumn(#"Removed Errors", "Custom", (x) => Table.ColumnNames(x[GetDerivedOutputs]))[Custom]),
+    columns_to_expand = List.Distinct(#"Added Custom1"),
+    #"Expanded GetDerivedOutputs" = Table.ExpandTableColumn(#"Removed Errors", "GetDerivedOutputs",columns_to_expand),
+    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Expanded GetDerivedOutputs", {"build_index", "scenario", "times"}, "Attribute", "Value"),
+    #"Renamed Columns" = Table.RenameColumns(#"Unpivoted Other Columns",{{"scenario", "do_scenario"}, {"times", "do_date"}, {"Attribute", "stratification_name"}, {"Value", "do_value"}}),
+    
+    //, "GetDerivedOutputs", {"do_scenario", "do_date", "stratification_name", "do_value"}, {"do_scenario", "do_date", "stratification_name", "do_value"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"do_scenario", type text}, {"do_date", type date}, {"stratification_name", type text}, {"do_value", type number}}),
     #"Inserted Merged Column" = Table.AddColumn(#"Changed Type", "bld_scn", each Text.Combine({Text.From([build_index], "en-AU"), [do_scenario]}, "_"), type text)
 in
     #"Inserted Merged Column";
 
 shared GetDerivedOutputs = let
     Source = (pbidbpath as text) => let
-        Source_2 = Odbc.Query("database="&pbidbpath&";dsn=SQLite3 Datasource", "select cast(scenario as int) as scenario, cast(times as int) as times, *#(lf)from derived_outputs"),
+        Source2 = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
+        derived_output_Table = Source2{[Name="derived_outputs",Kind="Table"]}[Data],
+        FixBinary = Table.TransformColumns(derived_output_Table,{{"scenario", ConvertBinary, Int64.Type},{"run", ConvertBinary, Int64.Type}}),
+        #"Changed Type1" = Table.TransformColumnTypes(FixBinary,{{"run", Int64.Type}, {"scenario", Int64.Type}}),
         start_time = GetStartTime(pbidbpath),
-        all_good = Table.RemoveColumns(Source_2,{"chain", "run", "scenario2", "times2"}),
+        all_good = Table.RemoveColumns(FixBinary,{"chain", "run"}),
         Replicate = try ReplicateBaseline(all_good, start_time) otherwise all_good,
         #"Added to Column" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
-        #"Changed Type" = Table.TransformColumnTypes(#"Added to Column",{{"times", type date}}),
-        #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Changed Type", {"scenario", "times"}, "stratification_name", "do_value"),
-        #"Renamed Columns" = Table.RenameColumns(#"Unpivoted Other Columns",{{"times", "do_date"}, {"scenario", "do_scenario"}})
+        #"Changed Type" = Table.TransformColumnTypes(#"Added to Column",{{"times", type date}})
     in
-        #"Renamed Columns"
+        #"Changed Type"
 in
     Source;
 
@@ -205,10 +210,13 @@ in
 
 shared GetUncertainty = let
     Source2 = (pbidbpath as text) => let
-        Source = Odbc.Query("database="&pbidbpath&";dsn=SQLite3 Datasource", "select cast(scenario as int) as scenario, cast(time as int) as times, *#(lf)from uncertainty"),
+        Source = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
+        uncertainty_Table = Source{[Name="uncertainty",Kind="Table"]}[Data],
+        FixBinary = Table.TransformColumns(uncertainty_Table,{{"scenario", ConvertBinary, Int64.Type}}),
+        #"Renamed Columns1" = Table.RenameColumns(FixBinary,{{"time", "times"}}),
+        #"Changed Type1" = Table.TransformColumnTypes(#"Renamed Columns1",{{"scenario", Int64.Type}, {"times", Int64.Type}}),
         start_time = GetStartTime(pbidbpath),
-        fix_accum = Table.RemoveColumns(Source,{"scenario2", "time"}),
-        Replicate = try ReplicateBaseline(fix_accum, start_time) otherwise fix_accum,
+        Replicate = try ReplicateBaseline(#"Changed Type1", start_time) otherwise #"Changed Type1",
         #"Added Covid start date" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
         #"Rename Columns" = Table.RenameColumns( #"Added Covid start date",{{"scenario", "un_scenario"}, {"quantile", "un_quantile"}, {"times", "un_date"}, {"type", "stratification_name"}, {"value", "un_value"}}),
         #"Added to Column" = Table.TransformColumns(#"Rename Columns", {{"stratification_name", each DimStratification{[stratification_name = _]}[stratification_id] , Int64.Type}}),
@@ -330,8 +338,11 @@ in
 
 shared GetCalibrationValues = let
     Func = (pbidbpath as text, table_name as text) => let
-        Source = Odbc.Query("database="&pbidbpath&";dsn=SQLite3 Datasource", "select key, cast(times as int) as times, cast(value as int) as value #(lf)from targets"),
-        Transform_columns = Table.TransformColumns(Source, {{"times", each _ + covid_date, type number},{"key", each DimStratification{[stratification_name = _]}[stratification_id], Int64.Type}}),
+        Source = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
+        targets_Table = Source{[Name="targets",Kind="Table"]}[Data],
+        FixBinary = Table.TransformColumns(targets_Table,{{"times", ConvertBinary, Int64.Type}}),
+        #"Changed Type" = Table.TransformColumnTypes(FixBinary,{{"times", Int64.Type}}),
+        Transform_columns = Table.TransformColumns(#"Changed Type", {{"times", each _ + covid_date, type number},{"key", each DimStratification{[stratification_name = _]}[stratification_id], Int64.Type}}),
         #"Changed Type2" = Table.TransformColumnTypes(Transform_columns,{{"times", type date}}),
         #"Renamed Columns" = Table.RenameColumns(#"Changed Type2",{{"key", "stratification_id"}, {"times", "cal_date"}, {"value", "cal_value"}})
     in
@@ -439,7 +450,7 @@ in
 
 shared StartDate = #date(2020, 1, 1) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
 
-shared EndDate = #date(2022, 1, 1) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
+shared EndDate = #date(2021, 12, 31) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
 
 shared mcmc = let
     Source = Table.NestedJoin(base_mcmc_run, {"build_index", "mcmc_chain", "mcmc_run"}, base_mcmc_param, {"build_index", "mcmc_chain", "mcmc_run"}, "base_mcmc_param", JoinKind.RightOuter),
@@ -465,29 +476,18 @@ shared data_location = "M:\Documents\@Projects\Covid_consolidate\output" meta [I
 shared GetBuild = let
     Source = (pbidbpath as text) => 
     let
-            Source = Odbc.Query("database="&pbidbpath&";dsn=SQLite3 Datasource", "select * #(lf)from build"),
-            #"Split Column by Delimiter" = Table.SplitColumn(Source, "build_key", Splitter.SplitTextByDelimiter("-", QuoteStyle.Csv), {"unix_epoch_time", "git_commit"}),
-            #"Changed Type" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"unix_epoch_time", Int64.Type}}),
-            #"Inserted Division" = Table.AddColumn(#"Changed Type", "build_time", each 25569+([unix_epoch_time] / (60*60*24)), type number),
-            #"Changed Type1" = Table.TransformColumnTypes(#"Inserted Division",{{"build_time", type datetime}}),
-            #"Inserted Date" = Table.AddColumn(#"Changed Type1", "build_date", each DateTime.Date([build_time]), type date)
+            //Source = Odbc.Query("database="&pbidbpath2&";dsn=SQLite3 Datasource", "select * #(lf)from build"),
+        Source = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
+        build_Table = Source{[Name="build",Kind="Table"]}[Data],
+        #"Split Column by Delimiter" = Table.SplitColumn(build_Table, "build_key", Splitter.SplitTextByDelimiter("-", QuoteStyle.Csv), {"unix_epoch_time", "git_commit"}),
+        #"Changed Type" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"unix_epoch_time", Int64.Type}}),
+        #"Inserted Division" = Table.AddColumn(#"Changed Type", "build_time", each 25569+([unix_epoch_time] / (60*60*24)), type number),
+        #"Changed Type1" = Table.TransformColumnTypes(#"Inserted Division",{{"build_time", type datetime}}),
+        #"Inserted Date" = Table.AddColumn(#"Changed Type1", "build_date", each DateTime.Date([build_time]), type date)
     in
-        #"Inserted Date"
+            #"Inserted Date"   
 in
     Source;
-
-shared #"Invoked Function" = (pbidbpath) => let
-        Source = Odbc.Query("database="&pbidbpath&";dsn=SQLite3 Datasource", "select cast(scenario as int) as scenario,cast(times as int) as times, *#(lf)from powerbi_outputs"),
-        start_time = GetStartTime(pbidbpath),
-        #"Removed Columns" = Table.RemoveColumns(Source,{"chain", "run", "scenario2","times2"}),
-        Replicate = ReplicateBaseline(#"Removed Columns", start_time),
-        #"Added Covid start date" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
-        #"Extracted Text After Delimiter" = Table.TransformColumns(#"Added Covid start date", {{"agegroup", each Text.AfterDelimiter(_, "_", {0, RelativePosition.FromEnd}), type text}}),
-        #"Changed Type1" = Table.TransformColumnTypes(#"Extracted Text After Delimiter",{{"agegroup", Int64.Type}, {"times", type date}}),
-        #"Renamed Columns" = Table.RenameColumns(#"Changed Type1",{{"times", "pbi_date"}, {"scenario", "pbi_scenario"}, {"value", "pbi_value"}, {"agegroup", "dim_age"}, {"clinical", "pbi_clinical"}, {"compartment", "pbi_compartment"}}),
-        #"Replaced Value" = Table.ReplaceValue(#"Renamed Columns",null,"-1",Replacer.ReplaceValue,{"pbi_clinical"})
-    in
-        #"Replaced Value";
 
 shared GetScenario = let
     Source2 = (pbidbpath as text) => let
@@ -500,12 +500,16 @@ shared GetScenario = let
 in
     Source2;
 
-shared pbidbpath2 = "M:\Documents\@Projects\Covid_consolidate\output\powerbi-covid_19-philippines-1619430919-1255853.db" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false];
+shared pbidbpath2 = "M:\Documents\@Projects\Covid_consolidate\output_test\powerbi-covid_19-calabarzon-1619430919-1255853.db" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false];
 
 shared GetStartTime = let
     Source = (pbidbpath as text) => let
-        Source = Odbc.Query("database="&pbidbpath&";dsn=SQLite3 Datasource", "select cast(scenario as int) as scenario, cast( start_time as int) as start_time#(lf)from scenario#(lf)where scenario != 0"),
-        #"Removed Duplicates" = Table.Distinct(Source[[start_time]], {"start_time"}){0}[start_time]
+        Source = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
+        scenario_Table = Source{[Name="scenario",Kind="Table"]}[Data],
+        FixBinary = Table.TransformColumns(scenario_Table,{{"scenario", ConvertBinary, Int64.Type},{"start_time", ConvertBinary, Int64.Type}}),
+        #"Changed Type" = Table.TransformColumnTypes(FixBinary,{{"scenario", Int64.Type}, {"start_time", Int64.Type}}),
+        #"Filtered Rows" = Table.SelectRows(#"Changed Type", each ([scenario] <> 0)),
+            #"Removed Duplicates" = Table.Distinct(#"Filtered Rows"[[start_time]], {"start_time"}){0}[start_time]
     in
         #"Removed Duplicates"
 in
@@ -539,12 +543,7 @@ in
     Source;
 
 shared ConvertBinary = let
-    Source = (_) =>  Lines.FromBinary(_,null,null,1252){0}
-in
-    Source;
-
-shared Query1 = let
-    Source = Table.ReplaceValue
+    Source = (_) =>  try Lines.FromBinary(_,null,null,1252){0} otherwise _
 in
     Source;
 
@@ -556,22 +555,3 @@ shared DimWith = let
     #"Added Conditional Column" = Table.AddColumn(#"Renamed Columns", "dim_age_group", each if [With] = 0 then "00-04" else if [With] = 5 then "05-09" else if [With] = 10 then "10-14" else if [With] = 15 then "15-19" else if [With] = 20 then "20-24" else if [With] = 25 then "25-29" else if [With] = 30 then "30-34" else if [With] = 35 then "35-39" else if [With] = 40 then "40-44" else if [With] = 45 then "45-49" else if [With] = 50 then "50-54" else if [With] = 55 then "55-59" else if [With] = 60 then "60-64" else if [With] = 65 then "65-69" else if [With] = 70 then "70-74" else if [With] = 75 then "75+" else null, type text)
 in
     #"Added Conditional Column";
-
-shared Query2 = let
-    pbidbpath = "M:\Documents\@Projects\Covid_consolidate\output\powerbi-covid_19-philippines-1620628794-bd24237.db",
-
-        Source = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
-        powerbi_Table = Source{[Name="powerbi_outputs",Kind="Table"]}[Data],
-        FixBinary = Table.TransformColumns(powerbi_Table,{{"scenario", ConvertBinary, Int64.Type}}),
-
-        start_time = GetStartTime(pbidbpath),
-        #"Removed Columns" = Table.RemoveColumns(FixBinary,{"chain", "run"}),
-        Replicate = try ReplicateBaseline(#"Removed Columns", start_time) otherwise #"Removed Columns",
-        #"Added Covid start date" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
-        #"Extracted Text After Delimiter" = Table.TransformColumns(#"Added Covid start date", {{"agegroup", each Text.AfterDelimiter(_, "_", {0, RelativePosition.FromEnd}), type text}}),
-        #"Changed Type1" = Table.TransformColumnTypes(#"Extracted Text After Delimiter",{{"agegroup", Int64.Type}, {"times", type date}}),
-        #"Renamed Columns" = Table.RenameColumns(#"Changed Type1",{{"times", "pbi_date"}, {"scenario", "pbi_scenario"}, {"value", "pbi_value"}, {"agegroup", "dim_age"}, {"clinical", "pbi_clinical"}, {"compartment", "pbi_compartment"}}),
-        remove_clinical = Table.TransformColumns(#"Renamed Columns", {{"pbi_clinical", each Text.AfterDelimiter(_, "clinical_"), type text}}),
-        #"Replaced Value" = Table.ReplaceValue(remove_clinical,null,"-1",Replacer.ReplaceValue,{"pbi_clinical"})
-    in
-        #"Replaced Value";

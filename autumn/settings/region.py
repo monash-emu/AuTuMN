@@ -29,6 +29,7 @@ class Region:
     KUALA_LUMPUR = "kuala-lumpur"
     NEPAL = "nepal"
     SRI_LANKA = "sri_lanka"
+    TIMOR_LESTE = "timor_leste"
 
     REGIONS = [
         PHILIPPINES,
@@ -61,6 +62,7 @@ class Region:
         DAVAO_CITY,
         NEPAL,
         SRI_LANKA,
+        TIMOR_LESTE,
     ]
 
     MALAYSIA_REGIONS = [

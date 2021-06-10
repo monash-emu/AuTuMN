@@ -1,10 +1,9 @@
 description: Scenario 7, In between max mobility six months and most recent mobility value + 80% vaccine roll-out
-
+parent: apps/covid_19/regions/kuala_lumpur/params/default.yml
 time:
   start: 504 # 18th May 2021
 
 vaccination:
-  coverage_override: 0.8
   # Eleven months from 18th April 2021
   roll_out_components:
     - supply_period_coverage:

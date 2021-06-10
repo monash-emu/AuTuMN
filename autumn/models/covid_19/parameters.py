@@ -265,7 +265,8 @@ class ContactTracing(BaseModel):
     """
 
     """
-    exponent_param: float
+    assumed_trace_prop: float
+    assumed_prev: float
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

@@ -181,7 +181,9 @@ vaccination:
   roll_out_components: []
 
 # Contact tracing-related
-contact_tracing: null
+contact_tracing:
+  assumed_trace_prop: 1e-3
+  assumed_prev: 4.5399929762484854e-05
 
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
 haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio

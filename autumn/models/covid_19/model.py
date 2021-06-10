@@ -1,3 +1,5 @@
+import numpy as np
+
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
@@ -190,7 +192,8 @@ def build_model(params: dict) -> CompartmentalModel:
     # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
     if params.contact_tracing:
-        trace_param = params.contact_tracing.exponent_param
+        trace_param = -np.log(params.contact_tracing.assumed_trace_prop) / params.contact_tracing.assumed_prev
+
 
         early_exposed_untraced_comps = \
             [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]

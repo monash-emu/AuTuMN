@@ -125,11 +125,13 @@ def request_standard_outputs(
         sympt_isolate_name = f"progressXagegroup_{agegroup}Xclinical_sympt_isolate"
         hospital_non_icu_name = f"progressXagegroup_{agegroup}Xclinical_hospital_non_icu"
         icu_name = f"progressXagegroup_{agegroup}Xclinical_icu"
+        notifications_by_age_sources = [sympt_isolate_name, hospital_non_icu_name, icu_name]
+        if params.contact_tracing:
+            notifications_by_age_sources += notifications_traced_by_age_sources[agegroup]
 
-        model.request_function_output(
+        model.request_aggregate_output(
             name=f"notificationsXagegroup_{agegroup}",
-            sources=[sympt_isolate_name, hospital_non_icu_name, icu_name] + notifications_traced_by_age_sources[agegroup],
-            func=lambda sympt, hosp, icu, traced_asympt, traced_sympt_ambu: sympt + hosp + icu + traced_asympt + traced_sympt_ambu,
+            sources=notifications_by_age_sources
         )
 
     # Infection deaths.

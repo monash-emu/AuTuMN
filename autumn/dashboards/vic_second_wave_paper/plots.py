@@ -33,7 +33,6 @@ from autumn.tools.inputs import get_mobility_data
 STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
 KEY_PARAMS = [
-    "seasonal_force",
     "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
     "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
 ]

@@ -2,7 +2,6 @@ description: BASELINE
 parent: apps/covid_19/params.yml
 
 contact_rate: 0.0231
-seasonal_force: 0.
 infectious_seed: 100.
 
 time:

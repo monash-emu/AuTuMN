@@ -1,5 +1,3 @@
-import numpy as np
-
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
@@ -17,7 +15,6 @@ from . import preprocess
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
-from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.vaccination import add_vaccination_flows
 from .preprocess.tracing import trace_function, TracingProc, get_tracing_param
 from .stratifications.agegroup import (
@@ -73,14 +70,8 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Add intercompartmental flows.
 
-    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate.
-    if params.seasonal_force:
-        contact_rate = get_seasonal_forcing(
-            365.0, 173.0, params.seasonal_force, params.contact_rate
-        )
-    else:
-        # Use a static contact rate.
-        contact_rate = params.contact_rate
+    # Have removed seasonal forcing, the contact rate is now a constant parameter.
+    contact_rate = params.contact_rate
 
     model.add_infection_frequency_flow(
         name="infection",

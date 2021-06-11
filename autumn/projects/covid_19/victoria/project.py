@@ -92,7 +92,6 @@ priors = [
     ),
     # Should be multiplied by 4/9 because seed is removed from regional clusters
     UniformPrior("infectious_seed", [22.5, 67.5], jumping_stdev=2.0),
-    UniformPrior("seasonal_force", [0.0, 0.5], jumping_stdev=0.015),
     TruncNormalPrior(
         "clinical_stratification.props.symptomatic.multiplier",
         mean=1.0,

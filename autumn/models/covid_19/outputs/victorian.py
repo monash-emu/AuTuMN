@@ -2,7 +2,7 @@ from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import (
     COMPARTMENTS,
-    NOTIFICATION_STRATA,
+    NOTIFICATION_CLINICAL_STRATA,
     Clinical,
     Compartment,
 )
@@ -35,7 +35,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
 
     # Notifications.
     notification_sources = []
-    for clinical in NOTIFICATION_STRATA:
+    for clinical in NOTIFICATION_CLINICAL_STRATA:
         name = f"progressX{clinical}"
         notification_sources.append(name)
         model.request_output_for_flow(
@@ -49,7 +49,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
     # Cluster-specific notifications.
     for cluster in clusters:
         cluster_notification_sources = []
-        for clinical in NOTIFICATION_STRATA:
+        for clinical in NOTIFICATION_CLINICAL_STRATA:
             name = f"progress_for_cluster_{cluster}X{clinical}"
             cluster_notification_sources.append(name)
             model.request_output_for_flow(
@@ -71,7 +71,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
     notifications_young_sources = []
     notifications_old_sources = []
     for agegroup in AGEGROUP_STRATA:
-        for clinical in NOTIFICATION_STRATA:
+        for clinical in NOTIFICATION_CLINICAL_STRATA:
             name = f"progress_for_age_{agegroup}X{clinical}"
             if agegroup in ["65", "70", "75"]:
                 notifications_old_sources.append(name)

@@ -2,7 +2,7 @@ from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import (
     COMPARTMENTS,
-    NOTIFICATION_STRATA,
+    NOTIFICATION_CLINICAL_STRATA,
     Clinical,
     Compartment,
 )
@@ -39,7 +39,7 @@ def request_standard_outputs(
                 flow_name="incidence",
                 dest_strata={"agegroup": agegroup, "clinical": clinical},
             )
-            if clinical in NOTIFICATION_STRATA:
+            if clinical in NOTIFICATION_CLINICAL_STRATA:
                 notification_at_sympt_onset_sources.append(name)
 
     # Notifications at symptom onset.
@@ -50,7 +50,7 @@ def request_standard_outputs(
     # Disease progression
     model.request_output_for_flow(name="progress", flow_name="progress")
     for agegroup in AGEGROUP_STRATA:
-        for clinical in NOTIFICATION_STRATA:
+        for clinical in NOTIFICATION_CLINICAL_STRATA:
             model.request_output_for_flow(
                 name=f"progressXagegroup_{agegroup}Xclinical_{clinical}",
                 flow_name="progress",
@@ -75,7 +75,7 @@ def request_standard_outputs(
 
     # Get notifications, which may included people detected in-country as they progress, or imported cases which are detected.
     notification_sources = [
-        f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_STRATA
+        f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_CLINICAL_STRATA
     ]
     model.request_aggregate_output(name="local_notifications", sources=notification_sources)
     model.request_aggregate_output(

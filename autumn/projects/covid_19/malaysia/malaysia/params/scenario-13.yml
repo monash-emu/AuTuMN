@@ -1,16 +1,17 @@
-description: Scenario 11, 25% return to maximum  + 80% vaccine roll-out
+description: Scenario 13, 80% coverage in 5 months + 25% return to max mobility
+parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
   start: 504 # 18th May 2021
 
 vaccination:
 
-  # Eleven months from 18th May 2021
+  # Five months from 18th May 2021
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.8
         start_time: 504.
-        end_time: 838.
+        end_time: 654.
 
 mobility:
   mixing:
@@ -21,7 +22,7 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - 0.25
+          - 0.75
     work:
       append: true
       times:
@@ -29,4 +30,4 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - 0.25
+          - 0.75

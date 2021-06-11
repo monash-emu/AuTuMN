@@ -5,6 +5,13 @@ from autumn.models.covid_19.constants import Compartment
 from summer.compute import DerivedValueProcessor, find_sum
 
 
+def get_tracing_param(assumed_trace_prop, assumed_prev):
+    """
+    Calculate multiplier for the relationship between traced proportion and prevalence for use in the next function.
+    """
+    return -np.log(assumed_trace_prop) / assumed_prev
+
+
 def get_traced_prop(trace_param, prev):
     """
     Function for the proportion of detected people who are traced.

@@ -19,7 +19,7 @@ from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.vaccination import add_vaccination_flows
-from .preprocess.tracing import trace_function, TracingProc
+from .preprocess.tracing import trace_function, TracingProc, get_tracing_param
 from .stratifications.agegroup import (
     AGEGROUP_STRATA,
     get_agegroup_strat,
@@ -192,8 +192,8 @@ def build_model(params: dict) -> CompartmentalModel:
     # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
     if params.contact_tracing:
-        trace_param = -np.log(params.contact_tracing.assumed_trace_prop) / params.contact_tracing.assumed_prev
 
+        trace_param = get_tracing_param(params.contact_tracing.assumed_trace_prop, params.contact_tracing.assumed_prev)
 
         early_exposed_untraced_comps = \
             [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]

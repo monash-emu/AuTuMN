@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import List, Union, Callable, Optional, Dict, Tuple
 from importlib import import_module, reload as reload_module
 
-
 import yaml
 import pandas as pd
 import numpy as np
@@ -374,6 +373,7 @@ def calc_absolute_diff_output(output_name, output_arr, baseline_output, sc_outpu
 
     new_output_name = f"abs_diff_{output_name}"
     return new_output_name
+
 
 
 OUTPUT_CALCS = {

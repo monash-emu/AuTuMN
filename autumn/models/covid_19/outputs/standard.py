@@ -89,6 +89,23 @@ def request_standard_outputs(
     notification_sources = [
         f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_CLINICAL_STRATA
     ]
+
+    # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
+    notifications_traced_by_age_sources = {}
+    if params.contact_tracing:
+        for agegroup in AGEGROUP_STRATA:
+            notifications_traced_by_age_sources[agegroup] = []
+            for clinical in [s for s in CLINICAL_STRATA if s not in NOTIFICATION_CLINICAL_STRATA]:
+                name = f"progress_tracedXagegroup_{agegroup}Xclinical_{clinical}"
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": "traced"},
+                    save_results=False,
+                )
+                notification_sources.append(name)
+                notifications_traced_by_age_sources[agegroup].append(name)
+
     model.request_aggregate_output(name="local_notifications", sources=notification_sources)
     model.request_aggregate_output(
         name="notifications", sources=notification_sources
@@ -111,8 +128,8 @@ def request_standard_outputs(
 
         model.request_function_output(
             name=f"notificationsXagegroup_{agegroup}",
-            sources=[sympt_isolate_name, hospital_non_icu_name, icu_name],
-            func=lambda sympt, hosp, icu: sympt + hosp + icu,
+            sources=[sympt_isolate_name, hospital_non_icu_name, icu_name] + notifications_traced_by_age_sources[agegroup],
+            func=lambda sympt, hosp, icu, traced_asympt, traced_sympt_ambu: sympt + hosp + icu + traced_asympt + traced_sympt_ambu,
         )
 
     # Infection deaths.

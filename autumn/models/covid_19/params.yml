@@ -3,7 +3,6 @@
 parent: null # This file is the bottom of the parameter tree for the Covid app
 description: BASELINE
 
-seasonal_force: null # Extent of seasonal forcing
 voc_emergence: null # Emergence of Variants of Concern
 stratify_by_infection_history: false # Note that the current code may not allocate imported cases to the right stratum
 waning_immunity_duration: null

@@ -5,6 +5,10 @@ def get_seasonal_forcing(
     period: float, shift: float, seasonal_force_magnitude: float, average_value: float
 ):
     """
+    Note that this is no longer being used. We considered it important for Victoria, but probably less so for the other
+    applications. Reviewers of the Victoria paper recommended removing it, so we have done so, so now not used for any
+    applications.
+
     Factory function to get a trigonometric/sinusoidal function (using cosine) to represent seasonal forcing of
     transmission in a model.
     Note that the time unit is not specified (as elsewhere in the repository), so the period is not assumed.

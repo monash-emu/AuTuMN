@@ -42,6 +42,18 @@ def request_standard_outputs(
             if clinical in NOTIFICATION_CLINICAL_STRATA:
                 notification_at_sympt_onset_sources.append(name)
 
+        # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
+        if params.contact_tracing:
+            for clinical in [s for s in CLINICAL_STRATA if s not in NOTIFICATION_CLINICAL_STRATA]:
+                name = f"incidence_tracedXagegroup_{agegroup}Xclinical_{clinical}"
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name="incidence",
+                    dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": "traced"},
+                    save_results=False,
+                )
+                notification_at_sympt_onset_sources.append(name)
+
     # Notifications at symptom onset.
     model.request_aggregate_output(
         name="notifications_at_sympt_onset", sources=notification_at_sympt_onset_sources

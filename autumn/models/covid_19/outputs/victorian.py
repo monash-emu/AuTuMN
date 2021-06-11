@@ -71,17 +71,18 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
     notifications_young_sources = []
     notifications_old_sources = []
     for agegroup in AGEGROUP_STRATA:
-        name = f"progressX{agegroup}"
-        if agegroup in ["65", "70", "75"]:
-            notifications_old_sources.append(name)
-        else:
-            notifications_young_sources.append(name)
-        model.request_output_for_flow(
-            name=name,
-            flow_name="progress",
-            dest_strata={"agegroup": agegroup},
-            save_results=False,
-        )
+        for clinical in NOTIFICATION_STRATA:
+            name = f"progress_for_age_{agegroup}X{clinical}"
+            if agegroup in ["65", "70", "75"]:
+                notifications_old_sources.append(name)
+            else:
+                notifications_young_sources.append(name)
+            model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata={"agegroup": agegroup, "clinical": clinical},
+                save_results=False,
+            )
 
     model.request_aggregate_output(
         name="notifications_young",

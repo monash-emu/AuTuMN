@@ -82,6 +82,7 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
 
     # Get the inter-cluster mixing matrix
     intercluster_mixing_matrix = create_assortative_matrix(vic.intercluster_mixing, CLUSTER_STRATA)
+    # intercluster_mixing_matrix = get_vic_cluster_adjacency_matrix(vic.intercluster_mixing)
 
     # Replace regional Victoria maximum effect calibration parameters with the metro values for consistency
     for microdist_process in ["face_coverings", "behaviour"]:
@@ -103,27 +104,24 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
     setattr(model, "_get_mixing_matrix", MethodType(get_mixing_matrix, model))
 
 
-def create_assortative_matrix(off_diagonal_values, matrix_dimensions):
+def create_assortative_matrix(off_diagonal_values, strata):
     """
     Create a matrix with all values the same except for the diagonal elements, which are greater, according to the
     requested value to go in the off-diagonal elements. To be used for creating a standard assortative mixing matrix
     according to any number of interacting groups.
     """
 
-    assert 0.0 <= off_diagonal_values <= 1.0 / len(matrix_dimensions)
-    off_diagonal_elements = (
-        np.ones([len(matrix_dimensions), len(matrix_dimensions)]) * off_diagonal_values
-    )
-    diagonal_elements = np.eye(len(matrix_dimensions)) * (
-        1.0 - len(matrix_dimensions) * off_diagonal_values
-    )
-    assortative_matrix = off_diagonal_elements + diagonal_elements
+    matrix_dimensions = len(strata)
+    assert 0. <= off_diagonal_values <= 1. / matrix_dimensions
+    off_diagonal_values = (np.ones([matrix_dimensions, matrix_dimensions]) * off_diagonal_values)
+    diagonal_top_ups = np.eye(matrix_dimensions) * (1. - matrix_dimensions * off_diagonal_values)
+    assortative_matrix = off_diagonal_values + diagonal_top_ups
 
-    # Ensure all rows and columns sum to one
-    for i_row in range(len(assortative_matrix)):
-        assert abs(sum(assortative_matrix[i_row, :]) - 1.0) <= 1e-6
-    for i_col in range(len(assortative_matrix)):
-        assert abs(sum(assortative_matrix[:, i_col]) - 1.0) <= 1e-6
+    # Check matrix symmetric and rows and columns sum to one
+    tolerance = 1e-10
+    assert np.all(np.abs(assortative_matrix - assortative_matrix.T) == 0.)
+    assert np.all(assortative_matrix.sum(axis=0) - 1 < tolerance)
+    assert np.all(assortative_matrix.sum(axis=1) - 1 < tolerance)
 
     return assortative_matrix
 

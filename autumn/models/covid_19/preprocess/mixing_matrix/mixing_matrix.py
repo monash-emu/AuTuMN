@@ -13,7 +13,7 @@ def build_dynamic_mixing_matrix(
     base_matrix: np.ndarray, mobility: Mobility, country: Country
 ) -> Callable[[float], np.ndarray]:
     """
-    Build a time-varing mixing matrix
+    Build a time-varying mixing matrix
     Returns a function of time which returns a 16x16 mixing matrix.
     """
     microdistancing_funcs = get_microdistancing_funcs(

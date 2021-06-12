@@ -1,6 +1,7 @@
 from types import MethodType
 
 import numpy as np
+import pandas as pd
 from summer import CompartmentalModel, Multiply, Stratification
 
 from autumn.models.covid_19.constants import COMPARTMENTS, Compartment
@@ -125,3 +126,49 @@ def create_assortative_matrix(off_diagonal_values, matrix_dimensions):
         assert abs(sum(assortative_matrix[:, i_col]) - 1.0) <= 1e-6
 
     return assortative_matrix
+
+
+def get_vic_cluster_adjacency_matrix(off_diagonal_value):
+    """
+    Create adjacency matrix for Victoria inter-cluster mixing
+    """
+
+    # Data should really be in the parameters file, but this is likely to be temporary
+    adjacency_dict = {
+        Region.BARWON_SOUTH_WEST: [Region.WEST_METRO, Region.NORTH_METRO, Region.GRAMPIANS],
+        Region.GRAMPIANS: [Region.LODDON_MALLEE, Region.WEST_METRO, Region.NORTH_METRO],
+        Region.LODDON_MALLEE: [Region.HUME, Region.NORTH_METRO, Region.WEST_METRO],
+        Region.HUME: [Region.GIPPSLAND, Region.NORTH_METRO, Region.SOUTH_EAST_METRO],
+        Region.GIPPSLAND: [Region.SOUTH_EAST_METRO, Region.SOUTH_METRO],
+        Region.WEST_METRO: [Region.NORTH_METRO],
+        Region.NORTH_METRO: [Region.SOUTH_EAST_METRO],
+        Region.SOUTH_EAST_METRO: [Region.SOUTH_METRO],
+    }
+
+    # Start from matrix of zeros
+    adj_matrix = np.zeros((9, 9))
+
+    # Populate adjacent elements
+    for index_region in adjacency_dict:
+        index_region_position = Region.VICTORIA_SUBREGIONS.index(index_region)
+        for other_region in adjacency_dict[index_region]:
+            other_region_position = Region.VICTORIA_SUBREGIONS.index(other_region)
+            adj_matrix[index_region_position, other_region_position] = off_diagonal_value
+            adj_matrix[other_region_position, index_region_position] = off_diagonal_value
+
+    # Fill remaining elements to sum rows and columns to one for assortative geographic mixing
+    np.fill_diagonal(
+        adj_matrix,
+        1. - adj_matrix.sum(axis=0)
+    )
+
+    # Check matrix symmetric and rows and columns sum to one
+    tolerance = 1e-10
+    assert np.all(np.abs(adj_matrix - adj_matrix.T) == 0.)
+    assert np.all(adj_matrix.sum(axis=0) - 1 < tolerance)
+    assert np.all(adj_matrix.sum(axis=1) - 1 < tolerance)
+
+    # To convert to a dataframe to output as CSV to check:
+    # adj_dataframe = pd.DataFrame(adj_matrix, index=Region.VICTORIA_SUBREGIONS, columns=Region.VICTORIA_SUBREGIONS)
+
+    return adj_matrix

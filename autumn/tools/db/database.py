@@ -6,7 +6,6 @@ from typing import Any, Dict, List
 import pandas as pd
 import pyarrow
 import pyarrow.parquet as parquet
-from pandas.util import hash_pandas_object
 from sqlalchemy import create_engine
 
 logger = logging.getLogger(__name__)
@@ -208,16 +207,6 @@ class Database(BaseDatabase):
     def is_compatible(cls, database_path: str) -> bool:
         """Returns True if the database is compatible with the given path"""
         return database_path.endswith(".db")
-
-    def get_hash(self):
-        """
-        Returns a hash of the database contents
-        """
-        table_hashes = [
-            hash_pandas_object(self.query(table_name)).mean() for table_name in self.table_names()
-        ]
-        db_hash = sum(table_hashes)
-        return f"{db_hash:0.0f}"
 
     def table_names(self):
         return self.engine.table_names()

@@ -27,7 +27,6 @@ def run_powerbi(instance, run_id: str, urunid: str, branch: str):
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
-        build_input_db(conn)
         pipeline_name = "powerbi"
         pipeline_args = {"run": run_id, "urunid": urunid}
         run_task_pipeline(conn, pipeline_name, pipeline_args)
@@ -50,7 +49,6 @@ def run_full_model(
 
         install_requirements(conn)
         read_secrets(conn)
-        build_input_db(conn)
         pipeline_name = "full"
         pipeline_args = {
             "run": run_id,
@@ -78,7 +76,6 @@ def run_calibration(
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
-        build_input_db(conn)
         run_id = get_run_id(conn, app_name, region_name)
         pipeline_name = "calibrate"
         pipeline_args = {
@@ -153,13 +150,6 @@ def read_secrets(conn: Connection):
     logger.info("Decrypting Autumn secrets.")
     with conn.cd(CODE_PATH):
         conn.run("./env/bin/python -m autumn secrets read", echo=True)
-
-
-def build_input_db(conn: Connection):
-    """Builds autumn input database"""
-    logger.info("Building input database.")
-    with conn.cd(CODE_PATH):
-        conn.run("./env/bin/python -W ignore -m autumn db build", echo=True)
 
 
 def install_requirements(conn: Connection):

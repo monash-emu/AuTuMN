@@ -101,7 +101,9 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
         country,
         intercluster_mixing_matrix,
     )
-    setattr(model, "_get_mixing_matrix", MethodType(get_mixing_matrix, model))
+    # setattr(model, "_get_mixing_matrix", MethodType(get_mixing_matrix, model))
+    # model._mixing_matrices = get_mixing_matrix
+    return get_mixing_matrix
 
 
 def create_assortative_matrix(off_diagonal_values, strata):

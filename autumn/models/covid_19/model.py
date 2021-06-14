@@ -15,9 +15,8 @@ from . import preprocess
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
-from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.vaccination import add_vaccination_flows
-from .preprocess.tracing import trace_function, TracingProc
+from .preprocess.tracing import trace_function, TracingProc, get_tracing_param
 from .stratifications.agegroup import (
     AGEGROUP_STRATA,
     get_agegroup_strat,
@@ -71,14 +70,8 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Add intercompartmental flows.
 
-    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate.
-    if params.seasonal_force:
-        contact_rate = get_seasonal_forcing(
-            365.0, 173.0, params.seasonal_force, params.contact_rate
-        )
-    else:
-        # Use a static contact rate.
-        contact_rate = params.contact_rate
+    # Have removed seasonal forcing, the contact rate is now a constant parameter.
+    contact_rate = params.contact_rate
 
     model.add_infection_frequency_flow(
         name="infection",
@@ -129,8 +122,9 @@ def build_model(params: dict) -> CompartmentalModel:
     model.stratify_with(clinical_strat)
 
     # Contact tracing stratification
-    tracing_strat = get_tracing_strat(params)
-    model.stratify_with(tracing_strat)
+    if params.contact_tracing:
+        tracing_strat = get_tracing_strat(params)
+        model.stratify_with(tracing_strat)
 
     # Apply the VoC stratification and adjust contact rate for Variant of Concerns.
     if params.voc_emergence:
@@ -190,7 +184,8 @@ def build_model(params: dict) -> CompartmentalModel:
     # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
     if params.contact_tracing:
-        trace_param = params.contact_tracing.exponent_param
+
+        trace_param = get_tracing_param(params.contact_tracing.assumed_trace_prop, params.contact_tracing.assumed_prev)
 
         early_exposed_untraced_comps = \
             [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]

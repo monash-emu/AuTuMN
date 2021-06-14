@@ -35,7 +35,6 @@ PLOT_TEXT_DICT = {
     "hospital_occupancy": "hospital beds occupied",
     "sojourn.compartment_periods_calculated.exposed.total_period": "incubation period",
     "sojourn.compartment_periods_calculated.active.total_period": "duration active",
-    "seasonal_force": "seasonal forcing",
     "mobility.microdistancing.behaviour.parameters.max_effect": "max effect microdistancing",
     "mobility.microdistancing.behaviour_adjuster.parameters.sigma": "microdist max wane",
     "mobility.microdistancing.behaviour_adjuster.parameters.c": "microdist wane time",

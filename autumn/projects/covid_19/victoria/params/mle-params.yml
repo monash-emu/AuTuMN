@@ -4,7 +4,6 @@ clinical_stratification.props.symptomatic.multiplier: 0.8854985144629046
 contact_rate: 0.04164650231077363
 infection_fatality.multiplier: 2.6009394469404783
 infectious_seed: 30.146351107143
-seasonal_force: 0.2
 sojourn.compartment_periods.icu_early: 6.4165094034238805
 sojourn.compartment_periods_calculated.active.total_period: 6.1933175895626364
 sojourn.compartment_periods_calculated.exposed.total_period: 4.326032009049163

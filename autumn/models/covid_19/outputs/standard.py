@@ -2,7 +2,7 @@ from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import (
     COMPARTMENTS,
-    NOTIFICATION_STRATA,
+    NOTIFICATION_CLINICAL_STRATA,
     Clinical,
     Compartment,
 )
@@ -39,7 +39,19 @@ def request_standard_outputs(
                 flow_name="incidence",
                 dest_strata={"agegroup": agegroup, "clinical": clinical},
             )
-            if clinical in NOTIFICATION_STRATA:
+            if clinical in NOTIFICATION_CLINICAL_STRATA:
+                notification_at_sympt_onset_sources.append(name)
+
+        # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
+        if params.contact_tracing:
+            for clinical in [s for s in CLINICAL_STRATA if s not in NOTIFICATION_CLINICAL_STRATA]:
+                name = f"incidence_tracedXagegroup_{agegroup}Xclinical_{clinical}"
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name="incidence",
+                    dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": "traced"},
+                    save_results=False,
+                )
                 notification_at_sympt_onset_sources.append(name)
 
     # Notifications at symptom onset.
@@ -50,7 +62,7 @@ def request_standard_outputs(
     # Disease progression
     model.request_output_for_flow(name="progress", flow_name="progress")
     for agegroup in AGEGROUP_STRATA:
-        for clinical in NOTIFICATION_STRATA:
+        for clinical in NOTIFICATION_CLINICAL_STRATA:
             model.request_output_for_flow(
                 name=f"progressXagegroup_{agegroup}Xclinical_{clinical}",
                 flow_name="progress",
@@ -75,8 +87,25 @@ def request_standard_outputs(
 
     # Get notifications, which may included people detected in-country as they progress, or imported cases which are detected.
     notification_sources = [
-        f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_STRATA
+        f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_CLINICAL_STRATA
     ]
+
+    # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
+    notifications_traced_by_age_sources = {}
+    if params.contact_tracing:
+        for agegroup in AGEGROUP_STRATA:
+            notifications_traced_by_age_sources[agegroup] = []
+            for clinical in [s for s in CLINICAL_STRATA if s not in NOTIFICATION_CLINICAL_STRATA]:
+                name = f"progress_tracedXagegroup_{agegroup}Xclinical_{clinical}"
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": "traced"},
+                    save_results=False,
+                )
+                notification_sources.append(name)
+                notifications_traced_by_age_sources[agegroup].append(name)
+
     model.request_aggregate_output(name="local_notifications", sources=notification_sources)
     model.request_aggregate_output(
         name="notifications", sources=notification_sources
@@ -96,11 +125,13 @@ def request_standard_outputs(
         sympt_isolate_name = f"progressXagegroup_{agegroup}Xclinical_sympt_isolate"
         hospital_non_icu_name = f"progressXagegroup_{agegroup}Xclinical_hospital_non_icu"
         icu_name = f"progressXagegroup_{agegroup}Xclinical_icu"
+        notifications_by_age_sources = [sympt_isolate_name, hospital_non_icu_name, icu_name]
+        if params.contact_tracing:
+            notifications_by_age_sources += notifications_traced_by_age_sources[agegroup]
 
-        model.request_function_output(
+        model.request_aggregate_output(
             name=f"notificationsXagegroup_{agegroup}",
-            sources=[sympt_isolate_name, hospital_non_icu_name, icu_name],
-            func=lambda sympt, hosp, icu: sympt + hosp + icu,
+            sources=notifications_by_age_sources
         )
 
     # Infection deaths.

@@ -265,7 +265,8 @@ class ContactTracing(BaseModel):
     """
 
     """
-    exponent_param: float
+    assumed_trace_prop: float
+    assumed_prev: float
 
 
 class AgeSpecificRiskMultiplier(BaseModel):
@@ -291,7 +292,6 @@ class Parameters:
     infect_death: float
     universal_death_rate: float
     infectious_seed: float
-    seasonal_force: Optional[float]  # Seasonal forcing factor
     voc_emergence: Optional[VocEmergence]
     age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
     stratify_by_infection_history: bool

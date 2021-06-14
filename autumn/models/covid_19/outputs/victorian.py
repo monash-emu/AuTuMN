@@ -2,7 +2,7 @@ from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import (
     COMPARTMENTS,
-    NOTIFICATION_STRATA,
+    NOTIFICATION_CLINICAL_STRATA,
     Clinical,
     Compartment,
 )
@@ -35,27 +35,54 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
 
     # Notifications.
     notification_sources = []
-    for clinical in NOTIFICATION_STRATA:
-        name = f"progressX{clinical}"
+    # first track all traced cases (regardless of clinical stratum)
+    if params.contact_tracing:
+        name = f"progress_traced"
         notification_sources.append(name)
         model.request_output_for_flow(
             name=name,
             flow_name="progress",
-            dest_strata={"clinical": clinical},
+            dest_strata={"tracing": "traced"},
             save_results=False,
         )
-
+    # then track untraced cases that are still detected
+    for clinical in NOTIFICATION_CLINICAL_STRATA:
+        name = f"progress_untracedX{clinical}"
+        dest_strata = {"clinical": clinical, "tracing": "untraced"} if params.contact_tracing else {"clinical": clinical}
+        notification_sources.append(name)
+        model.request_output_for_flow(
+            name=name,
+            flow_name="progress",
+            dest_strata=dest_strata,
+            save_results=False,
+        )
     model.request_aggregate_output(name="notifications", sources=notification_sources)
+
     # Cluster-specific notifications.
     for cluster in clusters:
         cluster_notification_sources = []
-        for clinical in NOTIFICATION_STRATA:
-            name = f"progress_for_cluster_{cluster}X{clinical}"
+
+        # first track all traced cases (regardless of clinical stratum)
+        if params.contact_tracing:
+            name = f"progress_tracedX{cluster}"
             cluster_notification_sources.append(name)
             model.request_output_for_flow(
                 name=name,
                 flow_name="progress",
-                dest_strata={"cluster": cluster, "clinical": clinical},
+                dest_strata={"tracing": "traced", "cluster": cluster},
+                save_results=False,
+            )
+
+        # then track untraced cases that are still detected
+        for clinical in NOTIFICATION_CLINICAL_STRATA:
+            name = f"progress_untraced_for_cluster_{cluster}X{clinical}"
+            cluster_notification_sources.append(name)
+            dest_strata = {"clinical": clinical, "cluster": cluster, "tracing": "untraced"} if\
+                params.contact_tracing else {"clinical": clinical, "cluster": cluster}
+            model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata=dest_strata,
                 save_results=False,
             )
 
@@ -71,17 +98,36 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
     notifications_young_sources = []
     notifications_old_sources = []
     for agegroup in AGEGROUP_STRATA:
-        name = f"progressX{agegroup}"
-        if agegroup in ["65", "70", "75"]:
-            notifications_old_sources.append(name)
-        else:
-            notifications_young_sources.append(name)
-        model.request_output_for_flow(
-            name=name,
-            flow_name="progress",
-            dest_strata={"agegroup": agegroup},
-            save_results=False,
-        )
+        # first track all traced cases (regardless of clinical stratum)
+        if params.contact_tracing:
+            name = f"progress_tracedX{agegroup}"
+            if agegroup in ["65", "70", "75"]:
+                notifications_old_sources.append(name)
+            else:
+                notifications_young_sources.append(name)
+            model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata={"tracing": "traced", "agegroup": agegroup},
+                save_results=False,
+            )
+
+        # then track untraced cases that are still detected
+        for clinical in NOTIFICATION_CLINICAL_STRATA:
+            name = f"progress_untraced_for_age_{agegroup}X{clinical}"
+            if agegroup in ["65", "70", "75"]:
+                notifications_old_sources.append(name)
+            else:
+                notifications_young_sources.append(name)
+
+            dest_strata = {"agegroup": agegroup, "clinical": clinical, "tracing": "untraced"} if\
+                params.contact_tracing else {"agegroup": agegroup, "clinical": clinical}
+            model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata=dest_strata,
+                save_results=False,
+            )
 
     model.request_aggregate_output(
         name="notifications_young",

@@ -1,3 +1,5 @@
+from typing import Any, Callable
+
 import numpy as np
 
 from autumn.tools.inputs.testing.eur_testing_data import (
@@ -74,7 +76,7 @@ def find_cdr_function_from_test_data(
     )
 
     # Calculate CDRs and the resulting CDR function over time
-    cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
+    cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
     return scale_up_function(
         test_dates,
         [cdr_from_tests_func(i_test_rate) for i_test_rate in smoothed_per_capita_tests],

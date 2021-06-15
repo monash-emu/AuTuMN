@@ -10,6 +10,8 @@ from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.settings import Region
 
+ELDERLY_NOTIFICATION_GROUPS = AGEGROUP_STRATA[-3:]
+
 
 def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
     # Victorian cluster model outputs.
@@ -101,7 +103,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         # first track all traced cases (regardless of clinical stratum)
         if params.contact_tracing:
             name = f"progress_tracedX{agegroup}"
-            if agegroup in ["65", "70", "75"]:
+            if agegroup in ELDERLY_NOTIFICATION_GROUPS:
                 notifications_old_sources.append(name)
             else:
                 notifications_young_sources.append(name)
@@ -115,7 +117,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         # then track untraced cases that are still detected
         for clinical in NOTIFICATION_CLINICAL_STRATA:
             name = f"progress_untraced_for_age_{agegroup}X{clinical}"
-            if agegroup in ["65", "70", "75"]:
+            if agegroup in ELDERLY_NOTIFICATION_GROUPS:
                 notifications_old_sources.append(name)
             else:
                 notifications_young_sources.append(name)

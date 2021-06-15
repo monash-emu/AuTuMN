@@ -1,10 +1,12 @@
+import os
 from datetime import datetime
 
 import numpy as np
 import pytest
 
+from autumn.tools.db import Database
+from autumn.tools.inputs import database as input_database
 from autumn.tools.inputs import (
-    build_input_database,
     get_country_mixing_matrix,
     get_crude_birth_rate,
     get_death_rates_by_agegroup,
@@ -17,13 +19,18 @@ from scripts.read_who_covid_data import read_who_data_from_csv
 
 
 @pytest.mark.github_only
-def test_build_input_database():
+def test_build_input_database(tmpdir, monkeypatch):
     """
     Ensure we can build the input database with nothing crashing
     """
-    # We use this to force the SQLite connection string to be "sqlite:///",
-    # which means we use an in-memory database rather than writing to a file.
-    build_input_database(rebuild=True)
+    input_db_path = os.path.join(tmpdir, "inputs.db")
+    monkeypatch.setattr(input_database, "INPUT_DB_PATH", input_db_path)
+    assert not os.path.exists(input_db_path)
+    input_database.build_input_database(rebuild=True)
+    assert os.path.exists(input_db_path)
+    db = Database(input_db_path)
+    expected_tables = set(["countries", "population", "birth_rates", "deaths", "life_expectancy"])
+    assert set(db.table_names()).intersection(expected_tables) == expected_tables
 
 
 def test_get_mobility_data():

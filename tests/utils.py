@@ -38,21 +38,24 @@ def in_memory_db_factory():
         """
         Returns an in-memory SQLite database that corresponds to db_path.
         """
-        # Return the real "inputs.db" if it's requested
+        assert db_path.endswith(".db"), f'Database path "{db_path}" must be a file that ends in .db'
+
         if db_path.endswith("inputs.db"):
+            # Return the real "inputs.db" if it's requested
             rel_db_path = os.path.relpath(db_path)
             engine = create_engine(f"sqlite:///{rel_db_path}", echo=False)
             return engine
-
-        # Create a fake DB path.
-        assert db_path.endswith(".db"), f'Database path "{db_path}" must be a file that ends in .db'
-        with open(db_path, "w") as f:
-            pass
 
         # Return an in-memory SQL Alchemy SQLite database engine.
         try:
             return databases[db_path]
         except KeyError:
+            # Create a fake DB path.
+            if not os.path.exists(db_path):
+                with open(db_path, "w"):
+                    pass
+
+            # Create an in-memory SQLite engine
             engine = create_engine("sqlite://", echo=False)
             databases[db_path] = engine
             return engine

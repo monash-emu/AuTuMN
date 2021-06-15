@@ -2,11 +2,10 @@ description: Scenario 15, 100, 000 daily vaccinations maintained for 3 months + 
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 531 #June 14 2021
+  start: 527 #June 10 2021
 
 vaccination:
 
-  # Five months from 18th May 2021
   roll_out_components:
     - supply_timeseries:
         times: [505, 506, 507, 508, 509, 510, 523, 524, 619, 620]
@@ -17,7 +16,7 @@ mobility:
     other_locations:
       append: true
       times:
-        - 2021-06-14
+        - 2021-06-10
       values:
         - - close_to_max_last_period
           - 180
@@ -25,7 +24,7 @@ mobility:
     work:
       append: true
       times:
-        - 2021-06-14
+        - 2021-06-10
       values:
         - - close_to_max_last_period
           - 180

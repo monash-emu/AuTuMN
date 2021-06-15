@@ -208,7 +208,7 @@ class Database(BaseDatabase):
         """Returns True if the database is compatible with the given path"""
         return database_path.endswith(".db")
 
-    def table_names(self):
+    def table_names(self) -> List[str]:
         return self.engine.table_names()
 
     def column_names(self, table_name):

@@ -25,14 +25,13 @@ def download_input_data():
 
 
 @db.command("build")
-@click.option("--force", is_flag=True)
-def build_input_db(force):
+def build_input_db():
     """
     Build a new input database from input data files.
     """
     from autumn.tools.inputs import build_input_database
 
-    build_input_database(force)
+    build_input_database(rebuild=True)
 
 
 @db.command("feather2sql")

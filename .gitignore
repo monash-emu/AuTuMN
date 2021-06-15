@@ -27,9 +27,13 @@ benchmark.json
 
 # Data
 *.db
+
 logs/
 log/
 *.log
+
+# Track input database.
+!data/inputs/inputs.db
 
 # Website stuff
 node_modules/

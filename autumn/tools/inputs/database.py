@@ -16,8 +16,8 @@ from .social_mixing.preprocess import preprocess_social_mixing
 logger = logging.getLogger(__name__)
 
 _input_db = None
-input_db_hash_path = os.path.join(INPUT_DATA_PATH, "inputs-hash.txt")
-input_db_path = os.path.join(INPUT_DATA_PATH, "inputs.db")
+
+INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "inputs.db")
 
 
 def get_input_db():
@@ -29,7 +29,7 @@ def get_input_db():
         return _input_db
 
 
-def build_input_database(force: bool = False, rebuild: bool = False):
+def build_input_database(rebuild: bool = False):
     """
     Builds the input database from scratch.
     If force is True, build the database from scratch and ignore any previous hashes.
@@ -40,11 +40,12 @@ def build_input_database(force: bool = False, rebuild: bool = False):
 
     Returns a Database, representing the input database.
     """
-    if os.path.exists(input_db_path) and not (force or rebuild):
-        input_db = Database(input_db_path)
+    if os.path.exists(INPUT_DB_PATH) and not rebuild:
+        input_db = Database(INPUT_DB_PATH)
     else:
         logger.info("Building a new database.")
-        input_db = Database(input_db_path)
+        input_db = Database(INPUT_DB_PATH)
+
         with Timer("Deleting all existing data."):
             input_db.delete_everything()
 
@@ -52,7 +53,7 @@ def build_input_database(force: bool = False, rebuild: bool = False):
             preprocess_covid_au(input_db)
 
         with Timer("Ingesting COVID PHL data."):
-            preprocess_covid_phl(input_db)\
+            preprocess_covid_phl(input_db)
 
         with Timer("Ingesting COVID LKA data."):
             preprocess_covid_lka(input_db)
@@ -69,53 +70,4 @@ def build_input_database(force: bool = False, rebuild: bool = False):
         with Timer("Ingesting mobility data."):
             preprocess_mobility(input_db, country_df)
 
-    current_db_hash = input_db.get_hash()
-    if force:
-        # Write the file hash
-        write_file_hash(current_db_hash, input_db_hash_path)
-    else:
-        # Read the file hash and compare
-        saved_db_hash = read_file_hash(input_db_hash_path)
-        is_hash_mismatch = current_db_hash != saved_db_hash
-        if rebuild and is_hash_mismatch:
-            log_msg = f"Canonical hash : {saved_db_hash}\nCurrent hash : {current_db_hash}"
-            logger.error(log_msg)
-            msg = "Input database does not match canonical version."
-            raise ValueError(msg)
-        elif is_hash_mismatch:
-            logger.info("Hash mismatch, try rebuilding database...")
-            build_input_database(rebuild=True)
-
     return input_db
-
-
-def read_file_hash(hash_path: str):
-    """
-    Read file hash, which is on the last line of the file
-    """
-    try:
-        with open(hash_path, "r") as f:
-            file_hash = [l for l in f.readlines() if l][-1].strip()
-
-    except FileNotFoundError:
-        msg = "No input database hash found, rebuild the input db with --force"
-        raise FileNotFoundError(msg)
-
-    return file_hash
-
-
-def write_file_hash(file_hash: str, hash_path: str):
-    """
-    Write file hash to a text file, so it can be read later
-    """
-    text = [
-        "# INPUT DATABASE FILE HASH",
-        "# This is a MD5 hash of the canonical input database",
-        "# If your input db has a different hash, something is wrong",
-        "# The database, and this file, is managed by `build_input_database`",
-        "# You can build a new input database using `python -m apps db build --help`",
-        "# Ensure you add this file to Git if you make changes to the database",
-        file_hash,
-    ]
-    with open(hash_path, "w") as f:
-        f.write("\n".join(text) + "\n")

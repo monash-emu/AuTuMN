@@ -23,7 +23,7 @@ def test_build_input_database():
     """
     # We use this to force the SQLite connection string to be "sqlite:///",
     # which means we use an in-memory database rather than writing to a file.
-    db = build_input_database()
+    build_input_database(rebuild=True)
 
 
 def test_get_mobility_data():

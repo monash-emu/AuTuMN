@@ -146,11 +146,11 @@ isort . --profile black
 
 ## Input data
 
-Input data is stored in text format in the `data/inputs/` folder. All input data required to run the app should be stored in this folder, along with a README explaining its meaning and provenance. Input data is preprocessed into an SQLite database at runtime, inside the `autumn.inputs` module. A unique identifier for the latest input data is stored in `data/inputs/input-hash.txt`. If you want to add new input data or modify existing data, then:
+Input data is stored in text format in the `data/inputs/` folder. All input data required to run the app should be stored in this folder, along with a README explaining its meaning and provenance. Input data is preprocessed into an SQLite database, using the `autumn.tools.inputs` module. The resulting database is stored at `data/inputs/inputs.db` and is tracked using Git LFS. If you want to add new input data or modify existing data, then:
 
 - add or update the source CSV/XLS files
-- adjust the preprocess functions in `autumn.inputs` as required
-- rebuild the database, forcing a new file hash to be written
+- adjust the preprocess functions in `autumn.tools.inputs` as required
+- rebuild the database, commit the new file to source control
 
 To fetch the latest data, run:
 
@@ -163,13 +163,13 @@ You will need to ensure that the latest date in all user-specified mixing data p
 To rebuild the database with new data, run:
 
 ```bash
-python -m autumn db build --force
+python -m autumn db build
 ```
 
 Once you are satisfied that all your models work again (run the tests), commit your changes and push up:
 
 - The updated CSV files
-- The updated `input-hash.txt` file
+- The updated `data/inputs/inputs.db` file
 - Any required changes to model parameters (eg. dynamic mixing dates)
 
 Note that all of our CSV and XLSX files are stored using [Git Large File Storage](https://docs.github.com/en/github/managing-large-files/versioning-large-files) in GitHub. You can install Git LFS [here](https://git-lfs.github.com/).

@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot
-
+from summer import Compartment
 
 from autumn.tools.inputs.demography.queries import get_population_by_agegroup
 from autumn.tools.inputs.social_mixing.queries import get_country_mixing_matrix
@@ -116,24 +116,23 @@ def plot_mixing_matrix_2(plotter: Plotter, iso3: str):
 
 def plot_agg_compartments_multi_scenario(
     plotter: Plotter,
-    scenarios: List,
-    compartment_names: List[str],
+    models: List,
+    compartments: List[Compartment],
     is_logscale=False,
 ):
     """
-    Plot multiple compartments with values aggregated for a multiple scenarios.
+    Plot multiple compartments with values aggregated for a multiple models.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
     legend = []
-    for color_idx, scenario in enumerate(scenarios):
-        model = scenario.model
+    for model_idx, model in enumerate(models):
         values = np.zeros(model.outputs.shape[0])
-        for compartment_name in compartment_names:
-            comp_idx = model.compartment_names.index(compartment_name)
+        for comp in compartments:
+            comp_idx = model.compartments.index(comp)
             values += model.outputs[:, comp_idx]
 
-        axis.plot(model.times, values, color=COLOR_THEME[color_idx], alpha=0.7)
-        legend.append(scenario.name)
+        axis.plot(model.times, values, color=COLOR_THEME[model_idx], alpha=0.7)
+        legend.append(model_idx)
 
     axis.legend(legend)
     if is_logscale:
@@ -144,27 +143,27 @@ def plot_agg_compartments_multi_scenario(
 
 def plot_single_compartment_multi_scenario(
     plotter: Plotter,
-    scenarios: List,
-    compartment_name: str,
+    models: List,
+    compartment: Compartment,
     is_logscale=False,
 ):
     """
-    Plot the selected output compartment for a multiple scenarios.
+    Plot the selected output compartment for a multiple models.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
     legend = []
-    for color_idx, scenario in enumerate(scenarios):
-        model = scenario.model
-        comp_idx = model.compartment_names.index(compartment_name)
+    for model_idx, model in enumerate(models):
+        comp_idx = model.compartments.index(compartment)
         values = model.outputs[:, comp_idx]
-        axis.plot(model.times, values, color=COLOR_THEME[color_idx], alpha=0.7)
-        legend.append(scenario.name)
+        axis.plot(model.times, values, color=COLOR_THEME[model_idx], alpha=0.7)
+        legend.append(model_idx)
 
     axis.legend(legend)
     if is_logscale:
         axis.set_yscale("log")
 
-    plotter.save_figure(fig, filename=compartment_name, title_text=compartment_name)
+    c_str = str(compartment)
+    plotter.save_figure(fig, filename=c_str, title_text=c_str)
 
 
 def plot_multi_compartments_single_scenario(

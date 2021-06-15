@@ -35,7 +35,7 @@ def build_model(params: dict) -> CompartmentalModel:
     # Add initial population
     init_pop = {
         Compartment.INFECTIOUS: 1,
-        Compartment.SUSCEPTIBLE: params.start_population_size,
+        Compartment.SUSCEPTIBLE: params.start_population_size - 1,
     }
     model.set_initial_population(init_pop)
 
@@ -260,6 +260,7 @@ def build_model(params: dict) -> CompartmentalModel:
         user_defined_strat = get_user_defined_strat(strat_name, strat_details, params)
         model.stratify_with(user_defined_strat)
 
+    return model
     # Organ stratifications
     if "organ" in params.stratify_by:
         organ_strat = get_organ_strat(params)

@@ -7,7 +7,6 @@ from typing import List, Tuple
 
 import pandas as pd
 import streamlit as st
-from summer.legacy.model import StratifiedModel
 from summer import CompartmentalModel
 
 from autumn.settings import OUTPUT_DATA_PATH
@@ -16,76 +15,72 @@ from autumn.tools.registry import get_registered_model_names, get_registered_pro
 from autumn.tools.project import Project, get_project
 
 
-def get_original_compartments(model: StratifiedModel) -> List[str]:
-    return list(set([str(c).split("X")[0] for c in model.compartment_names]))
+def get_original_compartments(model: CompartmentalModel) -> List[str]:
+    return list(set([str(c).split("X")[0] for c in model.compartments]))
 
 
-def single_compartment(model: StratifiedModel) -> str:
+def single_compartment(model: CompartmentalModel) -> str:
     """
     Allows the user to select a compartment given a model.
     Returns a compartment name.
     """
-    original_compartments = get_original_compartments(model)
-    compartment_choice = st.selectbox("compartment", original_compartments)
-
-    matching_compartments = [c for c in model.compartment_names if compartment_choice in c]
-    for strat_name, strata in model.all_stratifications.items():
-        if any([strat_name in c for c in matching_compartments]):
-            chosen_strata = st.selectbox(strat_name, strata)
-            key = f"{strat_name}_{chosen_strata}"
+    compartment_choice = st.selectbox("compartment", model._original_compartment_names)
+    matching_compartments = [c for c in model.compartments if c.has_name(compartment_choice)]
+    for strat in model._stratifications:
+        if any([strat.name in c.strata.keys() for c in matching_compartments]):
+            chosen_strata = st.selectbox(strat.name, strat.strata)
             matching_compartments = [
-                c for c in matching_compartments if any([key == p for p in c.split("X")])
+                c for c in matching_compartments if c.has_stratum(strat.name, chosen_strata)
             ]
 
     assert len(matching_compartments) == 1
     return matching_compartments[0]
 
 
-def multi_compartment(model: StratifiedModel) -> List[str]:
+def multi_compartment(model: CompartmentalModel) -> List[str]:
     """
     Allows the user to select multiple compartments given a model.
     Returns a list of compartment names.
     """
 
     # Choose compartments to aggregate
-    original_compartments = get_original_compartments(model)
+    original_compartments = model._original_compartment_names
     options = ["All"] + original_compartments
     compartment_choices = st.multiselect("compartments", options, default=["All"])
-    chosen_compartments = "All" if "All" in compartment_choices else compartment_choices
+    if "All" in compartment_choices:
+        chosen_compartments = original_compartments
+    else:
+        chosen_compartments = compartment_choices
 
     # Choose strata to aggregate
     chosen_strata = {}
-    for strat_name, strata in model.all_stratifications.items():
-        options = ["All"] + strata
-        choices = st.multiselect(strat_name, options, default=["All"])
-        chosen_strata[strat_name] = "All" if "All" in choices else choices
+    for strat in model._stratifications:
+        options = ["All"] + strat.strata
+        choices = st.multiselect(strat.name, options, default=["All"])
+        if "All" in choices:
+            chosen_strata[strat.name] = strat.strata
+        else:
+            chosen_strata[strat.name] = choices
 
     # Figure out which compartment names we just chose.
-    chosen_compartment_names = []
-    for compartment_name in model.compartment_names:
-        parts = str(compartment_name).split("X")
-        compartment, strata_strs = parts[0], parts[1:]
+    final_compartments = []
+    for comp in model.compartments:
         # Check that this compartment was selected
-        if chosen_compartments == "All":
-            is_accepted = True
-        else:
-            is_accepted = compartment in chosen_compartments
-
-        # Figure out which strata were selected
-        comp_strata = {}
-        for strata_str in strata_strs:
-            strat_parts = strata_str.split("_")
-            comp_strata[strat_parts[0]] = "_".join(strat_parts[1:])
+        is_accepted_comp = any(comp.name == c.name for c in chosen_compartments)
 
         # Check that each strata was selected
-        for strat_name, chosen_stratas in chosen_strata.items():
-            if chosen_stratas != "All":
-                is_accepted = is_accepted and comp_strata[strat_name] in chosen_stratas
+        is_strata_accepted = True
+        for name, strata in chosen_strata.items():
+            is_accepted_strata = False
+            for stratum in strata:
+                is_accepted_strata |= comp.has_stratum(name, stratum)
 
-        if is_accepted:
-            chosen_compartment_names.append(compartment_name)
+            is_strata_accepted &= is_accepted_strata
 
-    return chosen_compartment_names
+        if is_accepted_comp and is_strata_accepted:
+            final_compartments.append(comp)
+
+    return final_compartments
 
 
 def project() -> Project:

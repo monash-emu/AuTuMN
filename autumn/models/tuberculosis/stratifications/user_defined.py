@@ -10,7 +10,9 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
     """
     Stratify all model compartments based on a user-defined stratification request.
     """
-    strat = Stratification(name, details["strata"], COMPARTMENTS)
+    requested_strata = details["strata"]
+
+    strat = Stratification(name, requested_strata, COMPARTMENTS)
     strat.set_population_split(details["proportions"])
     if "mixing_matrix" in details:
         mixing_matrix = np.array([row for row in details["mixing_matrix"]])
@@ -63,41 +65,43 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
     ]
 
     for intervention_type in intervention_types:
-        if not intervention_type["implement_switch"]:
+        implement_switch = intervention_type["implement_switch"]
+        if not implement_switch:
             continue
 
-        int_adjustments = {}
-        for intervention in intervention_type["interventions"]:
-            intervention_adj_func = make_intervention_adjustment_func(
-                intervention["time_variant_screening_rate"],
-                intervention_type["sensitivity"],
-                intervention_type["prop_detected_effectively_moving"],
-            )
-            for stratum in details["strata"]:
-                if stratum in intervention["stratum_filter"][name]:
-                    int_adjustments[stratum] = intervention_adj_func
-                else:
-                    int_adjustments[stratum] = 0.0
+        interventions = intervention_type["interventions"]
+        flow_name = intervention_type["flow_name"]
+        sensitivity = intervention_type["sensitivity"]
+        prop_detected_effectively_moving = intervention_type["prop_detected_effectively_moving"]
 
-            for age in params.age_breakpoints:
-                should_exclude_age = age in intervention.get("exclude_age", [])
-                age_int_adjs = {
-                    k: Multiply(0) if should_exclude_age else Multiply(v)
-                    for k, v in int_adjustments.items()
-                }
-                strat.add_flow_adjustments(
-                    intervention_type["flow_name"], age_int_adjs, source_strata={"age": age}
-                )
+        for age in params.age_breakpoints:
+            intervention_adjustments = {}
+
+            for stratum in requested_strata:
+                intervention_adjustments[stratum] = 0.0
+
+            for intervention in interventions:
+                exclude_ages = intervention.get("exclude_age", [])
+                should_exclude_age = age in exclude_ages
+                if should_exclude_age:
+                    continue
+
+                intervention_stratum = intervention["stratum_filter"][name]
+                times = list(intervention["time_variant_screening_rate"].keys())
+                vals = [
+                    v * sensitivity * prop_detected_effectively_moving
+                    for v in list(intervention["time_variant_screening_rate"].values())
+                ]
+                intervention_func = scale_up_function(times, vals, method=4)
+                intervention_adjustments[intervention_stratum] = intervention_func
+
+            # import streamlit as st
+
+            # st.write(flow_name, intervention_adjustments, {"age": age})
+
+            intervention_adjustments = {k: Multiply(v) for k, v in intervention_adjustments.items()}
+            strat.add_flow_adjustments(
+                flow_name, intervention_adjustments, source_strata={"age": age}
+            )
 
     return strat
-
-
-def make_intervention_adjustment_func(
-    time_variant_screening_rate, sensitivity, prop_detected_effectively_moving
-):
-    times = list(time_variant_screening_rate.keys())
-    vals = [
-        v * sensitivity * prop_detected_effectively_moving
-        for v in list(time_variant_screening_rate.values())
-    ]
-    return scale_up_function(times, vals, method=4)

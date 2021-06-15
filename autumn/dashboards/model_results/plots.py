@@ -67,7 +67,7 @@ def plot_compartment_aggregate(
     is_logscale = st.sidebar.checkbox("Log scale")
     names = selectors.multi_compartment(models[0])
     plots.model.plots.plot_agg_compartments_multi_scenario(plotter, models, names, is_logscale)
-    st.write(names)
+    st.write([str(n) for n in names])
 
 
 @dash.register("Stacked outputs by stratum")

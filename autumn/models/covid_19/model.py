@@ -179,7 +179,7 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.victorian_clusters:
         cluster_strat = get_cluster_strat(params)
         model.stratify_with(cluster_strat)
-        apply_post_cluster_strat_hacks(params, model)
+        mixing_matrix_function = apply_post_cluster_strat_hacks(params, model)
 
     # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
@@ -218,5 +218,8 @@ def build_model(params: dict) -> CompartmentalModel:
         request_standard_outputs(model, params)
     else:
         request_victorian_outputs(model, params)
+
+    if params.victorian_clusters:
+        model._mixing_matrices = [mixing_matrix_function]
 
     return model

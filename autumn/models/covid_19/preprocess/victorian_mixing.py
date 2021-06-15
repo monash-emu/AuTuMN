@@ -45,7 +45,7 @@ def build_victorian_mixing_matrix_func(
         )
         cluster_age_mm_funcs.append(cluster_age_mm_func)
 
-    def get_mixing_matrix(self: StratifiedModel, time: float):
+    def get_mixing_matrix(time: float):
 
         # Collate the within-cluster mixing matrices
         cluster_age_mms = np.zeros((len(cluster_age_mm_funcs), *static_mixing_matrix.shape))

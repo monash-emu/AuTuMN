@@ -13,10 +13,10 @@ from autumn.tools.db import database
 
 from .utils import get_deterministic_random_seed, in_memory_db_factory
 
-get_in_memory_db = in_memory_db_factory()
-
 APPROVAL_DIR = os.path.join(settings.DATA_PATH, "approvals")
 IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
+
+get_in_memory_db_engine = in_memory_db_factory()
 
 
 def pytest_configure(config):
@@ -48,7 +48,7 @@ def memory_db(monkeypatch):
     Replaces all SQLite on-disk databases with in-memory databases.
     Automatically run at the start of every test run.
     """
-    monkeypatch.setattr(database, "get_sql_engine", get_in_memory_db)
+    monkeypatch.setattr(database, "get_sql_engine", get_in_memory_db_engine)
 
 
 @pytest.fixture(autouse=True)

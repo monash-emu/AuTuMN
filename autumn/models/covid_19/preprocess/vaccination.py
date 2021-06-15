@@ -41,7 +41,7 @@ def get_vacc_roll_out_function_from_doses(
     Return a time-variant function in a format that can be used to inform a functional flow.
     """
 
-    def net_flow_func(model, compartments, compartment_values, flows, flow_rates, time):
+    def net_flow_func(model, compartments, compartment_values, flows, flow_rates, derived_values, time):
         # work out the proportion of the eligible population that is in the relevant compartment
         # FIXME: we should be able to cache the two lists below. They depend on compartment_name, eligible_age_group
         #  and eligible_age_groups but not on time!

@@ -413,7 +413,6 @@ def calc_absolute_diff_output(output_name, output_arr, baseline_output, sc_outpu
     return new_output_name
 
 
-
 OUTPUT_CALCS = {
     DiffOutput.RELATIVE: calc_relative_diff_output,
     DiffOutput.ABSOLUTE: calc_absolute_diff_output,

@@ -13,6 +13,7 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
     requested_strata = details["strata"]
 
     strat = Stratification(name, requested_strata, COMPARTMENTS)
+
     strat.set_population_split(details["proportions"])
     if "mixing_matrix" in details:
         mixing_matrix = np.array([row for row in details["mixing_matrix"]])
@@ -73,6 +74,7 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
         flow_name = intervention_type["flow_name"]
         sensitivity = intervention_type["sensitivity"]
         prop_detected_effectively_moving = intervention_type["prop_detected_effectively_moving"]
+        intervention_multiplier = sensitivity * prop_detected_effectively_moving
 
         for age in params.age_breakpoints:
             intervention_adjustments = {}
@@ -87,21 +89,15 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
                     continue
 
                 intervention_stratum = intervention["stratum_filter"][name]
-                times = list(intervention["time_variant_screening_rate"].keys())
-                vals = [
-                    v * sensitivity * prop_detected_effectively_moving
-                    for v in list(intervention["time_variant_screening_rate"].values())
-                ]
+                ts = intervention["time_variant_screening_rate"]
+                times = list(ts.keys())
+                vals = [v * intervention_multiplier for v in list(ts.values())]
                 intervention_func = scale_up_function(times, vals, method=4)
                 intervention_adjustments[intervention_stratum] = intervention_func
 
-            # import streamlit as st
-
-            # st.write(flow_name, intervention_adjustments, {"age": age})
-
             intervention_adjustments = {k: Multiply(v) for k, v in intervention_adjustments.items()}
             strat.add_flow_adjustments(
-                flow_name, intervention_adjustments, source_strata={"age": age}
+                flow_name, intervention_adjustments, source_strata={"age": str(age)}
             )
 
     return strat

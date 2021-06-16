@@ -10,6 +10,7 @@ from .constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
 from .stratifications.age import get_age_strat
 from .stratifications.user_defined import get_user_defined_strat
 from .stratifications.organ import get_organ_strat
+from .outputs import request_outputs
 
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
@@ -28,9 +29,6 @@ def build_model(params: dict) -> CompartmentalModel:
         infectious_compartments=INFECTIOUS_COMPS,
         timestep=time.step,
     )
-
-    # Overwrite times for backwards-compatibility
-    model.times = get_model_times_from_inputs(time.start, time.end, time.step, time.critical_ranges)
 
     # Add initial population
     init_pop = {
@@ -260,43 +258,22 @@ def build_model(params: dict) -> CompartmentalModel:
         user_defined_strat = get_user_defined_strat(strat_name, strat_details, params)
         model.stratify_with(user_defined_strat)
 
-    return model
+    if "location" in params.user_defined_stratifications:
+        location_strata = params.user_defined_stratifications[strat_name]["strata"]
+    else:
+        location_strata = []
+
     # Organ stratifications
     if "organ" in params.stratify_by:
         organ_strat = get_organ_strat(params)
         model.stratify_with(organ_strat)
 
     # Derived outputs
-    # TODO
+    request_outputs(
+        model,
+        params.cumulative_output_start_time,
+        location_strata,
+        params.time_variant_tb_screening_rate,
+    )
 
     return model
-
-
-def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges=[]):
-    """
-    Find the time steps for model integration from the submitted requests, ensuring the time points are evenly spaced.
-    Use a refined time-step within critical ranges.
-    NB: this doesn't affect solver behavior.
-    """
-    times = []
-    interval_start = start_time
-    for critical_range in critical_ranges:
-        # add regularly-spaced points up until the start of the critical range
-        interval_end = critical_range[0]
-        if interval_end > interval_start:
-            times += list(np.arange(interval_start, interval_end, time_step))
-        # add points over the critical range with smaller time step
-        interval_start = interval_end
-        interval_end = critical_range[1]
-        if interval_end > interval_start:
-            times += list(np.arange(interval_start, interval_end, time_step / 10.0))
-        interval_start = interval_end
-
-    if end_time > interval_start:
-        times += list(np.arange(interval_start, end_time, time_step))
-    times.append(end_time)
-
-    # clean up time values ending .9999999999
-    times = [round(t, 5) for t in times]
-
-    return np.array(times)

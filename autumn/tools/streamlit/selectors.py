@@ -71,6 +71,9 @@ def multi_compartment(model: CompartmentalModel) -> List[str]:
         # Check that each strata was selected
         is_strata_accepted = True
         for name, strata in chosen_strata.items():
+            if name not in comp.strata:
+                continue
+
             is_accepted_strata = False
             for stratum in strata:
                 is_accepted_strata |= comp.has_stratum(name, stratum)

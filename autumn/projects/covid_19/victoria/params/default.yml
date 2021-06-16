@@ -5,6 +5,10 @@ population:
 country:
   iso3: AUS
 
+contact_tracing:
+    assumed_trace_prop: 1e4
+    assumed_prev: 0.5
+
 vaccination: null
 
 time:

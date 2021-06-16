@@ -51,7 +51,7 @@ class TracingProc(DerivedValueProcessor):
         self.active_comps = None
         self.get_traced_prop = None
         self.tracked_quantities = {}
-        self.track_quantity_names = ["times", "prev", "prop_detected_traced", "prop_traced"]
+        self.track_quantity_names = ["time", "prev", "prop_detected_traced", "prop_traced"]
         for quantity in self.track_quantity_names:
             self.tracked_quantities.update({quantity: []})
 

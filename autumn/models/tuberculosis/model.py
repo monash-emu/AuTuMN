@@ -259,7 +259,7 @@ def build_model(params: dict) -> CompartmentalModel:
         model.stratify_with(user_defined_strat)
 
     if "location" in params.user_defined_stratifications:
-        location_strata = params.user_defined_stratifications[strat_name]["strata"]
+        location_strata = params.user_defined_stratifications["location"]["strata"]
     else:
         location_strata = []
 

@@ -147,7 +147,6 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
 
     try:
         project = project_module.project
-        assert type(project) is Project
     except (AttributeError, AssertionError):
         msg = f"Cannot find a Project instance named 'project' in {import_path}"
         raise ImportError(msg)

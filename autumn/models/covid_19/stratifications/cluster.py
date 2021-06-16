@@ -1,7 +1,4 @@
-from types import MethodType
-
 import numpy as np
-import pandas as pd
 from summer import CompartmentalModel, Multiply, Stratification
 
 from autumn.models.covid_19.constants import COMPARTMENTS, Compartment
@@ -14,6 +11,11 @@ from autumn.tools import inputs
 from autumn.settings import Region
 
 CLUSTER_STRATA = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+
+cluster_contact_groups = {
+    "south_and_east": [Region.SOUTH_EAST_METRO, Region.SOUTH_METRO],
+    "regional": [i_region for i_region in Region.VICTORIA_RURAL if i_region != Region.BARWON_SOUTH_WEST]
+}
 
 
 def get_cluster_strat(params: Parameters) -> Stratification:
@@ -38,15 +40,27 @@ def get_cluster_strat(params: Parameters) -> Stratification:
 
     # Adjust contact rate multipliers
     contact_rate_adjustments = {}
-    for cluster in Region.VICTORIA_METRO + [Region.BARWON_SOUTH_WEST]:
+
+    for cluster in Region.VICTORIA_SUBREGIONS:
         cluster_name = cluster.replace("-", "_")
-        contact_rate_multiplier = getattr(vic, f"contact_rate_multiplier_{cluster_name}")
+        if cluster in cluster_contact_groups["south_and_east"]:
+            multiplier_name = f"contact_rate_multiplier_{Region.SOUTH_METRO.replace('-', '_')}"
+        elif cluster in cluster_contact_groups["regional"]:
+            multiplier_name = "contact_rate_multiplier_regional"
+        else:
+            multiplier_name = f"contact_rate_multiplier_{cluster_name}"
+        contact_rate_multiplier = getattr(vic, multiplier_name)
         contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
-    for cluster in Region.VICTORIA_RURAL:
-        if cluster != Region.BARWON_SOUTH_WEST:
-            cluster_name = cluster.replace("-", "_")
-            contact_rate_multiplier = getattr(vic, "contact_rate_multiplier_regional")
-            contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
+
+    # for cluster in Region.VICTORIA_METRO + [Region.BARWON_SOUTH_WEST]:
+    #     cluster_name = cluster.replace("-", "_")
+    #     contact_rate_multiplier = getattr(vic, f"contact_rate_multiplier_{cluster_name}")
+    #     contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
+    # for cluster in Region.VICTORIA_RURAL:
+    #     if cluster != Region.BARWON_SOUTH_WEST:
+    #         cluster_name = cluster.replace("-", "_")
+    #         contact_rate_multiplier = getattr(vic, "contact_rate_multiplier_regional")
+    #         contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
 
     # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
     cluster_strat.add_flow_adjustments("infection", contact_rate_adjustments)

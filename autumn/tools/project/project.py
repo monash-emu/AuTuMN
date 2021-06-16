@@ -4,6 +4,7 @@ import inspect
 from datetime import datetime
 from typing import List, Union, Callable, Optional, Dict, Tuple
 from importlib import import_module, reload as reload_module
+import json
 
 import yaml
 import pandas as pd
@@ -22,8 +23,10 @@ from autumn.tools.db.store import (
 from autumn.tools.db.database import FeatherDatabase
 from autumn.tools.utils.timer import Timer
 from autumn.tools.utils.utils import get_git_branch, get_git_hash
-from autumn.settings import OUTPUT_DATA_PATH
+from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH
 from autumn.tools.registry import _PROJECTS
+
+from autumn.tools.utils.tex_tools import write_main_param_table, write_priors_table
 
 from .params import ParameterSet, Params
 
@@ -128,6 +131,41 @@ class Project:
         else:
             model.run_model(IntegrationType.SOLVE_IVP)
 
+    def write_params_to_tex(self, main_table_params_list, project_path, output_dir_path=None):
+        """
+        Write the main parameter table as a tex file. Also write the table of calibrated parameters in a separate tex file.
+        :param main_table_params_list: ordered list of parameters to be included in the main table
+        :param project_path: path of the project's directory
+        :param output_dir_path: path of the directory where to dump the output tex files.
+               Default is "docs/papers/<model_name>/projects/<region_name>".
+        """
+        # Load parameters' descriptions (base model)
+        base_params_descriptions_path = os.path.join(MODELS_PATH, self.model_name, "params_descriptions.json")
+        with open(base_params_descriptions_path, mode="r") as f:
+            params_descriptions = json.load(f)
+
+        # Load parameters' descriptions (project-specific)
+        updated_descriptions_path = os.path.join(project_path, "params_descriptions.json")
+        if os.path.isfile(updated_descriptions_path):
+            with open(updated_descriptions_path, mode="r") as f:
+                updated_params_descriptions = json.load(f)
+            params_descriptions.update(updated_params_descriptions)
+
+        # work out output dir path
+        if output_dir_path is None:
+            output_dir_path = os.path.join(DOCS_PATH, "papers", self.model_name, "projects", self.region_name)
+
+        # Get list of priors
+        all_calibration_params_names = self.calibration.iterative_sampling_param_names + self.calibration.independent_sampling_param_names
+        all_priors = self.calibration.iterative_sampling_priors + self.calibration.independent_sampling_priors
+
+        # Write main parameter table to tex file
+        write_main_param_table(self, main_table_params_list, params_descriptions, all_calibration_params_names,
+                               all_priors, output_dir_path)
+
+        # Write calibrated parameter table to tex file
+        write_priors_table(params_descriptions, all_priors, output_dir_path)
+
 
 LOADED_PROJECTS = set()
 
@@ -221,6 +259,7 @@ def run_project_locally(project: Project, run_scenarios=True):
 
     with Timer("Running baseline model"):
         baseline_model = project.run_baseline_model(project.param_set.baseline)
+        print("hello")
 
     if run_scenarios:
         num_scenarios = len(project.param_set.scenarios)

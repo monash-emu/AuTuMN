@@ -1,50 +1,10 @@
 import os
-import json
 
 from autumn.tools.project.params import read_param_value_from_string
-from autumn.settings import MODELS_PATH, DOCS_PATH
-
 
 DISTRIBUTION_TRANSLATE = {
     "trunc_normal": "truncated normal",
 }
-
-
-def write_params_to_tex(project, main_table_params_list, project_path, output_dir_path=None):
-    """
-    Write the main parameter table as a tex file. Also write the table of calibrated parameters in a separate tex file.
-    :param project: Project object
-    :param main_table_params_list: ordered list of parameters to be included in the main table
-    :param project_path: path of the project's directory
-    :param output_dir_path: path of the directory where to dump the output tex files.
-           Default is "docs/papers/<model_name>/projects/<region_name>".
-    """
-    # Load parameters' descriptions (base model)
-    base_params_descriptions_path = os.path.join(MODELS_PATH, project.model_name, "params_descriptions.json")
-    with open(base_params_descriptions_path, mode="r") as f:
-        params_descriptions = json.load(f)
-
-    # Load parameters' descriptions (project-specific)
-    updated_descriptions_path = os.path.join(project_path, "params_descriptions.json")
-    if os.path.isfile(updated_descriptions_path):
-        with open(updated_descriptions_path, mode="r") as f:
-            updated_params_descriptions = json.load(f)
-        params_descriptions.update(updated_params_descriptions)
-
-    # work out output dir path
-    if output_dir_path is None:
-        output_dir_path = os.path.join(DOCS_PATH, "papers", project.model_name, "projects", project.region_name)
-
-    # Get list of priors
-    all_calibration_params_names = project.calibration.iterative_sampling_param_names + project.calibration.independent_sampling_param_names
-    all_priors = project.calibration.iterative_sampling_priors + project.calibration.independent_sampling_priors
-
-    # Write main parameter table to tex file
-    write_main_param_table(project, main_table_params_list, params_descriptions, all_calibration_params_names,
-                           all_priors, output_dir_path)
-
-    # Write calibrated parameter table to tex file
-    write_priors_table(params_descriptions, all_priors, output_dir_path)
 
 
 def write_main_param_table(project, main_table_params_list, params_descriptions, all_calibration_params_names,

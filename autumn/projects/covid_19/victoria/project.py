@@ -123,13 +123,6 @@ priors = [
         jumping_stdev=0.005,
     ),
     UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
-    # FIXME: The prior below will need to be included to vary the increased risk in the elderly
-    # UniformPrior(
-    #     "age_specific_risk_multiplier.contact_rate_multiplier",
-    #     [1., 2.],
-    #     jumping_stdev=0.01
-    # )
-
 ]
 calibration = Calibration(
     priors,

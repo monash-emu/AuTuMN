@@ -6,7 +6,6 @@ from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
-from autumn.tools.utils.tex_tools import write_params_to_tex
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
@@ -157,4 +156,4 @@ main_table_params_list = [
     "sojourn.compartment_periods_calculated.exposed.total_period",
     "contact_rate"
 ]
-# write_params_to_tex(project, main_table_params_list, project_path=build_rel_path(''))
+# project.write_params_to_tex(main_table_params_list, project_path=build_rel_path(''))

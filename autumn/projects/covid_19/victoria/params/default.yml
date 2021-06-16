@@ -5,13 +5,17 @@ population:
 country:
   iso3: AUS
 
+contact_tracing:
+    assumed_trace_prop: 0.35
+    assumed_prev: 1.e-3
+
 vaccination: null
 
 time:
-  start: 135 # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
-  end: 275 # 1st October
+  start: 135  # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
+  end: 275  # 1st October
 
-testing_to_detection: # Need to mention these parameters in the Supplement somewhere
+testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
   assumed_cdr_parameter: .3  # calibrated
   smoothing_period: 7

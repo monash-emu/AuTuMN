@@ -6,46 +6,49 @@ import boto3
 s3 = boto3.client("s3")
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 DATA_PATH = "M:\Documents\@Projects\Covid_consolidate\output"
-phl = {
-    "region": ["calabarzon", "central-visayas", "davao-city", "manila", "philippines"],
-    "columns": [
-        "incidence",
-        "notifications",
-        "icu_occupancy",
-        "accum_deaths",
-        "accum_incidence",
-        "accum_notifications",
-        "infection_deaths",
-    ],
-}
-mys = {
-    "region": ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"],
-    "columns": [
+
+STANDARD_COL = [
         "incidence",
         "notifications",
         "hospital_occupancy",
         "icu_occupancy",
         "accum_deaths",
         "infection_deaths",
-    ],
+    ]
+
+
+
+phl = {
+    "region": ["calabarzon", "central-visayas", "davao-city", "manila", "philippines"],
+    "columns": STANDARD_COL + ["accum_incidence","accum_notifications"],
 }
+mys = {
+    "region": ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"],
+    "columns": STANDARD_COL
+}
+
+lka = {
+    "region": ["sri_lanka"],
+    "columns": STANDARD_COL    
+}
+
 os.chdir(DATA_PATH)
 
 
 list_of_files = os.listdir(DATA_PATH)
 
-phl["region"] = {
+def get_files(country):
+   return  {
     region: os.path.join(DATA_PATH, each)
-    for region in phl["region"]
+    for region in country["region"]
     for each in list_of_files
     if region in each
 }
-mys["region"] = {
-    region: os.path.join(DATA_PATH, each)
-    for region in mys["region"]
-    for each in list_of_files
-    if region in each
-}
+
+
+phl["region"] = get_files(phl)
+mys["region"] = get_files(mys)
+lka["region"] = get_files(lka)
 
 country = {"phl": phl, "mys": mys}
 

@@ -18,7 +18,6 @@ TARGETS_END_TIME = 305  # 31st October
 TARGETS_RANGE = (TARGETS_START_TIME, TARGETS_END_TIME)
 DISPERSION_TARGET_RATIO = 0.07
 
-
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
@@ -42,21 +41,20 @@ targets = [
     PoissonTarget(ts_set.get("infection_deaths").truncate_times(*TARGETS_RANGE).moving_average(7)),
     PoissonTarget(ts_set.get("hospital_admissions").truncate_times(*TARGETS_RANGE)),
     PoissonTarget(ts_set.get("icu_admissions").truncate_times(*TARGETS_RANGE)),
-    # FIXME: The target below may need to be included for the revised analysis
-    # TruncNormalTarget(ts_set.get("prop_notifications_elderly"), trunc_range=[0., 1.], stdev=.1),
     *cluster_targets,
 ]
 
-
 cluster_priors = []
 # Add multiplier for each Victorian cluster
-for region in Region.VICTORIA_METRO:
+regions_for_multipliers = [reg for reg in Region.VICTORIA_METRO if reg != Region.SOUTH_EAST_METRO]
+regions_for_multipliers.append(Region.BARWON_SOUTH_WEST)
+
+for region in regions_for_multipliers:
     region_name = region.replace("-", "_")
     name = f"victorian_clusters.contact_rate_multiplier_{region_name}"
     # Shouldn't be too peaked with these values.
     prior = TruncNormalPrior(name, mean=1.0, stdev=0.5, trunc_range=[0.5, np.inf])
     cluster_priors.append(prior)
-
 
 priors = [
     # Global COVID priors.
@@ -64,15 +62,6 @@ priors = [
     # Cluster specific priors.
     *cluster_priors,
     # Victorian regional priors.
-    # Shouldn't be too peaked with these values
-    TruncNormalPrior(
-        f"victorian_clusters.contact_rate_multiplier_barwon_south_west",
-        mean=1.0,
-        stdev=0.5,
-        trunc_range=[0.5, np.inf],
-        jumping_stdev=0.05,
-    ),
-    # Shouldn't be too peaked with these values
     TruncNormalPrior(
         f"victorian_clusters.contact_rate_multiplier_regional",
         mean=1.0,
@@ -80,16 +69,8 @@ priors = [
         trunc_range=[0.5, np.inf],
         jumping_stdev=0.05,
     ),
-    UniformPrior(
-        "contact_rate",
-        [0.015, 0.06],
-        jumping_stdev=0.002,
-    ),
-    UniformPrior(
-        "victorian_clusters.intercluster_mixing",
-        [0.005, 0.05],
-        jumping_stdev=0.001,
-    ),
+    UniformPrior("contact_rate", [0.015, 0.06], jumping_stdev=0.002),
+    UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.001),
     # Should be multiplied by 4/9 because seed is removed from regional clusters
     UniformPrior("infectious_seed", [22.5, 67.5], jumping_stdev=2.0),
     TruncNormalPrior(
@@ -98,12 +79,8 @@ priors = [
         stdev=0.2,
         trunc_range=[0.5, np.inf],
     ),
-    UniformPrior(
-        "clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.7], jumping_stdev=0.01
-    ),
-    UniformPrior(
-        "clinical_stratification.props.hospital.multiplier", [0.5, 3.0], jumping_stdev=0.1
-    ),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.7], jumping_stdev=0.01),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.0], jumping_stdev=0.1),
     UniformPrior("infection_fatality.multiplier", [0.5, 4.0], jumping_stdev=0.05),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.01),
     TruncNormalPrior(
@@ -111,7 +88,7 @@ priors = [
         mean=12.7,
         stdev=4.0,
         trunc_range=[3.0, np.inf],
-        jumping_stdev=2.0,
+        jumping_stdev=2.0
     ),
     UniformPrior(
         "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
@@ -124,13 +101,6 @@ priors = [
         jumping_stdev=0.005,
     ),
     UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
-    # FIXME: The prior below will need to be included to vary the increased risk in the elderly
-    # UniformPrior(
-    #     "age_specific_risk_multiplier.contact_rate_multiplier",
-    #     [1., 2.],
-    #     jumping_stdev=0.01
-    # )
-
 ]
 calibration = Calibration(
     priors,

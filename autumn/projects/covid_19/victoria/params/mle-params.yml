@@ -12,7 +12,6 @@ testing_to_detection.assumed_cdr_parameter: 0.3118279518637689
 victorian_clusters.contact_rate_multiplier_barwon_south_west: 0.8874886645786295
 victorian_clusters.contact_rate_multiplier_north_metro: 1.08
 victorian_clusters.contact_rate_multiplier_regional: 0.639681613832883
-victorian_clusters.contact_rate_multiplier_south_east_metro: 0.9860666046439606
 victorian_clusters.contact_rate_multiplier_south_metro: 1.
 victorian_clusters.contact_rate_multiplier_west_metro: 1.1374353490294857
 victorian_clusters.intercluster_mixing: 0.012329655190981597

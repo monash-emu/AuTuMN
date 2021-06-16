@@ -80,8 +80,11 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     Adjust infection death rates for hospital patients (ICU and non-ICU)
     """
     symptomatic_adjuster = params.clinical_stratification.props.symptomatic.multiplier
-    hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
     ifr_adjuster = params.infection_fatality.multiplier
+
+    hospital_adjuster = ifr_adjuster if \
+        params.clinical_stratification.props.use_ifr_for_severity else \
+        params.clinical_stratification.props.hospital.multiplier
 
     # Get all the adjustments in the same way as we will do if the immunity stratification is implemented
     entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjs(

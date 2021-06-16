@@ -6,7 +6,6 @@ from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
-from autumn.tools.utils.tex_tools import write_params_to_tex
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
@@ -124,13 +123,6 @@ priors = [
         jumping_stdev=0.005,
     ),
     UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
-    # FIXME: The prior below will need to be included to vary the increased risk in the elderly
-    # UniformPrior(
-    #     "age_specific_risk_multiplier.contact_rate_multiplier",
-    #     [1., 2.],
-    #     jumping_stdev=0.01
-    # )
-
 ]
 calibration = Calibration(
     priors,

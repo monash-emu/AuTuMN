@@ -140,6 +140,7 @@ class StrataProps(BaseModel):
 class ClinicalProportions(BaseModel):
     hospital: StrataProps
     symptomatic: StrataProps
+    use_ifr_for_severity: Optional[bool]
 
 
 class ClinicalStratification(BaseModel):

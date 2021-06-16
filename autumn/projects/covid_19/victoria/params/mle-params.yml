@@ -1,7 +1,7 @@
 clinical_stratification.non_sympt_infect_multiplier: 0.3735211443059714
 clinical_stratification.props.hospital.multiplier: 2.336093266578529
 clinical_stratification.props.symptomatic.multiplier: 1.0597276719550561
-contact_rate: 0.044362259349481105
+contact_rate: 0.058
 infection_fatality.multiplier: 2.5032358251654108
 infectious_seed: 29.905603095133092
 sojourn.compartment_periods.icu_early: 10.045495179967219

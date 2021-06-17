@@ -1,3 +1,5 @@
+import numpy as np
+
 from typing import List
 from summer import CompartmentalModel
 
@@ -11,6 +13,7 @@ def request_outputs(
     cumulative_start_time: float,
     location_strata: List[str],
     time_variant_tb_screening_rate,
+    implement_acf: bool,
 ):
     request_compartment_output_plus_locations(
         model, "population_size", COMPARTMENTS, location_strata
@@ -96,7 +99,23 @@ def request_outputs(
     # Notifications
     # FIXME: Not seeing same crazy spike
     # TODO: Investigate
-    request_flow_output_plus_locations(model, "notifications", "detection", location_strata)
+    request_flow_output_plus_locations(model, "passive_notifications", "detection", location_strata)
+    if implement_acf:
+        request_flow_output_plus_locations(
+            model, "active_notifications", "acf_detection", location_strata
+        )
+    else:
+        null_func = lambda: np.zeros_like(model.times)
+        request_output_func_plus_locations(
+            model, "active_notifications", null_func, [], location_strata
+        )
+
+    request_aggregation_output_plus_locations(
+        model,
+        "notifications",
+        ["passive_notifications", "active_notifications"],
+        location_strata,
+    )
 
     # Screening rate
     screening_rate_func = tanh_based_scaleup(

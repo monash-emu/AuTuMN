@@ -36,7 +36,9 @@ def plot_outputs_multi(
         is_logscale = st.sidebar.checkbox("Log scale")
         is_custom_xrange = st.sidebar.checkbox("Use custom x axis range.")
         if is_custom_xrange:
-            x_low, x_up = selectors.create_xrange_selector(0, 700)
+            x_low, x_up = selectors.create_xrange_selector(
+                int(models[0].times[0]), int(models[0].times[-1])
+            )
         else:
             x_low = min(models[0].times)
             x_up = max(models[0].times)
@@ -59,7 +61,9 @@ def plot_outputs_multi(
         is_logscale = st.sidebar.checkbox("Log scale")
         is_custom_xrange = st.sidebar.checkbox("Use custom x axis range.")
         if is_custom_xrange:
-            x_low, x_up = selectors.create_xrange_selector(0, 700)
+            x_low, x_up = selectors.create_xrange_selector(
+                int(models[0].times[0]), int(models[0].times[-1])
+            )
         else:
             x_low = min(models[0].times)
             x_up = max(models[0].times)

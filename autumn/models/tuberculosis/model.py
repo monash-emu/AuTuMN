@@ -27,7 +27,7 @@ def build_model(params: dict) -> CompartmentalModel:
         times=[time.start, time.end],
         compartments=COMPARTMENTS,
         infectious_compartments=INFECTIOUS_COMPS,
-        timestep=time.step,
+        timestep=0.1,
     )
 
     # Add initial population
@@ -274,6 +274,7 @@ def build_model(params: dict) -> CompartmentalModel:
         params.cumulative_output_start_time,
         location_strata,
         params.time_variant_tb_screening_rate,
+        implement_acf,
     )
 
     return model

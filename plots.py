@@ -44,7 +44,7 @@ from autumn.dashboards.model_results.run import run_dashboard as model_results
 # )
 from autumn.dashboards.philippines import run_dashboard as run_philippines
 
-# from autumn.dashboards.vic_second_wave_paper import run_dashboard as run_vic_paper
+from autumn.dashboards.vic_second_wave_paper.run import run_dashboard as run_vic_paper
 
 DASHBOARDS = {
     "Home": None,
@@ -55,7 +55,7 @@ DASHBOARDS = {
     # "Multi-country plots": run_multicountry_dashboard,
     # "Multi-country inputs": run_multicountry_inputs,
     # "Multi-country uncertainty": run_multicountry_uncertainty,
-    # "Vic 2nd wave paper": run_vic_paper,
+    "Vic 2nd wave paper": run_vic_paper,
     "Philippines COVID": run_philippines,
 }
 

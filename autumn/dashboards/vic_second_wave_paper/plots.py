@@ -7,28 +7,32 @@ import pandas as pd
 import streamlit as st
 import yaml
 
-from apps import covid_19
+# from apps import covid_19
 from autumn.models.covid_19.parameters import Country, Population
 from autumn.models.covid_19.preprocess.case_detection import get_testing_pop
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
-from autumn import plots
+from autumn.tools import plots
 from autumn.tools.plots.calibration.plots import get_epi_params
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.plots.utils import get_plot_text_dict, REF_DATE, change_xaxis_to_date
 from autumn.settings import Region
-from autumn.utils.params import load_params
-from dash.dashboards.calibration_results.plots import (
+# from autumn.utils.params import load_params
+from autumn.dashboards.calibration_results.plots import (
     create_seroprev_csv,
     get_cdr_constants,
     get_uncertainty_db,
     get_uncertainty_df,
     write_mcmc_centiles,
 )
-from dash.utils import create_downloadable_csv
-from dash.dashboards.inspect_model.plots import BASE_DATE
+# from dash.utils import create_downloadable_csv
+# from dash.dashboards.inspect_model.plots import BASE_DATE
 from autumn.tools.utils.utils import apply_moving_average
 from autumn.tools.inputs import get_mobility_data
 
+
+from autumn.tools.streamlit.utils import create_downloadable_csv, round_sig_fig, Dashboard
+
+dash = Dashboard()
 
 STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
@@ -54,6 +58,7 @@ def get_contact_rate_multipliers(mcmc_params):
     ]
 
 
+@dash.register("Multiple timeseries uncertainty")
 def plot_multiple_timeseries_with_uncertainty(
     plotter: StreamlitPlotter,
     calib_dir_path: str,

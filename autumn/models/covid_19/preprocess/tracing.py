@@ -9,6 +9,8 @@ def get_tracing_param(assumed_trace_prop, assumed_prev):
     """
     Calculate multiplier for the relationship between traced proportion and prevalence for use in the next function.
     """
+    assert 0. <= assumed_trace_prop <= 1.
+    assert 0. <= assumed_prev <= 1.
     return -np.log(assumed_trace_prop) / assumed_prev
 
 
@@ -50,6 +52,10 @@ class TracingProc(DerivedValueProcessor):
         self.detected_prop_func = detected_prop_func
         self.active_comps = None
         self.get_traced_prop = None
+        self.tracked_quantities = {}
+        self.track_quantity_names = ["time", "prev", "prop_detected_traced", "prop_traced"]
+        for quantity in self.track_quantity_names:
+            self.tracked_quantities.update({quantity: []})
 
     def prepare_to_run(self, compartments, flows):
         """
@@ -69,7 +75,12 @@ class TracingProc(DerivedValueProcessor):
         The actual calculation performed during run-time
         Calculate the actual proportion of detected cases detected
         """
-        prev = find_sum(comp_vals[self.active_comps]) / find_sum(comp_vals)
-        prop_detected_traced = self.get_traced_prop(self.trace_param, prev)
-        prop_traced = prop_detected_traced * self.detected_prop_func(time)
+        prev = find_sum(comp_vals[self.active_comps]) / find_sum(comp_vals)  # Calculate prevalence
+        prop_detected_traced = self.get_traced_prop(self.trace_param, prev)  # Find the prop of detected that is traced
+        prop_traced = prop_detected_traced * self.detected_prop_func(time)  # Last, find the prop of all cases traced
+
+        # Track all the quantities that we might want to evaluate later
+        for quantity in self.track_quantity_names:
+            self.tracked_quantities[quantity].append(eval(quantity))
+
         return prop_traced

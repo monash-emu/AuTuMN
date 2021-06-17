@@ -68,9 +68,11 @@ data/outputs
 *.gz
 *.blg
 *.bbl
+*.toc
 apps/*/tex/*.pdf
 *.synctex*
 docs/papers/tex/*.pdf
+!docs/papers/*/projects/*/methods_figures/*.png
 
 # Random stuff
 saved_*

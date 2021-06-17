@@ -5,13 +5,17 @@ population:
 country:
   iso3: AUS
 
+contact_tracing:
+    assumed_trace_prop: 0.35
+    assumed_prev: 1.e-3
+
 vaccination: null
 
 time:
-  start: 135 # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
-  end: 275 # 1st October
+  start: 135  # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
+  end: 275  # 1st October
 
-testing_to_detection: # Need to mention these parameters in the Supplement somewhere
+testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
   assumed_cdr_parameter: .3  # calibrated
   smoothing_period: 7
@@ -19,6 +23,8 @@ testing_to_detection: # Need to mention these parameters in the Supplement somew
 # Tiny adjustment for consistency with observations (0.16 instead of 0.17)
 clinical_stratification:
   icu_prop: 0.16
+  props:
+    use_ifr_for_severity: true
 
 # VAHI, 1st July to 30th September
 sojourn:
@@ -185,9 +191,3 @@ victorian_clusters:
             - other_locations
             - school
             - work
-
-#age_specific_risk_multiplier:
-#  age_categories: ["65", "70", "75"]
-#  contact_rate_multiplier: 100.
-#  adjustment_start_time: 0  # this is optional and currently dummy value
-#  adjustment_end_time: 100  # this is optional and currently dummy value

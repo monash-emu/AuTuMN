@@ -7,7 +7,6 @@ import pandas as pd
 import streamlit as st
 import yaml
 
-# from apps import covid_19
 from autumn.models.covid_19.parameters import Country, Population
 from autumn.models.covid_19.preprocess.case_detection import get_testing_pop
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
@@ -16,7 +15,6 @@ from autumn.tools.plots.calibration.plots import get_epi_params
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.plots.utils import get_plot_text_dict, REF_DATE, change_xaxis_to_date
 from autumn.settings import Region
-# from autumn.utils.params import load_params
 from autumn.dashboards.calibration_results.plots import (
     create_seroprev_csv,
     get_cdr_constants,
@@ -24,18 +22,17 @@ from autumn.dashboards.calibration_results.plots import (
     get_uncertainty_df,
     write_mcmc_centiles,
 )
-# from dash.utils import create_downloadable_csv
-# from dash.dashboards.inspect_model.plots import BASE_DATE
+from autumn.models.covid_19.constants import BASE_DATETIME
 from autumn.tools.utils.utils import apply_moving_average
 from autumn.tools.inputs import get_mobility_data
+from autumn.tools.project import get_project
 
 
-from autumn.tools.streamlit.utils import create_downloadable_csv, round_sig_fig, Dashboard
+from autumn.tools.streamlit.utils import create_downloadable_csv, Dashboard
 
 dash = Dashboard()
 
 STANDARD_X_LIMITS = 153, 275
-PLOT_FUNCS = {}
 KEY_PARAMS = [
     "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
     "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
@@ -58,7 +55,7 @@ def get_contact_rate_multipliers(mcmc_params):
     ]
 
 
-@dash.register("Multiple timeseries uncertainty")
+@dash.register("Multi-output uncertainty")
 def plot_multiple_timeseries_with_uncertainty(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -100,9 +97,6 @@ def plot_multiple_timeseries_with_uncertainty(
     )
 
 
-PLOT_FUNCS["Multi-output uncertainty"] = plot_multiple_timeseries_with_uncertainty
-
-
 def plot_regional_outputs(
     plotter,
     calib_dir_path,
@@ -137,6 +131,7 @@ def plot_regional_outputs(
     )
 
 
+@dash.register("Metro notifications")
 def metro_notifications(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -160,9 +155,7 @@ def metro_notifications(
     )
 
 
-PLOT_FUNCS["Metro notifications"] = metro_notifications
-
-
+@dash.register("Regional notifications")
 def regional_notifications(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -186,9 +179,7 @@ def regional_notifications(
     )
 
 
-PLOT_FUNCS["Regional notifications"] = regional_notifications
-
-
+@dash.register("Metro hospitalisations")
 def metro_hospitalisations(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -212,9 +203,7 @@ def metro_hospitalisations(
     )
 
 
-PLOT_FUNCS["Metro hospitalisations"] = metro_hospitalisations
-
-
+@dash.register("Regional hospitalisations")
 def regional_hospitalisations(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -238,9 +227,7 @@ def regional_hospitalisations(
     )
 
 
-PLOT_FUNCS["Regional hospitalisations"] = regional_hospitalisations
-
-
+@dash.register("Metro ICU admissions")
 def metro_icu_admissions(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -262,9 +249,6 @@ def metro_icu_admissions(
         "metro_icu",
         max_y_values=(max_y_value,) * len(Region.VICTORIA_METRO),
     )
-
-
-PLOT_FUNCS["Metro ICU admissions"] = metro_icu_admissions
 
 
 def get_vic_epi_params(mcmc_params):
@@ -320,6 +304,7 @@ def plot_posteriors(
     write_mcmc_centiles(mcmc_params, mcmc_tables, burn_in, sig_figs, [2.5, 50, 97.5])
 
 
+@dash.register("Epi posteriors")
 def plot_epi_posteriors(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -340,9 +325,7 @@ def plot_epi_posteriors(
     )
 
 
-PLOT_FUNCS["Epi posteriors"] = plot_epi_posteriors
-
-
+@dash.register("Contact rate modifiers")
 def plot_contact_rate_modifiers(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -356,9 +339,7 @@ def plot_contact_rate_modifiers(
     plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, params, "contact_posteriors")
 
 
-PLOT_FUNCS["Contact rate modifiers"] = plot_contact_rate_modifiers
-
-
+@dash.register("Key parameters")
 def plot_key_params(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -370,9 +351,6 @@ def plot_key_params(
 ):
 
     plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, KEY_PARAMS, "key_posteriors")
-
-
-PLOT_FUNCS["Key parameters"] = plot_key_params
 
 
 def plot_param_matrix(
@@ -417,6 +395,7 @@ def plot_param_matrix(
     st.dataframe(params_df)
 
 
+@dash.register("All params matrix")
 def plot_all_param_matrix(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -435,9 +414,7 @@ def plot_all_param_matrix(
     )
 
 
-PLOT_FUNCS["All params matrix"] = plot_all_param_matrix
-
-
+@dash.register("Epi params matrix")
 def plot_epi_param_matrix(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -453,9 +430,7 @@ def plot_epi_param_matrix(
     )
 
 
-PLOT_FUNCS["Epi params matrix"] = plot_epi_param_matrix
-
-
+@dash.register("Key params matrix")
 def plot_key_param_matrix(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -476,9 +451,7 @@ def plot_key_param_matrix(
     )
 
 
-PLOT_FUNCS["Key params matrix"] = plot_key_param_matrix
-
-
+@dash.register("Key params traces")
 def plot_key_param_traces(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -510,9 +483,7 @@ def plot_key_param_traces(
     )
 
 
-PLOT_FUNCS["Key param traces"] = plot_key_param_traces
-
-
+@dash.register("Epi param traces")
 def plot_epi_param_traces(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -544,9 +515,7 @@ def plot_epi_param_traces(
     )
 
 
-PLOT_FUNCS["Epi param traces"] = plot_epi_param_traces
-
-
+@dash.register("Contact rate modifier traces")
 def plot_contact_param_traces(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -578,9 +547,7 @@ def plot_contact_param_traces(
     )
 
 
-PLOT_FUNCS["Contact rate modifier traces"] = plot_contact_param_traces
-
-
+@dash.register("Seroprevalence by age and cluster")
 def plot_seroprev_age_and_cluster(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -604,9 +571,7 @@ def plot_seroprev_age_and_cluster(
     st.write(overall_seroprev.to_dict())
 
 
-PLOT_FUNCS["Seroprevalence by age and cluster"] = plot_seroprev_age_and_cluster
-
-
+@dash.register("CDR Curves")
 def plot_cdr_curves(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -618,8 +583,11 @@ def plot_cdr_curves(
 ):
 
     start_date, end_date = STANDARD_X_LIMITS
-    samples, label_rotation, region_name = 70, 90, "victoria"
-    params = load_params(app_name, region_name)
+    samples, label_rotation = 70, 90
+
+    project = get_project("covid_19", "victoria", reload=True)
+    params = project.param_set.dump_to_dict()['baseline']
+
     (
         iso3,
         testing_year,
@@ -629,7 +597,7 @@ def plot_cdr_curves(
         time_params,
         times,
         agegroup_strata,
-    ) = get_cdr_constants(params["default"])
+    ) = get_cdr_constants(params)
 
     # Collate parameters into one structure
     testing_to_detection_values = []
@@ -673,9 +641,7 @@ def plot_cdr_curves(
     )
 
 
-PLOT_FUNCS["CDR curves"] = plot_cdr_curves
-
-
+@dash.register("Scenarios")
 def plot_scenarios(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -718,9 +684,7 @@ def plot_scenarios(
     )
 
 
-PLOT_FUNCS["Scenarios"] = plot_scenarios
-
-
+@dash.register("Multi-output scenarios")
 def plot_scenarios_multioutput(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -767,9 +731,7 @@ def plot_scenarios_multioutput(
     )
 
 
-PLOT_FUNCS["Multi-output scenarios"] = plot_scenarios_multioutput
-
-
+@dash.register("Mobility by cluster")
 def plot_multicluster_mobility(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -779,9 +741,8 @@ def plot_multicluster_mobility(
     app_name: str,
     region: str,
 ):
-
-    app = covid_19.app.get_region("victoria")
-    params = app.params["default"]
+    project = get_project("covid_19", "victoria", reload=True)
+    params = project.param_set.dump_to_dict()['baseline']
 
     all_cluster_mobility_values = {}
     fig, axes, max_dims, n_rows, n_cols, _ = plotter.get_figure()
@@ -790,7 +751,7 @@ def plot_multicluster_mobility(
         google_mobility_values, google_mobility_days = get_mobility_data(
             params["country"]["iso3"],
             i_region.replace("-", "_").upper(),
-            BASE_DATE,
+            BASE_DATETIME,
             params["mobility"]["google_mobility_locations"],
         )
 
@@ -826,6 +787,3 @@ def plot_multicluster_mobility(
     change_xaxis_to_date(axes, REF_DATE, rotation=0)
 
     plotter.save_figure(fig, filename=f"multi_cluster_mobility", title_text="Google mobility")
-
-
-PLOT_FUNCS["Mobility by cluster"] = plot_multicluster_mobility

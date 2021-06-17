@@ -1,17 +1,12 @@
 """
 Streamlit web UI for plotting MCMC outputs
 """
-import os
-
 import streamlit as st
 
 from autumn.tools import db
-from autumn.tools.plots.plotter import FilePlotter, StreamlitPlotter
-# from autumn.utils.params import load_targets
+from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.streamlit import selectors
-
-from autumn.tools.project import Project, get_project
-
+from autumn.tools.project import get_project
 from .plots import dash
 
 

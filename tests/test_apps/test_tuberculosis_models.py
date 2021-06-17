@@ -46,24 +46,21 @@ def test_tb_build_scenario_models(project_name):
 @pytest.mark.run_models
 @pytest.mark.github_only
 @pytest.mark.parametrize("project_name", TB_PROJECTS)
-@pytest.mark.parametrize("stratify_by", [[], ["organ"]])
-def test_tb_run_models_full(project_name, stratify_by):
+def test_tb_run_models_full(project_name):
     """
     Smoke test: ensure our models run to completion for any stratification request without crashing.
     This takes ~30s per model.
     """
     project = get_project(Models.TB, project_name)
-    params = project.param_set.baseline.update({"stratify_by": stratify_by})
-    baseline_model = project.run_baseline_model(params)
+    baseline_model = project.run_baseline_model(project.param_set.baseline)
     assert type(baseline_model) is CompartmentalModel
     assert baseline_model.outputs is not None
 
     start_times = [
         sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
     ]
-    scenario_params = [p.update({"stratify_by": stratify_by}) for p in project.param_set.scenarios]
     sc_models = project.run_scenario_models(
-        baseline_model, scenario_params, start_times=start_times
+        baseline_model, project.param_set.scenarios, start_times=start_times
     )
     for sc_model in sc_models:
         assert type(sc_model) is CompartmentalModel

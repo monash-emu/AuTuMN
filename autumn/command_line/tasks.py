@@ -60,7 +60,7 @@ def run_powerbi(run, urunid, verbose):
 
 def pre_task_setup():
     setup_warnings()
-    setup_sentry()
+    #setup_sentry()
     setup_matplotlib()
     setup_logging()
 

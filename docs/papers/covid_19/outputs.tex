@@ -1,0 +1,24 @@
+\section{Calculation of outputs}
+
+\subsection{Incidence}
+Incidence is calculated as any transitions into the early active compartment (\textit{``I"}).
+
+\subsection{Hospital occupancy}
+This is calculated as the sum of three quantities:
+\begin{enumerate}
+    \item All persons in the late active compartment in clinical stratum 4, representing those admitted to hospital but never critically unwell.
+    \item All persons in the late active compartment in clinical stratum 5, representing those currently admitted to ICU.
+    \item A proportion of the early active compartment in clinical stratum 5, representing those who will be admitted to ICU at a time in the future. This proportion is calculated as the quotient of \textit{1)} the difference between the pre-ICU period and the pre-hospital period for clinical stratum 4, divided by \textit{2)} the total pre-ICU period. That is, a proportion of the pre-ICU period is considered to represent patients in hospital who have not yet been admitted to ICU.
+\end{enumerate}
+
+\subsection{ICU occupancy}
+This is calculated as all persons in the late active compartment in clinical stratum 5.
+
+\subsection{Seropositive proportion}
+This is calculated as the proportion of the population in the recovered (\textit{``R"}) compartment. Although very similar numerically to the attack rate, persons who died of COVID-19 are not included in the denominator.
+
+\subsection{COVID-19-related mortality}
+This is calculated as all transitions representing death, exiting the model. This is implemented as depletion of the late active compartment.
+
+\subsection{Notifications}
+Local case notifications are calculated as transitions from the early to the late active compartment for clinical strata 3 to 5.

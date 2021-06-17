@@ -1,59 +1,36 @@
 """
 Streamlit web UI for plotting MCMC outputs
 """
-import os
-
 import streamlit as st
 
 from autumn.tools import db
-from autumn.tools.plots.plotter import FilePlotter, StreamlitPlotter
-from autumn.utils.params import load_targets
-from dash import selectors
-
-from .plots import PLOT_FUNCS
+from autumn.tools.plots.plotter import StreamlitPlotter
+from autumn.tools.streamlit import selectors
+from autumn.tools.project import get_project
+from .plots import dash
 
 
 def run_dashboard():
-    app_name, app_dirpath = "covid_19", os.path.join(os.getcwd(), "data\outputs\calibrate\covid_19")
-    if not app_name:
-        st.write("No calibrations have been run yet")
-        return
 
-    region_name = "victoria"
-    region_dirpath = os.path.join(app_dirpath, region_name)
-    if not region_name:
-        st.write("No region folder found")
-        return
-
-    calib_name, calib_dirpath = selectors.calibration_run(region_dirpath, region_name)
-    if not calib_name:
-        st.write("No model run folder found")
+    project = get_project("covid_19", "victoria", reload=True)
+    calib_path = selectors.calibration_path(project)
+    if not calib_path:
+        msg = f"No calibration outputs folder found for {project.model_name} {project.region_name}"
+        st.write(msg)
         return
 
     # Load MCMC tables
-    mcmc_tables = db.load.load_mcmc_tables(calib_dirpath)
-    mcmc_params = db.load.load_mcmc_params_tables(calib_dirpath)
-    targets = load_targets(app_name, region_name)
+    mcmc_tables = db.load.load_mcmc_tables(calib_path)
+    mcmc_params = db.load.load_mcmc_params_tables(calib_path)
 
-    plotter = StreamlitPlotter(targets)
-    plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
-    plot_func = PLOT_FUNCS[plot_type]
-
-    plot_func(
+    plotter = StreamlitPlotter(project.plots)
+    dash.select_plot(
         plotter,
-        calib_dirpath,
+        calib_path,
         mcmc_tables,
         mcmc_params,
-        targets,
-        app_name,
-        region_name,
+        project.plots,
+        project.model_name,
+        project.region_name,
     )
 
-    path_name = os.path.join(calib_dirpath, "saved_plots")
-    if not os.path.exists(path_name):
-        os.makedirs(path_name)
-    with st.spinner("Saving files..."):
-        file_plotter = FilePlotter(path_name, targets)
-        plot_func(
-            file_plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name
-        )

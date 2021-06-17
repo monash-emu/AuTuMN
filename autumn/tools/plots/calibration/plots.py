@@ -384,7 +384,10 @@ def plot_multiple_param_traces(
     )
 
     for i in range(n_rows * n_cols):
-        axis = axes[indices[i][0], indices[i][1]]
+        if len(params_to_plot) <= 2:
+            axis = axes[i]
+        else:
+            axis = axes[indices[i][0], indices[i][1]]
         if i < len(params_to_plot):
             param_name = params_to_plot[i]
             for i_chain in range(mcmc_params[0]["chain"].iloc[-1]):
@@ -567,7 +570,11 @@ def plot_multiple_posteriors(
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(parameters))
 
     for i in range(n_rows * n_cols):
-        axis = axes[indices[i][0], indices[i][1]]
+
+        if len(parameters) <= 2:
+            axis = axes[i]
+        else:
+            axis = axes[indices[i][0], indices[i][1]]
 
         if i < len(parameters):
             param_name = parameters[i]

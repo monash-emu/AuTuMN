@@ -259,7 +259,6 @@ def run_project_locally(project: Project, run_scenarios=True):
 
     with Timer("Running baseline model"):
         baseline_model = project.run_baseline_model(project.param_set.baseline)
-        print("hello")
 
     if run_scenarios:
         num_scenarios = len(project.param_set.scenarios)

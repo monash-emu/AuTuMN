@@ -7,7 +7,7 @@ import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import List, Callable, Any
 
-import sentry_sdk
+#import sentry_sdk
 
 logger = logging.getLogger(__name__)
 

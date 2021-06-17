@@ -27,7 +27,7 @@ def build_model(params: dict) -> CompartmentalModel:
         times=[time.start, time.end],
         compartments=COMPARTMENTS,
         infectious_compartments=INFECTIOUS_COMPS,
-        timestep=0.1,
+        timestep=time.step,
     )
 
     # Add initial population

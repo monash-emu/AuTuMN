@@ -5,7 +5,6 @@ from copy import deepcopy
 
 import numpy as np
 from numba import jit
-from summer.legacy.model import StratifiedModel
 
 from autumn.models.covid_19.preprocess.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.settings import Region

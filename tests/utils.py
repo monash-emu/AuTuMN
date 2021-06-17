@@ -2,6 +2,8 @@ import os
 import random
 from unittest import mock
 
+from summer import Compartment, Stratification
+
 import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
@@ -11,18 +13,21 @@ def get_mock_model(times, outputs, derived_outputs=None):
     mock_model = mock.Mock()
     mock_model.derived_outputs = derived_outputs or {}
     mock_model.outputs = np.array(outputs)
-    mock_model.compartment_names = [
-        "susceptibleXmood_happyXage_old",
-        "susceptibleXmood_sadXage_old",
-        "susceptibleXmood_happyXage_young",
-        "susceptibleXmood_sadXage_young",
-        "infectiousXmood_happyXage_old",
-        "infectiousXmood_sadXage_old",
-        "infectiousXmood_happyXage_young",
-        "infectiousXmood_sadXage_young",
+    mock_model.compartments = [
+        Compartment("susceptible", {"mood": "happy", "age": "old"}),
+        Compartment("susceptible", {"mood": "sad", "age": "old"}),
+        Compartment("susceptible", {"mood": "happy", "age": "young"}),
+        Compartment("susceptible", {"mood": "sad", "age": "young"}),
+        Compartment("infectious", {"mood": "happy", "age": "old"}),
+        Compartment("infectious", {"mood": "sad", "age": "old"}),
+        Compartment("infectious", {"mood": "happy", "age": "young"}),
+        Compartment("infectious", {"mood": "sad", "age": "young"}),
     ]
     mock_model.times = times
-    mock_model.all_stratifications = {"mood": ["happy", "sad"], "age": ["old", "young"]}
+    mock_model._stratifications = [
+        Stratification("mood", ["happy", "sad"], ["susceptible", "infectious"]),
+        Stratification("age", ["old", "young"], ["susceptible", "infectious"]),
+    ]
     return mock_model
 
 

@@ -1,8 +1,5 @@
-from copy import deepcopy
-from itertools import chain, combinations
-
 import pytest
-from summer.legacy.model import StratifiedModel
+from summer import CompartmentalModel
 
 from autumn.settings import Models
 from autumn.tools.project.project import _PROJECTS, get_project
@@ -21,19 +18,16 @@ def test_tb_run_models_partial(project_name):
     # Only run model for 5 timesteps.
     baseline_params = project.param_set.baseline
     baseline_params_dict = baseline_params.to_dict()
-    original_stratify_by = baseline_params_dict["stratify_by"]
-    for stratify_by in powerset(original_stratify_by):
-        params = baseline_params.update(
-            {
-                "stratify_by": list(stratify_by),
-                "time": {
-                    "critical_ranges": [],
-                    "end": baseline_params_dict["time"]["start"] + 5,
-                },
-            }
-        )
-        model = project.run_baseline_model(params)
-        assert type(model) is StratifiedModel
+    params = baseline_params.update(
+        {
+            "time": {
+                "critical_ranges": [],
+                "end": baseline_params_dict["time"]["start"] + 5,
+            },
+        }
+    )
+    model = project.run_baseline_model(params)
+    assert type(model) is CompartmentalModel
 
 
 @pytest.mark.run_models
@@ -46,40 +40,28 @@ def test_tb_build_scenario_models(project_name):
     project = get_project(Models.TB, project_name)
     for param in project.param_set.scenarios:
         model = project.build_model(param.to_dict())
-        assert type(model) is StratifiedModel
+        assert type(model) is CompartmentalModel
 
 
 @pytest.mark.run_models
 @pytest.mark.github_only
 @pytest.mark.parametrize("project_name", TB_PROJECTS)
-@pytest.mark.parametrize("stratify_by", [[], ["organ"]])
-def test_tb_run_models_full(project_name, stratify_by):
+def test_tb_run_models_full(project_name):
     """
     Smoke test: ensure our models run to completion for any stratification request without crashing.
     This takes ~30s per model.
     """
     project = get_project(Models.TB, project_name)
-    params = project.param_set.baseline.update({"stratify_by": stratify_by})
-    baseline_model = project.run_baseline_model(params)
-    assert type(baseline_model) is StratifiedModel
+    baseline_model = project.run_baseline_model(project.param_set.baseline)
+    assert type(baseline_model) is CompartmentalModel
     assert baseline_model.outputs is not None
 
     start_times = [
         sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
     ]
-    scenario_params = [p.update({"stratify_by": stratify_by}) for p in project.param_set.scenarios]
     sc_models = project.run_scenario_models(
-        baseline_model, scenario_params, start_times=start_times
+        baseline_model, project.param_set.scenarios, start_times=start_times
     )
     for sc_model in sc_models:
-        assert type(sc_model) is StratifiedModel
+        assert type(sc_model) is CompartmentalModel
         assert sc_model.outputs is not None
-
-
-def powerset(iterable):
-    """
-    Returns the powerset of a set.
-    powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)
-    """
-    s = list(iterable)
-    return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))

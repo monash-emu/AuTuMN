@@ -2,7 +2,7 @@ import os
 import logging
 import inspect
 from datetime import datetime
-from typing import List, Union, Callable, Optional, Dict, Tuple
+from typing import List, Callable, Optional, Dict, Tuple
 from importlib import import_module, reload as reload_module
 import json
 
@@ -10,8 +10,6 @@ import yaml
 import pandas as pd
 import numpy as np
 from summer.model import CompartmentalModel
-from summer.legacy.model import StratifiedModel
-from summer.legacy.constants import IntegrationType
 from summer.derived_outputs import DerivedOutputRequest
 
 from autumn.tools.db.store import (
@@ -32,7 +30,6 @@ from .params import ParameterSet, Params
 
 logger = logging.getLogger(__name__)
 
-CompModel = Union[CompartmentalModel, StratifiedModel]
 ModelBuilder = Callable[[dict], CompartmentalModel]
 
 
@@ -68,7 +65,7 @@ class Project:
 
     def run_baseline_model(
         self, params: Params, derived_outputs_whitelist: Optional[List[str]] = None
-    ) -> CompModel:
+    ) -> CompartmentalModel:
         """
         Run the project's baseline model with the given parameters.
         Returns the completed baseline model.
@@ -84,11 +81,11 @@ class Project:
 
     def run_scenario_models(
         self,
-        baseline_model: CompModel,
+        baseline_model: CompartmentalModel,
         scenario_params: List[Params],
         start_time: Optional[float] = None,
         start_times: Optional[List[float]] = None,
-    ) -> List[CompModel]:
+    ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
         Returns the completed scenario models.
@@ -122,14 +119,11 @@ class Project:
 
         return models
 
-    def _run_model(self, model: CompModel):
+    def _run_model(self, model: CompartmentalModel):
         """
         Run the model.
         """
-        if type(model) is CompartmentalModel:
-            model.run(max_step=1)
-        else:
-            model.run_model(IntegrationType.SOLVE_IVP)
+        model.run(max_step=1)
 
     def write_params_to_tex(self, main_table_params_list, project_path, output_dir_path=None):
         """
@@ -140,7 +134,9 @@ class Project:
                Default is "docs/papers/<model_name>/projects/<region_name>".
         """
         # Load parameters' descriptions (base model)
-        base_params_descriptions_path = os.path.join(MODELS_PATH, self.model_name, "params_descriptions.json")
+        base_params_descriptions_path = os.path.join(
+            MODELS_PATH, self.model_name, "params_descriptions.json"
+        )
         with open(base_params_descriptions_path, mode="r") as f:
             params_descriptions = json.load(f)
 
@@ -153,15 +149,29 @@ class Project:
 
         # work out output dir path
         if output_dir_path is None:
-            output_dir_path = os.path.join(DOCS_PATH, "papers", self.model_name, "projects", self.region_name)
+            output_dir_path = os.path.join(
+                DOCS_PATH, "papers", self.model_name, "projects", self.region_name
+            )
 
         # Get list of priors
-        all_calibration_params_names = self.calibration.iterative_sampling_param_names + self.calibration.independent_sampling_param_names
-        all_priors = self.calibration.iterative_sampling_priors + self.calibration.independent_sampling_priors
+        all_calibration_params_names = (
+            self.calibration.iterative_sampling_param_names
+            + self.calibration.independent_sampling_param_names
+        )
+        all_priors = (
+            self.calibration.iterative_sampling_priors
+            + self.calibration.independent_sampling_priors
+        )
 
         # Write main parameter table to tex file
-        write_main_param_table(self, main_table_params_list, params_descriptions, all_calibration_params_names,
-                               all_priors, output_dir_path)
+        write_main_param_table(
+            self,
+            main_table_params_list,
+            params_descriptions,
+            all_calibration_params_names,
+            all_priors,
+            output_dir_path,
+        )
 
         # Write calibrated parameter table to tex file
         write_priors_table(params_descriptions, all_priors, output_dir_path)
@@ -299,14 +309,14 @@ def get_all_available_scenario_paths(scenario_dir_path):
 
 
 def post_process_scenario_outputs(
-    models: List[CompModel], project: Project, run_id: int = 0, chain_id: int = None
+    models: List[CompartmentalModel], project: Project, run_id: int = 0, chain_id: int = None
 ) -> Dict[str, pd.DataFrame]:
     """
     Do any required postprocessing of scenario outputs,
     particularly those that require comparison to baseline.
 
     Args:
-        models (List[CompModel]): List of (run) models, as returned from run_baseline_model / run_scenario_models
+        models (List[CompartmentalModel]): List of (run) models, as returned from run_baseline_model / run_scenario_models
         run_id (int, optional): Required for multiple (usually remote) runs, not required for single local runs
         chain_id (int, optional): Used by MCMC runs, not required for single runs
 
@@ -326,7 +336,7 @@ def post_process_scenario_outputs(
     }
 
 
-def fix_cumulative_output_times(models: List[CompModel]):
+def fix_cumulative_output_times(models: List[CompartmentalModel]):
     """
     Fix a bug with summer's cumulative outputs
     FIXME: Accessing private member of model class; prefer not to modify summer code just for this
@@ -353,7 +363,7 @@ def fix_cumulative_output_times(models: List[CompModel]):
 
 
 def calculate_differential_outputs(
-    models: List[CompModel], diff_output_requests: List[Tuple[str, str]]
+    models: List[CompartmentalModel], diff_output_requests: List[Tuple[str, str]]
 ):
     """
     Calculate the difference in derived outputs between scenarios.
@@ -411,7 +421,6 @@ def calc_absolute_diff_output(output_name, output_arr, baseline_output, sc_outpu
 
     new_output_name = f"abs_diff_{output_name}"
     return new_output_name
-
 
 
 OUTPUT_CALCS = {

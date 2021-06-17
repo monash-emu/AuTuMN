@@ -1,431 +1,165 @@
-"""
-FIXME: These all need tests.
-"""
-from typing import List
-
 import numpy as np
-from summer.legacy.constants import Compartment
-from summer.legacy.model.derived_outputs import (
-    InfectionDeathFlowOutput,
-    TransitionFlowOutput,
-)
+
+from typing import List
+from summer import CompartmentalModel
 
 from autumn.tools.curve import tanh_based_scaleup
 
-
-def make_infectious_prevalence_calculation_function(stratum_filters=[]):
-    """
-    Make a derived output function that calculates TB prevalence, stratified or non-stratified depending on the
-    requested stratum_filters.
-    :param stratum_filters: list of dictionaries.
-    example of stratum_filters:
-        [{'name': 'age', 'value': '15'}, {'name':'organ', 'value':'smear_positive'}]
-    :return: a derived output function
-    """
-
-    def calculate_prevalence_infectious(time_idx, model, compartment_values, derived_outputs):
-        """
-        Calculate active TB prevalence at each time-step. Returns the proportion per 100,000 population.
-        """
-        prev_infectious = sum(
-            [
-                compartment_values[i]
-                for i, compartment in enumerate(model.compartment_names)
-                if (
-                    (
-                        compartment.has_name(Compartment.INFECTIOUS)
-                        or compartment.has_name(Compartment.ON_TREATMENT)
-                    )
-                    and all(
-                        [
-                            compartment.has_stratum(stratum["name"], stratum["value"])
-                            for stratum in stratum_filters
-                        ]
-                    )
-                )
-            ]
-        )
-        if len(stratum_filters) == 0:  # not necessary but will speed up calculation
-            denominator = sum(compartment_values)
-        else:
-            denominator = calculate_stratum_population_size(
-                compartment_values, model, stratum_filters
-            )
-        return 1.0e5 * prev_infectious / denominator
-
-    return calculate_prevalence_infectious
+from .constants import COMPARTMENTS, Compartment, INFECTIOUS_COMPS
 
 
-def make_latency_percentage_calculation_function(stratum_filters=[]):
-    """
-    Make a derived output function that calculates LTBI prevalence, stratified or non-stratified depending on the
-    requested stratum_filters.
-    :param stratum_filters: list of dictionaries.
-    example of stratum_filters:
-        [{'name': 'age', 'value': '15'}, {'name':'organ', 'value':'smear_positive'}]
-    :return: a derived output function
-    """
-
-    def calculate_prevalence_infectious(time_idx, model, compartment_values, derived_outputs):
-        """
-        Calculate active TB prevalence at each time-step. Returns the proportion per 100,000 population.
-        """
-        prev_latent = sum(
-            [
-                compartment_values[i]
-                for i, compartment in enumerate(model.compartment_names)
-                if (
-                    (
-                        compartment.has_name(Compartment.EARLY_LATENT)
-                        or compartment.has_name(Compartment.LATE_LATENT)
-                    )
-                    and all(
-                        [
-                            compartment.has_stratum(stratum["name"], stratum["value"])
-                            for stratum in stratum_filters
-                        ]
-                    )
-                )
-            ]
-        )
-        if len(stratum_filters) == 0:  # not necessary but will speed up calculation
-            denominator = sum(compartment_values)
-        else:
-            denominator = calculate_stratum_population_size(
-                compartment_values, model, stratum_filters
-            )
-        return 100 * prev_latent / denominator
-
-    return calculate_prevalence_infectious
-
-
-def get_notifications_connections(comps: List[Compartment], source_stratum=None):
-    """
-    Track "notifications": flow from infectious to treatment compartment.
-    """
-    output_name = "notifications"
-    if source_stratum:
-        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
-        source_strata = {source_stratum[0]: source_stratum[1]}
-    else:
-        source_strata = {}
-    return _get_transition_flow_connections(
-        output_name=output_name,
-        source=Compartment.INFECTIOUS,
-        dest=Compartment.ON_TREATMENT,
-        comps=comps,
-        source_strata=source_strata,
-    )
-
-
-def get_incidence_early_connections(comps: List[Compartment], source_stratum=None):
-    """
-    Track "notifications": flow from infectious to treatment compartment.
-    """
-    output_name = "incidence_early"
-    if source_stratum:
-        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
-        source_strata = {source_stratum[0]: source_stratum[1]}
-    else:
-        source_strata = {}
-    return _get_transition_flow_connections(
-        output_name=output_name,
-        source=Compartment.EARLY_LATENT,
-        dest=Compartment.INFECTIOUS,
-        comps=comps,
-        source_strata=source_strata,
-    )
-
-
-def get_incidence_late_connections(comps: List[Compartment], source_stratum=None):
-    """
-    Track "notifications": flow from infectious to treatment compartment.
-    """
-    output_name = "incidence_late"
-    if source_stratum:
-        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
-        source_strata = {source_stratum[0]: source_stratum[1]}
-    else:
-        source_strata = {}
-    return _get_transition_flow_connections(
-        output_name=output_name,
-        source=Compartment.LATE_LATENT,
-        dest=Compartment.INFECTIOUS,
-        comps=comps,
-        source_strata=source_strata,
-    )
-
-
-def _get_transition_flow_connections(
-    output_name: str,
-    source: str,
-    dest: str,
-    comps: List[Compartment],
-    source_strata={},
-    dest_strata={},
+def request_outputs(
+    model: CompartmentalModel,
+    cumulative_start_time: float,
+    location_strata: List[str],
+    time_variant_tb_screening_rate,
+    implement_acf: bool,
 ):
-    connections = {}
-    connections[output_name] = TransitionFlowOutput(
-        source=source,
-        dest=dest,
-        source_strata=source_strata,
-        dest_strata=dest_strata,
+    out = OutputBuilder(model, location_strata)
+
+    # Population
+    out.request_compartment_output("population_size", COMPARTMENTS)
+
+    # Percentage latent
+    latent_comps = [Compartment.LATE_LATENT, Compartment.EARLY_LATENT]
+    out.request_compartment_output("latent_population_size", latent_comps, save_results=False)
+    sources = ["latent_population_size", "population_size"]
+    out.request_output_func("percentage_latent", calculate_percentage, sources)
+
+    # Deaths
+    out.request_flow_output("mortality_infectious_raw", "infect_death", save_results=False)
+    out.request_flow_output("mortality_on_treatment_raw", "treatment_death", save_results=False)
+    sources = ["mortality_infectious_raw", "mortality_on_treatment_raw"]
+    out.request_aggregation_output("mortality_raw", sources, save_results=False)
+    model.request_cumulative_output(
+        "cumulative_deaths",
+        "mortality_raw",
+        start_time=cumulative_start_time,
     )
-    return connections
 
+    # Normalise mortality so that it is per unit time (year), not per timestep
+    out.request_normalise_flow_output("mortality_infectious", "mortality_infectious_raw")
+    out.request_normalise_flow_output("mortality_on_treatment", "mortality_on_treatment_raw")
+    out.request_normalise_flow_output("mortality_norm", "mortality_raw", save_results=False)
+    sources = ["mortality_norm", "population_size"]
+    out.request_output_func("mortality", calculate_per_hundred_thousand, sources)
 
-def get_mortality_flow_infectious(comps: List[Compartment], source_stratum=None):
-    output_name = "mortality_infectious"
-    connections = {}
-    if source_stratum:
-        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
-        source_strata = {source_stratum[0]: source_stratum[1]}
+    # Disease incidence
+    out.request_flow_output("incidence_early_raw", "early_activation", save_results=False)
+    out.request_flow_output("incidence_late_raw", "late_activation", save_results=False)
+    sources = ["incidence_early_raw", "incidence_late_raw"]
+    out.request_aggregation_output("incidence_raw", sources, save_results=False)
+    sources = ["incidence_raw", "population_size"]
+    model.request_cumulative_output(
+        "cumulative_diseased",
+        "incidence_raw",
+        start_time=cumulative_start_time,
+    )
+
+    # Normalise incidence so that it is per unit time (year), not per timestep
+    out.request_normalise_flow_output("incidence_early", "incidence_early_raw")
+    out.request_normalise_flow_output("incidence_late", "incidence_late_raw")
+    out.request_normalise_flow_output("incidence_norm", "incidence_raw", save_results=False)
+    sources = ["incidence_norm", "population_size"]
+    out.request_output_func("incidence", calculate_per_hundred_thousand, sources)
+
+    # Prevalence infectious
+    out.request_compartment_output(
+        "infectious_population_size", INFECTIOUS_COMPS, save_results=False
+    )
+    sources = ["infectious_population_size", "population_size"]
+    out.request_output_func("prevalence_infectious", calculate_per_hundred_thousand, sources)
+
+    # Notifications (normalized to per year)
+    out.request_flow_output("passive_notifications_raw", "detection", save_results=False)
+    if implement_acf:
+        out.request_flow_output("active_notifications_raw", "acf_detection", save_results=False)
     else:
-        source_strata = {}
-    connections[output_name] = InfectionDeathFlowOutput(
-        source=Compartment.INFECTIOUS, source_strata=source_strata
-    )
-    return connections
+        null_func = lambda: np.zeros_like(model.times)
+        out.request_output_func("active_notifications_raw", null_func, [], save_results=False)
 
+    sources = ["passive_notifications_raw", "active_notifications_raw"]
+    out.request_aggregation_output("notifications_raw", sources, save_results=False)
+    out.request_normalise_flow_output("notifications", "notifications_raw")
 
-def get_mortality_flow_on_treatment(comps: List[Compartment], source_stratum=None):
-    output_name = "mortality_on_treatment"
-    connections = {}
-    if source_stratum:
-        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
-        source_strata = {source_stratum[0]: source_stratum[1]}
-    else:
-        source_strata = {}
-
-    connections[output_name] = InfectionDeathFlowOutput(
-        source=Compartment.ON_TREATMENT, source_strata=source_strata
-    )
-    return connections
-
-
-def calculate_incidence(time_idx, model, compartment_values, derived_outputs):
-    return (
-        (derived_outputs["incidence_early"][time_idx] + derived_outputs["incidence_late"][time_idx])
-        / sum(compartment_values)
-        * 1.0e5
-    )
-
-
-def calculate_tb_mortality(time_idx, model, compartment_values, derived_outputs):
-    return (
-        (
-            derived_outputs["mortality_infectious"][time_idx]
-            + derived_outputs["mortality_on_treatment"][time_idx]
-        )
-        / sum(compartment_values)
-        * 1.0e5
-    )
-
-
-def make_stratified_output_func(output_type, source_stratum):
-    suffix = "X" + source_stratum[0] + "_" + source_stratum[1]
-    outputs_to_sum = {
-        "incidence": ["incidence_early", "incidence_late"],
-        "mortality": ["mortality_infectious", "mortality_on_treatment"],
-    }
-
-    def stratified_output_func(time_idx, model, compartment_values, derived_outputs):
-        total_flow = 0
-        for output in outputs_to_sum[output_type]:
-            total_flow += derived_outputs[output + suffix][time_idx]
-
-        popsize = calculate_stratum_population_size(
-            compartment_values, model, [{"name": source_stratum[0], "value": source_stratum[1]}]
-        )
-
-        return total_flow / popsize * 1.0e5
-
-    return stratified_output_func
-
-
-def make_cumulative_output_func(output, start_time_cumul):
-    """
-    Create a derived output function for cumulative output
-    :param output: one of ["cumulative_deaths", "cumulative_diseased"]
-    :param start_time_cumul: the reference time
-    :return: a derived output function
-    """
-    base_derived_outputs = {
-        "cumulative_diseased": ["incidence_early", "incidence_late"],
-        "cumulative_deaths": ["mortality_infectious", "mortality_on_treatment"],
-    }
-
-    def calculate_cumulative_output(time_idx, model, compartment_values, derived_outputs):
-        if start_time_cumul > max(model.times):
-            return 0.0
-        ref_time_idx = min(np.where(model.times >= start_time_cumul)[0])
-        if time_idx < ref_time_idx:
-            return 0.0
-        else:
-            total = derived_outputs[output][time_idx - 1]
-            for relevant_output in base_derived_outputs[output]:
-                total += derived_outputs[relevant_output][time_idx]
-            return total
-
-    return calculate_cumulative_output
-
-
-def calculate_population_size(time_idx, model, compartment_values, derived_outputs):
-    return sum(compartment_values)
-
-
-def calculate_screening_rate(time_idx, model, compartment_values, derived_outputs):
+    # Screening rate
     screening_rate_func = tanh_based_scaleup(
-        model.parameters["time_variant_tb_screening_rate"]["shape"],
-        model.parameters["time_variant_tb_screening_rate"]["inflection_time"],
-        model.parameters["time_variant_tb_screening_rate"]["lower_asymptote"],
-        model.parameters["time_variant_tb_screening_rate"]["upper_asymptote"],
+        time_variant_tb_screening_rate["shape"],
+        time_variant_tb_screening_rate["inflection_time"],
+        time_variant_tb_screening_rate["lower_asymptote"],
+        time_variant_tb_screening_rate["upper_asymptote"],
     )
-    return screening_rate_func(model.times[time_idx])
+
+    def get_screening_rate():
+        return screening_rate_func(model.times)
+
+    model.request_function_output("screening_rate", get_screening_rate, [])
 
 
-def calculate_stratum_population_size(compartment_values, model, stratum_filters):
-    """
-    Calculate the population size of a given stratum.
-    :param compartment_values: list of compartment sizes
-    :param model: model object
-    :param stratum_filters: list of dictionaries
-    example of stratum_filters:
-        [{'name': 'age', 'value': '15'}, {'name':'organ', 'value':'smear_positive'}]
-    :return: float
-    """
-    relevant_filter_names = [
-        s.name
-        for s in model.stratifications
-        if set(s.compartments) == set(model.original_compartment_names)
-    ]
+class OutputBuilder:
+    """Helps build derived outputs for the TB model"""
 
-    # FIXME: we should be able to run this in a single line of code but the following comprehensive list does not work
-    # return sum(
-    #     [compartment_values[i] for i, compartment in enumerate(model.compartment_names) if
-    #      all([compartment.has_stratum(stratum['name'], stratum['value']) for stratum in stratum_filters if
-    #           stratum['name'] is relevant_filter_names])
-    #      ]
-    # )
+    def __init__(self, model, location_strata) -> None:
+        self.model = model
+        self.locs = location_strata
 
-    relevant_compartment_indices = []
-    for i, compartment in enumerate(model.compartment_names):
-        relevant = True
-        for stratum in stratum_filters:
-            if stratum["name"] in relevant_filter_names:
-                if not compartment.has_stratum(stratum["name"], stratum["value"]):
-                    relevant = False
-        if relevant:
-            relevant_compartment_indices.append(i)
-    return sum([compartment_values[i] for i in relevant_compartment_indices])
+    def _normalise_timestep(self, vals):
+        """Normalise flow outputs to be 'per unit time (year)'"""
+        return vals / self.model.timestep
 
+    def request_normalise_flow_output(self, output_name, source, save_results=True):
+        self.request_output_func(
+            output_name, self._normalise_timestep, [source], save_results=save_results
+        )
 
-def get_all_derived_output_functions(calculated_outputs, outputs_stratification, model):
-    """
-    Will automatically make and register the derived outputs based on the user-requested calculated_outputs and
-    outputs_stratification
-    :param calculated_outputs: list of requested derived outputs
-    :param outputs_stratification: dict defining which derived outputs should be stratified and by which factor
-    :param model_stratifications: dict containing all model stratifications
-    :return: dict
-    """
-    simple_functions = {
-        "population_size": calculate_population_size,
-        "incidence": calculate_incidence,
-        "mortality": calculate_tb_mortality,
-        "screening_rate": calculate_screening_rate,
-    }
-    factory_functions = {
-        "prevalence_infectious": make_infectious_prevalence_calculation_function,
-        "percentage_latent": make_latency_percentage_calculation_function,
-    }
-    flow_functions = {
-        "notifications": get_notifications_connections,
-        "incidence_early": get_incidence_early_connections,
-        "incidence_late": get_incidence_late_connections,
-        "mortality_infectious": get_mortality_flow_infectious,
-        "mortality_on_treatment": get_mortality_flow_on_treatment,
-    }
-    cumulative_functions = {
-        "cumulative_deaths": make_cumulative_output_func,
-        "cumulative_diseased": make_cumulative_output_func,
-    }
-    # need to add two intermediate derived outputs to capture mortality flows
-    if "incidence" in calculated_outputs:
-        calculated_outputs = ["incidence_early", "incidence_late"] + calculated_outputs
-        if "incidence" in outputs_stratification:
-            outputs_stratification["incidence_early"] = outputs_stratification["incidence"]
-            outputs_stratification["incidence_late"] = outputs_stratification["incidence"]
-
-    # need to add two intermediate derived outputs to capture mortality flows
-    if "mortality" in calculated_outputs:
-        calculated_outputs = ["mortality_infectious", "mortality_on_treatment"] + calculated_outputs
-        if "mortality" in outputs_stratification:
-            outputs_stratification["mortality_infectious"] = outputs_stratification["mortality"]
-            outputs_stratification["mortality_on_treatment"] = outputs_stratification["mortality"]
-
-    model_stratification_names = [s.name for s in model.stratifications]
-    derived_output_functions = {}
-    for requested_output in calculated_outputs:
-        if requested_output in simple_functions:
-            derived_output_functions[requested_output] = simple_functions[requested_output]
-        elif requested_output in factory_functions:
-            # add the unstratified output
-            derived_output_functions[requested_output] = factory_functions[requested_output]()
-            # add potential stratified outputs
-            if requested_output in outputs_stratification:
-                for stratification_name in outputs_stratification[requested_output]:
-                    if stratification_name in model_stratification_names:
-                        stratification = [
-                            model.stratifications[i]
-                            for i, s in enumerate(model.stratifications)
-                            if s.name == stratification_name
-                        ][0]
-                        for stratum in stratification.strata:
-                            derived_output_functions[
-                                requested_output + "X" + stratification_name + "_" + stratum
-                            ] = factory_functions[requested_output](
-                                [{"name": stratification_name, "value": stratum}]
-                            )
-        elif requested_output in flow_functions:
-            connection = flow_functions[requested_output](model.compartment_names)
-            model.add_flow_derived_outputs(connection)
-            if requested_output in outputs_stratification:
-                for stratification_name in outputs_stratification[requested_output]:
-                    if stratification_name in model_stratification_names:
-                        stratification = [
-                            model.stratifications[i]
-                            for i, s in enumerate(model.stratifications)
-                            if s.name == stratification_name
-                        ][0]
-                        for stratum in stratification.strata:
-                            connection = flow_functions[requested_output](
-                                model.compartment_names, [stratification_name, stratum]
-                            )
-                            model.add_flow_derived_outputs(connection)
-        elif requested_output in cumulative_functions:
-            derived_output_functions[requested_output] = cumulative_functions[requested_output](
-                requested_output, model.parameters["cumulative_output_start_time"]
-            )
-        else:
-            raise ValueError(
-                requested_output
-                + " not among simple_functions, factory_functions or flow_functions"
+    def request_flow_output(self, output_name, flow_name, save_results=True):
+        self.model.request_output_for_flow(output_name, flow_name, save_results=save_results)
+        for location_stratum in self.locs:
+            loc_output_name = f"{output_name}Xlocation_{location_stratum}"
+            self.model.request_output_for_flow(
+                loc_output_name,
+                flow_name,
+                source_strata={"location": location_stratum},
+                save_results=save_results,
             )
 
-    # stratified incidence and mortality
-    for output_type in ["incidence", "mortality"]:
-        if output_type in outputs_stratification:
-            for stratification_name in outputs_stratification[output_type]:
-                if stratification_name in model_stratification_names:
-                    stratification = [
-                        model.stratifications[i]
-                        for i, s in enumerate(model.stratifications)
-                        if s.name == stratification_name
-                    ][0]
-                    for stratum in stratification.strata:  # [stratification_name, stratum]
-                        derived_output_functions[
-                            f"{output_type}X{stratification_name}_{stratum}"
-                        ] = make_stratified_output_func(output_type, [stratification_name, stratum])
+    def request_aggregation_output(self, output_name, sources, save_results=True):
+        self.model.request_aggregate_output(output_name, sources, save_results=save_results)
+        for location_stratum in self.locs:
+            # For location-specific mortality calculations
+            loc_output_name = f"{output_name}Xlocation_{location_stratum}"
+            loc_sources = [f"{s}Xlocation_{location_stratum}" for s in sources]
+            self.model.request_aggregate_output(
+                loc_output_name, loc_sources, save_results=save_results
+            )
 
-    model.add_function_derived_outputs(derived_output_functions)
+    def request_output_func(self, output_name, func, sources, save_results=True):
+        self.model.request_function_output(output_name, func, sources, save_results=save_results)
+        for location_stratum in self.locs:
+            loc_output_name = f"{output_name}Xlocation_{location_stratum}"
+            loc_sources = [f"{s}Xlocation_{location_stratum}" for s in sources]
+            self.model.request_function_output(
+                loc_output_name, func, loc_sources, save_results=save_results
+            )
+
+    def request_compartment_output(self, output_name, compartments, save_results=True):
+        self.model.request_output_for_compartments(
+            output_name, compartments, save_results=save_results
+        )
+        for location_stratum in self.locs:
+            # For location-specific mortality calculations
+            loc_output_name = f"{output_name}Xlocation_{location_stratum}"
+            self.model.request_output_for_compartments(
+                loc_output_name,
+                compartments,
+                strata={"location": location_stratum},
+                save_results=save_results,
+            )
+
+
+def calculate_per_hundred_thousand(sub_pop_size, total_pop_size):
+    return 1e5 * sub_pop_size / total_pop_size
+
+
+def calculate_percentage(sub_pop_size, total_pop_size):
+    return 100 * sub_pop_size / total_pop_size

@@ -16,7 +16,6 @@ from autumn.tools.plots.calibration.plots import (
 )
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.project import get_project
-from autumn.models.tuberculosis.model import get_model_times_from_inputs
 from autumn.tools.streamlit import selectors
 from autumn.tools.streamlit.utils import create_downloadable_csv, round_sig_fig, Dashboard
 

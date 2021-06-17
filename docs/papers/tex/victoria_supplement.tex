@@ -7,6 +7,7 @@
 \bibliographystyle{unsrt2authabbrvpp}
 \begin{document}
 
+% Title page
 \begin{titlepage}
 \centering
 \vspace*{3cm}        
@@ -15,10 +16,19 @@
 \vspace{0.5cm}
 \end{titlepage}
 
+% Table of contents
+\clearpage
+{
+    \sffamily
+    \tableofcontents
+}
+\clearpage
+
 \input{../covid_19/model_description.tex}
-\input{../covid_19/stratifications/clinical.tex}
 \input{../covid_19/stratifications/agegroup.tex}
+\input{../covid_19/stratifications/clinical.tex}
 \input{../covid_19/preprocess/case_detection.tex}
+\input{../covid_19/projects/victoria/case_detection_data.tex}
 \input{../covid_19/preprocess/mixing_matrix/mixing_and_npis.tex}
 \input{../covid_19/stratifications/cluster.tex}
 \input{../covid_19/projects/victoria/parameters.tex}

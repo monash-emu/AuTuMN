@@ -11,10 +11,12 @@ from typing import List, Callable, Any
 
 logger = logging.getLogger(__name__)
 
-
 MAX_WORKERS = mp.cpu_count() - 1
 SENTRY_ERROR_DELAY = 10  # seconds
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
+
+
+logger.info(f"MP_CORES: {MAX_WORKERS}")
 
 
 def report_errors(func):
@@ -46,7 +48,7 @@ def run_parallel_tasks(func: Callable, arg_list: List[Any]):
     if len(arg_list) == 1:
         return [func(*arg_list[0])]
 
-    excecutor = ProcessPoolExecutor(max_workers=MAX_WORKERS)
+    excecutor = ProcessPoolExecutor(max_workers=len(arg_list))
     futures = [excecutor.submit(func, *args) for args in arg_list]
     success_results = []
     failure_exceptions = []

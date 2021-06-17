@@ -17,10 +17,8 @@ dash = Dashboard()
 
 @dash.register("Flow weights")
 def plot_flow_params(plotter: StreamlitPlotter, project: Project):
-    # Assume a COVID model
     model = project.build_model(project.param_set.baseline.to_dict())
     flow_names = sorted(list({f.name for f in model._flows}))
-
     flow_name = st.sidebar.selectbox("Select flow", flow_names)
     flows = [f for f in model._flows if f.name == flow_name]
     is_logscale = st.sidebar.checkbox("Log scale")

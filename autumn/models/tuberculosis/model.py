@@ -1,190 +1,280 @@
 import numpy as np
-from copy import deepcopy
+from summer import CompartmentalModel
 
-from summer.legacy.constants import BirthApproach, Compartment
-from summer.legacy.model import StratifiedModel
-
-from autumn.models.tuberculosis import outputs, preprocess
-from autumn.models.tuberculosis.stratification import (
-    apply_user_defined_stratification,
-    stratify_by_age,
-    stratify_by_organ,
-)
-from autumn.models.tuberculosis.validate import check_param_values, validate_params
-from autumn.tools import inputs
-from autumn.tools.curve import scale_up_function
+from autumn.models.tuberculosis.parameters import Parameters
 from autumn.tools.project import Params, build_rel_path
+from autumn.tools.curve import scale_up_function, tanh_based_scaleup
+from autumn.tools import inputs
 
-base_params = Params(build_rel_path("params.yml"))
+from .constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
+from .stratifications.age import get_age_strat
+from .stratifications.user_defined import get_user_defined_strat
+from .stratifications.organ import get_organ_strat
+from .outputs import request_outputs
+
+base_params = Params(
+    build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
+)
 
 
-def build_model(params: dict) -> StratifiedModel:
+def build_model(params: dict) -> CompartmentalModel:
     """
-    Build the master function to run a tuberculosis model
+    Build the compartmental model from the provided parameters.
     """
-    validate_params(params)  # perform validation of parameter format
-    check_param_values(params)  # perform validation of some parameter values
-
-    # Define model times.
-    time = params["time"]
-    integration_times = get_model_times_from_inputs(
-        round(time["start"]), time["end"], time["step"], time["critical_ranges"]
+    params = Parameters(**params)
+    time = params.time
+    model = CompartmentalModel(
+        times=[time.start, time.end],
+        compartments=COMPARTMENTS,
+        infectious_compartments=INFECTIOUS_COMPS,
+        timestep=time.step,
     )
 
-    # Define model compartments.
-    compartments = [
-        Compartment.SUSCEPTIBLE,
+    # Add initial population
+    init_pop = {
+        Compartment.INFECTIOUS: 1,
+        Compartment.SUSCEPTIBLE: params.start_population_size - 1,
+    }
+    model.set_initial_population(init_pop)
+
+    contact_rate = params.contact_rate
+    contact_rate_latent = params.contact_rate * params.rr_infection_latent
+    contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
+    if params.hh_contacts_pt:
+        # PT in household contacts
+        times = [params.hh_contacts_pt["start_time"], params.hh_contacts_pt["start_time"] + 1]
+        vals = [0, params.hh_contacts_pt["prop_hh_contacts_screened"]]
+        scaleup_screening_prop = scale_up_function(x=times, y=vals, method=4)
+
+        def get_contact_rate_factory(contact_rate):
+            def get_contact_rate(t):
+                rel_reduction = (
+                    params.hh_contacts_pt["prop_smearpos_among_prev_tb"]
+                    * params.hh_contacts_pt["prop_hh_transmission"]
+                    * scaleup_screening_prop(t)
+                    * params.ltbi_screening_sensitivity
+                    * params.hh_contacts_pt["prop_pt_completion"]
+                )
+                return contact_rate * (1 - rel_reduction)
+
+            return get_contact_rate
+
+        contact_rate = get_contact_rate_factory(contact_rate)
+        contact_rate_latent = get_contact_rate_factory(contact_rate_latent)
+        contact_rate_recovered = get_contact_rate_factory(contact_rate_recovered)
+
+    # Infection flows.
+    model.add_infection_frequency_flow(
+        "infection", contact_rate, Compartment.SUSCEPTIBLE, Compartment.EARLY_LATENT
+    )
+    model.add_infection_frequency_flow(
+        "infection_from_latent",
+        contact_rate_latent,
+        Compartment.LATE_LATENT,
+        Compartment.EARLY_LATENT,
+    )
+    model.add_infection_frequency_flow(
+        "infection_from_recovered",
+        contact_rate_recovered,
+        Compartment.RECOVERED,
+        Compartment.EARLY_LATENT,
+    )
+
+    # Transition flows.
+    stabilisation_rate = 1.0
+    early_activation_rate = 1.0
+    late_activation_rate = 1.0
+    model.add_transition_flow(
+        "stabilisation",
+        stabilisation_rate,
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
+    )
+    model.add_transition_flow(
+        "early_activation",
+        early_activation_rate,
+        Compartment.EARLY_LATENT,
         Compartment.INFECTIOUS,
+    )
+    model.add_transition_flow(
+        "late_activation",
+        late_activation_rate,
+        Compartment.LATE_LATENT,
+        Compartment.INFECTIOUS,
+    )
+
+    # Post-active-disease flows
+    model.add_transition_flow(
+        "self_recovery",
+        params.self_recovery_rate_dict["unstratified"],
+        Compartment.INFECTIOUS,
+        Compartment.RECOVERED,
+    )
+
+    # Detection rate for infected people.
+    if "organ" in params.stratify_by:
+        detection_rate = 1.0
+    else:
+        func_params = params.time_variant_tb_screening_rate
+        screening_rate_func = tanh_based_scaleup(
+            func_params["shape"],
+            func_params["inflection_time"],
+            func_params["lower_asymptote"],
+            func_params["upper_asymptote"],
+        )
+
+        def detection_rate(t):
+            return screening_rate_func(t) * params.passive_screening_sensitivity["unstratified"]
+
+    model.add_transition_flow(
+        "detection",
+        detection_rate,
+        Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
+    )
+
+    # Treatment recovery, releapse, death flows.
+    # Relapse and treatment death need to be adjusted by age later.
+    treatment_recovery_rate = 1.0
+    treatment_death_rate = 1.0
+    relapse_rate = 1.0
+    model.add_transition_flow(
+        "treatment_recovery",
+        treatment_recovery_rate,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
-    ]
-    infectious_comps = [
-        Compartment.INFECTIOUS,
+    )
+    model.add_death_flow(
+        "treatment_death",
+        treatment_death_rate,
         Compartment.ON_TREATMENT,
-    ]
+    )
+    model.add_transition_flow(
+        "relapse",
+        relapse_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.INFECTIOUS,
+    )
 
-    # Define initial conditions - 1 infectious person.
-    init_conditions = {
-        Compartment.INFECTIOUS: 1,
-    }
+    # Entry flows
+    birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
+    birth_rates = [b / 1000.0 for b in birth_rates]  # Birth rates are provided / 1000 population
+    crude_birth_rate = scale_up_function(years, birth_rates, smoothness=0.2, method=5)
+    model.add_crude_birth_flow(
+        "birth",
+        crude_birth_rate,
+        Compartment.SUSCEPTIBLE,
+    )
 
-    # prepare infectiousness adjustment for individuals on treatment
-    treatment_infectiousness_adjustment = [
-        {
-            "comp_name": Compartment.ON_TREATMENT,
-            "comp_strata": {},
-            "value": params["on_treatment_infect_multiplier"],
-        }
-    ]
+    # Death flows - later modified by age stratification
+    universal_death_rate = 1.0
+    model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
-    # Define inter-compartmental flows.
-    flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
+    # Infection death
+    model.add_death_flow(
+        "infect_death",
+        params.infect_death_rate_dict["unstratified"],
+        Compartment.INFECTIOUS,
+    )
 
-    # is ACF implemented?
-    implement_acf = len(params["time_variant_acf"]) > 0
+    # Is active case finding (ACF) implemented?
+    implement_acf = len(params.time_variant_acf) > 0
     if implement_acf:
-        flows.append(preprocess.flows.ACF_FLOW)
+        # Default value
+        acf_detection_rate = 1.0
 
-    # is ltbi screening implemented?
-    implement_ltbi_screening = len(params["time_variant_ltbi_screening"]) > 0
+        # ACF flow parameter
+        should_use_func = (
+            len(params.time_variant_acf) == 1
+            and params.time_variant_acf[0]["stratum_filter"] is None
+        )
+        if should_use_func:
+            # Universal active case funding is applied
+            times = list(params.time_variant_acf[0]["time_variant_screening_rate"].keys())
+            vals = [
+                v * params.acf_screening_sensitivity
+                for v in list(params.time_variant_acf[0]["time_variant_screening_rate"].values())
+            ]
+            acf_detection_rate = scale_up_function(times, vals, method=4)
+
+        model.add_transition_flow(
+            "acf_detection",
+            acf_detection_rate,
+            Compartment.INFECTIOUS,
+            Compartment.ON_TREATMENT,
+        )
+
+    # Is LTBI screening implemented?
+    implement_ltbi_screening = len(params.time_variant_ltbi_screening) > 0
     if implement_ltbi_screening:
-        flows += preprocess.flows.get_preventive_treatment_flows(
-            params["pt_destination_compartment"]
+        # Default
+        preventive_treatment_rate = 1.0
+        should_use_func = (
+            len(params.time_variant_ltbi_screening) == 1
+            and params.time_variant_ltbi_screening[0]["stratum_filter"] is None
+        )
+        if should_use_func:
+            # universal LTBI screening is applied
+            times = list(
+                params.time_variant_ltbi_screening[0]["time_variant_screening_rate"].keys()
+            )
+            vals = [
+                v * params.ltbi_screening_sensitivity * params.pt_efficacy
+                for v in list(
+                    params.time_variant_ltbi_screening[0]["time_variant_screening_rate"].values()
+                )
+            ]
+            preventive_treatment_rate = scale_up_function(times, vals, method=4)
+
+        to_compartment_lookup = {
+            "susceptible": Compartment.SUSCEPTIBLE,
+            "recovered": Compartment.RECOVERED,
+        }
+        to_compartment = to_compartment_lookup[params.pt_destination_compartment]
+        model.add_transition_flow(
+            "preventive_treatment_early",
+            preventive_treatment_rate,
+            Compartment.EARLY_LATENT,
+            to_compartment,
+        )
+        model.add_transition_flow(
+            "preventive_treatment_late",
+            preventive_treatment_rate,
+            Compartment.LATE_LATENT,
+            to_compartment,
         )
 
-    # Set some parameter values or parameters that require pre-processing
-    (
-        params,
-        treatment_recovery_func,
-        treatment_death_func,
-        relapse_func,
-        detection_rate_func,
-        acf_detection_rate_func,
-        preventive_treatment_func,
-        contact_rate_functions,
-    ) = preprocess.flows.process_unstratified_parameter_values(
-        params, implement_acf, implement_ltbi_screening
-    )
+    # Age stratification.
+    age_strat = get_age_strat(params)
+    model.stratify_with(age_strat)
 
-    # Create the model.
-    tb_model = StratifiedModel(
-        times=integration_times,
-        compartment_names=compartments,
-        initial_conditions=init_conditions,
-        parameters=params,
-        requested_flows=flows,
-        infectious_compartments=infectious_comps,
-        birth_approach=BirthApproach.ADD_CRUDE,
-        entry_compartment=Compartment.SUSCEPTIBLE,
-        starting_population=int(params["start_population_size"]),
-    )
-
-    # register acf_detection_func
-    if acf_detection_rate_func is not None:
-        tb_model.time_variants["acf_detection_rate"] = acf_detection_rate_func
-    # register preventive_treatment_func
-    if preventive_treatment_func is not None:
-        tb_model.time_variants["preventive_treatment_rate"] = preventive_treatment_func
-    # register time-variant contact-rate functions:
-    for param_name, func in contact_rate_functions.items():
-        tb_model.time_variants[param_name] = func
-
-    # Apply infectiousness adjustment for individuals on treatment
-    tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
-
-    # apply age stratification
-    if "age" in params["stratify_by"]:
-        stratify_by_age(tb_model, params, compartments)
-    else:
-        # set time-variant functions for treatment death and relapse rates
-        tb_model.time_variants["treatment_recovery_rate"] = treatment_recovery_func
-        tb_model.time_variants["treatment_death_rate"] = treatment_death_func
-        tb_model.time_variants["relapse_rate"] = relapse_func
-
-    # Load time-variant birth rates
-    birth_rates, years = inputs.get_crude_birth_rate(params["iso3"])
-    birth_rates = [b / 1000.0 for b in birth_rates]  # birth rates are provided / 1000 population
-    tb_model.time_variants["crude_birth_rate"] = scale_up_function(
-        years, birth_rates, smoothness=0.2, method=5
-    )
-    tb_model.parameters["crude_birth_rate"] = "crude_birth_rate"
-
-    # apply user-defined stratifications
-    user_defined_stratifications = [
-        s for s in list(params["user_defined_stratifications"].keys()) if s in params["stratify_by"]
+    # Custom, user-defined stratifications
+    user_defined_strats = [
+        s for s in params.user_defined_stratifications.keys() if s in params.stratify_by
     ]
-    for stratification in user_defined_stratifications:
-        assert "_" not in stratification, "Stratification name should not include '_'"
-        stratification_details = params["user_defined_stratifications"][stratification]
-        apply_user_defined_stratification(
-            tb_model,
-            compartments,
-            stratification,
-            stratification_details,
-            implement_acf,
-            implement_ltbi_screening,
-        )
+    for strat_name in user_defined_strats:
+        assert "_" not in strat_name, "Stratification name should not include '_'"
+        strat_details = params.user_defined_stratifications[strat_name]
+        user_defined_strat = get_user_defined_strat(strat_name, strat_details, params)
+        model.stratify_with(user_defined_strat)
 
-    if "organ" in params["stratify_by"]:
-        stratify_by_organ(tb_model, params)
+    if "location" in params.user_defined_stratifications:
+        location_strata = params.user_defined_stratifications["location"]["strata"]
     else:
-        tb_model.time_variants["detection_rate"] = detection_rate_func
+        location_strata = []
 
-    # Register derived output functions, which are calculations based on the model's compartment values or flows.
-    # These are calculated after the model is run.
-    outputs.get_all_derived_output_functions(
-        params["calculated_outputs"], params["outputs_stratification"], tb_model
+    # Organ stratifications
+    if "organ" in params.stratify_by:
+        organ_strat = get_organ_strat(params)
+        model.stratify_with(organ_strat)
+
+    # Derived outputs
+    request_outputs(
+        model,
+        params.cumulative_output_start_time,
+        location_strata,
+        params.time_variant_tb_screening_rate,
+        implement_acf,
     )
 
-    return tb_model
-
-
-def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges=[]):
-    """
-    Find the time steps for model integration from the submitted requests, ensuring the time points are evenly spaced.
-    Use a refined time-step within critical ranges
-    """
-    times = []
-    interval_start = start_time
-    for critical_range in critical_ranges:
-        # add regularly-spaced points up until the start of the critical range
-        interval_end = critical_range[0]
-        if interval_end > interval_start:
-            times += list(np.arange(interval_start, interval_end, time_step))
-        # add points over the critical range with smaller time step
-        interval_start = interval_end
-        interval_end = critical_range[1]
-        if interval_end > interval_start:
-            times += list(np.arange(interval_start, interval_end, time_step / 10.0))
-        interval_start = interval_end
-
-    if end_time > interval_start:
-        times += list(np.arange(interval_start, end_time, time_step))
-    times.append(end_time)
-
-    # clean up time values ending .9999999999
-    times = [round(t, 5) for t in times]
-
-    return np.array(times)
+    return model

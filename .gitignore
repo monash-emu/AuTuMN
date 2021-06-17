@@ -72,8 +72,11 @@ data/outputs
 apps/*/tex/*.pdf
 *.synctex*
 docs/papers/tex/*.pdf
+!docs/papers/*/projects/*/methods_figures/*.png
 
 # Random stuff
+*marshall-islands*.pickle
+
 saved_*
 *marshall-islands*.pickle
 saved_optimisation_analyses/

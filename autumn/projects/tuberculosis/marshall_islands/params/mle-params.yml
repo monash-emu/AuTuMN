@@ -15,5 +15,5 @@ start_population_size: 418.39514196570616
 time_variant_tb_screening_rate.upper_asymptote: 0.5414189304520918
 time_variant_tb_screening_rate.inflection_time: 2012.3532479784524
 time_variant_tb_screening_rate.shape: 0.08166034697836569
-user_defined_stratifications.location.adjustments.detection_rate.ebeye: 1.8802685161189143
-user_defined_stratifications.location.adjustments.detection_rate.other: 1.2947835605223585
+user_defined_stratifications.location.adjustments.detection.ebeye: 1.8802685161189143
+user_defined_stratifications.location.adjustments.detection.other: 1.2947835605223585

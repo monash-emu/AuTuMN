@@ -123,7 +123,7 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Contact tracing stratification
     if params.contact_tracing:
-        tracing_strat = get_tracing_strat(params)
+        tracing_strat = get_tracing_strat(params.contact_tracing)
         model.stratify_with(tracing_strat)
 
     # Apply the VoC stratification and adjust contact rate for Variant of Concerns.

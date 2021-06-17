@@ -1,10 +1,9 @@
 from summer import Stratification, Multiply
 
 from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS
-from autumn.models.covid_19.parameters import Parameters
 
 
-def get_tracing_strat(params: Parameters) -> Stratification:
+def get_tracing_strat(contact_params) -> Stratification:
     tracing_strat = Stratification(
         "tracing",
         ["traced", "untraced"],
@@ -28,15 +27,12 @@ def get_tracing_strat(params: Parameters) -> Stratification:
         }
     )
 
-    # This will just be a parameter
-    rel_infectiousness_traced = 0.2
-
     # Adjust infectiousness of those traced
     for comp in DISEASE_COMPARTMENTS:
         tracing_strat.add_infectiousness_adjustments(
             comp,
             {
-                "traced": Multiply(rel_infectiousness_traced),
+                "traced": Multiply(contact_params.quarantine_infect_multiplier),
                 "untraced": None,
             },
         )

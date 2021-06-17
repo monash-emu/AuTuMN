@@ -1,0 +1,24 @@
+
+\section{Ordinary differential equations}
+
+For the clearest description of the model, we refer the reader to our code repository, because our object-oriented approach to software development is intended to be highly transparent and readable. For those who prefer dynamical systems such as this presented in the form of ordinary differential equations, we present the following.
+
+\[\frac{dS_{a,g}}{dt}=-\lambda_{a,g}(t)\times\sigma_{a}\times S_{a,g}\]
+\[\frac{dE_{a,g}}{dt}=\lambda_{a,g}(t)\times\sigma_{a}\times S_{a,g}-\alpha E_{a,g}\]
+\[\frac{dP_{a,c,g}}{dt}=p_{a,c}(t)\times \alpha E_{a,g}-\nu P_{a,c,g}\]
+\[\frac{dI_{a,c,g}}{dt}=\nu P_{a,c,g}-\gamma_{c}I_{a,c,g}\]
+\[\frac{dL_{a,c,g}}{dt}=\gamma_{c}I_{a,c,g}-\delta_{a,c}L_{a,c,g}-\mu_{a,c}L_{a,c,g}\]
+\[\frac{dR_{a,g}}{dt}=\sum_{c}{}\delta_{a,c}L_{a,c,g}\]
+where
+\[\lambda_{a,g}=\beta(t)\sum_{g'}\textbf{G}_{g,g'} \sum_{j,c}\frac{\epsilon P_{j,c,g'}(t)+\iota_{c}I_{j,c,g'}(t)+\kappa_{c}L_{j,c,g'}(t)}{N_{j,g'}(t)} C_{a,j}(t)\]
+
+\[\sum_{c}p_{a,c}(t)=1,\forall t\in\mathbb{R}\]
+
+\[\textbf{C}_{0}=\textbf{C}_{H}+\textbf{C}_{S}+\textbf{C}_{W}+\textbf{C}_{L}\]
+
+\[\textbf{C}_{g}(t)=\textbf{C}_{H}+s_{g}(t)^{2}\textbf{C}_{S}+w_{g}(t)^{2}\textbf{C}_{W}+l_{g}(t)^{2}\textbf{C}_{L}\]
+
+\[l_{g}(t)=\frac{re_{g}(t)+gr_{g}(t)+pa_{g}(t)+tr_{g}(t)}{4}\]
+
+
+

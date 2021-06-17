@@ -19,3 +19,17 @@ class OrganStratum:
     SMEAR_POSITIVE = "smear_positive"
     SMEAR_NEGATIVE = "smear_negative"
     EXTRAPULMONARY = "extrapulmonary"
+
+
+COMPARTMENTS = [
+    Compartment.SUSCEPTIBLE,
+    Compartment.EARLY_LATENT,
+    Compartment.LATE_LATENT,
+    Compartment.INFECTIOUS,
+    Compartment.ON_TREATMENT,
+    Compartment.RECOVERED,
+]
+INFECTIOUS_COMPS = [
+    Compartment.INFECTIOUS,
+    Compartment.ON_TREATMENT,
+]

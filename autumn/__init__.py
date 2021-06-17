@@ -1,7 +1,15 @@
+import os
 import warnings
 
 # Ignore future warnings they're annoying.
 warnings.simplefilter(action="ignore", category=FutureWarning)
+
+# Ensure NumPy only uses 1 thread for matrix multiplication,
+# because NumPy is stupid and tries to use heaps of threads,
+#  which is quite wasteful and makes our models run way more slowly.
+# https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
+os.environ["OMP_NUM_THREADS"] = "1"
+
 
 from autumn.settings import Models, Region
 from autumn.tools.registry import register_project
@@ -98,9 +106,9 @@ register_project(Models.COVID_19, Region.NEPAL, "autumn.projects.covid_19.nepal.
 register_project(Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.project")
 
 # Timor Leste
-register_project(Models.COVID_19, Region.TIMOR_LESTE, "autumn.projects.covid_19.timor_leste.project")
-
-
+register_project(
+    Models.COVID_19, Region.TIMOR_LESTE, "autumn.projects.covid_19.timor_leste.project"
+)
 
 
 # COVID: Victoria project

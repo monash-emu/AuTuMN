@@ -9,7 +9,6 @@ from typing import List
 
 import pandas as pd
 import yaml
-from summer.legacy.model import StratifiedModel
 from summer.model import CompartmentalModel
 
 from autumn.tools.db.database import get_database, BaseDatabase
@@ -55,13 +54,10 @@ def save_model_outputs(dest_db: BaseDatabase, **kwargs):
         dest_db.dump_df(table_name, df)
 
 
-def build_outputs_table(models: List[StratifiedModel], run_id: int, chain_id=None):
+def build_outputs_table(models: List[CompartmentalModel], run_id: int, chain_id=None):
     outputs_df = None
     for idx, model in enumerate(models):
-        if type(model) is CompartmentalModel:
-            names = [str(c) for c in model.compartments]
-        else:
-            names = model.compartment_names
+        names = [str(c) for c in model.compartments]
 
         # Save model outputs
         df = pd.DataFrame(model.outputs, columns=names)
@@ -77,7 +73,7 @@ def build_outputs_table(models: List[StratifiedModel], run_id: int, chain_id=Non
     return outputs_df
 
 
-def build_derived_outputs_table(models: List[StratifiedModel], run_id: int, chain_id=None):
+def build_derived_outputs_table(models: List[CompartmentalModel], run_id: int, chain_id=None):
     derived_outputs_df = None
     for idx, model in enumerate(models):
         # Save model derived outputs

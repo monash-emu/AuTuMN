@@ -40,15 +40,18 @@ def get_tracing_strat(contact_params) -> Stratification:
     return tracing_strat
 
 
-def hack_infectiousness_adjustments(model):
+def make_hack_infectiousness_func(quarantine_infect_multiplier):
     """
     So far the infectiousness of some compartments has been adjusted twice. This concerns the compartment that are both
     traced and detected. This hack will fix this by dividing the infectiousness of the relevant compartments by the
     multiplier that was applied twice.
     """
-    # Find indices of compartments for which infectiousness was adjusted twice
-    over_adjusted_compartment_indices = [idx for idx, c in enumerate(model.compartments) if "tracing_traced" in c._str and any([f"clinical_{d}" in c._str for d in NOTIFICATION_CLINICAL_STRATA])]
-    infectiousness_multiplier = 0.2  # FIXME: this should be a parameter
-    for strain in model._disease_strains:
-        for idx in over_adjusted_compartment_indices:
-            model._backend._compartment_infectiousness[strain][idx] /= infectiousness_multiplier
+    def hack_infectiousness_adjustments(model):
+        # Find indices of compartments for which infectiousness was adjusted twice
+        over_adjusted_compartment_indices = [idx for idx, c in enumerate(model.compartments) if "tracing_traced" in c._str and any([f"clinical_{d}" in c._str for d in NOTIFICATION_CLINICAL_STRATA])]
+        infectiousness_multiplier = quarantine_infect_multiplier
+        for strain in model._disease_strains:
+            for idx in over_adjusted_compartment_indices:
+                model._backend._compartment_infectiousness[strain][idx] /= infectiousness_multiplier
+
+    return hack_infectiousness_adjustments

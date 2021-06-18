@@ -8,7 +8,6 @@ from .constants import (
     COMPARTMENTS,
     DISEASE_COMPARTMENTS,
     INFECTIOUS_COMPARTMENTS,
-    NOTIFICATION_CLINICAL_STRATA,
     Compartment,
     Strain,
 )
@@ -29,7 +28,7 @@ from .stratifications.cluster import (
 )
 from .stratifications.tracing import (
     get_tracing_strat,
-    hack_infectiousness_adjustments
+    make_hack_infectiousness_func
 )
 from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
@@ -228,6 +227,8 @@ def build_model(params: dict) -> CompartmentalModel:
 
     if params.contact_tracing:
         # So far the infectiousness adjustments have wrongly been applied twice for some compartment (traced and detected)
-        model.set_hacking_function(hack_infectiousness_adjustments)
+        quarantine_infect_multiplier = params.contact_tracing.quarantine_infect_multiplier
+        hacking_func = make_hack_infectiousness_func(quarantine_infect_multiplier)
+        model.set_hacking_function(hacking_func)
 
     return model

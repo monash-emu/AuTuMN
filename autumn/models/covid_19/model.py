@@ -222,4 +222,9 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.victorian_clusters:
         model._mixing_matrices = [mixing_matrix_function]
 
+    def hack_infectiousness(model):
+        print(model._backend)
+
+    model.set_hacking_function(hack_infectiousness)
+
     return model

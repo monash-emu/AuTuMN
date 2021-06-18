@@ -9,7 +9,7 @@ time:
   end: 822
 
 country:
-  iso3: NPL
+  iso3: IDN
 
 clinical_stratification:
   non_sympt_infect_multiplier: 0.25

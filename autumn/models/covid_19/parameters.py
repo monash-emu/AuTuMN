@@ -268,6 +268,7 @@ class ContactTracing(BaseModel):
     """
     assumed_trace_prop: float
     assumed_prev: float
+    quarantine_infect_multiplier: float
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

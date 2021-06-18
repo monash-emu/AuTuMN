@@ -1,0 +1,28 @@
+\section{Contact tracing and quarantine}
+
+\subsection{Model adaptation}
+We simulate quarantining of persons identified as first degree contacts of COVID-19 patients explicitly through stratification of the compartments representing active COVID-19.
+That is, the compartments representing both phases of the incubation period and both phases of active COVID-19 are duplicated are stratified, with model strata referred to as ``traced" and ``untraced".
+In model initialisation, all infectious seed is assigned to the untraced stratum.
+All newly infected persons commence their incubation period in the untraced stratum of the early incubation period.
+As for isolated and hospitalised patients, those undergoing quarantine have their infectiousness reduced by 80\%.
+
+\subsection{Contact tracing process}
+Identification of infected persons through contact tracing is assumed to apply to those in their early incubation period, with flows added to the model that transition persons during their incubation period from the untraced to the traced stratum of this compartment type.
+The rate of transition from the traced to the untraced stratum of the early incubation period is determined by the proportion of contacts traced.
+It is assumed that only the contacts of identified cases can be traced, such that the case detection rate (the proportion of symptomatic cases detected traced) is considered the ceiling for the proportion of contacts traced.
+The proportion of contacts of identified cases traced is multiplied by the case detection rate to determine the proportion of all persons entering the incubation period who are traced.
+This proportion is considered to decrease as the severity of the COVID-19 epidemic increases, because we expect contact tracing to decline in efficiency as more cases are identified.
+We further assume that contact tracing is universal as COVID-19 prevalence approaches zero and declines exponentially with increasing prevalence.
+The relationship between the proportion of contacts of identified patients who are quarantined and prevalence is given as:
+
+\[q = e^{-prev \times \tau }\]
+
+such that \(e^{-prev \times \tau} \times CDR(t) \) represents the proportion of all contacts of COVID-19 who are quarantined.
+
+Rather than estimate \(\tau\) directly, we estimate the more intuitive quantity of the proportion of contacts of identified patients who would be quarantined at a particular prevalence.
+Solving for the previous equation for \(\tau\), we obtain:
+
+\[\tau = \frac{-log(q)}{prev} \]
+
+or \(\tau = \frac{-log(q_{0})}{prev_{0}} \) at a specific prevalence that accords with a particular value of \(q\). Fixing \(prev_{0}\) at \(10^{-3}\), we can vary \(q_{0}\) in calibration as the proportion of contacts of identified cases detected at this particular prevalence.

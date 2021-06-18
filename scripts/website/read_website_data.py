@@ -118,7 +118,12 @@ for k in keys:
         path_parts = k.split("/")
         run_id, path = path_parts[0], "/".join(path_parts[1:])
 
-    app_name, region_name, timestamp, commit = read_run_id(run_id)
+    try:
+        app_name, region_name, timestamp, commit = read_run_id(run_id)
+    except Exception as e:
+        print(f"Failed to parse run_id {run_id} for key {k}")
+        continue
+
     if not app_name in apps:
         apps[app_name] = {}
 

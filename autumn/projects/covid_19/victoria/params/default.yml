@@ -35,6 +35,7 @@ sojourn:
     active:
       proportions:
         early: 0.5
+        late: 0.5
 
 # Cluster stratification.
 victorian_clusters:

@@ -79,7 +79,6 @@ priors = [
         trunc_range=[0.5, np.inf],
     ),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.7], jumping_stdev=0.01),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.0], jumping_stdev=0.1),
     UniformPrior("infection_fatality.multiplier", [0.5, 4.0], jumping_stdev=0.05),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.01),
     TruncNormalPrior(

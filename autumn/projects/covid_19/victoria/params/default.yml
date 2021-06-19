@@ -32,6 +32,9 @@ sojourn:
   compartment_periods:
     hospital_late: 11.6 # VAHI hospital mean duration, all COVID
     icu_late: 7.4 # VAHI ICU mean duration, all COVID (177.6 hours)
+    active:
+      proportions:
+        early: 0.5
 
 # Cluster stratification.
 victorian_clusters:

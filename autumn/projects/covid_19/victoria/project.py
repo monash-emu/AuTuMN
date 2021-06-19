@@ -68,7 +68,7 @@ priors = [
         trunc_range=[0.5, np.inf],
         jumping_stdev=0.05,
     ),
-    UniformPrior("contact_rate", [0.015, 0.06], jumping_stdev=0.002),
+    UniformPrior("contact_rate", [0.03, 0.08], jumping_stdev=0.002),
     UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.001),
     # Should be multiplied by 4/9 because seed is removed from regional clusters
     UniformPrior("infectious_seed", [22.5, 67.5], jumping_stdev=2.0),

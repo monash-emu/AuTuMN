@@ -12,6 +12,8 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.tools import inputs
 
+from autumn.tools.utils.utils import list_element_wise_division
+
 
 def request_standard_outputs(
     model: CompartmentalModel,
@@ -299,3 +301,18 @@ def request_standard_outputs(
 
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
         model.request_output_for_flow(name="vaccination", flow_name="vaccination")
+
+    if params.voc_emergence:
+        # Calculate the incidence of VoC cases
+        model.request_output_for_flow(
+            name=f"incidence_voc",
+            flow_name="incidence",
+            dest_strata={"strain": "voc"},
+            save_results=False
+        )
+        # Calculate the proportion of incident cases that are VoC
+        model.request_function_output(
+            name="prop_voc_incidence",
+            func=lambda voc, total: list_element_wise_division(voc, total),
+            sources=["incidence_voc", "incidence"]
+        )

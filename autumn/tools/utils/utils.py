@@ -141,3 +141,10 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     modified_proportion = proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
     return modified_proportion
+
+
+def list_element_wise_division(a, b):
+    """
+    Performs element-wise division between two lists and returns zeros where denominator is zero.
+    """
+    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b != 0.)

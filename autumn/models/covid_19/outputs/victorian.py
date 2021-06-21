@@ -47,7 +47,12 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             dest_strata={"tracing": "traced"},
             save_results=False,
         )
-        model.request_derived_value_output("traced_prop")
+        
+        model.request_derived_value_output("prevalence")
+        model.request_derived_value_output("prop_detected_traced")
+        model.request_derived_value_output("prop_traced")
+        model.request_derived_value_output("traced_flow_rate")
+
 
     # then track untraced cases that are still detected
     for clinical in NOTIFICATION_CLINICAL_STRATA:

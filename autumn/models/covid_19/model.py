@@ -16,7 +16,7 @@ from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_vaccination_flows
-from .preprocess.tracing import trace_function, TracingProc, get_tracing_param
+from .preprocess import tracing
 from .stratifications.agegroup import (
     AGEGROUP_STRATA,
     get_agegroup_strat,
@@ -188,7 +188,7 @@ def build_model(params: dict) -> CompartmentalModel:
     # Apply the process of contact tracing
     if params.contact_tracing:
 
-        trace_param = get_tracing_param(params.contact_tracing.assumed_trace_prop, params.contact_tracing.assumed_prev)
+        trace_param = tracing.get_tracing_param(params.contact_tracing.assumed_trace_prop, params.contact_tracing.assumed_prev)
 
         early_exposed_untraced_comps = \
             [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]
@@ -201,15 +201,29 @@ def build_model(params: dict) -> CompartmentalModel:
         )
 
         model.add_derived_value_process(
-            "traced_prop",
-            TracingProc(trace_param, get_detected_proportion)
+            "prevalence",
+            tracing.PrevalenceProc()
+        )
+
+        model.add_derived_value_process(
+            "prop_detected_traced",
+            tracing.PropDetectedTracedProc(trace_param)
+        )
+
+        model.add_derived_value_process(
+            "prop_traced",
+            tracing.PropTracedProc(get_detected_proportion)
+        )
+
+        model.add_derived_value_process(
+            "traced_flow_rate",
+            tracing.TracedFlowRateProc(incidence_flow_rate)
         )
 
         for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
-            trace_func = trace_function(incidence_flow_rate)
             model.add_function_flow(
                 "tracing",
-                trace_func,
+                tracing.contact_tracing_func,
                 Compartment.EARLY_EXPOSED,
                 Compartment.EARLY_EXPOSED,
                 source_strata=untraced.strata,

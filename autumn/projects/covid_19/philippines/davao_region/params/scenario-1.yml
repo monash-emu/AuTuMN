@@ -1,4 +1,4 @@
-description: 30% vaccine coverage / 70% onsite workers
+description: 30% vaccine coverage / 30% mobility increase
 mobility:
   mixing:
     work:
@@ -8,7 +8,18 @@ mobility:
       - 546
       values:
       - - repeat_prev
-      - 0.7
+      - - scale_prev
+        - 1.3
+    other_locations:
+      append: true
+      times:
+      - 544
+      - 546
+      values:
+      - - repeat_prev
+      - - scale_prev
+        - 1.3
+
 parent: autumn/projects/covid_19/davao_region/davao_region/params/default.yml
 time:
   start: 545

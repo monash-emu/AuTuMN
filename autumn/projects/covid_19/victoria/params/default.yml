@@ -106,7 +106,7 @@ victorian_clusters:
           function_type: tanh
           parameters:
             shape: 0.5261693
-            inflection_time: 205. # 23rd July
+            inflection_time: 208. # Mandated 11:59pm Wednesday 22nd July, but inflection date from fit was 26th July
             lower_asymptote: 0.130469
             upper_asymptote: 0.9143849
           locations:
@@ -182,7 +182,7 @@ victorian_clusters:
           function_type: tanh
           parameters:
             shape: 0.5261693
-            inflection_time: 215. # 2nd August
+            inflection_time: 218. # Mandated 11:59pm Sunday 2nd August, but putting ten days after Metro for consistency
             lower_asymptote: 0.130469
             upper_asymptote: 0.9143849
           locations:
@@ -192,7 +192,7 @@ victorian_clusters:
         face_coverings_adjuster:
           function_type: constant
           parameters:
-            effect: 0. # Doesn't matter because over-written by the metro value
+            effect: 0. # Irrelevant because over-written by the metro value
           locations:
             - other_locations
             - school

@@ -12,13 +12,13 @@ import yaml
 
 from autumn.settings import Region
 
-SCENARIO_START_TIME = 532  # 15 June 2021
+SCENARIO_START_TIME = 545  # 28 June 2021
 
 WORKFORCE_PROP = [.7, .8, .9]
 BACK_TO_NORMAL_FRACTIONS = []
 MHS_REDUCTION_FRACTIONS = []
 SCHOOL_REOPEN_FRACTIONS = []
-VACCINE_SCENARIOS = {"coverage": [.2, .5]}
+VACCINE_SCENARIOS = {"coverage": [.3, .7]}
 
 
 def clear_all_scenarios(region):

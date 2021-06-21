@@ -1,4 +1,4 @@
-description: 30% vaccine coverage / 70% onsite workers
+description: 70% vaccine coverage / 70% onsite workers
 mobility:
   mixing:
     work:
@@ -15,6 +15,6 @@ time:
 vaccination:
   roll_out_components:
   - supply_period_coverage:
-      coverage: 0.3
+      coverage: 0.7
       end_time: 731
       start_time: 545

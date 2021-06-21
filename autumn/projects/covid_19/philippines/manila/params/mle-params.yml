@@ -1,18 +1,18 @@
-accum_deaths_dispersion_param: 4.050698588814419
-clinical_stratification.props.hospital.multiplier: 2.  # 1.282807010783093
-clinical_stratification.props.symptomatic.multiplier: 0.9476212245179099
-contact_rate: 0.034 # 0.030116365124676622
-icu_occupancy_dispersion_param: 2.9659688355138085
-infection_fatality.multiplier: 1.2 # 1.5130371015133341
-infectious_seed: 30 #129.65461163895026
-mobility.microdistancing.behaviour.parameters.max_effect: 0.25 # 0.1487335593845597
-mobility.microdistancing.behaviour_adjuster.parameters.inflection_time: 395.43668170588376
-mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote: 0.9905667852653697
-notifications_dispersion_param: 3.0988903868714535
-sojourn.compartment_periods_calculated.active.total_period: 7.30656682318997
-sojourn.compartment_periods_calculated.exposed.total_period: 6.427122888885482
-testing_to_detection.assumed_cdr_parameter: 0.042072194682492695
-vaccination.overall_efficacy: 0.7895775672145173
-vaccination.vacc_prop_prevent_infection: 0.9050656276193965
-voc_emergence.contact_rate_multiplier: 1.89  #8201791001709133
-voc_emergence.start_time: 300 #336.3016840410229
+accum_deaths_dispersion_param: 3.0270866240649106
+clinical_stratification.props.hospital.multiplier: 1.3149311871801181
+clinical_stratification.props.symptomatic.multiplier: 1.2895275309891159
+contact_rate: 0.03419080271684316
+icu_occupancy_dispersion_param: 3.577174249221902
+infection_fatality.multiplier: 1.1957329296663062
+infectious_seed: 34.132309241578135
+mobility.microdistancing.behaviour.parameters.max_effect: 0.21568499431738197
+mobility.microdistancing.behaviour_adjuster.parameters.inflection_time: 391.55705636953775
+mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote: 0.9835133501291907
+notifications_dispersion_param: 2.245540837323656
+sojourn.compartment_periods_calculated.active.total_period: 6.336536636643455
+sojourn.compartment_periods_calculated.exposed.total_period: 7.120542917709567
+testing_to_detection.assumed_cdr_parameter: 0.040930487569715276
+vaccination.overall_efficacy: 0.7400896017603067
+vaccination.vacc_prop_prevent_infection: 0.7884671305891244
+voc_emergence.contact_rate_multiplier: 1.8648210385355846
+voc_emergence.start_time: 309.5693625732799

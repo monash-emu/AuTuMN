@@ -77,6 +77,10 @@ register_project(
     Models.COVID_19, Region.DAVAO_CITY, "autumn.projects.covid_19.philippines.davao_city.project"
 )
 register_project(
+    Models.COVID_19, Region.DAVAO_REGION, "autumn.projects.covid_19.philippines.davao_region.project"
+)
+
+register_project(
     Models.COVID_19, Region.MANILA, "autumn.projects.covid_19.philippines.manila.project"
 )
 register_project(

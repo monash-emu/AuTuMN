@@ -147,10 +147,16 @@ def create_region_aggregates(df):
     ] = "unmatched"
     df.report_date = pd.to_datetime(df["report_date"], infer_datetime_format=True)
 
+
     # Get national estimates and collate
     phldf = df.copy()
     phldf["facility_name"] = "philippines"
     combined_df = df.append(phldf)
+
+    # Have to do this after national calculation
+    davao_region = combined_df[combined_df.facility_name=='davao city']
+    davao_region['facility_name'] = 'davao region'
+    combined_df = combined_df.append(davao_region)
 
     # Tidy up and return
     combined_df = combined_df[combined_df.facility_name != "unmatched"]

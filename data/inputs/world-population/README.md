@@ -28,6 +28,10 @@ https://www.data.gov.my/data/dataset/ec71711f-9b1f-42cd-9229-0c3e1f0e1dbb/resour
 
 Philippines sub region population numbers are provided by the FASSSTER team except for 
 Davao City population - https://www.citypopulation.de/en/philippines/mindanao/admin/davao_del_sur/112402__davao/
+Davao Region population - https://www.citypopulation.de/en/philippines/admin/11__davao/
+
+
+
 
 
 ### [WPP2019_FERT_F03_CRUDE_BIRTH_RATE](<https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/2_Fertility/WPP2019_FERT_F03_CRUDE_BIRTH_RATE.xlsx>)

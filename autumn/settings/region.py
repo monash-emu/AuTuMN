@@ -24,6 +24,7 @@ class Region:
     SABAH = "sabah"
     SELANGOR = "selangor"
     DAVAO_CITY = "davao-city"
+    DAVAO_REGION = "davao-region"
     JOHOR = "johor"
     PENANG = "penang"
     KUALA_LUMPUR = "kuala-lumpur"
@@ -86,6 +87,7 @@ class Region:
         PHILIPPINES,
         MANILA,
         CALABARZON,
+        DAVAO_REGION,
         # CENTRAL_VISAYAS,
         # DAVAO_CITY,
     ]

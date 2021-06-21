@@ -16,7 +16,7 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "1E6yke-Zi73d9EshfWE_qbzsYEBUJLvHg"  # sheet 05 daily report
+PHL_doh_link = "15FEaN7SjnHrvlQKPerSU365eB8eZLuXx"  # sheet 05 daily report
 PHL_fassster_link = "1ItBw4DeDQZFPBWMxl9byHthgTLh0BUCE"
 
 # destination folders filepaths
@@ -36,7 +36,7 @@ def main():
     fassster_filename = fassster_data_filepath()
 
     # Process DoH data
-    working_df = copy_davao_city_to_region(PHL_doh_dest)
+    working_df = pd.read_csv(PHL_doh_dest) # copy_davao_city_to_region(PHL_doh_dest)
     working_df = rename_regions(
         working_df,
         "region",
@@ -50,14 +50,14 @@ def main():
     process_icu_data(working_df)
 
     # Now fassster data
-    working_df = copy_davao_city_to_region(fassster_filename)
+    working_df = pd.read_csv(fassster_filename) #copy_davao_city_to_region(fassster_filename)
     working_df = rename_regions(working_df, "Region", "NCR", "4A", "07", "11")
     working_df = duplicate_data(working_df, "Region")
     working_df = filter_df_by_regions(working_df, "Region")
     process_accumulated_death_data(working_df)
     process_notifications_data(working_df)
     update_calibration_phl()
-    remove_files(fassster_filename)
+    #remove_files(fassster_filename)
 
 
 # function to fetch data

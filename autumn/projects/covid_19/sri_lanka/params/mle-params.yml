@@ -1,9 +1,9 @@
 contact_rate: 0.022200205935977393
 infection_deaths_dispersion_param: 5.393303859465226
-infectious_seed: 200.75289243005562
+infectious_seed: 350.75289243005562
 notifications_dispersion_param: 392.6992104150302
 sojourn.compartment_periods_calculated.active.total_period: 6.536854859987019
 sojourn.compartment_periods_calculated.exposed.total_period: 6.367176114344142
 testing_to_detection.assumed_cdr_parameter: 0.10280102887736722
 voc_emergence.contact_rate_multiplier: 2.1623980027083785
-voc_emergence.start_time: 390.9052656235185
+voc_emergence.start_time: 310.9052656235185

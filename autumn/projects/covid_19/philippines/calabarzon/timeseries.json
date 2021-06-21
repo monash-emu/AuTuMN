@@ -1,4 +1,17 @@
 {
+  "prop_voc_incidence": {
+    "title": "VoC proportion in incident cases",
+    "output_key": "prop_voc_incidence",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "incidence": {
     "title": "Incidence",
     "output_key": "incidence",

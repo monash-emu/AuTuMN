@@ -23,19 +23,9 @@ def get_traced_prop(trace_param, prev):
 
 def contact_tracing_func(flow, compartments, compartment_values, flows, flow_rates, derived_values, time):
     """
-    Calculate the transition flow as the product of the size of the source compartment, the only outflow and the
-    proportion of all new cases traced.
-
-    Solving the following equation:
-
-    traced_prop = traced_flow_rate / (traced_flow_rate + incidence_flow_rate)
-
-    for traced_flow_rate gives the following:
+    Multiply the flow rate through by the source compartment to get the final absolute rate
     """
-    #traced_flow_rate = incidence_flow_rate * derived_values["prop_traced"] / (1. - derived_values["prop_traced"])
-
-    # Multiply through by the source compartment to get the final absolute rate
-    return derived_values['traced_flow_rate'] * compartment_values[flow.source.idx]
+    return derived_values["traced_flow_rate"] * compartment_values[flow.source.idx]
 
 
 class PrevalenceProc(DerivedValueProcessor):
@@ -81,58 +71,32 @@ class PropTracedProc(DerivedValueProcessor):
     """
     Calculate the proportion of the contacts of all active cases that are traced.
     """
-    def __init__(self, detected_prop_func, model_params):
+    def __init__(self, detected_prop_func, sympt_props):
         self.detected_prop_func = detected_prop_func
+        self.sympt_props = sympt_props
 
     def process(self, comp_vals, flow_rates, derived_values, time):
-        prop_traced = derived_values["prop_detected_traced"] * self.detected_prop_func(time)
-        return prop_traced
+        prop_sympt_traced = derived_values["prop_detected_traced"] * self.detected_prop_func(time)
+        prop_symptomatic = np.mean(self.sympt_props)  # FIXME: Should be some sort of weighted rather than raw average
+        return prop_sympt_traced * prop_symptomatic
 
 
 class TracedFlowRateProc(DerivedValueProcessor):
+    """
+    Calculate the transition flow rate based on the only other outflow and the proportion of all new cases traced.
+    """
     def __init__(self, incidence_flow_rate):
         self.incidence_flow_rate = incidence_flow_rate
 
     def process(self, comp_vals, flow_rates, derived_values, time):
+        """
+        Solving the following equation:
+
+        traced_prop = traced_flow_rate / (traced_flow_rate + incidence_flow_rate)
+
+        for traced_flow_rate gives the following:
+        """
         traced_flow_rate = \
             self.incidence_flow_rate * derived_values["prop_traced"] / (1. - derived_values["prop_traced"])
+        assert 0. <= traced_flow_rate
         return traced_flow_rate
-
-
-class TracingProc(DerivedValueProcessor):
-    """
-        Calculate the proportion of traced cases
-        +++ FIXME This is redundant now, but has been kept in for verification puruposes
-    """
-    def __init__(self, trace_param, detected_prop_func):
-        """
-        Arguments needed to calculate running quantities during run-time.
-        """
-        self.trace_param = trace_param
-        self.detected_prop_func = detected_prop_func
-        self.active_comps = None
-        self.get_traced_prop = None
-
-        # Get the function for the proportion of contacts of detected cases who are traced
-        self.get_traced_prop = get_traced_prop
-
-    def prepare_to_run(self, compartments, flows):
-        """
-        Calculate emergent quantities from the model during run-time
-        To avoid calculating these quantities for every compartment in function flows
-        """
-
-        # Identify the compartments with active disease for the prevalence calculation
-        self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
-            comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)
-
-    def process(self, comp_vals, flow_rates, derived_values, time):
-        """
-        The actual calculation performed during run-time
-        Calculate the actual proportion of detected cases detected
-        """
-        prevalence = find_sum(comp_vals[self.active_comps]) / find_sum(comp_vals)  # Calculate prevalence
-        prop_detected_traced = self.get_traced_prop(self.trace_param, prevalence)  # Find the prop of detected that is traced
-        prop_traced = prop_detected_traced * self.detected_prop_func(time)  # Last, find the prop of all cases traced
-
-        return prop_traced

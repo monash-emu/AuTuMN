@@ -212,7 +212,7 @@ def build_model(params: dict) -> CompartmentalModel:
 
         model.add_derived_value_process(
             "prop_traced",
-            tracing.PropTracedProc(get_detected_proportion, params)
+            tracing.PropTracedProc(get_detected_proportion, params.clinical_stratification.props.symptomatic.props)
         )
 
         model.add_derived_value_process(

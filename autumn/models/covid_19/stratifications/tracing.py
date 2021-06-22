@@ -30,13 +30,17 @@ def get_tracing_strat(contact_params) -> Stratification:
     return tracing_strat
 
 
-def make_hack_infectiousness_func(quarantine_infect_multiplier):
+def make_hack_infectiousness_func(quarantine_infect_multiplier, other_infect_multipliers):
     """
     Because infectiousness adjustments are set as multipliers and we don't want to adjust twice for contact tracing and
     for hospitalisation or detection, we set infectiousness as a hack at the end for the traced compartments.
     This would generally assume that the infectiousness modification would be the same for tracing and for
     hospitalisation/detection.
     """
+    # Check the effect of isolation is the same as quarantine and hospitalisation
+    for infect_multiplier in other_infect_multipliers:
+        assert quarantine_infect_multiplier == other_infect_multipliers[infect_multiplier]
+
     def hack_infectiousness_adjustments(model):
         tracing_comps = [idx for idx, comp in enumerate(model.compartments) if comp.has_stratum("tracing", "traced")]
         for strain in model._disease_strains:

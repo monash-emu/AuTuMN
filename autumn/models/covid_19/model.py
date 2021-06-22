@@ -240,9 +240,11 @@ def build_model(params: dict) -> CompartmentalModel:
         model._mixing_matrices = [mixing_matrix_function]
 
     if params.contact_tracing:
-        # So far the infectiousness adjustments have wrongly been applied twice for some compartment (traced and detected)
         quarantine_infect_multiplier = params.contact_tracing.quarantine_infect_multiplier
-        hacking_func = make_hack_infectiousness_func(quarantine_infect_multiplier)
+        hacking_func = make_hack_infectiousness_func(
+            quarantine_infect_multiplier,
+            params.clinical_stratification.late_infect_multiplier
+        )
         model.set_hacking_function(hacking_func)
 
     return model

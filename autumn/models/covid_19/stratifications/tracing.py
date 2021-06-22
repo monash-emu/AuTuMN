@@ -38,10 +38,9 @@ def make_hack_infectiousness_func(quarantine_infect_multiplier):
     """
     def hack_infectiousness_adjustments(model):
         # Find indices of compartments for which infectiousness was adjusted twice
-        over_adjusted_compartment_indices = \
-            [idx for idx, comp in enumerate(model.compartments) if comp.has_stratum("tracing", "traced")]
+        tracing_comps = [idx for idx, comp in enumerate(model.compartments) if comp.has_stratum("tracing", "traced")]
         for strain in model._disease_strains:
-            for idx in over_adjusted_compartment_indices:
+            for idx in tracing_comps:
                 model._backend._compartment_infectiousness[strain][idx] = quarantine_infect_multiplier
 
     return hack_infectiousness_adjustments

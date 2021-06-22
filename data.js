@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1624323059307,
+  "lastUpdate": 1624325028820,
   "repoUrl": "https://github.com/monash-emu/AuTuMN",
   "entries": {
     "Benchmark": [
@@ -96704,6 +96704,184 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0601657937707598",
             "extra": "mean: 8.164597920200004 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "43531318+milinda-abay@users.noreply.github.com",
+            "name": "milinda-abay",
+            "username": "milinda-abay"
+          },
+          "committer": {
+            "email": "43531318+milinda-abay@users.noreply.github.com",
+            "name": "milinda-abay",
+            "username": "milinda-abay"
+          },
+          "distinct": true,
+          "id": "c72b9f6d4184784da2d916291f60b10922c43b80",
+          "message": "Rollback PHL targets to the 15th of June.",
+          "timestamp": "2021-06-22T11:01:42+10:00",
+          "tree_id": "548a312ebf5f9633cb7bbe53baec4a6cea4edef2",
+          "url": "https://github.com/monash-emu/AuTuMN/commit/c72b9f6d4184784da2d916291f60b10922c43b80"
+        },
+        "date": 1624325024910,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[victoria]",
+            "value": 0.08527195805065745,
+            "unit": "iter/sec",
+            "range": "stddev: 0.21694368686199178",
+            "extra": "mean: 11.727184678999993 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[belgium]",
+            "value": 0.22137705509981864,
+            "unit": "iter/sec",
+            "range": "stddev: 0.10316533459690144",
+            "extra": "mean: 4.517179974000021 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[spain]",
+            "value": 0.23910607196033654,
+            "unit": "iter/sec",
+            "range": "stddev: 0.09698952667716497",
+            "extra": "mean: 4.182244272599997 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[sweden]",
+            "value": 0.216668759450714,
+            "unit": "iter/sec",
+            "range": "stddev: 0.08353714551563454",
+            "extra": "mean: 4.6153400358 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[united-kingdom]",
+            "value": 0.24538919298795311,
+            "unit": "iter/sec",
+            "range": "stddev: 0.10320865803212206",
+            "extra": "mean: 4.075159088400005 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[italy]",
+            "value": 0.21988709909914114,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0699975029111788",
+            "extra": "mean: 4.547788406399991 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[france]",
+            "value": 0.2127320986891466,
+            "unit": "iter/sec",
+            "range": "stddev: 0.11496717336679643",
+            "extra": "mean: 4.700748058999989 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[calabarzon]",
+            "value": 0.10426315082852543,
+            "unit": "iter/sec",
+            "range": "stddev: 0.13300732730070003",
+            "extra": "mean: 9.591116248200024 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[central-visayas]",
+            "value": 0.10490027559620918,
+            "unit": "iter/sec",
+            "range": "stddev: 0.1612824310300498",
+            "extra": "mean: 9.532863420199988 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[davao-city]",
+            "value": 0.10920098560077265,
+            "unit": "iter/sec",
+            "range": "stddev: 0.18380504796111408",
+            "extra": "mean: 9.157426505800004 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[davao-region]",
+            "value": 0.10947219774936427,
+            "unit": "iter/sec",
+            "range": "stddev: 0.14686560393261816",
+            "extra": "mean: 9.134739418400022 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[manila]",
+            "value": 0.10528289199810625,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0999572858432516",
+            "extra": "mean: 9.49821933100002 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[philippines]",
+            "value": 0.10169138093134011,
+            "unit": "iter/sec",
+            "range": "stddev: 0.11044722229512026",
+            "extra": "mean: 9.833675094599993 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[johor]",
+            "value": 0.14974098008911918,
+            "unit": "iter/sec",
+            "range": "stddev: 0.11897826254159743",
+            "extra": "mean: 6.678198576 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[kuala-lumpur]",
+            "value": 0.1454032778745942,
+            "unit": "iter/sec",
+            "range": "stddev: 0.13705384508988885",
+            "extra": "mean: 6.877424048599982 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[malaysia]",
+            "value": 0.12241927743426707,
+            "unit": "iter/sec",
+            "range": "stddev: 0.07234767387901998",
+            "extra": "mean: 8.168648116200075 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[penang]",
+            "value": 0.14926173849592905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.09427352444451705",
+            "extra": "mean: 6.699640578199978 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[sabah]",
+            "value": 0.24395382057807646,
+            "unit": "iter/sec",
+            "range": "stddev: 0.07529048847539693",
+            "extra": "mean: 4.099136458000066 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[selangor]",
+            "value": 0.14314676078227068,
+            "unit": "iter/sec",
+            "range": "stddev: 0.14979592787012044",
+            "extra": "mean: 6.985837433799998 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[nepal]",
+            "value": 0.1308927788320441,
+            "unit": "iter/sec",
+            "range": "stddev: 0.17053815559161986",
+            "extra": "mean: 7.639840860000049 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[sri_lanka]",
+            "value": 0.09632420478120646,
+            "unit": "iter/sec",
+            "range": "stddev: 0.15988982026185586",
+            "extra": "mean: 10.381606598999998 sec\nrounds: 5"
+          },
+          {
+            "name": "tests/test_benchmarks.py::test_benchmark_covid_models[bali]",
+            "value": 0.1305509976082684,
+            "unit": "iter/sec",
+            "range": "stddev: 0.12037779905184613",
+            "extra": "mean: 7.659841887999983 sec\nrounds: 5"
           }
         ]
       }

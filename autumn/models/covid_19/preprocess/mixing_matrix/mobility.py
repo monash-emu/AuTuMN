@@ -209,6 +209,9 @@ def max_last_period(prev_vals: List[float], period: int):
     last_n_values = min(len(prev_vals), period)
     return max(prev_vals[-last_n_values:])
 
+def min_last_period(prev_vals: List[float], period: int):
+    last_n_values = min(len(prev_vals), period)
+    return min(prev_vals[-last_n_values:])
 
 def close_to_max_last_period(prev_vals: List[float], period: int, fraction: float):
     """
@@ -230,4 +233,5 @@ PARSE_FUNCS = {
     "close_gap_to_1": close_gap_to_1,
     "max_last_period": max_last_period,
     "close_to_max_last_period": close_to_max_last_period,
+    "min_last_period": min_last_period,
 }

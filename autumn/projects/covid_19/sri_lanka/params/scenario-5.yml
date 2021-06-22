@@ -1,0 +1,25 @@
+description: Scenario 5, What would have happened if the lockdown was done earlier on April 21st
+
+time:
+  start: 477 # 21st April 2021
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-04-21 # All schools close
+      values:
+        - 0
+    other_locations:
+      append: true
+      times:
+        - 2021-04-21
+      values:
+        - 0.2125
+    work:
+      append: true
+      times:
+        - 2021-04-21
+      values:
+        - 0.15

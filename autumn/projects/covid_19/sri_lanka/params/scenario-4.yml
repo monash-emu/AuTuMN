@@ -1,0 +1,25 @@
+description: Scenario 4, What would happen if May 21st lockdown did not take place
+
+time:
+  start: 507 # 21st May 2021
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-05-21 # All schools open
+      values:
+        - 1
+    other_locations:
+      append: true
+      times:
+        - 2021-05-21
+      values:
+        - 1.0075
+    work:
+      append: true
+      times:
+        - 2021-05-21
+      values:
+        - 0.64

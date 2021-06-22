@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+from pathlib import PurePath
 
 import boto3
 from boto3.s3.transfer import TransferConfig
@@ -144,14 +145,11 @@ def upload_folder_s3(client, folder_path, dest_folder_key):
 
 def upload_file_s3(client, src_path, dest_key):
     """Upload a file to S3"""
+    dest_key = validate_path(dest_key)
     logger.info("Uploading from %s to %s", src_path, dest_key)
 
     # Enforce mime types for common cases; just png for now
-    if src_path.split(".")[-1] == "png":
-        extra_args = S3_UPLOAD_EXTRA_ARGS.copy()
-        extra_args["ContentType"] = "image/png"
-    else:
-        extra_args = S3_UPLOAD_EXTRA_ARGS
+    extra_args = get_mime_args(src_path)
 
     client.upload_file(
         src_path,
@@ -160,3 +158,24 @@ def upload_file_s3(client, src_path, dest_key):
         ExtraArgs=extra_args,
         Config=S3_UPLOAD_CONFIG,
     )
+
+MIME_MAP = {
+    "png": "image/png",
+    "log": "text/plain",
+    "txt": "text/plain",
+    "yml": "text/x-yaml"
+}
+
+def get_mime_args(src_path):
+    extension = src_path.split(".")[-1]
+    mime_type = MIME_MAP.get(extension)
+    if mime_type:
+        extra_args = S3_UPLOAD_EXTRA_ARGS.copy()
+        extra_args["ContentType"] = mime_type
+    else:
+        extra_args = S3_UPLOAD_EXTRA_ARGS
+    return extra_args
+
+def validate_path(path):
+    pp = PurePath(path)
+    return pp.as_posix()

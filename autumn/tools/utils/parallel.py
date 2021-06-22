@@ -1,4 +1,5 @@
 import sys
+import traceback
 import time
 import os
 import logging
@@ -16,6 +17,34 @@ MAX_WORKERS = mp.cpu_count() - 1
 SENTRY_ERROR_DELAY = 10  # seconds
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
 
+def gather_exc_plus(filename='crash.log'):
+    """
+    Dump tracebacks and locals to a file
+    Borrowed from: https://www.oreilly.com/library/view/python-cookbook/0596001673/ch14s05.html
+    """
+    
+    out_f = open(filename, 'w')
+    
+    tb = sys.exc_info()[2]
+    while 1:
+        if not tb.tb_next:
+            break
+        tb = tb.tb_next
+    stack = []
+    f = tb.tb_frame
+    while f:
+        stack.append(f)
+        f = f.f_back
+    stack.reverse()
+    traceback.print_exc(file=out_f)
+    for frame in stack:
+        out_f.write(f"Frame {frame.f_code.co_name} in {frame.f_code.co_filename} at line {frame.f_lineno}\n")
+        for key, value in frame.f_locals.items(  ):
+            out_f.write(f"\t{key} = \n"),
+            try:
+                out_f.write(f"{value}\n")
+            except:
+                out_f.write("Could not represent as string\n")
 
 def report_errors(func):
     """
@@ -42,7 +71,7 @@ def report_errors(func):
     return error_handler_wrapper
 
 
-def run_parallel_tasks(func: Callable, arg_list: List[Any]):
+def run_parallel_tasks(func: Callable, arg_list: List[Any], auto_exit=True):
     if len(arg_list) == 1:
         return [func(*arg_list[0])]
 
@@ -64,11 +93,12 @@ def run_parallel_tasks(func: Callable, arg_list: List[Any]):
     logger.info("Successfully ran %s parallel tasks: %s", len(success_results), success_results)
     if failure_exceptions:
         logger.info("Failed to run %s parallel tasks", len(failure_exceptions))
-
-    if failure_exceptions:
-        logger.error(
-            "%s / %s parallel tasks failed - exiting.", len(failure_exceptions), len(arg_list)
-        )
-        sys.exit(-1)
+        if auto_exit:
+            logger.error(
+                "%s / %s parallel tasks failed - exiting.", len(failure_exceptions), len(arg_list)
+            )
+            sys.exit(-1)
+        else:
+            raise Exception("Parallel tasks failed")
 
     return success_results

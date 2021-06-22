@@ -40,48 +40,64 @@ def contact_tracing_func(flow, compartments, compartment_values, flows, flow_rat
 
 class PrevalenceProc(DerivedValueProcessor):
     """
-        Calculate prevalence from active disease compartments
+    Calculate prevalence from the active disease compartments.
     """
+    def __init__(self):
+        self.active_comps = None
 
     def prepare_to_run(self, compartments, flows):
-        # Identify the compartments with active disease for the prevalence calculation
+        """
+        Identify the compartments with active disease for the prevalence calculation
+        """
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
             comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)
 
     def process(self, comp_vals, flow_rates, derived_values, time):
-        prevalence = find_sum(comp_vals[self.active_comps]) / find_sum(comp_vals)  # Calculate prevalence
-        return prevalence
+        """
+        Calculate the actual prevalence during run-time
+        """
+        return find_sum(comp_vals[self.active_comps]) / find_sum(comp_vals)
+
 
 class PropDetectedTracedProc(DerivedValueProcessor):
     """
-        Calculate the proportion of detected cases which are traced
+    Calculate the proportion of detected cases which have their contacts traced.
     """
     def __init__(self, trace_param):
         self.trace_param = trace_param
 
     def process(self, comp_vals, flow_rates, derived_values, time):
-        prop_detected_traced = get_traced_prop(self.trace_param, derived_values['prevalence'])  # Find the prop of detected that is traced
-        return prop_detected_traced
+        """
+        Formula for calculating the proportion from the already-processed contact tracing parameter,
+        which has been worked out in the get_tracing_param function above.
+        Ensures that the proportion is bounded [0, 1]
+        """
+        prop_detect_traced = np.exp(-derived_values["prevalence"] * self.trace_param)
+        assert 0. <= prop_detect_traced <= 1.
+        return prop_detect_traced
 
 
 class PropTracedProc(DerivedValueProcessor):
     """
-        Calculate the proportion of all cases traced
+    Calculate the proportion of the contacts of all active cases that are traced.
     """
-    def __init__(self, detected_prop_func):
+    def __init__(self, detected_prop_func, model_params):
         self.detected_prop_func = detected_prop_func
 
     def process(self, comp_vals, flow_rates, derived_values, time):
-        prop_traced = derived_values['prop_detected_traced'] * self.detected_prop_func(time)  # Last, find the prop of all cases traced
+        prop_traced = derived_values["prop_detected_traced"] * self.detected_prop_func(time)
         return prop_traced
+
 
 class TracedFlowRateProc(DerivedValueProcessor):
     def __init__(self, incidence_flow_rate):
         self.incidence_flow_rate = incidence_flow_rate
 
     def process(self, comp_vals, flow_rates, derived_values, time):
-        traced_flow_rate = self.incidence_flow_rate * derived_values["prop_traced"] / (1. - derived_values["prop_traced"])
+        traced_flow_rate = \
+            self.incidence_flow_rate * derived_values["prop_traced"] / (1. - derived_values["prop_traced"])
         return traced_flow_rate
+
 
 class TracingProc(DerivedValueProcessor):
     """

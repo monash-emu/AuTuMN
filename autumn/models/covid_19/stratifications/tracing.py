@@ -27,16 +27,6 @@ def get_tracing_strat(contact_params) -> Stratification:
         }
     )
 
-    # Adjust infectiousness of those traced
-    for comp in DISEASE_COMPARTMENTS:
-        tracing_strat.add_infectiousness_adjustments(
-            comp,
-            {
-                "traced": Multiply(contact_params.quarantine_infect_multiplier),
-                "untraced": None,
-            },
-        )
-
     return tracing_strat
 
 
@@ -49,12 +39,9 @@ def make_hack_infectiousness_func(quarantine_infect_multiplier):
     def hack_infectiousness_adjustments(model):
         # Find indices of compartments for which infectiousness was adjusted twice
         over_adjusted_compartment_indices = \
-            [idx for idx, comp in enumerate(model.compartments) if
-             comp.has_stratum("tracing", "traced") and
-             any([comp.has_stratum("clinical", notif_stratum) for notif_stratum in NOTIFICATION_CLINICAL_STRATA])]
-        infectiousness_multiplier = quarantine_infect_multiplier
+            [idx for idx, comp in enumerate(model.compartments) if comp.has_stratum("tracing", "traced")]
         for strain in model._disease_strains:
             for idx in over_adjusted_compartment_indices:
-                model._backend._compartment_infectiousness[strain][idx] /= infectiousness_multiplier
+                model._backend._compartment_infectiousness[strain][idx] = quarantine_infect_multiplier
 
     return hack_infectiousness_adjustments

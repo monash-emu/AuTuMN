@@ -122,11 +122,14 @@ class PropIndexDetectedProc(DerivedValueProcessor):
                 total_force_of_infection += force_of_infection
                 if clinical in NOTIFICATION_CLINICAL_STRATA:
                     detected_force_of_infection += force_of_infection
+                assert detected_force_of_infection <= force_of_infection
 
         if total_force_of_infection == 0.:
             return 0.
         else:
-            return detected_force_of_infection / total_force_of_infection
+            proportion_detect_force_infection = detected_force_of_infection / total_force_of_infection
+            assert 0. <= proportion_detect_force_infection <= 1.
+            return proportion_detect_force_infection
 
 
 class TracedFlowRateProc(DerivedValueProcessor):
@@ -145,7 +148,6 @@ class TracedFlowRateProc(DerivedValueProcessor):
         for traced_flow_rate gives the following:
         """
         traced_prop = derived_values["prop_detected_traced"] * derived_values["prop_contacts_with_detected_index"]
-        traced_flow_rate = \
-            self.incidence_flow_rate * traced_prop / (1. - traced_prop)
+        traced_flow_rate = self.incidence_flow_rate * traced_prop / (1. - traced_prop)
         assert 0. <= traced_flow_rate
         return traced_flow_rate

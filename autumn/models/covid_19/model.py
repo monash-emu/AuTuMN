@@ -195,11 +195,6 @@ def build_model(params: dict) -> CompartmentalModel:
         early_exposed_traced_comps = \
             [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
 
-        # Create the CDR function in exactly the same way as what is used in calculating the flow rates
-        get_detected_proportion = build_detected_proportion_func(
-            AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
-        )
-
         model.add_derived_value_process(
             "prevalence",
             tracing.PrevalenceProc()
@@ -211,8 +206,11 @@ def build_model(params: dict) -> CompartmentalModel:
         )
 
         model.add_derived_value_process(
-            "prop_traced",
-            tracing.PropTracedProc(get_detected_proportion, params.clinical_stratification.props.symptomatic.props)
+            "prop_contacts_with_detected_index",
+            tracing.PropIndexDetectedProc(
+                params.clinical_stratification.non_sympt_infect_multiplier,
+                params.clinical_stratification.late_infect_multiplier
+            )
         )
 
         model.add_derived_value_process(

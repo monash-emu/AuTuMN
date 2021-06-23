@@ -1,6 +1,12 @@
 import numpy as np
 
-from autumn.models.covid_19.constants import Compartment
+from autumn.models.covid_19.constants import (
+    Compartment,
+    INFECTIOUS_COMPARTMENTS,
+    Clinical,
+    CLINICAL_STRATA,
+    NOTIFICATION_CLINICAL_STRATA
+)
 
 from summer.compute import DerivedValueProcessor, find_sum
 
@@ -26,6 +32,15 @@ def contact_tracing_func(flow, compartments, compartment_values, flows, flow_rat
     Multiply the flow rate through by the source compartment to get the final absolute rate
     """
     return derived_values["traced_flow_rate"] * compartment_values[flow.source.idx]
+
+
+def get_infectiousness_level(compartment, clinical, non_sympt_infect_multiplier, late_infect_multiplier):
+    if clinical == Clinical.NON_SYMPT:
+        return non_sympt_infect_multiplier
+    elif compartment == Compartment.LATE_ACTIVE and clinical in NOTIFICATION_CLINICAL_STRATA:
+        return late_infect_multiplier[clinical]
+    else:
+        return 1.
 
 
 class PrevalenceProc(DerivedValueProcessor):
@@ -67,22 +82,48 @@ class PropDetectedTracedProc(DerivedValueProcessor):
         return proportion_of_detected_traced
 
 
-class PropTracedProc(DerivedValueProcessor):
+class PropIndexDetectedProc(DerivedValueProcessor):
     """
-    Calculate the proportion of the contacts of all active cases that are traced.
+    Calculate the proportion of all contacts whose index case is ever detected.
     """
-    def __init__(self, detected_proportion_func, sympt_props):
-        self.detected_proportion_func = detected_proportion_func
-        self.average_sympt_proportion = np.mean(sympt_props)
+    def __init__(self, non_sympt_infect_multiplier, late_infect_multiplier):
+        self.non_sympt_infect_multiplier = non_sympt_infect_multiplier
+        self.late_infect_multiplier = late_infect_multiplier
+
+        self.infectious_comps = None
+        self.infectiousness_levels = None
+
+    def prepare_to_run(self, compartments, flows):
+        """
+        Identify the infectious compartments for the prevalence calculation by infection stage and clinical status.
+        Also captures the infectiousness levels by infection stage and clinical status.
+        """
+        self.infectious_comps, self.infectiousness_levels = {}, {}
+
+        for compartment in INFECTIOUS_COMPARTMENTS:
+            self.infectious_comps[compartment] = {}
+            self.infectiousness_levels[compartment] = {}
+            for clinical in CLINICAL_STRATA:
+                self.infectious_comps[compartment][clinical] = np.array([idx for idx, comp in enumerate(compartments) if
+                    comp.has_name(compartment) and comp.has_stratum("clinical", clinical)], dtype=int)
+                self.infectiousness_levels[compartment][clinical] = get_infectiousness_level(
+                    compartment, clinical, self.non_sympt_infect_multiplier, self.late_infect_multiplier)
 
     def process(self, comp_vals, flow_rates, derived_values, time):
         """
-        Find the approximate total proportion of all cases that are being traced, which assumes approximately equal
-        infectiousness of asymptomatic and symptomatic cases over their infectious period.
+        Calculate the actual prevalence during run-time
         """
-        return derived_values["prop_detected_traced"] * \
-               self.detected_proportion_func(time) * \
-               self.average_sympt_proportion
+        total_force_of_infection = 0.
+        detected_force_of_infection = 0.
+        for compartment in INFECTIOUS_COMPARTMENTS:
+            for clinical in CLINICAL_STRATA:
+                prevalence = find_sum(comp_vals[self.infectious_comps[compartment][clinical]])
+                force_of_infection = prevalence * self.infectiousness_levels[compartment][clinical]
+                total_force_of_infection += force_of_infection
+                if clinical in NOTIFICATION_CLINICAL_STRATA:
+                    detected_force_of_infection = force_of_infection
+
+        return detected_force_of_infection / total_force_of_infection
 
 
 class TracedFlowRateProc(DerivedValueProcessor):
@@ -100,7 +141,8 @@ class TracedFlowRateProc(DerivedValueProcessor):
 
         for traced_flow_rate gives the following:
         """
+        traced_prop = derived_values["prop_detected_traced"] * derived_values["prop_contacts_with_detected_index"]
         traced_flow_rate = \
-            self.incidence_flow_rate * derived_values["prop_traced"] / (1. - derived_values["prop_traced"])
+            self.incidence_flow_rate * traced_prop / (1. - traced_prop)
         assert 0. <= traced_flow_rate
         return traced_flow_rate

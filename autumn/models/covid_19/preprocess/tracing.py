@@ -122,7 +122,7 @@ class PropIndexDetectedProc(DerivedValueProcessor):
                 total_force_of_infection += force_of_infection
                 if clinical in NOTIFICATION_CLINICAL_STRATA:
                     detected_force_of_infection += force_of_infection
-                assert detected_force_of_infection <= force_of_infection
+                assert detected_force_of_infection <= total_force_of_infection
 
         if total_force_of_infection == 0.:
             return 0.

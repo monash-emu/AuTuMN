@@ -42,3 +42,6 @@ Age-specific infection fatality rates (IFRs) were applied and distributed across
     \caption{Illustration of the relative infectiousness of disease compartments by clinical stratification and stage of infection. Typical parameter values displayed.}
     \label{tab:clinical}
 \end{table}
+
+\subsection{Modelling Variants of Concern (VoC)}
+To consider the effects of VoC on infection dynamics and the vaccination programs, we explicitly simulated two competing strains to represent 1) the wild-type or ancestral virus, and 2) all VoC strains, where the VoC were assumed to be associated with increased transmissibility only, which is set to be calibrated from the model. Therefore, we do not differentiate between different variants and assume the single VoC strain that is modelled represents all currently circulating strains. Susceptible individuals can be infected with either the wild-type or VoC strain and infectious individuals contribute to the force of infection with their respective infecting strain only. VoC strains are seeded into the model such that one additional person per day is infected with the VoC strain for a duration of ten days, with the time that this ten-day period commences varied during model calibration.

@@ -1,9 +1,9 @@
-from summer import Stratification, Multiply
+from summer import Overwrite, Stratification, Multiply
 
-from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA
+from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS
 
 
-def get_tracing_strat(contact_params) -> Stratification:
+def get_tracing_strat(quarantine_infect_multiplier, other_infect_multipliers) -> Stratification:
     tracing_strat = Stratification(
         "tracing",
         ["traced", "untraced"],
@@ -27,24 +27,17 @@ def get_tracing_strat(contact_params) -> Stratification:
         }
     )
 
-    return tracing_strat
-
-
-def make_hack_infectiousness_func(quarantine_infect_multiplier, other_infect_multipliers):
-    """
-    Because infectiousness adjustments are set as multipliers and we don't want to adjust twice for contact tracing and
-    for hospitalisation or detection, we set infectiousness as a hack at the end for the traced compartments.
-    This would generally assume that the infectiousness modification would be the same for tracing and for
-    hospitalisation/detection.
-    """
     # Check the effect of isolation is the same as quarantine and hospitalisation
     for infect_multiplier in other_infect_multipliers:
         assert quarantine_infect_multiplier == other_infect_multipliers[infect_multiplier]
 
-    def hack_infectiousness_adjustments(model):
-        tracing_comps = [idx for idx, comp in enumerate(model.compartments) if comp.has_stratum("tracing", "traced")]
-        for strain in model._disease_strains:
-            for idx in tracing_comps:
-                model._backend._compartment_infectiousness[strain][idx] = quarantine_infect_multiplier
+    for compartment in DISEASE_COMPARTMENTS:
+        tracing_strat.add_infectiousness_adjustments(
+            compartment,
+            {
+                "traced": Overwrite(quarantine_infect_multiplier),
+                "untraced": None,
+            }
+        )
 
-    return hack_infectiousness_adjustments
+    return tracing_strat

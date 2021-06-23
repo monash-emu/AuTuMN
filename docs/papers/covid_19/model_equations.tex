@@ -1,0 +1,76 @@
+\section{Ordinary differential equations}
+
+For the clearest description of the model, we refer the reader to our code repository, because our object-oriented approach to software development is intended to be highly transparent and readable. For those who prefer dynamical systems such as those presented in the form of ordinary differential equations, we present the following.
+
+    
+    \[\frac{dS_{a}}{dt}=-\lambda_{a}(t)\times\sigma_{a}\times S_{a}\]
+    \[\frac{dE_{a}}{dt}=\lambda_{a}(t)\times\sigma_{a}\times S_{a}-\alpha E_{a}\]
+    \[\frac{dP_{a,c}}{dt}=p_{a,c}(t)\times \alpha E_{a}-\nu P_{a,c}\]
+    \[\frac{dI_{a,c}}{dt}=\nu P_{a,c}-\gamma_{c}I_{a,c}\]
+    \[\frac{dL_{a,c}}{dt}=\gamma_{c}I_{a,c}-\delta_{a,c}L_{a,c}-\mu_{a,c}L_{a,c}\]
+    \[\frac{dR_{a}}{dt}=\sum_{c}{}\delta_{a,c}L_{a,c}\]
+    where
+    \[\lambda_{a}=\beta\left[\sum_{j,c}\frac{\epsilon\times P_{j}}{N_{j}}\times C_{a,j}(t)+\sum_{j,c}\frac{I_{j,c}\times\iota_{c}+L_{j,c}\times\kappa_{c}}{N_{j}}\times C_{a,j}(t)\right]\]
+    \[\sum_{c}p_{a,c}(t)=1,\forall t\in\mathbb{R}\]
+    \[\textbf{C}_{0}=\textbf{C}_{H}+\textbf{C}_{S}+\textbf{C}_{W}+\textbf{C}_{L}\]
+    \[\textbf{C}(t)=h(t)\times\textbf{C}_{H}+s(t)\times\textbf{C}_{S}+w(t)\times\textbf{C}_{W}+l(t)\times\textbf{C}_{L}\]
+    \[l(t)=\frac{re(t)+gr(t)+pa(t)+tr(t)}{4}\]
+    
+\begin{table}[t] 
+
+    \begin{tabular}{| p{3.4cm} | p{10.4cm} |}
+        \hline
+        \textbf{Symbol} & \textbf{Explanation} \\
+        \hline
+        \textit{S} & Persons susceptible to infection \\
+   		\textit{E} & Persons in the non-infectious incubation period \\
+    	\textit{P} & Persons in the incubation period \\
+   		\textit{I} & Persons in the early active disease period, before isolation or 			   			hospitalisation may occur \\
+    	\textit{L} & Persons in the late active disease period, after isolation or hospitalisation 			may have occurred \\
+    	\textit{R} & Persons in the recovered period, from which re-infection cannot occur\\
+     	\hline
+    \end{tabular}
+
+\end{table}
+
+\clearpage
+\begin{table}[t] 
+
+    \begin{tabular}{| p{3.4cm} | p{10.4cm} |}
+	\hline
+	\textbf{Symbol} & \textbf{Explanation} \\
+	\hline
+    \textit{t} & Time  \\
+    {\textit{a}} & Compartment of age group a \\
+    {\textit{c}} & Compartment of clinical stratification c \\
+    $\sigma$ & Relative susceptibility to infection \\
+    $\alpha$ & Rate of progression from non-infectious to infectious incubation period \\
+    $\nu$ & Rate of progression from infectious incubation to early active disease \\
+    $\gamma$ & Rate of progression from early active disease to late active disease \\
+    $\mu$ & Rate of disease-related death \\
+    $\epsilon$ & Relative infectiousness of pre-symptomatic compartment \\
+    $\iota$ & Clinical stratification infectiousness vector for early active compartment \\
+    $\kappa$ & Clinical stratification infectiousness vector for late active compartments \\
+    $\beta$ & Probability of infection per contact between an infectious and susceptible individual \\
+    \textit{j} & Infectious populations \\
+    \textit{p} & Proportion progressing to each clinical stratification \\
+    \textbf{C} & Mixing matrix \\
+    \textbf{H} & Household contribution to mixing matrix \\
+    \textbf{W} & Workplace contribution to mixing matrix \\
+    \textbf{O} & Other locations contribution to mixing matrix \\
+    \textbf{S} & Schools contribution to mixing matrix \\
+    \textit{l} & Other locations macrodistancing function of time \\
+    \textit{w} & Function fit to Google mobility data for workplaces \\
+    \textit{s} & Function fit to Google mobility data for schools \\
+    \textit{re} & Function fit to Google mobility data for retail and recreation \\
+    \textit{gr} & Function fit to Google mobility data for grocery and pharmacy \\
+    \textit{pa} & Function fit to Google mobility data for parks \\
+    \textit{tr} & Function fit to Google mobility data for transit stations \\
+    \hline
+    \end{tabular}
+
+\end{table}
+
+\clearpage
+
+

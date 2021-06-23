@@ -28,7 +28,6 @@ from .stratifications.cluster import (
 )
 from .stratifications.tracing import (
     get_tracing_strat,
-    make_hack_infectiousness_func
 )
 from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
@@ -126,7 +125,10 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Contact tracing stratification
     if params.contact_tracing:
-        tracing_strat = get_tracing_strat(params.contact_tracing)
+        tracing_strat = get_tracing_strat(
+            params.contact_tracing.quarantine_infect_multiplier,
+            params.clinical_stratification.late_infect_multiplier
+        )
         model.stratify_with(tracing_strat)
 
     # Apply the VoC stratification and adjust contact rate for Variant of Concerns.
@@ -238,13 +240,5 @@ def build_model(params: dict) -> CompartmentalModel:
 
     if params.victorian_clusters:
         model._mixing_matrices = [mixing_matrix_function]
-
-    if params.contact_tracing:
-        quarantine_infect_multiplier = params.contact_tracing.quarantine_infect_multiplier
-        hacking_func = make_hack_infectiousness_func(
-            quarantine_infect_multiplier,
-            params.clinical_stratification.late_infect_multiplier
-        )
-        model.set_hacking_function(hacking_func)
 
     return model

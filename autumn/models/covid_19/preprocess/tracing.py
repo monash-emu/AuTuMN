@@ -76,8 +76,13 @@ class PropTracedProc(DerivedValueProcessor):
         self.average_sympt_proportion = np.mean(sympt_props)
 
     def process(self, comp_vals, flow_rates, derived_values, time):
-        proportion_of_symptomatic_traced = derived_values["prop_detected_traced"] * self.detected_proportion_func(time)
-        return proportion_of_symptomatic_traced * self.average_sympt_proportion
+        """
+        Find the approximate total proportion of all cases that are being traced, which assumes approximately equal
+        infectiousness of asymptomatic and symptomatic cases over their infectious period.
+        """
+        return derived_values["prop_detected_traced"] * \
+               self.detected_proportion_func(time) * \
+               self.average_sympt_proportion
 
 
 class TracedFlowRateProc(DerivedValueProcessor):

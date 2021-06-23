@@ -1,0 +1,17 @@
+\section{Ordinary differential equations}
+
+For the clearest description of the model, we refer the reader to our code repository, because our object-oriented approach to software development is intended to be highly transparent and readable. For those who prefer dynamical systems such as those presented in the form of ordinary differential equations, we present the following.
+
+    
+    \[\frac{dS_{a}}{dt}=-\lambda_{a}(t)\times\sigma_{a}\times S_{a}\]
+    \[\frac{dE_{a}}{dt}=\lambda_{a}(t)\times\sigma_{a}\times S_{a}-\alpha E_{a}\]
+    \[\frac{dP_{a,c}}{dt}=p_{a,c}(t)\times \alpha E_{a}-\nu P_{a,c}\]
+    \[\frac{dI_{a,c}}{dt}=\nu P_{a,c}-\gamma_{c}I_{a,c}\]
+    \[\frac{dL_{a,c}}{dt}=\gamma_{c}I_{a,c}-\delta_{a,c}L_{a,c}-\mu_{a,c}L_{a,c}\]
+    \[\frac{dR_{a}}{dt}=\sum_{c}{}\delta_{a,c}L_{a,c}\]
+    where
+    \[\lambda_{a}=\beta\left[\sum_{j,c}\frac{\epsilon\times P_{j}}{N_{j}}\times C_{a,j}(t)+\sum_{j,c}\frac{I_{j,c}\times\iota_{c}+L_{j,c}\times\kappa_{c}}{N_{j}}\times C_{a,j}(t)\right]\]
+    \[\sum_{c}p_{a,c}(t)=1,\forall t\in\mathbb{R}\]
+    \[\textbf{C}_{0}=\textbf{C}_{H}+\textbf{C}_{S}+\textbf{C}_{W}+\textbf{C}_{L}\]
+    \[\textbf{C}(t)=h(t)\times\textbf{C}_{H}+s(t)\times\textbf{C}_{S}+w(t)\times\textbf{C}_{W}+l(t)\times\textbf{C}_{L}\]
+    \[l(t)=\frac{re(t)+gr(t)+pa(t)+tr(t)}{4}\]

@@ -1,3 +1,7 @@
+"""
+Example project which uses generated scenario parameters instead of those stored in files
+"""
+
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, BetaPrior
@@ -14,14 +18,30 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 # Load and configure model parameters.
 malaysia_path = build_rel_path("../malaysia/params/default.yml")
 default_path = build_rel_path("params/default.yml")
-scenario_dir_path = build_rel_path("params/")
-scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+
+# Don't use scenario yml files - we are generating our own parameters
+#scenario_dir_path = build_rel_path("params/")
+#scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = (
     base_params.update(malaysia_path).update(default_path).update(mle_path, calibration_format=True)
 )
-scenario_params = [baseline_params.update(p) for p in scenario_paths]
-param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
+
+# List the parameters which you wish to sample here, in the format
+# param_name: [min_val, max_val]
+
+
+theta_params = {
+    # Example value
+    'contact_rate': [0.02, 0.15]
+}
+
+sampling_scenarios = []
+for param, (min_val, max_val) in theta_params.items():
+    sampling_scenarios.append(baseline_params.update({param: min_val}))
+    sampling_scenarios.append(baseline_params.update({param: max_val}))
+
+param_set = ParameterSet(baseline=baseline_params, scenarios=sampling_scenarios)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(210)

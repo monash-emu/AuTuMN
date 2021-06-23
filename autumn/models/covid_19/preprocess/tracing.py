@@ -111,7 +111,7 @@ class PropIndexDetectedProc(DerivedValueProcessor):
 
     def process(self, comp_vals, flow_rates, derived_values, time):
         """
-        Calculate the actual prevalence during run-time
+        Calculate the proportion of the force of infection arising from ever-detected individuals
         """
         total_force_of_infection = 0.
         detected_force_of_infection = 0.
@@ -121,7 +121,7 @@ class PropIndexDetectedProc(DerivedValueProcessor):
                 force_of_infection = prevalence * self.infectiousness_levels[compartment][clinical]
                 total_force_of_infection += force_of_infection
                 if clinical in NOTIFICATION_CLINICAL_STRATA:
-                    detected_force_of_infection = force_of_infection
+                    detected_force_of_infection += force_of_infection
 
         return detected_force_of_infection / total_force_of_infection
 

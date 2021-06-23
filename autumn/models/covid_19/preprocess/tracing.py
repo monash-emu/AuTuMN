@@ -62,23 +62,23 @@ class PropDetectedTracedProc(DerivedValueProcessor):
         which has been worked out in the get_tracing_param function above.
         Ensures that the proportion is bounded [0, 1]
         """
-        prop_detect_traced = np.exp(-derived_values["prevalence"] * self.trace_param)
-        assert 0. <= prop_detect_traced <= 1.
-        return prop_detect_traced
+        proportion_of_detected_traced = np.exp(-derived_values["prevalence"] * self.trace_param)
+        assert 0. <= proportion_of_detected_traced <= 1.
+        return proportion_of_detected_traced
 
 
 class PropTracedProc(DerivedValueProcessor):
     """
     Calculate the proportion of the contacts of all active cases that are traced.
     """
-    def __init__(self, detected_prop_func, sympt_props):
-        self.detected_prop_func = detected_prop_func
+    def __init__(self, detected_proportion_func, sympt_props):
+        self.detected_proportion_func = detected_proportion_func
         self.sympt_props = sympt_props
 
     def process(self, comp_vals, flow_rates, derived_values, time):
-        prop_sympt_traced = derived_values["prop_detected_traced"] * self.detected_prop_func(time)
-        prop_symptomatic = np.mean(self.sympt_props)  # FIXME: Should be some sort of weighted rather than raw average
-        return prop_sympt_traced * prop_symptomatic
+        proportion_of_symptomatic_traced = derived_values["prop_detected_traced"] * self.detected_proportion_func(time)
+        proportion_symptomatic = np.mean(self.sympt_props)  # FIXME: Should be a weighted rather than raw average
+        return proportion_of_symptomatic_traced * proportion_symptomatic
 
 
 class TracedFlowRateProc(DerivedValueProcessor):

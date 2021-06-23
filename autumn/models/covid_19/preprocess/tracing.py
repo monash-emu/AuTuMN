@@ -73,12 +73,11 @@ class PropTracedProc(DerivedValueProcessor):
     """
     def __init__(self, detected_proportion_func, sympt_props):
         self.detected_proportion_func = detected_proportion_func
-        self.sympt_props = sympt_props
+        self.average_sympt_proportion = np.mean(sympt_props)
 
     def process(self, comp_vals, flow_rates, derived_values, time):
         proportion_of_symptomatic_traced = derived_values["prop_detected_traced"] * self.detected_proportion_func(time)
-        proportion_symptomatic = np.mean(self.sympt_props)  # FIXME: Should be a weighted rather than raw average
-        return proportion_of_symptomatic_traced * proportion_symptomatic
+        return proportion_of_symptomatic_traced * self.average_sympt_proportion
 
 
 class TracedFlowRateProc(DerivedValueProcessor):

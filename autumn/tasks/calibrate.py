@@ -103,7 +103,7 @@ def run_calibration_chain(
         project.calibrate(runtime, chain_id, num_chains)
     except Exception:
         logger.exception("Calibration chain %s failed", chain_id)
-        gather_exc_plus(os.path.join(CALIBRATE_LOG_DIR, f"crash-{chain_id}.log"))
+        gather_exc_plus(os.path.join(CALIBRATE_LOG_DIR, f"crash-calibration-{chain_id}.log"))
         raise
     logging.info("Finished running calibration chain %s", chain_id)
     return chain_id

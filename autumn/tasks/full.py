@@ -10,7 +10,7 @@ from autumn.settings import REMOTE_BASE_DIR, Region
 from autumn.tasks.calibrate import CALIBRATE_DATA_DIR
 from autumn.tasks.utils import get_project_from_run_id, set_logging_config
 from autumn.tools.utils.fs import recreate_dir
-from autumn.tools.utils.parallel import run_parallel_tasks, report_errors
+from autumn.tools.utils.parallel import run_parallel_tasks, report_errors, gather_exc_plus
 from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from autumn.tools.utils.timer import Timer
 from autumn.tools.project import post_process_scenario_outputs
@@ -21,7 +21,8 @@ N_CANDIDATES = 15
 
 FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
 FULL_RUN_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
-FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR]
+FULL_RUN_LOG_DIR = os.path.join(REMOTE_BASE_DIR, "logs")
+FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
 TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
 
 
@@ -92,7 +93,7 @@ def run_full_model_for_chain(
 
     Once we've sampled all the runs we need, then we re-run them in full, including all their scenarios.
     """
-    set_logging_config(not quiet, chain_id)
+    set_logging_config(not quiet, chain_id, FULL_RUN_LOG_DIR)
     msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
     logger.info(msg, chain_id, burn_in, sample_size)
     try:
@@ -222,6 +223,7 @@ def run_full_model_for_chain(
 
     except Exception:
         logger.exception("Full model run for chain %s failed", chain_id)
+        gather_exc_plus(os.path.join(FULL_RUN_LOG_DIR, f"crash-full-{chain_id}.log"))
         raise
 
     logger.info("Finished running full models for chain %s.", chain_id)

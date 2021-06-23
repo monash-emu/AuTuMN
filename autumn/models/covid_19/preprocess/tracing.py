@@ -101,11 +101,13 @@ class PropIndexDetectedProc(DerivedValueProcessor):
         self.infectious_comps, self.infectiousness_levels = {}, {}
 
         for compartment in INFECTIOUS_COMPARTMENTS:
-            self.infectious_comps[compartment] = {}
-            self.infectiousness_levels[compartment] = {}
+            self.infectious_comps[compartment], self.infectiousness_levels[compartment] = {}, {}
             for clinical in CLINICAL_STRATA:
-                self.infectious_comps[compartment][clinical] = np.array([idx for idx, comp in enumerate(compartments) if
-                    comp.has_name(compartment) and comp.has_stratum("clinical", clinical)], dtype=int)
+                self.infectious_comps[compartment][clinical] = np.array(
+                    [idx for idx, comp in enumerate(compartments) if
+                     comp.has_name(compartment) and
+                     comp.has_stratum("clinical", clinical)], dtype=int
+                )
                 self.infectiousness_levels[compartment][clinical] = get_infectiousness_level(
                     compartment, clinical, self.non_sympt_infect_multiplier, self.late_infect_multiplier)
 
@@ -113,8 +115,7 @@ class PropIndexDetectedProc(DerivedValueProcessor):
         """
         Calculate the proportion of the force of infection arising from ever-detected individuals
         """
-        total_force_of_infection = 0.
-        detected_force_of_infection = 0.
+        total_force_of_infection, detected_force_of_infection = 0., 0.
         for compartment in INFECTIOUS_COMPARTMENTS:
             for clinical in CLINICAL_STRATA:
                 prevalence = find_sum(comp_vals[self.infectious_comps[compartment][clinical]])

@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 
 import pandas as pd
 
@@ -56,7 +57,13 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
             (run_id, db_path, chain_id, burn_in, sample_size, quiet)
             for chain_id, db_path in zip(chain_ids, db_paths)
         ]
-        chain_ids = run_parallel_tasks(run_full_model_for_chain, args_list)
+        try:
+            chain_ids = run_parallel_tasks(run_full_model_for_chain, args_list, False)
+        except Exception as e:
+            # Run failed but we still want to capture the logs
+            upload_to_run_s3(s3_client, run_id, FULL_RUN_LOG_DIR, quiet)
+            # +++ FIXME Do we always want sys.exit here? (Presumably need it to stop remote tasks hanging)
+            sys.exit(-1)
 
     # Create candidate plots from full run outputs
     if project.region_name in Region.PHILIPPINES_REGIONS:

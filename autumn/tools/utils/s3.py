@@ -103,6 +103,8 @@ def upload_to_run_s3(client, run_id: str, src_path: str, quiet: bool):
 def list_s3(client, key_prefix: str, key_suffix: str):
     """Returns the item keys in a path in AWS S3"""
     response = client.list_objects_v2(Bucket=settings.S3_BUCKET, Prefix=key_prefix)
+    if response["KeyCount"] == 0:
+        raise KeyError(f"No S3 results for key_prefix {key_prefix}")
     objs = response["Contents"]
     is_truncated = response["IsTruncated"]
     while is_truncated:

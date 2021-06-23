@@ -123,7 +123,10 @@ class PropIndexDetectedProc(DerivedValueProcessor):
                 if clinical in NOTIFICATION_CLINICAL_STRATA:
                     detected_force_of_infection += force_of_infection
 
-        return detected_force_of_infection / total_force_of_infection
+        if total_force_of_infection == 0.:
+            return 0.
+        else:
+            return detected_force_of_infection / total_force_of_infection
 
 
 class TracedFlowRateProc(DerivedValueProcessor):

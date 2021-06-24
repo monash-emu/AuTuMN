@@ -99,7 +99,7 @@ priors = [
         jumping_stdev=0.005,
     ),
     UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.1, 0.6], jumping_stdev=0.005),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.005),
 ]
 
 calibration = Calibration(

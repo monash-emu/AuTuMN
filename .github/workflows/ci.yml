@@ -32,6 +32,12 @@ jobs:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
         run: pytest --workers 2 -W ignore -vv -m "not run_models and not calibrate_models and not mixing_optimisation and not benchmark"
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+          
   test_runs:
     runs-on: ubuntu-latest
     steps:

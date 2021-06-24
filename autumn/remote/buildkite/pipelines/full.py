@@ -29,7 +29,7 @@ sample_size_field = TextInputField(
 use_latest_code_field = BooleanInputField(
     key="use-latest-code",
     title="Use latest code for model run",
-    hint="Should this task use the same Git commit as the calibration, or use the latest code instead?",
+    hint="Should this task use most recent push (HEAD)? If no, the calibration commit will be used",
     type=bool,
     default="no",
 )

@@ -16,8 +16,8 @@ steps:
     required: true
     text: Sample size
   - default: 'no'
-    hint: Should this task use the same Git commit as the calibration, or use the
-      latest code instead?
+    hint: Should this task use most recent push (HEAD)? If no, the calibration commit
+      will be used
     key: use-latest-code
     options:
     - label: 'Yes'

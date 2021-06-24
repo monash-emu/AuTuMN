@@ -62,7 +62,7 @@ def calibrate():
     app_name, region_name = model_name.split(":")
     job_name = f"{app_name}-{region_name}-{build_number}"
 
-    logger.info("Running calbration job %s with params:\n%s\n", job_name, params_str)
+    logger.info("Running calibration job %s with params:\n%s\n", job_name, params_str)
     run_id = aws.run_calibrate(
         job=job_name,
         app=app_name,

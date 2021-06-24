@@ -91,13 +91,13 @@ def run_calibration(
 
 def run_task_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict):
     """Run a task pipeline on the remote machine"""
-    logger.info("Running task pipleine %s", pipeline_name)
+    logger.info("Running task pipeline %s", pipeline_name)
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
     cmd_str = f"./env/bin/python -m autumn tasks {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
         conn.run(cmd_str, echo=True)
 
-    logger.info("Finished running task pipleine %s", pipeline_name)
+    logger.info("Finished running task pipeline %s", pipeline_name)
 
 
 LOGS_URL = "https://monashemu.grafana.net/explore?orgId=1&left=%5B%22now-1h%22,%22now%22,%22grafanacloud-monashemu-logs%22,%7B%22expr%22:%22%7Bjob%3D%5C%22app%5C%22%7D%20%7C%3D%20%5C%22${HOSTNAME}%5C%22%22%7D%5D"

@@ -42,7 +42,7 @@ def test_calibration_task(monkeypatch, tmpdir):
     monkeypatch.setattr(s3_settings, "S3_BUCKET", BUCKET_NAME)
 
     # Ignore logging config for now
-    monkeypatch.setattr(calibrate, "set_logging_config", lambda *args: None)
+    monkeypatch.setattr(calibrate, "set_logging_config", lambda *args, **kwargs: None)
 
     # Ensure our test model is being run.
     def get_project_from_run_id(run_id):

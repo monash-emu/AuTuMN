@@ -36,7 +36,7 @@ def test_full_model_run_task(monkeypatch, tmpdir):
     monkeypatch.setattr(s3_settings, "S3_BUCKET", BUCKET_NAME)
 
     # Ignore logging config for now
-    monkeypatch.setattr(full, "set_logging_config", lambda *args: None)
+    monkeypatch.setattr(full, "set_logging_config", lambda *args, **kwargs: None)
 
     # Create a calibration database as input to the full model run
     test_db_path = os.path.join(test_calibration_data_dir, "chain-0")

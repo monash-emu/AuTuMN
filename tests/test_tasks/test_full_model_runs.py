@@ -10,7 +10,7 @@ from autumn.tools.db.store import Table
 from autumn.tasks import full
 from autumn.tasks.full import full_model_run_task
 from autumn import settings as s3_settings
-from autumn.tools.utils.s3 import get_s3_client, upload_to_run_s3, list_s3, download_from_run_s3
+from autumn.tools.utils.s3 import get_s3_client, upload_to_run_s3, list_s3, download_from_run_s3, sanitise_path
 from autumn.tools.utils.fs import recreate_dir
 
 from tests.test_tasks.project import get_test_project

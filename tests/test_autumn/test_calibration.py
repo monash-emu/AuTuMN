@@ -125,7 +125,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
             )
         ),
     ]
-    calib = Calibration(priors, target_outputs)
+    calib = Calibration(priors, target_outputs, seed=0)
     params = ParameterSet(Params({"ice_cream_sales": 0, "time": {"start": 2000}}))
     project = Project("hawaii", "sharks", _build_mock_model, params, calib)
     calib.run(project, 1, 1, 1)
@@ -145,7 +145,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
     mcmc_params = out_db.query("mcmc_params")
     mle_params = db.process.find_mle_params(mcmc_runs, mcmc_params)
     ice_cream_sales_mle = mle_params["ice_cream_sales"]
-    # This value is non-deterministic due to fixed seed.
+    # +++FIXME Should be deterministic now
     assert 2.9 < ice_cream_sales_mle < 3.1
 
 

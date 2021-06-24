@@ -102,6 +102,9 @@ def upload_to_run_s3(client, run_id: str, src_path: str, quiet: bool):
 
 def list_s3(client, key_prefix: str, key_suffix: str):
     """Returns the item keys in a path in AWS S3"""
+
+    key_prefix = sanitise_path(key_prefix)
+
     response = client.list_objects_v2(Bucket=settings.S3_BUCKET, Prefix=key_prefix)
     if response["KeyCount"] == 0:
         raise KeyError(f"No S3 results for key_prefix {key_prefix}")
@@ -147,7 +150,7 @@ def upload_folder_s3(client, folder_path, dest_folder_key):
 
 def upload_file_s3(client, src_path, dest_key):
     """Upload a file to S3"""
-    dest_key = validate_path(dest_key)
+    dest_key = sanitise_path(dest_key)
     logger.info("Uploading from %s to %s", src_path, dest_key)
 
     # Enforce mime types for common cases; just png for now
@@ -178,6 +181,9 @@ def get_mime_args(src_path):
         extra_args = S3_UPLOAD_EXTRA_ARGS
     return extra_args
 
-def validate_path(path):
+def sanitise_path(path):
+    """
+    Return a posix path to ensure all s3 paths have forward slashes
+    """
     pp = PurePath(path)
     return pp.as_posix()

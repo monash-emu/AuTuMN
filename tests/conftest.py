@@ -11,7 +11,7 @@ from autumn import settings
 from autumn.tools.calibration import calibration
 from autumn.tools.db import database
 
-from .utils import get_deterministic_random_seed, in_memory_db_factory
+from .utils import in_memory_db_factory
 
 APPROVAL_DIR = os.path.join(settings.DATA_PATH, "approvals")
 IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
@@ -49,15 +49,6 @@ def memory_db(monkeypatch):
     Automatically run at the start of every test run.
     """
     monkeypatch.setattr(database, "get_sql_engine", get_in_memory_db_engine)
-
-
-@pytest.fixture(autouse=True)
-def deterministic_seed(monkeypatch):
-    """
-    Replaces all random seed non-deterministic seed.
-    Automatically run at the start of every test run.
-    """
-    monkeypatch.setattr(calibration, "get_random_seed", get_deterministic_random_seed)
 
 
 @pytest.fixture(autouse=True)

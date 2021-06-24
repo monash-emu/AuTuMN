@@ -23,7 +23,7 @@ def get_test_project():
     ts_set = TimeSeriesSet(ts_data)
     priors = [UniformPrior("recovery_rate", [0.05, 0.5])]
     targets = [NormalTarget(ts_set["recovery"])]
-    calibration = Calibration(priors=priors, targets=targets)
+    calibration = Calibration(priors=priors, targets=targets, seed=0)
     project = Project("test_region", "test_model", build_test_model, param_set, calibration)
     return project
 

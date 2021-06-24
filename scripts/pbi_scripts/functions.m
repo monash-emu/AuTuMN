@@ -2,40 +2,40 @@ Feedback Type:
 Frown (Error)
 
 Timestamp:
-2021-06-09T04:53:35.0474465Z
+2021-06-24T09:32:15.7786071Z
 
 Local Time:
-2021-06-09T14:53:35.0474465+10:00
+2021-06-24T09:32:15.7786071+00:00
 
 Session ID:
-e199ec05-183c-42cd-a7c0-b4fde857f8a5
+a1793274-07d2-4a4a-85fd-7259ef9c10c4
 
 Release:
 May 2021
 
 Product Version:
-2.93.981.0 (21.05) (x64)
+2.93.641.0 (21.05) (x64)
 
 OS Version:
-Microsoft Windows NT 10.0.17763.0 (x64 en-GB)
+Microsoft Windows NT 10.0.17763.0 (x64 en-US)
 
 CLR Version:
-4.7 or later [Release Number = 528049]
+4.7 or later [Release Number = 461814]
 
 Peak Virtual Memory:
-40.1 GB
+38.6 GB
 
 Private Memory:
-0.99 GB
+733 MB
 
 Peak Working Set:
-1.19 GB
+1.12 GB
 
 IE Version:
 11.1790.17763.0
 
 User ID:
-bba3e10e-bf65-455b-b5ce-ad1c3b84a97c
+0074d024-50e5-43f9-9239-9c3b9180ab57
 
 Workbook Package Info:
 1* - en-AU, Query Groups: 6, fastCombine: Enabled, runBackgroundAnalysis: False.
@@ -44,7 +44,7 @@ Telemetry Enabled:
 False
 
 Snapshot Trace Logs:
-C:\Users\maba0001\Microsoft\Power BI Desktop Store App\FrownSnapShot716b9662-7807-4246-bd9b-b64043d4362b.zip
+C:\Users\kogmaw\AppData\Local\Microsoft\Power BI Desktop\FrownSnapShota84e60cf-b42d-437a-b917-534634339945.zip
 
 Model Default Mode:
 Import
@@ -53,24 +53,24 @@ Model Version:
 PowerBI_V3
 
 Performance Trace Logs:
-C:\Users\maba0001\Microsoft\Power BI Desktop Store App\PerformanceTraces.zip
+C:\Users\kogmaw\AppData\Local\Microsoft\Power BI Desktop\PerformanceTraces.zip
 
 Enabled Preview Features:
-PBI_shapeMapVisualEnabled
 PBI_JsonTableInference
 PBI_NewWebTableInference
 PBI_ImportTextByExample
 PBI_ExcelTableInference
 PBI_eimInformationProtectionForDesktop
-PBI_azureMapVisual
-PBI_compositeModelsOverAS
-PBI_dynamicParameters
 PBI_cartesianMultiplesAuthoring
 
 Disabled Preview Features:
+PBI_shapeMapVisualEnabled
 PBI_SpanishLinguisticsEnabled
 PBI_qnaLiveConnect
+PBI_azureMapVisual
 PBI_dataPointLassoSelect
+PBI_compositeModelsOverAS
+PBI_dynamicParameters
 PBI_enhancedTooltips
 
 Disabled DirectQuery Options:
@@ -80,7 +80,7 @@ Cloud:
 GlobalCloud
 
 DPI Scale:
-125%
+100%
 
 Supported Services:
 Power BI
@@ -152,7 +152,8 @@ shared GetPowerbiOutputs = let
 
         start_time = GetStartTime(pbidbpath),
         #"Removed Columns" = Table.RemoveColumns(FixBinary,{"chain", "run"}),
-        Replicate = try ReplicateBaseline(#"Removed Columns", start_time) otherwise #"Removed Columns",
+        #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"scenario", Int64.Type}}),
+        Replicate = try ReplicateBaseline(#"Changed Type", start_time) otherwise #"Changed Type",
         #"Added Covid start date" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
         #"Extracted Text After Delimiter" = Table.TransformColumns(#"Added Covid start date", {{"agegroup", each Text.AfterDelimiter(_, "_", {0, RelativePosition.FromEnd}), type text}}),
         #"Changed Type1" = Table.TransformColumnTypes(#"Extracted Text After Delimiter",{{"agegroup", Int64.Type}, {"times", type date}}),
@@ -188,7 +189,7 @@ shared GetDerivedOutputs = let
         FixBinary = Table.TransformColumns(derived_output_Table,{{"scenario", ConvertBinary, Int64.Type},{"run", ConvertBinary, Int64.Type}}),
         #"Changed Type1" = Table.TransformColumnTypes(FixBinary,{{"run", Int64.Type}, {"scenario", Int64.Type}}),
         start_time = GetStartTime(pbidbpath),
-        all_good = Table.RemoveColumns(FixBinary,{"chain", "run"}),
+        all_good = Table.RemoveColumns(#"Changed Type1",{"chain", "run"}),
         Replicate = try ReplicateBaseline(all_good, start_time) otherwise all_good,
         #"Added to Column" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
         #"Changed Type" = Table.TransformColumnTypes(#"Added to Column",{{"times", type date}})
@@ -290,9 +291,10 @@ shared social_mixing = let
     Source = PowerBI.Dataflows(null),
     #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e" = Source{[workspaceId="d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"]}[Data],
     #"54e82e7b-6c12-4f7d-a631-69cd553c9d59" = #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"{[dataflowId="54e82e7b-6c12-4f7d-a631-69cd553c9d59"]}[Data],
-    social_mixing1 = #"54e82e7b-6c12-4f7d-a631-69cd553c9d59"{[entity="social_mixing"]}[Data]
+    social_mixing1 = #"54e82e7b-6c12-4f7d-a631-69cd553c9d59"{[entity="social_mixing"]}[Data],
+    #"Replaced Value" = Table.ReplaceValue(social_mixing1,"Sri Lanka","sri_lanka",Replacer.ReplaceText,{"country"})
 in
-    social_mixing1;
+    #"Replaced Value";
 
 shared google_mobility = let
     Source = PowerBI.Dataflows(null),
@@ -300,9 +302,10 @@ shared google_mobility = let
     #"54e82e7b-6c12-4f7d-a631-69cd553c9d59" = #"d3bcff4e-0826-4d4d-9dc6-bbbc58be488e"{[dataflowId="54e82e7b-6c12-4f7d-a631-69cd553c9d59"]}[Data],
     google_mobility1 = #"54e82e7b-6c12-4f7d-a631-69cd553c9d59"{[entity="google_mobility"]}[Data],
     #"Replaced Value" = Table.ReplaceValue(google_mobility1,"National Capital Region","national capital region",Replacer.ReplaceText,{"sub_region_1"}),
-    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","Central Visayas","central visayas",Replacer.ReplaceText,{"sub_region_1"})
+    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","Central Visayas","central visayas",Replacer.ReplaceText,{"sub_region_1"}),
+    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1","Sri Lanka","sri_lanka",Replacer.ReplaceText,{"sub_region_1"})
 in
-    #"Replaced Value1";
+    #"Replaced Value2";
 
 shared base_calibration = let
     Source = base_build_index,
@@ -315,9 +318,8 @@ in
     #"Changed Type";
 
 shared base_stratification = let
-    Source = base_derived_output,
-    #"Removed Other Columns" = Table.SelectColumns(Source,{"stratification_name"}),
-    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+    Source = base_derived_output[[stratification_name]],
+    #"Removed Duplicates" = Table.Distinct(Source),
     #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "stratification_id", 0, 1, Int64.Type),
     #"Inserted Text Between Delimiters" = Table.AddColumn(#"Added Index", "stratification_age", each Number.FromText(Text.BetweenDelimiters([stratification_name], "agegroup_", "X")), Int64.Type),
     #"Inserted Text After Delimiter" = Table.AddColumn(#"Inserted Text Between Delimiters", "stratification_clinical", each Text.AfterDelimiter([stratification_name], "clinical_"), type text),
@@ -448,7 +450,7 @@ shared Scale = let
 in
     #"Changed Type";
 
-shared StartDate = #date(2020, 1, 1) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
+shared StartDate = #date(2019, 12, 31) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
 
 shared EndDate = #date(2021, 12, 31) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
 
@@ -471,7 +473,7 @@ shared sanddance = let
 in
     #"Expanded base_mcmc_param";
 
-shared data_location = "M:\Documents\@Projects\Covid_consolidate\output" meta [IsParameterQuery=true, List={"M:\Documents\@Projects\Covid models\PHL_DATA\", "M:\Documents\@Projects\Covid_consolidate\output", "M:\Documents\@Projects\Covid_consolidate\output\powerbi-covid_19-malaysia-1613526591-d1d2eb1.db", "M:\Documents\@Projects\Covid_consolidate\output_fixed"}, DefaultValue=..., Type="Text", IsParameterQueryRequired=false];
+shared data_location = "C:\Users\kogmaw\Desktop\output" meta [IsParameterQuery=true, List={"M:\Documents\@Projects\Covid models\PHL_DATA\", "M:\Documents\@Projects\Covid_consolidate\output", "M:\Documents\@Projects\Covid_consolidate\output\powerbi-covid_19-malaysia-1613526591-d1d2eb1.db", "M:\Documents\@Projects\Covid_consolidate\output_fixed"}, DefaultValue=..., Type="Text", IsParameterQueryRequired=false];
 
 shared GetBuild = let
     Source = (pbidbpath as text) => 
@@ -500,31 +502,34 @@ shared GetScenario = let
 in
     Source2;
 
-shared pbidbpath2 = "M:\Documents\@Projects\Covid_consolidate\output_test\powerbi-covid_19-calabarzon-1619430919-1255853.db" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false];
+shared pbidbpath2 = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false];
 
 shared GetStartTime = let
     Source = (pbidbpath as text) => let
-        Source = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
-        scenario_Table = Source{[Name="scenario",Kind="Table"]}[Data],
+        Source2 = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
+        scenario_Table = Source2{[Name="scenario",Kind="Table"]}[Data],
         FixBinary = Table.TransformColumns(scenario_Table,{{"scenario", ConvertBinary, Int64.Type},{"start_time", ConvertBinary, Int64.Type}}),
         #"Changed Type" = Table.TransformColumnTypes(FixBinary,{{"scenario", Int64.Type}, {"start_time", Int64.Type}}),
-        #"Filtered Rows" = Table.SelectRows(#"Changed Type", each ([scenario] <> 0)),
-            #"Removed Duplicates" = Table.Distinct(#"Filtered Rows"[[start_time]], {"start_time"}){0}[start_time]
+        #"Filtered Rows" = Table.SelectRows(#"Changed Type", each ([scenario] <> 0))[[scenario],[start_time]]
     in
-        #"Removed Duplicates"
+        #"Filtered Rows"
 in
     Source;
 
-shared ReplicateBaseline = (a_table as table, start_time as number) as table => let
-    filter_baseline = Table.SelectRows(a_table, each [times] < start_time and [scenario] = 0),
-    baseline = Table.RenameColumns(filter_baseline,{{"scenario", "scenario.1"}}),
-    #"distinct scenarios" = Table.SelectRows(Table.Distinct(a_table[[scenario]]), each [scenario] <> 0),
-    holding_table = Table.AddColumn(#"distinct scenarios", "temp scenario", each 0, Int64.Type),
-    #"Merged Queries" = Table.NestedJoin(holding_table, {"temp scenario"}, baseline, {"scenario.1"}, "baseline", JoinKind.LeftOuter)[[scenario],[baseline]],
-    columns_to_expand = List.RemoveMatchingItems(Table.ColumnNames(baseline),{"scenario.1"}),
-    exapand_table = Table.ExpandTableColumn(#"Merged Queries", "baseline", columns_to_expand),
+shared ReplicateBaseline = (a_table as table, start_table as table) as table => let
+    #"Changed Type" = Table.TransformColumnTypes(a_table,{{"scenario", Int64.Type}}),
+    
+    buffer_table = Table.Buffer(#"Changed Type"),
+
+    #"Added Custom" = Table.AddColumn(start_table, "Custom", (x) => Table.SelectRows(buffer_table, each [times] < x[start_time] and [scenario]=0))[[scenario],[Custom]],
+
+    all_columns = Table.ColumnNames(buffer_table),
+    col_to_expand = List.RemoveMatchingItems(all_columns,{"scenario"}),
+
+    
+    exapand_table = Table.ExpandTableColumn(#"Added Custom", "Custom", col_to_expand),
     all_done = try Table.Combine({a_table,exapand_table}) otherwise a_table
-    in
+in
     all_done;
 
 shared FixInterventionStartValues = let

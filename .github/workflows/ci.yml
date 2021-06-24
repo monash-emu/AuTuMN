@@ -54,7 +54,13 @@ jobs:
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        run: pytest --workers 2 -W ignore -vv -m run_models
+        run: pytest --cov --workers 2 -W ignore -vv -m run_models
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
   test_calibrations:
     runs-on: ubuntu-latest
     steps:

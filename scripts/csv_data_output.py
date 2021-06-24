@@ -8,49 +8,53 @@ COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 DATA_PATH = "M:\Documents\@Projects\Covid_consolidate\output"
 
 STANDARD_COL = [
-        "incidence",
-        "notifications",
-        "hospital_occupancy",
-        "icu_occupancy",
-        "accum_deaths",
-        "infection_deaths",
-    ]
-
+    "incidence",
+    "notifications",
+    "hospital_occupancy",
+    "icu_occupancy",
+    "accum_deaths",
+    "infection_deaths",
+]
 
 
 phl = {
-    "region": ["calabarzon", "central-visayas", "davao-city", "manila", "philippines"],
-    "columns": STANDARD_COL + ["accum_incidence","accum_notifications"],
+    "region": [
+        "calabarzon",
+        "central-visayas",
+        "davao-city",
+        "davao-region",
+        "manila",
+        "philippines",
+    ],
+    "columns": STANDARD_COL + ["accum_incidence", "accum_notifications"],
 }
 mys = {
     "region": ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"],
-    "columns": STANDARD_COL
+    "columns": STANDARD_COL,
 }
 
-lka = {
-    "region": ["sri_lanka"],
-    "columns": STANDARD_COL    
-}
+lka = {"region": ["sri_lanka"], "columns": STANDARD_COL}
 
 os.chdir(DATA_PATH)
 
 
 list_of_files = os.listdir(DATA_PATH)
 
+
 def get_files(country):
-   return  {
-    region: os.path.join(DATA_PATH, each)
-    for region in country["region"]
-    for each in list_of_files
-    if region in each
-}
+    return {
+        region: os.path.join(DATA_PATH, each)
+        for region in country["region"]
+        for each in list_of_files
+        if region in each
+    }
 
 
 phl["region"] = get_files(phl)
 mys["region"] = get_files(mys)
 lka["region"] = get_files(lka)
 
-country = {"phl": phl, "mys": mys}
+country = {"phl": phl, "mys": mys, "lka": lka}
 
 for ctry in country:
 
@@ -63,7 +67,7 @@ for ctry in country:
         + " FROM derived_outputs;"
     )
     query_un = (
-        "SELECT scenario,time,type, value FROM uncertainty WHERE quantile=0.5 AND type in ("
+        "SELECT scenario,time,type,quantile, value FROM uncertainty WHERE type in ("
         + "".join({"'" + each + "', " for each in country[ctry]["columns"]})[:-2]
         + ");"
     )
@@ -86,6 +90,7 @@ for ctry in country:
             df_temp = pd.read_sql_query(query_un, conn)
             df_temp["Region"] = app_name
             df_un = df_un.append(df_temp)
+    df_un['type'] = df_un['type'] +'_Q'+ df_un['quantile'].astype(str)
     df_un = pd.pivot_table(
         df_un, values="value", index=["Region", "time", "scenario"], columns=["type"]
     )
@@ -96,7 +101,7 @@ for ctry in country:
         how="outer",
         left_on=["Region", "scenario", "times"],
         right_on=["Region", "scenario", "time"],
-        suffixes=("_mle", "_median"),
+        suffixes=("_mle", "_un"),
     )
 
     df["Date"] = pd.to_timedelta(df.times, unit="days") + (COVID_BASE_DATE)

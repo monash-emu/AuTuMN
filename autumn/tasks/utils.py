@@ -12,7 +12,7 @@ def get_project_from_run_id(run_id: str) -> Project:
     return get_project(app_name, region_name)
 
 
-def set_logging_config(verbose: bool, chain="main", log_path="log"):
+def set_logging_config(verbose: bool, chain="main", log_path="log", task="task"):
     old_factory = logging.getLogRecordFactory()
     if chain != "main":
         chain = f"chain-{chain}"
@@ -26,7 +26,7 @@ def set_logging_config(verbose: bool, chain="main", log_path="log"):
     logging.setLogRecordFactory(record_factory)
 
     log_format = "%(asctime)s %(host)s [%(chain)s] %(levelname)s %(message)s"
-    logfile = os.path.join(log_path, f"task-{chain}.log")
+    logfile = os.path.join(log_path, f"{task}-{chain}.log")
     root_logger = {"level": "INFO", "handlers": ["file"]}
     handlers = {
         "file": {

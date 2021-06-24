@@ -100,7 +100,7 @@ def run_full_model_for_chain(
 
     Once we've sampled all the runs we need, then we re-run them in full, including all their scenarios.
     """
-    set_logging_config(not quiet, chain_id, FULL_RUN_LOG_DIR)
+    set_logging_config(not quiet, chain_id, FULL_RUN_LOG_DIR, task='full')
     msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
     logger.info(msg, chain_id, burn_in, sample_size)
     try:

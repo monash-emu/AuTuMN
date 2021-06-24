@@ -94,7 +94,7 @@ def run_calibration_chain(
     """
     Run a single calibration chain.
     """
-    set_logging_config(verbose, chain_id, CALIBRATE_LOG_DIR)
+    set_logging_config(verbose, chain_id, CALIBRATE_LOG_DIR, task='calibration')
     logging.info("Running calibration chain %s", chain_id)
     os.environ["AUTUMN_CALIBRATE_DIR"] = CALIBRATE_DATA_DIR
 

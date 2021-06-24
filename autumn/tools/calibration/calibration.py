@@ -86,6 +86,7 @@ class Calibration:
         metropolis_init: str = DEFAULT_METRO_INIT,
         metropolis_init_rel_step_size: float = DEFAULT_METRO_STEP,
         fixed_proposal_steps: int = DEFAULT_STEPS,
+        seed: int = None
     ):
         """
         Defines a new calibration.
@@ -101,6 +102,10 @@ class Calibration:
         self.n_steps_fixed_proposal = fixed_proposal_steps
 
         self.split_priors_by_type()
+
+        if seed is None:
+            seed = int(time())
+        self.seed = seed
 
     def split_priors_by_type(self):
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
@@ -160,9 +165,14 @@ class Calibration:
         self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
 
         # Select starting params
+        # Random seed is reset in here; make sure any other seeding happens after this
         self.starting_point = set_initial_point(
             self.all_priors, model_parameters_data, chain_idx, num_chains, self.initialisation_type
         )
+
+        # Set chain specific seed
+        # Chain 0 will have seed equal to that set in the calibration initialisation
+        self.seed_chain = chain_idx * 1000 + self.seed
 
         # initialise output and save metadata
         self.output = CalibrationOutputs(chain_idx, project.model_name, project.region_name)
@@ -216,6 +226,8 @@ class Calibration:
             "start_time": datetime.now().strftime("%Y-%m-%d--%H-%M-%S"),
             "git_branch": get_git_branch(),
             "git_commit": get_git_hash(),
+            "seed_chain": self.seed_chain,
+            "seed": self.seed
         }
         self.output.write_metadata(f"meta-{chain_idx}.yml", metadata)
         self.output.write_metadata(f"params-{chain_idx}.yml", model_parameters_data)
@@ -419,7 +431,7 @@ class Calibration:
             raise ValueError(msg)
 
         # Initialise random seed differently for different chains
-        np.random.seed(get_random_seed(self.chain_idx))
+        np.random.seed(self.seed_chain)
 
         try:
             # Run the selected fitting algorithm.
@@ -866,14 +878,6 @@ class CalibrationOutputs:
 
             mcmc_runs_df = pd.DataFrame.from_dict(self.mcmc_runs)
             self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df)
-
-
-def get_random_seed(chain_idx: int):
-    """
-    Get a random seed for the calibration.
-    Mocked out by unit tests.
-    """
-    return chain_idx * 1000 + int(time())
 
 
 def get_parameter_bounds_from_priors(prior_dict):

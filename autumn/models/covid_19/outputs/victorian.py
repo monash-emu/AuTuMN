@@ -50,7 +50,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         
         model.request_derived_value_output("prevalence")
         model.request_derived_value_output("prop_detected_traced")
-        model.request_derived_value_output("prop_traced")
+        model.request_derived_value_output("prop_contacts_with_detected_index")
         model.request_derived_value_output("traced_flow_rate")
 
 

@@ -51,6 +51,14 @@ class Strain:
     VARIANT_OF_CONCERN = "voc"
 
 
+CLINICAL_STRATA = [
+    Clinical.NON_SYMPT,
+    Clinical.SYMPT_NON_HOSPITAL,
+    Clinical.SYMPT_ISOLATE,
+    Clinical.HOSPITAL_NON_ICU,
+    Clinical.ICU,
+]
+
 NOTIFICATION_CLINICAL_STRATA = [
     Clinical.SYMPT_ISOLATE,
     Clinical.HOSPITAL_NON_ICU,

@@ -37,6 +37,8 @@ def gather_exc_plus(filename='crash.log'):
         f = f.f_back
     stack.reverse()
     traceback.print_exc(file=out_f)
+    out_f.write("\n")
+    out_f.write("Showing stack for all frames:\n\n")
     for frame in stack:
         out_f.write(f"Frame {frame.f_code.co_name} in {frame.f_code.co_filename} at line {frame.f_lineno}\n")
         for key, value in frame.f_locals.items(  ):

@@ -49,6 +49,11 @@ PLOT_TEXT_DICT = {
     "infection_fatality.multiplier": "IFR adjuster",
     "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect": "physical distancing",
     "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect": "face coverings",
+    "cdr": "Proportion detected among symptomatic",
+    "prevalence": "Prevalence of active disease",
+    "prop_detected_traced": "Proportion traced among detected cases",
+    "prop_contacts_with_detected_index": "Proportion of contacts whose index is detected",
+    "prop_contacts_quarantined": "Proportion quarantined among all contacts",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)

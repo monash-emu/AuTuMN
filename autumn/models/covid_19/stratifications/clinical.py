@@ -6,7 +6,7 @@ from autumn.models.covid_19.preprocess.clinical import get_all_adjs
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
-def get_clinical_strat(params: Parameters) -> Stratification:
+def get_clinical_strat(params: Parameters):
 
     """
     Stratify the model by clinical status
@@ -79,7 +79,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
         params.clinical_stratification.props.hospital.multiplier
 
     # Get all the adjustments in the same way as we will do if the immunity stratification is implemented
-    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjs(
+    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, get_detected_proportion = get_all_adjs(
         clinical_params,
         country,
         pop,
@@ -112,4 +112,4 @@ def get_clinical_strat(params: Parameters) -> Stratification:
             source_strata=source,
         )
 
-    return clinical_strat
+    return clinical_strat, get_detected_proportion

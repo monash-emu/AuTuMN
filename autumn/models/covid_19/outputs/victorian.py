@@ -349,3 +349,6 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             sources=[recovered_name, total_name],
             func=lambda recovered, total: recovered / total,
         )
+
+    # track CDR
+    model.request_derived_value_output("cdr")

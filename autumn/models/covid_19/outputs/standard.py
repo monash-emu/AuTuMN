@@ -316,3 +316,6 @@ def request_standard_outputs(
             func=lambda voc, total: list_element_wise_division(voc, total),
             sources=["incidence_voc", "incidence"]
         )
+
+    # track CDR
+    model.request_derived_value_output("cdr")

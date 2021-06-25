@@ -2,7 +2,7 @@ from summer import CompartmentalModel
 
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
+from autumn.models.covid_19.preprocess.case_detection import CdrProc
 
 from .constants import (
     COMPARTMENTS,
@@ -120,8 +120,14 @@ def build_model(params: dict) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     # Stratify the model by clinical status
-    clinical_strat = get_clinical_strat(params)
+    clinical_strat, get_detected_proportion = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
+
+    # register the CDR function as derived value
+    model.add_derived_value_process(
+        "cdr",
+        CdrProc(get_detected_proportion)
+    )
 
     # Contact tracing stratification
     if params.contact_tracing:

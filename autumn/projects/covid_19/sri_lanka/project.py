@@ -40,7 +40,7 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.04, 0.18]),
     UniformPrior("voc_emergence.start_time", [300, 440]),
     UniformPrior("voc_emergence.contact_rate_multiplier", [1.25, 3.0]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.08, 0.6]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.03, 0.2]),
 ]
 
 

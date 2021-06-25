@@ -20,10 +20,11 @@ DISPERSION_TARGET_RATIO = 0.07
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-scenario_dir_path = build_rel_path("params/")
-scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+# scenario_dir_path = build_rel_path("params/")
+# scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
-scenario_params = [baseline_params.update(p) for p in scenario_paths]
+# scenario_params = [baseline_params.update(p) for p in scenario_paths]
+scenario_params = []
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Add calibration targets and priors

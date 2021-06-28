@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
@@ -20,7 +20,8 @@ DISPERSION_TARGET_RATIO = 0.07
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 5)]
+scenario_dir_path = build_rel_path("params/")
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
@@ -99,7 +100,7 @@ priors = [
         jumping_stdev=0.005,
     ),
     UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.1, 0.6], jumping_stdev=0.005),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.005),
 ]
 
 calibration = Calibration(

@@ -2,7 +2,7 @@ from summer import CompartmentalModel
 
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
+from autumn.models.covid_19.preprocess.case_detection import CdrProc
 
 from .constants import (
     COMPARTMENTS,
@@ -120,8 +120,14 @@ def build_model(params: dict) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     # Stratify the model by clinical status
-    clinical_strat = get_clinical_strat(params)
+    clinical_strat, get_detected_proportion = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
+
+    # register the CDR function as derived value
+    model.add_derived_value_process(
+        "cdr",
+        CdrProc(get_detected_proportion)
+    )
 
     # Contact tracing stratification
     if params.contact_tracing:
@@ -197,11 +203,6 @@ def build_model(params: dict) -> CompartmentalModel:
         early_exposed_traced_comps = \
             [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
 
-        # Create the CDR function in exactly the same way as what is used in calculating the flow rates
-        get_detected_proportion = build_detected_proportion_func(
-            AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
-        )
-
         model.add_derived_value_process(
             "prevalence",
             tracing.PrevalenceProc()
@@ -213,8 +214,11 @@ def build_model(params: dict) -> CompartmentalModel:
         )
 
         model.add_derived_value_process(
-            "prop_traced",
-            tracing.PropTracedProc(get_detected_proportion)
+            "prop_contacts_with_detected_index",
+            tracing.PropIndexDetectedProc(
+                params.clinical_stratification.non_sympt_infect_multiplier,
+                params.clinical_stratification.late_infect_multiplier
+            )
         )
 
         model.add_derived_value_process(

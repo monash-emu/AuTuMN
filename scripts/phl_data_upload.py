@@ -16,8 +16,8 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "15FEaN7SjnHrvlQKPerSU365eB8eZLuXx"  # sheet 05 daily report
-PHL_fassster_link = "1KZhKhTpsu0EGXyB6u73rVpXMj3WwIWq1"
+PHL_doh_link = "1Dl5y80wVlbG_xKsFb-n7ISpj-A3RP0_a"  # sheet 05 daily report
+PHL_fassster_link = "11mXfy6_0CKzdjGNqtxkjI8sdfRmMDI9i"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
@@ -57,7 +57,7 @@ def main():
     process_accumulated_death_data(working_df)
     process_notifications_data(working_df)
     update_calibration_phl()
-    #remove_files(fassster_filename)
+    remove_files(fassster_filename)
 
 
 # function to fetch data

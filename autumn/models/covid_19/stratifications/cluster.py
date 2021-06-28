@@ -95,8 +95,8 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
     """
 
     # Get the inter-cluster mixing matrix
-    intercluster_mixing_matrix = create_assortative_matrix(vic.intercluster_mixing, CLUSTER_STRATA)
-    # intercluster_mixing_matrix = get_vic_cluster_adjacency_matrix(vic.intercluster_mixing)
+    # intercluster_mixing_matrix = create_assortative_matrix(vic.intercluster_mixing, CLUSTER_STRATA)
+    intercluster_mixing_matrix = get_vic_cluster_adjacency_matrix(vic.intercluster_mixing)
 
     # Replace regional Victoria maximum effect calibration parameters with the metro values for consistency
     for microdist_process in ["face_coverings", "behaviour"]:

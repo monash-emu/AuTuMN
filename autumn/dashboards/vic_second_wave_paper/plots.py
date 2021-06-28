@@ -641,6 +641,46 @@ def plot_cdr_curves(
     )
 
 
+@dash.register("Contact tracing")
+def plot_scenarios_multioutput(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    (
+        dpi_request,
+        capitalise_first_letter,
+        is_logscale,
+        is_targets,
+        is_overlay_uncertainty,
+        is_legend,
+    ) = (300, False, False, True, True, True)
+
+    scenario_outputs = [
+        "prevalence", "prop_detected_traced", "cdr", "prop_contacts_with_detected_index", "prop_contacts_quarantined"
+    ]
+
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+        plotter,
+        uncertainty_df,
+        scenario_outputs,
+        uncertainty_df["scenario"].unique(),
+        targets,
+        is_logscale,
+        STANDARD_X_LIMITS[0],
+        426,
+        title_font_size=STANDARD_TITLE_FONTSIZE,
+        label_font_size=STANDARD_LABEL_FONTSIZE,
+        file_name="contact_tracing",
+        max_y_values=(2.0e-3, 1, 1, 1, 1),
+    )
+
+
 @dash.register("Scenarios")
 def plot_scenarios(
     plotter: StreamlitPlotter,

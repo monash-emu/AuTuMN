@@ -88,7 +88,7 @@ class Region:
         MANILA,
         CALABARZON,
         DAVAO_REGION,
-        # CENTRAL_VISAYAS,
+        CENTRAL_VISAYAS,
         # DAVAO_CITY,
     ]
 

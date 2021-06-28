@@ -1,22 +1,24 @@
-description: Scenario 15, 100, 000 daily vaccinations maintained for 3 months + 25% return to max mobility
+description: Scenario 13, 80% coverage in 7 months + 50% return to max mobility
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 527 #June 10 2021
+  start: 504 # 18th May 2021
 
 vaccination:
 
+  # 7 months from 18th May 2021
   roll_out_components:
-    - supply_timeseries:
-        times: [505, 506, 507, 508, 509, 510, 523, 524, 619, 620]
-        values: [49722, 58749, 41919, 42078, 180400, 69122, 100000, 100000, 100000, 0]
+    - supply_period_coverage:
+        coverage: 0.8
+        start_time: 504.
+        end_time: 687.
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-06-10
+        - 2021-05-18
       values:
         - - close_to_max_last_period
           - 180
@@ -24,8 +26,8 @@ mobility:
     work:
       append: true
       times:
-        - 2021-06-10
+        - 2021-05-18
       values:
         - - close_to_max_last_period
           - 180
-          - 0.25
+          - 0.5

@@ -24,7 +24,17 @@ def run_dashboard():
     mcmc_params = db.load.load_mcmc_params_tables(calib_path)
 
     plotter = StreamlitPlotter(project.plots)
-    dash.select_plot(
+    # dash.select_plot(
+    #     plotter,
+    #     calib_path,
+    #     mcmc_tables,
+    #     mcmc_params,
+    #     project.plots,
+    #     project.model_name,
+    #     project.region_name,
+    # )
+
+    dash.trigger_all_plots(
         plotter,
         calib_path,
         mcmc_tables,

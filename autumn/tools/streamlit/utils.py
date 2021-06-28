@@ -2,6 +2,7 @@ import base64
 
 import numpy as np
 import streamlit as st
+from matplotlib import pyplot
 
 
 class Dashboard:
@@ -20,6 +21,10 @@ class Dashboard:
         plot_func = self.plot_funcs[plot_type]
         plot_func(*args, **kwargs)
         return plot_type
+
+    def trigger_all_plots(self, *args, **kwargs):
+        for plot_func in self.plot_funcs.values():
+            plot_func(*args, **kwargs)
 
 
 def create_downloadable_csv(

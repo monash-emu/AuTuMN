@@ -1,6 +1,8 @@
 import streamlit as st
+import os
 
 from .base_plotter import BasePlotter
+from matplotlib import pyplot
 
 
 class StreamlitPlotter(BasePlotter):
@@ -18,3 +20,9 @@ class StreamlitPlotter(BasePlotter):
             st.markdown(md, unsafe_allow_html=True)
 
         st.pyplot(fig, dpi=dpi_request, bbox_inches="tight")
+
+        dir_name = "vic_figures"
+        if not os.path.isdir(dir_name):
+            os.makedirs(dir_name)
+        filename = os.path.join("vic_figures", f"{filename}.png")
+        pyplot.savefig(filename)

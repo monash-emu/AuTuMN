@@ -29,7 +29,6 @@ benchmark.json
 *.db
 
 logs/
-log/
 *.log
 
 # Track input database.

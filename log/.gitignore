@@ -1,0 +1,5 @@
+# Placeholder file to store empty folder
+# The log folder is required for some tests, however none of its contents should
+# ever be committed.
+
+!.gitignore

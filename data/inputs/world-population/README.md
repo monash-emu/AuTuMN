@@ -20,18 +20,19 @@ The UN WPP2019 dataset does not contain these figures.
 TODO: Document the provenance of the region data.
 
 Data for DHHS health clusters obtained from
-LGA population https://www.abs.gov.au/ausstats/subscriber.nsf/log?openagent&14100do0001_2014-19.xlsx&1410.0&Data%20Cubes&76DD7F46FAF7345CCA2585B20017416A&0&2014-19&28.07.2020&Latest
+[LGA population](https://www.abs.gov.au/ausstats/subscriber.nsf/log?openagent&14100do0001_2014-19.xlsx&1410.0&Data%20Cubes&76DD7F46FAF7345CCA2585B20017416A&0&2014-19&28.07.2020&Latest)
 and combined with 'LGA to Cluster mapping dictionary with proportions.csv' (.\data\inputs\mobility) to arrive at the static values for sub-regions.
 
 Malaysia regional population stats
-https://www.data.gov.my/data/dataset/ec71711f-9b1f-42cd-9229-0c3e1f0e1dbb/resource/423f8f8c-5b74-4b5b-9ba9-d67a5c80e22c/download/mid-year-population-estimates-by-age-group-sex-and-state-malaysia-2015-2019.csv
+[www.data.gov.my/data](https://www.data.gov.my/data/dataset/ec71711f-9b1f-42cd-9229-0c3e1f0e1dbb/resource/423f8f8c-5b74-4b5b-9ba9-d67a5c80e22c/download/mid-year-population-estimates-by-age-group-sex-and-state-malaysia-2015-2019.csv)
 
 Philippines sub region population numbers are provided by the FASSSTER team except for 
-Davao City population - https://www.citypopulation.de/en/philippines/mindanao/admin/davao_del_sur/112402__davao/
-Davao Region population - https://www.citypopulation.de/en/philippines/admin/11__davao/
+[Davao City population](https://www.citypopulation.de/en/philippines/mindanao/admin/davao_del_sur/112402__davao/)
+[Davao Region population](https://www.citypopulation.de/en/philippines/admin/11__davao/)
 
 
-
+Sri Lanka sub region population
+[Western Province](https://www.citypopulation.de/en/srilanka/prov/admin/1__western/)
 
 
 ### [WPP2019_FERT_F03_CRUDE_BIRTH_RATE](<https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/2_Fertility/WPP2019_FERT_F03_CRUDE_BIRTH_RATE.xlsx>)

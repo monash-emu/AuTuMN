@@ -135,6 +135,11 @@ def preprocess_mobility(input_db: Database, country_df):
         (mob_df.sub_region_1 == "Federal Territory of Kuala Lumpur"), "sub_region_1"
     ] = "Kuala Lumpur"
 
+    # Create a copy of mobility data for Sri Lanka's western province
+    sri_lanka_wp = mob_df[mob_df.country_region=='Sri Lanka'].copy()
+    sri_lanka_wp.sub_region_1 = "western province"
+
+    mob_df = mob_df.append(sri_lanka_wp)
     mob_df = mob_df.append(dhhs_cluster_mobility)
 
     # Drop all rows that have NA values in 1 or more mobility columns.
@@ -228,3 +233,5 @@ def reshape_to_clusters(gm_df):
     cluster_df.rename(columns={"cluster_name": "sub_region_1"}, inplace=True)
 
     return cluster_df
+
+

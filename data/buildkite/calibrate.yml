@@ -42,6 +42,8 @@ steps:
       value: covid_19:spain
     - label: Sri_Lanka (covid_19)
       value: covid_19:sri_lanka
+    - label: Sri_Lanka_Wp (covid_19)
+      value: covid_19:sri_lanka_wp
     - label: Sweden (covid_19)
       value: covid_19:sweden
     - label: United Kingdom (covid_19)

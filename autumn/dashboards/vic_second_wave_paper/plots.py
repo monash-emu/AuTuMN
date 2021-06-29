@@ -571,7 +571,7 @@ def plot_seroprev_age_and_cluster(
     st.write(overall_seroprev.to_dict())
 
 
-@dash.register("CDR Curves")
+#@dash.register("CDR Curves")
 def plot_cdr_curves(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -669,7 +669,7 @@ def plot_scenarios_multioutput(
         plotter,
         uncertainty_df,
         scenario_outputs,
-        uncertainty_df["scenario"].unique(),
+        [0],
         targets,
         is_logscale,
         STANDARD_X_LIMITS[0],

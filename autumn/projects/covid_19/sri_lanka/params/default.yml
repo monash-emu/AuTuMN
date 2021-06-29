@@ -5,7 +5,7 @@ infectious_seed: 200
 
 time:
   start: 240
-  end: 730
+  end: 875
 
 country:
   iso3: LKA
@@ -14,6 +14,11 @@ contact_tracing:
     assumed_trace_prop: 0.05
     assumed_prev: 1.e-3
     quarantine_infect_multiplier: 0.2
+
+vaccination:
+  overall_efficacy: 0.75
+  vacc_prop_prevent_infection: 1
+  coverage_override: 0.75
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

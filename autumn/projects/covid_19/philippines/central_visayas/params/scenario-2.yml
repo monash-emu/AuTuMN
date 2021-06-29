@@ -1,9 +1,29 @@
-description: 50% coverage
+description: 30% vaccine coverage / 50% increased mobility
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+      - 558
+      - 560
+      values:
+      - - repeat_prev
+      - - scale_prev
+        - 1.5
+    work:
+      append: true
+      times:
+      - 558
+      - 560
+      values:
+      - - repeat_prev
+      - - scale_prev
+        - 1.5
 time:
-  start: 517
+  start: 559
 vaccination:
   roll_out_components:
-    - supply_period_coverage:
-        coverage: 0.5
-        end_time: 731
-        start_time: 517
+  - supply_period_coverage:
+      coverage: 0.3
+      end_time: 731
+      start_time: 559

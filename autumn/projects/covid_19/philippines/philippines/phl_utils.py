@@ -12,13 +12,16 @@ import yaml
 
 from autumn.settings import Region
 
-SCENARIO_START_TIME = 545  # 28 June 2021
+SCENARIO_START_TIME = 559  # 12 Jul 2021
+#
+# WORKFORCE_PROP = []
+# BACK_TO_NORMAL_FRACTIONS = []
+# MHS_REDUCTION_FRACTIONS = []
+# SCHOOL_REOPEN_FRACTIONS = []
 
-WORKFORCE_PROP = [.7, .8, .9]
-BACK_TO_NORMAL_FRACTIONS = []
-MHS_REDUCTION_FRACTIONS = []
-SCHOOL_REOPEN_FRACTIONS = []
-VACCINE_SCENARIOS = {"coverage": [.3, .7]}
+BASELINE_TARGET_VACC_COVERAGE = .3
+VACCINE_SCENARIOS = {"extra_coverage_from_baseline_target": [0., .4]}
+INCREASED_MOBILITY = [0., .3, .5]
 
 
 def clear_all_scenarios(region):
@@ -52,27 +55,29 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
     sc_index = 0
     all_scenarios_dict = {}
 
-    # Back to normal in workplaces and other locations
-    for fraction in BACK_TO_NORMAL_FRACTIONS:
-        sc_index += 1
-        all_scenarios_dict[sc_index] = make_back_to_normal_sc_dict(fraction, scenario_start_time)
+    # # Back to normal in workplaces and other locations
+    # for fraction in BACK_TO_NORMAL_FRACTIONS:
+    #     sc_index += 1
+    #     all_scenarios_dict[sc_index] = make_back_to_normal_sc_dict(fraction, scenario_start_time)
+    #
+    # # MHS reduction
+    # for fraction in MHS_REDUCTION_FRACTIONS:
+    #     sc_index += 1
+    #     all_scenarios_dict[sc_index] = make_mhs_reduction_sc_dict(fraction, scenario_start_time)
+    #
+    # # School reopening
+    # for fraction in SCHOOL_REOPEN_FRACTIONS:
+    #     sc_index += 1
+    #     all_scenarios_dict[sc_index] = make_school_reopen_sc_dict(fraction, scenario_start_time)
 
-    # MHS reduction
-    for fraction in MHS_REDUCTION_FRACTIONS:
-        sc_index += 1
-        all_scenarios_dict[sc_index] = make_mhs_reduction_sc_dict(fraction, scenario_start_time)
-
-    # School reopening
-    for fraction in SCHOOL_REOPEN_FRACTIONS:
-        sc_index += 1
-        all_scenarios_dict[sc_index] = make_school_reopen_sc_dict(fraction, scenario_start_time)
-
-    # Vaccination
-    for coverage in VACCINE_SCENARIOS["coverage"]:
-        for prop_workforce in WORKFORCE_PROP:
+    # Vaccination combined with mobility changes
+    for extra_coverage in VACCINE_SCENARIOS["extra_coverage_from_baseline_target"]:
+        for increased_mobility in INCREASED_MOBILITY:
+            if extra_coverage == 0. and increased_mobility == 0.:
+                continue  # this is the baseline scenario
             sc_index += 1
-            all_scenarios_dict[sc_index] = make_vaccination_and_workforce_sc_dict(
-                coverage, prop_workforce, scenario_start_time
+            all_scenarios_dict[sc_index] = make_vaccination_and_increased_mobility_sc_dict(
+                extra_coverage, increased_mobility, scenario_start_time
             )
 
     # dump scenario files
@@ -86,7 +91,6 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
 
 def initialise_sc_dict(scenario_start_time):
     return {
-        "parent": "autumn/projects/covid_19/philippines/philippines/params/default.yml",
         "time": {"start": scenario_start_time},
     }
 
@@ -185,6 +189,47 @@ def make_vaccination_and_workforce_sc_dict(coverage, prop_workforce, scenario_st
     return sc_dict
 
 
+def make_vaccination_and_increased_mobility_sc_dict(extra_coverage, increased_mobility, scenario_start_time):
+    sc_dict = initialise_sc_dict(scenario_start_time)
+    perc_coverage = int(100 * (extra_coverage + BASELINE_TARGET_VACC_COVERAGE))
+    perc_increase_mobility = int(100 * increased_mobility)
+
+    mobility_description = f"{perc_increase_mobility}% increased mobility" if perc_increase_mobility > 0. else "baseline mobility"
+
+    sc_dict[
+        "description"
+    ] = f"{perc_coverage}% vaccine coverage / {mobility_description}"
+
+    sc_dict["vaccination"] = {
+        "roll_out_components": [
+            {
+                "supply_period_coverage": {
+                    "coverage": extra_coverage + BASELINE_TARGET_VACC_COVERAGE,
+                    "start_time": scenario_start_time,
+                    "end_time": 731,  # end of year 2021
+                }
+            }
+        ],
+    }
+
+    sc_dict["mobility"] = {
+        "mixing": {
+            "work": {
+                "append": True,
+                "times": [scenario_start_time - 1, scenario_start_time + 1],
+                "values": [["repeat_prev"], ["scale_prev", 1. + increased_mobility]],
+            },
+            "other_locations": {
+                "append": True,
+                "times": [scenario_start_time - 1, scenario_start_time + 1],
+                "values": [["repeat_prev"], ["scale_prev", 1. + increased_mobility]],
+            },
+        }
+    }
+
+    return sc_dict
+
+
 def read_all_phl_scenarios():
     """
     Read all the scenarios defined for the "philippines" application
@@ -221,8 +266,6 @@ def copy_scenarios_to_phl_regions():
 
         for filename, sc_dict in scenario_param_dicts.items():
             region_scenario_param = copy(sc_dict)
-            region_scenario_param["parent"] = sc_dict["parent"].replace("philippines", dir_name)
-
             file_path = f"../{dir_name}/params/{filename}"
             with open(file_path, "w") as f:
                 yaml.dump(region_scenario_param, f)

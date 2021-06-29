@@ -108,6 +108,8 @@ register_project(Models.COVID_19, Region.NEPAL, "autumn.projects.covid_19.nepal.
 
 # Sri Lanka
 register_project(Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.project")
+register_project(Models.COVID_19, Region.SRI_LANKA_WP, "autumn.projects.covid_19.sri_lanka_wp.project")
+
 
 # Bali
 register_project(

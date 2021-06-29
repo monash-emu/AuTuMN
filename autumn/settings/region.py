@@ -30,6 +30,7 @@ class Region:
     KUALA_LUMPUR = "kuala-lumpur"
     NEPAL = "nepal"
     SRI_LANKA = "sri_lanka"
+    SRI_LANKA_WP = "sri_lanka_wp"
     BALI = "bali"
 
     REGIONS = [
@@ -64,6 +65,7 @@ class Region:
         NEPAL,
         SRI_LANKA,
         BALI,
+        SRI_LANKA_WP,
     ]
 
     MALAYSIA_REGIONS = [

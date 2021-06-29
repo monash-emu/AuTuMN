@@ -21,8 +21,8 @@ class StreamlitPlotter(BasePlotter):
 
         st.pyplot(fig, dpi=dpi_request, bbox_inches="tight")
 
-        dir_name = "vic_figures"
+        dir_name = "vic_figures_2"
         if not os.path.isdir(dir_name):
             os.makedirs(dir_name)
-        filename = os.path.join("vic_figures", f"{filename}.png")
+        filename = os.path.join(dir_name, f"{filename}.png")
         pyplot.savefig(filename)

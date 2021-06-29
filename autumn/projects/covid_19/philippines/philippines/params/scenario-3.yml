@@ -1,24 +1,4 @@
 description: 70% vaccine coverage / baseline mobility
-mobility:
-  mixing:
-    other_locations:
-      append: true
-      times:
-      - 558
-      - 560
-      values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.0
-    work:
-      append: true
-      times:
-      - 558
-      - 560
-      values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.0
 time:
   start: 559
 vaccination:

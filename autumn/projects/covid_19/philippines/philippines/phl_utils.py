@@ -200,32 +200,33 @@ def make_vaccination_and_increased_mobility_sc_dict(extra_coverage, increased_mo
         "description"
     ] = f"{perc_coverage}% vaccine coverage / {mobility_description}"
 
-    sc_dict["vaccination"] = {
-        "roll_out_components": [
-            {
-                "supply_period_coverage": {
-                    "coverage": extra_coverage + BASELINE_TARGET_VACC_COVERAGE,
-                    "start_time": scenario_start_time,
-                    "end_time": 731,  # end of year 2021
+    if extra_coverage > 0.:
+        sc_dict["vaccination"] = {
+            "roll_out_components": [
+                {
+                    "supply_period_coverage": {
+                        "coverage": extra_coverage + BASELINE_TARGET_VACC_COVERAGE,
+                        "start_time": scenario_start_time,
+                        "end_time": 731,  # end of year 2021
+                    }
                 }
-            }
-        ],
-    }
-
-    sc_dict["mobility"] = {
-        "mixing": {
-            "work": {
-                "append": True,
-                "times": [scenario_start_time - 1, scenario_start_time + 1],
-                "values": [["repeat_prev"], ["scale_prev", 1. + increased_mobility]],
-            },
-            "other_locations": {
-                "append": True,
-                "times": [scenario_start_time - 1, scenario_start_time + 1],
-                "values": [["repeat_prev"], ["scale_prev", 1. + increased_mobility]],
-            },
+            ],
         }
-    }
+    if increased_mobility > 0.:
+        sc_dict["mobility"] = {
+            "mixing": {
+                "work": {
+                    "append": True,
+                    "times": [scenario_start_time - 1, scenario_start_time + 1],
+                    "values": [["repeat_prev"], ["scale_prev", 1. + increased_mobility]],
+                },
+                "other_locations": {
+                    "append": True,
+                    "times": [scenario_start_time - 1, scenario_start_time + 1],
+                    "values": [["repeat_prev"], ["scale_prev", 1. + increased_mobility]],
+                },
+            }
+        }
 
     return sc_dict
 

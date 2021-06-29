@@ -8,6 +8,6 @@ mobility:
     school:
       append: false
       times:
-        - 2021-06-12 # All schools open
+        - 2021-07-06 # All schools open
       values:
         - 1

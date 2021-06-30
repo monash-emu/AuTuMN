@@ -1,4 +1,4 @@
-description: Scenario 6, current mobility, 50% vaccine roll-out
+description: Scenario 6, 25% vaccine roll-out in 11 months + 50% return to the max mobility
 
 time:
   start: 529 # 12th June 2021
@@ -8,6 +8,25 @@ vaccination:
   # Eleven months from 12th June 2021
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.5
+        coverage: 0.25
         start_time: 529.
         end_time: 863.
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-06-12
+      values:
+        - - close_to_max_last_period
+          - 90
+          - 0.5
+    work:
+      append: true
+      times:
+        - 2021-06-12
+      values:
+        - - close_to_max_last_period
+          - 90
+          - 0.5

@@ -8,6 +8,8 @@ condaenv/
 *.cprof
 *.egg-info
 
+vic_figures/
+
 # Sphinx docs
 _build
 docs/examples

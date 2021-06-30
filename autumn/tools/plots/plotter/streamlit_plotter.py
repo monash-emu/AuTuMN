@@ -21,8 +21,13 @@ class StreamlitPlotter(BasePlotter):
 
         st.pyplot(fig, dpi=dpi_request, bbox_inches="tight")
 
-        dir_name = "vic_figures_2"
+        dir_name = "vic_figures"
         if not os.path.isdir(dir_name):
             os.makedirs(dir_name)
-        filename = os.path.join(dir_name, f"{filename}.png")
-        pyplot.savefig(filename)
+
+        for extension in ["png", "pdf"]:
+            dir_extension_name = os.path.join(dir_name, extension)
+            if not os.path.isdir(dir_extension_name):
+                os.makedirs(dir_extension_name)
+            path = os.path.join(dir_extension_name, f"{filename}.{extension}")
+            pyplot.savefig(path)

@@ -1,4 +1,4 @@
-description: Scenario 6, 25% vaccine roll-out in 11 months + 50% return to the max mobility
+description: Scenario 8, 25% vaccine roll-out in 11 months + 100% return to the max mobility
 
 time:
   start: 559 # 12th July 2021
@@ -19,14 +19,12 @@ mobility:
       times:
         - 2021-07-12
       values:
-        - - close_to_max_last_period
+        - - max_last_period
           - 120
-          - 0.5
     work:
       append: true
       times:
         - 2021-07-12
       values:
-        - - close_to_max_last_period
+        - - max_last_period
           - 120
-          - 0.5

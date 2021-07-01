@@ -2,21 +2,21 @@ description: Scenario 1, return to the max mobility last 3 months
 parent: apps/covid_19/regions/sri_lanka/params/default.yml
 
 time:
-  start: 529 # 12th June 2021
+  start: 559 # 12th July 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-06-12
+        - 2021-07-12
       values:
         - - max_last_period
-          - 90
+          - 120
     work:
       append: true
       times:
-        - 2021-06-12
+        - 2021-07-12
       values:
-        - - max_last_period
-          - 90
+        - -max_last_period
+          - 120

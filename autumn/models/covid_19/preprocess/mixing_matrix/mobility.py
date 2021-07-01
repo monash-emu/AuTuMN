@@ -202,6 +202,7 @@ def scale_prev_up_to_1(prev_vals: List[float], fraction: float):
 
 def close_gap_to_1(prev_vals: List[float], fraction: float):
     prev_val = prev_vals[-1]
+    print((1.0 - prev_val) * fraction + prev_val)
     return (1.0 - prev_val) * fraction + prev_val
 
 

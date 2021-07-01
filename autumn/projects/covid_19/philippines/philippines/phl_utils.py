@@ -12,7 +12,7 @@ import yaml
 
 from autumn.settings import Region
 
-SCENARIO_START_TIME = 559  # 12 Jul 2021
+SCENARIO_START_TIME = 562  # 15 Jul 2021
 #
 # WORKFORCE_PROP = []
 # BACK_TO_NORMAL_FRACTIONS = []
@@ -84,7 +84,7 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
 
     # dump scenario files
     for sc_i, scenario_dict in all_scenarios_dict.items():
-        print(scenario_dict["description"])
+        print(f"Scenario {sc_i}: {scenario_dict['description']}")
 
         file_path = f"params/scenario-{sc_i}.yml"
         with open(file_path, "w") as f:

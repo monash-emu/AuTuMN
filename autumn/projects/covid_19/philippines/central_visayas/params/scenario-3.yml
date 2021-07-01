@@ -4,8 +4,8 @@ mobility:
     other_locations:
       append: true
       times:
-      - 558
-      - 560
+      - 561
+      - 563
       values:
       - - repeat_prev
       - - scale_prev
@@ -13,8 +13,8 @@ mobility:
     work:
       append: true
       times:
-      - 558
-      - 560
+      - 561
+      - 563
       values:
       - - repeat_prev
       - - scale_prev
@@ -22,10 +22,10 @@ mobility:
 testing_to_detection:
   test_multiplier:
     times:
-    - 558
-    - 560
+    - 561
+    - 563
     values:
     - 1.0
     - 1.5
 time:
-  start: 559
+  start: 562

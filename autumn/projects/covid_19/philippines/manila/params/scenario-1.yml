@@ -2,10 +2,10 @@ description: 30% vaccine coverage / baseline mobility / 50% increased testing
 testing_to_detection:
   test_multiplier:
     times:
-    - 558
-    - 560
+    - 561
+    - 563
     values:
     - 1.0
     - 1.5
 time:
-  start: 559
+  start: 562

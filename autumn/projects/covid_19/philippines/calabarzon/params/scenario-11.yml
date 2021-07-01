@@ -1,4 +1,4 @@
-description: 30% vaccine coverage / 50% increased mobility / baseline testing
+description: 70% vaccine coverage / 50% increased mobility / 50% increased testing
 mobility:
   mixing:
     other_locations:
@@ -19,5 +19,19 @@ mobility:
       - - repeat_prev
       - - scale_prev
         - 1.5
+testing_to_detection:
+  test_multiplier:
+    times:
+    - 558
+    - 560
+    values:
+    - 1.0
+    - 1.5
 time:
   start: 559
+vaccination:
+  roll_out_components:
+  - supply_period_coverage:
+      coverage: 0.7
+      end_time: 731
+      start_time: 559

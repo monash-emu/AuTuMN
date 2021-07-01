@@ -703,3 +703,6 @@ apps/tuberculosis/regions/marshall_islands/outputs/old_figures/elimination/elimi
 apps/tuberculosis/regions/marshall_islands/outputs/old_figures/posterior_table/posterior_ranges.csv
 apps/tuberculosis/regions/marshall_islands/outputs/figures/output_numbers.txt
 apps/tuberculosis/regions/marshall_islands/outputs/figures/calibration/screening_rate.pdf
+
+# ignore vic figures automatically generated
+vic_figures/

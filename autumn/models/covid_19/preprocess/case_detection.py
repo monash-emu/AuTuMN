@@ -42,6 +42,7 @@ def build_detected_proportion_func(
         assumed_tests_parameter = testing.assumed_tests_parameter
         assumed_cdr_parameter = testing.assumed_cdr_parameter
         smoothing_period = testing.smoothing_period
+        test_multiplier = testing.test_multiplier if testing.test_multiplier else None
 
         testing_pop, testing_region = get_testing_pop(agegroup_strata, country, pop)
         detected_proportion = find_cdr_function_from_test_data(
@@ -51,6 +52,7 @@ def build_detected_proportion_func(
             country.iso3,
             testing_pop,
             subregion=testing_region,
+            test_multiplier=test_multiplier
         )
     else:
         # Approach based on a hyperbolic tan function

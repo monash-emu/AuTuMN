@@ -45,6 +45,7 @@ def find_cdr_function_from_test_data(
     country_iso3,
     total_pops,
     subregion=None,
+    test_multiplier=None,
 ):
 
     # Get the appropriate testing data
@@ -74,6 +75,12 @@ def find_cdr_function_from_test_data(
         if smoothing_period > 1
         else per_capita_tests
     )
+
+    # scale testing with time-variant parameter
+    if test_multiplier is not None:
+        testing_scale_up = scale_up_function(test_multiplier.times, test_multiplier.values, method=4)
+        new_per_capita_tests = [smoothed_per_capita_tests[i] * testing_scale_up(t) for i, t in enumerate(test_dates)]
+        smoothed_per_capita_tests = new_per_capita_tests
 
     # Calculate CDRs and the resulting CDR function over time
     cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)

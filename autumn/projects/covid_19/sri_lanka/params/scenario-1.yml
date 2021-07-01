@@ -18,5 +18,5 @@ mobility:
       times:
         - 2021-07-12
       values:
-        - -max_last_period
+        - - max_last_period
           - 120

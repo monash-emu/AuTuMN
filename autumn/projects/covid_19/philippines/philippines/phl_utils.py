@@ -22,6 +22,7 @@ SCENARIO_START_TIME = 559  # 12 Jul 2021
 BASELINE_TARGET_VACC_COVERAGE = .3
 VACCINE_SCENARIOS = {"extra_coverage_from_baseline_target": [0., .4]}
 INCREASED_MOBILITY = [0., .3, .5]
+INCREASED_TESTING = [0., .5]
 
 
 def clear_all_scenarios(region):
@@ -73,12 +74,13 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
     # Vaccination combined with mobility changes
     for extra_coverage in VACCINE_SCENARIOS["extra_coverage_from_baseline_target"]:
         for increased_mobility in INCREASED_MOBILITY:
-            if extra_coverage == 0. and increased_mobility == 0.:
-                continue  # this is the baseline scenario
-            sc_index += 1
-            all_scenarios_dict[sc_index] = make_vaccination_and_increased_mobility_sc_dict(
-                extra_coverage, increased_mobility, scenario_start_time
-            )
+            for increased_testing in INCREASED_TESTING:
+                if extra_coverage == 0. and increased_mobility == 0. and increased_testing == 0.:
+                    continue  # this is the baseline scenario
+                sc_index += 1
+                all_scenarios_dict[sc_index] = make_vaccination_and_increased_mobility_and_increased_testing_sc_dict(
+                    extra_coverage, increased_mobility, increased_testing, scenario_start_time
+                )
 
     # dump scenario files
     for sc_i, scenario_dict in all_scenarios_dict.items():
@@ -189,16 +191,20 @@ def make_vaccination_and_workforce_sc_dict(coverage, prop_workforce, scenario_st
     return sc_dict
 
 
-def make_vaccination_and_increased_mobility_sc_dict(extra_coverage, increased_mobility, scenario_start_time):
+def make_vaccination_and_increased_mobility_and_increased_testing_sc_dict(
+        extra_coverage, increased_mobility, increased_testing, scenario_start_time
+):
     sc_dict = initialise_sc_dict(scenario_start_time)
     perc_coverage = int(100 * (extra_coverage + BASELINE_TARGET_VACC_COVERAGE))
     perc_increase_mobility = int(100 * increased_mobility)
+    perc_increase_testing = int(100 * increased_testing)
 
     mobility_description = f"{perc_increase_mobility}% increased mobility" if perc_increase_mobility > 0. else "baseline mobility"
+    testing_description = f"{perc_increase_testing}% increased testing" if perc_increase_testing > 0. else "baseline testing"
 
     sc_dict[
         "description"
-    ] = f"{perc_coverage}% vaccine coverage / {mobility_description}"
+    ] = f"{perc_coverage}% vaccine coverage / {mobility_description} / {testing_description}"
 
     if extra_coverage > 0.:
         sc_dict["vaccination"] = {
@@ -225,6 +231,14 @@ def make_vaccination_and_increased_mobility_sc_dict(extra_coverage, increased_mo
                     "times": [scenario_start_time - 1, scenario_start_time + 1],
                     "values": [["repeat_prev"], ["scale_prev", 1. + increased_mobility]],
                 },
+            }
+        }
+
+    if increased_testing > 0.:
+        sc_dict['testing_to_detection'] = {
+            'test_multiplier': {
+                'times': [scenario_start_time - 1, scenario_start_time + 1],
+                'values': [1., 1. + increased_testing]
             }
         }
 

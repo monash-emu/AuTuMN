@@ -78,6 +78,19 @@ def find_cdr_function_from_test_data(
 
     # scale testing with time-variant parameter
     if test_multiplier is not None:
+
+        # add test datapoints to original series so we can scale-up
+        for time, value in zip(test_multiplier.times, test_multiplier.values):
+            if time not in test_dates:
+                test_dates = np.append(test_dates, [time])
+                smoothed_per_capita_tests.append(value)
+
+        # reorder the data
+        zipped_lists = zip(test_dates, smoothed_per_capita_tests)
+        sorted_pairs = sorted(zipped_lists)
+        tuples = zip(*sorted_pairs)
+        test_dates, smoothed_per_capita_tests = [list(tup) for tup in tuples]
+
         testing_scale_up = scale_up_function(test_multiplier.times, test_multiplier.values, method=4)
         new_per_capita_tests = [smoothed_per_capita_tests[i] * testing_scale_up(t) for i, t in enumerate(test_dates)]
         smoothed_per_capita_tests = new_per_capita_tests

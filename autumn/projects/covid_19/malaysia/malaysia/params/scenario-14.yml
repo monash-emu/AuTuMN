@@ -1,4 +1,5 @@
 description: Scenario 2, 80% coverage in 7 months + 25% return to max mobility
+
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:

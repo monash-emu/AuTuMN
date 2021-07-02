@@ -19,6 +19,7 @@ mobility:
       append: true
       times:
         - 2021-07-15
+
       values:
         - - close_to_max_last_period
           - 180

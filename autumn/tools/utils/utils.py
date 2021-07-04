@@ -40,6 +40,15 @@ def get_git_branch():
     return run_command("git rev-parse --abbrev-ref HEAD").strip()
 
 
+def get_git_modified() -> bool:
+    """
+    Return True if there are (tracked and uncommited) modifications
+    """
+
+    status = run_command("git status --porcelain").split('\n')
+    return any([s.startswith(' M') for s in status])
+
+
 def run_command(cmds):
     """
     Run a process and retun the stdout.

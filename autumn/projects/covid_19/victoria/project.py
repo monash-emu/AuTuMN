@@ -69,7 +69,7 @@ priors = [
         trunc_range=[0.5, np.inf],
         jumping_stdev=0.15,
     ),
-    UniformPrior("contact_rate", [0.03, 0.08], jumping_stdev=0.008),
+    UniformPrior("contact_rate", [0.04, 0.07], jumping_stdev=0.008),
     UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.01),
     UniformPrior("infectious_seed", [22.5, 67.5], jumping_stdev=4.),
     TruncNormalPrior(
@@ -99,7 +99,7 @@ priors = [
         [0.0, 0.5],
         jumping_stdev=0.04,
     ),
-    UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.05),
+    UniformPrior("target_output_ratio", [0.1, 0.3], jumping_stdev=0.02),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
 ]
 

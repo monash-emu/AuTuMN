@@ -1,13 +1,15 @@
 # Step 1: Install Chocolatey package manager
 
-Open a PowerShell window as _Administrator_ by searching for it in your Windows menu then run the follow lines:
+Open a PowerShell window as _Administrator_ by searching for it in your Windows menu.
+Note this will not work if you are using a terminal other than PowerShell.
+Once installed, run the following line of code:
 
 ```powershell
-# Install Chocolately package manager - https://chocolatey.org/install
 Set-ExecutionPolicy Bypass -Scope CurrentUser -Force
 $url = 'https://chocolatey.org/install.ps1'
 iex ((New-Object System.Net.WebClient).DownloadString($url))
 ```
+(further information about the Chocolatey installation manager is available at https://chocolatey.org/install)
 
 # Step 2: Install Git, Git Large File Storage
 

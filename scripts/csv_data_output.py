@@ -54,7 +54,7 @@ phl["region"] = get_files(phl)
 mys["region"] = get_files(mys)
 lka["region"] = get_files(lka)
 
-country = {"phl": phl, "mys": mys, "lka": lka}
+country = {"lka": lka,"phl": phl, "mys": mys }
 
 for ctry in country:
 
@@ -90,7 +90,7 @@ for ctry in country:
             df_temp = pd.read_sql_query(query_un, conn)
             df_temp["Region"] = app_name
             df_un = df_un.append(df_temp)
-    df_un['type'] = df_un['type'] +'_Q'+ df_un['quantile'].astype(str)
+    df_un["type"] = df_un["type"] + "_Q" + df_un["quantile"].astype(str)
     df_un = pd.pivot_table(
         df_un, values="value", index=["Region", "time", "scenario"], columns=["type"]
     )

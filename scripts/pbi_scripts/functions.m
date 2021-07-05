@@ -2,40 +2,40 @@ Feedback Type:
 Frown (Error)
 
 Timestamp:
-2021-06-24T09:32:15.7786071Z
+2021-07-04T23:15:36.5180255Z
 
 Local Time:
-2021-06-24T09:32:15.7786071+00:00
+2021-07-05T09:15:36.5180255+10:00
 
 Session ID:
-a1793274-07d2-4a4a-85fd-7259ef9c10c4
+7012f37c-63f7-4705-972e-4b2acf47cfd3
 
 Release:
-May 2021
+June 2021
 
 Product Version:
-2.93.641.0 (21.05) (x64)
+2.94.921.0 (21.06) (x64)
 
 OS Version:
-Microsoft Windows NT 10.0.17763.0 (x64 en-US)
+Microsoft Windows NT 10.0.17763.0 (x64 en-GB)
 
 CLR Version:
-4.7 or later [Release Number = 461814]
+4.7 or later [Release Number = 528049]
 
 Peak Virtual Memory:
 38.6 GB
 
 Private Memory:
-733 MB
+580 MB
 
 Peak Working Set:
-1.12 GB
+819 MB
 
 IE Version:
 11.1790.17763.0
 
 User ID:
-0074d024-50e5-43f9-9239-9c3b9180ab57
+bba3e10e-bf65-455b-b5ce-ad1c3b84a97c
 
 Workbook Package Info:
 1* - en-AU, Query Groups: 6, fastCombine: Enabled, runBackgroundAnalysis: False.
@@ -44,7 +44,7 @@ Telemetry Enabled:
 False
 
 Snapshot Trace Logs:
-C:\Users\kogmaw\AppData\Local\Microsoft\Power BI Desktop\FrownSnapShota84e60cf-b42d-437a-b917-534634339945.zip
+C:\Users\maba0001\Microsoft\Power BI Desktop Store App\FrownSnapShot058ec8b0-478c-46e2-b1b1-96839c90d3ae.zip
 
 Model Default Mode:
 Import
@@ -53,24 +53,25 @@ Model Version:
 PowerBI_V3
 
 Performance Trace Logs:
-C:\Users\kogmaw\AppData\Local\Microsoft\Power BI Desktop\PerformanceTraces.zip
+C:\Users\maba0001\Microsoft\Power BI Desktop Store App\PerformanceTraces.zip
 
 Enabled Preview Features:
+PBI_shapeMapVisualEnabled
 PBI_JsonTableInference
 PBI_NewWebTableInference
 PBI_ImportTextByExample
 PBI_ExcelTableInference
 PBI_eimInformationProtectionForDesktop
-PBI_cartesianMultiplesAuthoring
-
-Disabled Preview Features:
-PBI_shapeMapVisualEnabled
-PBI_SpanishLinguisticsEnabled
-PBI_qnaLiveConnect
 PBI_azureMapVisual
-PBI_dataPointLassoSelect
 PBI_compositeModelsOverAS
 PBI_dynamicParameters
+PBI_cartesianMultiplesAuthoring
+PBI_rdlNativeVisual
+
+Disabled Preview Features:
+PBI_SpanishLinguisticsEnabled
+PBI_qnaLiveConnect
+PBI_dataPointLassoSelect
 PBI_enhancedTooltips
 
 Disabled DirectQuery Options:
@@ -80,7 +81,7 @@ Cloud:
 GlobalCloud
 
 DPI Scale:
-100%
+125%
 
 Supported Services:
 Power BI
@@ -119,9 +120,42 @@ in
 shared #"#shared functions" = let
     Source = #shared,
     #"Converted to Table" = Record.ToTable(Source),
-    #"Filtered Rows" = Table.SelectRows(#"Converted to Table", each ([Name] = "Table.ReplaceValue"))
+    #"Filtered Rows" = Table.SelectRows(#"Converted to Table", each ([Name] = "Table.ExpandTableColumn"))
 in
     #"Filtered Rows";
+
+shared Query_Diagnostics = (Input as table) as table =>
+let
+    Source = Input,
+    #"Expanded Additional Info" = Table.ExpandRecordColumn(Source, "Additional Info", {"Message"}, {"Message"}),
+    #"Calculated Total Seconds" = Table.TransformColumns(#"Expanded Additional Info",{{"Exclusive Duration", Duration.TotalSeconds, type number}}),
+    #"Sorted Rows" = Table.Sort(#"Calculated Total Seconds",{{"Id", Order.Ascending},{"Start Time", Order.Ascending}}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Sorted Rows",{"Id", "Query", "Category", "Operation", "Start Time", "End Time", "Exclusive Duration (%)", "Exclusive Duration", "Data Source Query", "Message", "Row Count", "Content Length", "Path", "Group Id"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"Message", type text}}),
+    #"Replaced Value" = Table.ReplaceValue(#"Changed Type",null,"Missing",Replacer.ReplaceValue,{"Path"}),
+    BufferedTable = Table.Buffer(#"Replaced Value"),
+    GetAllChildRows = (CurrentId, CurrentPath) =>
+        Table.SelectRows(BufferedTable, each [Path]<>"Missing" and [Id]=CurrentId and Text.StartsWith([Path], CurrentPath)),
+    AddTotalED = Table.AddColumn(#"Replaced Value", "Exclusive Duration (Including Child Operations)", each List.Sum(GetAllChildRows([Id],[Path])[Exclusive Duration]), type number),
+    AddTotalEDPct = Table.AddColumn(AddTotalED, "Exclusive Duration (%) (Including Child Operations)", each List.Sum(GetAllChildRows([Id],[Path])[#"Exclusive Duration (%)"]), Percentage.Type),
+    #"Inserted Text Before Delimiter" = Table.AddColumn(AddTotalEDPct, "Parent Path", each Text.BeforeDelimiter([Path], "/", {0, RelativePosition.FromEnd}), type text),
+    #"Added Custom" = Table.AddColumn(#"Inserted Text Before Delimiter", "Child Operations", each 
+        let 
+            CurrentPath = [Path],
+            CurrentId = [Id],
+            ChildRows = 
+                Table.SelectRows(
+                    @#"Added Custom", 
+                    each 
+                        [Path]<>"Missing" and [Parent Path]=CurrentPath and [Id] = CurrentId
+                    ),
+            Output = if Table.RowCount(ChildRows)=0 then null else ChildRows
+        in 
+            Output),
+    #"Filtered Rows" = Table.SelectRows(#"Added Custom", each ([Path] = "0" or [Path]="Missing")),
+    #"Removed Columns" = Table.RemoveColumns(#"Filtered Rows",{"Parent Path"})
+in
+    #"Removed Columns";
 
 shared #"last refresh" = let
 
@@ -220,11 +254,12 @@ shared GetUncertainty = let
         Replicate = try ReplicateBaseline(#"Changed Type1", start_time) otherwise #"Changed Type1",
         #"Added Covid start date" = Table.TransformColumns(Replicate, {{"times", each _ + covid_date, Int64.Type}}),
         #"Rename Columns" = Table.RenameColumns( #"Added Covid start date",{{"scenario", "un_scenario"}, {"quantile", "un_quantile"}, {"times", "un_date"}, {"type", "stratification_name"}, {"value", "un_value"}}),
-        #"Added to Column" = Table.TransformColumns(#"Rename Columns", {{"stratification_name", each DimStratification{[stratification_name = _]}[stratification_id] , Int64.Type}}),
-        #"Changed Type" = Table.TransformColumnTypes(#"Added to Column",{{"un_date", type date}}),
-        #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"stratification_name", "stratification_id"}})
+        #"Merged Queries" = Table.NestedJoin(#"Rename Columns", {"stratification_name"}, DimStratification, {"stratification_name"}, "DimStratification", JoinKind.LeftOuter),
+        #"Expanded DimStratification" = Table.ExpandTableColumn(#"Merged Queries", "DimStratification", {"stratification_id"}, {"stratification_id"}),
+        #"Changed Type" = Table.TransformColumnTypes(#"Expanded DimStratification",{{"un_date", type date}}),
+        #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"stratification_name"})
     in
-        #"Renamed Columns"
+        #"Removed Columns"
 in
     Source2;
 
@@ -250,16 +285,20 @@ in
     #"Changed Type";
 
 shared DimAge = let
-    age = List.Generate(() => 0, each _ <= 75, each _ +5),
-    Custom1 = List.Union({age, {-1}}),
-    #"Converted to Table" = Table.FromList(Custom1, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    #"Renamed Columns" = Table.RenameColumns(#"Converted to Table",{{"Column1", "dim_age"}}),
-    #"Changed Type2" = Table.TransformColumnTypes(#"Renamed Columns",{{"dim_age", Int64.Type}}),#"Added Conditional Column" = Table.AddColumn(#"Changed Type2", "dim_age_group", each if [dim_age] = 0 then "00-04" else if [dim_age] = 5 then "05-09" else if [dim_age] = 10 then "10-14" else if [dim_age] = 15 then "15-19" else if [dim_age] = 20 then "20-24" else if [dim_age] = 25 then "25-29" else if [dim_age] = 30 then "30-34" else if [dim_age] = 35 then "35-39" else if [dim_age] = 40 then "40-44" else if [dim_age] = 45 then "45-49" else if [dim_age] = 50 then "50-54" else if [dim_age] = 55 then "55-59" else if [dim_age] = 60 then "60-64" else if [dim_age] = 65 then "65-69" else if [dim_age] = 70 then "70-74" else if [dim_age] = 75 then "75+" else null, type text)
+    
+    age = {"00-04","05-09","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75+"},
+    #"Converted to Table1" = Table.FromList(age, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Duplicated Column" = Table.DuplicateColumn(#"Converted to Table1", "Column1", "Column1 - Copy"),
+    #"Extracted Text Before Delimiter" = Table.TransformColumns(#"Duplicated Column", {{"Column1", each Text.BeforeDelimiter(_, "-"), type text}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Extracted Text Before Delimiter",{{"Column1 - Copy", type text}, {"Column1", Int64.Type}}),
+    #"Renamed Columns1" = Table.RenameColumns(#"Changed Type",{{"Column1", "dim_age"}, {"Column1 - Copy", "dim_age_group"}}),
+    Custom3 = Table.InsertRows(#"Renamed Columns1",16,{[dim_age=-1,dim_age_group="unknown"]}),
+    Custom1 = Table.Buffer(Custom3)
 in
-    #"Added Conditional Column";
+    Custom1;
 
 shared DimScenario = let
-    Source = #table({"dim_scenario" as text},{{"S_0"},{"S_1"},{"S_2"},{"S_3"},{"S_4"},{"S_5"},{"S_6"},{"S_7"},{"S_8"},{"S_9"},{"S_10"},{"S_11"},{"S_12"},{"S_13"}}) as table,
+    Source = #table({"dim_scenario" as text},{{"S_0"},{"S_1"},{"S_2"},{"S_3"},{"S_4"},{"S_5"},{"S_6"},{"S_7"},{"S_8"},{"S_9"},{"S_10"},{"S_11"},{"S_12"},{"S_13"},{"S_14"},{"S_15"}}) as table,
     #"Added Index" = Table.AddIndexColumn(Source, "dim_scenario_id", 0, 1, Int64.Type),
     #"Changed Type" = Table.TransformColumnTypes(#"Added Index",{{"dim_scenario", type text}})
 in
@@ -276,7 +315,7 @@ shared DimRegion = let
     #"Removed Other Columns" = Table.SelectColumns(Source,{"region_name"}),
     #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
     #"Renamed Columns1" = Table.RenameColumns(#"Removed Duplicates",{{"region_name", "dim_region"}}),
-    #"Added Conditional Column" = Table.AddColumn(#"Renamed Columns1", "country", each if [dim_region] = "national capital region" then "philippines" else if [dim_region] = "calabarzon" then "philippines" else if [dim_region] = "central visayas" then "philippines" else if [dim_region] = "davao city" then "philippines" else if [dim_region] = "victoria" then "australia" else if [dim_region] = "penang" then "malaysia" else if [dim_region] = "kuala lumpur" then "malaysia" else if [dim_region] = "johor" then "malaysia" else if [dim_region] = "selangor" then "malaysia" else [dim_region], type text),
+    #"Added Conditional Column" = Table.AddColumn(#"Renamed Columns1", "country", each if [dim_region] = "national capital region" then "philippines" else if [dim_region] = "calabarzon" then "philippines" else if [dim_region] = "central visayas" then "philippines" else if [dim_region] = "davao city" then "philippines" else if [dim_region] = "davao region" then "philippines" else if [dim_region] = "victoria" then "australia" else if [dim_region] = "penang" then "malaysia" else if [dim_region] = "kuala lumpur" then "malaysia" else if [dim_region] = "johor" then "malaysia" else if [dim_region] = "selangor" then "malaysia" else [dim_region], type text),
     #"Renamed Columns" = Table.RenameColumns(#"Added Conditional Column",{{"country", "dim_country"}})
 in
     #"Renamed Columns";
@@ -318,18 +357,23 @@ in
     #"Changed Type";
 
 shared base_stratification = let
-    Source = base_derived_output[[stratification_name]],
-    #"Removed Duplicates" = Table.Distinct(Source),
-    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "stratification_id", 0, 1, Int64.Type),
+    Source = base_build_index,
+    #"Invoked Custom Function" = Table.AddColumn(Source, "StratificationNames", each GetColumnNames([Full_Path]))[StratificationNames],
+    Custom1 = List.Distinct(List.Combine(#"Invoked Custom Function")),
+    #"Converted to Table" = Table.FromList(Custom1, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Renamed Columns" = Table.RenameColumns(#"Converted to Table",{{"Column1", "stratification_name"}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"stratification_name", type text}}),
+    #"Added Index" = Table.AddIndexColumn(#"Changed Type", "stratification_id", 0, 1, Int64.Type),
     #"Inserted Text Between Delimiters" = Table.AddColumn(#"Added Index", "stratification_age", each Number.FromText(Text.BetweenDelimiters([stratification_name], "agegroup_", "X")), Int64.Type),
     #"Inserted Text After Delimiter" = Table.AddColumn(#"Inserted Text Between Delimiters", "stratification_clinical", each Text.AfterDelimiter([stratification_name], "clinical_"), type text),
     #"Replaced Value" = Table.ReplaceValue(#"Inserted Text After Delimiter","","-1",Replacer.ReplaceValue,{"stratification_clinical"}),
     #"Inserted Text Before Delimiter" = Table.AddColumn(#"Replaced Value", "stratification_strata1", each  if [stratification_age] <> null then Text.BeforeDelimiter([stratification_name], "X") else null, type text),
     #"Replaced Value1" = Table.ReplaceValue(#"Inserted Text Before Delimiter",null,-1,Replacer.ReplaceValue,{"stratification_age"}),
     #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1",null, each [stratification_name],Replacer.ReplaceValue,{"stratification_strata1"} ),
-    #"Changed Type" = Table.TransformColumnTypes(#"Replaced Value2",{{"stratification_strata1", type text}})
+    #"Changed Type2" = Table.TransformColumnTypes(#"Replaced Value2",{{"stratification_strata1", type text}})
+
 in
-    #"Changed Type";
+    #"Changed Type2";
 
 shared derived_output = let
     Source = base_derived_output,
@@ -344,7 +388,7 @@ shared GetCalibrationValues = let
         targets_Table = Source{[Name="targets",Kind="Table"]}[Data],
         FixBinary = Table.TransformColumns(targets_Table,{{"times", ConvertBinary, Int64.Type}}),
         #"Changed Type" = Table.TransformColumnTypes(FixBinary,{{"times", Int64.Type}}),
-        Transform_columns = Table.TransformColumns(#"Changed Type", {{"times", each _ + covid_date, type number},{"key", each DimStratification{[stratification_name = _]}[stratification_id], Int64.Type}}),
+        Transform_columns = Table.TransformColumns(#"Changed Type", {{"times", each _ + covid_date, Int64.Type},{"key", each DimStratification{[stratification_name = _]}[stratification_id], Int64.Type}}),
         #"Changed Type2" = Table.TransformColumnTypes(Transform_columns,{{"times", type date}}),
         #"Renamed Columns" = Table.RenameColumns(#"Changed Type2",{{"key", "stratification_id"}, {"times", "cal_date"}, {"value", "cal_value"}})
     in
@@ -425,7 +469,7 @@ in
     Source;
 
 shared covid_date = let
-    Source = 43830
+    Source = Int64.From(43830)
 in
     Source;
 
@@ -452,7 +496,7 @@ in
 
 shared StartDate = #date(2019, 12, 31) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
 
-shared EndDate = #date(2021, 12, 31) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
+shared EndDate = #date(2022, 12, 31) meta [IsParameterQuery=true, Type="Date", IsParameterQueryRequired=true];
 
 shared mcmc = let
     Source = Table.NestedJoin(base_mcmc_run, {"build_index", "mcmc_chain", "mcmc_run"}, base_mcmc_param, {"build_index", "mcmc_chain", "mcmc_run"}, "base_mcmc_param", JoinKind.RightOuter),
@@ -473,7 +517,7 @@ shared sanddance = let
 in
     #"Expanded base_mcmc_param";
 
-shared data_location = "C:\Users\kogmaw\Desktop\output" meta [IsParameterQuery=true, List={"M:\Documents\@Projects\Covid models\PHL_DATA\", "M:\Documents\@Projects\Covid_consolidate\output", "M:\Documents\@Projects\Covid_consolidate\output\powerbi-covid_19-malaysia-1613526591-d1d2eb1.db", "M:\Documents\@Projects\Covid_consolidate\output_fixed"}, DefaultValue=..., Type="Text", IsParameterQueryRequired=false];
+shared data_location = "C:\Users\kogmaw\Desktop\output" meta [IsParameterQuery=true, List={"M:\Documents\@Projects\Covid_consolidate\output", "M:\Documents\@Projects\Covid_consolidate\output_fixed", "M:\Documents\@Projects\Covid_consolidate\output_test", "M:\Documents\@Projects\Covid_consolidate\output_pivot", "C:\Users\kogmaw\Desktop\output"}, DefaultValue=..., Type="Text", IsParameterQueryRequired=false];
 
 shared GetBuild = let
     Source = (pbidbpath as text) => 
@@ -560,3 +604,13 @@ shared DimWith = let
     #"Added Conditional Column" = Table.AddColumn(#"Renamed Columns", "dim_age_group", each if [With] = 0 then "00-04" else if [With] = 5 then "05-09" else if [With] = 10 then "10-14" else if [With] = 15 then "15-19" else if [With] = 20 then "20-24" else if [With] = 25 then "25-29" else if [With] = 30 then "30-34" else if [With] = 35 then "35-39" else if [With] = 40 then "40-44" else if [With] = 45 then "45-49" else if [With] = 50 then "50-54" else if [With] = 55 then "55-59" else if [With] = 60 then "60-64" else if [With] = 65 then "65-69" else if [With] = 70 then "70-74" else if [With] = 75 then "75+" else null, type text)
 in
     #"Added Conditional Column";
+
+shared GetColumnNames = let
+    Source = (pbidbpath as text) => let
+            Source2 = Odbc.DataSource("database="&pbidbpath&";dsn=SQLite3 Datasource", [HierarchicalNavigation=true]),
+            derived_output_Table = Source2{[Name="derived_outputs",Kind="Table"]}[Data],
+        Custom1 = List.RemoveMatchingItems(Table.ColumnNames(derived_output_Table), {"chain","run","scenario","times"})
+    in
+        Custom1
+in
+    Source;

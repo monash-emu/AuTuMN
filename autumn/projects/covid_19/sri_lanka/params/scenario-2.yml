@@ -1,23 +1,23 @@
 description: Scenario 2, 50% return to the max mobility obesrved in the past 90 days
 
 time:
-  start: 529 # 12th June 2021
+  start: 559 # 12th July 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-06-12
+        - 2021-07-12
       values:
         - - close_to_max_last_period
-          - 90
+          - 120
           - 0.5
     work:
       append: true
       times:
-        - 2021-06-12
+        - 2021-07-12
       values:
         - - close_to_max_last_period
-          - 90
+          - 120
           - 0.5

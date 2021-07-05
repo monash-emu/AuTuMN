@@ -56,7 +56,7 @@ voc_emergence:
   seed_duration: 10.
   contact_rate_multiplier: 1.56 # LSHTM's estimate
 
-cumul_incidence_start_time: 545 # 28 Jun 2021
+cumul_incidence_start_time: 562 # 15 Jul 2021
 
 # Vaccination-related
 vaccination:
@@ -64,10 +64,10 @@ vaccination:
   vacc_prop_prevent_infection: 1 # now varied
   roll_out_components:
     - supply_period_coverage:
-        coverage: .035
+        coverage: .08
         start_time: 426 # 1 Mar 2021
-        end_time: 544 # 27 June 2021
+        end_time: 561 # 14 July 2021
     - supply_period_coverage:
-        coverage: .3
-        start_time: 545 # 28 June 2021
+        coverage: .30
+        start_time: 562 # 15 July 2021
         end_time: 731 # 31 Dec 2021

@@ -1,0 +1,32 @@
+description: Scenario 7, 50% vaccine roll-out in 11 months + 50% return to the max mobility
+
+time:
+  start: 559 # 12th July 2021
+
+vaccination:
+
+  # Eleven months from 12th July 2021
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.5
+        start_time: 559.
+        end_time: 893.
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-07-12
+      values:
+        - - close_to_max_last_period
+          - 120
+          - 0.5
+    work:
+      append: true
+      times:
+        - 2021-07-12
+      values:
+        - - close_to_max_last_period
+          - 120
+          - 0.5

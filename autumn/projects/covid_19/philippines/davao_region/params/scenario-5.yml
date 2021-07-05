@@ -1,30 +1,31 @@
-description: 70% vaccine coverage / 50% increased mobility
+description: 30% vaccine coverage / 50% increased mobility / 50% increased testing
 mobility:
   mixing:
-    work:
-      append: true
-      times:
-      - 544
-      - 546
-      values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.5
     other_locations:
       append: true
       times:
-      - 544
-      - 546
+      - 561
+      - 563
       values:
       - - repeat_prev
       - - scale_prev
         - 1.5
-parent: autumn/projects/covid_19/davao_region/davao_region/params/default.yml
+    work:
+      append: true
+      times:
+      - 561
+      - 563
+      values:
+      - - repeat_prev
+      - - scale_prev
+        - 1.5
+testing_to_detection:
+  test_multiplier:
+    times:
+    - 561
+    - 563
+    values:
+    - 1.0
+    - 1.5
 time:
-  start: 545
-vaccination:
-  roll_out_components:
-  - supply_period_coverage:
-      coverage: 0.7
-      end_time: 731
-      start_time: 545
+  start: 562

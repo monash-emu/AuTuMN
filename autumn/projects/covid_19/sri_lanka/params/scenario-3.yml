@@ -1,13 +1,13 @@
 description: Scenario 3, re-opening schools
 
 time:
-  start: 529 # 12th June 2021
+  start: 559 # 12th July 2021
 
 mobility:
   mixing:
     school:
       append: false
       times:
-        - 2021-06-12 # All schools open
+        - 2021-07-12 # All schools open
       values:
         - 1

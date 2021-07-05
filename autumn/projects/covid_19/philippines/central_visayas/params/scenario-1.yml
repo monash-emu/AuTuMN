@@ -1,9 +1,11 @@
-description: 25% coverage
+description: 30% vaccine coverage / baseline mobility / 50% increased testing
+testing_to_detection:
+  test_multiplier:
+    times:
+    - 561
+    - 563
+    values:
+    - 1.0
+    - 1.5
 time:
-  start: 517
-vaccination:
-  roll_out_components:
-    - supply_period_coverage:
-        coverage: 0.25
-        end_time: 731
-        start_time: 517
+  start: 562

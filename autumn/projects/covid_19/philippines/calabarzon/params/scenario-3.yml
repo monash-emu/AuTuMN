@@ -1,20 +1,31 @@
-description: 30% vaccine coverage / 90% onsite workers
+description: 30% vaccine coverage / 30% increased mobility / 50% increased testing
 mobility:
   mixing:
+    other_locations:
+      append: true
+      times:
+      - 561
+      - 563
+      values:
+      - - repeat_prev
+      - - scale_prev
+        - 1.3
     work:
       append: true
       times:
-      - 544
-      - 546
+      - 561
+      - 563
       values:
       - - repeat_prev
-      - 0.9
-parent: autumn/projects/covid_19/calabarzon/calabarzon/params/default.yml
+      - - scale_prev
+        - 1.3
+testing_to_detection:
+  test_multiplier:
+    times:
+    - 561
+    - 563
+    values:
+    - 1.0
+    - 1.5
 time:
-  start: 545
-vaccination:
-  roll_out_components:
-  - supply_period_coverage:
-      coverage: 0.3
-      end_time: 731
-      start_time: 545
+  start: 562

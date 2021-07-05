@@ -596,7 +596,7 @@ class Calibration:
 
     def reduce_proposal_step_size(self):
         """
-        Halve the "jumping_sd" associated with each parameter during the pre-adaptive phase
+        Reduce the "jumping_sd" associated with each parameter during the pre-adaptive phase
         """
         for i in range(len(self.iterative_sampling_priors)):
             self.iterative_sampling_priors[i]["jumping_sd"] *= self.jumping_sd_adjustment

@@ -53,7 +53,7 @@ for region in regions_for_multipliers:
     region_name = region.replace("-", "_")
     name = f"victorian_clusters.contact_rate_multiplier_{region_name}"
     # Shouldn't be too peaked with these values.
-    prior = TruncNormalPrior(name, mean=1.0, stdev=0.5, trunc_range=[0.5, np.inf])
+    prior = TruncNormalPrior(name, mean=1.0, stdev=0.5, trunc_range=[0.5, np.inf], jumping_stdev=0.075)
     cluster_priors.append(prior)
 
 priors = [
@@ -69,8 +69,8 @@ priors = [
         trunc_range=[0.5, np.inf],
         jumping_stdev=0.05,
     ),
-    UniformPrior("contact_rate", [0.03, 0.08], jumping_stdev=0.002),
-    UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.001),
+    UniformPrior("contact_rate", [0.03, 0.08], jumping_stdev=0.004),
+    UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.005),
     # Should be multiplied by 4/9 because seed is removed from regional clusters
     UniformPrior("infectious_seed", [22.5, 67.5], jumping_stdev=2.0),
     TruncNormalPrior(
@@ -78,29 +78,30 @@ priors = [
         mean=1.0,
         stdev=0.2,
         trunc_range=[0.5, np.inf],
+        jumping_stdev=5.,
     ),
-    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.7], jumping_stdev=0.01),
-    UniformPrior("infection_fatality.multiplier", [0.5, 4.0], jumping_stdev=0.05),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.01),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.7], jumping_stdev=0.025),
+    UniformPrior("infection_fatality.multiplier", [0.5, 4.0], jumping_stdev=0.2),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.025),
     TruncNormalPrior(
         "sojourn.compartment_periods.icu_early",
         mean=12.7,
         stdev=4.0,
         trunc_range=[3.0, np.inf],
-        jumping_stdev=2.0
+        jumping_stdev=3.
     ),
     UniformPrior(
         "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
         [0.0, 0.5],
-        jumping_stdev=0.005,
+        jumping_stdev=0.05,
     ),
     UniformPrior(
         "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
         [0.0, 0.5],
-        jumping_stdev=0.005,
+        jumping_stdev=0.025,
     ),
-    UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.005),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.005),
+    UniformPrior("target_output_ratio", [0.1, 0.4], jumping_stdev=0.025),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.025),
 ]
 
 calibration = Calibration(

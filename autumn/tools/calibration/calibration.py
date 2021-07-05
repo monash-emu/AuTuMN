@@ -86,7 +86,9 @@ class Calibration:
         metropolis_init: str = DEFAULT_METRO_INIT,
         metropolis_init_rel_step_size: float = DEFAULT_METRO_STEP,
         fixed_proposal_steps: int = DEFAULT_STEPS,
-        seed: int = None
+        seed: int = None,
+        initial_jumping_sd_ratio: float = 0.25,
+        jumping_sd_adjustment: float = 0.5,
     ):
         """
         Defines a new calibration.
@@ -100,6 +102,8 @@ class Calibration:
         self.initialisation_type = metropolis_init
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
         self.n_steps_fixed_proposal = fixed_proposal_steps
+        self.initial_jumping_sd_ratio = initial_jumping_sd_ratio
+        self.jumping_sd_adjustment = jumping_sd_adjustment
 
         self.split_priors_by_type()
 
@@ -408,7 +412,7 @@ class Calibration:
                     self.metropolis_init_rel_step_size  # fraction of prior_width in which 95% of samples should fall
                 )
                 self.iterative_sampling_priors[i]["jumping_sd"] = (
-                    relative_prior_width * prior_width / 4.0
+                    relative_prior_width * prior_width * self.initial_jumping_sd_ratio
                 )
 
     def run_fitting_algorithm(
@@ -595,7 +599,7 @@ class Calibration:
         Halve the "jumping_sd" associated with each parameter during the pre-adaptive phase
         """
         for i in range(len(self.iterative_sampling_priors)):
-            self.iterative_sampling_priors[i]["jumping_sd"] /= 2.0
+            self.iterative_sampling_priors[i]["jumping_sd"] *= self.jumping_sd_adjustment
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(

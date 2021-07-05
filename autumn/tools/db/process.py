@@ -202,7 +202,7 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
 
     source_db = get_database(source_db_path)
     target_db = get_database(target_db_path)
-    tables_to_copy = [t for t in source_db.table_names() if t != "outputs"]
+    tables_to_copy = [t for t in source_db.table_names() if t not in ["outputs"]]
     for table_name in tables_to_copy:
         logger.info("Copying %s", table_name)
         table_df = source_db.query(table_name)
@@ -226,15 +226,15 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     logger.info("Adding 'scenario' metadata table")
 
     project = get_project(app_name, region_name)
-    basline_params = project.param_set.baseline.to_dict()
+    baseline_params = project.param_set.baseline.to_dict()
     sc_params = [sc.to_dict() for sc in project.param_set.scenarios]
 
     # Add default scenario
     scenario_data = [
         {
             "scenario": 0,
-            "start_time": int(basline_params["time"]["start"]),
-            "description": basline_params.get("description", ""),
+            "start_time": int(baseline_params["time"]["start"]),
+            "description": baseline_params.get("description", ""),
         }
     ]
     for sc_idx, sc_params in enumerate(sc_params):
@@ -267,6 +267,13 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     outputs_df = source_db.query("outputs")
     pbi_outputs_df = unpivot_outputs(outputs_df)
     target_db.dump_df("powerbi_outputs", pbi_outputs_df)
+
+    logger.info("Converting derived outputs to PowerBI format")
+    do_df = source_db.query("derived_outputs")
+    id_cols = ["chain", "run", "scenario", "times"]
+    pbi_do_df = do_df.melt(id_vars=id_cols, var_name="stratification", value_name="value")
+    target_db.dump_df("powerbi_derived_outputs", pbi_do_df)
+
     logger.info("Finished creating PowerBI output database at %s", target_db_path)
 
 

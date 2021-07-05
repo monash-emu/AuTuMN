@@ -19,6 +19,13 @@ urunid_field = TextInputField(
     default="mle",
     type=str,
 )
+branch_field = TextInputField(
+    key="branch",
+    title="Git branch name",
+    hint="Which git branch do you want to run from?",
+    default="master",
+    type=str,
+)
 spot_field = BooleanInputField(
     key="spot-instance",
     title="Use spot instances",
@@ -27,7 +34,7 @@ spot_field = BooleanInputField(
     type=bool,
 )
 
-fields = [run_id_field, urunid_field, spot_field]
+fields = [run_id_field, urunid_field, branch_field, spot_field]
 input_step = InputStep(
     key="powerbi-processing-settings",
     run_condition='build.env("SKIP_INPUT") == null',

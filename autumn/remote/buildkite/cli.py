@@ -152,6 +152,7 @@ def powerbi():
     run_id = powerbi_pipeline.run_id_field.get_value()
     is_spot = powerbi_pipeline.spot_field.get_value()
     urunid = powerbi_pipeline.urunid_field.get_value()
+    branch = powerbi_pipeline.branch_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in powerbi_pipeline.fields}, indent=2)
     app_name, region_name, _, _ = read_run_id(run_id)
     job_name = f"{app_name}-{region_name}-{build_number}"
@@ -159,7 +160,7 @@ def powerbi():
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Running PowerBI post processing job %s with params:\n%s\n", job_name, params_str)
     # FIXME +++ Nasty hack to get powerbi job running temporarily during refactor
-    aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, branch="master", is_spot=is_spot)
+    aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, branch=branch, is_spot=is_spot)
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
 

@@ -13,6 +13,50 @@ from autumn.tools.utils.utils import (
 )
 
 
+def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
+
+    adjustments = {}
+    for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
+
+        # Function-based flow rates
+
+        # Get isolated rate for overwriting
+        get_abs_prop_isolated = get_abs_prop_isolated_factory(
+            age_idx, abs_props, get_detected_proportion
+        )
+
+        def isolate_flow_rate(
+            t, func=get_abs_prop_isolated
+        ):  # Function must be "bound" within loop
+            return func(t) * early_rate
+
+        # Get sympt non-hospital rate for overwriting
+        get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
+            age_idx, abs_props, get_abs_prop_isolated
+        )
+
+        def sympt_non_hosp_rate(
+            t, func=get_abs_prop_sympt_non_hospital
+        ):  # Function must be "bound" within loop
+            return func(t) * early_rate
+
+        # Constant flow rates
+        clinical_non_sympt_rate = abs_props[Clinical.NON_SYMPT][age_idx] * early_rate
+        clinical_icu_rate = abs_props[Clinical.ICU][age_idx] * early_rate
+        hospital_non_icu_rate = abs_props[Clinical.HOSPITAL_NON_ICU][age_idx] * early_rate
+
+        # Age-specific adjustments object
+        adjustments[agegroup] = {
+            Clinical.NON_SYMPT: Overwrite(clinical_non_sympt_rate),
+            Clinical.ICU: Overwrite(clinical_icu_rate),
+            Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_non_icu_rate),
+            Clinical.SYMPT_NON_HOSPITAL: Overwrite(sympt_non_hosp_rate),
+            Clinical.SYMPT_ISOLATE: Overwrite(isolate_flow_rate),
+        }
+
+    return adjustments
+
+
 def get_proportion_symptomatic(clinical_params):
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
     return repeat_list_elements(2, clinical_params.props.symptomatic.props)
@@ -252,25 +296,6 @@ def get_relative_death_props(abs_props, abs_death_props):
     }
 
 
-def get_hosp_sojourns(sojourn):
-    # Now we want to convert these death proportions into flow rates
-    # These flow rates are the death rates for hospitalised patients in ICU and non-ICU
-    # We assume everyone who dies does so at the end of their time in the "late active" compartment
-    # We split the flow rate out of "late active" into a death or recovery flow, based on the relative death proportion
-    within_hospital_late = 1.0 / sojourn.compartment_periods["hospital_late"]
-    within_icu_late = 1.0 / sojourn.compartment_periods["icu_late"]
-
-    return within_hospital_late, within_icu_late
-
-
-def get_hosp_death_rates(relative_death_props, within_active_late, within_hospital_late, within_icu_late):
-    asympt_death_rates = relative_death_props[Clinical.NON_SYMPT] * within_active_late
-    hospital_death_rates = relative_death_props[Clinical.HOSPITAL_NON_ICU] * within_hospital_late
-    icu_death_rates = relative_death_props[Clinical.ICU] * within_icu_late
-
-    return asympt_death_rates, hospital_death_rates, icu_death_rates
-
-
 def get_death_adjs(asympt_death_rates, hospital_death_rates, icu_death_rates):
 
     # Apply adjusted infection death rates for hospital patients (ICU and non-ICU)
@@ -287,50 +312,6 @@ def get_death_adjs(asympt_death_rates, hospital_death_rates, icu_death_rates):
     return death_adjs
 
 
-def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
-
-    adjustments = {}
-    for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
-
-        # Function-based flow rates
-
-        # Get isolated rate for overwriting
-        get_abs_prop_isolated = get_abs_prop_isolated_factory(
-            age_idx, abs_props, get_detected_proportion
-        )
-
-        def isolate_flow_rate(
-            t, func=get_abs_prop_isolated
-        ):  # Function must be "bound" within loop
-            return func(t) * early_rate
-
-        # Get sympt non-hospital rate for overwriting
-        get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
-            age_idx, abs_props, get_abs_prop_isolated
-        )
-
-        def sympt_non_hosp_rate(
-            t, func=get_abs_prop_sympt_non_hospital
-        ):  # Function must be "bound" within loop
-            return func(t) * early_rate
-
-        # Constant flow rates
-        clinical_non_sympt_rate = abs_props[Clinical.NON_SYMPT][age_idx] * early_rate
-        clinical_icu_rate = abs_props[Clinical.ICU][age_idx] * early_rate
-        hospital_non_icu_rate = abs_props[Clinical.HOSPITAL_NON_ICU][age_idx] * early_rate
-
-        # Age-specific adjustments object
-        adjustments[agegroup] = {
-            Clinical.NON_SYMPT: Overwrite(clinical_non_sympt_rate),
-            Clinical.ICU: Overwrite(clinical_icu_rate),
-            Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_non_icu_rate),
-            Clinical.SYMPT_NON_HOSPITAL: Overwrite(sympt_non_hosp_rate),
-            Clinical.SYMPT_ISOLATE: Overwrite(isolate_flow_rate),
-        }
-
-    return adjustments
-
-
 def get_progress_adjs(within_hospital_early, within_icu_early):
     return {
         Clinical.NON_SYMPT: None,
@@ -345,7 +326,7 @@ def get_recovery_adjs(asympt_survival_rates, hospital_survival_rates, icu_surviv
     recovery_adjs = {}
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
         recovery_adjs[agegroup] = {
-            Clinical.NON_SYMPT: None,
+            Clinical.NON_SYMPT: Overwrite(asympt_survival_rates[i_age]),
             Clinical.ICU: Overwrite(icu_survival_rates[i_age]),
             Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[i_age]),
             Clinical.SYMPT_NON_HOSPITAL: None,
@@ -367,39 +348,74 @@ def get_all_adjs(
     hospital_adjuster,
     top_bracket_overwrite=None,
 ):
+
+    """
+    Work out all the relevant sojourn times and the associated total rates at which they exit the compartments.
+    We assume everyone who dies does so at the end of their time in the "late active" compartment.
+    Later, we split the flow rate out of "late active" into a death or recovery flow, based on proportion dying.
+    """
     compartment_periods = preprocess.compartments.calc_compartment_periods(sojourn)
+    within_asympt_late = 1. / compartment_periods["late_active"]
+    within_hospital_early = 1. / sojourn.compartment_periods["hospital_early"]
+    within_icu_early = 1. / sojourn.compartment_periods["icu_early"]
+    within_hospital_late = 1. / sojourn.compartment_periods["hospital_late"]
+    within_icu_late = 1. / sojourn.compartment_periods["icu_late"]
+
+    """
+    Process the IFR parameters.
+    """
     infection_fatality_props = get_ifr_props(ifr_adjuster, country, pop, ifr_props, top_bracket_overwrite)
+
+    """
+    Work out the proportion of people entering each stratum who die in that stratum
+    """
+
+    # The proportion of all people who enter each stratum.
     abs_props = get_sympt_props(
         symptomatic_adjuster,
         hospital_adjuster,
         clinical_params,
     )
+    # The proportion of people entering each stratum who die in that stratum.
     abs_death_props = get_absolute_death_proportions(
         abs_props, infection_fatality_props, clinical_params.icu_mortality_prop
     )
+    # The resulting proportion.
     relative_death_props = get_relative_death_props(abs_props, abs_death_props)
-    within_asympt_late = compartment_periods["late_active"]
-    within_hospital_late, within_icu_late = get_hosp_sojourns(sojourn)
-    asympt_death_rates, hospital_death_rates, icu_death_rates = get_hosp_death_rates(
-        relative_death_props, within_asympt_late, within_hospital_late, within_icu_late
-    )
+
+    # The survival proportions are the complement of the death proportions.
+    asympt_survival_props = 1.0 - relative_death_props[Clinical.NON_SYMPT]
+    hospital_survival_props = 1.0 - relative_death_props[Clinical.HOSPITAL_NON_ICU]
+    icu_survival_props = 1.0 - relative_death_props[Clinical.ICU]
+
+    """
+    Find death and survival rates from death proportions and sojourn times.
+    """
+    asympt_death_rates = relative_death_props[Clinical.NON_SYMPT] * within_asympt_late
+    hospital_death_rates = relative_death_props[Clinical.HOSPITAL_NON_ICU] * within_hospital_late
+    icu_death_rates = relative_death_props[Clinical.ICU] * within_icu_late
+
+    asympt_survival_rates = within_asympt_late * asympt_survival_props
+    hospital_survival_rates = within_hospital_late * hospital_survival_props
+    icu_survival_rates = within_icu_late * icu_survival_props
+
+    """
+    Convert to summer parameter overwrite objects.
+    """
     death_adjs = get_death_adjs(asympt_death_rates, hospital_death_rates, icu_death_rates)
+    progress_adjs = get_progress_adjs(within_hospital_early, within_icu_early)
+    recovery_adjs = get_recovery_adjs(asympt_survival_rates, hospital_survival_rates, icu_survival_rates)
+
+    """
+    Do the entry adjustments.
+    """
     get_detected_proportion = build_detected_proportion_func(
         AGEGROUP_STRATA, country, pop, testing_to_detection, case_detection
     )
     entry_adjustments = get_entry_adjustments(
-        abs_props, get_detected_proportion, 1.0 / compartment_periods[Compartment.EARLY_EXPOSED]
+        abs_props, get_detected_proportion, 1. / compartment_periods[Compartment.EARLY_EXPOSED]
     )
-    within_hospital_early = 1.0 / sojourn.compartment_periods["hospital_early"]
-    within_icu_early = 1.0 / sojourn.compartment_periods["icu_early"]
-    asympt_survival_props = 1.0 - relative_death_props[Clinical.NON_SYMPT]
-    hospital_survival_props = 1.0 - relative_death_props[Clinical.HOSPITAL_NON_ICU]
-    icu_survival_props = 1.0 - relative_death_props[Clinical.ICU]
-    asympt_survival_rates = within_asympt_late * asympt_survival_props
-    hospital_survival_rates = within_hospital_late * hospital_survival_props
-    icu_survival_rates = within_icu_late * icu_survival_props
-    progress_adjs = get_progress_adjs(within_hospital_early, within_icu_early)
-    recovery_adjs = get_recovery_adjs(asympt_survival_rates, hospital_survival_rates, icu_survival_rates)
+
     return (
         entry_adjustments,
         death_adjs,

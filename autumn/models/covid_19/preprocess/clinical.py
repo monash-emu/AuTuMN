@@ -257,21 +257,6 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     return split_arr, complement_arr
 
 
-def get_ifr_props(adjuster, country, pop, ifr_props, top_bracket_overwrite=None):
-
-    # Proportion of people in age group who die, given the number infected: dead / total infected.
-    base_ifr_props = get_infection_fatality_proportions(
-        infection_fatality_props_10_year=ifr_props,
-        infection_rate_multiplier=adjuster,
-        iso3=country.iso3,
-        pop_region=pop.region,
-        pop_year=pop.year,
-    )
-    if top_bracket_overwrite:
-        base_ifr_props[-1] = top_bracket_overwrite
-    return base_ifr_props
-
-
 def get_sympt_props(symptomatic_adjuster, hospital_adjuster, clinical_params):
     """
     Get the proportion of people in each clinical stratum, relative to total people in compartment.
@@ -340,9 +325,19 @@ def get_all_adjs(
     within_icu_late = 1. / sojourn.compartment_periods["icu_late"]
 
     """
-    Process the age-structured IFR parameters.
+    Process the age-structured IFR parameters, i.e. the proportion of people in age group who die,
+    given the number infected
+    Numerator: deaths, denominator: all infected
     """
-    infection_fatality_props = get_ifr_props(ifr_adjuster, country, pop, ifr_props, top_bracket_overwrite)
+    infection_fatality_props = get_infection_fatality_proportions(
+        infection_fatality_props_10_year=ifr_props,
+        infection_rate_multiplier=ifr_adjuster,
+        iso3=country.iso3,
+        pop_region=pop.region,
+        pop_year=pop.year,
+    )
+    if top_bracket_overwrite:
+        infection_fatality_props[-1] = top_bracket_overwrite
 
     """
     Work out the proportion of people entering each stratum who die in that stratum (for each age group).

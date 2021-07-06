@@ -33,6 +33,7 @@ statsmodels>=0.12.2
 pytest
 pytest-parallel
 pytest-benchmark
+pytest-cov
 black
 isort
 moto[s3]  # Mock out AWS S3 storage

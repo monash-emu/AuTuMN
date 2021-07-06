@@ -37,6 +37,7 @@ def get_history_strat(params: Parameters) -> Stratification:
         rel_prop_symptomatic_experienced,
         rel_prop_symptomatic_experienced,
         rel_prop_symptomatic_experienced,
+        params.infection_fatality.top_bracket_overwrite,
     )
 
     return history_strat

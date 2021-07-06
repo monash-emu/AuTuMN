@@ -30,9 +30,11 @@ Philippines sub region population numbers are provided by the FASSSTER team exce
 [Davao City population](https://www.citypopulation.de/en/philippines/mindanao/admin/davao_del_sur/112402__davao/)
 [Davao Region population](https://www.citypopulation.de/en/philippines/admin/11__davao/)
 
-
 Sri Lanka sub region population
 [Western Province](https://www.citypopulation.de/en/srilanka/prov/admin/1__western/)
+
+Bali sub region population
+[Bali](https://www.citypopulation.de/php/indonesia-admin.php?adm1id=51)
 
 
 ### [WPP2019_FERT_F03_CRUDE_BIRTH_RATE](<https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/2_Fertility/WPP2019_FERT_F03_CRUDE_BIRTH_RATE.xlsx>)

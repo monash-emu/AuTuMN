@@ -11,6 +11,13 @@ time:
 country:
   iso3: IDN
 
+population:
+  region: Bali
+  year: 2010
+
+mobility:
+  region: Bali
+
 clinical_stratification:
   non_sympt_infect_multiplier: 0.25
   props:

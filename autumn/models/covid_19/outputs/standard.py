@@ -300,7 +300,12 @@ def request_standard_outputs(
                 )
 
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-        model.request_output_for_flow(name="vaccination", flow_name="vaccination")
+        for agegroup in AGEGROUP_STRATA:
+            model.request_output_for_flow(
+                name=f"vaccinationXagegroup_{agegroup}",
+                flow_name="vaccination",
+                source_strata={"agegroup": agegroup},
+                save_results=False)
 
     if params.voc_emergence:
         # Calculate the incidence of VoC cases

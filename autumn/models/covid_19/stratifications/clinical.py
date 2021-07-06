@@ -81,7 +81,6 @@ def get_clinical_strat(params: Parameters):
     #     params.clinical_stratification.props.hospital.multiplier
     hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
 
-
     # Get all the adjustments in the same way as we will do if the immunity stratification is implemented
     entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, get_detected_proportion = get_all_adjs(
         clinical_params,

@@ -263,21 +263,22 @@ def get_hosp_sojourns(sojourn):
     return within_hospital_late, within_icu_late
 
 
-def get_hosp_death_rates(relative_death_props, within_hospital_late, within_icu_late):
+def get_hosp_death_rates(relative_death_props, within_active_late, within_hospital_late, within_icu_late):
+    asympt_death_rates = relative_death_props[Clinical.NON_SYMPT] * within_active_late
     hospital_death_rates = relative_death_props[Clinical.HOSPITAL_NON_ICU] * within_hospital_late
     icu_death_rates = relative_death_props[Clinical.ICU] * within_icu_late
 
-    return hospital_death_rates, icu_death_rates
+    return asympt_death_rates, hospital_death_rates, icu_death_rates
 
 
-def apply_death_adjustments(hospital_death_rates, icu_death_rates):
+def get_death_adjs(asympt_death_rates, hospital_death_rates, icu_death_rates):
 
     # Apply adjusted infection death rates for hospital patients (ICU and non-ICU)
     # Death and non-death progression between infectious compartments towards the recovered compartment
     death_adjs = {}
     for idx, age_group in enumerate(AGEGROUP_STRATA):
         death_adjs[age_group] = {
-            Clinical.NON_SYMPT: None,
+            Clinical.NON_SYMPT: Overwrite(asympt_death_rates[idx]),
             Clinical.SYMPT_NON_HOSPITAL: None,
             Clinical.SYMPT_ISOLATE: None,
             Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_death_rates[idx]),
@@ -340,7 +341,7 @@ def get_progress_adjs(within_hospital_early, within_icu_early):
     }
 
 
-def get_recovery_adjs(hospital_survival_rates, icu_survival_rates):
+def get_recovery_adjs(asympt_survival_rates, hospital_survival_rates, icu_survival_rates):
     recovery_adjs = {}
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
         recovery_adjs[agegroup] = {
@@ -366,6 +367,7 @@ def get_all_adjs(
     hospital_adjuster,
     top_bracket_overwrite=None,
 ):
+    compartment_periods = preprocess.compartments.calc_compartment_periods(sojourn)
     infection_fatality_props = get_ifr_props(ifr_adjuster, country, pop, ifr_props, top_bracket_overwrite)
     abs_props = get_sympt_props(
         symptomatic_adjuster,
@@ -376,26 +378,28 @@ def get_all_adjs(
         abs_props, infection_fatality_props, clinical_params.icu_mortality_prop
     )
     relative_death_props = get_relative_death_props(abs_props, abs_death_props)
+    within_asympt_late = compartment_periods["late_active"]
     within_hospital_late, within_icu_late = get_hosp_sojourns(sojourn)
-    hospital_death_rates, icu_death_rates = get_hosp_death_rates(
-        relative_death_props, within_hospital_late, within_icu_late
+    asympt_death_rates, hospital_death_rates, icu_death_rates = get_hosp_death_rates(
+        relative_death_props, within_asympt_late, within_hospital_late, within_icu_late
     )
-    death_adjs = apply_death_adjustments(hospital_death_rates, icu_death_rates)
+    death_adjs = get_death_adjs(asympt_death_rates, hospital_death_rates, icu_death_rates)
     get_detected_proportion = build_detected_proportion_func(
         AGEGROUP_STRATA, country, pop, testing_to_detection, case_detection
     )
-    compartment_periods = preprocess.compartments.calc_compartment_periods(sojourn)
     entry_adjustments = get_entry_adjustments(
         abs_props, get_detected_proportion, 1.0 / compartment_periods[Compartment.EARLY_EXPOSED]
     )
     within_hospital_early = 1.0 / sojourn.compartment_periods["hospital_early"]
     within_icu_early = 1.0 / sojourn.compartment_periods["icu_early"]
+    asympt_survival_props = 1.0 - relative_death_props[Clinical.NON_SYMPT]
     hospital_survival_props = 1.0 - relative_death_props[Clinical.HOSPITAL_NON_ICU]
     icu_survival_props = 1.0 - relative_death_props[Clinical.ICU]
+    asympt_survival_rates = within_asympt_late * asympt_survival_props
     hospital_survival_rates = within_hospital_late * hospital_survival_props
     icu_survival_rates = within_icu_late * icu_survival_props
     progress_adjs = get_progress_adjs(within_hospital_early, within_icu_early)
-    recovery_adjs = get_recovery_adjs(hospital_survival_rates, icu_survival_rates)
+    recovery_adjs = get_recovery_adjs(asympt_survival_rates, hospital_survival_rates, icu_survival_rates)
     return (
         entry_adjustments,
         death_adjs,

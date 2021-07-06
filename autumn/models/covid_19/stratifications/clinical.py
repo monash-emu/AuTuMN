@@ -76,9 +76,11 @@ def get_clinical_strat(params: Parameters):
     ifr_top_bracket_overwrite = params.infection_fatality.top_bracket_overwrite
 
     # This is now unused and could be deleted - was the previous approach for Victoria
-    hospital_adjuster = ifr_adjuster if \
-        params.clinical_stratification.props.use_ifr_for_severity else \
-        params.clinical_stratification.props.hospital.multiplier
+    # hospital_adjuster = ifr_adjuster if \
+    #     params.clinical_stratification.props.use_ifr_for_severity else \
+    #     params.clinical_stratification.props.hospital.multiplier
+    hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
+
 
     # Get all the adjustments in the same way as we will do if the immunity stratification is implemented
     entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, get_detected_proportion = get_all_adjs(

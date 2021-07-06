@@ -57,8 +57,21 @@ for region in regions_for_multipliers:
     cluster_priors.append(prior)
 
 priors = [
-    # Global COVID priors.
-    *COVID_GLOBAL_PRIORS,
+    # Global COVID priors, but with jumping sds adjusted
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.exposed.total_period",
+        mean=5.5,
+        stdev=0.97,
+        trunc_range=[1.0, np.inf],
+        jumping_stdev=0.5,
+    ),
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.active.total_period",
+        mean=6.5,
+        stdev=0.77,
+        trunc_range=[4.0, np.inf],
+        jumping_stdev=0.4,
+    ),
     # Cluster specific priors.
     *cluster_priors,
     # Victorian regional priors.

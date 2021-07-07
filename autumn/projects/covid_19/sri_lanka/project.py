@@ -13,8 +13,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_dir_path = build_rel_path("params/")
-scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(10, 16)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
@@ -37,7 +36,7 @@ priors = [
     UniformPrior("contact_rate", [0.018, 0.028]),
     UniformPrior("infectious_seed", [140.0, 550.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.06]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.08]),
     UniformPrior("voc_emergence.start_time", [290, 440]),
     UniformPrior("voc_emergence.contact_rate_multiplier", [1.15, 3.2]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 0.75]),

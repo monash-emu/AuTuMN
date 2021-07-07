@@ -1,13 +1,11 @@
-contact_rate: 0.0262 # 0.025865638805460087
-contact_tracing.assumed_trace_prop:  0.6  # 0.05325334990807438
-testing_to_detection.assumed_cdr_parameter: 0.08 # 0.1567789967858573
-infection_fatality.multiplier: 1.75
-infection_deaths_dispersion_param: 8.822716413736384
-infectious_seed: 100 # 237.9325473337531
-notifications_dispersion_param: 447.0887853074105
-sojourn.compartment_periods_calculated.active.total_period: 6.016777957202477
-sojourn.compartment_periods_calculated.exposed.total_period: 6.108743748741511
-voc_emergence.contact_rate_multiplier: 2.466804224798431
-voc_emergence.start_time: 424.842025398809
-
-
+contact_rate: 0.02268898845567891
+contact_tracing.assumed_trace_prop: 0.739852267022194
+infection_deaths_dispersion_param: 9.13134112900087
+infection_fatality.multiplier: 1.6581426601070497
+infectious_seed: 385.3731832077551
+notifications_dispersion_param: 450.25355731555044
+sojourn.compartment_periods_calculated.active.total_period: 6.238131160555313
+sojourn.compartment_periods_calculated.exposed.total_period: 6.88084154432382
+testing_to_detection.assumed_cdr_parameter: 0.07362215340791542
+voc_emergence.contact_rate_multiplier: 2.8260468700606007
+voc_emergence.start_time: 429.59963141287676

@@ -41,7 +41,7 @@ priors = [
     UniformPrior("voc_emergence.start_time", [290, 440]),
     UniformPrior("voc_emergence.contact_rate_multiplier", [1.15, 3.2]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 0.75]),
-    UniformPrior("infection_fatality.multiplier", [2.0, 2.75])
+    UniformPrior("infection_fatality.multiplier", [1.5, 2.75])
 ]
 
 

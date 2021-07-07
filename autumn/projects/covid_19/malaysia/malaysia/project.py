@@ -39,23 +39,23 @@ priors = [
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.015, 0.06]),
-    UniformPrior("infectious_seed", [30.0, 300.0]),
+    UniformPrior("contact_rate", [0.01, 0.075]),
+    UniformPrior("infectious_seed", [25.0, 325.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.01, 0.06]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.08]),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.05, 0.4]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.01, 0.4]),
     # Health system-related
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.7, 1.25]),
-    UniformPrior("clinical_stratification.icu_prop", [0.18, 0.25]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.7, 1.35]),
+    UniformPrior("clinical_stratification.icu_prop", [0.18, 0.30]),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.01, 1.5]),
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.contact_rate_multiplier", [1.0, 3.0]),
-    UniformPrior("voc_emergence.start_time", [300, 420]),
-    UniformPrior("infection_fatality.multiplier", [2.0, 2.75])
+    UniformPrior("voc_emergence.start_time", [275, 420]),
+    UniformPrior("infection_fatality.multiplier", [1.8, 2.9])
 ]
 
 

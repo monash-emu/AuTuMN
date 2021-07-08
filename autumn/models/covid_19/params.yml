@@ -120,6 +120,7 @@ clinical_stratification:
 
 infection_fatality:
   multiplier: 1.
+  top_bracket_overwrite: null
   # Infection fatality proportions - last column of Table S3 (Mendeley citation key ODriscoll2020)
   props:
     - 0.00003 # 0-4

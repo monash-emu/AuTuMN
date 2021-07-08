@@ -166,6 +166,7 @@ def add_clinical_adjustments_to_strat(
     symptomatic_adjuster,
     hospital_adjuster,
     ifr_adjuster,
+    top_bracket_overwrite,
 ):
     """
     Get all the adjustments in the same way for both the history and vaccination stratifications.
@@ -182,6 +183,7 @@ def add_clinical_adjustments_to_strat(
         ifr_adjuster,
         symptomatic_adjuster,
         hospital_adjuster,
+        top_bracket_overwrite,
     )
 
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):

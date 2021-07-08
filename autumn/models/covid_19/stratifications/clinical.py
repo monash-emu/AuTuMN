@@ -73,10 +73,8 @@ def get_clinical_strat(params: Parameters):
     """
     symptomatic_adjuster = params.clinical_stratification.props.symptomatic.multiplier
     ifr_adjuster = params.infection_fatality.multiplier
-
-    hospital_adjuster = ifr_adjuster if \
-        params.clinical_stratification.props.use_ifr_for_severity else \
-        params.clinical_stratification.props.hospital.multiplier
+    ifr_top_bracket_overwrite = params.infection_fatality.top_bracket_overwrite
+    hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
 
     # Get all the adjustments in the same way as we will do if the immunity stratification is implemented
     entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, get_detected_proportion = get_all_adjs(
@@ -90,6 +88,7 @@ def get_clinical_strat(params: Parameters):
         ifr_adjuster,
         symptomatic_adjuster,
         hospital_adjuster,
+        ifr_top_bracket_overwrite,
     )
 
     # Assign all the adjustments to the model

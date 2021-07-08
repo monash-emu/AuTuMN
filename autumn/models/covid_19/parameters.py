@@ -140,7 +140,6 @@ class StrataProps(BaseModel):
 class ClinicalProportions(BaseModel):
     hospital: StrataProps
     symptomatic: StrataProps
-    use_ifr_for_severity: Optional[bool]
 
 
 class ClinicalStratification(BaseModel):
@@ -158,6 +157,8 @@ class InfectionFatality(BaseModel):
 
     # Calibrated multiplier for props.
     multiplier: float
+    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket.
+    top_bracket_overwrite: Optional[float]
     # Proportion of people dying / total infected by age.
     props: List[float]
 

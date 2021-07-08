@@ -10,6 +10,9 @@ contact_tracing:
     assumed_prev: 1.e-3
     quarantine_infect_multiplier: 0.2
 
+infection_fatality:
+  top_bracket_overwrite: 0.25
+
 vaccination: null
 
 time:
@@ -24,8 +27,6 @@ testing_to_detection:  # Need to mention these parameters in the Supplement some
 # Tiny adjustment for consistency with observations (0.16 instead of 0.17)
 clinical_stratification:
   icu_prop: 0.16
-  props:
-    use_ifr_for_severity: true
 
 # VAHI, 1st July to 30th September
 sojourn:

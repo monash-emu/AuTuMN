@@ -45,6 +45,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
         symptomatic_adjuster,
         hospital_adjuster,
         ifr_adjuster,
+        params.infection_fatality.top_bracket_overwrite,
     )
 
     # Apply vaccination effect against infection/transmission

@@ -9,7 +9,6 @@ from autumn.tools import inputs
 from autumn.tools.utils.utils import (
     apply_odds_ratio_to_proportion,
     repeat_list_elements,
-    repeat_list_elements_average_last_two,
 )
 NUM_AGE_STRATA = 16
 
@@ -70,16 +69,6 @@ def get_sympt_props(symptomatic_adjuster, hospital_adjuster, clinical_params):
         symptomatic_props_multiplier=symptomatic_adjuster,
         hospital_props_multiplier=hospital_adjuster,
     )
-
-
-def get_progress_adjs(within_hospital_early, within_icu_early):
-    return {
-        Clinical.NON_SYMPT: None,
-        Clinical.ICU: Overwrite(within_icu_early),
-        Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
-        Clinical.SYMPT_NON_HOSPITAL: None,
-        Clinical.SYMPT_ISOLATE: None,
-    }
 
 
 def get_proportion_symptomatic(clinical_params):
@@ -274,8 +263,10 @@ def get_all_adjustments(
 
     within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
 
-    within_hospital_early = 1. / sojourn.compartment_periods["hospital_early"]
-    within_icu_early = 1. / sojourn.compartment_periods["icu_early"]
+    within_early_rates = {
+        Clinical.HOSPITAL_NON_ICU: 1. / sojourn.compartment_periods["hospital_early"],
+        Clinical.ICU: 1. / sojourn.compartment_periods["icu_early"]
+    }
 
     within_late_rates = {
         Clinical.NON_SYMPT: 1. / compartment_periods["late_active"],
@@ -294,7 +285,10 @@ def get_all_adjustments(
     """
     Progress adjustments.
     """
-    progress_adjs = get_progress_adjs(within_hospital_early, within_icu_early)
+    progress_adjs = {}
+    for stratum in CLINICAL_STRATA:
+        rate = Overwrite(within_early_rates[stratum]) if stratum in within_early_rates else None
+        progress_adjs.update({stratum: rate})
 
     """
     Death and recovery adjustments.

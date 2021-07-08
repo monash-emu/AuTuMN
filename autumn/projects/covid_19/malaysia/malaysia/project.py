@@ -44,18 +44,19 @@ priors = [
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.08]),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.01, 0.4]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.009, 0.4]),
     # Health system-related
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.7, 1.35]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.65, 1.38]),
     UniformPrior("clinical_stratification.icu_prop", [0.18, 0.30]),
-    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.125, 0.4]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.01, 1.5]),
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.contact_rate_multiplier", [1.0, 3.0]),
     UniformPrior("voc_emergence.start_time", [275, 420]),
-    UniformPrior("infection_fatality.multiplier", [1.8, 2.9])
+    UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 0.75]),
 ]
 
 

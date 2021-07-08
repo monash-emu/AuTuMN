@@ -175,36 +175,20 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     return split_arr, complement_arr
 
 
-def get_infection_fatality_proportions(
-    infection_fatality_props_10_year,
-    infection_rate_multiplier,
-    iso3,
-    pop_region,
-    pop_year,
-):
+def convert_ifr_agegroups(raw_ifr_props, iso3, pop_region, pop_year):
     """
-    Returns the Proportion of people in age group who die, given the total number of people in that compartment.
-    ie: dead / total infected
+    Converts the IFRs from the age groups they were provided in to the ones needed for the model.
     """
-    if_props_10_year = [
-        apply_odds_ratio_to_proportion(i_prop, infection_rate_multiplier)
-        for i_prop in infection_fatality_props_10_year
-    ]
-    # Calculate the proportion of 80+ years old among the 75+ population
-    elderly_populations = inputs.get_population_by_agegroup(
-        [0, 75, 80], iso3, pop_region, year=pop_year
-    )
+
+    # Work out the proportion of 80+ years old among the 75+ population
+    elderly_populations = inputs.get_population_by_agegroup([0, 75, 80], iso3, pop_region, year=pop_year)
     prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
-    # Infection fatality rate by age group.
-    # Data in props may have used 10 year bands 0-80+, but we want 5 year bands from 0-75+
+
     # Calculate 75+ age bracket as weighted average between 75-79 and half 80+
-    if len(infection_fatality_props_10_year) == 17:
-        last_ifr = if_props_10_year[-1] * prop_over_80 + if_props_10_year[-2] * (1 - prop_over_80)
-        ifrs_by_age = if_props_10_year[:-1]
-        ifrs_by_age[-1] = last_ifr
-    else:
-        ifrs_by_age = repeat_list_elements_average_last_two(if_props_10_year, prop_over_80)
-    return ifrs_by_age
+    return [
+        *raw_ifr_props[:-2],
+        raw_ifr_props[-1] * prop_over_80 + raw_ifr_props[-2] * (1. - prop_over_80)
+    ]
 
 
 def get_absolute_death_proportions(abs_props, infection_fatality_props, icu_mortality_prop):
@@ -266,7 +250,7 @@ def get_all_adjustments(
     clinical_params,
     country,
     pop,
-    ifr_props,
+    raw_ifr_props,
     sojourn,
     testing_to_detection,
     case_detection,
@@ -305,7 +289,7 @@ def get_all_adjustments(
     get_detected_proportion = build_detected_proportion_func(
         AGEGROUP_STRATA, country, pop, testing_to_detection, case_detection
     )
-    entry_adjustments = get_entry_adjustments(abs_props, get_detected_proportion, within_early_exposed)
+    entry_adjs = get_entry_adjustments(abs_props, get_detected_proportion, within_early_exposed)
 
     """
     Progress adjustments.
@@ -314,19 +298,20 @@ def get_all_adjustments(
 
     """
     Death and recovery adjustments.
+    
+    Process the IFR parameters, i.e. the proportion of people in age group who die, given the number infected
+    Numerator: deaths, denominator: all infected
     """
 
-    # Process the IFR parameters, i.e. the proportion of people in age group who die, given the number infected
-    # Numerator: deaths, denominator: all infected
-    infection_fatality_props = get_infection_fatality_proportions(
-        infection_fatality_props_10_year=ifr_props,
-        infection_rate_multiplier=ifr_adjuster,
-        iso3=country.iso3,
-        pop_region=pop.region,
-        pop_year=pop.year,
-    )
+    # Scale raw IFR values according to adjuster parameter
+    adjusted_ifr_props = [apply_odds_ratio_to_proportion(i_prop, ifr_adjuster) for i_prop in raw_ifr_props]
+
+    # Convert from provided age groups to model age groups
+    final_ifr_props = convert_ifr_agegroups(adjusted_ifr_props, country.iso3, pop.region, pop.year)
+
+    # Over-write the oldest age bracket, if that's what's being done in the model
     if top_bracket_overwrite:
-        infection_fatality_props[-1] = top_bracket_overwrite
+        final_ifr_props[-1] = top_bracket_overwrite
 
     """
     Work out the proportion of people entering each stratum who die in that stratum (for each age group).
@@ -338,7 +323,7 @@ def get_all_adjustments(
     # The proportion of people entering each stratum who die in that stratum
     # Numerator: deaths in stratum, denominator: everyone
     abs_death_props = get_absolute_death_proportions(
-        abs_props, infection_fatality_props, clinical_params.icu_mortality_prop
+        abs_props, final_ifr_props, clinical_params.icu_mortality_prop
     )
 
     # The resulting proportion
@@ -367,11 +352,7 @@ def get_all_adjustments(
     death_adjs = get_rate_adjustments(death_rates)
     recovery_adjs = get_rate_adjustments(survival_rates)
 
-    return (
-        entry_adjustments,
-        death_adjs,
-        progress_adjs,
-        recovery_adjs,
-        abs_props,
-        get_detected_proportion,
-    )
+    """
+    Return all the adjustments
+    """
+    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, abs_props, get_detected_proportion

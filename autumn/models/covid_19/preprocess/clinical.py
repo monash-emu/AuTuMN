@@ -12,8 +12,9 @@ from autumn.tools.utils.utils import (
 )
 NUM_AGE_STRATA = 16
 
+
 """
-General data processing functions
+General data processing functions.
 """
 
 
@@ -32,7 +33,7 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
 
 
 """
-Used in multiple sections
+Used in multiple sections.
 """
 
 
@@ -62,7 +63,7 @@ def get_absolute_strata_proportions(symptomatic_props, icu_props, hospital_props
 
 
 """
-Entry-related functions
+Entry-related functions.
 """
 
 
@@ -83,6 +84,14 @@ def get_abs_prop_isolated_factory(age_idx, abs_props, prop_detect_among_sympt_fu
         return abs_prop_isolated
 
     return get_abs_prop_isolated
+
+
+def get_abs_prop_sympt_non_hospital_factory(age_idx, abs_props, get_abs_prop_isolated_func):
+    """
+    Returns the absolute proportion of infected not entering the hospital.
+    This also does not count people who are isolated/detected.
+    """
+    return lambda t: abs_props["sympt"][age_idx] - abs_props["hospital"][age_idx] - get_abs_prop_isolated_func(t)
 
 
 def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
@@ -123,14 +132,6 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
         }
 
     return adjustments
-
-
-def get_abs_prop_sympt_non_hospital_factory(age_idx, abs_props, get_abs_prop_isolated_func):
-    """
-    Returns the absolute proportion of infected not entering the hospital.
-    This also does not count people who are isolated/detected.
-    """
-    return lambda t: abs_props["sympt"][age_idx] - abs_props["hospital"][age_idx] - get_abs_prop_isolated_func(t)
 
 
 """

@@ -27,7 +27,7 @@ vaccination:
     - supply_period_coverage:
         coverage: .80
         start_time: 562 # 15 July 2021
-        end_time: 746 # 15 Jan 2022
+        end_time: 822
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

@@ -58,6 +58,30 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
     return adjustments
 
 
+def get_sympt_props(symptomatic_adjuster, hospital_adjuster, clinical_params):
+    """
+    Get the proportion of people in each clinical stratum, relative to total people in compartment.
+    """
+    symptomatic_props = get_proportion_symptomatic(clinical_params)
+    return get_absolute_strata_proportions(
+        symptomatic_props=symptomatic_props,
+        icu_props=clinical_params.icu_prop,
+        hospital_props=clinical_params.props.hospital.props,
+        symptomatic_props_multiplier=symptomatic_adjuster,
+        hospital_props_multiplier=hospital_adjuster,
+    )
+
+
+def get_progress_adjs(within_hospital_early, within_icu_early):
+    return {
+        Clinical.NON_SYMPT: None,
+        Clinical.ICU: Overwrite(within_icu_early),
+        Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
+        Clinical.SYMPT_NON_HOSPITAL: None,
+        Clinical.SYMPT_ISOLATE: None,
+    }
+
+
 def get_proportion_symptomatic(clinical_params):
     """
     This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+.
@@ -141,6 +165,48 @@ def get_absolute_strata_proportions(
     }
 
 
+def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
+    """
+    Split an array (base_array) of proportions into two arrays (split_arr, complement_arr)
+    according to the split proportions provided (split_prop).
+    """
+    split_arr = base_props * split_props
+    complement_arr = base_props * (1 - split_props)
+    return split_arr, complement_arr
+
+
+def get_infection_fatality_proportions(
+    infection_fatality_props_10_year,
+    infection_rate_multiplier,
+    iso3,
+    pop_region,
+    pop_year,
+):
+    """
+    Returns the Proportion of people in age group who die, given the total number of people in that compartment.
+    ie: dead / total infected
+    """
+    if_props_10_year = [
+        apply_odds_ratio_to_proportion(i_prop, infection_rate_multiplier)
+        for i_prop in infection_fatality_props_10_year
+    ]
+    # Calculate the proportion of 80+ years old among the 75+ population
+    elderly_populations = inputs.get_population_by_agegroup(
+        [0, 75, 80], iso3, pop_region, year=pop_year
+    )
+    prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
+    # Infection fatality rate by age group.
+    # Data in props may have used 10 year bands 0-80+, but we want 5 year bands from 0-75+
+    # Calculate 75+ age bracket as weighted average between 75-79 and half 80+
+    if len(infection_fatality_props_10_year) == 17:
+        last_ifr = if_props_10_year[-1] * prop_over_80 + if_props_10_year[-2] * (1 - prop_over_80)
+        ifrs_by_age = if_props_10_year[:-1]
+        ifrs_by_age[-1] = last_ifr
+    else:
+        ifrs_by_age = repeat_list_elements_average_last_two(if_props_10_year, prop_over_80)
+    return ifrs_by_age
+
+
 def get_absolute_death_proportions(abs_props, infection_fatality_props, icu_mortality_prop):
     """
     Calculate death proportions: find where the absolute number of deaths accrue.
@@ -178,72 +244,6 @@ def get_absolute_death_proportions(abs_props, infection_fatality_props, icu_mort
         assert round(total_death_props, allowed_rounding_error) == round(ifr_prop, allowed_rounding_error)
 
     return abs_death_props
-
-
-def get_infection_fatality_proportions(
-    infection_fatality_props_10_year,
-    infection_rate_multiplier,
-    iso3,
-    pop_region,
-    pop_year,
-):
-    """
-    Returns the Proportion of people in age group who die, given the total number of people in that compartment.
-    ie: dead / total infected
-    """
-    if_props_10_year = [
-        apply_odds_ratio_to_proportion(i_prop, infection_rate_multiplier)
-        for i_prop in infection_fatality_props_10_year
-    ]
-    # Calculate the proportion of 80+ years old among the 75+ population
-    elderly_populations = inputs.get_population_by_agegroup(
-        [0, 75, 80], iso3, pop_region, year=pop_year
-    )
-    prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
-    # Infection fatality rate by age group.
-    # Data in props may have used 10 year bands 0-80+, but we want 5 year bands from 0-75+
-    # Calculate 75+ age bracket as weighted average between 75-79 and half 80+
-    if len(infection_fatality_props_10_year) == 17:
-        last_ifr = if_props_10_year[-1] * prop_over_80 + if_props_10_year[-2] * (1 - prop_over_80)
-        ifrs_by_age = if_props_10_year[:-1]
-        ifrs_by_age[-1] = last_ifr
-    else:
-        ifrs_by_age = repeat_list_elements_average_last_two(if_props_10_year, prop_over_80)
-    return ifrs_by_age
-
-
-def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
-    """
-    Split an array (base_array) of proportions into two arrays (split_arr, complement_arr)
-    according to the split proportions provided (split_prop).
-    """
-    split_arr = base_props * split_props
-    complement_arr = base_props * (1 - split_props)
-    return split_arr, complement_arr
-
-
-def get_sympt_props(symptomatic_adjuster, hospital_adjuster, clinical_params):
-    """
-    Get the proportion of people in each clinical stratum, relative to total people in compartment.
-    """
-    symptomatic_props = get_proportion_symptomatic(clinical_params)
-    return get_absolute_strata_proportions(
-        symptomatic_props=symptomatic_props,
-        icu_props=clinical_params.icu_prop,
-        hospital_props=clinical_params.props.hospital.props,
-        symptomatic_props_multiplier=symptomatic_adjuster,
-        hospital_props_multiplier=hospital_adjuster,
-    )
-
-
-def get_progress_adjs(within_hospital_early, within_icu_early):
-    return {
-        Clinical.NON_SYMPT: None,
-        Clinical.ICU: Overwrite(within_icu_early),
-        Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
-        Clinical.SYMPT_NON_HOSPITAL: None,
-        Clinical.SYMPT_ISOLATE: None,
-    }
 
 
 def get_rate_adjustments(rates):

@@ -304,8 +304,8 @@ def request_standard_outputs(
             model.request_output_for_flow(
                 name=f"vaccinationXagegroup_{agegroup}",
                 flow_name="vaccination",
-                source_strata={"agegroup": agegroup},
-                save_results=False)
+                source_strata={"agegroup": agegroup}
+                )
 
     if params.voc_emergence:
         # Calculate the incidence of VoC cases

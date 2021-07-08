@@ -4,7 +4,7 @@ from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS
 from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
-from autumn.models.covid_19.preprocess.clinical import get_all_adjs
+from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
 
 
 def get_vacc_roll_out_function_from_coverage(supply_params, coverage_override=None):
@@ -172,7 +172,7 @@ def add_clinical_adjustments_to_strat(
     Get all the adjustments in the same way for both the history and vaccination stratifications.
 
     """
-    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjs(
+    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
         params.clinical_stratification,
         params.country,
         params.population,

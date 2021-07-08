@@ -172,7 +172,7 @@ def add_clinical_adjustments_to_strat(
     Get all the adjustments in the same way for both the history and vaccination stratifications.
 
     """
-    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
+    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _ = get_all_adjustments(
         params.clinical_stratification,
         params.country,
         params.population,

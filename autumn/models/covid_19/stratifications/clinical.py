@@ -1,114 +1,82 @@
+import copy
+
 from summer import Overwrite, Stratification
 
 from autumn.models.covid_19.constants import INFECTIOUS_COMPARTMENTS, Clinical, Compartment, CLINICAL_STRATA
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.preprocess.clinical import get_all_adjs
+from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
 def get_clinical_strat(params: Parameters):
 
     """
-    Stratify the model by clinical status
-    Stratify the infectious compartments of the covid model (not including the pre-symptomatic compartments, which are
-    actually infectious)
-
-    - notifications are derived from progress from early to late for some strata
-    - the proportion of people moving from presympt to early infectious, conditioned on age group
-    - rate of which people flow through these compartments (reciprocal of time, using within_* which is a rate of ppl / day)
-    - infectiousness levels adjusted by early/late and for clinical strata
-    - we start with an age stratified infection fatality rate
-        - 50% of deaths for each age bracket die in ICU
-        - the other deaths go to hospital, assume no-one else can die from COVID
-        - should we ditch this?
-
+    Stratify the infectious compartments of the covid model by "clinical" status.
     """
     clinical_strat = Stratification("clinical", CLINICAL_STRATA, INFECTIOUS_COMPARTMENTS)
     clinical_params = params.clinical_stratification
-    country = params.country
-    pop = params.population
 
     """
     Infectiousness adjustments for clinical stratification
     """
     # Add infectiousness reduction multiplier for all non-symptomatic infectious people.
     # These people are less infectious because of biology.
-    non_sympt_adjust = Overwrite(clinical_params.non_sympt_infect_multiplier)
-    clinical_strat.add_infectiousness_adjustments(
-        Compartment.LATE_EXPOSED,
-        {
-            Clinical.NON_SYMPT: non_sympt_adjust,
-            Clinical.SYMPT_NON_HOSPITAL: None,
-            Clinical.SYMPT_ISOLATE: None,
-            Clinical.HOSPITAL_NON_ICU: None,
-            Clinical.ICU: None,
-        },
-    )
-    clinical_strat.add_infectiousness_adjustments(
-        Compartment.EARLY_ACTIVE,
-        {
-            Clinical.NON_SYMPT: non_sympt_adjust,
-            Clinical.SYMPT_NON_HOSPITAL: None,
-            Clinical.SYMPT_ISOLATE: None,
-            Clinical.HOSPITAL_NON_ICU: None,
-            Clinical.ICU: None,
-        },
-    )
+
+    # Start from blank adjustments.
+    non_isolated_adjustments = {stratum: None for stratum in CLINICAL_STRATA}
+
+    # Update for asymptomatic.
+    non_isolated_adjustments.update({Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)})
+
+    # Apply this to both the late incubation and early active periods.
+    for compartment in (Compartment.LATE_EXPOSED, Compartment.EARLY_ACTIVE):
+        clinical_strat.add_infectiousness_adjustments(compartment, non_isolated_adjustments)
+
     # Add infectiousness reduction for people who are late active and in isolation or hospital/icu.
     # These people are less infectious because of physical distancing/isolation/PPE precautions.
-    late_infect_multiplier = clinical_params.late_infect_multiplier
-    clinical_strat.add_infectiousness_adjustments(
-        Compartment.LATE_ACTIVE,
-        {
-            Clinical.NON_SYMPT: non_sympt_adjust,
-            Clinical.SYMPT_ISOLATE: Overwrite(late_infect_multiplier[Clinical.SYMPT_ISOLATE]),
-            Clinical.SYMPT_NON_HOSPITAL: None,
-            Clinical.HOSPITAL_NON_ICU: Overwrite(late_infect_multiplier[Clinical.HOSPITAL_NON_ICU]),
-            Clinical.ICU: Overwrite(late_infect_multiplier[Clinical.ICU]),
-        },
-    )
+
+    # Start from where we left off for the late incubation and early active periods - including the asymptomatic.
+    late_active_adjustments = copy.copy(non_isolated_adjustments)
+
+    # Update the ones in late active who are isolated or admitted to hospital.
+    for stratum in [Clinical.SYMPT_ISOLATE, Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
+        late_active_adjustments.update({stratum: Overwrite(clinical_params.late_infect_multiplier[stratum])})
+
+    # Apply to the compartment.
+    clinical_strat.add_infectiousness_adjustments(Compartment.LATE_ACTIVE, late_active_adjustments)
 
     """
     Adjust infection death rates for hospital patients (ICU and non-ICU)
     """
-    symptomatic_adjuster = params.clinical_stratification.props.symptomatic.multiplier
-    ifr_adjuster = params.infection_fatality.multiplier
-    ifr_top_bracket_overwrite = params.infection_fatality.top_bracket_overwrite
-    hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
 
-    # Get all the adjustments in the same way as we will do if the immunity stratification is implemented
-    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, get_detected_proportion = get_all_adjs(
+    # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications.
+    entry_adjs, death_adjs, progress_adjs, recovery_adjs, get_detected_proportion = get_all_adjustments(
         clinical_params,
-        country,
-        pop,
+        params.country,
+        params.population,
         params.infection_fatality.props,
         params.sojourn,
         params.testing_to_detection,
-        params.case_detection,
-        ifr_adjuster,
-        symptomatic_adjuster,
-        hospital_adjuster,
-        ifr_top_bracket_overwrite,
+        params.case_detection, params.infection_fatality.multiplier,
+        params.clinical_stratification.props.symptomatic.multiplier,
+        params.clinical_stratification.props.hospital.multiplier,
+        params.infection_fatality.top_bracket_overwrite,
     )
 
-    # Assign all the adjustments to the model
+    # Assign all the adjustments to the summer model.
     for agegroup in AGEGROUP_STRATA:
         source = {"agegroup": agegroup}
         clinical_strat.add_flow_adjustments(
-            "infect_onset", entry_adjustments[agegroup], source_strata=source
+            "infect_onset", entry_adjs[agegroup], source_strata=source
+        )
+        clinical_strat.add_flow_adjustments(
+            "progress", progress_adjs, source_strata=source,
         )
         clinical_strat.add_flow_adjustments(
             "infect_death", death_adjs[agegroup], source_strata=source
         )
         clinical_strat.add_flow_adjustments(
-            "progress",
-            progress_adjs,
-            source_strata=source,
-        )
-        clinical_strat.add_flow_adjustments(
-            "recovery",
-            recovery_adjs[agegroup],
-            source_strata=source,
+            "recovery", recovery_adjs[agegroup], source_strata=source,
         )
 
     return clinical_strat, get_detected_proportion

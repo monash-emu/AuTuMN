@@ -22,10 +22,10 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(350)
-death_ts = ts_set.get("infection_deaths").truncate_start_time(350)
+
 targets = [
-    NormalTarget(notifications_ts),
-    NormalTarget(death_ts),
+    NormalTarget(notifications_ts)
+    
 ]
 
 priors = [

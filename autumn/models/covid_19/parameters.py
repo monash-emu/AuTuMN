@@ -216,12 +216,19 @@ class VocEmergence(BaseModel):
     """
     Parameters defining the emergence profile of Variants of Concerns
     """
-
+    dual_voc: bool
     start_time: float
     entry_rate: float
     seed_duration: float
     contact_rate_multiplier: float
 
+    """
+    Parameters defining the emergence profile of the second Variants of Concerns
+    """
+    start_time_second_VoC: Optional[float]
+    entry_rate_second_VoC: Optional[float]
+    seed_duration_second_VoC: Optional[float]
+    contact_rate_multiplier_second_VoC: Optional[float]
 
 class VaccCoveragePeriod(BaseModel):
     """

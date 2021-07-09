@@ -83,6 +83,7 @@ mobility:
         - 0.
 
 voc_emergence:
+  dual_voc: false #whether two or one strain VoC
   start_time: 381 #15 Jan 2021
   entry_rate: 1.
   seed_duration: 10.

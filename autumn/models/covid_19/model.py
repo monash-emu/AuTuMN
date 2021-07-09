@@ -138,7 +138,7 @@ def build_model(params: dict) -> CompartmentalModel:
         model.stratify_with(tracing_strat)
 
     # Apply the VoC stratification and adjust contact rate for a single Variant of Concern.
-    if params.voc_emergence:
+    if params.voc_emergence and not params.voc_emergence.dual_voc:
         voc_start_time = params.voc_emergence.start_time
         voc_entry_rate = params.voc_emergence.entry_rate
         seed_duration = params.voc_emergence.seed_duration
@@ -156,8 +156,9 @@ def build_model(params: dict) -> CompartmentalModel:
             dest=Compartment.EARLY_ACTIVE,
             dest_strata={"strain": Strain.VARIANT_OF_CONCERN},
         )
+
     # Apply the VoC stratification and adjust contact rate for the additional Variant of Concern.
-    if params.voc_emergence.dual_voc:
+    if params.voc_emergence and params.voc_emergence.dual_voc:
         voc_start_time = params.voc_emergence.start_time
         voc_entry_rate = params.voc_emergence.entry_rate
         seed_duration = params.voc_emergence.seed_duration

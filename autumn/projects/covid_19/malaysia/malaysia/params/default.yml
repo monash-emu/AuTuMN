@@ -83,11 +83,16 @@ mobility:
         - 0.
 
 voc_emergence:
-  dual_voc: false #whether two or one strain VoC
+  dual_voc: true #whether two or one strain VoC
   start_time: 381 #15 Jan 2021
   entry_rate: 1.
   seed_duration: 10.
   contact_rate_multiplier: 1.56 # LSHTM's estimate
+
+  start_time_second_VoC: 532 #15 June 2021
+  entry_rate_second_VoC: 1.
+  seed_duration_second_VoC: 10.
+  contact_rate_multiplier_second_VoC: 2.56 # LSHTM's estimate
 
 contact_tracing:
     assumed_trace_prop: 0.05

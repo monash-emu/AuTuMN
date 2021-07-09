@@ -54,7 +54,9 @@ priors = [
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.contact_rate_multiplier", [1.0, 3.0]),
+    UniformPrior("voc_emergence.contact_rate_multiplier_second_VoC", [1.0, 3.0]),
     UniformPrior("voc_emergence.start_time", [275, 420]),
+    UniformPrior("voc_emergence.start_time_second_VoC", [300, 550]),
     UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.3, 0.75]),
 ]

@@ -20,7 +20,7 @@ def get_strain_strat(contact_rate_multiplier):
     )
 
     # Assign all population to the wild type.
-    strain_strat.set_population_split({Strain.WILD_TYPE: 1.0, Strain.VARIANT_OF_CONCERN: 0.0},)
+    strain_strat.set_population_split({Strain.WILD_TYPE: 1.0, Strain.VARIANT_OF_CONCERN: 0.0})
 
     # Make the VoC stratum more transmissible.
     strain_strat.add_flow_adjustments(
@@ -31,7 +31,7 @@ def get_strain_strat(contact_rate_multiplier):
 
 def get_strain_strat_dual_voc(contact_rate_multiplier,contact_rate_multiplier_second_VoC):
     """
-    Stratify the model by strain, with three strata, being wild or "ancestral" virus type, variant of concern ("VoC") and another highly transmissible variant of concern ("VoC") and.
+    Stratify the model by strain, with three strata, being wild or "ancestral" virus type, variant of concern ("VoC") and another highly transmissible variant of concern ("VoC").
 
     """
 

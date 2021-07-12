@@ -1,5 +1,4 @@
-description: Scenario 16, 50% mobility + re-opening schools mid July + vaccination 25% coverage in 6 months
-
+description: Scenario 15, 50% mobility + re-opening 50% schools August 1st+ vaccination 25% coverage in 6 month
 time:
   start: 562 # 15th July 2021
 
@@ -8,13 +7,15 @@ mobility:
     school:
       append: false
       times:
-        - 2021-07-15 # All schools open
+        - 2021-07-31 # All schools close
+        - 2021-08-01 #50% of schools open
       values:
-        - 1
+        - 0.0
+        - 0.5
     other_locations:
       append: true
       times:
-        - 2021-07-15
+        - 2021-08-01
       values:
         - - close_to_max_last_period
           - 180
@@ -22,7 +23,7 @@ mobility:
     work:
       append: true
       times:
-        - 2021-07-15
+        - 2021-08-01
       values:
         - - close_to_max_last_period
           - 180

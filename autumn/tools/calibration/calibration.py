@@ -17,7 +17,7 @@ from autumn.tools.utils.timer import Timer
 from autumn.tools.calibration.priors import BasePrior
 from autumn.tools.calibration.targets import BaseTarget
 from autumn.tools.project.params import read_param_value_from_string
-from autumn.tools.project import Project
+from autumn.tools.project import Project, get_project
 
 
 from .constants import ADAPTIVE_METROPOLIS
@@ -110,6 +110,36 @@ class Calibration:
         if seed is None:
             seed = int(time())
         self.seed = seed
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['transform']
+        del state['project']
+        del state['output']
+
+        # Probably can't pickle models...
+        state['latest_model'] = None
+
+        # These are items that are not members of the class/object dictionary,
+        # but are still required for restoring state
+        state['_extra'] = {}
+        state['_extra']['project'] = {'model_name': self.project.model_name, 'project_name': self.project.region_name}
+        state['_extra']['rng'] = np.random.get_state()
+
+        return state
+
+    def __setstate__(self, state):
+
+        # These are items that are not members of the class/object dictionary,
+        # but are still required for restoring state
+        _extra = state.pop('_extra')
+
+        self.__dict__.update(state)
+        self.project = get_project(**_extra['project'])
+        self.build_transformations(update_jumping_sd=False)
+        np.random.set_state(_extra['rng'])
+
+        #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
 
     def split_priors_by_type(self):
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
@@ -440,7 +470,7 @@ class Calibration:
         try:
             # Run the selected fitting algorithm.
             if run_mode == CalibrationMode.AUTUMN_MCMC:
-                self.run_autumn_mcmc(1, available_time, self.haario_scaling_factor)
+                self.run_autumn_mcmc(available_time)
 
         finally:
             self.output.write_data_to_disk()
@@ -460,36 +490,39 @@ class Calibration:
 
     def run_autumn_mcmc(
         self,
-        n_chains: int,
-        available_time,
-        haario_scaling_factor,
-        start_time=None,
+        available_time
     ):
         """
         Run our hand-rolled MCMC algorithm to calibrate model parameters.
         """
-        if start_time is None:
-            start_time = time()
-        if n_chains > 1:
-            msg = "Autumn MCMC method does not support multiple-chain runs at the moment."
-            raise ValueError(msg)
 
         self.mcmc_trace_matrix = None  # will store param trace and loglikelihood evolution
 
-        last_accepted_iterative_params_trans = None
-        last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
-        n_accepted = 0
-        n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
+        self.last_accepted_iterative_params_trans = None
+        self.last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
+        self.n_accepted = 0
+        self.n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
         self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
+    
+        self.enter_mcmc_loop(available_time)
+
+    def resume_autumn_mcmc(self, available_time: int = None, max_iters: int = None):
+        try:
+            self.enter_mcmc_loop(available_time, max_iters)
+        finally:
+            self.output.write_data_to_disk()
+
+    def enter_mcmc_loop(self, available_time: int = None, max_iters: int = None):
+        start_time = time()
         while True:
-            logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
+            logging.info("Running MCMC iteration %s, run %s", self.n_iters_real, self.run_num)
 
             # Not actually LHS sampling - just sampling directly from prior.
             independent_samples = draw_independent_samples(self.independent_sampling_priors)
 
             # Propose new parameter set.
             proposed_iterative_params_trans = self.propose_new_iterative_params_trans(
-                last_accepted_iterative_params_trans, haario_scaling_factor
+                self.last_accepted_iterative_params_trans, self.haario_scaling_factor
             )
             proposed_iterative_params = self.get_original_params(proposed_iterative_params_trans)
 
@@ -529,13 +562,13 @@ class Calibration:
                         proposed_acceptance_quantity += math.log(1.0e-100)
 
                 is_auto_accept = (
-                    last_acceptance_quantity is None
-                    or proposed_acceptance_quantity >= last_acceptance_quantity
+                    self.last_acceptance_quantity is None
+                    or proposed_acceptance_quantity >= self.last_acceptance_quantity
                 )
                 if is_auto_accept:
                     accept = True
                 else:
-                    accept_prob = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
+                    accept_prob = np.exp(proposed_acceptance_quantity - self.last_acceptance_quantity)
                     accept = (np.random.binomial(n=1, p=accept_prob, size=1) > 0)[0]
             else:
                 accept = False
@@ -544,11 +577,11 @@ class Calibration:
 
             # Update stored quantities.
             if accept:
-                last_accepted_iterative_params_trans = proposed_iterative_params_trans
-                last_acceptance_quantity = proposed_acceptance_quantity
-                n_accepted += 1
+                self.last_accepted_iterative_params_trans = proposed_iterative_params_trans
+                self.last_acceptance_quantity = proposed_acceptance_quantity
+                self.n_accepted += 1
 
-            self.update_mcmc_trace(last_accepted_iterative_params_trans)
+            self.update_mcmc_trace(self.last_accepted_iterative_params_trans)
 
             # Store model outputs
             self.output.store_mcmc_iteration(
@@ -561,23 +594,29 @@ class Calibration:
             if accept:
                 self.output.store_model_outputs(self.latest_model, self.run_num)
 
-            logging.info("Finished MCMC iteration %s, run %s", n_iters_real, self.run_num)
+            logging.info("Finished MCMC iteration %s, run %s", self.n_iters_real, self.run_num)
             self.run_num += 1
-            n_iters_real += 1
+            self.n_iters_real += 1
             if available_time:
                 # Stop iterating if we have run out of time.
                 elapsed_time = time() - start_time
                 if elapsed_time > available_time:
-                    msg = f"Stopping MCMC simulation after {n_iters_real} iterations because of {available_time}s time limit"
+                    msg = f"Stopping MCMC simulation after {self.n_iters_real} iterations because of {available_time}s time limit"
+                    logger.info(msg)
+                    break
+            if max_iters:
+                # Stop running if we have performed enough iterations
+                if self.n_iters_real >= max_iters:
+                    msg = f"Stopping MCMC simulation after {self.n_iters_real} iterations, maximum iterations hit"
                     logger.info(msg)
                     break
 
             # Check that the pre-adaptive phase ended with a decent acceptance ratio
             if self.adaptive_proposal and self.run_num == self.n_steps_fixed_proposal:
-                acceptance_ratio = n_accepted / self.run_num
+                acceptance_ratio = self.n_accepted / self.run_num
                 logger.info(
                     "Pre-adaptive phase completed at %s iterations after %s runs with an acceptance ratio of %s.",
-                    n_iters_real,
+                    self.n_iters_real,
                     self.run_num,
                     acceptance_ratio,
                 )
@@ -585,9 +624,9 @@ class Calibration:
                     logger.info("Acceptance ratio too low, restart sampling from scratch.")
                     (
                         self.run_num,
-                        n_accepted,
-                        last_accepted_params_trans,
-                        last_acceptance_quantity,
+                        self.n_accepted,
+                        self.last_accepted_params_trans,
+                        self.last_acceptance_quantity,
                     ) = (0, 0, None, None)
                     self.reduce_proposal_step_size()
                     self.output.delete_stored_iterations()
@@ -622,7 +661,7 @@ class Calibration:
 
         return param_bounds
 
-    def build_transformations(self):
+    def build_transformations(self, update_jumping_sd=True):
         """
         Build transformation functions between the parameter space and R^n.
         """
@@ -681,7 +720,9 @@ class Calibration:
                 elif self.starting_point[param_name] >= upper_bound:
                     self.starting_point[param_name] = upper_bound - original_sd / 10
 
-            if representative_point is not None:
+            # Don't update jumping if we are resuming (this has already been calculated)
+            # FIXME:  We should probably refactor this to update on copies rather than in place
+            if representative_point is not None and update_jumping_sd:
                 transformed_low = self.transform[param_name]["direct"](
                     representative_point - original_sd / 2
                 )
@@ -798,6 +839,24 @@ class CalibrationOutputs:
         logger.info("Created data directory at %s", self.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
         self.db = db.ParquetDatabase(self.output_db_path)
+
+    @classmethod
+    def open_existing(cls, chain_id, output_dir):
+        obj = cls.__new__(cls)
+        obj.output_dir = output_dir
+
+        db_name = f"chain-{chain_id}"
+
+        obj.output_db_path = os.path.join(obj.output_dir, db_name)
+        obj.db = db.ParquetDatabase(obj.output_db_path)
+
+        obj.chain_id = chain_id
+
+        # List of dicts for tracking MCMC progress.
+        obj.mcmc_runs = []
+        obj.mcmc_params = []
+
+        return obj
 
     def write_metadata(self, filename, data):
         file_path = os.path.join(self.output_dir, filename)

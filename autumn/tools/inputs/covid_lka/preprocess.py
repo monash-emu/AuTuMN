@@ -16,6 +16,6 @@ def preprocess_covid_lka(input_db: Database):
     )
     df["date_index"] = (df.periodname - COVID_BASE_DATETIME).dt.days
     df = df[df.periodname <= pd.to_datetime("today")]
-    df.rename(columns={"PCR tests done": "PCR_tests_done"}, inplace=True)
+    df.rename(columns={"Sri Lanka PCR tests done": "Sri_Lanka_PCR_tests_done", "Western PDHS PCR tests done":"Western_PDHS_PCR_tests_done"}, inplace=True)
 
     input_db.dump_df("covid_lka", df)

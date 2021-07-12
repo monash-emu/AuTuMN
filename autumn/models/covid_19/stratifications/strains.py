@@ -44,7 +44,7 @@ def get_strain_strat_dual_voc(contact_rate_multiplier,contact_rate_multiplier_se
 
     # Assign all population to the wild type.
     strain_strat.set_population_split({Strain.WILD_TYPE: 1.0, Strain.VARIANT_OF_CONCERN: 0.0,
-                                      Strain.ADDITIONAL_VARIANT_OF_CONCERN: 0.0},)
+                                      Strain.ADDITIONAL_VARIANT_OF_CONCERN: 0.0})
 
     # Make the VoC stratum more transmissible.
     strain_strat.add_flow_adjustments(

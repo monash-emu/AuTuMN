@@ -33,7 +33,6 @@ from .stratifications.strains import get_strain_strat, get_strain_strat_dual_voc
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
-
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
 )
@@ -137,59 +136,47 @@ def build_model(params: dict) -> CompartmentalModel:
         )
         model.stratify_with(tracing_strat)
 
-    # Apply the VoC stratification and adjust contact rate for a single Variant of Concern.
-    if params.voc_emergence and not params.voc_emergence.dual_voc:
-        voc_start_time = params.voc_emergence.start_time
+    # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern.
+    if params.voc_emergence:
+        voc_start_time = params.voc_emergence.start_time  # first (single) VoC
         voc_entry_rate = params.voc_emergence.entry_rate
         seed_duration = params.voc_emergence.seed_duration
         strain_strat = get_strain_strat(params.voc_emergence.contact_rate_multiplier)
-        model.stratify_with(strain_strat)
 
-        # Work out the seeding function and seed the VoC stratum.
+        if not params.voc_emergence.dual_voc:  # only single VoC strain in the model
+            model.stratify_with(strain_strat)  # stratify model with single VoC strain
+
+        # Work out the seeding function and seed the first VoC stratum.
         voc_seed = (
             lambda time: voc_entry_rate if 0.0 < time - voc_start_time < seed_duration else 0.0
         )
 
+        if params.voc_emergence.dual_voc:  # when two VoC strains are present in the model
+            additional_voc_start_time = params.voc_emergence.start_time_second_VoC  # second VoC strain
+            additional_voc_entry_rate = params.voc_emergence.entry_rate_second_VoC
+            additional_seed_duration = params.voc_emergence.seed_duration_second_VoC
+            additional_strain_strat = get_strain_strat_dual_voc(params.voc_emergence.contact_rate_multiplier,
+                                                                params.voc_emergence.contact_rate_multiplier_second_VoC)
+            model.stratify_with(additional_strain_strat)  # stratify model with two VoC strains
+
+            # seed the second VoC strain
+            additional_voc_seed = (
+                lambda
+                    time: additional_voc_entry_rate if 0.0 < time - additional_voc_start_time < additional_seed_duration else 0.0
+            )
+            # add flows for the second VoC strain
+            model.add_importation_flow(
+                "seed_voc_dual",
+                additional_voc_seed,
+                dest=Compartment.EARLY_ACTIVE,
+                dest_strata={"strain": Strain.ADDITIONAL_VARIANT_OF_CONCERN},
+            )
+        # add flows for the first (single) VoC strain
         model.add_importation_flow(
             "seed_voc",
             voc_seed,
             dest=Compartment.EARLY_ACTIVE,
             dest_strata={"strain": Strain.VARIANT_OF_CONCERN},
-        )
-
-    # Apply the VoC stratification and adjust contact rate for the additional Variant of Concern.
-    if params.voc_emergence and params.voc_emergence.dual_voc:
-        voc_start_time = params.voc_emergence.start_time
-        voc_entry_rate = params.voc_emergence.entry_rate
-        seed_duration = params.voc_emergence.seed_duration
-        additional_voc_start_time = params.voc_emergence.start_time_second_VoC
-        additional_voc_entry_rate = params.voc_emergence.entry_rate_second_VoC
-        additional_seed_duration = params.voc_emergence.seed_duration_second_VoC
-        additional_strain_strat = get_strain_strat_dual_voc(params.voc_emergence.contact_rate_multiplier,
-                                                   params.voc_emergence.contact_rate_multiplier_second_VoC)
-        model.stratify_with(additional_strain_strat)
-
-        # Work out the seeding function and seed the VoC stratum for the single VoC.
-        voc_seed = (
-            lambda time: voc_entry_rate if 0.0 < time - voc_start_time < seed_duration else 0.0
-        )
-        # Work out the seeding function and seed the VoC stratum for the additional VoC.
-        additional_voc_seed = (
-            lambda time: additional_voc_entry_rate if 0.0 < time - additional_voc_start_time < additional_seed_duration else 0.0
-        )
-
-        model.add_importation_flow(
-            "seed_voc_single",
-            voc_seed,
-            dest=Compartment.EARLY_ACTIVE,
-            dest_strata={"strain": Strain.VARIANT_OF_CONCERN},
-        )
-
-        model.add_importation_flow(
-            "seed_voc_dual",
-            additional_voc_seed,
-            dest=Compartment.EARLY_ACTIVE,
-            dest_strata={"strain": Strain.ADDITIONAL_VARIANT_OF_CONCERN},
         )
 
     # Infection history stratification
@@ -231,7 +218,8 @@ def build_model(params: dict) -> CompartmentalModel:
     # Apply the process of contact tracing
     if params.contact_tracing:
 
-        trace_param = tracing.get_tracing_param(params.contact_tracing.assumed_trace_prop, params.contact_tracing.assumed_prev)
+        trace_param = tracing.get_tracing_param(params.contact_tracing.assumed_trace_prop,
+                                                params.contact_tracing.assumed_prev)
 
         early_exposed_untraced_comps = \
             [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]

@@ -20,7 +20,10 @@ def get_strain_strat(contact_rate_multiplier):
     )
 
     # Assign all population to the wild type.
-    strain_strat.set_population_split({Strain.WILD_TYPE: 1.0, Strain.VARIANT_OF_CONCERN: 0.0})
+    strain_strat.set_population_split({
+        Strain.WILD_TYPE: 1.0,
+        Strain.VARIANT_OF_CONCERN: 0.0
+    })
 
     # Make the VoC stratum more transmissible.
     strain_strat.add_flow_adjustments(
@@ -28,6 +31,7 @@ def get_strain_strat(contact_rate_multiplier):
         {Strain.WILD_TYPE: None, Strain.VARIANT_OF_CONCERN: Multiply(contact_rate_multiplier)},
     )
     return strain_strat
+
 
 def get_strain_strat_dual_voc(contact_rate_multiplier,contact_rate_multiplier_second_VoC):
     """
@@ -43,13 +47,19 @@ def get_strain_strat_dual_voc(contact_rate_multiplier,contact_rate_multiplier_se
     )
 
     # Assign all population to the wild type.
-    strain_strat.set_population_split({Strain.WILD_TYPE: 1.0, Strain.VARIANT_OF_CONCERN: 0.0,
-                                      Strain.ADDITIONAL_VARIANT_OF_CONCERN: 0.0})
+    strain_strat.set_population_split({
+        Strain.WILD_TYPE: 1.0,
+        Strain.VARIANT_OF_CONCERN: 0.0,
+        Strain.ADDITIONAL_VARIANT_OF_CONCERN: 0.0
+    })
 
     # Make the VoC stratum more transmissible.
     strain_strat.add_flow_adjustments(
         "infection",
-        {Strain.WILD_TYPE: None, Strain.VARIANT_OF_CONCERN: Multiply(contact_rate_multiplier),
-         Strain.ADDITIONAL_VARIANT_OF_CONCERN: Multiply(contact_rate_multiplier_second_VoC)},
+        {
+            Strain.WILD_TYPE: None,
+            Strain.VARIANT_OF_CONCERN: Multiply(contact_rate_multiplier),
+            Strain.ADDITIONAL_VARIANT_OF_CONCERN: Multiply(contact_rate_multiplier_second_VoC)},
     )
+
     return strain_strat

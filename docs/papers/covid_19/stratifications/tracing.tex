@@ -10,8 +10,8 @@ As for isolated and hospitalised patients, those undergoing quarantine have thei
 \subsection{Contact tracing process}
 Identification of infected persons through contact tracing is assumed to apply to those in their early incubation period, with flows added to the model that transition persons during their incubation period from the untraced to the traced stratum of this compartment type.
 The rate of transition from the untraced to the traced stratum of the early incubation period is determined by the proportion of contacts traced.
-It is assumed that only the contacts of identified cases can be traced, such that the case detection rate (the proportion of symptomatic cases detected traced) is considered the ceiling for the proportion of contacts traced.
-The proportion of contacts of identified cases traced is multiplied by the proportion of contacts whose index is detected to determine the proportion of all persons entering the incubation period who are traced.
+It is assumed that only the contacts of identified cases can be traced, such that the case detection rate (the proportion of symptomatic cases detected) is considered the ceiling for the proportion of contacts traced.
+The proportion of contacts of identified cases that is traced is multiplied by the proportion of contacts whose index is detected (the case detection rate) to determine the proportion of all persons entering the incubation period who are traced.
 The proportion of contacts with detected index is calculated as the relative contribution of ever-detected infectious individuals to the total force of infection, given as:
 
 \[ \frac
@@ -35,4 +35,4 @@ Solving for the previous equation for \(\tau\), we obtain:
 
 \[\tau = \frac{-log(q)}{prev} \]
 
-or \(\tau = \frac{-log(q_{0})}{prev_{0}} \) at a specific prevalence that accords with a particular value of \(q\). Fixing \(prev_{0}\) at \(10^{-3}\), we can vary \(q_{0}\) in calibration as the proportion of contacts of identified cases detected at this particular prevalence.
+or \(\tau = \frac{-log(q_{0})}{prev_{0}} \) at a specific prevalence that accords with a particular value of \(q\). Fixing \(prev_{0}\) at \(10^{-3}\), we can vary \(q_{0}\) in calibration as the proportion of contacts of identified cases detected at a prevalence of one active case per thousand population.

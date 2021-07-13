@@ -41,7 +41,7 @@ priors = [
     UniformPrior("contact_rate", [0.01, 0.075]),
     UniformPrior("infectious_seed", [25.0, 325.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.08]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
     # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.009, 0.4]),
     # Health system-related
@@ -53,9 +53,9 @@ priors = [
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.contact_rate_multiplier", [1.0, 3.0]),
-    UniformPrior("voc_emergence.contact_rate_multiplier_second_VoC", [1.0, 3.0]),
+    UniformPrior("voc_emergence.contact_rate_multiplier_second_VoC", [1.0, 4.0]),
     UniformPrior("voc_emergence.start_time", [275, 420]),
-    UniformPrior("voc_emergence.start_time_second_VoC", [300, 550]),
+    UniformPrior("voc_emergence.start_time_second_VoC", [280, 550]),
     UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.3, 0.75]),
 ]

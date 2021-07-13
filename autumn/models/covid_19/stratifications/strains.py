@@ -8,8 +8,8 @@ from autumn.models.covid_19.constants import (
 
 def get_strain_strat(contact_rate_multiplier):
     """
-    Stratify the model by strain, with two strata, being wild or "ancestral" virus type and the single variant of concern ("VoC")
-
+    Stratify the model by strain, with two strata, being wild or "ancestral" virus type and the single
+    variant of concern ("VoC").
     """
 
     # Stratify model.
@@ -33,10 +33,10 @@ def get_strain_strat(contact_rate_multiplier):
     return strain_strat
 
 
-def get_strain_strat_dual_voc(contact_rate_multiplier,contact_rate_multiplier_second_VoC):
+def get_strain_strat_dual_voc(contact_rate_multiplier, contact_rate_multiplier_second_VoC):
     """
-    Stratify the model by strain, with three strata, being wild or "ancestral" virus type, variant of concern ("VoC") and another highly transmissible variant of concern ("VoC").
-
+    Stratify the model by strain, with three strata, being wild or "ancestral" virus type, variant of concern ("VoC")
+    and another highly transmissible variant of concern ("VoC").
     """
 
     # Stratify model.

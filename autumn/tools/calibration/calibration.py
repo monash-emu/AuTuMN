@@ -16,6 +16,7 @@ from autumn.tools.utils.utils import get_git_branch, get_git_hash
 from autumn.tools.utils.timer import Timer
 from autumn.tools.calibration.priors import BasePrior
 from autumn.tools.calibration.targets import BaseTarget
+from autumn.tools.calibration.proposal_tuning import tune_jumping_sd
 from autumn.tools.project.params import read_param_value_from_string
 from autumn.tools.project import Project
 
@@ -135,6 +136,37 @@ class Calibration:
             self.independent_sampling_priors[i]["param_name"]
             for i in range(len(self.independent_sampling_priors))
         ]
+
+    def tune_proposal(self, param_name, project: Project, n_points=100, relative_likelihood_reduction=0.5):
+        assert param_name in self.iterative_sampling_param_names, f"{param_name} is not an iteratively sampled parameter"
+        assert n_points > 1, "A minimum of two points is required to perform proposal tuning"
+
+        # needed to be able to evaluate the loglikelihood
+        self.project = project
+        self.model_parameters = project.param_set.baseline
+        self.end_time = 2 + max([max(t["years"]) for t in self.targets])
+        target_names = [t["output_key"] for t in self.targets]
+        self.derived_outputs_whitelist = list(set(target_names))
+        self.run_mode = CalibrationMode.AUTUMN_MCMC
+        self.workout_unspecified_target_sds()  # for likelihood definition
+        self.workout_unspecified_time_weights()  # for likelihood weighting
+
+        prior_dict = [p_dict for p_dict in self.all_priors if p_dict["param_name"] == param_name][0]
+        lower_bound, upper_bound = get_parameter_finite_range_from_prior(prior_dict)
+
+        starting_point = read_current_parameter_values(self.all_priors, self.model_parameters.to_dict())
+
+        eval_points = list(np.linspace(start=lower_bound, stop=upper_bound, num=n_points, endpoint=True))
+        eval_loglikelihoods = []
+        for i_run, eval_point in enumerate(eval_points):
+            self.run_num = i_run
+            update = {param_name: eval_point}
+            updated_param = {**starting_point, **update}
+            eval_loglikelihoods.append(
+                self.loglikelihood(updated_param)
+            )
+
+        return tune_jumping_sd(eval_points, eval_loglikelihoods, relative_likelihood_reduction)
 
     def run(
         self,
@@ -359,53 +391,8 @@ class Calibration:
     def workout_unspecified_jumping_sds(self):
         for i, prior_dict in enumerate(self.iterative_sampling_priors):
             if "jumping_sd" not in prior_dict.keys():
-                if prior_dict["distribution"] == "uniform":
-                    prior_width = prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
-                elif prior_dict["distribution"] == "lognormal":
-                    mu = prior_dict["distri_params"][0]
-                    sd = prior_dict["distri_params"][1]
-                    quantile_2_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1))
-                    quantile_97_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
-                    prior_width = quantile_97_5 - quantile_2_5
-                elif prior_dict["distribution"] == "trunc_normal":
-                    mu = prior_dict["distri_params"][0]
-                    sd = prior_dict["distri_params"][1]
-                    bounds = prior_dict["trunc_range"]
-                    quantile_2_5 = stats.truncnorm.ppf(
-                        0.025, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
-                    )
-                    quantile_97_5 = stats.truncnorm.ppf(
-                        0.975, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
-                    )
-                    prior_width = quantile_97_5 - quantile_2_5
-                elif prior_dict["distribution"] == "beta":
-                    quantile_2_5 = stats.beta.ppf(
-                        0.025,
-                        prior_dict["distri_params"][0],
-                        prior_dict["distri_params"][1],
-                    )
-                    quantile_97_5 = stats.beta.ppf(
-                        0.975,
-                        prior_dict["distri_params"][0],
-                        prior_dict["distri_params"][1],
-                    )
-                    prior_width = quantile_97_5 - quantile_2_5
-                elif prior_dict["distribution"] == "gamma":
-                    quantile_2_5 = stats.gamma.ppf(
-                        0.025,
-                        prior_dict["distri_params"][0],
-                        0.0,
-                        prior_dict["distri_params"][1],
-                    )
-                    quantile_97_5 = stats.gamma.ppf(
-                        0.975,
-                        prior_dict["distri_params"][0],
-                        0.0,
-                        prior_dict["distri_params"][1],
-                    )
-                    prior_width = quantile_97_5 - quantile_2_5
-                else:
-                    raise_error_unsupported_prior(prior_dict["distribution"])
+                prior_low, prior_high = get_parameter_finite_range_from_prior(prior_dict)
+                prior_width = prior_high - prior_low
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
                 relative_prior_width = (
@@ -908,6 +895,55 @@ def get_parameter_bounds_from_priors(prior_dict):
     return lower_bound, upper_bound
 
 
+def get_parameter_finite_range_from_prior(prior_dict):
+    if prior_dict["distribution"] == "uniform":
+        prior_low = prior_dict["distri_params"][0]
+        prior_high = prior_dict["distri_params"][1]
+    elif prior_dict["distribution"] == "lognormal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        prior_low = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1))
+        prior_high = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
+    elif prior_dict["distribution"] == "trunc_normal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        bounds = prior_dict["trunc_range"]
+        prior_low = stats.truncnorm.ppf(
+            0.025, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+        )
+        prior_high = stats.truncnorm.ppf(
+            0.975, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+        )
+    elif prior_dict["distribution"] == "beta":
+        prior_low = stats.beta.ppf(
+            0.025,
+            prior_dict["distri_params"][0],
+            prior_dict["distri_params"][1],
+        )
+        prior_high = stats.beta.ppf(
+            0.975,
+            prior_dict["distri_params"][0],
+            prior_dict["distri_params"][1],
+        )
+    elif prior_dict["distribution"] == "gamma":
+        prior_low = stats.gamma.ppf(
+            0.025,
+            prior_dict["distri_params"][0],
+            0.0,
+            prior_dict["distri_params"][1],
+        )
+        prior_high = stats.gamma.ppf(
+            0.975,
+            prior_dict["distri_params"][0],
+            0.0,
+            prior_dict["distri_params"][1],
+        )
+    else:
+        raise_error_unsupported_prior(prior_dict["distribution"])
+
+    return prior_low, prior_high
+
+
 def sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix):
     return np.random.multivariate_normal(prev_params, adaptive_cov_matrix)
 
@@ -948,16 +984,21 @@ def set_initial_point(
         return starting_points[chain_idx - 1]
     elif initialisation_type == MetroInit.CURRENT_PARAMS:
         # use the current parameter values from the yaml files
-        starting_points = {}
-        for param_dict in priors:
-            if param_dict["param_name"].endswith("dispersion_param"):
-                assert param_dict["distribution"] == "uniform"
-                starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
-            else:
-                starting_points[param_dict["param_name"]] = read_param_value_from_string(
-                    model_parameters, param_dict["param_name"]
-                )
-
+        starting_points = read_current_parameter_values(priors, model_parameters)
         return starting_points
     else:
         raise ValueError(f"{initialisation_type} is not a supported Initialisation Type")
+
+
+def read_current_parameter_values(priors, model_parameters):
+    starting_points = {}
+    for param_dict in priors:
+        if param_dict["param_name"].endswith("dispersion_param"):
+            assert param_dict["distribution"] == "uniform"
+            starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
+        else:
+            starting_points[param_dict["param_name"]] = read_param_value_from_string(
+                model_parameters, param_dict["param_name"]
+            )
+
+    return starting_points

@@ -45,19 +45,22 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
             # Calibration failed, but we still want to store some results
             cal_success = False
     
-    with Timer("Uploading metadata"):
-        upload_to_run_s3(s3_client, run_id, CALIBRATE_DATA_DIR, quiet=not verbose)
+    with Timer("Uploading logs"):
         upload_to_run_s3(s3_client, run_id, CALIBRATE_LOG_DIR, quiet=not verbose)
 
+    with Timer("Uploading run data"):
+        upload_to_run_s3(s3_client, run_id, CALIBRATE_DATA_DIR, quiet=not verbose)
+        
     if not cal_success:
+        logger.info("Terminating early from failure")
         sys.exit(-1)
 
     # Upload the calibration outputs of AWS S3.
-    with Timer(f"Uploading calibration data to AWS S3"):
-        for chain_id in chain_ids:
-            with Timer(f"Uploading data for chain {chain_id} to AWS S3"):
-                src_dir = os.path.join(CALIBRATE_DATA_DIR, f"chain-{chain_id}")
-                upload_to_run_s3(s3_client, run_id, src_dir, quiet=not verbose)
+    #with Timer(f"Uploading calibration data to AWS S3"):
+    #    for chain_id in chain_ids:
+    #        with Timer(f"Uploading data for chain {chain_id} to AWS S3"):
+    #            src_dir = os.path.join(CALIBRATE_DATA_DIR, f"chain-{chain_id}")
+    #            upload_to_run_s3(s3_client, run_id, src_dir, quiet=not verbose)
 
     # Create plots from the calibration outputs.
     with Timer(f"Creating post-calibration plots"):

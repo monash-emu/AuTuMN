@@ -3,6 +3,7 @@ from datetime import datetime
 from itertools import chain
 from time import time
 from typing import List, Callable
+import pickle
 
 import yaml
 import numpy as np
@@ -110,6 +111,12 @@ class Calibration:
         if seed is None:
             seed = int(time())
         self.seed = seed
+
+    @staticmethod
+    def from_existing(pkl_file, output_dir):
+        obj = pickle.load(open(pkl_file, 'rb'))
+        obj.output = CalibrationOutputs.from_existing(obj.chain_idx, output_dir)
+        return obj
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -473,7 +480,12 @@ class Calibration:
                 self.run_autumn_mcmc(available_time)
 
         finally:
-            self.output.write_data_to_disk()
+            self.write_outputs()
+
+    def write_outputs(self):
+        self.output.write_data_to_disk()
+        state_pkl_filename = os.path.join(self.output.output_dir, f"calstate-{self.chain_idx}.pkl")
+        pickle.dump(self, open(state_pkl_filename, 'wb'))
 
     def test_in_prior_support(self, iterative_params):
         in_support = True
@@ -510,8 +522,8 @@ class Calibration:
         try:
             self.enter_mcmc_loop(available_time, max_iters)
         finally:
-            self.output.write_data_to_disk()
-
+            self.write_outputs()
+            
     def enter_mcmc_loop(self, available_time: int = None, max_iters: int = None):
         start_time = time()
         while True:
@@ -841,7 +853,7 @@ class CalibrationOutputs:
         self.db = db.ParquetDatabase(self.output_db_path)
 
     @classmethod
-    def open_existing(cls, chain_id, output_dir):
+    def from_existing(cls, chain_id, output_dir):
         obj = cls.__new__(cls)
         obj.output_dir = output_dir
 

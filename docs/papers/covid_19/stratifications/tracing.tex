@@ -15,12 +15,12 @@ The proportion of contacts of identified cases that is traced is multiplied by t
 The proportion of contacts with detected index is calculated as the relative contribution of ever-detected infectious individuals to the total force of infection, given as:
 
 \[ \frac
-{\sum_{c \in \mathcal{I}} \sum_{j \in \mathcal{D}} \, prev_{c, j}(t) \times inf_{c, j}}
-{\sum_{c \in \mathcal{I}} \sum_{j \in \mathcal{C}} \, prev_{c, j}(t) \times inf_{c, j}} \, ,
+{\sum_{c \in \mathcal{C}} \sum_{s \in \mathcal{D}} \, prev_{c, s}(t) \times inf_{c, s}}
+{\sum_{c \in \mathcal{C}} \sum_{s \in \mathcal{S}} \, prev_{c, s}(t) \times inf_{c, s}} \, ,
 \]
 
-where $\mathcal{I}$ is the set of infectious compartments, $\mathcal{C}$ represents all clinical strata and $\mathcal{D} \subset \mathcal{C}$ is the list of detected clinical strata.
-The prevalence of infectious compartment $c$ in clinical stratum $j$ at time $t$ is represented by $prev_{c,j}(t)$, and $inf_{c, j}$ is the relative infectiousness of compartment $c$ in clinical stratum $j$.
+where $\mathcal{C}$ is the set of infectious compartments, $\mathcal{S}$ represents all clinical strata and $\mathcal{D} \subset \mathcal{S}$ is the list of detected clinical strata.
+The prevalence of infectious compartment $c$ in clinical stratum $s$ at time $t$ is represented by $prev_{c, s}(t)$, and $inf_{c, s}$ is the relative infectiousness of compartment $c$ in clinical stratum $s$.
 
 The proportion of contacts of identified cases traced is considered to decrease as the severity of the COVID-19 epidemic increases, because we expect contact tracing to decline in efficiency as more cases are identified.
 That is, we assume that contact tracing is universal as COVID-19 prevalence approaches zero and declines exponentially with increasing prevalence.

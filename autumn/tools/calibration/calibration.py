@@ -483,6 +483,8 @@ class Calibration:
             self.write_outputs()
 
     def write_outputs(self):
+        """Ensure output data from run is written to disk, including model state for resume
+        """
         self.output.write_data_to_disk()
         state_pkl_filename = os.path.join(self.output.output_dir, f"calstate-{self.chain_idx}.pkl")
         pickle.dump(self, open(state_pkl_filename, 'wb'))
@@ -518,11 +520,12 @@ class Calibration:
     
         self.enter_mcmc_loop(available_time)
 
-    def resume_autumn_mcmc(self, available_time: int = None, max_iters: int = None):
+    def resume_autumn_mcmc(self, available_time: int = None, max_iters: int = None, finalise=True):
         try:
             self.enter_mcmc_loop(available_time, max_iters)
         finally:
-            self.write_outputs()
+            if finalise:
+                self.write_outputs()
             
     def enter_mcmc_loop(self, available_time: int = None, max_iters: int = None):
         start_time = time()
@@ -865,10 +868,17 @@ class CalibrationOutputs:
         obj.chain_id = chain_id
 
         # List of dicts for tracking MCMC progress.
-        obj.mcmc_runs = []
-        obj.mcmc_params = []
+        #obj.mcmc_runs = []
+        #obj.mcmc_params = []
+        obj.load_mcmc()
 
         return obj
+
+    def load_mcmc(self):
+        """Read MCMC calibration data from disk (for resuming an existing run)
+        """
+        self.mcmc_runs = self.db.query('mcmc_run').to_dict('records')
+        self.mcmc_params = self.db.query('mcmc_params').to_dict('records')
 
     def write_metadata(self, filename, data):
         file_path = os.path.join(self.output_dir, filename)
@@ -942,7 +952,7 @@ class CalibrationOutputs:
         with Timer("Writing calibration data to disk."):
             # Write parameters
             mcmc_params_df = pd.DataFrame.from_dict(self.mcmc_params)
-            self.db.dump_df(db.store.Table.PARAMS, mcmc_params_df)
+            self.db.dump_df(db.store.Table.PARAMS, mcmc_params_df, append=False)
             # Calculate iterations weights, then write to disk
             weight = 0
             for mcmc_run in reversed(self.mcmc_runs):
@@ -952,7 +962,7 @@ class CalibrationOutputs:
                     weight = 0
 
             mcmc_runs_df = pd.DataFrame.from_dict(self.mcmc_runs)
-            self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df)
+            self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df, append=False)
 
 
 def get_parameter_bounds_from_priors(prior_dict):

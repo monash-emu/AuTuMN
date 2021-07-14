@@ -40,6 +40,7 @@ Set-ItemProperty -Path $RegistryLoc -Name PATH -Value $NewPath
 
 # Close and re-open powershell as an administrator
 # Setup Anaconda to work with PowerShell
+# Run the following command using the Anaconda Powershell Prompt (can be found through the start menu)
 conda init powershell
 
 ```

@@ -106,6 +106,8 @@ class Params:
         else:
             raise ValueError(f"Loaded parameter data must be a string or dict, got {t}")
 
+    def __reduce__(self):
+        return (self.__class__, (self.to_dict(), ))
 
 class ParameterSet:
     """

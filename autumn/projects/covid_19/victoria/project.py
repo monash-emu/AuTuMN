@@ -15,7 +15,6 @@ CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 TARGETS_START_TIME = 153  # 1st June
 TARGETS_END_TIME = 305  # 31st October
 TARGETS_RANGE = (TARGETS_START_TIME, TARGETS_END_TIME)
-DISPERSION_TARGET_RATIO = 0.07
 
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
@@ -29,11 +28,12 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 
+# For all the cluster targets, a universal calibrated parameter called "target_output_ratio" is used to scale the
+# dispersion parameter of the targets' normal likelihoods.
 cluster_targets = []
 for cluster in CLUSTERS:
     notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").moving_average(4)
-    dispersion_value = max(notifs_ts.values) * DISPERSION_TARGET_RATIO
-    target = NormalTarget(notifs_ts, stdev=dispersion_value)
+    target = NormalTarget(notifs_ts)
     cluster_targets.append(target)
 
 targets = [
@@ -113,7 +113,7 @@ priors = [
         [0.0, 0.5],
         jumping_stdev=0.04,
     ),
-    UniformPrior("target_output_ratio", [0.1, 0.3], jumping_stdev=0.02),
+    UniformPrior("target_output_ratio", [0.2, 0.7], jumping_stdev=0.04),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
 ]
 
@@ -123,7 +123,7 @@ calibration = Calibration(
     metropolis_init="current_params",
     metropolis_init_rel_step_size=0.05,
     fixed_proposal_steps=500,
-    jumping_sd_adjustment=0.8,
+    jumping_stdev_adjustment=0.8,
 )
 
 # FIXME: Replace with flexible Python plot request API.

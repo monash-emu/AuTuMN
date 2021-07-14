@@ -12,7 +12,7 @@ Identification of infected persons through contact tracing is assumed to apply t
 The rate of transition from the untraced to the traced stratum of the early incubation period is determined by the proportion of contacts traced.
 It is assumed that only the contacts of identified cases can be traced, such that the case detection rate (the proportion of symptomatic cases detected) is considered the ceiling for the proportion of contacts traced.
 The proportion of contacts of identified cases that is traced is multiplied by the proportion of contacts whose index is detected (the case detection rate) to determine the proportion of all persons entering the incubation period who are traced.
-The proportion of contacts with detected index (\(u(t)\)) is calculated as the relative contribution of ever-detected infectious individuals to the total force of infection, given as:
+The proportion of contacts with detected index, \(u(t)\), is calculated as the relative contribution of ever-detected infectious individuals to the total force of infection, given as:
 
 \[
 u(t) = \frac
@@ -23,13 +23,11 @@ u(t) = \frac
 where $\mathcal{C}$ is the set of infectious compartments, $\mathcal{S}$ represents all clinical strata and $\mathcal{D} \subset \mathcal{S}$ is the list of detected clinical strata.
 The prevalence of infectious compartment $c$ in clinical stratum $s$ at time $t$ is represented by $prev_{c, s}(t)$, and $inf_{c, s}$ is the relative infectiousness of compartment $c$ in clinical stratum $s$.
 
-The proportion of contacts of identified cases traced (\(q(t)\)) is considered to decrease as the severity of the COVID-19 epidemic increases, because we expect contact tracing to decline in efficiency as more cases are identified.
+The proportion of contacts of identified cases that is traced, \(q(t)\), is considered to decrease as the severity of the COVID-19 epidemic increases, because we expect contact tracing to decline in efficiency as more cases are identified.
 That is, we assume that contact tracing is universal as COVID-19 prevalence approaches zero and declines exponentially with increasing prevalence.
 The relationship between the proportion of contacts of identified patients who are quarantined and prevalence is given as:
 
 \[q(t) = e^{-prev(t) \times \tau }\]
-
-such that \(e^{-prev(t) \times \tau} \times u(t) \) represents the proportion of all contacts of COVID-19 who are quarantined.
 
 Rather than estimate \(\tau\) directly, we estimate the more intuitive quantity of the proportion of contacts of identified patients who would be quarantined at a particular prevalence.
 Solving for the previous equation for \(\tau\), we obtain:
@@ -38,4 +36,4 @@ Solving for the previous equation for \(\tau\), we obtain:
 
 or \(\tau = \frac{-log(q_{0})}{prev_{0}} \) at a specific prevalence that accords with a particular value of \(q\). Fixing \(prev_{0}\) at \(10^{-3}\), we can vary \(q_{0}\) in calibration as the proportion of contacts of identified cases detected at a prevalence of one active case per thousand population.
 
-Finally, \(q(t) \times u(t) \) gives the proportion of all infected persons who are traced. This proportion of persons entering their early latent period transition to the late latent period in the traced stratum.
+Finally, \(q(t) \times u(t) \) gives the proportion of all infected persons who are traced. This proportion of persons entering their early latent period transition to the equivalent compartment in the traced stratum before proceeding to the late latent period.

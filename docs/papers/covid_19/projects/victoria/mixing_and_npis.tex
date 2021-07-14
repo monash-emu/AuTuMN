@@ -54,6 +54,3 @@ Two separate face coverings microdistancing functions are employed, one for metr
 	\label{fig:face}
 	\title{Face coverings micro-distancing function for metropolitan Melbourne clusters with data used for fitting.}
 \end{figure}
-
-\section{Between cluster mixing}
-The preceding section describes the creation of heterogeneous mixing matrices by age for each of the nine health service clusters individually. These mixing matrices are then combined to create a single time-varying heterogeneous mixing matrix by cluster and age resulting in a 144 by 144 (\(9\times16=144\)) square mixing matrix. The force of infection for an index cluster is calculated from the mixing matrices of the age-assortative matrix for each of the clusters modelled. For clusters other than the index cluster, the mixing matrices are multiplied by a parameter that represents the extent of inter-cluster mixing. This is then added to the mixing matrix for the index cluster multiplied by \(1-8\times intercluster\;mixing\) (because there are eight clusters other than the index cluster contributing to the mixing matrix) to create the final inter-cluster mixing matrix. The upper limit of prior of the \textit{intercluster mixing} parameter is set to be considerably less than one ninth, to ensure most of the force of infection is contributed from the index cluster.

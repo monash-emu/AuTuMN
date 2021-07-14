@@ -4,10 +4,9 @@
 For the clearest description of the model, we refer the reader to our code repository, because our object-oriented approach to software development is intended to be highly transparent and readable. For those who prefer dynamical systems such as this presented in the form of ordinary differential equations, we present the following.
 
 \[\frac{dS_{a,g}}{dt}=-\lambda_{a,g}(t) \sigma_{a} S_{a,g}\]
-\[\frac{dE_{a,g,q=1}}{dt}=\lambda_{a,g}(t) \sigma_{a} S_{a,g}- \alpha E_{a,g,q=1} \]
-\[\frac{dE_{a,g,q=2}}{dt}=\chi(t) \alpha E_{a,g,q=1} -\alpha E_{a,g,q=2}\]
-\[\frac{dP_{a,c,g,q=1}}{dt}=(1 - \chi(t)) p_{a,c}(t) \alpha E_{a,g,q=1}-\nu P_{a,c,g,q}\]
-\[\frac{dP_{a,c,g,q=2}}{dt}=p_{a,c}(t) \alpha E_{a,g,q=2}-\nu P_{a,c,g,q}\]
+\[\frac{dE_{a,g,q=1}}{dt}=\lambda_{a,g}(t) \sigma_{a} S_{a,g} -\alpha E_{a,g,q=1} - \chi(t) E_{a,g,q=1} \]
+\[\frac{dE_{a,g,q=2}}{dt}=-\alpha E_{a,g,q=2} + \chi(t) E_{a,g,q=1} \]
+\[\frac{dP_{a,c,g,q}}{dt}=p_{a,c}(t) \alpha E_{a,g,q}-\nu P_{a,c,g,q}\]
 \[\frac{dI_{a,c,g,q}}{dt}=\nu P_{a,c,g,q}-\gamma_{c}I_{a,c,g,q}\]
 \[\frac{dL_{a,c,g,q}}{dt}=\gamma_{c}I_{a,c,g,q}-\delta_{a,c}L_{a,c,g,q}-\mu_{a,c}L_{a,c,g,q}\]
 \[\frac{dR_{a,g}}{dt}=\sum_{c}{}\delta_{a,c}L_{a,c,g,q}\]
@@ -16,7 +15,7 @@ where
 
 \[\sum_{c}p_{a,c}(t)=1,\forall t\in\mathbb{R}\]
 
-\[\chi(t) = q(t) \times u(t)\]
+\[\chi(t) = \frac{\alpha q(t) u(t)}{1 - q(t) u(t)}\]
 
 \[\textbf{C}_{0}=\textbf{C}_{H}+\textbf{C}_{S}+\textbf{C}_{W}+\textbf{C}_{L}\]
 
@@ -61,7 +60,7 @@ where
     		$\beta$ & Probability of infection per contact between an infectious and susceptible individual \\
 	    	\textit{j} & Infectious populations \\
     		\textit{p} & Proportion progressing to each clinical stratification \\
-    		\textbf{G} & Square matrix of dimensions \(9 \times 9\) (for nine clusters) with values of mixing parameter for the off-diagonal elements and values of \(1-8\times mixing parameter\) \\
+    		\textbf{G} & Square matrix of dimensions \(9 \times 9\) for nine clusters \\
     \hline
 	\end{tabular}
 \end{table}

@@ -141,7 +141,14 @@ class Calibration:
         assert param_name in self.iterative_sampling_param_names, f"{param_name} is not an iteratively sampled parameter"
         assert n_points > 1, "A minimum of two points is required to perform proposal tuning"
 
-        # needed to be able to evaluate the loglikelihood
+        # We must perform a few initialisation tasks (needs refactoring)
+        # work out missing distribution params for priors
+        specify_missing_prior_params(self.iterative_sampling_priors)
+        specify_missing_prior_params(self.independent_sampling_priors)
+
+        # rebuild self.all_priors, following changes to the two sets of priors
+        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
+
         self.project = project
         self.model_parameters = project.param_set.baseline
         self.end_time = 2 + max([max(t["years"]) for t in self.targets])
@@ -157,16 +164,15 @@ class Calibration:
         starting_point = read_current_parameter_values(self.all_priors, self.model_parameters.to_dict())
 
         eval_points = list(np.linspace(start=lower_bound, stop=upper_bound, num=n_points, endpoint=True))
-        eval_loglikelihoods = []
+        eval_log_postertiors = []
         for i_run, eval_point in enumerate(eval_points):
             self.run_num = i_run
             update = {param_name: eval_point}
-            updated_param = {**starting_point, **update}
-            eval_loglikelihoods.append(
-                self.loglikelihood(updated_param)
-            )
-
-        return tune_jumping_sd(eval_points, eval_loglikelihoods, relative_likelihood_reduction)
+            updated_params = {**starting_point, **update}
+            log_likelihood = self.loglikelihood(updated_params)
+            log_prior = self.logprior(updated_params)
+            eval_log_postertiors.append(log_likelihood + log_prior)
+        return tune_jumping_sd(eval_points, eval_log_postertiors, relative_likelihood_reduction)
 
     def run(
         self,

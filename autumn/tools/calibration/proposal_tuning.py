@@ -2,7 +2,7 @@
 from numpy import mean, exp, log
 
 
-def tune_jumping_sd(eval_points, eval_logposteriors, relative_likelihood_reduction):
+def tune_jumping_stdev(eval_points, eval_logposteriors, relative_likelihood_reduction):
     """
     Identify how much parameter variation is required in order to modify the posterior likelihood by a given quantity
     (target_likelihood_ratio), when starting from the maximum likelihood value.
@@ -54,11 +54,11 @@ def tune_jumping_sd(eval_points, eval_logposteriors, relative_likelihood_reducti
 
     if len(cutoff_solutions) > 0:
         gaps = [abs(best_point - c) for c in cutoff_solutions]
-        jumping_sd = mean(gaps)
+        jumping_stdev = mean(gaps)
     else:
-        jumping_sd = eval_points[-1] - eval_points[0]
+        jumping_stdev = eval_points[-1] - eval_points[0]
 
-    return jumping_sd
+    return jumping_stdev
 
 
 def perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.5):

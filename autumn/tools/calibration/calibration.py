@@ -16,7 +16,7 @@ from autumn.tools.utils.utils import get_git_branch, get_git_hash
 from autumn.tools.utils.timer import Timer
 from autumn.tools.calibration.priors import BasePrior
 from autumn.tools.calibration.targets import BaseTarget
-from autumn.tools.calibration.proposal_tuning import tune_jumping_sd
+from autumn.tools.calibration.proposal_tuning import tune_jumping_stdev
 from autumn.tools.project.params import read_param_value_from_string
 from autumn.tools.project import Project
 
@@ -88,8 +88,8 @@ class Calibration:
         metropolis_init_rel_step_size: float = DEFAULT_METRO_STEP,
         fixed_proposal_steps: int = DEFAULT_STEPS,
         seed: int = None,
-        initial_jumping_sd_ratio: float = 0.25,
-        jumping_sd_adjustment: float = 0.5,
+        initial_jumping_stdev_ratio: float = 0.25,
+        jumping_stdev_adjustment: float = 0.5,
     ):
         """
         Defines a new calibration.
@@ -103,8 +103,8 @@ class Calibration:
         self.initialisation_type = metropolis_init
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
         self.n_steps_fixed_proposal = fixed_proposal_steps
-        self.initial_jumping_sd_ratio = initial_jumping_sd_ratio
-        self.jumping_sd_adjustment = jumping_sd_adjustment
+        self.initial_jumping_stdev_ratio = initial_jumping_stdev_ratio
+        self.jumping_stdev_adjustment = jumping_stdev_adjustment
 
         self.split_priors_by_type()
 
@@ -172,7 +172,7 @@ class Calibration:
             log_likelihood = self.loglikelihood(updated_params)
             log_prior = self.logprior(updated_params)
             eval_log_postertiors.append(log_likelihood + log_prior)
-        return tune_jumping_sd(eval_points, eval_log_postertiors, relative_likelihood_reduction)
+        return tune_jumping_stdev(eval_points, eval_log_postertiors, relative_likelihood_reduction)
 
     def run(
         self,
@@ -222,7 +222,7 @@ class Calibration:
 
         self.workout_unspecified_target_sds()  # for likelihood definition
         self.workout_unspecified_time_weights()  # for likelihood weighting
-        self.workout_unspecified_jumping_sds()  # for proposal function definition
+        self.workout_unspecified_jumping_stdevs()  # for proposal function definition
         self.param_bounds = self.get_parameter_bounds()
 
         self.build_transformations()
@@ -394,9 +394,9 @@ class Calibration:
                 s = sum(target["time_weights"])
                 target["time_weights"] = [w / s for w in target["time_weights"]]
 
-    def workout_unspecified_jumping_sds(self):
+    def workout_unspecified_jumping_stdevs(self):
         for i, prior_dict in enumerate(self.iterative_sampling_priors):
-            if "jumping_sd" not in prior_dict.keys():
+            if "jumping_stdev" not in prior_dict.keys():
                 prior_low, prior_high = get_parameter_finite_range_from_prior(prior_dict)
                 prior_width = prior_high - prior_low
 
@@ -404,8 +404,8 @@ class Calibration:
                 relative_prior_width = (
                     self.metropolis_init_rel_step_size  # fraction of prior_width in which 95% of samples should fall
                 )
-                self.iterative_sampling_priors[i]["jumping_sd"] = (
-                    relative_prior_width * prior_width * self.initial_jumping_sd_ratio
+                self.iterative_sampling_priors[i]["jumping_stdev"] = (
+                    relative_prior_width * prior_width * self.initial_jumping_stdev_ratio
                 )
 
     def run_fitting_algorithm(
@@ -589,10 +589,10 @@ class Calibration:
 
     def reduce_proposal_step_size(self):
         """
-        Reduce the "jumping_sd" associated with each parameter during the pre-adaptive phase
+        Reduce the "jumping_stdev" associated with each parameter during the pre-adaptive phase
         """
         for i in range(len(self.iterative_sampling_priors)):
-            self.iterative_sampling_priors[i]["jumping_sd"] *= self.jumping_sd_adjustment
+            self.iterative_sampling_priors[i]["jumping_stdev"] *= self.jumping_stdev_adjustment
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(
@@ -631,7 +631,7 @@ class Calibration:
             upper_bound = self.param_bounds[param_name][1]
 
             original_sd = self.iterative_sampling_priors[i][
-                "jumping_sd"
+                "jumping_stdev"
             ]  # we will need to transform the jumping step
 
             # trivial case of an unbounded parameter
@@ -681,7 +681,7 @@ class Calibration:
                 transformed_up = self.transform[param_name]["direct"](
                     representative_point + original_sd / 2
                 )
-                self.iterative_sampling_priors[i]["jumping_sd"] = abs(
+                self.iterative_sampling_priors[i]["jumping_stdev"] = abs(
                     transformed_up - transformed_low
                 )
 
@@ -730,7 +730,7 @@ class Calibration:
         if not use_adaptive_proposal:
             for i, prior_dict in enumerate(self.iterative_sampling_priors):
                 sample = np.random.normal(
-                    loc=prev_iterative_params_trans[i], scale=prior_dict["jumping_sd"], size=1
+                    loc=prev_iterative_params_trans[i], scale=prior_dict["jumping_stdev"], size=1
                 )[0]
                 new_iterative_params_trans.append(sample)
 

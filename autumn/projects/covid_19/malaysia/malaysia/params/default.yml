@@ -88,7 +88,6 @@ voc_emergence:
   entry_rate: 1.
   seed_duration: 10.
   contact_rate_multiplier: 1.56 # LSHTM's estimate
-
   start_time_second_VoC: 532 #15 June 2021
   entry_rate_second_VoC: 1.
   seed_duration_second_VoC: 10.

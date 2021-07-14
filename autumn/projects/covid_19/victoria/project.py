@@ -123,7 +123,7 @@ calibration = Calibration(
     metropolis_init="current_params",
     metropolis_init_rel_step_size=0.05,
     fixed_proposal_steps=500,
-    jumping_sd_adjustment=0.8,
+    jumping_stdev_adjustment=0.8,
 )
 
 # FIXME: Replace with flexible Python plot request API.

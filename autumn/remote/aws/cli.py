@@ -147,6 +147,32 @@ def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
         job_func = functools.partial(remote.run_calibration, **kwargs)
         return _run_job(job_id, [instance_type], is_spot, job_func)
 
+@run.command("resume_calibration")
+@click.option("--job", type=str, required=True)
+@click.option("--baserun", type=str, required=True)
+@click.option("--chains", type=int, required=True)
+@click.option("--runtime", type=int, required=True)
+@click.option("--branch", type=str, default="master")
+@click.option("--latest-code", is_flag=True)
+@click.option("--spot", is_flag=True)
+def resume_calibration_cli(job, baserun, chains, runtime, branch, spot):
+    resume_calibration(job, baserun, chains, runtime, branch, spot)
+
+def resume_calibration(job, baserun, chains, runtime, branch, is_spot):
+    """
+    Run a MCMC calibration on an AWS server.
+    """
+    job_id = f"resume-{job}"
+    instance_type = aws.get_instance_type(2 * chains, 8)
+
+    kwargs = {
+        "num_chains": chains,
+        "baserun": baserun,
+        "runtime": runtime,
+        "branch": branch,
+    }
+    job_func = functools.partial(remote.resume_calibration, **kwargs)
+    return _run_job(job_id, [instance_type], is_spot, job_func)
 
 @run.command("full")
 @click.option("--job", type=str, required=True)

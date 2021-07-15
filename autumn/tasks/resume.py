@@ -8,8 +8,9 @@ from autumn.tools import db, plots
 from autumn.settings import REMOTE_BASE_DIR
 from autumn.tools.utils.parallel import report_errors, run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.fs import recreate_dir
-from autumn.tools.utils.s3 import upload_to_run_s3, get_s3_client
+from autumn.tools.utils.s3 import upload_to_run_s3, get_s3_client, list_s3, download_from_run_s3
 from autumn.tools.utils.timer import Timer
+from autumn.tools.calibration import Calibration
 
 from .utils import get_project_from_run_id, set_logging_config
 
@@ -25,7 +26,7 @@ CALIBRATE_DIRS = [CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, CALIBRATE_LOG_DIR]
 MLE_PARAMS_PATH = os.path.join(CALIBRATE_DATA_DIR, "mle-params.yml")
 
 
-def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
+def resume_calibration_task(run_id: str, base_run_id: str, runtime: float, num_chains: int, verbose: bool = False):
     s3_client = get_s3_client()
 
     # Set up directories for plots and output data.
@@ -33,13 +34,25 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
         for dirpath in CALIBRATE_DIRS:
             recreate_dir(dirpath)
 
+    # Download data for existing calibration chain
+    # We need the pickled Calibration objects, and the previous MCMC run/parameter data
+
+    key_prefix = os.path.join(base_run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
+    all_cal_data_keys = list_s3(s3_client, key_prefix)
+
+    keys_to_dl = [k for k in all_cal_data_keys if any([t in k for t in ['.pkl', 'mcmc_run.parquet', 'mcmc_params.parquet']])]
+
+    with Timer(f"Downloading existing calibration data"):
+        for src_key in keys_to_dl:
+            download_from_run_s3(s3_client, base_run_id, src_key, not verbose)
+
     # Run the actual calibrations
-    with Timer(f"Running {num_chains} calibration chains"):
+    with Timer(f"Resuming {num_chains} calibration chains"):
         args_list = [
-            (run_id, runtime, chain_id, num_chains, verbose) for chain_id in range(num_chains)
+            (runtime, chain_id, verbose) for chain_id in range(num_chains)
         ]
         try:
-            chain_ids = run_parallel_tasks(run_calibration_chain, args_list, False)
+            chain_ids = run_parallel_tasks(resume_calibration_chain, args_list, False)
             cal_success = True
         except Exception as e:
             # Calibration failed, but we still want to store some results
@@ -91,8 +104,8 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
         upload_to_run_s3(s3_client, run_id, 'log', quiet=not verbose)
 
 @report_errors
-def run_calibration_chain(
-    run_id: str, runtime: float, chain_id: int, num_chains: int, verbose: bool
+def resume_calibration_chain(
+    runtime: float, chain_id: int, verbose: bool
 ):
     """
     Run a single calibration chain.
@@ -102,11 +115,13 @@ def run_calibration_chain(
     os.environ["AUTUMN_CALIBRATE_DIR"] = CALIBRATE_DATA_DIR
 
     try:
-        project = get_project_from_run_id(run_id)
-        project.calibrate(runtime, chain_id, num_chains)
+        #project = get_project_from_run_id(run_id)
+        #project.calibrate(runtime, chain_id, num_chains)
+        rcal = Calibration.from_existing(os.path.join(CALIBRATE_DATA_DIR, f"calstate-{chain_id}.pkl"), CALIBRATE_DATA_DIR)
+        rcal.resume_autumn_mcmc(runtime)
     except Exception:
         logger.exception("Calibration chain %s failed", chain_id)
-        gather_exc_plus(os.path.join(CALIBRATE_LOG_DIR, f"crash-calibration-{chain_id}.log"))
+        gather_exc_plus(os.path.join(CALIBRATE_LOG_DIR, f"crash-resume-{chain_id}.log"))
         raise
     logging.info("Finished running calibration chain %s", chain_id)
     return chain_id

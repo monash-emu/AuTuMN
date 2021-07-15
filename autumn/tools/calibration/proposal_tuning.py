@@ -65,8 +65,10 @@ def perform_all_params_proposal_tuning(project, calibration, priors, n_points=10
 
     params_to_tune = [p.name for p in priors if p.sampling is None]
 
-    for param_name in params_to_tune:  # FIXME: these tasks should be run in parallel
+    for i, param_name in enumerate(params_to_tune):  # FIXME: these tasks should be run in parallel
+        print(f"Completed {i} out of {len(params_to_tune)} tuned parameters. Now tuning {param_name} ")
         tuned_proposal_sd = calibration.tune_proposal(param_name, project, n_points, relative_likelihood_reduction)
+        print(f"{param_name}: {tuned_proposal_sd}")
 
     # FIXME: we need to store all the tuned values in a single yaml file
     # Required format for the stored dictionary: {"param_name_1": tuned_proposal_sd_1, "param_name_2": tuned_proposal_sd_2, ...}

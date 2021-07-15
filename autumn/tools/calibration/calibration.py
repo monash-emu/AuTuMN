@@ -676,10 +676,10 @@ class Calibration:
 
             if representative_point is not None:
                 transformed_low = self.transform[param_name]["direct"](
-                    representative_point - original_sd / 2
+                    representative_point - original_sd / 4
                 )
                 transformed_up = self.transform[param_name]["direct"](
-                    representative_point + original_sd / 2
+                    representative_point + original_sd / 4
                 )
                 self.iterative_sampling_priors[i]["jumping_stdev"] = abs(
                     transformed_up - transformed_low

@@ -61,7 +61,7 @@ def tune_jumping_stdev(eval_points, eval_logposteriors, relative_likelihood_redu
     return jumping_stdev
 
 
-def perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.8):
+def perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2):
 
     params_to_tune = [p.name for p in priors if p.sampling is None]
 

@@ -47,4 +47,4 @@ project = Project(
 )
 
 # from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=2, relative_likelihood_reduction=0.8)
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=2, relative_likelihood_reduction=0.2)

@@ -79,7 +79,7 @@ def resume_calibration(
         install_requirements(conn)
         read_secrets(conn)
         run_id = get_run_id(conn, app_name, region_name)
-        pipeline_name = "resume-calibration"
+        pipeline_name = "resume_calibration"
         pipeline_args = {
             "run": run_id,
             "baserun": baserun,

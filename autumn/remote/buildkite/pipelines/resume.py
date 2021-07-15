@@ -56,10 +56,10 @@ fields = [
     spot_field,
 ]
 input_step = InputStep(
-    key="resume-calibration-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields
+    key="resume_calibration_settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields
 )
 resume_calibration_step = CommandStep(
-    key="resume-calibration",
+    key="resume_calibration",
     command="./scripts/buildkite.sh resume",
 )
 website_step = CommandStep(
@@ -73,4 +73,4 @@ steps = [
     resume_calibration_step,
     website_step,
 ]
-pipeline = Pipeline(key="resume-calibration", steps=steps)
+pipeline = Pipeline(key="resume_calibration", steps=steps)

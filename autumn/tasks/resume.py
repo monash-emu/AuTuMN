@@ -26,7 +26,7 @@ CALIBRATE_DIRS = [CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, CALIBRATE_LOG_DIR]
 MLE_PARAMS_PATH = os.path.join(CALIBRATE_DATA_DIR, "mle-params.yml")
 
 
-def resume_calibration_task(run_id: str, base_run_id: str, runtime: float, max_iters: int, num_chains: int, verbose: bool):
+def resume_calibration_task(run_id: str, base_run_id: str, runtime: float, num_chains: int, verbose: bool = False):
     s3_client = get_s3_client()
 
     # Set up directories for plots and output data.

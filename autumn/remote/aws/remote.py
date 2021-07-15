@@ -59,6 +59,38 @@ def run_full_model(
         logger.info("Full model runs completed for %s", run_id)
 
 
+def resume_calibration(
+    instance,
+    baserun: str,
+    num_chains: int,
+    runtime: int,
+    branch: str,
+):
+    """Resume calibration job on the remote server"""
+    msg = "Resuming calibration with %s chains for %s seconds on AWS instance %s."
+    logger.info(msg, num_chains, runtime, instance["InstanceId"])
+    run_id = None
+
+    app_name, region_name, _, orig_commit = baserun.split('/')
+
+    with get_connection(instance) as conn:
+        print_hostname(conn)
+        update_repo(conn, branch=branch)
+        install_requirements(conn)
+        read_secrets(conn)
+        run_id = get_run_id(conn, app_name, region_name)
+        pipeline_name = "resume-calibration"
+        pipeline_args = {
+            "run": run_id,
+            "baserun": baserun,
+            "chains": num_chains,
+            "runtime": runtime,
+        }
+        run_task_pipeline(conn, pipeline_name, pipeline_args)
+        logger.info("Calibration resume completed for %s", run_id)
+
+    return run_id
+
 def run_calibration(
     instance,
     app_name: str,

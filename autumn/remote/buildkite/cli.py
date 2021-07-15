@@ -10,6 +10,7 @@ from autumn.tools.utils.runs import read_run_id
 
 from .buildkite import trigger_pipeline
 from .pipelines import calibrate as calibrate_pipeline
+from .pipelines import resume as resume_pipeline
 from .pipelines import full as full_pipeline
 from .pipelines import powerbi as powerbi_pipeline
 from .pipelines import trigger_europe as trigger_europe_pipeline
@@ -34,6 +35,7 @@ def update():
         calibrate_pipeline.pipeline,
         full_pipeline.pipeline,
         powerbi_pipeline.pipeline,
+        resume_pipeline.pipeline,
         trigger_philippines_pipeline.pipeline,
         trigger_victoria_pipeline.pipeline,
         trigger_europe_pipeline.pipeline,
@@ -93,6 +95,36 @@ def calibrate():
                 fp.spot_field.key: fp.spot_field.get_option(is_spot),
             },
         )
+
+    logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
+    logger.info("Results available at %s", get_run_url(run_id))
+
+@buildkite_cli.command()
+def resume():
+    """Run a calibration job in Buildkite"""
+    logger.info("Gathering data for calibration.")
+    build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
+    baserun = resume_pipeline.run_id_field.get_value()
+    chains = resume_pipeline.chains_field.get_value()
+    runtime = resume_pipeline.runtime_field.get_value()
+    branch = resume_pipeline.branch_field.get_value()
+    use_latest = resume_pipeline.use_latest_code_field.get_value()
+    is_spot = resume_pipeline.spot_field.get_value()
+    params_str = pprint.pformat({f.key: f.get_value() for f in resume_pipeline.fields}, indent=2)
+
+    # Decode combined app + model name from user input.
+    app_name, region_name, baserun_id, base_commit = baserun.split("/")
+    job_name = f"resume-{app_name}-{region_name}-{build_number}"
+
+    logger.info("Resuming calibration job %s with params:\n%s\n", job_name, params_str)
+    run_id = aws.resume_calibration(
+        job=job_name,
+        baserun=baserun,
+        chains=chains,
+        runtime=runtime,
+        branch=branch,
+        is_spot=is_spot,
+    )
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))

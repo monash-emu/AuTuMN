@@ -101,7 +101,7 @@ def upload_to_run_s3(client, run_id: str, src_path: str, quiet: bool):
     return src_path
 
 
-def list_s3(client, key_prefix: str, key_suffix: str):
+def list_s3(client, key_prefix: str, key_suffix: str = None):
     """Returns the item keys in a path in AWS S3"""
 
     key_prefix = sanitise_path(key_prefix)
@@ -119,8 +119,10 @@ def list_s3(client, key_prefix: str, key_suffix: str):
         objs += response["Contents"]
         is_truncated = response["IsTruncated"]
 
-    return [o["Key"] for o in objs if o["Key"].endswith(key_suffix)]
-
+    if key_suffix:
+        return [o["Key"] for o in objs if o["Key"].endswith(key_suffix)]
+    else:
+        return [o["Key"] for o in objs]
 
 def download_s3(client, src_key, dest_path):
     """Downloads a file from AWS S3"""

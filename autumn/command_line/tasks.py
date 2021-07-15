@@ -32,6 +32,19 @@ def run_calibrate(run, chains, runtime, verbose):
 
     calibrate_task(run, runtime, chains, verbose)
 
+@tasks.command("resume")
+@click.option("--run", type=str, required=True)
+@click.option("--baserun", type=str, required=True)
+@click.option("--chains", type=int, required=True)
+@click.option("--runtime", type=int, required=True)
+@click.option("--verbose", is_flag=True)
+def resume_calibrate(run, baserun, chains, runtime, verbose):
+    pre_task_setup()
+
+    from autumn.tasks.resume import resume_calibration_task
+
+    resume_calibration_task(run, baserun, runtime, chains, verbose)
+
 
 @tasks.command("full")
 @click.option("--run", type=str, required=True)

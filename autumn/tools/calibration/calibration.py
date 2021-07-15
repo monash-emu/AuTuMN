@@ -88,8 +88,8 @@ class Calibration:
         metropolis_init_rel_step_size: float = DEFAULT_METRO_STEP,
         fixed_proposal_steps: int = DEFAULT_STEPS,
         seed: int = None,
-        initial_jumping_sd_ratio: float = 0.25,
-        jumping_sd_adjustment: float = 0.5,
+        initial_jumping_stdev_ratio: float = 0.25,
+        jumping_stdev_adjustment: float = 0.5,
     ):
         """
         Defines a new calibration.
@@ -103,8 +103,8 @@ class Calibration:
         self.initialisation_type = metropolis_init
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
         self.n_steps_fixed_proposal = fixed_proposal_steps
-        self.initial_jumping_sd_ratio = initial_jumping_sd_ratio
-        self.jumping_sd_adjustment = jumping_sd_adjustment
+        self.initial_jumping_stdev_ratio = initial_jumping_stdev_ratio
+        self.jumping_stdev_adjustment = jumping_stdev_adjustment
 
         self.split_priors_by_type()
 
@@ -143,7 +143,7 @@ class Calibration:
 
         self.__dict__.update(state)
         self.project = get_project(**_extra['project'])
-        self.build_transformations(update_jumping_sd=False)
+        self.build_transformations(update_jumping_stdev=False)
         np.random.set_state(_extra['rng'])
 
         #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
@@ -221,7 +221,7 @@ class Calibration:
 
         self.workout_unspecified_target_sds()  # for likelihood definition
         self.workout_unspecified_time_weights()  # for likelihood weighting
-        self.workout_unspecified_jumping_sds()  # for proposal function definition
+        self.workout_unspecified_jumping_stdevs()  # for proposal function definition
         self.param_bounds = self.get_parameter_bounds()
 
         self.build_transformations()
@@ -393,9 +393,9 @@ class Calibration:
                 s = sum(target["time_weights"])
                 target["time_weights"] = [w / s for w in target["time_weights"]]
 
-    def workout_unspecified_jumping_sds(self):
+    def workout_unspecified_jumping_stdevs(self):
         for i, prior_dict in enumerate(self.iterative_sampling_priors):
-            if "jumping_sd" not in prior_dict.keys():
+            if "jumping_stdev" not in prior_dict.keys():
                 if prior_dict["distribution"] == "uniform":
                     prior_width = prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
                 elif prior_dict["distribution"] == "lognormal":
@@ -448,8 +448,8 @@ class Calibration:
                 relative_prior_width = (
                     self.metropolis_init_rel_step_size  # fraction of prior_width in which 95% of samples should fall
                 )
-                self.iterative_sampling_priors[i]["jumping_sd"] = (
-                    relative_prior_width * prior_width * self.initial_jumping_sd_ratio
+                self.iterative_sampling_priors[i]["jumping_stdev"] = (
+                    relative_prior_width * prior_width * self.initial_jumping_stdev_ratio
                 )
 
     def run_fitting_algorithm(
@@ -529,6 +529,13 @@ class Calibration:
             
     def enter_mcmc_loop(self, available_time: int = None, max_iters: int = None):
         start_time = time()
+
+        if max_iters:
+            if self.n_iters_real >= max_iters:
+                msg = f"Not resuming run. Existing run already has {self.n_iters_real} iterations; max_iters = {max_iters}"
+                logger.info(msg)
+                return
+
         while True:
             logging.info("Running MCMC iteration %s, run %s", self.n_iters_real, self.run_num)
 
@@ -650,10 +657,10 @@ class Calibration:
 
     def reduce_proposal_step_size(self):
         """
-        Reduce the "jumping_sd" associated with each parameter during the pre-adaptive phase
+        Reduce the "jumping_stdev" associated with each parameter during the pre-adaptive phase
         """
         for i in range(len(self.iterative_sampling_priors)):
-            self.iterative_sampling_priors[i]["jumping_sd"] *= self.jumping_sd_adjustment
+            self.iterative_sampling_priors[i]["jumping_stdev"] *= self.jumping_stdev_adjustment
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(
@@ -676,7 +683,7 @@ class Calibration:
 
         return param_bounds
 
-    def build_transformations(self, update_jumping_sd=True):
+    def build_transformations(self, update_jumping_stdev=True):
         """
         Build transformation functions between the parameter space and R^n.
         """
@@ -692,7 +699,7 @@ class Calibration:
             upper_bound = self.param_bounds[param_name][1]
 
             original_sd = self.iterative_sampling_priors[i][
-                "jumping_sd"
+                "jumping_stdev"
             ]  # we will need to transform the jumping step
 
             # trivial case of an unbounded parameter
@@ -737,14 +744,14 @@ class Calibration:
 
             # Don't update jumping if we are resuming (this has already been calculated)
             # FIXME:  We should probably refactor this to update on copies rather than in place
-            if representative_point is not None and update_jumping_sd:
+            if representative_point is not None and update_jumping_stdev:
                 transformed_low = self.transform[param_name]["direct"](
                     representative_point - original_sd / 2
                 )
                 transformed_up = self.transform[param_name]["direct"](
                     representative_point + original_sd / 2
                 )
-                self.iterative_sampling_priors[i]["jumping_sd"] = abs(
+                self.iterative_sampling_priors[i]["jumping_stdev"] = abs(
                     transformed_up - transformed_low
                 )
 
@@ -793,7 +800,7 @@ class Calibration:
         if not use_adaptive_proposal:
             for i, prior_dict in enumerate(self.iterative_sampling_priors):
                 sample = np.random.normal(
-                    loc=prev_iterative_params_trans[i], scale=prior_dict["jumping_sd"], size=1
+                    loc=prev_iterative_params_trans[i], scale=prior_dict["jumping_stdev"], size=1
                 )[0]
                 new_iterative_params_trans.append(sample)
 

@@ -1,4 +1,4 @@
-description: Scenario 10, current mobility + re-opening schools mid July + vaccination 60% coverage in 6 months
+description: Scenario 10, current mobility + re-opening 50% schools August 1st + vaccination 60% coverage in 6 months
 
 time:
   start: 562 # 15th July 2021
@@ -8,9 +8,11 @@ mobility:
     school:
       append: false
       times:
-        - 2021-07-15 # All schools open
+        - 2021-07-31 # All schools close
+        - 2021-08-01 #50% of schools open
       values:
-        - 1
+        - 0.0
+        - 0.5
 
 vaccination:
 

@@ -44,7 +44,7 @@ def resume_calibration_task(run_id: str, base_run_id: str, runtime: float, num_c
 
     with Timer(f"Downloading existing calibration data"):
         for src_key in keys_to_dl:
-            download_from_run_s3(s3_client, run_id, src_key, not verbose)
+            download_from_run_s3(s3_client, base_run_id, src_key, not verbose)
 
     # Run the actual calibrations
     with Timer(f"Resuming {num_chains} calibration chains"):
@@ -87,7 +87,7 @@ def resume_calibration_task(run_id: str, base_run_id: str, runtime: float, num_c
         upload_to_run_s3(s3_client, run_id, CALIBRATE_PLOTS_DIR, quiet=not verbose)
 
     # Find the MLE parameter set from all the chains.
-    with Timer(f"Finding max likelihood esitmate params"):
+    with Timer(f"Finding max likelihood estimate params"):
         database_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
         with TemporaryDirectory() as tmp_dir_path:
             collated_db_path = os.path.join(tmp_dir_path, "collated.db")
@@ -97,7 +97,7 @@ def resume_calibration_task(run_id: str, base_run_id: str, runtime: float, num_c
             db.store.save_mle_params(collated_db_path, MLE_PARAMS_PATH)
 
     # Upload the MLE parameter set to AWS S3.
-    with Timer(f"Uploading max likelihood esitmate params to AWS S3"):
+    with Timer(f"Uploading max likelihood estimate params to AWS S3"):
         upload_to_run_s3(s3_client, run_id, MLE_PARAMS_PATH, quiet=not verbose)
 
     with Timer(f"Uploading final logs to AWS S3"):

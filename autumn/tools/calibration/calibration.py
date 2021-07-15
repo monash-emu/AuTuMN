@@ -907,6 +907,7 @@ class CalibrationOutputs:
         derived_outputs_df = db.store.build_derived_outputs_table(
             [model], run_id=iter_num, chain_id=self.chain_id
         )
+        logger.info("It should be happening here")
         self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
         self.db.append_df(db.store.Table.DERIVED, derived_outputs_df)
 

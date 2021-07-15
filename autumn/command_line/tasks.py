@@ -32,7 +32,7 @@ def run_calibrate(run, chains, runtime, verbose):
 
     calibrate_task(run, runtime, chains, verbose)
 
-@tasks.command("resume")
+@tasks.command("resume_calibration")
 @click.option("--run", type=str, required=True)
 @click.option("--baserun", type=str, required=True)
 @click.option("--runtime", type=int, required=True)

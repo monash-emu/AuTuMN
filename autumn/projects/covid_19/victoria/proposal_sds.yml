@@ -1,0 +1,20 @@
+clinical_stratification.non_sympt_infect_multiplier: 0.002128423108827049
+clinical_stratification.props.hospital.multiplier: 0.3892145217538652
+clinical_stratification.props.symptomatic.multiplier: 0.03227787381228836
+contact_rate: 5.9524467368583106e-05
+contact_tracing.assumed_trace_prop: 0.009781023706591396
+infection_fatality.top_bracket_overwrite: 0.05193255839651325
+infectious_seed: 1.647179755353175
+sojourn.compartment_periods.icu_early: 2.2462908729807634
+sojourn.compartment_periods_calculated.active.total_period: 0.02175170863956577
+sojourn.compartment_periods_calculated.exposed.total_period: 0.002797298251749236
+target_output_ratio: 0.2251801020878279
+testing_to_detection.assumed_cdr_parameter: 0.0029844476580005996
+victorian_clusters.contact_rate_multiplier_barwon_south_west: 0.01982327698937425
+victorian_clusters.contact_rate_multiplier_north_metro: 0.004332311070608386
+victorian_clusters.contact_rate_multiplier_regional: 0.03225374979664558
+victorian_clusters.contact_rate_multiplier_south_metro: 0.009376901962392048
+victorian_clusters.contact_rate_multiplier_west_metro: 0.0028309869009762734
+victorian_clusters.intercluster_mixing: 0.0010544297907338013
+#victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect: 0.5  # FIXME
+victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect: 0.007053797919141708

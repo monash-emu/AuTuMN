@@ -1,4 +1,4 @@
-description: Scenario 18, second VoC strain with contact rate multiplier 50% of alpha
+description: Scenario 19, second VoC strain with contact rate multiplier 50% of alpha
 parent: apps/covid_19/regions/sri_lanka/params/default.yml
 
 time:

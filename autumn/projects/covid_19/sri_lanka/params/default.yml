@@ -93,8 +93,13 @@ mobility:
         - 0
 
 voc_emergence:
-  dual_voc: false #whether two or one strain VoC
+  dual_voc: true #whether two or one strain VoC
   start_time: 410
   entry_rate: 1.
   seed_duration: 10.
   contact_rate_multiplier: 2.45 # LSHTM's estimate
+
+  start_time_second_VoC: 1000000 # whatever time that is far in the future
+  entry_rate_second_VoC: 1. # doesn't matter
+  seed_duration_second_VoC: 10. # doesn't matter
+  contact_rate_multiplier_second_VoC: 2.45 # doesn't matter

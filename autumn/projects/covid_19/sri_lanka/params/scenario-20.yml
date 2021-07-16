@@ -1,4 +1,4 @@
-description: Scenario 18, second VoC strain with contact rate multiplier 50% of alpha
+description: Scenario 20, second VoC strain with contact rate multiplier 100% of alpha
 parent: apps/covid_19/regions/sri_lanka/params/default.yml
 
 time:
@@ -10,4 +10,4 @@ voc_emergence:
   start_time_second_VoC: 562 #15 July 2021
   entry_rate_second_VoC: 1.
   seed_duration_second_VoC: 10.
-  contact_rate_multiplier_second_VoC: 4.15
+  contact_rate_multiplier_second_VoC: 5.54

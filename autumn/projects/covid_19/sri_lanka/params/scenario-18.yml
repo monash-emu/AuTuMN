@@ -1,0 +1,17 @@
+description: Scenario 18, second VoC strain with contact rate multiplier 6
+parent: apps/covid_19/regions/sri_lanka/params/default.yml
+
+time:
+  start: 410 # 12th July 2021
+
+voc_emergence:
+  dual_voc: true #whether two or one strain VoC
+  start_time: 410
+  entry_rate: 1.
+  seed_duration: 10.
+  contact_rate_multiplier: 2.45 # LSHTM's estimate
+
+  start_time_second_VoC: 562 #15 July 2021
+  entry_rate_second_VoC: 1.
+  seed_duration_second_VoC: 10.
+  contact_rate_multiplier_second_VoC: 6

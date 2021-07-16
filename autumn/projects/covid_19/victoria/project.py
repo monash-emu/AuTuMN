@@ -105,11 +105,11 @@ priors = [
         trunc_range=[4.0, np.inf],
         jumping_stdev=4.
     ),
-    UniformPrior(
-        "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
-        [0.0, 0.5],
-        jumping_stdev=0.075,
-    ),
+    # UniformPrior(
+    #     "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
+    #     [0.0, 0.5],
+    #     jumping_stdev=0.075,
+    # ),
     UniformPrior(
         "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
         [0.0, 0.5],

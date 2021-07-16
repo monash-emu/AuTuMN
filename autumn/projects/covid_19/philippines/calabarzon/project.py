@@ -31,7 +31,8 @@ if os.path.isfile(proposal_sds_path):
     proposal_sds = read_yaml_file(proposal_sds_path)
     for prior in priors:
         if prior.name in proposal_sds:
-            prior.jumping_stdev = proposal_sds[prior.name]
+            if proposal_sds[prior.name] is not None:
+                prior.jumping_stdev = proposal_sds[prior.name]
 
 calibration = Calibration(priors, targets, metropolis_init="current_params")
 

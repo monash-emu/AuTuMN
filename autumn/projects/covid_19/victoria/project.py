@@ -2,10 +2,12 @@ import numpy as np
 
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
+from autumn.tools.project.params import read_yaml_file
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
+import os
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
@@ -117,6 +119,15 @@ priors = [
     UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
 ]
 
+# Read saved proposal sds from yml file
+proposal_sds_path = build_rel_path("proposal_sds.yml")
+if os.path.isfile(proposal_sds_path):
+    proposal_sds = read_yaml_file(proposal_sds_path)
+    for prior in priors:
+        if prior.name in proposal_sds:
+            if proposal_sds[prior.name] is not None:
+                prior.jumping_stdev = proposal_sds[prior.name]
+
 calibration = Calibration(
     priors,
     targets,
@@ -145,3 +156,6 @@ main_table_params_list = [
 ]
 # project.write_params_to_tex(main_table_params_list, project_path=build_rel_path(''))
 
+
+# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)

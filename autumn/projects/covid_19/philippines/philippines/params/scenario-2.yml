@@ -4,8 +4,8 @@ mobility:
     other_locations:
       append: true
       times:
-      - 561
-      - 563
+      - 572
+      - 574
       values:
       - - repeat_prev
       - - scale_prev
@@ -13,11 +13,11 @@ mobility:
     work:
       append: true
       times:
-      - 561
-      - 563
+      - 572
+      - 574
       values:
       - - repeat_prev
       - - scale_prev
         - 1.3
 time:
-  start: 562
+  start: 573

@@ -12,7 +12,7 @@ import yaml
 
 from autumn.settings import Region
 
-SCENARIO_START_TIME = 562  # 15 Jul 2021
+SCENARIO_START_TIME = 573  # 26 Jul 2021
 #
 # WORKFORCE_PROP = []
 # BACK_TO_NORMAL_FRACTIONS = []

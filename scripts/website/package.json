@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "NODE_OPTIONS='--inspect' next dev",
+    "dev": "cross-env NODE_OPTIONS='--inspect' next dev",
     "build": "next build && next export",
     "start": "next start"
   },

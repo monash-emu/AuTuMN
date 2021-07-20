@@ -95,6 +95,7 @@ victorian_clusters:
             - other_locations
             - school
             - work
+            - home
         behaviour_adjuster:
           function_type: constant
           parameters:
@@ -103,6 +104,7 @@ victorian_clusters:
             - other_locations
             - school
             - work
+            - home
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
@@ -171,6 +173,7 @@ victorian_clusters:
             - other_locations
             - school
             - work
+            - home
         behaviour_adjuster:
           function_type: constant
           parameters:
@@ -179,6 +182,7 @@ victorian_clusters:
             - other_locations
             - school
             - work
+            - home
         face_coverings:
           function_type: tanh
           parameters:

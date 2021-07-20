@@ -212,23 +212,24 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
-class VocEmergence(BaseModel):
+class VocComponentsFunc(BaseModel):
     """
-    Parameters defining the emergence profile of Variants of Concerns
+        Parameters defining the emergence profile of the Variants of Concerns
     """
-    dual_voc: bool
-    start_time: float
-    entry_rate: float
-    seed_duration: float
-    contact_rate_multiplier: float
+    start_time: Optional[float]
+    entry_rate: Optional[float]
+    seed_duration: Optional[float]
+    contact_rate_multiplier: Optional[float]
 
-    """
-    Parameters defining the emergence profile of the second Variants of Concerns
-    """
-    start_time_second_VoC: Optional[float]
-    entry_rate_second_VoC: Optional[float]
-    seed_duration_second_VoC: Optional[float]
-    contact_rate_multiplier_second_VoC: Optional[float]
+
+class VocFunc(BaseModel):
+    voc_components: VocComponentsFunc
+
+
+class VocEmergence(BaseModel):
+    dual_voc: bool
+    voc_strain: List[VocFunc]
+
 
 class VaccCoveragePeriod(BaseModel):
     """

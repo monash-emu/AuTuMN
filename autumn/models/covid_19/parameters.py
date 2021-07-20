@@ -305,7 +305,6 @@ class Parameters:
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float
     n_steps_fixed_proposal: int
-    metropolis_initialisation_type: str
     cumul_incidence_start_time: Optional[float]
     # Modular parameters.
     time: Time

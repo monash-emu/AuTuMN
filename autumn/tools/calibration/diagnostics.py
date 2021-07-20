@@ -63,18 +63,17 @@ def calculate_r_hat(posterior_chains):
     b_over_n = 1 / (m - 1) * sum([(means_per_chain[j_chain] - overall_mean)**2 for j_chain in range(m)])
 
     # Compute within-chain variation for each chain
-    variation = {}
-    chain_lenght = {}
+    variation, chain_length = {}, {}
     for j_chain, x_j in posterior_chains.items():
         n_j = len(x_j)
         variation[j_chain] = sum([(x_j[i] - means_per_chain[j_chain])**2 for i in range(n_j)])
-        chain_lenght[j_chain] = n_j
+        chain_length[j_chain] = n_j
 
     # Compute the average of within-chain variances (W)
-    w = 1 / m * sum([1 / (chain_lenght[j_chain] - 1) * variation[j_chain] for j_chain in range(m)])
+    w = 1 / m * sum([1 / (chain_length[j_chain] - 1) * variation[j_chain] for j_chain in range(m)])
 
     # Calculate the marginal posterior variance
-    var_hat = 1 / m * sum([1 / chain_lenght[j_chain] * variation[j_chain] for j_chain in range(m)]) + b_over_n
+    var_hat = 1 / m * sum([1 / chain_length[j_chain] * variation[j_chain] for j_chain in range(m)]) + b_over_n
 
     # Calculate R_hat
     r_hat = sqrt(var_hat / w)

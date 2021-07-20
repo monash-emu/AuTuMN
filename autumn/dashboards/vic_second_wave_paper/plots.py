@@ -830,7 +830,7 @@ def plot_multicluster_mobility(
 
 
 @dash.register("R_hat convergence statistics")
-def plot_multicluster_mobility(
+def display_parameters_r_hats(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],

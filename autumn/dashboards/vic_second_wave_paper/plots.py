@@ -11,7 +11,7 @@ from autumn.models.covid_19.parameters import Country, Population
 from autumn.models.covid_19.preprocess.case_detection import get_testing_pop
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.tools import plots
-from autumn.tools.plots.calibration.plots import get_epi_params
+from autumn.tools.plots.calibration.plots import get_epi_params, calculate_r_hats
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.plots.utils import get_plot_text_dict, REF_DATE, change_xaxis_to_date
 from autumn.settings import Region
@@ -827,3 +827,20 @@ def plot_multicluster_mobility(
     change_xaxis_to_date(axes, REF_DATE, rotation=0)
 
     plotter.save_figure(fig, filename=f"multi_cluster_mobility", title_text="Google mobility")
+
+
+@dash.register("R_hat convergence statistics")
+def plot_multicluster_mobility(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    r_hats = calculate_r_hats(mcmc_params, mcmc_tables, burn_in=0)
+    st.write("Convergence R_hat statistics for each parameter.\nWe want these values to be as close as possible to 1 (ideally < 1.1).")
+    st.write(r_hats)
+

@@ -1,5 +1,6 @@
 import statsmodels.api as sm
-from math import floor
+from math import floor, sqrt
+from numpy import mean
 
 
 def calculate_effective_sample_size(x):
@@ -36,3 +37,47 @@ def first_neg(x):
     """
     res = [i for i, x in enumerate(x) if x < 0]
     return None if res == [] else res[0]
+
+
+def calculate_r_hat(posterior_chains):
+    """
+    Calculate the R_hat statistic for a single parameter. The code below is intended to be compatible with chains of
+    different lengths. This is why the calculations may look slightly different compared to what is found in classic
+    textbooks.
+    :param posterior_chains: a dictionary, The keys are the chains ids and the values contain each chain's posterior
+    sample.
+    :return: the R_hat statistic (float)
+    """
+    m = len(posterior_chains)
+
+    # Compute within-chain means
+    means_per_chain = {}
+    for j_chain, x_j in posterior_chains.items():
+        means_per_chain[j_chain] = mean(x_j)
+
+    # Compute overall mean
+    flat_listed_values = sum(list(posterior_chains.values()), [])
+    overall_mean = mean(flat_listed_values)
+
+    # Compute between-chain variation (B / n)
+    b_over_n = 1 / (m - 1) * sum([(means_per_chain[j_chain] - overall_mean)**2 for j_chain in range(m)])
+
+    # Compute within-chain variation for each chain
+    variation = {}
+    chain_lenght = {}
+    for j_chain, x_j in posterior_chains.items():
+        n_j = len(x_j)
+        variation[j_chain] = sum([(x_j[i] - means_per_chain[j_chain])**2 for i in range(n_j)])
+        chain_lenght[j_chain] = n_j
+
+    # Compute the average of within-chain variances (W)
+    w = 1 / m * sum([1 / (chain_lenght[j_chain] - 1) * variation[j_chain] for j_chain in range(m)])
+
+    # Calculate the marginal posterior variance
+    var_hat = 1 / m * sum([1 / chain_lenght[j_chain] * variation[j_chain] for j_chain in range(m)]) + b_over_n
+
+    # Calculate R_hat
+    r_hat = sqrt(var_hat / w)
+
+    return r_hat
+

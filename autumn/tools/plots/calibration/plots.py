@@ -282,7 +282,6 @@ def calculate_r_hats(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataF
     chain_ids = mcmc_params[0]["chain"].unique().tolist()
     assert len(chain_ids) > 1, "We need at least two chains to compute R_hats"
     mcmc_params_list, mcmc_tables_list = [], []
-    mcmc_tables_list = []
     for i_chain in chain_ids:
         mcmc_params_list.append(
             mcmc_params[0][mcmc_params[0]["chain"] == i_chain]

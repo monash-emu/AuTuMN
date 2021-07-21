@@ -9,7 +9,6 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 import os
 
-from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
@@ -38,6 +37,7 @@ for cluster in CLUSTERS:
     target = NormalTarget(notifs_ts)
     cluster_targets.append(target)
 
+# Request calibration targets
 targets = [
     PoissonTarget(ts_set.get("notifications").truncate_times(*TARGETS_RANGE).round_values()),
     PoissonTarget(ts_set.get("infection_deaths").truncate_times(*TARGETS_RANGE).moving_average(7)),
@@ -46,8 +46,8 @@ targets = [
     *cluster_targets,
 ]
 
+# Add multiplier for most services, except use South Metro for South East Metro, use North Metro for West Metro
 cluster_priors = []
-# Add multiplier for each Victorian cluster
 regions_for_multipliers = [
     reg for reg in Region.VICTORIA_METRO if reg not in (Region.SOUTH_EAST_METRO, Region.WEST_METRO)
 ]

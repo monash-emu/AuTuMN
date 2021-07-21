@@ -223,11 +223,15 @@ class VocComponentsFunc(BaseModel):
 
 
 class VocFunc(BaseModel):
-    voc_components: VocComponentsFunc
+    start_time: float
+    entry_rate: float
+    seed_duration: float
+    contact_rate_multiplier: float
 
 
 class VocEmergence(BaseModel):
-    voc_strain: List[VocFunc]
+    first_voc: Dict[str, VocFunc]
+    second_voc: Dict[str, VocFunc]
 
 
 class VaccCoveragePeriod(BaseModel):

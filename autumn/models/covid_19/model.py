@@ -138,22 +138,22 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern.
     if params.voc_emergence:
-
+        print(params.voc_emergence.first_voc)
         voc_params = params.voc_emergence
         voc_start_time = voc_params.voc_strain[0].voc_components.start_time  # first (single) VoC
         voc_entry_rate = voc_params.voc_strain[0].voc_components.entry_rate
         seed_duration = voc_params.voc_strain[0].voc_components.seed_duration
         strain_strat = get_strain_strat(voc_params.voc_strain[0].voc_components.contact_rate_multiplier)
 
-        if len(params.voc_emergence.voc_strain) == 1:  # only single VoC strain in the model
-            model.stratify_with(strain_strat)  # stratify model with single VoC strain
-
         # Work out the seeding function and seed the first VoC stratum.
         voc_seed = (
             lambda time: voc_entry_rate if 0.0 < time - voc_start_time < seed_duration else 0.0
         )
 
-        if len(params.voc_emergence.voc_strain) > 1:  # when two VoC strains are present in the model
+        if len(params.voc_emergence.voc_strain) == 1:  # only single VoC strain in the model
+            model.stratify_with(strain_strat)  # stratify model with single VoC strain
+
+        else:  # when two VoC strains are present in the model
 
             additional_voc_start_time = voc_params.voc_strain[1].voc_components.start_time   # second VoC strain
             additional_voc_entry_rate = voc_params.voc_strain[1].voc_components.entry_rate

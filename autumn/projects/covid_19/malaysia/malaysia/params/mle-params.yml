@@ -16,7 +16,7 @@ contact_tracing.assumed_trace_prop: 0.6809646172780593
 vaccination.coverage_override: 0.2115800560094676
 vaccination.overall_efficacy: 0.028688955168473584
 vaccination.vacc_prop_prevent_infection: 0.700476589285974
-voc_emergence.contact_rate_multiplier: 1.95798987160927
-voc_emergence.start_time: 360.71144235434133
-voc_emergence.contact_rate_multiplier_second_VoC: 2.63633553944114
-voc_emergence.start_time_second_VoC: 500.39264330358117
+#voc_emergence.contact_rate_multiplier: 1.95798987160927
+#voc_emergence.start_time: 360.71144235434133
+#voc_emergence.contact_rate_multiplier_second_VoC: 2.63633553944114
+#voc_emergence.start_time_second_VoC: 500.39264330358117

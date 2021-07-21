@@ -13,8 +13,9 @@ from autumn.tools.streamlit import selectors
 from autumn.tools.streamlit.utils import Dashboard
 from autumn.tools.project import Project
 
+import pandas as pd
 dash = Dashboard()
-
+import datetime
 
 @dash.register("Derived outputs")
 def plot_outputs_multi(
@@ -54,23 +55,40 @@ def plot_outputs_multi(
 def plot_outputs_multi(
     plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
 ):
+
+    REF_DATE = datetime.date(2019, 12, 31)
+
     chosen_models = selectors.scenarios(models)
     if chosen_models:
-        output_config = model_output_selector(chosen_models, project.plots)
+        keys = ["notifications", "icu_occupancy", "infection_deaths", "hospital_occupancy"]
 
-        is_logscale = st.sidebar.checkbox("Log scale")
-        is_custom_xrange = st.sidebar.checkbox("Use custom x axis range.")
-        if is_custom_xrange:
-            x_low, x_up = selectors.create_xrange_selector(
-                int(models[0].times[0]), int(models[0].times[-1])
+        for sc_index in range(len(chosen_models)):
+            out = pd.DataFrame()
+            out["times"] = chosen_models[sc_index].times
+            out["date"] = [(REF_DATE + datetime.timedelta(days=int(t))).strftime("%#d-%b-%y") for t in chosen_models[sc_index].times]
+            for key in keys:
+                out[key] = chosen_models[sc_index].derived_outputs[key]
+            out.to_csv(f"CSV_OUT/scenario_{sc_index}.csv", index=False)
+
+        for key in keys:
+            output_config = {'output_key': key, 'values': [], 'times': []}
+
+
+            # is_logscale = st.sidebar.checkbox("Log scale")
+            # is_custom_xrange = st.sidebar.checkbox("Use custom x axis range.")
+            # if is_custom_xrange:
+            #     x_low, x_up = selectors.create_xrange_selector(
+            #         int(models[0].times[0]), int(models[0].times[-1])
+            #     )
+            # else:
+            #     x_low = min(models[0].times)
+            #     x_up = max(models[0].times)
+
+            plots.model.plots.plot_outputs_multi(
+                plotter, chosen_models, output_config, False, 550, 731
             )
-        else:
-            x_low = min(models[0].times)
-            x_up = max(models[0].times)
 
-        plots.model.plots.plot_outputs_multi(
-            plotter, chosen_models, output_config, is_logscale, x_low, x_up
-        )
+
 
 
 @dash.register("Compartment sizes")

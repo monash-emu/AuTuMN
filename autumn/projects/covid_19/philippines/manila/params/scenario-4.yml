@@ -1,23 +1,8 @@
-description: 30% vaccine coverage / 50% increased mobility / baseline testing
-mobility:
-  mixing:
-    other_locations:
-      append: true
-      times:
-      - 561
-      - 563
-      values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.5
-    work:
-      append: true
-      times:
-      - 561
-      - 563
-      values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.5
+description: 50% mobility increase for all ages
+
 time:
-  start: 562
+  start: 572
+
+age_specific_risk_multiplier:
+  age_categories: ['0', '5', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55', '60', '65', '70', '75']
+  contact_rate_multiplier: 1.50

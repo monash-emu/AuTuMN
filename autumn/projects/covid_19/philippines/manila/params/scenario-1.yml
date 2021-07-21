@@ -1,11 +1,8 @@
-description: 30% vaccine coverage / baseline mobility / 50% increased testing
-testing_to_detection:
-  test_multiplier:
-    times:
-    - 561
-    - 563
-    values:
-    - 1.0
-    - 1.5
+description: 25% mobility increase for 5-19 years old
+
 time:
-  start: 562
+  start: 572
+
+age_specific_risk_multiplier:
+  age_categories: ['5', '10', '15']
+  contact_rate_multiplier: 1.25

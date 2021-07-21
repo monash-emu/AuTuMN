@@ -212,22 +212,33 @@ def plot_outputs_multi(
     for idx, model in enumerate(reversed(models)):
         color_idx = len(models) - idx - 1
         _plot_outputs_to_axis(axis, model, output_name, color_idx=color_idx, alpha=0.7)
-        legend.append(idx)
+        legend.append(color_idx)
 
     axis.legend(legend)
 
     values = output_config["values"]
     times = output_config["times"]
 
-    _plot_targets_to_axis(axis, values, times)
+    change_xaxis_to_date(axis, REF_DATE)
+
+    # _plot_targets_to_axis(axis, values, times)
     if is_logscale:
         axis.set_yscale("log")
 
-    X_MIN = x_low
+    X_MIN = 550
     X_MAX = x_up
 
     if X_MIN is not None and X_MAX is not None:
         axis.set_xlim((X_MIN, X_MAX))
+
+    titles = {
+        "notifications": "Confirmed new daily cases",
+        "icu_occupancy": "ICU occupancy",
+        "infection_deaths": "Daily COVID-19 deaths",
+        "hospital_occupancy": "Hospital occupancy",
+    }
+    # axis.set_title(titles[output_name])
+
     plotter.save_figure(fig, filename=output_name, title_text=output_name)
 
 

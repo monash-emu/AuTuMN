@@ -13,7 +13,7 @@ testing_to_detection:
 clinical_stratification:
   props:
     hospital:
-      multiplier: 2.
+      multiplier: 3.
 
 mobility:
   microdistancing:
@@ -57,7 +57,12 @@ voc_emergence:
   seed_duration: 10.
   contact_rate_multiplier: 1.56 # LSHTM's estimate
 
-cumul_incidence_start_time: 562 # 15 Jul 2021
+  start_time_second_VoC: 560
+  entry_rate_second_VoC: 1
+  seed_duration_second_VoC: 10
+  contact_rate_multiplier_second_VoC: 2.
+
+cumul_incidence_start_time: 572 # 25 Jul 2021
 
 # Vaccination-related
 vaccination:
@@ -65,10 +70,10 @@ vaccination:
   vacc_prop_prevent_infection: 1 # now varied
   roll_out_components:
     - supply_period_coverage:
-        coverage: .08
+        coverage: .10
         start_time: 426 # 1 Mar 2021
-        end_time: 561 # 14 July 2021
+        end_time: 572 # 25 July 2021
     - supply_period_coverage:
         coverage: .30
-        start_time: 562 # 15 July 2021
+        start_time: 573 # 26 July 2021
         end_time: 731 # 31 Dec 2021

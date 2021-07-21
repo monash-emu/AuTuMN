@@ -227,7 +227,6 @@ class VocFunc(BaseModel):
 
 
 class VocEmergence(BaseModel):
-    dual_voc: bool
     voc_strain: List[VocFunc]
 
 

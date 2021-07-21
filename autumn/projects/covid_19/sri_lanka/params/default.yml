@@ -93,7 +93,6 @@ mobility:
         - 0
 
 voc_emergence:
-  dual_voc: true #whether two or one strain VoC
   voc_strain:
     - voc_components:
         start_time: 410

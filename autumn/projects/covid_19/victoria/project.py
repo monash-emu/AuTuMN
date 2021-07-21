@@ -48,7 +48,9 @@ targets = [
 
 cluster_priors = []
 # Add multiplier for each Victorian cluster
-regions_for_multipliers = [reg for reg in Region.VICTORIA_METRO if reg != Region.SOUTH_EAST_METRO]
+regions_for_multipliers = [
+    reg for reg in Region.VICTORIA_METRO if reg not in (Region.SOUTH_EAST_METRO, Region.WEST_METRO)
+]
 regions_for_multipliers.append(Region.BARWON_SOUTH_WEST)
 
 for region in regions_for_multipliers:

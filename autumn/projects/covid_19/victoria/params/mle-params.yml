@@ -12,7 +12,6 @@ victorian_clusters.contact_rate_multiplier_barwon_south_west: 0.975303335005165
 victorian_clusters.contact_rate_multiplier_north_metro: 1.0596802368217975
 victorian_clusters.contact_rate_multiplier_regional: 0.6208983974469938
 victorian_clusters.contact_rate_multiplier_south_metro: 0.9421754679862706
-victorian_clusters.contact_rate_multiplier_west_metro: 1.0477542652255947
 victorian_clusters.intercluster_mixing: 0.013700437923095037
 victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect: 0.2123017448549535
 victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect: 0.4376582187552679

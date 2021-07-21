@@ -131,7 +131,7 @@ if os.path.isfile(proposal_sds_path):
 calibration = Calibration(
     priors,
     targets,
-    metropolis_init="lhs",
+    metropolis_init="current_params",
     metropolis_init_rel_step_size=0.05,
     fixed_proposal_steps=500,
     jumping_stdev_adjustment=0.8,

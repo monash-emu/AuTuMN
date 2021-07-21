@@ -43,9 +43,7 @@ sojourn:
 victorian_clusters:
   intercluster_mixing: 0.02 # calibrated
   contact_rate_multiplier_north_metro: 1. # calibrated
-  contact_rate_multiplier_west_metro: 1. # calibrated
   contact_rate_multiplier_south_metro: 1. # calibrated
-  contact_rate_multiplier_south_east_metro: 1. # calibrated
   contact_rate_multiplier_barwon_south_west: 1. # calibrated
   contact_rate_multiplier_regional: 1. # calibrated
   # *** METRO ***

@@ -1,6 +1,6 @@
 clinical_stratification.non_sympt_infect_multiplier: 0.5815796399511982
 clinical_stratification.props.symptomatic.multiplier: 0.8316214842756067
-contact_rate: 0.04825432815722279
+contact_rate: 0.0475
 contact_tracing.assumed_trace_prop: 0.2803283302480137
 infectious_seed: 28.725805191322344
 sojourn.compartment_periods.icu_early: 5.486711103663831
@@ -14,4 +14,4 @@ victorian_clusters.contact_rate_multiplier_regional: 0.6208983974469938
 victorian_clusters.contact_rate_multiplier_south_metro: 0.9421754679862706
 victorian_clusters.intercluster_mixing: 0.013700437923095037
 victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect: 0.2123017448549535
-victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect: 0.4376582187552679
+victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect: 0.37

@@ -212,7 +212,7 @@ def plot_outputs_multi(
     for idx, model in enumerate(reversed(models)):
         color_idx = len(models) - idx - 1
         _plot_outputs_to_axis(axis, model, output_name, color_idx=color_idx, alpha=0.7)
-        legend.append(idx)
+        legend.append(color_idx)
 
     axis.legend(legend)
 

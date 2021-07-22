@@ -1,7 +1,7 @@
-clinical_stratification.props.hospital.multiplier: 1.4073383174691578
-contact_rate: 0.023240841262474467
-infectious_seed: 40.94326607649258
-testing_to_detection.assumed_cdr_parameter: 0.024029765825981212
-vaccination.overall_efficacy: 0.7908546444683682
-vaccination.vacc_prop_prevent_infection: 0.7717040071943247
-voc_emergence.start_time: 439.4098927272121
+clinical_stratification.props.hospital.multiplier: 1.5537995809787122
+contact_rate: 0.025909376215424513
+infectious_seed: 4.270269928176134
+testing_to_detection.assumed_cdr_parameter: 0.06376391819152533
+vaccination.overall_efficacy: 0.4948354614702364
+vaccination.vacc_prop_prevent_infection: 0.4259045149879396
+voc_emergence.start_time: 489.41263296769273

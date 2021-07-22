@@ -138,7 +138,7 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern.
     if params.voc_emergence:
-        print(params.voc_emergence.first_voc)
+
         voc_params = params.voc_emergence
         voc_start_time = voc_params.voc_strain[0].voc_components.start_time  # first (single) VoC
         voc_entry_rate = voc_params.voc_strain[0].voc_components.entry_rate

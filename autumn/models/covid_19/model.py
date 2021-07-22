@@ -159,7 +159,7 @@ def build_model(params: dict) -> CompartmentalModel:
             additional_voc_entry_rate = voc_params.voc_strain[1].voc_components.entry_rate
             additional_seed_duration = voc_params.voc_strain[1].voc_components.seed_duration
             additional_strain_strat = get_strain_strat_dual_voc\
-                (voc_params.voc_strain[1].voc_components.contact_rate_multiplier,
+                (voc_params.voc_strain[0].voc_components.contact_rate_multiplier,
                  voc_params.voc_strain[1].voc_components.contact_rate_multiplier)
             model.stratify_with(additional_strain_strat)  # stratify model with two VoC strains
 

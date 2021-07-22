@@ -1,7 +1,7 @@
 clinical_stratification.non_sympt_infect_multiplier: 0.004
 clinical_stratification.props.hospital.multiplier: 0.4306251844348099
 clinical_stratification.props.symptomatic.multiplier: 0.08
-contact_rate: 2.-04
+contact_rate: 2.e-04
 contact_tracing.assumed_trace_prop: 0.04679428983921441
 infection_fatality.top_bracket_overwrite: 0.04943415099711988
 infectious_seed: 3.

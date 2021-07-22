@@ -1,5 +1,7 @@
-accum_deaths_dispersion_param: 4.881399254426424
-voc_emergence.start_time: 3000
-voc_emergence.contact_rate_multiplier: 1.5
-infectious_seed: 10
-testing_to_detection.assumed_cdr_parameter: 0.1
+clinical_stratification.props.hospital.multiplier: 1.2185782048437783
+contact_rate: 0.026016332575026148
+infectious_seed: 31.606457426922198
+testing_to_detection.assumed_cdr_parameter: 0.14379038989190115
+vaccination.overall_efficacy: 0.7432314565491396
+vaccination.vacc_prop_prevent_infection: 0.6847118280218966
+voc_emergence.start_time: 545.9163287855226

@@ -50,9 +50,9 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
             "infection_fatality.multiplier", mean=1.0, stdev=0.4, trunc_range=[0.5, np.inf]
         ),
         # Between 1 Dec 2020 and 30 June 2021
-        UniformPrior("voc_emergence.start_time", [280, 547]),
+        UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [280, 547]),
         # Using reported 95 CI from Pearson et al.
-        UniformPrior("voc_emergence.contact_rate_multiplier", [1.2, 2.1]),
+        UniformPrior("voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier", [1.2, 2.1]),
         UniformPrior(
             "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote", [0.8, 1.0]
         ),

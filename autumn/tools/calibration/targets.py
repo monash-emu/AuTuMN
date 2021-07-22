@@ -47,19 +47,24 @@ class NegativeBinomialTarget(BaseTarget):
     A calibration target sampled from a truncated normal distribution
     """
 
-    def __init__(self, timeseries: TimeSeries, **kwargs):
+    def __init__(self, timeseries: TimeSeries, dispersion_param: float = None, **kwargs):
         super().__init__(**kwargs)
         self.timeseries = timeseries
+        self.dispersion_param = dispersion_param
 
     def to_dict(self) -> dict:
         base_dict = super().to_dict()
-        return {
+        target = {
             **base_dict,
             "output_key": self.timeseries.name,
             "years": self.timeseries.times,
             "values": self.timeseries.values,
             "loglikelihood_distri": "negative_binomial",
         }
+        if self.dispersion_param:
+            target['dispersion_param'] = self.dispersion_param
+
+        return target
 
 
 class TruncNormalTarget(BaseTarget):

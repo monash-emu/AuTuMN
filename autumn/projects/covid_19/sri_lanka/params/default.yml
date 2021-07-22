@@ -104,3 +104,4 @@ voc_emergence:
         entry_rate: 1. # doesn't matter
         seed_duration: 10. # doesn't matter
         contact_rate_multiplier: 2.45 # doesn't matter
+

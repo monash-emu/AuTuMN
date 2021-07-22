@@ -14,6 +14,7 @@ CLUSTER_STRATA = [Region.to_filename(region) for region in Region.VICTORIA_SUBRE
 
 cluster_contact_groups = {
     "south_and_east": [Region.SOUTH_EAST_METRO, Region.SOUTH_METRO],
+    "north_and_west": [Region.WEST_METRO, Region.NORTH_METRO],
     "regional": [i_region for i_region in Region.VICTORIA_RURAL if i_region != Region.BARWON_SOUTH_WEST]
 }
 
@@ -45,6 +46,8 @@ def get_cluster_strat(params: Parameters) -> Stratification:
         cluster_name = cluster.replace("-", "_")
         if cluster in cluster_contact_groups["south_and_east"]:
             multiplier_name = f"contact_rate_multiplier_{Region.SOUTH_METRO.replace('-', '_')}"
+        elif cluster in cluster_contact_groups["north_and_west"]:
+            multiplier_name = f"contact_rate_multiplier_{Region.NORTH_METRO.replace('-', '_')}"
         elif cluster in cluster_contact_groups["regional"]:
             multiplier_name = "contact_rate_multiplier_regional"
         else:

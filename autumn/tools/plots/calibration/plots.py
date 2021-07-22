@@ -24,7 +24,7 @@ from autumn.tools.plots.utils import (
     change_xaxis_to_date,
     get_plot_text_dict,
 )
-from autumn.tools.calibration.diagnostics import calculate_effective_sample_size
+from autumn.tools.calibration.diagnostics import calculate_effective_sample_size, calculate_r_hat
 
 logger = logging.getLogger(__name__)
 
@@ -270,6 +270,37 @@ def make_ess_table(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFra
     ess_table["total_ESS"] = ess_table.sum(numeric_only=True, axis=1)
 
     return ess_table
+
+
+def calculate_r_hats(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFrame], burn_in: int):
+    """
+    Calculates the R_hat statistic for all parameters
+    :return: a dictionary
+    """
+
+    # split tables by chain
+    chain_ids = mcmc_params[0]["chain"].unique().tolist()
+    assert len(chain_ids) > 1, "We need at least two chains to compute R_hats"
+    mcmc_params_list, mcmc_tables_list = [], []
+    for i_chain in chain_ids:
+        mcmc_params_list.append(
+            mcmc_params[0][mcmc_params[0]["chain"] == i_chain]
+        )
+        mcmc_tables_list.append(
+            mcmc_tables[0][mcmc_tables[0]["chain"] == i_chain]
+        )
+
+    param_options = mcmc_params[0]["name"].unique().tolist()
+
+    r_hats = {}
+    for param_name in param_options:
+        posterior_chains = {}
+        for i_chain, table_df in enumerate(mcmc_params_list):
+            posterior_chains[i_chain] = list(get_posterior([table_df], [mcmc_tables_list[i_chain]], param_name, burn_in)[param_name])
+
+        r_hats[param_name] = calculate_r_hat(posterior_chains)
+
+    return r_hats
 
 
 def plot_effective_sample_size(

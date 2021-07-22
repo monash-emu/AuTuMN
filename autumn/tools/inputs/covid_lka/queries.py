@@ -11,10 +11,10 @@ def get_lka_testing_numbers():
     input_db = get_input_db()
     df = input_db.query(
         "covid_lka",
-        columns=["date_index", "PCR_tests_done"],
+        columns=["date_index", "Sri_Lanka_PCR_tests_done"],
     )
     df.dropna(how="any", inplace=True)
     test_dates = df.date_index.to_numpy()
-    test_values = df.PCR_tests_done.to_numpy()
+    test_values = df.Sri_Lanka_PCR_tests_done.to_numpy()
 
     return test_dates, test_values

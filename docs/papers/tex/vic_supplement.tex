@@ -1,16 +1,20 @@
-\input{standard_format.tex}
 
+\input{standard_format.tex}
 \usepackage{graphicx}
 \usepackage[table]{xcolor}
 \usepackage{longtable}
 \usepackage{amsfonts}
+\usepackage{soul}  % For highlighting text
+\usepackage{floatrow}  % For changing default font in tables
+\usepackage[font={sf, it}]{caption}
+
+\floatsetup[table]{font=sf}
 
 \bibliographystyle{unsrt2authabbrvpp}
 \begin{document}
 
 % Title page
 \begin{titlepage}
-%	From model start & Remote learning & 0.1 \\
 \centering
 \vspace*{3cm}
 \huge
@@ -39,7 +43,7 @@
 \input{../covid_19/parameters/age_specific_parameters.tex}
 \input{../covid_19/outputs.tex}
 \input{../covid_19/projects/victoria/calibration.tex}
-\input{../covid_19/projects/victoria/equations.tex}
+\input{../covid_19/projects/victoria/equations_with_tracing.tex}
 
 \clearpage
 

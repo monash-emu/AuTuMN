@@ -187,7 +187,6 @@ contact_tracing: null
 haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio
 metropolis_init_rel_step_size: .1
 n_steps_fixed_proposal: 50
-metropolis_initialisation_type: "current_params"
 
 # Time from which cumulative cases should start (incidence and notification), if null, the output is not calculated
 cumul_incidence_start_time: null

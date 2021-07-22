@@ -1,13 +1,14 @@
 import numpy as np
 
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
+from autumn.tools.project.params import read_yaml_file
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
+import os
 
-from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
@@ -15,7 +16,6 @@ CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 TARGETS_START_TIME = 153  # 1st June
 TARGETS_END_TIME = 305  # 31st October
 TARGETS_RANGE = (TARGETS_START_TIME, TARGETS_END_TIME)
-DISPERSION_TARGET_RATIO = 0.07
 
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
@@ -29,13 +29,15 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 
+# For all the cluster targets, a universal calibrated parameter called "target_output_ratio" is used to scale the
+# dispersion parameter of the targets' normal likelihoods.
 cluster_targets = []
 for cluster in CLUSTERS:
     notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").moving_average(4)
-    dispersion_value = max(notifs_ts.values) * DISPERSION_TARGET_RATIO
-    target = NormalTarget(notifs_ts, stdev=dispersion_value)
+    target = NormalTarget(notifs_ts)
     cluster_targets.append(target)
 
+# Request calibration targets
 targets = [
     PoissonTarget(ts_set.get("notifications").truncate_times(*TARGETS_RANGE).round_values()),
     PoissonTarget(ts_set.get("infection_deaths").truncate_times(*TARGETS_RANGE).moving_average(7)),
@@ -44,9 +46,11 @@ targets = [
     *cluster_targets,
 ]
 
+# Add multiplier for most services, except use South Metro for South East Metro, use North Metro for West Metro
 cluster_priors = []
-# Add multiplier for each Victorian cluster
-regions_for_multipliers = [reg for reg in Region.VICTORIA_METRO if reg != Region.SOUTH_EAST_METRO]
+regions_for_multipliers = [
+    reg for reg in Region.VICTORIA_METRO if reg not in (Region.SOUTH_EAST_METRO, Region.WEST_METRO)
+]
 regions_for_multipliers.append(Region.BARWON_SOUTH_WEST)
 
 for region in regions_for_multipliers:
@@ -93,7 +97,7 @@ priors = [
         jumping_stdev=0.2,
     ),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.7], jumping_stdev=0.05),
-    UniformPrior("infection_fatality.top_bracket_overwrite", [0.04, 0.25], jumping_stdev=0.04),
+    UniformPrior("infection_fatality.top_bracket_overwrite", [0.05, 0.2], jumping_stdev=0.04),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 4.0], jumping_stdev=0.4),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.04),
     TruncNormalPrior(
@@ -113,9 +117,12 @@ priors = [
         [0.0, 0.5],
         jumping_stdev=0.04,
     ),
-    UniformPrior("target_output_ratio", [0.1, 0.3], jumping_stdev=0.02),
+    UniformPrior("target_output_ratio", [0.2, 0.7], jumping_stdev=0.04),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
 ]
+
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(
     priors,
@@ -123,7 +130,7 @@ calibration = Calibration(
     metropolis_init="current_params",
     metropolis_init_rel_step_size=0.05,
     fixed_proposal_steps=500,
-    jumping_sd_adjustment=0.8,
+    jumping_stdev_adjustment=0.8,
 )
 
 # FIXME: Replace with flexible Python plot request API.
@@ -145,3 +152,6 @@ main_table_params_list = [
 ]
 # project.write_params_to_tex(main_table_params_list, project_path=build_rel_path(''))
 
+
+# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)

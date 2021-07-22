@@ -34,7 +34,7 @@ class BaseDatabase(ABC):
         """Deletes and recreates the db."""
 
     @abstractmethod
-    def dump_df(self, table_name: str, dataframe: pd.DataFrame):
+    def dump_df(self, table_name: str, dataframe: pd.DataFrame, append=True):
         """Writes a dataframe to a table. Appends if the table already exists."""
 
     @abstractmethod
@@ -91,14 +91,14 @@ class FileDatabase(BaseDatabase, ABC):
             fpath = os.path.join(self.database_path, fname)
             os.remove(fpath)
 
-    def dump_df(self, table_name: str, df: pd.DataFrame):
+    def dump_df(self, table_name: str, df: pd.DataFrame, append=True):
         """
         Writes a dataframe to a table. Appends if the table already exists.
         It is much more memory efficient to use append_df if possible (eg. ParquetDatabase).
         """
         fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
         write_df = df
-        if os.path.exists(fpath):
+        if os.path.exists(fpath) and append:
             # Read in existing dataframe and then append to the end of it.
             # This could be slow so ideally don't do this.
             orig_df = self.read_file(fpath)
@@ -225,8 +225,9 @@ class Database(BaseDatabase):
 
         self.engine = get_sql_engine(self.database_path)
 
-    def dump_df(self, table_name: str, df: pd.DataFrame):
-        df.to_sql(table_name, con=self.engine, if_exists="append", index=False)
+    def dump_df(self, table_name: str, df: pd.DataFrame, append=True):
+        exists_mode = 'append' if append else 'replace'
+        df.to_sql(table_name, con=self.engine, if_exists=exists_mode, index=False)
 
     def query(
         self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}

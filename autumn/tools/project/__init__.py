@@ -6,6 +6,7 @@ from .project import (
     post_process_scenario_outputs,
     DiffOutput,
     get_all_available_scenario_paths,
+    use_tuned_proposal_sds,
 )
 from .params import ParameterSet, Params
 from .timeseries import TimeSeriesSet, TimeSeries

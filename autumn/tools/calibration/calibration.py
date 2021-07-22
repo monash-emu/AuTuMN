@@ -3,6 +3,7 @@ from datetime import datetime
 from itertools import chain
 from time import time
 from typing import List, Callable
+import pickle
 
 import yaml
 import numpy as np
@@ -16,8 +17,9 @@ from autumn.tools.utils.utils import get_git_branch, get_git_hash
 from autumn.tools.utils.timer import Timer
 from autumn.tools.calibration.priors import BasePrior
 from autumn.tools.calibration.targets import BaseTarget
+from autumn.tools.calibration.proposal_tuning import tune_jumping_stdev
 from autumn.tools.project.params import read_param_value_from_string
-from autumn.tools.project import Project
+from autumn.tools.project import Project, get_project
 
 
 from .constants import ADAPTIVE_METROPOLIS
@@ -87,8 +89,8 @@ class Calibration:
         metropolis_init_rel_step_size: float = DEFAULT_METRO_STEP,
         fixed_proposal_steps: int = DEFAULT_STEPS,
         seed: int = None,
-        initial_jumping_sd_ratio: float = 0.25,
-        jumping_sd_adjustment: float = 0.5,
+        initial_jumping_stdev_ratio: float = 0.25,
+        jumping_stdev_adjustment: float = 0.5,
     ):
         """
         Defines a new calibration.
@@ -102,14 +104,50 @@ class Calibration:
         self.initialisation_type = metropolis_init
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
         self.n_steps_fixed_proposal = fixed_proposal_steps
-        self.initial_jumping_sd_ratio = initial_jumping_sd_ratio
-        self.jumping_sd_adjustment = jumping_sd_adjustment
+        self.initial_jumping_stdev_ratio = initial_jumping_stdev_ratio
+        self.jumping_stdev_adjustment = jumping_stdev_adjustment
 
         self.split_priors_by_type()
 
         if seed is None:
             seed = int(time())
         self.seed = seed
+
+    @staticmethod
+    def from_existing(pkl_file, output_dir):
+        obj = pickle.load(open(pkl_file, 'rb'))
+        obj.output = CalibrationOutputs.from_existing(obj.chain_idx, output_dir)
+        return obj
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['transform']
+        del state['project']
+        del state['output']
+
+        # Probably can't pickle models...
+        state['latest_model'] = None
+
+        # These are items that are not members of the class/object dictionary,
+        # but are still required for restoring state
+        state['_extra'] = {}
+        state['_extra']['project'] = {'model_name': self.project.model_name, 'project_name': self.project.region_name}
+        state['_extra']['rng'] = np.random.get_state()
+
+        return state
+
+    def __setstate__(self, state):
+
+        # These are items that are not members of the class/object dictionary,
+        # but are still required for restoring state
+        _extra = state.pop('_extra')
+
+        self.__dict__.update(state)
+        self.project = get_project(**_extra['project'])
+        self.build_transformations(update_jumping_stdev=False)
+        np.random.set_state(_extra['rng'])
+
+        #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
 
     def split_priors_by_type(self):
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
@@ -135,6 +173,43 @@ class Calibration:
             self.independent_sampling_priors[i]["param_name"]
             for i in range(len(self.independent_sampling_priors))
         ]
+
+    def tune_proposal(self, param_name, project: Project, n_points=100, relative_likelihood_reduction=0.5):
+        assert param_name in self.iterative_sampling_param_names, f"{param_name} is not an iteratively sampled parameter"
+        assert n_points > 1, "A minimum of two points is required to perform proposal tuning"
+
+        # We must perform a few initialisation tasks (needs refactoring)
+        # work out missing distribution params for priors
+        specify_missing_prior_params(self.iterative_sampling_priors)
+        specify_missing_prior_params(self.independent_sampling_priors)
+
+        # rebuild self.all_priors, following changes to the two sets of priors
+        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
+
+        self.project = project
+        self.model_parameters = project.param_set.baseline
+        self.end_time = 2 + max([max(t["years"]) for t in self.targets])
+        target_names = [t["output_key"] for t in self.targets]
+        self.derived_outputs_whitelist = list(set(target_names))
+        self.run_mode = CalibrationMode.AUTUMN_MCMC
+        self.workout_unspecified_target_sds()  # for likelihood definition
+        self.workout_unspecified_time_weights()  # for likelihood weighting
+
+        prior_dict = [p_dict for p_dict in self.all_priors if p_dict["param_name"] == param_name][0]
+        lower_bound, upper_bound = get_parameter_finite_range_from_prior(prior_dict)
+
+        starting_point = read_current_parameter_values(self.all_priors, self.model_parameters.to_dict())
+
+        eval_points = list(np.linspace(start=lower_bound, stop=upper_bound, num=n_points, endpoint=True))
+        eval_log_postertiors = []
+        for i_run, eval_point in enumerate(eval_points):
+            self.run_num = i_run
+            update = {param_name: eval_point}
+            updated_params = {**starting_point, **update}
+            log_likelihood = self.loglikelihood(updated_params)
+            log_prior = self.logprior(updated_params)
+            eval_log_postertiors.append(log_likelihood + log_prior)
+        return tune_jumping_stdev(eval_points, eval_log_postertiors, relative_likelihood_reduction)
 
     def run(
         self,
@@ -184,7 +259,7 @@ class Calibration:
 
         self.workout_unspecified_target_sds()  # for likelihood definition
         self.workout_unspecified_time_weights()  # for likelihood weighting
-        self.workout_unspecified_jumping_sds()  # for proposal function definition
+        self.workout_unspecified_jumping_stdevs()  # for proposal function definition
         self.param_bounds = self.get_parameter_bounds()
 
         self.build_transformations()
@@ -309,9 +384,14 @@ class Calibration:
                             - math.log(math.factorial(round(data[i])))
                         ) * time_weigths[i]
                 elif target["loglikelihood_distri"] == "negative_binomial":
-                    assert key + "_dispersion_param" in all_params_dict
-                    # the dispersion parameter varies during the MCMC. We need to retrieve its value
-                    n = all_params_dict[key + "_dispersion_param"]
+                    if key + "_dispersion_param" in all_params_dict:
+                        # the dispersion parameter varies during the MCMC. We need to retrieve its value
+                        n = all_params_dict[key + "_dispersion_param"]
+                    elif "dispersion_param" in target:
+                        n = target["dispersion_param"]
+                    else:
+                        raise ValueError(f"A dispersion_param is required for target {key}")
+
                     for i in range(len(data)):
                         # We use the parameterisation based on mean and variance and assume define var=mean**delta
                         mu = model_output[i]
@@ -356,63 +436,18 @@ class Calibration:
                 s = sum(target["time_weights"])
                 target["time_weights"] = [w / s for w in target["time_weights"]]
 
-    def workout_unspecified_jumping_sds(self):
+    def workout_unspecified_jumping_stdevs(self):
         for i, prior_dict in enumerate(self.iterative_sampling_priors):
-            if "jumping_sd" not in prior_dict.keys():
-                if prior_dict["distribution"] == "uniform":
-                    prior_width = prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
-                elif prior_dict["distribution"] == "lognormal":
-                    mu = prior_dict["distri_params"][0]
-                    sd = prior_dict["distri_params"][1]
-                    quantile_2_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1))
-                    quantile_97_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
-                    prior_width = quantile_97_5 - quantile_2_5
-                elif prior_dict["distribution"] == "trunc_normal":
-                    mu = prior_dict["distri_params"][0]
-                    sd = prior_dict["distri_params"][1]
-                    bounds = prior_dict["trunc_range"]
-                    quantile_2_5 = stats.truncnorm.ppf(
-                        0.025, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
-                    )
-                    quantile_97_5 = stats.truncnorm.ppf(
-                        0.975, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
-                    )
-                    prior_width = quantile_97_5 - quantile_2_5
-                elif prior_dict["distribution"] == "beta":
-                    quantile_2_5 = stats.beta.ppf(
-                        0.025,
-                        prior_dict["distri_params"][0],
-                        prior_dict["distri_params"][1],
-                    )
-                    quantile_97_5 = stats.beta.ppf(
-                        0.975,
-                        prior_dict["distri_params"][0],
-                        prior_dict["distri_params"][1],
-                    )
-                    prior_width = quantile_97_5 - quantile_2_5
-                elif prior_dict["distribution"] == "gamma":
-                    quantile_2_5 = stats.gamma.ppf(
-                        0.025,
-                        prior_dict["distri_params"][0],
-                        0.0,
-                        prior_dict["distri_params"][1],
-                    )
-                    quantile_97_5 = stats.gamma.ppf(
-                        0.975,
-                        prior_dict["distri_params"][0],
-                        0.0,
-                        prior_dict["distri_params"][1],
-                    )
-                    prior_width = quantile_97_5 - quantile_2_5
-                else:
-                    raise_error_unsupported_prior(prior_dict["distribution"])
+            if "jumping_stdev" not in prior_dict.keys():
+                prior_low, prior_high = get_parameter_finite_range_from_prior(prior_dict)
+                prior_width = prior_high - prior_low
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
                 relative_prior_width = (
                     self.metropolis_init_rel_step_size  # fraction of prior_width in which 95% of samples should fall
                 )
-                self.iterative_sampling_priors[i]["jumping_sd"] = (
-                    relative_prior_width * prior_width * self.initial_jumping_sd_ratio
+                self.iterative_sampling_priors[i]["jumping_stdev"] = (
+                    relative_prior_width * prior_width * self.initial_jumping_stdev_ratio
                 )
 
     def run_fitting_algorithm(
@@ -440,10 +475,17 @@ class Calibration:
         try:
             # Run the selected fitting algorithm.
             if run_mode == CalibrationMode.AUTUMN_MCMC:
-                self.run_autumn_mcmc(1, available_time, self.haario_scaling_factor)
+                self.run_autumn_mcmc(available_time)
 
         finally:
-            self.output.write_data_to_disk()
+            self.write_outputs()
+
+    def write_outputs(self):
+        """Ensure output data from run is written to disk, including model state for resume
+        """
+        self.output.write_data_to_disk()
+        state_pkl_filename = os.path.join(self.output.output_dir, f"calstate-{self.chain_idx}.pkl")
+        pickle.dump(self, open(state_pkl_filename, 'wb'))
 
     def test_in_prior_support(self, iterative_params):
         in_support = True
@@ -460,36 +502,47 @@ class Calibration:
 
     def run_autumn_mcmc(
         self,
-        n_chains: int,
-        available_time,
-        haario_scaling_factor,
-        start_time=None,
+        available_time
     ):
         """
         Run our hand-rolled MCMC algorithm to calibrate model parameters.
         """
-        if start_time is None:
-            start_time = time()
-        if n_chains > 1:
-            msg = "Autumn MCMC method does not support multiple-chain runs at the moment."
-            raise ValueError(msg)
 
         self.mcmc_trace_matrix = None  # will store param trace and loglikelihood evolution
 
-        last_accepted_iterative_params_trans = None
-        last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
-        n_accepted = 0
-        n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
+        self.last_accepted_iterative_params_trans = None
+        self.last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
+        self.n_accepted = 0
+        self.n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
         self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
+    
+        self.enter_mcmc_loop(available_time)
+
+    def resume_autumn_mcmc(self, available_time: int = None, max_iters: int = None, finalise=True):
+        try:
+            self.enter_mcmc_loop(available_time, max_iters)
+        finally:
+            if finalise:
+                self.write_outputs()
+            
+    def enter_mcmc_loop(self, available_time: int = None, max_iters: int = None):
+        start_time = time()
+
+        if max_iters:
+            if self.n_iters_real >= max_iters:
+                msg = f"Not resuming run. Existing run already has {self.n_iters_real} iterations; max_iters = {max_iters}"
+                logger.info(msg)
+                return
+
         while True:
-            logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
+            logging.info("Running MCMC iteration %s, run %s", self.n_iters_real, self.run_num)
 
             # Not actually LHS sampling - just sampling directly from prior.
             independent_samples = draw_independent_samples(self.independent_sampling_priors)
 
             # Propose new parameter set.
             proposed_iterative_params_trans = self.propose_new_iterative_params_trans(
-                last_accepted_iterative_params_trans, haario_scaling_factor
+                self.last_accepted_iterative_params_trans, self.haario_scaling_factor
             )
             proposed_iterative_params = self.get_original_params(proposed_iterative_params_trans)
 
@@ -529,13 +582,13 @@ class Calibration:
                         proposed_acceptance_quantity += math.log(1.0e-100)
 
                 is_auto_accept = (
-                    last_acceptance_quantity is None
-                    or proposed_acceptance_quantity >= last_acceptance_quantity
+                    self.last_acceptance_quantity is None
+                    or proposed_acceptance_quantity >= self.last_acceptance_quantity
                 )
                 if is_auto_accept:
                     accept = True
                 else:
-                    accept_prob = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
+                    accept_prob = np.exp(proposed_acceptance_quantity - self.last_acceptance_quantity)
                     accept = (np.random.binomial(n=1, p=accept_prob, size=1) > 0)[0]
             else:
                 accept = False
@@ -544,11 +597,11 @@ class Calibration:
 
             # Update stored quantities.
             if accept:
-                last_accepted_iterative_params_trans = proposed_iterative_params_trans
-                last_acceptance_quantity = proposed_acceptance_quantity
-                n_accepted += 1
+                self.last_accepted_iterative_params_trans = proposed_iterative_params_trans
+                self.last_acceptance_quantity = proposed_acceptance_quantity
+                self.n_accepted += 1
 
-            self.update_mcmc_trace(last_accepted_iterative_params_trans)
+            self.update_mcmc_trace(self.last_accepted_iterative_params_trans)
 
             # Store model outputs
             self.output.store_mcmc_iteration(
@@ -561,23 +614,29 @@ class Calibration:
             if accept:
                 self.output.store_model_outputs(self.latest_model, self.run_num)
 
-            logging.info("Finished MCMC iteration %s, run %s", n_iters_real, self.run_num)
+            logging.info("Finished MCMC iteration %s, run %s", self.n_iters_real, self.run_num)
             self.run_num += 1
-            n_iters_real += 1
+            self.n_iters_real += 1
             if available_time:
                 # Stop iterating if we have run out of time.
                 elapsed_time = time() - start_time
                 if elapsed_time > available_time:
-                    msg = f"Stopping MCMC simulation after {n_iters_real} iterations because of {available_time}s time limit"
+                    msg = f"Stopping MCMC simulation after {self.n_iters_real} iterations because of {available_time}s time limit"
+                    logger.info(msg)
+                    break
+            if max_iters:
+                # Stop running if we have performed enough iterations
+                if self.n_iters_real >= max_iters:
+                    msg = f"Stopping MCMC simulation after {self.n_iters_real} iterations, maximum iterations hit"
                     logger.info(msg)
                     break
 
             # Check that the pre-adaptive phase ended with a decent acceptance ratio
             if self.adaptive_proposal and self.run_num == self.n_steps_fixed_proposal:
-                acceptance_ratio = n_accepted / self.run_num
+                acceptance_ratio = self.n_accepted / self.run_num
                 logger.info(
                     "Pre-adaptive phase completed at %s iterations after %s runs with an acceptance ratio of %s.",
-                    n_iters_real,
+                    self.n_iters_real,
                     self.run_num,
                     acceptance_ratio,
                 )
@@ -585,9 +644,9 @@ class Calibration:
                     logger.info("Acceptance ratio too low, restart sampling from scratch.")
                     (
                         self.run_num,
-                        n_accepted,
-                        last_accepted_params_trans,
-                        last_acceptance_quantity,
+                        self.n_accepted,
+                        self.last_accepted_params_trans,
+                        self.last_acceptance_quantity,
                     ) = (0, 0, None, None)
                     self.reduce_proposal_step_size()
                     self.output.delete_stored_iterations()
@@ -596,10 +655,10 @@ class Calibration:
 
     def reduce_proposal_step_size(self):
         """
-        Reduce the "jumping_sd" associated with each parameter during the pre-adaptive phase
+        Reduce the "jumping_stdev" associated with each parameter during the pre-adaptive phase
         """
         for i in range(len(self.iterative_sampling_priors)):
-            self.iterative_sampling_priors[i]["jumping_sd"] *= self.jumping_sd_adjustment
+            self.iterative_sampling_priors[i]["jumping_stdev"] *= self.jumping_stdev_adjustment
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(
@@ -622,7 +681,7 @@ class Calibration:
 
         return param_bounds
 
-    def build_transformations(self):
+    def build_transformations(self, update_jumping_stdev=True):
         """
         Build transformation functions between the parameter space and R^n.
         """
@@ -638,7 +697,7 @@ class Calibration:
             upper_bound = self.param_bounds[param_name][1]
 
             original_sd = self.iterative_sampling_priors[i][
-                "jumping_sd"
+                "jumping_stdev"
             ]  # we will need to transform the jumping step
 
             # trivial case of an unbounded parameter
@@ -681,14 +740,16 @@ class Calibration:
                 elif self.starting_point[param_name] >= upper_bound:
                     self.starting_point[param_name] = upper_bound - original_sd / 10
 
-            if representative_point is not None:
+            # Don't update jumping if we are resuming (this has already been calculated)
+            # FIXME:  We should probably refactor this to update on copies rather than in place
+            if representative_point is not None and update_jumping_stdev:
                 transformed_low = self.transform[param_name]["direct"](
-                    representative_point - original_sd / 2
+                    representative_point - original_sd / 4
                 )
                 transformed_up = self.transform[param_name]["direct"](
-                    representative_point + original_sd / 2
+                    representative_point + original_sd / 4
                 )
-                self.iterative_sampling_priors[i]["jumping_sd"] = abs(
+                self.iterative_sampling_priors[i]["jumping_stdev"] = abs(
                     transformed_up - transformed_low
                 )
 
@@ -737,7 +798,7 @@ class Calibration:
         if not use_adaptive_proposal:
             for i, prior_dict in enumerate(self.iterative_sampling_priors):
                 sample = np.random.normal(
-                    loc=prev_iterative_params_trans[i], scale=prior_dict["jumping_sd"], size=1
+                    loc=prev_iterative_params_trans[i], scale=prior_dict["jumping_stdev"], size=1
                 )[0]
                 new_iterative_params_trans.append(sample)
 
@@ -798,6 +859,31 @@ class CalibrationOutputs:
         logger.info("Created data directory at %s", self.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
         self.db = db.ParquetDatabase(self.output_db_path)
+
+    @classmethod
+    def from_existing(cls, chain_id, output_dir):
+        obj = cls.__new__(cls)
+        obj.output_dir = output_dir
+
+        db_name = f"chain-{chain_id}"
+
+        obj.output_db_path = os.path.join(obj.output_dir, db_name)
+        obj.db = db.ParquetDatabase(obj.output_db_path)
+
+        obj.chain_id = chain_id
+
+        # List of dicts for tracking MCMC progress.
+        #obj.mcmc_runs = []
+        #obj.mcmc_params = []
+        obj.load_mcmc()
+
+        return obj
+
+    def load_mcmc(self):
+        """Read MCMC calibration data from disk (for resuming an existing run)
+        """
+        self.mcmc_runs = self.db.query('mcmc_run').to_dict('records')
+        self.mcmc_params = self.db.query('mcmc_params').to_dict('records')
 
     def write_metadata(self, filename, data):
         file_path = os.path.join(self.output_dir, filename)
@@ -871,7 +957,7 @@ class CalibrationOutputs:
         with Timer("Writing calibration data to disk."):
             # Write parameters
             mcmc_params_df = pd.DataFrame.from_dict(self.mcmc_params)
-            self.db.dump_df(db.store.Table.PARAMS, mcmc_params_df)
+            self.db.dump_df(db.store.Table.PARAMS, mcmc_params_df, append=False)
             # Calculate iterations weights, then write to disk
             weight = 0
             for mcmc_run in reversed(self.mcmc_runs):
@@ -881,7 +967,7 @@ class CalibrationOutputs:
                     weight = 0
 
             mcmc_runs_df = pd.DataFrame.from_dict(self.mcmc_runs)
-            self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df)
+            self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df, append=False)
 
 
 def get_parameter_bounds_from_priors(prior_dict):
@@ -906,6 +992,55 @@ def get_parameter_bounds_from_priors(prior_dict):
         raise ValueError("prior distribution bounds detection currently not handled.")
 
     return lower_bound, upper_bound
+
+
+def get_parameter_finite_range_from_prior(prior_dict):
+    if prior_dict["distribution"] == "uniform":
+        prior_low = prior_dict["distri_params"][0]
+        prior_high = prior_dict["distri_params"][1]
+    elif prior_dict["distribution"] == "lognormal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        prior_low = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1))
+        prior_high = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
+    elif prior_dict["distribution"] == "trunc_normal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        bounds = prior_dict["trunc_range"]
+        prior_low = stats.truncnorm.ppf(
+            0.025, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+        )
+        prior_high = stats.truncnorm.ppf(
+            0.975, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+        )
+    elif prior_dict["distribution"] == "beta":
+        prior_low = stats.beta.ppf(
+            0.025,
+            prior_dict["distri_params"][0],
+            prior_dict["distri_params"][1],
+        )
+        prior_high = stats.beta.ppf(
+            0.975,
+            prior_dict["distri_params"][0],
+            prior_dict["distri_params"][1],
+        )
+    elif prior_dict["distribution"] == "gamma":
+        prior_low = stats.gamma.ppf(
+            0.025,
+            prior_dict["distri_params"][0],
+            0.0,
+            prior_dict["distri_params"][1],
+        )
+        prior_high = stats.gamma.ppf(
+            0.975,
+            prior_dict["distri_params"][0],
+            0.0,
+            prior_dict["distri_params"][1],
+        )
+    else:
+        raise_error_unsupported_prior(prior_dict["distribution"])
+
+    return prior_low, prior_high
 
 
 def sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix):
@@ -948,16 +1083,21 @@ def set_initial_point(
         return starting_points[chain_idx - 1]
     elif initialisation_type == MetroInit.CURRENT_PARAMS:
         # use the current parameter values from the yaml files
-        starting_points = {}
-        for param_dict in priors:
-            if param_dict["param_name"].endswith("dispersion_param"):
-                assert param_dict["distribution"] == "uniform"
-                starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
-            else:
-                starting_points[param_dict["param_name"]] = read_param_value_from_string(
-                    model_parameters, param_dict["param_name"]
-                )
-
+        starting_points = read_current_parameter_values(priors, model_parameters)
         return starting_points
     else:
         raise ValueError(f"{initialisation_type} is not a supported Initialisation Type")
+
+
+def read_current_parameter_values(priors, model_parameters):
+    starting_points = {}
+    for param_dict in priors:
+        if param_dict["param_name"].endswith("dispersion_param"):
+            assert param_dict["distribution"] == "uniform"
+            starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
+        else:
+            starting_points[param_dict["param_name"]] = read_param_value_from_string(
+                model_parameters, param_dict["param_name"]
+            )
+
+    return starting_points

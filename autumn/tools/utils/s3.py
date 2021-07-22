@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 S3_UPLOAD_EXTRA_ARGS = {"ACL": "public-read"}
 S3_UPLOAD_CONFIG = TransferConfig(
     max_concurrency=2,
+    multipart_threshold= (1024**2) * 100 # 100mb
 )
 S3_DOWNLOAD_CONFIG = TransferConfig(
     max_concurrency=2,
@@ -100,7 +101,7 @@ def upload_to_run_s3(client, run_id: str, src_path: str, quiet: bool):
     return src_path
 
 
-def list_s3(client, key_prefix: str, key_suffix: str):
+def list_s3(client, key_prefix: str, key_suffix: str = None):
     """Returns the item keys in a path in AWS S3"""
 
     key_prefix = sanitise_path(key_prefix)
@@ -118,8 +119,10 @@ def list_s3(client, key_prefix: str, key_suffix: str):
         objs += response["Contents"]
         is_truncated = response["IsTruncated"]
 
-    return [o["Key"] for o in objs if o["Key"].endswith(key_suffix)]
-
+    if key_suffix:
+        return [o["Key"] for o in objs if o["Key"].endswith(key_suffix)]
+    else:
+        return [o["Key"] for o in objs]
 
 def download_s3(client, src_key, dest_path):
     """Downloads a file from AWS S3"""
@@ -148,21 +151,35 @@ def upload_folder_s3(client, folder_path, dest_folder_key):
         upload_file_s3(client, src_path, dest_key)
 
 
-def upload_file_s3(client, src_path, dest_key):
+def upload_file_s3(client, src_path, dest_key, max_retry=5):
     """Upload a file to S3"""
     dest_key = sanitise_path(dest_key)
     logger.info("Uploading from %s to %s", src_path, dest_key)
 
-    # Enforce mime types for common cases; just png for now
+    # Enforce mime types for common cases
     extra_args = get_mime_args(src_path)
 
-    client.upload_file(
-        src_path,
-        settings.S3_BUCKET,
-        dest_key,
-        ExtraArgs=extra_args,
-        Config=S3_UPLOAD_CONFIG,
-    )
+    retry_count = 0
+    while True:
+        try:
+            client.upload_file(
+                src_path,
+                settings.S3_BUCKET,
+                dest_key,
+                ExtraArgs=extra_args,
+                Config=S3_UPLOAD_CONFIG,
+            )
+            break
+        except Exception:
+            # Make sure we capture any issues here...
+            retry_count += 1
+            if retry_count < max_retry:
+                logger.exception(f"Upload to {dest_key} failed, trying again.")
+            else:
+                logger.error(
+                    f"Upload to {dest_key} failed, tried {retry_count} times, still failing."
+                )
+                raise
 
 MIME_MAP = {
     "png": "image/png",

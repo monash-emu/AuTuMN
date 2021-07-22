@@ -30,6 +30,7 @@ from autumn.tools.registry import _PROJECTS
 from autumn.tools.utils.tex_tools import write_main_param_table, write_priors_table
 
 from .params import ParameterSet, Params
+from autumn.tools.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
@@ -309,6 +310,15 @@ def get_all_available_scenario_paths(scenario_dir_path):
     file_list_sorted = sorted(scenario_file_list, key = lambda x: int(re.match('.*scenario-([0-9]*)',x).group(1)))
 
     return file_list_sorted
+
+
+def use_tuned_proposal_sds(priors, proposal_sds_path):
+    if os.path.isfile(proposal_sds_path):
+        proposal_sds = read_yaml_file(proposal_sds_path)
+        for prior in priors:
+            if prior.name in proposal_sds:
+                if proposal_sds[prior.name] is not None:
+                    prior.jumping_stdev = proposal_sds[prior.name]
 
 
 def post_process_scenario_outputs(

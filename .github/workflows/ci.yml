@@ -31,7 +31,7 @@ jobs:
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        run: pytest --workers 2 -W ignore -vv -m "not run_models and not calibrate_models and not mixing_optimisation and not benchmark"
+        run: pytest --workers 2 -W ignore -vv -m "not nightly and not run_models and not calibrate_models and not mixing_optimisation and not benchmark"
   test_runs:
     runs-on: ubuntu-latest
     steps:

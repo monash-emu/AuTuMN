@@ -38,23 +38,19 @@ def get_microdistancing_funcs(
             adjustment_key = f"{key}_adjuster"
             adjustment_func_params = params.get(adjustment_key)
             if adjustment_func_params:
-
                 # Ensure the adjuster applies to the same locations as the original
                 assert params[f"{key}_adjuster"].locations == params[f"{key}"].locations
-
                 # An adjustment function is applied to the original function
                 waning_adjustment = get_microdist_func_component(adjustment_func_params)
-                microdistancing_func = lambda t: microdist_func(t) * waning_adjustment(t)
             else:
-                # Just use the original function
-                microdistancing_func = microdist_func
+                waning_adjustment = lambda t: 1.
 
             if loc in params[key].locations:
-                microdist_component_funcs.append(microdistancing_func)
+                microdist_component_funcs.append(make_adjusted_microdistancing_func(microdist_func, waning_adjustment))
 
         # Generate the overall composite contact adjustment function as the product of the reciprocal all the components
         if len(microdist_component_funcs) > 0:
-
+            
             def microdist_composite_func(time: float) -> float:
                 power = 2 if square_mobility_effect else 1
                 return np.product(
@@ -70,6 +66,10 @@ def get_microdistancing_funcs(
         final_adjustments[loc] = microdist_composite_func
 
     return final_adjustments
+
+
+def make_adjusted_microdistancing_func(microdist_func, waning_adjustment):
+        return lambda t: microdist_func(t) * waning_adjustment(t)
 
 
 def get_microdist_func_component(func_params: MicroDistancingFunc):

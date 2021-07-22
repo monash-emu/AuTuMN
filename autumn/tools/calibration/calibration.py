@@ -384,9 +384,14 @@ class Calibration:
                             - math.log(math.factorial(round(data[i])))
                         ) * time_weigths[i]
                 elif target["loglikelihood_distri"] == "negative_binomial":
-                    assert key + "_dispersion_param" in all_params_dict
-                    # the dispersion parameter varies during the MCMC. We need to retrieve its value
-                    n = all_params_dict[key + "_dispersion_param"]
+                    if key + "_dispersion_param" in all_params_dict:
+                        # the dispersion parameter varies during the MCMC. We need to retrieve its value
+                        n = all_params_dict[key + "_dispersion_param"]
+                    elif "dispersion_param" in target:
+                        n = target["dispersion_param"]
+                    else:
+                        raise ValueError(f"A dispersion_param is required for target {key}")
+
                     for i in range(len(data)):
                         # We use the parameterisation based on mean and variance and assume define var=mean**delta
                         mu = model_output[i]

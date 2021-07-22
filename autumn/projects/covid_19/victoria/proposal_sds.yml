@@ -9,7 +9,7 @@ sojourn.compartment_periods.icu_early: 2.3781359465094694
 sojourn.compartment_periods_calculated.active.total_period: 0.047742686344705465
 sojourn.compartment_periods_calculated.exposed.total_period: 0.1788486608236748
 target_output_ratio: 0.2578170138839997
-testing_to_detection.assumed_cdr_parameter: 0.005973810492992421
+testing_to_detection.assumed_cdr_parameter: 0.015
 victorian_clusters.contact_rate_multiplier_barwon_south_west: 0.0469350348987525
 victorian_clusters.contact_rate_multiplier_north_metro: 0.003329112020944547
 victorian_clusters.contact_rate_multiplier_regional: 0.054007528852057285

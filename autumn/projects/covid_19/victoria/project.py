@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.project.params import read_yaml_file
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
@@ -121,14 +121,8 @@ priors = [
     UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
 ]
 
-# Read saved proposal sds from yml file
-proposal_sds_path = build_rel_path("proposal_sds.yml")
-if os.path.isfile(proposal_sds_path):
-    proposal_sds = read_yaml_file(proposal_sds_path)
-    for prior in priors:
-        if prior.name in proposal_sds:
-            if proposal_sds[prior.name] is not None:
-                prior.jumping_stdev = proposal_sds[prior.name]
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(
     priors,

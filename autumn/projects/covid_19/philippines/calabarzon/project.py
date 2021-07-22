@@ -1,6 +1,6 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
-from autumn.tools.project.params import read_yaml_file
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
+
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 import os
@@ -25,14 +25,8 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 targets, priors = get_philippies_calibration_settings(ts_set)
 
-# Read saved proposal sds from yml file
-proposal_sds_path = build_rel_path("proposal_sds.yml")
-if os.path.isfile(proposal_sds_path):
-    proposal_sds = read_yaml_file(proposal_sds_path)
-    for prior in priors:
-        if prior.name in proposal_sds:
-            if proposal_sds[prior.name] is not None:
-                prior.jumping_stdev = proposal_sds[prior.name]
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(priors, targets, metropolis_init="current_params")
 

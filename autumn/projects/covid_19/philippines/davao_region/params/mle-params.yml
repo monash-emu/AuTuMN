@@ -1,14 +1,18 @@
-accum_deaths_dispersion_param: 3.8773605018783823
-clinical_stratification.props.hospital.multiplier: 1.2 #0.9338872610266398
-clinical_stratification.props.symptomatic.multiplier: 1.1 # 1.3462690354467315
-contact_rate: 0.0232  # 0.022739500009201784
-icu_occupancy_dispersion_param: 2.8877465051889613
-infection_fatality.multiplier: 1.3 #1.5 # 1.4211991699810722
-infectious_seed: 46.31844655681356
-mobility.microdistancing.behaviour.parameters.max_effect: 0.10295540440156241
-mobility.microdistancing.behaviour_adjuster.parameters.inflection_time: 424.9835673607258
-mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote: 0.9711363935676619
-notifications_dispersion_param: 3.419752158273172
-sojourn.compartment_periods_calculated.active.total_period: 7.591200841295983
-sojourn.compartment_periods_calculated.exposed.total_period: 6.95162056202483
-testing_to_detection.assumed_cdr_parameter: 0.021 # 0.025789103149374812
+accum_deaths_dispersion_param: 2.0610670505387896
+clinical_stratification.props.hospital.multiplier: 1.4073383174691578
+clinical_stratification.props.symptomatic.multiplier: 1.071145466012515
+contact_rate: 0.023240841262474467
+icu_occupancy_dispersion_param: 3.945192213046072
+infection_fatality.multiplier: 1.012414827734296
+infectious_seed: 40.94326607649258
+mobility.microdistancing.behaviour.parameters.max_effect: 0.15103830182603317
+mobility.microdistancing.behaviour_adjuster.parameters.inflection_time: 424.85639402992166
+mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote: 0.9635609526867054
+notifications_dispersion_param: 4.349360551060683
+sojourn.compartment_periods_calculated.active.total_period: 7.141212653828749
+sojourn.compartment_periods_calculated.exposed.total_period: 7.814044675379923
+testing_to_detection.assumed_cdr_parameter: 0.024029765825981212
+vaccination.overall_efficacy: 0.7908546444683682
+vaccination.vacc_prop_prevent_infection: 0.7717040071943247
+voc_emergence.contact_rate_multiplier: 1.539920405894661
+voc_emergence.start_time: 439.4098927272121

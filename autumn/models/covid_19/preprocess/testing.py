@@ -81,9 +81,10 @@ def find_cdr_function_from_test_data(
 
         # add test datapoints to original series so we can scale-up
         for time, value in zip(test_multiplier.times, test_multiplier.values):
+            latest_per_capita_tests = smoothed_per_capita_tests[-1]
             if time not in test_dates:
                 test_dates = np.append(test_dates, [time])
-                smoothed_per_capita_tests.append(value)
+                smoothed_per_capita_tests.append(latest_per_capita_tests)
 
         # reorder the data
         zipped_lists = zip(test_dates, smoothed_per_capita_tests)

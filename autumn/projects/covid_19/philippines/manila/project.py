@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
@@ -22,6 +22,10 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 targets, priors = get_philippies_calibration_settings(ts_set)
+
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+
 calibration = Calibration(priors, targets, metropolis_init="current_params")
 
 # FIXME: Replace with flexible Python plot request API.
@@ -35,3 +39,6 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.MANILA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
+
+# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=2, relative_likelihood_reduction=0.2)

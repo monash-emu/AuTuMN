@@ -15,7 +15,7 @@ def get_tracing_param(assumed_trace_prop, assumed_prev):
     """
     Calculate multiplier for the relationship between traced proportion and prevalence for use in the next function.
     """
-    assert 0. <= assumed_trace_prop <= 1.
+    assert 0. <= assumed_trace_prop <= 1.001
     assert 0. <= assumed_prev <= 1.
     return -np.log(assumed_trace_prop) / assumed_prev
 

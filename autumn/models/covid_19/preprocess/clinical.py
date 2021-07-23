@@ -120,7 +120,7 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
         #abs_prop_sympt_non_hospital_func = get_abs_prop_sympt_non_hospital_factory(
         #    age_idx, abs_props, get_abs_prop_isolated
         #)
-        adj_sympt_non_hospital = AbsPropIsolatedProc(age_idx, abs_props, get_detected_proportion, early_rate)
+        adj_sympt_non_hospital = AbsPropSymptNonHospProc(age_idx, abs_props, get_detected_proportion, early_rate)
 
         adjustments[agegroup][Clinical.SYMPT_NON_HOSPITAL] = adj_sympt_non_hospital
         #    lambda time, func=abs_prop_sympt_non_hospital_func: func(time) * early_rate

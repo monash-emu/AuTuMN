@@ -4,4 +4,5 @@ infectious_seed: 2.084286741185652
 testing_to_detection.assumed_cdr_parameter: 0.19495913795377254
 vaccination.overall_efficacy: 0.6984601995703406
 vaccination.vacc_prop_prevent_infection: 0.9135956535551519
-voc_emergence.start_time: 514.2697425942533
+voc_emergence.voc_strain(0).voc_components.start_time: 514.2697425942533
+

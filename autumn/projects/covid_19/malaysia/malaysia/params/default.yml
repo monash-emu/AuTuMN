@@ -82,11 +82,20 @@ mobility:
         - 1.
         - 0.
 
+
 voc_emergence:
-  start_time: 381 #15 Jan 2021
-  entry_rate: 1.
-  seed_duration: 10.
-  contact_rate_multiplier: 1.56 # LSHTM's estimate
+  voc_strain:
+    - voc_components:
+        start_time: 381 #15 Jan 2021
+        entry_rate: 1.
+        seed_duration: 10.
+        contact_rate_multiplier: 1.56
+
+    - voc_components: #second voc strain
+        start_time: 532
+        entry_rate: 1.
+        seed_duration: 10.
+        contact_rate_multiplier: 2.56
 
 contact_tracing:
     assumed_trace_prop: 0.05

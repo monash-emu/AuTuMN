@@ -93,7 +93,15 @@ mobility:
         - 0
 
 voc_emergence:
-  start_time: 410
-  entry_rate: 1.
-  seed_duration: 10.
-  contact_rate_multiplier: 2.45
+  voc_strain:
+    - voc_components:
+        start_time: 410
+        entry_rate: 1.
+        seed_duration: 10.
+        contact_rate_multiplier: 2.45 # LSHTM's estimate
+    - voc_components:
+        start_time: 1000000 # whatever time that is far in the future
+        entry_rate: 1. # doesn't matter
+        seed_duration: 10. # doesn't matter
+        contact_rate_multiplier: 2.45 # doesn't matter
+

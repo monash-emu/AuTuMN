@@ -19,7 +19,16 @@ clinical_stratification:
 vaccination:
   overall_efficacy: 0.7
   vacc_prop_prevent_infection: 1
-  coverage_override: 0.75
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: .15
+        start_time: 481 # 25 Apr 2021
+        end_time: 569 # 23 July 2021
+    - supply_period_coverage:
+        coverage: .80
+        start_time: 569 # 23 July 2021
+        end_time: 755 # 23 Jan 2022
+
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -82,11 +91,20 @@ mobility:
         - 1.
         - 0.
 
+
 voc_emergence:
-  start_time: 381 #15 Jan 2021
-  entry_rate: 1.
-  seed_duration: 10.
-  contact_rate_multiplier: 1.56 # LSHTM's estimate
+  voc_strain:
+    - voc_components:
+        start_time: 381 #15 Jan 2021
+        entry_rate: 1.
+        seed_duration: 10.
+        contact_rate_multiplier: 1.56
+
+    - voc_components: #second voc strain
+        start_time: 532
+        entry_rate: 1.
+        seed_duration: 10.
+        contact_rate_multiplier: 2.56
 
 contact_tracing:
     assumed_trace_prop: 0.05

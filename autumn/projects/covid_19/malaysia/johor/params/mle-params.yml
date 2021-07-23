@@ -12,5 +12,5 @@ sojourn.compartment_periods_calculated.exposed.total_period: 5.765464465650991
 testing_to_detection.assumed_cdr_parameter: 0.04811070982173664
 vaccination.overall_efficacy: 0.7592696490704094
 vaccination.vacc_prop_prevent_infection: 0.6595684941728035
-voc_emergence.contact_rate_multiplier: 2.0735808555310538
-voc_emergence.start_time: 478.27201441272337
+voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier: 2.0735808555310538
+voc_emergence.voc_strain(0).voc_components.start_time: 478.27201441272337

@@ -1,3 +1,4 @@
+from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, BetaPrior
@@ -58,3 +59,5 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.SRI_LANKA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
+
+perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

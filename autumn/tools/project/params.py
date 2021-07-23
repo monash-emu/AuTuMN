@@ -218,15 +218,12 @@ def read_param_value_from_string(params: dict, update_key: str):
     param_value = params[current_key]
         
     for nested_key in nested_keys:
-        try:
-            is_arr_key = re.match(ARRAY_REQUEST_REGEX, nested_key)
-            if is_arr_key:
-                key, idx_str = nested_key.replace(")", "").split("(")
-                idx = int(idx_str)
-                param_value = param_value[key][idx]
-            else:
-                param_value = param_value[nested_key]
-        except:
-            print("FAILHERE", param_value, nested_key, current_key)
+        is_arr_key = re.match(ARRAY_REQUEST_REGEX, nested_key)
+        if is_arr_key:
+            key, idx_str = nested_key.replace(")", "").split("(")
+            idx = int(idx_str)
+            param_value = param_value[key][idx]
+        else:
+            param_value = param_value[nested_key]
 
     return param_value

@@ -2,6 +2,7 @@ import numpy as np
 from summer import Overwrite
 
 from autumn.models.covid_19.constants import Clinical, Compartment, CLINICAL_STRATA, DEATH_CLINICAL_STRATA
+from autumn.models.covid_19.preprocess.adjusterprocs import AbsPropIsolatedProc, AbsPropSymptNonHospProc
 from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -105,16 +106,24 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
         adjustments[agegroup] = {}
 
         # Get time-varying symptomatic isolated non-community rate - this function must be "bound" within loop.
-        get_abs_prop_isolated = get_abs_prop_isolated_factory(age_idx, abs_props, get_detected_proportion)
-        adjustments[agegroup][Clinical.SYMPT_ISOLATE] = \
-            lambda time, func=get_abs_prop_isolated: func(time) * early_rate
+        #get_abs_prop_isolated = get_abs_prop_isolated_factory(age_idx, abs_props, get_detected_proportion)
+
+        #def adj_isolated(time):
+        #    return get_abs_prop_isolated(time) * early_rate
+
+        adj_isolated = AbsPropIsolatedProc(age_idx, abs_props, get_detected_proportion, early_rate)
+
+        adjustments[agegroup][Clinical.SYMPT_ISOLATE] = adj_isolated
+        #    lambda time, func=get_abs_prop_isolated: func(time) * early_rate
 
         # Get time-varying symptomatic undetected non-hospital rate - this function must be "bound" within loop.
-        abs_prop_sympt_non_hospital_func = get_abs_prop_sympt_non_hospital_factory(
-            age_idx, abs_props, get_abs_prop_isolated
-        )
-        adjustments[agegroup][Clinical.SYMPT_NON_HOSPITAL] = \
-            lambda time, func=abs_prop_sympt_non_hospital_func: func(time) * early_rate
+        #abs_prop_sympt_non_hospital_func = get_abs_prop_sympt_non_hospital_factory(
+        #    age_idx, abs_props, get_abs_prop_isolated
+        #)
+        adj_sympt_non_hospital = AbsPropIsolatedProc(age_idx, abs_props, get_detected_proportion, early_rate)
+
+        adjustments[agegroup][Clinical.SYMPT_NON_HOSPITAL] = adj_sympt_non_hospital
+        #    lambda time, func=abs_prop_sympt_non_hospital_func: func(time) * early_rate
 
         # Constant flow rates.
         adjustments[agegroup].update({

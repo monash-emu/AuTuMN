@@ -479,7 +479,7 @@ def plot_key_param_traces(
         dpi_request,
         optional_param_request=KEY_PARAMS,
         file_name="key_traces",
-        x_ticks_on=False,
+        x_ticks_on=True,
     )
 
 
@@ -511,7 +511,7 @@ def plot_epi_param_traces(
         dpi_request,
         optional_param_request=get_vic_epi_params(mcmc_params),
         file_name="epi_traces",
-        x_ticks_on=False,
+        x_ticks_on=True,
     )
 
 
@@ -543,7 +543,7 @@ def plot_contact_param_traces(
         dpi_request,
         optional_param_request=get_contact_rate_multipliers(mcmc_params),
         file_name="contact_traces",
-        x_ticks_on=False,
+        x_ticks_on=True,
     )
 
 

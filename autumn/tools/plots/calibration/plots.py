@@ -434,7 +434,7 @@ def plot_multiple_param_traces(
 
             if not x_ticks_on:
                 axis.set_xticks([])
-            elif indices[i][0] == n_rows - 1:
+            elif not indices or indices[i][0] == n_rows - 1:
                 x_label = "Iterations" if capitalise_first_letter else "iterations"
                 axis.set_xlabel(x_label, fontsize=label_font_size)
             pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)

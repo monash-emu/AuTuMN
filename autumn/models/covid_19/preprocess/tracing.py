@@ -57,7 +57,7 @@ class PrevalenceProc(DerivedValueProcessor):
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
             comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)
 
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, comp_vals, flow_rates, input_values, derived_values, time):
         """
         Calculate the actual prevalence during run-time
         """
@@ -71,7 +71,7 @@ class PropDetectedTracedProc(DerivedValueProcessor):
     def __init__(self, trace_param):
         self.trace_param = trace_param
 
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, comp_vals, flow_rates, input_values, derived_values, time):
         """
         Formula for calculating the proportion from the already-processed contact tracing parameter,
         which has been worked out in the get_tracing_param function above.
@@ -111,7 +111,7 @@ class PropIndexDetectedProc(DerivedValueProcessor):
                 self.infectiousness_levels[compartment][clinical] = get_infectiousness_level(
                     compartment, clinical, self.non_sympt_infect_multiplier, self.late_infect_multiplier)
 
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, comp_vals, flow_rates, input_values, derived_values, time):
         """
         Calculate the proportion of the force of infection arising from ever-detected individuals
         """
@@ -140,7 +140,7 @@ class TracedFlowRateProc(DerivedValueProcessor):
     def __init__(self, incidence_flow_rate):
         self.incidence_flow_rate = incidence_flow_rate
 
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, comp_vals, flow_rates, input_values, derived_values, time):
         """
         Solving the following equation:
 

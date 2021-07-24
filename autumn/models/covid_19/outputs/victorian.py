@@ -37,7 +37,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
 
 
     # track CDR
-    model.request_derived_value_output("cdr")
+    #model.request_derived_value_output("cdr")
 
     # Notifications.
     notification_sources = []

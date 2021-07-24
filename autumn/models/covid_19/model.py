@@ -123,7 +123,7 @@ def build_model(params: dict) -> CompartmentalModel:
     model.stratify_with(clinical_strat)
 
     # register the CDR function as derived value
-    model.add_derived_value_process(
+    model.add_input_value_process(
         "cdr",
         CdrProc(get_detected_proportion)
     )

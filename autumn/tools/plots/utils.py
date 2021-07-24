@@ -55,6 +55,8 @@ PLOT_TEXT_DICT = {
     "prop_contacts_with_detected_index": "Proportion of contacts whose index is detected",
     "prop_contacts_quarantined": "Proportion quarantined among all contacts",
     "infection_fatality.top_bracket_overwrite": "over 75 IFR",
+    "victorian_clusters.contact_rate_multiplier_north_metro": "north and west metro",
+    "victorian_clusters.contact_rate_multiplier_south_metro": "south and south east metro",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)

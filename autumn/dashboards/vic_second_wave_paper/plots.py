@@ -788,7 +788,7 @@ def plot_scenarios_multioutput(
         plotter,
         uncertainty_df,
         scenario_outputs,
-        uncertainty_df["scenario"].unique(),
+        [2, 3, 4],  # Scenarios to run in this plot
         targets,
         is_logscale,
         STANDARD_X_LIMITS[0],

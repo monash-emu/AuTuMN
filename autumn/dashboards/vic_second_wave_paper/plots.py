@@ -261,6 +261,14 @@ def get_vic_epi_params(mcmc_params):
     return params
 
 
+def get_vic_contact_params(mcmc_params):
+    return [
+        param
+        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
+        if "contact_rate" in param
+    ]
+
+
 def plot_posteriors(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -354,21 +362,18 @@ def plot_key_params(
 
 
 def plot_param_matrix(
-    plotter: StreamlitPlotter,
-    mcmc_params: List[pd.DataFrame],
-    parameters: List,
-    label_param_string=False,
-    show_ticks=False,
-    file_name="",
+        plotter: StreamlitPlotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: List,
+        label_param_string=False,
+        show_ticks=False,
+        file_name="",
+        tight_layout=False,
+        short_label=False,
 ):
 
     burn_in, label_font_size, label_chars, bins, style, dpi_request = (
-        BURN_INS,
-        8,
-        2,
-        20,
-        "Shade",
-        300,
+        BURN_INS, 8, 2, 20, "Shade", 300
     )
     plots.calibration.plots.plot_param_vs_param(
         plotter,
@@ -383,6 +388,8 @@ def plot_param_matrix(
         label_param_string=label_param_string,
         show_ticks=show_ticks,
         file_name=file_name,
+        tight_layout=tight_layout,
+        short_label=short_label,
     )
     param_names = [get_plot_text_dict(param) for param in parameters]
     params_df = pd.DataFrame({"names": param_names})
@@ -448,6 +455,29 @@ def plot_key_param_matrix(
         label_param_string=True,
         show_ticks=True,
         file_name="key_param_matrix",
+    )
+
+
+@dash.register("Contact params matrix")
+def plot_key_param_matrix(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    plot_param_matrix(
+        plotter,
+        mcmc_params,
+        get_vic_contact_params(mcmc_params),
+        label_param_string=True,
+        show_ticks=True,
+        file_name="contact_param_matrix",
+        tight_layout=True,
+        short_label=True,
     )
 
 

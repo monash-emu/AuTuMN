@@ -59,6 +59,14 @@ PLOT_TEXT_DICT = {
     "victorian_clusters.contact_rate_multiplier_south_metro": "south and south east metro",
 }
 
+SHORT_TEXT_DICT = {
+    "victorian_clusters.contact_rate_multiplier_north_metro": "nw metro",
+    "victorian_clusters.contact_rate_multiplier_south_metro": "s se metro",
+    "victorian_clusters.contact_rate_multiplier_barwon_south_west": "barwon sw",
+    "victorian_clusters.contact_rate_multiplier_regional": "regional",
+    "contact_rate": "contact rate",
+}
+
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)
 # https://matplotlib.org/3.1.0/gallery/color/named_colors.html
 COLORS = (
@@ -85,13 +93,16 @@ REF_DATE = datetime.date(2019, 12, 31)
 
 
 def get_plot_text_dict(
-    param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True
+    param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True, get_short_text=False,
 ):
     """
     Get standard text for use in plotting as title, y-label, etc.
     """
 
-    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    if get_short_text:
+        text = SHORT_TEXT_DICT[param_string] if param_string in SHORT_TEXT_DICT else param_string
+    else:
+        text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
     if "victorian_clusters.contact_rate_multiplier_" in param_string:
         text = text.replace("victorian_clusters.contact_rate_multiplier_", "")
     if "victorian_clusters." in param_string:

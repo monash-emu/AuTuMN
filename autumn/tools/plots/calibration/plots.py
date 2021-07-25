@@ -804,18 +804,20 @@ def plot_param_vs_param_by_chain(
 
 
 def plot_param_vs_param(
-    plotter: Plotter,
-    mcmc_params: List[pd.DataFrame],
-    parameters: list,
-    burn_in: int,
-    style: str,
-    bins: int,
-    label_font_size: int,
-    label_chars: int,
-    dpi_request: int,
-    label_param_string=True,
-    show_ticks=False,
-    file_name="parameter_correlation_matrix",
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: list,
+        burn_in: int,
+        style: str,
+        bins: int,
+        label_font_size: int,
+        label_chars: int,
+        dpi_request: int,
+        label_param_string=True,
+        show_ticks=False,
+        file_name="parameter_correlation_matrix",
+        tight_layout=False,
+        short_label=False,
 ):
     """
     Plot the parameter correlation matrices for each parameter combination.
@@ -824,6 +826,8 @@ def plot_param_vs_param(
     # Prelims
     fig, axes, _, _, _, _ = plotter.get_figure(n_panels=len(parameters) ** 2)
     row_data, col_data = {}, {}
+    if tight_layout:
+        fig.tight_layout(pad=0.)
 
     # Get x and y data separately and collate up over the chains
     for row_idx, row_param_name in enumerate(parameters):
@@ -888,10 +892,12 @@ def plot_param_vs_param(
             y_param_label = row_param_name if label_param_string else str(row_idx + 1)
             if row_idx == len(parameters) - 1:
                 axis.set_xlabel(
-                    get_plot_text_dict(x_param_label), fontsize=label_font_size, labelpad=3
+                    get_plot_text_dict(x_param_label, get_short_text=short_label), fontsize=label_font_size, labelpad=3,
                 )
             if col_idx == 0:
-                axis.set_ylabel(get_plot_text_dict(y_param_label), fontsize=label_font_size)
+                axis.set_ylabel(
+                    get_plot_text_dict(y_param_label, get_short_text=short_label), fontsize=label_font_size
+                )
 
     # Save
     plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)

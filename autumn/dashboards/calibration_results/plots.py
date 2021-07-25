@@ -700,10 +700,13 @@ def get_cdr_constants(default_params):
     agegroup_params = default_params["age_stratification"]
     time_params = default_params["time"]
 
-    # Derive times and age group breaks in the same way as the model does
-    times = get_model_times_from_inputs(
-        time_params["start"], time_params["end"], time_params["step"]
-    )
+    # Get some decent times - a bit of hack to get it working again, but I think we'll be redoing all this
+    working_time = time_params["start"]
+    times = []
+    while working_time <= time_params["end"]:
+        times.append(working_time)
+        working_time += time_params["step"]
+
     agegroup_strata = [str(s) for s in range(0, 75, 5)]
     return (
         iso3,

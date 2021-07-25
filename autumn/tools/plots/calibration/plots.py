@@ -1070,7 +1070,7 @@ def plot_cdr_curves(
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
     axis = plot_cdr_to_axis(axis, times, detected_proportion, alpha=alpha, line_width=line_width)
-    axis.set_ylabel("proportion symptomatic cases detected")
+    axis.set_ylabel("proportion symptomatic cases passively detected", fontsize=10)
     tidy_cdr_axis(axis, rotation, start_date, end_date)
     plotter.save_figure(fig, filename=f"cdr_curves")
 

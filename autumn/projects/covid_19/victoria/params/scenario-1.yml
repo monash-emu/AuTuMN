@@ -21,3 +21,6 @@ victorian_clusters:
             - 2020-07-09
           values:
             - 1.
+
+infection_fatality:
+  top_bracket_overwrite: 0.06216691045755533

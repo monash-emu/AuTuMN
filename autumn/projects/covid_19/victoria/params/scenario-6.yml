@@ -4107,3 +4107,6 @@ victorian_clusters:
             - 0.9144857096075896
             - 0.9449132345029292
             - 0.9525745879603453
+
+infection_fatality:
+  top_bracket_overwrite: 0.06216691045755533

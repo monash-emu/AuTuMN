@@ -68,7 +68,7 @@ const DashPage = ({ id, timestamp, commit, files }) => {
 export default DashPage
 
 const PlotsTab = ({ files }) => {
-  const [currentCat, setCat] = useState('loglikelihood')
+  const [currentCat, setCat] = useState('dash')
   const plotFilesPre = files.filter((f) => f.path.startsWith('plots'))
   const plotFiles = plotFilesPre.filter((f) => f.path.split('/')[1] != 'dashboard')
   if (plotFiles.length < 1) {

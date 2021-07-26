@@ -1,17 +1,19 @@
-clinical_stratification.non_sympt_infect_multiplier: 0.5815796399511982
-clinical_stratification.props.symptomatic.multiplier: 0.8316214842756067
-contact_rate: 0.0475
-contact_tracing.assumed_trace_prop: 0.2803283302480137
-infectious_seed: 28.725805191322344
-sojourn.compartment_periods.icu_early: 5.486711103663831
-sojourn.compartment_periods_calculated.active.total_period: 5. # 4.413524303871758
-sojourn.compartment_periods_calculated.exposed.total_period: 5. # 2.4705742103441466
-target_output_ratio: 0.37732981825813094
-testing_to_detection.assumed_cdr_parameter: 0.23540481862757998
-victorian_clusters.contact_rate_multiplier_barwon_south_west: 0.975303335005165
-victorian_clusters.contact_rate_multiplier_north_metro: 1.0596802368217975
-victorian_clusters.contact_rate_multiplier_regional: 0.6208983974469938
-victorian_clusters.contact_rate_multiplier_south_metro: 0.9421754679862706
-victorian_clusters.intercluster_mixing: 0.013700437923095037
-victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect: 0.2123017448549535
-victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect: 0.37
+clinical_stratification.non_sympt_infect_multiplier: 0.6499620009382898
+clinical_stratification.props.hospital.multiplier: 3.814867973828741
+clinical_stratification.props.symptomatic.multiplier: 0.9044812617878031
+contact_rate: 0.04894984547239206
+contact_tracing.assumed_trace_prop: 0.4782593534566138
+infection_fatality.top_bracket_overwrite: 0.1324971600326926
+infectious_seed: 29.629546726537505
+sojourn.compartment_periods.icu_early: 8.752235234681752
+sojourn.compartment_periods_calculated.active.total_period: 4.574823302472714
+sojourn.compartment_periods_calculated.exposed.total_period: 3.593396369551793
+target_output_ratio: 0.5791479368496775
+testing_to_detection.assumed_cdr_parameter: 0.2639928971064892
+victorian_clusters.contact_rate_multiplier_barwon_south_west: 0.7038121820862753
+victorian_clusters.contact_rate_multiplier_north_metro: 1.0167989633831898
+victorian_clusters.contact_rate_multiplier_regional: 0.5600282455448201
+victorian_clusters.contact_rate_multiplier_south_metro: 0.9337557518404555
+victorian_clusters.intercluster_mixing: 0.014833363196287228
+victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect: 0.19669706205597276
+victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect: 0.46758323592778883

@@ -1,4 +1,6 @@
 description: Stage 4 lockdown starts on 7 July
+# Why 7th - 9th would be stage 3
+# Could also replicate scenarios 5 and 6 at the postcode lockdown date (30th June I think) on Brett's advice
 
 time:
   start: 189
@@ -4107,3 +4109,6 @@ victorian_clusters:
             - 0.9144857096075896
             - 0.9449132345029292
             - 0.9525745879603453
+
+infection_fatality:
+  top_bracket_overwrite: 0.06216691045755533

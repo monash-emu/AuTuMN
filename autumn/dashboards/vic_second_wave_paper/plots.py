@@ -41,10 +41,10 @@ STATEWIDE_OUTPUTS = ["notifications", "hospital_admissions", "icu_admissions", "
 STANDARD_TITLE_FONTSIZE = 20
 STANDARD_LABEL_FONTSIZE = 14
 STANDARD_N_TICKS = 10
+VIC_BURN_INS = 7500
 
 # This has to be specified here, and we would generally want it to be the same as what you requested when asking for the
 # full model runs to be triggered in BuildKite, but doesn't have to be.
-BURN_INS = 2000
 
 
 def get_contact_rate_multipliers(mcmc_params):
@@ -261,13 +261,21 @@ def get_vic_epi_params(mcmc_params):
     return params
 
 
+def get_vic_contact_params(mcmc_params):
+    return [
+        param
+        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
+        if "contact_rate" in param
+    ]
+
+
 def plot_posteriors(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    params: List,
-    file_name: str,
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        params: List,
+        file_name: str,
 ):
 
     st.write(params)
@@ -286,7 +294,7 @@ def plot_posteriors(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = (BURN_INS, 16, 3, 8, 8, 300, False)
+    ) = (VIC_BURN_INS, 16, 3, 8, 8, 300, False)
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
@@ -354,21 +362,18 @@ def plot_key_params(
 
 
 def plot_param_matrix(
-    plotter: StreamlitPlotter,
-    mcmc_params: List[pd.DataFrame],
-    parameters: List,
-    label_param_string=False,
-    show_ticks=False,
-    file_name="",
+        plotter: StreamlitPlotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: List,
+        label_param_string=False,
+        show_ticks=False,
+        file_name="",
+        tight_layout=False,
+        short_label=False,
 ):
 
     burn_in, label_font_size, label_chars, bins, style, dpi_request = (
-        BURN_INS,
-        8,
-        2,
-        20,
-        "Shade",
-        300,
+        VIC_BURN_INS, 8, 2, 20, "Shade", 300
     )
     plots.calibration.plots.plot_param_vs_param(
         plotter,
@@ -383,6 +388,8 @@ def plot_param_matrix(
         label_param_string=label_param_string,
         show_ticks=show_ticks,
         file_name=file_name,
+        tight_layout=tight_layout,
+        short_label=short_label,
     )
     param_names = [get_plot_text_dict(param) for param in parameters]
     params_df = pd.DataFrame({"names": param_names})
@@ -451,6 +458,29 @@ def plot_key_param_matrix(
     )
 
 
+@dash.register("Contact params matrix")
+def plot_key_param_matrix(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    plot_param_matrix(
+        plotter,
+        mcmc_params,
+        get_vic_contact_params(mcmc_params),
+        label_param_string=True,
+        show_ticks=True,
+        file_name="contact_param_matrix",
+        tight_layout=True,
+        short_label=True,
+    )
+
+
 @dash.register("Key params traces")
 def plot_key_param_traces(
     plotter: StreamlitPlotter,
@@ -463,11 +493,7 @@ def plot_key_param_traces(
 ):
 
     title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = (
-        8,
-        6,
-        300,
-        False,
-        0,
+        8, 6, 300, False, VIC_BURN_INS,
     )
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
@@ -479,7 +505,7 @@ def plot_key_param_traces(
         dpi_request,
         optional_param_request=KEY_PARAMS,
         file_name="key_traces",
-        x_ticks_on=False,
+        x_ticks_on=True,
     )
 
 
@@ -511,7 +537,7 @@ def plot_epi_param_traces(
         dpi_request,
         optional_param_request=get_vic_epi_params(mcmc_params),
         file_name="epi_traces",
-        x_ticks_on=False,
+        x_ticks_on=True,
     )
 
 
@@ -543,7 +569,7 @@ def plot_contact_param_traces(
         dpi_request,
         optional_param_request=get_contact_rate_multipliers(mcmc_params),
         file_name="contact_traces",
-        x_ticks_on=False,
+        x_ticks_on=True,
     )
 
 
@@ -724,8 +750,8 @@ def plot_scenarios(
     )
 
 
-@dash.register("Multi-output scenarios")
-def plot_scenarios_multioutput(
+@dash.register("Multi-output worse scenarios")
+def plot_worse_scenarios_multioutput(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
@@ -744,11 +770,11 @@ def plot_scenarios_multioutput(
         is_legend,
     ) = (300, False, False, True, True, True)
 
-    scenario_outputs = ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]
+    scenario_outputs = ["notifications", "infection_deaths", "hospital_admissions", "icu_occupancy"]
 
     # From Litton et al.
     icu_capacities = [{}] * len(scenario_outputs)
-    icu_capacities[2] = {
+    icu_capacities[3] = {
         "base ICU beds": 499,
         "max physical ICU beds": 1092,
         "max surge ICU capacity": 1665,
@@ -758,7 +784,7 @@ def plot_scenarios_multioutput(
         plotter,
         uncertainty_df,
         scenario_outputs,
-        uncertainty_df["scenario"].unique(),
+        [2, 3, 4],  # Scenarios to run in this plot
         targets,
         is_logscale,
         STANDARD_X_LIMITS[0],
@@ -768,6 +794,80 @@ def plot_scenarios_multioutput(
         file_name="multi_scenario",
         multi_panel_hlines=icu_capacities,
         max_y_values=(24e3, 750, 3e3, 3e4),
+    )
+
+
+@dash.register("Multi-output better scenarios")
+def plot_good_scenarios_multioutput(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    (
+        dpi_request,
+        capitalise_first_letter,
+        is_logscale,
+        is_targets,
+        is_overlay_uncertainty,
+        is_legend,
+    ) = (300, False, False, True, True, True)
+
+    scenario_outputs = ["notifications", "infection_deaths", "hospital_admissions", "icu_occupancy"]
+
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+        plotter,
+        uncertainty_df,
+        scenario_outputs,
+        [0, 5, 6],  # Scenarios to run in this plot
+        targets,
+        is_logscale,
+        STANDARD_X_LIMITS[0],
+        275,
+        title_font_size=STANDARD_TITLE_FONTSIZE,
+        label_font_size=STANDARD_LABEL_FONTSIZE,
+        file_name="multi_scenario",
+    )
+
+
+@dash.register("Multi-output school scenario")
+def plot_school_scenario_multioutput(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    (
+        dpi_request,
+        capitalise_first_letter,
+        is_logscale,
+        is_targets,
+        is_overlay_uncertainty,
+        is_legend,
+    ) = (300, False, False, True, True, True)
+
+    scenario_outputs = ["notifications", "infection_deaths", "hospital_admissions", "icu_occupancy"]
+
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+        plotter,
+        uncertainty_df,
+        scenario_outputs,
+        [0, 1],  # Scenarios to run in this plot
+        targets,
+        is_logscale,
+        STANDARD_X_LIMITS[0],
+        275,
+        title_font_size=STANDARD_TITLE_FONTSIZE,
+        label_font_size=STANDARD_LABEL_FONTSIZE,
+        file_name="multi_scenario",
     )
 
 
@@ -840,7 +940,7 @@ def display_parameters_r_hats(
     region: str,
 ):
 
-    r_hats = calculate_r_hats(mcmc_params, mcmc_tables, burn_in=0)
+    r_hats = calculate_r_hats(mcmc_params, mcmc_tables, burn_in=VIC_BURN_INS)
     st.write("Convergence R_hat statistics for each parameter.\nWe want these values to be as close as possible to 1 (ideally < 1.1).")
     st.write(r_hats)
 

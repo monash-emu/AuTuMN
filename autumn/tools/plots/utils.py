@@ -55,6 +55,16 @@ PLOT_TEXT_DICT = {
     "prop_contacts_with_detected_index": "Proportion of contacts whose index is detected",
     "prop_contacts_quarantined": "Proportion quarantined among all contacts",
     "infection_fatality.top_bracket_overwrite": "over 75 IFR",
+    "victorian_clusters.contact_rate_multiplier_north_metro": "north and west metro",
+    "victorian_clusters.contact_rate_multiplier_south_metro": "south and south east metro",
+}
+
+SHORT_TEXT_DICT = {
+    "victorian_clusters.contact_rate_multiplier_north_metro": "nw metro",
+    "victorian_clusters.contact_rate_multiplier_south_metro": "s se metro",
+    "victorian_clusters.contact_rate_multiplier_barwon_south_west": "barwon sw",
+    "victorian_clusters.contact_rate_multiplier_regional": "regional",
+    "contact_rate": "contact rate",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)
@@ -83,13 +93,16 @@ REF_DATE = datetime.date(2019, 12, 31)
 
 
 def get_plot_text_dict(
-    param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True
+    param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True, get_short_text=False,
 ):
     """
     Get standard text for use in plotting as title, y-label, etc.
     """
 
-    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    if get_short_text:
+        text = SHORT_TEXT_DICT[param_string] if param_string in SHORT_TEXT_DICT else param_string
+    else:
+        text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
     if "victorian_clusters.contact_rate_multiplier_" in param_string:
         text = text.replace("victorian_clusters.contact_rate_multiplier_", "")
     if "victorian_clusters." in param_string:
@@ -181,7 +194,7 @@ def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncert
     assert len(times) == len(values), "Targets have inconsistent length"
     # Plot a single point estimate
     if on_uncertainty_plot:
-        axis.scatter(times, values, marker="o", color="black", s=10)
+        axis.scatter(times, values, marker="o", color="black", s=10, zorder=999)
     else:
         axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
         axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)

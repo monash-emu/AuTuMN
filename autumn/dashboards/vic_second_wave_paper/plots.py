@@ -750,8 +750,8 @@ def plot_scenarios(
     )
 
 
-@dash.register("Multi-output scenarios")
-def plot_scenarios_multioutput(
+@dash.register("Multi-output worse scenarios")
+def plot_worse_scenarios_multioutput(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
@@ -770,11 +770,11 @@ def plot_scenarios_multioutput(
         is_legend,
     ) = (300, False, False, True, True, True)
 
-    scenario_outputs = ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]
+    scenario_outputs = ["notifications", "infection_deaths", "hospital_admissions", "icu_occupancy"]
 
     # From Litton et al.
     icu_capacities = [{}] * len(scenario_outputs)
-    icu_capacities[2] = {
+    icu_capacities[3] = {
         "base ICU beds": 499,
         "max physical ICU beds": 1092,
         "max surge ICU capacity": 1665,
@@ -794,6 +794,80 @@ def plot_scenarios_multioutput(
         file_name="multi_scenario",
         multi_panel_hlines=icu_capacities,
         max_y_values=(24e3, 750, 3e3, 3e4),
+    )
+
+
+@dash.register("Multi-output better scenarios")
+def plot_good_scenarios_multioutput(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    (
+        dpi_request,
+        capitalise_first_letter,
+        is_logscale,
+        is_targets,
+        is_overlay_uncertainty,
+        is_legend,
+    ) = (300, False, False, True, True, True)
+
+    scenario_outputs = ["notifications", "infection_deaths", "hospital_admissions", "icu_occupancy"]
+
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+        plotter,
+        uncertainty_df,
+        scenario_outputs,
+        [0, 5, 6],  # Scenarios to run in this plot
+        targets,
+        is_logscale,
+        STANDARD_X_LIMITS[0],
+        275,
+        title_font_size=STANDARD_TITLE_FONTSIZE,
+        label_font_size=STANDARD_LABEL_FONTSIZE,
+        file_name="multi_scenario",
+    )
+
+
+@dash.register("Multi-output school scenario")
+def plot_school_scenario_multioutput(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    (
+        dpi_request,
+        capitalise_first_letter,
+        is_logscale,
+        is_targets,
+        is_overlay_uncertainty,
+        is_legend,
+    ) = (300, False, False, True, True, True)
+
+    scenario_outputs = ["notifications", "infection_deaths", "hospital_admissions", "icu_occupancy"]
+
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+        plotter,
+        uncertainty_df,
+        scenario_outputs,
+        [0, 1],  # Scenarios to run in this plot
+        targets,
+        is_logscale,
+        STANDARD_X_LIMITS[0],
+        275,
+        title_font_size=STANDARD_TITLE_FONTSIZE,
+        label_font_size=STANDARD_LABEL_FONTSIZE,
+        file_name="multi_scenario",
     )
 
 

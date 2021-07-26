@@ -270,12 +270,13 @@ def get_vic_contact_params(mcmc_params):
 
 
 def plot_posteriors(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    params: List,
-    file_name: str,
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        params: List,
+        file_name: str,
+        burn_ins=BURN_INS,
 ):
 
     st.write(params)
@@ -294,7 +295,7 @@ def plot_posteriors(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = (BURN_INS, 16, 3, 8, 8, 300, False)
+    ) = (burn_ins, 16, 3, 8, 8, 300, False)
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
@@ -330,6 +331,7 @@ def plot_epi_posteriors(
         mcmc_params,
         get_vic_epi_params(mcmc_params),
         "epi_posteriors",
+        burn_ins=5000,
     )
 
 
@@ -358,7 +360,7 @@ def plot_key_params(
     region: str,
 ):
 
-    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, KEY_PARAMS, "key_posteriors")
+    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, KEY_PARAMS, "key_posteriors", burn_ins=5000)
 
 
 def plot_param_matrix(

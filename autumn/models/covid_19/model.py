@@ -119,9 +119,13 @@ def build_model(params: dict) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     # Stratify the model by clinical status
-    clinical_strat, get_detected_proportion = get_clinical_strat(params)
+    clinical_strat, get_detected_proportion, adjustment_systems = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
 
+    # Add the adjuster systems used by the clinical stratification
+    for k, v in adjustment_systems.items():
+        model.add_adjustment_system(k, v)
+    
     # register the CDR function as derived value
     model.add_input_value_process(
         "cdr",

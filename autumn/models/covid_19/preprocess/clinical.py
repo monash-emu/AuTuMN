@@ -1,8 +1,9 @@
 import numpy as np
 from summer import Overwrite
+from summer.adjust import AdjustmentComponent
 
 from autumn.models.covid_19.constants import Clinical, Compartment, CLINICAL_STRATA, DEATH_CLINICAL_STRATA
-from autumn.models.covid_19.preprocess.adjusterprocs import AbsPropIsolatedProc, AbsPropSymptNonHospProc
+from autumn.models.covid_19.preprocess.adjusterprocs import AbsPropIsolatedSystem, AbsPropSymptNonHospSystem
 from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -110,11 +111,17 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
 
         #def adj_isolated(time):
         #    return get_abs_prop_isolated(time) * early_rate
+        proportion_sympt = abs_props["sympt"][age_idx]
+        proportion_hosp = abs_props["hospital"][age_idx]
 
         #adj_isolated = AbsPropIsolatedProc(age_idx, abs_props, get_detected_proportion, early_rate)
-        adj_isolated = AbsPropIsolatedProc(age_idx, abs_props, early_rate)
+        #adj_isolated = AbsPropIsolatedProc(age_idx, abs_props, early_rate)
 
-        adjustments[agegroup][Clinical.SYMPT_ISOLATE] = adj_isolated
+        proportions = {'proportion_sympt': proportion_sympt, 'proportion_hosp': proportion_hosp}
+
+        adj_isolated_component = AdjustmentComponent(system='isolated', data=proportions)
+
+        adjustments[agegroup][Clinical.SYMPT_ISOLATE] = adj_isolated_component
         #    lambda time, func=get_abs_prop_isolated: func(time) * early_rate
 
         # Get time-varying symptomatic undetected non-hospital rate - this function must be "bound" within loop.
@@ -122,9 +129,11 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
         #    age_idx, abs_props, get_abs_prop_isolated
         #)
         #adj_sympt_non_hospital = AbsPropSymptNonHospProc(age_idx, abs_props, get_detected_proportion, early_rate)
-        adj_sympt_non_hospital = AbsPropSymptNonHospProc(age_idx, abs_props, early_rate)
+        #adj_sympt_non_hospital = AbsPropSymptNonHospProc(age_idx, abs_props, early_rate)
 
-        adjustments[agegroup][Clinical.SYMPT_NON_HOSPITAL] = adj_sympt_non_hospital
+        adj_sympt_non_hospital_component = AdjustmentComponent(system='sympt_non_hosp', data=proportions)
+
+        adjustments[agegroup][Clinical.SYMPT_NON_HOSPITAL] = adj_sympt_non_hospital_component
         #    lambda time, func=abs_prop_sympt_non_hospital_func: func(time) * early_rate
 
         # Constant flow rates.
@@ -275,6 +284,11 @@ def get_all_adjustments(
     )
     entry_adjs = get_entry_adjustments(abs_props, get_detected_proportion, within_early_exposed)
 
+    adjuster_systems = {
+        'isolated': AbsPropIsolatedSystem(within_early_exposed),
+        'sympt_non_hosp': AbsPropSymptNonHospSystem(within_early_exposed)
+    }
+
     """
     Progress adjustments.
     """
@@ -345,4 +359,4 @@ def get_all_adjustments(
     Return all the adjustments.
     """
 
-    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, get_detected_proportion
+    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, get_detected_proportion, adjuster_systems

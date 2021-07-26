@@ -426,7 +426,7 @@ def plot_multiple_param_traces(
                     mcmc_params[0]["name"] == param_name
                 )
                 param_values = mcmc_params[0][param_mask].values
-                axis.plot(param_values[:, 3], alpha=0.8, linewidth=0.7)
+                axis.plot(param_values[:, 3], alpha=0.8, linewidth=0.3)
             axis.set_title(
                 get_plot_text_dict(param_name, capitalise_first_letter=capitalise_first_letter),
                 fontsize=title_font_size,

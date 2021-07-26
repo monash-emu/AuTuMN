@@ -41,10 +41,10 @@ STATEWIDE_OUTPUTS = ["notifications", "hospital_admissions", "icu_admissions", "
 STANDARD_TITLE_FONTSIZE = 20
 STANDARD_LABEL_FONTSIZE = 14
 STANDARD_N_TICKS = 10
+VIC_BURN_INS = 7500
 
 # This has to be specified here, and we would generally want it to be the same as what you requested when asking for the
 # full model runs to be triggered in BuildKite, but doesn't have to be.
-BURN_INS = 2000
 
 
 def get_contact_rate_multipliers(mcmc_params):
@@ -276,7 +276,6 @@ def plot_posteriors(
         mcmc_params: List[pd.DataFrame],
         params: List,
         file_name: str,
-        burn_ins=BURN_INS,
 ):
 
     st.write(params)
@@ -295,7 +294,7 @@ def plot_posteriors(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = (burn_ins, 16, 3, 8, 8, 300, False)
+    ) = (VIC_BURN_INS, 16, 3, 8, 8, 300, False)
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
@@ -331,7 +330,6 @@ def plot_epi_posteriors(
         mcmc_params,
         get_vic_epi_params(mcmc_params),
         "epi_posteriors",
-        burn_ins=5000,
     )
 
 
@@ -360,7 +358,7 @@ def plot_key_params(
     region: str,
 ):
 
-    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, KEY_PARAMS, "key_posteriors", burn_ins=5000)
+    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, KEY_PARAMS, "key_posteriors")
 
 
 def plot_param_matrix(
@@ -375,7 +373,7 @@ def plot_param_matrix(
 ):
 
     burn_in, label_font_size, label_chars, bins, style, dpi_request = (
-        BURN_INS, 8, 2, 20, "Shade", 300
+        VIC_BURN_INS, 8, 2, 20, "Shade", 300
     )
     plots.calibration.plots.plot_param_vs_param(
         plotter,
@@ -495,11 +493,7 @@ def plot_key_param_traces(
 ):
 
     title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = (
-        8,
-        6,
-        300,
-        False,
-        0,
+        8, 6, 300, False, VIC_BURN_INS,
     )
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
@@ -872,7 +866,7 @@ def display_parameters_r_hats(
     region: str,
 ):
 
-    r_hats = calculate_r_hats(mcmc_params, mcmc_tables, burn_in=0)
+    r_hats = calculate_r_hats(mcmc_params, mcmc_tables, burn_in=VIC_BURN_INS)
     st.write("Convergence R_hat statistics for each parameter.\nWe want these values to be as close as possible to 1 (ideally < 1.1).")
     st.write(r_hats)
 

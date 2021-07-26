@@ -60,6 +60,8 @@ priors = [
     ),
     UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [275, 450]),
     UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [450, 600]),
+    UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
+
 ]
 
 

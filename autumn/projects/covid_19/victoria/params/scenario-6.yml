@@ -1,7 +1,8 @@
 description: Stage 4 lockdown starts on 9th July
+# In build_early_lockdown_scenario, time parameters are set to 191 (9th July) and 215 (2nd August)
 
 time:
-  start: 189
+  start: 189  # A couple of days earlier
   end: 426 # 1st March 2021
 
 victorian_clusters:

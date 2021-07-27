@@ -219,9 +219,12 @@ def plot_outputs_multi(
     values = output_config["values"]
     times = output_config["times"]
 
-    _plot_targets_to_axis(axis, values, times)
+    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot = True)
     if is_logscale:
         axis.set_yscale("log")
+
+    ref_date = REF_DATE
+    change_xaxis_to_date(axis, ref_date, rotation=0)
 
     X_MIN = x_low
     X_MAX = x_up

@@ -2,7 +2,7 @@ description: face coverings policy introduced when post-code restrictions starte
 # this means 22 days before the actual mandate date: inflection time = 208 - 22 = 186 (Metro) / 218- 22 = 196 (Regional)
 
 time:
-  start: 189
+  start: 184
   end: 426
 
 victorian_clusters:

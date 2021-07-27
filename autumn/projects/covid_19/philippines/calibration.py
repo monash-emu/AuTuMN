@@ -30,6 +30,7 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
         UniformPrior("contact_rate", [0.02, 0.04]),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.20]),
         UniformPrior("infectious_seed", [1.0, 300.0]),
+        UniformPrior("infection_fatality.multiplier", [0.5, 3.]),
         TruncNormalPrior(
             "clinical_stratification.props.hospital.multiplier",
             mean=1.0,

@@ -46,21 +46,11 @@ priors = [
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
     UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
-    # Microdistancing
-    TruncNormalPrior(
-        "voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier",
-        mean=1.28,
-        stdev=0.1,
-        trunc_range=[1, np.Inf],
-    ),
-    TruncNormalPrior(
-        "voc_emergence.voc_strain(1).voc_components.contact_rate_multiplier",
-        mean=2,
-        stdev=0.1,
-        trunc_range=[1, np.Inf],
-    ),
-    UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [275, 450]),
-    UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [450, 600]),
+    UniformPrior("voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier", [1.23, 1.34]),
+    UniformPrior("voc_emergence.voc_strain(1).voc_components.contact_rate_multiplier", [1.7, 2.3]),
+    UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [275, 400]),
+    UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [400, 600]),
+
 ]
 
 

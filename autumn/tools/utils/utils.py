@@ -189,10 +189,15 @@ def update_mle_from_remote_calibration(model, region, run_id=None):
     dest_path = os.path.join(destination_dir_path, "mle-params.yml")
 
     # Download the mle file
-    print(f"Downloading MLE file for {region}'s {model} model, run_id = {run_id}")
+    key_prefix = os.path.join(run_id, "data", "calibration_outputs").replace("\\", "/")
+    all_mle_files = list_s3(s3_client, key_prefix, key_suffix="mle-params.yml")
 
-    s3_key = run_id + "/data/calibration_outputs/mle-params.yml"
-    download_from_s3(s3_client, s3_key, dest_path, quiet=True)
+    if len(all_mle_files) == 0:
+        print(f"WARNING: No MLE file found for {run_id}")
+    else:
+        s3_key = all_mle_files[0]
+        download_from_s3(s3_client, s3_key, dest_path, quiet=True)
+        print(f"Updated MLE file for {region}'s {model} model, using {run_id}")
 
 
 def find_latest_run_id(model, region, s3_client):

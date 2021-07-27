@@ -1,4 +1,4 @@
-description: Scenario 15, 80% coverage in 6 months + 50% return to max mobility end of August
+description: Scenario 15, 60% coverage in 6 months + 50% return to max mobility end of August
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
@@ -9,7 +9,7 @@ vaccination:
   # 6 months from 31st July 2021
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.8
+        coverage: 0.6
         start_time: 578.
         end_time: 762.
 

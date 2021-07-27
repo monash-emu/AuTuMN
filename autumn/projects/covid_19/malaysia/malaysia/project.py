@@ -17,7 +17,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 # Load and configure model parameters.
 malaysia_path = build_rel_path("../malaysia/params/default.yml")
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(13, 17)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(13, 15)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = (
     base_params.update(malaysia_path).update(default_path).update(mle_path, calibration_format=True)
@@ -45,6 +45,7 @@ priors = [
     UniformPrior("infectious_seed", [20.0, 400.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
+    UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
     # Microdistancing
     TruncNormalPrior(
         "voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier",

@@ -1,4 +1,4 @@
-description: Scenario 13, 80% coverage in 6 months + 50% return to max mobility end of July
+description: Scenario 13, 80% coverage in 6 months + 100% return to max mobility end of July
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
@@ -22,9 +22,8 @@ mobility:
         - 2021-07-31
       values:
         - - repeat_prev
-        - - close_to_max_last_period
+        - - max_last_period
           - 180
-          - 0.5
     work:
       append: true
       times:
@@ -32,6 +31,5 @@ mobility:
         - 2021-07-31
       values:
         - - repeat_prev
-        - - close_to_max_last_period
+        - - max_last_period
           - 180
-          - 0.5

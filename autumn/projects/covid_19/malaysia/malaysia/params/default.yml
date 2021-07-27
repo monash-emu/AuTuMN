@@ -25,7 +25,7 @@ vaccination:
         start_time: 481 # 25 Apr 2021
         end_time: 569 # 23 July 2021
     - supply_period_coverage:
-        coverage: 0.80
+        coverage: 0.60
         start_time: 569 # 23 July 2021
         end_time: 755 # 23 Jan 2022
 

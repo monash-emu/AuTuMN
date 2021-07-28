@@ -750,7 +750,7 @@ def plot_worse_scenarios_multioutput(
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_scenario",
         multi_panel_hlines=icu_capacities,
-        max_y_values=(24e3, 750, 3e3, 3e4),
+        max_y_values=(3.2e4, 1.2e3, 6e3, 7e3),
     )
 
 

@@ -59,7 +59,7 @@ class MetroInit:
 # Greater values increase jumping step size and reduce the acceptance ratio
 DEFAULT_HAARIO_SCALING_FACTOR = 2.4
 
-DEFAULT_METRO_INIT = MetroInit.LHS
+DEFAULT_METRO_INIT = MetroInit.CURRENT_PARAMS
 DEFAULT_METRO_STEP = 0.1
 
 DEFAULT_STEPS = 50

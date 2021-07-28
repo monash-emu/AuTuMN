@@ -62,4 +62,4 @@ project = Project(
     Region.SRI_LANKA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
 
-#perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)

@@ -31,18 +31,13 @@ targets = [
 priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,
-    # Dispersion parameters based on targets
-    *get_dispersion_priors_for_gaussian_targets(targets),
-    *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.018, 0.028]),
-    UniformPrior("infectious_seed", [100.0, 700.0]),
+    UniformPrior("infectious_seed", [75.0, 500.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.025, 0.08]),
     UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [320, 450]),
-    UniformPrior("voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier", [1, 1.34]),
-    UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [500, 550]),
-    UniformPrior("voc_emergence.voc_strain(1).voc_components.contact_rate_multiplier", [1.7, 2.3]),
+    UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [400, 550]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 1.0]),
     UniformPrior("infection_fatality.multiplier", [1.25, 3.2])
 ]
@@ -62,4 +57,4 @@ project = Project(
     Region.SRI_LANKA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
 
-#perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)

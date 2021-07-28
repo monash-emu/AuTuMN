@@ -45,8 +45,6 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
     UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.009, 0.4]),
-    UniformPrior("voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier", [1.23, 1.34]),
-    UniformPrior("voc_emergence.voc_strain(1).voc_components.contact_rate_multiplier", [1.7, 2.3]),
     UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [270, 450]),
     UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [450, 600]),
 ]

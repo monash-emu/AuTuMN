@@ -1,7 +1,8 @@
 import numpy as np
 
 from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, \
+    use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, BetaPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import (
@@ -53,6 +54,8 @@ priors = [
     UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [450, 600]),
 ]
 
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(priors, targets)
 
@@ -68,4 +71,4 @@ project = Project(
     Region.MALAYSIA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
 
-#perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)
+#perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)

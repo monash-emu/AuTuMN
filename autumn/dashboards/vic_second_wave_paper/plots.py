@@ -1,6 +1,7 @@
 import os
 import random
 from typing import List
+import numpy as np
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -901,3 +902,6 @@ def display_parameters_r_hats(
     st.write("Convergence R_hat statistics for each parameter.\nWe want these values to be as close as possible to 1 (ideally < 1.1).")
     st.write(r_hats)
 
+    # Print out results in format ready for TeX document.
+    for r_hat_name, r_hat_value in r_hats.items():
+        st.write(f"\hline \n{get_plot_text_dict(r_hat_name)} & {np.round(r_hat_value, 3)}" + r" \\\\")

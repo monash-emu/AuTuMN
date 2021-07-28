@@ -18,6 +18,3 @@ victorian_clusters:
         face_coverings:
           parameters:
             inflection_time: 196.
-
-infection_fatality:
-  top_bracket_overwrite: 0.06216691045755533

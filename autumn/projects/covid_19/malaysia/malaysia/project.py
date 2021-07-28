@@ -38,8 +38,6 @@ targets = [
 priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,
-    # Dispersion parameters based on targets
-    *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.01, 0.075]),
     UniformPrior("infectious_seed", [20.0, 450.0]),

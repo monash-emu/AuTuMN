@@ -198,3 +198,17 @@ def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncert
     else:
         axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
         axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)
+
+
+def split_mcmc_outputs_by_chain(mcmc_params, mcmc_tables):
+    chain_ids = mcmc_params[0]["chain"].unique().tolist()
+    mcmc_params_list, mcmc_tables_list = [], []
+    for i_chain in chain_ids:
+        mcmc_params_list.append(
+            mcmc_params[0][mcmc_params[0]["chain"] == i_chain]
+        )
+        mcmc_tables_list.append(
+            mcmc_tables[0][mcmc_tables[0]["chain"] == i_chain]
+        )
+
+    return mcmc_params_list, mcmc_tables_list

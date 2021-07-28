@@ -23,6 +23,7 @@ from autumn.tools.plots.utils import (
     _plot_targets_to_axis,
     change_xaxis_to_date,
     get_plot_text_dict,
+    split_mcmc_outputs_by_chain,
 )
 from autumn.tools.calibration.diagnostics import calculate_effective_sample_size, calculate_r_hat
 
@@ -279,16 +280,7 @@ def calculate_r_hats(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataF
     """
 
     # split tables by chain
-    chain_ids = mcmc_params[0]["chain"].unique().tolist()
-    assert len(chain_ids) > 1, "We need at least two chains to compute R_hats"
-    mcmc_params_list, mcmc_tables_list = [], []
-    for i_chain in chain_ids:
-        mcmc_params_list.append(
-            mcmc_params[0][mcmc_params[0]["chain"] == i_chain]
-        )
-        mcmc_tables_list.append(
-            mcmc_tables[0][mcmc_tables[0]["chain"] == i_chain]
-        )
+    mcmc_params_list, mcmc_tables_list = split_mcmc_outputs_by_chain(mcmc_params, mcmc_tables)
 
     param_options = mcmc_params[0]["name"].unique().tolist()
 

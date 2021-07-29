@@ -20,12 +20,12 @@ vaccination:
   vacc_prop_prevent_infection: 1
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.08
+        coverage: 0.1
         start_time: 481 # 25 Apr 2021
         end_time: 578 # 31 July 2021
     - supply_period_coverage:
-        coverage: 0.60
-        start_time: 578 # 15 July 2021
+        coverage: 0.50
+        start_time: 578 # 31 July 2021
         end_time: 763 # 31 Jan 2022
 
 testing_to_detection:

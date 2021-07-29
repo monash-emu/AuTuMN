@@ -150,9 +150,8 @@ def build_model(params: dict) -> CompartmentalModel:
         strain_strat = get_strain_strat(voc_params.voc_strain[0].voc_components.contact_rate_multiplier)
 
         # Work out the seeding function and seed the first VoC stratum.
-        voc_seed = (
-            lambda time: voc_entry_rate if 0.0 < time - voc_start_time < seed_duration else 0.0
-        )
+        def voc_seed(time):
+            return voc_entry_rate if 0.0 < time - voc_start_time < seed_duration else 0.0
 
         if len(params.voc_emergence.voc_strain) == 1:  # only single VoC strain in the model
             model.stratify_with(strain_strat)  # stratify model with single VoC strain
@@ -168,12 +167,11 @@ def build_model(params: dict) -> CompartmentalModel:
             model.stratify_with(additional_strain_strat)  # stratify model with two VoC strains
 
             # seed the second VoC strain
-            additional_voc_seed = (
-                lambda
-                time: additional_voc_entry_rate
-                if 0.0 < time - additional_voc_start_time < additional_seed_duration
+            def additional_voc_seed(time):
+                return additional_voc_entry_rate \
+                if 0.0 < time - additional_voc_start_time < additional_seed_duration \
                 else 0.0
-            )
+            
             # add flows for the second VoC strain
             model.add_importation_flow(
                 "seed_voc_dual",

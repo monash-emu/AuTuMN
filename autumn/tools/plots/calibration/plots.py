@@ -384,6 +384,7 @@ def plot_parallel_coordinates_flat(
 def plot_multiple_param_traces(
     plotter: Plotter,
     mcmc_params: List[pd.DataFrame],
+    mcmc_tables: List[pd.DataFrame],
     burn_in: int,
     title_font_size: int,
     label_font_size: int,
@@ -406,6 +407,9 @@ def plot_multiple_param_traces(
         len(params_to_plot), share_xaxis=True, share_yaxis=False
     )
 
+    # split MCMC tables by chain
+    mcmc_params_list, mcmc_tables_list = split_mcmc_outputs_by_chain(mcmc_params, mcmc_tables)
+
     for i in range(n_rows * n_cols):
         if len(params_to_plot) <= 2:
             axis = axes[i]
@@ -413,12 +417,11 @@ def plot_multiple_param_traces(
             axis = axes[indices[i][0], indices[i][1]]
         if i < len(params_to_plot):
             param_name = params_to_plot[i]
-            for i_chain in range(mcmc_params[0]["chain"].iloc[-1]):
-                param_mask = (mcmc_params[0]["chain"] == i_chain) & (
-                    mcmc_params[0]["name"] == param_name
-                )
-                param_values = mcmc_params[0][param_mask].values
-                axis.plot(param_values[:, 3], alpha=0.8, linewidth=0.3)
+
+            for i_chain in range(len(mcmc_params_list)):
+                param_values = get_posterior([mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], param_name, burn_in)
+                axis.plot(param_values, alpha=0.8, linewidth=0.3)
+
             axis.set_title(
                 get_plot_text_dict(param_name, capitalise_first_letter=capitalise_first_letter),
                 fontsize=title_font_size,
@@ -798,6 +801,7 @@ def plot_param_vs_param_by_chain(
 def plot_param_vs_param(
         plotter: Plotter,
         mcmc_params: List[pd.DataFrame],
+        mcmc_tables: List[pd.DataFrame],
         parameters: list,
         burn_in: int,
         style: str,
@@ -815,6 +819,9 @@ def plot_param_vs_param(
     Plot the parameter correlation matrices for each parameter combination.
     """
 
+    # split tables by chain
+    mcmc_params_list, mcmc_tables_list = split_mcmc_outputs_by_chain(mcmc_params, mcmc_tables)
+
     # Prelims
     fig, axes, _, _, _, _ = plotter.get_figure(n_panels=len(parameters) ** 2)
     row_data, col_data = {}, {}
@@ -824,18 +831,14 @@ def plot_param_vs_param(
     # Get x and y data separately and collate up over the chains
     for row_idx, row_param_name in enumerate(parameters):
         row_data[row_param_name] = []
-        for chain in range(len(mcmc_params)):
-            x_param_mask = (mcmc_params[chain]["name"] == row_param_name) & (
-                mcmc_params[chain]["run"] > burn_in
-            )
-            row_data[row_param_name] += mcmc_params[chain][x_param_mask]["value"].to_list()
+        for i_chain in range(len(mcmc_params_list)):
+            values = get_posterior([mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], row_param_name, burn_in)
+            row_data[row_param_name] += values[row_param_name].to_list()
     for col_idx, col_param_name in enumerate(parameters):
         col_data[col_param_name] = []
-        for chain in range(len(mcmc_params)):
-            y_param_mask = (mcmc_params[chain]["name"] == col_param_name) & (
-                mcmc_params[chain]["run"] > burn_in
-            )
-            col_data[col_param_name] += mcmc_params[chain][y_param_mask]["value"].to_list()
+        for i_chain in range(len(mcmc_params_list)):
+            values = get_posterior([mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], col_param_name, burn_in)
+            col_data[col_param_name] += values[col_param_name].to_list()
 
     # Loop over parameter combinations
     for row_idx, row_param_name in enumerate(parameters):

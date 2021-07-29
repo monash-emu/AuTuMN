@@ -42,7 +42,7 @@ STATEWIDE_OUTPUTS = ["notifications", "hospital_admissions", "icu_admissions", "
 STANDARD_TITLE_FONTSIZE = 20
 STANDARD_LABEL_FONTSIZE = 14
 STANDARD_N_TICKS = 10
-VIC_BURN_INS = 7500
+VIC_BURN_INS = 0  # note that a burn-in was already applied on the server before generating the PBI db.
 
 # This has to be specified here, and we would generally want it to be the same as what you requested when asking for the
 # full model runs to be triggered in BuildKite, but doesn't have to be.
@@ -365,6 +365,7 @@ def plot_key_params(
 def plot_param_matrix(
         plotter: StreamlitPlotter,
         mcmc_params: List[pd.DataFrame],
+        mcmc_tables: List[pd.DataFrame],
         parameters: List,
         label_param_string=False,
         show_ticks=False,
@@ -374,11 +375,12 @@ def plot_param_matrix(
 ):
 
     burn_in, label_font_size, label_chars, bins, style, dpi_request = (
-        VIC_BURN_INS, 8, 2, 20, "Shade", 300
+        VIC_BURN_INS, 8, 2, 16, "Shade", 300
     )
     plots.calibration.plots.plot_param_vs_param(
         plotter,
         mcmc_params,
+        mcmc_tables,
         parameters,
         burn_in,
         style,
@@ -417,6 +419,7 @@ def plot_all_param_matrix(
     plot_param_matrix(
         plotter,
         mcmc_params,
+        mcmc_tables,
         mcmc_params[0]["name"].unique().tolist(),
         file_name="all_params_matrix",
     )
@@ -434,7 +437,7 @@ def plot_epi_param_matrix(
 ):
 
     plot_param_matrix(
-        plotter, mcmc_params, get_vic_epi_params(mcmc_params), file_name="epi_param_matrix"
+        plotter, mcmc_params, mcmc_tables, get_vic_epi_params(mcmc_params), file_name="epi_param_matrix"
     )
 
 
@@ -452,6 +455,7 @@ def plot_key_param_matrix(
     plot_param_matrix(
         plotter,
         mcmc_params,
+        mcmc_tables,
         KEY_PARAMS,
         label_param_string=True,
         show_ticks=True,
@@ -473,6 +477,7 @@ def plot_key_param_matrix(
     plot_param_matrix(
         plotter,
         mcmc_params,
+        mcmc_tables,
         get_vic_contact_params(mcmc_params),
         label_param_string=True,
         show_ticks=True,
@@ -499,6 +504,7 @@ def plot_key_param_traces(
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
+        mcmc_tables,
         burn_in,
         title_font_size,
         label_font_size,
@@ -531,6 +537,7 @@ def plot_epi_param_traces(
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
+        mcmc_tables,
         burn_in,
         title_font_size,
         label_font_size,
@@ -563,6 +570,7 @@ def plot_contact_param_traces(
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
+        mcmc_tables,
         burn_in,
         title_font_size,
         label_font_size,

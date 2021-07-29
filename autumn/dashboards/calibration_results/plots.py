@@ -338,6 +338,7 @@ def plot_all_param_traces(
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
+        mcmc_tables,
         burn_in,
         title_font_size,
         label_font_size,
@@ -524,6 +525,7 @@ def plot_param_matrix(
     plots.calibration.plots.plot_param_vs_param(
         plotter,
         mcmc_params,
+        mcmc_tables,
         parameters,
         burn_in,
         style,

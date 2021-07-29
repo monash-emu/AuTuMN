@@ -1,25 +1,14 @@
-description: Scenario 13, 80% coverage in 6 months + 100% return to max mobility end of July
-parent: apps/covid_19/regions/malaysia/params/default.yml
-
+description: Scenario 13, + current mobility and releasing all restrictions January, 2022
 time:
-  start: 578 # 31st July 2021
-
-vaccination:
-
-  # 6 months from 31st July 2021
-  roll_out_components:
-    - supply_period_coverage:
-        coverage: 0.8
-        start_time: 578.
-        end_time: 762.
+  start: 762 # 31st Jan 2022
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-07-30
-        - 2021-07-31
+        - 2022-01-30
+        - 2022-01-31
       values:
         - - repeat_prev
         - - max_last_period
@@ -27,9 +16,18 @@ mobility:
     work:
       append: true
       times:
-        - 2021-07-30
-        - 2021-07-31
+        - 2022-01-30
+        - 2022-01-31
       values:
         - - repeat_prev
         - - max_last_period
           - 180
+
+
+vaccination:
+  # 6 months from 31st July 2021
+    roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.60
+        start_time: 579 # 01 August 2021
+        end_time: 762 # 31 Jan 2022

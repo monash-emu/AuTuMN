@@ -1,31 +1,55 @@
-description: Scenario 12, sensitivity analysis for the coverage parameter and 25% return to the max mobility
-parent: apps/covid_19/regions/malaysia/params/default.yml
-
+description: Scenario 12, + min mobility observed in the past 6 months + vaccination 80% coverage by January, 2022
 time:
-  start: 504 # 18th May 2021
-
-vaccination:
-  # Eleven months from 18th May 2021
-  roll_out_components:
-  - supply_period_coverage:
-      start_time: 504.
-      end_time: 838.
+  start: 579 # 01st August 2021
 
 mobility:
   mixing:
+    school:
+      append: false
+      times:
+        - 2021-08-31 # All schools close
+        - 2021-09-01 # All schools close
+        - 2022-01-30 #All schools close
+        - 2022-01-31 #All schools open
+      values:
+        - 0.0
+        - 0.0
+        - 0.0
+        - 1.0
     other_locations:
       append: true
       times:
-        - 2021-03-07
+        - 2021-07-31
+        - 2021-08-01
+        - 2022-01-30
+        - 2022-01-31
       values:
-        - - close_to_max_last_period
+        - - repeat_prev
+        - - min_last_period
           - 180
-          - 0.25
+        - - repeat_prev
+        - - max_last_period
+          - 180
     work:
       append: true
       times:
-        - 2021-03-07
+        - 2021-07-31
+        - 2021-08-01
+        - 2022-01-30
+        - 2022-01-31
       values:
-        - - close_to_max_last_period
+        - - repeat_prev
+        - - min_last_period
           - 180
-          - 0.25
+        - - repeat_prev
+        - - max_last_period
+          - 180
+
+
+vaccination:
+  # 6 months from 31st July 2021
+    roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.60
+        start_time: 579 # 01 August 2021
+        end_time: 762 # 31 Jan 2022

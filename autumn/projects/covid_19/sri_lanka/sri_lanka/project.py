@@ -49,7 +49,7 @@ priors = [
 ]
 
 # Load proposal sds from yml file
-use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+#use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(priors, targets)
 

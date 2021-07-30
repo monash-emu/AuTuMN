@@ -796,7 +796,7 @@ def plot_good_scenarios_multioutput(
         275,
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
-        file_name="multi_scenario",
+        file_name="multi_scenario_better",
     )
 
 
@@ -833,7 +833,7 @@ def plot_school_scenario_multioutput(
         275,
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
-        file_name="multi_scenario",
+        file_name="multi_scenario_school",
     )
 
 

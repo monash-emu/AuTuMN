@@ -111,10 +111,14 @@ register_project(Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sr
 register_project(Models.COVID_19, Region.SRI_LANKA_WP, "autumn.projects.covid_19.sri_lanka.sri_lanka_wp.project")
 
 
-# Bali
+# Indonesia & Bali
 register_project(
-    Models.COVID_19, Region.BALI, "autumn.projects.covid_19.bali.project"
+    Models.COVID_19, Region.BALI, "autumn.projects.covid_19.indonesia.bali.project"
 )
+register_project(
+    Models.COVID_19, Region.INDONESIA, "autumn.projects.covid_19.indonesia.indonesia.project"
+)
+
 
 
 # COVID: Victoria project

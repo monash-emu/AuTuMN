@@ -70,7 +70,12 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     logger.info("Plotting loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-loglikelihood")
     for chosen_param in param_options:
-        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, 0, chosen_param)
+        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=False)
+
+    logger.info("Plotting posterior loglikelihood vs params")
+    subplotter = _get_sub_plotter(plot_dir, "params-vs-posterior-loglikelihood")
+    for chosen_param in param_options:
+        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=True)
 
     logger.info("Plotting parameter traces")
     subplotter = _get_sub_plotter(plot_dir, "params-traces")
@@ -87,9 +92,9 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     plots.plot_acceptance_ratio(plotter, mcmc_tables, 0)
 
     logger.info("Plotting loglikelihood traces")
-    num_iters = len(mcmc_tables[0])
-    plots.plot_burn_in(plotter, num_iters, PLOT_BURN_IN)
-    plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN)
+
+    plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN, posterior=False)
+    plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN, posterior=True)
 
     for mle_only in [True, False]:
         plots.plot_parallel_coordinates_flat(plotter, mcmc_params, mcmc_tables, priors, mle_only)

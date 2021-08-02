@@ -55,7 +55,6 @@ def test_plot_post_calibration(tmp_path):
 
     # Check plots - do a super basic check
     expected_files = [
-        "burn-in.png",
         "loglikelihood-traces.png",
         "acceptance_ratio.png",
         "params-traces",

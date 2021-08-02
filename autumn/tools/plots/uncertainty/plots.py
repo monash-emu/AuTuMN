@@ -45,7 +45,7 @@ def plot_timeseries_with_uncertainty(
     label_font_size=10,
     dpi_request=300,
     capitalise_first_letter=False,
-    legend=False,
+    legend=True,
     requested_x_ticks=None,
     show_title=True,
     ylab=None,
@@ -66,6 +66,7 @@ def plot_timeseries_with_uncertainty(
         fig, axis, _, _, _, _ = plotter.get_figure()
 
     n_scenarios_to_plot = len(scenario_idxs)
+
     if sc_colors is None:
         n_scenarios_to_plot = min([len(scenario_idxs), len(COLORS)])
         colors = _apply_transparency(COLORS[:n_scenarios_to_plot], ALPHAS[:n_scenarios_to_plot])
@@ -103,23 +104,27 @@ def plot_timeseries_with_uncertainty(
         # This basically ignores all the other colour mapping functionality, but
         # works reliably; this module really requires a refactor, so it's not worth
         # trying to fix the other bits right now...
-        scenario_colors = colors[i]
 
-        times, quantiles = _plot_uncertainty(
-            axis,
-            uncertainty_df,
-            output_name,
-            scenario_idx,
-            x_up,
-            x_low,
-            scenario_colors,
-            overlay_uncertainty=overlay_uncertainty,
-            start_quantile=start_quantile,
-            zorder=i + 1,
-        )
+        #if scenario_idx !=0:
+            scenario_colors = colors[i]
 
-        data_to_return[scenario_idx] = pd.DataFrame.from_dict(quantiles)
-        data_to_return[scenario_idx].insert(0, "days from 31/12/2019", times)
+            times, quantiles = _plot_uncertainty(
+                axis,
+                uncertainty_df,
+                output_name,
+                scenario_idx,
+                x_up,
+                x_low,
+                scenario_colors,
+                overlay_uncertainty=overlay_uncertainty,
+                start_quantile=start_quantile,
+                zorder=i + 1,
+            )
+
+            data_to_return[scenario_idx] = pd.DataFrame.from_dict(quantiles)
+            data_to_return[scenario_idx].insert(0, "days from 31/12/2019", times)
+
+
 
     # Add plot targets
     if add_targets:

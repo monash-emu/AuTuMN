@@ -113,3 +113,5 @@ contact_tracing:
     assumed_trace_prop: 0.05
     assumed_prev: 1.e-3
     quarantine_infect_multiplier: 0.2
+
+waning_immunity_duration: 365

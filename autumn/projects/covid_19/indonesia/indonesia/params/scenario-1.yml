@@ -1,5 +1,5 @@
 description: Scenario 1, max mobility last 6 months
-parent: apps/covid_19/regions/nepal/params/default.yml
+parent: apps/covid_19/regions/indonesia/indonesia/params/default.yml
 
 time:
   start: 504 # 18th May 2021

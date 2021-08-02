@@ -708,24 +708,3 @@ apps/tuberculosis/regions/marshall_islands/outputs/figures/calibration/screening
 
 # ignore vic figures automatically generated
 vic_figures/
-docs/papers/covid_19/projects/victoria/results_figures/all_params_matrix.pdf
-docs/papers/covid_19/projects/victoria/results_figures/cdr_curves.pdf
-docs/papers/covid_19/projects/victoria/results_figures/contact_param_matrix.pdf
-docs/papers/covid_19/projects/victoria/results_figures/contact_posteriors.pdf
-docs/papers/covid_19/projects/victoria/results_figures/contact_traces.pdf
-docs/papers/covid_19/projects/victoria/results_figures/contact_tracing.pdf
-docs/papers/covid_19/projects/victoria/results_figures/epi_param_matrix.pdf
-docs/papers/covid_19/projects/victoria/results_figures/epi_posteriors.pdf
-docs/papers/covid_19/projects/victoria/results_figures/epi_traces.pdf
-docs/papers/covid_19/projects/victoria/results_figures/key_param_matrix.pdf
-docs/papers/covid_19/projects/victoria/results_figures/key_posteriors.pdf
-docs/papers/covid_19/projects/victoria/results_figures/key_traces.pdf
-docs/papers/covid_19/projects/victoria/results_figures/metro_hospital.pdf
-docs/papers/covid_19/projects/victoria/results_figures/metro_icu.pdf
-docs/papers/covid_19/projects/victoria/results_figures/metro_notifications.pdf
-docs/papers/covid_19/projects/victoria/results_figures/multi_cluster_mobility.pdf
-docs/papers/covid_19/projects/victoria/results_figures/multi_output.pdf
-docs/papers/covid_19/projects/victoria/results_figures/multi_scenario.pdf
-docs/papers/covid_19/projects/victoria/results_figures/regional_hospital.pdf
-docs/papers/covid_19/projects/victoria/results_figures/regional_notifications.pdf
-docs/papers/covid_19/projects/victoria/results_figures/sero_by_cluster.pdf

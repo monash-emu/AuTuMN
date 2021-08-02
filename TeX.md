@@ -13,7 +13,7 @@ I suggest the following steps to getting started with documenting our code using
    * If you get the error "Could not start the command. pdflatex-synctex=1 -interaction=nonstopmode %.tex",
    try closing Texmaker and re-opening
 5. When updating references, sync the shared EndNote library (owned by Milinda)
-   * Export using "BibTeX Export using EN Label Field"
+   * Export using "BibTeX Export"
    * This should ensure that the bib libraries retain the same citations keys,
      which should be "RN**" where ** is the EndNote library record number
 6. Current plan for file structures is to keep one app-specific library in apps/<app_name>/tex, 

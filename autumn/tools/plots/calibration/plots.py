@@ -217,7 +217,7 @@ def plot_mcmc_parameter_trace(
 
     axis.set_ylabel(param_name)
     axis.set_xlabel("MCMC iterations")
-    plotter.save_figure(fig, filename=f"{param_name}-traces", title_text=f"{param_name}-traces")
+    plotter.save_figure(fig, filename=f"{param_name}-traces", title_text=param_name)
 
 
 def plot_autocorrelation(
@@ -445,11 +445,13 @@ def plot_multiple_param_traces(
     plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
-def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0):
+def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0, posterior=False):
     """
     Plot the loglikelihood traces for each MCMC run.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
+
+    variable_key = "ap_loglikelihood" if posterior else "loglikelihood"
 
     if len(mcmc_tables) == 1:  # there may be multiple chains within a single dataframe
         table_df = mcmc_tables[0]
@@ -458,14 +460,17 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
         for chain_id in chain_idx:
             chain_mask = table_df["chain"] == chain_id
             masked_df = table_df[accept_mask][chain_mask]
-            axis.plot(masked_df["run"], masked_df["loglikelihood"], alpha=0.8, linewidth=0.7)
+            axis.plot(masked_df["run"], masked_df[variable_key], alpha=0.8, linewidth=0.7)
     else:  # there is one chain per dataframe
         for idx, table_df in enumerate(mcmc_tables):
             accept_mask = table_df["accept"] == 1
-            table_df[accept_mask].loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
-
-    axis.set_ylabel("Loglikelihood")
-    axis.set_xlabel("MCMC iterations")
+            if posterior:
+                table_df[accept_mask].loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+            else:
+                table_df[accept_mask].ap_loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+    title = "Posterior Loglikelihood" if posterior else "Loglikelihood"
+    axis.set_ylabel(title)
+    axis.set_xlabel("Metropolis iterations")
 
     if burn_in:
         axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
@@ -473,7 +478,7 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
         y_max = max(table_df.loglikelihood[burn_in:])
         axis.set_ylim((y_min - 0.2 * (y_max - y_min), y_max + 0.2 * (y_max - y_min)))
 
-    plotter.save_figure(fig, filename="loglikelihood-traces", title_text="loglikelihood-traces")
+    plotter.save_figure(fig, filename=f"{variable_key}-traces", title_text=f"{variable_key}-traces")
 
 
 def plot_loglikelihood_boxplots(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
@@ -634,13 +639,14 @@ def plot_multiple_posteriors(
     plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
-def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis):
+def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis, posterior=False):
     for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
         df = param_df.merge(mcmc_df, on=["run", "chain"])
         mask = (df["accept"] == 1) & (df["name"] == param_name) & (df["run"] > burn_in)
         df = df[mask]
         param_values = df["value"]
-        loglikelihood_values = [-log(-v) for v in df["loglikelihood"]]
+        var_key = "ap_loglikelihood" if posterior else "loglikelihood"
+        loglikelihood_values = [-log(-v) for v in df[var_key]]
         axis.plot(param_values, loglikelihood_values, ".")
 
 
@@ -733,18 +739,26 @@ def plot_single_param_loglike(
     mcmc_params: List[pd.DataFrame],
     burn_in: int,
     param_name: str,
+    posterior=False,
 ):
     """
     Plots the loglikelihood against parameter values.
     """
+
+
     fig, axis, _, _, _, _ = plotter.get_figure()
-    plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis)
+    plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis, posterior)
     axis.set_xlabel(param_name)
     axis.set_ylabel("-log(-loglikelihood)")
+
+    filename = f"likelihood-against-{param_name}"
+    if posterior:
+        filename = "posterior-" + filename
+
     plotter.save_figure(
         fig,
-        filename=f"likelihood-against-{param_name}",
-        title_text=f"likelihood against {param_name}",
+        filename=filename,
+        title_text=param_name,
     )
 
 
@@ -1043,10 +1057,10 @@ def plot_calibration_fit(
     plot_calibration(axis, output_name, outputs, targets, is_logscale)
     if is_logscale:
         filename = f"calibration-fit-{output_name}-logscale"
-        title_text = f"Calibration fit for {output_name} (logscale)"
+        title_text = f"{output_name} (logscale)"
     else:
         filename = f"calibration-fit-{output_name}"
-        title_text = f"Calibration fit for {output_name}"
+        title_text = f"{output_name}"
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 

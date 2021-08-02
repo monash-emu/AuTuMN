@@ -18,7 +18,9 @@ from autumn.settings import INPUT_DATA_PATH
 COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 COVID_LKA_DATACSV = os.path.join(INPUT_DATA_PATH, "covid_lka", "data.csv")
 COVID_LKA_REGION = {"sri_lanka": "Sri Lanka", "sri_lanka_wp": "Western PDHS"}
-COVID_LKA_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "sri_lanka", "timeseries.json")
+COVID_LKA_TARGETS = os.path.join(
+    PROJECTS_PATH, "covid_19", "sri_lanka", "sri_lanka", "timeseries.json"
+)
 
 TARGETS = {
     "notifications": "New COVID19 cases reported",
@@ -42,7 +44,7 @@ def preprocess_lka_data():
 df = preprocess_lka_data()
 
 for region, col_name in COVID_LKA_REGION.items():
-    file_path = os.path.join(PROJECTS_PATH, "covid_19", region, "timeseries.json")
+    file_path = os.path.join(PROJECTS_PATH, "covid_19", "sri_lanka", region, "timeseries.json")
 
     region_select = [each_col for each_col in df.columns if col_name in each_col]
     region_df = df[["date_index"] + region_select]

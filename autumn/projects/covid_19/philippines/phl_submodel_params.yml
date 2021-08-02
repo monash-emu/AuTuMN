@@ -39,9 +39,12 @@ voc_emergence:
         start_time: 400
         entry_rate: 1.
         seed_duration: 10.
-        contact_rate_multiplier: 1.7
-
-
+        contact_rate_multiplier: 1.56
+    - voc_components:
+        start_time: 500
+        entry_rate: 1.
+        seed_duration: 10.
+        contact_rate_multiplier: 2.
 cumul_incidence_start_time: 573 # 26 Jul 2021
 
 # Vaccination-related

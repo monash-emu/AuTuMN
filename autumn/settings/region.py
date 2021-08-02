@@ -87,11 +87,11 @@ class Region:
     ]
 
     PHILIPPINES_REGIONS = [
-        PHILIPPINES,
+        # PHILIPPINES,
         MANILA,
-        CALABARZON,
-        DAVAO_REGION,
-        CENTRAL_VISAYAS,
+        # CALABARZON,
+        # DAVAO_REGION,
+        # CENTRAL_VISAYAS,
         # DAVAO_CITY,
     ]
 

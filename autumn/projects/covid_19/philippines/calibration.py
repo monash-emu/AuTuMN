@@ -21,9 +21,9 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
     icu_occupancy_ts = ts_set.get("icu_occupancy")[-1]
     accum_deaths_ts = ts_set.get("infection_deaths", name="accum_deaths")[-1]
     targets = [
-        NegativeBinomialTarget(notifications_ts, time_weights=notification_weights, dispersion_param=5.),
-        NegativeBinomialTarget(icu_occupancy_ts, dispersion_param=5.),
-        NegativeBinomialTarget(accum_deaths_ts, dispersion_param=5.),
+        NegativeBinomialTarget(notifications_ts, time_weights=notification_weights, dispersion_param=3.),
+        NegativeBinomialTarget(icu_occupancy_ts, dispersion_param=3.),
+        NegativeBinomialTarget(accum_deaths_ts, dispersion_param=3.),
     ]
     priors = [
         # Philippines country-wide priors
@@ -38,8 +38,8 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
             trunc_range=[0.5, np.inf],
         ),
         # Between 1 Dec 2020 and 30 June 2021
-        UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [280, 547]),
-
+        UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [300, 400]),
+        UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [450, 550]),
         # Vaccination parameters (independent sampling)
         UniformPrior("vaccination.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
         BetaPrior("vaccination.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),

@@ -26,7 +26,7 @@ targets, priors = get_philippies_calibration_settings(ts_set)
 # Load proposal sds from yml file
 use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
-calibration = Calibration(priors, targets, metropolis_init="current_params")
+calibration = Calibration(priors, targets, metropolis_init="lhs")
 
 # FIXME: Replace with flexible Python plot request API.
 import json

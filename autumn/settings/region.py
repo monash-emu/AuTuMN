@@ -32,6 +32,7 @@ class Region:
     SRI_LANKA = "sri_lanka"
     SRI_LANKA_WP = "sri_lanka_wp"
     BALI = "bali"
+    INDONESIA = "indonesia"
 
     REGIONS = [
         PHILIPPINES,

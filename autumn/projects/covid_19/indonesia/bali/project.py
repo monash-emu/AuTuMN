@@ -62,5 +62,5 @@ with open(plot_spec_filepath) as f:
 
 
 project = Project(
-    Region.NEPAL, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
+    Region.BALI, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )

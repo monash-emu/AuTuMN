@@ -215,6 +215,14 @@ def min_last_period(prev_vals: List[float], period: int):
     return min(prev_vals[-last_n_values:])
 
 
+def copy_mobility(prev_vals: List[float], ignore_vals: int):
+    """
+    returns the mobility level at the requested time by ignoring the last values defined by ignore_vals
+    """
+    prev_val = (prev_vals[-ignore_vals:])
+    return prev_val[1]
+
+
 def close_to_max_last_period(prev_vals: List[float], period: int, fraction: float):
     """
     Partial return from last mobility estimate to the highest level observed over the recent period specified.
@@ -236,4 +244,5 @@ PARSE_FUNCS = {
     "max_last_period": max_last_period,
     "close_to_max_last_period": close_to_max_last_period,
     "min_last_period": min_last_period,
+    "copy_mobility": copy_mobility,
 }

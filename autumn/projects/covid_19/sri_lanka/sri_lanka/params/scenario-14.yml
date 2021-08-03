@@ -16,7 +16,8 @@ mobility:
         - - min_last_period
           - 180
         - - repeat_prev
-        - 0.93
+        - - copy_mobility
+          - 04
 
     work:
       append: true
@@ -30,7 +31,8 @@ mobility:
         - - min_last_period
           - 180
         - - repeat_prev
-        - 0.71
+        - - copy_mobility
+          - 04
 
 vaccination:
   roll_out_components:

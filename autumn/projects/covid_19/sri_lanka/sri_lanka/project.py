@@ -15,7 +15,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(14, 17)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(14, 15)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]

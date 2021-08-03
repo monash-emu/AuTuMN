@@ -11,8 +11,10 @@ def get_strain_strat(voc_params):
     Stratify the model by strain, with two strata, being wild or "ancestral" virus type and the single
     variant of concern ("VoC").
     """
-
     voc_names = list(voc_params.keys())
+
+    msg = f"VoC names must be different from {Strain.WILD_TYPE}"
+    assert Strain.WILD_TYPE not in voc_names, msg
 
     # Stratify model.
     strain_strat = StrainStratification(

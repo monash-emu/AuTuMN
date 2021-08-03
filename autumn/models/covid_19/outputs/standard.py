@@ -5,6 +5,7 @@ from autumn.models.covid_19.constants import (
     NOTIFICATION_CLINICAL_STRATA,
     Clinical,
     Compartment,
+    Strain,
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_ISO3S, Region
 from autumn.models.covid_19.parameters import Parameters
@@ -309,19 +310,23 @@ def request_standard_outputs(
 
     if params.voc_emergence:
 
-        # # Calculate the incidence of VoC cases
-        # model.request_output_for_flow(
-        #     name=f"incidence_voc",
-        #     flow_name="incidence",
-        #     dest_strata={"strain": "voc"},
-        #     save_results=False
-        # )
-        # Calculate the proportion of incident cases that are VoC
-        model.request_function_output(
-            name="prop_voc_incidence",
-            func=lambda _: 1.,
-            sources=["incidence"]
-        )
+        # # Calculate the incidence by strain
+        voc_names = list(params.voc_emergence.keys())
+        all_strains = [Strain.WILD_TYPE] + voc_names
+        for strain in all_strains:
+            incidence_key = f"incidence_strain_{strain}"
+            model.request_output_for_flow(
+                name=incidence_key,
+                flow_name="incidence",
+                dest_strata={"strain": strain},
+                save_results=False
+            )
+            # Calculate the proportion of incident cases that are VoC
+            model.request_function_output(
+                name=f"prop_incidence_strain_{strain}",
+                func=lambda strain_inc, total_inc: list_element_wise_division(strain_inc, total_inc),
+                sources=[incidence_key, "incidence"]
+            )
 
     # track CDR
     model.request_derived_value_output("cdr")

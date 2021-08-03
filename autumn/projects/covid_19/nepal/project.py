@@ -32,7 +32,6 @@ priors = [
     UniformPrior("contact_rate", [0.015, 0.03]),
     UniformPrior("infectious_seed", [50.0, 200.0]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.15]),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.05, 0.4]),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),

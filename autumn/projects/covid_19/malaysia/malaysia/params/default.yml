@@ -21,13 +21,13 @@ vaccination:
   vacc_prop_prevent_infection: 1
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.2
+        coverage: 0.25
         start_time: 481 # 25 Apr 2021
-        end_time: 579 # 01 August 2021
+        end_time: 584 # 06 August 2021
     - supply_period_coverage:
-        coverage: 0.60
-        start_time: 579 # 01 August 2021
-        end_time: 762 # 31 Jan 2022
+        coverage: 0.55
+        start_time: 585 # 07 August 2021
+        end_time: 732 # 01 Jan 2022
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

@@ -1,55 +1,60 @@
-description: Scenario 12, + min mobility observed in the past 6 months + vaccination 80% coverage by January, 2022
+description: Scenario 12, Minimum mobility till September 30th. After that current mobility. After January 1st max mobility.
 time:
-  start: 579 # 01st August 2021
+  start: 584 # 06st August 2021
 
 mobility:
   mixing:
-    school:
-      append: false
-      times:
-        - 2021-08-31 # All schools close
-        - 2021-09-01 # All schools close
-        - 2022-01-30 #All schools close
-        - 2022-01-31 #All schools open
-      values:
-        - 0.0
-        - 0.0
-        - 0.0
-        - 1.0
     other_locations:
       append: true
       times:
-        - 2021-07-31
-        - 2021-08-01
-        - 2022-01-30
-        - 2022-01-31
+        - 2021-08-05
+        - 2021-08-06
+        - 2021-09-29
+        - 2021-09-30
+        - 2022-01-01
+        - 2022-01-02
       values:
         - - repeat_prev
         - - min_last_period
           - 180
+        - - repeat_prev
+        - - copy_mobility
+          - 03
         - - repeat_prev
         - - max_last_period
           - 180
+
+
     work:
       append: true
       times:
-        - 2021-07-31
-        - 2021-08-01
-        - 2022-01-30
-        - 2022-01-31
+        - 2021-08-05
+        - 2021-08-06
+        - 2021-09-29
+        - 2021-09-30
+        - 2022-01-01
+        - 2022-01-02
       values:
         - - repeat_prev
         - - min_last_period
           - 180
+        - - repeat_prev
+        - - copy_mobility
+          - 03
         - - repeat_prev
         - - max_last_period
           - 180
 
 
 vaccination:
-  # 6 months from 31st July 2021
-    roll_out_components:
+  overall_efficacy: 0.7
+  vacc_prop_prevent_infection: 1
+  roll_out_components:
     - supply_period_coverage:
-        coverage: 0.60
-        start_time: 579 # 01 August 2021
-        end_time: 762 # 31 Jan 2022
+        coverage: 0.25
+        start_time: 481 # 25 Apr 2021
+        end_time: 584 # 06 August 2021
+    - supply_period_coverage:
+        coverage: 0.55
+        start_time: 585 # 07 August 2021
+        end_time: 732 # 01 Jan 2022

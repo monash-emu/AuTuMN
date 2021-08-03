@@ -43,8 +43,8 @@ vaccination:
     - supply_period_coverage:
         coverage: 0.4
         start_time: 582 # 04 August 2021
-        end_time: 593 # 15 August 2021
+        end_time: 609 # 31 August 2021
     - supply_period_coverage:
         coverage: 0.30
-        start_time: 594 # 16 August 2021
+        start_time: 610 #01  September 2021
         end_time: 732 # 1 Jan 2022

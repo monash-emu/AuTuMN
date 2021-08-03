@@ -38,8 +38,8 @@ priors = [
     UniformPrior("infectious_seed", [140.0, 550.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.04, 0.18]),
-    UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [300, 440]),
-    UniformPrior("voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier", [1.15, 3.0]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [300, 440]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.15, 3.0]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.03, 0.2]),
 ]
 

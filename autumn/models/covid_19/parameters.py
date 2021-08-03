@@ -210,9 +210,14 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
+"""
+Variant-related parameters
+"""
+
+
 class VocComponentsFunc(BaseModel):
     """
-        Parameters defining the emergence profile of the Variants of Concerns
+    Parameters defining the emergence profile of the Variants of Concerns
     """
     start_time: Optional[float]
     entry_rate: Optional[float]
@@ -221,10 +226,16 @@ class VocComponentsFunc(BaseModel):
 
 
 class VocFunc(BaseModel):
+    """
+
+    """
     voc_components: VocComponentsFunc
 
 
 class VocEmergence(BaseModel):
+    """
+    Master parameter structure containing the information pertaining to all VoCs included in the model.
+    """
     voc_strain: List[VocFunc]
 
 

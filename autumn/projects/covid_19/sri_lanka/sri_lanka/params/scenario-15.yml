@@ -1,4 +1,4 @@
-description: Scenario 15,50% vaccination and curfew till August 31st. After August 31st mobility to the minimum levels.
+description: Scenario 15,50% vaccination maximum mobility into the future indefinitely.
 time:
   start: 583 # 05th August 2021
 
@@ -9,14 +9,10 @@ mobility:
       times:
         - 2021-08-04
         - 2021-08-05
-        - 2021-08-31
-        - 2021-09-01
+
       values:
         - - repeat_prev
-        - - min_last_period
-          - 180
-        - - repeat_prev
-        - - min_last_period
+        - - max_last_period
           - 180
 
     work:
@@ -24,14 +20,10 @@ mobility:
       times:
         - 2021-08-04
         - 2021-08-05
-        - 2021-08-31
-        - 2021-09-01
+
       values:
         - - repeat_prev
-        - - min_last_period
-          - 180
-        - - repeat_prev
-        - - min_last_period
+        - - max_last_period
           - 180
 
 vaccination:
@@ -39,8 +31,8 @@ vaccination:
     - supply_period_coverage:
         coverage: 0.5
         start_time: 481 # 25 Apr 2021
-        end_time: 609 # 31 August 2021
+        end_time: 593 # 15 August 2021
     - supply_period_coverage:
         coverage: 0.30
-        start_time: 609 # 31 August 2021
+        start_time: 593 # 15 August 2021
         end_time: 732 # 1 Jan 2022

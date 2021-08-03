@@ -40,7 +40,7 @@ def plot_timeseries_with_uncertainty(
     n_xticks=None,
     ref_date=REF_DATE,
     add_targets=True,
-    overlay_uncertainty=True,
+    overlay_uncertainty=False,
     title_font_size=12,
     label_font_size=10,
     dpi_request=300,

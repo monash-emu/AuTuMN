@@ -17,7 +17,7 @@ mobility:
           - 180
         - - repeat_prev
         - - copy_mobility
-          - 04
+          - 03
 
     work:
       append: true
@@ -32,15 +32,19 @@ mobility:
           - 180
         - - repeat_prev
         - - copy_mobility
-          - 04
+          - 03
 
 vaccination:
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.5
+        coverage: 0.1
         start_time: 481 # 25 Apr 2021
+        end_time: 581 # 03 August 2021
+    - supply_period_coverage:
+        coverage: 0.4
+        start_time: 582 # 04 August 2021
         end_time: 593 # 15 August 2021
     - supply_period_coverage:
         coverage: 0.30
-        start_time: 593 # 15 August 2021
+        start_time: 594 # 16 August 2021
         end_time: 732 # 1 Jan 2022

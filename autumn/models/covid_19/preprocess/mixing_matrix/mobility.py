@@ -219,6 +219,7 @@ def copy_mobility(prev_vals: List[float], ignore_vals: int):
     """
     returns the mobility level at the requested time by ignoring the last values defined by ignore_vals
     """
+    ignore_vals = ignore_vals+1
     prev_val = (prev_vals[-ignore_vals:])
     return prev_val[1]
 

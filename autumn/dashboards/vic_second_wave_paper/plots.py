@@ -416,11 +416,16 @@ def plot_all_param_matrix(
     region: str,
 ):
 
+    params_to_plot = [
+        param for param in mcmc_params[0]["name"].unique().tolist() if
+        param != "target_output_ratio"
+    ]
+
     plot_param_matrix(
         plotter,
         mcmc_params,
         mcmc_tables,
-        mcmc_params[0]["name"].unique().tolist(),
+        params_to_plot,
         file_name="all_params_matrix",
     )
 

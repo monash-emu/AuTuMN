@@ -210,7 +210,7 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
-class VocComponentsFunc(BaseModel):
+class VocComponent(BaseModel):
     """
         Parameters defining the emergence profile of the Variants of Concerns
     """
@@ -218,14 +218,6 @@ class VocComponentsFunc(BaseModel):
     entry_rate: Optional[float]
     seed_duration: Optional[float]
     contact_rate_multiplier: Optional[float]
-
-
-class VocFunc(BaseModel):
-    voc_components: VocComponentsFunc
-
-
-class VocEmergence(BaseModel):
-    voc_strain: List[VocFunc]
 
 
 class VaccCoveragePeriod(BaseModel):
@@ -301,7 +293,7 @@ class Parameters:
     infect_death: float
     universal_death_rate: float
     infectious_seed: float
-    voc_emergence: Optional[VocEmergence]
+    voc_emergence: Optional[Dict[str, VocComponent]]
     age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
     stratify_by_infection_history: bool
     waning_immunity_duration: Optional[float]

@@ -48,8 +48,6 @@ class Clinical:
 
 class Strain:
     WILD_TYPE = "wild"
-    VARIANT_OF_CONCERN = "voc"
-    ADDITIONAL_VARIANT_OF_CONCERN = "additional_voc"
 
 
 CLINICAL_STRATA = [

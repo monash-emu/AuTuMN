@@ -6,60 +6,36 @@ from autumn.models.covid_19.constants import (
 )
 
 
-def get_strain_strat(contact_rate_multiplier):
+def get_strain_strat(voc_params):
     """
     Stratify the model by strain, with two strata, being wild or "ancestral" virus type and the single
     variant of concern ("VoC").
     """
 
-    # Stratify model.
-    strain_strat = StrainStratification(
-        "strain",
-        [Strain.WILD_TYPE, Strain.VARIANT_OF_CONCERN],
-        DISEASE_COMPARTMENTS,
-    )
-
-    # Assign all population to the wild type.
-    strain_strat.set_population_split({
-        Strain.WILD_TYPE: 1.0,
-        Strain.VARIANT_OF_CONCERN: 0.0
-    })
-
-    # Make the VoC stratum more transmissible.
-    strain_strat.add_flow_adjustments(
-        "infection",
-        {Strain.WILD_TYPE: None, Strain.VARIANT_OF_CONCERN: Multiply(contact_rate_multiplier)},
-    )
-    return strain_strat
-
-
-def get_strain_strat_dual_voc(contact_rate_multiplier, contact_rate_multiplier_second_VoC):
-    """
-    Stratify the model by strain, with three strata, being wild or "ancestral" virus type, variant of concern ("VoC")
-    and another highly transmissible variant of concern ("VoC").
-    """
+    voc_names = list(voc_params.keys())
 
     # Stratify model.
     strain_strat = StrainStratification(
         "strain",
-        [Strain.WILD_TYPE, Strain.VARIANT_OF_CONCERN, Strain.ADDITIONAL_VARIANT_OF_CONCERN],
+        [Strain.WILD_TYPE] + voc_names,
         DISEASE_COMPARTMENTS,
     )
 
-    # Assign all population to the wild type.
-    strain_strat.set_population_split({
-        Strain.WILD_TYPE: 1.0,
-        Strain.VARIANT_OF_CONCERN: 0.0,
-        Strain.ADDITIONAL_VARIANT_OF_CONCERN: 0.0
-    })
+    # Prepare population split and transmission adjustments.
+    population_split = {Strain.WILD_TYPE: 1.0}
+    trans_adjustment = {Strain.WILD_TYPE: None}
+    for voc_name in voc_names:
+        population_split[voc_name] = 0.
+        trans_adjustment[voc_name] = Multiply(voc_params[voc_name].contact_rate_multiplier)
 
-    # Make the VoC stratum more transmissible.
-    strain_strat.add_flow_adjustments(
-        "infection",
-        {
-            Strain.WILD_TYPE: None,
-            Strain.VARIANT_OF_CONCERN: Multiply(contact_rate_multiplier),
-            Strain.ADDITIONAL_VARIANT_OF_CONCERN: Multiply(contact_rate_multiplier_second_VoC)},
-    )
+    # apply population split
+    strain_strat.set_population_split(population_split)
+
+    # apply transmission adjustments
+    strain_strat.add_flow_adjustments("infection", trans_adjustment)
 
     return strain_strat
+
+
+def make_voc_seed_func(entry_rate, start_time, seed_duration):
+    return lambda time: entry_rate if 0.0 < time - start_time < seed_duration else 0.0

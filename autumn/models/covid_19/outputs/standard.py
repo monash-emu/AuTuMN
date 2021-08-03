@@ -308,18 +308,19 @@ def request_standard_outputs(
                 )
 
     if params.voc_emergence:
-        # Calculate the incidence of VoC cases
-        model.request_output_for_flow(
-            name=f"incidence_voc",
-            flow_name="incidence",
-            dest_strata={"strain": "voc"},
-            save_results=False
-        )
+
+        # # Calculate the incidence of VoC cases
+        # model.request_output_for_flow(
+        #     name=f"incidence_voc",
+        #     flow_name="incidence",
+        #     dest_strata={"strain": "voc"},
+        #     save_results=False
+        # )
         # Calculate the proportion of incident cases that are VoC
         model.request_function_output(
             name="prop_voc_incidence",
-            func=lambda voc, total: list_element_wise_division(voc, total),
-            sources=["incidence_voc", "incidence"]
+            func=lambda _: 1.,
+            sources=["incidence"]
         )
 
     # track CDR

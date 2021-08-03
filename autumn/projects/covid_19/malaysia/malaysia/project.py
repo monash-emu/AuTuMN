@@ -18,7 +18,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 # Load and configure model parameters.
 malaysia_path = build_rel_path("../malaysia/params/default.yml")
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(12, 13)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(12, 14)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = (
     base_params.update(malaysia_path).update(default_path).update(mle_path, calibration_format=True)

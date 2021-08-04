@@ -1,0 +1,51 @@
+description: BASELINE
+parent: apps/covid_19/params.yml
+
+contact_rate: 0.0231
+infectious_seed: 100.
+
+time:
+  start: 180
+  end: 822
+
+country:
+  iso3: VNM
+
+clinical_stratification:
+  non_sympt_infect_multiplier: 0.25
+  props:
+    symptomatic:
+      multiplier: 1.5
+
+vaccination:
+  overall_efficacy: 0.75
+  vacc_prop_prevent_infection: 1
+
+testing_to_detection:
+  assumed_tests_parameter: 1.e-04
+  assumed_cdr_parameter: 0.06
+  smoothing_period: 14
+
+mobility:
+  microdistancing:
+    behaviour:
+      function_type: tanh
+      parameters:
+        shape: .1
+        inflection_time: 398.  # 1st February 2021
+        lower_asymptote: 0.
+        upper_asymptote: 0.11
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
+  
+
+voc_emergence:
+  voc_strain:
+    - voc_components:
+        start_time: 381 #15 Jan 2021
+        entry_rate: 1.
+        seed_duration: 5.
+        contact_rate_multiplier: 1.56

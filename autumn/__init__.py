@@ -119,7 +119,10 @@ register_project(
     Models.COVID_19, Region.INDONESIA, "autumn.projects.covid_19.indonesia.indonesia.project"
 )
 
-
+# Vietnam
+register_project(
+    Models.COVID_19, Region.VIETNAM, "autumn.projects.covid_19.vietnam.project"
+)
 
 # COVID: Victoria project
 # FIXME: Parameter validation issues

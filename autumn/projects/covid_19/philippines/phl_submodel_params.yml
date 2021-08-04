@@ -33,7 +33,7 @@ mobility:
         - 1.
         - 0.
 
-voc_emergence:
+voc_emergence: 
   alpha_beta:
     start_time: 400
     entry_rate: 1.

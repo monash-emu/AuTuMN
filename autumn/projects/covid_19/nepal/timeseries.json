@@ -2046,5 +2046,65 @@
       0.75,
       0.975
     ]
+  },
+  "cdr": {
+  "title": "Proportion detected among symptomatic",
+  "output_key": "cdr",
+  "times": [],
+  "values": [],
+  "quantiles": [
+    0.01,
+    0.025,
+    0.25,
+    0.5,
+    0.75,
+    0.975,
+    0.99
+  ]
+},
+  "prop_detected_traced": {
+    "title": "Proportion traced among detected cases",
+    "output_key": "prop_detected_traced",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
+    ]
+  },
+  "prop_contacts_with_detected_index": {
+    "title": "Proportion of contacts whose index is detected",
+    "output_key": "prop_contacts_with_detected_index",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
+    ]
+  },
+  "prop_contacts_quarantined": {
+    "title": "Proportion quarantined among all contacts",
+    "output_key": "prop_contacts_quarantined",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
+    ]
   }
 }

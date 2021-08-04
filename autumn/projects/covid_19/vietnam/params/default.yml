@@ -42,10 +42,10 @@ mobility:
         - home
   
 
-voc_emergence:
-  voc_strain:
-    - voc_components:
-        start_time: 381 #15 Jan 2021
-        entry_rate: 1.
-        seed_duration: 5.
-        contact_rate_multiplier: 1.56
+#voc_emergence:
+#  voc_strain:
+#    - voc_components:
+#        start_time: 381 #15 Jan 2021
+#        entry_rate: 1.
+#        seed_duration: 5.
+#        contact_rate_multiplier: 1.56

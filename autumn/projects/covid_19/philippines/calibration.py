@@ -38,8 +38,8 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
             trunc_range=[0.5, np.inf],
         ),
         # Between 1 Dec 2020 and 30 June 2021
-        UniformPrior("voc_emergence.voc_strain(0).voc_components.start_time", [300, 400]),
-        UniformPrior("voc_emergence.voc_strain(1).voc_components.start_time", [450, 550]),
+        UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
+        UniformPrior("voc_emergence.delta.start_time", [450, 550]),
         # Vaccination parameters (independent sampling)
         UniformPrior("vaccination.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
         BetaPrior("vaccination.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),

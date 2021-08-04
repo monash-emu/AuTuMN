@@ -1,7 +1,7 @@
 {
-  "prop_voc_incidence": {
-    "title": "VoC proportion in incident cases",
-    "output_key": "prop_voc_incidence",
+  "prop_incidence_strain_alpha_beta": {
+    "title": "Prop. of alpha/beta VoC in incident cases ",
+    "output_key": "prop_incidence_strain_alpha_beta",
     "times": [],
     "values": [],
     "quantiles": [

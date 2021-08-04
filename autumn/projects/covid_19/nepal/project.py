@@ -29,6 +29,7 @@ priors = [
     UniformPrior("contact_rate", (0.015, 0.03)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.03, 0.15)),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.15, 0.6)),
+    UniformPrior("voc_emergence.voc_strain(0).voc_components.contact_rate_multiplier", (1.6, 2.0))
 ]
 
 calibration = Calibration(priors, targets)

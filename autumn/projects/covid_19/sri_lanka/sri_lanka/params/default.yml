@@ -93,16 +93,15 @@ mobility:
         - 0
 
 voc_emergence:
-  voc_strain:
-    - voc_components:
-        start_time: 410
-        entry_rate: 1.
-        seed_duration: 10.
-        contact_rate_multiplier: 1.3 # LSHTM's estimate
-    - voc_components:
-        start_time: 548 # July 01
-        entry_rate: 1.
-        seed_duration: 10.
-        contact_rate_multiplier: 2.2
+  alpha_beta:
+    start_time: 410
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 1.3 # LSHTM's estimate
+  delta:
+    start_time: 548 # July 01
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 2.2
 
 waning_immunity_duration: 365

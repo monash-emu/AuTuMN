@@ -27,7 +27,7 @@ def get_vacc_roll_out_function_from_coverage(supply_params, coverage_override=No
     # Calculate the vaccination rate from the coverage and the duration of the program
     vaccination_rate = -np.log(1.0 - coverage) / duration
 
-    def get_vaccination_rate(time):
+    def get_vaccination_rate(time, computed_values):
         return vaccination_rate if start_time < time < end_time else 0.0
 
     return get_vaccination_rate
@@ -41,7 +41,7 @@ def get_vacc_roll_out_function_from_doses(
     Return a time-variant function in a format that can be used to inform a functional flow.
     """
 
-    def net_flow_func(model, compartments, compartment_values, flows, flow_rates, derived_values, time):
+    def net_flow_func(model, compartments, compartment_values, flows, flow_rates, computed_values, time):
         # work out the proportion of the eligible population that is in the relevant compartment
         # FIXME: we should be able to cache the two lists below. They depend on compartment_name, eligible_age_group
         #  and eligible_age_groups but not on time!
@@ -172,7 +172,7 @@ def add_clinical_adjustments_to_strat(
     Get all the adjustments in the same way for both the history and vaccination stratifications.
 
     """
-    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _ = get_all_adjustments(
+    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
         params.clinical_stratification,
         params.country,
         params.population,

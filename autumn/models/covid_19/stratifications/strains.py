@@ -40,4 +40,7 @@ def get_strain_strat(voc_params):
 
 
 def make_voc_seed_func(entry_rate, start_time, seed_duration):
-    return lambda time: entry_rate if 0.0 < time - start_time < seed_duration else 0.0
+    def voc_seed_func(time, computed_values):
+        return entry_rate if 0.0 < time - start_time < seed_duration else 0.0
+
+    return voc_seed_func

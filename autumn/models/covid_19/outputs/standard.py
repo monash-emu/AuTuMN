@@ -323,4 +323,4 @@ def request_standard_outputs(
         )
 
     # track CDR
-    model.request_input_value_output("cdr")
+    model.request_computed_value_output("cdr")

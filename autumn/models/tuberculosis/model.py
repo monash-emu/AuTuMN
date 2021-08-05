@@ -47,7 +47,7 @@ def build_model(params: dict) -> CompartmentalModel:
         scaleup_screening_prop = scale_up_function(x=times, y=vals, method=4)
 
         def get_contact_rate_factory(contact_rate):
-            def get_contact_rate(t):
+            def get_contact_rate(t, computed_values):
                 rel_reduction = (
                     params.hh_contacts_pt["prop_smearpos_among_prev_tb"]
                     * params.hh_contacts_pt["prop_hh_transmission"]
@@ -123,8 +123,8 @@ def build_model(params: dict) -> CompartmentalModel:
             func_params["upper_asymptote"],
         )
 
-        def detection_rate(t):
-            return screening_rate_func(t) * params.passive_screening_sensitivity["unstratified"]
+        def detection_rate(t, cv=None):
+            return screening_rate_func(t, cv) * params.passive_screening_sensitivity["unstratified"]
 
     model.add_transition_flow(
         "detection",

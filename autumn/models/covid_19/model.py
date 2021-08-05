@@ -127,7 +127,7 @@ def build_model(params: dict) -> CompartmentalModel:
         model.add_adjustment_system(k, v)
     
     # register the CDR function as derived value
-    model.add_input_value_process(
+    model.add_computed_value_process(
         "cdr",
         CdrProc(get_detected_proportion)
     )
@@ -150,7 +150,7 @@ def build_model(params: dict) -> CompartmentalModel:
         strain_strat = get_strain_strat(voc_params.voc_strain[0].voc_components.contact_rate_multiplier)
 
         # Work out the seeding function and seed the first VoC stratum.
-        def voc_seed(time):
+        def voc_seed(time, computed_values):
             return voc_entry_rate if 0.0 < time - voc_start_time < seed_duration else 0.0
 
         if len(params.voc_emergence.voc_strain) == 1:  # only single VoC strain in the model
@@ -167,7 +167,7 @@ def build_model(params: dict) -> CompartmentalModel:
             model.stratify_with(additional_strain_strat)  # stratify model with two VoC strains
 
             # seed the second VoC strain
-            def additional_voc_seed(time):
+            def additional_voc_seed(time, computed_values):
                 return additional_voc_entry_rate \
                 if 0.0 < time - additional_voc_start_time < additional_seed_duration \
                 else 0.0
@@ -234,17 +234,17 @@ def build_model(params: dict) -> CompartmentalModel:
         early_exposed_traced_comps = \
             [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
 
-        model.add_derived_value_process(
+        model.add_computed_value_process(
             "prevalence",
             tracing.PrevalenceProc()
         )
 
-        model.add_derived_value_process(
+        model.add_computed_value_process(
             "prop_detected_traced",
             tracing.PropDetectedTracedProc(trace_param)
         )
 
-        model.add_derived_value_process(
+        model.add_computed_value_process(
             "prop_contacts_with_detected_index",
             tracing.PropIndexDetectedProc(
                 params.clinical_stratification.non_sympt_infect_multiplier,
@@ -252,7 +252,7 @@ def build_model(params: dict) -> CompartmentalModel:
             )
         )
 
-        model.add_derived_value_process(
+        model.add_computed_value_process(
             "traced_flow_rate",
             tracing.TracedFlowRateProc(incidence_flow_rate)
         )
@@ -267,6 +267,7 @@ def build_model(params: dict) -> CompartmentalModel:
                 dest_strata=traced.strata,
                 expected_flow_count=1,
             )
+            # +++ FIXME: convert this to transition flow with new computed_values aware flow param
     # Set up derived output functions
     if not params.victorian_clusters:
         request_standard_outputs(model, params)

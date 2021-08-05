@@ -14,8 +14,8 @@ class AbsPropIsolatedProc:
         self.proportion_hosp = abs_props["hospital"][age_idx]
         self.early_rate = early_rate
 
-    def __call__(self, time, input_values):
-        return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, input_values["cdr"]) * self.early_rate
+    def __call__(self, time, computed_values):
+        return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, computed_values["cdr"]) * self.early_rate
 
 class AbsPropIsolatedSystem(AdjustmentSystem):
     """
@@ -44,8 +44,8 @@ class AbsPropIsolatedSystem(AdjustmentSystem):
             self.proportion_sympt[i] = component['proportion_sympt']
             self.proportion_hosp[i] = component['proportion_hosp']
 
-    def get_weights_at_time(self, time, input_values):
-        cdr = input_values["cdr"]
+    def get_weights_at_time(self, time, computed_values):
+        cdr = computed_values["cdr"]
         return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr) * self.early_rate
 
 class AbsPropSymptNonHospProc:
@@ -63,8 +63,8 @@ class AbsPropSymptNonHospProc:
         prop_isolated = get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr)
         return self.proportion_sympt - self.proportion_hosp - prop_isolated
 
-    def __call__(self, time, input_values):
-        return self.get_abs_prop_sympt_non_hospital(time, input_values["cdr"]) * self.early_rate
+    def __call__(self, time, computed_values):
+        return self.get_abs_prop_sympt_non_hospital(time, computed_values["cdr"]) * self.early_rate
 
 class AbsPropSymptNonHospSystem(AdjustmentSystem):
     """
@@ -93,8 +93,8 @@ class AbsPropSymptNonHospSystem(AdjustmentSystem):
             self.proportion_sympt[i] = component['proportion_sympt']
             self.proportion_hosp[i] = component['proportion_hosp']
 
-    def get_weights_at_time(self, time, input_values):
-        cdr = input_values["cdr"]
+    def get_weights_at_time(self, time, computed_values):
+        cdr = computed_values["cdr"]
         prop_isolated = get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr)
         prop_sympt_non_hospital = self.proportion_sympt - self.proportion_hosp - prop_isolated
         return prop_sympt_non_hospital * self.early_rate

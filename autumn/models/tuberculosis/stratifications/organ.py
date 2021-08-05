@@ -68,7 +68,7 @@ def get_organ_strat(params: Parameters) -> Stratification:
             y_1=params.awareness_raising["relative_screening_rate"],
         )
 
-        def awareness_multiplier(t):
+        def awareness_multiplier(t, cv):
             if t <= params.awareness_raising["scale_up_range"][0]:
                 return 1.0
             elif t >= params.awareness_raising["scale_up_range"][1]:
@@ -77,9 +77,9 @@ def get_organ_strat(params: Parameters) -> Stratification:
                 return awaireness_linear_scaleup(t)
 
     else:
-        awareness_multiplier = lambda t: 1.0
+        awareness_multiplier = lambda t, cv: 1.0
 
-    combined_screening_rate_func = lambda t: screening_rate_func(t) * awareness_multiplier(t)
+    combined_screening_rate_func = lambda t, cv: screening_rate_func(t, cv) * awareness_multiplier(t, cv)
     detection_adjs = {}
     for organ_stratum in ORGAN_STRATA:
         detection_adjs[organ_stratum] = make_detection_func(
@@ -105,7 +105,7 @@ def get_organ_strat(params: Parameters) -> Stratification:
 
 
 def make_detection_func(organ_stratum, params, screening_rate_func):
-    def detection_func(t):
-        return screening_rate_func(t) * params.passive_screening_sensitivity[organ_stratum]
+    def detection_func(t, cv):
+        return screening_rate_func(t, cv) * params.passive_screening_sensitivity[organ_stratum]
 
     return detection_func

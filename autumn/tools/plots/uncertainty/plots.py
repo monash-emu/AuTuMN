@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 def plot_timeseries_with_uncertainty(
+
         plotter: Plotter,
         uncertainty_df: pd.DataFrame,
         output_name: str,
@@ -55,6 +56,7 @@ def plot_timeseries_with_uncertainty(
         custom_title=None,
         vlines={},
         hlines={},
+
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.

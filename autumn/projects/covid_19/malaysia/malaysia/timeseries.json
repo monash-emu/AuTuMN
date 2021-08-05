@@ -3135,9 +3135,35 @@
       0.975
     ]
   },
+    "cdr": {
+    "output_key": "cdr",
+    "title": "Proportion detected among symptomatic",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
     "prop_incidence_strain_alpha_beta": {
     "title": "Prop. of alpha/beta VoC in incident cases ",
     "output_key": "prop_incidence_strain_alpha_beta",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+    "prop_incidence_strain_delta": {
+    "title": "Prop. of delta VoC in incident cases ",
+    "output_key": "prop_incidence_strain_delta",
     "times": [],
     "values": [],
     "quantiles": [

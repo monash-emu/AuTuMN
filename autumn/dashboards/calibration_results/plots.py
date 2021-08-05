@@ -208,6 +208,8 @@ def plot_multiple_timeseries_with_uncertainty(
     available_scenarios = uncertainty_df["scenario"].unique()
     selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
     is_logscale = st.sidebar.checkbox("Log scale")
+    show_uncertainty = st.sidebar.checkbox("Show uncertainty")
+    is_legend = st.sidebar.checkbox("Show legend")
     n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
     title_font_size = st.sidebar.slider("Title font size", 1, 30, 12)
     label_font_size = st.sidebar.slider("Label font size", 1, 30, 10)
@@ -223,6 +225,8 @@ def plot_multiple_timeseries_with_uncertainty(
         n_xticks,
         title_font_size=title_font_size,
         label_font_size=label_font_size,
+        overlay_uncertainty=show_uncertainty,
+        is_legend=is_legend,
     )
 
 

@@ -8,7 +8,7 @@ from autumn.models.covid_19.constants import (
     NOTIFICATION_CLINICAL_STRATA
 )
 
-from summer.compute import DerivedValueProcessor, find_sum
+from summer.compute import ComputedValueProcessor, find_sum
 
 
 def get_tracing_param(assumed_trace_prop, assumed_prev):
@@ -27,11 +27,11 @@ def get_traced_prop(trace_param, prev):
     return np.exp(-prev * trace_param)
 
 
-def contact_tracing_func(flow, compartments, compartment_values, flows, flow_rates, derived_values, time):
+def contact_tracing_func(flow, compartments, compartment_values, flows, flow_rates, computed_values, time):
     """
     Multiply the flow rate through by the source compartment to get the final absolute rate
     """
-    return derived_values["traced_flow_rate"] * compartment_values[flow.source.idx]
+    return computed_values["traced_flow_rate"] * compartment_values[flow.source.idx]
 
 
 def get_infectiousness_level(compartment, clinical, non_sympt_infect_multiplier, late_infect_multiplier):
@@ -43,7 +43,7 @@ def get_infectiousness_level(compartment, clinical, non_sympt_infect_multiplier,
         return 1.
 
 
-class PrevalenceProc(DerivedValueProcessor):
+class PrevalenceProc(ComputedValueProcessor):
     """
     Calculate prevalence from the active disease compartments.
     """
@@ -57,32 +57,32 @@ class PrevalenceProc(DerivedValueProcessor):
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
             comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)
 
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, compartment_values, computed_values, time):
         """
         Calculate the actual prevalence during run-time
         """
-        return find_sum(comp_vals[self.active_comps]) / find_sum(comp_vals)
+        return find_sum(compartment_values[self.active_comps]) / find_sum(compartment_values)
 
 
-class PropDetectedTracedProc(DerivedValueProcessor):
+class PropDetectedTracedProc(ComputedValueProcessor):
     """
     Calculate the proportion of detected cases which have their contacts traced.
     """
     def __init__(self, trace_param):
         self.trace_param = trace_param
 
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, compartment_values, computed_values, time):
         """
         Formula for calculating the proportion from the already-processed contact tracing parameter,
         which has been worked out in the get_tracing_param function above.
         Ensures that the proportion is bounded [0, 1]
         """
-        proportion_of_detected_traced = np.exp(-derived_values["prevalence"] * self.trace_param)
+        proportion_of_detected_traced = np.exp(-computed_values["prevalence"] * self.trace_param)
         assert 0. <= proportion_of_detected_traced <= 1.
         return proportion_of_detected_traced
 
 
-class PropIndexDetectedProc(DerivedValueProcessor):
+class PropIndexDetectedProc(ComputedValueProcessor):
     """
     Calculate the proportion of all contacts whose index case is ever detected.
     """
@@ -111,14 +111,14 @@ class PropIndexDetectedProc(DerivedValueProcessor):
                 self.infectiousness_levels[compartment][clinical] = get_infectiousness_level(
                     compartment, clinical, self.non_sympt_infect_multiplier, self.late_infect_multiplier)
 
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, compartment_values, computed_values, time):
         """
         Calculate the proportion of the force of infection arising from ever-detected individuals
         """
         total_force_of_infection, detected_force_of_infection = 0., 0.
         for compartment in INFECTIOUS_COMPARTMENTS:
             for clinical in CLINICAL_STRATA:
-                prevalence = find_sum(comp_vals[self.infectious_comps[compartment][clinical]])
+                prevalence = find_sum(compartment_values[self.infectious_comps[compartment][clinical]])
                 force_of_infection = prevalence * self.infectiousness_levels[compartment][clinical]
                 total_force_of_infection += force_of_infection
                 if clinical in NOTIFICATION_CLINICAL_STRATA:
@@ -133,14 +133,14 @@ class PropIndexDetectedProc(DerivedValueProcessor):
             return proportion_detect_force_infection
 
 
-class TracedFlowRateProc(DerivedValueProcessor):
+class TracedFlowRateProc(ComputedValueProcessor):
     """
     Calculate the transition flow rate based on the only other outflow and the proportion of all new cases traced.
     """
     def __init__(self, incidence_flow_rate):
         self.incidence_flow_rate = incidence_flow_rate
 
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, compartment_values, computed_values, time):
         """
         Solving the following equation:
 
@@ -148,7 +148,7 @@ class TracedFlowRateProc(DerivedValueProcessor):
 
         for traced_flow_rate gives the following:
         """
-        traced_prop = derived_values["prop_detected_traced"] * derived_values["prop_contacts_with_detected_index"]
+        traced_prop = computed_values["prop_detected_traced"] * computed_values["prop_contacts_with_detected_index"]
         traced_flow_rate = self.incidence_flow_rate * traced_prop / (1. - traced_prop)
         assert 0. <= traced_flow_rate
         return traced_flow_rate

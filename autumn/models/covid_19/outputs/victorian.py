@@ -35,10 +35,6 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             dest_strata={"cluster": cluster},
         )
 
-
-    # track CDR
-    model.request_derived_value_output("cdr")
-
     # Notifications.
     notification_sources = []
     # first track all traced cases (regardless of clinical stratum)
@@ -52,10 +48,10 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             save_results=False,
         )
         
-        model.request_derived_value_output("prevalence")
-        model.request_derived_value_output("prop_detected_traced")
-        model.request_derived_value_output("prop_contacts_with_detected_index")
-        model.request_derived_value_output("traced_flow_rate")
+        model.request_computed_value_output("prevalence")
+        model.request_computed_value_output("prop_detected_traced")
+        model.request_computed_value_output("prop_contacts_with_detected_index")
+        model.request_computed_value_output("traced_flow_rate")
 
         # Proportion of quarantined contacts among all contacts
         model.request_function_output(

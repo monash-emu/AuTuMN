@@ -6,6 +6,8 @@ time:
   start: 40.
   end: 600.
 
+infectious_seed: 10.
+
 sojourn:
   compartment_periods_calculated:
     exposed:
@@ -52,12 +54,12 @@ mobility:
 
 voc_emergence: 
   alpha_beta:
-    start_time: 400
+    start_time: 320
     entry_rate: 5.
     seed_duration: 10.
     contact_rate_multiplier: 1.5
   delta:
-    start_time: 500
+    start_time: 510
     entry_rate: 10.
     seed_duration: 10.
     contact_rate_multiplier: 2.5

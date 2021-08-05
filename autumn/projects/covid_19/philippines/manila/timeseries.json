@@ -25,6 +25,19 @@
       0.975
     ]
   },
+  "cdr": {
+    "title": "Proportion of symptomatics detected",
+    "output_key": "cdr",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "incidence": {
     "title": "Incidence",
     "output_key": "incidence",

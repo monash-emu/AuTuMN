@@ -13,7 +13,7 @@ def tanh_based_scaleup(shape, inflection_time, lower_asymptote, upper_asymptote=
     rng = upper_asymptote - lower_asymptote
     assert rng >= 0.0, "Lower asymptote is greater than upper asymptote"
 
-    def tanh_scaleup(t):
+    def tanh_scaleup(t, cv=None):
         return (tanh(shape * (t - inflection_time)) / 2.0 + 0.5) * rng + lower_asymptote
 
     return tanh_scaleup

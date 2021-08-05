@@ -417,7 +417,7 @@ def scale_up_function(
         x_min = x.min()
         x_max = x.max()
 
-        def curve(t):
+        def curve(t, computed_values=None):
             if t <= x_min:  # t is before the range defined by x -> takes the initial value
                 return y[0]
             elif t >= x_max:  # t is after the range defined by x -> takes the last value
@@ -715,7 +715,7 @@ def scale_up_function(
                     t = x[out["indice_next"]]
                 t += (x[-1] - x[0]) / 1000.0
 
-        def curve(t):
+        def curve(t, computed_values=None):
             t = float(t)
             y_t = 0
             if t <= x[0]:
@@ -757,7 +757,7 @@ def scale_up_function(
     else:
         raise Exception("method " + method + "does not exist.")
 
-    def curve(t):
+    def curve(t, computed_values=None):
         t = t / coef
         if t <= x[0]:  # Constant before x[0]
             return float(y[0])

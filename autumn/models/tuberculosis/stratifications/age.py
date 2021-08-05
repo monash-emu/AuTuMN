@@ -67,6 +67,7 @@ def get_age_strat(params: Parameters) -> AgeStratification:
 
                 def get_latency_with_diabetes(
                     t,
+                    computed_values,
                     prop_diabetes=params.extra_params["prop_diabetes"][age],
                     previous_progression_rate=adjs[str(age)],
                     rr_progression_diabetes=params.extra_params["rr_progression_diabetes"],
@@ -120,7 +121,7 @@ def get_age_strat(params: Parameters) -> AgeStratification:
     treatment_relapse_funcs = {}
     for age in params.age_breakpoints:
 
-        def get_treatment_recovery_rate(t, age=age):
+        def get_treatment_recovery_rate(t, computed_values, age=age):
             death_rate = universal_death_funcs[age](t)
             floor_val = 1 / params.treatment_duration
             dynamic_val = (
@@ -130,9 +131,9 @@ def get_age_strat(params: Parameters) -> AgeStratification:
             )
             return max(floor_val, dynamic_val)
 
-        def get_treatment_death_rate(t, age=age):
+        def get_treatment_death_rate(t, computed_values, age=age):
             death_rate = universal_death_funcs[age](t)
-            recovery_rate = get_treatment_recovery_rate(t, age=age)
+            recovery_rate = get_treatment_recovery_rate(t, computed_values, age=age)
             return (
                 params.prop_death_among_negative_tx_outcome
                 * recovery_rate
@@ -141,8 +142,8 @@ def get_age_strat(params: Parameters) -> AgeStratification:
                 - death_rate
             )
 
-        def get_treatment_relapse_rate(t, age=age):
-            recovery_rate = get_treatment_recovery_rate(t, age=age)
+        def get_treatment_relapse_rate(t, computed_values, age=age):
+            recovery_rate = get_treatment_recovery_rate(t, computed_values, age=age)
             return (
                 recovery_rate
                 * (1.0 / time_variant_tsr(t) - 1.0)
@@ -200,7 +201,7 @@ def get_average_age_for_bcg(agegroup, age_breakpoints):
 
 
 def make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age):
-    def bcg_multiplier_func(t):
+    def bcg_multiplier_func(t, computed_values):
         return 1.0 - bcg_coverage_func(t - average_age) / 100.0 * (1.0 - multiplier)
 
     return bcg_multiplier_func

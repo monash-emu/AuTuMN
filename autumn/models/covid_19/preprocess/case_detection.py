@@ -10,7 +10,7 @@ from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_tes
 from autumn.tools import inputs
 from autumn.tools.curve import tanh_based_scaleup
 
-from summer.compute import DerivedValueProcessor
+from summer.compute import ComputedValueProcessor
 
 
 def get_testing_pop(agegroup_strata: List[str], country: Country, pop: Population):
@@ -66,17 +66,14 @@ def build_detected_proportion_func(
     return detected_proportion
 
 
-class CdrProc(DerivedValueProcessor):
+class CdrProc(ComputedValueProcessor):
     """
     Calculate prevalence from the active disease compartments.
     """
     def __init__(self, detected_proportion_func):
         self.detected_proportion_func = detected_proportion_func
 
-    def prepare_to_run(self, compartments, flows):
-        pass
-
-    def process(self, comp_vals, flow_rates, derived_values, time):
+    def process(self, compartment_values, computed_values, time):
         """
         Calculate the actual prevalence during run-time
         """

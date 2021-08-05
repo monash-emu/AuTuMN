@@ -354,10 +354,12 @@ def plot_time_varying_multi_input(
     pyplot.legend(
         df.columns, loc="best", labels=[get_plot_text_dict(location) for location in df.columns]
     )
+
     if X_MIN is not None and X_MAX is not None:
         axes.set_xlim((X_MIN, X_MAX))
     axes.set_ylim(bottom=0.0)
-
+    axes.set_xlabel("Date", fontsize=10)
+    axes.set_ylabel("Change in mobility from baseline", fontsize=10)
     plotter.save_figure(
         fig, filename=f"time-variant-{'Google mobility'}", title_text="Google mobility"
     )

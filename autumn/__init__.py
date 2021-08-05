@@ -107,15 +107,22 @@ register_project(
 register_project(Models.COVID_19, Region.NEPAL, "autumn.projects.covid_19.nepal.project")
 
 # Sri Lanka
-register_project(Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.project")
-register_project(Models.COVID_19, Region.SRI_LANKA_WP, "autumn.projects.covid_19.sri_lanka_wp.project")
+register_project(Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.sri_lanka.project")
+register_project(Models.COVID_19, Region.SRI_LANKA_WP, "autumn.projects.covid_19.sri_lanka.sri_lanka_wp.project")
 
 
-# Bali
+# Indonesia & Bali
 register_project(
-    Models.COVID_19, Region.BALI, "autumn.projects.covid_19.bali.project"
+    Models.COVID_19, Region.BALI, "autumn.projects.covid_19.indonesia.bali.project"
+)
+register_project(
+    Models.COVID_19, Region.INDONESIA, "autumn.projects.covid_19.indonesia.indonesia.project"
 )
 
+# Vietnam
+register_project(
+    Models.COVID_19, Region.VIETNAM, "autumn.projects.covid_19.vietnam.project"
+)
 
 # COVID: Victoria project
 # FIXME: Parameter validation issues

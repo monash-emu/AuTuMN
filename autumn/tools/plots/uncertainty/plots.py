@@ -28,33 +28,33 @@ logger = logging.getLogger(__name__)
 
 
 def plot_timeseries_with_uncertainty(
-    plotter: Plotter,
-    uncertainty_df: pd.DataFrame,
-    output_name: str,
-    scenario_idxs: List[int],
-    targets: dict,
-    is_logscale=False,
-    x_low=0.0,
-    x_up=1e6,
-    axis=None,
-    n_xticks=None,
-    ref_date=REF_DATE,
-    add_targets=True,
-    overlay_uncertainty=True,
-    title_font_size=12,
-    label_font_size=10,
-    dpi_request=300,
-    capitalise_first_letter=False,
-    legend=False,
-    requested_x_ticks=None,
-    show_title=True,
-    ylab=None,
-    x_axis_to_date=True,
-    start_quantile=0,
-    sc_colors=None,
-    custom_title=None,
-    vlines={},
-    hlines={},
+        plotter: Plotter,
+        uncertainty_df: pd.DataFrame,
+        output_name: str,
+        scenario_idxs: List[int],
+        targets: dict,
+        is_logscale=False,
+        x_low=0.0,
+        x_up=1e6,
+        axis=None,
+        n_xticks=None,
+        ref_date=REF_DATE,
+        add_targets=True,
+        overlay_uncertainty=False,
+        title_font_size=12,
+        label_font_size=10,
+        dpi_request=300,
+        capitalise_first_letter=False,
+        legend=True,
+        requested_x_ticks=None,
+        show_title=True,
+        ylab=None,
+        x_axis_to_date=True,
+        start_quantile=0,
+        sc_colors=None,
+        custom_title=None,
+        vlines={},
+        hlines={},
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -66,6 +66,7 @@ def plot_timeseries_with_uncertainty(
         fig, axis, _, _, _, _ = plotter.get_figure()
 
     n_scenarios_to_plot = len(scenario_idxs)
+
     if sc_colors is None:
         n_scenarios_to_plot = min([len(scenario_idxs), len(COLORS)])
         colors = _apply_transparency(COLORS[:n_scenarios_to_plot], ALPHAS[:n_scenarios_to_plot])
@@ -103,23 +104,27 @@ def plot_timeseries_with_uncertainty(
         # This basically ignores all the other colour mapping functionality, but
         # works reliably; this module really requires a refactor, so it's not worth
         # trying to fix the other bits right now...
-        scenario_colors = colors[i]
 
-        times, quantiles = _plot_uncertainty(
-            axis,
-            uncertainty_df,
-            output_name,
-            scenario_idx,
-            x_up,
-            x_low,
-            scenario_colors,
-            overlay_uncertainty=overlay_uncertainty,
-            start_quantile=start_quantile,
-            zorder=i + 1,
-        )
+        #if scenario_idx !=0:
+            scenario_colors = colors[i]
 
-        data_to_return[scenario_idx] = pd.DataFrame.from_dict(quantiles)
-        data_to_return[scenario_idx].insert(0, "days from 31/12/2019", times)
+            times, quantiles = _plot_uncertainty(
+                axis,
+                uncertainty_df,
+                output_name,
+                scenario_idx,
+                x_up,
+                x_low,
+                scenario_colors,
+                overlay_uncertainty=overlay_uncertainty,
+                start_quantile=start_quantile,
+                zorder=i + 1,
+            )
+
+            data_to_return[scenario_idx] = pd.DataFrame.from_dict(quantiles)
+            data_to_return[scenario_idx].insert(0, "days from 31/12/2019", times)
+
+
 
     # Add plot targets
     if add_targets:
@@ -215,23 +220,25 @@ def _plot_uncertainty(
 
 
 def plot_multi_output_timeseries_with_uncertainty(
-    plotter: Plotter,
-    uncertainty_df: pd.DataFrame,
-    output_names: str,
-    scenarios: list,
-    all_targets: dict,
-    is_logscale=False,
-    x_low=0.0,
-    x_up=2000.0,
-    n_xticks=None,
-    title_font_size=12,
-    label_font_size=10,
-    file_name="multi_uncertainty",
-    max_y_values=(),
-    custom_titles=None,
-    custom_sup_title=None,
-    multi_panel_vlines=(),
-    multi_panel_hlines=(),
+        plotter: Plotter,
+        uncertainty_df: pd.DataFrame,
+        output_names: str,
+        scenarios: list,
+        all_targets: dict,
+        is_logscale=False,
+        x_low=0.0,
+        x_up=2000.0,
+        n_xticks=None,
+        title_font_size=12,
+        label_font_size=10,
+        file_name="multi_uncertainty",
+        max_y_values=(),
+        custom_titles=None,
+        custom_sup_title=None,
+        multi_panel_vlines=(),
+        multi_panel_hlines=(),
+        overlay_uncertainty=False,
+        is_legend=True,
 ):
     pyplot.style.use("ggplot")
     if len(output_names) * len(scenarios) == 0:
@@ -292,6 +299,8 @@ def plot_multi_output_timeseries_with_uncertainty(
             custom_title=custom_title,
             vlines=vlines,
             hlines=hlines,
+            overlay_uncertainty=overlay_uncertainty,
+            legend=is_legend,
         )
         i_col += 1
         if i_col == max_n_col:

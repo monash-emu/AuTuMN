@@ -11,6 +11,14 @@ testing_to_detection:
   smoothing_period: 14
 
 mobility:
+  smooth_google_data: true # whether to apply a 7-day moving average
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
   microdistancing:
     behaviour:
       function_type: empiric
@@ -22,7 +30,6 @@ mobility:
         - other_locations
         - school
         - work
-        - home
   mixing:
     school:
       append: false
@@ -33,16 +40,19 @@ mobility:
         - 1.
         - 0.
 
-voc_emergence:
-  voc_strain:
-    - voc_components:
-        start_time: 400
-        entry_rate: 1.
-        seed_duration: 10.
-        contact_rate_multiplier: 1.7
+voc_emergence: 
+  alpha_beta:
+    start_time: 400
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 1.56
+  delta:
+    start_time: 500
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 2.
 
-
-cumul_incidence_start_time: 573 # 26 Jul 2021
+cumul_incidence_start_time: 587 # 9 Aug 2021
 
 # Vaccination-related
 vaccination:

@@ -209,9 +209,20 @@ def max_last_period(prev_vals: List[float], period: int):
     last_n_values = min(len(prev_vals), period)
     return max(prev_vals[-last_n_values:])
 
+
 def min_last_period(prev_vals: List[float], period: int):
     last_n_values = min(len(prev_vals), period)
     return min(prev_vals[-last_n_values:])
+
+
+def copy_mobility(prev_vals: List[float], ignore_vals: int):
+    """
+    returns the mobility level at the requested time by ignoring the last values defined by ignore_vals
+    """
+    ignore_vals = ignore_vals+1
+    prev_val = (prev_vals[-ignore_vals:])
+    return prev_val[1]
+
 
 def close_to_max_last_period(prev_vals: List[float], period: int, fraction: float):
     """
@@ -234,4 +245,5 @@ PARSE_FUNCS = {
     "max_last_period": max_last_period,
     "close_to_max_last_period": close_to_max_last_period,
     "min_last_period": min_last_period,
+    "copy_mobility": copy_mobility,
 }

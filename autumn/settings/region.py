@@ -32,20 +32,23 @@ class Region:
     SRI_LANKA = "sri_lanka"
     SRI_LANKA_WP = "sri_lanka_wp"
     BALI = "bali"
+    INDONESIA = "indonesia"
+    VIETNAM = "vietnam"
 
     REGIONS = [
         PHILIPPINES,
-        MALAYSIA,
-        VICTORIA,
         MANILA,
         CALABARZON,
         CENTRAL_VISAYAS,
+        DAVAO_CITY,
+        DAVAO_REGION,
         UNITED_KINGDOM,
         BELGIUM,
         ITALY,
         SWEDEN,
         FRANCE,
         SPAIN,
+        VICTORIA,
         NORTH_METRO,
         SOUTH_EAST_METRO,
         SOUTH_METRO,
@@ -56,16 +59,18 @@ class Region:
         LODDON_MALLEE,
         GRAMPIANS,
         MARSHALL_ISLANDS,
+        MALAYSIA,
         SABAH,
         SELANGOR,
         JOHOR,
         PENANG,
         KUALA_LUMPUR,
-        DAVAO_CITY,
         NEPAL,
         SRI_LANKA,
-        BALI,
         SRI_LANKA_WP,
+        INDONESIA,
+        BALI,
+        VIETNAM,
     ]
 
     MALAYSIA_REGIONS = [
@@ -86,11 +91,11 @@ class Region:
     ]
 
     PHILIPPINES_REGIONS = [
-        PHILIPPINES,
+        # PHILIPPINES,
         MANILA,
-        CALABARZON,
-        DAVAO_REGION,
-        CENTRAL_VISAYAS,
+        # CALABARZON,
+        # DAVAO_REGION,
+        # CENTRAL_VISAYAS,
         # DAVAO_CITY,
     ]
 

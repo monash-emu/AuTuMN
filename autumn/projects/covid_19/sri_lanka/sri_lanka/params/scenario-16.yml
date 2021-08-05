@@ -1,0 +1,50 @@
+description: Scenario 16,50% vaccination by 15th August. Until August 31st minimum mobility. After that max mobility.
+time:
+  start: 583 # 05th August 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-08-04
+        - 2021-08-05
+        - 2021-08-31
+        - 2021-09-01
+      values:
+        - - repeat_prev
+        - - min_last_period
+          - 180
+        - - repeat_prev
+        - - max_last_period
+          - 180
+
+    work:
+      append: true
+      times:
+        - 2021-08-04
+        - 2021-08-05
+        - 2021-08-31
+        - 2021-09-01
+      values:
+        - - repeat_prev
+        - - min_last_period
+          - 180
+        - - repeat_prev
+        - - max_last_period
+          - 180
+
+vaccination:
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.1
+        start_time: 481 # 25 Apr 2021
+        end_time: 581 # 03 August 2021
+    - supply_period_coverage:
+        coverage: 0.4
+        start_time: 582 # 04 August 2021
+        end_time: 609 # 31 August 2021
+    - supply_period_coverage:
+        coverage: 0.30
+        start_time: 610 #01  September 2021
+        end_time: 732 # 1 Jan 2022

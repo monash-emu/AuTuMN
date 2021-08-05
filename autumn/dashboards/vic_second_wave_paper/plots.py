@@ -1,6 +1,7 @@
 import os
 import random
 from typing import List
+import numpy as np
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -41,7 +42,7 @@ STATEWIDE_OUTPUTS = ["notifications", "hospital_admissions", "icu_admissions", "
 STANDARD_TITLE_FONTSIZE = 20
 STANDARD_LABEL_FONTSIZE = 14
 STANDARD_N_TICKS = 10
-VIC_BURN_INS = 7500
+VIC_BURN_INS = 0  # note that a burn-in was already applied on the server before generating the PBI db.
 
 # This has to be specified here, and we would generally want it to be the same as what you requested when asking for the
 # full model runs to be triggered in BuildKite, but doesn't have to be.
@@ -364,6 +365,7 @@ def plot_key_params(
 def plot_param_matrix(
         plotter: StreamlitPlotter,
         mcmc_params: List[pd.DataFrame],
+        mcmc_tables: List[pd.DataFrame],
         parameters: List,
         label_param_string=False,
         show_ticks=False,
@@ -373,11 +375,12 @@ def plot_param_matrix(
 ):
 
     burn_in, label_font_size, label_chars, bins, style, dpi_request = (
-        VIC_BURN_INS, 8, 2, 20, "Shade", 300
+        VIC_BURN_INS, 8, 2, 16, "Shade", 300
     )
     plots.calibration.plots.plot_param_vs_param(
         plotter,
         mcmc_params,
+        mcmc_tables,
         parameters,
         burn_in,
         style,
@@ -413,10 +416,16 @@ def plot_all_param_matrix(
     region: str,
 ):
 
+    params_to_plot = [
+        param for param in mcmc_params[0]["name"].unique().tolist() if
+        param != "target_output_ratio"
+    ]
+
     plot_param_matrix(
         plotter,
         mcmc_params,
-        mcmc_params[0]["name"].unique().tolist(),
+        mcmc_tables,
+        params_to_plot,
         file_name="all_params_matrix",
     )
 
@@ -433,7 +442,7 @@ def plot_epi_param_matrix(
 ):
 
     plot_param_matrix(
-        plotter, mcmc_params, get_vic_epi_params(mcmc_params), file_name="epi_param_matrix"
+        plotter, mcmc_params, mcmc_tables, get_vic_epi_params(mcmc_params), file_name="epi_param_matrix"
     )
 
 
@@ -451,6 +460,7 @@ def plot_key_param_matrix(
     plot_param_matrix(
         plotter,
         mcmc_params,
+        mcmc_tables,
         KEY_PARAMS,
         label_param_string=True,
         show_ticks=True,
@@ -472,6 +482,7 @@ def plot_key_param_matrix(
     plot_param_matrix(
         plotter,
         mcmc_params,
+        mcmc_tables,
         get_vic_contact_params(mcmc_params),
         label_param_string=True,
         show_ticks=True,
@@ -498,6 +509,7 @@ def plot_key_param_traces(
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
+        mcmc_tables,
         burn_in,
         title_font_size,
         label_font_size,
@@ -530,6 +542,7 @@ def plot_epi_param_traces(
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
+        mcmc_tables,
         burn_in,
         title_font_size,
         label_font_size,
@@ -562,6 +575,7 @@ def plot_contact_param_traces(
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
+        mcmc_tables,
         burn_in,
         title_font_size,
         label_font_size,
@@ -707,49 +721,6 @@ def plot_scenarios_multioutput(
     )
 
 
-@dash.register("Scenarios")
-def plot_scenarios(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
-):
-    chosen_output = "notifications"
-    targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
-    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
-    selected_scenarios = uncertainty_df["scenario"].unique()
-    (
-        title_font_size,
-        label_font_size,
-        dpi_request,
-        capitalise_first_letter,
-        is_logscale,
-        is_targets,
-        is_overlay_uncertainty,
-        is_legend,
-    ) = (8, 8, 300, False, False, True, True, True)
-    plots.uncertainty.plots.plot_timeseries_with_uncertainty(
-        plotter,
-        uncertainty_df,
-        chosen_output,
-        selected_scenarios,
-        targets,
-        is_logscale,
-        STANDARD_X_LIMITS[0],
-        426,
-        add_targets=is_targets,
-        overlay_uncertainty=is_overlay_uncertainty,
-        title_font_size=title_font_size,
-        label_font_size=label_font_size,
-        dpi_request=dpi_request,
-        capitalise_first_letter=capitalise_first_letter,
-        legend=is_legend,
-    )
-
-
 @dash.register("Multi-output worse scenarios")
 def plot_worse_scenarios_multioutput(
     plotter: StreamlitPlotter,
@@ -793,7 +764,7 @@ def plot_worse_scenarios_multioutput(
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_scenario",
         multi_panel_hlines=icu_capacities,
-        max_y_values=(24e3, 750, 3e3, 3e4),
+        max_y_values=(3.2e4, 1.2e3, 6e3, 7e3),
     )
 
 
@@ -830,7 +801,7 @@ def plot_good_scenarios_multioutput(
         275,
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
-        file_name="multi_scenario",
+        file_name="multi_scenario_better",
     )
 
 
@@ -867,7 +838,7 @@ def plot_school_scenario_multioutput(
         275,
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
-        file_name="multi_scenario",
+        file_name="multi_scenario_school",
     )
 
 
@@ -944,3 +915,6 @@ def display_parameters_r_hats(
     st.write("Convergence R_hat statistics for each parameter.\nWe want these values to be as close as possible to 1 (ideally < 1.1).")
     st.write(r_hats)
 
+    # Print out results in format ready for TeX document.
+    for r_hat_name, r_hat_value in r_hats.items():
+        st.write(f"\hline \n{get_plot_text_dict(r_hat_name)} & {np.round(r_hat_value, 3)}" + r" \\\\")

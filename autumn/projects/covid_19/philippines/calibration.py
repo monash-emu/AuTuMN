@@ -2,7 +2,7 @@ import numpy as np
 
 from autumn.tools.project import TimeSeriesSet
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
-from autumn.tools.calibration.targets import NegativeBinomialTarget
+from autumn.tools.calibration.targets import NegativeBinomialTarget, TruncNormalTarget
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
@@ -29,9 +29,9 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
     accum_deaths_ts.values = [accum_deaths_ts.values[0], accum_deaths_ts.values[-1]]
 
     targets = [
-        NegativeBinomialTarget(notifications_ts, time_weights=notification_weights, dispersion_param=1.),
-        NegativeBinomialTarget(icu_occupancy_ts, dispersion_param=1.),
-        NegativeBinomialTarget(accum_deaths_ts, dispersion_param=1.),
+        TruncNormalTarget(notifications_ts, trunc_range=[0, np.inf], time_weights=notification_weights),
+        TruncNormalTarget(icu_occupancy_ts, trunc_range=[0, np.inf]),
+        TruncNormalTarget(accum_deaths_ts, trunc_range=[0, np.inf]),
     ]
 
     priors = [

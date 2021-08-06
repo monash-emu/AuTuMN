@@ -1,9 +1,0 @@
-description: 70% vaccine coverage / baseline mobility / baseline testing
-time:
-  start: 573
-vaccination:
-  roll_out_components:
-  - supply_period_coverage:
-      coverage: 0.7
-      end_time: 731
-      start_time: 573

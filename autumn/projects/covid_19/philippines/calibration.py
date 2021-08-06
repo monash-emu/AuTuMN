@@ -29,9 +29,9 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
     accum_deaths_ts.values = [accum_deaths_ts.values[0], accum_deaths_ts.values[-1]]
 
     targets = [
-        NegativeBinomialTarget(notifications_ts, time_weights=notification_weights, dispersion_param=3.),
-        NegativeBinomialTarget(icu_occupancy_ts, dispersion_param=3.),
-        NegativeBinomialTarget(accum_deaths_ts, dispersion_param=3.),
+        NegativeBinomialTarget(notifications_ts, time_weights=notification_weights, dispersion_param=1.),
+        NegativeBinomialTarget(icu_occupancy_ts, dispersion_param=1.),
+        NegativeBinomialTarget(accum_deaths_ts, dispersion_param=1.),
     ]
 
     priors = [

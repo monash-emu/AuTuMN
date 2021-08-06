@@ -81,6 +81,12 @@ Then, navigate to the autumn project directory and run:
 pip install -r requirements.txt
 ```
 
+and finally
+
+```
+pip install -e ./
+```
+
 Now try run an Autumn model from the command line.
 
 ```powershell

@@ -39,12 +39,7 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
         UniformPrior("contact_rate", [0.03, 0.05]),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.03]),
         UniformPrior("infection_fatality.multiplier", [0.5, 3.]),
-        TruncNormalPrior(
-            "clinical_stratification.props.hospital.multiplier",
-            mean=1.0,
-            stdev=1.0,
-            trunc_range=[0.5, np.inf],
-        ),
+        UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.]),
         UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2., 3.]),
 
         # Vaccination parameters (independent sampling)

@@ -646,8 +646,12 @@ def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis, p
         df = df[mask]
         param_values = df["value"]
         var_key = "ap_loglikelihood" if posterior else "loglikelihood"
-        loglikelihood_values = [-log(-v) for v in df[var_key]]
-        axis.plot(param_values, loglikelihood_values, ".")
+        loglikelihood_values = df[var_key]
+
+        # apply transformation to improve readability
+        m = max(loglikelihood_values) + 0.01
+        trans_loglikelihood_values = [-log(-v + m) for v in df[var_key]]
+        axis.plot(param_values, trans_loglikelihood_values, ".")
 
 
 def plot_parallel_coordinates(

@@ -4,7 +4,7 @@ country:
 
 time:
   start: 40.
-  end: 600.
+  end: 731.
 
 infectious_seed: 10.
 
@@ -64,7 +64,7 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 2.5
 
-cumul_incidence_start_time: 587 # 9 Aug 2021
+cumul_incidence_start_time: 598 # 20 Aug 2021
 
 # Vaccination-related
 vaccination:
@@ -74,8 +74,8 @@ vaccination:
     - supply_period_coverage:
         coverage: .10
         start_time: 426 # 1 Mar 2021
-        end_time: 572 # 25 July 2021
+        end_time: 578 # 31 July 2021
     - supply_period_coverage:
         coverage: .30
-        start_time: 573 # 26 July 2021
+        start_time: 579 # 1 Aug 2021
         end_time: 731 # 31 Dec 2021

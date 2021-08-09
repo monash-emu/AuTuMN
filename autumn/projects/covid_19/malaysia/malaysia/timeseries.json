@@ -546,7 +546,14 @@
       575,
       576,
       577,
-      578
+      578,
+      579,
+      580,
+      581,
+      582,
+      583,
+      584,
+      585
     ],
     "values": [
       7,
@@ -1064,7 +1071,14 @@
       17405,
       17170,
       16840,
-      17786
+      17786,
+      17150,
+      15764,
+      17105,
+      19819,
+      20596,
+      20889,
+      19257
     ],
     "quantiles": [
       0.025,
@@ -1578,7 +1592,15 @@
       574,
       575,
       576,
-      577
+      577,
+      578,
+      579,
+      580,
+      581,
+      582,
+      583,
+      584,
+      585
     ],
     "values": [
       2.0,
@@ -2081,7 +2103,15 @@
       207.0,
       143.0,
       174.0,
-      134.0
+      134.0,
+      165.0,
+      160.0,
+      219.0,
+      195.0,
+      257.0,
+      164.0,
+      160.0,
+      210.0
     ],
     "quantiles": [
       0.025,
@@ -2602,7 +2632,14 @@
       575,
       576,
       577,
-      578
+      578,
+      579,
+      580,
+      581,
+      582,
+      583,
+      584,
+      585
     ],
     "values": [
       2.0,
@@ -3112,7 +3149,14 @@
       1016.0,
       1043.0,
       1055.0,
-      1062.0
+      1062.0,
+      1059.0,
+      1063.0,
+      1066.0,
+      1069.0,
+      1078.0,
+      1096.0,
+      1097.0
     ],
     "quantiles": [
       0.025,
@@ -3135,7 +3179,7 @@
       0.975
     ]
   },
-    "cdr": {
+  "cdr": {
     "output_key": "cdr",
     "title": "Proportion detected among symptomatic",
     "times": [],
@@ -3148,7 +3192,7 @@
       0.975
     ]
   },
-    "prop_incidence_strain_alpha_beta": {
+  "prop_incidence_strain_alpha_beta": {
     "title": "Prop. of alpha/beta VoC in incident cases ",
     "output_key": "prop_incidence_strain_alpha_beta",
     "times": [],
@@ -3161,7 +3205,7 @@
       0.975
     ]
   },
-    "prop_incidence_strain_delta": {
+  "prop_incidence_strain_delta": {
     "title": "Prop. of delta VoC in incident cases ",
     "output_key": "prop_incidence_strain_delta",
     "times": [],

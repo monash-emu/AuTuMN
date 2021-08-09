@@ -1,4 +1,4 @@
-description: 2-week ECQ (21 Aug - 3 Sep), 2-week MECQ (4 Sep - 17 Sep)
+description: 4-week ECQ (21 Aug - 17 Sep) / increased MHS
 
 time:
   start: 583
@@ -10,8 +10,6 @@ mobility:
       times:
         - 2021-08-06
         - 2021-08-22
-        - 2021-09-03
-        - 2021-09-05
         - 2021-09-17
         - 2021-09-19
       values:
@@ -20,10 +18,6 @@ mobility:
         - - ECQ
           - other_locations
         - - ECQ
-          - other_locations
-        - - MECQ
-          - other_locations
-        - - MECQ
           - other_locations
         - - GCQ
           - other_locations
@@ -32,8 +26,6 @@ mobility:
       times:
         - 2021-08-06
         - 2021-08-22
-        - 2021-09-03
-        - 2021-09-05
         - 2021-09-17
         - 2021-09-19
       values:
@@ -43,9 +35,15 @@ mobility:
           - work
         - - ECQ
           - work
-        - - MECQ
-          - work
-        - - MECQ
-          - work
         - - GCQ
           - work
+
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 583 # 5 Aug
+          - 585 # 7 Aug
+        values:
+          - 0.4  # 583
+          - 0.6  # 585

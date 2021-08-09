@@ -1,17 +1,23 @@
 description: 2-week MECQ (21 Aug - 3 Sep), 2-week GCQ (4 Sep - 17 Sep)
 
 time:
-  start: 597
+  start: 583
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
+        - 2021-08-06
+        - 2021-08-20
         - 2021-08-22
         - 2021-09-03
         - 2021-09-05
       values:
+        - - ECQ
+          - other_locations
+        - - ECQ
+          - other_locations
         - - MECQ
           - other_locations
         - - MECQ
@@ -21,10 +27,16 @@ mobility:
     work:
       append: true
       times:
+        - 2021-08-06
+        - 2021-08-20
         - 2021-08-22
         - 2021-09-03
         - 2021-09-05
       values:
+        - - ECQ
+          - work
+        - - ECQ
+          - work
         - - MECQ
           - work
         - - MECQ

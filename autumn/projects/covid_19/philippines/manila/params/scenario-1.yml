@@ -1,17 +1,20 @@
 description: 4-week ECQ (21 Aug - 17 Sep)
 
 time:
-  start: 597
+  start: 583
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
+        - 2021-08-06
         - 2021-08-22
         - 2021-09-17
         - 2021-09-19
       values:
+        - - ECQ
+          - other_locations
         - - ECQ
           - other_locations
         - - ECQ
@@ -21,10 +24,13 @@ mobility:
     work:
       append: true
       times:
+        - 2021-08-06
         - 2021-08-22
         - 2021-09-17
         - 2021-09-19
       values:
+        - - ECQ
+          - work
         - - ECQ
           - work
         - - ECQ

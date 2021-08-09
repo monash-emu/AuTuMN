@@ -64,7 +64,7 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 2.5
 
-cumul_incidence_start_time: 598 # 20 Aug 2021
+cumul_incidence_start_time: 584 # 20 Aug 2021
 
 # Vaccination-related
 vaccination:

@@ -1,31 +1,45 @@
-description: 30% vaccine coverage / 30% increased mobility / 50% increased testing
+description: 4-week MECQ (21 Aug - 17 Sep)
+
+time:
+  start: 583
+
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-      - 572
-      - 574
+        - 2021-08-06
+        - 2021-08-20
+        - 2021-08-22
+        - 2021-09-17
+        - 2021-09-19
       values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.3
+        - - ECQ
+          - other_locations
+        - - ECQ
+          - other_locations
+        - - MECQ
+          - other_locations
+        - - MECQ
+          - other_locations
+        - - GCQ
+          - other_locations
     work:
       append: true
       times:
-      - 572
-      - 574
+        - 2021-08-06
+        - 2021-08-20
+        - 2021-08-22
+        - 2021-09-17
+        - 2021-09-19
       values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.3
-testing_to_detection:
-  test_multiplier:
-    times:
-    - 572
-    - 574
-    values:
-    - 1.0
-    - 1.5
-time:
-  start: 573
+        - - ECQ
+          - work
+        - - ECQ
+          - work
+        - - MECQ
+          - work
+        - - MECQ
+          - work
+        - - GCQ
+          - work

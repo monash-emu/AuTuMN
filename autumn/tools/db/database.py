@@ -202,6 +202,7 @@ class Database(BaseDatabase):
     def __init__(self, database_path):
         self.database_path = database_path
         self.engine = get_sql_engine(database_path)
+        self._cache = {}
 
     @classmethod
     def is_compatible(cls, database_path: str) -> bool:
@@ -253,7 +254,11 @@ class Database(BaseDatabase):
             query += f" WHERE {condition_chain}"
 
         query += ";"
-        df = pd.read_sql_query(query, con=self.engine)
+
+        if query not in self._cache:
+            self._cache[query] = df = pd.read_sql_query(query, con=self.engine)
+        
+        df = self._cache[query]
 
         # Backwards compatibility fix for old column names with square brackets
         column_names = self.column_names(table_name)

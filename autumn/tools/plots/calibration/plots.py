@@ -925,6 +925,7 @@ def plot_all_params_vs_loglike(
     label_font_size: int,
     capitalise_first_letter: bool,
     dpi_request: int,
+    posterior: bool,
 ):
 
     # Except not the dispersion parameters - only the epidemiological ones
@@ -943,7 +944,7 @@ def plot_all_params_vs_loglike(
 
         if i < len(parameters):
             param_name = parameters[i]
-            plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis)
+            plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis, posterior)
             axis.set_title(
                 get_plot_text_dict(param_name, capitalise_first_letter=capitalise_first_letter),
                 fontsize=title_font_size,

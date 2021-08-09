@@ -27,7 +27,7 @@ TARGETS = {
 }
 
 
-def preprocess_npl_data():
+def preprocess_vnm_data():
     df = pd.read_csv(COVID_VNM_DATACSV)
     df = df[df.iso_code == "VNM"]
     df.date = pd.to_datetime(
@@ -39,7 +39,7 @@ def preprocess_npl_data():
     return df
 
 
-df = preprocess_npl_data()
+df = preprocess_vnm_data()
 file_path = COVID_VNM_TARGETS
 with open(file_path, mode="r") as f:
     targets = json.load(f)

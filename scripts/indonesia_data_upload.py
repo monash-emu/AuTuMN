@@ -19,8 +19,10 @@ COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 
 # Use OWID csv for notification and death numbers.
 COVID_IDN_OWID = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")
-COVID_IDN_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "indonesia", "indonesia","timeseries.json")
-
+COVID_IDN_DATA = os.path.join(INPUT_DATA_PATH, "covid_idn", "cases_by_province.xlsx")
+COVID_IDN_TARGETS = os.path.join(
+    PROJECTS_PATH, "covid_19", "indonesia", "indonesia", "timeseries.json"
+)
 
 
 TARGETS = {
@@ -28,7 +30,8 @@ TARGETS = {
     "infection_deaths": "new_deaths",
 }
 
-def preprocess_npl_data():
+
+def preprocess_idn_data():
     df = pd.read_csv(COVID_IDN_OWID)
     df = df[df.iso_code == "NPL"]
     df.date = pd.to_datetime(
@@ -40,7 +43,7 @@ def preprocess_npl_data():
     return df
 
 
-df = preprocess_npl_data()
+df = preprocess_idn_data()
 file_path = COVID_IDN_TARGETS
 with open(file_path, mode="r") as f:
     targets = json.load(f)
@@ -52,3 +55,9 @@ for key, val in TARGETS.items():
     targets[key]["values"] = list(temp_df[val])
 with open(file_path, "w") as f:
     json.dump(targets, f, indent=2)
+
+
+# df = pd.read_excel(COVID_IDN_DATA)
+# df.data = pd.to_datetime(df.date, errors="coerce", format="%Y-%m-%d", infer_datetime_format=False)
+# df["date_index"] = (df.date - COVID_BASE_DATETIME).dt.days
+# df

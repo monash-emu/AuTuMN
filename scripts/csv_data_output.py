@@ -34,6 +34,7 @@ mys = {
 }
 
 lka = {"region": ["sri_lanka"], "columns": STANDARD_COL}
+npl = {"region": ["nepal"], "columns": STANDARD_COL}
 
 os.chdir(DATA_PATH)
 
@@ -53,8 +54,9 @@ def get_files(country):
 phl["region"] = get_files(phl)
 mys["region"] = get_files(mys)
 lka["region"] = get_files(lka)
+npl["region"] = get_files(npl)
 
-country = {"lka": lka,"phl": phl, "mys": mys }
+country = {"lka": lka,"phl": phl, "mys": mys, "npl": npl }
 
 for ctry in country:
 

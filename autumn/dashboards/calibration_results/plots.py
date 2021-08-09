@@ -351,6 +351,19 @@ def plot_all_param_traces(
     )
 
 
+def plot_ll_or_posterior_vs_parameter(
+    plotter: StreamlitPlotter,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    posterior: bool,
+):
+    chosen_param = selectors.parameter(mcmc_params[0])
+    chain_length = find_shortest_chain_length(mcmc_tables)
+    burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
+    plots.calibration.plots.plot_single_param_loglike(
+        plotter, mcmc_tables, mcmc_params, burn_in, chosen_param, posterior
+    )
+
 @dash.register("Loglikelihood vs param")
 def plot_loglikelihood_vs_parameter(
     plotter: StreamlitPlotter,
@@ -361,16 +374,16 @@ def plot_loglikelihood_vs_parameter(
     app_name: str,
     region: str,
 ):
-    chosen_param = selectors.parameter(mcmc_params[0])
-    chain_length = find_shortest_chain_length(mcmc_tables)
-    burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
-    plots.calibration.plots.plot_single_param_loglike(
-        plotter, mcmc_tables, mcmc_params, burn_in, chosen_param
+    plot_ll_or_posterior_vs_parameter(
+        plotter,
+        mcmc_tables,
+        mcmc_params,
+        posterior=False,
     )
 
 
-@dash.register("All loglike vs params")
-def plot_loglike_vs_all_params(
+@dash.register("Log-Posterior vs param")
+def plot_logposterior_vs_parameter(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
@@ -378,6 +391,20 @@ def plot_loglike_vs_all_params(
     targets: dict,
     app_name: str,
     region: str,
+):
+    plot_ll_or_posterior_vs_parameter(
+        plotter,
+        mcmc_tables,
+        mcmc_params,
+        posterior=True,
+    )
+
+
+def plot_ll_or_posterior_vs_all_params(
+    plotter: StreamlitPlotter,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    posterior: bool,
 ):
     (
         title_font_size,
@@ -396,7 +423,45 @@ def plot_loglike_vs_all_params(
         label_font_size,
         capitalise_first_letter,
         dpi_request,
+        posterior
     )
+
+
+@dash.register("All loglike vs params")
+def plot_loglike_vs_all_params(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    plot_ll_or_posterior_vs_all_params(
+        plotter,
+        mcmc_tables,
+        mcmc_params,
+        posterior=False
+    )
+
+@dash.register("All posterior vs params")
+def plot_posterior_vs_all_params(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    plot_ll_or_posterior_vs_all_params(
+        plotter,
+        mcmc_tables,
+        mcmc_params,
+        posterior=True
+    )
+
+
 
 
 @dash.register("Posterior distributions")

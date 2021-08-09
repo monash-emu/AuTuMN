@@ -235,6 +235,35 @@ def close_to_max_last_period(prev_vals: List[float], period: int, fraction: floa
     return (max_val_last_period - prev_val) * fraction + prev_val
 
 
+# Used for the Philippines
+CQ_MOBILITY = {
+    "GCQ": {
+        "work": .70,
+        "other_locations": .70
+    },
+    "MECQ": {
+        "work": .60,
+        "other_locations": .60
+    },
+    "ECQ": {
+        "work": .50,
+        "other_locations": .50
+    },
+}
+
+
+def ecq(prev_vals: List[float], loc_key: str):
+    return CQ_MOBILITY["ECQ"][loc_key]
+
+
+def mecq(prev_vals: List[float], loc_key: str):
+    return CQ_MOBILITY["MECQ"][loc_key]
+
+
+def gcq(prev_vals: List[float], loc_key: str):
+    return CQ_MOBILITY["GCQ"][loc_key]
+
+
 PARSE_FUNCS = {
     "repeat_prev": repeat_prev,
     "add_to_prev": add_to_prev,
@@ -246,4 +275,8 @@ PARSE_FUNCS = {
     "close_to_max_last_period": close_to_max_last_period,
     "min_last_period": min_last_period,
     "copy_mobility": copy_mobility,
+    # used for the Philippines
+    "ECQ": ecq,
+    "MECQ": mecq,
+    "GCQ": gcq,
 }

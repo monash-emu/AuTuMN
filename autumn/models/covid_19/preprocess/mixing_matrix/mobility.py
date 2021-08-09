@@ -237,17 +237,20 @@ def close_to_max_last_period(prev_vals: List[float], period: int, fraction: floa
 
 # Used for the Philippines
 CQ_MOBILITY = {
+    # GCQ Reference period: from May 15 2021
     "GCQ": {
         "work": .70,
         "other_locations": .70
     },
+    # MECQ Reference period April 12-May 15 2021
     "MECQ": {
-        "work": .60,
-        "other_locations": .60
+        "work": .55,
+        "other_locations": .55
     },
+    # ECQ Reference period March 29-April 11 2021
     "ECQ": {
-        "work": .50,
-        "other_locations": .50
+        "work": .40,
+        "other_locations": .40
     },
 }
 

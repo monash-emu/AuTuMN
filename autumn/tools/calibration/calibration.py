@@ -113,6 +113,9 @@ class Calibration:
             seed = int(time())
         self.seed = seed
 
+        # Set this to True for mock tests that have trouble with pickling
+        self._no_pickle = False
+
     @staticmethod
     def from_existing(pkl_file, output_dir):
         obj = pickle.load(open(pkl_file, 'rb'))
@@ -329,15 +332,18 @@ class Calibration:
 
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
 
-        build_options = dict(enable_validation = self._is_first_run)
+        if self._is_first_run:
+            self.build_options = dict(enable_validation = True)
 
         self.latest_model = self.project.run_baseline_model(
             iter_params, derived_outputs_whitelist=self.derived_outputs_whitelist,
-            build_options=build_options
+            build_options = self.build_options
         )
         
         if self._is_first_run:
             self._is_first_run = False
+            self.build_options['enable_validation'] = False
+            self.build_options['derived_outputs_idx_cache'] = self.latest_model._derived_outputs_idx_cache
 
         return self.latest_model
 
@@ -496,8 +502,9 @@ class Calibration:
         """Ensure output data from run is written to disk, including model state for resume
         """
         self.output.write_data_to_disk()
-        state_pkl_filename = os.path.join(self.output.output_dir, f"calstate-{self.chain_idx}.pkl")
-        pickle.dump(self, open(state_pkl_filename, 'wb'))
+        if not self._no_pickle:
+            state_pkl_filename = os.path.join(self.output.output_dir, f"calstate-{self.chain_idx}.pkl")
+            pickle.dump(self, open(state_pkl_filename, 'wb'))
 
     def test_in_prior_support(self, iterative_params):
         in_support = True

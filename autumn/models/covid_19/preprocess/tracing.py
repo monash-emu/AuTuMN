@@ -27,11 +27,11 @@ def get_traced_prop(trace_param, prev):
     return np.exp(-prev * trace_param)
 
 
-def contact_tracing_func(flow, compartments, compartment_values, flows, flow_rates, computed_values, time):
+def contact_tracing_func(time, computed_values):
     """
     Multiply the flow rate through by the source compartment to get the final absolute rate
     """
-    return computed_values["traced_flow_rate"] * compartment_values[flow.source.idx]
+    return computed_values["traced_flow_rate"]
 
 
 def get_infectiousness_level(compartment, clinical, non_sympt_infect_multiplier, late_infect_multiplier):

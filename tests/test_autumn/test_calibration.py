@@ -126,6 +126,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
         ),
     ]
     calib = Calibration(priors, target_outputs, seed=0)
+    calib._no_pickle = True
     params = ParameterSet(Params({"ice_cream_sales": 0, "time": {"start": 2000}}))
     project = Project("hawaii", "sharks", _build_mock_model, params, calib)
     calib.run(project, 1, 1, 1)

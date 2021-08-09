@@ -30,3 +30,35 @@ mobility:
           - 1.  # 450
           - 1.  # 530
           - 0.4  # 550
+
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-08-05
+        - 2021-08-07
+        - 2021-08-20
+        - 2021-08-22
+      values:
+        - - repeat_prev
+        - - ECQ
+          - other_locations
+        - - ECQ
+          - other_locations
+        - - GCQ
+          - other_locations
+    work:
+      append: true
+      times:
+        - 2021-08-05
+        - 2021-08-07
+        - 2021-08-20
+        - 2021-08-22
+      values:
+        - - repeat_prev
+        - - ECQ
+          - work
+        - - ECQ
+          - work
+        - - GCQ
+          - work

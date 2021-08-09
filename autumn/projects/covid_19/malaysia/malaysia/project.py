@@ -42,8 +42,8 @@ priors = [
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.01, 0.04]),
-    UniformPrior("infectious_seed", [15.0, 100.0]),
+    UniformPrior("contact_rate", [0.01, 0.075]),
+    UniformPrior("infectious_seed", [15.0, 125.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
     UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),

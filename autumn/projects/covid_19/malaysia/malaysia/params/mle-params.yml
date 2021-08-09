@@ -2,7 +2,7 @@ contact_rate: 0.02438081555906811
 icu_occupancy_dispersion_param: 118.53297767661424
 infection_deaths_dispersion_param: 24.263436431409108
 infection_fatality.multiplier: 1.656166653651356
-infectious_seed: 117.57192032739698
+infectious_seed: 42.57192032739698
 mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.07464433627704056
 notifications_dispersion_param: 1938.1748635055988
 sojourn.compartment_periods_calculated.active.total_period: 6.3020599548298

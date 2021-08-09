@@ -36,7 +36,7 @@ from .utils import (
     draw_independent_samples,
 )
 
-ModelBuilder = Callable[[dict], CompartmentalModel]
+ModelBuilder = Callable[[dict,dict], CompartmentalModel]
 
 logger = logging.getLogger(__name__)
 
@@ -275,6 +275,10 @@ class Calibration:
             if model_parameters_data["victorian_clusters"]:
                 self.is_vic_super_model = True
 
+        # Set up a flag so that we run a full model validation the first iteration,
+        # but disable for subsequent iterations
+        self._is_first_run = True
+
         # Actually run the calibration
         self.run_fitting_algorithm(
             run_mode=CalibrationMode.AUTUMN_MCMC,
@@ -324,9 +328,17 @@ class Calibration:
             param_updates[param_name] = value
 
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
+
+        build_options = dict(enable_validation = self._is_first_run)
+
         self.latest_model = self.project.run_baseline_model(
-            iter_params, derived_outputs_whitelist=self.derived_outputs_whitelist
+            iter_params, derived_outputs_whitelist=self.derived_outputs_whitelist,
+            build_options=build_options
         )
+        
+        if self._is_first_run:
+            self._is_first_run = False
+
         return self.latest_model
 
     def loglikelihood(self, all_params_dict):

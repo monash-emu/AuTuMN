@@ -38,7 +38,7 @@ base_params = Params(
 )
 
 
-def build_model(params: dict) -> CompartmentalModel:
+def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
     """
@@ -49,6 +49,14 @@ def build_model(params: dict) -> CompartmentalModel:
         infectious_compartments=INFECTIOUS_COMPARTMENTS,
         timestep=params.time.step,
     )
+
+    # Check build_options
+    # This will be automatically populated by calibration.py if we are running a calibration,
+    # but can be manually set if so desired
+    if build_options:
+        validate = build_options.get('enable_validation')
+        if validate is not None:
+            model.set_validation_enabled(validate)
 
     # Population distribution
     country = params.country

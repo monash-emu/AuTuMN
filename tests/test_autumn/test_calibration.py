@@ -149,7 +149,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
     assert 2.9 < ice_cream_sales_mle < 3.1
 
 
-def _build_mock_model(params):
+def _build_mock_model(params, build_options=None):
     """
     Fake model building function where derived output "shark_attacks"
     is influenced by the ice_cream_sales input parameter.

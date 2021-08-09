@@ -34,7 +34,7 @@ from autumn.tools.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
-ModelBuilder = Callable[[dict], CompartmentalModel]
+ModelBuilder = Callable[[dict,dict], CompartmentalModel]
 
 
 class Project:
@@ -68,14 +68,15 @@ class Project:
             self.calibration.run(self, max_seconds, chain_idx, num_chains)
 
     def run_baseline_model(
-        self, params: Params, derived_outputs_whitelist: Optional[List[str]] = None
+        self, params: Params, derived_outputs_whitelist: Optional[List[str]] = None,
+        build_options: Optional[dict] = None
     ) -> CompartmentalModel:
         """
         Run the project's baseline model with the given parameters.
         Returns the completed baseline model.
         """
         params_dict = params.to_dict()
-        model = self.build_model(params_dict)
+        model = self.build_model(params_dict, build_options)
         if type(model) is CompartmentalModel and derived_outputs_whitelist:
             # Only calculate required derived outputs.
             model.set_derived_outputs_whitelist(derived_outputs_whitelist)
@@ -89,6 +90,7 @@ class Project:
         scenario_params: List[Params],
         start_time: Optional[float] = None,
         start_times: Optional[List[float]] = None,
+        build_options: Optional[dict] = None
     ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
@@ -106,7 +108,7 @@ class Project:
         assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
         for start_time, params in zip(start_times, scenario_params):
             params_dict = params.to_dict()
-            model = self.build_model(params_dict)
+            model = self.build_model(params_dict, build_options)
 
             if start_time is not None:
                 # Find the initial conditions for the given start time

@@ -36,7 +36,7 @@ from .utils import (
     draw_independent_samples,
 )
 
-ModelBuilder = Callable[[dict], CompartmentalModel]
+ModelBuilder = Callable[[dict,dict], CompartmentalModel]
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +112,9 @@ class Calibration:
         if seed is None:
             seed = int(time())
         self.seed = seed
+
+        # Set this to True for mock tests that have trouble with pickling
+        self._no_pickle = False
 
     @staticmethod
     def from_existing(pkl_file, output_dir):
@@ -275,6 +278,10 @@ class Calibration:
             if model_parameters_data["victorian_clusters"]:
                 self.is_vic_super_model = True
 
+        # Set up a flag so that we run a full model validation the first iteration,
+        # but disable for subsequent iterations
+        self._is_first_run = True
+
         # Actually run the calibration
         self.run_fitting_algorithm(
             run_mode=CalibrationMode.AUTUMN_MCMC,
@@ -324,9 +331,20 @@ class Calibration:
             param_updates[param_name] = value
 
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
+
+        if self._is_first_run:
+            self.build_options = dict(enable_validation = True)
+
         self.latest_model = self.project.run_baseline_model(
-            iter_params, derived_outputs_whitelist=self.derived_outputs_whitelist
+            iter_params, derived_outputs_whitelist=self.derived_outputs_whitelist,
+            build_options = self.build_options
         )
+        
+        if self._is_first_run:
+            self._is_first_run = False
+            self.build_options['enable_validation'] = False
+            self.build_options['derived_outputs_idx_cache'] = self.latest_model._derived_outputs_idx_cache
+
         return self.latest_model
 
     def loglikelihood(self, all_params_dict):
@@ -484,8 +502,9 @@ class Calibration:
         """Ensure output data from run is written to disk, including model state for resume
         """
         self.output.write_data_to_disk()
-        state_pkl_filename = os.path.join(self.output.output_dir, f"calstate-{self.chain_idx}.pkl")
-        pickle.dump(self, open(state_pkl_filename, 'wb'))
+        if not self._no_pickle:
+            state_pkl_filename = os.path.join(self.output.output_dir, f"calstate-{self.chain_idx}.pkl")
+            pickle.dump(self, open(state_pkl_filename, 'wb'))
 
     def test_in_prior_support(self, iterative_params):
         in_support = True

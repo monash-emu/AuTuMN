@@ -2,7 +2,7 @@ from summer import CompartmentalModel
 from autumn.tools.project import Params, build_rel_path
 
 
-def build_model(params: dict) -> CompartmentalModel:
+def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the master function to run a simple SIR model
     """

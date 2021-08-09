@@ -38,7 +38,7 @@ base_params = Params(
 )
 
 
-def build_model(params: dict) -> CompartmentalModel:
+def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
     """
@@ -49,6 +49,17 @@ def build_model(params: dict) -> CompartmentalModel:
         infectious_compartments=INFECTIOUS_COMPARTMENTS,
         timestep=params.time.step,
     )
+
+    # Check build_options
+    # This will be automatically populated by calibration.py if we are running a calibration,
+    # but can be manually set if so desired
+    if build_options:
+        validate = build_options.get('enable_validation')
+        if validate is not None:
+            model.set_validation_enabled(validate)
+        idx_cache = build_options.get('derived_outputs_idx_cache')
+        if idx_cache:
+            model._set_derived_outputs_index_cache(idx_cache)
 
     # Population distribution
     country = params.country
@@ -228,7 +239,7 @@ def build_model(params: dict) -> CompartmentalModel:
         )
 
         for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
-            model.add_function_flow(
+            model.add_transition_flow(
                 "tracing",
                 tracing.contact_tracing_func,
                 Compartment.EARLY_EXPOSED,

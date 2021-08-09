@@ -17,7 +17,7 @@ base_params = Params(
 )
 
 
-def build_model(params: dict) -> CompartmentalModel:
+def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
     """

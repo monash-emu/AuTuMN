@@ -28,7 +28,7 @@ def get_test_project():
     return project
 
 
-def build_test_model(params: dict):
+def build_test_model(params: dict, build_options: dict = None):
     model = CompartmentalModel(
         times=[params["time"]["start"], 5],
         compartments=["S", "I", "R"],

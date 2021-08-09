@@ -40,7 +40,7 @@ INFECTED_COMPS = [
 ]
 
 
-def build_model(params: dict) -> CompartmentalModel:
+def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     time = params["time"]
     model = CompartmentalModel(
         times=[time["start"], time["end"]],

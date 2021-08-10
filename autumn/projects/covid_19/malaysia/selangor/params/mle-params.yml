@@ -14,5 +14,4 @@ vaccination.overall_efficacy: 0.9457779324863268
 vaccination.vacc_prop_prevent_infection: 0.5033597090679711
 voc_emergence.alpha_beta.contact_rate_multiplier: 1.9615062342211393
 voc_emergence.alpha_beta.start_time: 398.64636912842485
-voc_emergence.delta.contact_rate_multiplier: 2.42 #2.63633553944114
-voc_emergence.delta.start_time: 470 #500.39264330358117
+

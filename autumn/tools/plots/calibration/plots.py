@@ -1002,6 +1002,93 @@ def sample_outputs_for_calibration_fit(
     return outputs
 
 
+def plot_multi_output_single_run(
+    plotter: Plotter,
+    mcmc_tables: List[pd.DataFrame],
+    calib_dir_path,
+    chosen_outputs: List[str],
+    selected_scenarios: List[int],
+    run_id: str,
+    x_low: int,
+    x_up: int,
+    is_legend: bool,
+    n_xticks: int,
+    title_font_size: int,
+    label_font_size: int,
+    dpi_request=300,
+    xaxis_date=True
+):
+
+    # Except not the dispersion parameters - only the epidemiological ones
+    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(chosen_outputs))
+
+    for i in range(n_rows * n_cols):
+
+        if len(chosen_outputs) == 1:
+            axis = axes
+        elif len(chosen_outputs) == 2:
+            axis = axes[i]
+        else:
+            axis = axes[indices[i][0], indices[i][1]]
+
+        if i < len(chosen_outputs):
+            output_name = chosen_outputs[i]
+            derived_output_tables = db.load.load_derived_output_tables(calib_dir_path, column=output_name)
+
+            for scenario in selected_scenarios:
+
+                times, values = get_output_from_run_id(output_name, mcmc_tables, derived_output_tables, run_id, scenario)
+
+                # Plot the prior
+                linestyle = 'dotted' if scenario == 0 else 'solid'
+                axis.plot(times, values, color=COLOR_THEME[scenario], linestyle=linestyle)
+
+            axis.set_title(
+                get_plot_text_dict(output_name),
+                fontsize=title_font_size,
+            )
+            pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+            pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+
+            if xaxis_date:
+                change_xaxis_to_date(axis, REF_DATE)
+
+            axis.set_xlim((x_low, x_up))
+
+        else:
+            axis.axis("off")
+
+    file_name = "multi_scenario_single_run"
+    fig.tight_layout()
+    plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
+
+
+def get_output_from_run_id(
+    output_name: str,
+    mcmc_tables: List[pd.DataFrame],
+    do_tables: List[pd.DataFrame],
+    run_id: str,
+    scenario: int,
+):
+    assert len(mcmc_tables) == len(do_tables)
+    mcmc_df = db.load.append_tables(mcmc_tables)
+    do_df = db.load.append_tables(do_tables)
+
+    if run_id in ["mle", "MLE"]:
+        # Find MLE run
+        mle_df = db.process.find_mle_run(mcmc_df)
+        i_run = mle_df["run"].iloc[0]
+        chain_id = mle_df["chain"].iloc[0]
+    else:
+        chain_id, i_run = run_id.split("_")
+
+    mask = (do_df["run"] == i_run) & (do_df["chain"] == chain_id) & (do_df["scenario"] == scenario)
+    times = do_df[mask]["times"]
+    values = do_df[mask][output_name]
+
+    return [times, values]
+
+
 def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_DATE):
     # Track the maximum value being plotted
     label_font_size = 8

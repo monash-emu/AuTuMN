@@ -1,4 +1,5 @@
 import numpy as np
+import numba
 
 from autumn.models.covid_19.constants import (
     Compartment,
@@ -41,6 +42,31 @@ def get_infectiousness_level(compartment, clinical, non_sympt_infect_multiplier,
         return late_infect_multiplier[clinical]
     else:
         return 1.
+
+
+@numba.jit(nopython=True)
+def get_proportion_detect_force_infection(compartment_values, notif_comps, notif_levels, non_notif_comps, non_notif_levels):
+    """
+    Calculate the proportion of the force of infection arising from ever-detected individuals
+    See PropIndexDetectedProc for details on calling this function
+    """
+    non_detected_detected_force_of_infection = 0.
+    for i, c in enumerate(non_notif_comps):
+        non_detected_detected_force_of_infection += compartment_values[c] * non_notif_levels[i]
+        
+    detected_force_of_infection = 0.
+    for i, c in enumerate(notif_comps):
+        detected_force_of_infection += compartment_values[c] * notif_levels[i]
+        
+    total_force_of_infection = non_detected_detected_force_of_infection + detected_force_of_infection
+
+    if total_force_of_infection == 0.:
+        return 0.
+    else:
+        proportion_detect_force_infection = detected_force_of_infection / total_force_of_infection
+        assert 0. <= proportion_detect_force_infection <= 1.
+        return proportion_detect_force_infection
+
 
 
 class PrevalenceProc(ComputedValueProcessor):
@@ -90,48 +116,47 @@ class PropIndexDetectedProc(ComputedValueProcessor):
         self.non_sympt_infect_multiplier = non_sympt_infect_multiplier
         self.late_infect_multiplier = late_infect_multiplier
 
-        self.infectious_comps = None
-        self.infectiousness_levels = None
-
     def prepare_to_run(self, compartments, flows):
         """
         Identify the infectious compartments for the prevalence calculation by infection stage and clinical status.
         Also captures the infectiousness levels by infection stage and clinical status.
         """
-        self.infectious_comps, self.infectiousness_levels = {}, {}
+        notif_comps = []
+        non_notif_comps = []
+        notif_levels = []
+        non_notif_levels = []
 
         for compartment in INFECTIOUS_COMPARTMENTS:
-            self.infectious_comps[compartment], self.infectiousness_levels[compartment] = {}, {}
             for clinical in CLINICAL_STRATA:
-                self.infectious_comps[compartment][clinical] = np.array(
-                    [idx for idx, comp in enumerate(compartments) if
-                     comp.has_name(compartment) and
-                     comp.has_stratum("clinical", clinical)], dtype=int
-                )
-                self.infectiousness_levels[compartment][clinical] = get_infectiousness_level(
+                
+                infectiousness_level = get_infectiousness_level(
                     compartment, clinical, self.non_sympt_infect_multiplier, self.late_infect_multiplier)
+            
+                # Get all the matching compartments for the current infectious/stratification level
+                cur_comps = [idx for idx, comp in enumerate(compartments) if
+                     comp.has_name(compartment) and
+                     comp.has_stratum("clinical", clinical)]
+                
+                # Store these separately as notifying and non-notifying
+                if clinical in NOTIFICATION_CLINICAL_STRATA:
+                    notif_comps += cur_comps
+                    notif_levels += [infectiousness_level] * len(cur_comps)
+                else:
+                    non_notif_comps += cur_comps
+                    non_notif_levels += [infectiousness_level] * len(cur_comps)
+                    
+        # Convert the indices and levels to numpy arrays
+        self.notif_comps = np.array(notif_comps, dtype=int)
+        self.notif_levels = np.array(notif_levels, dtype=float)
+        self.non_notif_comps = np.array(non_notif_comps, dtype=int)
+        self.non_notif_levels = np.array(non_notif_levels, dtype=float)
 
     def process(self, compartment_values, computed_values, time):
         """
         Calculate the proportion of the force of infection arising from ever-detected individuals
         """
-        total_force_of_infection, detected_force_of_infection = 0., 0.
-        for compartment in INFECTIOUS_COMPARTMENTS:
-            for clinical in CLINICAL_STRATA:
-                prevalence = find_sum(compartment_values[self.infectious_comps[compartment][clinical]])
-                force_of_infection = prevalence * self.infectiousness_levels[compartment][clinical]
-                total_force_of_infection += force_of_infection
-                if clinical in NOTIFICATION_CLINICAL_STRATA:
-                    detected_force_of_infection += force_of_infection
-
-
-        if total_force_of_infection == 0.:
-            return 0.
-        else:
-            proportion_detect_force_infection = detected_force_of_infection / total_force_of_infection
-            assert 0. <= proportion_detect_force_infection <= 1.
-            return proportion_detect_force_infection
-
+        # Call the optimized numba JIT version of this function (we cannot JIT directly on the class member function)
+        return get_proportion_detect_force_infection(compartment_values, self.notif_comps, self.notif_levels, self.non_notif_comps, self.non_notif_levels)
 
 class TracedFlowRateProc(ComputedValueProcessor):
     """

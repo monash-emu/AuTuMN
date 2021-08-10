@@ -1,38 +1,31 @@
-description: Scenario 16,50% vaccination by 15th August. Until August 31st minimum mobility. After that max mobility.
+description: Scenario 3, current mobility + re-opening 50% schools Sep 1st
+
 time:
-  start: 583 # 05th August 2021
+  start: 590 # 12th August 2021
 
 mobility:
   mixing:
+    school:
+      append: false
+      times:
+        - 2021-08-31 # All schools close
+        - 2021-09-01 #50% of schools open
+      values:
+        - 0.0
+        - 0.5
     other_locations:
       append: true
       times:
-        - 2021-08-04
-        - 2021-08-05
-        - 2021-08-31
-        - 2021-09-01
+        - 2021-08-12
       values:
         - - repeat_prev
-        - - min_last_period
-          - 180
-        - - repeat_prev
-        - - max_last_period
-          - 180
-
     work:
       append: true
       times:
-        - 2021-08-04
-        - 2021-08-05
-        - 2021-08-31
-        - 2021-09-01
+        - 2021-08-12
       values:
         - - repeat_prev
-        - - min_last_period
-          - 180
-        - - repeat_prev
-        - - max_last_period
-          - 180
+
 
 vaccination:
   roll_out_components:
@@ -48,3 +41,4 @@ vaccination:
         coverage: 0.30
         start_time: 610 #01  September 2021
         end_time: 732 # 1 Jan 2022
+

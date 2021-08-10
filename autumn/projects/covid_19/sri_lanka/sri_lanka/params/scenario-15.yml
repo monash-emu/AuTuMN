@@ -1,14 +1,14 @@
-description: Scenario 15,50% vaccination maximum mobility into the future indefinitely.
+description: Scenario 2,50% vaccination maximum mobility into the future indefinitely.
 time:
-  start: 583 # 05th August 2021
+  start: 590 # 12th August 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-08-04
-        - 2021-08-05
+        - 2021-08-11
+        - 2021-08-12
 
       values:
         - - repeat_prev
@@ -18,8 +18,8 @@ mobility:
     work:
       append: true
       times:
-        - 2021-08-04
-        - 2021-08-05
+        - 2021-08-11
+        - 2021-08-12
 
       values:
         - - repeat_prev

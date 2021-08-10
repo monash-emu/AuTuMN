@@ -8,11 +8,8 @@ import json
 import os
 import pandas as pd
 from datetime import datetime
-
-
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
-
 
 # start date to calculate time since Dec 31, 2019
 COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
@@ -23,17 +20,14 @@ COVID_IDN_DATA = os.path.join(INPUT_DATA_PATH, "covid_idn", "cases_by_province.x
 COVID_IDN_TARGETS = os.path.join(
     PROJECTS_PATH, "covid_19", "indonesia", "indonesia", "timeseries.json"
 )
-
-
 TARGETS = {
     "notifications": "new_cases",
     "infection_deaths": "new_deaths",
 }
 
-
 def preprocess_idn_data():
     df = pd.read_csv(COVID_IDN_OWID)
-    df = df[df.iso_code == "NPL"]
+    df = df[df.iso_code == "IDN"]
     df.date = pd.to_datetime(
         df.date, errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
     )

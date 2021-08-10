@@ -5,7 +5,7 @@ infectious_seed: 100.
 
 time:
   start: 180
-  end: 850
+  end: 822
 
 country:
   iso3: MYS
@@ -19,15 +19,7 @@ clinical_stratification:
 vaccination:
   overall_efficacy: 0.7
   vacc_prop_prevent_infection: 1
-  roll_out_components:
-    - supply_period_coverage:
-        coverage: 0.25
-        start_time: 481 # 25 Apr 2021
-        end_time: 584 # 06 August 2021
-    - supply_period_coverage:
-        coverage: 0.55
-        start_time: 585 # 07 August 2021
-        end_time: 732 # 01 Jan 2022
+  coverage_override: 0.75
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -70,8 +62,6 @@ mobility:
         - 2021-04-04
         - 2021-05-01
         - 2021-05-02 # Schools fully close again
-        - 2021-08-31
-        - 2021-09-01 # All schools open
       values:
         - 1.
         - 0.
@@ -91,9 +81,6 @@ mobility:
         - 1.
         - 1.
         - 0.
-        - 0.
-        - 1.
-
 
 voc_emergence:
   alpha_beta:
@@ -101,15 +88,3 @@ voc_emergence:
     entry_rate: 1.
     seed_duration: 10.
     contact_rate_multiplier: 1.56
-  delta:
-    start_time: 532
-    entry_rate: 1.
-    seed_duration: 10.
-    contact_rate_multiplier: 2.56
-
-contact_tracing:
-    assumed_trace_prop: 0.05
-    assumed_prev: 1.e-3
-    quarantine_infect_multiplier: 0.2
-
-waning_immunity_duration: 365

@@ -25,11 +25,11 @@ priors = [
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.015, 0.03]),
+    UniformPrior("contact_rate", (0.02, 0.04)),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.06]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2., 2.6]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.1, 0.3]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.06)),
+    UniformPrior("contact_tracing.assumed_trace_prop", (0.1, 0.3)),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.8, 2.3)),
 ]
 
 calibration = Calibration(priors, targets)

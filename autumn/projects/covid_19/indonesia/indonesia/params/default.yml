@@ -1,7 +1,7 @@
 description: BASELINE
 parent: apps/covid_19/params.yml
 
-contact_rate: 0.0208
+contact_rate: 0.028
 infectious_seed: 250.
 
 time:
@@ -33,6 +33,19 @@ mobility:
         - school
         - work
         - home
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-13
+        - 2020-03-14  # Jakarta suspends schools
+        - 2020-03-23
+        - 2020-03-24  # Schools suspended nationwide
+      values:
+        - 1.
+        - 0.96  # Assuming Jakarta is 4% of Indonesia's population
+        - 0.96
+        - 0.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -40,13 +53,13 @@ testing_to_detection:
   smoothing_period: 14
 
 contact_tracing:
-    assumed_trace_prop: 0.2
-    assumed_prev: 1.e-3
-    quarantine_infect_multiplier: 0.2
+  assumed_trace_prop: 0.2
+  assumed_prev: 1.e-3
+  quarantine_infect_multiplier: 0.2
 
 voc_emergence:
   delta:
     start_time: 360
     entry_rate: 1.
     seed_duration: 10.
-    contact_rate_multiplier: 2.3
+    contact_rate_multiplier: 2.1

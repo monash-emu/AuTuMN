@@ -45,7 +45,7 @@ def collate_acceptance_ratios(acceptance_list):
     return ratios
 
 
-def get_epi_params(mcmc_params, strings_to_ignore=("dispersion_param",)):
+def get_epi_params(mcmc_params, strings_to_ignore=("dispersion_param","vacc")):
     """
     Extract only the epidemiological parameters, ignoring the ones that were only used to tune proposal distributions,
     which end in dispersion_param.

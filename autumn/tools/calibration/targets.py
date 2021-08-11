@@ -5,6 +5,25 @@ from autumn.tools.project.timeseries import TimeSeries
 from .priors import UniformPrior
 
 
+SOMETHING = "something"
+
+
+def convert_targets_to_dict(raw_targets):
+    """
+    Take the raw targets data structure, which is a list that you have to dig the targets out of
+    and convert it into a dictionary with the names of the targets being the keys.
+
+    """
+    targets_dict = {}
+    for i_target in range(len(raw_targets)):
+        output_key = raw_targets[i_target]["output_key"]
+        targets_dict[output_key] = {
+            "times": raw_targets[i_target]["years"],
+            "values": raw_targets[i_target]["values"]
+        }
+    return targets_dict
+
+
 class BaseTarget(ABC):
 
     timeseries: TimeSeries

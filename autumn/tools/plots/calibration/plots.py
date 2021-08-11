@@ -1041,7 +1041,10 @@ def plot_multi_output_single_run(
 
                 # Plot the prior
                 linestyle = 'dotted' if scenario == 0 else 'solid'
-                axis.plot(times, values, color=COLOR_THEME[scenario], linestyle=linestyle)
+
+                color = COLOR_THEME[scenario] if scenario < 5 else COLOR_THEME[scenario - 4]
+
+                axis.plot(times, values, color=color, linestyle=linestyle)
 
             axis.set_title(
                 get_plot_text_dict(output_name),

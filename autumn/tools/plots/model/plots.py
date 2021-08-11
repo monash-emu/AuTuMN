@@ -348,11 +348,13 @@ def plot_time_varying_multi_input(
 
     df = pd.DataFrame(tv_key)
     df.index = times
+    print(df.values[:,[0,1]])
 
-    axes.plot(df.index, df.values)
+    axes.plot(df.index, df.values[:,[0, 1]])
     change_xaxis_to_date(axes, REF_DATE)
+    location = ['work', 'other_locations']
     pyplot.legend(
-        df.columns, loc="best", labels=[get_plot_text_dict(location) for location in df.columns]
+        df.columns, loc="best", labels=location
     )
 
     if X_MIN is not None and X_MAX is not None:

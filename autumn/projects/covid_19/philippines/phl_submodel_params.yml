@@ -59,7 +59,7 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 1.5
   delta:
-    start_time: 510
+    start_time: 500
     entry_rate: 10.
     seed_duration: 10.
     contact_rate_multiplier: 2.5
@@ -72,10 +72,10 @@ vaccination:
   vacc_prop_prevent_infection: 1 # now varied
   roll_out_components:
     - supply_period_coverage:
-        coverage: .10
+        coverage: .25
         start_time: 426 # 1 Mar 2021
         end_time: 578 # 31 July 2021
     - supply_period_coverage:
-        coverage: .30
+        coverage: .60  # to reach 70% overall by end of year
         start_time: 579 # 1 Aug 2021
         end_time: 731 # 31 Dec 2021

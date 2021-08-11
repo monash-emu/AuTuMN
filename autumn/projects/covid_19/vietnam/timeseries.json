@@ -27,6 +27,45 @@
       0.975
     ]
   },
+  "hospital_occupancy": {
+    "output_key": "hospital_occupancy",
+    "title": "Hospital occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "icu_occupancy": {
+    "output_key": "icu_occupancy",
+    "title": "ICU occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "cdr": {
+    "title": "Proportion of symptomatics detected",
+    "output_key": "cdr",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "notifications": {
     "output_key": "notifications",
     "title": "Daily number of confirmed cases",

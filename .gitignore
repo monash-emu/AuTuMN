@@ -22,7 +22,7 @@ benchmark.json
 .idea
 .spyderworkspace
 .vscode
-*.ipynb
+#*.ipynb
 
 # Images
 *.png
@@ -30,8 +30,11 @@ benchmark.json
 # Data
 *.db
 
+# Runtime artifacts
 logs/
 *.log
+*.pkl
+*ipynb_checkpoints*
 
 # Track input database.
 !data/inputs/inputs.db

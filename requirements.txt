@@ -37,6 +37,8 @@ black
 isort
 moto[s3]  # Mock out AWS S3 storage
 
+# Notebook management
+nbstripout
 
 # Cloud computing jobs
 sentry-sdk

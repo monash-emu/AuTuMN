@@ -15,27 +15,28 @@ from .plots import dash
 
 
 def run_dashboard():
-    project = get_project(Models.COVID_19, Region.PHILIPPINES)
+    project = get_project(Models.COVID_19, Region.MANILA)
     if not project:
         return
 
-    calib_dirpath = selectors.calibration_path(project)
-    if not calib_dirpath:
+    calib_path = selectors.calibration_path(project)
+
+    if not calib_path:
         st.write("No calibration run folder found")
         return
 
     # Load MCMC tables
-    mcmc_tables = db.load.load_mcmc_tables(calib_dirpath)
-    mcmc_params = db.load.load_mcmc_params_tables(calib_dirpath)
+    mcmc_tables = db.load.load_mcmc_tables(calib_path)
+    mcmc_params = db.load.load_mcmc_params_tables(calib_path)
 
     # Plot in streamlit.
     plotter = StreamlitPlotter(project.plots)
-    plot_name = dash.select_plot(plotter, calib_dirpath, mcmc_tables, mcmc_params, project)
-
-    # Plot to filesystem
-    path_name = os.path.join(calib_dirpath, "saved_plots")
-    if not os.path.exists(path_name):
-        os.makedirs(path_name)
-    with st.spinner("Saving files..."):
-        file_plotter = FilePlotter(path_name, project.plots)
-        dash.plot_funcs[plot_name](file_plotter, calib_dirpath, mcmc_tables, mcmc_params, project)
+    dash.select_plot(
+        plotter,
+        calib_path,
+        mcmc_tables,
+        mcmc_params,
+        project.plots,
+        project.model_name,
+        project.region_name,
+    )

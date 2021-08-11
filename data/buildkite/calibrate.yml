@@ -18,6 +18,8 @@ steps:
       value: covid_19:davao-region
     - label: France (covid_19)
       value: covid_19:france
+    - label: Indonesia (covid_19)
+      value: covid_19:indonesia
     - label: Italy (covid_19)
       value: covid_19:italy
     - label: Johor (covid_19)
@@ -50,6 +52,8 @@ steps:
       value: covid_19:united-kingdom
     - label: Victoria (covid_19)
       value: covid_19:victoria
+    - label: Vietnam (covid_19)
+      value: covid_19:vietnam
     - label: Philippines (sir_example)
       value: sir_example:philippines
     - label: Victoria (sir_example)

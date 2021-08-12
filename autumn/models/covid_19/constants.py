@@ -21,13 +21,14 @@ class Compartment:
 """
 Compartments
 """
-# People who are infectious.
+
+# People who are infectious
 INFECTIOUS_COMPARTMENTS = [
     Compartment.LATE_EXPOSED,
     Compartment.EARLY_ACTIVE,
     Compartment.LATE_ACTIVE,
 ]
-# People who are infected, but may or may not be infectious.
+# People who are infected, but may or may not be infectious
 DISEASE_COMPARTMENTS = [Compartment.EARLY_EXPOSED, *INFECTIOUS_COMPARTMENTS]
 
 # People who are eligible to receive vaccination
@@ -38,12 +39,16 @@ COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPART
 
 
 class Clinical:
-
     NON_SYMPT = "non_sympt"
     SYMPT_NON_HOSPITAL = "sympt_non_hospital"
     SYMPT_ISOLATE = "sympt_isolate"
     HOSPITAL_NON_ICU = "hospital_non_icu"
     ICU = "icu"
+
+
+class Vaccination:
+    UNVACCINATED = "unvaccinated"
+    VACCINATED = "vaccinated"
 
 
 class Strain:
@@ -68,4 +73,9 @@ DEATH_CLINICAL_STRATA = [
     Clinical.NON_SYMPT,
     Clinical.HOSPITAL_NON_ICU,
     Clinical.ICU,
+]
+
+VACCINATION_STRATA = [
+    Vaccination.UNVACCINATED,
+    Vaccination.VACCINATED,
 ]

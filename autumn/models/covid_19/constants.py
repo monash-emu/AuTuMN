@@ -7,7 +7,7 @@ BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 
 class Compartment:
     """
-    A COVID-19 model compartment.
+    A COVID-19 model compartment
     """
 
     SUSCEPTIBLE = "susceptible"

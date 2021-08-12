@@ -7,39 +7,45 @@ from autumn.models.covid_19.constants import (
     Compartment,
     Strain,
 )
-from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_ISO3S, Region
+from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
-from autumn.tools import inputs
-
 from autumn.tools.utils.utils import list_element_wise_division
+
+
+NOTIFICATIONS = "notifications"
+INCIDENCE = "incidence"
+PROGRESS = "progress"
 
 
 def request_standard_outputs(
     model: CompartmentalModel,
     params: Parameters,
 ):
-    country = params.country
-    pop = params.population
-    is_region_vic = pop.region and Region.to_name(pop.region) in Region.VICTORIA_SUBREGIONS
+    """
+    Request all of the standard model outputs for the COVID-19 model, other than some specific ones used in Victoria
+    """
 
-    # Disease incidence
-    model.request_output_for_flow(name="incidence", flow_name="incidence")
+    # Different output requests for Victoria model
+    is_region_vic = params.population.region and Region.to_name(params.population.region) in Region.VICTORIA_SUBREGIONS
+
+    # COVID-19 episode incidence - overall, disaggregated by age group and by both age group and clinical status
+    model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
     notification_at_sympt_onset_sources = []
+
     for agegroup in AGEGROUP_STRATA:
-        # Track incidence for each agegroup.
         model.request_output_for_flow(
-            name=f"incidenceXagegroup_{agegroup}",
-            flow_name="incidence",
+            name=f"{INCIDENCE}Xagegroup_{agegroup}",
+            flow_name=INCIDENCE,
             dest_strata={"agegroup": agegroup},
         )
+
         for clinical in CLINICAL_STRATA:
-            # Track incidence for each agegroup and clinical status.
-            name = f"incidenceXagegroup_{agegroup}Xclinical_{clinical}"
+            name = f"{INCIDENCE}Xagegroup_{agegroup}Xclinical_{clinical}"
             model.request_output_for_flow(
                 name=name,
-                flow_name="incidence",
+                flow_name=INCIDENCE,
                 dest_strata={"agegroup": agegroup, "clinical": clinical},
             )
             if clinical in NOTIFICATION_CLINICAL_STRATA:
@@ -47,50 +53,41 @@ def request_standard_outputs(
 
         # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
         if params.contact_tracing:
-            for clinical in [s for s in CLINICAL_STRATA if s not in NOTIFICATION_CLINICAL_STRATA]:
-                name = f"incidence_tracedXagegroup_{agegroup}Xclinical_{clinical}"
+            for clinical in [strat for strat in CLINICAL_STRATA if strat not in NOTIFICATION_CLINICAL_STRATA]:
+                name = f"{INCIDENCE}_tracedXagegroup_{agegroup}Xclinical_{clinical}"
                 model.request_output_for_flow(
                     name=name,
-                    flow_name="incidence",
+                    flow_name=INCIDENCE,
                     dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": "traced"},
                     save_results=False,
                 )
                 notification_at_sympt_onset_sources.append(name)
 
-    # Notifications at symptom onset.
-    model.request_aggregate_output(
-        name="notifications_at_sympt_onset", sources=notification_at_sympt_onset_sources
-    )
-
-    # Disease progression
-    model.request_output_for_flow(name="progress", flow_name="progress")
+    # Within active progression
+    model.request_output_for_flow(name=PROGRESS, flow_name=PROGRESS)
     for agegroup in AGEGROUP_STRATA:
         for clinical in NOTIFICATION_CLINICAL_STRATA:
             model.request_output_for_flow(
-                name=f"progressXagegroup_{agegroup}Xclinical_{clinical}",
-                flow_name="progress",
+                name=f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{clinical}",
+                flow_name=PROGRESS,
                 dest_strata={"agegroup": agegroup, "clinical": clinical},
             )
 
-    # New hospital admissions
-    hospital_sources = []
-    icu_sources = []
+    # New hospital and ICU admissions
+    hospital_sources, icu_sources = [], []
     for agegroup in AGEGROUP_STRATA:
-        icu_sources.append(f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}")
         hospital_sources += [
-            f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}",
-            f"progressXagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
+            f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}",
+            f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
         ]
-
-    model.request_aggregate_output(
-        name="new_hospital_admissions",
-        sources=hospital_sources,
-    )
+        icu_sources.append(f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}")
+    model.request_aggregate_output(name="new_hospital_admissions", sources=hospital_sources)
     model.request_aggregate_output(name="new_icu_admissions", sources=icu_sources)
 
-    # Get notifications, which may included people detected in-country as they progress, or imported cases which are detected.
     notification_sources = [
-        f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_CLINICAL_STRATA
+        f"{PROGRESS}Xagegroup_{age}Xclinical_{clinical}"
+        for age in AGEGROUP_STRATA
+        for clinical in NOTIFICATION_CLINICAL_STRATA
     ]
 
     # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
@@ -99,45 +96,42 @@ def request_standard_outputs(
         for agegroup in AGEGROUP_STRATA:
             notifications_traced_by_age_sources[agegroup] = []
             for clinical in [s for s in CLINICAL_STRATA if s not in NOTIFICATION_CLINICAL_STRATA]:
-                name = f"progress_tracedXagegroup_{agegroup}Xclinical_{clinical}"
+                name = f"{PROGRESS}_tracedXagegroup_{agegroup}Xclinical_{clinical}"
                 model.request_output_for_flow(
                     name=name,
-                    flow_name="progress",
+                    flow_name=PROGRESS,
                     dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": "traced"},
                     save_results=False,
                 )
                 notification_sources.append(name)
                 notifications_traced_by_age_sources[agegroup].append(name)
 
-    model.request_aggregate_output(name="local_notifications", sources=notification_sources)
-    model.request_aggregate_output(
-        name="notifications", sources=notification_sources
-    )  # Used to be different coz we had imports.
+    model.request_aggregate_output(name=NOTIFICATIONS, sources=notification_sources)
 
-    # cumulative incidence and notifications
+    # Cumulative incidence and notifications
     if params.cumul_incidence_start_time:
-        for existing_output in ["incidence", "notifications"]:
+        for existing_output in [INCIDENCE, NOTIFICATIONS]:
             model.request_cumulative_output(
                 name=f"accum_{existing_output}",
                 source=existing_output,
                 start_time=params.cumul_incidence_start_time,
             )
 
-    # Notification by age group
+    # Notifications by age group
     for agegroup in AGEGROUP_STRATA:
-        sympt_isolate_name = f"progressXagegroup_{agegroup}Xclinical_sympt_isolate"
-        hospital_non_icu_name = f"progressXagegroup_{agegroup}Xclinical_hospital_non_icu"
-        icu_name = f"progressXagegroup_{agegroup}Xclinical_icu"
+        sympt_isolate_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
+        hospital_non_icu_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}"
+        icu_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}"
         notifications_by_age_sources = [sympt_isolate_name, hospital_non_icu_name, icu_name]
         if params.contact_tracing:
             notifications_by_age_sources += notifications_traced_by_age_sources[agegroup]
 
         model.request_aggregate_output(
-            name=f"notificationsXagegroup_{agegroup}",
+            name=f"{NOTIFICATIONS}Xagegroup_{agegroup}",
             sources=notifications_by_age_sources
         )
 
-    # Infection deaths.
+    # Covid-related deaths
     model.request_output_for_flow(name="infection_deaths", flow_name="infect_death")
     for agegroup in AGEGROUP_STRATA:
         model.request_output_for_flow(
@@ -161,35 +155,7 @@ def request_standard_outputs(
                 source=f"infection_deathsXagegroup_{agegroup}",
             )
 
-    # Track years of life lost per year.
-    life_expectancy = inputs.get_life_expectancy_by_agegroup(AGEGROUP_STRATA, country.iso3)[0]
-    life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
-    yoll_sources = []
-    for idx, agegroup in enumerate(AGEGROUP_STRATA):
-        # Use default parameter to bind loop variable to function.
-        l = life_expectancy_latest[idx]
-
-        def get_yoll(deaths, life_exp=l):
-            return deaths * life_exp
-
-        yoll_source = f"_yoll_{agegroup}"
-        yoll_sources.append(yoll_source)
-        model.request_function_output(
-            name=yoll_source,
-            func=get_yoll,
-            sources=[f"infection_deathsXagegroup_{agegroup}"],
-            save_results=False,
-        )
-
-    model.request_aggregate_output(name="years_of_life_lost", sources=yoll_sources)
-    if params.country.iso3 in OPTI_ISO3S:
-        # Derived outputs for the optimization project.
-        model.request_cumulative_output(
-            name="accum_years_of_life_lost", source="years_of_life_lost"
-        )
-
-    # Track hospital occupancy.
-    # We count all ICU and hospital late active compartments and a proportion of early active ICU cases.
+    # Track hospital occupancy - as all ICU and hospital late active compartments and some of the early active ICU cases
     compartment_periods = params.sojourn.compartment_periods
     icu_early_period = compartment_periods["icu_early"]
     hospital_early_period = compartment_periods["hospital_early"]
@@ -306,27 +272,26 @@ def request_standard_outputs(
                 name=f"vaccinationXagegroup_{agegroup}",
                 flow_name="vaccination",
                 source_strata={"agegroup": agegroup}
-                )
+            )
 
+    # Calculate the incidence by strain
     if params.voc_emergence:
-
-        # # Calculate the incidence by strain
         voc_names = list(params.voc_emergence.keys())
         all_strains = [Strain.WILD_TYPE] + voc_names
         for strain in all_strains:
-            incidence_key = f"incidence_strain_{strain}"
+            incidence_key = f"{INCIDENCE}_strain_{strain}"
             model.request_output_for_flow(
                 name=incidence_key,
-                flow_name="incidence",
+                flow_name=INCIDENCE,
                 dest_strata={"strain": strain},
                 save_results=False
             )
             # Calculate the proportion of incident cases that are VoC
             model.request_function_output(
-                name=f"prop_incidence_strain_{strain}",
+                name=f"prop_{INCIDENCE}_strain_{strain}",
                 func=lambda strain_inc, total_inc: list_element_wise_division(strain_inc, total_inc),
-                sources=[incidence_key, "incidence"]
+                sources=[incidence_key, INCIDENCE]
             )
 
-    # track CDR
+    # Track CDR
     model.request_computed_value_output("cdr")

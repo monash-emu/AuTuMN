@@ -31,9 +31,9 @@ targets = [
 priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,
-    UniformPrior("infectious_seed", [10, 20]),
+    UniformPrior("infectious_seed", [1, 50]),
     UniformPrior("contact_rate", [0.02, 0.03]),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.07]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.01, 0.1]),
 ]
 
 

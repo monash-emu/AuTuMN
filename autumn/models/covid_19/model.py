@@ -11,7 +11,7 @@ from .constants import (
     DISEASE_COMPARTMENTS,
     INFECTIOUS_COMPARTMENTS,
     Compartment,
-    Strain,
+    Tracing,
 )
 from . import preprocess
 from .outputs.standard import request_standard_outputs
@@ -211,14 +211,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
     if params.contact_tracing:
-
-        trace_param = tracing.get_tracing_param(params.contact_tracing.assumed_trace_prop,
-                                                params.contact_tracing.assumed_prev)
+        trace_param = tracing.get_tracing_param(
+            params.contact_tracing.assumed_trace_prop,
+            params.contact_tracing.assumed_prev
+        )
 
         early_exposed_untraced_comps = \
-            [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "untraced"})]
+            [comp for comp in model.compartments if
+             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})]
         early_exposed_traced_comps = \
-            [comp for comp in model.compartments if comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": "traced"})]
+            [comp for comp in model.compartments if
+             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})]
 
         model.add_computed_value_process(
             "prevalence",
@@ -254,6 +257,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 expected_flow_count=1,
             )
             # +++ FIXME: convert this to transition flow with new computed_values aware flow param
+
     # Set up derived output functions
     if not params.victorian_clusters:
         request_standard_outputs(model, params)

@@ -63,9 +63,7 @@ def get_clinical_strat(params: Parameters):
         params.infection_fatality.top_bracket_overwrite,
     )
 
-    # Assign all the adjustments to the summer model.
-    #clinical_strat.add_flow_adjustments("infect_onset", entry_adjs)
-
+    # Assign all the adjustments to the summer model
     for agegroup in AGEGROUP_STRATA:
         source = {"agegroup": agegroup}
         clinical_strat.add_flow_adjustments(

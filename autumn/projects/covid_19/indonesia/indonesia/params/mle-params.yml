@@ -5,4 +5,4 @@ notifications_dispersion_param: 6770.505474647682
 sojourn.compartment_periods_calculated.active.total_period: 4.765613236406974
 sojourn.compartment_periods_calculated.exposed.total_period: 5.850427383110604
 testing_to_detection.assumed_cdr_parameter: 0.04277209987491989
-voc_emergence.delta.contact_rate_multiplier: 2.12
+voc_emergence.delta.contact_rate_multiplier: 2.17

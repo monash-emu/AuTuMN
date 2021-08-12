@@ -182,6 +182,9 @@ class Project:
         # Write calibrated parameter table to tex file
         write_priors_table(params_descriptions, all_priors, output_dir_path)
 
+    def __repr__(self):
+        return f"Project<{self.model_name}, {self.region_name}>"
+
 
 LOADED_PROJECTS = set()
 

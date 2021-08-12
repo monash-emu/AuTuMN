@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
@@ -33,6 +35,8 @@ from .stratifications.strains import get_strain_strat, make_voc_seed_func
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
+REF_DATE = datetime(2019, 12, 31)
+
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
 )
@@ -48,6 +52,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         compartments=COMPARTMENTS,
         infectious_compartments=INFECTIOUS_COMPARTMENTS,
         timestep=params.time.step,
+        ref_date=REF_DATE
     )
 
     # Check build_options

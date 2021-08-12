@@ -109,6 +109,15 @@ class Params:
     def __reduce__(self):
         return (self.__class__, (self.to_dict(), ))
 
+    def __repr__(self):
+        return "Params" + repr(self.to_dict())
+
+    def __pretty__(self, printer):
+        return "Params\n" + printer.pformat(self.to_dict())
+
+    def __getitem__(self, k):
+        return self.to_dict()[k]
+
 class ParameterSet:
     """
     A collection of model parameters, each representing a counterfactual scenario.
@@ -142,6 +151,13 @@ class ParameterSet:
             "baseline": self.baseline.to_dict(),
             "scenarios": [s.to_dict() for s in self.scenarios],
         }
+
+    def __repr__(self):
+        return "ParameterSet\n" + repr(self.dump_to_dict())
+
+    def __pretty__(self, printer):
+        return "ParameterSet\n" + printer.pformat(self.dump_to_dict())
+
 
 
 def read_yaml_file(path: str):

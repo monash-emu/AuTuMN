@@ -13,6 +13,7 @@ from autumn.tools.plots.calibration.plots import (
     find_shortest_chain_length,
     get_epi_params,
     get_posterior,
+    calculate_r_hats,
 )
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.project import get_project
@@ -687,6 +688,25 @@ def plot_seroprevalence_by_age(
         )
         create_seroprev_csv(seroprevalence_by_age)
         st.write(overall_seroprev.to_dict())
+
+
+@dash.register("R_hat convergence statistics")
+def display_parameters_r_hats(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    chain_length = find_shortest_chain_length(mcmc_tables)
+    burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
+
+    r_hats = calculate_r_hats(mcmc_params, mcmc_tables, burn_in=burn_in)
+    st.write("Convergence R_hat statistics for each parameter.\nWe want these values to be as close as possible to 1 (ideally < 1.1).")
+    st.write(r_hats)
+
 
 
 def write_mcmc_centiles(

@@ -8,7 +8,8 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-baseline_params = base_params.update(default_path)
+mle_path = build_rel_path("params/mle-params.yml")
+baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
@@ -29,7 +30,7 @@ priors = [
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.06)),
     UniformPrior("contact_tracing.assumed_trace_prop", (0.1, 0.3)),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.8, 2.3)),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.6, 2.3)),
 ]
 
 calibration = Calibration(priors, targets)

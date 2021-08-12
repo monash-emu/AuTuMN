@@ -19,6 +19,22 @@ INCIDENCE = "incidence"
 PROGRESS = "progress"
 
 
+def find_vaccinated_agegroups(roll_out_components):
+    """
+    Find all the age groups that are getting vaccinated under any of the roll-out components.
+    """
+
+    relevant_agegroups = set()
+    for component in range(len(roll_out_components)):
+        age_min = roll_out_components[component].age_min
+        age_max = roll_out_components[component].age_max
+        min_value = age_min if age_min else 0.
+        max_value = age_max if age_max else 200.
+        vaccinated_agegroups = [age for age in AGEGROUP_STRATA if min_value <= float(age) < max_value]
+        relevant_agegroups = set.union(relevant_agegroups, set(vaccinated_agegroups))
+    return relevant_agegroups
+
+
 def request_standard_outputs(
     model: CompartmentalModel,
     params: Parameters,
@@ -267,11 +283,7 @@ def request_standard_outputs(
                 )
 
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-        # FIXME: I don't think is universal yet
-        age_min = params.vaccination.roll_out_components[0].age_min
-        age_max = params.vaccination.roll_out_components[0].age_max
-        vaccinated_agegroups = [age for age in AGEGROUP_STRATA if age_max <= float(agegroup) < age_min]
-        for agegroup in vaccinated_agegroups:
+        for agegroup in find_vaccinated_agegroups(params.vaccination.roll_out_components):
             model.request_output_for_flow(
                 name=f"vaccinationXagegroup_{agegroup}",
                 flow_name="vaccination",

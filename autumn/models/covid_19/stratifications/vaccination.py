@@ -43,8 +43,8 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     vacc_strat.add_flow_adjustments(
         "infection",
         {
-            Vaccination.VACCINATED: Multiply(1. - infection_efficacy),
             Vaccination.UNVACCINATED: None,
+            Vaccination.VACCINATED: Multiply(1. - infection_efficacy),
         },
     )
 

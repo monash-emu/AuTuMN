@@ -3,12 +3,12 @@ description: Scenario 2, vaccinate elderly first
 vaccination:
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.9  # Should be about 51 million doses
+        coverage: 0.9  # Should be about 102 million people
         start_time: 593  # 15th August 2021
         end_time: 654  # 15th October 2021
       age_min: 50
     - supply_period_coverage:
-        coverage: 0.9  # Should be about another 52 million doses
+        coverage: 0.262  # Should be about another 30.5 million doses
         start_time: 655  # 16th October 2021
         end_time: 731  # 31st December 2021
       age_min: 20

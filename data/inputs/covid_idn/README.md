@@ -6,3 +6,5 @@ Here there is a [link](https://docs.google.com/spreadsheets/d/1ma1T9hWbec1pXlwZ8
 
 
 cases_by_province.xlsx and province_population.xlsx were obtained from Emma MacBryde's dropbox folder.
+
+Bali Modelling.xlsx provided by Shalala Ahmadova (WHO) by email.

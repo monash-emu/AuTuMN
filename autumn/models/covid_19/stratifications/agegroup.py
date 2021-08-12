@@ -2,31 +2,11 @@ from typing import List
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS
+from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA
 from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.parameters import Parameters
 from autumn.tools import inputs
 from autumn.tools.utils.utils import normalise_sequence
-
-# Age groups match the Prem matrices
-AGEGROUP_STRATA = [
-    "0",
-    "5",
-    "10",
-    "15",
-    "20",
-    "25",
-    "30",
-    "35",
-    "40",
-    "45",
-    "50",
-    "55",
-    "60",
-    "65",
-    "70",
-    "75",
-]
 
 
 def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratification:
@@ -34,7 +14,7 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratificat
     Age stratification
     """
     # We use "Stratification" instead of "AgeStratification" for this model, to avoid triggering
-    # automatic demography features (which work on the assumption that the time unit is years, so would be totally wrong)
+    # automatic demography features (which work on the assumption that the time is in years, so would be totally wrong)
     age_strat = Stratification("agegroup", AGEGROUP_STRATA, COMPARTMENTS)
     country = params.country
 

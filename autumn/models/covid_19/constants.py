@@ -38,6 +38,14 @@ VACCINE_ELIGIBLE_COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED]
 COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPARTMENTS]
 
 
+"""
+Stratifications
+"""
+
+# Age groups match the Prem matrices
+AGEGROUP_STRATA = [str(breakpoint) for breakpoint in list(range(0, 80, 5))]
+
+
 class Clinical:
     NON_SYMPT = "non_sympt"
     SYMPT_NON_HOSPITAL = "sympt_non_hospital"
@@ -53,6 +61,16 @@ class Vaccination:
 
 class Strain:
     WILD_TYPE = "wild"
+
+
+class Tracing:
+    TRACED = "traced"
+    UNTRACED = "untraced"
+
+
+class History:
+    NAIVE = "naive"
+    EXPERIENCED = "experienced"
 
 
 CLINICAL_STRATA = [
@@ -78,4 +96,9 @@ DEATH_CLINICAL_STRATA = [
 VACCINATION_STRATA = [
     Vaccination.UNVACCINATED,
     Vaccination.VACCINATED,
+]
+
+HISTORY_STRATA = [
+    History.NAIVE,
+    History.EXPERIENCED,
 ]

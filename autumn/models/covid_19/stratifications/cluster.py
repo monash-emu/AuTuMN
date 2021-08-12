@@ -55,16 +55,6 @@ def get_cluster_strat(params: Parameters) -> Stratification:
         contact_rate_multiplier = getattr(vic, multiplier_name)
         contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
 
-    # for cluster in Region.VICTORIA_METRO + [Region.BARWON_SOUTH_WEST]:
-    #     cluster_name = cluster.replace("-", "_")
-    #     contact_rate_multiplier = getattr(vic, f"contact_rate_multiplier_{cluster_name}")
-    #     contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
-    # for cluster in Region.VICTORIA_RURAL:
-    #     if cluster != Region.BARWON_SOUTH_WEST:
-    #         cluster_name = cluster.replace("-", "_")
-    #         contact_rate_multiplier = getattr(vic, "contact_rate_multiplier_regional")
-    #         contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
-
     # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
     cluster_strat.add_flow_adjustments("infection", contact_rate_adjustments)
 
@@ -86,11 +76,11 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
         if any(
             [comp.has_stratum("cluster", cluster) for cluster in regional_clusters]
         ) and not comp.has_name(Compartment.SUSCEPTIBLE):
-            model.initial_population[i_comp] = 0.0
+            model.initial_population[i_comp] = 0.
         elif any(
             [comp.has_stratum("cluster", cluster) for cluster in metro_clusters]
         ) and not comp.has_name(Compartment.SUSCEPTIBLE):
-            model.initial_population[i_comp] *= 9.0 / 4.0
+            model.initial_population[i_comp] *= 9. / 4.
 
     """
     Hack in a custom (144x144) mixing matrix where each region is adjusted individually

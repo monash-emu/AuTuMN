@@ -1,13 +1,8 @@
 from summer import Stratification
 
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.constants import COMPARTMENTS
+from autumn.models.covid_19.constants import COMPARTMENTS, History, HISTORY_STRATA
 from autumn.models.covid_19.preprocess.vaccination import add_clinical_adjustments_to_strat
-
-HISTORY_STRATA = [
-    "naive",
-    "experienced",
-]
 
 
 def get_history_strat(params: Parameters) -> Stratification:
@@ -20,19 +15,19 @@ def get_history_strat(params: Parameters) -> Stratification:
         COMPARTMENTS,
     )
 
-    # Everyone starts out infection-naive.
-    history_strat.set_population_split({"naive": 1.0, "experienced": 0.0})
+    # Everyone starts out infection-naive
+    history_strat.set_population_split({History.NAIVE: 1., History.EXPERIENCED: 0.})
 
-    # Severity parameter for previously infected persons.
+    # Severity parameter for previously infected persons
     rel_prop_symptomatic_experienced = (
-        params.rel_prop_symptomatic_experienced if params.rel_prop_symptomatic_experienced else 1.0
+        params.rel_prop_symptomatic_experienced if params.rel_prop_symptomatic_experienced else 1.
     )
 
-    # Add the clinical adjustments parameters as overwrites in the same way as for vaccination.
+    # Add the clinical adjustments parameters as overwrites in the same way as for vaccination
     history_strat = add_clinical_adjustments_to_strat(
         history_strat,
-        HISTORY_STRATA[0],
-        HISTORY_STRATA[1],
+        History.NAIVE,
+        History.EXPERIENCED,
         params,
         rel_prop_symptomatic_experienced,
         rel_prop_symptomatic_experienced,

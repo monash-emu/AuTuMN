@@ -1,20 +1,20 @@
 from summer import Overwrite, Stratification, Multiply
 
-from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS
+from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Tracing
 
 
 def get_tracing_strat(quarantine_infect_multiplier, other_infect_multipliers) -> Stratification:
     tracing_strat = Stratification(
         "tracing",
-        ["traced", "untraced"],
+        [Tracing.TRACED, Tracing.UNTRACED],
         DISEASE_COMPARTMENTS
     )
 
     # Current default for everyone to start out untraced
     tracing_strat.set_population_split(
         {
-            "traced": 0.,
-            "untraced": 1.,
+            Tracing.TRACED: 0.,
+            Tracing.UNTRACED: 1.,
         }
     )
 
@@ -22,8 +22,8 @@ def get_tracing_strat(quarantine_infect_multiplier, other_infect_multipliers) ->
     tracing_strat.add_flow_adjustments(
         "infection",
         {
-            "traced": Multiply(0.),
-            "untraced": Multiply(1.),
+            Tracing.TRACED: Multiply(0.),
+            Tracing.UNTRACED: Multiply(1.),
         }
     )
 
@@ -35,8 +35,8 @@ def get_tracing_strat(quarantine_infect_multiplier, other_infect_multipliers) ->
         tracing_strat.add_infectiousness_adjustments(
             compartment,
             {
-                "traced": Overwrite(quarantine_infect_multiplier),
-                "untraced": None,
+                Tracing.TRACED: Overwrite(quarantine_infect_multiplier),
+                Tracing.UNTRACED: None,
             }
         )
 

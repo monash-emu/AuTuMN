@@ -1,11 +1,10 @@
 description: BASELINE
 parent: apps/covid_19/params.yml
 
-contact_rate: 0.0203
 infectious_seed: 80
 
 time:
-  start: 120
+  start: 50
   end: 600
 
 country:
@@ -30,14 +29,27 @@ mobility:
       - grocery_and_pharmacy
       - parks
       - transit_stations
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-09-16
+        - 2020-09-17
+        - 2021-04-19
+        - 2021-04-20
+      values:
+        - 0.
+        - 0.5
+        - 0.5
+        - 0.
   microdistancing:
     behaviour:
       function_type: tanh
       parameters:
-        shape: .05
+        shape: .1
         inflection_time: 280
         lower_asymptote: 0.
-        upper_asymptote: 0.4
+        upper_asymptote: 0.32
       locations:
         - other_locations
         - school
@@ -45,10 +57,9 @@ mobility:
 
 voc_emergence:
   delta:
-    start_time: 350
+    start_time: 400
     entry_rate: 1.
     seed_duration: 10.
-    contact_rate_multiplier: 1.98
 
 vaccination:
   overall_efficacy: 0.7

@@ -190,25 +190,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest_strata={"history": "experienced"},
             )
 
-    # Stratify by vaccination status
-    if params.vaccination:
-        vaccination_strat = get_vaccination_strat(params)
-        model.stratify_with(vaccination_strat)
-        vacc_params = params.vaccination
-        for roll_out_component in vacc_params.roll_out_components:
-            if vacc_params.coverage_override:
-                coverage_override = vacc_params.coverage_override
-            else:
-                coverage_override = None
-            add_vaccination_flows(model, roll_out_component, age_strat.strata, coverage_override)
-
     # Stratify model by Victorian subregion (used for Victorian cluster model).
     if params.victorian_clusters:
         cluster_strat = get_cluster_strat(params)
         model.stratify_with(cluster_strat)
         mixing_matrix_function = apply_post_cluster_strat_hacks(params, model)
 
-    # **** THIS MUST BE THE LAST STRATIFICATION ****
     # Apply the process of contact tracing
     if params.contact_tracing:
         trace_param = tracing.get_tracing_param(
@@ -257,6 +244,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 expected_flow_count=1,
             )
             # +++ FIXME: convert this to transition flow with new computed_values aware flow param
+
+    # Stratify by vaccination status
+    if params.vaccination:
+        vaccination_strat = get_vaccination_strat(params)
+        model.stratify_with(vaccination_strat)
+        vacc_params = params.vaccination
+        for roll_out_component in vacc_params.roll_out_components:
+            if vacc_params.coverage_override:
+                coverage_override = vacc_params.coverage_override
+            else:
+                coverage_override = None
+            add_vaccination_flows(model, roll_out_component, age_strat.strata, coverage_override)
 
     # Set up derived output functions
     if not params.victorian_clusters:

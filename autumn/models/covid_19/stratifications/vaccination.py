@@ -1,6 +1,6 @@
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, Vaccination, VACCINATION_STRATA
+from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, VACCINATION_STRATA
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.preprocess.vaccination import \
     add_clinical_adjustments_to_strat, add_vaccine_infection_and_severity
@@ -47,5 +47,15 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
             Vaccination.VACCINATED: Multiply(1. - infection_efficacy),
         },
     )
+
+    # Adjust the infectiousness of vaccinated people
+    for compartment in DISEASE_COMPARTMENTS:
+        vacc_strat.add_infectiousness_adjustments(
+            compartment,
+            {
+                Vaccination.UNVACCINATED: None,
+                Vaccination.VACCINATED: Multiply(1. - params.vaccination.vacc_reduce_infectiousness),
+            }
+        )
 
     return vacc_strat

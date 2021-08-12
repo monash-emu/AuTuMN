@@ -176,8 +176,9 @@ victorian_clusters: null
 
 # Vaccination-related
 vaccination:
-  overall_efficacy: 0
-  vacc_prop_prevent_infection: 0
+  overall_efficacy: 0.
+  vacc_prop_prevent_infection: 0.
+  vacc_reduce_infectiousness: 0.
   roll_out_components: []
 
 # Contact tracing-related

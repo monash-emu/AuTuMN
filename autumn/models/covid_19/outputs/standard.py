@@ -267,7 +267,11 @@ def request_standard_outputs(
                 )
 
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-        for agegroup in AGEGROUP_STRATA:
+        # FIXME: I don't think is universal yet
+        age_min = params.vaccination.roll_out_components[0].age_min
+        age_max = params.vaccination.roll_out_components[0].age_max
+        vaccinated_agegroups = [age for age in AGEGROUP_STRATA if age_max <= float(agegroup) < age_min]
+        for agegroup in vaccinated_agegroups:
             model.request_output_for_flow(
                 name=f"vaccinationXagegroup_{agegroup}",
                 flow_name="vaccination",

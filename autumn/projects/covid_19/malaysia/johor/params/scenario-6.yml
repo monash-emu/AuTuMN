@@ -1,9 +1,10 @@
-description: Scenario 6, In between max mobility six months and most recent mobility value + 50% vaccine roll-out
+description: Scenario 6, 50% return to the max mobility + 50% vaccine roll-out
 parent: apps/covid_19/regions/johor/params/default.yml
 time:
   start: 504 # 18th May 2021
 
 vaccination:
+
   # Eleven months from 18th May 2021
   roll_out_components:
     - supply_period_coverage:
@@ -20,7 +21,7 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - -0.5
+          - 0.5
     work:
       append: true
       times:
@@ -28,4 +29,4 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - -0.5
+          - 0.5

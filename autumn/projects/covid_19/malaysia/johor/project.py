@@ -13,7 +13,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 # Load and configure model parameters.
 malaysia_path = build_rel_path("../malaysia/params/default.yml")
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 10)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 7)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = (
     base_params.update(malaysia_path).update(default_path).update(mle_path, calibration_format=True)
@@ -42,11 +42,9 @@ priors = [
     UniformPrior("clinical_stratification.icu_prop", [0.12, 0.25]),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.8, 2.0]),
-    UniformPrior("vaccination.vacc_prop_prevent_infection", [0.0, 1.0]),
-    UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
-    UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 2.75]),
 ]
 
 calibration = Calibration(priors, targets)

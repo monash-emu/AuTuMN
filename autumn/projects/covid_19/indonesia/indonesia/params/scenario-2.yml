@@ -1,5 +1,8 @@
 description: Scenario 2, vaccinate elderly first
 
+time:
+  start: 592
+
 vaccination:
   roll_out_components:
     - supply_period_coverage:

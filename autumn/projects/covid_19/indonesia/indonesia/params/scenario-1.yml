@@ -1,5 +1,8 @@
 description: Scenario 1, vaccinate middle-aged first
 
+time:
+  start: 592
+
 vaccination:
   roll_out_components:
     - supply_period_coverage:

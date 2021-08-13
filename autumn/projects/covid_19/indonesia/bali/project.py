@@ -18,8 +18,8 @@ baseline_params = base_params.update(default_path).update(mle_path, calibration_
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(210)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(210).downsample(7)
+notifications_ts = ts_set.get("notifications").truncate_start_time(242)
+infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(242).downsample(7)
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(infection_deaths_ts),
@@ -31,21 +31,11 @@ priors = [
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.015, 0.03]),
-    UniformPrior("infectious_seed", [50.0, 200.0]),
+    UniformPrior("contact_rate", (0.02, 0.04)),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.15]),
-    # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.05, 0.4]),
-    # Health system-related
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.7, 1.5]),
-    UniformPrior("clinical_stratification.icu_prop", [0.12, 0.25]),
-    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.01, 1.5]),
-    BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
-    UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.2, 2.1]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [370, 400]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.06)),
+    UniformPrior("contact_tracing.assumed_trace_prop", (0.1, 0.3)),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.6, 2.3)),
 ]
 
 

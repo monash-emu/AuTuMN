@@ -27,8 +27,7 @@ notifications_ts = ts_set.get("notifications").truncate_start_time(290)
 infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(290).downsample(7)
 targets = [
     NormalTarget(notifications_ts),
-    NormalTarget(infection_deaths_ts),
-]
+    ]
 priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,

@@ -21,7 +21,7 @@ mobility:
       values:
         - - close_to_max_last_period
           - 180
-          - 0.25
+          - -0.25
     work:
       append: true
       times:

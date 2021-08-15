@@ -84,6 +84,13 @@ def plot_timeseries_with_uncertainty(
 
     # Plot each scenario on a single axis
     data_to_return = {}
+    legend = []
+    scenario_numbers = ["baseline", "max mob.+80% cov.(S1)",
+                        "max mob.+50% cov.(S2)", "25% max mob.+80% cov.(S3)",
+                        "50% max mob.+80% cov.(S4)", "25% max mob.+50% cov.(S5)",
+                        "50% max mob.+50% cov.(S6)"]
+    iter_val=0;
+
     for i, scenario_idx in enumerate(scenario_idxs[:n_scenarios_to_plot]):
 
         # +++
@@ -108,6 +115,10 @@ def plot_timeseries_with_uncertainty(
         # trying to fix the other bits right now...
 
         #if scenario_idx !=0:
+
+
+            legend.append(scenario_numbers[iter_val])
+            iter_val=iter_val+1
             scenario_colors = colors[i]
 
             times, quantiles = _plot_uncertainty(

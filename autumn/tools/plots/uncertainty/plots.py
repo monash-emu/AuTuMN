@@ -180,8 +180,9 @@ def plot_timeseries_with_uncertainty(
     if ylab is not None:
         axis.set_ylabel(ylab, fontsize=label_font_size)
 
-    if legend:
-        pyplot.legend(labels=scenario_idxs)
+    if output_name == "notifications":
+        if legend:
+            pyplot.legend(labels=legend)
 
     if single_panel:
         idx_str = "-".join(map(str, scenario_idxs))

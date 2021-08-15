@@ -147,9 +147,14 @@ def plot_timeseries_with_uncertainty(
 
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
+
     if show_title:
-        title = custom_title if custom_title else get_plot_text_dict(output_name)
-        axis.set_title(title, fontsize=title_font_size)
+        if output_name == "proportion_seropositive":
+            title = "recovered percentage"
+            axis.set_title(title, fontsize=title_font_size)
+        else:
+            title = custom_title if custom_title else get_plot_text_dict(output_name)
+            axis.set_title(title, fontsize=title_font_size)
 
     if requested_x_ticks is not None:
         pyplot.xticks(requested_x_ticks)

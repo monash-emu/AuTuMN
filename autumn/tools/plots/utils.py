@@ -67,7 +67,8 @@ SHORT_TEXT_DICT = {
     "contact_rate": "contact rate",
 }
 
-ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)
+#ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)
+ALPHAS = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
 # https://matplotlib.org/3.1.0/gallery/color/named_colors.html
 COLORS = (
     # Blues
@@ -79,15 +80,15 @@ COLORS = (
     # Yellows
     ["lightgoldenrodyellow", "palegoldenrod", "gold", "darkgoldenrod"],
     # Orangey-browns
-    ["papayawhip", "navajowhite", "burlywood", "saddlebrown"],
+    ["orangered", "orangered", "orangered", "orangered"],
     # Cyans
-    ["lightcyan", "paleturquoise", "darkcyan", "darkslategrey"],
-    # Greys
-    ["lightgrey", "darkgrey", "dimgrey", "black"],
+    ["darkturquoise", "darkturquoise", "darkturquoise", "darkturquoise"],
     # Reds
-    ["lightsalmon", "tomato", "indianred", "darkred"],
+    ["darkred", "darkred", "darkred", "darkred"],
     # Dark greens
     ["mediumseagreen", "seagreen", "green", "darkgreen"],
+    # Greys
+    ["lightgrey", "darkgrey", "dimgrey", "black"],
 )
 REF_DATE = datetime.date(2019, 12, 31)
 

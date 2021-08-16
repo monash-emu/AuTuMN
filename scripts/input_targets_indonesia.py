@@ -29,11 +29,11 @@ TARGETS_IDN = {
     "infection_deaths": "new_deaths",
 }
 
-
 TARGETS_BALI = {
     "notifications": "daily_confirmed",
     "infection_deaths": "death_daily",
 }
+
 
 def preprocess_idn_data():
     df = pd.read_csv(COVID_IDN_OWID)
@@ -75,4 +75,4 @@ df = preprocess_idn_data()
 update_timeseries(TARGETS_IDN, df, COVID_IDN_TARGETS)
 
 df = preprocess_bali_data()
-update_timeseries(TARGETS_BALI,df, COVID_BALI_TARGETS)
+update_timeseries(TARGETS_BALI, df, COVID_BALI_TARGETS)

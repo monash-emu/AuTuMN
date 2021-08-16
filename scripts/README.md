@@ -24,7 +24,7 @@ Update \autumun\inputs\covid_phl\fetch.py DATA URL = '1GE-uO9kaFBgwreu7zFdXhYvG3
 
 2. Now update inputs.db by executing the following at your python environment shell/conda prompt
     python -m autumn db fetch
-    python -m autumn db build --force
+    python -m autumn db build
 
 3. Update scripts\phl_data_upload.py
 

@@ -35,6 +35,15 @@ testing_to_detection:
   smoothing_period: 14
 
 mobility:
+  smooth_google_data: false # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
   microdistancing:
     behaviour:
       function_type: tanh
@@ -47,7 +56,6 @@ mobility:
         - other_locations
         - school
         - work
-        - home
   mixing:
     school:
       append: false

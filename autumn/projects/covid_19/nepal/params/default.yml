@@ -5,10 +5,13 @@ infectious_seed: 80
 
 time:
   start: 50
-  end: 600
+  end: 800
 
 country:
   iso3: NPL
+
+stratify_by_infection_history: true
+waning_immunity_duration: 240.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -49,7 +52,7 @@ mobility:
         shape: .1
         inflection_time: 280
         lower_asymptote: 0.
-        upper_asymptote: 0.32
+        upper_asymptote: 0.34
       locations:
         - other_locations
         - school

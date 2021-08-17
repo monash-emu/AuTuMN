@@ -1,12 +1,14 @@
 description: BASELINE
 parent: apps/covid_19/params.yml
 
-contact_rate: 0.0275
 infectious_seed: 250.
 
+stratify_by_infection_history: true
+waning_immunity_duration: 240.
+
 time:
-  start: 180
-  end: 822
+  start: 110
+  end: 1100
 
 country:
   iso3: IDN
@@ -24,10 +26,10 @@ mobility:
     behaviour:
       function_type: tanh
       parameters:
-        shape: .005
+        shape: .004
         inflection_time: 430
         lower_asymptote: 0.
-        upper_asymptote: 0.35
+        upper_asymptote: 0.16
       locations:
         - other_locations
         - school
@@ -59,10 +61,9 @@ contact_tracing:
 
 voc_emergence:
   delta:
-    start_time: 384
+    start_time: 360
     entry_rate: 1.
     seed_duration: 10.
-    contact_rate_multiplier: 2.15
 
 vaccination:
   overall_efficacy: 0.6

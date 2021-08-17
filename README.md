@@ -32,6 +32,7 @@ python -m autumn --help
 |   ├─ command_line             Command line interface
 |   ├─ dashboards               Streamlit dashboards
 |   ├─ models                   Generic disease models
+|   ├─ notebooks                Example and user specific Jupyter notebooks
 |   ├─ projects                 Region specifc projects that use disease models
 |   ├─ remote                   Remote server orchestration tasks
 |   ├─ settings                 Globally shared constants

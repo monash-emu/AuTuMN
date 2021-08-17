@@ -423,8 +423,8 @@ class Calibration:
 
     def workout_unspecified_target_sds(self):
         """
-        If the sd parameter of the targeted output is not specified, it will automatically be calculated such that the
-        95% CI of the associated normal distribution covers 50% of the mean value of the target.
+        If the sd parameter of the targeted output is not specified, it will be calculated automatically such that the
+        95% CI of the associated normal distribution covers a width equivalent to 25% of the maximum value of the target.
         :return:
         """
         for i, target in enumerate(self.targets):

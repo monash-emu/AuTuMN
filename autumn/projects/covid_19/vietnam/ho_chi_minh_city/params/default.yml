@@ -7,6 +7,10 @@ time:
 country:
   iso3: VNM
 
+population:
+  region: Ho Chi Minh City
+  year: 2019
+
 mobility:
   region: Ho Chi Minh City
 

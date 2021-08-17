@@ -164,7 +164,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             model.add_importation_flow(
                 f"seed_voc_{voc_name}",
                 make_voc_seed_func(characteristics.entry_rate, characteristics.start_time, characteristics.seed_duration),
-                dest=Compartment.EARLY_EXPOSED,
+                dest=Compartment.EARLY_ACTIVE,
                 dest_strata={"strain": voc_name},
             )
 

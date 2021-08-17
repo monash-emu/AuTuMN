@@ -36,6 +36,8 @@ Sri Lanka sub region population
 Bali sub region population
 [Bali](https://www.citypopulation.de/php/indonesia-admin.php?adm1id=51)
 
+Vietnam Ho Chi Minh City population
+Details are in /data/inputs/covid_vnm/README.md
 
 ### [WPP2019_FERT_F03_CRUDE_BIRTH_RATE](<https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/2_Fertility/WPP2019_FERT_F03_CRUDE_BIRTH_RATE.xlsx>)
 

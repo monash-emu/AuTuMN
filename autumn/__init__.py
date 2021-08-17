@@ -77,7 +77,9 @@ register_project(
     Models.COVID_19, Region.DAVAO_CITY, "autumn.projects.covid_19.philippines.davao_city.project"
 )
 register_project(
-    Models.COVID_19, Region.DAVAO_REGION, "autumn.projects.covid_19.philippines.davao_region.project"
+    Models.COVID_19,
+    Region.DAVAO_REGION,
+    "autumn.projects.covid_19.philippines.davao_region.project",
 )
 
 register_project(
@@ -107,21 +109,28 @@ register_project(
 register_project(Models.COVID_19, Region.NEPAL, "autumn.projects.covid_19.nepal.project")
 
 # Sri Lanka
-register_project(Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.sri_lanka.project")
-register_project(Models.COVID_19, Region.SRI_LANKA_WP, "autumn.projects.covid_19.sri_lanka.sri_lanka_wp.project")
+register_project(
+    Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.sri_lanka.project"
+)
+register_project(
+    Models.COVID_19, Region.SRI_LANKA_WP, "autumn.projects.covid_19.sri_lanka.sri_lanka_wp.project"
+)
 
 
 # Indonesia & Bali
-register_project(
-    Models.COVID_19, Region.BALI, "autumn.projects.covid_19.indonesia.bali.project"
-)
+register_project(Models.COVID_19, Region.BALI, "autumn.projects.covid_19.indonesia.bali.project")
 register_project(
     Models.COVID_19, Region.INDONESIA, "autumn.projects.covid_19.indonesia.indonesia.project"
 )
 
 # Vietnam
 register_project(
-    Models.COVID_19, Region.VIETNAM, "autumn.projects.covid_19.vietnam.project"
+    Models.COVID_19, Region.VIETNAM, "autumn.projects.covid_19.vietnam.vietnam.project"
+)
+register_project(
+    Models.COVID_19,
+    Region.HO_CHI_MINH_CITY,
+    "autumn.projects.covid_19.vietnam.ho_chi_minh_city.project",
 )
 
 # COVID: Victoria project

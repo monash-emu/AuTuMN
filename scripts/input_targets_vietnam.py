@@ -19,7 +19,7 @@ COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 
 # Use OWID csv for notification and death numbers.
 COVID_VNM_DATACSV = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")
-COVID_VNM_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "timeseries.json")
+COVID_VNM_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam","vietnam", "timeseries.json")
 
 TARGETS = {
     "notifications": "new_cases",

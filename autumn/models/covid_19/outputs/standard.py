@@ -35,6 +35,15 @@ def find_vaccinated_agegroups(roll_out_components):
     return relevant_agegroups
 
 
+def request_stratified_output_for_flow(model, flow, strata, stratification):
+    for stratum in strata:
+        model.request_output_for_flow(
+            name=f"{flow}X{stratification}_{stratum}",
+            flow_name=flow,
+            dest_strata={stratification: stratum},
+        )
+
+
 def request_standard_outputs(
     model: CompartmentalModel,
     params: Parameters,
@@ -48,15 +57,8 @@ def request_standard_outputs(
 
     # COVID-19 episode incidence - overall, disaggregated by age group and by both age group and clinical status
     model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
-    notification_at_sympt_onset_sources = []
-
+    request_stratified_output_for_flow(model, INCIDENCE, AGEGROUP_STRATA, "agegroup")
     for agegroup in AGEGROUP_STRATA:
-        model.request_output_for_flow(
-            name=f"{INCIDENCE}Xagegroup_{agegroup}",
-            flow_name=INCIDENCE,
-            dest_strata={"agegroup": agegroup},
-        )
-
         for clinical in CLINICAL_STRATA:
             name = f"{INCIDENCE}Xagegroup_{agegroup}Xclinical_{clinical}"
             model.request_output_for_flow(
@@ -64,8 +66,6 @@ def request_standard_outputs(
                 flow_name=INCIDENCE,
                 dest_strata={"agegroup": agegroup, "clinical": clinical},
             )
-            if clinical in NOTIFICATION_CLINICAL_STRATA:
-                notification_at_sympt_onset_sources.append(name)
 
         # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
         if params.contact_tracing:
@@ -77,7 +77,6 @@ def request_standard_outputs(
                     dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": "traced"},
                     save_results=False,
                 )
-                notification_at_sympt_onset_sources.append(name)
 
     # Within active progression
     model.request_output_for_flow(name=PROGRESS, flow_name=PROGRESS)
@@ -149,6 +148,7 @@ def request_standard_outputs(
 
     # Covid-related deaths
     model.request_output_for_flow(name="infection_deaths", flow_name="infect_death")
+
     for agegroup in AGEGROUP_STRATA:
         model.request_output_for_flow(
             name=f"infection_deathsXagegroup_{agegroup}",
@@ -283,12 +283,9 @@ def request_standard_outputs(
                 )
 
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-        for agegroup in find_vaccinated_agegroups(params.vaccination.roll_out_components):
-            model.request_output_for_flow(
-                name=f"vaccinationXagegroup_{agegroup}",
-                flow_name="vaccination",
-                source_strata={"agegroup": agegroup}
-            )
+        request_stratified_output_for_flow(
+            model, "vaccination", find_vaccinated_agegroups(params.vaccination.roll_out_components), "agegroup"
+        )
 
     # Calculate the incidence by strain
     if params.voc_emergence:

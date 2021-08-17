@@ -31,8 +31,8 @@ priors = [
     *COVID_GLOBAL_PRIORS,
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
-    UniformPrior("contact_rate", (0.015, 0.03)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.03, 0.15)),
+    UniformPrior("contact_rate", (0.015, 0.06)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.015, 0.15)),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.15, 0.6)),
     TruncNormalPrior("voc_emergence.delta.contact_rate_multiplier", 2., 0.2, (1., 10.))
 ]

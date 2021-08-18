@@ -13,10 +13,12 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.history import History
 from autumn.models.covid_19.stratifications.tracing import Tracing
+from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRATA
 from autumn.tools.utils.utils import list_element_wise_division
 
 
 NOTIFICATIONS = "notifications"
+INFECTION = "infection"
 INCIDENCE = "incidence"
 PROGRESS = "progress"
 INFECT_DEATH = "infect_death"
@@ -98,6 +100,14 @@ def request_standard_outputs(
 
     # Different output requests for Victoria model
     is_region_vic = params.population.region and Region.to_name(params.population.region) in Region.VICTORIA_SUBREGIONS
+
+    """
+    Infection
+    """
+
+    model.request_output_for_flow(INFECTION, INFECTION)
+    if params.vaccination:
+        request_stratified_output_for_flow(model, INFECTION, VACCINATION_STRATA, "vaccination")
 
     """
     Incidence

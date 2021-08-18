@@ -67,8 +67,9 @@ voc_emergence:
 vaccination:
   overall_efficacy: 0.7
   vacc_prop_prevent_infection: 0.7
+  vacc_reduce_infectiousness: 0.5
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.16  # "Effective vaccination coverage", allowing first dose to be 60% effective
+        coverage: 0.224  # "Effective vaccination coverage", allowing first dose to be 60% effective
         start_time: 407  # Start vaccinating from 27/1/21, lagged by 14 days to 10/2/21
-        end_time: 568  # Report from 4/8/21, lagged by 14 days to 21/7/21
+        end_time: 596  # Report from 16/8/21, not lagged

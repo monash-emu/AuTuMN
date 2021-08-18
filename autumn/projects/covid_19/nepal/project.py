@@ -20,15 +20,19 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(210)
-targets = [NormalTarget(notifications_ts)]
+seroprevalence_estimate = ts_set.get("proportion_seropositive")
+targets = [
+    NormalTarget(notifications_ts),
+    NormalTarget(seroprevalence_estimate, stdev=0.1),
+]
 
 priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
-    UniformPrior("contact_rate", (0.015, 0.03)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.03, 0.15)),
+    UniformPrior("contact_rate", (0.015, 0.06)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.015, 0.15)),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.15, 0.6)),
     TruncNormalPrior("voc_emergence.delta.contact_rate_multiplier", 2., 0.2, (1., 10.))
 ]

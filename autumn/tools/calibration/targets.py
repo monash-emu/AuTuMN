@@ -1,11 +1,11 @@
 from typing import List, Tuple
 from abc import ABC, abstractmethod
 
+import pandas as pd
+from summer.utils import ref_times_to_dti
+
 from autumn.tools.project.timeseries import TimeSeries
 from .priors import UniformPrior
-
-
-SOMETHING = "something"
 
 
 def convert_targets_to_dict(raw_targets):
@@ -22,6 +22,17 @@ def convert_targets_to_dict(raw_targets):
             "values": raw_targets[i_target]["values"]
         }
     return targets_dict
+
+
+def get_target_series(raw_targets, ref_date, output):
+    """
+    Extends the previous function to return the times and values of a particular requested output as a pandas series.
+    """
+
+    processed_targets = convert_targets_to_dict(raw_targets)
+    times_series = ref_times_to_dti(ref_date, processed_targets[output]["times"])
+    values_series = pd.Series(data=processed_targets[output]["values"], index=times_series)
+    return times_series, values_series
 
 
 class BaseTarget(ABC):

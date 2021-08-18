@@ -39,7 +39,7 @@ TARGETS = {
     for region in REGION
 }
 TARGETS["malaysia"]["icu_occupancy"] = "malaysia_ICU"
-
+TARGETS["malaysia"]["hospital_occupancy"] = "malaysia_HOSPITAL"
 
 def main():
 
@@ -159,11 +159,12 @@ def load_mys():
             "New Cases (A)": "malaysia_case",
             "Imported cases (B)": "IC",
             "Total ICU Usage including ventilator usage (E)": "malaysia_ICU",
+            "Active cases exclude ICU (D = C - E)": "malaysia_HOSPITAL"
         },
         inplace=True,
     )
 
-    return case_df[["date_index", "malaysia_case", "malaysia_ICU"]]
+    return case_df[["date_index", "malaysia_case", "malaysia_ICU","malaysia_HOSPITAL"]]
 
 
 if __name__ == "__main__":

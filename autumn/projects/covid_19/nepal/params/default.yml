@@ -5,7 +5,7 @@ infectious_seed: 80
 
 time:
   start: 50
-  end: 800
+  end: 731
 
 country:
   iso3: NPL
@@ -72,4 +72,4 @@ vaccination:
     - supply_period_coverage:
         coverage: 0.224  # "Effective vaccination coverage", allowing first dose to be 60% effective
         start_time: 407  # Start vaccinating from 27/1/21, lagged by 14 days to 10/2/21
-        end_time: 596  # Report from 16/8/21, not lagged
+        end_time: 594  # Report from 16/8/21, not lagged

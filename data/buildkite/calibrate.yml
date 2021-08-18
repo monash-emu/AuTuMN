@@ -18,6 +18,8 @@ steps:
       value: covid_19:davao-region
     - label: France (covid_19)
       value: covid_19:france
+    - label: Ho_Chi_Minh_City (covid_19)
+      value: covid_19:ho_chi_minh_city
     - label: Indonesia (covid_19)
       value: covid_19:indonesia
     - label: Italy (covid_19)

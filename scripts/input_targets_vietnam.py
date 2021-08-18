@@ -2,11 +2,9 @@
 Script for loading NPL data into calibration targets and default.yml
 
 """
+
 import json
-
-
 import os
-from scripts.input_targets_sri_lanka import TARGETS
 import pandas as pd
 from datetime import datetime
 
@@ -20,7 +18,9 @@ COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 # Use OWID csv for notification and death numbers.
 COVID_OWID = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")
 COVID_VNM_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "vietnam", "timeseries.json")
-COVID_HCMC_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "ho_chi_minh_city", "timeseries.json")
+COVID_HCMC_TARGETS = os.path.join(
+    PROJECTS_PATH, "covid_19", "vietnam", "ho_chi_minh_city", "timeseries.json"
+)
 COVID_HCMC_CASES = os.path.join(INPUT_DATA_PATH, "covid_vnm", "cases.csv")
 COVID_HCMC_TEST = os.path.join(INPUT_DATA_PATH, "covid_vnm", "testing.csv")
 COVID_HCMC_URL = "https://docs.google.com/spreadsheets/d/1CKCT9uOfKNuF4KNs8vKnr3y-hokkg9kv/export?format=xlsx&id=1CKCT9uOfKNuF4KNs8vKnr3y-hokkg9kv"
@@ -33,9 +33,8 @@ TARGETS_VNM = {
 TARGETS_HCMC = {
     "notifications": "daily_reported_cases",
     "infection_deaths": "daily_death",
-    "hospital_occupancy": "total_severe_cases"
+    "hospital_occupancy": "total_severe_cases",
 }
-
 
 
 def preprocess_vnm_data():
@@ -51,7 +50,6 @@ def preprocess_vnm_data():
 
 
 df = preprocess_vnm_data()
-file_path = COVID_VNM_TARGETS
 
 
 def update_timeseries(TARGETS, df, file_path):
@@ -66,13 +64,22 @@ def update_timeseries(TARGETS, df, file_path):
     with open(file_path, "w") as f:
         json.dump(targets, f, indent=2)
 
+
 update_timeseries(TARGETS_VNM, df, COVID_VNM_TARGETS)
 
 df_cases = pd.read_excel(COVID_HCMC_URL, sheet_name=["Reported cases"])["Reported cases"]
 df_cases.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
 df_cases.to_csv(COVID_HCMC_CASES)
+
 df_testing = pd.read_excel(COVID_HCMC_URL, skiprows=[0, 2], sheet_name=["Testing"])["Testing"]
 df_testing.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
+df_testing.date = pd.to_datetime(
+    df_testing["date"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
+)
+df_testing["date_index"] = (df_testing.date - COVID_BASE_DATETIME).dt.days
+df_testing.rename(columns={"sum.1": "daily_test"}, inplace=True)
+df_testing["region"] = "Ho Chi Minh City"
+df_testing = df_testing[["date", "date_index", "region", "daily_test"]][1:]
 df_testing.to_csv(COVID_HCMC_TEST)
 
 df_cases.date = pd.to_datetime(
@@ -80,10 +87,8 @@ df_cases.date = pd.to_datetime(
 )
 df_cases["date_index"] = (df_cases.date - COVID_BASE_DATETIME).dt.days
 
-df_testing.date = pd.to_datetime(
-    df_testing["date"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
-)
-df_testing["date_index"] = (df_testing.date - COVID_BASE_DATETIME).dt.days
 
 update_timeseries(TARGETS_HCMC, df_cases, COVID_HCMC_TARGETS)
 
+
+df_testing.columns

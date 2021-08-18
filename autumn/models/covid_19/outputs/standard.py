@@ -75,6 +75,19 @@ def request_double_stratified_output_for_flow(
             )
 
 
+def request_stratified_output_for_compartment(
+        model, request_name, compartments, strata, stratification, save_results=True
+):
+    for stratum in strata:
+        full_request_name = f"{request_name}X{stratification}_{stratum}"
+        model.request_output_for_compartments(
+            name=full_request_name,
+            compartments=compartments,
+            strata={stratification: stratum},
+            save_results=save_results,
+        )
+
+
 def request_standard_outputs(
     model: CompartmentalModel,
     params: Parameters,
@@ -280,15 +293,12 @@ def request_standard_outputs(
             func=lambda recovered, total: recovered / total,
         )
     if not is_region_vic:
+        request_stratified_output_for_compartment(
+            model, "_total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
+        )
         for agegroup in AGEGROUP_STRATA:
             recovered_name = f"_recoveredXagegroup_{agegroup}"
             total_name = f"_total_populationXagegroup_{agegroup}"
-            model.request_output_for_compartments(
-                name=total_name,
-                compartments=COMPARTMENTS,
-                strata={"agegroup": agegroup},
-                save_results=False,
-            )
             if params.stratify_by_infection_history:
                 experienced_name = f"_experiencedXagegroup_{agegroup}"
                 model.request_output_for_compartments(

@@ -187,6 +187,7 @@ def _plot_uncertainty(
     start_quantile=0,
     zorder=1,
     linestyle="solid",
+    linewidth=1,
 ):
     """Plots the uncertainty values in the provided dataframe to an axis"""
     mask = (
@@ -216,7 +217,7 @@ def _plot_uncertainty(
 
     if num_quantiles % 2:
         q_key = q_keys[half_length]
-        axis.plot(times, quantiles[q_key], color=colors[3], zorder=zorder, linestyle=linestyle)
+        axis.plot(times, quantiles[q_key], color=colors[3], zorder=zorder, linestyle=linestyle, linewidth=linewidth)
 
     return times, quantiles
 

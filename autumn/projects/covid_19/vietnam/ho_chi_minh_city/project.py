@@ -1,6 +1,6 @@
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
+from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
 from autumn.tools.calibration.targets import (
     NormalTarget,
 )
@@ -59,6 +59,10 @@ priors = [
 
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.002, 0.007]),
     UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.4]),
+
+    # Vaccination parameters (independent sampling)
+    UniformPrior("vaccination.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
+    BetaPrior("vaccination.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
 ]
 
 calibration = Calibration(priors, targets)

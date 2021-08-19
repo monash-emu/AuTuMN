@@ -30,10 +30,13 @@ ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(210)
 icu_occupancy_ts = ts_set.get("icu_occupancy").truncate_start_time(210)
 infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(210)
+hospital_occupancy_ts = ts_set.get("hospital_occupancy").truncate_start_time(210)
+
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(icu_occupancy_ts),
     NormalTarget(infection_deaths_ts),
+    NormalTarget(hospital_occupancy_ts),
 ]
 
 priors = [

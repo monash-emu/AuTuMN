@@ -22,7 +22,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 cutoff_time = 518  # 1 June 2021
 hosp_endtime = 582
-n_inflated_weight = 40
+n_inflated_weight = 35
 
 targets = []
 for output_name in ["notifications", "hospital_occupancy", "infection_deaths"]:

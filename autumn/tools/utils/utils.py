@@ -3,13 +3,19 @@ Miscellaneous utility functions.
 If several functions here develop a theme, consider reorganising them into a module.
 """
 import itertools
+import json
 import subprocess as sp
+import os
+import numpy
+import pandas as pd
+from datetime import datetime
+
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
 from autumn.settings.folders import PROJECTS_PATH
 
-import os
-import numpy
+# start date to calculate time since Dec 31, 2019
+COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 
 
 def merge_dicts(src: dict, dest: dict):
@@ -49,8 +55,8 @@ def get_git_modified() -> bool:
     Return True if there are (tracked and uncommited) modifications
     """
 
-    status = run_command("git status --porcelain").split('\n')
-    return any([s.startswith(' M') for s in status])
+    status = run_command("git status --porcelain").split("\n")
+    return any([s.startswith(" M") for s in status])
 
 
 def run_command(cmds):
@@ -160,7 +166,7 @@ def list_element_wise_division(a, b):
     """
     Performs element-wise division between two lists and returns zeros where denominator is zero.
     """
-    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b != 0.)
+    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b != 0.0)
 
 
 def update_mle_from_remote_calibration(model, region, run_id=None):
@@ -181,7 +187,9 @@ def update_mle_from_remote_calibration(model, region, run_id=None):
 
     # Define the destination folder
     project_registry_name = registry._PROJECTS[model][region]
-    region_subfolder_names = project_registry_name.split(f"autumn.projects.{model}.")[1].split(".project")[0].split(".")
+    region_subfolder_names = (
+        project_registry_name.split(f"autumn.projects.{model}.")[1].split(".project")[0].split(".")
+    )
     destination_dir_path = os.path.join(PROJECTS_PATH, model)
     for region_subfolder_name in region_subfolder_names:
         destination_dir_path = os.path.join(destination_dir_path, region_subfolder_name)
@@ -221,3 +229,29 @@ def find_latest_run_id(model, region, s3_client):
     commit = all_commits[0]
 
     return f"{model}/{region}/{latest_timestamp}/{commit}"
+
+
+def update_timeseries(TARGETS_MAPPING, df, file_path):
+    """
+    Simple function to update timeseries.json
+    """
+    with open(file_path, mode="r") as f:
+        targets = json.load(f)
+    for key, val in TARGETS_MAPPING.items():
+        # Drop the NaN value rows from df before writing data.
+        temp_df = df[["date_index", val]].dropna(0, subset=[val])
+
+        targets[key]["times"] = list(temp_df["date_index"])
+        targets[key]["values"] = list(temp_df[val])
+    with open(file_path, "w") as f:
+        json.dump(targets, f, indent=2)
+
+def create_date_index(COVID_BASE_DATETIME, df, datecol):
+    df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
+    df.rename(columns={datecol.lower():'date'},inplace=True)
+    df.date = pd.to_datetime(
+    df["date"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
+)
+    df["date_index"] = (df.date - COVID_BASE_DATETIME).dt.days
+
+    return df

@@ -12,3 +12,4 @@ voc_emergence.alpha_beta.contact_rate_multiplier: 1.4186369363264997
 voc_emergence.alpha_beta.start_time: 323.0568096194103
 voc_emergence.delta.contact_rate_multiplier: 2.5940346000662347
 voc_emergence.delta.start_time: 465.4484942435662
+clinical_stratification.props.symptomatic.multiplier: 1.009259275472229

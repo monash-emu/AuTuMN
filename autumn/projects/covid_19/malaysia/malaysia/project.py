@@ -28,8 +28,8 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(210)
-icu_occupancy_ts = ts_set.get("icu_occupancy").truncate_start_time(210).downsample(7)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(210).downsample(7)
+icu_occupancy_ts = ts_set.get("icu_occupancy").truncate_start_time(210)
+infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(210)
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(icu_occupancy_ts),
@@ -48,6 +48,7 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
     UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.02, 0.13]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.01, 1.5]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.23, 1.5]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.2, 2.75]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [270, 360]),

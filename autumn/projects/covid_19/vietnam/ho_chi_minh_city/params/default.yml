@@ -2,7 +2,7 @@ description: BASELINE
 
 time:
   start: 485 #457  # 1 Apr 2021
-  end: 600
+  end: 912
 
 country:
   iso3: VNM
@@ -57,7 +57,13 @@ vaccination:
   vacc_prop_prevent_infection: 1 # now varied
   roll_out_components:
     - supply_period_coverage:
-        coverage: .11
-        start_time: 548 # 1 July 2021
-        end_time: 578 # 18 Aug 2021
+        coverage: .1033
+        start_time: 558 # 11 July 2021
+        end_time: 596 # 18 Aug 2021
       age_min: 20
+      age_max: 64
+    - supply_period_coverage:
+        coverage: .2901
+        start_time: 558 # 11 July 2021
+        end_time: 596 # 18 Aug 2021
+      age_min: 65

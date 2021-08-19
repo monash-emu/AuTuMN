@@ -43,10 +43,13 @@ priors = [
         stdev=0.77,
         trunc_range=[4.0, np.inf],
     ),
-    UniformPrior("infectious_seed", [1, 50]),
-    UniformPrior("contact_rate", [0.02, 0.03]),
+    UniformPrior("infectious_seed", [1, 20]),
+    UniformPrior("contact_rate", [0.035, 0.055]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.]),
     UniformPrior("infection_fatality.multiplier", [0.5, 3.]),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
+
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.002, 0.007]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.4]),
 ]
 
 calibration = Calibration(priors, targets)

@@ -85,9 +85,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
     model.set_initial_population(init_pop)
 
-    # Add intercompartmental flows.
+    # Add intercompartmental flows
 
-    # Have removed seasonal forcing, the contact rate is now a constant parameter.
+    # Have removed seasonal forcing, the contact rate is now a constant parameter
     contact_rate = params.contact_rate
 
     model.add_infection_frequency_flow(
@@ -99,11 +99,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Infection progress flows.
     model.add_transition_flow(
         name="infect_onset",
-        fractional_rate=1.0 / compartment_periods[Compartment.EARLY_EXPOSED],
+        fractional_rate=1. / compartment_periods[Compartment.EARLY_EXPOSED],
         source=Compartment.EARLY_EXPOSED,
         dest=Compartment.LATE_EXPOSED,
     )
-    incidence_flow_rate = 1.0 / compartment_periods[Compartment.LATE_EXPOSED]
+    incidence_flow_rate = 1. / compartment_periods[Compartment.LATE_EXPOSED]
     model.add_transition_flow(
         name="incidence",
         fractional_rate=incidence_flow_rate,

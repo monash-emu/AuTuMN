@@ -1,7 +1,6 @@
 import numpy as np
 
 from autumn.models.covid_19 import preprocess
-from autumn.models.covid_19.preprocess.seasonality import get_seasonal_forcing
 
 
 def test_cdr_intercept():
@@ -24,24 +23,3 @@ def test_cdr_values():
         for i_tests in list(np.linspace(0.0, 1e3, 11)) + list(np.linspace(0.0, 1e5, 11)):
             assert cdr_function(i_tests) >= 0.0
             assert cdr_function(i_tests) <= 1.0
-
-
-def test_no_seasonal_forcing():
-    """
-    Test seasonal forcing function returns the average value when the magnitude is zero
-    """
-
-    seasonal_forcing_function = get_seasonal_forcing(365.0, 0.0, 0.0, 1.0)
-    for i_time in np.linspace(-100.0, 100.0, 50):
-        assert seasonal_forcing_function(i_time) == 1.0
-
-
-def test_peak_trough_seasonal_forcing():
-    """
-    Test seasonal forcing returns the peak and trough values appropriately
-    """
-
-    seasonal_forcing_function = get_seasonal_forcing(365.0, 0.0, 2.0, 1.0)
-    assert seasonal_forcing_function(0.0) == 2.0
-    assert seasonal_forcing_function(365.0) == 2.0
-    assert seasonal_forcing_function(365.0 / 2.0) == 0.0

@@ -1,8 +1,8 @@
 description: BASELINE
 
 time:
-  start: 457  # 1 Apr 2021
-  end: 731
+  start: 485 #457  # 1 Apr 2021
+  end: 600
 
 country:
   iso3: VNM
@@ -13,6 +13,37 @@ population:
 
 mobility:
   region: Ho Chi Minh City
+  # Google mobility data
+  smooth_google_data: true # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
+  # Micro distancing
+  microdistancing:
+    behaviour:
+      function_type: empiric
+      parameters:
+        max_effect: .2
+        times: [560, 575]
+        values: [0., 1.]
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
+  mixing:
+    # Consider schools are closed for now
+    school:
+      append: false
+      times:
+        - 2020-01-01
+      values:
+        - 0.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-4

@@ -63,8 +63,8 @@ def find_cdr_function_from_test_data(
         test_dates, test_values = get_eu_testing_numbers(country_iso3)
     elif country_iso3 == "LKA":
         test_dates, test_values = get_lka_testing_numbers()
-    elif subregion is not None and country_iso3 == "VNM":
-        test_dates, test_values = get_vnm_testing_numbers(subregion)
+    # elif subregion is not None and country_iso3 == "VNM":
+    #     test_dates, test_values = get_vnm_testing_numbers(subregion)
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
 

@@ -10,3 +10,11 @@ notebooks/            # This folder
 ```
 
 This heirarchy may be expanded from time to time.  Do not commit notebooks outside of this structure.  
+
+Note that in order for notebooks to run correctly from arbitrary folders, you will need to have AuTuMN installed as a Python module.  
+
+This should already be the case if you have followed the setup instructions, but if not, the recommended method is (from the base directory of the repository, with your environment activated):  
+
+```
+pip install -e ./
+```

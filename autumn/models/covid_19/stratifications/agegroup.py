@@ -18,6 +18,24 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratificat
     age_strat = Stratification("agegroup", AGEGROUP_STRATA, COMPARTMENTS)
     country = params.country
 
+    # Dynamic heterogeneous mixing by age
+    if params.age_specific_risk_multiplier and not params.mobility.age_mixing:
+        # Apply adjustments to the age mixing parameters
+        age_categories = params.age_specific_risk_multiplier.age_categories
+        contact_rate_multiplier = params.age_specific_risk_multiplier.contact_rate_multiplier
+        if params.age_specific_risk_multiplier.adjustment_start_time:
+            adjustment_start_time = params.age_specific_risk_multiplier.adjustment_start_time
+        else:
+            adjustment_start_time = params.time.start
+        if params.age_specific_risk_multiplier.adjustment_end_time:
+            adjustment_end_time = params.age_specific_risk_multiplier.adjustment_end_time
+        else:
+            adjustment_end_time = params.time.end
+
+        params.mobility.age_mixing = preprocess.age_specific_risk.get_adjusted_age_specific_mixing(
+            age_categories, adjustment_start_time, adjustment_end_time, contact_rate_multiplier
+        )
+
     static_mixing_matrix = inputs.get_country_mixing_matrix("all_locations", country.iso3)
     dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic_mixing_matrix(
         static_mixing_matrix,

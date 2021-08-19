@@ -271,6 +271,13 @@ class ContactTracing(BaseModel):
     quarantine_infect_multiplier: float
 
 
+class AgeSpecificRiskMultiplier(BaseModel):
+    age_categories: List[str]
+    adjustment_start_time: Optional[int]
+    adjustment_end_time: Optional[int]
+    contact_rate_multiplier: float
+
+
 class ParamConfig:
     """Config for parameter models"""
 
@@ -288,6 +295,7 @@ class Parameters:
     universal_death_rate: float
     infectious_seed: float
     voc_emergence: Optional[Dict[str, VocComponent]]
+    age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
     stratify_by_infection_history: bool
     waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]

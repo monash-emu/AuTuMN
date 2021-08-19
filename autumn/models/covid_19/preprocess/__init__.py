@@ -1,1 +1,1 @@
-from . import compartments, mixing_matrix
+from . import compartments, age_specific_risk, mixing_matrix

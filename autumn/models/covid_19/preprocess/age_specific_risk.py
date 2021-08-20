@@ -4,7 +4,7 @@ from autumn.models.covid_19.parameters import TimeSeries
 def get_adjusted_age_specific_mixing(age_categories, adjustment_start_time, adjustment_end_time, contact_rate_multiplier):
     """
     Adjust the rate of contacts by age base on the parameter age_specific_risk_multiplier.
-    This willbe ignored if age-specific adjustments are already requested through the mobility parameter
+    This will be ignored if age-specific adjustments are already requested through the mobility parameter.
     """
     assert adjustment_end_time > adjustment_start_time + 2, "the age-specific adjustment has to last more than two days"
 

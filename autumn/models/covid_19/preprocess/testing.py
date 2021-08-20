@@ -10,7 +10,6 @@ from autumn.tools.curve import scale_up_function
 from autumn.tools.inputs.covid_au.queries import get_dhhs_testing_numbers
 from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 from autumn.tools.inputs.covid_lka.queries import get_lka_testing_numbers
-from autumn.tools.inputs.covid_vnm.queries import get_vnm_testing_numbers
 from autumn.tools.inputs.owid.queries import get_international_testing_numbers
 from autumn.tools.utils.utils import apply_moving_average
 
@@ -30,13 +29,13 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
     """
 
     assert assumed_tests >= 0, "Number of tests at certain CDR must be positive"
-    assert 1.0 >= assumed_cdr >= 0.0, "CDR for given number of tests must be between zero and one"
+    assert 1. >= assumed_cdr >= 0., "CDR for given number of tests must be between zero and one"
 
     # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - exp(-b * t)
-    exponent_multiplier = np.log(1.0 - assumed_cdr) / assumed_tests
+    exponent_multiplier = np.log(1. - assumed_cdr) / assumed_tests
 
     # Construct the function based on this parameter
-    return lambda tests_per_capita: 1.0 - np.exp(exponent_multiplier * tests_per_capita)
+    return lambda tests_per_capita: 1. - np.exp(exponent_multiplier * tests_per_capita)
 
 
 def find_cdr_function_from_test_data(
@@ -105,5 +104,5 @@ def find_cdr_function_from_test_data(
         [cdr_from_tests_func(i_test_rate) for i_test_rate in smoothed_per_capita_tests],
         smoothness=0.2,
         method=4,
-        bound_low=0.0,
+        bound_low=0.,
     )

@@ -68,7 +68,6 @@ def get_proportion_detect_force_infection(compartment_values, notif_comps, notif
         return proportion_detect_force_infection
 
 
-
 class PrevalenceProc(ComputedValueProcessor):
     """
     Calculate prevalence from the active disease compartments.
@@ -157,6 +156,7 @@ class PropIndexDetectedProc(ComputedValueProcessor):
         """
         # Call the optimized numba JIT version of this function (we cannot JIT directly on the class member function)
         return get_proportion_detect_force_infection(compartment_values, self.notif_comps, self.notif_levels, self.non_notif_comps, self.non_notif_levels)
+
 
 class TracedFlowRateProc(ComputedValueProcessor):
     """

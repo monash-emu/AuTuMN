@@ -1,22 +1,7 @@
-from typing import List, Any
-
-from summer.adjust import AdjustmentComponent, AdjustmentSystem
+from typing import List
 import numpy as np
 
-
-class AbsPropIsolatedProc:
-    """
-    Returns the absolute proportion of infected becoming isolated at home.
-    Isolated people are those who are detected but not sent to hospital.
-    """
-    def __init__(self, age_idx, abs_props, early_rate):
-        self.age_idx = age_idx
-        self.proportion_sympt = abs_props["sympt"][age_idx]
-        self.proportion_hosp = abs_props["hospital"][age_idx]
-        self.early_rate = early_rate
-
-    def __call__(self, time, computed_values):
-        return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, computed_values["cdr"]) * self.early_rate
+from summer.adjust import AdjustmentSystem
 
 
 class AbsPropIsolatedSystem(AdjustmentSystem):
@@ -49,25 +34,6 @@ class AbsPropIsolatedSystem(AdjustmentSystem):
     def get_weights_at_time(self, time, computed_values):
         cdr = computed_values["cdr"]
         return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr) * self.early_rate
-
-
-class AbsPropSymptNonHospProc:
-    """
-    Returns the absolute proportion of infected not entering the hospital.
-    This also does not count people who are isolated/detected.
-    """
-    def __init__(self, age_idx, abs_props, early_rate):
-        self.age_idx = age_idx
-        self.proportion_sympt = abs_props["sympt"][age_idx]
-        self.proportion_hosp = abs_props["hospital"][age_idx]
-        self.early_rate = early_rate
-
-    def get_abs_prop_sympt_non_hospital(self, time, cdr):
-        prop_isolated = get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr)
-        return self.proportion_sympt - self.proportion_hosp - prop_isolated
-
-    def __call__(self, time, computed_values):
-        return self.get_abs_prop_sympt_non_hospital(time, computed_values["cdr"]) * self.early_rate
 
 
 class AbsPropSymptNonHospSystem(AdjustmentSystem):
@@ -105,7 +71,8 @@ class AbsPropSymptNonHospSystem(AdjustmentSystem):
 
 
 def get_abs_prop_isolated(proportion_sympt, proportion_hosp, cdr) -> np.ndarray:
-    """    Returns the absolute proportion of infected becoming isolated at home.
+    """
+    Returns the absolute proportion of infected becoming isolated at home.
     Isolated people are those who are detected but not sent to hospital.
     
     Args:
@@ -117,4 +84,4 @@ def get_abs_prop_isolated(proportion_sympt, proportion_hosp, cdr) -> np.ndarray:
         [np.ndarray]: Output value
     """
     target_prop_detected = proportion_sympt * cdr
-    return np.maximum(0.0, target_prop_detected - proportion_hosp)
+    return np.maximum(0., target_prop_detected - proportion_hosp)

@@ -6,6 +6,7 @@ from autumn.models.covid_19.constants import (
     Clinical,
     Compartment,
     Strain,
+    Vaccination,
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
@@ -349,6 +350,32 @@ def request_standard_outputs(
         request_stratified_output_for_flow(
             model, "vaccination", find_vaccinated_agegroups(params.vaccination.roll_out_components), "agegroup"
         )
+
+        # track proportion vaccinated
+        model.request_output_for_compartments(
+            name="_vaccinated",
+            compartments=COMPARTMENTS,
+            strata={"vaccination": Vaccination.VACCINATED},
+            save_results=False,
+        )
+        model.request_function_output(
+            name="proportion_vaccinated",
+            sources=["_vaccinated", "_total_population"],
+            func=lambda vaccinated, total: vaccinated / total,
+        )
+        # track proportion vaccinated by age group
+        for agegroup in AGEGROUP_STRATA:
+            model.request_output_for_compartments(
+                name=f"_vaccinatedXagegroup_{agegroup}",
+                compartments=COMPARTMENTS,
+                strata={"vaccination": Vaccination.VACCINATED, "agegroup": agegroup},
+                save_results=False,
+            )
+            model.request_function_output(
+                name=f"proportion_vaccinatedXagegroup_{agegroup}",
+                sources=[f"_vaccinatedXagegroup_{agegroup}", f"_total_populationXagegroup_{agegroup}"],
+                func=lambda vaccinated, total: vaccinated / total,
+            )
 
     # Calculate the incidence by strain
     if params.voc_emergence:

@@ -1,4 +1,4 @@
-description: Scenario 1, vaccinate middle-aged first fast
+description: Scenario 13, vaccinate middle-aged first fast high coverage
 
 time:
   start: 592
@@ -12,7 +12,7 @@ vaccination:
       age_min: 20
       age_max: 50
     - supply_period_coverage:
-        coverage: 0.503  # Should be about another 28.5 million doses
+        coverage: 0.9  # Should be about another 28.5 million doses
         start_time: 655  # 16th October 2021
         end_time: 731  # 31st December 2021
       age_min: 50

@@ -6,13 +6,8 @@ from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.preprocess.case_detection import CdrProc
 
-from .constants import (
-    COMPARTMENTS,
-    DISEASE_COMPARTMENTS,
-    INFECTIOUS_COMPARTMENTS,
-    Compartment,
-    Tracing,
-)
+from .constants import COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE
+
 from . import preprocess
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
@@ -35,8 +30,6 @@ from .stratifications.strains import get_strain_strat, make_voc_seed_func
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
-REF_DATE = datetime(2019, 12, 31)
-
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
 )
@@ -52,7 +45,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         compartments=COMPARTMENTS,
         infectious_compartments=INFECTIOUS_COMPARTMENTS,
         timestep=params.time.step,
-        ref_date=REF_DATE
+        ref_date=BASE_DATE
     )
 
     # Check build_options

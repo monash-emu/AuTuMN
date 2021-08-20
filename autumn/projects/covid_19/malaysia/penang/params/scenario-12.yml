@@ -1,5 +1,4 @@
 description: Scenario 12, sensitivity and 25% return to the maximum mobility
-parent: apps/covid_19/regions/penang/params/default.yml
 
 time:
   start: 504 # 18th May 2021

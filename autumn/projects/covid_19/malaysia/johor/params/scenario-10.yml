@@ -1,5 +1,5 @@
 description: Scenario 10, 25% to the maximum mobility + 50% vaccine roll-out
-parent: apps/covid_19/regions/johor/params/default.yml
+
 time:
   start: 504 # 18th May 2021
 

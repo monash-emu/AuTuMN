@@ -143,20 +143,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Add the adjuster systems used by the clinical stratification
     for k, v in adjustment_systems.items():
         model.add_adjustment_system(k, v)
-    
+
     # Register the CDR function as derived value
     model.add_computed_value_process(
         "cdr",
         CdrProc(get_detected_proportion)
     )
-
-    # Contact tracing stratification
-    if params.contact_tracing:
-        tracing_strat = get_tracing_strat(
-            params.contact_tracing.quarantine_infect_multiplier,
-            params.clinical_stratification.late_infect_multiplier
-        )
-        model.stratify_with(tracing_strat)
 
     # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern.
     if params.voc_emergence:
@@ -201,8 +193,15 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(cluster_strat)
         mixing_matrix_function = apply_post_cluster_strat_hacks(params, model)
 
-    # Apply the contact tracing process
+    # Contact tracing stratification
     if params.contact_tracing:
+        tracing_strat = get_tracing_strat(
+            params.contact_tracing.quarantine_infect_multiplier,
+            params.clinical_stratification.late_infect_multiplier
+        )
+        model.stratify_with(tracing_strat)
+
+    # Contact tracing processes
         trace_param = tracing.get_tracing_param(
             params.contact_tracing.assumed_trace_prop,
             params.contact_tracing.assumed_prev
@@ -268,6 +267,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         request_standard_outputs(model, params)
 
+    # Dive into summer internals to over-write mixing matrix
     if is_region_vic:
         model._mixing_matrices = [mixing_matrix_function]
 

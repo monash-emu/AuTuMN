@@ -1,6 +1,6 @@
 from summer import StrainStratification, Multiply
 
-from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Strain
+from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Strain, INFECTION
 
 
 def get_strain_strat(voc_params):
@@ -31,7 +31,7 @@ def get_strain_strat(voc_params):
     strain_strat.set_population_split(population_split)
 
     # Apply transmission adjustments
-    strain_strat.add_flow_adjustments("infection", trans_adjustment)
+    strain_strat.add_flow_adjustments(INFECTION, trans_adjustment)
 
     return strain_strat
 

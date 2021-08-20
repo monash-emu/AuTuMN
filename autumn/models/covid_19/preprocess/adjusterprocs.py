@@ -3,6 +3,7 @@ from typing import List, Any
 from summer.adjust import AdjustmentComponent, AdjustmentSystem
 import numpy as np
 
+
 class AbsPropIsolatedProc:
     """
     Returns the absolute proportion of infected becoming isolated at home.
@@ -16,6 +17,7 @@ class AbsPropIsolatedProc:
 
     def __call__(self, time, computed_values):
         return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, computed_values["cdr"]) * self.early_rate
+
 
 class AbsPropIsolatedSystem(AdjustmentSystem):
     """
@@ -48,6 +50,7 @@ class AbsPropIsolatedSystem(AdjustmentSystem):
         cdr = computed_values["cdr"]
         return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr) * self.early_rate
 
+
 class AbsPropSymptNonHospProc:
     """
     Returns the absolute proportion of infected not entering the hospital.
@@ -65,6 +68,7 @@ class AbsPropSymptNonHospProc:
 
     def __call__(self, time, computed_values):
         return self.get_abs_prop_sympt_non_hospital(time, computed_values["cdr"]) * self.early_rate
+
 
 class AbsPropSymptNonHospSystem(AdjustmentSystem):
     """
@@ -98,6 +102,7 @@ class AbsPropSymptNonHospSystem(AdjustmentSystem):
         prop_isolated = get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr)
         prop_sympt_non_hospital = self.proportion_sympt - self.proportion_hosp - prop_isolated
         return prop_sympt_non_hospital * self.early_rate
+
 
 def get_abs_prop_isolated(proportion_sympt, proportion_hosp, cdr) -> np.ndarray:
     """    Returns the absolute proportion of infected becoming isolated at home.

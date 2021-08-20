@@ -7,6 +7,11 @@ from autumn.models.covid_19.constants import (
     Compartment,
     Strain,
     Vaccination,
+    NOTIFICATIONS,
+    INFECTION,
+    INCIDENCE,
+    PROGRESS,
+    INFECT_DEATH,
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
@@ -16,13 +21,6 @@ from autumn.models.covid_19.stratifications.history import History
 from autumn.models.covid_19.stratifications.tracing import Tracing
 from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRATA
 from autumn.tools.utils.utils import list_element_wise_division
-
-
-NOTIFICATIONS = "notifications"
-INFECTION = "infection"
-INCIDENCE = "incidence"
-PROGRESS = "progress"
-INFECT_DEATH = "infect_death"
 
 
 def find_vaccinated_agegroups(roll_out_components):

@@ -5,7 +5,7 @@ scenario_start_time = 599  # 21 Aug 2021
 end_lockdowns = [624, 609]
 i_vacc_scenarios = range(4)
 
-date_end_lockdowns = {624: "15 Sep 2021", 609: "31 Aug 2021"}
+date_end_lockdowns = {609: "31 Aug 2021"}
 
 
 def get_mobility_values(end_lockdown):
@@ -85,8 +85,15 @@ def get_vaccine_roll_out(i_vacc_scenario):
 def get_all_scenario_dicts():
 
     all_scenario_dicts = []
-    for end_lockdown in end_lockdowns:
-        lockdown_title = f"Lockdown relaxed on {date_end_lockdowns[end_lockdown]}"
+    for i_lockdown_scenario in [0, 1]:
+        lockdown_title = f"Lockdown relaxed on {list(date_end_lockdowns.values())[0]}"
+
+
+        if i_lockdown_scenario == 1:
+            lockdown_title += " 60% reduced mobility after that."
+        else:
+            lockdown_title += " back to normal mobility after that."
+
         for i_vacc_scenario in i_vacc_scenarios:
 
             vaccine_title = f"Vaccine scenario V{i_vacc_scenario + 1}"
@@ -98,13 +105,21 @@ def get_all_scenario_dicts():
             }
 
             # mobility parameters
-            times, values = get_mobility_values(end_lockdown)
-            for key_loc in ["other_locations", "work"]:
-                scenario_dict["mobility"]["mixing"][key_loc] = {
-                    "append": True,
-                    "times": times,
-                    "values": values
-                }
+            if i_lockdown_scenario == 0:
+                times, values = get_mobility_values(609)
+                for key_loc in ["other_locations", "work"]:
+                    scenario_dict["mobility"]["mixing"][key_loc] = {
+                        "append": True,
+                        "times": times,
+                        "values": values
+                    }
+            else:
+                for key_loc in ["other_locations", "work"]:
+                    scenario_dict["mobility"]["mixing"][key_loc] = {
+                        "append": True,
+                        "times": [scenario_start_time, 609, 609 + 2, 609 + 14, 609 + 14 + 2],
+                        "values": [["repeat_prev"], ["repeat_prev"], .40, .40, .60]
+                    }
             # scenario_dict["mobility"]["mixing"]["school"] = {
             #         "append": False,
             #         "times": [end_lockdown, end_lockdown + 2],

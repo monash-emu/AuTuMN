@@ -1,5 +1,5 @@
 description: Scenario 11, 25% return to maximum mobility  + 80% vaccine roll-out
-parent: apps/covid_19/regions/kuala_lumpur/params/default.yml
+
 time:
   start: 504 # 18th May 2021
 

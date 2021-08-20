@@ -1,5 +1,4 @@
 description: Scenario 12, sensitivity 25% return to the max mobility
-parent: apps/covid_19/regions/selangor/params/default.yml
 
 time:
   start: 504 # 18th May 2021

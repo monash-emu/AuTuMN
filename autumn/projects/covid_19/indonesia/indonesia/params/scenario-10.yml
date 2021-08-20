@@ -1,0 +1,18 @@
+description: Scenario 10, vaccinate elderly fast medium coverage
+
+time:
+  start: 592
+
+vaccination:
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.8  # Should be about 102 million people
+        start_time: 593  # 15th August 2021
+        end_time: 654  # 15th October 2021
+      age_min: 50
+    - supply_period_coverage:
+        coverage: 0.8  # Should be about another 30.5 million doses
+        start_time: 655  # 16th October 2021
+        end_time: 731  # 31st December 2021
+      age_min: 20
+      age_max: 50

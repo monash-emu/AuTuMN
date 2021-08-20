@@ -1,6 +1,5 @@
 ---
 # Parameters used to build a general model of COVID-19 disease
-parent: null # This file is the bottom of the parameter tree for the Covid app
 description: BASELINE
 
 voc_emergence: null # Emergence of Variants of Concern

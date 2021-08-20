@@ -1,5 +1,4 @@
 description: BASELINE
-parent: apps/covid_19/params.yml
 
 country:
   iso3: IDN
@@ -15,7 +14,7 @@ waning_immunity_duration: 240.
 
 time:
   start: 240
-  end: 700
+  end: 1100
 
 mobility:
   google_mobility_locations:  # Not mapping residential mobility to home

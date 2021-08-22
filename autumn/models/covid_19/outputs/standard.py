@@ -105,8 +105,28 @@ def request_standard_outputs(
     """
 
     model.request_output_for_flow(INFECTION, INFECTION)
+    model.request_output_for_compartments("_susceptible", [Compartment.SUSCEPTIBLE], save_results=False)
+    model.request_function_output(
+        "susceptible_infection_rate",
+        func=lambda infection, susceptible: infection / susceptible,
+        sources=[INFECTION, "_susceptible"]
+    )
     if params.vaccination:
         request_stratified_output_for_flow(model, INFECTION, VACCINATION_STRATA, "vaccination")
+        request_stratified_output_for_compartment(
+            model,
+            f"_{Compartment.SUSCEPTIBLE}",
+            [Compartment.SUSCEPTIBLE],
+            strata=VACCINATION_STRATA,
+            stratification="vaccination",
+            save_results=False,
+        )
+        for stratum in VACCINATION_STRATA:
+            model.request_function_output(
+                f"susceptible_infection_rate_{stratum}",
+                func=lambda infection, susceptible: infection / (susceptible + 1e-10),  # Avoid divide by zero issues
+                sources=[f"{INFECTION}Xvaccination_{stratum}", f"_susceptibleXvaccination_{Vaccination.VACCINATED}"],
+            )
 
     """
     Incidence

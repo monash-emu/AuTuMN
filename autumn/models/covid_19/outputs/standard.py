@@ -104,6 +104,7 @@ def request_standard_outputs(
     Infection
     """
 
+    # susceptible_infection_rate functions will only work for SEIR structure, would need to change for SEIRS, SEIS, etc.
     model.request_output_for_flow(INFECTION, INFECTION)
     model.request_output_for_compartments("_susceptible", [Compartment.SUSCEPTIBLE], save_results=False)
     model.request_function_output(

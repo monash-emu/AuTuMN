@@ -25,4 +25,4 @@ targets = [
     )
 ]
 calibration = Calibration(priors=priors, targets=targets)
-project = Project(Region.VICTORIA_2020, Models.EXAMPLE, build_model, param_set, calibration)
+project = Project(Region.VICTORIA, Models.EXAMPLE, build_model, param_set, calibration)

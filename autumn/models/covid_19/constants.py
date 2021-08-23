@@ -102,3 +102,15 @@ HISTORY_STRATA = [
     History.NAIVE,
     History.EXPERIENCED,
 ]
+
+"""
+Transitions
+"""
+
+INFECTION = "infection"
+INFECTIOUSNESS_ONSET = "infect_onset"
+INCIDENCE = "incidence"
+NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the others
+PROGRESS = "progress"
+RECOVERY = "recovery"
+INFECT_DEATH = "infect_death"

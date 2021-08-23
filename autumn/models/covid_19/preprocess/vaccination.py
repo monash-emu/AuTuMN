@@ -22,13 +22,13 @@ def get_vacc_roll_out_function_from_coverage(supply_params, coverage_override=No
     end_time = supply_params.end_time
     duration = end_time - start_time
     assert end_time >= start_time
-    assert 0.0 <= coverage <= 1.0
+    assert 0. <= coverage <= 1.
 
     # Calculate the vaccination rate from the coverage and the duration of the program
-    vaccination_rate = -np.log(1.0 - coverage) / duration
+    vaccination_rate = -np.log(1. - coverage) / duration
 
     def get_vaccination_rate(time, computed_values):
-        return vaccination_rate if start_time < time < end_time else 0.0
+        return vaccination_rate if start_time < time < end_time else 0.
 
     return get_vaccination_rate
 
@@ -65,7 +65,7 @@ def get_vacc_roll_out_function_from_doses(
         if total_eligible_pop_size > 0.1:
             nb_vaccinated = compartment_size / total_eligible_pop_size * time_variant_supply(time)
         else:
-            nb_vaccinated = 0.0
+            nb_vaccinated = 0.
 
         return max(0, min(nb_vaccinated, compartment_size))
 
@@ -147,11 +147,11 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.
 
     """
-    if vacc_prop_prevent_infection == 1.0:
-        severity_efficacy = 0.0
+    if vacc_prop_prevent_infection == 1.:
+        severity_efficacy = 0.
     else:
-        prop_infected = 1.0 - vacc_prop_prevent_infection
-        prop_infect_prevented = 1.0 - (vacc_prop_prevent_infection * overall_efficacy)
+        prop_infected = 1. - vacc_prop_prevent_infection
+        prop_infect_prevented = 1. - (vacc_prop_prevent_infection * overall_efficacy)
         severity_efficacy = overall_efficacy * prop_infected / prop_infect_prevented
     infection_efficacy = vacc_prop_prevent_infection * overall_efficacy
 

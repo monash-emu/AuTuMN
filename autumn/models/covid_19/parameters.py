@@ -304,7 +304,7 @@ class Parameters:
     metropolis_init_rel_step_size: float
     n_steps_fixed_proposal: int
     cumul_incidence_start_time: Optional[float]
-    # Modular parameters.
+    # Modular parameters
     time: Time
     country: Country
     population: Population
@@ -317,5 +317,5 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     victorian_clusters: Optional[VictorianClusterStratification]
-    # Dummy parameters - not used
+    # Non-epidemiological parameters
     target_output_ratio: Optional[float]

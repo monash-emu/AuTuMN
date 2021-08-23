@@ -8,11 +8,11 @@ from autumn.projects.covid_19.mixing_optimisation.constants import (
     PHASE_2_DURATION,
     PHASE_2_START_TIME,
 )
+from autumn.models.covid_19.constants import BASE_DATE
 
 APP_NAME = "covid_19"
 ROOT_MODEL_PARAMS = {"time": {"end": PHASE_2_START_TIME}}
 
-REF_DATE = date(2019, 12, 31)
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 AGE_MODE = "by_age"
@@ -64,9 +64,9 @@ def make_scenario_func(
 
     # Convert time integers to dates.
     phase_2_end_days = phase_2_end_times[duration]
-    phase_2_first_day = REF_DATE + timedelta(days=PHASE_2_START_TIME)
+    phase_2_first_day = BASE_DATE + timedelta(days=PHASE_2_START_TIME)
     phase_1_end_date = phase_2_first_day + timedelta(days=-1)
-    phase_2_end_date = REF_DATE + timedelta(days=phase_2_end_days)
+    phase_2_end_date = BASE_DATE + timedelta(days=phase_2_end_days)
     phase_3_first_day = phase_2_end_date + timedelta(days=1)
 
     def scenario_func(decision_variables):

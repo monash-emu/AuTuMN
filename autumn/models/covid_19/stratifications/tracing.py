@@ -1,9 +1,14 @@
 from summer import Overwrite, Stratification, Multiply
 
-from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Tracing
+from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Tracing, INFECTION
 
 
 def get_tracing_strat(quarantine_infect_multiplier, other_infect_multipliers) -> Stratification:
+    """
+    Contact tracing stratification to represent those detected actively through screening of first order contacts of
+    symptomatic COVID-19 patients presenting passively.
+    """
+
     tracing_strat = Stratification(
         "tracing",
         [Tracing.TRACED, Tracing.UNTRACED],
@@ -20,14 +25,15 @@ def get_tracing_strat(quarantine_infect_multiplier, other_infect_multipliers) ->
 
     # Apply the contact tracing
     tracing_strat.add_flow_adjustments(
-        "infection",
+        INFECTION,
         {
             Tracing.TRACED: Multiply(0.),
             Tracing.UNTRACED: Multiply(1.),
         }
     )
 
-    # Check the effect of isolation is the same as quarantine and hospitalisation
+    # Ensure the effects of isolation, quarantine and admission are the same
+    # (to ensure the stratification order doesn't matter)
     for infect_multiplier in other_infect_multipliers:
         assert quarantine_infect_multiplier == other_infect_multipliers[infect_multiplier]
 

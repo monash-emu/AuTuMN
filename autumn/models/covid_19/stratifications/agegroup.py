@@ -2,7 +2,7 @@ from typing import List
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA
+from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
 from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.parameters import Parameters
 from autumn.tools import inputs
@@ -51,8 +51,8 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratificat
     }
     age_strat.set_population_split(age_split_props)
 
-    # Adjust flows based on age group.
+    # Adjust flows based on age group
     age_strat.add_flow_adjustments(
-        "infection", {s: Multiply(v) for s, v in params.age_stratification.susceptibility.items()}
+        INFECTION, {sus: Multiply(value) for sus, value in params.age_stratification.susceptibility.items()}
     )
     return age_strat

@@ -34,7 +34,7 @@ mys = {
 }
 
 lka = {"region": ["sri_lanka"], "columns": STANDARD_COL}
-npl = {"region": ["nepal"], "columns": STANDARD_COL}
+npl = {"region": ["nepal"], "columns": STANDARD_COL + ["notificationsXagegroup_50","notificationsXagegroup_55"]}
 
 os.chdir(DATA_PATH)
 

@@ -100,18 +100,21 @@ mobility:
       times:
         - 2021-08-20
         - 2021-08-21
+        - 2021-08-22
       values:
         - - repeat_prev
+        - 0.6
         - 0.3
     work:
       append: true
       times:
         - 2021-08-20
         - 2021-08-21
+        - 2021-08-22
       values:
         - - repeat_prev
+        - 0.6
         - 0.3
-
 
 voc_emergence:
   alpha_beta:

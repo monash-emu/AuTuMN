@@ -90,9 +90,9 @@ def get_all_scenario_dicts():
 
 
         if i_lockdown_scenario == 1:
-            lockdown_title += " 60% reduced mobility after that."
+            lockdown_title += " to reach 60% reduced mobility, then 40% reduced mobility two weeks later."
         else:
-            lockdown_title += " back to normal mobility after that."
+            lockdown_title += " with 20% increment in mobility every two weeks, up to normal mobility."
 
         for i_vacc_scenario in i_vacc_scenarios:
 

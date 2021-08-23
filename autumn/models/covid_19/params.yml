@@ -81,14 +81,22 @@ clinical_stratification:
       # Mean estimated values used. a.k.a "clinical fraction".
       multiplier: 1.
       props:
-        - 0.533  # 0-9
-        - 0.533  # 10-19
-        - 0.679  # 20-29
-        - 0.679  # 30-39
-        - 0.679  # 40-49
-        - 0.679  # 50-59
-        - 0.803  # 60-69
-        - 0.803  # 70+
+        - 0.533  # 0-4
+        - 0.533  # 5-9
+        - 0.533  # 10-14
+        - 0.533  # 15-19
+        - 0.679  # 20-24
+        - 0.679  # 25-29
+        - 0.679  # 30-34
+        - 0.679  # 35-39
+        - 0.679  # 40-44
+        - 0.679  # 45-49
+        - 0.679  # 50-55
+        - 0.679  # 55-59
+        - 0.803  # 60-64
+        - 0.803  # 65-69
+        - 0.803  # 70-74
+        - 0.803  # 75+
     hospital:
       # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
       multiplier: 1. # Multiplier to the below age-stratified parameters

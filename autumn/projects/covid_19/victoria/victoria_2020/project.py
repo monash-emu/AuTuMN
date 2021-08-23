@@ -2,12 +2,10 @@ import numpy as np
 
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
-from autumn.tools.project.params import read_yaml_file
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
-import os
 
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
@@ -134,7 +132,7 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 project = Project(
-    Region.VICTORIA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
+    Region.VICTORIA_2020, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
 
 # Write parameter table to tex file

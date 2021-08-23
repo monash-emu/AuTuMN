@@ -23,13 +23,13 @@ register_project(Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.ph
 
 # Example projects
 register_project(Models.EXAMPLE, Region.PHILIPPINES, "autumn.projects.example.philippines.project")
-register_project(Models.EXAMPLE, Region.VICTORIA, "autumn.projects.example.victoria.project")
+register_project(Models.EXAMPLE, Region.VICTORIA_2020, "autumn.projects.example.victoria.victoria_2020.project")
 
 # COVID: Victoria state-wide super-model
 register_project(
     Models.COVID_19,
-    Region.VICTORIA,
-    "autumn.projects.covid_19.victoria.project",
+    Region.VICTORIA_2020,
+    "autumn.projects.covid_19.victoria.victoria_2020.project",
 )
 
 # COVID: European mixing optmization

@@ -1,7 +1,7 @@
 class Region:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
-    VICTORIA = "victoria"
+    VICTORIA_2020 = "victoria_2020"
     MANILA = "manila"
     CALABARZON = "calabarzon"
     CENTRAL_VISAYAS = "central-visayas"
@@ -49,7 +49,7 @@ class Region:
         SWEDEN,
         FRANCE,
         SPAIN,
-        VICTORIA,
+        VICTORIA_2020,
         NORTH_METRO,
         SOUTH_EAST_METRO,
         SOUTH_METRO,

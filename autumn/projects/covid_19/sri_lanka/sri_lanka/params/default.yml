@@ -15,9 +15,8 @@ contact_tracing:
     assumed_prev: 1.e-3
     quarantine_infect_multiplier: 0.2
 
+
 vaccination:
-  overall_efficacy: 0.7
-  vacc_prop_prevent_infection: 1
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.12
@@ -31,6 +30,7 @@ vaccination:
         coverage: 0.30
         start_time: 610 #01  September 2021
         end_time: 732 # 1 Jan 2022
+
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -95,6 +95,23 @@ mobility:
         - 1
         - 1
         - 0
+    other_locations:
+      append: true
+      times:
+        - 2021-08-20
+        - 2021-08-21
+      values:
+        - - repeat_prev
+        - 0.3
+    work:
+      append: true
+      times:
+        - 2021-08-20
+        - 2021-08-21
+      values:
+        - - repeat_prev
+        - 0.3
+
 
 voc_emergence:
   alpha_beta:

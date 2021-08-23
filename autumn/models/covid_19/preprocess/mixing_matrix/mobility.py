@@ -215,6 +215,11 @@ def min_last_period(prev_vals: List[float], period: int):
     return min(prev_vals[-last_n_values:])
 
 
+def average_mobility(prev_vals: List[float], period: int):
+    last_n_values = min(len(prev_vals), period)
+    return sum(prev_vals[-last_n_values:])/len(prev_vals[-last_n_values:])
+
+
 def copy_mobility(prev_vals: List[float], ignore_vals: int):
     """
     returns the mobility level at the requested time by ignoring the last values defined by ignore_vals
@@ -278,6 +283,7 @@ PARSE_FUNCS = {
     "close_to_max_last_period": close_to_max_last_period,
     "min_last_period": min_last_period,
     "copy_mobility": copy_mobility,
+    "average_mobility":average_mobility,
     # used for the Philippines
     "ECQ": ecq,
     "MECQ": mecq,

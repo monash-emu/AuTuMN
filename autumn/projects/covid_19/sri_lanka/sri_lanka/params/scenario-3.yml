@@ -1,13 +1,36 @@
-description: Scenario 3, re-opening schools
-
+description: Scenario 3,50% vaccination by 14th Sep. Until Sep 18th lockdown. After that mobility level before lockdown.
 time:
-  start: 559 # 12th July 2021
+  start: 599 # 21st August 2021
 
 mobility:
   mixing:
-    school:
-      append: false
+    other_locations:
+      append: true
       times:
-        - 2021-07-12 # All schools open
+        - 2021-08-20
+        - 2021-08-21
+        - 2021-09-18
+        - 2021-09-19
       values:
-        - 1
+        - - repeat_prev
+        - 0.3
+        - - repeat_prev
+        - - average_mobility
+          - 17
+
+
+    work:
+      append: true
+      times:
+        - 2021-08-20
+        - 2021-08-21
+        - 2021-09-18
+        - 2021-09-19
+      values:
+        - - repeat_prev
+        - 0.3
+        - - repeat_prev
+        - - average_mobility
+          - 17
+
+

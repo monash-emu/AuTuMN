@@ -36,7 +36,7 @@ def build_synthetic_matrices(modelled_country_iso3, proxy_country_iso3, modelled
 
     # convert matrices to match modelled age groups
     model_ready_matrices = convert_matrices_agegroups(
-        age_adjusted_matrices, source_age_breaks, modelled_age_breaks
+        age_adjusted_matrices, source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name
     )
 
     return model_ready_matrices
@@ -114,13 +114,15 @@ def adjust_matrices_for_age_distribution(
 
 
 def convert_matrices_agegroups(
-    matrices, source_age_breaks, modelled_age_breaks
+    matrices, source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name=None
 ):
     """
     Transform the contact matrices to match the model age stratification.
     :param matrices: contact matrices based the source age stratification
     :param source_age_breaks: age breaks of the source matrices
     :param modelled_age_breaks: the requested model's age breaks
+    :param modelled_country_iso3: the ISO3 code of the modelled country
+    :param modelled_region_name: name of a sub-region (if applicable)
     :return: contact matrices based on model's age stratification (dictionary)
     """
     n_modelled_groups = len(modelled_age_breaks)
@@ -130,7 +132,8 @@ def convert_matrices_agegroups(
     modelled_upper_bounds = _get_upper_bounds(modelled_age_breaks)
     source_upper_bounds = _get_upper_bounds(source_age_breaks)
 
-    # For each model's age group, work out the overlap with each source age group
+    # For each model's age group, work out the overlapping age portion with each source age group, and calculate
+    # the proportion of the population this age portion takes up among the source age group.
     source_age_break_contributions = []
     for i_model, modelled_age_break in enumerate(modelled_age_breaks):
         model_lower, model_upper = int(modelled_age_break), modelled_upper_bounds[i_model]
@@ -141,9 +144,11 @@ def convert_matrices_agegroups(
             if model_upper <= source_lower or model_lower >= source_upper:
                 contributions.append(0.)
             else:
-                overlap_width = min(source_upper, model_upper) - max(source_lower, model_lower)
-                source_width = source_upper - source_lower
-                contributions.append(overlap_width / source_width)
+                overlap_range = max(source_lower, model_lower), min(source_upper, model_upper)
+                contributions.append(
+                    _get_proportion_between_ages_among_agegroup(
+                        overlap_range, (source_lower, source_upper), modelled_country_iso3, modelled_region_name)
+                )
 
         source_age_break_contributions.append(contributions)
 
@@ -180,6 +185,32 @@ def _get_pop_props_by_age(age_breaks, country_iso3, region_name=None, reference_
     )
     total_pop = sum(age_pops)
     return [p / total_pop for p in age_pops]
+
+
+def _get_proportion_between_ages_among_agegroup(
+    age_range_numerator, age_range_denominator, modelled_country_iso3, modelled_region_name
+):
+    """
+    Work out the proportion of population aged within age_range_numerator among the age group age_range_denominator
+    """
+    numerator_low, numerator_up = age_range_numerator
+    denominator_low, denominator_up = age_range_denominator
+
+    assert numerator_low >= denominator_low and numerator_up <= denominator_up
+
+    if numerator_low == denominator_low and numerator_up == denominator_up:
+        return 1.
+    else:
+        popsize_denominator = get_population_by_agegroup(
+            [0, denominator_low, denominator_up], modelled_country_iso3, modelled_region_name, year=2020
+        )[1]
+        if popsize_denominator == 0:
+            return 0.
+        else:
+            popsize_numerator = get_population_by_agegroup(
+                [0, numerator_low, numerator_up], modelled_country_iso3, modelled_region_name, year=2020
+            )[1]
+            return popsize_numerator / popsize_denominator
 
 
 def _get_upper_bounds(all_age_breaks):

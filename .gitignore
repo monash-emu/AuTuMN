@@ -81,6 +81,8 @@ docs/papers/tex/*.pdf
 # Random stuff
 *marshall-islands*.pickle
 
+notebooks/user/rragonnet/outputs/
+
 saved_*
 *marshall-islands*.pickle
 saved_optimisation_analyses/

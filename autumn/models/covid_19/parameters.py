@@ -124,8 +124,11 @@ class Mobility(BaseModel):
     npi_effectiveness: Dict[str, float]
     google_mobility_locations: Dict[str, List[str]]
 
+
 class MixingMatrices(BaseModel):
-    type: Optional[str] # None defaults to Prem matrices, otherwise 'prem' or 'synth' - see build_model
+    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
+    source_iso3: Optional[str]
+
 
 class AgeStratification(BaseModel):
     """Parameters used in age based stratification"""

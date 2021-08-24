@@ -1,3 +1,5 @@
+from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
+from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
@@ -86,6 +88,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.set_initial_population(init_pop)
 
     """
+    Get input data
+    """
+    if params.mixing_matrices:
+        if params.mixing_matrices.type == 'prem':
+            mixing_matrices = get_prem_mixing_matrices(country.iso3)
+        elif params.mixing_matrices.type == 'synth':
+            mixing_matrices = build_synthetic_matrices(country.iso3, 'VNM', AGEGROUP_STRATA)
+        else:
+            raise Exception("Invalid mixing matrix type specified in parameters")
+    else:
+        # Default to prem matrices (old model runs)
+        mixing_matrices = get_prem_mixing_matrices(country.iso3)
+
+    """
     Add intercompartmental flows
     """
 
@@ -133,7 +149,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Stratify the model by age group
-    age_strat = get_agegroup_strat(params, total_pops)
+    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices)
     model.stratify_with(age_strat)
 
     # Stratify the model by clinical status
@@ -191,7 +207,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if is_region_vic:
         cluster_strat = get_cluster_strat(params)
         model.stratify_with(cluster_strat)
-        mixing_matrix_function = apply_post_cluster_strat_hacks(params, model)
+        mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)
 
     # Contact tracing stratification
     if params.contact_tracing:

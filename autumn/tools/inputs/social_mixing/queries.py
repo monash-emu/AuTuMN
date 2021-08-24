@@ -10,6 +10,14 @@ MAPPING_ISO_CODE = {
     "MHL": "KIR",
 }
 
+def get_prem_mixing_matrices(country_iso_code: str):
+    out_matrices = {}
+
+    for loc in LOCATIONS:
+        out_matrices[loc] = get_country_mixing_matrix(loc, country_iso_code)
+
+    return out_matrices
+
 # Cache result beecause this gets called 1000s of times during calibration.
 @lru_cache(maxsize=None)
 def get_country_mixing_matrix(

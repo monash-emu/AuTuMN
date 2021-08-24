@@ -2,9 +2,6 @@ from typing import Callable, Dict
 
 import numpy as np
 
-from autumn.models.covid_19.parameters import Country
-from autumn.tools.inputs import get_country_mixing_matrix
-
 from .base_adjuster import BaseMixingAdjuster
 
 # Locations that can be used for mixing
@@ -18,7 +15,7 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
 
     def __init__(
         self,
-        country: Country,
+        mixing_matrices: Dict[str, np.ndarray],
         mobility_funcs: Dict[str, Callable[[float], float]],
         microdistancing_funcs: Dict[str, Callable[[float], float]],
     ):
@@ -27,10 +24,7 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
         self.microdistancing_funcs = microdistancing_funcs
 
         # Load all the location-specific mixing matrices.
-        self.matrix_components = {}
-        for sheet_type in LOCATIONS:
-            # Loads a 16x16 ndarray
-            self.matrix_components[sheet_type] = get_country_mixing_matrix(sheet_type, country.iso3)
+        self.matrix_components = mixing_matrices
 
     def get_adjustment(self, time: float, mixing_matrix: np.ndarray) -> np.ndarray:
         """

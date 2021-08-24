@@ -19,16 +19,16 @@ contact_tracing:
 vaccination:
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.12
+        coverage: 0.25
         start_time: 481 # 25 Apr 2021
-        end_time: 586 # 08 August 2021
+        end_time: 600 # 22 August 2021
     - supply_period_coverage:
-        coverage: 0.38
-        start_time: 587 # 09 August 2021
-        end_time: 609 # 31 August 2021
+        coverage: 0.33 # 50% coverage by Aug 31
+        start_time: 601 # 23 August 2021
+        end_time: 623 # 14 Sep August 2021 (two weeks lag)
     - supply_period_coverage:
-        coverage: 0.30
-        start_time: 610 #01  September 2021
+        coverage: 0.60 #80% coverage by Jan 1
+        start_time: 624 #15  September 2021
         end_time: 732 # 1 Jan 2022
 
 

@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 from numpy.testing import assert_allclose
+from pandas.core import base
 
 from autumn.models.covid_19.constants import BASE_DATE
 from autumn.models.covid_19.parameters import Country, Mobility
@@ -24,6 +25,14 @@ OTHER_LOCATIONS_MM = MM * 0.2
 SCHOOL_MM = MM * 0.3
 WORK_MM = MM * 0.6
 
+MIXING_MATRICES = {
+    'all_locations': MM,
+    'home': HOME_MM,
+    'other_locations': OTHER_LOCATIONS_MM,
+    'school': SCHOOL_MM,
+    'work': WORK_MM
+}
+
 UNTESTED_PARAMS = {
     "npi_effectiveness": {},
     "google_mobility_locations": {},
@@ -32,11 +41,11 @@ UNTESTED_PARAMS = {
 }
 
 
-def test_build_dynamic__with_no_changes(monkeypatch):
+def test_build_dynamic__with_no_changes():
     """
     Ensure dynamic mixing matrix has no change over time, if no changes are supplied.
     """
-    monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
+    #monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
     mobility_params = {
         "mixing": {},
         "age_mixing": None,
@@ -46,7 +55,7 @@ def test_build_dynamic__with_no_changes(monkeypatch):
     }
 
     mm_func = build_dynamic_mixing_matrix(
-        base_matrix=MM, country=Country(iso3="AUS"), mobility=Mobility(**mobility_params)
+        base_matrices=MIXING_MATRICES, country=Country(iso3="AUS"), mobility=Mobility(**mobility_params)
     )
     mm = mm_func(0)
     assert_allclose(mm, MM, atol=0.01, verbose=True)
@@ -66,7 +75,7 @@ def test_build_dynamic__with_location_mobility_data(monkeypatch):
         return vals, days
 
     monkeypatch.setattr(mobility, "get_mobility_data", get_fake_mobility_data)
-    monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
+    #monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
     mobility_params = {
         "mixing": {
             "school": {
@@ -81,7 +90,7 @@ def test_build_dynamic__with_location_mobility_data(monkeypatch):
         **UNTESTED_PARAMS,
     }
     mm_func = build_dynamic_mixing_matrix(
-        base_matrix=MM,
+        base_matrices=MIXING_MATRICES,
         country=Country(iso3="AUS"),
         mobility=Mobility(**mobility_params),
     )
@@ -94,11 +103,10 @@ def test_build_dynamic__with_location_mobility_data(monkeypatch):
     assert_allclose(mm, expected_mm, atol=0.01, verbose=True)
 
 
-def test_build_dynamic__with_age_mobility_data(monkeypatch):
+def test_build_dynamic__with_age_mobility_data():
     """
     Ensure dynamic mixing matrix can use age-based mobility data set by the user.
     """
-    monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
     mobility_params = {
         "mixing": {},
         "age_mixing": {
@@ -116,7 +124,7 @@ def test_build_dynamic__with_age_mobility_data(monkeypatch):
         **UNTESTED_PARAMS,
     }
     mm_func = build_dynamic_mixing_matrix(
-        base_matrix=MM,
+        base_matrices=MIXING_MATRICES,
         country=Country(iso3="AUS"),
         mobility=Mobility(**mobility_params),
     )
@@ -134,11 +142,10 @@ def test_build_dynamic__with_age_mobility_data(monkeypatch):
     assert_allclose(mm, expected_mm, atol=0.01, verbose=True)
 
 
-def test_build_dynamic__with_microdistancing(monkeypatch):
+def test_build_dynamic__with_microdistancing():
     """
     Ensure dynamic mixing matrix can use microdistancing set by the user.
     """
-    monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
     mobility_params = {
         "mixing": {},
         "age_mixing": None,
@@ -157,7 +164,7 @@ def test_build_dynamic__with_microdistancing(monkeypatch):
         **UNTESTED_PARAMS,
     }
     mm_func = build_dynamic_mixing_matrix(
-        base_matrix=MM,
+        base_matrices=MIXING_MATRICES,
         country=Country(iso3="AUS"),
         mobility=Mobility(**mobility_params),
     )
@@ -184,7 +191,7 @@ def test_build_dynamic__with_everything(monkeypatch):
         return vals, days
 
     monkeypatch.setattr(mobility, "get_mobility_data", get_fake_mobility_data)
-    monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
+    #monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
     mobility_params = {
         "mixing": {
             "school": {
@@ -218,7 +225,7 @@ def test_build_dynamic__with_everything(monkeypatch):
         **UNTESTED_PARAMS,
     }
     mm_func = build_dynamic_mixing_matrix(
-        base_matrix=MM,
+        base_matrices=MIXING_MATRICES,
         country=Country(iso3="AUS"),
         mobility=Mobility(**mobility_params),
     )

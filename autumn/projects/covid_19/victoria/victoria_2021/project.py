@@ -1,9 +1,10 @@
 import numpy as np
+import json
 
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
+from autumn.tools.calibration.targets import NormalTarget, PoissonTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
@@ -16,11 +17,10 @@ TARGETS_END_TIME = 305  # 31st October
 TARGETS_RANGE = (TARGETS_START_TIME, TARGETS_END_TIME)
 
 # Load and configure model parameters
-default_path = build_rel_path("params/default.yml")
-mle_path = build_rel_path("params/mle-params.yml")
+default_path = build_rel_path("../victoria_2020/params/default.yml")
 scenario_dir_path = build_rel_path("params/")
 scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
-baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
+baseline_params = base_params.update(default_path)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
@@ -112,9 +112,6 @@ priors = [
     UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
 ]
 
-# Load proposal sds from yml file
-use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
-
 calibration = Calibration(
     priors,
     targets,
@@ -124,9 +121,6 @@ calibration = Calibration(
     jumping_stdev_adjustment=0.8,
 )
 
-# FIXME: Replace with flexible Python plot request API.
-import json
-
 plot_spec_filepath = build_rel_path("targets.secret.json")
 with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
@@ -134,15 +128,3 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.VICTORIA_2021, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
-
-# Write parameter table to tex file
-main_table_params_list = [
-    "clinical_stratification.icu_prop",
-    "sojourn.compartment_periods_calculated.exposed.total_period",
-    "contact_rate"
-]
-# project.write_params_to_tex(main_table_params_list, project_path=build_rel_path(''))
-
-
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)

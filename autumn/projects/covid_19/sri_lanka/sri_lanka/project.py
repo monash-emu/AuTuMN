@@ -45,7 +45,7 @@ priors = [
     UniformPrior("voc_emergence.delta.start_time", [430, 485]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [3.25, 4.65]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 1.0]),
-    UniformPrior("infection_fatality.multiplier", [1.15, 1.8])
+    UniformPrior("infection_fatality.multiplier", [1.15, 2.1])
 ]
 
 # Load proposal sds from yml file

@@ -1120,3 +1120,11 @@ def read_current_parameter_values(priors, model_parameters):
             )
 
     return starting_points
+
+
+def get_param_names_from_df(params_df, chain=0):
+    """
+    Extract the names of all the parameters used in the calibration that created this parameters dataframe object.
+    """
+
+    return params_df[chain]["name"].unique()

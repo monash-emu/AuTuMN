@@ -238,11 +238,14 @@ def update_timeseries(TARGETS_MAPPING, df, file_path):
     with open(file_path, mode="r") as f:
         targets = json.load(f)
     for key, val in TARGETS_MAPPING.items():
-        # Drop the NaN value rows from df before writing data.
-        temp_df = df[["date_index", val]].dropna(0, subset=[val])
 
-        targets[key]["times"] = list(temp_df["date_index"])
-        targets[key]["values"] = list(temp_df[val])
+        if val in df.columns and key in targets.keys():
+                
+            # Drop the NaN value rows from df before writing data.
+            temp_df = df[["date_index", val]].dropna(0, subset=[val])
+
+            targets[key]["times"] = list(temp_df["date_index"])
+            targets[key]["values"] = list(temp_df[val])
     with open(file_path, "w") as f:
         json.dump(targets, f, indent=2)
 

@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Dict
 
 import numpy as np
 
@@ -10,7 +10,7 @@ from .mobility import get_mobility_funcs
 
 
 def build_dynamic_mixing_matrix(
-    base_matrix: np.ndarray, mobility: Mobility, country: Country
+    base_matrices: Dict[str, np.ndarray], mobility: Mobility, country: Country
 ) -> Callable[[float], np.ndarray]:
     """
     Build a time-varying mixing matrix
@@ -30,7 +30,7 @@ def build_dynamic_mixing_matrix(
         mobility.smooth_google_data,
     )
 
-    location_adjuster = LocationMixingAdjuster(country, mobility_funcs, microdistancing_funcs)
+    location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
     if mobility.age_mixing:
         age_adjuster = AgeMixingAdjuster(mobility.age_mixing)
     else:
@@ -40,7 +40,7 @@ def build_dynamic_mixing_matrix(
         """
         Returns a 16x16 mixing matrix for a given time.
         """
-        mixing_matrix = np.copy(base_matrix)
+        mixing_matrix = np.copy(base_matrices['all_locations'])
         mixing_matrix = location_adjuster.get_adjustment(time, mixing_matrix)
         if age_adjuster:
             mixing_matrix = age_adjuster.get_adjustment(time, mixing_matrix)

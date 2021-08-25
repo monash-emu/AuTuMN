@@ -1,6 +1,8 @@
-from typing import List
+from typing import List, Dict
 
 from summer import Multiply, Stratification
+
+import numpy as np
 
 from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
 from autumn.models.covid_19.model import preprocess
@@ -9,7 +11,7 @@ from autumn.tools import inputs
 from autumn.tools.utils.utils import normalise_sequence
 
 
-def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratification:
+def get_agegroup_strat(params: Parameters, total_pops: List[int], mixing_matrices: Dict[str, np.ndarray]) -> Stratification:
     """
     Age stratification
     """
@@ -36,9 +38,8 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratificat
             age_categories, adjustment_start_time, adjustment_end_time, contact_rate_multiplier
         )
 
-    static_mixing_matrix = inputs.get_country_mixing_matrix("all_locations", country.iso3)
     dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic_mixing_matrix(
-        static_mixing_matrix,
+        mixing_matrices,
         params.mobility,
         country,
     )

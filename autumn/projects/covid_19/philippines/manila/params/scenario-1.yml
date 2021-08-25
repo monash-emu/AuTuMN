@@ -1,39 +1,33 @@
-description: 4-week ECQ (21 Aug - 17 Sep)
+description: MECQ until 15 Sep / high MHS compliance sustained
 
 time:
-  start: 583
+  start: 608  # 30 Aug 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-08-06
         - 2021-08-22
+        - 2021-09-15
         - 2021-09-17
-        - 2021-09-19
       values:
-        - - ECQ
+        - - MECQ
           - other_locations
-        - - ECQ
-          - other_locations
-        - - ECQ
+        - - MECQ
           - other_locations
         - - GCQ
           - other_locations
     work:
       append: true
       times:
-        - 2021-08-06
         - 2021-08-22
+        - 2021-09-15
         - 2021-09-17
-        - 2021-09-19
       values:
-        - - ECQ
+        - - MECQ
           - work
-        - - ECQ
-          - work
-        - - ECQ
+        - - MECQ
           - work
         - - GCQ
           - work

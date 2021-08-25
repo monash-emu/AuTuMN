@@ -16,7 +16,7 @@ mobility:
         - 0.3
         - - repeat_prev
         - - average_mobility
-          - 17
+          - 14
 
     work:
       append: true
@@ -30,6 +30,6 @@ mobility:
         - 0.3
         - - repeat_prev
         - - average_mobility
-          - 17
+          - 14
 
 

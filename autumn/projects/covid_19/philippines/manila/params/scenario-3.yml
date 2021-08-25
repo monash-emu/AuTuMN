@@ -1,23 +1,17 @@
-description: 4-week MECQ (21 Aug - 17 Sep)
+description: MECQ until 15 Sep / reduced MHS compliance
 
 time:
-  start: 583
+  start: 608  # 30 Aug 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-08-06
-        - 2021-08-20
         - 2021-08-22
+        - 2021-09-15
         - 2021-09-17
-        - 2021-09-19
       values:
-        - - ECQ
-          - other_locations
-        - - ECQ
-          - other_locations
         - - MECQ
           - other_locations
         - - MECQ
@@ -27,19 +21,23 @@ mobility:
     work:
       append: true
       times:
-        - 2021-08-06
-        - 2021-08-20
         - 2021-08-22
+        - 2021-09-15
         - 2021-09-17
-        - 2021-09-19
       values:
-        - - ECQ
-          - work
-        - - ECQ
-          - work
         - - MECQ
           - work
         - - MECQ
           - work
         - - GCQ
           - work
+
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 608 # 30 Aug
+          - 611 # 2 Sep
+        values:
+          - 0.6
+          - 0.4

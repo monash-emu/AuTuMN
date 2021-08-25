@@ -13,8 +13,18 @@ SOURCE_MATRICES_PATH = os.path.join(INPUT_DATA_PATH, "social-mixing", "socialmix
 
 # Year when the contact survey was conducted (nearest multiple of 5)
 REFERENCE_YEAR = {
-    "VNM": 2005,  # survey conducted in 2007
+    "VNM": 2005,  # survey conducted in 2007 in semi-rural setting
+    "HKG": 2015,  # 2015-2016
+    "CHN": 2015,  # 2017-2018 in Shanghai City
+    # POLYMOD surveys below
     "GBR": 2005,  # survey conducted in 2005, 2006
+    "ITA": 2005,
+    "DEU": 2005,
+    "FIN": 2005,
+    "POL": 2005,
+    "BEL": 2005,
+    "NLD": 2005,
+    "LUX": 2005,
 }
 
 

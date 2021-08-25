@@ -1,5 +1,9 @@
 description: BASELINE
 
+mixing_matrices:
+  type: extrapolated
+  source_iso3: GBR
+
 population:
   region: Victoria
 country:

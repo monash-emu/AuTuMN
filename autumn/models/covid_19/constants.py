@@ -105,6 +105,12 @@ HISTORY_STRATA = [
     History.EXPERIENCED,
 ]
 
+VACCINATED_CATEGORIES = [
+    Vaccination.ONE_DOSE,
+    Vaccination.FULLY_VACCINATED,
+]
+
+
 """
 Transitions
 """

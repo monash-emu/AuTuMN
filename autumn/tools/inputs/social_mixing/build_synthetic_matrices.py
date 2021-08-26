@@ -133,25 +133,25 @@ def find_source_age_group_contributions(
 
     # For each model's age group, work out the overlapping age portion with each source age group, and calculate
     # the proportion of the population this age portion takes up among the source age group.
-    source_age_break_contributions = []
-    for i_model, modelled_age_break in enumerate(modelled_breaks):
-        model_lower, model_upper = int(modelled_age_break), modelled_upper_bounds[i_model]
-        contributions = []  # stores the portion of each source bracket included in a given modelled bracket
+    contributions_array = np.zeros((len(modelled_breaks), len(source_breaks)))
+
+    for i_break, modelled_age_break in enumerate(modelled_breaks):
+        model_lower, model_upper = int(modelled_age_break), modelled_upper_bounds[i_break]
+
+        # Stores the portion of each source bracket included in a given modelled bracket
         for i_source, source_age_break in enumerate(source_breaks):
-            # work out the proportion of source bracket that is included in modelled bracket
+
+            # Work out the proportion of source bracket that is included in each modelled bracket
             source_lower, source_upper = int(source_age_break), source_upper_bounds[i_source]
-            if model_upper <= source_lower or model_lower >= source_upper:
-                contributions.append(0.)
-            else:
+            if not (model_upper <= source_lower or model_lower >= source_upper):
                 overlap_range = max(source_lower, model_lower), min(source_upper, model_upper)
-                contributions.append(
-                    _get_proportion_between_ages_among_agegroup(
-                        overlap_range, (source_lower, source_upper), modelled_iso3, modelled_region)
+                contributions_array[i_break, i_source] = _get_proportion_between_ages_among_agegroup(
+                    overlap_range, (source_lower, source_upper), modelled_iso3, modelled_region
                 )
 
-        source_age_break_contributions.append(contributions)
-
-    return source_age_break_contributions
+    for source_total in np.sum(contributions_array, 1):
+        assert abs(source_total - 1.) < 1e-6, "Source categories' proportions aren't summing to one"
+    return contributions_array
 
 
 def convert_matrices_agegroups(
@@ -179,14 +179,14 @@ def convert_matrices_agegroups(
         base_matrix = matrices[location]
         output_matrix = np.zeros((n_modelled_groups, n_modelled_groups))
         for i_model in range(n_modelled_groups):
-            i_contributions = np.matrix(source_age_break_contributions[i_model]).reshape(n_source_groups, 1)
+            i_contributions = source_age_break_contributions[i_model, :].reshape(n_source_groups, 1)
             for j_model in range(n_modelled_groups):
-                j_contributions = np.matrix(source_age_break_contributions[j_model]).reshape(n_source_groups, 1)
+                j_contributions = source_age_break_contributions[j_model, :].reshape(n_source_groups, 1)
 
-                # sum over contactees' contributions for each contactor's contribution
+                # Sum over contactees' contributions for each contactor's contribution
                 sums_over_contactees = np.dot(base_matrix, j_contributions)
 
-                # average over contactors' contributions
+                # Average over contactors' contributions
                 average_over_contactors = \
                     float(np.dot(np.transpose(i_contributions), sums_over_contactees)) / float(sum(i_contributions))
 

@@ -54,8 +54,8 @@ priors = [
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.01, 1.5]),
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.2, 2.0]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.2, 2.5]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [300, 450]),
 ]
 
 # Load proposal sds from yml file

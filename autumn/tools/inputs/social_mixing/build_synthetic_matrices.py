@@ -143,7 +143,7 @@ def find_source_age_group_contributions(
 
             # Work out the proportion of source bracket that is included in each modelled bracket
             source_lower, source_upper = int(source_age_break), source_upper_bounds[i_source]
-            if not (model_upper <= source_lower or model_lower >= source_upper):
+            if model_upper > source_lower and model_lower < source_upper:
                 overlap_range = max(source_lower, model_lower), min(source_upper, model_upper)
                 contributions_array[i_break, i_source] = _get_proportion_between_ages_among_agegroup(
                     overlap_range, (source_lower, source_upper), modelled_iso3, modelled_region
@@ -151,6 +151,7 @@ def find_source_age_group_contributions(
 
     for source_total in np.sum(contributions_array, 1):
         assert abs(source_total - 1.) < 1e-6, "Source categories' proportions aren't summing to one"
+
     return contributions_array
 
 

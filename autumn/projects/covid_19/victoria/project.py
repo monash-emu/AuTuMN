@@ -3,7 +3,7 @@ import numpy as np
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.project.params import read_yaml_file
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
+from autumn.tools.calibration.priors import IndependentPriorSetClassic, IndependentPriorSet, UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
@@ -117,8 +117,10 @@ priors = [
 # Load proposal sds from yml file
 use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
+priorset = IndependentPriorSet(priors)
+
 calibration = Calibration(
-    priors,
+    priorset,
     targets,
     metropolis_init="current_params",
     metropolis_init_rel_step_size=0.05,

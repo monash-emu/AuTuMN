@@ -1,3 +1,4 @@
+#from autumn.tools.calibration.priors import BasePrior
 import math
 import os
 from typing import Any, Dict, List
@@ -81,7 +82,7 @@ def draw_independent_samples(independent_priors):
     return independent_samples
 
 
-def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples: int):
+def sample_starting_params_from_lhs(par_priors: Dict[str, Any], n_samples: int):
     """
     Use Latin Hypercube Sampling to define MCMC starting points
     :param par_priors: a list of dictionaries defining the prior distributions
@@ -92,11 +93,11 @@ def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples:
 
     # Draw a Latin hypercube (all values in [0-1])
     hypercube = lhs(n=len(par_priors), samples=n_samples, criterion="center")
-    for j, prior_dict in enumerate(par_priors):
+    for j, prior in enumerate(par_priors.values()):
         for i in range(n_samples):
             prop = hypercube[i, j]
-            quantile = sample_prior(prior_dict, prop)
-            list_of_starting_params[i][prior_dict["param_name"]] = quantile
+            quantile = sample_prior(prior.to_dict(), prop)
+            list_of_starting_params[i][prior.name] = quantile
 
     return list_of_starting_params
 

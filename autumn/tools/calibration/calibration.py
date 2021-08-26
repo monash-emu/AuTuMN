@@ -15,7 +15,7 @@ from autumn import settings
 from autumn.tools import db, plots
 from autumn.tools.utils.utils import get_git_branch, get_git_hash
 from autumn.tools.utils.timer import Timer
-from autumn.tools.calibration.priors import BasePrior
+from autumn.tools.calibration.priors import BasePrior, BasePriorSet, UniformPrior
 from autumn.tools.calibration.targets import BaseTarget
 from autumn.tools.calibration.proposal_tuning import tune_jumping_stdev
 from autumn.tools.project.params import read_param_value_from_string
@@ -81,7 +81,7 @@ class Calibration:
 
     def __init__(
         self,
-        priors: List[BasePrior],
+        priors: BasePriorSet,
         targets: List[BaseTarget],
         haario_scaling_factor: float = DEFAULT_HAARIO_SCALING_FACTOR,
         adaptive_proposal: bool = True,
@@ -95,9 +95,11 @@ class Calibration:
         """
         Defines a new calibration.
         """
-        self.all_priors = [p.to_dict() for p in priors]
+
+        self.priorset = priors
+        #self.all_priors = [p.to_dict() for p in priors.priors.values()]
         self.targets = [t.to_dict() for t in targets]
-        self.targets = remove_early_points_to_prevent_crash(self.targets, self.all_priors)
+        self.targets = remove_early_points_to_prevent_crash(self.targets, self.priorset.priors)
 
         self.haario_scaling_factor = haario_scaling_factor
         self.adaptive_proposal = adaptive_proposal
@@ -107,7 +109,7 @@ class Calibration:
         self.initial_jumping_stdev_ratio = initial_jumping_stdev_ratio
         self.jumping_stdev_adjustment = jumping_stdev_adjustment
 
-        self.split_priors_by_type()
+        #self.split_priors_by_type()
 
         if seed is None:
             seed = int(time())
@@ -178,16 +180,16 @@ class Calibration:
         ]
 
     def tune_proposal(self, param_name, project: Project, n_points=100, relative_likelihood_reduction=0.5):
-        assert param_name in self.iterative_sampling_param_names, f"{param_name} is not an iteratively sampled parameter"
+        assert param_name in self.iterative_sampling_priors.priors, f"{param_name} is not an iteratively sampled parameter"
         assert n_points > 1, "A minimum of two points is required to perform proposal tuning"
 
         # We must perform a few initialisation tasks (needs refactoring)
         # work out missing distribution params for priors
-        specify_missing_prior_params(self.iterative_sampling_priors)
-        specify_missing_prior_params(self.independent_sampling_priors)
+        #specify_missing_prior_params(self.iterative_sampling_priors)
+        #specify_missing_prior_params(self.independent_sampling_priors)
 
         # rebuild self.all_priors, following changes to the two sets of priors
-        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
+        #self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
 
         self.project = project
         self.model_parameters = project.param_set.baseline
@@ -198,8 +200,8 @@ class Calibration:
         self.workout_unspecified_target_sds()  # for likelihood definition
         self.workout_unspecified_time_weights()  # for likelihood weighting
 
-        prior_dict = [p_dict for p_dict in self.all_priors if p_dict["param_name"] == param_name][0]
-        lower_bound, upper_bound = get_parameter_finite_range_from_prior(prior_dict)
+        prior = self.priorset.get(param_name)
+        lower_bound, upper_bound = prior.get_finite_range()
 
         starting_point = read_current_parameter_values(self.all_priors, self.model_parameters.to_dict())
 
@@ -240,16 +242,17 @@ class Calibration:
         self.end_time = 2 + max([max(t["years"]) for t in self.targets])
 
         # work out missing distribution params for priors
-        specify_missing_prior_params(self.iterative_sampling_priors)
-        specify_missing_prior_params(self.independent_sampling_priors)
+        #specify_missing_prior_params(self.iterative_sampling_priors)
+        #specify_missing_prior_params(self.independent_sampling_priors)
 
         # rebuild self.all_priors, following changes to the two sets of priors
-        self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
+        self.independent_sampling_priors = []
+        self.all_priors = self.iterative_sampling_priors = self.priorset
 
         # Select starting params
         # Random seed is reset in here; make sure any other seeding happens after this
         self.starting_point = set_initial_point(
-            self.all_priors, model_parameters_data, chain_idx, num_chains, self.initialisation_type
+            self.priorset, model_parameters_data, chain_idx, num_chains, self.initialisation_type
         )
 
         # Set chain specific seed
@@ -262,8 +265,7 @@ class Calibration:
 
         self.workout_unspecified_target_sds()  # for likelihood definition
         self.workout_unspecified_time_weights()  # for likelihood weighting
-        self.workout_unspecified_jumping_stdevs()  # for proposal function definition
-        self.param_bounds = self.get_parameter_bounds()
+        workout_unspecified_jumping_stdevs(self.priorset, self.metropolis_init_rel_step_size, self.initial_jumping_stdev_ratio)  # for proposal function definition
 
         self.build_transformations()
 
@@ -271,7 +273,7 @@ class Calibration:
         self.mcmc_trace_matrix = None  # will store the results of the MCMC model calibration
 
         if self.chain_idx == 0:
-            plots.calibration.plot_pre_calibration(self.all_priors, self.output.output_dir)
+            plots.calibration.plot_pre_calibration(self.all_priors.as_list_of_dicts(), self.output.output_dir)
 
         self.is_vic_super_model = False
         if "victorian_clusters" in model_parameters_data:
@@ -292,9 +294,9 @@ class Calibration:
     def validate_target_start_time(self, model_parameters_data):
         model_start = model_parameters_data["time"]["start"]
         max_prior_start = None
-        for p in self.all_priors:
-            if p["param_name"] == "time.start":
-                max_prior_start = max(p["distri_params"])
+        p = self.priorset.get("time.start")
+        if p:
+            max_prior_start = max(p.get_bounds())
 
         for t in self.targets:
             t_name = t["output_key"]
@@ -317,7 +319,8 @@ class Calibration:
         }
         self.output.write_metadata(f"meta-{chain_idx}.yml", metadata)
         self.output.write_metadata(f"params-{chain_idx}.yml", model_parameters_data)
-        self.output.write_metadata(f"priors-{chain_idx}.yml", self.all_priors)
+        _meta_priors = [p.to_dict() for p in self.priorset.priors.values()]
+        self.output.write_metadata(f"priors-{chain_idx}.yml", _meta_priors)
         self.output.write_metadata(f"targets-{chain_idx}.yml", self.targets)
 
     def run_model_with_params(self, proposed_params: dict):
@@ -454,19 +457,6 @@ class Calibration:
                 s = sum(target["time_weights"])
                 target["time_weights"] = [w / s for w in target["time_weights"]]
 
-    def workout_unspecified_jumping_stdevs(self):
-        for i, prior_dict in enumerate(self.iterative_sampling_priors):
-            if "jumping_stdev" not in prior_dict.keys():
-                prior_low, prior_high = get_parameter_finite_range_from_prior(prior_dict)
-                prior_width = prior_high - prior_low
-
-                #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
-                relative_prior_width = (
-                    self.metropolis_init_rel_step_size  # fraction of prior_width in which 95% of samples should fall
-                )
-                self.iterative_sampling_priors[i]["jumping_stdev"] = (
-                    relative_prior_width * prior_width * self.initial_jumping_stdev_ratio
-                )
 
     def run_fitting_algorithm(
         self,
@@ -508,11 +498,10 @@ class Calibration:
 
     def test_in_prior_support(self, iterative_params):
         in_support = True
-        for i, prior_dict in enumerate(self.iterative_sampling_priors):
-            param_name = prior_dict["param_name"]
+        for i, (param_name, prior) in enumerate(self.iterative_sampling_priors.priors.items()):
+
             # Work out bounds for acceptable values, using the support of the prior distribution
-            lower_bound = self.param_bounds[param_name][0]
-            upper_bound = self.param_bounds[param_name][1]
+            lower_bound, upper_bound = prior.get_bounds()
             if iterative_params[i] < lower_bound or iterative_params[i] > upper_bound:
                 in_support = False
                 break
@@ -570,10 +559,11 @@ class Calibration:
             )  # should always be true but this is a good safety check
 
             # combine all sampled params into a single dictionary
-            iterative_samples_dict = {
-                self.iterative_sampling_param_names[i]: proposed_iterative_params[i]
-                for i in range(len(proposed_iterative_params))
-            }
+            #iterative_samples_dict = {
+            #    self.iterative_sampling_param_names[i]: proposed_iterative_params[i]
+            #    for i in range(len(proposed_iterative_params))
+            #}
+            iterative_samples_dict = dict(zip(self.iterative_sampling_priors.priors, proposed_iterative_params))
             all_params_dict = {**iterative_samples_dict, **independent_samples}
 
             if is_within_prior_support:
@@ -589,10 +579,10 @@ class Calibration:
 
                 # transform the density
                 proposed_acceptance_quantity = proposed_log_posterior
-                for i, prior_dict in enumerate(
-                    self.iterative_sampling_priors
+                for i, (param_name, prior) in enumerate(
+                    self.iterative_sampling_priors.priors.items()
                 ):  # multiply the density with the determinant of the Jacobian
-                    inv_derivative = self.transform[prior_dict["param_name"]]["inverse_derivative"](
+                    inv_derivative = self.transform[param_name]["inverse_derivative"](
                         proposed_iterative_params_trans[i]
                     )
                     if inv_derivative > 0:
@@ -676,27 +666,25 @@ class Calibration:
         """
         Reduce the "jumping_stdev" associated with each parameter during the pre-adaptive phase
         """
-        for i in range(len(self.iterative_sampling_priors)):
-            self.iterative_sampling_priors[i]["jumping_stdev"] *= self.jumping_stdev_adjustment
+        for p in self.iterative_sampling_priors.priors.values():
+            p.jumping_stdev *= self.jumping_stdev_adjustment
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(
-            self.iterative_sampling_priors
+            self.iterative_sampling_priors.priors
         )  # from Haario et al. 2001
         cov_matrix = np.cov(self.mcmc_trace_matrix, rowvar=False)
         adaptive_cov_matrix = scaling_factor * cov_matrix + scaling_factor * ADAPTIVE_METROPOLIS[
             "EPSILON"
-        ] * np.eye(len(self.iterative_sampling_priors))
+        ] * np.eye(len(self.iterative_sampling_priors.priors))
         return adaptive_cov_matrix
 
     def get_parameter_bounds(self):
         param_bounds = {}
-        for i, prior_dict in enumerate(
-            self.iterative_sampling_priors + self.independent_sampling_priors
-        ):
+        for param_name, prior in self.priorset.priors.items():
             # Work out bounds for acceptable values, using the support of the prior distribution
-            lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)
-            param_bounds[prior_dict["param_name"]] = [lower_bound, upper_bound]
+            lower_bound, upper_bound = prior.get_bounds()
+            param_bounds[param_name] = [lower_bound, upper_bound]
 
         return param_bounds
 
@@ -705,19 +693,16 @@ class Calibration:
         Build transformation functions between the parameter space and R^n.
         """
         self.transform = {}
-        for i, prior_dict in enumerate(self.iterative_sampling_priors):
-            param_name = prior_dict["param_name"]
+        for param_name, prior in self.iterative_sampling_priors.priors.items():
             self.transform[param_name] = {
                 "direct": None,  # param support to R
                 "inverse": None,  # R to param space
                 "inverse_derivative": None,  # R to R
             }
-            lower_bound = self.param_bounds[param_name][0]
-            upper_bound = self.param_bounds[param_name][1]
 
-            original_sd = self.iterative_sampling_priors[i][
-                "jumping_stdev"
-            ]  # we will need to transform the jumping step
+            lower_bound, upper_bound = prior.get_bounds()
+
+            original_sd = prior.jumping_stdev
 
             # trivial case of an unbounded parameter
             if lower_bound == -float("inf") and upper_bound == float("inf"):
@@ -768,15 +753,15 @@ class Calibration:
                 transformed_up = self.transform[param_name]["direct"](
                     representative_point + original_sd / 4
                 )
-                self.iterative_sampling_priors[i]["jumping_stdev"] = abs(
+                prior.jumping_stdev = abs(
                     transformed_up - transformed_low
                 )
 
     def get_original_params(self, transformed_iterative_params):
         original_iterative_params = []
-        for i, prior_dict in enumerate(self.iterative_sampling_priors):
+        for i, param_name in enumerate(self.iterative_sampling_priors.priors):
             original_iterative_params.append(
-                self.transform[prior_dict["param_name"]]["inverse"](transformed_iterative_params[i])
+                self.transform[param_name]["inverse"](transformed_iterative_params[i])
             )
         return original_iterative_params
 
@@ -792,10 +777,10 @@ class Calibration:
         new_iterative_params_trans = []
         # if this is the initial step
         if prev_iterative_params_trans is None:
-            for prior_dict in self.iterative_sampling_priors:
-                start_point = self.starting_point[prior_dict["param_name"]]
+            for param_name in self.iterative_sampling_priors.priors:
+                start_point = self.starting_point[param_name]
                 new_iterative_params_trans.append(
-                    self.transform[prior_dict["param_name"]]["direct"](start_point)
+                    self.transform[param_name]["direct"](start_point)
                 )
             return new_iterative_params_trans
 
@@ -815,15 +800,15 @@ class Calibration:
                 )
 
         if not use_adaptive_proposal:
-            for i, prior_dict in enumerate(self.iterative_sampling_priors):
+            for i, prior in enumerate(self.iterative_sampling_priors.priors.values()):
                 sample = np.random.normal(
-                    loc=prev_iterative_params_trans[i], scale=prior_dict["jumping_stdev"], size=1
+                    loc=prev_iterative_params_trans[i], scale=prior.jumping_stdev, size=1
                 )[0]
                 new_iterative_params_trans.append(sample)
 
         return new_iterative_params_trans
 
-    def logprior(self, all_params_dict):
+    def _DEP_logprior(self, all_params_dict):
         """
         calculated the joint log prior
         :param all_params_dict: model parameters as a dictionary
@@ -835,6 +820,9 @@ class Calibration:
             logp += calculate_prior(prior_dict, value, log=True)
 
         return logp
+
+    def logprior(self, params: dict):
+        return self.priorset.logprior(params)
 
     def update_mcmc_trace(self, params_to_store):
         """
@@ -1070,14 +1058,11 @@ def remove_early_points_to_prevent_crash(target_outputs, priors):
     """
     Trim the beginning of the time series when model start time is varied during the MCMC
     """
-    idx = None
-    for i, p in enumerate(priors):
-        if p["param_name"] == "time.start":
-            idx = i
-            break
 
-    if idx is not None:
-        latest_start_time = priors[idx]["distri_params"][1]
+    time_prior = priors.get("time.start")
+
+    if time_prior:
+        latest_start_time = time_prior.get_bounds()[1]
         for target in target_outputs:
             first_idx_to_keep = next(
                 x[0] for x in enumerate(target["years"]) if x[1] > latest_start_time
@@ -1089,7 +1074,7 @@ def remove_early_points_to_prevent_crash(target_outputs, priors):
 
 
 def set_initial_point(
-    priors, model_parameters: dict, chain_idx, total_nb_chains, initialisation_type
+    priors: BasePriorSet, model_parameters: dict, chain_idx, total_nb_chains, initialisation_type
 ):
     """
     Determine the starting point of the MCMC.
@@ -1108,15 +1093,27 @@ def set_initial_point(
         raise ValueError(f"{initialisation_type} is not a supported Initialisation Type")
 
 
-def read_current_parameter_values(priors, model_parameters):
+def read_current_parameter_values(priorset: BasePriorSet, model_parameters):
     starting_points = {}
-    for param_dict in priors:
-        if param_dict["param_name"].endswith("dispersion_param"):
-            assert param_dict["distribution"] == "uniform"
-            starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
+    for param_name, prior in priorset.priors.items():
+        if param_name.endswith("dispersion_param"):
+            assert isinstance(prior, UniformPrior)
+            starting_points[param_name] = np.mean(prior.get_bounds())
         else:
-            starting_points[param_dict["param_name"]] = read_param_value_from_string(
-                model_parameters, param_dict["param_name"]
+            starting_points[param_name] = read_param_value_from_string(
+                model_parameters, param_name
             )
 
     return starting_points
+
+def workout_unspecified_jumping_stdevs(priorset: BasePriorSet, metropolis_init_rel_step_size: float, initial_ratio: float):
+    for name, prior in priorset.priors.items():
+        if prior.jumping_stdev is None:
+            prior_low, prior_high = prior.get_finite_range()
+            prior_width = prior_high - prior_low
+
+            #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
+            relative_prior_width = (
+                metropolis_init_rel_step_size  # fraction of prior_width in which 95% of samples should fall
+            )
+            prior.jumping_stdev = relative_prior_width * prior_width * initial_ratio

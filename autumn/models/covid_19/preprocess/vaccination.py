@@ -161,7 +161,7 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
 def add_clinical_adjustments_to_strat(
     strat,
     unaffected_stratum,
-    affected_stratum,
+    affected_strata,
     params,
     symptomatic_adjuster,
     hospital_adjuster,
@@ -192,33 +192,48 @@ def add_clinical_adjustments_to_strat(
                 "agegroup": agegroup,
                 "clinical": clinical_stratum,
             }
+
+            infect_onset_adjustments = {unaffected_stratum: None}
+            for stratum in affected_strata:
+                infect_onset_adjustments.update(
+                    {stratum: entry_adjustments[agegroup][clinical_stratum]}
+                )
             strat.add_flow_adjustments(
                 "infect_onset",
-                {
-                    unaffected_stratum: None,
-                    affected_stratum: entry_adjustments[agegroup][clinical_stratum],
-                },
+                infect_onset_adjustments,
                 dest_strata=relevant_strata,  # Must be dest
             )
+
+            death_adjustments = {unaffected_stratum: None}
+            for stratum in affected_strata:
+                death_adjustments.update(
+                    {stratum: death_adjs[agegroup][clinical_stratum]}
+                )
             strat.add_flow_adjustments(
                 "infect_death",
-                {
-                    unaffected_stratum: None,
-                    affected_stratum: death_adjs[agegroup][clinical_stratum],
-                },
+                death_adjustments,
                 source_strata=relevant_strata,  # Must be source
             )
+
+            progress_adjustments = {unaffected_stratum: None}
+            for stratum in affected_strata:
+                progress_adjustments.update(
+                    {stratum: progress_adjs[clinical_stratum]}
+                )
             strat.add_flow_adjustments(
                 "progress",
-                {unaffected_stratum: None, affected_stratum: progress_adjs[clinical_stratum]},
+                progress_adjustments,
                 source_strata=relevant_strata,  # Either source or dest or both
             )
+
+            recovery_adjustments = {unaffected_stratum: None}
+            for stratum in affected_strata:
+                recovery_adjustments.update(
+                    {stratum: recovery_adjs[agegroup][clinical_stratum]}
+                )
             strat.add_flow_adjustments(
                 "recovery",
-                {
-                    unaffected_stratum: None,
-                    affected_stratum: recovery_adjs[agegroup][clinical_stratum],
-                },
+                recovery_adjustments,
                 source_strata=relevant_strata,  # Must be source
             )
     return strat

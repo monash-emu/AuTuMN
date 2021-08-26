@@ -16,7 +16,9 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     vacc_strat = Stratification("vaccination", VACCINATION_STRATA, COMPARTMENTS)
 
     # Everyone starts out unvaccinated
-    vacc_strat.set_population_split({Vaccination.UNVACCINATED: 1., Vaccination.VACCINATED: 0.})
+    vacc_strat.set_population_split(
+        {Vaccination.UNVACCINATED: 1., Vaccination.ONE_DOSE: 0., Vaccination.FULLY_VACCINATED: 0.}
+    )
 
     # Process the parameters to be applied
     infection_efficacy, severity_efficacy = add_vaccine_infection_and_severity(
@@ -33,7 +35,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     vacc_strat = add_clinical_adjustments_to_strat(
         vacc_strat,
         Vaccination.UNVACCINATED,
-        Vaccination.VACCINATED,
+        [Vaccination.ONE_DOSE, Vaccination.FULLY_VACCINATED],
         params,
         symptomatic_adjuster,
         hospital_adjuster,
@@ -46,7 +48,8 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
         INFECTION,
         {
             Vaccination.UNVACCINATED: None,
-            Vaccination.VACCINATED: Multiply(1. - infection_efficacy),
+            Vaccination.ONE_DOSE: Multiply(1. - infection_efficacy),
+            Vaccination.FULLY_VACCINATED: Multiply(1. - infection_efficacy),
         },
     )
 
@@ -56,7 +59,8 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
             compartment,
             {
                 Vaccination.UNVACCINATED: None,
-                Vaccination.VACCINATED: Multiply(1. - params.vaccination.vacc_reduce_infectiousness),
+                Vaccination.ONE_DOSE: Multiply(1. - params.vaccination.vacc_reduce_infectiousness),
+                Vaccination.FULLY_VACCINATED: Multiply(1. - params.vaccination.vacc_reduce_infectiousness),
             }
         )
 

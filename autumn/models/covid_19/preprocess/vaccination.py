@@ -110,7 +110,7 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
             method=4,
         )
 
-    # work out eligible model age_groups
+    # Work out eligible model age_groups
     eligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
     for eligible_age_group in eligible_age_groups:
@@ -155,6 +155,9 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
         prop_infect_prevented = 1. - vacc_prop_prevent_infection * overall_efficacy
         severity_efficacy = overall_efficacy * prop_infected / prop_infect_prevented
     infection_efficacy = vacc_prop_prevent_infection * overall_efficacy
+
+    assert 0. <= infection_efficacy <= overall_efficacy
+    assert 0. <= severity_efficacy <= overall_efficacy
 
     return infection_efficacy, severity_efficacy
 

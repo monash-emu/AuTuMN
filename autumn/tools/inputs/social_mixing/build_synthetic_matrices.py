@@ -110,17 +110,49 @@ def adjust_matrices_for_age_distribution(
         source_age_breaks, modelled_country_iso3, modelled_region_name, 2020
     )
 
-    # calculate age-specific population ratios
-    age_pop_ratio = [p_modelled / p_proxy for (p_modelled, p_proxy) in zip(age_proportions_modelled, age_proportions_proxy)]
-    # convert into a diagonal matrix to prepare columns multiplication
+    # Calculate age-specific population ratios
+    age_pop_ratio = [
+        p_modelled / p_proxy for (p_modelled, p_proxy) in zip(age_proportions_modelled, age_proportions_proxy)
+    ]
+
+    # Convert into a diagonal matrix to prepare columns multiplication
     diag_age_pop_ratio = np.diag(age_pop_ratio)
 
-    # make population adjustment by multiplying matrices' columns by age-specific population ratios
+    # Make population adjustment by multiplying matrices' columns by age-specific population ratios
     age_adjusted_matrices = {}
     for location in LOCATIONS:
         age_adjusted_matrices[location] = np.dot(source_matrices[location], diag_age_pop_ratio)
 
     return age_adjusted_matrices
+
+
+def find_source_age_group_contributions(
+        source_breaks, modelled_breaks, modelled_iso3, modelled_region
+):
+
+    # Get upper bounds for both classifications (assumed final band's upper bound = 100)
+    modelled_upper_bounds = _get_upper_bounds(modelled_breaks)
+    source_upper_bounds = _get_upper_bounds(source_breaks)
+
+    # For each model's age group, work out the overlapping age portion with each source age group, and calculate
+    # the proportion of the population this age portion takes up among the source age group.
+    contributions_array = np.zeros((len(modelled_breaks), len(source_breaks)))
+
+    for i_break, modelled_age_break in enumerate(modelled_breaks):
+        model_lower, model_upper = int(modelled_age_break), modelled_upper_bounds[i_break]
+
+        # Stores the portion of each source bracket included in a given modelled bracket
+        for j_source, source_age_break in enumerate(source_breaks):
+
+            # Work out the proportion of source bracket that is included in each modelled bracket
+            source_lower, source_upper = int(source_age_break), source_upper_bounds[j_source]
+            if model_upper > source_lower and model_lower < source_upper:
+                overlap_range = max(source_lower, model_lower), min(source_upper, model_upper)
+                contributions_array[i_break, j_source] = _get_proportion_between_ages_among_agegroup(
+                    overlap_range, (source_lower, source_upper), modelled_iso3, modelled_region
+                )
+
+    return contributions_array
 
 
 def convert_matrices_agegroups(
@@ -135,32 +167,12 @@ def convert_matrices_agegroups(
     :param modelled_region_name: name of a sub-region (if applicable)
     :return: contact matrices based on model's age stratification (dictionary)
     """
+    source_age_break_contributions = find_source_age_group_contributions(
+        source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name
+    )
+
     n_modelled_groups = len(modelled_age_breaks)
     n_source_groups = len(source_age_breaks)
-
-    # Get upper bounds for both classifications (assumed final band's upper bound = 100)
-    modelled_upper_bounds = _get_upper_bounds(modelled_age_breaks)
-    source_upper_bounds = _get_upper_bounds(source_age_breaks)
-
-    # For each model's age group, work out the overlapping age portion with each source age group, and calculate
-    # the proportion of the population this age portion takes up among the source age group.
-    source_age_break_contributions = []
-    for i_model, modelled_age_break in enumerate(modelled_age_breaks):
-        model_lower, model_upper = int(modelled_age_break), modelled_upper_bounds[i_model]
-        contributions = []  # stores the portion of each source bracket included in a given modelled bracket
-        for i_source, source_age_break in enumerate(source_age_breaks):
-            # work out the proportion of source bracket that is included in modelled bracket
-            source_lower, source_upper = int(source_age_break), source_upper_bounds[i_source]
-            if model_upper <= source_lower or model_lower >= source_upper:
-                contributions.append(0.)
-            else:
-                overlap_range = max(source_lower, model_lower), min(source_upper, model_upper)
-                contributions.append(
-                    _get_proportion_between_ages_among_agegroup(
-                        overlap_range, (source_lower, source_upper), modelled_country_iso3, modelled_region_name)
-                )
-
-        source_age_break_contributions.append(contributions)
 
     # Build the output contact matrices based on the calculated age group contributions
     model_ready_matrices = {}
@@ -168,14 +180,16 @@ def convert_matrices_agegroups(
         base_matrix = matrices[location]
         output_matrix = np.zeros((n_modelled_groups, n_modelled_groups))
         for i_model in range(n_modelled_groups):
-            i_contributions = np.matrix(source_age_break_contributions[i_model]).reshape(n_source_groups, 1)
-            for j_model in range(n_modelled_groups):
-                j_contributions = np.matrix(source_age_break_contributions[j_model]).reshape(n_source_groups, 1)
 
-                # sum over contactees' contributions for each contactor's contribution
+            # FIXME: Romain, please check this - using the rows both times, which is what I think we should do
+            i_contributions = source_age_break_contributions[i_model, :].reshape(n_source_groups, 1)
+            for j_model in range(n_modelled_groups):
+                j_contributions = source_age_break_contributions[j_model, :].reshape(n_source_groups, 1)
+
+                # Sum over contactees' contributions for each contactor's contribution
                 sums_over_contactees = np.dot(base_matrix, j_contributions)
 
-                # average over contactors' contributions
+                # Average over contactors' contributions
                 average_over_contactors = \
                     float(np.dot(np.transpose(i_contributions), sums_over_contactees)) / float(sum(i_contributions))
 
@@ -208,19 +222,23 @@ def _get_proportion_between_ages_among_agegroup(
 
     assert numerator_low >= denominator_low and numerator_up <= denominator_up
 
+    # get_population_by_agegroup has a strange signature, in that it insists on returning the bottom age group
+    popsize_denominator = get_population_by_agegroup(
+        [0, denominator_low, denominator_up], modelled_country_iso3, modelled_region_name, year=2020
+    )[1]
+    popsize_numerator = get_population_by_agegroup(
+        [0, numerator_low, numerator_up], modelled_country_iso3, modelled_region_name, year=2020
+    )[1]
+
     if numerator_low == denominator_low and numerator_up == denominator_up:
-        return 1.
+        result = 1.
+    elif popsize_denominator == 0:
+        result = 0.
     else:
-        popsize_denominator = get_population_by_agegroup(
-            [0, denominator_low, denominator_up], modelled_country_iso3, modelled_region_name, year=2020
-        )[1]
-        if popsize_denominator == 0:
-            return 0.
-        else:
-            popsize_numerator = get_population_by_agegroup(
-                [0, numerator_low, numerator_up], modelled_country_iso3, modelled_region_name, year=2020
-            )[1]
-            return popsize_numerator / popsize_denominator
+        result = popsize_numerator / popsize_denominator
+
+    assert 0. <= result <= 1.
+    return result
 
 
 def _get_upper_bounds(all_age_breaks):

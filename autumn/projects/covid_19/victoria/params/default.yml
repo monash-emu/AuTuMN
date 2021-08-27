@@ -86,6 +86,12 @@ victorian_clusters:
             - 1.
             - 0.1 # 9th July
       microdistancing:
+        home_reduction:
+          function_type: constant
+          parameters:
+            effect: 0.
+          locations:
+            - home
         behaviour:
           function_type: tanh
           parameters:
@@ -164,6 +170,14 @@ victorian_clusters:
             - 0.1 # 9th July
       # Regional Victoria clusters microdistancing function
       microdistancing:
+
+        home_reduction:
+          function_type: constant
+          parameters:
+            effect: 0.
+          locations:
+            - home
+
         behaviour:
           function_type: tanh
           parameters:

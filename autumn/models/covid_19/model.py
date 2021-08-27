@@ -265,7 +265,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             )
             # +++ FIXME: convert this to transition flow with new computed_values aware flow param
 
-    # Stratify by vaccination status
+    # Stratify by vaccination status - has to come last to overwrite the adjustments for the previous strata
     if params.vaccination:
         vaccination_strat = get_vaccination_strat(params)
         model.stratify_with(vaccination_strat)

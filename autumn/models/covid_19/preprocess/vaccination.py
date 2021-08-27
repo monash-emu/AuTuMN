@@ -1,6 +1,8 @@
 import numpy as np
 
-from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS
+from autumn.models.covid_19.constants import (
+    Vaccination, VACCINE_ELIGIBLE_COMPARTMENTS, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
+)
 from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
@@ -51,7 +53,7 @@ def get_vacc_roll_out_function_from_doses(
             if (
                 compartment.name in VACCINE_ELIGIBLE_COMPARTMENTS
                 and compartment.strata["agegroup"] in eligible_age_groups
-                and compartment.strata["vaccination"] == "unvaccinated"
+                and compartment.strata["vaccination"] == Vaccination.FULLY_VACCINATED
             ):
                 deno_indices.append(i)
                 if (
@@ -79,14 +81,12 @@ def get_eligible_age_groups(roll_out_component, age_strata):
     eligible_age_groups = age_strata
     if roll_out_component.age_min:
         eligible_age_groups = [
-            agegroup
-            for agegroup in eligible_age_groups
-            if float(agegroup) >= roll_out_component.age_min
+            agegroup for agegroup in eligible_age_groups if
+            float(agegroup) >= roll_out_component.age_min
         ]
     if roll_out_component.age_max:
         eligible_age_groups = [
-            agegroup
-            for agegroup in eligible_age_groups
+            agegroup for agegroup in eligible_age_groups
             if float(agegroup) < roll_out_component.age_max
         ]
     return eligible_age_groups
@@ -96,6 +96,7 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
+
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = bool(roll_out_component.supply_period_coverage)
     if is_coverage:
@@ -113,8 +114,8 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
     eligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
     for eligible_age_group in eligible_age_groups:
-        _source_strata = {"vaccination": "unvaccinated", "agegroup": eligible_age_group}
-        _dest_strata = {"vaccination": "vaccinated", "agegroup": eligible_age_group}
+        _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
+        _dest_strata = {"vaccination": Vaccination.FULLY_VACCINATED, "agegroup": eligible_age_group}
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             if is_coverage:
                 # the roll-out function is applied as a rate that multiplies the source compartments
@@ -145,13 +146,13 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
 def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_efficacy):
     """
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.
-
     """
+
     if vacc_prop_prevent_infection == 1.:
         severity_efficacy = 0.
     else:
         prop_infected = 1. - vacc_prop_prevent_infection
-        prop_infect_prevented = 1. - (vacc_prop_prevent_infection * overall_efficacy)
+        prop_infect_prevented = 1. - vacc_prop_prevent_infection * overall_efficacy
         severity_efficacy = overall_efficacy * prop_infected / prop_infect_prevented
     infection_efficacy = vacc_prop_prevent_infection * overall_efficacy
 
@@ -187,33 +188,24 @@ def add_clinical_adjustments_to_strat(
                 "clinical": clinical_stratum,
             }
 
-            infect_onset_adjustments = {unaffected_stratum: None}
-            infect_onset_adjustments.update(
+            inf_final_adjs = {unaffected_stratum: None}
+            inf_final_adjs.update(
                 {stratum: entry_adjustments[agegroup][clinical_stratum] for stratum in affected_strata}
             )
             strat.add_flow_adjustments(
-                "infect_onset", infect_onset_adjustments, dest_strata=relevant_strata,  # Must be dest
+                INFECTIOUSNESS_ONSET, inf_final_adjs, dest_strata=relevant_strata,  # Must be dest
             )
 
             death_adjustments = {unaffected_stratum: None}
             death_adjustments.update({stratum: death_adjs[agegroup][clinical_stratum] for stratum in affected_strata})
-            strat.add_flow_adjustments(
-                "infect_death", death_adjustments, source_strata=relevant_strata,  # Must be source
-            )
+            strat.add_flow_adjustments(INFECT_DEATH, death_adjustments, source_strata=relevant_strata)  # Must be source
 
-            progress_adjustments = {unaffected_stratum: None}
-            progress_adjustments.update(
-                {stratum: progress_adjs[clinical_stratum] for stratum in affected_strata}
-            )
-            strat.add_flow_adjustments(
-                "progress", progress_adjustments, source_strata=relevant_strata,  # Either source or dest or both
-            )
+            prog_final_adjs = {unaffected_stratum: None}
+            prog_final_adjs.update({stratum: progress_adjs[clinical_stratum] for stratum in affected_strata})
+            strat.add_flow_adjustments(PROGRESS, prog_final_adjs, source_strata=relevant_strata)  # Source, dest or both
 
-            recovery_adjustments = {unaffected_stratum: None}
-            recovery_adjustments.update(
-                {stratum: recovery_adjs[agegroup][clinical_stratum] for stratum in affected_strata}
-            )
-            strat.add_flow_adjustments(
-                "recovery", recovery_adjustments, source_strata=relevant_strata,  # Must be source
-            )
+            rec_final_adjs = {unaffected_stratum: None}
+            rec_final_adjs.update({stratum: recovery_adjs[agegroup][clinical_stratum] for stratum in affected_strata})
+            strat.add_flow_adjustments(RECOVERY, rec_final_adjs, source_strata=relevant_strata)  # Must be source
+
     return strat

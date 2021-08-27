@@ -1,6 +1,6 @@
 clinical_stratification.icu_prop: 0.22118290813228195
 clinical_stratification.non_sympt_infect_multiplier: 0.3857768711298092
-clinical_stratification.props.hospital.multiplier: 0.7941775587568923
+infection_fatality.multiplier: 1.2909605351109752
 clinical_stratification.props.symptomatic.multiplier: 1.5135219508767888
 contact_rate: 0.03446709169182245
 infection_deaths_dispersion_param: 0.7161826904105082

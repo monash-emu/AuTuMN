@@ -38,7 +38,7 @@ priors = [
     # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.1, 0.4]),
     # Health system-related
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.7, 1.3]),
+    UniformPrior("infection_fatality.multiplier", [0.8, 2.0]),
     UniformPrior("clinical_stratification.icu_prop", [0.12, 0.25]),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.8, 2.0]),

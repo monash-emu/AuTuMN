@@ -35,13 +35,13 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.015, 0.06]),
-    UniformPrior("infectious_seed", [30.0, 200.0]),
+    UniformPrior("infectious_seed", [30.0, 220.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.1]),
     # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.01, 0.4]),
     # Health system-related
-    UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
+    UniformPrior("infection_fatality.multiplier", [0.75, 2.0]),
     UniformPrior("clinical_stratification.icu_prop", [0.12, 0.25]),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [1.2, 2.3]),

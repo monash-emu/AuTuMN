@@ -7,6 +7,10 @@ time:
   start: 180
   end: 850
 
+mixing_matrices:
+  type: extrapolated
+  source_iso3: CHN
+
 country:
   iso3: MYS
 

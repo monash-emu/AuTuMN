@@ -92,7 +92,7 @@ priors = [
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
     UniformPrior("infection_fatality.top_bracket_overwrite", [0.05, 0.3], jumping_stdev=0.04),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.04),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.05, 0.3], jumping_stdev=0.04),
     TruncNormalPrior(
         "sojourn.compartment_periods.icu_early",
         mean=12.7,
@@ -108,6 +108,11 @@ priors = [
     UniformPrior(
         "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
         [0.0, 0.6],
+        jumping_stdev=0.04,
+    ),
+    UniformPrior(
+        "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect",
+        [0.0, 0.4],
         jumping_stdev=0.04,
     ),
     UniformPrior("target_output_ratio", [0.2, 0.7], jumping_stdev=0.04),

@@ -111,6 +111,7 @@ def adjust_matrices_for_age_distribution(
     )
 
     # Calculate age-specific population ratios
+    assert all([p > 0. for p in age_proportions_proxy]), "All age proportions must be >0 to prevent division by zero."
     age_pop_ratio = [
         p_modelled / p_proxy for (p_modelled, p_proxy) in zip(age_proportions_modelled, age_proportions_proxy)
     ]
@@ -151,6 +152,8 @@ def find_source_age_group_contributions(
                 contributions_array[i_break, j_source] = _get_proportion_between_ages_among_agegroup(
                     overlap_range, (source_lower, source_upper), modelled_iso3, modelled_region
                 )
+
+    _check_population_contributions_array(contributions_array)
 
     return contributions_array
 
@@ -269,3 +272,8 @@ def _clean_up_model_ready_matrices(matrices):
     other_locations_matrix[other_locations_matrix < 0.] = 0
     matrices["other_locations"] = other_locations_matrix
     return matrices
+
+
+def _check_population_contributions_array(contributions_array):
+    msg = "The sum of the contributions from each source age bin should be equal to 1"
+    assert max(abs(np.sum(contributions_array, 0) - 1)) < 1.e-3, msg

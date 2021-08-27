@@ -152,11 +152,22 @@ def get_population_by_agegroup(
 
     age_breakpoints = _check_age_breakpoints(age_breakpoints)
     input_db = get_input_db()
+
+    # Work out the year that is nearest to the requested year, among available years.
+    available_years = list(input_db.query(
+        "population",
+        conditions={
+            "iso3": country_iso_code,
+            "region": region or None,
+        },
+    )["year"].unique())
+    nearest_year = min(available_years, key=lambda x: abs(x-year))
+
     pop_df = input_db.query(
         "population",
         conditions={
             "iso3": country_iso_code,
-            "year": year,
+            "year": nearest_year,
             "region": region or None,
         },
     )

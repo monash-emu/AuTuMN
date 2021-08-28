@@ -5,6 +5,10 @@ contact_rate: 0.027
 time:
   start: 250
 
+mixing_matrices:
+  type: extrapolated
+  source_iso3: CHN
+
 population:
   region: Selangor
   year: 2019

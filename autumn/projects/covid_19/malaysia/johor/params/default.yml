@@ -5,6 +5,10 @@ contact_rate: 0.032
 time:
   start: 290
 
+mixing_matrices:
+  type: extrapolated
+  source_iso3: CHN
+
 population:
   region: Johor
   year: 2019

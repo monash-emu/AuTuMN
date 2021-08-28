@@ -5,6 +5,10 @@ contact_rate: 0.0295
 time:
   start: 280
 
+mixing_matrices:
+  type: extrapolated
+  source_iso3: CHN
+
 population:
   region: Kuala Lumpur
   year: 2019

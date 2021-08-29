@@ -35,13 +35,13 @@ priors = [
     UniformPrior("contact_rate", [0.015, 0.06]),
     UniformPrior("infectious_seed", [30.0, 200.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.1]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.2]),
     # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.01, 0.4]),
     # Health system-related
     UniformPrior("infection_fatality.multiplier", [0.8, 2.0]),
     UniformPrior("clinical_stratification.icu_prop", [0.12, 0.25]),
-    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.6]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.8, 2.0]),
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),

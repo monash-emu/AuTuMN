@@ -32,7 +32,7 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.015, 0.06]),
-    UniformPrior("infectious_seed", [30.0, 200.0]),
+    UniformPrior("infectious_seed", [50.0, 225.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.2]),
     # Microdistancing
@@ -46,7 +46,7 @@ priors = [
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.0]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [275, 450]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [325, 475]),
 ]
 
 calibration = Calibration(priors, targets)

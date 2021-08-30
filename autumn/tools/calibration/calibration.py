@@ -364,6 +364,8 @@ class Calibration:
                 time_idx = time_idxs[0]
                 indices.append(time_idx)
 
+            target_ll = 0.0
+
             model_output = model.derived_outputs[key][indices]
             if self.run_mode == CalibrationMode.AUTUMN_MCMC:
                 if "loglikelihood_distri" not in target:  # default distribution
@@ -379,12 +381,12 @@ class Calibration:
 
                     if target["loglikelihood_distri"] == "normal":
                         squared_distance = (data - model_output) ** 2
-                        ll += -(0.5 / normal_sd ** 2) * np.sum(
+                        target_ll += -(0.5 / normal_sd ** 2) * np.sum(
                             [w * d for (w, d) in zip(time_weigths, squared_distance)]
                         )
                     else:  # this is a truncated normal likelihood
                         for i in range(len(data)):
-                            ll += (
+                            target_ll += (
                                 stats.truncnorm.logpdf(
                                     x=data[i],
                                     a=target["trunc_range"][0],
@@ -396,7 +398,7 @@ class Calibration:
                             )
                 elif target["loglikelihood_distri"] == "poisson":
                     for i in range(len(data)):
-                        ll += (
+                        target_ll += (
                             round(data[i]) * math.log(abs(model_output[i]))
                             - model_output[i]
                             - math.log(math.factorial(round(data[i])))
@@ -415,9 +417,11 @@ class Calibration:
                         mu = model_output[i]
                         # work out parameter p to match the distribution mean with the model output
                         p = mu / (mu + n)
-                        ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weigths[i]
+                        target_ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weigths[i]
                 else:
                     raise ValueError("Distribution not supported in loglikelihood_distri")
+
+                ll += target_ll * target["weight"]
 
         return ll
 

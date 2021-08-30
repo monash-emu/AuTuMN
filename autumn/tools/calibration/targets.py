@@ -39,13 +39,14 @@ class BaseTarget(ABC):
 
     timeseries: TimeSeries
 
-    def __init__(self, time_weights: List[float] = None):
+    def __init__(self, weight: float = 1.0, time_weights: List[float] = None):
         self.time_weights = time_weights
+        self.weight = weight
 
     @abstractmethod
     def to_dict(self) -> dict:
         """Returns the target as a dict... for now"""
-        target = {}
+        target = {"weight": self.weight}
         if self.time_weights:
             target["time_weights"] = self.time_weights
 

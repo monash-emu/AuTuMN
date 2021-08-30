@@ -39,7 +39,7 @@ priors = [
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.175]),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.15, 0.6]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.15, 0.7]),
     # Health system-related
     UniformPrior("infection_fatality.multiplier", [0.8, 2.0]),
     UniformPrior("clinical_stratification.icu_prop", [0.15, 0.275]),

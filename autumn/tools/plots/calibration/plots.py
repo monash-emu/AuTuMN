@@ -45,7 +45,7 @@ def collate_acceptance_ratios(acceptance_list):
     return ratios
 
 
-def get_epi_params(mcmc_params, strings_to_ignore=("dispersion_param",)):
+def get_epi_params(mcmc_params, strings_to_ignore=("dispersion_param","vacc",)):
     """
     Extract only the epidemiological parameters, ignoring the ones that were only used to tune proposal distributions,
     which end in dispersion_param.
@@ -624,11 +624,17 @@ def plot_multiple_posteriors(
 
             # Plot the prior
             axis.plot(x_values, y_values)
+            if param_name == 'voc_emergence.alpha_beta.contact_rate_multiplier':
+                axis.set_title('VoC contact_rate_multiplier', fontsize=title_font_size, )
 
-            axis.set_title(
-                get_plot_text_dict(param_name, capitalise_first_letter=capitalise_first_letter),
-                fontsize=title_font_size,
-            )
+            elif prior["param_name"] == "voc_emergence.alpha_beta.start_time":
+                axis.set_title('VoC emergence start time', fontsize=title_font_size,)
+
+            else:
+                axis.set_title(get_plot_text_dict(param_name,
+                                                  capitalise_first_letter=capitalise_first_letter),
+                               fontsize=title_font_size)
+
             pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
             pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
 

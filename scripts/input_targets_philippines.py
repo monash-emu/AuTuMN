@@ -16,8 +16,8 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "1ZyW3V7ZOF_lRqL8g50vHVLu-_bcaxJIA"  # sheet 05 daily report
-PHL_fassster_link = "1HTceQXGhZHWW6LynAtP57nJQSpIip8Pt"
+PHL_doh_link = "1YB1g1bnjijz9dxJey0HZRPuOtI94oj4p"  # sheet 05 daily report
+PHL_fassster_link = "1ZRWf_QZ4vnYcUJwiV-cnjg2eZneI1QSw"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")

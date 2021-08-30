@@ -84,8 +84,18 @@ def plot_timeseries_with_uncertainty(
 
     # Plot each scenario on a single axis
     data_to_return = {}
-    for i, scenario_idx in enumerate(scenario_idxs[:n_scenarios_to_plot]):
+    legend = []
+    #scenario_numbers=["baseline","Scenario 1","Scenario 2", "Scenario 3", "Scenario 4","Scenario 5","Scenario 6"]
+    scenario_numbers = ["baseline", "max mob.+80% cov.(S1)",
+                        "max mob.+50% cov.(S2)", "25% max mob.+80% cov.(S3)",
+                        "50% max mob.+80% cov.(S4)", "25% max mob.+50% cov.(S5)",
+                        "50% max mob.+50% cov.(S6)"]
 
+    iter_val=0;
+
+    for i, scenario_idx in enumerate(scenario_idxs[:n_scenarios_to_plot]):
+            legend.append(scenario_numbers[iter_val])
+            iter_val=iter_val+1
         # +++
         # Retain these commented blocks just so we can see the original intentions
         # when we come to refactor...
@@ -148,8 +158,12 @@ def plot_timeseries_with_uncertainty(
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
     if show_title:
-        title = custom_title if custom_title else get_plot_text_dict(output_name)
-        axis.set_title(title, fontsize=title_font_size)
+        if output_name == "proportion_seropositive":
+            title = "recovered percentage"
+            axis.set_title(title, fontsize=title_font_size)
+        else:
+            title = custom_title if custom_title else get_plot_text_dict(output_name)
+            axis.set_title(title, fontsize=title_font_size)
 
     if requested_x_ticks is not None:
         pyplot.xticks(requested_x_ticks)
@@ -166,6 +180,12 @@ def plot_timeseries_with_uncertainty(
 
     if legend:
         pyplot.legend(labels=scenario_idxs)
+
+    if output_name == "notifications":
+        #axis.legend([])
+        axis.legend(legend, fontsize=12)
+    else:
+        axis.legend([])
 
     if single_panel:
         idx_str = "-".join(map(str, scenario_idxs))

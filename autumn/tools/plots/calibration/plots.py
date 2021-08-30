@@ -1208,8 +1208,10 @@ def plot_cdr_to_axis(axis, times, detected_proportions, alpha=1.0, line_width=0.
     """
     Plot a set of CDR curves to an axis
     """
-
+    CDR_data = []
+    CDR_times = []
     for i_curve in range(len(detected_proportions)):
+        CDR_data.append([detected_proportions[i_curve](i_time) for i_time in times])
         axis.plot(
             times,
             [detected_proportions[i_curve](i_time) for i_time in times],
@@ -1217,6 +1219,18 @@ def plot_cdr_to_axis(axis, times, detected_proportions, alpha=1.0, line_width=0.
             linewidth=line_width,
             alpha=alpha,
         )
+    for i_time in times:
+        CDR_times.append(i_time)
+
+    dict_CDR = {'CDR_data': CDR_data }
+    df = pd.DataFrame(dict_CDR)
+    # saving the dataframe
+    df.to_csv('CDR_data_30_08.csv')
+
+    dict_CDR_times = {'CDR_data': CDR_times}
+    df = pd.DataFrame(dict_CDR_times)
+    # saving the dataframe
+    df.to_csv('CDR_times_30_08.csv')
     return axis
 
 

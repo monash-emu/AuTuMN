@@ -32,7 +32,7 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Other regional priors
     UniformPrior("contact_rate", [0.015, 0.045]),
-    UniformPrior("infectious_seed", [15.0, 200.0]),
+    UniformPrior("infectious_seed", [15.0, 125.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.15]),
     # Microdistancing

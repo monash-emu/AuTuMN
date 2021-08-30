@@ -36,7 +36,7 @@ priors = [
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.03, 0.2]),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.1, 0.4]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.15, 0.65]),
     # Health system-related
     UniformPrior("infection_fatality.multiplier", [0.8, 2.0]),
     UniformPrior("clinical_stratification.icu_prop", [0.12, 0.25]),
@@ -45,7 +45,7 @@ priors = [
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.0]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.15, 3.0]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [325, 475]),
 ]
 

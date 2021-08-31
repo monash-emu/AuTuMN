@@ -14,6 +14,7 @@ contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 #
 mixing_matrices:
     type: "prem"
+    age_adjust: true  # Note that this is not relevant unless "empiric" selected for type
 
 # Integration times
 time:

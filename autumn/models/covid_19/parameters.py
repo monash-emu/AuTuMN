@@ -128,6 +128,7 @@ class Mobility(BaseModel):
 class MixingMatrices(BaseModel):
     type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
     source_iso3: Optional[str]
+    age_adjust: bool  # Only relevant if 'extrapolated' selected
 
 
 class AgeStratification(BaseModel):

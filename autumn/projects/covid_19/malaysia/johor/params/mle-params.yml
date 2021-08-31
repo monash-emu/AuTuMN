@@ -13,3 +13,4 @@ vaccination.coverage_override: 0.2769633546654785
 vaccination.overall_efficacy: 0.5164730472451541
 vaccination.vacc_prop_prevent_infection: 0.6198617909119635
 voc_emergence.alpha_beta.start_time: 293.7438182570261
+voc_emergence.alpha_beta.contact_rate_multiplier: 1.8397821015927582

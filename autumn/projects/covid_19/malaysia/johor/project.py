@@ -47,6 +47,7 @@ priors = [
     BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.alpha_beta.start_time", [250, 375]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 2.1]),
 ]
 
 calibration = Calibration(priors, targets)

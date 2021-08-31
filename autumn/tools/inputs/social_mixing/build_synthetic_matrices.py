@@ -28,7 +28,9 @@ REFERENCE_YEAR = {
 }
 
 
-def build_synthetic_matrices(modelled_country_iso3, proxy_country_iso3, modelled_age_breaks, modelled_region_name=None):
+def build_synthetic_matrices(
+        modelled_country_iso3, proxy_country_iso3, modelled_age_breaks, age_adjust, modelled_region_name=None
+):
     """
     :param modelled_country_iso3: The name of the modelled country
     :param proxy_country_iso3: The name of the country from which we want to source the contact matrix
@@ -40,9 +42,12 @@ def build_synthetic_matrices(modelled_country_iso3, proxy_country_iso3, modelled
     source_matrices, source_age_breaks = load_socialmixr_matrices(proxy_country_iso3)
 
     # adjust matrices for modelled region's age distribution
-    age_adjusted_matrices = adjust_matrices_for_age_distribution(
-        source_matrices, proxy_country_iso3, modelled_country_iso3, source_age_breaks, modelled_region_name
-    )
+    if age_adjust:
+        age_adjusted_matrices = adjust_matrices_for_age_distribution(
+            source_matrices, proxy_country_iso3, modelled_country_iso3, source_age_breaks, modelled_region_name
+        )
+    else:
+        age_adjusted_matrices = source_matrices
 
     # convert matrices to match modelled age groups
     model_ready_matrices = convert_matrices_agegroups(

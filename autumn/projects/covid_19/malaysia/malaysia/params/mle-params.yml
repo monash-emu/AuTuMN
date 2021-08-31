@@ -6,13 +6,13 @@ icu_occupancy_dispersion_param: 76.38181190170891
 infection_deaths_dispersion_param: 6.769981393165123
 infection_fatality.multiplier: 0.8525609972054522
 infectious_seed: 114.94007033132327
-mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.06673466923905035
+mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.26673466923905035
 notifications_dispersion_param: 1046.0487745416417
 sojourn.compartment_periods_calculated.active.total_period: 7.495508332984361
 sojourn.compartment_periods_calculated.exposed.total_period: 4.870213326203746
-testing_to_detection.assumed_cdr_parameter: 0.11690816790219437
+testing_to_detection.assumed_cdr_parameter: 0.0811690816790219437
 vaccination.coverage_override: 0.13357590181746148
 vaccination.overall_efficacy: 0.5613800289048317
 vaccination.vacc_prop_prevent_infection: 0.7330232055020661
 voc_emergence.alpha_beta.contact_rate_multiplier: 1.5213383033382413
-voc_emergence.alpha_beta.start_time: 375.36932935280595
+voc_emergence.alpha_beta.start_time: 340.36932935280595

@@ -1,4 +1,4 @@
-from scripts.phl_data_upload import COVID_BASE_DATETIME
+from autumn.tools.utils.utils import COVID_BASE_DATETIME
 import pandas as pd
 import numpy as np
 import os

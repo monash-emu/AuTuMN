@@ -1,3 +1,5 @@
+from typing import Dict
+
 import numpy as np
 from summer import CompartmentalModel, Multiply, Stratification
 
@@ -65,7 +67,7 @@ def get_cluster_strat(params: Parameters) -> Stratification:
     return cluster_strat
 
 
-def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel):
+def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel, mixing_matrices: Dict[str, np.ndarray]):
     metro_clusters = [region.replace("-", "_") for region in Region.VICTORIA_METRO]
     regional_clusters = [region.replace("-", "_") for region in Region.VICTORIA_RURAL]
     vic = params.victorian_clusters
@@ -100,9 +102,8 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
         ].parameters.effect
 
     # Get new mixing matrix
-    static_mixing_matrix = inputs.get_country_mixing_matrix("all_locations", country.iso3)
     get_mixing_matrix = build_victorian_mixing_matrix_func(
-        static_mixing_matrix,
+        mixing_matrices,
         vic.metro.mobility,
         vic.regional.mobility,
         country,

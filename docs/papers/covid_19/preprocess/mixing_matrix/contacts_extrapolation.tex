@@ -1,0 +1,32 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1.0in]{geometry}
+\usepackage{titling}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\setlength{\droptitle}{0em} 
+
+\title{Description of the contact matrix extrapolation}
+
+\begin{document}
+\maketitle
+
+\newcommand{\myCountry}{the Philippines}
+\newcommand{\myProxyCountry}{China}
+\newcommand{\myProxyCountryDate}{2017}
+\newcommand{\myProxyCountryReference}{\cite{RN10}}
+
+
+\subsection{Contact matrices calculation}
+For each location $L$ (home, school, work, other locations) the age-specific contact matrix $\mathbf{C^L} = (c_{i,j}^L) \in \mathbb{R}_{+}^{16 \times 16}$ is defined such that $c_{i,j}^L$ is the average number of contacts that a typical individual aged $i$ has with individuals aged $j$. As there is no contact survey avalaible for \myCountry{}, the matrices $\mathbf{C^L}$ were obtained by extrapolating contact matrices from \myProxyCountry{}, where a contact survey was conducted in \myProxyCountryDate{} \myProxyCountryReference{}. The original matrices from \myProxyCountry{} are denoted $\mathbf{Q^L} = (q_{i,j}^L) \in \mathbb{R}_{+}^{16 \times 16}$, where $q_{i,j}^L$ is defined using the same convention as for $c_{i,j}^L$. The matrices $\mathbf{Q^L}$ were extracted using the R package ``socialmixr'' (v 0.1.8) and the next paragraph describes how these contact matrices were then adjusted to account for age distribution differences between \myCountry{} and \myProxyCountry{}.
+
+
+Let $\pi_j$ denote the proportion of people aged $j$ in \myCountry{}, and $\rho_j$ the proportion of people aged $j$ in \myProxyCountry{}. The contact matrices $\mathbf{C^L}$ were obtained from:
+$$
+c_{i,j}^L = q_{i,j}^L \times \frac{\pi_j}{\rho_j} . 
+$$
+
+
+\end{document}

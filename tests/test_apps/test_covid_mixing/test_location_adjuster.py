@@ -13,26 +13,30 @@ OTHER_LOCATIONS_MM = MM * 0.2
 SCHOOL_MM = MM * 0.3
 WORK_MM = MM * 0.6
 
+MIXING_MATRICES = {
+    'all_locations': MM,
+    'home': HOME_MM,
+    'other_locations': OTHER_LOCATIONS_MM,
+    'school': SCHOOL_MM,
+    'work': WORK_MM
+}
 
 def test_location_adjuster__with_no_data():
     """
     Ensure there is no change if no mixing data has been suplied.
     """
-    country = Country(iso3="AUS")
     mobility_funcs = {}
     microdistancing_funcs = {}
-    adjuster = LocationMixingAdjuster(country, mobility_funcs, microdistancing_funcs)
+    adjuster = LocationMixingAdjuster(MIXING_MATRICES, mobility_funcs, microdistancing_funcs)
     mm = np.ones([16, 16])
     adj_mm = adjuster.get_adjustment(0, mm)
     assert_allclose(mm, adj_mm, atol=0.01, verbose=True)
 
 
-def test_location_adjuster__with_only_mobility_data(monkeypatch):
-    monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
-    country = Country(iso3="AUS")
+def test_location_adjuster__with_only_mobility_data():
     mobility_funcs = {"work": lambda t: 0.3 * t, "school": lambda t: 0.2 * t}
     microdistancing_funcs = {}
-    adjuster = LocationMixingAdjuster(country, mobility_funcs, microdistancing_funcs)
+    adjuster = LocationMixingAdjuster(MIXING_MATRICES, mobility_funcs, microdistancing_funcs)
     mm = np.ones([16, 16])
     adj_mm = adjuster.get_adjustment(1, mm)
     work_component = WORK_MM * (0.3 - 1)
@@ -41,12 +45,10 @@ def test_location_adjuster__with_only_mobility_data(monkeypatch):
     assert_allclose(expect_mm, adj_mm, atol=0.01, verbose=True)
 
 
-def test_location_adjuster__with_only_microdistancing_data(monkeypatch):
-    monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
-    country = Country(iso3="AUS")
+def test_location_adjuster__with_only_microdistancing_data():
     mobility_funcs = {}
     microdistancing_funcs = {"work": lambda t: 0.3 * t, "school": lambda t: 0.2 * t}
-    adjuster = LocationMixingAdjuster(country, mobility_funcs, microdistancing_funcs)
+    adjuster = LocationMixingAdjuster(MIXING_MATRICES, mobility_funcs, microdistancing_funcs)
     mm = np.ones([16, 16])
     adj_mm = adjuster.get_adjustment(1, mm)
     work_component = WORK_MM * (0.3 - 1)
@@ -55,12 +57,10 @@ def test_location_adjuster__with_only_microdistancing_data(monkeypatch):
     assert_allclose(expect_mm, adj_mm, atol=0.01, verbose=True)
 
 
-def test_location_adjuster__with_microdistancing_and_mobility_data(monkeypatch):
-    monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
-    country = Country(iso3="AUS")
+def test_location_adjuster__with_microdistancing_and_mobility_data():
     mobility_funcs = {"work": lambda t: 0.3 * t, "home": lambda t: 0.5}
     microdistancing_funcs = {"school": lambda t: 0.2 * t, "home": lambda t: 0.7}
-    adjuster = LocationMixingAdjuster(country, mobility_funcs, microdistancing_funcs)
+    adjuster = LocationMixingAdjuster(MIXING_MATRICES, mobility_funcs, microdistancing_funcs)
     mm = np.ones([16, 16])
     adj_mm = adjuster.get_adjustment(1, mm)
     work_component = WORK_MM * (0.3 - 1)

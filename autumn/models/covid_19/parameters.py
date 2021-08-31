@@ -125,6 +125,12 @@ class Mobility(BaseModel):
     google_mobility_locations: Dict[str, List[str]]
 
 
+class MixingMatrices(BaseModel):
+    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
+    source_iso3: Optional[str]
+    age_adjust: bool  # Only relevant if 'extrapolated' selected
+
+
 class AgeStratification(BaseModel):
     """Parameters used in age based stratification"""
 
@@ -310,6 +316,7 @@ class Parameters:
     population: Population
     sojourn: Sojourn
     mobility: Mobility
+    mixing_matrices: Optional[MixingMatrices]
     infection_fatality: InfectionFatality
     age_stratification: AgeStratification
     clinical_stratification: ClinicalStratification

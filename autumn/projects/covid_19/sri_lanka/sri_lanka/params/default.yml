@@ -21,12 +21,12 @@ vaccination:
   vacc_prop_prevent_infection: 1
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.25
+        coverage: 0.32
         start_time: 481 # 25 Apr 2021
-        end_time: 600 # 22 August 2021
+        end_time: 608 # 30 August 2021
     - supply_period_coverage:
-        coverage: 0.33 # 50% coverage by Aug 31
-        start_time: 601 # 23 August 2021
+        coverage: 0.27 # 50% coverage by Aug 31
+        start_time: 609 # 31 August 2021
         end_time: 623 # 14 Sep August 2021 (two weeks lag)
     - supply_period_coverage:
         coverage: 0.60 #80% coverage by Jan 1
@@ -97,26 +97,6 @@ mobility:
         - 1
         - 1
         - 0
-    other_locations:
-      append: true
-      times:
-        - 2021-08-20
-        - 2021-08-21
-        - 2021-08-22
-      values:
-        - - repeat_prev
-        - 0.6
-        - 0.3
-    work:
-      append: true
-      times:
-        - 2021-08-20
-        - 2021-08-21
-        - 2021-08-22
-      values:
-        - - repeat_prev
-        - 0.6
-        - 0.3
 
 voc_emergence:
   alpha_beta:

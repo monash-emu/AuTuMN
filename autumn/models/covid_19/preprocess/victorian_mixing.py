@@ -11,7 +11,7 @@ from autumn.settings import Region
 
 
 def build_victorian_mixing_matrix_func(
-    static_mixing_matrix,
+    base_mixing_matrices,
     metro_mobility,
     regional_mobility,
     country,
@@ -38,11 +38,13 @@ def build_victorian_mixing_matrix_func(
 
         # Build the cluster-specific dynamic mixing matrix
         cluster_age_mm_func = build_dynamic_mixing_matrix(
-            static_mixing_matrix,
+            base_mixing_matrices,
             cluster_mobility,
             country,
         )
         cluster_age_mm_funcs.append(cluster_age_mm_func)
+
+    static_mixing_matrix = base_mixing_matrices['all_locations']
 
     def get_mixing_matrix(time: float):
 

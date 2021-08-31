@@ -204,14 +204,13 @@ def get_all_adjustments(
     Preliminary processing.
     """
 
-    # Work out the proportions of all infected people entering each clinical stratum.
-    symptomatic_props = repeat_list_elements(2, clinical_params.props.symptomatic.props)  # Convert to model age groups
-
-    # Apply odds ratio adjusters to proportions needing to be adjusted.
+    # Apply odds ratio adjusters to proportions needing to be adjusted
     hospital_props = apply_odds_ratio_to_multiple_proportions(clinical_params.props.hospital.props, hospital_adjuster)
-    adjusted_symptomatic_props = apply_odds_ratio_to_multiple_proportions(symptomatic_props, symptomatic_adjuster)
+    adjusted_symptomatic_props = apply_odds_ratio_to_multiple_proportions(
+        clinical_params.props.symptomatic.props, symptomatic_adjuster
+    )
 
-    # Get the proportions that don't vary over time, not all of these are actually clinical strata.
+    # Get the proportions that don't vary over time, not all of these are actually clinical strata
     abs_props = get_absolute_strata_proportions(adjusted_symptomatic_props, clinical_params.icu_prop, hospital_props)
 
     # Work out all the relevant sojourn times and the associated total rates at which they exit the compartments.

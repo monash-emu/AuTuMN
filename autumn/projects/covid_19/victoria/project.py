@@ -62,20 +62,20 @@ for region in regions_for_multipliers:
 
 priors = [
     # Global COVID priors, but with jumping sds adjusted
-    # TruncNormalPrior(
-    #     "sojourn.compartment_periods_calculated.exposed.total_period",
-    #     mean=5.5,
-    #     stdev=0.97,
-    #     trunc_range=[1.0, np.inf],
-    #     jumping_stdev=0.5,
-    # ),
-    # TruncNormalPrior(
-    #     "sojourn.compartment_periods_calculated.active.total_period",
-    #     mean=6.5,
-    #     stdev=0.77,
-    #     trunc_range=[4.0, np.inf],
-    #     jumping_stdev=0.4,
-    # ),
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.exposed.total_period",
+        mean=5.5,
+        stdev=0.97,
+        trunc_range=[1.0, np.inf],
+        jumping_stdev=0.5,
+    ),
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.active.total_period",
+        mean=6.5,
+        stdev=0.77,
+        trunc_range=[4.0, np.inf],
+        jumping_stdev=0.4,
+    ),
     # Cluster specific priors.
     # *cluster_priors,
     # Victorian regional priors.
@@ -91,15 +91,15 @@ priors = [
     UniformPrior("infectious_seed", [20., 70.], jumping_stdev=4.),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
     UniformPrior("infection_fatality.top_bracket_overwrite", [0.05, 0.3], jumping_stdev=0.04),
-    # UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.04),
-    # TruncNormalPrior(
-    #     "sojourn.compartment_periods.icu_early",
-    #     mean=12.7,
-    #     stdev=4.0,
-    #     trunc_range=[5.0, np.inf],
-    #     jumping_stdev=4.
-    # ),
+    TruncNormalPrior(
+        "sojourn.compartment_periods.icu_early",
+        mean=12.7,
+        stdev=4.0,
+        trunc_range=[5.0, np.inf],
+        jumping_stdev=4.
+    ),
     UniformPrior(
         "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
         [0.0, 0.6],

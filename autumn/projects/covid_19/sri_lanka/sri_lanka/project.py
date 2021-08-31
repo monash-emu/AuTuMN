@@ -39,13 +39,13 @@ priors = [
     UniformPrior("contact_rate", [0.018, 0.028]),
     UniformPrior("infectious_seed", [250.0, 320.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.045, 0.075]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.045, 0.07]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [400, 420]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.5, 3]),
-    UniformPrior("voc_emergence.delta.start_time", [430, 465]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [3.0, 4.2]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.5, 2.9]),
+    UniformPrior("voc_emergence.delta.start_time", [430, 460]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [3.0, 4.0]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 1.0]),
-    UniformPrior("infection_fatality.multiplier", [1.8, 3.0])
+    UniformPrior("infection_fatality.multiplier", [2.2, 3.0])
 ]
 
 # Load proposal sds from yml file

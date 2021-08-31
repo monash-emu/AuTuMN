@@ -45,7 +45,7 @@ priors = [
     UniformPrior("contact_rate", [0.015, 0.04]),
     UniformPrior("infectious_seed", [75.0, 225.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.075]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 1.5]),
     # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.05, 0.5]),
     # Health system-related

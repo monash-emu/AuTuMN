@@ -79,20 +79,20 @@ priors = [
     # Cluster specific priors.
     # *cluster_priors,
     # Victorian regional priors.
-    # TruncNormalPrior(
-    #     f"victorian_clusters.contact_rate_multiplier_regional",
-    #     mean=1.0,
-    #     stdev=0.5,
-    #     trunc_range=[0.5, np.inf],
-    #     jumping_stdev=0.15,
-    # ),
+    TruncNormalPrior(
+        f"victorian_clusters.contact_rate_multiplier_regional",
+        mean=1.0,
+        stdev=0.5,
+        trunc_range=[0.5, np.inf],
+        jumping_stdev=0.15,
+    ),
     UniformPrior("contact_rate", [0.04, 0.07], jumping_stdev=0.008),
     # UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.01),
-    # UniformPrior("infectious_seed", [20., 70.], jumping_stdev=4.),
-    # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
+    UniformPrior("infectious_seed", [20., 70.], jumping_stdev=4.),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
     UniformPrior("infection_fatality.top_bracket_overwrite", [0.05, 0.3], jumping_stdev=0.04),
     # UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
-    # UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.04),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.04),
     # TruncNormalPrior(
     #     "sojourn.compartment_periods.icu_early",
     #     mean=12.7,

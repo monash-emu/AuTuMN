@@ -92,6 +92,5 @@ do_df = do_df.merge(
 )
 
 do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=["chain", "run"])
-do_df.to_csv('sensitivity_dataframe_new.csv', index=True)
 count_row = mcmc_param_df.shape[0]  # Gives number of rows
-print(count_row)
+

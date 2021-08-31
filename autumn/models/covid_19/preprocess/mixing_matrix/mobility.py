@@ -217,7 +217,6 @@ def min_last_period(prev_vals: List[float], period: int):
 
 def average_mobility(prev_vals: List[float], period: int):
     last_n_values = min(len(prev_vals), period)
-    print(sum(prev_vals[-last_n_values:])/len(prev_vals[-last_n_values:]))
     return sum(prev_vals[-last_n_values:])/len(prev_vals[-last_n_values:])
 
 

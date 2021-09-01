@@ -7,6 +7,8 @@
 \usepackage{soul}  % For highlighting text
 \usepackage{floatrow}  % For changing default font in tables
 \usepackage[font={sf, it}]{caption}
+\usepackage{amsmath}
+\usepackage{amssymb}
 
 \floatsetup[table]{font=sf}
 
@@ -33,6 +35,7 @@
 % Methods
 \input{../covid_19/model_description.tex}
 \input{../covid_19/stratifications/agegroup.tex}
+\input{../covid_19/preprocess/mixing_matrix/contacts_extrapolation_vic.tex}
 \input{../covid_19/stratifications/clinical.tex}
 \input{../covid_19/preprocess/case_detection.tex}
 \input{../covid_19/stratifications/tracing.tex}

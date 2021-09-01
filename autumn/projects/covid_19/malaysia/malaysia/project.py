@@ -58,7 +58,7 @@ priors = [
     UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     #VoC parameters
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 1.7]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.1, 1.7]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
 ]
 

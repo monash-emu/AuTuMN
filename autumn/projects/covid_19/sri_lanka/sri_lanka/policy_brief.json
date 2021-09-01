@@ -1,0 +1,33 @@
+{
+  "RUN_ID": "covid_19/sri_lanka/1629876738/5ab0deb",
+  "Background objectives": "Cillum minim duis ea laboris excepteur occaecat commodo ut duis incididunt eu esse nulla dolor. Commodo sint magna dolor cillum officia quis mollit Lorem. Culpa mollit adipisicing deserunt culpa eu. Cillum sit velit cillum minim sunt magna Lorem enim laboris anim ex velit labore sit. Eiusmod aliquip anim cupidatat voluptate eu duis id minim. Minim mollit velit qui duis elit officia laboris culpa nostrud ut sint pariatur occaecat.\r\n",
+  "Abbreviations": [
+    "ad:sint",
+    "ullamco:sint",
+    "cillum:et",
+    "consequat:ullamco",
+    "irure:consequat",
+    "eu:nulla",
+    "proident:cupidatat"
+  ],
+  "Key findings": {
+    "finding_1": "* do nulla duis aliquip in consectetur ex ex tempor minim laborum est enim quis fugiat ex commodo magna pariatur tempor",
+    "finding_2": "* qui est cillum dolor ipsum laborum nisi nisi officia sint est fugiat ut velit deserunt proident fugiat esse officia cillum",
+    "finding_3": "* amet ullamco eiusmod exercitation excepteur laborum dolor commodo consequat commodo minim minim excepteur adipisicing deserunt fugiat do labore quis mollit",
+    "finding_4": "* voluptate id adipisicing id voluptate aliqua excepteur ea elit laborum fugiat magna consequat veniam exercitation qui laboris dolore sunt dolor",
+    "finding_5": "* quis irure aute deserunt et voluptate quis commodo excepteur aute magna Lorem commodo ea duis veniam incididunt velit in ad"
+  },
+  "Epidemic projections": {
+    "epi_pic_01": "https://autumn-data.s3-ap-southeast-2.amazonaws.com/covid_19/sri_lanka/1630324452/5b8604f/plots/calibration-fit/calibration-fit-infection_deaths.png",
+    "epi_pic_02": "https://autumn-data.s3-ap-southeast-2.amazonaws.com/covid_19/sri_lanka/1630324452/5b8604f/plots/calibration-fit/calibration-fit-infection_deaths.png",
+    "epi_text": "Voluptate sunt incididunt aute esse pariatur esse in laboris ut anim laborum. Occaecat tempor eu ad esse reprehenderit mollit et ad non irure. Excepteur veniam id aute aute amet aliqua aliquip sint ut adipisicing. Eiusmod veniam cupidatat minim exercitation irure elit non veniam labore. Anim officia in enim elit reprehenderit ipsum. Aliquip id et adipisicing aliquip. Eu sint officia consequat laboris esse dolore.\r\nEst magna minim pariatur sint magna proident proident pariatur. Elit laborum mollit proident laboris deserunt culpa. Tempor non non anim ipsum anim. Mollit nostrud pariatur reprehenderit cillum veniam aute. Lorem do ex ad consequat amet eu.\r\n",
+    "Scenario 1": "Scenario 1: est mollit aliquip in qui eiusmod commodo commodo voluptate enim",
+    "Scenario 2": "Scenario 2: eu mollit esse magna aute irure non consectetur qui eiusmod",
+    "Scenario 3": "Scenario 3: do qui dolor occaecat incididunt qui dolore consequat labore id"
+  },
+  "Recommendations": {
+    "rec_pic": "https://autumn-data.s3-ap-southeast-2.amazonaws.com/covid_19/sri_lanka/1630324452/5b8604f/plots/params-vs-loglikelihood/likelihood-against-contact_rate.png",
+    "rec_text": "Ea ex ea consequat et tempor elit est eu. Magna aute sit sunt id sunt. Duis exercitation exercitation magna enim est non fugiat est nisi aliqua aute nulla consectetur.\r\nCulpa mollit elit est aute ad sunt nulla laborum ea est minim. Nulla consectetur dolor in pariatur aute reprehenderit quis. Dolore sint aliquip et aliqua incididunt anim cillum consectetur. Culpa anim labore excepteur consequat sit adipisicing deserunt non incididunt ad in ex. Pariatur quis eu dolore consectetur. Consectetur ut cillum excepteur id mollit dolor aute incididunt ex.\r\n"
+  },
+  "Assumption": "Ut ullamco qui laborum est sunt consectetur adipisicing sit laborum esse velit nisi dolor. Aute ipsum tempor ut dolore adipisicing officia pariatur quis cupidatat nisi magna et. Non incididunt fugiat incididunt ipsum.\r\nEsse eu non cillum culpa ipsum anim ullamco mollit aliquip reprehenderit elit ullamco laboris. Cillum consequat eu est exercitation ad. Eu cupidatat velit ut aute laborum sint sint tempor. Ullamco duis ut cillum ipsum occaecat ipsum ipsum veniam qui qui voluptate nisi commodo. Consectetur velit laboris eiusmod nulla amet labore dolor. Tempor qui exercitation sunt culpa irure esse proident in magna dolore dolor. Ut excepteur occaecat proident et.\r\n"
+}

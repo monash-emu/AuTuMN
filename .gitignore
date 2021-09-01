@@ -78,6 +78,10 @@ apps/*/tex/*.pdf
 docs/papers/tex/*.pdf
 !docs/papers/*/projects/*/methods_figures/*.png
 
+
+# Policy brief
+!docs/papers/covid_19/policy_brief/images/*.png
+
 # Random stuff
 *marshall-islands*.pickle
 

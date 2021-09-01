@@ -8,8 +8,7 @@ import datetime
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import matplotlib.pyplot as plt
 
-
-from scripts.phl_data_upload import COVID_BASE_DATETIME
+from autumn.tools.utils.utils import COVID_BASE_DATETIME
 from autumn.settings import OUTPUT_DATA_PATH
 from autumn.settings import INPUT_DATA_PATH
 
@@ -102,10 +101,10 @@ def get_mys_deaths():
     df = df.append(mys_national_death)
     df.rename(columns={"sex": "death"}, inplace=True)
     df = df[df.state == REGION]
-    bins = list(range(-1, 130, 5)) # -1 to ensure the bins intervals are correct
+    bins = list(range(-1, 130, 5))  # -1 to ensure the bins intervals are correct
 
     groups = df.groupby(pd.cut(df.age, bins)).sum()
-    groups.index = [ each +1 for each in bins[:-1] ]
+    groups.index = [each + 1 for each in bins[:-1]]
     groups.age = groups.index
 
     return groups[["age", "death"]]
@@ -125,6 +124,7 @@ def get_mys_notif():
     df = df.groupby(by="age").sum().reset_index()
     df = df.astype({"age": "int32"})
     return df
+
 
 def get_do_feature(feature, cutoff_date):
 
@@ -261,11 +261,8 @@ notif_bin = [-1, 4, 14, 24, 34, 44, 54, 64, 74, 129]
 
 do_notif_df = group_by_age(do_notif_df, notif_bin)
 
-do_notif_df =  do_notif_df.merge(mys_notif, how='left', on= 'age')
+do_notif_df = do_notif_df.merge(mys_notif, how="left", on="age")
 plot_do_feature(do_notif_df, "notification")
-
-
-
 
 
 mcmc_param_df = mcmc_param_df.pivot_table(
@@ -304,7 +301,6 @@ do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=
 # Got here finally
 
 
-
 #
 # df = get_do_feature()
 #
@@ -314,4 +310,3 @@ do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=
 # df = get_do_feature()
 # df = df.merge(mys_death, how="left", on=["age"])
 # do_df = create_sensitivity_df(do_df)
-

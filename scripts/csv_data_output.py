@@ -16,6 +16,7 @@ STANDARD_COL = [
     "infection_deaths",
 ]
 
+AGE_GROUPS = list(range(0, 80, 5))
 
 phl = {
     "region": [
@@ -34,10 +35,11 @@ mys = {
 }
 
 lka = {"region": ["sri_lanka"], "columns": STANDARD_COL}
-npl = {"region": ["nepal"], "columns": STANDARD_COL + ["notificationsXagegroup_50","notificationsXagegroup_55"]}
+
+npl_incidence_col = [f"incidenceXagegroup_{each_age}" for each_age in AGE_GROUPS]
+npl = {"region": ["nepal"], "columns": STANDARD_COL + npl_incidence_col}
 
 os.chdir(DATA_PATH)
-
 
 list_of_files = os.listdir(DATA_PATH)
 
@@ -56,7 +58,7 @@ mys["region"] = get_files(mys)
 lka["region"] = get_files(lka)
 npl["region"] = get_files(npl)
 
-country = {"lka": lka,"phl": phl, "mys": mys, "npl": npl }
+country = {"lka": lka, "phl": phl, "mys": mys, "npl": npl}
 
 for ctry in country:
 

@@ -218,6 +218,7 @@ def downsample_quantity(orig_vals: List[float], orig_bins: List[float], new_bins
     num_orig_bins = len(orig_bins)
     num_new_bins = len(new_bins)
     weights = get_bin_weights(orig_bins, new_bins)
+
     new_vals = [0 for _ in range(num_new_bins)]
     for i_n in range(num_new_bins):
         for i_o in range(num_orig_bins):
@@ -259,7 +260,7 @@ def get_bin_weights(orig_bins: List[float], new_bins: List[float]):
             elif orig_start <= new_start < orig_end:
                 # New bin starts at start, or half way through an old bin
                 # We get a fraction of the end of the bin
-                weights[i_o, i_n] = (orig_end - new_start) / (orig_end - orig_start)
+                weights[i_o, i_n] = (min(new_end, orig_end) - new_start) / (orig_end - orig_start)
             elif new_start < orig_start and new_end >= orig_end:
                 # New bin encompasses old bin, add the whole thing
                 weights[i_o, i_n] = 1

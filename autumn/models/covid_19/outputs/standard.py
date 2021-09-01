@@ -40,7 +40,7 @@ def find_vaccinated_agegroups(roll_out_components):
 
 
 def request_stratified_output_for_flow(
-        model, flow, strata, stratification, name_stem=None
+        model, flow, strata, stratification, name_stem=None, filter_on="destination"
 ):
     """
     Standardise looping over stratum to pull out stratified outputs for flow.
@@ -48,15 +48,24 @@ def request_stratified_output_for_flow(
 
     stem = name_stem if name_stem else flow
     for stratum in strata:
-        model.request_output_for_flow(
-            name=f"{stem}X{stratification}_{stratum}",
-            flow_name=flow,
-            dest_strata={stratification: stratum},
-        )
+        if filter_on == "destination":
+            model.request_output_for_flow(
+                name=f"{stem}X{stratification}_{stratum}",
+                flow_name=flow,
+                dest_strata={stratification: stratum},
+            )
+        elif filter_on == "source":
+            model.request_output_for_flow(
+                name=f"{stem}X{stratification}_{stratum}",
+                flow_name=flow,
+                source_strata={stratification: stratum},
+            )
+        else:
+            raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
 
 
 def request_double_stratified_output_for_flow(
-        model, flow, strata_1, stratification_1, strata_2, stratification_2, name_stem=None
+        model, flow, strata_1, stratification_1, strata_2, stratification_2, name_stem=None, filter_on="destination"
 ):
     """
     As for previous function, but looping over two stratifications.
@@ -66,14 +75,26 @@ def request_double_stratified_output_for_flow(
     for stratum_1 in strata_1:
         for stratum_2 in strata_2:
             name = f"{stem}X{stratification_1}_{stratum_1}X{stratification_2}_{stratum_2}"
-            model.request_output_for_flow(
-                name=name,
-                flow_name=flow,
-                dest_strata={
-                    stratification_1: stratum_1,
-                    stratification_2: stratum_2,
-                }
-            )
+            if filter_on == "destination":
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name=flow,
+                    dest_strata={
+                        stratification_1: stratum_1,
+                        stratification_2: stratum_2,
+                    }
+                )
+            elif filter_on == "source":
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name=flow,
+                    source_strata={
+                        stratification_1: stratum_1,
+                        stratification_2: stratum_2,
+                    }
+                )
+            else:
+                raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
 
 
 def request_stratified_output_for_compartment(
@@ -231,10 +252,10 @@ def request_standard_outputs(
         name="infection_deaths", flow_name=INFECT_DEATH
     )
     request_stratified_output_for_flow(
-        model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup", name_stem="infection_deaths"
+        model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup", name_stem="infection_deaths", filter_on="source"
     )
     request_double_stratified_output_for_flow(
-        model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical", name_stem="infection_deaths"
+        model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical", name_stem="infection_deaths", filter_on="source"
     )
     model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
     if not is_region_vic:

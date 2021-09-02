@@ -15,6 +15,7 @@ from autumn.models.covid_19.constants import (
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
+from autumn.models.covid_19.preprocess.vaccination import get_eligible_age_groups
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.history import History
@@ -404,7 +405,7 @@ def request_standard_outputs(
             func=lambda vaccinated, total: vaccinated / total,
         )
         # track proportion vaccinated by age group
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in params.vaccination.tts_rate.keys():
             model.request_output_for_compartments(
                 name=f"_vaccinatedXagegroup_{agegroup}",
                 compartments=COMPARTMENTS,

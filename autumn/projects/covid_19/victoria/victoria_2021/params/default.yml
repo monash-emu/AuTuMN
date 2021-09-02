@@ -20,7 +20,7 @@ infection_fatality:
 vaccination: null
 
 time:
-  start: 611  # PLS REVIEW
+  start: 153  # PLS REVIEW
   end: 711  # PLS REVIEW
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere

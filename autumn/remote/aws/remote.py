@@ -75,7 +75,8 @@ def resume_calibration(
 
     with get_connection(instance) as conn:
         print_hostname(conn)
-        update_repo(conn, branch=branch)
+        #update_repo(conn, branch=branch)
+        set_run_id(conn, baserun)
         install_requirements(conn)
         read_secrets(conn)
         run_id = get_run_id(conn, app_name, region_name)

@@ -417,6 +417,18 @@ def request_standard_outputs(
                 func=lambda vaccinated, total: vaccinated / total,
             )
 
+            # Track the rate of TTS occurring on the assumption that all doses are Astra-Zeneca
+            model.request_output_for_flow(
+                name=f"vaccinationXagegroup{agegroup}",
+                flow_name="vaccination",
+                source_strata={"agegroup": agegroup},
+            )
+            model.request_function_output(
+                name=f"ttsXagegroup_{agegroup}",
+                sources=[f"vaccinationXagegroup_{agegroup}"],
+                func=lambda vaccinated: vaccinated * params.vaccination.tts_rate[agegroup]
+            )
+
     # Calculate the incidence by strain
     if params.voc_emergence:
         voc_names = list(params.voc_emergence.keys())

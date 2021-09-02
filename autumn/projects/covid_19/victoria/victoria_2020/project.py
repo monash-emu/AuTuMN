@@ -139,7 +139,7 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 project = Project(
-    Region.VICTORIA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
+    Region.VICTORIA_2020, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
 
 # Write parameter table to tex file

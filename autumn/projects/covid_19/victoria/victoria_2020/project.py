@@ -62,13 +62,13 @@ for region in regions_for_multipliers:
 
 priors = [
     # Global COVID priors, but with jumping sds adjusted
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.exposed.total_period",
-        mean=5.5,
-        stdev=0.97,
-        trunc_range=[1.0, np.inf],
-        jumping_stdev=0.5,
-    ),
+    # TruncNormalPrior(
+    #     "sojourn.compartment_periods_calculated.exposed.total_period",
+    #     mean=5.5,
+    #     stdev=0.97,
+    #     trunc_range=[1.0, np.inf],
+    #     jumping_stdev=0.5,
+    # ),
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.active.total_period",
         mean=6.5,
@@ -77,29 +77,29 @@ priors = [
         jumping_stdev=0.4,
     ),
     # Cluster specific priors.
-    *cluster_priors,
+    # *cluster_priors,
     # Victorian regional priors.
-    TruncNormalPrior(
-        f"victorian_clusters.contact_rate_multiplier_regional",
-        mean=1.0,
-        stdev=0.5,
-        trunc_range=[0.5, np.inf],
-        jumping_stdev=0.15,
-    ),
+    # TruncNormalPrior(
+    #     f"victorian_clusters.contact_rate_multiplier_regional",
+    #     mean=1.0,
+    #     stdev=0.5,
+    #     trunc_range=[0.5, np.inf],
+    #     jumping_stdev=0.15,
+    # ),
     UniformPrior("contact_rate", [0.04, 0.07], jumping_stdev=0.008),
-    UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.01),
+    # UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.01),
     UniformPrior("infectious_seed", [20., 70.], jumping_stdev=4.),
-    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
+    # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
     UniformPrior("infection_fatality.top_bracket_overwrite", [0.05, 0.3], jumping_stdev=0.04),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.05, 0.3], jumping_stdev=0.04),
-    TruncNormalPrior(
-        "sojourn.compartment_periods.icu_early",
-        mean=12.7,
-        stdev=4.0,
-        trunc_range=[5.0, np.inf],
-        jumping_stdev=4.
-    ),
+    # TruncNormalPrior(
+    #     "sojourn.compartment_periods.icu_early",
+    #     mean=12.7,
+    #     stdev=4.0,
+    #     trunc_range=[5.0, np.inf],
+    #     jumping_stdev=4.
+    # ),
     UniformPrior(
         "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
         [0.0, 0.6],
@@ -110,13 +110,13 @@ priors = [
         [0.0, 0.6],
         jumping_stdev=0.04,
     ),
-    UniformPrior(
-        "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect",
-        [0.0, 0.4],
-        jumping_stdev=0.04,
-    ),
-    UniformPrior("target_output_ratio", [0.2, 0.7], jumping_stdev=0.04),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
+    # UniformPrior(
+    #     "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect",
+    #     [0.0, 0.4],
+    #     jumping_stdev=0.04,
+    # ),
+    # UniformPrior("target_output_ratio", [0.2, 0.7], jumping_stdev=0.04),
+    # UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
 ]
 
 # Load proposal sds from yml file
@@ -125,7 +125,7 @@ use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 calibration = Calibration(
     priors,
     targets,
-    metropolis_init="current_params",
+    metropolis_init="lhs",
     metropolis_init_rel_step_size=0.05,
     fixed_proposal_steps=500,
     jumping_stdev_adjustment=0.8,

@@ -11,22 +11,32 @@ from autumn.tools.project import build_rel_path
 
 POLICY_PATH = os.path.join(DOCS_PATH, "papers", "covid_19", "policy_brief")
 POLICY_PDF = os.path.join(POLICY_PATH, "policy_brief.pdf")
-POLICY_JSON = os.path.join(PROJECTS_PATH, "covid_19", "sri_lanka", "sri_lanka", "policy_brief.json")  # for now
-
+POLICY_JSON = os.path.join(
+    PROJECTS_PATH, "covid_19", "philippines", "philippines", "policy_brief.json"
+)  # TODO - Milinda to arrive at a better method of defining the input file
 
 AUTUMN_LOGO = os.path.join(POLICY_PATH, "images", "AuTuMN_official.png")
-MONASH_LOGO = os.path.join(POLICY_PATH,  "images","Monash_University_logo.png")
+MONASH_LOGO = os.path.join(POLICY_PATH, "images", "Monash_University_logo.png")
 PAGE_BACK = os.path.join(POLICY_PATH, "images", "page_background.png")
 WHO_LOGO = os.path.join(POLICY_PATH, "images", "WHO_SEARO.jpg")
+
 flag_path = {
-    "australia": os.path.join(POLICY_PATH,"images", "AUS.png"),
-    "indonesia": os.path.join(POLICY_PATH,"images", "IDN.png"),
-    "sri_lanka": os.path.join(POLICY_PATH,"images", "LKA.png"),
-    "malaysia": os.path.join(POLICY_PATH, "images","MYS.png"),
-    "nepal": os.path.join(POLICY_PATH, "images","NPL.png"),
-    "philippines": os.path.join(POLICY_PATH,"images", "PHL.png"),
-    "vietnam": os.path.join(POLICY_PATH, "images","VNM.png"),
+    "australia": os.path.join(POLICY_PATH, "images", "AUS.png"),
+    "indonesia": os.path.join(POLICY_PATH, "images", "IDN.png"),
+    "sri_lanka": os.path.join(POLICY_PATH, "images", "LKA.png"),
+    "malaysia": os.path.join(POLICY_PATH, "images", "MYS.png"),
+    "nepal": os.path.join(POLICY_PATH, "images", "NPL.png"),
+    "philippines": os.path.join(POLICY_PATH, "images", "PHL.png"),
+    "vietnam": os.path.join(POLICY_PATH, "images", "VNM.png"),
 }
+
+dark_blue = (0, 0, 55)
+blue = (115, 152, 181)
+light_blue = (219, 228, 233)
+dark_red = (130, 0, 0)
+orange = (217, 71, 0)
+yellow = (244, 172, 69)
+white = (255, 255, 255)
 
 
 class PDF(FPDF):
@@ -41,9 +51,9 @@ class PDF(FPDF):
         self.image(PAGE_BACK, 0, 0)
 
         # Title
-        self.set_fill_color(0, 0, 55)
-        self.set_draw_color(0, 0, 55)
-        self.set_text_color(255, 255, 255)
+        self.set_fill_color(*dark_blue)
+        self.set_draw_color(*dark_blue)
+        self.set_text_color(*white)
 
         self.cell(
             w=0,
@@ -67,18 +77,17 @@ class PDF(FPDF):
 
         # Logo
         self.image(MONASH_LOGO, 2, 2, h=12)
-        self.image(AUTUMN_LOGO, 165, 3, h=10)
+        self.image(AUTUMN_LOGO, 165, 3, h=11)
 
-        # Line break
-        # self.ln(5)
-        self.set_margins(5, 20)
+        # Set margins
+        self.set_margins(5, 20, 5)
 
     # Page footer
     def footer(self):
         # Colour
-        self.set_fill_color(0, 0, 55)
-        self.set_draw_color(0, 0, 55)
-        self.set_text_color(255, 255, 255)
+        self.set_fill_color(*dark_blue)
+        self.set_draw_color(*dark_blue)
+        self.set_text_color(*white)
 
         # Position at 1.5 cm from bottom
         self.set_margins(0, 0)
@@ -90,7 +99,7 @@ class PDF(FPDF):
         self.cell(0, 16, "Page " + str(self.page_no()) + "/{nb}", 0, 0, "C", fill=True)
 
         self.image(flag_path[self.region], 2, 283, h=12)
-        self.image(WHO_LOGO, 165, 283, h=13)
+        self.image(WHO_LOGO, 165, 283, h=12)
 
     def read_policy_brief(self, policy_json):
 
@@ -102,9 +111,9 @@ class PDF(FPDF):
         self.region = self.pb["RUN_ID"].split("/")[1]
         self.date = str(datetime.fromtimestamp(int(self.pb["RUN_ID"].split("/")[2])).date())
         self.heading = [*self.pb][1:]
-        self.output_pdf = os.path.join(POLICY_PATH, f'policy_brief_{self.region}.pdf')
+        self.output_pdf = os.path.join(POLICY_PATH, f"policy_brief_{self.region}.pdf")
 
-    def print_section(self, width, heading):
+    def print_text(self, width, heading):
 
         if heading.lower() == "abbreviations":
             x, y = self.get_x(), self.get_y()
@@ -114,8 +123,8 @@ class PDF(FPDF):
 
         if heading.lower() == "abbreviations":
             text = "".join(f"{each}\n" for each in self.pb[heading])
-            self.set_fill_color(115, 152, 181)
-            self.set_text_color(255, 255, 255)
+            self.set_fill_color(*blue)
+            self.set_text_color(*white)
             self.multi_cell(width, 5, txt=text, align="L", ln=1, fill=True)
 
         else:
@@ -128,7 +137,7 @@ class PDF(FPDF):
 
         # Title
         self.set_font("helvetica", "B", 10)
-        self.set_text_color(217, 71, 0)
+        self.set_text_color(*orange)
         self.cell(txt=heading, ln=2)
 
         # Set body text location & colour
@@ -167,13 +176,11 @@ class PDF(FPDF):
         self.set_xy(width + 5, body_start_y)
         for img in img_list:
             self.image(self.pb[heading][img], h=50)
-            # x, y = self.get_x(), self.get_y()
-            # self.set_xy(x,y)
 
         x, y = self.get_x(), self.get_y()
 
         if len(img_list):
-            self.set_xy(body_end_x, y + 5)
+            self.set_xy(body_end_x, y + 10)
         else:
             self.set_xy(body_end_x, body_end_y + 5)
 
@@ -189,14 +196,12 @@ class PDF(FPDF):
 
         if background is not None:
             self.set_fill_color(*background)
-            fill=True
+            fill = True
         else:
-            fill=False
+            fill = False
 
-        self.set_text_color(255, 255, 255)
+        self.set_text_color(*white)
         self.multi_cell(width, 5, txt=text, align="L", ln=1, fill=fill)
-
-
 
 
 pdf = PDF(orientation="P", unit="mm", format="A4")
@@ -205,17 +210,12 @@ pdf.read_policy_brief(POLICY_JSON)
 pdf.extract_attributes()
 pdf.add_page()
 
-pdf.print_section(150, pdf.heading[0])
-pdf.print_list(50, pdf.heading[1], background=(115, 152, 181))
-
-pdf.print_dict(0, pdf.heading[2], background=(250, 213, 161))
-
+pdf.print_text(140, pdf.heading[0])
+pdf.print_list(60, pdf.heading[1], background=(blue))
+pdf.print_dict(0, pdf.heading[2], background=(yellow))
 pdf.print_dict(140, pdf.heading[3])
-
-pdf.print_dict(0, pdf.heading[4])
-pdf.print_section(0, pdf.heading[5])
+pdf.ln(60)  # add line break to manage automatic page breaks
+pdf.print_dict(140, pdf.heading[4])
+pdf.print_text(0, pdf.heading[5])
 
 pdf.output(pdf.output_pdf)
-
-
-PROJECTS_PATH

@@ -13,8 +13,8 @@ import os
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 # Just calibrate to June, July, August and September for now (but run for some lead in time at the start)
-TARGETS_START_TIME = 153  # 1st June
-TARGETS_END_TIME = 305  # 31st October
+TARGETS_START_TIME = 150  # TODO UPDATE ONCE WE HAVE DATA
+TARGETS_END_TIME = 305  # TODO UPDATE ONCE WE HAVE DATA
 TARGETS_RANGE = (TARGETS_START_TIME, TARGETS_END_TIME)
 
 # Load and configure model parameters
@@ -139,7 +139,7 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 project = Project(
-    Region.VICTORIA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
+    Region.VICTORIA_2021, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
 
 # Write parameter table to tex file

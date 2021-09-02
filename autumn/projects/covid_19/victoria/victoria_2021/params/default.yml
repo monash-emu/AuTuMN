@@ -1,0 +1,202 @@
+description: BASELINE
+
+mixing_matrices:
+  type: extrapolated
+  source_iso3: GBR
+
+population:
+  region: Victoria
+country:
+  iso3: AUS
+
+contact_tracing:
+    assumed_trace_prop: 0.35
+    assumed_prev: 1.e-3
+    quarantine_infect_multiplier: 0.2
+
+infection_fatality:
+  top_bracket_overwrite: 0.17
+
+vaccination: null
+
+time:
+  start: 150  # PLS REVIEW
+  end: 711  # PLS REVIEW
+
+testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
+  assumed_tests_parameter: 1.e-03
+  assumed_cdr_parameter: .3  # calibrated
+  smoothing_period: 7
+
+# Tiny adjustment for consistency with observations (0.16 instead of 0.17)
+clinical_stratification:
+  icu_prop: 0.16
+
+# VAHI, 1st July to 30th September
+sojourn:
+  compartment_periods:
+    hospital_late: 11.6 # VAHI hospital mean duration, all COVID
+    icu_late: 7.4 # VAHI ICU mean duration, all COVID (177.6 hours)
+  compartment_periods_calculated:
+    active:
+      proportions:
+        early: 0.5
+        late: 0.5
+
+# Cluster stratification.
+victorian_clusters:
+  intercluster_mixing: 0.02 # calibrated
+  contact_rate_multiplier_north_metro: 1. # calibrated
+  contact_rate_multiplier_south_metro: 1. # calibrated
+  contact_rate_multiplier_barwon_south_west: 1. # calibrated
+  contact_rate_multiplier_regional: 1. # calibrated
+  # *** METRO ***
+  metro:
+    mobility:
+      region: null
+      age_mixing: null
+      npi_effectiveness: {}
+      google_mobility_locations:
+        work:
+          - workplaces
+        other_locations:
+          - retail_and_recreation
+          - grocery_and_pharmacy
+          - parks
+          - transit_stations
+#        home:
+#          - residential
+      smooth_google_data: false # Whether to apply a 7-day moving average
+      square_mobility_effect: true
+      mixing:
+        school:
+          append: false
+          times:
+            - 2020-09-02 # PLS REVIEW
+            
+          values:
+            - 1. # PLS REVIEW
+            
+      microdistancing:
+        home_reduction:
+          function_type: constant
+          parameters:
+            effect: 0.
+          locations:
+            - home
+        behaviour:
+          function_type: tanh
+          parameters:
+            shape: 0.262764
+            inflection_time: 611. # PLS REVIEW 2-Sep-2021
+            lower_asymptote: 0.2803973
+            upper_asymptote: 0.4421819
+          locations:
+            - other_locations
+            - school
+            - work
+#            - home
+        behaviour_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.3
+          locations:
+            - other_locations
+            - school
+            - work
+#            - home
+        face_coverings: # Mandatory face coverings
+          function_type: tanh
+          parameters:
+            shape: 0.5261693
+            inflection_time: 611. # PLS REVIEW 2-Sep-2021
+            lower_asymptote: 0.130469
+            upper_asymptote: 0.9143849
+          locations:
+            - other_locations
+            - school
+            - work
+        face_coverings_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.3
+          locations:
+            - other_locations
+            - school
+            - work
+
+  # *** REGIONAL ***
+  regional:
+    mobility:
+      region: null
+      age_mixing: null
+      npi_effectiveness: {}
+      google_mobility_locations:
+        work:
+          - workplaces
+        other_locations:
+          - retail_and_recreation
+          - grocery_and_pharmacy
+          - parks
+          - transit_stations
+#        home:
+#          - residential
+      smooth_google_data: false # Whether to apply a 7-day moving average
+      square_mobility_effect: true
+      mixing:
+        school:
+          append: false
+          times:
+            - 2021-09-02
+
+          values:
+            - 1
+
+      # Regional Victoria clusters microdistancing function
+      microdistancing:
+        home_reduction:
+          function_type: constant
+          parameters:
+            effect: 0.
+          locations:
+            - home
+        behaviour:
+          function_type: tanh
+          parameters:
+            shape: 0.262764
+            inflection_time: 611. # PLS REVIEW 2-Sep-2021
+            lower_asymptote: 0.2803973
+            upper_asymptote: 0.4421819
+          locations:
+            - other_locations
+            - school
+            - work
+#            - home
+        behaviour_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.
+          locations:
+            - other_locations
+            - school
+            - work
+#            - home
+        face_coverings:
+          function_type: tanh
+          parameters:
+            shape: 0.5261693
+            inflection_time: 611. # PLS REVIEW 2-Sep-2021
+            lower_asymptote: 0.130469
+            upper_asymptote: 0.9143849
+          locations:
+            - other_locations
+            - school
+            - work
+        face_coverings_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0. # Irrelevant because over-written by the metro value
+          locations:
+            - other_locations
+            - school
+            - work

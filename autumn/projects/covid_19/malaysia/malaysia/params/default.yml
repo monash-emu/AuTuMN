@@ -93,18 +93,6 @@ mobility:
         - 1.
         - 1.
         - 0.
-    other_locations:
-      append: true
-      times:
-        - 2021-06-03
-      values:
-        - 0.65
-    work:
-      append: true
-      times:
-        - 2021-06-03
-      values:
-        - 0.45
 
 voc_emergence:
   alpha_beta:

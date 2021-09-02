@@ -95,6 +95,7 @@ def plot_multiple_timeseries_with_uncertainty(
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_output",
         multi_panel_vlines=multi_panel_vlines,
+        overlay_uncertainty=True,
     )
 
 
@@ -129,6 +130,7 @@ def plot_regional_outputs(
         max_y_values=max_y_values,
         custom_titles=[i_region.replace("-", " ") for i_region in regions],
         custom_sup_title=indicator.replace("_", " "),
+        overlay_uncertainty=True,
     )
 
 
@@ -718,6 +720,7 @@ def plot_scenarios_multioutput(
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="contact_tracing",
         max_y_values=(2.0e-3, 1, 1, 1, 1),
+        overlay_uncertainty=True,
     )
 
 
@@ -765,6 +768,7 @@ def plot_worse_scenarios_multioutput(
         file_name="multi_scenario",
         multi_panel_hlines=icu_capacities,
         max_y_values=(3.2e4, 1.2e3, 6e3, 7e3),
+        overlay_uncertainty=True,
     )
 
 
@@ -802,6 +806,7 @@ def plot_good_scenarios_multioutput(
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_scenario_better",
+        overlay_uncertainty=True,
     )
 
 
@@ -839,6 +844,7 @@ def plot_school_scenario_multioutput(
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_scenario_school",
+        overlay_uncertainty=True,
     )
 
 

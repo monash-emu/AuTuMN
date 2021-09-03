@@ -24,7 +24,8 @@ def run_powerbi(instance, run_id: str, urunid: str, branch: str):
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
         print_hostname(conn)
-        update_repo(conn, branch=branch)
+        #update_repo(conn, branch=branch)
+        set_run_id(conn, run_id)
         install_requirements(conn)
         read_secrets(conn)
         pipeline_name = "powerbi"

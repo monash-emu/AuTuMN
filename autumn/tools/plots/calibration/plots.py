@@ -395,12 +395,21 @@ def plot_multiple_param_traces(
     x_ticks_on=True,
 ):
 
-    # Except not the dispersion parameters - only the epidemiological ones
+    # Except not the dispersion parameters or vaccination param- only the epidemiological ones
+    print(mcmc_params[0].loc[:, "name"])
     parameters = [
         param
         for param in mcmc_params[0].loc[:, "name"].unique().tolist()
         if "dispersion_param" not in param
+
     ]
+    parameters = [
+        paramval
+        for paramval in parameters
+        if "vaccination" not in paramval
+
+    ]
+
     params_to_plot = optional_param_request if optional_param_request else parameters
 
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(

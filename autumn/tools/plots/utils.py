@@ -113,6 +113,10 @@ def get_plot_text_dict(
         text = text.replace("victorian_clusters.metro.mobility.microdistancing", "")
     if "upper_asymptote" in param_string:
         text = text.replace("parameters.upper_asymptote", "")
+    if "voc_emergence.alpha_beta.contact_rate_multiplier" in param_string:
+        text = text.replace("voc_emergence.alpha_beta.contact_rate_multiplier", "VoC contact rate multiplier")
+    if "voc_emergence.alpha_beta.start_time" in param_string:
+        text = text.replace("voc_emergence.alpha_beta.start_time", "VoC start time")
     if capitalise_first_letter:
         text = text[0].upper() + text[1:]
     if remove_underscore:

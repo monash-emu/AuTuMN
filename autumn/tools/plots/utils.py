@@ -58,7 +58,8 @@ PLOT_TEXT_DICT = {
     "victorian_clusters.contact_rate_multiplier_north_metro": "north and west metro",
     "victorian_clusters.contact_rate_multiplier_south_metro": "south and south east metro",
     "notifications": "Daily Covid-19 notifications",
-    "prop_incidence_strain_delta": "Proportion of Delta variant in new cases"
+    "prop_incidence_strain_delta": "Proportion of Delta variant in new cases",
+    "contact_tracing_assumed_trace_prop": "traced proportion at high prevalence",
 }
 
 SHORT_TEXT_DICT = {

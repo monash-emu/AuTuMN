@@ -82,6 +82,10 @@ cases_df = (
 )
 cases_df.cluster_id.replace(CLUSTER_MAP, inplace=True)
 
+password = os.environ.get(PASSWORD_ENVAR, "")
+if not password:
+    password = getpass(prompt="Enter the encryption password:")
+    
 
 for cluster in CLUSTER_MAP.values():
 
@@ -89,9 +93,7 @@ for cluster in CLUSTER_MAP.values():
     f"notifications_for_cluster_{cluster.lower()}": "cluster_cases"}
 
     cluster_df = cases_df.loc[cases_df.cluster_id==cluster]
-    password = os.environ.get(PASSWORD_ENVAR, "") 
-    if not password:
-        password = getpass(prompt="Enter the encryption password:")
+    
     update_timeseries(TARGET_MAP_DHHS,cluster_df,COVID_DHHS_TARGETS,password)
 
 

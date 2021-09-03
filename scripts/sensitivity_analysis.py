@@ -179,7 +179,6 @@ def create_sensitivity_df(df):
     ]
 
 
-
 def group_by_age(df, bin):
 
     df = df.groupby(by=[pd.cut(df.age, bin)]).sum()

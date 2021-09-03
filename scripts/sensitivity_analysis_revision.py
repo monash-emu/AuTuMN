@@ -45,9 +45,8 @@ do_df = do_df[BASE_COL + REQ_COL]
 start_time = do_df[["scenario", "times"]].groupby(["scenario"]).min().max()[0]
 
 MLE_RUN = mcmc_run_df.sort_values(["accept", "loglikelihood"], ascending=[False, False])[0:1]
-
-
 MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo/export?format=xlsx&id=15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo"
+
 
 def perform_calculation(df):
     df_baseline = df.loc[

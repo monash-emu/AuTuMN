@@ -70,7 +70,7 @@ Close and re-open your shell. In either bash (Linux) or PowerShell (Windows), ru
 
 ```bash
 # Create Autumn environment in Anaconda
-conda create -n autumn python=3.6
+conda create -n autumn python=3.7
 # Activate autumn environment
 conda activate autumn
 ```
@@ -166,7 +166,7 @@ To re-create your autumn conda environment from scratch:
 ```powershell
 conda activate base
 conda env remove -n autumn -y
-conda create -n autumn python=3.6 -y
+conda create -n autumn python=3.7 -y
 conda activate autumn
 pip install -r requirements.txt
 ```

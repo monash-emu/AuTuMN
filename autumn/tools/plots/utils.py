@@ -43,7 +43,7 @@ PLOT_TEXT_DICT = {
     "sojourn.compartment_periods.icu_early": "pre-ICU period",
     "other_locations": "other locations",
     "manila": "national capital region",
-    "victorian_clusters.intercluster_mixing": "inter-cluster mixing",
+    "victorian_clusters.intercluster_mixing": "inter-service mixing",
     "clinical_stratification.props.symptomatic.multiplier": "sympt prop adjuster",
     "clinical_stratification.non_sympt_infect_multiplier": "asympt infect multiplier",
     "infection_fatality.multiplier": "IFR adjuster",
@@ -57,8 +57,10 @@ PLOT_TEXT_DICT = {
     "infection_fatality.top_bracket_overwrite": "75 and above IFR",
     "victorian_clusters.contact_rate_multiplier_north_metro": "north and west metro",
     "victorian_clusters.contact_rate_multiplier_south_metro": "south and south east metro",
-    "notifications": "Daily Covid-19 notifications",
-    "prop_incidence_strain_delta": "Proportion of Delta variant in new cases"
+    "prop_incidence_strain_delta": "Proportion of Delta variant in new cases",
+    "contact_tracing.assumed_trace_prop": "traced prop high prevalence",
+    "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect": "home contacts reduction",
+
 }
 
 SHORT_TEXT_DICT = {

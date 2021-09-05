@@ -65,6 +65,12 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
             # +++ FIXME Do we always want sys.exit here? (Presumably need it to stop remote tasks hanging)
             sys.exit(-1)
 
+    # Upload the full model run outputs of AWS S3.
+    db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
+    with Timer(f"Uploading full model run data to AWS S3"):
+        for db_path in db_paths:
+            upload_to_run_s3(s3_client, run_id, db_path, quiet)
+
     # Create candidate plots from full run outputs
 
     with Timer(f"Creating candidate selection plots"):
@@ -77,11 +83,6 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     with Timer(f"Uploading plots to AWS S3"):
         upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
 
-    # Upload the full model run outputs of AWS S3.
-    db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
-    with Timer(f"Uploading full model run data to AWS S3"):
-        for db_path in db_paths:
-            upload_to_run_s3(s3_client, run_id, db_path, quiet)
 
 
 @report_errors

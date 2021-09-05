@@ -20,8 +20,8 @@ infection_fatality:
 vaccination: null
 
 time:
-  start: 135  # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
-  end: 275  # 1st October
+  start: 10  # PLS REVIEW
+  end: 711  # PLS REVIEW
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
@@ -72,25 +72,23 @@ victorian_clusters:
         school:
           append: false
           times:
-            - 2020-05-25
-            - 2020-05-26 # 400,000 students return
-            - 2020-06-08
-            - 2020-06-09 # Remaining 618,000 students return
-            - 2020-07-08
-            - 2020-07-09 # Schools close for stage 3
+            - 2020-09-02 # PLS REVIEW
+            
           values:
-            - 0.
-            - 0.393 # 26th May
-            - 0.393
-            - 1. # 9th June
-            - 1.
-            - 0.1 # 9th July
+            - 1. # PLS REVIEW
+            
       microdistancing:
+        home_reduction:
+          function_type: constant
+          parameters:
+            effect: 0.
+          locations:
+            - home
         behaviour:
           function_type: tanh
           parameters:
             shape: 0.262764
-            inflection_time: 197. # 15th July
+            inflection_time: 611. # PLS REVIEW 2-Sep-2021
             lower_asymptote: 0.2803973
             upper_asymptote: 0.4421819
           locations:
@@ -111,7 +109,7 @@ victorian_clusters:
           function_type: tanh
           parameters:
             shape: 0.5261693
-            inflection_time: 208. # Mandated 11:59pm Wednesday 22nd July, but inflection date from fit was 26th July
+            inflection_time: 611. # PLS REVIEW 2-Sep-2021
             lower_asymptote: 0.130469
             upper_asymptote: 0.9143849
           locations:
@@ -149,26 +147,24 @@ victorian_clusters:
         school:
           append: false
           times:
-            - 2020-05-25
-            - 2020-05-26 # 400,000 students return
-            - 2020-06-08
-            - 2020-06-09 # Remaining 618,000 students return
-            - 2020-07-08
-            - 2020-07-09 # Schools close for stage 3
+            - 2021-09-02
+
           values:
-            - 0.1
-            - 0.393 # 26th May
-            - 0.393
-            - 1. # 9th June
-            - 1.
-            - 0.1 # 9th July
+            - 1
+
       # Regional Victoria clusters microdistancing function
       microdistancing:
+        home_reduction:
+          function_type: constant
+          parameters:
+            effect: 0.
+          locations:
+            - home
         behaviour:
           function_type: tanh
           parameters:
             shape: 0.262764
-            inflection_time: 197. # 15th July
+            inflection_time: 611. # PLS REVIEW 2-Sep-2021
             lower_asymptote: 0.2803973
             upper_asymptote: 0.4421819
           locations:
@@ -189,7 +185,7 @@ victorian_clusters:
           function_type: tanh
           parameters:
             shape: 0.5261693
-            inflection_time: 218. # Mandated 11:59pm Sunday 2nd August, but putting ten days after Metro for consistency
+            inflection_time: 611. # PLS REVIEW 2-Sep-2021
             lower_asymptote: 0.130469
             upper_asymptote: 0.9143849
           locations:

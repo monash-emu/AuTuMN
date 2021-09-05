@@ -7,9 +7,9 @@ time:
 country:
   iso3: VNM
 
-mixing_matrices:
-  type: extrapolated
-  source_iso3: VNM
+#mixing_matrices:
+#  type: extrapolated
+#  source_iso3: CHN
 
 population:
   region: Ho Chi Minh City

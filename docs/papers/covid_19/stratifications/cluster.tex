@@ -1,6 +1,6 @@
 
-\section{Between cluster mixing}
-The preceding section describes the creation of heterogeneous mixing matrices by age for each of the nine health service clusters individually. These mixing matrices are then combined to create a single time-varying heterogeneous mixing matrix by cluster and age resulting in a 144 by 144 (\(9\times16=144\)) square mixing matrix. The force of infection for an index cluster is calculated from the mixing matrices of the age-assortative matrix for each of the clusters modelled. The spatial mixing matrix is based on the adjacency of health service clusters as indicated in Table \ref{tab:intercluster_mixing}.
+\section{Between service mixing}
+The preceding section describes the creation of heterogeneous mixing matrices by age for each of the nine health service clusters individually. These mixing matrices are then combined to create a single time-varying heterogeneous mixing matrix by service and age resulting in a 144 by 144 (\(9\times16=144\)) square mixing matrix. The force of infection for an index service is calculated from the mixing matrices of the age-assortative matrix for each of the services modelled. The spatial mixing matrix is based on the adjacency of health service clusters as indicated in Table \ref{tab:intercluster_mixing}.
 
 \begin{table}[ht]
 \renewcommand{\baselinestretch}{1}
@@ -28,9 +28,9 @@ The preceding section describes the creation of heterogeneous mixing matrices by
 	\hline
     \end{tabular}
     \title{Adjacency-based spatial mixing matrix.}
-    \caption{\textbf{Adjacency-based spatial mixing matrix.} 0, no mixing between spatial patches; M, calibrated inter-cluster mixing parameter for adjacent clusters; R, the diagonal matrix elements are populated with the complement of the other values for each row/column (and so may take a different value in each cell in which it appears)}
+    \caption{\textbf{Adjacency-based spatial mixing matrix.} 0, no mixing between spatial patches; M, calibrated inter-service mixing parameter for adjacent services; R, the diagonal matrix elements are populated with the complement of the other values for each row/column (and so may take a different value in each cell in which it appears)}
     \label{tab:intercluster_mixing}
 \end{table}
 
 \section{Model initialisation}
-The model was commenced from around one to two weeks earlier than the actual beginning of Victoria's second wave (as determined by genomic analysis), in order that the distribution of infectious persons distributes naturally across compartments as the model approaches the actual beginning of Victoria's second wave in early June. The actual start date selected was the 14\textsuperscript{th} May. The infectious seed needed at this time was then calibrated to ensure dynamics were realistic at the beginning of the second wave. The infectious seed is distributed evenly across metropolitan clusters, consistent with the epidemic's emergence from Metropolitan Melbourne.
+The model was commenced from around one to two weeks earlier than the actual beginning of Victoria's second wave (as determined by genomic analysis), in order that the distribution of infectious persons distributes naturally across compartments as the model approaches the actual beginning of Victoria's second wave in early June. The actual start date selected was the 14\textsuperscript{th} May. The infectious seed needed at this time was then calibrated to ensure dynamics were realistic at the beginning of the second wave. The infectious seed is distributed evenly across metropolitan services, consistent with the epidemic's emergence from Metropolitan Melbourne.

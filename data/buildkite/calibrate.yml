@@ -52,14 +52,16 @@ steps:
       value: covid_19:sweden
     - label: United Kingdom (covid_19)
       value: covid_19:united-kingdom
-    - label: Victoria (covid_19)
-      value: covid_19:victoria
+    - label: Victoria_2020 (covid_19)
+      value: covid_19:victoria_2020
+    - label: Victoria_2021 (covid_19)
+      value: covid_19:victoria_2021
     - label: Vietnam (covid_19)
       value: covid_19:vietnam
     - label: Philippines (sir_example)
       value: sir_example:philippines
-    - label: Victoria (sir_example)
-      value: sir_example:victoria
+    - label: Victoria_2020 (sir_example)
+      value: sir_example:victoria_2020
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)

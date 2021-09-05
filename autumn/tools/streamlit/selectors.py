@@ -234,9 +234,12 @@ def model_run_path(project: Project, multi_country_run_number=None) -> str:
     # Parse model run folder names
     model_runs = []
     for dirname in model_run_dirs:
-        run_datetime = datetime.strptime(dirname, "%Y-%m-%d--%H-%M-%S")
-        model_runs.append(run_datetime)
-
+        try:
+            run_datetime = datetime.strptime(dirname, "%Y-%m-%d--%H-%M-%S")
+            model_runs.append(run_datetime)
+        except:
+            pass
+        
     # Create labels for the select box.
     labels = []
     model_run_dir_lookup = {}

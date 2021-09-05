@@ -13,8 +13,8 @@ import os
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 # Just calibrate to June, July, August and September for now (but run for some lead in time at the start)
-TARGETS_START_TIME = 153  # 1st June
-TARGETS_END_TIME = 305  # 31st October
+TARGETS_START_TIME = 10  # TODO UPDATE ONCE WE HAVE DATA
+TARGETS_END_TIME = 305  # TODO UPDATE ONCE WE HAVE DATA
 TARGETS_RANGE = (TARGETS_START_TIME, TARGETS_END_TIME)
 
 # Load and configure model parameters
@@ -92,7 +92,7 @@ priors = [
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
     UniformPrior("infection_fatality.top_bracket_overwrite", [0.05, 0.3], jumping_stdev=0.04),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.2, 0.5], jumping_stdev=0.04),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.05, 0.3], jumping_stdev=0.04),
     TruncNormalPrior(
         "sojourn.compartment_periods.icu_early",
         mean=12.7,
@@ -108,6 +108,11 @@ priors = [
     UniformPrior(
         "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
         [0.0, 0.6],
+        jumping_stdev=0.04,
+    ),
+    UniformPrior(
+        "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect",
+        [0.0, 0.4],
         jumping_stdev=0.04,
     ),
     UniformPrior("target_output_ratio", [0.2, 0.7], jumping_stdev=0.04),
@@ -134,7 +139,7 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 project = Project(
-    Region.VICTORIA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
+    Region.VICTORIA_2021, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
 
 # Write parameter table to tex file

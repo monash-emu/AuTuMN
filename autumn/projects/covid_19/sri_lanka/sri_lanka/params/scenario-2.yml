@@ -1,35 +1,25 @@
-description: Scenario 1,50% vaccination by 14th Sep. Until August 31st lockdown. After that 50% of max mobility.
+description: Scenario 2,50% vaccination by 14th Sep. Until Sep 6 lockdown. After that 50% of max mobility.
 time:
-  start: 599 # 21st August 2021
+  start: 609 # 31st August 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-08-20
-        - 2021-08-21
-        - 2021-08-31
-        - 2021-09-01
+        - 2021-09-05
+        - 2021-09-06
       values:
-        - - repeat_prev
-        - 0.3
         - - repeat_prev
         - - close_to_max_last_period
           - 180
           - 0.5
-
-
     work:
       append: true
       times:
-        - 2021-08-20
-        - 2021-08-21
-        - 2021-08-31
-        - 2021-09-01
+        - 2021-09-05
+        - 2021-09-06
       values:
-        - - repeat_prev
-        - 0.3
         - - repeat_prev
         - - close_to_max_last_period
           - 180

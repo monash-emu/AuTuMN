@@ -20,14 +20,14 @@ The effect of Victorian school closures is captured through the timeline present
 		\hline
     \end{tabular}
     \title{Timeline used to implement Victorian school closure policies.}
-    \caption{\textbf{Timeline used to implement Victorian school closure policies.} The function is applied to both metropolitan and regional clusters.}	
+    \caption{\textbf{Timeline used to implement Victorian school closure policies.} The function is applied to both metropolitan and regional services.}	
     \label{tab:school_timeline}
 \end{table}
 
 \subsection{Macrodistancing in workplaces and other locations}
-The functions applied here are determined by the Google mobility data according to Table \ref{tab:mobility_map}, as described above, but are applied separately for each cluster. Because Google mobility data pertains to local government areas (LGAs), whereas health service clusters may receive patients from across the state, it was necessary to map mobility data to clusters. Health service clusters' overall mobility values in each location were calculated using a weighted average of LGA mobility values according to the historical pattern of the origin of patients presenting to services within each cluster.
+The functions applied here are determined by the Google mobility data according to Table \ref{tab:mobility_map}, as described above, but are applied separately for each service. Because Google mobility data pertains to local government areas (LGAs), whereas health service clusters may receive patients from across the state, it was necessary to map mobility data to services. Health service clusters' overall mobility values in each location were calculated using a weighted average of LGA mobility values according to the historical pattern of the origin of patients presenting to services within each service.
 
-As a hypothetical example, if 50\% of patients historically presenting to Barwon South West health cluster services come from the City of Geelong, the mobility data for the City of Geelong will contribute 50\% of the Google mobility estimate of Barwon South West.
+As a hypothetical example, if 50\% of patients historically presenting to Barwon South West health services come from the City of Geelong, the mobility data for the City of Geelong will contribute 50\% of the Google mobility estimate of Barwon South West.
 
 Historical patterns of patient presentations by health service cluster were provided by the Victorian Department of Health and Human Services (DHHS).
 
@@ -40,17 +40,17 @@ The physical distancing function \(d(t)\) is a transposed and translated hyperbo
 
 \begin{figure}[ht]
     \resizebox{1\textwidth}{!}{\includegraphics[scale=1]{../covid_19/projects/victoria/methods_figures/physical_distancing_fig.png}}
-    \caption{\textbf{Physical distancing micro-distancing function with data used for fitting} (for all clusters).}
+    \caption{\textbf{Physical distancing micro-distancing function with data used for fitting} (for all services).}
     \title{Physical distancing micro-distancing function with data used for fitting}
     \label{fig:physical}
 \end{figure}
 
 \subsection{Face coverings}
-Two separate face coverings microdistancing functions are employed, one for metropolitan and one for regional health service clusters. These functions were fitted using the same methods as for physical distancing, using YouGov data on Victorian residents' survey responses to the question ``Thinking about the last 7 days, have you worn a face mask outside your home (e.g. when on public transport, going to a supermarket, going to a main road)?". Estimated parameters were: shape, 0.5261693; lower asymptote, 0.130469; upper asymptote, 0.9143849; and inflection point, 23\textsuperscript{rd} July (consistent with the policy change in metropolitan Melbourne). This was applied directly to metropolitan clusters and translated ten days later for regional clusters, where face coverings were mandated from the 2\textsuperscript{nd} August. The resulting function is presented in Figure \ref{fig:face}.
+Two separate face coverings microdistancing functions are employed, one for metropolitan and one for regional health service clusters. These functions were fitted using the same methods as for physical distancing, using YouGov data on Victorian residents' survey responses to the question ``Thinking about the last 7 days, have you worn a face mask outside your home (e.g. when on public transport, going to a supermarket, going to a main road)?". Estimated parameters were: shape, 0.5261693; lower asymptote, 0.130469; upper asymptote, 0.9143849; and inflection point, 23\textsuperscript{rd} July (consistent with the policy change in metropolitan Melbourne). This was applied directly to metropolitan services and translated ten days later for regional services, where face coverings were mandated from the 2\textsuperscript{nd} August. The resulting function is presented in Figure \ref{fig:face}.
 
 \begin{figure}[ht]
  	\resizebox{1\textwidth}{!}{\includegraphics[scale=1]{../covid_19/projects/victoria/methods_figures/face_covering_fig.png}}
-    \caption{\textbf{Face coverings micro-distancing function for metropolitan Melbourne clusters with data used for fitting.}}
+    \caption{\textbf{Face coverings micro-distancing function for metropolitan Melbourne services with data used for fitting.}}
 	\label{fig:face}
-	\title{Face coverings micro-distancing function for metropolitan Melbourne clusters with data used for fitting.}
+	\title{Face coverings micro-distancing function for metropolitan Melbourne services with data used for fitting.}
 \end{figure}

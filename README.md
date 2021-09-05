@@ -179,8 +179,8 @@ Note that all of our CSV and XLSX files are stored using [Git Large File Storage
 
 We often need to run long, computationally expensive jobs. We are currently using Amazon Web Services (AWS) to do this. The scripts and documentation that allow you to do this can be found in the `remote/aws/` folder. The following jobs are run in AWS:
 
-- Calibration: Finding maximum likelihood parameters for some historical data using MCMC
-- Full model runs: Running all scenarios for all accepted MCMC parameter sets
+- Calibration: Using an adaptive Metropolis algorithm to fit the model to observations
+- Full model runs: Running all scenarios for all accepted Metropolis parameter sets
 - PowerBI processing: Post-processing of full model runs for display in PowerBI
 
 All outputs and plots for all model runs are stored in AWS S3, and they are publicly available at [this website](http://www.autumn-data.com). Application _should_ be uploaded if the app crashes midway.

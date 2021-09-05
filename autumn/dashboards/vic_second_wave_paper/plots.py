@@ -629,7 +629,7 @@ def plot_cdr_curves(
     start_date, end_date = STANDARD_X_LIMITS
     samples, label_rotation = 70, 90
 
-    project = get_project("covid_19", "victoria", reload=True)
+    project = get_project("covid_19", "victoria_2020", reload=True)
     params = project.param_set.dump_to_dict()['baseline']
 
     (
@@ -864,7 +864,7 @@ def plot_multicluster_mobility(
     app_name: str,
     region: str,
 ):
-    project = get_project("covid_19", "victoria", reload=True)
+    project = get_project("covid_19", "victoria_2020", reload=True)
     params = project.param_set.dump_to_dict()['baseline']
 
     all_cluster_mobility_values = {}

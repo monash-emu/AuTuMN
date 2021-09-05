@@ -12,7 +12,8 @@ from autumn.tools.utils.utils import COVID_BASE_DATETIME
 from autumn.settings import OUTPUT_DATA_PATH
 from autumn.settings import INPUT_DATA_PATH
 
-RUN_ID = "covid_19/malaysia/1621579054/07755e9"
+#RUN_ID = "covid_19/malaysia/1621579054/07755e9"
+RUN_ID = "covid_19/malaysia/1630648084/7acbfdc"
 RUN_ID = RUN_ID.split(sep="/")
 REGION = [
     region

@@ -1,4 +1,5 @@
-from autumn.tools.utils.utils import COVID_BASE_DATETIME
+from numpy.core.arrayprint import _guarded_repr_or_str
+from numpy.lib.shape_base import column_stack
 import pandas as pd
 import numpy as np
 import os
@@ -7,11 +8,11 @@ import datetime
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import matplotlib.pyplot as plt
 
-# Don't ask me why sigh ...
-sys.path.append("C:\\Users\\maba0001\\AuTuMN")
+from autumn.tools.utils.utils import COVID_BASE_DATETIME
+from autumn.settings import OUTPUT_DATA_PATH
+from autumn.settings import INPUT_DATA_PATH
 
-COVID_BASE_DATE = pd.datetime(2019, 12, 31)
-RUN_ID = "covid_19/malaysia/1622599229/e9de2f6"
+RUN_ID = "covid_19/malaysia/1630648084/7acbfdc"
 RUN_ID = RUN_ID.split(sep="/")
 REGION = [
     region
@@ -42,13 +43,12 @@ mcmc_param_df = pd.concat(mcmc_param_list)
 params = mcmc_param_df.name.unique()
 mcmc_run_df = pd.concat(mcmc_run_list)
 do_df = do_df[BASE_COL + REQ_COL]
-start_time = do_df[["scenario", "times"]].groupby(["scenario"]).min().max()[0]
+intervention_start = do_df[["scenario", "times"]].groupby(["scenario"]).min().max()[0]
 
-MLE_RUN = mcmc_run_df.sort_values(["accept", "loglikelihood"], ascending=[False, False])[0:1]
-MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo/export?format=xlsx&id=15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo"
+# Establish model start time
+model_start = do_df[["times"]].min()[0]
 
-
-def perform_calculation(df):
+def create_sensitivity_df(df):
     df_baseline = df.loc[
         df.scenario == 0,
     ]
@@ -70,12 +70,10 @@ def perform_calculation(df):
     df.drop(["scenario_baseline"], axis=1, inplace=True)
 
     return df.loc[
-        df.times == (start_time + TIME),
+        df.times == (intervention_start + TIME),
     ]
 
-
-do_df = perform_calculation(do_df)
-
+do_df = create_sensitivity_df(do_df)
 
 mcmc_param_df = mcmc_param_df.pivot_table(
     index=["chain", "run"], columns="name", values="value"
@@ -90,5 +88,6 @@ do_df = do_df.merge(
 )
 
 do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=["chain", "run"])
+do_df.to_csv('sensitivity_dataframe_02_09.csv', index=True)
 count_row = mcmc_param_df.shape[0]  # Gives number of rows
-
+print(count_row)

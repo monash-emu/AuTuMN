@@ -36,7 +36,8 @@ def test_sample_starting_params_from_lhs__with_beta_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 0.04680260472064115}])
+    actual = list(params)[0]['ice_cream_sales']
+    np.testing.assert_almost_equal(actual, 0.0468026047206411)
 
 
 def test_sample_starting_params_from_lhs__with_gamma_prior_and_one_sample():
@@ -50,7 +51,8 @@ def test_sample_starting_params_from_lhs__with_gamma_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 4.932833078981056}])
+    actual = list(params)[0]['ice_cream_sales']
+    np.testing.assert_almost_equal(actual, 4.932833080345159)
 
 
 def test_sample_starting_params_from_lhs__with_uniform_prior_and_one_sample():

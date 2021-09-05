@@ -53,7 +53,7 @@ def get_vacc_roll_out_function_from_doses(
             if (
                 compartment.name in VACCINE_ELIGIBLE_COMPARTMENTS
                 and compartment.strata["agegroup"] in eligible_age_groups
-                and compartment.strata["vaccination"] == Vaccination.FULLY_VACCINATED
+                and compartment.strata["vaccination"] == Vaccination.UNVACCINATED
             ):
                 deno_indices.append(i)
                 if (

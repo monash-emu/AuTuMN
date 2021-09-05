@@ -46,7 +46,7 @@ priors = [
     UniformPrior("infectious_seed", [15.0, 125.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
-    UniformPrior("infection_fatality.multiplier", [1.1, 2.9]),
+    UniformPrior("infection_fatality.multiplier", [0.8, 2.5]),
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.02, 0.13]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.01, 1.5]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.23, 1.5]),

@@ -133,22 +133,22 @@ def request_standard_outputs(
         func=lambda infection, susceptible: infection / susceptible,
         sources=[INFECTION, "_susceptible"]
     )
-    if params.vaccination:
-        request_stratified_output_for_flow(model, INFECTION, VACCINATION_STRATA, "vaccination")
-        request_stratified_output_for_compartment(
-            model,
-            f"_{Compartment.SUSCEPTIBLE}",
-            [Compartment.SUSCEPTIBLE],
-            strata=VACCINATION_STRATA,
-            stratification="vaccination",
-            save_results=False,
-        )
-        for stratum in VACCINATION_STRATA:
-            model.request_function_output(
-                f"susceptible_infection_rate_{stratum}",
-                func=lambda infection, susceptible: infection / (susceptible + 1e-10),  # Avoid divide by zero issues
-                sources=[f"{INFECTION}Xvaccination_{stratum}", f"_susceptibleXvaccination_{Vaccination.VACCINATED}"],
-            )
+    # if params.vaccination:
+    #     request_stratified_output_for_flow(model, INFECTION, VACCINATION_STRATA, "vaccination")
+    #     request_stratified_output_for_compartment(
+    #         model,
+    #         f"_{Compartment.SUSCEPTIBLE}",
+    #         [Compartment.SUSCEPTIBLE],
+    #         strata=VACCINATION_STRATA,
+    #         stratification="vaccination",
+    #         save_results=False,
+    #     )
+        # for stratum in VACCINATION_STRATA:
+        #     model.request_function_output(
+        #         f"susceptible_infection_rate_{stratum}",
+        #         func=lambda infection, susceptible: infection / (susceptible + 1e-10),  # Avoid divide by zero issues
+        #         sources=[f"{INFECTION}Xvaccination_{stratum}", f"_susceptibleXvaccination_{Vaccination.VACCINATED}"],
+        #     )
 
     """
     Incidence
@@ -385,37 +385,37 @@ def request_standard_outputs(
     """
     Vaccination
     """
-
-    if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-        request_stratified_output_for_flow(
-            model, "vaccination", find_vaccinated_agegroups(params.vaccination.roll_out_components), "agegroup"
-        )
-
-        # track proportion vaccinated
-        model.request_output_for_compartments(
-            name="_vaccinated",
-            compartments=COMPARTMENTS,
-            strata={"vaccination": Vaccination.VACCINATED},
-            save_results=False,
-        )
-        model.request_function_output(
-            name="proportion_vaccinated",
-            sources=["_vaccinated", "_total_population"],
-            func=lambda vaccinated, total: vaccinated / total,
-        )
-        # track proportion vaccinated by age group
-        for agegroup in AGEGROUP_STRATA:
-            model.request_output_for_compartments(
-                name=f"_vaccinatedXagegroup_{agegroup}",
-                compartments=COMPARTMENTS,
-                strata={"vaccination": Vaccination.VACCINATED, "agegroup": agegroup},
-                save_results=False,
-            )
-            model.request_function_output(
-                name=f"proportion_vaccinatedXagegroup_{agegroup}",
-                sources=[f"_vaccinatedXagegroup_{agegroup}", f"_total_populationXagegroup_{agegroup}"],
-                func=lambda vaccinated, total: vaccinated / total,
-            )
+    #
+    # if params.vaccination and len(params.vaccination.roll_out_components) > 0:
+    #     request_stratified_output_for_flow(
+    #         model, "vaccination", find_vaccinated_agegroups(params.vaccination.roll_out_components), "agegroup"
+    #     )
+    #
+    #     # track proportion vaccinated
+    #     model.request_output_for_compartments(
+    #         name="_vaccinated",
+    #         compartments=COMPARTMENTS,
+    #         strata={"vaccination": Vaccination.VACCINATED},
+    #         save_results=False,
+    #     )
+    #     model.request_function_output(
+    #         name="proportion_vaccinated",
+    #         sources=["_vaccinated", "_total_population"],
+    #         func=lambda vaccinated, total: vaccinated / total,
+    #     )
+    #     # track proportion vaccinated by age group
+    #     for agegroup in AGEGROUP_STRATA:
+    #         model.request_output_for_compartments(
+    #             name=f"_vaccinatedXagegroup_{agegroup}",
+    #             compartments=COMPARTMENTS,
+    #             strata={"vaccination": Vaccination.VACCINATED, "agegroup": agegroup},
+    #             save_results=False,
+    #         )
+    #         model.request_function_output(
+    #             name=f"proportion_vaccinatedXagegroup_{agegroup}",
+    #             sources=[f"_vaccinatedXagegroup_{agegroup}", f"_total_populationXagegroup_{agegroup}"],
+    #             func=lambda vaccinated, total: vaccinated / total,
+    #         )
 
     # Calculate the incidence by strain
     if params.voc_emergence:

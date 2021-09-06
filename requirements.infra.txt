@@ -6,3 +6,4 @@ tabulate
 awscli
 fabric
 pyyaml
+s3fs

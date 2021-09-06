@@ -58,13 +58,13 @@ def get_contact_rate_multipliers(mcmc_params):
 
 @dash.register("Multi-output uncertainty")
 def plot_multiple_timeseries_with_uncertainty(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
 ):
 
     plt.style.use("ggplot")
@@ -96,6 +96,7 @@ def plot_multiple_timeseries_with_uncertainty(
         file_name="multi_output",
         multi_panel_vlines=multi_panel_vlines,
         overlay_uncertainty=True,
+        is_legend=False,
     )
 
 
@@ -131,6 +132,7 @@ def plot_regional_outputs(
         custom_titles=[i_region.replace("-", " ") for i_region in regions],
         custom_sup_title=indicator.replace("_", " "),
         overlay_uncertainty=True,
+        is_legend=False,
     )
 
 
@@ -627,7 +629,7 @@ def plot_cdr_curves(
     start_date, end_date = STANDARD_X_LIMITS
     samples, label_rotation = 70, 90
 
-    project = get_project("covid_19", "victoria", reload=True)
+    project = get_project("covid_19", "victoria_2020", reload=True)
     params = project.param_set.dump_to_dict()['baseline']
 
     (
@@ -704,7 +706,7 @@ def plot_scenarios_multioutput(
     ) = (300, False, False, True, True, True)
 
     scenario_outputs = [
-        "prevalence", "prop_detected_traced", "cdr", "prop_contacts_with_detected_index", "prop_contacts_quarantined"
+        "prevalence", "prop_detected_traced", "prop_contacts_with_detected_index", "prop_contacts_quarantined"
     ]
 
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
@@ -719,8 +721,9 @@ def plot_scenarios_multioutput(
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="contact_tracing",
-        max_y_values=(2.0e-3, 1, 1, 1, 1),
+        max_y_values=(2.0e-3, 1, 1, 1),
         overlay_uncertainty=True,
+        is_legend=False,
     )
 
 
@@ -769,6 +772,7 @@ def plot_worse_scenarios_multioutput(
         multi_panel_hlines=icu_capacities,
         max_y_values=(3.2e4, 1.2e3, 6e3, 7e3),
         overlay_uncertainty=True,
+        is_legend=False,
     )
 
 
@@ -807,6 +811,7 @@ def plot_good_scenarios_multioutput(
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_scenario_better",
         overlay_uncertainty=True,
+        is_legend=False,
     )
 
 
@@ -845,6 +850,7 @@ def plot_school_scenario_multioutput(
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_scenario_school",
         overlay_uncertainty=True,
+        is_legend=False,
     )
 
 
@@ -858,7 +864,7 @@ def plot_multicluster_mobility(
     app_name: str,
     region: str,
 ):
-    project = get_project("covid_19", "victoria", reload=True)
+    project = get_project("covid_19", "victoria_2020", reload=True)
     params = project.param_set.dump_to_dict()['baseline']
 
     all_cluster_mobility_values = {}

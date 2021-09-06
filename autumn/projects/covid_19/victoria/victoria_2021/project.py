@@ -13,7 +13,7 @@ import os
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 # Just calibrate to June, July, August and September for now (but run for some lead in time at the start)
-TARGETS_START_TIME = 150  # TODO UPDATE ONCE WE HAVE DATA
+TARGETS_START_TIME = 10  # TODO UPDATE ONCE WE HAVE DATA
 TARGETS_END_TIME = 305  # TODO UPDATE ONCE WE HAVE DATA
 TARGETS_RANGE = (TARGETS_START_TIME, TARGETS_END_TIME)
 

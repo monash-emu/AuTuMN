@@ -23,7 +23,7 @@ def get_tracing_strat(quarantine_infect_multiplier, other_infect_multipliers) ->
         }
     )
 
-    # Apply the contact tracing
+    # Everybody starts out untraced when they are infected
     tracing_strat.add_flow_adjustments(
         INFECTION,
         {

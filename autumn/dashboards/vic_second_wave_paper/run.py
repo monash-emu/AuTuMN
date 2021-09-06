@@ -12,7 +12,7 @@ from .plots import dash
 
 def run_dashboard():
 
-    project = get_project("covid_19", "victoria", reload=True)
+    project = get_project("covid_19", "victoria_2020", reload=True)
     calib_path = selectors.calibration_path(project)
     if not calib_path:
         msg = f"No calibration outputs folder found for {project.model_name} {project.region_name}"

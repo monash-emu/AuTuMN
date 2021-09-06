@@ -13,6 +13,7 @@ from datetime import datetime
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
 from autumn.settings.folders import PROJECTS_PATH
+from autumn.tools.utils import secrets
 
 # start date to calculate time since Dec 31, 2019
 COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
@@ -231,7 +232,7 @@ def find_latest_run_id(model, region, s3_client):
     return f"{model}/{region}/{latest_timestamp}/{commit}"
 
 
-def update_timeseries(TARGETS_MAPPING, df, file_path):
+def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
     """
     Simple function to update timeseries.json
     """
@@ -248,6 +249,9 @@ def update_timeseries(TARGETS_MAPPING, df, file_path):
             targets[key]["values"] = list(temp_df[val])
     with open(file_path, "w") as f:
         json.dump(targets, f, indent=2)
+
+    if args:
+        secrets.write(file_path, *args)
 
 def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)

@@ -717,3 +717,5 @@ apps/tuberculosis/regions/marshall_islands/outputs/figures/calibration/screening
 
 # ignore vic figures automatically generated
 vic_figures/
+notebooks/user/rragonnet/lhs_start_traces_median.pdf
+notebooks/user/rragonnet/posterior_against_params.pdf

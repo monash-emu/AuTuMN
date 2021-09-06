@@ -41,24 +41,16 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     )
 
     # Apply vaccination effect against transmission
-    vacc_strat.add_flow_adjustments(
-        INFECTION,
-        {
-            Vaccination.UNVACCINATED: None,
-            Vaccination.ONE_DOSE: None,
-            Vaccination.FULLY_VACCINATED: Multiply(1. - infection_efficacy),
-        },
-    )
+    infection_adjustment = Multiply(1. - infection_efficacy)
+    all_infection_adjustments = {Vaccination.UNVACCINATED: None}
+    all_infection_adjustments.update({stratum: infection_adjustment for stratum in VACCINATED_CATEGORIES})
+    vacc_strat.add_flow_adjustments(INFECTION, all_infection_adjustments)
 
     # Adjust the infectiousness of vaccinated people
+    infectiousness_adjustment = Multiply(1. - params.vaccination.vacc_reduce_infectiousness)
     for compartment in DISEASE_COMPARTMENTS:
-        vacc_strat.add_infectiousness_adjustments(
-            compartment,
-            {
-                Vaccination.UNVACCINATED: None,
-                Vaccination.ONE_DOSE: None,
-                Vaccination.FULLY_VACCINATED: Multiply(1. - params.vaccination.vacc_reduce_infectiousness),
-            }
-        )
+        all_infectiousness_adjustments = {Vaccination.UNVACCINATED: None}
+        all_infectiousness_adjustments.update({stratum: infectiousness_adjustment for stratum in VACCINATED_CATEGORIES})
+        vacc_strat.add_infectiousness_adjustments(compartment, all_infectiousness_adjustments)
 
     return vacc_strat

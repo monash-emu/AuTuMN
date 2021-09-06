@@ -207,6 +207,7 @@ def close_gap_to_1(prev_vals: List[float], fraction: float):
 
 def max_last_period(prev_vals: List[float], period: int):
     last_n_values = min(len(prev_vals), period)
+    print(max(prev_vals[-last_n_values:]))
     return max(prev_vals[-last_n_values:])
 
 

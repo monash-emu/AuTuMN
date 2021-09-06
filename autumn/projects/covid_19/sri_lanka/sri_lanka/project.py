@@ -15,7 +15,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 2)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 3)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
@@ -37,15 +37,15 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.018, 0.023]),
-    UniformPrior("infectious_seed", [240.0, 300.0]),
+    UniformPrior("infectious_seed", [200.0, 280.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.045, 0.07]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [400, 420]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.5, 2.9]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [405, 425]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.55, 2.9]),
     UniformPrior("voc_emergence.delta.start_time", [440, 465]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [3.4, 4.1]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 0.8]),
-    UniformPrior("infection_fatality.multiplier", [2.2, 3.0])
+    UniformPrior("infection_fatality.multiplier", [2.4, 3.5])
 ]
 
 # Load proposal sds from yml file

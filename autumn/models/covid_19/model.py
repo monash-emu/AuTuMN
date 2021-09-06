@@ -188,23 +188,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest_strata={"strain": voc_name},
             )
 
-    # Infection history stratification
-    if params.stratify_by_infection_history:
-        history_strat = get_history_strat(params)
-        model.stratify_with(history_strat)
-
-        # Waning immunity (if requested)
-        # Note that this approach would mean that the recovered in the naive class have actually previously had Covid
-        if params.waning_immunity_duration:
-            model.add_transition_flow(
-                name="waning_immunity",
-                fractional_rate=1. / params.waning_immunity_duration,
-                source=Compartment.RECOVERED,
-                dest=Compartment.SUSCEPTIBLE,
-                source_strata={"history": History.NAIVE},
-                dest_strata={"history": History.EXPERIENCED},
-            )
-
     # Stratify model by Victorian subregion (used for Victorian cluster model)
     if is_region_vic:
         cluster_strat = get_cluster_strat(params)
@@ -219,7 +202,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
         model.stratify_with(tracing_strat)
 
-    # Contact tracing processes
+        # Contact tracing processes
         trace_param = tracing.get_tracing_param(
             params.contact_tracing.assumed_trace_prop,
             params.contact_tracing.assumed_prev
@@ -278,6 +261,23 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             else:
                 coverage_override = None
             add_vaccination_flows(model, roll_out_component, age_strat.strata, coverage_override)
+
+    # Infection history stratification
+    if params.stratify_by_infection_history:
+        history_strat = get_history_strat(params)
+        model.stratify_with(history_strat)
+
+        # Waning immunity (if requested)
+        # Note that this approach would mean that the recovered in the naive class have actually previously had Covid
+        if params.waning_immunity_duration:
+            model.add_transition_flow(
+                name="waning_immunity",
+                fractional_rate=1. / params.waning_immunity_duration,
+                source=Compartment.RECOVERED,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"history": History.NAIVE},
+                dest_strata={"history": History.EXPERIENCED},
+            )
 
     # Set up derived output functions
     if is_region_vic:

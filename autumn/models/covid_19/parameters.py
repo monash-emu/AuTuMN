@@ -254,6 +254,7 @@ class Vaccination(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
     vacc_reduce_infectiousness: float
+    tts_rate: Dict[str, float]
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]
 

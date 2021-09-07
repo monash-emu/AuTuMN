@@ -161,7 +161,7 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
 def add_clinical_adjustments_to_strat(
     strat,
     unaffected_stratum,
-    affected_stratum,
+    affected_strata,
     params,
     symptomatic_adjuster,
     hospital_adjuster,
@@ -173,17 +173,9 @@ def add_clinical_adjustments_to_strat(
 
     """
     entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
-        params.clinical_stratification,
-        params.country,
-        params.population,
-        params.infection_fatality.props,
-        params.sojourn,
-        params.testing_to_detection,
-        params.case_detection,
-        ifr_adjuster,
-        symptomatic_adjuster,
-        hospital_adjuster,
-        top_bracket_overwrite,
+        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+        params.sojourn, params.testing_to_detection, params.case_detection, ifr_adjuster, symptomatic_adjuster,
+        hospital_adjuster, top_bracket_overwrite,
     )
 
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
@@ -192,33 +184,33 @@ def add_clinical_adjustments_to_strat(
                 "agegroup": agegroup,
                 "clinical": clinical_stratum,
             }
-            strat.add_flow_adjustments(
-                "infect_onset",
-                {
-                    unaffected_stratum: None,
-                    affected_stratum: entry_adjustments[agegroup][clinical_stratum],
-                },
-                dest_strata=relevant_strata,  # Must be dest
+
+            # Must be dest
+            infect_onset_adjustments = {unaffected_stratum: None}
+            infect_onset_adjustments.update(
+                {stratum: entry_adjustments[agegroup][clinical_stratum] for stratum in affected_strata}
             )
-            strat.add_flow_adjustments(
-                "infect_death",
-                {
-                    unaffected_stratum: None,
-                    affected_stratum: death_adjs[agegroup][clinical_stratum],
-                },
-                source_strata=relevant_strata,  # Must be source
+            strat.add_flow_adjustments("infect_onset", infect_onset_adjustments, dest_strata=relevant_strata)
+
+            # Must be source
+            infect_death_adjustments = {unaffected_stratum: None}
+            infect_death_adjustments.update(
+                {stratum: death_adjs[agegroup][clinical_stratum] for stratum in affected_strata}
             )
-            strat.add_flow_adjustments(
-                "progress",
-                {unaffected_stratum: None, affected_stratum: progress_adjs[clinical_stratum]},
-                source_strata=relevant_strata,  # Either source or dest or both
+            strat.add_flow_adjustments("infect_death", infect_death_adjustments, source_strata=relevant_strata)
+
+            # Either source or dest or both
+            progress_adjustments = {unaffected_stratum: None}
+            progress_adjustments.update(
+                {stratum: progress_adjs[clinical_stratum] for stratum in affected_strata}
             )
-            strat.add_flow_adjustments(
-                "recovery",
-                {
-                    unaffected_stratum: None,
-                    affected_stratum: recovery_adjs[agegroup][clinical_stratum],
-                },
-                source_strata=relevant_strata,  # Must be source
+            strat.add_flow_adjustments("progress", progress_adjustments, source_strata=relevant_strata)
+
+            # Must be source
+            recovery_adjustments = {unaffected_stratum: None}
+            recovery_adjustments.update(
+                {stratum: recovery_adjs[agegroup][clinical_stratum] for stratum in affected_strata}
             )
+            strat.add_flow_adjustments("recovery", recovery_adjustments, source_strata=relevant_strata)
+
     return strat

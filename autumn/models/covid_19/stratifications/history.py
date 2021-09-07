@@ -27,7 +27,7 @@ def get_history_strat(params: Parameters) -> Stratification:
     history_strat = add_clinical_adjustments_to_strat(
         history_strat,
         History.NAIVE,
-        History.EXPERIENCED,
+        [History.EXPERIENCED],
         params,
         rel_prop_symptomatic_experienced,
         rel_prop_symptomatic_experienced,

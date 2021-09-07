@@ -33,7 +33,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     vacc_strat = add_clinical_adjustments_to_strat(
         vacc_strat,
         Vaccination.UNVACCINATED,
-        Vaccination.VACCINATED,
+        [Vaccination.VACCINATED],
         params,
         symptomatic_adjuster,
         hospital_adjuster,

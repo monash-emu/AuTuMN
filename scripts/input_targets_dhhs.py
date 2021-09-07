@@ -228,11 +228,26 @@ vac_df = vac_df[
         "proportion",
     ]
 ]
-vac_df.loc[vac_df.cluster_id.isna(), ["proportion","cluster_id"]] = [1,0]
-
+vac_df.loc[vac_df.cluster_id.isna(), ["proportion", "cluster_id"]] = [1, 0]
+vac_df = (
+    vac_df.groupby(
+        ["date", "date_index", "age_group", "vaccine_brand_name", "cluster_id", "proportion"]
+    )
+    .sum()
+    .reset_index()
+)
+vac_df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+vac_df.dose_1 = vac_df.dose_1 * vac_df.proportion
+vac_df.dose_2 = vac_df.dose_2 * vac_df.proportion
+vac_df[["start_age", "end_age"]] = vac_df.age_group.str.split("-", expand=True)
 
 
 # %%
 
+
+
+# %%
+vac_df
+# %%
 
 # %%

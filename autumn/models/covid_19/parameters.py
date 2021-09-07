@@ -270,6 +270,7 @@ class Vaccination(BaseModel):
 
 class VaccinationRisk(BaseModel):
     tts_rate: Dict[str, float]
+    tts_fatality_ratio: Dict[str, float]
 
 
 class ContactTracing(BaseModel):

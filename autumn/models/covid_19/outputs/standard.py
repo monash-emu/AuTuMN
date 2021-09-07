@@ -417,9 +417,15 @@ def request_standard_outputs(
                 source_strata={"agegroup": agegroup},
             )
             model.request_function_output(
-                name=f"ttsXagegroup_{agegroup}",
+                name=f"tts_casesXagegroup_{agegroup}",
                 sources=[f"vaccinationXagegroup_{agegroup}"],
                 func=lambda vaccinated: vaccinated * params.vaccination_risk.tts_rate[agegroup]
+            )
+
+            model.request_function_output(
+                name=f"tts_deathsXagegroup_{agegroup}",
+                sources=[f"tts_casesXagegroup_{agegroup}"],
+                func=lambda tts_cases: tts_cases * params.vaccination_risk.tts_fatality_ratio[agegroup]
             )
 
     # Calculate the incidence by strain

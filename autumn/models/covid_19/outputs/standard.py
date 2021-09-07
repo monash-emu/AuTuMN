@@ -389,9 +389,7 @@ def request_standard_outputs(
     Vaccination
     """
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-        request_stratified_output_for_flow(
-            model, "vaccination", find_vaccinated_agegroups(params.vaccination.roll_out_components), "agegroup"
-        )
+        request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
 
         # track proportions vaccinated by vaccination status
         for vacc_stratum in VACCINATED_STRATA:

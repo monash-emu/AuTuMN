@@ -190,6 +190,7 @@ vaccination:
   vacc_prop_prevent_infection: 0.
   vacc_reduce_infectiousness: 0.
   roll_out_components: []
+  tts_rate: {}
 
 # Contact tracing-related
 contact_tracing: null

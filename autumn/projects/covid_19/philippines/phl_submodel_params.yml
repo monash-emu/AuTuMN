@@ -68,23 +68,6 @@ cumul_incidence_start_time: 608 # 30 Aug 2021
 
 # Vaccination-related
 vaccination:
-  tts_rate: # Source: https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
-    0: 2.5e-5
-    5: 2.5e-5
-    15: 2.5e-5
-    10: 2.5e-5
-    20: 2.5e-5
-    25: 2.5e-5
-    30: 2.5e-5
-    35: 2.5e-5
-    40: 2.5e-5
-    45: 2.5e-5
-    50: 2.7e-5
-    55: 2.7e-5
-    60: 1.6e-5
-    65: 1.6e-5
-    70: 2.1e-5
-    75: 1.8e-5
   overall_efficacy: 0.7 # now varied
   vacc_prop_prevent_infection: 1 # now varied
   roll_out_components:

@@ -254,7 +254,6 @@ class Vaccination(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
     vacc_reduce_infectiousness: float
-    tts_rate: Dict[str, float]
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]
 
@@ -267,6 +266,11 @@ class Vaccination(BaseModel):
     def check_vacc_prop_prevent_infection(val):
         assert 0 <= val <= 1, "vacc_prop_prevent_infection should be in [0, 1]"
         return val
+
+
+class VaccinationRisk(BaseModel):
+    tts_rate: Dict[str, float]
+    tts_fatality_ratio: Dict[str, float]
 
 
 class ContactTracing(BaseModel):
@@ -306,6 +310,7 @@ class Parameters:
     stratify_by_infection_history: bool
     waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
+    vaccination_risk: Optional[VaccinationRisk]
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float

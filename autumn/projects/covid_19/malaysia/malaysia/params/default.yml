@@ -28,7 +28,6 @@ vaccination:
         coverage: 0.55
         start_time: 585 # 07 August 2021
         end_time: 732 # 01 Jan 2022
-  tts_rate: {}
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

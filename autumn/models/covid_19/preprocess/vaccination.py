@@ -74,22 +74,26 @@ def get_vacc_roll_out_function_from_doses(
 
 def get_eligible_age_groups(roll_out_component, age_strata):
     """
-    return a list with the model's age groups that are relevant to the requested roll_out_component
+    Return a list with the model's age groups that are relevant to the requested roll_out_component
+    Also return the ineligible age groups so that we can apply vaccination to them as well
     """
-    eligible_age_groups = age_strata
-    if roll_out_component.age_min:
-        eligible_age_groups = [
-            agegroup
-            for agegroup in eligible_age_groups
-            if float(agegroup) >= roll_out_component.age_min
-        ]
-    if roll_out_component.age_max:
-        eligible_age_groups = [
-            agegroup
-            for agegroup in eligible_age_groups
-            if float(agegroup) < roll_out_component.age_max
-        ]
-    return eligible_age_groups
+
+    eligible_age_groups, ineligible_age_groups = [], []
+    for agegroup in age_strata:
+
+        # Either not requested, or requested and meets that age cut-off for min or max
+        above_age_min = \
+            not roll_out_component.age_min or \
+            (bool(roll_out_component.age_min) and float(agegroup) >= roll_out_component.age_min)
+        below_age_max = \
+            not roll_out_component.age_max or \
+            bool(roll_out_component.age_max) and float(agegroup) < roll_out_component.age_max
+        if above_age_min and below_age_max:
+            eligible_age_groups.append(agegroup)
+        else:
+            ineligible_age_groups.append(agegroup)
+
+    return eligible_age_groups, ineligible_age_groups
 
 
 def add_vaccination_flows(model, roll_out_component, age_strata, coverage_override=None):
@@ -110,7 +114,7 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
         )
 
     # work out eligible model age_groups
-    eligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
+    eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
     for eligible_age_group in eligible_age_groups:
         _source_strata = {"vaccination": "unvaccinated", "agegroup": eligible_age_group}
@@ -140,6 +144,19 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
                     source_strata=_source_strata,
                     dest_strata=_dest_strata,
                 )
+
+    for age_group in ineligible_age_groups:
+        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
+            _source_strata = {"vaccination": "unvaccinated", "agegroup": age_group}
+            _dest_strata = {"vaccination": "vaccinated", "agegroup": age_group}
+            model.add_transition_flow(
+                name="vaccination",
+                fractional_rate=0.,
+                source=compartment,
+                dest=compartment,
+                source_strata=_source_strata,
+                dest_strata=_dest_strata,
+            )
 
 
 def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_efficacy):

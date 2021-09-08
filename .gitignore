@@ -22,7 +22,11 @@ benchmark.json
 .idea
 .spyderworkspace
 .vscode
-#*.ipynb
+
+
+# Ignore notebooks by default, but override with -f
+notebooks/
+*.ipynb
 
 # Images
 *.png

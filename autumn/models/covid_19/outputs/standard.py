@@ -23,7 +23,7 @@ from autumn.models.covid_19.stratifications.tracing import Tracing
 from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRATA
 from autumn.tools.utils.utils import list_element_wise_division
 
-VACCINATED_STRATA = [Vaccination.ONE_DOSE, Vaccination.FULLY_VACCINATED]
+VACCINATED_STRATA = [Vaccination.VACCINATED]
 
 
 def find_vaccinated_agegroups(roll_out_components):
@@ -136,22 +136,22 @@ def request_standard_outputs(
         func=lambda infection, susceptible: infection / susceptible,
         sources=[INFECTION, "_susceptible"]
     )
-    # if params.vaccination:
-    #     request_stratified_output_for_flow(model, INFECTION, VACCINATION_STRATA, "vaccination")
-    #     request_stratified_output_for_compartment(
-    #         model,
-    #         f"_{Compartment.SUSCEPTIBLE}",
-    #         [Compartment.SUSCEPTIBLE],
-    #         strata=VACCINATION_STRATA,
-    #         stratification="vaccination",
-    #         save_results=False,
-    #     )
-        # for stratum in VACCINATION_STRATA:
-        #     model.request_function_output(
-        #         f"susceptible_infection_rate_{stratum}",
-        #         func=lambda infection, susceptible: infection / (susceptible + 1e-10),  # Avoid divide by zero issues
-        #         sources=[f"{INFECTION}Xvaccination_{stratum}", f"_susceptibleXvaccination_{Vaccination.VACCINATED}"],
-        #     )
+    if params.vaccination:
+        request_stratified_output_for_flow(model, INFECTION, VACCINATION_STRATA, "vaccination")
+        request_stratified_output_for_compartment(
+            model,
+            f"_{Compartment.SUSCEPTIBLE}",
+            [Compartment.SUSCEPTIBLE],
+            strata=VACCINATION_STRATA,
+            stratification="vaccination",
+            save_results=False,
+        )
+        for stratum in VACCINATION_STRATA:
+            model.request_function_output(
+                f"susceptible_infection_rate_{stratum}",
+                func=lambda infection, susceptible: infection / (susceptible + 1e-10),  # Avoid divide by zero issues
+                sources=[f"{INFECTION}Xvaccination_{stratum}", f"_susceptibleXvaccination_{Vaccination.VACCINATED}"],
+            )
 
     """
     Incidence
@@ -388,6 +388,7 @@ def request_standard_outputs(
     """
     Vaccination
     """
+
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
         request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
 

@@ -17,6 +17,19 @@ MOBILITY_LGA_PATH = os.path.join(
     MOBILITY_DIRPATH, "LGA to Cluster mapping dictionary with proportions.csv"
 )
 
+CLUSTER_MAP = {
+    1: "NORTH_METRO",
+    2: "SOUTH_EAST_METRO",
+    3: "SOUTH_METRO",
+    4: "WEST_METRO",
+    5: "BARWON_SOUTH_WEST",
+    6: "GIPPSLAND",
+    7: "GRAMPIANS",
+    8: "HUME",
+    9: "LODDON_MALLEE",
+    0: "VIC",
+}
+
 
 def fetch_covid_au_data():
     pd.read_csv(DATA_URL).to_csv(COVID_AU_CSV_PATH)

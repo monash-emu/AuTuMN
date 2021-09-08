@@ -1,33 +1,38 @@
-description: MECQ until 15 Sep / high MHS compliance sustained
+description: no vaccine
 
 time:
-  start: 608  # 30 Aug 2021
+  start: 618  # 9 Sep 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-08-22
-        - 2021-09-15
-        - 2021-09-17
+        - 2021-10-31
+        - 2021-11-02
       values:
-        - - MECQ
-          - other_locations
-        - - MECQ
-          - other_locations
-        - - GCQ
-          - other_locations
+        - - repeat_prev
+        - 1.
     work:
       append: true
       times:
-        - 2021-08-22
-        - 2021-09-15
-        - 2021-09-17
+        - 2021-10-31
+        - 2021-11-02
       values:
-        - - MECQ
-          - work
-        - - MECQ
-          - work
-        - - GCQ
-          - work
+        - - repeat_prev
+        - 1.
+    school:
+      append: false
+      times:
+        - 2021-10-31
+        - 2021-11-02
+      values:
+        - 0.
+        - 1.
+
+vaccination:
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: .001
+        start_time: 618 # 9 Sep 2021
+        end_time: 671 # 1 Nov 2021

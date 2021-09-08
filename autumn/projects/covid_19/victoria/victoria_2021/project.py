@@ -2,29 +2,19 @@ import numpy as np
 
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
-from autumn.tools.project.params import read_yaml_file
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.tools.calibration.targets import NormalTarget, PoissonTarget, TruncNormalTarget
+from autumn.tools.calibration.targets import NormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
-import os
 
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
-# Just calibrate to June, July, August and September for now (but run for some lead in time at the start)
-TARGETS_START_TIME = 10  # TODO UPDATE ONCE WE HAVE DATA
-TARGETS_END_TIME = 305  # TODO UPDATE ONCE WE HAVE DATA
-TARGETS_RANGE = (TARGETS_START_TIME, TARGETS_END_TIME)
-
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
-mle_path = build_rel_path("params/mle-params.yml")
 scenario_dir_path = build_rel_path("params/")
-scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
-baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
-scenario_params = [baseline_params.update(p) for p in scenario_paths]
-param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
+baseline_params = base_params.update(default_path)
+param_set = ParameterSet(baseline=baseline_params)
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
@@ -39,10 +29,10 @@ for cluster in CLUSTERS:
 
 # Request calibration targets
 targets = [
-    #PoissonTarget(ts_set.get("notifications").truncate_times(*TARGETS_RANGE).round_values()),
-    #PoissonTarget(ts_set.get("infection_deaths").truncate_times(*TARGETS_RANGE).moving_average(7)),
-    #PoissonTarget(ts_set.get("hospital_admissions").truncate_times(*TARGETS_RANGE)),
-    #PoissonTarget(ts_set.get("icu_admissions").truncate_times(*TARGETS_RANGE)),
+    # PoissonTarget(ts_set.get("notifications").round_values()),
+    # PoissonTarget(ts_set.get("infection_deaths").moving_average(7)),
+    # PoissonTarget(ts_set.get("hospital_admissions")),
+    # PoissonTarget(ts_set.get("icu_admissions")),
     *cluster_targets,
 ]
 
@@ -141,15 +131,3 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.VICTORIA_2021, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
-
-# Write parameter table to tex file
-main_table_params_list = [
-    "clinical_stratification.icu_prop",
-    "sojourn.compartment_periods_calculated.exposed.total_period",
-    "contact_rate"
-]
-# project.write_params_to_tex(main_table_params_list, project_path=build_rel_path(''))
-
-
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)

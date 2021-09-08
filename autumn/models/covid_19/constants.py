@@ -56,8 +56,8 @@ class Clinical:
 
 class Vaccination:
     UNVACCINATED = "unvaccinated"
-    ONE_DOSE = "one_dose_only"
-    FULLY_VACCINATED = "vaccinated"
+    VACCINATED = "vaccinated"
+
 
 class Strain:
     WILD_TYPE = "wild"
@@ -95,18 +95,12 @@ DEATH_CLINICAL_STRATA = [
 
 VACCINATION_STRATA = [
     Vaccination.UNVACCINATED,
-    Vaccination.ONE_DOSE,
-    Vaccination.FULLY_VACCINATED,
+    Vaccination.VACCINATED,
 ]
 
 HISTORY_STRATA = [
     History.NAIVE,
     History.EXPERIENCED,
-]
-
-VACCINATED_CATEGORIES = [
-    Vaccination.ONE_DOSE,
-    Vaccination.FULLY_VACCINATED,
 ]
 
 """

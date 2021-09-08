@@ -17,11 +17,6 @@ MOBILITY_LGA_PATH = os.path.join(
     MOBILITY_DIRPATH, "LGA to Cluster mapping dictionary with proportions.csv"
 )
 
-COVID_DHHS_VAC_CSV = os.path.join(
-    COVID_AU_DIRPATH, "vac_by_week_final_2021-09-02.csv"
-)  # TODO - parse for latest file, not hardcode.
-
-
 CLUSTER_MAP = {
     1: "NORTH_METRO",
     2: "SOUTH_EAST_METRO",

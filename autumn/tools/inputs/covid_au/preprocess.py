@@ -2,7 +2,7 @@ import pandas as pd
 
 from autumn.tools.db import Database
 
-from .fetch import COVID_AU_CSV_PATH, COVID_LGA_CSV_PATH, MOBILITY_LGA_PATH, COVID_DHHS_VAC_CSV, CLUSTER_MAP
+from .fetch import COVID_AU_CSV_PATH, COVID_LGA_CSV_PATH, MOBILITY_LGA_PATH, CLUSTER_MAP
 from autumn.tools.utils.utils import create_date_index, COVID_BASE_DATETIME
 
 def preprocess_covid_au(input_db: Database):

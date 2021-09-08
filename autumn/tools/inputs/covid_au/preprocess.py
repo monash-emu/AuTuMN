@@ -12,8 +12,8 @@ def preprocess_covid_au(input_db: Database):
     df = reshape_to_clusters(df)
     input_db.dump_df("covid_dhhs_test", df)
 
-    df = reshape_vac_to_clusters()
-    input_db.dump_df("covid_dhhs_victoria_2021", df)
+    #df = reshape_vac_to_clusters()
+    #input_db.dump_df("covid_dhhs_victoria_2021", df)
 
 def reshape_to_clusters(lga_test):
     """

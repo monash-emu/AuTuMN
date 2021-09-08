@@ -426,39 +426,6 @@ def request_standard_outputs(
                 sources=[f"tts_casesXagegroup_{agegroup}"],
                 func=lambda tts_cases: tts_cases * params.vaccination_risk.tts_fatality_ratio[agegroup]
             )
-# =======
-#
-#     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-#         request_stratified_output_for_flow(
-#             model, "vaccination", find_vaccinated_agegroups(params.vaccination.roll_out_components), "agegroup"
-#         )
-#
-#         # track proportion vaccinated
-#         model.request_output_for_compartments(
-#             name="_vaccinated",
-#             compartments=COMPARTMENTS,
-#             strata={"vaccination": Vaccination.VACCINATED},
-#             save_results=False,
-#         )
-#         model.request_function_output(
-#             name="proportion_vaccinated",
-#             sources=["_vaccinated", "_total_population"],
-#             func=lambda vaccinated, total: vaccinated / total,
-#         )
-#         # track proportion vaccinated by age group
-#         for agegroup in AGEGROUP_STRATA:
-#             model.request_output_for_compartments(
-#                 name=f"_vaccinatedXagegroup_{agegroup}",
-#                 compartments=COMPARTMENTS,
-#                 strata={"vaccination": Vaccination.VACCINATED, "agegroup": agegroup},
-#                 save_results=False,
-#             )
-#             model.request_function_output(
-#                 name=f"proportion_vaccinatedXagegroup_{agegroup}",
-#                 sources=[f"_vaccinatedXagegroup_{agegroup}", f"_total_populationXagegroup_{agegroup}"],
-#                 func=lambda vaccinated, total: vaccinated / total,
-#             )
-# >>>>>>> parent of ff070120b (Get three strata running with same behaviour as master)
 
     # Calculate the incidence by strain
     if params.voc_emergence:

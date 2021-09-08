@@ -10,6 +10,10 @@ time:
 country:
   iso3: MYS
 
+mixing_matrices:
+  type: extrapolated
+  source_iso3: CHN
+
 clinical_stratification:
   non_sympt_infect_multiplier: 0.25
   props:

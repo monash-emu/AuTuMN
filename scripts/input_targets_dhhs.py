@@ -1,6 +1,3 @@
-# %%
-
-
 import os
 import pandas as pd
 
@@ -98,12 +95,9 @@ CHRIS_MAP = {
 CHRIS_HOSPITAL = "Confirmed COVID ‘+’ cases admitted to your hospital"
 CHRIS_ICU = "Confirmed COVID ‘+’ cases in your ICU/HDU(s)"
 
-# %%
-
 
 def main():
 
-    fetch_vic_cases()
     cases = preprocess_cases()
     cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
 
@@ -146,12 +140,6 @@ def main():
         cluster_df = cases.loc[cases.cluster_id == cluster]
 
         update_timeseries(TARGET_MAP_DHHS, cluster_df, COVID_DHHS_TARGETS, password)
-
-
-def fetch_vic_cases():
-
-    URL = "https://www.dhhs.vic.gov.au/ncov-covid-cases-by-lga-source-csv"
-    pd.read_csv(URL).to_csv(COVID_VIC_CASE_CSV)
 
 
 def preprocess_cases():
@@ -204,50 +192,3 @@ def load_chris_df(load: str):
 
 if __name__ == "__main__":
     main()
-
-# %%
-
-vac_df = pd.read_csv(COVID_DHHS_VAC_CSV)
-vac_df["week"] = pd.to_datetime(
-    vac_df["week"], format="%d/%m/%Y %H:%M:%S", infer_datetime_format=True
-).dt.date
-vac_df = create_date_index(COVID_BASE_DATETIME, vac_df, "week")
-
-
-cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
-vac_df = vac_df.merge(cluster_map_df, left_on="lga_name_2018", right_on="lga_name", how="left")
-vac_df = vac_df[
-    [
-        "date",
-        "date_index",
-        "age_group",
-        "vaccine_brand_name",
-        "dose_1",
-        "dose_2",
-        "cluster_id",
-        "proportion",
-    ]
-]
-vac_df.loc[vac_df.cluster_id.isna(), ["proportion", "cluster_id"]] = [1, 0]
-vac_df = (
-    vac_df.groupby(
-        ["date", "date_index", "age_group", "vaccine_brand_name", "cluster_id", "proportion"]
-    )
-    .sum()
-    .reset_index()
-)
-vac_df.cluster_id.replace(CLUSTER_MAP, inplace=True)
-vac_df.dose_1 = vac_df.dose_1 * vac_df.proportion
-vac_df.dose_2 = vac_df.dose_2 * vac_df.proportion
-vac_df[["start_age", "end_age"]] = vac_df.age_group.str.split("-", expand=True)
-
-
-# %%
-
-
-
-# %%
-vac_df
-# %%
-
-# %%

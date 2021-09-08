@@ -1,27 +1,57 @@
-description: Scenario 1,50% vaccination by 14th Sep. Until Sep 06 lockdown. After that mobility level before lockdown.
+description: Scenario 1,50% vaccination by 14th Sep. Until Sep 18 lockdown. After that gradual increase in mobility
 time:
-  start: 609 # 31st August 2021
+  start: 618 # 09th Sep 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-09-05
-        - 2021-09-06
+        - 2021-09-18
+        - 2021-09-19
+        - 2021-09-25
+        - 2021-09-26
+        - 2021-10-02
+        - 2021-10-03
+        - 2021-10-09
+        - 2021-10-10
+        - 2021-10-16
+        - 2021-12-31
       values:
         - - repeat_prev
-        - - average_mobility
-          - 14
+        - 0.726
+        - 0.726
+        - 0.768
+        - 0.768
+        - 0.838
+        - 0.838
+        - 0.893
+        - 0.893
+        - 1.00
     work:
       append: true
       times:
-        - 2021-09-05
-        - 2021-09-06
+        - 2021-09-18
+        - 2021-09-19
+        - 2021-09-25
+        - 2021-09-26
+        - 2021-10-02
+        - 2021-10-03
+        - 2021-10-09
+        - 2021-10-10
+        - 2021-10-16
+        - 2021-12-31
       values:
         - - repeat_prev
-        - - average_mobility
-          - 14
+        - 0.581
+        - 0.581
+        - 0.671
+        - 0.671
+        - 0.697
+        - 0.697
+        - 0.717
+        - 0.717
+        - 1.00
 
 
 

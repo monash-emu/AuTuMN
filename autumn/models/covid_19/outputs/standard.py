@@ -15,12 +15,15 @@ from autumn.models.covid_19.constants import (
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
+from autumn.models.covid_19.preprocess.vaccination import get_eligible_age_groups
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.history import History
 from autumn.models.covid_19.stratifications.tracing import Tracing
 from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRATA
 from autumn.tools.utils.utils import list_element_wise_division
+
+VACCINATED_STRATA = [Vaccination.VACCINATED]
 
 
 def find_vaccinated_agegroups(roll_out_components):
@@ -387,34 +390,41 @@ def request_standard_outputs(
     """
 
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-        request_stratified_output_for_flow(
-            model, "vaccination", find_vaccinated_agegroups(params.vaccination.roll_out_components), "agegroup"
-        )
+        request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
 
-        # track proportion vaccinated
-        model.request_output_for_compartments(
-            name="_vaccinated",
-            compartments=COMPARTMENTS,
-            strata={"vaccination": Vaccination.VACCINATED},
-            save_results=False,
-        )
-        model.request_function_output(
-            name="proportion_vaccinated",
-            sources=["_vaccinated", "_total_population"],
-            func=lambda vaccinated, total: vaccinated / total,
-        )
-        # track proportion vaccinated by age group
-        for agegroup in AGEGROUP_STRATA:
+        # track proportions vaccinated by vaccination status
+        for vacc_stratum in VACCINATED_STRATA:
             model.request_output_for_compartments(
-                name=f"_vaccinatedXagegroup_{agegroup}",
+                name=f"_{vacc_stratum}",
                 compartments=COMPARTMENTS,
-                strata={"vaccination": Vaccination.VACCINATED, "agegroup": agegroup},
+                strata={"vaccination": vacc_stratum},
                 save_results=False,
             )
             model.request_function_output(
-                name=f"proportion_vaccinatedXagegroup_{agegroup}",
-                sources=[f"_vaccinatedXagegroup_{agegroup}", f"_total_populationXagegroup_{agegroup}"],
+                name=f"proportion_{vacc_stratum}",
+                sources=[f"_{vacc_stratum}", "_total_population"],
                 func=lambda vaccinated, total: vaccinated / total,
+            )
+
+        # Track the rate of TTS occurring on the assumption that all doses are Astra-Zeneca
+        # FIXME: this currently tracks individuals based on second-dose vaccination, because the one-dose category is
+        #  not working yet.
+        for agegroup in params.vaccination_risk.tts_rate.keys():
+            model.request_output_for_flow(
+                name=f"vaccinationXagegroup{agegroup}",
+                flow_name="vaccination",
+                source_strata={"agegroup": agegroup},
+            )
+            model.request_function_output(
+                name=f"tts_casesXagegroup_{agegroup}",
+                sources=[f"vaccinationXagegroup_{agegroup}"],
+                func=lambda vaccinated: vaccinated * params.vaccination_risk.tts_rate[agegroup]
+            )
+
+            model.request_function_output(
+                name=f"tts_deathsXagegroup_{agegroup}",
+                sources=[f"tts_casesXagegroup_{agegroup}"],
+                func=lambda tts_cases: tts_cases * params.vaccination_risk.tts_fatality_ratio[agegroup]
             )
 
     # Calculate the incidence by strain

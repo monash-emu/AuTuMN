@@ -191,6 +191,43 @@ vaccination:
   vacc_reduce_infectiousness: 0.
   roll_out_components: []
 
+vaccination_risk:
+  tts_rate: # Source: https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
+    0: 2.5e-5
+    5: 2.5e-5
+    10: 2.5e-5
+    15: 2.5e-5
+    20: 2.5e-5
+    25: 2.5e-5
+    30: 2.5e-5
+    35: 2.5e-5
+    40: 2.5e-5
+    45: 2.5e-5
+    50: 2.7e-5
+    55: 2.7e-5
+    60: 1.6e-5
+    65: 1.6e-5
+    70: 2.1e-5
+    75: 1.8e-5
+
+  tts_fatality_ratio: # Source: https://www.gov.uk/government/publications/coronavirus-covid-19-vaccine-adverse-reactions/coronavirus-vaccine-summary-of-yellow-card-reporting
+    0: .25  # No data available for this group. We assume the same fatality ratio as for 18-29 years old.
+    5: .25  # No data available for this group. We assume the same fatality ratio as for 18-29 years old.
+    10: .25  # No data available for this group. We assume the same fatality ratio as for 18-29 years old.
+    15: .25  # No data available for this group. We assume the same fatality ratio as for 18-29 years old.
+    20: .25
+    25: .25
+    30: .21
+    35: .21
+    40: .12
+    45: .12
+    50: .19
+    55: .19
+    60: .15
+    65: .15
+    70: .18
+    75: .18
+
 # Contact tracing-related
 contact_tracing: null
 

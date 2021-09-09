@@ -99,7 +99,9 @@ def get_eligible_age_groups(roll_out_component, age_strata):
     return eligible_age_groups, ineligible_age_groups
 
 
-def add_vaccination_flows(model, roll_out_component, age_strata, coverage_override=None):
+def add_vaccination_flows(
+        model, roll_out_component, age_strata, one_dose_active, second_dose_delay, coverage_override=None
+):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
@@ -119,9 +121,12 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
     # Work out eligible model age_groups
     eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
+    # Find vaccination destination stratum, depending on whether one-dose vaccination being simulated
+    vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose_active else Vaccination.VACCINATED
+
     for eligible_age_group in eligible_age_groups:
         _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
-        _dest_strata = {"vaccination": Vaccination.VACCINATED, "agegroup": eligible_age_group}
+        _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             if is_coverage:
                 # the roll-out function is applied as a rate that multiplies the source compartments
@@ -151,7 +156,7 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
     for age_group in ineligible_age_groups:
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": age_group}
-            _dest_strata = {"vaccination": Vaccination.VACCINATED, "agegroup": age_group}
+            _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": age_group}
             model.add_transition_flow(
                 name="vaccination",
                 fractional_rate=0.,
@@ -160,6 +165,16 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
                 source_strata=_source_strata,
                 dest_strata=_dest_strata,
             )
+
+    if one_dose_active:
+        model.add_transition_flow(
+            name="second_dose",
+            fractional_rate=1. / second_dose_delay,
+            source=compartment,
+            dest=compartment,
+            source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
+            dest_strata={"vaccination": Vaccination.VACCINATED},
+        )
 
 
 def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_efficacy):

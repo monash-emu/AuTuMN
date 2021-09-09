@@ -17,7 +17,8 @@ contact_tracing:
 infection_fatality:
   top_bracket_overwrite: 0.17
 
-vaccination: null
+vaccination:
+  one_dose_active: true
 
 time:
   start: 10  # PLS REVIEW

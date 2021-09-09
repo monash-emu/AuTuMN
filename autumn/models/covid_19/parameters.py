@@ -256,6 +256,8 @@ class Vaccination(BaseModel):
     vacc_reduce_infectiousness: float
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]
+    one_dose_active: bool
+    second_dose_delay: float
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):

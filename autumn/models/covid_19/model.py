@@ -280,7 +280,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             else:
                 coverage_override = None
             add_vaccination_flows(
-                model, roll_out_component, age_strat.strata, params.vaccination.one_dose_active,
+                model, roll_out_component, age_strat.strata, params.vaccination.one_dose,
                 params.vaccination.second_dose_delay, coverage_override
             )
 

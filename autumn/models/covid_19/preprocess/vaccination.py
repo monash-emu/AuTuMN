@@ -100,11 +100,12 @@ def get_eligible_age_groups(roll_out_component, age_strata):
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose_active, second_dose_delay, coverage_override=None
+        model, roll_out_component, age_strata, one_dose, second_dose_delay, coverage_override=None
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
+
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = bool(roll_out_component.supply_period_coverage)
     if is_coverage:
@@ -122,7 +123,7 @@ def add_vaccination_flows(
     eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
     # Find vaccination destination stratum, depending on whether one-dose vaccination being simulated
-    vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose_active else Vaccination.VACCINATED
+    vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
 
     for eligible_age_group in eligible_age_groups:
         _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
@@ -166,7 +167,7 @@ def add_vaccination_flows(
                 dest_strata=_dest_strata,
             )
 
-    if one_dose_active:
+    if one_dose:
         model.add_transition_flow(
             name="second_dose",
             fractional_rate=1. / second_dose_delay,
@@ -180,7 +181,6 @@ def add_vaccination_flows(
 def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_efficacy):
     """
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.
-
     """
 
     if vacc_prop_prevent_infection == 1.:

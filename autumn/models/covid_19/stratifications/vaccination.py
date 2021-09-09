@@ -26,8 +26,8 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
 
     # Process the parameters to be applied
     infection_efficacy, severity_efficacy = add_vaccine_infection_and_severity(
-        params.vaccination.vacc_prop_prevent_infection,
-        params.vaccination.overall_efficacy
+        params.vaccination.fully_vaccinated.vacc_prop_prevent_infection,
+        params.vaccination.fully_vaccinated.overall_efficacy
     )
     symptomatic_adjuster, hospital_adjuster, ifr_adjuster = (1. - severity_efficacy,) * 3
 
@@ -67,7 +67,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
             {
                 Vaccination.UNVACCINATED: None,
                 Vaccination.ONE_DOSE_ONLY: None,
-                Vaccination.VACCINATED: Multiply(1. - params.vaccination.vacc_reduce_infectiousness),
+                Vaccination.VACCINATED: Multiply(1. - params.vaccination.fully_vaccinated.vacc_reduce_infectiousness),
             }
         )
 

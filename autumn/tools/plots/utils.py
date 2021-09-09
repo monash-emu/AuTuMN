@@ -126,7 +126,7 @@ def get_plot_text_dict(
     return text
 
 
-def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b", rotation=30):
+def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b-%Y", rotation=30):
     """
     Change the format of a numerically formatted x-axis to date.
     """

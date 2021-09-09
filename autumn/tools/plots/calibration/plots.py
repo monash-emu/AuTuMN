@@ -630,7 +630,6 @@ def plot_multiple_posteriors(
 
             # Plot histograms
             vals_df.hist(bins=num_bins, ax=axis, density=True)
-
             # Plot the prior
             axis.plot(x_values, y_values)
             if param_name == 'voc_emergence.alpha_beta.contact_rate_multiplier':
@@ -638,6 +637,9 @@ def plot_multiple_posteriors(
 
             elif prior["param_name"] == "voc_emergence.alpha_beta.start_time":
                 axis.set_title('VoC emergence start time', fontsize=title_font_size,)
+
+            elif prior["param_name"] == "mobility.microdistancing.behaviour.parameters.upper_asymptote":
+                axis.set_title('microdistancing', fontsize=title_font_size,)
 
             else:
                 axis.set_title(get_plot_text_dict(param_name,

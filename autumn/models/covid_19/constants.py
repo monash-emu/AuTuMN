@@ -100,6 +100,11 @@ VACCINATION_STRATA = [
     Vaccination.VACCINATED,
 ]
 
+VACCINATED_STRATA = [
+    Vaccination.ONE_DOSE_ONLY,
+    Vaccination.VACCINATED,
+]
+
 HISTORY_STRATA = [
     History.NAIVE,
     History.EXPERIENCED,

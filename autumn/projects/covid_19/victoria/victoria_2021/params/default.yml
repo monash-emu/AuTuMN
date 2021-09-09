@@ -18,7 +18,10 @@ infection_fatality:
   top_bracket_overwrite: 0.17
 
 vaccination:
-  one_dose_active: true
+  one_dose:
+    overall_efficacy: 0.7
+    vacc_prop_prevent_infection: 0.7
+    vacc_reduce_infectiousness: 0.7
 
 time:
   start: 10  # PLS REVIEW

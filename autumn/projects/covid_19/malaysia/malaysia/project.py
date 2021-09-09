@@ -42,14 +42,19 @@ priors = [
     # Dispersion parameters based on targets
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.01, 0.075]),
-    UniformPrior("infectious_seed", [15.0, 125.0]),
+    UniformPrior("contact_rate", [0.015, 0.04]),
+    UniformPrior("infectious_seed", [75.0, 225.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
-    UniformPrior("infection_fatality.multiplier", [0.8, 2.5]),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.02, 0.13]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.01, 1.5]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.23, 1.5]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.02]),
+    # Microdistancing
+    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.05, 0.5]),
+    # Health system-related
+    UniformPrior("clinical_stratification.icu_prop", [0.05, 0.15]),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.6]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.5, 1.5]),
+    UniformPrior("infection_fatality.multiplier", [0.1, 1.0]),
+    #VoC parameters
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 1.7]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.2, 2.75]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [270, 360]),
     UniformPrior("voc_emergence.delta.start_time", [450, 470]),

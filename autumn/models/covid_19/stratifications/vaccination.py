@@ -61,15 +61,13 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     vacc_strat = add_clinical_adjustments_to_strat(
         vacc_strat,
         Vaccination.UNVACCINATED,
-        [
-            Vaccination.ONE_DOSE_ONLY,
-            Vaccination.VACCINATED
-        ],
+        Vaccination.VACCINATED,
         params,
         symptomatic_adjuster[Vaccination.VACCINATED],
         hospital_adjuster[Vaccination.VACCINATED],
         ifr_adjuster[Vaccination.VACCINATED],
         params.infection_fatality.top_bracket_overwrite,
+        second_modified_stratum=Vaccination.ONE_DOSE_ONLY
     )
 
     # Apply vaccination protection against being infected

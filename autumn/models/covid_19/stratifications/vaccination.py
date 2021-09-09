@@ -26,30 +26,31 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     )
 
     # Preliminary processing
-    strata_to_adjust = VACCINATED_STRATA if params.vaccination.one_dose else [Vaccination.VACCINATED]
     is_one_dose_active = bool(params.vaccination.one_dose)
-    infection_efficacy, severity_efficacy = {}, {}
-    symptomatic_adjuster, hospital_adjuster, ifr_adjuster = {}, {}, {}
-
-    ######
-    infection_efficacy[Vaccination.VACCINATED], severity_efficacy[Vaccination.VACCINATED] = \
-        add_vaccine_infection_and_severity(
-            params.vaccination.fully_vaccinated.vacc_prop_prevent_infection,
-            params.vaccination.fully_vaccinated.overall_efficacy
-        )
-    symptomatic_adjuster[Vaccination.VACCINATED], hospital_adjuster[Vaccination.VACCINATED], ifr_adjuster[Vaccination.VACCINATED] = \
-        (1. - severity_efficacy[Vaccination.VACCINATED],) * 3
-
+    strata_to_adjust = VACCINATED_STRATA if is_one_dose_active else [Vaccination.VACCINATED]
+    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = ({},) * 5
+    vaccination_effects = {
+        Vaccination.VACCINATED: {
+            "prevent_infection": params.vaccination.fully_vaccinated.vacc_prop_prevent_infection,
+            "overall_efficacy": params.vaccination.fully_vaccinated.overall_efficacy,
+        }
+    }
     if is_one_dose_active:
-        infection_efficacy[Vaccination.ONE_DOSE_ONLY], severity_efficacy[Vaccination.ONE_DOSE_ONLY] = \
-            add_vaccine_infection_and_severity(
-                params.vaccination.one_dose.vacc_prop_prevent_infection,
-                params.vaccination.one_dose.overall_efficacy
-            )
-        symptomatic_adjuster[Vaccination.ONE_DOSE_ONLY], \
-        hospital_adjuster[Vaccination.ONE_DOSE_ONLY], \
-        ifr_adjuster[Vaccination.ONE_DOSE_ONLY] = \
-            (1. - severity_efficacy[Vaccination.ONE_DOSE_ONLY],) * 3
+        vaccination_effects.update({
+            Vaccination.ONE_DOSE_ONLY: {
+                "prevent_infection": params.vaccination.one_dose.vacc_prop_prevent_infection,
+                "overall_efficacy": params.vaccination.one_dose.overall_efficacy,
+            },
+        })
+
+    # Get vaccination effects from requests by dose number and mode of action
+    for stratum in strata_to_adjust:
+        infection_efficacy[stratum], severity_efficacy[stratum] = add_vaccine_infection_and_severity(
+            vaccination_effects[stratum]["prevent_infection"],
+            vaccination_effects[stratum]["overall_efficacy"],
+        )
+        symptomatic_adjuster[stratum], hospital_adjuster[stratum], ifr_adjuster[stratum] = \
+            (1. - severity_efficacy[stratum],) * 3
 
     # Apply the calibration adjustment parameters
     for stratum in strata_to_adjust:

@@ -272,18 +272,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Stratify by vaccination status
     if params.vaccination:
         vaccination_strat = get_vaccination_strat(params)
-
-        if params.voc_emergence:
-            for voc_name, characteristics in voc_params.items():
-                vaccination_strat.add_flow_adjustments(
-                    f"seed_voc_{voc_name}",
-                    {
-                        Vaccination.VACCINATED: Multiply(1. / 2.),
-                        Vaccination.ONE_DOSE_ONLY: Overwrite(0.),
-                        Vaccination.UNVACCINATED: Multiply(1. / 2.),
-                    }
-                )
-
         model.stratify_with(vaccination_strat)
         vacc_params = params.vaccination
         for roll_out_component in vacc_params.roll_out_components:

@@ -221,7 +221,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
         model.stratify_with(tracing_strat)
 
-    # Contact tracing processes
+        # Contact tracing processes
         trace_param = tracing.get_tracing_param(
             params.contact_tracing.assumed_trace_prop,
             params.contact_tracing.assumed_prev
@@ -272,18 +272,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Stratify by vaccination status
     if params.vaccination:
         vaccination_strat = get_vaccination_strat(params)
-
-        if params.voc_emergence:
-            for voc_name, characteristics in voc_params.items():
-                vaccination_strat.add_flow_adjustments(
-                    f"seed_voc_{voc_name}",
-                    {
-                        Vaccination.VACCINATED: Multiply(1. / 2.),
-                        Vaccination.ONE_DOSE_ONLY: Overwrite(0.),
-                        Vaccination.UNVACCINATED: Multiply(1. / 2.),
-                    }
-                )
-
         model.stratify_with(vaccination_strat)
         vacc_params = params.vaccination
         for roll_out_component in vacc_params.roll_out_components:
@@ -291,7 +279,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 coverage_override = vacc_params.coverage_override
             else:
                 coverage_override = None
-            add_vaccination_flows(model, roll_out_component, age_strat.strata, coverage_override)
+            add_vaccination_flows(
+                model, roll_out_component, age_strat.strata, params.vaccination.one_dose_active,
+                params.vaccination.second_dose_delay, coverage_override
+            )
 
     # Set up derived output functions
     if is_region_vic:

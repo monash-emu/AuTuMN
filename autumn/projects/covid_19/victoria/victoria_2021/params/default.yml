@@ -65,8 +65,6 @@ victorian_clusters:
           - grocery_and_pharmacy
           - parks
           - transit_stations
-#        home:
-#          - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:
@@ -96,7 +94,6 @@ victorian_clusters:
             - other_locations
             - school
             - work
-#            - home
         behaviour_adjuster:
           function_type: constant
           parameters:
@@ -105,7 +102,6 @@ victorian_clusters:
             - other_locations
             - school
             - work
-#            - home
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
@@ -140,8 +136,6 @@ victorian_clusters:
           - grocery_and_pharmacy
           - parks
           - transit_stations
-#        home:
-#          - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:
@@ -149,7 +143,6 @@ victorian_clusters:
           append: false
           times:
             - 2021-09-02
-
           values:
             - 1
 
@@ -172,7 +165,6 @@ victorian_clusters:
             - other_locations
             - school
             - work
-#            - home
         behaviour_adjuster:
           function_type: constant
           parameters:
@@ -181,7 +173,6 @@ victorian_clusters:
             - other_locations
             - school
             - work
-#            - home
         face_coverings:
           function_type: tanh
           parameters:

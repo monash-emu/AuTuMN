@@ -1,6 +1,8 @@
 import numpy as np
 
-from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS
+from autumn.models.covid_19.constants import (
+    VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
+)
 from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
@@ -12,6 +14,7 @@ def get_vacc_roll_out_function_from_coverage(supply_params, coverage_override=No
     Work out the time-variant vaccination rate based on a requested coverage and roll-out window.
     Return a function of time.
     """
+
     # Get vaccination parameters
     if supply_params.coverage:
         coverage = supply_params.coverage
@@ -113,12 +116,12 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
             method=4,
         )
 
-    # work out eligible model age_groups
+    # Work out eligible model age_groups
     eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
     for eligible_age_group in eligible_age_groups:
-        _source_strata = {"vaccination": "unvaccinated", "agegroup": eligible_age_group}
-        _dest_strata = {"vaccination": "vaccinated", "agegroup": eligible_age_group}
+        _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
+        _dest_strata = {"vaccination": Vaccination.VACCINATED, "agegroup": eligible_age_group}
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             if is_coverage:
                 # the roll-out function is applied as a rate that multiplies the source compartments
@@ -147,8 +150,8 @@ def add_vaccination_flows(model, roll_out_component, age_strata, coverage_overri
 
     for age_group in ineligible_age_groups:
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-            _source_strata = {"vaccination": "unvaccinated", "agegroup": age_group}
-            _dest_strata = {"vaccination": "vaccinated", "agegroup": age_group}
+            _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": age_group}
+            _dest_strata = {"vaccination": Vaccination.VACCINATED, "agegroup": age_group}
             model.add_transition_flow(
                 name="vaccination",
                 fractional_rate=0.,
@@ -164,6 +167,7 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.
 
     """
+
     if vacc_prop_prevent_infection == 1.:
         severity_efficacy = 0.
     else:
@@ -187,8 +191,8 @@ def add_clinical_adjustments_to_strat(
 ):
     """
     Get all the adjustments in the same way for both the history and vaccination stratifications.
-
     """
+
     entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
         params.sojourn, params.testing_to_detection, params.case_detection, ifr_adjuster, symptomatic_adjuster,
@@ -207,27 +211,27 @@ def add_clinical_adjustments_to_strat(
             infect_onset_adjustments.update(
                 {stratum: entry_adjustments[agegroup][clinical_stratum] for stratum in affected_strata}
             )
-            strat.add_flow_adjustments("infect_onset", infect_onset_adjustments, dest_strata=relevant_strata)
+            strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infect_onset_adjustments, dest_strata=relevant_strata)
 
             # Must be source
             infect_death_adjustments = {unaffected_stratum: None}
             infect_death_adjustments.update(
                 {stratum: death_adjs[agegroup][clinical_stratum] for stratum in affected_strata}
             )
-            strat.add_flow_adjustments("infect_death", infect_death_adjustments, source_strata=relevant_strata)
+            strat.add_flow_adjustments(INFECT_DEATH, infect_death_adjustments, source_strata=relevant_strata)
 
             # Either source or dest or both
             progress_adjustments = {unaffected_stratum: None}
             progress_adjustments.update(
                 {stratum: progress_adjs[clinical_stratum] for stratum in affected_strata}
             )
-            strat.add_flow_adjustments("progress", progress_adjustments, source_strata=relevant_strata)
+            strat.add_flow_adjustments(PROGRESS, progress_adjustments, source_strata=relevant_strata)
 
             # Must be source
             recovery_adjustments = {unaffected_stratum: None}
             recovery_adjustments.update(
                 {stratum: recovery_adjs[agegroup][clinical_stratum] for stratum in affected_strata}
             )
-            strat.add_flow_adjustments("recovery", recovery_adjustments, source_strata=relevant_strata)
+            strat.add_flow_adjustments(RECOVERY, recovery_adjustments, source_strata=relevant_strata)
 
     return strat

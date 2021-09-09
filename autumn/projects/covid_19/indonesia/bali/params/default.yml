@@ -74,7 +74,7 @@ vaccination:
   vacc_reduce_infectiousness: 0.5
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.444
+        coverage: 0.54
         start_time: 398
         end_time: 579
       age_min: 20

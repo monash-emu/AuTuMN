@@ -1,12 +1,12 @@
 description: BASELINE
 
-infectious_seed: 250.
+infectious_seed: 240.
 
 stratify_by_infection_history: true
 waning_immunity_duration: 240.
 
 time:
-  start: 110
+  start: 230
   end: 1100
 
 country:

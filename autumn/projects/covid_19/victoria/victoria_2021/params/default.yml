@@ -17,8 +17,16 @@ contact_tracing:
 infection_fatality:
   top_bracket_overwrite: 0.17
 
+# Vaccination effectiveness parameters taken from https://www.medrxiv.org/content/10.1101/2021.08.18.21262237v1
 vaccination:
-  one_dose_active: true
+  one_dose:
+    overall_efficacy: 0.49  # Average of 0.4 and 0.58
+    vacc_prop_prevent_infection: 0.9  # Approximate estimate
+    vacc_reduce_infectiousness: 0.56  # Average of 0.5 and 0.62
+  fully_vaccinated:
+    overall_efficacy: 0.775  # Average of 0.71 and 0.84
+    vacc_prop_prevent_infection: 0.9  # Approximate estimate
+    vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
 
 time:
   start: 10  # PLS REVIEW

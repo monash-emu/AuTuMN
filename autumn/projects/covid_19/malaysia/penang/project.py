@@ -47,8 +47,8 @@ priors = [
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.4]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.8, 2.0]),
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
-    BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
-    UniformPrior("vaccination.overall_efficacy", [0.0, 1.0], sampling="lhs"),
+    BetaPrior("vaccination.fully_vaccinated.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
+    UniformPrior("vaccination.fully_vaccinated.overall_efficacy", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.2, 2.1]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
 ]

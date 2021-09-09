@@ -250,14 +250,10 @@ class RollOutFunc(BaseModel):
         return values
 
 
-class Vaccination(BaseModel):
+class VaccEffectiveness(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
     vacc_reduce_infectiousness: float
-    roll_out_components: List[RollOutFunc]
-    coverage_override: Optional[float]
-    one_dose_active: bool
-    second_dose_delay: float
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
@@ -266,8 +262,22 @@ class Vaccination(BaseModel):
 
     @validator("vacc_prop_prevent_infection", pre=True, allow_reuse=True)
     def check_vacc_prop_prevent_infection(val):
-        assert 0 <= val <= 1, "vacc_prop_prevent_infection should be in [0, 1]"
+        assert 0 <= val <= 1, "Proportion of vaccine effect attributable to preventing infection should be in [0, 1]"
         return val
+
+    @validator("vacc_reduce_infectiousness", pre=True, allow_reuse=True)
+    def check_overall_efficacy(val):
+        assert 0 <= val <= 1, "Reduction in infectousness should be in [0, 1]"
+        return val
+
+
+class Vaccination(BaseModel):
+    second_dose_delay: float
+    one_dose: Optional[VaccEffectiveness]
+    fully_vaccinated: VaccEffectiveness
+
+    roll_out_components: List[RollOutFunc]
+    coverage_override: Optional[float]
 
 
 class VaccinationRisk(BaseModel):

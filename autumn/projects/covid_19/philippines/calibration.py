@@ -43,7 +43,7 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
         UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2., 3.]),
 
         # Vaccination parameters (independent sampling)
-        UniformPrior("vaccination.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
-        BetaPrior("vaccination.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
+        UniformPrior("vaccination.fully_vaccinated.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
+        BetaPrior("vaccination.fully_vaccinated.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     ]
     return targets, priors

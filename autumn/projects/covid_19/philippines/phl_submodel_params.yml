@@ -68,8 +68,9 @@ cumul_incidence_start_time: 618 # 30 Aug 2021
 
 # Vaccination-related
 vaccination:
-  overall_efficacy: 0.7 # now varied
-  vacc_prop_prevent_infection: 1 # now varied
+  fully_vaccinated:
+    overall_efficacy: 0.7 # now varied
+    vacc_prop_prevent_infection: 1 # now varied
   roll_out_components:
     - supply_period_coverage:
         coverage: .25

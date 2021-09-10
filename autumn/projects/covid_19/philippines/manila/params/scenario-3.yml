@@ -1,4 +1,4 @@
-description: with mRNA vaccine
+description: with AstraZeneca vaccine
 
 time:
   start: 624  # 15 Sep 2021
@@ -31,10 +31,10 @@ mobility:
         - 1.
 
 vaccination:
-  # Pfizer efficacy against delta
+  # AZ efficacy against delta
   fully_vaccinated:
-    overall_efficacy: .88
-    vacc_prop_prevent_infection: .86
+    overall_efficacy: .67
+    vacc_prop_prevent_infection: .72
   roll_out_components:
     - age_min: 15
       supply_period_coverage:
@@ -43,5 +43,5 @@ vaccination:
         end_time: 700 # 30 Nov 2021
 
 vaccination_risk:
-  prop_astrazeneca: 0.
-  prop_mrna: 1.
+  prop_astrazeneca: 1.
+  prop_mrna: 0.

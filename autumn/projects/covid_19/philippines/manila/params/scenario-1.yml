@@ -1,31 +1,31 @@
 description: no vaccine
 
 time:
-  start: 618  # 9 Sep 2021
+  start: 624  # 15 Sep 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-10-31
-        - 2021-11-02
+        - 2021-11-30
+        - 2021-12-02
       values:
         - - repeat_prev
         - 1.
     work:
       append: true
       times:
-        - 2021-10-31
-        - 2021-11-02
+        - 2021-11-30
+        - 2021-12-02
       values:
         - - repeat_prev
         - 1.
     school:
       append: false
       times:
-        - 2021-10-31
-        - 2021-11-02
+        - 2021-11-30
+        - 2021-12-02
       values:
         - 0.
         - 1.
@@ -33,6 +33,6 @@ mobility:
 vaccination:
   roll_out_components:
     - supply_period_coverage:
-        coverage: .001
-        start_time: 618 # 9 Sep 2021
-        end_time: 671 # 1 Nov 2021
+        coverage: .00001
+        start_time: 624 # 15 Sep 2021
+        end_time: 700 # 30 Nov 2021

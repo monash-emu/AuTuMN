@@ -16,10 +16,7 @@ def get_vacc_roll_out_function_from_coverage(supply_params, coverage_override=No
     """
 
     # Get vaccination parameters
-    if supply_params.coverage:
-        coverage = supply_params.coverage
-    else:
-        coverage = coverage_override
+    coverage = supply_params.coverage if supply_params.coverage else coverage_override
 
     start_time = supply_params.start_time
     end_time = supply_params.end_time
@@ -48,8 +45,7 @@ def get_vacc_roll_out_function_from_doses(
         # work out the proportion of the eligible population that is in the relevant compartment
         # FIXME: we should be able to cache the two lists below. They depend on compartment_name, eligible_age_group
         #  and eligible_age_groups but not on time!
-        num_indices = []
-        deno_indices = []
+        num_indices, deno_indices = [], []
         for i, compartment in enumerate(compartments):
             if (
                 compartment.name in VACCINE_ELIGIBLE_COMPARTMENTS
@@ -65,10 +61,9 @@ def get_vacc_roll_out_function_from_doses(
 
         compartment_size = sum([compartment_values[i] for i in num_indices])
         total_eligible_pop_size = sum([compartment_values[i] for i in deno_indices])
-        if total_eligible_pop_size > 0.1:
-            nb_vaccinated = compartment_size / total_eligible_pop_size * time_variant_supply(time)
-        else:
-            nb_vaccinated = 0.
+        nb_vaccinated = \
+            compartment_size / total_eligible_pop_size * time_variant_supply(time) if \
+            total_eligible_pop_size >= 0.1 else 0.
 
         return max(0, min(nb_vaccinated, compartment_size))
 
@@ -100,7 +95,7 @@ def get_eligible_age_groups(roll_out_component, age_strata):
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose, coverage_override=None, additional_strata={},
+        model, roll_out_component, age_strata, one_dose, is_region_vic, coverage_override=None, additional_strata={},
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
@@ -108,7 +103,11 @@ def add_vaccination_flows(
 
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = bool(roll_out_component.supply_period_coverage)
-    if is_coverage:
+    if is_region_vic:
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+            roll_out_component.supply_period_coverage
+        )
+    elif is_coverage:
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
             roll_out_component.supply_period_coverage, coverage_override
         )
@@ -126,7 +125,6 @@ def add_vaccination_flows(
     vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
 
     for eligible_age_group in eligible_age_groups:
-        print(eligible_age_group)
         _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
         _source_strata.update(additional_strata)
         _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}

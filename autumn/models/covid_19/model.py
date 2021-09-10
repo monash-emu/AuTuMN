@@ -1,7 +1,9 @@
+from summer import CompartmentalModel
+from summer.adjust import Multiply, Overwrite
+
 from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-from summer import CompartmentalModel
-
+from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.preprocess.case_detection import CdrProc
@@ -26,7 +28,7 @@ from . import preprocess
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows
+from .preprocess.vaccination import add_vaccination_flows, add_second_dose_flows
 from .preprocess import tracing
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
@@ -219,7 +221,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
         model.stratify_with(tracing_strat)
 
-    # Contact tracing processes
+        # Contact tracing processes
         trace_param = tracing.get_tracing_param(
             params.contact_tracing.assumed_trace_prop,
             params.contact_tracing.assumed_prev
@@ -270,6 +272,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Stratify by vaccination status
     if params.vaccination:
         vaccination_strat = get_vaccination_strat(params)
+        if params.voc_emergence:
+            for voc_name, characteristics in voc_params.items():
+                vaccination_strat.add_flow_adjustments(
+                    f"seed_voc_{voc_name}",
+                    {
+                        Vaccination.VACCINATED: Multiply(1. / 2.),
+                        Vaccination.ONE_DOSE_ONLY: Overwrite(0.),
+                        Vaccination.UNVACCINATED: Multiply(1. / 2.),
+                    }
+                )
         model.stratify_with(vaccination_strat)
         vacc_params = params.vaccination
         for roll_out_component in vacc_params.roll_out_components:
@@ -277,7 +289,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 coverage_override = vacc_params.coverage_override
             else:
                 coverage_override = None
-            add_vaccination_flows(model, roll_out_component, age_strat.strata, coverage_override)
+            add_vaccination_flows(
+                model, roll_out_component, age_strat.strata, params.vaccination.one_dose, coverage_override
+            )
+
+        if params.vaccination.one_dose:
+            add_second_dose_flows(model, params.vaccination.second_dose_delay)
 
     # Set up derived output functions
     if is_region_vic:

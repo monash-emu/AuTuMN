@@ -1,33 +1,47 @@
-description: GCQ from 1 Sep / high MHS compliance sustained
+description: with mRNA vaccine
 
 time:
-  start: 608  # 30 Aug 2021
+  start: 624  # 15 Sep 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-08-22
-        - 2021-09-01
-        - 2021-09-03
+        - 2021-11-30
+        - 2021-12-02
       values:
-        - - MECQ
-          - other_locations
-        - - MECQ
-          - other_locations
-        - - GCQ
-          - other_locations
+        - - repeat_prev
+        - 1.
     work:
       append: true
       times:
-        - 2021-08-22
-        - 2021-09-01
-        - 2021-09-03
+        - 2021-11-30
+        - 2021-12-02
       values:
-        - - MECQ
-          - work
-        - - MECQ
-          - work
-        - - GCQ
-          - work
+        - - repeat_prev
+        - 1.
+    school:
+      append: false
+      times:
+        - 2021-11-30
+        - 2021-12-02
+      values:
+        - 0.
+        - 1.
+
+vaccination:
+  # Pfizer efficacy against delta
+  fully_vaccinated:
+    overall_efficacy: .88
+    vacc_prop_prevent_infection: .86
+  roll_out_components:
+    - age_min: 15
+      supply_period_coverage:
+        coverage: .50
+        start_time: 624 # 15 Sep 2021
+        end_time: 700 # 30 Nov 2021
+
+vaccination_risk:
+  prop_astrazeneca: 0.
+  prop_mrna: 1.

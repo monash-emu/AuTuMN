@@ -238,6 +238,9 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
     """
     with open(file_path, mode="r") as f:
         targets = json.load(f)
+
+    df.sort_values(by=['date_index'], inplace=True)
+
     for key, val in TARGETS_MAPPING.items():
 
         if val in df.columns and key in targets.keys():

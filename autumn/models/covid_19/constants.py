@@ -56,6 +56,7 @@ class Clinical:
 
 class Vaccination:
     UNVACCINATED = "unvaccinated"
+    ONE_DOSE_ONLY = "one_dose_only"
     VACCINATED = "vaccinated"
 
 
@@ -95,6 +96,12 @@ DEATH_CLINICAL_STRATA = [
 
 VACCINATION_STRATA = [
     Vaccination.UNVACCINATED,
+    Vaccination.ONE_DOSE_ONLY,
+    Vaccination.VACCINATED,
+]
+
+VACCINATED_STRATA = [
+    Vaccination.ONE_DOSE_ONLY,
     Vaccination.VACCINATED,
 ]
 

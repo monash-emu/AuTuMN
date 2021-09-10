@@ -186,12 +186,17 @@ victorian_clusters: null
 
 # Vaccination-related
 vaccination:
-  overall_efficacy: 0.
-  vacc_prop_prevent_infection: 0.
-  vacc_reduce_infectiousness: 0.
+  fully_vaccinated:
+    overall_efficacy: 0.
+    vacc_prop_prevent_infection: 0.
+    vacc_reduce_infectiousness: 0.
+  one_dose: null
+  second_dose_delay: 90.  # Time from receiving first dose to second
   roll_out_components: []
 
 vaccination_risk:
+  prop_astrazeneca: 1.
+  prop_mrna: 0.
   tts_rate: # Source: https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
     0: 2.5e-5
     5: 2.5e-5
@@ -227,6 +232,24 @@ vaccination_risk:
     65: .15
     70: .18
     75: .18
+
+  myocarditis_rate: # dummy values for now
+    0: 2.5e-5
+    5: 2.5e-5
+    10: 2.5e-5
+    15: 2.5e-5
+    20: 2.5e-5
+    25: 2.5e-5
+    30: 2.5e-5
+    35: 2.5e-5
+    40: 2.5e-5
+    45: 2.5e-5
+    50: 2.7e-5
+    55: 2.7e-5
+    60: 1.6e-5
+    65: 1.6e-5
+    70: 2.1e-5
+    75: 1.8e-5
 
 # Contact tracing-related
 contact_tracing: null

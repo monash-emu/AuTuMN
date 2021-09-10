@@ -4,7 +4,7 @@ country:
 
 time:
   start: 40.
-  end: 731.
+  end: 913.
 
 infectious_seed: 10.
 
@@ -64,18 +64,17 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 2.5
 
-cumul_incidence_start_time: 608 # 30 Aug 2021
+cumul_incidence_start_time: 624 # 30 Aug 2021
 
 # Vaccination-related
 vaccination:
-  overall_efficacy: 0.7 # now varied
-  vacc_prop_prevent_infection: 1 # now varied
+  fully_vaccinated:
+    overall_efficacy: 0.7
+    vacc_prop_prevent_infection: 0.7
   roll_out_components:
-    - supply_period_coverage:
-        coverage: .25
+    - age_min: 15  # the 15+ age group covers 75.5% of the total NCR population
+      supply_period_coverage:
+        coverage: .41  # calculated such that 30% of the total NCR population is fully vaccimated by 15 Sep
         start_time: 426 # 1 Mar 2021
-        end_time: 578 # 31 July 2021
-    - supply_period_coverage:
-        coverage: .60  # to reach 70% overall by end of year
-        start_time: 579 # 1 Aug 2021
-        end_time: 731 # 31 Dec 2021
+        end_time: 624 # 15 Sep 2021
+

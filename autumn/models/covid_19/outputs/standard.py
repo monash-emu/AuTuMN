@@ -406,19 +406,19 @@ def request_standard_outputs(
                 func=lambda vaccinated, total: vaccinated / total,
             )
 
-        # Track the rate of TTS occurring on the assumption that all doses are Astra-Zeneca
-        # FIXME: this currently tracks individuals based on second-dose vaccination, because the one-dose category is
-        #  not working yet.
-        for agegroup in params.vaccination_risk.tts_rate.keys():
+        # Track the rate of adverse events
+        for agegroup in AGEGROUP_STRATA:
             model.request_output_for_flow(
                 name=f"vaccinationXagegroup{agegroup}",
                 flow_name="vaccination",
                 source_strata={"agegroup": agegroup},
             )
+
+            # TTS for AstraZeneca vaccines
             model.request_function_output(
                 name=f"tts_casesXagegroup_{agegroup}",
                 sources=[f"vaccinationXagegroup_{agegroup}"],
-                func=lambda vaccinated: vaccinated * params.vaccination_risk.tts_rate[agegroup]
+                func=lambda vaccinated: vaccinated * params.vaccination_risk.tts_rate[agegroup] * params.vaccination_risk.prop_astrazeneca
             )
 
             model.request_function_output(
@@ -426,6 +426,15 @@ def request_standard_outputs(
                 sources=[f"tts_casesXagegroup_{agegroup}"],
                 func=lambda tts_cases: tts_cases * params.vaccination_risk.tts_fatality_ratio[agegroup]
             )
+
+            # Myocarditis for mRNA vaccines
+            model.request_function_output(
+                name=f"myocarditis_casesXagegroup_{agegroup}",
+                sources=[f"vaccinationXagegroup_{agegroup}"],
+                func=lambda vaccinated: vaccinated * params.vaccination_risk.myocarditis_rate[agegroup] * params.vaccination_risk.prop_mrna
+            )
+
+
 
     # Calculate the incidence by strain
     if params.voc_emergence:

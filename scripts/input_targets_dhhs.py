@@ -13,14 +13,17 @@ from getpass import getpass
 # Use OWID csv for notification and death numbers.
 
 COVID_AU_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_au")
-COVID_VIC_CASE_CSV = os.path.join(COVID_AU_DIRPATH, "VIC_LGA_CASE.CSV")
 COVID_AU_CSV_PATH = os.path.join(COVID_AU_DIRPATH, "COVID_AU_state_daily_change.csv")
-CHRIS_CSV = os.path.join(COVID_AU_DIRPATH, "monitoringreport.csv")
-COVID_DHHS_VAC_CSV = os.path.join(
-    COVID_AU_DIRPATH, "vac_by_week_final_2021-09-02.csv"
-)  # TODO - parse for latest file, not hardcode.
 
-COVID_DHHS_TARGETS = os.path.join(
+CHRIS_CSV = os.path.join(COVID_AU_DIRPATH, "monitoringreport.secret.csv")
+
+COVID_DHHS_CASE_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_cases.secret.csv")
+COVID_DHHS_ADMN_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_admissions.secret.csv")
+COVID_DHHS_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_vaccination.secret.csv")
+
+# COVID_DHHS_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_merged.secret.csv")
+
+COVID_VIC2021_TARGETS_CSV = os.path.join(
     PROJECTS_PATH, "covid_19", "victoria", "victoria_2021", "targets.secret.json"
 )
 COVID_DHHS_CLUSTERS_CSV = os.path.join(
@@ -92,38 +95,51 @@ CHRIS_MAP = {
     "Mildura Base Public Hospital": "LODDON_MALLEE",
 }
 
+
 CHRIS_HOSPITAL = "Confirmed COVID ‘+’ cases admitted to your hospital"
 CHRIS_ICU = "Confirmed COVID ‘+’ cases in your ICU/HDU(s)"
+
+fix_lga = {
+    "Unknown": 0,
+    "Kingston (C) (Vic.)": "Kingston (C)",
+    "Interstate": 0,
+    "Overseas": 0,
+    "Melton (C)": "Melton (S)",
+    "Latrobe (C) (Vic.)": "Latrobe (C)",
+    "Wodonga (C)": "Wodonga (RC)",
+    "Unincorporated Vic": 0,
+}
+# df = pd.read_csv(COVID_DHHS_VAC_CSV)
+
+# postcode_lga = (
+#     pd.read_csv(COVID_DHHS_CASE_CSV, usecols=[1, 3])
+#     .groupby(["Postcode", "Localgovernmentarea"])
+#     .count()
+# )
+
+# postcode_lga
+
+# postcode_lga.Localgovernmentarea.unique()
 
 
 def main():
 
     cases = preprocess_cases()
-    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
-
-    cases = cases.merge(
-        cluster_map_df, left_on=["localgovernmentarea"], right_on=["lga_name"], how="left"
-    )
-
-    cases.loc[cases.cluster_id.isna(), ["proportion", "cluster_id"]] = [1, 0]
-
-    cases["cluster_cases"] = cases.cases * cases.proportion
-    cases = (
-        cases[["date_index", "cluster_id", "cluster_cases"]]
-        .groupby(["date_index", "cluster_id"])
-        .sum()
-        .reset_index()
-    )
-    cases.cluster_id.replace(CLUSTER_MAP, inplace=True)
+    cases = load_cases(cases)
 
     chris_icu = load_chris_df(CHRIS_ICU)
     chris_hosp = load_chris_df(CHRIS_HOSPITAL)
+
     chris_df = chris_hosp.merge(
         chris_icu, on=["date_index", "cluster_id"], how="outer", suffixes=("_hosp", "_icu")
     )
     chris_df = chris_df.groupby(["date_index", "cluster_id"]).sum().reset_index()
 
+    admissions = preprocess_admissions()
+    admissions = load_admissions(admissions)
+
     cases = cases.merge(chris_df, on=["date_index", "cluster_id"], how="outer")
+    cases = cases.merge(admissions, on=["date_index", "cluster_id"], how="outer")
 
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
@@ -135,22 +151,80 @@ def main():
             f"notifications_for_cluster_{cluster.lower()}": "cluster_cases",
             f"hospital_occupancy_for_cluster_{cluster.lower()}": "value_hosp",
             f"icu_occupancy_for_cluster_{cluster.lower()}": "value_icu",
+            f"icu_admissions_for_cluster_{cluster.lower()}": "admittedtoicu",
+            f"hospital_admissions_for_cluster_{cluster.lower()}": "nadmissions",
         }
 
         cluster_df = cases.loc[cases.cluster_id == cluster]
 
-        update_timeseries(TARGET_MAP_DHHS, cluster_df, COVID_DHHS_TARGETS, password)
+        update_timeseries(TARGET_MAP_DHHS, cluster_df, COVID_VIC2021_TARGETS_CSV, password)
+
+    vic_df = cases.groupby("date_index").sum().reset_index()
+
+    TARGET_MAP_DHHS = {
+        "notifications": "cluster_cases",
+        "hospital_occupancy": "value_hosp",
+        "icu_occupancy": "value_icu",
+        "icu_admissions": "admittedtoicu",
+        "hospital_admissions": "nadmissions",
+    }
+
+    update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VIC2021_TARGETS_CSV, password)
+
+
+def preprocess_admissions():
+    df = pd.read_csv(COVID_DHHS_ADMN_CSV)
+    df = create_date_index(COVID_BASE_DATETIME, df, "AdmissionDate")
+
+    df.lga.replace(fix_lga, inplace=True)
+    return df
+
+
+def load_admissions(df):
+
+    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
+    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+
+    df[["admittedtoicu", "ventilated", "nadmissions"]] = df[
+        ["admittedtoicu", "ventilated", "nadmissions"]
+    ].multiply(df["proportion"], axis="index")
+
+    df = (
+        df[["cluster_id", "date_index", "nadmissions", "admittedtoicu", "ventilated"]]
+        .groupby(["cluster_id", "date_index"])
+        .sum()
+        .reset_index()
+    )
+
+    return df
 
 
 def preprocess_cases():
-    df = pd.read_csv(COVID_VIC_CASE_CSV)
-    df = create_date_index(COVID_BASE_DATETIME, df, "diagnosis_date")
+    df = pd.read_csv(COVID_DHHS_CASE_CSV)
+    df = create_date_index(COVID_BASE_DATETIME, df, "DiagnosisDate")
+    df = df.groupby(["date_index", "lga"]).sum().reset_index()
+    df.lga.replace(fix_lga, inplace=True)
 
-    df = df.groupby(["date_index", "localgovernmentarea"]).size().reset_index()
-    df.replace({"Melton (C)": "Melton (S)", "Wodonga (C)": "Wodonga (RC)"}, inplace=True)
+    return df
 
-    df.rename(columns={0: "cases"}, inplace=True)
 
+def load_cases(df):
+    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+
+    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
+
+    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
+
+    df["cluster_cases"] = df.nnewcases * df.proportion
+    df = (
+        df[["date_index", "cluster_id", "cluster_cases"]]
+        .groupby(["date_index", "cluster_id"])
+        .sum()
+        .reset_index()
+    )
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
     return df
 
 

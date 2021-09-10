@@ -28,7 +28,7 @@ from . import preprocess
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows
+from .preprocess.vaccination import add_vaccination_flows, add_second_dose_flows
 from .preprocess import tracing
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
@@ -290,9 +290,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             else:
                 coverage_override = None
             add_vaccination_flows(
-                model, roll_out_component, age_strat.strata, params.vaccination.one_dose,
-                params.vaccination.second_dose_delay, coverage_override
+                model, roll_out_component, age_strat.strata, params.vaccination.one_dose, coverage_override
             )
+
+        if params.vaccination.one_dose:
+            add_second_dose_flows(model, params.vaccination.second_dose_delay)
 
     # Set up derived output functions
     if is_region_vic:

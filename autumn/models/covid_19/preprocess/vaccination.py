@@ -1,7 +1,7 @@
 import numpy as np
 
 from autumn.models.covid_19.constants import (
-    VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
+    VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY, COMPARTMENTS
 )
 from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -100,7 +100,7 @@ def get_eligible_age_groups(roll_out_component, age_strata):
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose, second_dose_delay, coverage_override=None
+        model, roll_out_component, age_strata, one_dose, coverage_override=None
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
@@ -167,7 +167,14 @@ def add_vaccination_flows(
                 dest_strata=_dest_strata,
             )
 
-    if one_dose:
+
+def add_second_dose_flows(
+       model, second_dose_delay
+):
+    """
+    Add flows between the one-dose and the fully-vaccinated strata
+    """
+    for compartment in COMPARTMENTS:
         model.add_transition_flow(
             name="second_dose",
             fractional_rate=1. / second_dose_delay,

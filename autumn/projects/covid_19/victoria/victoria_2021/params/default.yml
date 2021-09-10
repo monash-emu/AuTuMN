@@ -14,15 +14,20 @@ contact_tracing:
     assumed_prev: 1.e-3
     quarantine_infect_multiplier: 0.2
 
-infection_fatality:
-  top_bracket_overwrite: 0.17
-
+# Vaccination effectiveness parameters taken from https://www.medrxiv.org/content/10.1101/2021.08.18.21262237v1
 vaccination:
-  one_dose_active: true
+  one_dose:
+    overall_efficacy: 0.49  # Average of 0.4 and 0.58
+    vacc_prop_prevent_infection: 0.9  # Approximate estimate
+    vacc_reduce_infectiousness: 0.56  # Average of 0.5 and 0.62
+  fully_vaccinated:
+    overall_efficacy: 0.775  # Average of 0.71 and 0.84
+    vacc_prop_prevent_infection: 0.9  # Approximate estimate
+    vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
 
 time:
-  start: 10  # PLS REVIEW
-  end: 711  # PLS REVIEW
+  start: 560  # 13th July 2021
+  end: 731  # 31st December 2021
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
@@ -36,8 +41,8 @@ clinical_stratification:
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
-    hospital_late: 11.6 # VAHI hospital mean duration, all COVID
-    icu_late: 7.4 # VAHI ICU mean duration, all COVID (177.6 hours)
+    hospital_late: 11.6  # VAHI hospital mean duration, all COVID
+    icu_late: 7.4  # VAHI ICU mean duration, all COVID (177.6 hours)
   compartment_periods_calculated:
     active:
       proportions:
@@ -46,11 +51,12 @@ sojourn:
 
 # Cluster stratification.
 victorian_clusters:
-  intercluster_mixing: 0.02 # calibrated
-  contact_rate_multiplier_north_metro: 1. # calibrated
-  contact_rate_multiplier_south_metro: 1. # calibrated
-  contact_rate_multiplier_barwon_south_west: 1. # calibrated
-  contact_rate_multiplier_regional: 1. # calibrated
+  intercluster_mixing: 0.02  # Ignore, calibrated
+  contact_rate_multiplier_north_metro: 1.  # Ignore, ccalibrated
+  contact_rate_multiplier_south_metro: 1.  # Ignore, calibrated
+  contact_rate_multiplier_barwon_south_west: 1.  # Ignore, calibrated
+  contact_rate_multiplier_regional: 1.  # Ignore, calibrated
+
   # *** METRO ***
   metro:
     mobility:
@@ -71,10 +77,19 @@ victorian_clusters:
         school:
           append: false
           times:
-            - 2020-09-02 # PLS REVIEW
-            
+            - 2021-07-15
+            - 2021-07-16  # Schools close with lockdown 5
+            - 2021-07-26
+            - 2021-07-27  # Schools re-open after lockdown 5
+            - 2021-08-04
+            - 2021-08-05  # Schools close with lockdown 6
           values:
-            - 1. # PLS REVIEW
+            - 1.
+            - 0.
+            - 0.
+            - 1.
+            - 1.
+            - 0.
             
       microdistancing:
         home_reduction:
@@ -84,12 +99,9 @@ victorian_clusters:
           locations:
             - home
         behaviour:
-          function_type: tanh
+          function_type: constant
           parameters:
-            shape: 0.262764
-            inflection_time: 611. # PLS REVIEW 2-Sep-2021
-            lower_asymptote: 0.2803973
-            upper_asymptote: 0.4421819
+            effect: 0.4421819
           locations:
             - other_locations
             - school
@@ -103,12 +115,9 @@ victorian_clusters:
             - school
             - work
         face_coverings: # Mandatory face coverings
-          function_type: tanh
+          function_type: constant
           parameters:
-            shape: 0.5261693
-            inflection_time: 611. # PLS REVIEW 2-Sep-2021
-            lower_asymptote: 0.130469
-            upper_asymptote: 0.9143849
+            effect: 0.9143849
           locations:
             - other_locations
             - school
@@ -142,9 +151,19 @@ victorian_clusters:
         school:
           append: false
           times:
-            - 2021-09-02
+            - 2021-07-15
+            - 2021-07-16  # Schools close with lockdown 5
+            - 2021-07-26
+            - 2021-07-27  # Schools re-open after lockdown 5
+            - 2021-08-04
+            - 2021-08-05  # Schools close with lockdown 6
           values:
-            - 1
+            - 1.
+            - 0.
+            - 0.
+            - 1.
+            - 1.
+            - 0.
 
       # Regional Victoria clusters microdistancing function
       microdistancing:
@@ -155,12 +174,9 @@ victorian_clusters:
           locations:
             - home
         behaviour:
-          function_type: tanh
+          function_type: constant
           parameters:
-            shape: 0.262764
-            inflection_time: 611. # PLS REVIEW 2-Sep-2021
-            lower_asymptote: 0.2803973
-            upper_asymptote: 0.4421819
+            effect: 0.4421819
           locations:
             - other_locations
             - school
@@ -174,12 +190,9 @@ victorian_clusters:
             - school
             - work
         face_coverings:
-          function_type: tanh
+          function_type: constant
           parameters:
-            shape: 0.5261693
-            inflection_time: 611. # PLS REVIEW 2-Sep-2021
-            lower_asymptote: 0.130469
-            upper_asymptote: 0.9143849
+            effect: 0.9143849
           locations:
             - other_locations
             - school

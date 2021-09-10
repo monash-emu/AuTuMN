@@ -100,11 +100,12 @@ def get_eligible_age_groups(roll_out_component, age_strata):
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose_active, second_dose_delay, coverage_override=None
+        model, roll_out_component, age_strata, one_dose, second_dose_delay, coverage_override=None
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
+
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = bool(roll_out_component.supply_period_coverage)
     if is_coverage:
@@ -122,7 +123,7 @@ def add_vaccination_flows(
     eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
     # Find vaccination destination stratum, depending on whether one-dose vaccination being simulated
-    vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose_active else Vaccination.VACCINATED
+    vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
 
     for eligible_age_group in eligible_age_groups:
         _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
@@ -166,7 +167,7 @@ def add_vaccination_flows(
                 dest_strata=_dest_strata,
             )
 
-    if one_dose_active:
+    if one_dose:
         model.add_transition_flow(
             name="second_dose",
             fractional_rate=1. / second_dose_delay,
@@ -180,7 +181,6 @@ def add_vaccination_flows(
 def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_efficacy):
     """
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.
-
     """
 
     if vacc_prop_prevent_infection == 1.:
@@ -195,23 +195,35 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
 
 
 def add_clinical_adjustments_to_strat(
-    strat,
-    unaffected_stratum,
-    affected_strata,
-    params,
-    symptomatic_adjuster,
-    hospital_adjuster,
-    ifr_adjuster,
-    top_bracket_overwrite,
+        strat,
+        unaffected_stratum,
+        first_modified_stratum,
+        params,
+        symptomatic_adjuster,
+        hospital_adjuster,
+        ifr_adjuster,
+        top_bracket_overwrite,
+        second_modified_stratum=None,
+        second_sympt_adjuster=1.,
+        second_hospital_adjuster=1.,
+        second_ifr_adjuster=1.,
+        second_top_bracket_overwrite=None,
 ):
     """
     Get all the adjustments in the same way for both the history and vaccination stratifications.
     """
 
-    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
+    entry_adjs, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
         params.sojourn, params.testing_to_detection, params.case_detection, ifr_adjuster, symptomatic_adjuster,
         hospital_adjuster, top_bracket_overwrite,
+    )
+
+    # Make these calculations for the one-dose stratum, even if this is being called by the history stratification
+    second_entry_adjs, second_death_adjs, second_progress_adjs, second_recovery_adjs, _, _ = get_all_adjustments(
+        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+        params.sojourn, params.testing_to_detection, params.case_detection, second_ifr_adjuster,
+        second_sympt_adjuster, second_hospital_adjuster, second_top_bracket_overwrite,
     )
 
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
@@ -221,32 +233,48 @@ def add_clinical_adjustments_to_strat(
                 "clinical": clinical_stratum,
             }
 
-            # Must be dest
-            infect_onset_adjustments = {unaffected_stratum: None}
-            infect_onset_adjustments.update(
-                {stratum: entry_adjustments[agegroup][clinical_stratum] for stratum in affected_strata}
-            )
+            # Infectiousness onset adjustments *** Must be dest
+            infect_onset_adjustments = {
+                unaffected_stratum: None,
+                first_modified_stratum: entry_adjs[agegroup][clinical_stratum]
+            }
+            if second_modified_stratum:
+                infect_onset_adjustments.update(
+                    {second_modified_stratum: second_entry_adjs[agegroup][clinical_stratum]}
+                )
             strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infect_onset_adjustments, dest_strata=relevant_strata)
 
-            # Must be source
-            infect_death_adjustments = {unaffected_stratum: None}
-            infect_death_adjustments.update(
-                {stratum: death_adjs[agegroup][clinical_stratum] for stratum in affected_strata}
-            )
+            # Infect death adjustments *** Must be source
+            infect_death_adjustments = {
+                unaffected_stratum: None,
+                first_modified_stratum: death_adjs[agegroup][clinical_stratum]
+            }
+            if second_modified_stratum:
+                infect_death_adjustments.update(
+                    {second_modified_stratum: second_death_adjs[agegroup][clinical_stratum]}
+                )
             strat.add_flow_adjustments(INFECT_DEATH, infect_death_adjustments, source_strata=relevant_strata)
 
-            # Either source or dest or both
-            progress_adjustments = {unaffected_stratum: None}
-            progress_adjustments.update(
-                {stratum: progress_adjs[clinical_stratum] for stratum in affected_strata}
-            )
+            # Progress adjustments *** Either source, dest or both *** Note that this isn't indexed by age group
+            progress_adjustments = {
+                unaffected_stratum: None,
+                first_modified_stratum: progress_adjs[clinical_stratum]
+            }
+            if second_modified_stratum:
+                progress_adjustments.update(
+                    {second_modified_stratum: second_progress_adjs[clinical_stratum]}
+                )
             strat.add_flow_adjustments(PROGRESS, progress_adjustments, source_strata=relevant_strata)
 
-            # Must be source
-            recovery_adjustments = {unaffected_stratum: None}
-            recovery_adjustments.update(
-                {stratum: recovery_adjs[agegroup][clinical_stratum] for stratum in affected_strata}
-            )
+            # Recovery adjustments *** Must be source
+            recovery_adjustments = {
+                unaffected_stratum: None,
+                first_modified_stratum: recovery_adjs[agegroup][clinical_stratum]
+            }
+            if second_modified_stratum:
+                recovery_adjustments.update(
+                    {second_modified_stratum: second_recovery_adjs[agegroup][clinical_stratum]}
+                )
             strat.add_flow_adjustments(RECOVERY, recovery_adjustments, source_strata=relevant_strata)
 
     return strat

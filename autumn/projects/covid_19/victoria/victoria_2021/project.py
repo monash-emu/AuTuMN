@@ -23,7 +23,7 @@ ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 # dispersion parameter of the targets' normal likelihoods.
 cluster_targets = []
 for cluster in CLUSTERS:
-    notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").moving_average(4)
+    notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").truncate_start_time(560).moving_average(4)
     target = NormalTarget(notifs_ts)
     cluster_targets.append(target)
 
@@ -80,7 +80,6 @@ priors = [
     UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.01),
     UniformPrior("infectious_seed", [20., 70.], jumping_stdev=4.),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
-    UniformPrior("infection_fatality.top_bracket_overwrite", [0.05, 0.3], jumping_stdev=0.04),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.05, 0.3], jumping_stdev=0.04),
     TruncNormalPrior(

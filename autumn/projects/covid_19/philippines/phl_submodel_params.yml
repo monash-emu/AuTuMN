@@ -69,8 +69,8 @@ cumul_incidence_start_time: 624 # 30 Aug 2021
 # Vaccination-related
 vaccination:
   fully_vaccinated:
-    overall_efficacy: 0.7 # now varied
-    vacc_prop_prevent_infection: 1 # now varied
+    overall_efficacy: 0.7
+    vacc_prop_prevent_infection: 0.7
   roll_out_components:
     - age_min: 15  # the 15+ age group covers 75.5% of the total NCR population
       supply_period_coverage:

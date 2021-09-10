@@ -7,21 +7,19 @@ from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
+from autumn.tools.inputs.covid_au.queries import get_dhhs_vaccination_numbers
 
 
-def get_vacc_roll_out_function_from_coverage(supply_params, coverage_override=None):
+def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
     """
     Work out the time-variant vaccination rate based on a requested coverage and roll-out window.
     Return a function of time.
     """
 
     # Get vaccination parameters
-    coverage = supply_params.coverage if supply_params.coverage else coverage_override
-
-    start_time = supply_params.start_time
-    end_time = supply_params.end_time
+    coverage = coverage if coverage else coverage_override
     duration = end_time - start_time
-    assert end_time >= start_time
+    assert duration >= 0.
     assert 0. <= coverage <= 1.
 
     # Calculate the vaccination rate from the coverage and the duration of the program
@@ -104,12 +102,28 @@ def add_vaccination_flows(
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = bool(roll_out_component.supply_period_coverage)
     if is_region_vic:
+        vaccination_rates = {
+            "north_metro": 0.535,
+            "south_east_metro": 0.535,
+            "south_metro": 0.535,
+            "west_metro": 0.535,
+            "barwon_south_west": 0.535,
+            "gippsland": 0.535,
+            "hume": 0.535,
+            "loddon_mallee": 0.535,
+            "grampians": 0.535,
+        }
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            roll_out_component.supply_period_coverage
+            vaccination_rates[additional_strata["cluster"]],
+            roll_out_component.supply_period_coverage.start_time,
+            roll_out_component.supply_period_coverage.end_time,
         )
     elif is_coverage:
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            roll_out_component.supply_period_coverage, coverage_override
+            roll_out_component.supply_period_coverage.coverage,
+            roll_out_component.supply_period_coverage.start_time,
+            roll_out_component.supply_period_coverage.end_time,
+            coverage_override
         )
     else:
         time_variant_supply = scale_up_function(

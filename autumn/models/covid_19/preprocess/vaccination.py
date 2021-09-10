@@ -93,7 +93,8 @@ def get_eligible_age_groups(roll_out_component, age_strata):
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose, is_region_vic, coverage_override=None, additional_strata={},
+        model, roll_out_component, age_strata, one_dose, is_region_vic,
+        coverage_override=None, additional_strata={}, cluster_pop=None,
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
@@ -102,19 +103,9 @@ def add_vaccination_flows(
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = bool(roll_out_component.supply_period_coverage)
     if is_region_vic:
-        vaccination_rates = {
-            "north_metro": 0.535,
-            "south_east_metro": 0.535,
-            "south_metro": 0.535,
-            "west_metro": 0.535,
-            "barwon_south_west": 0.535,
-            "gippsland": 0.535,
-            "hume": 0.535,
-            "loddon_mallee": 0.535,
-            "grampians": 0.535,
-        }
+        vacc_total = get_dhhs_vaccination_numbers(additional_strata["cluster"].upper())[1].sum()
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            vaccination_rates[additional_strata["cluster"]],
+            vacc_total / cluster_pop,
             roll_out_component.supply_period_coverage.start_time,
             roll_out_component.supply_period_coverage.end_time,
         )

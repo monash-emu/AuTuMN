@@ -24,6 +24,11 @@ vaccination:
     overall_efficacy: 0.775  # Average of 0.71 and 0.84
     vacc_prop_prevent_infection: 0.9  # Approximate estimate
     vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.535  # Statewide vaccination coverage as at 9th September
+        start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
+        end_time: 632  # 9th September is 618 (current date), lagged by two weeks
 
 time:
   start: 560  # 13th July 2021

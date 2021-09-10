@@ -81,7 +81,7 @@ def get_eligible_age_groups(roll_out_component, age_strata):
     Also return the ineligible age groups so that we can apply vaccination to them as well.
     """
 
-    eligible_age_groups, ineligible_age_groups = ([],) * 2
+    eligible_age_groups, ineligible_age_groups = [], []
     for agegroup in age_strata:
 
         # Either not requested, or requested and meets that age cut-off for min or max
@@ -100,7 +100,7 @@ def get_eligible_age_groups(roll_out_component, age_strata):
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose, coverage_override=None
+        model, roll_out_component, age_strata, one_dose, coverage_override=None, additional_strata={},
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
@@ -126,10 +126,14 @@ def add_vaccination_flows(
     vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
 
     for eligible_age_group in eligible_age_groups:
+        print(eligible_age_group)
         _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
+        _source_strata.update(additional_strata)
         _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
+        _dest_strata.update(additional_strata)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             if is_coverage:
+
                 # the roll-out function is applied as a rate that multiplies the source compartments
                 model.add_transition_flow(
                     name="vaccination",
@@ -140,11 +144,10 @@ def add_vaccination_flows(
                     dest_strata=_dest_strata,
                 )
             else:
-                # we need to create a functional flow, which depends on the agegroup and the compartment considered
+                # We need to create a functional flow, which depends on the agegroup and the compartment considered
                 vaccination_roll_out_function = get_vacc_roll_out_function_from_doses(
                     time_variant_supply, compartment, eligible_age_group, eligible_age_groups
                 )
-
                 model.add_function_flow(
                     name="vaccination",
                     flow_rate_func=vaccination_roll_out_function,

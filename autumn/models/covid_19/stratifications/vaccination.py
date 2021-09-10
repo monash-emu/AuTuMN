@@ -28,7 +28,8 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     # Preliminary processing
     is_one_dose_active = bool(params.vaccination.one_dose)
     strata_to_adjust = VACCINATED_STRATA if is_one_dose_active else [Vaccination.VACCINATED]
-    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = ({},) * 5
+    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = \
+        {}, {}, {}, {}, {}
     vaccination_effects = {
         Vaccination.VACCINATED: {
             "prevent_infection": params.vaccination.fully_vaccinated.vacc_prop_prevent_infection,

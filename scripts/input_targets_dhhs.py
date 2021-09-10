@@ -11,7 +11,6 @@ from getpass import getpass
 
 
 # Use OWID csv for notification and death numbers.
-
 COVID_AU_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_au")
 COVID_AU_CSV_PATH = os.path.join(COVID_AU_DIRPATH, "COVID_AU_state_daily_change.csv")
 
@@ -20,8 +19,10 @@ CHRIS_CSV = os.path.join(COVID_AU_DIRPATH, "monitoringreport.secret.csv")
 COVID_DHHS_CASE_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_cases.secret.csv")
 COVID_DHHS_ADMN_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_admissions.secret.csv")
 COVID_DHHS_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_vaccination.secret.csv")
+COVID_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
 
-# COVID_DHHS_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_merged.secret.csv")
+
+COVID_DHHS_POSTCODE_LGA_CSV = os.path.join(COVID_AU_DIRPATH, "postcode lphu concordance.csv")
 
 COVID_VIC2021_TARGETS_CSV = os.path.join(
     PROJECTS_PATH, "covid_19", "victoria", "victoria_2021", "targets.secret.json"
@@ -42,7 +43,6 @@ CLUSTER_MAP = {
     9: "LODDON_MALLEE",
     0: "VIC",
 }
-
 
 CHRIS_MAP = {
     "Royal Childrens Hospital [Parkville]": "WEST_METRO",
@@ -95,7 +95,6 @@ CHRIS_MAP = {
     "Mildura Base Public Hospital": "LODDON_MALLEE",
 }
 
-
 CHRIS_HOSPITAL = "Confirmed COVID ‘+’ cases admitted to your hospital"
 CHRIS_ICU = "Confirmed COVID ‘+’ cases in your ICU/HDU(s)"
 
@@ -109,17 +108,6 @@ fix_lga = {
     "Wodonga (C)": "Wodonga (RC)",
     "Unincorporated Vic": 0,
 }
-# df = pd.read_csv(COVID_DHHS_VAC_CSV)
-
-# postcode_lga = (
-#     pd.read_csv(COVID_DHHS_CASE_CSV, usecols=[1, 3])
-#     .groupby(["Postcode", "Localgovernmentarea"])
-#     .count()
-# )
-
-# postcode_lga
-
-# postcode_lga.Localgovernmentarea.unique()
 
 
 def main():
@@ -170,6 +158,11 @@ def main():
     }
 
     update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VIC2021_TARGETS_CSV, password)
+
+    df = preprocess_vac()
+    df = create_vac_coverage(df)
+
+    df.to_csv(COVID_VAC_CSV)
 
 
 def preprocess_admissions():
@@ -264,5 +257,55 @@ def load_chris_df(load: str):
     return df
 
 
+
+def preprocess_vac():
+
+    df = pd.read_csv(COVID_DHHS_VAC_CSV)
+    postcode_lga = (
+        pd.read_csv(COVID_DHHS_POSTCODE_LGA_CSV, usecols=[0, 1])
+        .groupby(["postcode", "lga_name_2018"])
+        .size()
+        .reset_index()
+    )
+
+    df = create_date_index(COVID_BASE_DATETIME, df, "EncounterDate")
+
+    df = df.merge(postcode_lga, on="postcode", how="left")
+    df.lga_name_2018.replace(fix_lga, inplace=True)
+
+    return df
+
+
+def create_vac_coverage(df):
+
+    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    cluster_map_df["cluster_pop"] = cluster_map_df.proportion * cluster_map_df.population
+    cluster_map_df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+    cluster_pop = (
+        cluster_map_df.groupby("cluster_id").sum().reset_index()[["cluster_id", "cluster_pop"]]
+    )
+
+    df = df.merge(cluster_map_df, left_on=["lga_name_2018"], right_on=["lga_name"], how="left")
+    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+
+    df["n"] = df.n * df.proportion
+
+    df = (
+        df[["date", "date_index", "agegroup", "dosenumber", "cluster_id", "n"]]
+        .groupby(["date", "date_index", "agegroup", "dosenumber", "cluster_id"])
+        .sum()
+        .reset_index()
+    )
+
+    df = df.merge(cluster_pop, on=["cluster_id"], how="left")
+    df["coverage"] = df.n / df.cluster_pop
+    df.sort_values(by=["cluster_id", "agegroup", "date_index"], inplace=True)
+
+    return df
+
+
+    
 if __name__ == "__main__":
     main()
+

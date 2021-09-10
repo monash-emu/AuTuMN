@@ -389,43 +389,52 @@ def request_standard_outputs(
     Vaccination
     """
 
-    # if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-    #     request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
-    #
-    #     # track proportions vaccinated by vaccination status
-    #     for vacc_stratum in VACCINATED_STRATA:
-    #         model.request_output_for_compartments(
-    #             name=f"_{vacc_stratum}",
-    #             compartments=COMPARTMENTS,
-    #             strata={"vaccination": vacc_stratum},
-    #             save_results=False,
-    #         )
-    #         model.request_function_output(
-    #             name=f"proportion_{vacc_stratum}",
-    #             sources=[f"_{vacc_stratum}", "_total_population"],
-    #             func=lambda vaccinated, total: vaccinated / total,
-    #         )
-    #
-    #     # Track the rate of TTS occurring on the assumption that all doses are Astra-Zeneca
-    #     # FIXME: this currently tracks individuals based on second-dose vaccination, because the one-dose category is
-    #     #  not working yet.
-    #     for agegroup in params.vaccination_risk.tts_rate.keys():
-    #         model.request_output_for_flow(
-    #             name=f"vaccinationXagegroup{agegroup}",
-    #             flow_name="vaccination",
-    #             source_strata={"agegroup": agegroup},
-    #         )
-    #         model.request_function_output(
-    #             name=f"tts_casesXagegroup_{agegroup}",
-    #             sources=[f"vaccinationXagegroup_{agegroup}"],
-    #             func=lambda vaccinated: vaccinated * params.vaccination_risk.tts_rate[agegroup]
-    #         )
-    #
-    #         model.request_function_output(
-    #             name=f"tts_deathsXagegroup_{agegroup}",
-    #             sources=[f"tts_casesXagegroup_{agegroup}"],
-    #             func=lambda tts_cases: tts_cases * params.vaccination_risk.tts_fatality_ratio[agegroup]
-    #         )
+    if params.vaccination and len(params.vaccination.roll_out_components) > 0:
+        request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
+
+        # track proportions vaccinated by vaccination status
+        for vacc_stratum in VACCINATED_STRATA:
+            model.request_output_for_compartments(
+                name=f"_{vacc_stratum}",
+                compartments=COMPARTMENTS,
+                strata={"vaccination": vacc_stratum},
+                save_results=False,
+            )
+            model.request_function_output(
+                name=f"proportion_{vacc_stratum}",
+                sources=[f"_{vacc_stratum}", "_total_population"],
+                func=lambda vaccinated, total: vaccinated / total,
+            )
+
+        # Track the rate of adverse events
+        for agegroup in AGEGROUP_STRATA:
+            model.request_output_for_flow(
+                name=f"vaccinationXagegroup{agegroup}",
+                flow_name="vaccination",
+                source_strata={"agegroup": agegroup},
+            )
+
+            # TTS for AstraZeneca vaccines
+            model.request_function_output(
+                name=f"tts_casesXagegroup_{agegroup}",
+                sources=[f"vaccinationXagegroup_{agegroup}"],
+                func=lambda vaccinated: vaccinated * params.vaccination_risk.tts_rate[agegroup] * params.vaccination_risk.prop_astrazeneca
+            )
+
+            model.request_function_output(
+                name=f"tts_deathsXagegroup_{agegroup}",
+                sources=[f"tts_casesXagegroup_{agegroup}"],
+                func=lambda tts_cases: tts_cases * params.vaccination_risk.tts_fatality_ratio[agegroup]
+            )
+
+            # Myocarditis for mRNA vaccines
+            model.request_function_output(
+                name=f"myocarditis_casesXagegroup_{agegroup}",
+                sources=[f"vaccinationXagegroup_{agegroup}"],
+                func=lambda vaccinated: vaccinated * params.vaccination_risk.myocarditis_rate[agegroup] * params.vaccination_risk.prop_mrna
+            )
+
+
 
     # Calculate the incidence by strain
     if params.voc_emergence:

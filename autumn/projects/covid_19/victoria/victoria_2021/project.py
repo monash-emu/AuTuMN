@@ -32,7 +32,7 @@ for cluster in CLUSTERS:
 # Request calibration targets
 targets = [
     PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(target_start_time)),
-    PoissonTarget(ts_set.get("infection_deaths").moving_average(7).truncate_start_time(target_start_time)),
+    # PoissonTarget(ts_set.get("infection_deaths").moving_average(7).truncate_start_time(target_start_time)),
     PoissonTarget(ts_set.get("hospital_admissions").truncate_start_time(target_start_time)),
     PoissonTarget(ts_set.get("icu_admissions").truncate_start_time(target_start_time)),
     *cluster_targets,

@@ -281,9 +281,13 @@ class Vaccination(BaseModel):
 
 
 class VaccinationRisk(BaseModel):
+    prop_astrazeneca: float
+    prop_mrna: float
+
     tts_rate: Dict[str, float]
     tts_fatality_ratio: Dict[str, float]
 
+    myocarditis_rate: Dict[str, float]
 
 class ContactTracing(BaseModel):
     """

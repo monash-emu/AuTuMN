@@ -3,7 +3,6 @@ clinical_stratification.props.hospital.multiplier: 0.4306251844348099
 clinical_stratification.props.symptomatic.multiplier: 0.1
 contact_rate: 3.e-04
 contact_tracing.assumed_trace_prop: 0.04679428983921441
-infection_fatality.top_bracket_overwrite: 0.04943415099711988
 infectious_seed: 4.
 sojourn.compartment_periods.icu_early: 8.
 sojourn.compartment_periods_calculated.active.total_period: 0.1

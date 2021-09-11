@@ -1,4 +1,4 @@
-description: Scenario 4, vaccinate elderly first_slow
+description: Scenario 4, vaccinate 50% coverage slow by end Feb 2022
 
 time:
   start: 592
@@ -6,13 +6,7 @@ time:
 vaccination:
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.9  # Should be about 104 million doses
+        coverage: 0.5  # Should be about 104 million doses
         start_time: 593  # 15th August 2021
-        end_time: 715  # 15th December 2021
-      age_min: 50
-    - supply_period_coverage:
-        coverage: 0.503  # Should be about another 28.5 million doses
-        start_time: 716  # 16th December 2021
-        end_time: 777  # 15th February 2022
+        end_time: 790  # 28th Feb 2022
       age_min: 20
-      age_max: 50

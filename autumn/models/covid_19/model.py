@@ -28,7 +28,7 @@ from . import preprocess
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows
+from .preprocess.vaccination import add_vaccination_flows, add_second_dose_flows
 from .preprocess import tracing
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
@@ -272,6 +272,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Stratify by vaccination status
     if params.vaccination:
         vaccination_strat = get_vaccination_strat(params)
+
+        # Was going to delete this, but it is necessary - doesn't make sense to have VoC in an otherwise empty stratum
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
                 vaccination_strat.add_flow_adjustments(
@@ -283,16 +285,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     }
                 )
         model.stratify_with(vaccination_strat)
+
+        # Implement the process of people getting vaccinated
         vacc_params = params.vaccination
         for roll_out_component in vacc_params.roll_out_components:
-            if vacc_params.coverage_override:
-                coverage_override = vacc_params.coverage_override
-            else:
-                coverage_override = None
+            coverage_override = vacc_params.coverage_override if vacc_params.coverage_override else None
             add_vaccination_flows(
-                model, roll_out_component, age_strat.strata, params.vaccination.one_dose,
-                params.vaccination.second_dose_delay, coverage_override
+                model, roll_out_component, age_strat.strata, params.vaccination.one_dose, coverage_override
             )
+
+        # Add transition from single dose to fully vaccinated
+        if params.vaccination.one_dose:
+            add_second_dose_flows(model, params.vaccination.second_dose_delay)
 
     # Set up derived output functions
     if is_region_vic:

@@ -29,9 +29,14 @@ vaccination:
   roll_out_components:
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
       supply_period_coverage:
-        coverage: 0.535  # Statewide vaccination coverage as at 9th September
+        coverage: 0.  # Ignore, not used but part of parameter validation
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 632  # 9th September is 618 (current date), lagged by two weeks
+    - age_min: 15
+      supply_period_coverage:
+        coverage: 0.8  # Interpreted as the average statewide value to be reached at this time
+        start_time: 632
+        end_time: 655
 
 time:
   start: 580

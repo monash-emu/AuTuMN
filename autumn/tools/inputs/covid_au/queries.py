@@ -59,7 +59,6 @@ def get_dhhs_vaccination_numbers(cluster: str = None, agegroup: str = None, dose
         df = input_db.query(
             "vic_2021", columns=["date_index", "n"], conditions={"cluster_id": cluster,"dosenumber": dose}
         )
-    date_str_to_int = lambda s: (datetime.strptime(s, "%Y-%m-%d") - COVID_BASE_DATETIME).days
 
     vac_dates = df.date_index.to_numpy()
     vac_values = df.n.to_numpy()

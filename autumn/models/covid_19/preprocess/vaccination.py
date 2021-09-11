@@ -93,8 +93,8 @@ def get_eligible_age_groups(roll_out_component, age_strata):
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose, is_region_vic,
-        coverage_override=None, additional_strata={}, cluster_pop=None,
+        model, roll_out_component, age_strata, one_dose, vic_phase,
+        coverage_override=None, additional_strata={}, cluster_pop=None, total_pop=0.
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
@@ -102,19 +102,45 @@ def add_vaccination_flows(
 
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = bool(roll_out_component.supply_period_coverage)
-    if is_region_vic:
-        vacc_total = get_dhhs_vaccination_numbers(additional_strata["cluster"].upper())[1].sum()
+    if vic_phase == 1:
+
+        # Get the region-specific vaccination numbers
+        cluster_vacc = get_dhhs_vaccination_numbers(additional_strata["cluster"].upper())[1].sum()
+        coverage = cluster_vacc / cluster_pop
 
         # Make sure we're dealing with reasonably sensible coverage values
-        coverage = vacc_total / cluster_pop
-        assert coverage <= 1.
-        sensible_coverage = max(coverage, 0.96)
+        assert 0. <= coverage <= 1.
+        sensible_coverage = min(coverage, 0.96)
 
+        # Create the function
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
             sensible_coverage,
             roll_out_component.supply_period_coverage.start_time,
             roll_out_component.supply_period_coverage.end_time,
         )
+
+    elif vic_phase == 2:
+
+        # Most recent statewide coverage
+        statewide_vacc = sum(get_dhhs_vaccination_numbers()[1])
+        statewide_coverage = statewide_vacc / total_pop
+
+        # Increase to the end of the simulation period
+        coverage = min(
+            (roll_out_component.supply_period_coverage.coverage - statewide_coverage) / (1. - statewide_coverage), 1.
+        )
+
+        # Make sure we're dealing with reasonably sensible coverage values
+        assert 0. <= coverage <= 1.
+        sensible_coverage = min(coverage, 0.96)
+
+        # Create the function
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+            sensible_coverage,
+            roll_out_component.supply_period_coverage.start_time,
+            roll_out_component.supply_period_coverage.end_time,
+        )
+
     elif is_coverage:
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
             roll_out_component.supply_period_coverage.coverage,
@@ -169,7 +195,9 @@ def add_vaccination_flows(
     for age_group in ineligible_age_groups:
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": age_group}
+            _source_strata.update(additional_strata)
             _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": age_group}
+            _dest_strata.update(additional_strata)
             model.add_transition_flow(
                 name="vaccination",
                 fractional_rate=0.,

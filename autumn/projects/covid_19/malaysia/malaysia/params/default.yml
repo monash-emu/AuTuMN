@@ -5,7 +5,7 @@ infectious_seed: 100.
 
 time:
   start: 180
-  end: 850
+  end: 883 # june 1, 2022
 
 country:
   iso3: MYS

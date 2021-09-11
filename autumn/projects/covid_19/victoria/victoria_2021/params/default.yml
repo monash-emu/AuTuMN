@@ -40,7 +40,7 @@ vaccination:
 
 time:
   start: 580
-  end: 619
+  end: 655
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03

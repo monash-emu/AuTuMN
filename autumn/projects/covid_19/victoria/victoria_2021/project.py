@@ -12,7 +12,7 @@ from autumn.settings import Region, Models
 # TODO: Get calibration running
 # TODO: Possibly increase severity for Delta
 # TODO: Check YouGov inputs to micro-distancing functions
-# TODO: Turn off top bracket IFR overwrite
+# DONE: Turn off top bracket IFR overwrite
 # DONE: Check how case detection is working
 # DONE: Make sure vaccination coverage can't exceed 100%
 # DONE: Check waning immunity is off to make things a bit simpler

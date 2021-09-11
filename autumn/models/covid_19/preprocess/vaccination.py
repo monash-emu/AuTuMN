@@ -104,8 +104,14 @@ def add_vaccination_flows(
     is_coverage = bool(roll_out_component.supply_period_coverage)
     if is_region_vic:
         vacc_total = get_dhhs_vaccination_numbers(additional_strata["cluster"].upper())[1].sum()
+
+        # Make sure we're dealing with reasonably sensible coverage values
+        coverage = vacc_total / cluster_pop
+        assert coverage <= 1.
+        sensible_coverage = max(coverage, 0.96)
+
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            vacc_total / cluster_pop,
+            sensible_coverage,
             roll_out_component.supply_period_coverage.start_time,
             roll_out_component.supply_period_coverage.end_time,
         )

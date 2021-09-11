@@ -12,10 +12,11 @@ from autumn.settings import Region, Models
 # TODO: Check how case detection is working
 # TODO: Get calibration running
 # TODO: Possibly increase severity for Delta
-# TODO: Turn off top bracket IFR overwrite
 # TODO: Check YouGov inputs to micro-distancing functions
-# TODO: Make sure vaccination coverage can't exceed 100%
-# TODO: Check waning immunity is off to make things a bit simpler
+# TODO: Turn off top bracket IFR overwrite
+# DONE: Make sure vaccination coverage can't exceed 100%
+# DONE: Check waning immunity is off to make things a bit simpler
+# DONE: Checked multi-strain functionality is turned off
 
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]

@@ -39,12 +39,20 @@ time:
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
-  assumed_cdr_parameter: .3  # calibrated
+  assumed_cdr_parameter: .3  # Calibrated
   smoothing_period: 7
 
 # Tiny adjustment for consistency with observations (0.16 instead of 0.17)
 clinical_stratification:
   icu_prop: 0.16
+
+  # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
+  props:
+    symptomatic:
+      multiplier: 2.
+
+infection_fatality:
+  multiplier: 2.
 
 # VAHI, 1st July to 30th September
 sojourn:
@@ -153,7 +161,7 @@ victorian_clusters:
           - grocery_and_pharmacy
           - parks
           - transit_stations
-      smooth_google_data: false # Whether to apply a 7-day moving average
+      smooth_google_data: false  # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:
         school:
@@ -208,10 +216,12 @@ victorian_clusters:
         face_coverings_adjuster:
           function_type: constant
           parameters:
-            effect: 0. # Irrelevant because over-written by the metro value
+            effect: 0.  # Ignore, because over-written by the metro value
           locations:
             - other_locations
             - school
             - work
 
 target_output_ratio: 0.5
+
+

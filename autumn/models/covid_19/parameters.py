@@ -161,11 +161,11 @@ class ClinicalStratification(BaseModel):
 class InfectionFatality(BaseModel):
     """Parameters relating to death from infection"""
 
-    # Calibrated multiplier for props.
+    # Calibrated multiplier for props
     multiplier: float
-    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket.
+    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket
     top_bracket_overwrite: Optional[float]
-    # Proportion of people dying / total infected by age.
+    # Proportion of people dying / total infected by age
     props: List[float]
 
 

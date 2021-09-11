@@ -48,6 +48,8 @@ clinical_stratification:
 
   # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
   # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88
+  # News article also links to some of the more important recent studies and pre-prints
+  # https://www.cbc.ca/news/health/does-delta-cause-more-severe-covid-19-here-s-what-we-know-and-don-t-1.6153470
   props:
     symptomatic:
       multiplier: 1.88

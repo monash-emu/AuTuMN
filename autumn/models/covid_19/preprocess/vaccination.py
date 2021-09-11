@@ -214,19 +214,9 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
 
 
 def add_clinical_adjustments_to_strat(
-        strat,
-        unaffected_stratum,
-        first_modified_stratum,
-        params,
-        symptomatic_adjuster,
-        hospital_adjuster,
-        ifr_adjuster,
-        top_bracket_overwrite,
-        second_modified_stratum=None,
-        second_sympt_adjuster=1.,
-        second_hospital_adjuster=1.,
-        second_ifr_adjuster=1.,
-        second_top_bracket_overwrite=None,
+        strat, unaffected_stratum, first_modified_stratum, params, symptomatic_adjuster, hospital_adjuster,
+        ifr_adjuster, top_bracket_overwrite, second_modified_stratum=None, second_sympt_adjuster=1.,
+        second_hospital_adjuster=1., second_ifr_adjuster=1., second_top_bracket_overwrite=None,
 ):
     """
     Get all the adjustments in the same way for both the history and vaccination stratifications.

@@ -187,17 +187,8 @@ Master function
 
 
 def get_all_adjustments(
-    clinical_params,
-    country,
-    pop,
-    raw_ifr_props,
-    sojourn,
-    testing_to_detection,
-    case_detection,
-    ifr_adjuster,
-    symptomatic_adjuster,
-    hospital_adjuster,
-    top_bracket_overwrite=None,
+        clinical_params, country, pop, raw_ifr_props, sojourn, testing_to_detection, case_detection, ifr_adjuster,
+        symptomatic_adjuster, hospital_adjuster, top_bracket_overwrite=None,
 ):
 
     """
@@ -235,9 +226,7 @@ def get_all_adjustments(
     Entry adjustments.
     """
 
-    get_detected_proportion = build_detected_proportion_func(
-        AGEGROUP_STRATA, country, pop, testing_to_detection, case_detection
-    )
+    get_detected_proportion = build_detected_proportion_func(AGEGROUP_STRATA, country, pop, testing_to_detection)
     entry_adjs = get_entry_adjustments(abs_props, get_detected_proportion, within_early_exposed)
 
     # These are the systems that will compute (in a vectorized fashion) the adjustments added using AdjustmentComponents

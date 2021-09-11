@@ -21,6 +21,8 @@ ALLOWED_ROUNDING_ERROR = 6
 General data processing functions.
 """
 
+# FIXME: Move these out of Covid model, for re-use for other conditions
+
 
 def apply_odds_ratio_to_multiple_proportions(props, adjuster):
     """

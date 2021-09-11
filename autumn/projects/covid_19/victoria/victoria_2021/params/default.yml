@@ -47,12 +47,13 @@ clinical_stratification:
   icu_prop: 0.16
 
   # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
+  # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88
   props:
     symptomatic:
-      multiplier: 2.
+      multiplier: 1.88
 
 infection_fatality:
-  multiplier: 2.
+  multiplier: 1.88
 
 # VAHI, 1st July to 30th September
 sojourn:

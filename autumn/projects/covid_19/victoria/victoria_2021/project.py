@@ -12,6 +12,8 @@ from autumn.settings import Region, Models
 # TODO: Implement future vaccination roll-out
 # TODO: Check YouGov inputs to micro-distancing functions
 # TODO: Apply David's marginal posteriors as priors code
+# TODO: Possibly move testing function out to a more obvious point in the code
+# DONE: Check what's happening with testing numbers
 # DONE: Increase severity for Delta
 # DONE: Make vaccination apply to adults only
 # DONE: Turn off top bracket IFR overwrite

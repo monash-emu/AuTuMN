@@ -36,7 +36,6 @@ def get_dhhs_testing_numbers(cluster: str = None):
         df = input_db.query(
             "covid_dhhs_test", columns=["date", "test"], conditions={"cluster_name": cluster}
         )
-    date_str_to_int = lambda s: (datetime.strptime(s, "%Y-%m-%d") - COVID_BASE_DATETIME).days
 
     test_dates = (pd.to_datetime(df.date) - pd.datetime(2019, 12, 31)).dt.days.to_numpy()
     test_values = df.test.to_numpy()

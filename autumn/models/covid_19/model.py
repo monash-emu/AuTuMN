@@ -7,21 +7,11 @@ from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.preprocess.case_detection import CdrProc
+from autumn.settings.region import Region
 
 from .constants import (
-    COMPARTMENTS,
-    DISEASE_COMPARTMENTS,
-    INFECTIOUS_COMPARTMENTS,
-    Compartment,
-    Tracing,
-    BASE_DATE,
-    History,
-    INFECTION,
-    INFECTIOUSNESS_ONSET,
-    INCIDENCE,
-    PROGRESS,
-    RECOVERY,
-    INFECT_DEATH,
+    COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH,
 )
 
 from . import preprocess
@@ -213,6 +203,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         cluster_strat = get_cluster_strat(params)
         model.stratify_with(cluster_strat)
         mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)
+
+        # Seeding well after vaccination commencement
+        seed_date = 585.
+
+        def model_seed_func(time, computed_values):
+            return 10. if seed_date < time < seed_date + 10. else 0.
+
+        for stratum in (Region.NORTH_METRO, Region.WEST_METRO):
+            model.add_importation_flow(
+                "seed",
+                model_seed_func,
+                dest=Compartment.EARLY_EXPOSED,
+                dest_strata={"cluster": stratum.replace("-", "_")},
+            )
 
     # Contact tracing stratification
     if params.contact_tracing:

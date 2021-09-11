@@ -1,6 +1,7 @@
 description: BASELINE
 
-contact_rate: 0.4
+contact_rate: 0.32
+infectious_seed: 1.5e-7
 
 mixing_matrices:
   type: extrapolated
@@ -39,8 +40,8 @@ vaccination:
         end_time: 655
 
 time:
-  start: 580
-  end: 655
+  start: 454
+  end: 700
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03

@@ -293,14 +293,16 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             func=lambda recovered, total: recovered / total,
         )
 
-    for stratum in VACCINATION_STRATA:
-        model.request_output_for_compartments(
-            name=f"{stratum}_number",
-            compartments=COMPARTMENTS,
-            strata={"vaccination": stratum}
-        )
-        model.request_function_output(
-            name=f"{stratum}_prop",
-            func=lambda number, pop: number / pop,
-            sources=[f"{stratum}_number", "_total_population"],
-        )
+    # FIXME: this is a hack to work out if vaccination has been applied, but isn't generalisable
+    if len(model._stratifications) == 5:
+        for stratum in VACCINATION_STRATA:
+            model.request_output_for_compartments(
+                name=f"{stratum}_number",
+                compartments=COMPARTMENTS,
+                strata={"vaccination": stratum}
+            )
+            model.request_function_output(
+                name=f"{stratum}_prop",
+                func=lambda number, pop: number / pop,
+                sources=[f"{stratum}_number", "_total_population"],
+            )

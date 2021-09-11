@@ -8,6 +8,16 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
 
+# TODO: Make vaccination apply to adults only
+# TODO: Check how case detection is working
+# TODO: Get calibration running
+# TODO: Possibly increase severity for Delta
+# TODO: Turn off top bracket IFR overwrite
+# TODO: Check YouGov inputs to micro-distancing functions
+# TODO: Make sure vaccination coverage can't exceed 100%
+# TODO: Check waning immunity is off to make things a bit simpler
+
+
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 # Load and configure model parameters

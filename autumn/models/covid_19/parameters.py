@@ -169,15 +169,6 @@ class InfectionFatality(BaseModel):
     props: List[float]
 
 
-class CaseDetection(BaseModel):
-    """Time variant detection of cases"""
-
-    shape: float  # The shape parameter to the tanh-based curve
-    inflection_time: float  # Point at which curve inflects
-    lower_asymptote: float  # Starting value - lower asymptote for increasing function
-    upper_asymptote: float  # End value - upper asymptote for increasing function
-
-
 class TestingToDetection(BaseModel):
     """
     More empiric approach based on per capita testing rates
@@ -289,6 +280,7 @@ class VaccinationRisk(BaseModel):
 
     myocarditis_rate: Dict[str, float]
 
+
 class ContactTracing(BaseModel):
     """
 
@@ -342,7 +334,6 @@ class Parameters:
     infection_fatality: InfectionFatality
     age_stratification: AgeStratification
     clinical_stratification: ClinicalStratification
-    case_detection: CaseDetection
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     victorian_clusters: Optional[VictorianClusterStratification]

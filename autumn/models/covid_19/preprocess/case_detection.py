@@ -1,14 +1,8 @@
 from typing import List
 
-from autumn.models.covid_19.parameters import (
-    CaseDetection,
-    Country,
-    Population,
-    TestingToDetection,
-)
+from autumn.models.covid_19.parameters import Country, Population, TestingToDetection
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.tools import inputs
-from autumn.tools.curve import tanh_based_scaleup
 
 from summer.compute import ComputedValueProcessor
 

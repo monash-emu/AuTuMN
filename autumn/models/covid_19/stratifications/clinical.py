@@ -56,7 +56,7 @@ def get_clinical_strat(params: Parameters):
     # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
     entry_adjs, death_adjs, progress_adjs, recovery_adjs, get_detected_proportion, adj_systems = get_all_adjustments(
         clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
-        params.testing_to_detection, params.case_detection, params.infection_fatality.multiplier,
+        params.testing_to_detection, params.infection_fatality.multiplier,
         params.clinical_stratification.props.symptomatic.multiplier,
         params.clinical_stratification.props.hospital.multiplier, params.infection_fatality.top_bracket_overwrite,
     )

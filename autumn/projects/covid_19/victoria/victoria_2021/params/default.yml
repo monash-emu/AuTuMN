@@ -1,5 +1,7 @@
 description: BASELINE
 
+contact_rate: 0.4
+
 mixing_matrices:
   type: extrapolated
   source_iso3: GBR
@@ -31,8 +33,8 @@ vaccination:
         end_time: 632  # 9th September is 618 (current date), lagged by two weeks
 
 time:
-  start: 560  # 13th July 2021
-  end: 619  # 31st December 2021
+  start: 580
+  end: 619
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03

@@ -43,16 +43,16 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.01, 0.075]),
-    UniformPrior("infectious_seed", [15.0, 125.0]),
+    UniformPrior("infectious_seed", [10.0, 100.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.09]),
-    UniformPrior("infection_fatality.multiplier", [0.8, 2.5]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.007, 0.05]),
+    UniformPrior("infection_fatality.multiplier", [0.75, 2.5]),
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.02, 0.13]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.01, 1.5]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.23, 1.5]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.2, 2.75]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.2, 3.00]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [270, 360]),
-    UniformPrior("voc_emergence.delta.start_time", [450, 470]),
+    UniformPrior("voc_emergence.delta.start_time", [450, 490]),
 ]
 
 # Load proposal sds from yml file

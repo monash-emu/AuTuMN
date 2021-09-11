@@ -143,7 +143,7 @@ def add_vaccination_flows(
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             if is_coverage:
 
-                # the roll-out function is applied as a rate that multiplies the source compartments
+                # The roll-out function is applied as a rate that multiplies the source compartments
                 model.add_transition_flow(
                     name="vaccination",
                     fractional_rate=vaccination_roll_out_function,

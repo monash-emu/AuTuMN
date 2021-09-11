@@ -10,9 +10,9 @@ from autumn.settings import Region, Models
 
 # TODO: Get calibration running
 # TODO: Implement future vaccination targets
-# TODO: Make vaccination apply to adults only
 # TODO: Check YouGov inputs to micro-distancing functions
-# TODO: Possibly increase severity for Delta
+# TODO: Increase severity for Delta
+# DONE: Make vaccination apply to adults only
 # DONE: Turn off top bracket IFR overwrite
 # DONE: Check how case detection is working
 # DONE: Make sure vaccination coverage can't exceed 100%

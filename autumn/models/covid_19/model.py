@@ -291,13 +291,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         vacc_params = params.vaccination
 
         if is_region_vic:
-            cluster_pops = {
-                cluster: cluster_strat.population_split[cluster] * sum(total_pops) for cluster in cluster_strat.strata
+            cluster_adults_pops = {
+                cluster: cluster_strat.population_split[cluster] * sum(total_pops[3:]) for
+                cluster in cluster_strat.strata
             }
             for cluster in cluster_strat.strata:
                 add_vaccination_flows(
                     model, vacc_params.roll_out_components[0], age_strat.strata, params.vaccination.one_dose,
-                    is_region_vic, additional_strata={"cluster": cluster}, cluster_pop=cluster_pops[cluster],
+                    is_region_vic, additional_strata={"cluster": cluster}, cluster_pop=cluster_adults_pops[cluster],
                 )
         else:
             for roll_out_component in vacc_params.roll_out_components:

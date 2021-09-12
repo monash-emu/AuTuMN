@@ -7,12 +7,11 @@ from autumn.tools.calibration.targets import NormalTarget, PoissonTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
-
 # TODO: Get calibration running
 # TODO: Apply David's marginal posteriors as priors code
 # TODO: Possibly move testing function out to a more obvious point in the code (less important)
 # TODO: Check YouGov inputs to micro-distancing functions
-#  Need to get Mili on to this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
+#  - need to get Mili to do this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
 # DONE: Work out why vaccination coverage targets aren't reached - done, it was all ages but program is adults - duh!
 # DONE: Implement future vaccination roll-out - understand the future projections provided by Vida
 # DONE: Implement future vaccination roll-out - understand how to specify projected roll-out in our code
@@ -43,7 +42,9 @@ target_start_time = 600
 # dispersion parameter of the targets' normal likelihoods.
 cluster_targets = []
 for cluster in metro_clusters:
-    notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").truncate_start_time(target_start_time).moving_average(4)
+    notifs_ts = ts_set.get(
+        f"notifications_for_cluster_{cluster}"
+    ).truncate_start_time(target_start_time).moving_average(4)
     target = NormalTarget(notifs_ts)
     cluster_targets.append(target)
 
@@ -69,61 +70,36 @@ for region in regions_for_multipliers:
     prior = TruncNormalPrior(name, mean=1.0, stdev=0.5, trunc_range=[0.5, np.inf], jumping_stdev=0.15)
     cluster_priors.append(prior)
 
+incubation_period_name = "sojourn.compartment_periods_calculated.exposed.total_period"
+active_period_name = "sojourn.compartment_periods_calculated.active.total_period"
+regional_multiplier_name = f"victorian_clusters.contact_rate_multiplier_regional"
+icu_period_name = "sojourn.compartment_periods.icu_early"
+behaviour_adjuster_name = "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect"
+face_masks_adjuster_name = "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect"
+home_reduction_name = "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect"
+
 priors = [
     # Global COVID priors, but with jumping sds adjusted
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.exposed.total_period",
-        mean=3.5,
-        stdev=0.97,
-        trunc_range=[1.0, np.inf],
-        jumping_stdev=0.5,
-    ),
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.active.total_period",
-        mean=5.,
-        stdev=0.77,
-        trunc_range=[3.0, np.inf],
-        jumping_stdev=0.4,
-    ),
-    # Cluster specific priors.
+    TruncNormalPrior(incubation_period_name, mean=3.5, stdev=0.97, trunc_range=(1.0, np.inf), jumping_stdev=0.5),
+    TruncNormalPrior(active_period_name, mean=5., stdev=0.77, trunc_range=(3.0, np.inf), jumping_stdev=0.4),
+
+    # Cluster specific priors
     *cluster_priors,
-    # Victorian regional priors.
-    TruncNormalPrior(
-        f"victorian_clusters.contact_rate_multiplier_regional",
-        mean=1.0,
-        stdev=0.5,
-        trunc_range=[0.5, np.inf],
-        jumping_stdev=0.15,
-    ),
-    UniformPrior("contact_rate", [0.4, 0.7], jumping_stdev=0.008),
-    UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.01),
-    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.2], jumping_stdev=0.04),
-    TruncNormalPrior(
-        "sojourn.compartment_periods.icu_early",
-        mean=12.7,
-        stdev=4.0,
-        trunc_range=[5.0, np.inf],
-        jumping_stdev=4.
-    ),
-    UniformPrior(
-        "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
-        [0.0, 0.6],
-        jumping_stdev=0.075,
-    ),
-    UniformPrior(
-        "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
-        [0.0, 0.6],
-        jumping_stdev=0.04,
-    ),
-    UniformPrior(
-        "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect",
-        [0.0, 0.4],
-        jumping_stdev=0.04,
-    ),
-    UniformPrior("target_output_ratio", [0.2, 0.7], jumping_stdev=0.04),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.2, 0.5], jumping_stdev=0.04),
+
+    # Victorian regional priors
+    TruncNormalPrior(regional_multiplier_name, mean=1.0, stdev=0.5, trunc_range=(0.5, np.inf), jumping_stdev=0.15),
+    UniformPrior("contact_rate", (0.4, 0.7), jumping_stdev=0.008),
+    UniformPrior("victorian_clusters.intercluster_mixing", (0.005, 0.05), jumping_stdev=0.01),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.2, 0.8), jumping_stdev=0.05),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", (0.5, 5.0), jumping_stdev=0.4),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.2), jumping_stdev=0.04),
+    UniformPrior("clinical_stratification.icu_prop", (0.1, 0.3), jumping_stdev=0.05),
+    TruncNormalPrior(icu_period_name, mean=12.7, stdev=4.0, trunc_range=(5.0, np.inf), jumping_stdev=4.),
+    UniformPrior(behaviour_adjuster_name, (0.0, 0.6), jumping_stdev=0.075),
+    UniformPrior(face_masks_adjuster_name, (0.0, 0.6), jumping_stdev=0.04),
+    UniformPrior(home_reduction_name, (0.0, 0.4), jumping_stdev=0.04),
+    UniformPrior("target_output_ratio", (0.2, 0.7), jumping_stdev=0.04),
+    UniformPrior("contact_tracing.assumed_trace_prop", (0.2, 0.5), jumping_stdev=0.04),
 ]
 
 # Load proposal sds from yml file

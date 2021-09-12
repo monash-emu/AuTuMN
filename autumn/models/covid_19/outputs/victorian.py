@@ -1,6 +1,6 @@
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import Vaccination, VACCINATION_STRATA
+from autumn.models.covid_19.constants import VACCINATION_STRATA
 from autumn.models.covid_19.constants import COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -294,8 +294,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             func=lambda recovered, total: recovered / total,
         )
 
-    # FIXME: this is a hack to work out if vaccination has been applied, but isn't generalisable
-    if len(model._stratifications) == 5:
+    if params.vaccination:
         for stratum in VACCINATION_STRATA:
             model.request_output_for_compartments(
                 name=f"{stratum}_number",

@@ -106,23 +106,42 @@ home_reduction_name = "victorian_clusters.metro.mobility.microdistancing.home_re
 
 priors = [
     # Global COVID priors, but with jumping sds adjusted
-    TruncNormalPrior(incubation_period_name, mean=3.5, stdev=0.97, trunc_range=(1.0, np.inf), jumping_stdev=0.5),
-    TruncNormalPrior(active_period_name, mean=5., stdev=0.77, trunc_range=(3.0, np.inf), jumping_stdev=0.4),
+    TruncNormalPrior(
+        incubation_period_name, mean=3.5, stdev=0.7810560402997285, trunc_range=(1.0, np.inf), jumping_stdev=0.5
+    ),
+    TruncNormalPrior(
+        active_period_name,
+        mean=6.431724510638751, stdev=0.6588899585941116, trunc_range=(3.0, np.inf), jumping_stdev=0.4
+    ),
 
     # Cluster specific priors
     *cluster_priors,
 
     # Victorian regional priors
-    TruncNormalPrior(regional_multiplier_name, mean=1.0, stdev=0.5, trunc_range=(0.5, np.inf), jumping_stdev=0.15),
-    UniformPrior("contact_rate", (0.4, 0.7), jumping_stdev=0.008),
+    TruncNormalPrior(
+        regional_multiplier_name,
+        mean=0.7070792993624084, stdev=0.11538988453463195, trunc_range=(0.5, np.inf), jumping_stdev=0.15
+    ),
+    UniformPrior("contact_rate", (0.25, 0.38), jumping_stdev=0.008),
     UniformPrior("victorian_clusters.intercluster_mixing", (0.005, 0.05), jumping_stdev=0.01),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.2, 0.8), jumping_stdev=0.05),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", (0.5, 5.0), jumping_stdev=0.4),
+    TruncNormalPrior(
+        "clinical_stratification.props.hospital.multiplier",
+        mean=3.072957401469314, stdev=0.9230093569298286, trunc_range=(0.5, np.inf), jumping_stdev=0.4
+    ),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.2), jumping_stdev=0.04),
-    UniformPrior("clinical_stratification.icu_prop", (0.1, 0.3), jumping_stdev=0.05),
-    TruncNormalPrior(icu_period_name, mean=12.7, stdev=4.0, trunc_range=(5.0, np.inf), jumping_stdev=4.),
-    UniformPrior(behaviour_adjuster_name, (0.0, 0.6), jumping_stdev=0.075),
-    UniformPrior(face_masks_adjuster_name, (0.0, 0.6), jumping_stdev=0.04),
+    UniformPrior("clinical_stratification.icu_prop", (0.15, 0.3), jumping_stdev=0.05),
+    TruncNormalPrior(
+        icu_period_name, mean=13.189283389438017, stdev=3.267836334270357, trunc_range=(5.0, np.inf), jumping_stdev=4.
+    ),
+    TruncNormalPrior(
+        behaviour_adjuster_name,
+        mean=0.3336881545907932, stdev=0.12974271665347392, trunc_range=(0., 1.), jumping_stdev=0.075
+    ),
+    TruncNormalPrior(
+        face_masks_adjuster_name,
+        mean=0.4590192843551404, stdev=0.054643498605008924, trunc_range=(0., 1.), jumping_stdev=0.04
+    ),
     UniformPrior(home_reduction_name, (0.0, 0.4), jumping_stdev=0.04),
     UniformPrior("target_output_ratio", (0.2, 0.7), jumping_stdev=0.04),
     UniformPrior("contact_tracing.assumed_trace_prop", (0.2, 0.5), jumping_stdev=0.04),

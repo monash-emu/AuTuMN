@@ -211,7 +211,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         cluster_seeds = {
             Region.NORTH_METRO: 30.,
             Region.WEST_METRO: 25.,
-            Region.SOUTH_METRO: 10.,
+            Region.SOUTH_METRO: 8.,
             Region.SOUTH_EAST_METRO: 10.,
             Region.BARWON_SOUTH_WEST: 1.,
             Region.GRAMPIANS: 1.,

@@ -141,7 +141,7 @@ victorian_clusters:
         face_coverings: # Mandatory face coverings
           function_type: constant
           parameters:
-            effect: 0.9143849
+            effect: 0.8
           locations:
             - other_locations
             - school
@@ -216,7 +216,7 @@ victorian_clusters:
         face_coverings:
           function_type: constant
           parameters:
-            effect: 0.9143849
+            effect: 0.8
           locations:
             - other_locations
             - school

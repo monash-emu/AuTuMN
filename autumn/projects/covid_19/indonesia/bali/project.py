@@ -35,8 +35,8 @@ priors = [
     # Regional parameters
     UniformPrior("contact_rate", (0.02, 0.04)),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.06)),
-    UniformPrior("contact_tracing.assumed_trace_prop", (0.1, 0.3)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.0002, 0.06)),
+    UniformPrior("contact_tracing.assumed_trace_prop", (0.01, 0.3)),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.6, 2.3)),
 ]
 

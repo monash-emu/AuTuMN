@@ -27,7 +27,7 @@ vaccination:
 
 time:
   start: 560  # 13th July 2021
-  end: 731  # 31st December 2021
+  end: 619  # 31st December 2021
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03

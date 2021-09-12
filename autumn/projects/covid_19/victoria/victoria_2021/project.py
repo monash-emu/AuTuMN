@@ -3,7 +3,7 @@ import numpy as np
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.tools.calibration.targets import NormalTarget, PoissonTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
@@ -12,27 +12,29 @@ CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
+mle_path = build_rel_path("params/mle-params.yml")
 scenario_dir_path = build_rel_path("params/")
-baseline_params = base_params.update(default_path)
+baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 param_set = ParameterSet(baseline=baseline_params)
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
+target_start_time = 600
 
 # For all the cluster targets, a universal calibrated parameter called "target_output_ratio" is used to scale the
 # dispersion parameter of the targets' normal likelihoods.
 cluster_targets = []
 for cluster in CLUSTERS:
-    notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").truncate_start_time(560).moving_average(4)
+    notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").truncate_start_time(target_start_time).moving_average(4)
     target = NormalTarget(notifs_ts)
     cluster_targets.append(target)
 
 # Request calibration targets
 targets = [
-    # PoissonTarget(ts_set.get("notifications").round_values()),
-    # PoissonTarget(ts_set.get("infection_deaths").moving_average(7)),
-    # PoissonTarget(ts_set.get("hospital_admissions")),
-    # PoissonTarget(ts_set.get("icu_admissions")),
+    PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(target_start_time)),
+    # PoissonTarget(ts_set.get("infection_deaths").moving_average(7).truncate_start_time(target_start_time)),
+    PoissonTarget(ts_set.get("hospital_admissions").truncate_start_time(target_start_time)),
+    PoissonTarget(ts_set.get("icu_admissions").truncate_start_time(target_start_time)),
     *cluster_targets,
 ]
 

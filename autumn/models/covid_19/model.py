@@ -272,6 +272,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Stratify by vaccination status
     if params.vaccination:
         vaccination_strat = get_vaccination_strat(params)
+
+        # Was going to delete this, but it is necessary - doesn't make sense to have VoC in an otherwise empty stratum
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
                 vaccination_strat.add_flow_adjustments(
@@ -283,16 +285,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     }
                 )
         model.stratify_with(vaccination_strat)
+
+        # Implement the process of people getting vaccinated
         vacc_params = params.vaccination
         for roll_out_component in vacc_params.roll_out_components:
-            if vacc_params.coverage_override:
-                coverage_override = vacc_params.coverage_override
-            else:
-                coverage_override = None
+            coverage_override = vacc_params.coverage_override if vacc_params.coverage_override else None
             add_vaccination_flows(
                 model, roll_out_component, age_strat.strata, params.vaccination.one_dose, coverage_override
             )
 
+        # Add transition from single dose to fully vaccinated
         if params.vaccination.one_dose:
             add_second_dose_flows(model, params.vaccination.second_dose_delay)
 

@@ -9,10 +9,11 @@ from autumn.settings import Region, Models
 
 
 # TODO: Get calibration running
-# TODO: Work out why vaccination coverage targets aren't being hit
-# TODO: Check YouGov inputs to micro-distancing functions
 # TODO: Apply David's marginal posteriors as priors code
 # TODO: Possibly move testing function out to a more obvious point in the code (less important)
+# TODO: Check YouGov inputs to micro-distancing functions
+#  Need to get Mili on to this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
+# DONE: Work out why vaccination coverage targets aren't reached - done, it was all ages but program is adults - duh!
 # DONE: Implement future vaccination roll-out - understand the future projections provided by Vida
 # DONE: Implement future vaccination roll-out - understand how to specify projected roll-out in our code
 # DONE: Check what's happening with testing numbers

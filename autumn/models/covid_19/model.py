@@ -15,6 +15,7 @@ from .constants import (
 )
 
 from . import preprocess
+from .outputs.common import request_common_outputs
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
@@ -338,6 +339,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         request_victorian_outputs(model, params)
     else:
         request_standard_outputs(model, params)
+    request_common_outputs(model, params)
 
     # Dive into summer internals to over-write mixing matrix
     if is_region_vic:

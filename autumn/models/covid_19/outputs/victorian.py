@@ -1,6 +1,5 @@
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import VACCINATION_STRATA
 from autumn.models.covid_19.constants import COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -293,16 +292,3 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             sources=[recovered_name, total_name],
             func=lambda recovered, total: recovered / total,
         )
-
-    if params.vaccination:
-        for stratum in VACCINATION_STRATA:
-            model.request_output_for_compartments(
-                name=f"{stratum}_number",
-                compartments=COMPARTMENTS,
-                strata={"vaccination": stratum}
-            )
-            model.request_function_output(
-                name=f"{stratum}_prop",
-                func=lambda number, pop: number / pop,
-                sources=[f"{stratum}_number", "_total_population"],
-            )

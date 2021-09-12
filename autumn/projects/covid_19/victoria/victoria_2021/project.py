@@ -25,7 +25,7 @@ from autumn.settings import Region, Models
 # DONE: Checked multi-strain functionality is turned off
 
 # Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis
-metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_METRO]
+metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")

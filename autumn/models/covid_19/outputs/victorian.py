@@ -48,6 +48,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         model.request_computed_value_output("prop_detected_traced")
         model.request_computed_value_output("prop_contacts_with_detected_index")
         model.request_computed_value_output("traced_flow_rate")
+        model.request_computed_value_output("cdr")
 
         # Proportion of quarantined contacts among all contacts
         model.request_function_output(

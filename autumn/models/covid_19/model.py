@@ -205,12 +205,26 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)
 
         # Seeding well after vaccination commencement
-        seed_date = 585.
+        seed_date = 590.
 
-        def model_seed_func(time, computed_values):
-            return 10. if seed_date < time < seed_date + 10. else 0.
+        cluster_seeds = {
+            Region.NORTH_METRO: 30.,
+            Region.WEST_METRO: 25.,
+            Region.SOUTH_METRO: 10.,
+            Region.SOUTH_EAST_METRO: 10.,
+            Region.BARWON_SOUTH_WEST: 1.,
+            Region.GRAMPIANS: 1.,
+            Region.GIPPSLAND: 1.,
+            Region.HUME: 1.,
+            Region.LODDON_MALLEE: 1.,
+        }
 
-        for stratum in (Region.NORTH_METRO, Region.WEST_METRO):
+        for stratum in cluster_seeds:
+
+            def model_seed_func(time, computed_values):
+                seed = cluster_seeds[stratum]
+                return seed if seed_date < time < seed_date + 10. else 0.
+
             model.add_importation_flow(
                 "seed",
                 model_seed_func,

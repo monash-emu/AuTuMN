@@ -1,7 +1,6 @@
 description: BASELINE
 
-contact_rate: 0.28
-infectious_seed: 1.5e-7
+infectious_seed: 0.
 
 mixing_matrices:
   type: extrapolated
@@ -13,7 +12,7 @@ country:
   iso3: AUS
 
 contact_tracing:
-    assumed_trace_prop: 0.35
+    assumed_trace_prop: 0.2  # Ignore, calibrated
     assumed_prev: 1.e-3
     quarantine_infect_multiplier: 0.2
 
@@ -21,11 +20,11 @@ contact_tracing:
 vaccination:
   one_dose:
     overall_efficacy: 0.49  # Average of 0.4 and 0.58
-    vacc_prop_prevent_infection: 0.7  # Approximate estimate
+    vacc_prop_prevent_infection: 0.9  # Approximate estimate
     vacc_reduce_infectiousness: 0.56  # Average of 0.5 and 0.62
   fully_vaccinated:
     overall_efficacy: 0.775  # Average of 0.71 and 0.84
-    vacc_prop_prevent_infection: 0.7  # Approximate estimate
+    vacc_prop_prevent_infection: 0.9  # Approximate estimate
     vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
   roll_out_components:
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
@@ -35,9 +34,9 @@ vaccination:
         end_time: 632  # 9th September is 618 (current date), lagged by two weeks
     - age_min: 15
       supply_period_coverage:
-        coverage: 0.8  # Interpreted as the average statewide value to be reached at this time
+        coverage: 1.  # Interpreted as the average statewide value to be reached at this time
         start_time: 632
-        end_time: 655
+        end_time: 675
 
 time:
   start: 454
@@ -50,7 +49,7 @@ testing_to_detection:  # Need to mention these parameters in the Supplement some
 
 # Tiny adjustment for consistency with observations (0.16 instead of 0.17)
 clinical_stratification:
-  icu_prop: 0.16
+  icu_prop: 0.25
 
   # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
   # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88

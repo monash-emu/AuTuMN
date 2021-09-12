@@ -9,10 +9,11 @@ from autumn.settings import Region, Models
 
 
 # TODO: Get calibration running
+# TODO: Work out why vaccination coverage targets aren't being hit
 # TODO: Check YouGov inputs to micro-distancing functions
 # TODO: Apply David's marginal posteriors as priors code
 # TODO: Possibly move testing function out to a more obvious point in the code (less important)
-# TODO: Implement future vaccination roll-out - understand the future projections provided by Vida
+# DONE: Implement future vaccination roll-out - understand the future projections provided by Vida
 # DONE: Implement future vaccination roll-out - understand how to specify projected roll-out in our code
 # DONE: Check what's happening with testing numbers
 # DONE: Increase severity for Delta
@@ -23,8 +24,8 @@ from autumn.settings import Region, Models
 # DONE: Check waning immunity is off to make things a bit simpler
 # DONE: Checked multi-strain functionality is turned off
 
-
-CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
+# Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis
+metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_METRO]
 
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
@@ -40,7 +41,7 @@ target_start_time = 600
 # For all the cluster targets, a universal calibrated parameter called "target_output_ratio" is used to scale the
 # dispersion parameter of the targets' normal likelihoods.
 cluster_targets = []
-for cluster in CLUSTERS:
+for cluster in metro_clusters:
     notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").truncate_start_time(target_start_time).moving_average(4)
     target = NormalTarget(notifs_ts)
     cluster_targets.append(target)
@@ -48,7 +49,6 @@ for cluster in CLUSTERS:
 # Request calibration targets
 targets = [
     PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(target_start_time)),
-    # PoissonTarget(ts_set.get("infection_deaths").moving_average(7).truncate_start_time(target_start_time)),
     PoissonTarget(ts_set.get("hospital_admissions").truncate_start_time(target_start_time)),
     PoissonTarget(ts_set.get("icu_admissions").truncate_start_time(target_start_time)),
     *cluster_targets,
@@ -64,7 +64,7 @@ regions_for_multipliers.append(Region.BARWON_SOUTH_WEST)
 for region in regions_for_multipliers:
     region_name = region.replace("-", "_")
     name = f"victorian_clusters.contact_rate_multiplier_{region_name}"
-    # Shouldn't be too peaked with these values.
+    # Shouldn't be too peaked with these values
     prior = TruncNormalPrior(name, mean=1.0, stdev=0.5, trunc_range=[0.5, np.inf], jumping_stdev=0.15)
     cluster_priors.append(prior)
 
@@ -72,16 +72,16 @@ priors = [
     # Global COVID priors, but with jumping sds adjusted
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",
-        mean=5.5,
+        mean=3.5,
         stdev=0.97,
         trunc_range=[1.0, np.inf],
         jumping_stdev=0.5,
     ),
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.active.total_period",
-        mean=6.5,
+        mean=5.,
         stdev=0.77,
-        trunc_range=[4.0, np.inf],
+        trunc_range=[3.0, np.inf],
         jumping_stdev=0.4,
     ),
     # Cluster specific priors.
@@ -94,12 +94,11 @@ priors = [
         trunc_range=[0.5, np.inf],
         jumping_stdev=0.15,
     ),
-    UniformPrior("contact_rate", [0.04, 0.07], jumping_stdev=0.008),
+    UniformPrior("contact_rate", [0.4, 0.7], jumping_stdev=0.008),
     UniformPrior("victorian_clusters.intercluster_mixing", [0.005, 0.05], jumping_stdev=0.01),
-    UniformPrior("infectious_seed", [20., 70.], jumping_stdev=4.),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.2, 0.8], jumping_stdev=0.05),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 5.0], jumping_stdev=0.4),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.05, 0.3], jumping_stdev=0.04),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.2], jumping_stdev=0.04),
     TruncNormalPrior(
         "sojourn.compartment_periods.icu_early",
         mean=12.7,

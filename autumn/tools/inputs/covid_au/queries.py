@@ -57,7 +57,9 @@ def get_dhhs_vaccination_numbers(cluster: str = None, agegroup: str = None, dose
         df = df.groupby(["date_index"], as_index=False).sum()
     elif agegroup is None:
         df = input_db.query(
-            "vic_2021", columns=["date_index", "n"], conditions={"cluster_id": cluster,"dosenumber": dose}
+            "vic_2021",
+            columns=["date_index", "n"],
+            conditions={"cluster_id": cluster, "dosenumber": dose},
         )
 
     vac_dates = df.date_index.to_numpy()
@@ -65,3 +67,10 @@ def get_dhhs_vaccination_numbers(cluster: str = None, agegroup: str = None, dose
     epsilon = 1e-6  # A really tiny number to avoid having any zeros
     avg_vals = np.array(apply_moving_average(vac_values, 7)) + epsilon
     return vac_dates, avg_vals
+
+
+def get_yougov_date():
+    """ Return the entire YouGov table for Victoria"""
+    input_db = get_input_db()
+    df = input_db.query("yougov_vic")
+    return df

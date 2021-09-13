@@ -272,6 +272,7 @@ class Vaccination(BaseModel):
 
 
 class VaccinationRisk(BaseModel):
+    calculate: bool
     prop_astrazeneca: float
     prop_mrna: float
 

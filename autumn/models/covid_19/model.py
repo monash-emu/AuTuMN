@@ -15,7 +15,7 @@ from .constants import (
 )
 
 from . import preprocess
-from .outputs.common import request_common_outputs
+from .outputs.vaccination import request_vaccination_outputs
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
@@ -354,7 +354,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Vaccination
     if params.vaccination:
-        request_common_outputs(model, params)
+        request_vaccination_outputs(model, params)
 
     # Dive into summer internals to over-write mixing matrix
     if is_region_vic:

@@ -15,7 +15,6 @@ from autumn.models.covid_19.constants import (
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.preprocess.vaccination import get_eligible_age_groups
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.history import History
@@ -24,22 +23,6 @@ from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRAT
 from autumn.tools.utils.utils import list_element_wise_division
 
 VACCINATED_STRATA = [Vaccination.VACCINATED]
-
-
-def find_vaccinated_agegroups(roll_out_components):
-    """
-    Find all the age groups that are getting vaccinated under any of the roll-out components.
-    """
-
-    relevant_agegroups = set()
-    for component in range(len(roll_out_components)):
-        age_min = roll_out_components[component].age_min
-        age_max = roll_out_components[component].age_max
-        min_value = age_min if age_min else 0.
-        max_value = age_max if age_max else 200.
-        vaccinated_agegroups = [age for age in AGEGROUP_STRATA if min_value <= float(age) < max_value]
-        relevant_agegroups = set.union(relevant_agegroups, set(vaccinated_agegroups))
-    return relevant_agegroups
 
 
 def request_stratified_output_for_flow(
@@ -136,22 +119,6 @@ def request_standard_outputs(
         func=lambda infection, susceptible: infection / susceptible,
         sources=[INFECTION, "_susceptible"]
     )
-    if params.vaccination:
-        request_stratified_output_for_flow(model, INFECTION, VACCINATION_STRATA, "vaccination")
-        request_stratified_output_for_compartment(
-            model,
-            f"_{Compartment.SUSCEPTIBLE}",
-            [Compartment.SUSCEPTIBLE],
-            strata=VACCINATION_STRATA,
-            stratification="vaccination",
-            save_results=False,
-        )
-        for stratum in VACCINATION_STRATA:
-            model.request_function_output(
-                f"susceptible_infection_rate_{stratum}",
-                func=lambda infection, susceptible: infection / (susceptible + 1e-10),  # Avoid divide by zero issues
-                sources=[f"{INFECTION}Xvaccination_{stratum}", f"_susceptibleXvaccination_{Vaccination.VACCINATED}"],
-            )
 
     """
     Incidence
@@ -391,20 +358,6 @@ def request_standard_outputs(
 
     if params.vaccination and len(params.vaccination.roll_out_components) > 0:
         request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
-
-        # track proportions vaccinated by vaccination status
-        for vacc_stratum in VACCINATED_STRATA:
-            model.request_output_for_compartments(
-                name=f"_{vacc_stratum}",
-                compartments=COMPARTMENTS,
-                strata={"vaccination": vacc_stratum},
-                save_results=False,
-            )
-            model.request_function_output(
-                name=f"proportion_{vacc_stratum}",
-                sources=[f"_{vacc_stratum}", "_total_population"],
-                func=lambda vaccinated, total: vaccinated / total,
-            )
 
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
         if params.vaccination_risk.calculate:

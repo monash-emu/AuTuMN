@@ -118,6 +118,7 @@ class Params:
     def __getitem__(self, k):
         return self.to_dict()[k]
 
+
 class ParameterSet:
     """
     A collection of model parameters, each representing a counterfactual scenario.
@@ -157,7 +158,6 @@ class ParameterSet:
 
     def __pretty__(self, printer):
         return "ParameterSet\n" + printer.pformat(self.dump_to_dict())
-
 
 
 def read_yaml_file(path: str):

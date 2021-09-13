@@ -161,21 +161,12 @@ class ClinicalStratification(BaseModel):
 class InfectionFatality(BaseModel):
     """Parameters relating to death from infection"""
 
-    # Calibrated multiplier for props.
+    # Calibrated multiplier for props
     multiplier: float
-    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket.
+    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket
     top_bracket_overwrite: Optional[float]
-    # Proportion of people dying / total infected by age.
+    # Proportion of people dying / total infected by age
     props: List[float]
-
-
-class CaseDetection(BaseModel):
-    """Time variant detection of cases"""
-
-    shape: float  # The shape parameter to the tanh-based curve
-    inflection_time: float  # Point at which curve inflects
-    lower_asymptote: float  # Starting value - lower asymptote for increasing function
-    upper_asymptote: float  # End value - upper asymptote for increasing function
 
 
 class TestingToDetection(BaseModel):
@@ -250,12 +241,10 @@ class RollOutFunc(BaseModel):
         return values
 
 
-class Vaccination(BaseModel):
+class VaccEffectiveness(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
     vacc_reduce_infectiousness: float
-    roll_out_components: List[RollOutFunc]
-    coverage_override: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
@@ -264,13 +253,33 @@ class Vaccination(BaseModel):
 
     @validator("vacc_prop_prevent_infection", pre=True, allow_reuse=True)
     def check_vacc_prop_prevent_infection(val):
-        assert 0 <= val <= 1, "vacc_prop_prevent_infection should be in [0, 1]"
+        assert 0 <= val <= 1, "Proportion of vaccine effect attributable to preventing infection should be in [0, 1]"
+        return val
+
+    @validator("vacc_reduce_infectiousness", pre=True, allow_reuse=True)
+    def check_overall_efficacy(val):
+        assert 0 <= val <= 1, "Reduction in infectousness should be in [0, 1]"
         return val
 
 
+class Vaccination(BaseModel):
+    second_dose_delay: float
+    one_dose: Optional[VaccEffectiveness]
+    fully_vaccinated: VaccEffectiveness
+
+    roll_out_components: List[RollOutFunc]
+    coverage_override: Optional[float]
+
+
 class VaccinationRisk(BaseModel):
+    calculate: bool
+    prop_astrazeneca: float
+    prop_mrna: float
+
     tts_rate: Dict[str, float]
     tts_fatality_ratio: Dict[str, float]
+
+    myocarditis_rate: Dict[str, float]
 
 
 class ContactTracing(BaseModel):
@@ -326,7 +335,6 @@ class Parameters:
     infection_fatality: InfectionFatality
     age_stratification: AgeStratification
     clinical_stratification: ClinicalStratification
-    case_detection: CaseDetection
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     victorian_clusters: Optional[VictorianClusterStratification]

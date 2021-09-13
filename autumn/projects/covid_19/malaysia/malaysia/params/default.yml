@@ -5,7 +5,7 @@ infectious_seed: 100.
 
 time:
   start: 180
-  end: 850
+  end: 883 # june 1, 2022
 
 country:
   iso3: MYS
@@ -17,8 +17,9 @@ clinical_stratification:
       multiplier: 1.5
 
 vaccination:
-  overall_efficacy: 0.7
-  vacc_prop_prevent_infection: 1
+  fully_vaccinated:
+    overall_efficacy: 0.7
+    vacc_prop_prevent_infection: 1
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.25

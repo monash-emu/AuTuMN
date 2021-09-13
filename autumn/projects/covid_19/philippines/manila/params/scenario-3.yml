@@ -1,0 +1,47 @@
+description: with AstraZeneca vaccine
+
+time:
+  start: 624  # 15 Sep 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-11-30
+        - 2021-12-02
+      values:
+        - - repeat_prev
+        - 1.
+    work:
+      append: true
+      times:
+        - 2021-11-30
+        - 2021-12-02
+      values:
+        - - repeat_prev
+        - 1.
+    school:
+      append: false
+      times:
+        - 2021-11-30
+        - 2021-12-02
+      values:
+        - 0.
+        - 1.
+
+vaccination:
+  # AZ efficacy against delta
+  fully_vaccinated:
+    overall_efficacy: .67
+    vacc_prop_prevent_infection: .72
+  roll_out_components:
+    - age_min: 15
+      supply_period_coverage:
+        coverage: .50
+        start_time: 624 # 15 Sep 2021
+        end_time: 700 # 30 Nov 2021
+
+vaccination_risk:
+  prop_astrazeneca: 1.
+  prop_mrna: 0.

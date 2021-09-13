@@ -54,27 +54,28 @@ mobility:
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.04
+  assumed_cdr_parameter: 0.0004
   smoothing_period: 14
 
 contact_tracing:
-  assumed_trace_prop: 0.2
+  assumed_trace_prop: 0.02
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2
 
 voc_emergence:
   delta:
-    start_time: 420
+    start_time: 400
     entry_rate: 1.
     seed_duration: 10.
 
 vaccination:
-  overall_efficacy: 0.6
-  vacc_prop_prevent_infection: 0.65
-  vacc_reduce_infectiousness: 0.5
+  fully_vaccinated:
+    overall_efficacy: 0.6
+    vacc_prop_prevent_infection: 0.65
+    vacc_reduce_infectiousness: 0.5
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.444
+        coverage: 0.54
         start_time: 398
         end_time: 579
       age_min: 20

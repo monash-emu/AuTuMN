@@ -28,7 +28,8 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     # Preliminary processing
     is_one_dose_active = bool(params.vaccination.one_dose)
     strata_to_adjust = VACCINATED_STRATA if is_one_dose_active else [Vaccination.VACCINATED]
-    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = ({},) * 5
+    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = {}, {}, {}, {}, {}
+
     vaccination_effects = {
         Vaccination.VACCINATED: {
             "prevent_infection": params.vaccination.fully_vaccinated.vacc_prop_prevent_infection,
@@ -49,8 +50,10 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
             vaccination_effects[stratum]["prevent_infection"],
             vaccination_effects[stratum]["overall_efficacy"],
         )
+
+        severity_adjustment = 1. - severity_efficacy[stratum]
         symptomatic_adjuster[stratum], hospital_adjuster[stratum], ifr_adjuster[stratum] = \
-            (1. - severity_efficacy[stratum],) * 3
+            severity_adjustment, severity_adjustment, severity_adjustment
 
     # Apply the calibration adjustment parameters
     for stratum in strata_to_adjust:
@@ -82,6 +85,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
         Vaccination.ONE_DOSE_ONLY: one_dose_infection_adj,
         Vaccination.VACCINATED: Multiply(1. - infection_efficacy[Vaccination.VACCINATED]),
     }
+
     vacc_strat.add_flow_adjustments(INFECTION, infection_adjustments)
 
     # Adjust the infectiousness of vaccinated people

@@ -1,5 +1,7 @@
 description: BASELINE
 
+infectious_seed: 0.
+
 mixing_matrices:
   type: extrapolated
   source_iso3: GBR
@@ -10,9 +12,9 @@ country:
   iso3: AUS
 
 contact_tracing:
-    assumed_trace_prop: 0.35
-    assumed_prev: 1.e-3
-    quarantine_infect_multiplier: 0.2
+  assumed_trace_prop: 0.2  # Ignore, calibrated
+  assumed_prev: 1.e-3
+  quarantine_infect_multiplier: 0.2
 
 # Vaccination effectiveness parameters taken from https://www.medrxiv.org/content/10.1101/2021.08.18.21262237v1
 vaccination:
@@ -24,19 +26,41 @@ vaccination:
     overall_efficacy: 0.775  # Average of 0.71 and 0.84
     vacc_prop_prevent_infection: 0.9  # Approximate estimate
     vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
+  roll_out_components:
+    - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
+      supply_period_coverage:
+        coverage: 0.  # Ignore, not used but part of parameter validation
+        start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
+        end_time: 632  # 9th September is 618 (current date), lagged by two weeks
+    - age_min: 15
+      supply_period_coverage:
+        coverage: 0.85  # Interpreted as the average statewide value to be reached at this time
+        start_time: 632
+        end_time: 653
 
 time:
-  start: 560  # 13th July 2021
-  end: 731  # 31st December 2021
+  start: 454
+  end: 700
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
-  assumed_cdr_parameter: .3  # calibrated
+  assumed_cdr_parameter: .3  # Calibrated
   smoothing_period: 7
 
 # Tiny adjustment for consistency with observations (0.16 instead of 0.17)
 clinical_stratification:
-  icu_prop: 0.16
+  icu_prop: 0.25
+
+  # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
+  # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88
+  # News article also links to some of the more important recent studies and pre-prints
+  # https://www.cbc.ca/news/health/does-delta-cause-more-severe-covid-19-here-s-what-we-know-and-don-t-1.6153470
+  props:
+    symptomatic:
+      multiplier: 1.88
+
+infection_fatality:
+  multiplier: 1.88
 
 # VAHI, 1st July to 30th September
 sojourn:
@@ -117,7 +141,7 @@ victorian_clusters:
         face_coverings: # Mandatory face coverings
           function_type: constant
           parameters:
-            effect: 0.9143849
+            effect: 0.75
           locations:
             - other_locations
             - school
@@ -145,7 +169,7 @@ victorian_clusters:
           - grocery_and_pharmacy
           - parks
           - transit_stations
-      smooth_google_data: false # Whether to apply a 7-day moving average
+      smooth_google_data: false  # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:
         school:
@@ -192,7 +216,7 @@ victorian_clusters:
         face_coverings:
           function_type: constant
           parameters:
-            effect: 0.9143849
+            effect: 0.75
           locations:
             - other_locations
             - school
@@ -200,10 +224,12 @@ victorian_clusters:
         face_coverings_adjuster:
           function_type: constant
           parameters:
-            effect: 0. # Irrelevant because over-written by the metro value
+            effect: 0.  # Ignore, because over-written by the metro value
           locations:
             - other_locations
             - school
             - work
 
 target_output_ratio: 0.5
+
+

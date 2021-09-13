@@ -22,7 +22,8 @@ benchmark.json
 .idea
 .spyderworkspace
 .vscode
-#*.ipynb
+*.ipynb
+notebooks/
 
 # Images
 *.png

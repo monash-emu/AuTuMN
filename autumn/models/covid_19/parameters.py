@@ -161,21 +161,12 @@ class ClinicalStratification(BaseModel):
 class InfectionFatality(BaseModel):
     """Parameters relating to death from infection"""
 
-    # Calibrated multiplier for props.
+    # Calibrated multiplier for props
     multiplier: float
-    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket.
+    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket
     top_bracket_overwrite: Optional[float]
-    # Proportion of people dying / total infected by age.
+    # Proportion of people dying / total infected by age
     props: List[float]
-
-
-class CaseDetection(BaseModel):
-    """Time variant detection of cases"""
-
-    shape: float  # The shape parameter to the tanh-based curve
-    inflection_time: float  # Point at which curve inflects
-    lower_asymptote: float  # Starting value - lower asymptote for increasing function
-    upper_asymptote: float  # End value - upper asymptote for increasing function
 
 
 class TestingToDetection(BaseModel):
@@ -281,6 +272,7 @@ class Vaccination(BaseModel):
 
 
 class VaccinationRisk(BaseModel):
+    calculate: bool
     prop_astrazeneca: float
     prop_mrna: float
 
@@ -288,6 +280,7 @@ class VaccinationRisk(BaseModel):
     tts_fatality_ratio: Dict[str, float]
 
     myocarditis_rate: Dict[str, float]
+
 
 class ContactTracing(BaseModel):
     """
@@ -342,7 +335,6 @@ class Parameters:
     infection_fatality: InfectionFatality
     age_stratification: AgeStratification
     clinical_stratification: ClinicalStratification
-    case_detection: CaseDetection
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     victorian_clusters: Optional[VictorianClusterStratification]

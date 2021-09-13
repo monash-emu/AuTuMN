@@ -173,13 +173,6 @@ mobility:
   square_mobility_effect: true
   microdistancing: {}
 
-# Parameters of tanh-based scale-up function used to define time-variant detection, if that approach selected
-case_detection:
-  shape: 0.05 # The shape parameter to the tanh-based curve
-  inflection_time: 90. # Point at which curve inflects
-  lower_asymptote: 0.1 # Starting value - lower asymptote for increasing function
-  upper_asymptote: 0.6 # End value - upper asymptote for increasing function
-
 testing_to_detection: null
 
 victorian_clusters: null
@@ -191,10 +184,11 @@ vaccination:
     vacc_prop_prevent_infection: 0.
     vacc_reduce_infectiousness: 0.
   one_dose: null
-  second_dose_delay: 90.  # Time from receiving first dose to second
+  second_dose_delay: 41.  # Time from receiving first dose to second
   roll_out_components: []
 
 vaccination_risk:
+  calculate: false
   prop_astrazeneca: 1.
   prop_mrna: 0.
   tts_rate: # Source: https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021

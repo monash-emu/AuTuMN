@@ -51,6 +51,19 @@
       0.975
     ]
   },
+  "new_hospital_admissions": {
+    "title": "New hospital admissions",
+    "output_key": "new_hospital_admissions",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "accum_incidence": {
     "title": "Cumulative incidence",
     "output_key": "accum_incidence",

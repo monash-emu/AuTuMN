@@ -9,6 +9,7 @@ def get_history_strat(params: Parameters) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
     """
+
     history_strat = Stratification(
         "history",
         HISTORY_STRATA,

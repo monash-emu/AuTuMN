@@ -19,7 +19,7 @@ from .outputs.common import request_common_outputs
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows, add_second_dose_flows
+from .preprocess.vaccination import add_vaccination_flows
 from .preprocess import tracing
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
@@ -40,6 +40,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     params = Parameters(**params)
     is_region_vic = bool(params.victorian_clusters)  # Different structures for Victoria model
+    is_region_vic2021 = is_region_vic and params.time.start > 365.  # Probably this can be done better
     model = CompartmentalModel(
         times=[params.time.start, params.time.end],
         compartments=COMPARTMENTS,
@@ -205,6 +206,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(cluster_strat)
         mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)
 
+    if is_region_vic2021:
+
         # Seeding well after vaccination commencement
         seed_date = 590.
 
@@ -309,7 +312,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Implement the process of people getting vaccinated
         vacc_params = params.vaccination
 
-        if is_region_vic:
+        # Vic 2021 code is not generalisable
+        if is_region_vic2021:
             for i_component, roll_out_component in enumerate(vacc_params.roll_out_components):
                 total_adult_pop = sum(total_pops[3:])
                 cluster_adults_pops = {
@@ -332,14 +336,25 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Add transition from single dose to fully vaccinated
         if params.vaccination.one_dose:
-            add_second_dose_flows(model, params.vaccination.second_dose_delay)
+            for compartment in COMPARTMENTS:
+                model.add_transition_flow(
+                    name="second_dose",
+                    fractional_rate=1. / params.vaccination.second_dose_delay,
+                    source=compartment,
+                    dest=compartment,
+                    source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
+                    dest_strata={"vaccination": Vaccination.VACCINATED},
+                )
 
     # Set up derived output functions
     if is_region_vic:
         request_victorian_outputs(model, params)
     else:
         request_standard_outputs(model, params)
-    request_common_outputs(model, params)
+
+    # Vaccination
+    if params.vaccination:
+        request_common_outputs(model, params)
 
     # Dive into summer internals to over-write mixing matrix
     if is_region_vic:

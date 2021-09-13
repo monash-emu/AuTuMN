@@ -77,11 +77,11 @@ def get_vacc_roll_out_function_from_doses(
 
 def get_eligible_age_groups(roll_out_component, age_strata):
     """
-    Return a list with the model's age groups that are relevant to the requested roll_out_component
-    Also return the ineligible age groups so that we can apply vaccination to them as well
+    Return a list with the model's age groups that are relevant to the requested roll_out_component.
+    Also return the ineligible age groups so that we can apply vaccination to them as well.
     """
 
-    eligible_age_groups, ineligible_age_groups = [], []
+    eligible_age_groups, ineligible_age_groups = ([],) * 2
     for agegroup in age_strata:
 
         # Either not requested, or requested and meets that age cut-off for min or max
@@ -90,7 +90,7 @@ def get_eligible_age_groups(roll_out_component, age_strata):
             (bool(roll_out_component.age_min) and float(agegroup) >= roll_out_component.age_min)
         below_age_max = \
             not roll_out_component.age_max or \
-            bool(roll_out_component.age_max) and float(agegroup) < roll_out_component.age_max
+            (bool(roll_out_component.age_max) and float(agegroup) < roll_out_component.age_max)
         if above_age_min and below_age_max:
             eligible_age_groups.append(agegroup)
         else:
@@ -122,7 +122,7 @@ def add_vaccination_flows(
     # Work out eligible model age_groups
     eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
-    # Find vaccination destination stratum, depending on whether one-dose vaccination being simulated
+    # Find vaccination destination stratum, depending on whether one-dose vaccination stratum is active
     vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
 
     for eligible_age_group in eligible_age_groups:

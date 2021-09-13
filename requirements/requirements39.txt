@@ -6,7 +6,7 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-#summerepi==2.3.0
+summerepi==2.4.0
 
 # Data visualization
 matplotlib>=3.4.3

@@ -195,6 +195,7 @@ vaccination:
   roll_out_components: []
 
 vaccination_risk:
+  calculate: false
   prop_astrazeneca: 1.
   prop_mrna: 0.
   tts_rate: # Source: https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021

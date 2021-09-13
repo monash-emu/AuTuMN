@@ -1,12 +1,14 @@
 import pandas as pd
 
 from autumn.tools.db import Database
+from autumn.tools.utils.utils import create_date_index, COVID_BASE_DATETIME
 
 from .fetch import (
     COVID_AU_CSV_PATH,
     COVID_LGA_CSV_PATH,
     MOBILITY_LGA_PATH,
     COVID_VAC_COV_CSV,
+    COVID_AU_YOUGOV,
 )
 
 
@@ -18,6 +20,9 @@ def preprocess_covid_au(input_db: Database):
     input_db.dump_df("covid_dhhs_test", df)
     df = pd.read_csv(COVID_VAC_COV_CSV)
     input_db.dump_df("vic_2021", df)
+    df = pd.read_csv(COVID_AU_YOUGOV)
+    df = process_yougov(df)
+    input_db.dump_df("yougov_vic", df)
 
 
 def reshape_to_clusters(lga_test):
@@ -48,3 +53,12 @@ def reshape_to_clusters(lga_test):
     lga_df.rename(columns={"CollectionDate": "date", "lga_test_prop": "test"}, inplace=True)
 
     return lga_df
+
+
+def process_yougov(df):
+
+    df = df[df.state.str.lower() == "victoria"]
+    df["endtime"] = pd.to_datetime(df.endtime, format="%d/%m/%Y %H:%M").dt.date
+    df = create_date_index(COVID_BASE_DATETIME, df, "endtime")
+
+    return df

@@ -40,9 +40,6 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
         for cluster in clusters:
             model.request_output_for_flow(
                 name=f"infection_deaths_for_cluster_{cluster}",
-                flow_name="infect_death",
+                flow_name=INFECT_DEATH,
                 source_strata={"cluster": cluster},
-            )
-            model.request_cumulative_output(
-                name=f"accum_infection_deaths_for_cluster_{cluster}", source="infection_deaths"
             )

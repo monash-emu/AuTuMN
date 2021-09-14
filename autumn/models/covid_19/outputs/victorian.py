@@ -30,7 +30,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             dest_strata={"cluster": cluster},
         )
 
-    # Notifications.
+    # Notifications
     notification_sources = []
     # first track all traced cases (regardless of clinical stratum)
     if params.contact_tracing:
@@ -55,7 +55,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             sources=["prop_detected_traced", "prop_contacts_with_detected_index"],
         )
 
-    # then track untraced cases that are still detected
+    # Then track untraced cases that are still detected
     for clinical in NOTIFICATION_CLINICAL_STRATA:
         name = f"progress_untracedX{clinical}"
         dest_strata = {"clinical": clinical, "tracing": "untraced"} if params.contact_tracing else {"clinical": clinical}

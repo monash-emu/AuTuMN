@@ -286,14 +286,21 @@ class ContactTracing(BaseModel):
     """
 
     """
+    floor: float
     assumed_trace_prop: float
     assumed_prev: float
     quarantine_infect_multiplier: float
-    floor: float
+    
 
-    @validator("floor", pre=True, allow_reuse=True)
+    @validator("floor")
     def check_floor(val):
         assert 0 <= val <= 1, "Contact tracing floor must be in range [0, 1]"
+        return val
+
+    @validator("assumed_trace_prop")
+    def assumed_trace_prop(val, values):
+        if 'floor' in values:
+            assert val >= values['floor'], "Contact tracing assumed_trace_prop must be >= floor"
         return val
 
 

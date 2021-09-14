@@ -200,36 +200,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest_strata={"history": History.EXPERIENCED},
             )
 
-    # Stratify model by Victorian subregion (used for Victorian cluster model)
+    # Stratify model by Victorian sub-region (used for Victorian cluster model)
     if is_region_vic:
         cluster_strat = get_cluster_strat(params)
         model.stratify_with(cluster_strat)
         mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)
 
     if is_region_vic2021:
+        seed_start_time = params.vic_2021_seeding.seed_time
 
-        # Seeding well after vaccination commencement
-        seed_date = 560
-
-        cluster_seeds = {
-            Region.NORTH_METRO: 0.2,
-            Region.WEST_METRO: 0.2,
-            Region.SOUTH_METRO: 0.2,
-            Region.SOUTH_EAST_METRO: 0.02,
-            Region.BARWON_SOUTH_WEST: 0.,
-            Region.GRAMPIANS: 0.,
-            Region.GIPPSLAND: 0.,
-            Region.HUME: 0.1,
-            Region.LODDON_MALLEE: 0.,
-        }
-
-        for stratum in cluster_seeds:
-
-            seed = cluster_seeds[stratum]
+        for stratum in cluster_strat.strata:
+            seed = params.vic_2021_seeding.__getattribute__(stratum)
 
             # Function must be bound in loop with optional argument
             def model_seed_func(time, computed_values, seed=seed):
-                return seed if seed_date < time < seed_date + 5. else 0.
+                return seed if seed_start_time < time < seed_start_time + 5. else 0.
 
             model.add_importation_flow(
                 "seed",
@@ -240,7 +225,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Contact tracing stratification
     if params.contact_tracing:
-
         tracing_strat = get_tracing_strat(
             params.contact_tracing.quarantine_infect_multiplier,
             params.clinical_stratification.late_infect_multiplier

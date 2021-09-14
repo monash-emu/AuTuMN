@@ -207,9 +207,22 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
+class Vic2021Seeding(BaseModel):
+    seed_time: float
+    north_metro: float
+    south_east_metro: float
+    south_metro: float
+    west_metro: float
+    barwon_south_west: float
+    gippsland: float
+    hume: float
+    loddon_mallee: float
+    grampians: float
+
+
 class VocComponent(BaseModel):
     """
-        Parameters defining the emergence profile of the Variants of Concerns
+    Parameters defining the emergence profile of the Variants of Concerns
     """
     start_time: Optional[float]
     entry_rate: Optional[float]
@@ -311,7 +324,9 @@ class AgeSpecificRiskMultiplier(BaseModel):
 
 
 class ParamConfig:
-    """Config for parameter models"""
+    """
+    Config for parameter models
+    """
 
     anystr_strip_whitespace = True  # Strip whitespace
     allow_mutation = False  # Params should be immutable
@@ -350,5 +365,6 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     victorian_clusters: Optional[VictorianClusterStratification]
-    # Non-epidemiological parameters
+    vic_2021_seeding: Optional[Vic2021Seeding]
+    # Non_epidemiological parameters
     target_output_ratio: Optional[float]

@@ -1,30 +1,43 @@
-description: Scenario 3, max mobility six months + 50% vaccine roll-out
+description: with AstraZeneca vaccine
 
 time:
-  start: 504 # 18th May 2021
-
-vaccination:
-
-  # Eleven months from 18th May 2021
-  roll_out_components:
-    - supply_period_coverage:
-        coverage: 0.5
-        start_time: 504.
-        end_time: 838.
+  start: 624  # 15 Sep 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-03-07
+        - 2022-01-01
+        - 2022-01-02
       values:
-        - - max_last_period
-          - 180
+        - - repeat_prev
+        - 1.
     work:
       append: true
       times:
-        - 2021-03-07
+        - 2022-01-01
+        - 2022-01-02
       values:
-        - - max_last_period
-          - 180
+        - - repeat_prev
+        - 1.
+
+
+vaccination:
+  # AZ efficacy against delta
+  fully_vaccinated:
+    overall_efficacy: .67
+    vacc_prop_prevent_infection: .72
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.55
+        start_time: 481 # 25 Apr 2021
+        end_time: 624 # 15 Sep 2021
+    - supply_period_coverage:
+        coverage: 0.55
+        start_time: 625 # 16 Sep 2021
+        end_time: 732 # 01 Jan 2022
+
+vaccination_risk:
+  prop_astrazeneca: 1.
+  prop_mrna: 0.

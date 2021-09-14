@@ -225,6 +225,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Contact tracing stratification
     if params.contact_tracing:
+
         tracing_strat = get_tracing_strat(
             params.contact_tracing.quarantine_infect_multiplier,
             params.clinical_stratification.late_infect_multiplier

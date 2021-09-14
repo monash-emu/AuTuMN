@@ -12,19 +12,26 @@ from autumn.models.covid_19.constants import (
 from summer.compute import ComputedValueProcessor, find_sum
 
 
-def get_tracing_param(assumed_trace_prop, assumed_prev):
+def get_tracing_param(assumed_trace_prop, assumed_prev, floor):
     """
     Calculate multiplier for the relationship between traced proportion and prevalence for use in the next function.
+
+    Solving:
+    floor + (1 - floor) exp -(result * assumed_prev) = assumed_trace_prop
+
+    for result.
     """
+
     assert 0. <= assumed_trace_prop <= 1.001
     assert 0. <= assumed_prev <= 1.
-    return -np.log(assumed_trace_prop) / assumed_prev
+    return -np.log((assumed_trace_prop - floor) / (1. - floor)) / assumed_prev
 
 
 def get_traced_prop(trace_param, prev):
     """
     Function for the proportion of detected people who are traced.
     """
+
     return np.exp(-prev * trace_param)
 
 
@@ -93,8 +100,9 @@ class PropDetectedTracedProc(ComputedValueProcessor):
     """
     Calculate the proportion of detected cases which have their contacts traced.
     """
-    def __init__(self, trace_param):
+    def __init__(self, trace_param, floor):
         self.trace_param = trace_param
+        self.floor = floor
 
     def process(self, compartment_values, computed_values, time):
         """
@@ -102,7 +110,9 @@ class PropDetectedTracedProc(ComputedValueProcessor):
         which has been worked out in the get_tracing_param function above.
         Ensures that the proportion is bounded [0, 1]
         """
-        proportion_of_detected_traced = np.exp(-computed_values["prevalence"] * self.trace_param)
+
+        floor = self.floor
+        proportion_of_detected_traced = floor + (1. - floor) * np.exp(-computed_values["prevalence"] * self.trace_param)
         assert 0. <= proportion_of_detected_traced <= 1.
         return proportion_of_detected_traced
 

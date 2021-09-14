@@ -54,7 +54,6 @@ def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
                 func=lambda vaccinated:
                 vaccinated * params.vaccination_risk.tts_rate[agegroup] * params.vaccination_risk.prop_astrazeneca
             )
-
             model.request_function_output(
                 name=f"tts_deathsXagegroup_{agegroup}",
                 sources=[f"tts_casesXagegroup_{agegroup}"],
@@ -69,7 +68,6 @@ def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
                 func=lambda vaccinated:
                 vaccinated * params.vaccination_risk.myocarditis_rate[agegroup] * params.vaccination_risk.prop_mrna
             )
-
             hospital_sources += [
                 f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}",
                 f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",

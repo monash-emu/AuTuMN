@@ -7,7 +7,6 @@ from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.preprocess.case_detection import CdrProc
-from autumn.settings.region import Region
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
@@ -15,6 +14,7 @@ from .constants import (
 )
 
 from . import preprocess
+from .outputs.common import request_common_outputs
 from .outputs.vaccination import request_vaccination_outputs
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
@@ -336,6 +336,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
                     dest_strata={"vaccination": Vaccination.VACCINATED},
                 )
+
+
+
+    request_common_outputs(model, params, is_region_vic)
 
     # Set up derived output functions
     if is_region_vic:

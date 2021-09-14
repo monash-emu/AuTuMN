@@ -47,7 +47,6 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         model.request_computed_value_output("prop_detected_traced")
         model.request_computed_value_output("prop_contacts_with_detected_index")
         model.request_computed_value_output("traced_flow_rate")
-        model.request_computed_value_output("cdr")
 
         # Proportion of quarantined contacts among all contacts
         model.request_function_output(
@@ -69,11 +68,11 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         )
     model.request_aggregate_output(name="notifications", sources=notification_sources)
 
-    # Cluster-specific notifications.
+    # Cluster-specific notifications
     for cluster in clusters:
         cluster_notification_sources = []
 
-        # first track all traced cases (regardless of clinical stratum)
+        # First track all traced cases (regardless of clinical stratum)
         if params.contact_tracing:
             name = f"progress_tracedX{cluster}"
             cluster_notification_sources.append(name)
@@ -84,7 +83,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
                 save_results=False,
             )
 
-        # then track untraced cases that are still detected
+        # Then track untraced cases that are still detected
         for clinical in NOTIFICATION_CLINICAL_STRATA:
             name = f"progress_untraced_for_cluster_{cluster}X{clinical}"
             cluster_notification_sources.append(name)
@@ -225,19 +224,6 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
                 f"icu_occupancy_for_cluster_{cluster}",
                 f"_early_active_icu_proportion_for_cluster_{cluster}",
             ],
-        )
-
-    # Infection deaths.
-    model.request_output_for_flow(name="infection_deaths", flow_name="infect_death")
-    model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
-    for cluster in clusters:
-        model.request_output_for_flow(
-            name=f"infection_deaths_for_cluster_{cluster}",
-            flow_name="infect_death",
-            source_strata={"cluster": cluster},
-        )
-        model.request_cumulative_output(
-            name=f"accum_infection_deaths_for_cluster_{cluster}", source="infection_deaths"
         )
 
     # Proportion seropositive

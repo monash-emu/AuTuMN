@@ -2,7 +2,7 @@ from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import (
     COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment, Strain, NOTIFICATIONS, INFECTION, INCIDENCE,
-    PROGRESS, INFECT_DEATH,
+    PROGRESS,
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
@@ -201,27 +201,6 @@ def request_standard_outputs(
             name=f"{NOTIFICATIONS}Xagegroup_{agegroup}",
             sources=notifications_by_age_sources
         )
-
-    """
-    Deaths
-    """
-
-    model.request_output_for_flow(
-        name="infection_deaths", flow_name=INFECT_DEATH
-    )
-    request_stratified_output_for_flow(
-        model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup", name_stem="infection_deaths", filter_on="source"
-    )
-    request_double_stratified_output_for_flow(
-        model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical", name_stem="infection_deaths", filter_on="source"
-    )
-    model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
-    if not is_region_vic:
-        for agegroup in AGEGROUP_STRATA:
-            model.request_cumulative_output(
-                name=f"accum_deathsXagegroup_{agegroup}",
-                source=f"infection_deathsXagegroup_{agegroup}",
-            )
 
     """
     Healthcare occupancy

@@ -33,11 +33,11 @@ vaccination:
         coverage: 0.  # Ignore, not used but part of parameter validation
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 632  # 9th September is 618 (current date), lagged by two weeks
-    - age_min: 10
+    - age_min: 15
       supply_period_coverage:
-        coverage: 0.9  # Interpreted as the average statewide value to be reached at this time
+        coverage: 0.85  # Interpreted as the average statewide value to be reached at this time
         start_time: 632
-        end_time: 660
+        end_time: 653
 
 time:
   start: 454

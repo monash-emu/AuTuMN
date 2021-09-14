@@ -209,7 +209,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if is_region_vic2021:
 
         # Seeding well after vaccination commencement
-        seed_date = 590.
+        seed_date = 560  # 590.
 
         cluster_seeds = {
             Region.NORTH_METRO: 2.,
@@ -225,7 +225,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         for stratum in cluster_seeds:
 
-            seed = cluster_seeds[stratum]
+            seed = cluster_seeds[stratum] / 10.
 
             def model_seed_func(time, computed_values, seed=seed):
                 return seed if seed_date < time < seed_date + 5. else 0.

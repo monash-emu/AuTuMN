@@ -1,17 +1,8 @@
 from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import (
-    COMPARTMENTS,
-    NOTIFICATION_CLINICAL_STRATA,
-    Clinical,
-    Compartment,
-    Strain,
-    Vaccination,
-    NOTIFICATIONS,
-    INFECTION,
-    INCIDENCE,
-    PROGRESS,
-    INFECT_DEATH,
+    COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment, Strain, NOTIFICATIONS, INFECTION, INCIDENCE,
+    PROGRESS, INFECT_DEATH,
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
@@ -19,10 +10,7 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.history import History
 from autumn.models.covid_19.stratifications.tracing import Tracing
-from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRATA
 from autumn.tools.utils.utils import list_element_wise_division
-
-VACCINATED_STRATA = [Vaccination.VACCINATED]
 
 
 def request_stratified_output_for_flow(
@@ -350,49 +338,6 @@ def request_standard_outputs(
                     name=f"proportion_seropositiveXagegroup_{agegroup}",
                     sources=[recovered_name, total_name],
                     func=lambda recovered, total: recovered / total,
-                )
-
-    """
-    Vaccination
-    """
-
-    if params.vaccination and len(params.vaccination.roll_out_components) > 0:
-        request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
-
-        # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
-        if params.vaccination_risk.calculate:
-            for agegroup in AGEGROUP_STRATA:
-                model.request_output_for_flow(
-                    name=f"vaccinationXagegroup{agegroup}",
-                    flow_name="vaccination",
-                    source_strata={"agegroup": agegroup},
-                )
-
-                # TTS for AstraZeneca vaccines
-                model.request_function_output(
-                    name=f"tts_casesXagegroup_{agegroup}",
-                    sources=[f"vaccinationXagegroup_{agegroup}"],
-                    func=lambda vaccinated: vaccinated * params.vaccination_risk.tts_rate[agegroup] * params.vaccination_risk.prop_astrazeneca
-                )
-
-                model.request_function_output(
-                    name=f"tts_deathsXagegroup_{agegroup}",
-                    sources=[f"tts_casesXagegroup_{agegroup}"],
-                    func=lambda tts_cases: tts_cases * params.vaccination_risk.tts_fatality_ratio[agegroup]
-                )
-
-                # Myocarditis for mRNA vaccines
-                model.request_function_output(
-                    name=f"myocarditis_casesXagegroup_{agegroup}",
-                    sources=[f"vaccinationXagegroup_{agegroup}"],
-                    func=lambda vaccinated: vaccinated * params.vaccination_risk.myocarditis_rate[agegroup] * params.vaccination_risk.prop_mrna
-                )
-
-                # Hospitalisations by age
-                hospital_sources_this_age = [s for s in hospital_sources if f"Xagegroup_{agegroup}X" in s]
-                model.request_aggregate_output(
-                    name=f"new_hospital_admissionsXagegroup_{agegroup}",
-                    sources=hospital_sources_this_age
                 )
 
     # Calculate the incidence by strain

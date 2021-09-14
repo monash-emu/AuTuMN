@@ -120,15 +120,6 @@ def request_standard_outputs(
                 )
 
     """
-    Progression
-    """
-
-    model.request_output_for_flow(name=PROGRESS, flow_name=PROGRESS)
-    request_double_stratified_output_for_flow(
-        model, PROGRESS, AGEGROUP_STRATA, "agegroup", NOTIFICATION_CLINICAL_STRATA, "clinical"
-    )
-
-    """
     Healthcare admissions
     """
 

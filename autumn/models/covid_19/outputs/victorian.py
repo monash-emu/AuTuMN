@@ -20,16 +20,6 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             dest_strata={"cluster": cluster},
         )
 
-    # Track progress of disease (transition from early to late active)
-    # - overall, by cluster, by clinical stratum and by both
-    model.request_output_for_flow(name="progress", flow_name="progress")
-    for cluster in clusters:
-        model.request_output_for_flow(
-            name=f"progress_for_cluster_{cluster}",
-            flow_name="progress",
-            dest_strata={"cluster": cluster},
-        )
-
     # Notifications
     notification_sources = []
     # first track all traced cases (regardless of clinical stratum)

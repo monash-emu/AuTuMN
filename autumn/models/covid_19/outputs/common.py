@@ -1,14 +1,20 @@
-from summer import CompartmentalModel, Compartment
+from summer import CompartmentalModel
 
 from autumn.models.covid_19.parameters import Parameters
 from autumn.settings import Region
-from autumn.models.covid_19.constants import INFECT_DEATH, INFECTION
+from autumn.models.covid_19.constants import (
+    INFECT_DEATH, INFECTION, Compartment, PROGRESS, NOTIFICATION_CLINICAL_STRATA
+)
 from .standard import request_stratified_output_for_flow, request_double_stratified_output_for_flow
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
+from autumn.settings import Region
 
 
 def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):
+
+    # Clusters to cycle over for Vic model if needed
+    clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else None
 
     """
     Infection
@@ -22,6 +28,26 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
         func=lambda infection, susceptible: infection / susceptible,
         sources=[INFECTION, "_susceptible"]
     )
+
+    """
+    Progression
+    """
+
+    # Unstratified
+    model.request_output_for_flow(name=PROGRESS, flow_name=PROGRESS)
+
+    # Stratified by age group and clinical status
+    request_double_stratified_output_for_flow(
+        model, PROGRESS, AGEGROUP_STRATA, "agegroup", NOTIFICATION_CLINICAL_STRATA, "clinical"
+    )
+
+    # Stratified by cluster
+    if is_region_vic:
+        request_stratified_output_for_flow(
+            model, PROGRESS,
+            [region.replace("-", "_") for region in Region.VICTORIA_SUBREGIONS],
+            "cluster", "progress_for_", filter_on="destination",
+        )
 
     """
     Deaths
@@ -49,7 +75,6 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
 
     # Victoria-specific output by cluster
     if is_region_vic:
-        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
         for cluster in clusters:
             model.request_output_for_flow(
                 name=f"infection_deaths_for_cluster_{cluster}",

@@ -48,7 +48,6 @@ testing_to_detection:  # Need to mention these parameters in the Supplement some
   smoothing_period: 7
 
 clinical_stratification:
-  icu_prop: 0.25  # Manually adjusted to observations
 
   # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
   # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88
@@ -57,6 +56,26 @@ clinical_stratification:
   props:
     symptomatic:
       multiplier: 1.88
+    hospital:
+      props:
+        - 0.029  # 0-4
+        - 0.029  # 5-9
+        - 0.014  # 10-14
+        - 0.014  # 15-19
+        - 0.030  # 20-24
+        - 0.030  # 25-29
+        - 0.047  # 30-34
+        - 0.047  # 35-39
+        - 0.081  # 40-44
+        - 0.081  # 45-49
+        - 0.128  # 50-54
+        - 0.128  # 55-59
+        - 0.221  # 60-64
+        - 0.221  # 65-69
+        - 0.389  # 70-74
+        - 0.5  # 75+ FIXME: currently approximate, need to sort out weighting for this
+
+  icu_prop: 0.25  # Manually adjusted to observations
 
 infection_fatality:
   multiplier: 1.88

@@ -289,6 +289,12 @@ class ContactTracing(BaseModel):
     assumed_trace_prop: float
     assumed_prev: float
     quarantine_infect_multiplier: float
+    floor: float
+
+    @validator("floor", pre=True, allow_reuse=True)
+    def check_floor(val):
+        assert 0 <= val <= 1, "Contact tracing floor must be in range [0, 1]"
+        return val
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

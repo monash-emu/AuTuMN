@@ -269,7 +269,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         model.add_computed_value_process(
             "prop_detected_traced",
-            tracing.PropDetectedTracedProc(trace_param, floor_value)
+            tracing.PropDetectedTracedProc(
+                trace_param,
+                floor_value
+            )
         )
 
         model.add_computed_value_process(

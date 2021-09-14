@@ -39,6 +39,7 @@ def contact_tracing_func(time, computed_values):
     """
     Multiply the flow rate through by the source compartment to get the final absolute rate
     """
+
     return computed_values["traced_flow_rate"]
 
 
@@ -57,6 +58,7 @@ def get_proportion_detect_force_infection(compartment_values, notif_comps, notif
     Calculate the proportion of the force of infection arising from ever-detected individuals
     See PropIndexDetectedProc for details on calling this function
     """
+
     non_detected_detected_force_of_infection = 0.
     for i, c in enumerate(non_notif_comps):
         non_detected_detected_force_of_infection += compartment_values[c] * non_notif_levels[i]
@@ -86,6 +88,7 @@ class PrevalenceProc(ComputedValueProcessor):
         """
         Identify the compartments with active disease for the prevalence calculation
         """
+
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
             comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)
 
@@ -93,6 +96,7 @@ class PrevalenceProc(ComputedValueProcessor):
         """
         Calculate the actual prevalence during run-time
         """
+
         return find_sum(compartment_values[self.active_comps]) / find_sum(compartment_values)
 
 
@@ -111,8 +115,8 @@ class PropDetectedTracedProc(ComputedValueProcessor):
         Ensures that the proportion is bounded [0, 1]
         """
 
-        floor = self.floor
-        proportion_of_detected_traced = floor + (1. - floor) * np.exp(-computed_values["prevalence"] * self.trace_param)
+        proportion_of_detected_traced = \
+            self.floor + (1. - self.floor) * np.exp(-computed_values["prevalence"] * self.trace_param)
         assert 0. <= proportion_of_detected_traced <= 1.
         return proportion_of_detected_traced
 
@@ -121,6 +125,7 @@ class PropIndexDetectedProc(ComputedValueProcessor):
     """
     Calculate the proportion of all contacts whose index case is ever detected.
     """
+
     def __init__(self, non_sympt_infect_multiplier, late_infect_multiplier):
         self.non_sympt_infect_multiplier = non_sympt_infect_multiplier
         self.late_infect_multiplier = late_infect_multiplier
@@ -164,7 +169,8 @@ class PropIndexDetectedProc(ComputedValueProcessor):
         """
         Calculate the proportion of the force of infection arising from ever-detected individuals
         """
-        # Call the optimized numba JIT version of this function (we cannot JIT directly on the class member function)
+
+        # Call the optimised numba JIT version of this function (we cannot JIT directly on the class member function)
         return get_proportion_detect_force_infection(compartment_values, self.notif_comps, self.notif_levels, self.non_notif_comps, self.non_notif_levels)
 
 
@@ -172,6 +178,7 @@ class TracedFlowRateProc(ComputedValueProcessor):
     """
     Calculate the transition flow rate based on the only other outflow and the proportion of all new cases traced.
     """
+
     def __init__(self, incidence_flow_rate):
         self.incidence_flow_rate = incidence_flow_rate
 
@@ -183,6 +190,7 @@ class TracedFlowRateProc(ComputedValueProcessor):
 
         for traced_flow_rate gives the following:
         """
+
         traced_prop = computed_values["prop_detected_traced"] * computed_values["prop_contacts_with_detected_index"]
         traced_flow_rate = self.incidence_flow_rate * traced_prop / (1. - traced_prop)
         assert 0. <= traced_flow_rate

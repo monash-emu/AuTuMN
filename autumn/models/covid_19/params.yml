@@ -13,8 +13,8 @@ contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 
 #
 mixing_matrices:
-    type: "prem"
-    age_adjust: true  # Note that this is not relevant unless "empiric" selected for type
+  type: "prem"
+  age_adjust: true  # Note that this is not relevant unless "empiric" selected for type
 
 # Integration times
 time:
@@ -59,7 +59,7 @@ sojourn:
   compartment_periods:
     hospital_early: 7.7
     hospital_late: 12.8
-    icu_early: 10.5 # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
+    icu_early: 10.5  # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
     icu_late: 13.3
 
   # Mean time spent in each compartment, defined via proportions

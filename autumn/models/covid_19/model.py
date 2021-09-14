@@ -240,8 +240,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Contact tracing stratification
     if params.contact_tracing:
 
-        floor_value = 0.
-
         tracing_strat = get_tracing_strat(
             params.contact_tracing.quarantine_infect_multiplier,
             params.clinical_stratification.late_infect_multiplier
@@ -252,7 +250,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         trace_param = tracing.get_tracing_param(
             params.contact_tracing.assumed_trace_prop,
             params.contact_tracing.assumed_prev,
-            floor_value,
+            params.contact_tracing.floor,
         )
 
         early_exposed_untraced_comps = \
@@ -271,7 +269,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             "prop_detected_traced",
             tracing.PropDetectedTracedProc(
                 trace_param,
-                floor_value
+                params.contact_tracing.floor,
             )
         )
 

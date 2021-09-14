@@ -10,9 +10,10 @@ country:
   iso3: AUS
 
 contact_tracing:
-    assumed_trace_prop: 0.35
-    assumed_prev: 1.e-3
-    quarantine_infect_multiplier: 0.2
+  assumed_trace_prop: 0.35
+  assumed_prev: 1.e-3
+  quarantine_infect_multiplier: 0.2
+  floor: 0.
 
 infection_fatality:
   top_bracket_overwrite: 0.17

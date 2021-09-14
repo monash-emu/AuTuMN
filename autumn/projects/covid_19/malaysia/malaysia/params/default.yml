@@ -120,8 +120,9 @@ voc_emergence:
     contact_rate_multiplier: 2.56
 
 contact_tracing:
-    assumed_trace_prop: 0.05
-    assumed_prev: 1.e-3
-    quarantine_infect_multiplier: 0.2
+  assumed_trace_prop: 0.05
+  assumed_prev: 1.e-3
+  quarantine_infect_multiplier: 0.2
+  floor: 0.
 
 waning_immunity_duration: 365

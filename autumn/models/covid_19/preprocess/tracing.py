@@ -24,6 +24,7 @@ def get_tracing_param(assumed_trace_prop, assumed_prev, floor):
 
     assert 0. <= assumed_trace_prop <= 1.001
     assert 0. <= assumed_prev <= 1.
+    assert floor < assumed_trace_prop, "Assumed trace proportion less than or equal to contact tracing floor"
     return -np.log((assumed_trace_prop - floor) / (1. - floor)) / assumed_prev
 
 
@@ -39,6 +40,7 @@ def contact_tracing_func(time, computed_values):
     """
     Multiply the flow rate through by the source compartment to get the final absolute rate
     """
+
 
     return computed_values["traced_flow_rate"]
 

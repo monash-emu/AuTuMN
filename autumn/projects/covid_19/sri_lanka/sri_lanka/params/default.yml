@@ -10,6 +10,10 @@ time:
 country:
   iso3: LKA
 
+mixing_matrices:
+  type: extrapolated
+  source_iso3: CHN
+
 contact_tracing:
   assumed_trace_prop: 0.05
   assumed_prev: 1.e-3

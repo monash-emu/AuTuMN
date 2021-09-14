@@ -227,23 +227,23 @@ vaccination_risk:
     70: .18
     75: .18
 
-  myocarditis_rate: # dummy values for now
-    0: 2.5e-5
-    5: 2.5e-5
-    10: 2.5e-5
-    15: 2.5e-5
-    20: 2.5e-5
-    25: 2.5e-5
-    30: 2.5e-5
-    35: 2.5e-5
-    40: 2.5e-5
-    45: 2.5e-5
-    50: 2.7e-5
-    55: 2.7e-5
-    60: 1.6e-5
-    65: 1.6e-5
-    70: 2.1e-5
-    75: 1.8e-5
+  myocarditis_rate:
+    0: 3.57e-5  # assumed same as 12-17 category
+    5: 3.57e-5 # assumed same as 12-17 category
+    10: 3.57e-5  # from 12-17 category
+    15: 3.2e-5  # average of 12-17 and 18-24 categories
+    20: 2.7e-5  # from 18-24 category
+    25: 0.90e-5
+    30: 0.43e-5
+    35: 0.43e-5
+    40: 0.29e-5
+    45: 0.29e-5
+    50: 0.10e-5
+    55: 0.10e-5
+    60: 0.10e-5
+    65: 0.05e-5
+    70: 0.05e-5
+    75: 0.05e-5
 
 # Contact tracing-related
 contact_tracing: null

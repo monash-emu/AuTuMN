@@ -23,7 +23,7 @@ vaccination:
     vacc_prop_prevent_infection: 0.9  # Approximate estimate
     vacc_reduce_infectiousness: 0.56  # Average of 0.5 and 0.62
   fully_vaccinated:
-    overall_efficacy: 0.775  # Average of 0.71 and 0.84
+    overall_efficacy: 0.9  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
     vacc_prop_prevent_infection: 0.9  # Approximate estimate
     vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
   roll_out_components:
@@ -32,11 +32,11 @@ vaccination:
         coverage: 0.  # Ignore, not used but part of parameter validation
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 632  # 9th September is 618 (current date), lagged by two weeks
-    - age_min: 15
+    - age_min: 10
       supply_period_coverage:
-        coverage: 0.85  # Interpreted as the average statewide value to be reached at this time
+        coverage: 0.9  # Interpreted as the average statewide value to be reached at this time
         start_time: 632
-        end_time: 653
+        end_time: 660
 
 time:
   start: 454
@@ -47,9 +47,8 @@ testing_to_detection:  # Need to mention these parameters in the Supplement some
   assumed_cdr_parameter: .3  # Calibrated
   smoothing_period: 7
 
-# Tiny adjustment for consistency with observations (0.16 instead of 0.17)
 clinical_stratification:
-  icu_prop: 0.25
+  icu_prop: 0.25  # Manually adjusted to observations
 
   # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
   # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88

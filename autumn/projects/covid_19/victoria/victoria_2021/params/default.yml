@@ -96,7 +96,7 @@ sojourn:
 # Cluster stratification.
 victorian_clusters:
   intercluster_mixing: 0.02  # Ignore, calibrated
-  contact_rate_multiplier_north_metro: 1.  # Ignore, ccalibrated
+  contact_rate_multiplier_north_metro: 1.  # Ignore, calibrated
   contact_rate_multiplier_south_metro: 1.  # Ignore, calibrated
   contact_rate_multiplier_barwon_south_west: 1.  # Ignore, calibrated
   contact_rate_multiplier_regional: 1.  # Ignore, calibrated

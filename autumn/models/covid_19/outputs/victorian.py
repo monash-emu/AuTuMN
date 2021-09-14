@@ -1,11 +1,6 @@
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import (
-    COMPARTMENTS,
-    NOTIFICATION_CLINICAL_STRATA,
-    Clinical,
-    Compartment,
-)
+from autumn.models.covid_19.constants import COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.settings import Region
@@ -52,6 +47,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         model.request_computed_value_output("prop_detected_traced")
         model.request_computed_value_output("prop_contacts_with_detected_index")
         model.request_computed_value_output("traced_flow_rate")
+        model.request_computed_value_output("cdr")
 
         # Proportion of quarantined contacts among all contacts
         model.request_function_output(

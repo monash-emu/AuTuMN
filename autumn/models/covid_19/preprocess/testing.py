@@ -2,10 +2,8 @@ from typing import Any, Callable
 
 import numpy as np
 
-from autumn.tools.inputs.testing.eur_testing_data import (
-    get_uk_testing_numbers,
-    get_eu_testing_numbers,
-)
+from autumn.tools.inputs.testing.eur_testing_data import get_uk_testing_numbers, get_eu_testing_numbers
+from autumn.tools.inputs.covid_au.queries import get_vic_testing_numbers
 from autumn.tools.curve import scale_up_function
 from autumn.tools.inputs.covid_au.queries import get_dhhs_testing_numbers
 from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
@@ -39,18 +37,13 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
 
 
 def find_cdr_function_from_test_data(
-    assumed_tests_parameter,
-    assumed_cdr_parameter,
-    smoothing_period,
-    country_iso3,
-    total_pops,
-    subregion=None,
+    assumed_tests_parameter, assumed_cdr_parameter, smoothing_period, country_iso3, total_pops, subregion=None,
     test_multiplier=None,
 ):
 
     # Get the appropriate testing data
     if country_iso3 == "AUS":
-        test_dates, test_values = get_dhhs_testing_numbers()
+        test_dates, test_values = get_vic_testing_numbers()
     elif country_iso3 == "PHL":
         phl_region = subregion.lower() if subregion else "philippines"
         test_dates, test_values = get_phl_subregion_testing_numbers(phl_region)

@@ -9,6 +9,7 @@ def get_history_strat(params: Parameters) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
     """
+
     history_strat = Stratification(
         "history",
         HISTORY_STRATA,
@@ -19,20 +20,13 @@ def get_history_strat(params: Parameters) -> Stratification:
     history_strat.set_population_split({History.NAIVE: 1., History.EXPERIENCED: 0.})
 
     # Severity parameter for previously infected persons
-    rel_prop_symptomatic_experienced = (
-        params.rel_prop_symptomatic_experienced if params.rel_prop_symptomatic_experienced else 1.
-    )
+    severity_adjuster_request = params.rel_prop_symptomatic_experienced
+    severity_adjuster_experienced = params.rel_prop_symptomatic_experienced if severity_adjuster_request else 1.
 
     # Add the clinical adjustments parameters as overwrites in the same way as for vaccination
     history_strat = add_clinical_adjustments_to_strat(
-        history_strat,
-        History.NAIVE,
-        History.EXPERIENCED,
-        params,
-        rel_prop_symptomatic_experienced,
-        rel_prop_symptomatic_experienced,
-        rel_prop_symptomatic_experienced,
-        params.infection_fatality.top_bracket_overwrite,
+        history_strat, History.NAIVE, History.EXPERIENCED, params, severity_adjuster_experienced,
+        severity_adjuster_experienced, severity_adjuster_experienced, params.infection_fatality.top_bracket_overwrite,
     )
 
     return history_strat

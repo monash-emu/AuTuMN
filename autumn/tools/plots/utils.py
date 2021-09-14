@@ -60,7 +60,10 @@ PLOT_TEXT_DICT = {
     "prop_incidence_strain_delta": "Proportion of Delta variant in new cases",
     "contact_tracing.assumed_trace_prop": "traced prop high prevalence",
     "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect": "home contacts reduction",
-
+    "unvaccinated_prop": "proportion unvaccinated (all ages)",
+    "one_dose_only_prop": "proportion received only one dose (all ages)",
+    "vaccinated_prop": "proportion fully vaccinated (all ages)",
+    "at_least_one_dose_prop": "proportion received at least one dose (all ages)",
 }
 
 SHORT_TEXT_DICT = {

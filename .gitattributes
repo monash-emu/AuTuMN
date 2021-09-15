@@ -4,6 +4,9 @@
 *.zip filter=lfs diff=lfs merge=lfs -text
 data/inputs/inputs.db filter=lfs diff=lfs merge=lfs -text
 
-*.ipynb filter=nbstripout
-*.zpln filter=nbstripout
-*.ipynb diff=ipynb
+#*.ipynb filter=nbstripout
+#*.zpln filter=nbstripout
+#*.ipynb diff=ipynb
+
+*.ipynb	diff=jupyternotebook
+*.ipynb	merge=jupyternotebook

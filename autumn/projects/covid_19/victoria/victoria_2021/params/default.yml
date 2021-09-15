@@ -202,6 +202,8 @@ victorian_clusters:
             - 2021-07-27  # Schools re-open after lockdown 5
             - 2021-08-04
             - 2021-08-05  # Schools close with lockdown 6
+            - 2021-09-12
+            - 2021-09-13  # Schools re-open in regional Victoria
           values:
             - 1.
             - 0.
@@ -209,6 +211,8 @@ victorian_clusters:
             - 1.
             - 1.
             - 0.
+            - 0.
+            - 0.30769  # Four of 13 year levels (prep to year 2 and year 12)
 
       # Regional Victoria clusters microdistancing function
       microdistancing:

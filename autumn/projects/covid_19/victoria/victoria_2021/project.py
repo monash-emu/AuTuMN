@@ -108,7 +108,8 @@ home_reduction_name = "victorian_clusters.metro.mobility.microdistancing.home_re
 priors = [
     # Global COVID priors, but with jumping sds adjusted
     TruncNormalPrior(
-        incubation_period_name, mean=3.5, stdev=0.7810560402997285, trunc_range=(1.0, np.inf), jumping_stdev=0.5
+        incubation_period_name,
+        mean=6.095798813756773, stdev=0.7810560402997285, trunc_range=(1.0, np.inf), jumping_stdev=0.5
     ),
     TruncNormalPrior(
         active_period_name,

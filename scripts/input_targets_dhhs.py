@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
@@ -147,7 +148,9 @@ def main():
 
         update_timeseries(TARGET_MAP_DHHS, cluster_df, COVID_VIC2021_TARGETS_CSV, password)
 
-    vic_df = cases.groupby("date_index").sum().reset_index()
+    cases.fillna(np.inf, inplace=True)
+    vic_df = cases.groupby("date_index").sum(skipna=True).reset_index()
+    vic_df.replace({np.inf:np.nan}, inplace=True)
 
     TARGET_MAP_DHHS = {
         "notifications": "cluster_cases",

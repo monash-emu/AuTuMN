@@ -52,6 +52,7 @@ for cluster in metro_clusters:
 # Request calibration targets
 targets = [
     PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(target_start_time)),
+    PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(616)),  # Emphasise last week of data
     PoissonTarget(ts_set.get("hospital_admissions").truncate_start_time(target_start_time)),
     PoissonTarget(ts_set.get("icu_admissions").truncate_start_time(target_start_time)),
     *cluster_targets,

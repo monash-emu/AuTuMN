@@ -55,8 +55,6 @@ clinical_stratification:
   # News article also links to some of the more important recent studies and pre-prints
   # https://www.cbc.ca/news/health/does-delta-cause-more-severe-covid-19-here-s-what-we-know-and-don-t-1.6153470
   props:
-    symptomatic:
-      multiplier: 1.88
 
     # Table 1.1 from NNDSS document that Peter Collignon tweeted (from my email)
     hospital:
@@ -78,10 +76,7 @@ clinical_stratification:
         - 0.389  # 70-74
         - 0.5  # 75+ FIXME: currently approximate, need to sort out weighting to population for this age group
 
-  icu_prop: 0.25  # Manually adjusted to observations
-
-infection_fatality:
-  multiplier: 1.88
+  icu_prop: 0.16
 
 # VAHI, 1st July to 30th September
 sojourn:
@@ -202,6 +197,8 @@ victorian_clusters:
             - 2021-07-27  # Schools re-open after lockdown 5
             - 2021-08-04
             - 2021-08-05  # Schools close with lockdown 6
+            - 2021-09-12
+            - 2021-09-13  # Schools re-open in regional Victoria
           values:
             - 1.
             - 0.
@@ -209,6 +206,8 @@ victorian_clusters:
             - 1.
             - 1.
             - 0.
+            - 0.
+            - 0.30769  # Four of 13 year levels (prep to year 2 and year 12)
 
       # Regional Victoria clusters microdistancing function
       microdistancing:

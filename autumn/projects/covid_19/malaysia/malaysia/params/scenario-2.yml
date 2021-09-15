@@ -1,13 +1,43 @@
-description: Scenario 2, current mobility, 50% vaccine roll-out
+description: with mRNA vaccine
 
 time:
-  start: 504 # 18th May 2021
+  start: 624  # 15 Sep 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2022-01-01
+        - 2022-01-02
+      values:
+        - - repeat_prev
+        - 1.
+    work:
+      append: true
+      times:
+        - 2022-01-01
+        - 2022-01-02
+      values:
+        - - repeat_prev
+        - 1.
+
 
 vaccination:
-
-  # Eleven months from 18th May 2021
+  # Pfizer efficacy against delta
+  fully_vaccinated:
+    overall_efficacy: .88
+    vacc_prop_prevent_infection: .86
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.5
-        start_time: 504.
-        end_time: 838.
+        coverage: 0.55
+        start_time: 481 # 25 Apr 2021
+        end_time: 624 # 15 Sep 2021
+    - supply_period_coverage:
+        coverage: 0.55
+        start_time: 625 # 16 Sep 2021
+        end_time: 732 # 01 Jan 2022
+
+vaccination_risk:
+  prop_astrazeneca: 0.
+  prop_mrna: 1.

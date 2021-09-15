@@ -207,9 +207,22 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
+class Vic2021Seeding(BaseModel):
+    seed_time: float
+    north_metro: float
+    south_east_metro: float
+    south_metro: float
+    west_metro: float
+    barwon_south_west: float
+    gippsland: float
+    hume: float
+    loddon_mallee: float
+    grampians: float
+
+
 class VocComponent(BaseModel):
     """
-        Parameters defining the emergence profile of the Variants of Concerns
+    Parameters defining the emergence profile of the Variants of Concerns
     """
     start_time: Optional[float]
     entry_rate: Optional[float]
@@ -284,11 +297,23 @@ class VaccinationRisk(BaseModel):
 
 class ContactTracing(BaseModel):
     """
-
+    Contact tracing effectiveness that scales with disease burden parameters.
     """
+    floor: float
     assumed_trace_prop: float
     assumed_prev: float
     quarantine_infect_multiplier: float
+
+    @validator("floor", allow_reuse=True)
+    def check_floor(val):
+        assert 0 <= val <= 1, "Contact tracing floor must be in range [0, 1]"
+        return val
+
+    @validator("assumed_trace_prop", allow_reuse=True)
+    def check_assumed_trace_prop(val, values):
+        if 'floor' in values:
+            assert val >= values['floor'], "Contact tracing assumed_trace_prop must be >= floor"
+        return val
 
 
 class AgeSpecificRiskMultiplier(BaseModel):
@@ -299,7 +324,9 @@ class AgeSpecificRiskMultiplier(BaseModel):
 
 
 class ParamConfig:
-    """Config for parameter models"""
+    """
+    Config for parameter models
+    """
 
     anystr_strip_whitespace = True  # Strip whitespace
     allow_mutation = False  # Params should be immutable
@@ -338,5 +365,6 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     victorian_clusters: Optional[VictorianClusterStratification]
-    # Non-epidemiological parameters
+    vic_2021_seeding: Optional[Vic2021Seeding]
+    # Non_epidemiological parameters
     target_output_ratio: Optional[float]

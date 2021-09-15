@@ -920,11 +920,11 @@ class CalibrationOutputs:
         Record the model outputs for this iteration
         """
         assert model and model.outputs is not None, "No model has been run"
-        outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
+        #outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
         derived_outputs_df = db.store.build_derived_outputs_table(
             [model], run_id=iter_num, chain_id=self.chain_id
         )
-        self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
+        #self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
         self.db.append_df(db.store.Table.DERIVED, derived_outputs_df)
 
     def store_mcmc_iteration(

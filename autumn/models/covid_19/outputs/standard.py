@@ -1,8 +1,7 @@
 from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import (
-    COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment, Strain, NOTIFICATIONS, INFECTION, INCIDENCE,
-    PROGRESS,
+    COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment, NOTIFICATIONS, INCIDENCE, PROGRESS,
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
@@ -10,7 +9,6 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.history import History
 from autumn.models.covid_19.stratifications.tracing import Tracing
-from autumn.tools.utils.utils import list_element_wise_division
 
 
 def request_stratified_output_for_flow(
@@ -296,25 +294,6 @@ def request_standard_outputs(
                     sources=[recovered_name, total_name],
                     func=lambda recovered, total: recovered / total,
                 )
-
-    # Calculate the incidence by strain
-    if params.voc_emergence:
-        voc_names = list(params.voc_emergence.keys())
-        all_strains = [Strain.WILD_TYPE] + voc_names
-        for strain in all_strains:
-            incidence_key = f"{INCIDENCE}_strain_{strain}"
-            model.request_output_for_flow(
-                name=incidence_key,
-                flow_name=INCIDENCE,
-                dest_strata={"strain": strain},
-                save_results=False
-            )
-            # Calculate the proportion of incident cases that are VoC
-            model.request_function_output(
-                name=f"prop_{INCIDENCE}_strain_{strain}",
-                func=lambda strain_inc, total_inc: list_element_wise_division(strain_inc, total_inc),
-                sources=[incidence_key, INCIDENCE]
-            )
 
     """
     Case detection rate

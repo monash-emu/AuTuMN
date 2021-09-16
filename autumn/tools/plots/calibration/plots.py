@@ -1109,8 +1109,13 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
             output_config = t
 
     values = output_config["values"]
-    times = output_config["times"]
-    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=False)
+    target_times = output_config["times"]
+
+    n_pre = sum(target_times < times[0])
+    values = values[n_pre:]
+    target_times = target_times[n_pre:]
+
+    _plot_targets_to_axis(axis, values, target_times, on_uncertainty_plot=False)
 
     # Find upper limit for y-axis
     if values:

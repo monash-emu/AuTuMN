@@ -152,7 +152,7 @@ priors = [
     UniformPrior(home_reduction_name, (0.0, 0.4), jumping_stdev=0.04),
     UniformPrior("target_output_ratio", (0.2, 0.7), jumping_stdev=0.04),
     UniformPrior("contact_tracing.assumed_trace_prop", (0.35, 0.6), jumping_stdev=0.04),
-    UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
+    # UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
 ]
 
 # Load proposal sds from yml file

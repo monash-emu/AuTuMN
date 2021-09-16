@@ -9,10 +9,10 @@ from autumn.settings import Region, Models
 
 
 # TODO: Get calibration running
-# TODO: Apply David's marginal posteriors as priors code
 # TODO: Possibly move testing function out to a more obvious point in the code (less important)
 # TODO: Check YouGov inputs to micro-distancing functions
 #  - need to get Mili to do this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
+# DONE: Apply David's marginal posteriors as priors code
 # DONE: Work out why vaccination coverage targets aren't reached - done, it was all ages but program is adults - duh!
 # DONE: Implement future vaccination roll-out - understand the future projections provided by Vida
 # DONE: Implement future vaccination roll-out - understand how to specify projected roll-out in our code
@@ -56,6 +56,12 @@ targets = [
     PoissonTarget(ts_set.get("icu_admissions").truncate_start_time(target_start_time)),
     *cluster_targets,
 ]
+
+# Hacky way to emphasise the last time point
+last_notification_time = targets[0].timeseries.times[-1]
+targets.append(
+    PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(last_notification_time - 1))
+)
 
 # Add multiplier for most services, except use South Metro for South East Metro, use North Metro for West Metro
 cluster_priors = []
@@ -146,6 +152,7 @@ priors = [
     UniformPrior(home_reduction_name, (0.0, 0.4), jumping_stdev=0.04),
     UniformPrior("target_output_ratio", (0.2, 0.7), jumping_stdev=0.04),
     UniformPrior("contact_tracing.assumed_trace_prop", (0.35, 0.6), jumping_stdev=0.04),
+    UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
 ]
 
 # Load proposal sds from yml file

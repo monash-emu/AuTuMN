@@ -52,7 +52,6 @@ for cluster in metro_clusters:
 # Request calibration targets
 targets = [
     PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(target_start_time)),
-    PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(616)),  # Emphasise last week of data
     PoissonTarget(ts_set.get("hospital_admissions").truncate_start_time(target_start_time)),
     PoissonTarget(ts_set.get("icu_admissions").truncate_start_time(target_start_time)),
     *cluster_targets,
@@ -131,7 +130,7 @@ priors = [
         "clinical_stratification.props.hospital.multiplier",
         mean=3.072957401469314, stdev=0.9230093569298286, trunc_range=(0.5, np.inf), jumping_stdev=0.4
     ),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.2), jumping_stdev=0.04),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.15), jumping_stdev=0.04),
     UniformPrior("clinical_stratification.icu_prop", (0.15, 0.3), jumping_stdev=0.05),
     TruncNormalPrior(
         icu_period_name, mean=13.189283389438017, stdev=3.267836334270357, trunc_range=(5.0, np.inf), jumping_stdev=4.

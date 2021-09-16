@@ -11,14 +11,6 @@ ELDERLY_NOTIFICATION_GROUPS = AGEGROUP_STRATA[-3:]
 def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
     # Victorian cluster model outputs.
     clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
-    # Track incidence of disease (transition from exposed to active) - overall and for each cluster
-    model.request_output_for_flow(name="incidence", flow_name="incidence")
-    for cluster in clusters:
-        model.request_output_for_flow(
-            name=f"incidence_for_cluster_{cluster}",
-            flow_name="incidence",
-            dest_strata={"cluster": cluster},
-        )
 
     # Notifications
     notification_sources = []

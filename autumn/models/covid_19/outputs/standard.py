@@ -97,12 +97,7 @@ def request_standard_outputs(
     Incidence
     """
 
-    # Overall, disaggregated by age group and disaggregated by both age group and clinical status
-    model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
-    request_stratified_output_for_flow(model, INCIDENCE, AGEGROUP_STRATA, "agegroup")
-    request_double_stratified_output_for_flow(
-        model, INCIDENCE, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical"
-    )
+
 
     # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
     if params.contact_tracing:

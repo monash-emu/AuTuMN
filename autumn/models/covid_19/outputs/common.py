@@ -1,9 +1,8 @@
 from summer import CompartmentalModel
 
 from autumn.models.covid_19.parameters import Parameters
-from autumn.settings import Region
 from autumn.models.covid_19.constants import (
-    INFECT_DEATH, INFECTION, Compartment, PROGRESS, NOTIFICATION_CLINICAL_STRATA
+    INFECT_DEATH, INFECTION, Compartment, PROGRESS, NOTIFICATION_CLINICAL_STRATA, INCIDENCE,
 )
 from .standard import request_stratified_output_for_flow, request_double_stratified_output_for_flow
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -15,6 +14,21 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
 
     # Clusters to cycle over for Vic model if needed
     clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else None
+
+    """
+    Incidence
+    """
+
+    # Unstratified
+    model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
+
+    # Stratified by age group
+    request_stratified_output_for_flow(model, INCIDENCE, AGEGROUP_STRATA, "agegroup")
+
+    # Stratified by age group and by clinical stratum
+    request_double_stratified_output_for_flow(
+        model, INCIDENCE, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical"
+    )
 
     """
     Infection

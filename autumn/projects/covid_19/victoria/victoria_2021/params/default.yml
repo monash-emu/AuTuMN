@@ -253,7 +253,7 @@ victorian_clusters:
 target_output_ratio: 0.5
 
 vic_2021_seeding:
-  seed_time: 560
+  seed_time: 545
   north_metro: 0.2
   south_east_metro: 0.02
   south_metro: 0.2

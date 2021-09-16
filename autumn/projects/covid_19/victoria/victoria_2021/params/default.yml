@@ -82,7 +82,7 @@ clinical_stratification:
 sojourn:
   compartment_periods:
     hospital_late: 11.6  # VAHI hospital mean duration, all COVID
-    icu_late: 7.4  # VAHI ICU mean duration, all COVID (177.6 hours)
+    icu_late: 5.9  # SPRINT-SARI Australia Project
   compartment_periods_calculated:
     active:
       proportions:

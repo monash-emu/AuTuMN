@@ -1138,6 +1138,9 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
         axis.set_ylabel("percentage", fontsize=label_font_size)
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
+
+    axis.set_xlim([times[0], times[-1]])
+
     change_xaxis_to_date(axis, ref_date, rotation=0)
 
     return axis

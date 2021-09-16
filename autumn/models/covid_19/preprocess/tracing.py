@@ -117,10 +117,9 @@ class PropDetectedTracedProc(ComputedValueProcessor):
         Ensures that the proportion is bounded [0, 1]
         """
 
-        non_zero_prevalence = max(computed_values["prevalence"], 1e-6)
         prop_of_detected_traced = \
-            self.floor + (1. - self.floor) * np.exp(-non_zero_prevalence * self.trace_param)
-        msg = f"floor: {prop_of_detected_traced}\n prev: {non_zero_prevalence}\n param: {self.trace_param}"
+            self.floor + (1. - self.floor) * np.exp(-computed_values["prevalence"] * self.trace_param)
+        msg = f"floor: {prop_of_detected_traced}\n prev: {computed_values['prevalence']}\n param: {self.trace_param}"
         assert 0. <= prop_of_detected_traced <= 1., msg
         return prop_of_detected_traced
 

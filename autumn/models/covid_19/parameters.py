@@ -338,6 +338,7 @@ class Parameters:
     description: Optional[str]
     # Values
     contact_rate: float
+    seasonal_force: Optional[float]
     infect_death: float
     universal_death_rate: float
     infectious_seed: float

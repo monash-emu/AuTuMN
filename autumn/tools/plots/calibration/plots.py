@@ -1140,8 +1140,8 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
     axis.tick_params(axis="y", labelsize=label_font_size)
 
     change_xaxis_to_date(axis, ref_date, rotation=0)
-    axis.set_xlim([times[0], times[-1]])
-    
+    axis.set_xlim([times.iloc[0], times.iloc[-1]])
+
     return axis
 
 

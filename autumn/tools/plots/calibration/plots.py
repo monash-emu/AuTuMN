@@ -1111,7 +1111,7 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
     values = output_config["values"]
     target_times = output_config["times"]
 
-    n_pre = sum(target_times < times[0])
+    n_pre = len([t for t in target_times if t < times.iloc[0]])
     values = values[n_pre:]
     target_times = target_times[n_pre:]
 

@@ -1,0 +1,17 @@
+description: schools open on Oct 1st. Current mobility indefinitely
+
+time:
+  start: 626  # 16 Sep 2021
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-09-30
+        - 2021-10-01 # All schools open
+      values:
+        - 0.
+        - 1
+
+

@@ -19,6 +19,7 @@ from .outputs.vaccination import request_vaccination_outputs
 from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .outputs.strains import request_strain_outputs
+from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_vaccination_flows
 from .preprocess import tracing
@@ -338,6 +339,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     dest_strata={"vaccination": Vaccination.VACCINATED},
                 )
 
+    # Find the total population, used by multiple output types
+    model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
+
     request_common_outputs(model, params, is_region_vic)
 
     # Set up derived output functions
@@ -352,10 +356,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Strain-related outputs
     if params.voc_emergence:
-        request_strain_outputs(model, params)
+        request_strain_outputs(model, list(params.voc_emergence.keys()))
 
     # Dive into summer internals to over-write mixing matrix
     if is_region_vic:
         model._mixing_matrices = [mixing_matrix_function]
+
+    # Proportion of the population previously infected/exposed
+    if params.stratify_by_infection_history:
+        request_history_outputs(model)
+    else:
+        request_recovered_outputs(model, is_region_vic)
 
     return model

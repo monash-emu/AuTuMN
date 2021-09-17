@@ -1,13 +1,12 @@
 from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import (
-    COMPARTMENTS, NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment, NOTIFICATIONS, INCIDENCE, PROGRESS,
+    NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment, NOTIFICATIONS, INCIDENCE, PROGRESS,
 )
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
-from autumn.models.covid_19.stratifications.history import History
 from autumn.models.covid_19.stratifications.tracing import Tracing
 
 
@@ -92,11 +91,6 @@ def request_standard_outputs(
 
     # Different output requests for Victoria model
     is_region_vic = params.population.region and Region.to_name(params.population.region) in Region.VICTORIA_SUBREGIONS
-
-    """
-    Incidence
-    """
-
 
 
     # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
@@ -214,81 +208,6 @@ def request_standard_outputs(
             "_early_active_icu_proportion",
         ],
     )
-
-    """
-    Proportion seropositive/recovered
-    """
-
-    model.request_output_for_compartments(
-        name="_total_population", compartments=COMPARTMENTS, save_results=False
-    )
-    if params.stratify_by_infection_history:
-
-        # Note these people are called "naive", but they have actually had past Covid, immunity just hasn't yet waned
-        model.request_output_for_compartments(
-            name="_recovered",
-            compartments=[Compartment.RECOVERED],
-            strata={"history": History.NAIVE},
-            save_results=False,
-        )
-        model.request_output_for_compartments(
-            name="_experienced",
-            compartments=COMPARTMENTS,
-            strata={"history": History.EXPERIENCED},
-            save_results=False,
-        )
-        model.request_function_output(
-            name="proportion_seropositive",
-            sources=["_recovered", "_experienced", "_total_population"],
-            func=lambda recovered, experienced, total: (recovered + experienced) / total,
-        )
-    else:
-        model.request_output_for_compartments(
-            name="_recovered", compartments=[Compartment.RECOVERED], save_results=False
-        )
-        model.request_function_output(
-            name="proportion_seropositive",
-            sources=["_recovered", "_total_population"],
-            func=lambda recovered, total: recovered / total,
-        )
-    if not is_region_vic:
-        request_stratified_output_for_compartment(
-            model, "_total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
-        )
-        for agegroup in AGEGROUP_STRATA:
-            recovered_name = f"_recoveredXagegroup_{agegroup}"
-            total_name = f"_total_populationXagegroup_{agegroup}"
-            if params.stratify_by_infection_history:
-                experienced_name = f"_experiencedXagegroup_{agegroup}"
-                model.request_output_for_compartments(
-                    name=recovered_name,
-                    compartments=[Compartment.RECOVERED],
-                    strata={"agegroup": agegroup, "history": History.EXPERIENCED},
-                    save_results=False,
-                )
-                model.request_output_for_compartments(
-                    name=experienced_name,
-                    compartments=COMPARTMENTS,
-                    strata={"agegroup": agegroup, "history": History.NAIVE},
-                    save_results=False,
-                )
-                model.request_function_output(
-                    name=f"proportion_seropositiveXagegroup_{agegroup}",
-                    sources=[recovered_name, experienced_name, total_name],
-                    func=lambda recovered, experienced, total: (recovered + experienced) / total,
-                )
-            else:
-                model.request_output_for_compartments(
-                    name=recovered_name,
-                    compartments=[Compartment.RECOVERED],
-                    strata={"agegroup": agegroup},
-                    save_results=False,
-                )
-                model.request_function_output(
-                    name=f"proportion_seropositiveXagegroup_{agegroup}",
-                    sources=[recovered_name, total_name],
-                    func=lambda recovered, total: recovered / total,
-                )
 
     """
     Case detection rate

@@ -24,18 +24,6 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             dest_strata={"tracing": "traced"},
             save_results=False,
         )
-        
-        model.request_computed_value_output("prevalence")
-        model.request_computed_value_output("prop_detected_traced")
-        model.request_computed_value_output("prop_contacts_with_detected_index")
-        model.request_computed_value_output("traced_flow_rate")
-
-        # Proportion of quarantined contacts among all contacts
-        model.request_function_output(
-            name="prop_contacts_quarantined",
-            func=lambda a, b: a * b,
-            sources=["prop_detected_traced", "prop_contacts_with_detected_index"],
-        )
 
     # Then track untraced cases that are still detected
     for clinical in NOTIFICATION_CLINICAL_STRATA:

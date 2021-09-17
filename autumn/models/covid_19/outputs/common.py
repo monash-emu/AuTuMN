@@ -44,6 +44,12 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
     )
 
     """
+    Case detection
+    """
+
+    model.request_computed_value_output("cdr")
+
+    """
     Progression
     """
 
@@ -87,7 +93,7 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
         CLINICAL_STRATA, "clinical", name_stem="infection_deaths", filter_on="source"
     )
 
-    # Victoria-specific output by cluster
+    # Victoria-specific stratification by cluster
     if is_region_vic:
         for cluster in clusters:
             model.request_output_for_flow(

@@ -208,9 +208,3 @@ def request_standard_outputs(
             "_early_active_icu_proportion",
         ],
     )
-
-    """
-    Case detection rate
-    """
-
-    model.request_computed_value_output("cdr")

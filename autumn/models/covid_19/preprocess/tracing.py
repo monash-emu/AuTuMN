@@ -195,6 +195,6 @@ class TracedFlowRateProc(ComputedValueProcessor):
         """
 
         traced_prop = computed_values["prop_detected_traced"] * computed_values["prop_contacts_with_detected_index"]
-        traced_flow_rate = self.incidence_flow_rate * traced_prop / (1. - traced_prop)
+        traced_flow_rate = self.incidence_flow_rate * traced_prop / max((1. - traced_prop), 1e-6)
         assert 0. <= traced_flow_rate
         return traced_flow_rate

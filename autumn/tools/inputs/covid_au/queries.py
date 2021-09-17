@@ -92,12 +92,11 @@ def get_vac_num(input_db, cond_map):
 
 
 def get_pop(cluster, start_age, end_age, input_db):
-    year = 2020 if cluster == "Victoria" else 2018
     pop = input_db.query(
         "population",
         columns=["population"],
         conditions={
-            "year": year,
+            "year": 2020,
             "region": cluster,
             "start_age>": start_age,
             "end_age<": end_age,

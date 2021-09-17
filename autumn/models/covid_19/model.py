@@ -20,6 +20,7 @@ from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .outputs.strains import request_strain_outputs
 from .outputs.tracing import request_tracing_outputs
+from .outputs.healthcare import request_healthcare_outputs
 from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_vaccination_flows
@@ -347,7 +348,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Find the total population, used by multiple output types
     model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
 
-    request_common_outputs(model, params, is_region_vic)
+    # Most standard outputs
+    request_common_outputs(model, is_region_vic)
+    request_healthcare_outputs(model, params.sojourn.compartment_periods, is_region_vic)
 
     # Set up derived output functions
     if is_region_vic:

@@ -1,8 +1,6 @@
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import (
-    NOTIFICATION_CLINICAL_STRATA, Clinical, Compartment, NOTIFICATIONS, INCIDENCE, PROGRESS,
-)
+from autumn.models.covid_19.constants import NOTIFICATION_CLINICAL_STRATA, Clinical, NOTIFICATIONS, INCIDENCE, PROGRESS
 from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -81,17 +79,10 @@ def request_stratified_output_for_compartment(
         )
 
 
-def request_standard_outputs(
-    model: CompartmentalModel,
-    params: Parameters,
-):
+def request_standard_outputs(model: CompartmentalModel, params: Parameters):
     """
     Request all of the standard model outputs for the COVID-19 model, other than some specific ones used in Victoria.
     """
-
-    # Different output requests for Victoria model
-    is_region_vic = params.population.region and Region.to_name(params.population.region) in Region.VICTORIA_SUBREGIONS
-
 
     # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
     if params.contact_tracing:
@@ -167,44 +158,3 @@ def request_standard_outputs(
             sources=notifications_by_age_sources
         )
 
-    """
-    Healthcare occupancy
-    """
-
-    # Hospital occupancy represented as all ICU, all hospital late active, and some early active ICU cases
-    compartment_periods = params.sojourn.compartment_periods
-    icu_early_period = compartment_periods["icu_early"]
-    hospital_early_period = compartment_periods["hospital_early"]
-    period_icu_patients_in_hospital = max(icu_early_period - hospital_early_period, 0.)
-    proportion_icu_patients_in_hospital = period_icu_patients_in_hospital / icu_early_period
-    model.request_output_for_compartments(
-        "_late_active_hospital",
-        compartments=[Compartment.LATE_ACTIVE],
-        strata={"clinical": Clinical.HOSPITAL_NON_ICU},
-        save_results=False,
-    )
-    model.request_output_for_compartments(
-        "icu_occupancy",
-        compartments=[Compartment.LATE_ACTIVE],
-        strata={"clinical": Clinical.ICU},
-    )
-    model.request_output_for_compartments(
-        "_early_active_icu",
-        compartments=[Compartment.EARLY_ACTIVE],
-        strata={"clinical": Clinical.ICU},
-        save_results=False,
-    )
-    model.request_function_output(
-        name="_early_active_icu_proportion",
-        func=lambda patients: patients * proportion_icu_patients_in_hospital,
-        sources=["_early_active_icu"],
-        save_results=False,
-    )
-    model.request_aggregate_output(
-        name="hospital_occupancy",
-        sources=[
-            "_late_active_hospital",
-            "icu_occupancy",
-            "_early_active_icu_proportion",
-        ],
-    )

@@ -1,6 +1,5 @@
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, PROGRESS, NOTIFICATION_CLINICAL_STRATA, INCIDENCE,
 )
@@ -10,7 +9,7 @@ from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.settings import Region
 
 
-def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):
+def request_common_outputs(model: CompartmentalModel, is_region_vic):
 
     # Clusters to cycle over for Vic model if needed
     clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else None

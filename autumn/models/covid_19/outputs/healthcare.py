@@ -1,10 +1,27 @@
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import Compartment, Clinical
+from autumn.models.covid_19.constants import Compartment
 from autumn.settings import Region
+from autumn.models.covid_19.constants import Clinical, PROGRESS
+from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
 def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_region_vic: bool):
+
+    """
+    New admissions (from standard.py)
+    """
+
+    hospital_sources, icu_sources = [], []
+    for agegroup in AGEGROUP_STRATA:
+        hospital_sources += [
+            f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}",
+            f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
+        ]
+        icu_sources.append(f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}")
+    model.request_aggregate_output(name="new_hospital_admissions", sources=hospital_sources)
+    model.request_aggregate_output(name="new_icu_admissions", sources=icu_sources)
+
     """
     Healthcare occupancy
     """

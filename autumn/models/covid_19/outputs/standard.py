@@ -1,7 +1,6 @@
 from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import NOTIFICATION_CLINICAL_STRATA, Clinical, NOTIFICATIONS, INCIDENCE, PROGRESS
-from autumn.projects.covid_19.mixing_optimisation.constants import Region
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
@@ -100,16 +99,6 @@ def request_standard_outputs(model: CompartmentalModel, params: Parameters):
     """
     Healthcare admissions
     """
-
-    hospital_sources, icu_sources = [], []
-    for agegroup in AGEGROUP_STRATA:
-        hospital_sources += [
-            f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}",
-            f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
-        ]
-        icu_sources.append(f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}")
-    model.request_aggregate_output(name="new_hospital_admissions", sources=hospital_sources)
-    model.request_aggregate_output(name="new_icu_admissions", sources=icu_sources)
 
     notification_sources = [
         f"{PROGRESS}Xagegroup_{age}Xclinical_{clinical}"

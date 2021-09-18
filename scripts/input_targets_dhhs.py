@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
@@ -147,7 +148,9 @@ def main():
 
         update_timeseries(TARGET_MAP_DHHS, cluster_df, COVID_VIC2021_TARGETS_CSV, password)
 
-    vic_df = cases.groupby("date_index").sum().reset_index()
+    cases.fillna(np.inf, inplace=True)
+    vic_df = cases.groupby("date_index").sum(skipna=True).reset_index()
+    vic_df.replace({np.inf:np.nan}, inplace=True)
 
     TARGET_MAP_DHHS = {
         "notifications": "cluster_cases",
@@ -281,9 +284,7 @@ def create_vac_coverage(df):
     cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
     cluster_map_df["cluster_pop"] = cluster_map_df.proportion * cluster_map_df.population
     cluster_map_df.cluster_id.replace(CLUSTER_MAP, inplace=True)
-    cluster_pop = (
-        cluster_map_df.groupby("cluster_id").sum().reset_index()[["cluster_id", "cluster_pop"]]
-    )
+   
 
     df = df.merge(cluster_map_df, left_on=["lga_name_2018"], right_on=["lga_name"], how="left")
     df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
@@ -298,9 +299,14 @@ def create_vac_coverage(df):
         .reset_index()
     )
 
-    df = df.merge(cluster_pop, on=["cluster_id"], how="left")
-    df["coverage"] = df.n / df.cluster_pop
     df.sort_values(by=["cluster_id", "agegroup", "date_index"], inplace=True)
+
+    df.agegroup.replace({ '90-94':'85-89', '95-99':'85-89','100+':'85-89'}, inplace=True)
+    df["start_age"] = df["agegroup"].apply(lambda s: int(s.split("-")[0]))
+    df["end_age"] = df["agegroup"].apply(lambda s: int(s.split("-")[1]))
+
+    numeric_cols = ['dosenumber','n','start_age','end_age']
+    df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
 
     return df
 

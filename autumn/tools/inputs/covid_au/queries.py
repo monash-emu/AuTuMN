@@ -44,29 +44,66 @@ def get_dhhs_testing_numbers(cluster: str = None):
     return test_dates, avg_vals
 
 
-def get_dhhs_vaccination_numbers(cluster: str = None, agegroup: str = None, dose=1):
+def get_dhhs_vaccination_numbers(
+    cluster: str = None, start_age: int = 0, end_age: int = 89, dose=1
+):
     """
     Returns number of vaccinations administered in Victoria.
     """
     input_db = get_input_db()
 
-    if cluster is None and agegroup is None:
-        df = input_db.query(
-            "vic_2021", columns=["date_index", "n"], conditions={"dosenumber": dose}
-        )
-        df = df.groupby(["date_index"], as_index=False).sum()
-    elif agegroup is None:
-        df = input_db.query(
-            "vic_2021",
-            columns=["date_index", "n"],
-            conditions={"cluster_id": cluster, "dosenumber": dose},
-        )
+    cond_map = {
+        "dosenumber": dose,
+        "start_age>": start_age,
+        "end_age<": end_age,
+    }
+
+    # Conditional to manage state or cluster
+    if cluster is None:
+        cluster = "Victoria"
+
+    elif cluster is not None:
+        cluster = cluster.upper()
+        cond_map["cluster_id"] = cluster
+
+    pop = get_pop(cluster, start_age, end_age, input_db)
+    df = get_vac_num(input_db, cond_map)
+
+    # Total number of vaccinations per day
+    df = df[["date_index", "n"]].groupby(["date_index"], as_index=False).sum()
+
+    # Cumulative vaccination and coverage
+    df["cml_n"] = df.n.cumsum()
+    df["cml_coverage"] = df.cml_n / pop
 
     vac_dates = df.date_index.to_numpy()
-    vac_values = df.n.to_numpy()
+    coverage_values = df.cml_coverage.to_numpy()
     epsilon = 1e-6  # A really tiny number to avoid having any zeros
-    avg_vals = np.array(apply_moving_average(vac_values, 7)) + epsilon
+    avg_vals = np.array(apply_moving_average(coverage_values, 7)) + epsilon
     return vac_dates, avg_vals
+
+
+def get_vac_num(input_db, cond_map):
+    df = input_db.query(
+        "vic_2021", columns=["date_index", "n", "start_age", "end_age"], conditions=cond_map
+    )
+
+    return df
+
+
+def get_pop(cluster, start_age, end_age, input_db):
+    pop = input_db.query(
+        "population",
+        columns=["population"],
+        conditions={
+            "year": 2020,
+            "region": cluster,
+            "start_age>": start_age,
+            "end_age<": end_age,
+        },
+    )
+    pop = pop.population.sum()
+    return pop
 
 
 def get_yougov_date():

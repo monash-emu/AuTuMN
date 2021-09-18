@@ -1,6 +1,7 @@
 description: BASELINE
 
 infectious_seed: 0.
+seasonal_force: 0.
 
 mixing_matrices:
   type: extrapolated
@@ -12,10 +13,10 @@ country:
   iso3: AUS
 
 contact_tracing:
-  assumed_trace_prop: 0.2  # Ignore, calibrated
+  assumed_trace_prop: 0.31  # Ignore, calibrated
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2
-  floor: 0.4
+  floor: 0.3
 
 # Vaccination effectiveness parameters taken from https://www.medrxiv.org/content/10.1101/2021.08.18.21262237v1
 vaccination:
@@ -33,11 +34,11 @@ vaccination:
         coverage: 0.  # Ignore, not used but part of parameter validation
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 632  # 9th September is 618 (current date), lagged by two weeks
-    - age_min: 10
+    - age_min: 15
       supply_period_coverage:
-        coverage: 0.9  # Interpreted as the average statewide value to be reached at this time
+        coverage: 0.85  # Interpreted as the average statewide value to be reached at this time
         start_time: 632
-        end_time: 660
+        end_time: 653
 
 time:
   start: 454
@@ -49,24 +50,40 @@ testing_to_detection:  # Need to mention these parameters in the Supplement some
   smoothing_period: 7
 
 clinical_stratification:
-  icu_prop: 0.25  # Manually adjusted to observations
 
   # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
   # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88
   # News article also links to some of the more important recent studies and pre-prints
   # https://www.cbc.ca/news/health/does-delta-cause-more-severe-covid-19-here-s-what-we-know-and-don-t-1.6153470
   props:
-    symptomatic:
-      multiplier: 1.88
 
-infection_fatality:
-  multiplier: 1.88
+    # Table 1.1 from NNDSS document that Peter Collignon tweeted (from my email)
+    hospital:
+      props:
+        - 0.029  # 0-4
+        - 0.029  # 5-9
+        - 0.014  # 10-14
+        - 0.014  # 15-19
+        - 0.030  # 20-24
+        - 0.030  # 25-29
+        - 0.047  # 30-34
+        - 0.047  # 35-39
+        - 0.081  # 40-44
+        - 0.081  # 45-49
+        - 0.128  # 50-54
+        - 0.128  # 55-59
+        - 0.221  # 60-64
+        - 0.221  # 65-69
+        - 0.389  # 70-74
+        - 0.5  # 75+ FIXME: currently approximate, need to sort out weighting to population for this age group
+
+  icu_prop: 0.16
 
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
     hospital_late: 11.6  # VAHI hospital mean duration, all COVID
-    icu_late: 7.4  # VAHI ICU mean duration, all COVID (177.6 hours)
+    icu_late: 5.9  # SPRINT-SARI Australia Project
   compartment_periods_calculated:
     active:
       proportions:
@@ -76,7 +93,7 @@ sojourn:
 # Cluster stratification.
 victorian_clusters:
   intercluster_mixing: 0.02  # Ignore, calibrated
-  contact_rate_multiplier_north_metro: 1.  # Ignore, ccalibrated
+  contact_rate_multiplier_north_metro: 1.  # Ignore, calibrated
   contact_rate_multiplier_south_metro: 1.  # Ignore, calibrated
   contact_rate_multiplier_barwon_south_west: 1.  # Ignore, calibrated
   contact_rate_multiplier_regional: 1.  # Ignore, calibrated
@@ -181,6 +198,8 @@ victorian_clusters:
             - 2021-07-27  # Schools re-open after lockdown 5
             - 2021-08-04
             - 2021-08-05  # Schools close with lockdown 6
+            - 2021-09-12
+            - 2021-09-13  # Schools re-open in regional Victoria
           values:
             - 1.
             - 0.
@@ -188,6 +207,8 @@ victorian_clusters:
             - 1.
             - 1.
             - 0.
+            - 0.
+            - 0.30769  # Four of 13 year levels (prep to year 2 and year 12)
 
       # Regional Victoria clusters microdistancing function
       microdistancing:
@@ -233,7 +254,7 @@ victorian_clusters:
 target_output_ratio: 0.5
 
 vic_2021_seeding:
-  seed_time: 560
+  seed_time: 545
   north_metro: 0.2
   south_east_metro: 0.02
   south_metro: 0.2

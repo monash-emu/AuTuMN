@@ -5,7 +5,7 @@ infectious_seed: 100.
 
 time:
   start: 180
-  end: 883 # june 1, 2022
+  end: 913 # july 1, 2022
 
 country:
   iso3: MYS
@@ -19,16 +19,19 @@ clinical_stratification:
 vaccination:
   fully_vaccinated:
     overall_efficacy: 0.7
-    vacc_prop_prevent_infection: 1
+    vacc_prop_prevent_infection: 0.7
   roll_out_components:
     - supply_period_coverage:
-        coverage: 0.25
+        coverage: 0.55
         start_time: 481 # 25 Apr 2021
-        end_time: 584 # 06 August 2021
+        end_time: 624 # 15 Sep 2021
     - supply_period_coverage:
         coverage: 0.55
-        start_time: 585 # 07 August 2021
+        start_time: 625 # 16 Sep 2021
         end_time: 732 # 01 Jan 2022
+
+vaccination_risk:
+  calculate: true
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -79,8 +82,7 @@ mobility:
         - 2021-04-04
         - 2021-05-01
         - 2021-05-02 # Schools fully close again
-        - 2021-08-31
-        - 2021-09-01 # All schools open
+        - 2021-09-30
       values:
         - 1.
         - 0.
@@ -101,7 +103,6 @@ mobility:
         - 1.
         - 0.
         - 0.
-        - 1.
 
 
 voc_emergence:

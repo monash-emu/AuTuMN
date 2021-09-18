@@ -304,7 +304,7 @@ class ContactTracing(BaseModel):
     assumed_prev: float
     quarantine_infect_multiplier: float
 
-    @validator("floor")
+    @validator("floor", allow_reuse=True)
     def check_floor(val):
         assert 0 <= val <= 1, "Contact tracing floor must be in range [0, 1]"
         return val
@@ -338,6 +338,7 @@ class Parameters:
     description: Optional[str]
     # Values
     contact_rate: float
+    seasonal_force: Optional[float]
     infect_death: float
     universal_death_rate: float
     infectious_seed: float

@@ -24,6 +24,7 @@ def get_tracing_param(assumed_trace_prop, assumed_prev, floor):
 
     assert 0. <= assumed_trace_prop <= 1.001
     assert 0. <= assumed_prev <= 1.
+    assert floor < assumed_trace_prop, "Assumed trace proportion less than or equal to contact tracing floor"
     return -np.log((assumed_trace_prop - floor) / (1. - floor)) / assumed_prev
 
 
@@ -115,10 +116,11 @@ class PropDetectedTracedProc(ComputedValueProcessor):
         Ensures that the proportion is bounded [0, 1]
         """
 
-        proportion_of_detected_traced = \
+        prop_of_detected_traced = \
             self.floor + (1. - self.floor) * np.exp(-computed_values["prevalence"] * self.trace_param)
-        assert 0. <= proportion_of_detected_traced <= 1.
-        return proportion_of_detected_traced
+        msg = f"floor: {prop_of_detected_traced}\n prev: {computed_values['prevalence']}\n param: {self.trace_param}"
+        assert 0. <= prop_of_detected_traced <= 1., msg
+        return prop_of_detected_traced
 
 
 class PropIndexDetectedProc(ComputedValueProcessor):
@@ -192,6 +194,6 @@ class TracedFlowRateProc(ComputedValueProcessor):
         """
 
         traced_prop = computed_values["prop_detected_traced"] * computed_values["prop_contacts_with_detected_index"]
-        traced_flow_rate = self.incidence_flow_rate * traced_prop / (1. - traced_prop)
+        traced_flow_rate = self.incidence_flow_rate * traced_prop / max((1. - traced_prop), 1e-6)
         assert 0. <= traced_flow_rate
         return traced_flow_rate

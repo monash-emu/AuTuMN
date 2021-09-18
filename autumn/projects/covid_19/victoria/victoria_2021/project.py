@@ -9,10 +9,10 @@ from autumn.settings import Region, Models
 
 
 # TODO: Get calibration running
-# TODO: Apply David's marginal posteriors as priors code
 # TODO: Possibly move testing function out to a more obvious point in the code (less important)
 # TODO: Check YouGov inputs to micro-distancing functions
 #  - need to get Mili to do this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
+# DONE: Apply David's marginal posteriors as priors code
 # DONE: Work out why vaccination coverage targets aren't reached - done, it was all ages but program is adults - duh!
 # DONE: Implement future vaccination roll-out - understand the future projections provided by Vida
 # DONE: Implement future vaccination roll-out - understand how to specify projected roll-out in our code
@@ -56,6 +56,12 @@ targets = [
     PoissonTarget(ts_set.get("icu_admissions").truncate_start_time(target_start_time)),
     *cluster_targets,
 ]
+
+# Hacky way to emphasise the last time point
+last_notification_time = targets[0].timeseries.times[-1]
+targets.append(
+    PoissonTarget(ts_set.get("notifications").round_values().truncate_start_time(last_notification_time - 1))
+)
 
 # Add multiplier for most services, except use South Metro for South East Metro, use North Metro for West Metro
 cluster_priors = []
@@ -107,7 +113,8 @@ home_reduction_name = "victorian_clusters.metro.mobility.microdistancing.home_re
 priors = [
     # Global COVID priors, but with jumping sds adjusted
     TruncNormalPrior(
-        incubation_period_name, mean=3.5, stdev=0.7810560402997285, trunc_range=(1.0, np.inf), jumping_stdev=0.5
+        incubation_period_name,
+        mean=6.095798813756773, stdev=0.7810560402997285, trunc_range=(1.0, np.inf), jumping_stdev=0.5
     ),
     TruncNormalPrior(
         active_period_name,
@@ -129,7 +136,7 @@ priors = [
         "clinical_stratification.props.hospital.multiplier",
         mean=3.072957401469314, stdev=0.9230093569298286, trunc_range=(0.5, np.inf), jumping_stdev=0.4
     ),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.2), jumping_stdev=0.04),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.15), jumping_stdev=0.04),
     UniformPrior("clinical_stratification.icu_prop", (0.15, 0.3), jumping_stdev=0.05),
     TruncNormalPrior(
         icu_period_name, mean=13.189283389438017, stdev=3.267836334270357, trunc_range=(5.0, np.inf), jumping_stdev=4.
@@ -144,7 +151,8 @@ priors = [
     ),
     UniformPrior(home_reduction_name, (0.0, 0.4), jumping_stdev=0.04),
     UniformPrior("target_output_ratio", (0.2, 0.7), jumping_stdev=0.04),
-    UniformPrior("contact_tracing.assumed_trace_prop", (0.2, 0.5), jumping_stdev=0.04),
+    UniformPrior("contact_tracing.assumed_trace_prop", (0.35, 0.6), jumping_stdev=0.04),
+    # UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
 ]
 
 # Load proposal sds from yml file

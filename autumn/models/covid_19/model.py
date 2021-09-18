@@ -7,6 +7,7 @@ from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.preprocess.case_detection import CdrProc
+from .preprocess.seasonality import get_seasonal_forcing
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
@@ -106,8 +107,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Add intercompartmental flows
     """
 
+    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate.
+    if params.seasonal_force:
+        contact_rate = get_seasonal_forcing(
+            365.0, 173.0, params.seasonal_force, params.contact_rate
+        )
+    else:
+        # Use a static contact rate.
+        contact_rate = params.contact_rate
+
     # Infection
-    contact_rate = params.contact_rate
     model.add_infection_frequency_flow(
         name=INFECTION,
         contact_rate=contact_rate,
@@ -229,6 +238,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Contact tracing stratification
     if params.contact_tracing:
+
         tracing_strat = get_tracing_strat(
             params.contact_tracing.quarantine_infect_multiplier,
             params.clinical_stratification.late_infect_multiplier

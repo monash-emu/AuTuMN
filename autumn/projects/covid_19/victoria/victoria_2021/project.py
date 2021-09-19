@@ -89,7 +89,7 @@ for region in regions_for_multipliers:
 # "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
 #  norm (0.4590192843551404, 0.054643498605008924)
 #  or beta (2.233261027002466, 1.7150557025357558, 0.00300823791519224, 0.5850818483284497)
-# "contact_rate", updated (0.005097283966437761, 0.04484184883556176)
+# "contact_rate", norm (0.0474203530259076, 0.004265332122213565)
 # "clinical_stratification.non_sympt_infect_multiplier",
 #  beta (5.070057160691058, 2.0783831204948724, -0.04627612686595504, 0.8467253773323684)
 # "clinical_stratification.props.hospital.multiplier", norm (3.072957401469314, 0.9230093569298286)
@@ -129,7 +129,7 @@ priors = [
         regional_multiplier_name,
         mean=0.7070792993624084, stdev=0.11538988453463195, trunc_range=(0.5, np.inf), jumping_stdev=0.15
     ),
-    UniformPrior("contact_rate", (0.125, 0.19), jumping_stdev=0.004),
+    TruncNormalPrior("contact_rate", mean=0.0474203530259076, stdev=0.004265332122213565, jumping_stdev=0.004),
     UniformPrior("victorian_clusters.intercluster_mixing", (0.005, 0.05), jumping_stdev=0.01),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.2, 0.8), jumping_stdev=0.05),
     TruncNormalPrior(

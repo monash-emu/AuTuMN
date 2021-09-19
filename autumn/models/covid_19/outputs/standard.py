@@ -79,70 +79,58 @@ def request_stratified_output_for_compartment(
 
 
 def request_standard_outputs(model: CompartmentalModel, params: Parameters):
-    """
-    Request all of the standard model outputs for the COVID-19 model, other than some specific ones used in Victoria.
-    """
-
-    # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
-    if params.contact_tracing:
-        non_notified_clinical_strata = [strat for strat in CLINICAL_STRATA if strat not in NOTIFICATION_CLINICAL_STRATA]
-        for agegroup in AGEGROUP_STRATA:
-            for clinical in non_notified_clinical_strata:
-                name = f"{INCIDENCE}_tracedXagegroup_{agegroup}Xclinical_{clinical}"
-                model.request_output_for_flow(
-                    name=name,
-                    flow_name=INCIDENCE,
-                    dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": Tracing.TRACED},
-                    save_results=False,
-                )
-
-    """
-    Healthcare admissions
-    """
-
-    notification_sources = [
-        f"{PROGRESS}Xagegroup_{age}Xclinical_{clinical}"
-        for age in AGEGROUP_STRATA
-        for clinical in NOTIFICATION_CLINICAL_STRATA
-    ]
-
-    # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
-    notifications_traced_by_age_sources = {}
-    if params.contact_tracing:
-        for agegroup in AGEGROUP_STRATA:
-            notifications_traced_by_age_sources[agegroup] = []
-            for clinical in [s for s in CLINICAL_STRATA if s not in NOTIFICATION_CLINICAL_STRATA]:
-                name = f"{PROGRESS}_tracedXagegroup_{agegroup}Xclinical_{clinical}"
-                model.request_output_for_flow(
-                    name=name,
-                    flow_name=PROGRESS,
-                    dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": Tracing.TRACED},
-                    save_results=False,
-                )
-                notification_sources.append(name)
-                notifications_traced_by_age_sources[agegroup].append(name)
-
-    model.request_aggregate_output(name=NOTIFICATIONS, sources=notification_sources)
-
-    # Notifications by age group
-    for agegroup in AGEGROUP_STRATA:
-        sympt_isolate_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
-        hospital_non_icu_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}"
-        icu_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}"
-        notifications_by_age_sources = [sympt_isolate_name, hospital_non_icu_name, icu_name]
-        if params.contact_tracing:
-            notifications_by_age_sources += notifications_traced_by_age_sources[agegroup]
-
-        model.request_aggregate_output(
-            name=f"{NOTIFICATIONS}Xagegroup_{agegroup}",
-            sources=notifications_by_age_sources
-        )
-
-    # Cumulative incidence and notifications
-    if params.cumul_incidence_start_time:
-        model.request_cumulative_output(
-            name=f"accum_{NOTIFICATIONS}",
-            source=NOTIFICATIONS,
-            start_time=params.cumul_incidence_start_time,
-        )
-
+    pass
+    # # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
+    # if params.contact_tracing:
+    #     non_notified_clinical_strata = [strat for strat in CLINICAL_STRATA if strat not in NOTIFICATION_CLINICAL_STRATA]
+    #     for agegroup in AGEGROUP_STRATA:
+    #         for clinical in non_notified_clinical_strata:
+    #             name = f"{INCIDENCE}_tracedXagegroup_{agegroup}Xclinical_{clinical}"
+    #             model.request_output_for_flow(
+    #                 name=name,
+    #                 flow_name=INCIDENCE,
+    #                 dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": Tracing.TRACED},
+    #                 save_results=False,
+    #             )
+    #
+    # notification_sources = [
+    #     f"{PROGRESS}Xagegroup_{age}Xclinical_{clinical}"
+    #     for age in AGEGROUP_STRATA
+    #     for clinical in NOTIFICATION_CLINICAL_STRATA
+    # ]
+    #
+    # # We also need to capture traced cases that are not already captured with NOTIFICATION_CLINICAL_STRATA
+    # notifications_traced_by_age_sources = {}
+    # if params.contact_tracing:
+    #     for agegroup in AGEGROUP_STRATA:
+    #         notifications_traced_by_age_sources[agegroup] = []
+    #         for clinical in [s for s in CLINICAL_STRATA if s not in NOTIFICATION_CLINICAL_STRATA]:
+    #             name = f"{PROGRESS}_tracedXagegroup_{agegroup}Xclinical_{clinical}"
+    #             model.request_output_for_flow(
+    #                 name=name,
+    #                 flow_name=PROGRESS,
+    #                 dest_strata={"agegroup": agegroup, "clinical": clinical, "tracing": Tracing.TRACED},
+    #                 save_results=False,
+    #             )
+    #             notification_sources.append(name)
+    #             notifications_traced_by_age_sources[agegroup].append(name)
+    #
+    # model.request_aggregate_output(name=NOTIFICATIONS, sources=notification_sources)
+    #
+    #
+    #
+    #
+    # # Notifications by age group
+    # for agegroup in AGEGROUP_STRATA:
+    #     sympt_isolate_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
+    #     hospital_non_icu_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}"
+    #     icu_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}"
+    #     notifications_by_age_sources = [sympt_isolate_name, hospital_non_icu_name, icu_name]
+    #     if params.contact_tracing:
+    #         notifications_by_age_sources += notifications_traced_by_age_sources[agegroup]
+    #
+    #     model.request_aggregate_output(
+    #         name=f"{NOTIFICATIONS}Xagegroup_{agegroup}",
+    #         sources=notifications_by_age_sources
+    #     )
+    #

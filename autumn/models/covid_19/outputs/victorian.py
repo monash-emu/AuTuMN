@@ -6,34 +6,9 @@ from autumn.settings import Region
 
 
 def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
-    # Victorian cluster model outputs.
+
+    # Victorian cluster model outputs
     clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
-
-    # Notifications
-    notification_sources = []
-    # first track all traced cases (regardless of clinical stratum)
-    if params.contact_tracing:
-        name = f"progress_traced"
-        notification_sources.append(name)
-        model.request_output_for_flow(
-            name=name,
-            flow_name="progress",
-            dest_strata={"tracing": "traced"},
-            save_results=False,
-        )
-
-    # Then track untraced cases that are still detected
-    for clinical in NOTIFICATION_CLINICAL_STRATA:
-        name = f"progress_untracedX{clinical}"
-        dest_strata = {"clinical": clinical, "tracing": "untraced"} if params.contact_tracing else {"clinical": clinical}
-        notification_sources.append(name)
-        model.request_output_for_flow(
-            name=name,
-            flow_name="progress",
-            dest_strata=dest_strata,
-            save_results=False,
-        )
-    model.request_aggregate_output(name="notifications", sources=notification_sources)
 
     # Cluster-specific notifications
     for cluster in clusters:
@@ -66,10 +41,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         model.request_aggregate_output(
             name=f"notifications_for_cluster_{cluster}", sources=cluster_notification_sources
         )
-        model.request_cumulative_output(
-            name=f"accum_notifications_for_cluster_{cluster}",
-            source=f"notifications_for_cluster_{cluster}",
-        )
+
 
     # Track non-ICU hospital admissions (transition from early to late active in hospital, non-ICU stratum)
     model.request_output_for_flow(

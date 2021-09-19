@@ -129,7 +129,10 @@ priors = [
         regional_multiplier_name,
         mean=0.7070792993624084, stdev=0.11538988453463195, trunc_range=(0.5, np.inf), jumping_stdev=0.15
     ),
-    TruncNormalPrior("contact_rate", mean=0.0474203530259076, stdev=0.004265332122213565, jumping_stdev=0.004),
+    TruncNormalPrior(
+        "contact_rate",
+        mean=0.0474203530259076, stdev=0.004265332122213565, trunc_range=(0.02, np.inf), jumping_stdev=0.004
+    ),
     UniformPrior("victorian_clusters.intercluster_mixing", (0.005, 0.05), jumping_stdev=0.01),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.2, 0.8), jumping_stdev=0.05),
     TruncNormalPrior(

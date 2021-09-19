@@ -82,9 +82,6 @@ def request_stratified_output_for_compartment(
 
 def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):
 
-    # Clusters to cycle over for Vic model if needed
-    clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else None
-
     """
     Incidence
     """
@@ -195,40 +192,39 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
         )
 
     # Victorian cluster model outputs
-    clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+    clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else ()
 
     # Cluster-specific notifications
-    if is_region_vic:
-        for cluster in clusters:
-            cluster_notification_sources = []
-    
-            # First track all traced cases (regardless of clinical stratum)
-            if params.contact_tracing:
-                name = f"progress_tracedX{cluster}"
-                cluster_notification_sources.append(name)
-                model.request_output_for_flow(
-                    name=name,
-                    flow_name="progress",
-                    dest_strata={"tracing": "traced", "cluster": cluster},
-                    save_results=False,
-                )
+    for cluster in clusters:
+        cluster_notification_sources = []
 
-            # Then track untraced cases that are passively detected (depending on clinical stratum)
-            for clinical in NOTIFICATION_CLINICAL_STRATA:
-                name = f"progress_untracedXcluster_{cluster}X{clinical}"
-                dest_strata = {"clinical": clinical, "cluster": cluster, "tracing": "untraced"} if \
-                    params.contact_tracing else {"clinical": clinical, "cluster": cluster}
-                cluster_notification_sources.append(name)
-                model.request_output_for_flow(
-                    name=name,
-                    flow_name="progress",
-                    dest_strata=dest_strata,
-                    save_results=False,
-                )
-    
-            model.request_aggregate_output(
-                name=f"notificationsXcluster_{cluster}", sources=cluster_notification_sources
+        # First track all traced cases (regardless of clinical stratum)
+        if params.contact_tracing:
+            name = f"progress_tracedX{cluster}"
+            cluster_notification_sources.append(name)
+            model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata={"tracing": "traced", "cluster": cluster},
+                save_results=False,
             )
+
+        # Then track untraced cases that are passively detected (depending on clinical stratum)
+        for clinical in NOTIFICATION_CLINICAL_STRATA:
+            name = f"progress_untracedXcluster_{cluster}X{clinical}"
+            dest_strata = {"clinical": clinical, "cluster": cluster, "tracing": "untraced"} if \
+                params.contact_tracing else {"clinical": clinical, "cluster": cluster}
+            cluster_notification_sources.append(name)
+            model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata=dest_strata,
+                save_results=False,
+            )
+
+        model.request_aggregate_output(
+            name=f"notificationsXcluster_{cluster}", sources=cluster_notification_sources
+        )
 
     """
     Case detection
@@ -282,9 +278,4 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
 
     # Victoria-specific stratification by cluster
     if is_region_vic:
-        for cluster in clusters:
-            model.request_output_for_flow(
-                name=f"infection_deaths_for_cluster_{cluster}",
-                flow_name=INFECT_DEATH,
-                source_strata={"cluster": cluster},
-            )
+        request_stratified_output_for_flow(model, INFECT_DEATH, clusters, "cluster", "source")

@@ -212,13 +212,13 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
                     dest_strata={"tracing": "traced", "cluster": cluster},
                     save_results=False,
                 )
-    
-            # Then track untraced cases that are still detected
+
+            # Then track untraced cases that are passively detected (depending on clinical stratum)
             for clinical in NOTIFICATION_CLINICAL_STRATA:
-                name = f"progress_untraced_for_cluster_{cluster}X{clinical}"
-                cluster_notification_sources.append(name)
-                dest_strata = {"clinical": clinical, "cluster": cluster, "tracing": "untraced"} if\
+                name = f"progress_untracedXcluster_{cluster}X{clinical}"
+                dest_strata = {"clinical": clinical, "cluster": cluster, "tracing": "untraced"} if \
                     params.contact_tracing else {"clinical": clinical, "cluster": cluster}
+                cluster_notification_sources.append(name)
                 model.request_output_for_flow(
                     name=name,
                     flow_name="progress",
@@ -227,7 +227,7 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
                 )
     
             model.request_aggregate_output(
-                name=f"notifications_for_cluster_{cluster}", sources=cluster_notification_sources
+                name=f"notificationsXcluster_{cluster}", sources=cluster_notification_sources
             )
 
     """

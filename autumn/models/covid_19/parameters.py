@@ -339,6 +339,7 @@ class Parameters:
     # Values
     contact_rate: float
     seasonal_force: Optional[float]
+    vic_delta_infectiousness_multiplier: Optional[float]
     infect_death: float
     universal_death_rate: float
     infectious_seed: float

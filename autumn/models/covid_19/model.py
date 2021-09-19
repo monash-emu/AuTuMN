@@ -102,6 +102,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Add intercompartmental flows
     """
 
+    vic_delta_multiplier = params.vic_delta_infectiousness_multiplier if is_region_vic2021 else 1.
+    contact_rate = params.contact_rate * vic_delta_multiplier
+
     # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate.
     if params.seasonal_force:
         contact_rate = get_seasonal_forcing(

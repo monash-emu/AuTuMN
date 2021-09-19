@@ -10,6 +10,7 @@ infect_death: 0. # Compulsory parameter that is completely overwritten in strati
 universal_death_rate: 0. # Compulsory parameter for all models, even though there are no population-wide deaths
 infectious_seed: 10 # Initial condition for infectious
 contact_rate: 0.03 # Routinely calibrated, see respective calibration files
+vic_delta_infectiousness_multiplier: null
 seasonal_force: null
 
 #

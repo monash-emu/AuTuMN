@@ -2,6 +2,7 @@ description: BASELINE
 
 infectious_seed: 0.
 seasonal_force: 0.
+vic_delta_infectiousness_multiplier: 1.
 
 mixing_matrices:
   type: extrapolated

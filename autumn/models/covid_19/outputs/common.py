@@ -154,14 +154,22 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
         )
     model.request_aggregate_output(name="notifications", sources=notification_pathways)
 
-    age_notification_pathways = {}
+    # Cumulative unstratified notifications
+    if params.cumul_incidence_start_time:
+        model.request_cumulative_output(
+            name=f"accum_{NOTIFICATIONS}",
+            source=NOTIFICATIONS,
+            start_time=params.cumul_incidence_start_time,
+        )
+
+    # Age-specific notifications
     for agegroup in AGEGROUP_STRATA:
-        age_notification_pathways[agegroup] = []
+        age_notification_pathways = []
 
         # First track all traced cases (regardless of clinical stratum)
         if params.contact_tracing:
             name = f"progress_tracedX{agegroup}"
-            age_notification_pathways[agegroup].append(name)
+            age_notification_pathways.append(name)
             model.request_output_for_flow(
                 name=name,
                 flow_name="progress",
@@ -175,7 +183,7 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
             dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
                 params.contact_tracing else \
                 {"clinical": clinical, "agegroup": agegroup}
-            age_notification_pathways[agegroup].append(name)
+            age_notification_pathways.append(name)
             model.request_output_for_flow(
                 name=name,
                 flow_name="progress",
@@ -183,16 +191,44 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
                 save_results=False,
             )
         model.request_aggregate_output(
-            name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways[agegroup]
+            name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways
         )
 
-    # Cumulative notifications
-    if params.cumul_incidence_start_time:
-        model.request_cumulative_output(
-            name=f"accum_{NOTIFICATIONS}",
-            source=NOTIFICATIONS,
-            start_time=params.cumul_incidence_start_time,
-        )
+    # Victorian cluster model outputs
+    clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+
+    # Cluster-specific notifications
+    if is_region_vic:
+        for cluster in clusters:
+            cluster_notification_sources = []
+    
+            # First track all traced cases (regardless of clinical stratum)
+            if params.contact_tracing:
+                name = f"progress_tracedX{cluster}"
+                cluster_notification_sources.append(name)
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"tracing": "traced", "cluster": cluster},
+                    save_results=False,
+                )
+    
+            # Then track untraced cases that are still detected
+            for clinical in NOTIFICATION_CLINICAL_STRATA:
+                name = f"progress_untraced_for_cluster_{cluster}X{clinical}"
+                cluster_notification_sources.append(name)
+                dest_strata = {"clinical": clinical, "cluster": cluster, "tracing": "untraced"} if\
+                    params.contact_tracing else {"clinical": clinical, "cluster": cluster}
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata=dest_strata,
+                    save_results=False,
+                )
+    
+            model.request_aggregate_output(
+                name=f"notifications_for_cluster_{cluster}", sources=cluster_notification_sources
+            )
 
     """
     Case detection

@@ -17,7 +17,6 @@ from .constants import (
 from . import preprocess
 from .outputs.common import request_common_outputs
 from .outputs.vaccination import request_vaccination_outputs
-from .outputs.victorian import request_victorian_outputs
 from .outputs.strains import request_strain_outputs
 from .outputs.tracing import request_tracing_outputs
 from .outputs.healthcare import request_healthcare_outputs
@@ -361,9 +360,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     request_common_outputs(model, params, is_region_vic)
     request_healthcare_outputs(model, params.sojourn.compartment_periods, is_region_vic)
 
-    # Set up derived output functions
-    if is_region_vic:
-        request_victorian_outputs(model, params)
+    """
+    Set up derived output functions
+    """
 
     # Vaccination
     if params.vaccination:

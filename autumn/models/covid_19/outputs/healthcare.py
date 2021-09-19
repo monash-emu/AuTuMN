@@ -26,8 +26,6 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
     Healthcare occupancy
     """
 
-    clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
-
     # Hospital occupancy represented as all ICU, all hospital late active, and some early active ICU cases
     compartment_periods = sojourn_periods
     icu_early_period = compartment_periods["icu_early"]
@@ -74,6 +72,9 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
     proportion_icu_patients_in_hospital = period_icu_patients_in_hospital / icu_early_period
 
     if is_region_vic:
+
+        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+
         for cluster in clusters:
             model.request_output_for_compartments(
                 f"_late_active_hospital_for_cluster_{cluster}",
@@ -105,4 +106,63 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
                     f"icu_occupancy_for_cluster_{cluster}",
                     f"_early_active_icu_proportion_for_cluster_{cluster}",
                 ],
+            )
+
+
+
+
+        # ********
+
+        # Clusters to cycle over for Vic model if needed
+        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+
+        # Track non-ICU hospital admissions (transition from early to late active in hospital, non-ICU stratum)
+        model.request_output_for_flow(
+            name="non_icu_admissions",
+            flow_name="progress",
+            source_strata={"clinical": Clinical.HOSPITAL_NON_ICU},
+            dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU},
+        )
+        for cluster in clusters:
+            model.request_output_for_flow(
+                name=f"non_icu_admissions_for_cluster_{cluster}",
+                flow_name="progress",
+                source_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
+                dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
+            )
+
+        # Track ICU admissions (transition from early to late active in ICU stratum)
+        model.request_output_for_flow(
+            name="icu_admissions",
+            flow_name="progress",
+            source_strata={"clinical": Clinical.ICU},
+            dest_strata={"clinical": Clinical.ICU},
+        )
+        for cluster in clusters:
+            model.request_output_for_flow(
+                name=f"icu_admissions_for_cluster_{cluster}",
+                flow_name="progress",
+                source_strata={"clinical": Clinical.ICU, "cluster": cluster},
+                dest_strata={"clinical": Clinical.ICU, "cluster": cluster},
+            )
+            model.request_cumulative_output(
+                name=f"accum_icu_admissions_for_cluster_{cluster}",
+                source=f"icu_admissions_for_cluster_{cluster}",
+            )
+
+        # Create hospitalisation functions as sum of hospital non-ICU and ICU
+        model.request_aggregate_output(
+            "hospital_admissions", sources=["icu_admissions", "non_icu_admissions"]
+        )
+        for cluster in clusters:
+            model.request_aggregate_output(
+                f"hospital_admissions_for_cluster_{cluster}",
+                sources=[
+                    f"icu_admissions_for_cluster_{cluster}",
+                    f"non_icu_admissions_for_cluster_{cluster}",
+                ],
+            )
+            model.request_cumulative_output(
+                name=f"accum_hospital_admissions_for_cluster_{cluster}",
+                source=f"hospital_admissions_for_cluster_{cluster}",
             )

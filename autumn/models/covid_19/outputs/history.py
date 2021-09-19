@@ -1,9 +1,8 @@
 from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import Compartment, COMPARTMENTS, History
-from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
-from autumn.models.covid_19.outputs.standard import request_stratified_output_for_compartment
+from autumn.models.covid_19.outputs.common import request_stratified_output_for_compartment
 from autumn.settings import Region
 
 

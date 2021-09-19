@@ -3,11 +3,81 @@ from summer import CompartmentalModel
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, PROGRESS, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA, INCIDENCE,
 )
-from .standard import request_stratified_output_for_flow, request_double_stratified_output_for_flow
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.settings import Region
 from autumn.models.covid_19.parameters import Parameters
+
+
+def request_stratified_output_for_flow(
+        model, flow, strata, stratification, name_stem=None, filter_on="destination"
+):
+    """
+    Standardise looping over stratum to pull out stratified outputs for flow.
+    """
+
+    stem = name_stem if name_stem else flow
+    for stratum in strata:
+        if filter_on == "destination":
+            model.request_output_for_flow(
+                name=f"{stem}X{stratification}_{stratum}",
+                flow_name=flow,
+                dest_strata={stratification: stratum},
+            )
+        elif filter_on == "source":
+            model.request_output_for_flow(
+                name=f"{stem}X{stratification}_{stratum}",
+                flow_name=flow,
+                source_strata={stratification: stratum},
+            )
+        else:
+            raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
+
+
+def request_double_stratified_output_for_flow(
+        model, flow, strata_1, stratification_1, strata_2, stratification_2, name_stem=None, filter_on="destination"
+):
+    """
+    As for previous function, but looping over two stratifications.
+    """
+
+    stem = name_stem if name_stem else flow
+    for stratum_1 in strata_1:
+        for stratum_2 in strata_2:
+            name = f"{stem}X{stratification_1}_{stratum_1}X{stratification_2}_{stratum_2}"
+            if filter_on == "destination":
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name=flow,
+                    dest_strata={
+                        stratification_1: stratum_1,
+                        stratification_2: stratum_2,
+                    }
+                )
+            elif filter_on == "source":
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name=flow,
+                    source_strata={
+                        stratification_1: stratum_1,
+                        stratification_2: stratum_2,
+                    }
+                )
+            else:
+                raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
+
+
+def request_stratified_output_for_compartment(
+        model, request_name, compartments, strata, stratification, save_results=True
+):
+    for stratum in strata:
+        full_request_name = f"{request_name}X{stratification}_{stratum}"
+        model.request_output_for_compartments(
+            name=full_request_name,
+            compartments=compartments,
+            strata={stratification: stratum},
+            save_results=save_results,
+        )
 
 
 def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):

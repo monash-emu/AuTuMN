@@ -1,6 +1,5 @@
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
 from autumn.tools.utils.utils import list_element_wise_division

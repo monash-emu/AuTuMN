@@ -17,7 +17,6 @@ from .constants import (
 from . import preprocess
 from .outputs.common import request_common_outputs
 from .outputs.vaccination import request_vaccination_outputs
-from .outputs.standard import request_standard_outputs
 from .outputs.victorian import request_victorian_outputs
 from .outputs.strains import request_strain_outputs
 from .outputs.tracing import request_tracing_outputs
@@ -365,8 +364,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Set up derived output functions
     if is_region_vic:
         request_victorian_outputs(model, params)
-    else:
-        request_standard_outputs(model, params)
 
     # Vaccination
     if params.vaccination:

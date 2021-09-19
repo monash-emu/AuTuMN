@@ -4,7 +4,7 @@ from autumn.models.covid_19.constants import COMPARTMENTS, Vaccination, PROGRESS
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRATA
-from autumn.models.covid_19.outputs.standard import request_stratified_output_for_flow
+from autumn.models.covid_19.outputs.common import request_stratified_output_for_flow
 
 
 def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):

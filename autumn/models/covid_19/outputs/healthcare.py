@@ -9,7 +9,7 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_region_vic: bool):
 
     """
-    New admissions (from standard.py)
+    New admissions
     """
 
     hospital_sources, icu_sources = [], []

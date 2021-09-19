@@ -124,14 +124,6 @@ def request_standard_outputs(model: CompartmentalModel, params: Parameters):
 
     model.request_aggregate_output(name=NOTIFICATIONS, sources=notification_sources)
 
-    # Cumulative incidence and notifications
-    if params.cumul_incidence_start_time:
-        model.request_cumulative_output(
-            name=f"accum_{NOTIFICATIONS}",
-            source=NOTIFICATIONS,
-            start_time=params.cumul_incidence_start_time,
-        )
-
     # Notifications by age group
     for agegroup in AGEGROUP_STRATA:
         sympt_isolate_name = f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
@@ -144,5 +136,13 @@ def request_standard_outputs(model: CompartmentalModel, params: Parameters):
         model.request_aggregate_output(
             name=f"{NOTIFICATIONS}Xagegroup_{agegroup}",
             sources=notifications_by_age_sources
+        )
+
+    # Cumulative incidence and notifications
+    if params.cumul_incidence_start_time:
+        model.request_cumulative_output(
+            name=f"accum_{NOTIFICATIONS}",
+            source=NOTIFICATIONS,
+            start_time=params.cumul_incidence_start_time,
         )
 

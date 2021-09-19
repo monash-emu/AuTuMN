@@ -1,7 +1,7 @@
 description: BASELINE
 
 infectious_seed: 0.
-seasonal_force: 0.3
+seasonal_force: 0.
 
 mixing_matrices:
   type: extrapolated

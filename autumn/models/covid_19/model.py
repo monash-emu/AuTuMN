@@ -359,7 +359,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
 
     # Most standard outputs
-    request_common_outputs(model, is_region_vic)
+    request_common_outputs(model, params, is_region_vic)
     request_healthcare_outputs(model, params.sojourn.compartment_periods, is_region_vic)
 
     # Set up derived output functions

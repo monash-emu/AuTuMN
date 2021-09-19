@@ -7,9 +7,10 @@ from .standard import request_stratified_output_for_flow, request_double_stratif
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.settings import Region
+from autumn.models.covid_19.parameters import Parameters
 
 
-def request_common_outputs(model: CompartmentalModel, is_region_vic):
+def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):
 
     # Clusters to cycle over for Vic model if needed
     clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else None
@@ -28,6 +29,14 @@ def request_common_outputs(model: CompartmentalModel, is_region_vic):
     request_double_stratified_output_for_flow(
         model, INCIDENCE, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical"
     )
+
+    # Cumulative incidence
+    if params.cumul_incidence_start_time:
+        model.request_cumulative_output(
+            name=f"accum_{INCIDENCE}",
+            source=INCIDENCE,
+            start_time=params.cumul_incidence_start_time,
+        )
 
     """
     Infection

@@ -126,12 +126,11 @@ def request_standard_outputs(model: CompartmentalModel, params: Parameters):
 
     # Cumulative incidence and notifications
     if params.cumul_incidence_start_time:
-        for existing_output in [INCIDENCE, NOTIFICATIONS]:
-            model.request_cumulative_output(
-                name=f"accum_{existing_output}",
-                source=existing_output,
-                start_time=params.cumul_incidence_start_time,
-            )
+        model.request_cumulative_output(
+            name=f"accum_{NOTIFICATIONS}",
+            source=NOTIFICATIONS,
+            start_time=params.cumul_incidence_start_time,
+        )
 
     # Notifications by age group
     for agegroup in AGEGROUP_STRATA:

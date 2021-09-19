@@ -105,19 +105,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     vic_delta_multiplier = params.vic_delta_infectiousness_multiplier if is_region_vic2021 else 1.
     contact_rate = params.contact_rate * vic_delta_multiplier
 
-    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate.
+    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate
     if params.seasonal_force:
-        contact_rate = get_seasonal_forcing(
-            365.0, 173.0, params.seasonal_force, params.contact_rate
+        final_contact_rate = get_seasonal_forcing(
+            365.0, 173.0, params.seasonal_force, contact_rate
         )
     else:
-        # Use a static contact rate.
-        contact_rate = params.contact_rate
+        # Use a static contact rate
+        final_contact_rate = contact_rate
 
     # Infection
     model.add_infection_frequency_flow(
         name=INFECTION,
-        contact_rate=contact_rate,
+        contact_rate=final_contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.EARLY_EXPOSED,
     )

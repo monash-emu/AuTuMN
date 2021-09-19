@@ -1,7 +1,8 @@
 clinical_stratification.icu_prop: 0.19111631233015963
 clinical_stratification.non_sympt_infect_multiplier: 0.46581410954199787
 clinical_stratification.props.hospital.multiplier: 0.7070205666445437
-contact_rate: 0.26347415199873264
+contact_rate: 0.13173707599936632
+vic_delta_infectiousness_multiplier: 2.
 contact_tracing.assumed_trace_prop: 0.35233576476969164
 sojourn.compartment_periods.icu_early: 15.727904430135705
 sojourn.compartment_periods_calculated.active.total_period: 5.965997804345176

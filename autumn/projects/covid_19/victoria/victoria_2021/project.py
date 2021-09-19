@@ -129,7 +129,7 @@ priors = [
         regional_multiplier_name,
         mean=0.7070792993624084, stdev=0.11538988453463195, trunc_range=(0.5, np.inf), jumping_stdev=0.15
     ),
-    UniformPrior("contact_rate", (0.25, 0.38), jumping_stdev=0.008),
+    UniformPrior("contact_rate", (0.125, 0.19), jumping_stdev=0.004),
     UniformPrior("victorian_clusters.intercluster_mixing", (0.005, 0.05), jumping_stdev=0.01),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.2, 0.8), jumping_stdev=0.05),
     TruncNormalPrior(
@@ -152,7 +152,9 @@ priors = [
     UniformPrior(home_reduction_name, (0.0, 0.4), jumping_stdev=0.04),
     UniformPrior("target_output_ratio", (0.2, 0.7), jumping_stdev=0.04),
     UniformPrior("contact_tracing.assumed_trace_prop", (0.35, 0.6), jumping_stdev=0.04),
-    # UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
+    TruncNormalPrior(
+        "vic_delta_infectiousness_multiplier", mean=2., stdev=0.2, trunc_range=(1.5, np.inf), jumping_stdev=0.05
+    )
 ]
 
 # Load proposal sds from yml file

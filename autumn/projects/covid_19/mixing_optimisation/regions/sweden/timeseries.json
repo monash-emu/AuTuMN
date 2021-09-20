@@ -148,9 +148,9 @@
       0.975
     ]
   },
-  "new_icu_admissions": {
-    "title": "New ICU admissions",
-    "output_key": "new_icu_admissions",
+  "icu_admissions": {
+    "title": "ICU admissions",
+    "output_key": "icu_admissions",
     "times": [
       65.0,
       72.0,

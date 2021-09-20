@@ -51,9 +51,9 @@
       0.975
     ]
   },
-  "new_hospital_admissions": {
-    "title": "New hospital admissions",
-    "output_key": "new_hospital_admissions",
+  "hospital_admissions": {
+    "title": "Hospital admissions",
+    "output_key": "hospital_admissions",
     "times": [],
     "values": [],
     "quantiles": [

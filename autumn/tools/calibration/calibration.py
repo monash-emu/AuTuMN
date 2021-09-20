@@ -181,6 +181,8 @@ class Calibration:
         assert param_name in self.iterative_sampling_param_names, f"{param_name} is not an iteratively sampled parameter"
         assert n_points > 1, "A minimum of two points is required to perform proposal tuning"
 
+        self._is_first_run = True
+
         # We must perform a few initialisation tasks (needs refactoring)
         # work out missing distribution params for priors
         specify_missing_prior_params(self.iterative_sampling_priors)

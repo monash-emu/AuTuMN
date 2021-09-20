@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, DiffOutput
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import (
@@ -57,6 +57,9 @@ priors = [
     UniformPrior("awareness_raising.relative_screening_rate", [1.0, 1.5]),
     *natural_history_priors,
 ]
+
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(
     priors, targets, metropolis_init="current_params", metropolis_init_rel_step_size=0.1

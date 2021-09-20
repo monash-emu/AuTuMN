@@ -25,8 +25,8 @@ targets = [
     NormalTarget(ts_set.get("prevalence_infectiousXlocation_majuro"), stdev=80.0),
     NormalTarget(ts_set.get("prevalence_infectiousXlocation_ebeye"), stdev=120.0),
     NormalTarget(ts_set.get("percentage_latentXlocation_majuro"), stdev=10.0),
-    NormalTarget(ts_set.get("notificationsXlocation_majuro")),
-    NormalTarget(ts_set.get("notificationsXlocation_ebeye")),
+    NormalTarget(ts_set.get("notificationsXlocation_majuro"), stdev=40.),
+    NormalTarget(ts_set.get("notificationsXlocation_ebeye"), stdev=9.),
     NormalTarget(ts_set.get("population_size"), stdev=2500.0),
 ]
 
@@ -38,7 +38,7 @@ for param_name in ["infect_death_rate", "self_recovery_rate"]:
         natural_history_priors.append(prior)
 
 priors = [
-    *get_dispersion_priors_for_gaussian_targets(targets),
+    # *get_dispersion_priors_for_gaussian_targets(targets),
     UniformPrior("start_population_size", [200, 800]),
     UniformPrior("contact_rate", [0.2, 1.0]),
     UniformPrior("progression_multiplier", [0.5, 2.0]),

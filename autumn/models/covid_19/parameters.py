@@ -199,6 +199,12 @@ class StrataProps(BaseModel):
     props: List[float]
     multiplier: float
 
+    @validator("props", allow_reuse=True)
+    def check_props(val):
+        msg = f"Not all of list of proportions is in [0, 1]: {val}"
+        assert all([0. <= prop <= 1. for prop in val]), msg
+        return val
+
 
 class ClinicalProportions(BaseModel):
     hospital: StrataProps
@@ -216,9 +222,21 @@ class ClinicalStratification(BaseModel):
     late_infect_multiplier: Dict[str, float]
     non_sympt_infect_multiplier: float
 
+    @validator("icu_prop", allow_reuse=True)
+    def check_coverage(val):
+        assert 0. <= val <= 1., f"Proportion of hospitalised patients admitted to ICU is not in [0, 1]: {val}"
+        return val
+
+    @validator("icu_mortality_prop", allow_reuse=True)
+    def check_coverage(val):
+        assert 0. <= val <= 1., f"Ceiling for proportion of ICU patients dying is not in [0, 1]: {val}"
+        return val
+
 
 class InfectionFatality(BaseModel):
-    """Parameters relating to death from infection"""
+    """
+    Parameters relating to death from infection.
+    """
 
     # Calibrated multiplier for props
     multiplier: float
@@ -227,11 +245,15 @@ class InfectionFatality(BaseModel):
     # Proportion of people dying / total infected by age
     props: List[float]
 
+    @validator("multiplier")
+    def check_multiplier(val):
+        assert 0. <= val, f"Multiplier applied to IFRs must be in range [0, 1]: {val}"
+        return val
+
 
 class TestingToDetection(BaseModel):
     """
-    More empiric approach based on per capita testing rates
-    An alternative to CaseDetection.
+    Empiric approach to building the case detection rate that is based on per capita testing rates.
     """
 
     assumed_tests_parameter: float
@@ -291,7 +313,7 @@ class VocComponent(BaseModel):
     seed_duration: Optional[float]
     contact_rate_multiplier: Optional[float]
 
-    @root_validator(pre=True, allow_reuse=True)
+    @root_validator(allow_reuse=True)
     def check_times(cls, values):
         if "seed_duration" in values:
             assert 0. <= values["seed_duration"], "Seed duration negative"
@@ -304,14 +326,20 @@ class VocComponent(BaseModel):
 
 class VaccCoveragePeriod(BaseModel):
     """
-    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
+    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time.
     """
 
     coverage: Optional[float]
     start_time: float
     end_time: float
 
-    @root_validator(pre=True, allow_reuse=True)
+    @validator("coverage")
+    def check_coverage(val):
+        if val:
+            assert 0. <= val <= 1., f"Requested coverage for phase of vaccination program is not in [0, 1]: {val}"
+        return val
+
+    @root_validator(allow_reuse=True)
     def check_times(cls, values):
         msg = f"End time: {values['start_time']} before start time: {values['end_time']}"
         assert values["start_time"] <= values["end_time"], msg
@@ -319,6 +347,10 @@ class VaccCoveragePeriod(BaseModel):
 
 
 class RollOutFunc(BaseModel):
+    """
+    Provides the parameters needed to construct a phase of vaccination roll-out.
+    """
+
     age_min: Optional[float]
     age_max: Optional[float]
     supply_period_coverage: Optional[VaccCoveragePeriod]
@@ -411,11 +443,23 @@ class ContactTracing(BaseModel):
         assert 0. <= val <= 1., f"Contact tracing floor must be in range [0, 1]: {val}"
         return val
 
-    # @validator("assumed_trace_prop")
-    # def assumed_trace_prop(val, values):
-    #     if 'floor' in values:
-    #         assert val >= values['floor'], "Contact tracing assumed_trace_prop must be >= floor"
-    #     return val
+    @validator("quarantine_infect_multiplier", allow_reuse=True)
+    def check_multiplier(val):
+        assert 0. <= val <= 1., f"Contact tracing infectiousness multiplier must be in range [0, 1]: {val}"
+        return val
+
+    @ validator("assumed_prev", allow_reuse=True)
+    def check_prevalence(val):
+        assert 0. <= val, f"Contact tracing assumed prevalence must not be negative: {val}"
+        return val
+
+    # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated
+    # @root_validator(allow_reuse=True)
+    # def assumed_trace_prop(cls, values):
+    #     if "floor" in values:
+    #         msg = f"Contact tracing assumed_trace_prop must be >= floor"
+    #         assert values["assumed_trace_prop"] >= values["floor"], msg
+    #     return values
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

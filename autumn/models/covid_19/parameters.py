@@ -287,6 +287,7 @@ class VocComponent(BaseModel):
             assert 0. <= values["contact_rate_multiplier"], "Contact rate multiplier negative"
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
+        return values
 
 
 class VaccCoveragePeriod(BaseModel):

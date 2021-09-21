@@ -8,24 +8,24 @@ mobility:
     other_locations:
       append: true
       times:
-        - 2021-11-30
-        - 2021-12-02
+        - 2021-12-31
+        - 2022-01-02
       values:
         - - repeat_prev
         - 1.
     work:
       append: true
       times:
-        - 2021-11-30
-        - 2021-12-02
+        - 2021-12-31
+        - 2022-01-02
       values:
         - - repeat_prev
         - 1.
     school:
       append: false
       times:
-        - 2021-11-30
-        - 2021-12-02
+        - 2021-12-31
+        - 2022-01-02
       values:
         - 0.
         - 1.

@@ -4,7 +4,7 @@ from autumn.models.covid_19.constants import COMPARTMENTS, Vaccination, PROGRESS
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRATA
-from autumn.models.covid_19.outputs.standard import request_stratified_output_for_flow
+from autumn.models.covid_19.outputs.common import request_stratified_output_for_flow
 
 
 def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
@@ -54,7 +54,6 @@ def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
                 func=lambda vaccinated:
                 vaccinated * params.vaccination_risk.tts_rate[agegroup] * params.vaccination_risk.prop_astrazeneca
             )
-
             model.request_function_output(
                 name=f"tts_deathsXagegroup_{agegroup}",
                 sources=[f"tts_casesXagegroup_{agegroup}"],
@@ -69,7 +68,6 @@ def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
                 func=lambda vaccinated:
                 vaccinated * params.vaccination_risk.myocarditis_rate[agegroup] * params.vaccination_risk.prop_mrna
             )
-
             hospital_sources += [
                 f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}",
                 f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",

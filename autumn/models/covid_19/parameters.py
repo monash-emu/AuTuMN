@@ -309,11 +309,11 @@ class ContactTracing(BaseModel):
         assert 0 <= val <= 1, "Contact tracing floor must be in range [0, 1]"
         return val
 
-    @validator("assumed_trace_prop", allow_reuse=True)
-    def check_assumed_trace_prop(val, values):
-        if 'floor' in values:
-            assert val >= values['floor'], "Contact tracing assumed_trace_prop must be >= floor"
-        return val
+    # @validator("assumed_trace_prop")
+    # def assumed_trace_prop(val, values):
+    #     if 'floor' in values:
+    #         assert val >= values['floor'], "Contact tracing assumed_trace_prop must be >= floor"
+    #     return val
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

@@ -1,20 +1,21 @@
 from typing import List, Dict
+import numpy as np
 
 from summer import Multiply, Stratification
-
-import numpy as np
 
 from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
 from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.parameters import Parameters
-from autumn.tools import inputs
 from autumn.tools.utils.utils import normalise_sequence
 
 
-def get_agegroup_strat(params: Parameters, total_pops: List[int], mixing_matrices: Dict[str, np.ndarray]) -> Stratification:
+def get_agegroup_strat(
+        params: Parameters, total_pops: List[int], mixing_matrices: Dict[str, np.ndarray]
+) -> Stratification:
     """
     Age stratification
     """
+
     # We use "Stratification" instead of "AgeStratification" for this model, to avoid triggering
     # automatic demography features (which work on the assumption that the time is in years, so would be totally wrong)
     age_strat = Stratification("agegroup", AGEGROUP_STRATA, COMPARTMENTS)
@@ -22,6 +23,7 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int], mixing_matrice
 
     # Dynamic heterogeneous mixing by age
     if params.age_specific_risk_multiplier and not params.mobility.age_mixing:
+
         # Apply adjustments to the age mixing parameters
         age_categories = params.age_specific_risk_multiplier.age_categories
         contact_rate_multiplier = params.age_specific_risk_multiplier.contact_rate_multiplier

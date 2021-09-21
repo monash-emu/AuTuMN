@@ -2,6 +2,8 @@ import os
 
 import pandas as pd
 
+from autumn.projects.tuberculosis.marshall_islands.project import priors
+
 from autumn.projects.tuberculosis.marshall_islands.outputs.posteriors import (
     format_parameter,
 )
@@ -21,6 +23,8 @@ FIGURE_PATH = os.path.join(
     "priors_table",
 )
 
+PRIORS = priors
+
 
 def main():
     make_output_directories(FIGURE_PATH)
@@ -32,10 +36,10 @@ def make_priors_table(priors):
     ranges = []
 
     for prior in priors:
-        if "_dispersion_param" in prior["param_name"]:
+        if "_dispersion_param" in prior.name:
             continue
-        names.append(format_parameter(prior["param_name"]))
-        par_range = prior["distri_params"]
+        names.append(format_parameter(prior.name))
+        par_range = prior.start, prior.end
         ranges.append(f"{par_range[0]} - {par_range[1]}")
     df = pd.DataFrame({"Parameter": names, "Range": ranges})
     filename = os.path.join(FIGURE_PATH, "priors.csv")

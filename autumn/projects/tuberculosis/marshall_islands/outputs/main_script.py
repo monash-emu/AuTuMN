@@ -18,10 +18,10 @@ def make_all_rmi_plots():
     cal.main()
 
     # prior table
-    # pri.main() # FIXME
+    pri.main()
 
     # posterior table
-    # pos.main()  # FIXME
+    pos.main()
 
     # counterfactual outputs
     # ctf.main() # FIXME

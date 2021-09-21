@@ -1,11 +1,11 @@
 """
 Type definition for model parameters
 """
-from datetime import date
-from typing import Any, Dict, List, Optional, Union
-
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
+
+from datetime import date
+from typing import Any, Dict, List, Optional, Union
 
 from autumn.models.covid_19.constants import BASE_DATE
 
@@ -15,9 +15,9 @@ BaseModel.Config.extra = Extra.forbid
 
 class Time(BaseModel):
     """
-    Model time period
-    Running time-related - for COVID-19 model
-    All times are assumed to be in days and reference time is 31st Dec 2019
+    Parameters to define the model time period and evaluation steps.
+    For the COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019.
+    The medium term plan is to replace this structure with standard Python date structures.
     """
 
     start: float
@@ -59,12 +59,14 @@ class Country(BaseModel):
 
     @validator("iso3", pre=True, allow_reuse=True)
     def check_length(iso3):
-        assert len(iso3) == 3, f"ISO3 codes should have three digits, code is: {iso3}"
+        assert len(iso3) == 3, f"ISO3 codes should universally have three digits, ISO3 code provided was: {iso3}"
         return iso3
 
 
 class Population(BaseModel):
-    """Model population parameters"""
+    """
+    Model population parameters.
+    """
 
     region: Optional[str]  # None/null means default to parent country
     year: int

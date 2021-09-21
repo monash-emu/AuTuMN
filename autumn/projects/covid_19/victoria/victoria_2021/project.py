@@ -44,7 +44,7 @@ target_start_time = 600
 cluster_targets = []
 for cluster in metro_clusters:
     notifs_ts = ts_set.get(
-        f"notifications_for_cluster_{cluster}"
+        f"notificationsXcluster_{cluster}"
     ).truncate_start_time(target_start_time).moving_average(4)
     target = NormalTarget(notifs_ts)
     cluster_targets.append(target)

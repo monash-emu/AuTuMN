@@ -35,7 +35,7 @@ targets = [
         trunc_range=[0, np.inf],
     ),
     TruncNormalTarget(
-        timeseries=ts_set.get("new_hospital_admissions").truncate_times(*calib_times),
+        timeseries=ts_set.get("hospital_admissions").truncate_times(*calib_times),
         trunc_range=[0, np.inf],
     ),
     TruncNormalTarget(

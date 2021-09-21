@@ -297,9 +297,9 @@
       0.975
     ]
   },
-  "new_hospital_admissions": {
-    "title": "new_hospital_admissions",
-    "output_key": "new_hospital_admissions",
+  "hospital_admissions": {
+    "title": "hospital_admissions",
+    "output_key": "hospital_admissions",
     "times": [
       79.0,
       86.0,

@@ -36,7 +36,7 @@ vaccination:
         end_time: 624 # 15 Sep 2021
     - age_min: 15
       supply_period_coverage:
-        coverage: 0.7 # 70% of the total population vaccinated
+        coverage: 0.3 # 80% of coverage
         start_time: 625 # 16 Sep 2021
         end_time: 732 # 01 Jan 2022
 

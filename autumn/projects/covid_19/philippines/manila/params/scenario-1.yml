@@ -1,7 +1,7 @@
 description: no vaccine
 
 time:
-  start: 621  # 12 Sep 2021
+  start: 627  # 18 Sep 2021
 
 mobility:
   mixing:
@@ -34,5 +34,5 @@ vaccination:
   roll_out_components:
     - supply_period_coverage:
         coverage: .00001
-        start_time: 621 # 15 Sep 2021
-        end_time: 700 # 30 Nov 2021
+        start_time: 627 # 18 Sep 2021
+        end_time: 731 # 30 Nov 2021

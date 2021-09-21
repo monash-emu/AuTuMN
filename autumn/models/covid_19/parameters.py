@@ -8,6 +8,7 @@ from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
 from autumn.models.covid_19.constants import BASE_DATE
+from autumn.settings.region import Region
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
@@ -302,6 +303,13 @@ class Vic2021Seeding(BaseModel):
     loddon_mallee: float
     grampians: float
 
+    @root_validator(allow_reuse=True)
+    def check_seeds(cls, values):
+        for region in Region.VICTORIA_SUBREGIONS:
+            region_name = region.replace("-", "_")
+            assert 0. <= values[region_name], f"Seed value for cluster {region_name} is negative"
+        return values
+
 
 class VocComponent(BaseModel):
     """
@@ -313,7 +321,7 @@ class VocComponent(BaseModel):
     seed_duration: Optional[float]
     contact_rate_multiplier: Optional[float]
 
-    @root_validator(allow_reuse=True)
+    @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):
         if "seed_duration" in values:
             assert 0. <= values["seed_duration"], "Seed duration negative"

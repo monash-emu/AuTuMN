@@ -4,27 +4,11 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
 )
 from autumn.tools.db.load import load_uncertainty_table
-from autumn.settings import BASE_PATH
 
-FIGURE_PATH = os.path.join(
-    BASE_PATH,
-    "apps",
-    "tuberculosis",
-    "regions",
-    "marshall_islands",
-    "outputs",
-    "figures",
-    "output_numbers",
-)
-
-DATA_PATH = os.path.join(
-    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "pbi_databases"
-)
-
-
-def main():
-    make_output_directories(FIGURE_PATH)
-    uncertainty_df = load_uncertainty_table(DATA_PATH)
+def main(data_path, output_path):
+    figure_path = os.path.join(output_path, "output_numbers")
+    make_output_directories(figure_path)
+    uncertainty_df = load_uncertainty_table(data_path)
 
     # End TB Targets
     print("End TB Targets")
@@ -75,7 +59,3 @@ def print_median_and_ci(uncertainty_df, output, time, scenario_idx):
     print("******************")
     print(f"{output} in {time} for Scenario {scenario_idx}:")
     print(out_str)
-
-
-if __name__ == "__main__":
-    main()

@@ -12,22 +12,6 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
 from autumn.tools.db.load import load_uncertainty_table
 from autumn.tools.plots.uncertainty.plots import _plot_uncertainty
 from autumn.tools.plots.utils import COLORS, _apply_transparency
-from autumn.settings import BASE_PATH
-
-FIGURE_PATH = os.path.join(
-    BASE_PATH,
-    "apps",
-    "tuberculosis",
-    "regions",
-    "marshall_islands",
-    "outputs",
-    "figures",
-    "elimination",
-)
-
-DATA_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "pbi_databases"
-)
 
 end_tb_targets = {
     "mortality": {
@@ -43,15 +27,16 @@ end_tb_targets = {
 target_colours = {2025: "slategrey", 2035: "darkslategrey"}
 
 
-def main():
-    make_output_directories(FIGURE_PATH)
+def main(data_path, output_path):
+    figure_path = os.path.join(output_path, "elimination")
+    make_output_directories(figure_path)
     get_format()
-    uncertainty_df = load_uncertainty_table(DATA_PATH)
+    uncertainty_df = load_uncertainty_table(data_path)
     for is_logscale in [True, False]:
-        plot_elimination(uncertainty_df, is_logscale)
+        plot_elimination(uncertainty_df, figure_path, is_logscale)
 
 
-def plot_elimination(uncertainty_df, is_logscale=False):
+def plot_elimination(uncertainty_df, figure_path, is_logscale=False):
 
     interventions = ["ACF", "ACF_LTBI", "hh_pt"]
     scenario_idxs = {"ACF": [0, 5, 4, 3], "ACF_LTBI": [0, 8, 7, 6], "hh_pt": [0, 9]}
@@ -91,7 +76,7 @@ def plot_elimination(uncertainty_df, is_logscale=False):
             sc_colors = _apply_transparency(sc_colors, alphas[intervention])
 
             for k, scenario_idx in enumerate(scenario_idxs[intervention]):
-                x_low = 2019 if scenario_idx == 0 else 2020
+                x_low = 2020 if scenario_idx == 0 else 2020
                 _plot_uncertainty(
                     ax,
                     uncertainty_df,
@@ -121,12 +106,11 @@ def plot_elimination(uncertainty_df, is_logscale=False):
                     ax.text(2016, 0.6, "pre-elimination threshold", fontsize=12)
             else:
                 ax.set_ylim(ymin=0)
+
+            ax.set_xlim((2019, 2051))
+
     filename = "elimination"
     if is_logscale:
         filename += "_logscale"
 
-    save_figure(filename, FIGURE_PATH)
-
-
-if __name__ == "__main__":
-    main()
+    save_figure(filename, figure_path)

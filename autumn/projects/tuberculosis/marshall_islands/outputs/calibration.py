@@ -17,33 +17,18 @@ from autumn.tools.plots.uncertainty.plots import (
     _plot_uncertainty,
 )
 from autumn.tools.plots.utils import COLORS
-from autumn.settings import BASE_PATH
-
-FIGURE_PATH = os.path.join(
-    BASE_PATH,
-    "apps",
-    "tuberculosis",
-    "regions",
-    "marshall_islands",
-    "outputs",
-    "figures",
-    "calibration",
-)
-
-DATA_PATH = os.path.join(
-    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "pbi_databases"
-)
 
 
-def main():
-    make_output_directories(FIGURE_PATH)
+def main(data_path, output_path):
+    figure_path = os.path.join(output_path, "calibration")
+    make_output_directories(figure_path)
     get_format()
-    uncertainty_df = load_uncertainty_table(DATA_PATH)
-    plot_screening_rate(uncertainty_df)
-    plot_model_fits(uncertainty_df)
+    uncertainty_df = load_uncertainty_table(data_path)
+    plot_screening_rate(uncertainty_df, figure_path)
+    plot_model_fits(uncertainty_df, figure_path)
 
 
-def plot_screening_rate(uncertainty_df):
+def plot_screening_rate(uncertainty_df, figure_path):
     n_col = 1
     n_row = 1
 
@@ -92,10 +77,10 @@ def plot_screening_rate(uncertainty_df):
             i_col = 0
             i_row += 1
 
-    save_figure("screening_rate", FIGURE_PATH)
+    save_figure("screening_rate", figure_path)
 
 
-def plot_model_fits(uncertainty_df):
+def plot_model_fits(uncertainty_df, figure_path):
     project = get_project("tuberculosis", "marshall-islands")
 
     n_col = 3
@@ -159,8 +144,4 @@ def plot_model_fits(uncertainty_df):
         trunc_times = [t for (v, t) in zip(values, times) if x_low <= t <= x_up]
         _plot_targets_to_axis(ax, trunc_values, trunc_times, on_uncertainty_plot=True)
 
-    save_figure("model_fits", FIGURE_PATH)
-
-
-if __name__ == "__main__":
-    main()
+    save_figure("model_fits", figure_path)

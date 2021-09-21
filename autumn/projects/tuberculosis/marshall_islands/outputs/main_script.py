@@ -7,31 +7,44 @@ import autumn.projects.tuberculosis.marshall_islands.outputs.posteriors as pos
 import autumn.projects.tuberculosis.marshall_islands.outputs.priors as pri
 from autumn.projects.tuberculosis.marshall_islands.outputs.utils import get_format
 
+import os
+from autumn.settings import BASE_PATH
 
-def make_all_rmi_plots():
+DATA_PATH = os.path.join(
+    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "pbi_databases"
+)
+OUTPUT_PATH = os.path.join(
+    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "all_outputs"
+)
+
+
+def make_all_rmi_plots(analysis="main"):
+    data_path = os.path.join(DATA_PATH, analysis)
+    output_path = os.path.join(OUTPUT_PATH, analysis)
+
     get_format()
 
     # Print outputs as numbers
-    gon.main()
+    gon.main(data_path, output_path)
 
     # calibration outputs
-    cal.main()
+    cal.main(data_path, output_path)
 
     # prior table
-    pri.main()
+    pri.main(output_path)
 
     # posterior table
-    pos.main()
+    pos.main(data_path, output_path)
 
     # counterfactual outputs
-    # ctf.main() # FIXME
+    ctf.main(data_path, output_path)
 
     # elimination outputs
-    # elm.main()  # FIXME
+    elm.main(data_path, output_path)
 
     # diabetes plot
-    # dia.main()  # FIXME
+    dia.main(data_path, output_path)
 
 
-
-make_all_rmi_plots()
+for analysis in ["main", "flexible_cdr"]:
+    make_all_rmi_plots(analysis)

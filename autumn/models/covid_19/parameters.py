@@ -41,8 +41,10 @@ class TimeSeries(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
-        vs, ts = values.get("values"), values.get("times")
-        assert len(ts) == len(vs), f"TimeSeries length mismatch, times length: {len(ts)}, values length: {len(vs)}"
+        value_series, time_series = values.get("values"), values.get("times")
+        assert len(time_series) == \
+               len(value_series), \
+        f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
         return values
 
     @validator("times", pre=True, allow_reuse=True)
@@ -71,7 +73,9 @@ class Population(BaseModel):
 
 
 class Sojourn(BaseModel):
-    """Parameters for determining how long a person stays in a given compartment."""
+    """
+    Parameters for determining how long a person stays in a given compartment.
+    """
 
     class CalcPeriod(BaseModel):
         total_period: float
@@ -84,7 +88,7 @@ class Sojourn(BaseModel):
 
     @validator("compartment_periods", allow_reuse=True)
     def check_positive(periods):
-        assert all(val >= 0. for val in periods.values()), f"Sojourn times must be positive, times are: {periods}"
+        assert all(val >= 0. for val in periods.values()), f"Sojourn times must be non-negative, times are: {periods}"
         return periods
 
 
@@ -98,8 +102,8 @@ class MixingLocation(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
-        vs, ts = values.get("values"), values.get("times")
-        assert len(ts) == len(vs), f"Mixing series length mismatch."
+        value_series, time_series = values.get("values"), values.get("times")
+        assert len(time_series) == len(value_series), f"Mixing series length mismatch."
         return values
 
     @validator("times", pre=True, allow_reuse=True)
@@ -119,8 +123,8 @@ class EmpiricMicrodistancingParams(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
-        vs, ts = values.get("values"), values.get("times")
-        assert len(ts) == len(vs), f"TimeSeries length mismatch, times length: {len(ts)}, values length: {len(vs)}"
+        value, time_series = values.get("values"), values.get("times")
+        assert len(time_series) == len(value), f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value)}"
         return values
 
 
@@ -133,7 +137,7 @@ class TanhMicrodistancingParams(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_asymptotes(cls, values):
         lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
-        assert lower <= upper, "Asymptotes specified upside-down"
+        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
         assert 0. <= lower <= 1., "Lower asymptote not in domain [0, 1]"
         assert 0. <= upper <= 1., "Upper asymptote not in domain [0, 1]"
         return values
@@ -148,6 +152,8 @@ class ConstantMicrodistancingParams(BaseModel):
         return effect
 
 
+from autumn.tools.inputs.social_mixing.constants import LOCATIONS
+
 class MicroDistancingFunc(BaseModel):
     function_type: str
     parameters: Union[
@@ -157,8 +163,7 @@ class MicroDistancingFunc(BaseModel):
 
     @validator("locations", allow_reuse=True)
     def effect_domain(locations):
-        mixing_locations = ["home", "other_locations", "school", "work"]
-        assert all([loc in mixing_locations for loc in locations])
+        assert all([loc in LOCATIONS for loc in locations])
         return locations
 
 

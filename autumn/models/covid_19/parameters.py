@@ -41,9 +41,8 @@ class TimeSeries(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
-        value_list, times_list = values.get("values"), values.get("times")
-        msg = f"TimeSeries length mismatch, times length: {len(times_list)}, values length: {len(value_list)}"
-        assert len(times_list) == len(value_list), msg
+        vs, ts = values.get("values"), values.get("times")
+        assert len(ts) == len(vs), f"TimeSeries length mismatch, times length: {len(ts)}, values length: {len(vs)}"
         return values
 
     @validator("times", pre=True, allow_reuse=True)

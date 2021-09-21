@@ -181,6 +181,8 @@ class Calibration:
         assert param_name in self.iterative_sampling_param_names, f"{param_name} is not an iteratively sampled parameter"
         assert n_points > 1, "A minimum of two points is required to perform proposal tuning"
 
+        self._is_first_run = True
+
         # We must perform a few initialisation tasks (needs refactoring)
         # work out missing distribution params for priors
         specify_missing_prior_params(self.iterative_sampling_priors)
@@ -920,11 +922,11 @@ class CalibrationOutputs:
         Record the model outputs for this iteration
         """
         assert model and model.outputs is not None, "No model has been run"
-        outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
+        #outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
         derived_outputs_df = db.store.build_derived_outputs_table(
             [model], run_id=iter_num, chain_id=self.chain_id
         )
-        self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
+        #self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
         self.db.append_df(db.store.Table.DERIVED, derived_outputs_df)
 
     def store_mcmc_iteration(

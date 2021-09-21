@@ -10,11 +10,12 @@ infect_death: 0. # Compulsory parameter that is completely overwritten in strati
 universal_death_rate: 0. # Compulsory parameter for all models, even though there are no population-wide deaths
 infectious_seed: 10 # Initial condition for infectious
 contact_rate: 0.03 # Routinely calibrated, see respective calibration files
+seasonal_force: null
 
 #
 mixing_matrices:
-    type: "prem"
-    age_adjust: true  # Note that this is not relevant unless "empiric" selected for type
+  type: "prem"
+  age_adjust: true  # Note that this is not relevant unless "empiric" selected for type
 
 # Integration times
 time:
@@ -59,7 +60,7 @@ sojourn:
   compartment_periods:
     hospital_early: 7.7
     hospital_late: 12.8
-    icu_early: 10.5 # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
+    icu_early: 10.5  # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
     icu_late: 13.3
 
   # Mean time spent in each compartment, defined via proportions
@@ -173,13 +174,6 @@ mobility:
   square_mobility_effect: true
   microdistancing: {}
 
-# Parameters of tanh-based scale-up function used to define time-variant detection, if that approach selected
-case_detection:
-  shape: 0.05 # The shape parameter to the tanh-based curve
-  inflection_time: 90. # Point at which curve inflects
-  lower_asymptote: 0.1 # Starting value - lower asymptote for increasing function
-  upper_asymptote: 0.6 # End value - upper asymptote for increasing function
-
 testing_to_detection: null
 
 victorian_clusters: null
@@ -191,7 +185,7 @@ vaccination:
     vacc_prop_prevent_infection: 0.
     vacc_reduce_infectiousness: 0.
   one_dose: null
-  second_dose_delay: 90.  # Time from receiving first dose to second
+  second_dose_delay: 41.  # Time from receiving first dose to second
   roll_out_components: []
 
 vaccination_risk:
@@ -234,34 +228,37 @@ vaccination_risk:
     70: .18
     75: .18
 
-  myocarditis_rate: # dummy values for now
-    0: 2.5e-5
-    5: 2.5e-5
-    10: 2.5e-5
-    15: 2.5e-5
-    20: 2.5e-5
-    25: 2.5e-5
-    30: 2.5e-5
-    35: 2.5e-5
-    40: 2.5e-5
-    45: 2.5e-5
-    50: 2.7e-5
-    55: 2.7e-5
-    60: 1.6e-5
-    65: 1.6e-5
-    70: 2.1e-5
-    75: 1.8e-5
+  myocarditis_rate:
+    0: 3.57e-5  # assumed same as 12-17 category
+    5: 3.57e-5 # assumed same as 12-17 category
+    10: 3.57e-5  # from 12-17 category
+    15: 3.2e-5  # average of 12-17 and 18-24 categories
+    20: 2.7e-5  # from 18-24 category
+    25: 0.90e-5
+    30: 0.43e-5
+    35: 0.43e-5
+    40: 0.29e-5
+    45: 0.29e-5
+    50: 0.10e-5
+    55: 0.10e-5
+    60: 0.10e-5
+    65: 0.05e-5
+    70: 0.05e-5
+    75: 0.05e-5
 
 # Contact tracing-related
 contact_tracing: null
 
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
-haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio
+haario_scaling_factor: 2.4  # Greater values increase jumping step size and reduce the acceptance ratio
 metropolis_init_rel_step_size: .1
 n_steps_fixed_proposal: 50
 
 # Time from which cumulative cases should start (incidence and notification), if null, the output is not calculated
 cumul_incidence_start_time: null
+
+# Vic 2021 seeding
+vic_2021_seeding: null
 
 # Fake parameters used in calibration for negative binomial (need to be listed for validation to pass)
 # Not used by model.

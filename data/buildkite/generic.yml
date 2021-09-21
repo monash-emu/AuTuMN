@@ -1,0 +1,3 @@
+steps:
+  - label: ":pipeline: Metadata Test"
+    command: buildkite-agent meta-data get "test_meta"

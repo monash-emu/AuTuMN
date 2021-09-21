@@ -20,8 +20,9 @@ The UN WPP2019 dataset does not contain these figures.
 TODO: Document the provenance of the region data.
 
 Data for DHHS health clusters obtained from
-[LGA population](https://www.abs.gov.au/ausstats/subscriber.nsf/log?openagent&14100do0001_2014-19.xlsx&1410.0&Data%20Cubes&76DD7F46FAF7345CCA2585B20017416A&0&2014-19&28.07.2020&Latest)
+Excel file 32350DS0003_2020.xls from [ABS site](https://www.abs.gov.au/statistics/people/population/regional-population-age-and-sex/latest-release#data-download)
 and combined with 'LGA to Cluster mapping dictionary with proportions.csv' (.\data\inputs\mobility) to arrive at the static values for sub-regions.
+Manual calculation are done in 'Sheet 1'. 
 
 Malaysia regional population stats
 [www.data.gov.my/data](https://www.data.gov.my/data/dataset/ec71711f-9b1f-42cd-9229-0c3e1f0e1dbb/resource/423f8f8c-5b74-4b5b-9ba9-d67a5c80e22c/download/mid-year-population-estimates-by-age-group-sex-and-state-malaysia-2015-2019.csv)

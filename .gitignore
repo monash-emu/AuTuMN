@@ -22,7 +22,8 @@ benchmark.json
 .idea
 .spyderworkspace
 .vscode
-#*.ipynb
+*.ipynb
+notebooks/
 
 # Images
 *.png
@@ -719,3 +720,6 @@ apps/tuberculosis/regions/marshall_islands/outputs/figures/calibration/screening
 vic_figures/
 notebooks/user/rragonnet/lhs_start_traces_median.pdf
 notebooks/user/rragonnet/posterior_against_params.pdf
+
+# ignoring marshall islands figures and databases
+autumn/projects/tuberculosis/marshall_islands/outputs/all_outputs/*

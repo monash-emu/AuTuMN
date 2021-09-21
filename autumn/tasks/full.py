@@ -73,15 +73,19 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
 
     # Create candidate plots from full run outputs
 
-    with Timer(f"Creating candidate selection plots"):
-        candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, N_CANDIDATES)
-        plots.model.plot_post_full_run(
-            project.plots, FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, candidates_df
-        )
+    try:
+        with Timer(f"Creating candidate selection plots"):
+            candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, N_CANDIDATES)
+            plots.model.plot_post_full_run(
+                project.plots, FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, candidates_df
+            )
 
-    # Upload the plots to AWS S3.
-    with Timer(f"Uploading plots to AWS S3"):
-        upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
+        # Upload the plots to AWS S3.
+        with Timer(f"Uploading plots to AWS S3"):
+            upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
+
+    except Exception as e:
+        logger.warning("Candidate plots failed, resuming task")
 
 
 

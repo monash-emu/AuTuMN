@@ -137,7 +137,6 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
     assert len(db_paths) == 1
     out_db = db.get_database(db_paths[0])
     assert set(out_db.table_names()) == {
-        "outputs",
         "derived_outputs",
         "mcmc_run",
         "mcmc_params",

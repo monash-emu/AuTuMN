@@ -1,14 +1,8 @@
 from typing import List
 
-from autumn.models.covid_19.parameters import (
-    CaseDetection,
-    Country,
-    Population,
-    TestingToDetection,
-)
+from autumn.models.covid_19.parameters import Country, Population, TestingToDetection
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.tools import inputs
-from autumn.tools.curve import tanh_based_scaleup
 
 from summer.compute import ComputedValueProcessor
 
@@ -28,40 +22,28 @@ def get_testing_pop(agegroup_strata: List[str], country: Country, pop: Populatio
 
 
 def build_detected_proportion_func(
-    agegroup_strata: List[str],
-    country: Country,
-    pop: Population,
-    testing: TestingToDetection,
-    case_detection: CaseDetection,
+        agegroup_strata: List[str], country: Country, pop: Population, testing: TestingToDetection,
 ):
     """
     Returns a time varying function that gives us the proportion of cases detected.
+    There is a previous version that uses a hyperbolic tan function that can be pulled out of earlier versions of the
+    repo.
     """
-    if testing is not None:
-        # More empiric approach based on per capita testing rates
-        assumed_tests_parameter = testing.assumed_tests_parameter
-        assumed_cdr_parameter = testing.assumed_cdr_parameter
-        smoothing_period = testing.smoothing_period
-        test_multiplier = testing.test_multiplier if testing.test_multiplier else None
 
-        testing_pop, testing_region = get_testing_pop(agegroup_strata, country, pop)
-        detected_proportion = find_cdr_function_from_test_data(
-            assumed_tests_parameter,
-            assumed_cdr_parameter,
-            smoothing_period,
-            country.iso3,
-            testing_pop,
-            subregion=testing_region,
-            test_multiplier=test_multiplier
-        )
-    else:
-        # Approach based on a hyperbolic tan function
-        detected_proportion = tanh_based_scaleup(
-            case_detection.shape,
-            case_detection.inflection_time,
-            case_detection.lower_asymptote,
-            case_detection.upper_asymptote,
-        )
+    # Process the parameters
+    assumed_tests_parameter = testing.assumed_tests_parameter
+    assumed_cdr_parameter = testing.assumed_cdr_parameter
+    smoothing_period = testing.smoothing_period
+    test_multiplier = testing.test_multiplier if testing.test_multiplier else None
+
+    # Get the empiric data
+    testing_pop, testing_region = get_testing_pop(agegroup_strata, country, pop)
+
+    # Create the function
+    detected_proportion = find_cdr_function_from_test_data(
+        assumed_tests_parameter, assumed_cdr_parameter, smoothing_period, country.iso3, testing_pop,
+        subregion=testing_region, test_multiplier=test_multiplier
+    )
 
     return detected_proportion
 

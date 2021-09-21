@@ -11,32 +11,17 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
 from autumn.tools.db.load import load_uncertainty_table
 from autumn.tools.plots.uncertainty.plots import _plot_uncertainty
 from autumn.tools.plots.utils import COLORS, _apply_transparency
-from autumn.settings import BASE_PATH
-
-FIGURE_PATH = os.path.join(
-    BASE_PATH,
-    "apps",
-    "tuberculosis",
-    "regions",
-    "marshall_islands",
-    "outputs",
-    "figures",
-    "diabetes",
-)
-
-DATA_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "pbi_databases"
-)
 
 
-def main():
-    make_output_directories(FIGURE_PATH)
+def main(data_path, output_path):
+    figure_path = os.path.join(output_path, "diabetes")
+    make_output_directories(figure_path)
     get_format()
-    uncertainty_df = load_uncertainty_table(DATA_PATH)
-    plot_diabetes_graph(uncertainty_df)
+    uncertainty_df = load_uncertainty_table(data_path)
+    plot_diabetes_graph(uncertainty_df, figure_path)
 
 
-def plot_diabetes_graph(uncertainty_df):
+def plot_diabetes_graph(uncertainty_df, figure_path):
 
     outputs = ["incidence"]
     panel_h = 5
@@ -95,8 +80,4 @@ def plot_diabetes_graph(uncertainty_df):
         #     start_quantile=1
         # )
 
-    save_figure("diabetes", FIGURE_PATH)
-
-
-if __name__ == "__main__":
-    main()
+    save_figure("diabetes", figure_path)

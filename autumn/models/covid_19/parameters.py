@@ -1,11 +1,11 @@
 """
 Type definition for model parameters
 """
-from datetime import date
-from typing import Any, Dict, List, Optional, Union
-
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
+
+from datetime import date
+from typing import Any, Dict, List, Optional, Union
 
 from autumn.models.covid_19.constants import BASE_DATE
 from autumn.settings.region import Region
@@ -16,9 +16,9 @@ BaseModel.Config.extra = Extra.forbid
 
 class Time(BaseModel):
     """
-    Model time period
-    Running time-related - for COVID-19 model
-    All times are assumed to be in days and reference time is 31st Dec 2019
+    Parameters to define the model time period and evaluation steps.
+    For the COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019.
+    The medium term plan is to replace this structure with standard Python date structures.
     """
 
     start: float
@@ -46,7 +46,6 @@ class TimeSeries(BaseModel):
         assert len(time_series) == \
                len(value_series), \
         f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
-        return values
 
     @validator("times", pre=True, allow_reuse=True)
     def parse_dates_to_days(dates):
@@ -67,7 +66,9 @@ class Country(BaseModel):
 
 
 class Population(BaseModel):
-    """Model population parameters"""
+    """
+    Model population parameters.
+    """
 
     region: Optional[str]  # None/null means default to parent country
     year: int
@@ -151,7 +152,6 @@ class ConstantMicrodistancingParams(BaseModel):
     def effect_domain(effect):
         assert 0. <= effect <= 1., "Microdistancing effect not in domain [0, 1]"
         return effect
-
 
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 

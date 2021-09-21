@@ -14,6 +14,7 @@ def request_outputs(
     location_strata: List[str],
     time_variant_tb_screening_rate,
     implement_acf: bool,
+    implement_ltbi=False
 ):
     out = OutputBuilder(model, location_strata)
 
@@ -96,10 +97,11 @@ def request_outputs(
     model.request_function_output("screening_rate", get_screening_rate, [])
 
     # Track cumulative number of preventive treatments provided from 2016
-    model.request_output_for_flow("pt_early", "preventive_treatment_early", save_results=False)
-    model.request_output_for_flow("pt_late", "preventive_treatment_early", save_results=False)
-    model.request_aggregate_output("pt", ["pt_early", "pt_late"], save_results=True)
-    model.request_cumulative_output("cumulative_pt", "pt", start_time=2016.)
+    if implement_ltbi:
+        model.request_output_for_flow("pt_early", "preventive_treatment_early", save_results=False)
+        model.request_output_for_flow("pt_late", "preventive_treatment_early", save_results=False)
+        model.request_aggregate_output("pt", ["pt_early", "pt_late"], save_results=True)
+        model.request_cumulative_output("cumulative_pt", "pt", start_time=2016.)
 
 
 class OutputBuilder:

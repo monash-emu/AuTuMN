@@ -1,4 +1,4 @@
-description: with mRNA vaccine
+description: Vaccination continues until 31 Dec / Restrictions lifted on 31 Dec
 
 time:
   start: 627  # 18 Sep 2021
@@ -30,12 +30,6 @@ mobility:
         - 0.
         - 1.
 
-vaccination:
-  # Pfizer efficacy against delta
-  fully_vaccinated:
-    overall_efficacy: .88
-    vacc_prop_prevent_infection: .86
-
-vaccination_risk:
+vaccination_risk:  # props do not matter. AEs are calculated in notebook anyway
   prop_astrazeneca: 0.
   prop_mrna: 1.

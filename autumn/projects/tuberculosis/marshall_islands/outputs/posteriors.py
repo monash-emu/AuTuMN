@@ -6,28 +6,7 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
 )
 from autumn.tools.plots.utils import PLOT_TEXT_DICT
-from autumn.settings import BASE_PATH
 
-FIGURE_PATH = os.path.join(
-    BASE_PATH,
-    "apps",
-    "tuberculosis",
-    "regions",
-    "marshall_islands",
-    "outputs",
-    "figures",
-    "posterior_table",
-)
-
-DATA_PATH = os.path.join(
-    BASE_PATH,
-    "apps",
-    "tuberculosis",
-    "regions",
-    "marshall_islands",
-    "outputs",
-    "parameter_posteriors",
-)
 
 PARAMETER_NAMES_OVERRIDE = {
     "rel. screening rate (Ebeye)": "relative rate of passive TB screening in Ebeye (ref. Majuro)",
@@ -45,9 +24,11 @@ PARAMETER_NAMES_OVERRIDE = {
 }
 
 
-def main():
-    make_output_directories(FIGURE_PATH)
-    file_path = os.path.join(DATA_PATH, "posterior_centiles.csv")
+def main(data_path, output_path):
+    figure_path = os.path.join(output_path, "posterior_table")
+    make_output_directories(figure_path)
+
+    file_path = os.path.join(data_path, "parameter_posteriors", "posterior_centiles.csv")
     posterior_df = pd.read_csv(file_path, sep=",")
     posterior_df = posterior_df.rename(
         columns={
@@ -57,7 +38,7 @@ def main():
             "97.5": "97.5th percentile",
         }
     )
-    make_posterior_table(posterior_df)
+    make_posterior_table(posterior_df, figure_path)
 
 
 def format_parameter(parameter):
@@ -73,14 +54,10 @@ def format_parameter(parameter):
         return parameter_name
 
 
-def make_posterior_table(posterior_df):
+def make_posterior_table(posterior_df, figure_path):
 
     posterior_df.Parameter = posterior_df.Parameter.apply(format_parameter)
 
     filename = "posterior_ranges.csv"
-    file_path = os.path.join(FIGURE_PATH, filename)
+    file_path = os.path.join(figure_path, filename)
     posterior_df.to_csv(file_path)
-
-
-if __name__ == "__main__":
-    main()

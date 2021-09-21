@@ -33,7 +33,7 @@ ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 # dispersion parameter of the targets' normal likelihoods.
 cluster_targets = []
 for cluster in CLUSTERS:
-    notifs_ts = ts_set.get(f"notifications_for_cluster_{cluster}").moving_average(4)
+    notifs_ts = ts_set.get(f"notificationsXcluster_{cluster}").moving_average(4)
     target = NormalTarget(notifs_ts)
     cluster_targets.append(target)
 

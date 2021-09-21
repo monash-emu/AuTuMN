@@ -41,7 +41,6 @@ def contact_tracing_func(time, computed_values):
     Multiply the flow rate through by the source compartment to get the final absolute rate
     """
 
-
     return computed_values["traced_flow_rate"]
 
 

@@ -13,31 +13,16 @@ from autumn.tools.db.load import load_uncertainty_table
 from autumn.tools.plots.uncertainty.plots import plot_timeseries_with_uncertainty
 from autumn.settings import BASE_PATH
 
-FIGURE_PATH = os.path.join(
-    BASE_PATH,
-    "apps",
-    "tuberculosis",
-    "regions",
-    "marshall_islands",
-    "outputs",
-    "figures",
-    "counterfactual",
-)
 
-DATA_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "pbi_databases"
-)
-
-
-def main():
-    make_output_directories(FIGURE_PATH)
-
+def main(data_path, output_path):
+    figure_path = os.path.join(output_path, "counterfactual")
+    make_output_directories(figure_path)
     get_format()
-    uncertainty_df = load_uncertainty_table(DATA_PATH)
-    plot_counterfactual(uncertainty_df)
+    uncertainty_df = load_uncertainty_table(data_path)
+    plot_counterfactual(uncertainty_df, figure_path)
 
 
-def plot_counterfactual(uncertainty_df):
+def plot_counterfactual(uncertainty_df, figure_path):
 
     regions = ["majuro", "ebeye", "all"]
     outputs = ["incidence", "mortality", "percentage_latent", "notifications"]
@@ -84,10 +69,8 @@ def plot_counterfactual(uncertainty_df):
                 ylab=ylab,
                 x_axis_to_date=False,
                 start_quantile=0,
+                overlay_uncertainty=True,
+                legend=False
             )
 
-    save_figure("counterfactual", FIGURE_PATH)
-
-
-if __name__ == "__main__":
-    main()
+    save_figure("counterfactual", figure_path)

@@ -8,6 +8,8 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
     save_figure,
 )
+from autumn.tools.project import get_project
+
 from autumn.tools.db.load import load_uncertainty_table
 from autumn.tools.plots.uncertainty.plots import (
     _get_target_values,
@@ -29,7 +31,7 @@ FIGURE_PATH = os.path.join(
 )
 
 DATA_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "pbi_databases"
+    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "pbi_databases"
 )
 
 
@@ -53,9 +55,6 @@ def plot_screening_rate(uncertainty_df):
     heights = [panel_h] * n_row
     fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
     spec = fig.add_gridspec(ncols=n_col, nrows=n_row, width_ratios=widths, height_ratios=heights)
-
-    # load targets
-    targets = load_targets("tuberculosis", "marshall_islands")
 
     x_low = 1950
     x_up = 2050
@@ -93,19 +92,20 @@ def plot_screening_rate(uncertainty_df):
             i_col = 0
             i_row += 1
 
-        values, times = _get_target_values(targets, output)
-        trunc_values = [v for (v, t) in zip(values, times) if x_low <= t <= x_up]
-        trunc_times = [t for (v, t) in zip(values, times) if x_low <= t <= x_up]
-        _plot_targets_to_axis(ax, trunc_values, trunc_times, on_uncertainty_plot=True)
-
     save_figure("screening_rate", FIGURE_PATH)
 
 
 def plot_model_fits(uncertainty_df):
+    project = get_project("tuberculosis", "marshall-islands")
+
     n_col = 3
     n_row = 2
 
-    outputs = targets_to_use
+    outputs = [
+        "prevalence_infectiousXlocation_majuro", "prevalence_infectiousXlocation_ebeye",
+        "percentage_latentXlocation_majuro", "notificationsXlocation_majuro", "notificationsXlocation_ebeye",
+        "population_size"
+    ]
     panel_h = 5
     panel_w = 7
 
@@ -115,7 +115,7 @@ def plot_model_fits(uncertainty_df):
     spec = fig.add_gridspec(ncols=n_col, nrows=n_row, width_ratios=widths, height_ratios=heights)
 
     # load targets
-    targets = load_targets("tuberculosis", "marshall_islands")
+    targets = project.plots
 
     x_low = 2010
     x_up = 2020

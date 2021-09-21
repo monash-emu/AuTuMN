@@ -18,16 +18,20 @@ def make_all_rmi_plots():
     cal.main()
 
     # prior table
-    pri.main()
+    # pri.main() # FIXME
 
     # posterior table
-    pos.main()
+    # pos.main()  # FIXME
 
     # counterfactual outputs
-    ctf.main()
+    # ctf.main() # FIXME
 
     # elimination outputs
-    elm.main()
+    # elm.main()  # FIXME
 
     # diabetes plot
-    dia.main()
+    # dia.main()  # FIXME
+
+
+
+make_all_rmi_plots()

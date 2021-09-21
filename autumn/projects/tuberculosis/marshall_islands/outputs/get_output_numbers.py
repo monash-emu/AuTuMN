@@ -18,7 +18,7 @@ FIGURE_PATH = os.path.join(
 )
 
 DATA_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "pbi_databases"
+    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "pbi_databases"
 )
 
 

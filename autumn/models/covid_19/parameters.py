@@ -24,9 +24,17 @@ class Time(BaseModel):
     end: float
     step: float
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_lengths(cls, values):
+        start, end = values.get("start"), values.get("end")
+        assert end >= start, f"End time: {end} before start: {start}"
+        return values
+
 
 class TimeSeries(BaseModel):
-    """A set of values with associated time points"""
+    """
+    A set of values with associated time points
+    """
 
     times: List[float]
     values: List[float]
@@ -34,7 +42,7 @@ class TimeSeries(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
         vs, ts = values.get("values"), values.get("times")
-        assert len(ts) == len(vs), f"TimeSeries length mismatch."
+        assert len(ts) == len(vs), f"TimeSeries length mismatch, times length: {len(ts)}, values length: {len(vs)}"
         return values
 
     @validator("times", pre=True, allow_reuse=True)
@@ -43,9 +51,16 @@ class TimeSeries(BaseModel):
 
 
 class Country(BaseModel):
-    """The country that the model is based in."""
+    """
+    The country that the model is based in. (The country may be, and often is, the same as the region.)
+    """
 
     iso3: str
+
+    @validator("iso3", pre=True, allow_reuse=True)
+    def check_length(iso3):
+        assert len(iso3) == 3, f"ISO3 codes should have three digits, code is: {iso3}"
+        return iso3
 
 
 class Population(BaseModel):
@@ -66,6 +81,11 @@ class Sojourn(BaseModel):
     compartment_periods: Dict[str, float]
     # Mean time spent in each compartment, defined via proportions
     compartment_periods_calculated: Dict[str, CalcPeriod]
+
+    @validator("compartment_periods", allow_reuse=True)
+    def check_positive(periods):
+        assert all(val >= 0. for val in periods.values()), f"Sojourn times must be positive, times are: {periods}"
+        return periods
 
 
 class MixingLocation(BaseModel):
@@ -92,6 +112,17 @@ class EmpiricMicrodistancingParams(BaseModel):
     times: List[float]
     values: List[float]
 
+    @validator("max_effect", allow_reuse=True)
+    def effect_domain(effect):
+        assert 0. <= effect <= 1.
+        return effect
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_lengths(cls, values):
+        vs, ts = values.get("values"), values.get("times")
+        assert len(ts) == len(vs), f"TimeSeries length mismatch, times length: {len(ts)}, values length: {len(vs)}"
+        return values
+
 
 class TanhMicrodistancingParams(BaseModel):
     shape: float
@@ -99,9 +130,22 @@ class TanhMicrodistancingParams(BaseModel):
     lower_asymptote: float
     upper_asymptote: float
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_asymptotes(cls, values):
+        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
+        assert lower <= upper, "Asymptotes specified upside-down"
+        assert 0. <= lower <= 1., "Lower asymptote not in domain [0, 1]"
+        assert 0. <= upper <= 1., "Upper asymptote not in domain [0, 1]"
+        return values
+
 
 class ConstantMicrodistancingParams(BaseModel):
     effect: float
+
+    @validator("effect", allow_reuse=True)
+    def effect_domain(effect):
+        assert 0. <= effect <= 1., "Microdistancing effect not in domain [0, 1]"
+        return effect
 
 
 class MicroDistancingFunc(BaseModel):
@@ -110,6 +154,12 @@ class MicroDistancingFunc(BaseModel):
         EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams
     ]
     locations: List[str]
+
+    @validator("locations", allow_reuse=True)
+    def effect_domain(locations):
+        mixing_locations = ["home", "other_locations", "school", "work"]
+        assert all([loc in mixing_locations for loc in locations])
+        return locations
 
 
 class Mobility(BaseModel):
@@ -132,7 +182,9 @@ class MixingMatrices(BaseModel):
 
 
 class AgeStratification(BaseModel):
-    """Parameters used in age based stratification"""
+    """
+    Parameters used in age based stratification.
+    """
 
     # Susceptibility by age
     susceptibility: Dict[str, float]
@@ -149,7 +201,9 @@ class ClinicalProportions(BaseModel):
 
 
 class ClinicalStratification(BaseModel):
-    """Parameters used in clinical status based stratification"""
+    """
+    Parameters used in clinical status based stratification.
+    """
 
     props: ClinicalProportions
     icu_prop: float  # Proportion of those hospitalised that are admitted to ICU
@@ -182,7 +236,9 @@ class TestingToDetection(BaseModel):
 
 
 class SusceptibilityHeterogeneity(BaseModel):
-    """Specifies heterogeneity in susceptibility"""
+    """
+    Specifies heterogeneity in susceptibility.
+    """
 
     bins: int
     tail_cut: float
@@ -224,10 +280,21 @@ class VocComponent(BaseModel):
     """
     Parameters defining the emergence profile of the Variants of Concerns
     """
+
     start_time: Optional[float]
     entry_rate: Optional[float]
     seed_duration: Optional[float]
     contact_rate_multiplier: Optional[float]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_times(cls, values):
+        if "seed_duration" in values:
+            assert 0. <= values["seed_duration"], "Seed duration negative"
+        if "contact_rate_multiplier" in values:
+            assert 0. <= values["contact_rate_multiplier"], "Contact rate multiplier negative"
+        if "entry_rate" in values:
+            assert 0. <= values["entry_rate"], "Entry rate negative"
+        return values
 
 
 class VaccCoveragePeriod(BaseModel):
@@ -238,6 +305,12 @@ class VaccCoveragePeriod(BaseModel):
     coverage: Optional[float]
     start_time: float
     end_time: float
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_times(cls, values):
+        msg = f"End time: {values['start_time']} before start time: {values['end_time']}"
+        assert values["start_time"] <= values["end_time"], msg
+        return values
 
 
 class RollOutFunc(BaseModel):
@@ -251,6 +324,13 @@ class RollOutFunc(BaseModel):
         p, ts = values.get("supply_period_coverage"), values.get("supply_timeseries")
         has_supply = bool(p) != bool(ts)
         assert has_supply, "Roll out function must have a period or timeseries for supply."
+        if "age_min" in values:
+            assert 0. <= values["age_min"], f"Minimum age is negative: {values['age_min']}"
+        if "age_max" in values:
+            assert 0. <= values["age_max"], f"Minimum age is negative: {values['age_max']}"
+        if "age_min" in values and "age_max" in values:
+            msg = f"Maximum age: {values['age_max']} is less than minimum age: {values['age_max']}"
+            assert values["age_min"] <= values["age_max"], msg
         return values
 
 
@@ -261,17 +341,17 @@ class VaccEffectiveness(BaseModel):
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
-        assert 0 <= val <= 1, "Overall efficacy should be in [0, 1]"
+        assert 0. <= val <= 1., f"Overall efficacy should be in [0, 1]: {val}"
         return val
 
     @validator("vacc_prop_prevent_infection", pre=True, allow_reuse=True)
     def check_vacc_prop_prevent_infection(val):
-        assert 0 <= val <= 1, "Proportion of vaccine effect attributable to preventing infection should be in [0, 1]"
+        assert 0. <= val <= 1., f"Proportion of vaccine effect preventing infection should be in [0, 1]: {val}"
         return val
 
     @validator("vacc_reduce_infectiousness", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
-        assert 0 <= val <= 1, "Reduction in infectousness should be in [0, 1]"
+        assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
 
@@ -283,16 +363,33 @@ class Vaccination(BaseModel):
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_vacc_range(cls, values):
+        assert 0. < values["second_dose_delay"], f"Delay to second dose is not positive: {values['second_dose_delay']}"
+        return values
+
 
 class VaccinationRisk(BaseModel):
     calculate: bool
     prop_astrazeneca: float
     prop_mrna: float
-
     tts_rate: Dict[str, float]
     tts_fatality_ratio: Dict[str, float]
-
     myocarditis_rate: Dict[str, float]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_vacc_risk_ranges(cls, values):
+        msg = f"Proportion Astra-Zeneca not in range [0, 1]: {values['prop_astrazeneca']}"
+        assert 0. <= values["prop_astrazeneca"] <= 1., msg
+        msg = f"Proportion mRNA not in range [0, 1]: {values['prop_mrna']}"
+        assert 0. <= values["prop_mrna"] <= 1., msg
+        msg = f"At least one TTS rate is negative: {values['tts_rate']}"
+        assert all([0. <= val for val in values["tts_rate"].values()]), msg
+        msg = f"TTS fatality ratio is negative: {values['tts_fatality_ratio']}"
+        assert all([0. <= val for val in values["tts_fatality_ratio"].values()]), msg
+        msg = f"Myocarditis rate is negative: {values['myocarditis_rate']}"
+        assert all([0. <= val for val in values["myocarditis_rate"].values()]), msg
+        return values
 
 
 class ContactTracing(BaseModel):
@@ -306,7 +403,7 @@ class ContactTracing(BaseModel):
 
     @validator("floor", allow_reuse=True)
     def check_floor(val):
-        assert 0 <= val <= 1, "Contact tracing floor must be in range [0, 1]"
+        assert 0. <= val <= 1., f"Contact tracing floor must be in range [0, 1]: {val}"
         return val
 
     # @validator("assumed_trace_prop")

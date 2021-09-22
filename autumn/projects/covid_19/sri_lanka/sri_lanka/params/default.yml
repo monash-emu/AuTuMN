@@ -4,11 +4,15 @@ contact_rate: 0.0215
 infectious_seed: 200
 
 time:
-  start: 240
+  start: 150
   end: 791 # march 1st 2022
 
 country:
   iso3: LKA
+
+mixing_matrices:
+  type: extrapolated
+  source_iso3: CHN
 
 contact_tracing:
   assumed_trace_prop: 0.05
@@ -44,6 +48,15 @@ clinical_stratification:
   icu_prop: 0.04
 
 mobility:
+  smooth_google_data: false # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
   microdistancing:
     behaviour:
       function_type: tanh

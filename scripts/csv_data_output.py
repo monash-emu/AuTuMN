@@ -78,6 +78,18 @@ npl_incidence_col = [f"incidenceXagegroup_{each_age}" for each_age in AGE_GROUPS
 npl = {"region": ["nepal"], "columns": STANDARD_COL + npl_incidence_col}
 
 
+def upload_csv(country_list):
+    for ctry in country_list:
+        s3.upload_file(
+            f"{ctry}_data.csv", "autumn-files", f"{ctry}_data.csv", ExtraArgs={"ACL": "public-read"}
+        )
+        os.remove(f"{ctry}_data.csv")
+
+
+
+
+
+
 def get_files(country):
     return {
         region: os.path.join(DATA_PATH, each)
@@ -161,14 +173,5 @@ for ctry in country:
     df = df[col_set1 + col_set2]
 
     df.to_csv(f"{ctry}_data.csv")
-
-
-def upload_csv(country_list):
-    for ctry in country_list:
-        s3.upload_file(
-            f"{ctry}_data.csv", "autumn-files", f"{ctry}_data.csv", ExtraArgs={"ACL": "public-read"}
-        )
-        os.remove(f"{ctry}_data.csv")
-
 
 upload_csv(["lka", "phl", "mys", "npl"])

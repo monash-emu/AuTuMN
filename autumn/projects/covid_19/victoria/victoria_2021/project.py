@@ -8,9 +8,13 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
 
-# TODO: Possibly move testing function out to a more obvious point in the code (less important)
-# TODO: Check YouGov inputs to micro-distancing functions
+# TODO: Check YouGov inputs to micro-distancing functions (face coverings and physical distancing)
 #  - need to get Mili to do this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
+# TODO: Calibrate to statewide deaths
+# TODO: See how shorter hospitalisation duration goes
+# TODO: Consider turning seasonal forcing on
+# TODO: Write everything up as a policy brief
+# TODO: Write the methods up as a technical document
 
 # Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis
 metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
@@ -61,7 +65,10 @@ for region in regions_for_multipliers:
     region_name = region.replace("-", "_")
     name = f"victorian_clusters.contact_rate_multiplier_{region_name}"
     # Shouldn't be too peaked with these values
-    prior = TruncNormalPrior(name, mean=1.0, stdev=0.5, trunc_range=[0.5, np.inf], jumping_stdev=0.15)
+    prior = TruncNormalPrior(
+        name,
+        mean=1.0, stdev=0.5, trunc_range=[0.5, np.inf], jumping_stdev=0.15
+    )
     cluster_priors.append(prior)
 
 # Marginal distributions of Vic 2020 to consider as priors for Vic 2021
@@ -89,56 +96,73 @@ for region in regions_for_multipliers:
 #  or norm (0.5376752874675825, 0.11298858887538074)
 # "contact_tracing.assumed_trace_prop", uniform (0.20052289494754472, 0.29896766288137805)
 
-incubation_period_name = "sojourn.compartment_periods_calculated.exposed.total_period"
-active_period_name = "sojourn.compartment_periods_calculated.active.total_period"
-regional_multiplier_name = f"victorian_clusters.contact_rate_multiplier_regional"
-icu_period_name = "sojourn.compartment_periods.icu_early"
-behaviour_adjuster_name = "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect"
-face_masks_adjuster_name = "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect"
-home_reduction_name = "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect"
-
 priors = [
-    # Global COVID priors, but with jumping sds adjusted
-    TruncNormalPrior(
-        incubation_period_name,
-        mean=6.095798813756773, stdev=0.7810560402997285, trunc_range=(1.0, np.inf), jumping_stdev=0.5
-    ),
-    TruncNormalPrior(
-        active_period_name,
-        mean=6.431724510638751, stdev=0.6588899585941116, trunc_range=(3.0, np.inf), jumping_stdev=0.4
-    ),
-
     # Cluster specific priors
     *cluster_priors,
 
+    # Global COVID priors, but with jumping sds adjusted
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.exposed.total_period",
+        mean=6.095798813756773, stdev=0.7810560402997285, trunc_range=(1.0, np.inf), jumping_stdev=0.5
+    ),
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.active.total_period",
+        mean=6.431724510638751, stdev=0.6588899585941116, trunc_range=(3.0, np.inf), jumping_stdev=0.4
+    ),
+
     # Victorian regional priors
     TruncNormalPrior(
-        regional_multiplier_name,
+        "victorian_clusters.contact_rate_multiplier_regional",
         mean=0.7070792993624084, stdev=0.11538988453463195, trunc_range=(0.5, np.inf), jumping_stdev=0.15
     ),
-    UniformPrior("contact_rate", (0.25, 0.38), jumping_stdev=0.008),
-    UniformPrior("victorian_clusters.intercluster_mixing", (0.005, 0.05), jumping_stdev=0.01),
-    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", (0.2, 0.8), jumping_stdev=0.05),
+    UniformPrior(
+        "contact_rate",
+        (0.25, 0.38), jumping_stdev=0.008
+    ),
+    UniformPrior(
+        "victorian_clusters.intercluster_mixing",
+        (0.005, 0.05), jumping_stdev=0.01
+    ),
+    UniformPrior(
+        "clinical_stratification.non_sympt_infect_multiplier",
+        (0.2, 0.8), jumping_stdev=0.05
+    ),
     TruncNormalPrior(
         "clinical_stratification.props.hospital.multiplier",
         mean=3.072957401469314, stdev=0.9230093569298286, trunc_range=(0.5, np.inf), jumping_stdev=0.4
     ),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.02, 0.15), jumping_stdev=0.04),
-    UniformPrior("clinical_stratification.icu_prop", (0.15, 0.3), jumping_stdev=0.05),
-    TruncNormalPrior(
-        icu_period_name, mean=13.189283389438017, stdev=3.267836334270357, trunc_range=(5.0, np.inf), jumping_stdev=4.
+    UniformPrior(
+        "testing_to_detection.assumed_cdr_parameter",
+        (0.02, 0.15), jumping_stdev=0.04
+    ),
+    UniformPrior(
+        "clinical_stratification.icu_prop",
+        (0.15, 0.3), jumping_stdev=0.05
     ),
     TruncNormalPrior(
-        behaviour_adjuster_name,
+        "sojourn.compartment_periods.icu_early",
+        mean=13.189283389438017, stdev=3.267836334270357, trunc_range=(5.0, np.inf), jumping_stdev=4.
+    ),
+    TruncNormalPrior(
+        "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
         mean=0.3336881545907932, stdev=0.12974271665347392, trunc_range=(0., 1.), jumping_stdev=0.075
     ),
     TruncNormalPrior(
-        face_masks_adjuster_name,
+        "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
         mean=0.4590192843551404, stdev=0.054643498605008924, trunc_range=(0., 1.), jumping_stdev=0.04
     ),
-    UniformPrior(home_reduction_name, (0.0, 0.4), jumping_stdev=0.04),
-    UniformPrior("target_output_ratio", (0.2, 0.7), jumping_stdev=0.04),
-    UniformPrior("contact_tracing.assumed_trace_prop", (0.35, 0.6), jumping_stdev=0.04),
+    UniformPrior(
+        "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect",
+        (0.0, 0.4), jumping_stdev=0.04
+    ),
+    UniformPrior(
+        "target_output_ratio",
+        (0.2, 0.7), jumping_stdev=0.04
+    ),
+    UniformPrior(
+        "contact_tracing.assumed_trace_prop",
+        (0.35, 0.6), jumping_stdev=0.04
+    ),
     # UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
 ]
 

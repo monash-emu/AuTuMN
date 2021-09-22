@@ -1,13 +1,15 @@
 """
 Type definition for model parameters
 """
-from datetime import date
-from typing import Any, Dict, List, Optional, Union
-
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
+from datetime import date
+from typing import Any, Dict, List, Optional, Union
+
 from autumn.models.covid_19.constants import BASE_DATE
+from autumn.settings.region import Region
+from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
@@ -15,9 +17,9 @@ BaseModel.Config.extra = Extra.forbid
 
 class Time(BaseModel):
     """
-    Model time period
-    Running time-related - for COVID-19 model
-    All times are assumed to be in days and reference time is 31st Dec 2019
+    Parameters to define the model time period and evaluation steps.
+    For the COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019.
+    The medium term plan is to replace this structure with standard Python date structures.
     """
 
     start: float
@@ -40,10 +42,12 @@ class TimeSeries(BaseModel):
     values: List[float]
 
     @root_validator(pre=True, allow_reuse=True)
-    def check_lengths(cls, values):
-        vs, ts = values.get("values"), values.get("times")
-        assert len(ts) == len(vs), f"TimeSeries length mismatch, times length: {len(ts)}, values length: {len(vs)}"
-        return values
+    def check_lengths(cls, inputs):
+        value_series, time_series = inputs.get("values"), inputs.get("times")
+        assert len(time_series) == \
+               len(value_series), \
+        f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        return inputs
 
     @validator("times", pre=True, allow_reuse=True)
     def parse_dates_to_days(dates):
@@ -64,14 +68,18 @@ class Country(BaseModel):
 
 
 class Population(BaseModel):
-    """Model population parameters"""
+    """
+    Model population parameters.
+    """
 
     region: Optional[str]  # None/null means default to parent country
     year: int
 
 
 class Sojourn(BaseModel):
-    """Parameters for determining how long a person stays in a given compartment."""
+    """
+    Parameters for determining how long a person stays in a given compartment.
+    """
 
     class CalcPeriod(BaseModel):
         total_period: float
@@ -84,7 +92,7 @@ class Sojourn(BaseModel):
 
     @validator("compartment_periods", allow_reuse=True)
     def check_positive(periods):
-        assert all(val >= 0. for val in periods.values()), f"Sojourn times must be positive, times are: {periods}"
+        assert all(val >= 0. for val in periods.values()), f"Sojourn times must be non-negative, times are: {periods}"
         return periods
 
 
@@ -98,8 +106,8 @@ class MixingLocation(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
-        vs, ts = values.get("values"), values.get("times")
-        assert len(ts) == len(vs), f"Mixing series length mismatch."
+        value_series, time_series = values.get("values"), values.get("times")
+        assert len(time_series) == len(value_series), f"Mixing series length mismatch."
         return values
 
     @validator("times", pre=True, allow_reuse=True)
@@ -119,8 +127,8 @@ class EmpiricMicrodistancingParams(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
-        vs, ts = values.get("values"), values.get("times")
-        assert len(ts) == len(vs), f"TimeSeries length mismatch, times length: {len(ts)}, values length: {len(vs)}"
+        value, time_series = values.get("values"), values.get("times")
+        assert len(time_series) == len(value), f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value)}"
         return values
 
 
@@ -133,7 +141,7 @@ class TanhMicrodistancingParams(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_asymptotes(cls, values):
         lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
-        assert lower <= upper, "Asymptotes specified upside-down"
+        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
         assert 0. <= lower <= 1., "Lower asymptote not in domain [0, 1]"
         assert 0. <= upper <= 1., "Upper asymptote not in domain [0, 1]"
         return values
@@ -157,8 +165,7 @@ class MicroDistancingFunc(BaseModel):
 
     @validator("locations", allow_reuse=True)
     def effect_domain(locations):
-        mixing_locations = ["home", "other_locations", "school", "work"]
-        assert all([loc in mixing_locations for loc in locations])
+        assert all([loc in LOCATIONS for loc in locations])
         return locations
 
 
@@ -194,6 +201,12 @@ class StrataProps(BaseModel):
     props: List[float]
     multiplier: float
 
+    @validator("props", allow_reuse=True)
+    def check_props(val):
+        msg = f"Not all of list of proportions is in [0, 1]: {val}"
+        assert all([0. <= prop <= 1. for prop in val]), msg
+        return val
+
 
 class ClinicalProportions(BaseModel):
     hospital: StrataProps
@@ -211,9 +224,21 @@ class ClinicalStratification(BaseModel):
     late_infect_multiplier: Dict[str, float]
     non_sympt_infect_multiplier: float
 
+    @validator("icu_prop", allow_reuse=True)
+    def check_coverage(val):
+        assert 0. <= val <= 1., f"Proportion of hospitalised patients admitted to ICU is not in [0, 1]: {val}"
+        return val
+
+    @validator("icu_mortality_prop", allow_reuse=True)
+    def check_coverage(val):
+        assert 0. <= val <= 1., f"Ceiling for proportion of ICU patients dying is not in [0, 1]: {val}"
+        return val
+
 
 class InfectionFatality(BaseModel):
-    """Parameters relating to death from infection"""
+    """
+    Parameters relating to death from infection.
+    """
 
     # Calibrated multiplier for props
     multiplier: float
@@ -222,11 +247,15 @@ class InfectionFatality(BaseModel):
     # Proportion of people dying / total infected by age
     props: List[float]
 
+    @validator("multiplier", allow_reuse=True)
+    def check_multiplier(val):
+        assert 0. <= val, f"Multiplier applied to IFRs must be in range [0, 1]: {val}"
+        return val
+
 
 class TestingToDetection(BaseModel):
     """
-    More empiric approach based on per capita testing rates
-    An alternative to CaseDetection.
+    Empiric approach to building the case detection rate that is based on per capita testing rates.
     """
 
     assumed_tests_parameter: float
@@ -275,6 +304,13 @@ class Vic2021Seeding(BaseModel):
     loddon_mallee: float
     grampians: float
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_seeds(cls, values):
+        for region in Region.VICTORIA_SUBREGIONS:
+            region_name = region.replace("-", "_")
+            assert 0. <= values[region_name], f"Seed value for cluster {region_name} is negative"
+        return values
+
 
 class VocComponent(BaseModel):
     """
@@ -299,14 +335,20 @@ class VocComponent(BaseModel):
 
 class VaccCoveragePeriod(BaseModel):
     """
-    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
+    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time.
     """
 
     coverage: Optional[float]
     start_time: float
     end_time: float
 
-    @root_validator(pre=True, allow_reuse=True)
+    @validator("coverage")
+    def check_coverage(val):
+        if val:
+            assert 0. <= val <= 1., f"Requested coverage for phase of vaccination program is not in [0, 1]: {val}"
+        return val
+
+    @root_validator(allow_reuse=True)
     def check_times(cls, values):
         msg = f"End time: {values['start_time']} before start time: {values['end_time']}"
         assert values["start_time"] <= values["end_time"], msg
@@ -314,6 +356,10 @@ class VaccCoveragePeriod(BaseModel):
 
 
 class RollOutFunc(BaseModel):
+    """
+    Provides the parameters needed to construct a phase of vaccination roll-out.
+    """
+
     age_min: Optional[float]
     age_max: Optional[float]
     supply_period_coverage: Optional[VaccCoveragePeriod]
@@ -406,11 +452,23 @@ class ContactTracing(BaseModel):
         assert 0. <= val <= 1., f"Contact tracing floor must be in range [0, 1]: {val}"
         return val
 
-    # @validator("assumed_trace_prop")
-    # def assumed_trace_prop(val, values):
-    #     if 'floor' in values:
-    #         assert val >= values['floor'], "Contact tracing assumed_trace_prop must be >= floor"
-    #     return val
+    @validator("quarantine_infect_multiplier", allow_reuse=True)
+    def check_multiplier(val):
+        assert 0. <= val <= 1., f"Contact tracing infectiousness multiplier must be in range [0, 1]: {val}"
+        return val
+
+    @ validator("assumed_prev", allow_reuse=True)
+    def check_prevalence(val):
+        assert 0. <= val, f"Contact tracing assumed prevalence must not be negative: {val}"
+        return val
+
+    # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated
+    # @root_validator(allow_reuse=True)
+    # def assumed_trace_prop(cls, values):
+    #     if "floor" in values:
+    #         msg = f"Contact tracing assumed_trace_prop must be >= floor"
+    #         assert values["assumed_trace_prop"] >= values["floor"], msg
+    #     return values
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

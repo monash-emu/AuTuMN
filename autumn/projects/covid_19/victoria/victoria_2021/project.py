@@ -8,22 +8,9 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
 
-# TODO: Get calibration running
 # TODO: Possibly move testing function out to a more obvious point in the code (less important)
 # TODO: Check YouGov inputs to micro-distancing functions
 #  - need to get Mili to do this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
-# DONE: Apply David's marginal posteriors as priors code
-# DONE: Work out why vaccination coverage targets aren't reached - done, it was all ages but program is adults - duh!
-# DONE: Implement future vaccination roll-out - understand the future projections provided by Vida
-# DONE: Implement future vaccination roll-out - understand how to specify projected roll-out in our code
-# DONE: Check what's happening with testing numbers
-# DONE: Increase severity for Delta
-# DONE: Make vaccination apply to adults only
-# DONE: Turn off top bracket IFR overwrite
-# DONE: Check how case detection is working
-# DONE: Make sure vaccination coverage can't exceed 100%
-# DONE: Check waning immunity is off to make things a bit simpler
-# DONE: Checked multi-strain functionality is turned off
 
 # Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis
 metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]

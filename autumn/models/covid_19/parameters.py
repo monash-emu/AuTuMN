@@ -42,11 +42,12 @@ class TimeSeries(BaseModel):
     values: List[float]
 
     @root_validator(pre=True, allow_reuse=True)
-    def check_lengths(cls, values):
-        value_series, time_series = values.get("values"), values.get("times")
+    def check_lengths(cls, inputs):
+        value_series, time_series = inputs.get("values"), inputs.get("times")
         assert len(time_series) == \
                len(value_series), \
         f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        return inputs
 
     @validator("times", pre=True, allow_reuse=True)
     def parse_dates_to_days(dates):

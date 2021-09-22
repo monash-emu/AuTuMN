@@ -164,6 +164,10 @@ priors = [
         "contact_tracing.assumed_trace_prop",
         (0.35, 0.6), jumping_stdev=0.04
     ),
+    UniformPrior(
+        "seasonal_forcing",
+        (0., 0.4), jumping_stdev=0.05
+    )
     # UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
 ]
 

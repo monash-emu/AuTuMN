@@ -82,7 +82,7 @@ clinical_stratification:
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
-    hospital_late: 5.  # Much shorter value than what we had been using, to help with calibration
+    hospital_late: 7.8  # FluCAN monthly Covid Epi Report to CDNA, 30th August 2020
     icu_late: 5.9  # SPRINT-SARI Australia Project
   compartment_periods_calculated:
     active:

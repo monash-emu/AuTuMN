@@ -13,10 +13,10 @@ from getpass import getpass
 
 # Use OWID csv for notification and death numbers.
 COVID_AU_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_au")
-COVID_AU_CSV_PATH = os.path.join(COVID_AU_DIRPATH, "COVID_AU_state_daily_change.csv")
+
 
 CHRIS_CSV = os.path.join(COVID_AU_DIRPATH, "monitoringreport.secret.csv")
-
+COVID_DHHS_DEATH_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_deaths.secret.csv")
 COVID_DHHS_CASE_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_cases.secret.csv")
 COVID_DHHS_ADMN_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_admissions.secret.csv")
 COVID_DHHS_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_vaccination.secret.csv")
@@ -113,6 +113,7 @@ fix_lga = {
 
 def main():
 
+    process_zip_files()
     cases = preprocess_cases()
     cases = load_cases(cases)
 
@@ -127,8 +128,12 @@ def main():
     admissions = preprocess_admissions()
     admissions = load_admissions(admissions)
 
+    deaths = preprocess_deaths()
+    deaths = load_deaths(deaths)
+
     cases = cases.merge(chris_df, on=["date_index", "cluster_id"], how="outer")
     cases = cases.merge(admissions, on=["date_index", "cluster_id"], how="outer")
+    cases = cases.merge(deaths, on=["date_index", "cluster_id"], how="outer")
 
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
@@ -150,7 +155,7 @@ def main():
 
     cases.fillna(np.inf, inplace=True)
     vic_df = cases.groupby("date_index").sum(skipna=True).reset_index()
-    vic_df.replace({np.inf:np.nan}, inplace=True)
+    vic_df.replace({np.inf: np.nan}, inplace=True)
 
     TARGET_MAP_DHHS = {
         "notifications": "cluster_cases",
@@ -158,6 +163,7 @@ def main():
         "icu_occupancy": "value_icu",
         "icu_admissions": "admittedtoicu",
         "hospital_admissions": "nadmissions",
+        "infection_deaths": "cluster_deaths"
     }
 
     update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VIC2021_TARGETS_CSV, password)
@@ -260,7 +266,6 @@ def load_chris_df(load: str):
     return df
 
 
-
 def preprocess_vac():
 
     df = pd.read_csv(COVID_DHHS_VAC_CSV)
@@ -284,7 +289,6 @@ def create_vac_coverage(df):
     cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
     cluster_map_df["cluster_pop"] = cluster_map_df.proportion * cluster_map_df.population
     cluster_map_df.cluster_id.replace(CLUSTER_MAP, inplace=True)
-   
 
     df = df.merge(cluster_map_df, left_on=["lga_name_2018"], right_on=["lga_name"], how="left")
     df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
@@ -301,17 +305,64 @@ def create_vac_coverage(df):
 
     df.sort_values(by=["cluster_id", "agegroup", "date_index"], inplace=True)
 
-    df.agegroup.replace({ '90-94':'85-89', '95-99':'85-89','100+':'85-89'}, inplace=True)
+    df.agegroup.replace({"90-94": "85-89", "95-99": "85-89", "100+": "85-89"}, inplace=True)
     df["start_age"] = df["agegroup"].apply(lambda s: int(s.split("-")[0]))
     df["end_age"] = df["agegroup"].apply(lambda s: int(s.split("-")[1]))
 
-    numeric_cols = ['dosenumber','n','start_age','end_age']
+    numeric_cols = ["dosenumber", "n", "start_age", "end_age"]
     df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
 
     return df
 
 
-    
+def process_zip_files():
+
+    files_map = {
+        "nAdmissions_by_AdmissionDate_LGA_Age_Acquired_AdmittedToICU_Ventilated": COVID_DHHS_ADMN_CSV,
+        "nEncounters_by_EncounterDate_Postcode_AgeGroup_isPfizer_DoseNumber": COVID_DHHS_VAC_CSV,
+        "NewCases_by_DiagnosisDate_LGA_Age_Acquired": COVID_DHHS_CASE_CSV,
+        "deaths_LGA_age": COVID_DHHS_DEATH_CSV,
+        "monitoringreport.csv": CHRIS_CSV,
+    }
+
+    for file in files_map:
+        for each in os.listdir(COVID_AU_DIRPATH):
+            if file in each:
+                pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(files_map[file])
+                os.remove(os.path.join(COVID_AU_DIRPATH, each))
+
+
+def preprocess_deaths():
+
+    df = pd.read_csv(COVID_DHHS_DEATH_CSV, usecols=[1, 2, 3, 4])
+    df = df[~df.DateOfDeath.isna()]
+
+    df = create_date_index(COVID_BASE_DATETIME, df, "DateofDeath")
+    df = df.groupby(["date_index", "lga"]).sum().reset_index()
+    df.lga.replace(fix_lga, inplace=True)
+
+    return df
+
+
+def load_deaths(df):
+    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+
+    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
+
+    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
+
+    df["cluster_deaths"] = df.n * df.proportion
+    df = (
+        df[["date_index", "cluster_id", "cluster_deaths"]]
+        .groupby(["date_index", "cluster_id"])
+        .sum()
+        .reset_index()
+    )
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+
+    return df
+
+
 if __name__ == "__main__":
     main()
 

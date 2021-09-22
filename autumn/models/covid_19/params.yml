@@ -82,7 +82,7 @@ clinical_stratification:
   icu_mortality_prop: 0.5 # Death proportion ceiling for ICU mortality
   props:
     symptomatic:
-      # Changed (26th August) to "Asyptomatic SARS-Cov-2 infection: A Systematic review and meta-analysis", Sah et al.
+      # Changed (26th August) to "Asymptomatic SARS-Cov-2 infection: A Systematic review and meta-analysis", Sah et al.
       multiplier: 1.
       props:
         - 0.533  # 0-4
@@ -185,7 +185,8 @@ vaccination:
     vacc_prop_prevent_infection: 0.
     vacc_reduce_infectiousness: 0.
   one_dose: null
-  second_dose_delay: 41.  # Time from receiving first dose to second
+  # Time from receiving first dose to second, based on the days from Vic achieving the same coverage with one and two
+  second_dose_delay: 43.
   roll_out_components: []
 
 vaccination_risk:

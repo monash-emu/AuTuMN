@@ -57,7 +57,7 @@ clinical_stratification:
   # https://www.cbc.ca/news/health/does-delta-cause-more-severe-covid-19-here-s-what-we-know-and-don-t-1.6153470
   props:
 
-    # Table 1.1 from NNDSS document that Peter Collignon tweeted (from my email)
+    # Table 1.1 from NNDSS document on cases in Australia to May 2021
     hospital:
       props:
         - 0.029  # 0-4
@@ -75,14 +75,14 @@ clinical_stratification:
         - 0.221  # 60-64
         - 0.221  # 65-69
         - 0.389  # 70-74
-        - 0.5  # 75+ FIXME: currently approximate, need to sort out weighting to population for this age group
+        - 0.471  # 75+ - weighted to the observed cases in >75s as (511 / 2 + 652 + 356) / (1344 / 2 + 1230 + 783)
 
   icu_prop: 0.16
 
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
-    hospital_late: 5.  # Much shorter value than what we had been using, to help with calibration
+    hospital_late: 7.8  # FluCAN monthly Covid Epi Report to CDNA, 30th August 2020
     icu_late: 5.9  # SPRINT-SARI Australia Project
   compartment_periods_calculated:
     active:

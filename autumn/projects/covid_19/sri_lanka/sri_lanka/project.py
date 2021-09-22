@@ -15,7 +15,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 3)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(3, 4)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
@@ -36,22 +36,22 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.02, 0.03]),
-    UniformPrior("infectious_seed", [50.0, 350.0]),
+    UniformPrior("contact_rate", [0.02, 0.028]),
+    UniformPrior("infectious_seed", [150.0, 350.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.01]),
-    UniformPrior("infection_fatality.multiplier", [0.25, 1.75]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [1.5, 3.0]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.075, 0.25]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0065, 0.01]),
+    UniformPrior("infection_fatality.multiplier", [0.25, 0.75]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [1.5, 2.3]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.075, 0.2]),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [380, 425]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.5, 3.5]),
-    UniformPrior("voc_emergence.delta.start_time", [450, 550]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [5, 6.5]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [395, 425]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.7, 3.5]),
+    UniformPrior("voc_emergence.delta.start_time", [475, 550]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [5.2, 6.5]),
 ]
 
 # Load proposal sds from yml file
-# use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(priors, targets)
 

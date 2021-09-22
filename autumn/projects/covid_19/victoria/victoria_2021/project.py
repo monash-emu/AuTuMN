@@ -15,6 +15,7 @@ from autumn.settings import Region, Models
 # TODO: Consider turning seasonal forcing on
 # TODO: Write everything up as a policy brief
 # TODO: Write the methods up as a technical document
+# TODO: Implement age and cluster-specific vaccination coverage functions (may just be too much complexity)
 
 # Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis
 metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
@@ -117,7 +118,7 @@ priors = [
     ),
     UniformPrior(
         "contact_rate",
-        (0.25, 0.38), jumping_stdev=0.008
+        (0.1, 0.28), jumping_stdev=0.008
     ),
     UniformPrior(
         "victorian_clusters.intercluster_mixing",
@@ -163,6 +164,10 @@ priors = [
         "contact_tracing.assumed_trace_prop",
         (0.35, 0.6), jumping_stdev=0.04
     ),
+    UniformPrior(
+        "seasonal_force",
+        (0., 0.4), jumping_stdev=0.05
+    )
     # UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
 ]
 

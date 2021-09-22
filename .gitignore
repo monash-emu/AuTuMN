@@ -76,7 +76,7 @@ data/outputs
 *.toc
 apps/*/tex/*.pdf
 *.synctex*
-docs/papers/tex/*.pdf
+docs/papers/master_files/*.pdf
 !docs/papers/*/projects/*/methods_figures/*.png
 
 

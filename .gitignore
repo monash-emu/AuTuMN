@@ -72,6 +72,7 @@ data/outputs
 *.aux
 *.gz
 *.blg
+*.out
 *.bbl
 *.toc
 apps/*/tex/*.pdf

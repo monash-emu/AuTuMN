@@ -118,7 +118,7 @@ priors = [
     ),
     UniformPrior(
         "contact_rate",
-        (0.25, 0.38), jumping_stdev=0.008
+        (0.1, 0.28), jumping_stdev=0.008
     ),
     UniformPrior(
         "victorian_clusters.intercluster_mixing",

@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from autumn.models.covid_19.constants import BASE_DATE
 from autumn.settings.region import Region
+from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
@@ -153,7 +154,6 @@ class ConstantMicrodistancingParams(BaseModel):
         assert 0. <= effect <= 1., "Microdistancing effect not in domain [0, 1]"
         return effect
 
-from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
 class MicroDistancingFunc(BaseModel):
     function_type: str
@@ -246,7 +246,7 @@ class InfectionFatality(BaseModel):
     # Proportion of people dying / total infected by age
     props: List[float]
 
-    @validator("multiplier")
+    @validator("multiplier", allow_reuse=True)
     def check_multiplier(val):
         assert 0. <= val, f"Multiplier applied to IFRs must be in range [0, 1]: {val}"
         return val
@@ -303,7 +303,7 @@ class Vic2021Seeding(BaseModel):
     loddon_mallee: float
     grampians: float
 
-    @root_validator(allow_reuse=True)
+    @root_validator(pre=True, allow_reuse=True)
     def check_seeds(cls, values):
         for region in Region.VICTORIA_SUBREGIONS:
             region_name = region.replace("-", "_")

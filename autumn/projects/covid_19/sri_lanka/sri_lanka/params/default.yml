@@ -19,7 +19,7 @@ contact_tracing:
 vaccination:
   fully_vaccinated:
     overall_efficacy: 0.7
-    vacc_prop_prevent_infection: 1
+    vacc_prop_prevent_infection: 0.7
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.32
@@ -102,12 +102,12 @@ mobility:
 voc_emergence:
   alpha_beta:
     start_time: 410
-    entry_rate: 1.
+    entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 1.3 # LSHTM's estimate
   delta:
     start_time: 548 # July 01
-    entry_rate: 1.
+    entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
 

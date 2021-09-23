@@ -11,8 +11,6 @@ from autumn.settings import Region, Models
 # TODO: Check YouGov inputs to micro-distancing functions (face coverings and physical distancing)
 #  - need to get Mili to do this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
 # TODO: Calibrate to statewide deaths
-# TODO: See how shorter hospitalisation duration goes
-# TODO: Consider turning seasonal forcing on
 # TODO: Write everything up as a policy brief
 # TODO: Write the methods up as a technical document
 # TODO: Implement age and cluster-specific vaccination coverage functions (may just be too much complexity)

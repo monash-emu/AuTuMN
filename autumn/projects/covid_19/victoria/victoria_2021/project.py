@@ -14,6 +14,7 @@ from autumn.settings import Region, Models
 # TODO: Write everything up as a policy brief
 # TODO: Write the methods up as a technical document
 # TODO: Implement age and cluster-specific vaccination coverage functions (may just be too much complexity)
+# TODO: Implement the roadmap, including school closures and mobility changes
 
 # Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis
 metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]

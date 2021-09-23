@@ -29,7 +29,7 @@ user_defined_stratifications: # this specifies user-defined  stratifications
       majuro: .523
       ebeye: .2
       other: .277
-    prop_mixing_same_stratum: .95
+    prop_mixing_same_stratum: .80
     adjustments:
       infection:
         majuro: 1.

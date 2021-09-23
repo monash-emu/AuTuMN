@@ -55,6 +55,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         age_mixing_matrices = get_prem_mixing_matrices(params.iso3, params.age_breakpoints, None)
 
     age_mixing_matrix = age_mixing_matrices["all_locations"]
+    # convert daily contact rates to yearly rates
+    age_mixing_matrix *= 365.25
 
     contact_rate = params.contact_rate
     contact_rate_latent = params.contact_rate * params.rr_infection_latent

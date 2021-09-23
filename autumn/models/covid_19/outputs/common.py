@@ -81,7 +81,6 @@ def request_stratified_output_for_compartment(
 
 
 def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):
-
     """
     Incidence
     """

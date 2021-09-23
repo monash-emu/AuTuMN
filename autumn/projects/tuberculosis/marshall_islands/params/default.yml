@@ -41,7 +41,7 @@ user_defined_stratifications: # this specifies user-defined  stratifications
         other: 1.2325688858220845
 
 # BCG coverage
-bcg_effect: "infection"  # infection or mortality
+bcg_effect: "mortality"  # infection or mortality
 time_variant_bcg_perc:
   1930: 0.
   1990: 49.

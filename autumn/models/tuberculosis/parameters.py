@@ -25,6 +25,12 @@ class ParamConfig:
     allow_mutation = False  # Params should be immutable
 
 
+class MixingMatrices(BaseModel):
+    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
+    source_iso3: Optional[str]
+    age_adjust: Optional[bool]  # Only relevant if 'extrapolated' selected
+
+
 @dataclass(config=ParamConfig)
 class Parameters:
     # Metadata
@@ -33,6 +39,7 @@ class Parameters:
     crude_birth_rate: float
     iso3: str
     region: Optional[str]
+    age_mixing: Optional[MixingMatrices]
     # Running time.
     time: Time
     # Output requests

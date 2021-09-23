@@ -1,6 +1,12 @@
 ---
 iso3: "MHL"
 
+age_mixing:
+  type: "prem"
+#  type: extrapolated
+#  source_iso3: FJI
+#  age_adjust: true
+
 time:
   start: 1800.
   end: 2050.

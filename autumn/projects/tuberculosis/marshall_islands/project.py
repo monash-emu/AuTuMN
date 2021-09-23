@@ -42,8 +42,8 @@ priors = [
     UniformPrior("start_population_size", [200, 800]),
     UniformPrior("contact_rate", [0.002, 0.01]),
     UniformPrior("progression_multiplier", [0.5, 2.0]),
-    UniformPrior("time_variant_tb_screening_rate.inflection_time", [2000.0, 2020.0]),
-    UniformPrior("time_variant_tb_screening_rate.shape", [0.07, 0.1]),
+    # UniformPrior("time_variant_tb_screening_rate.inflection_time", [2000.0, 2020.0]),
+    # UniformPrior("time_variant_tb_screening_rate.shape", [0.07, 0.1]),
     UniformPrior("time_variant_tb_screening_rate.upper_asymptote", [0.4, 0.55]),
     UniformPrior(
         "user_defined_stratifications.location.adjustments.detection.ebeye",

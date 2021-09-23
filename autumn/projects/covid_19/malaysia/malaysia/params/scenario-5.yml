@@ -1,28 +1,10 @@
-description: schools open on Oct 1st. Current mobility till Jan 1st. Max mobility aterwards
+description: schools open on Oct 1st. No change to mobility at other locations and workplaces. 70% coverage by Jan 1st
 
 time:
   start: 626  # 16 Sep 2021
 
 mobility:
   mixing:
-    other_locations:
-      append: true
-      times:
-        - 2022-01-01
-        - 2022-01-02
-      values:
-        - - repeat_prev
-        - - max_last_period
-          - 180
-    work:
-      append: true
-      times:
-        - 2022-01-01
-        - 2022-01-02
-      values:
-        - - repeat_prev
-        - - max_last_period
-          - 180
     school:
       append: false
       times:

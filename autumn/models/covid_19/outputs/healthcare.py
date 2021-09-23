@@ -126,34 +126,68 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
     )
 
     for cluster in clusters:
+        cluster_extension = f"Xcluster_{cluster}"
         model.request_output_for_compartments(
-            f"_late_active_hospitalXcluster_{cluster}",
+            f"_late_active_hospital{cluster_extension}",
             compartments=[Compartment.LATE_ACTIVE],
             strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
             save_results=False,
         )
         model.request_output_for_compartments(
-            f"icu_occupancyXcluster_{cluster}",
+            f"icu_occupancy{cluster_extension}",
             compartments=[Compartment.LATE_ACTIVE],
             strata={"clinical": Clinical.ICU, "cluster": cluster},
         )
         model.request_output_for_compartments(
-            f"_early_active_icuXcluster_{cluster}",
+            f"_early_active_icu{cluster_extension}",
             compartments=[Compartment.EARLY_ACTIVE],
             strata={"clinical": Clinical.ICU, "cluster": cluster},
             save_results=False,
         )
         model.request_function_output(
-            name=f"_early_active_icu_proportionXcluster_{cluster}",
+            name=f"_early_active_icu_proportion{cluster_extension}",
             func=lambda patients: patients * proportion_icu_patients_in_hospital,
             sources=["_early_active_icu"],
             save_results=False,
         )
         model.request_aggregate_output(
-            name=f"hospital_occupancyXcluster_{cluster}",
+            name=f"hospital_occupancy{cluster_extension}",
             sources=[
-                f"_late_active_hospitalXcluster_{cluster}",
-                f"icu_occupancyXcluster_{cluster}",
-                f"_early_active_icu_proportionXcluster_{cluster}",
+                f"_late_active_hospital{cluster_extension}",
+                f"icu_occupancy{cluster_extension}",
+                f"_early_active_icu_proportion{cluster_extension}",
             ],
         )
+        for agegroup in AGEGROUP_STRATA:
+            cluster_age_extension = f"Xcluster_{cluster}Xagegroup_{agegroup}"
+            model.request_output_for_compartments(
+                f"_late_active_hospital{cluster_age_extension}",
+                compartments=[Compartment.LATE_ACTIVE],
+                strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
+                save_results=False,
+            )
+            model.request_output_for_compartments(
+                f"icu_occupancy{cluster_age_extension}",
+                compartments=[Compartment.LATE_ACTIVE],
+                strata={"clinical": Clinical.ICU, "cluster": cluster},
+            )
+            model.request_output_for_compartments(
+                f"_early_active_icu{cluster_age_extension}",
+                compartments=[Compartment.EARLY_ACTIVE],
+                strata={"clinical": Clinical.ICU, "cluster": cluster},
+                save_results=False,
+            )
+            model.request_function_output(
+                name=f"_early_active_icu_proportion{cluster_age_extension}",
+                func=lambda patients: patients * proportion_icu_patients_in_hospital,
+                sources=["_early_active_icu"],
+                save_results=False,
+            )
+            model.request_aggregate_output(
+                name=f"hospital_occupancy{cluster_age_extension}",
+                sources=[
+                    f"_late_active_hospital{cluster_age_extension}",
+                    f"icu_occupancy{cluster_age_extension}",
+                    f"_early_active_icu_proportion{cluster_age_extension}",
+                ],
+            )

@@ -16,11 +16,10 @@ from autumn.models.tuberculosis.utils import (
 )
 
 
-def get_age_strat(params: Parameters) -> AgeStratification:
+def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     strat = AgeStratification("age", params.age_breakpoints, COMPARTMENTS)
 
-    mixing_matrix = get_mixing_matrix_specific_agegroups(params.iso3, params.age_breakpoints)
-    strat.set_mixing_matrix(mixing_matrix)
+    strat.set_mixing_matrix(age_mixing_matrix)
 
     # Add an age-specific all-causes mortality rate
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(

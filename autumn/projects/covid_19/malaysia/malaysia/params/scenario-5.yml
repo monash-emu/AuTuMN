@@ -1,10 +1,28 @@
-description: schools open on Oct 1st. Current mobility indefinitely
+description: schools open on Oct 1st. Current mobility till Jan 1st. Max mobility aterwards
 
 time:
   start: 626  # 16 Sep 2021
 
 mobility:
   mixing:
+    other_locations:
+      append: true
+      times:
+        - 2022-01-01
+        - 2022-01-02
+      values:
+        - - repeat_prev
+        - - max_last_period
+          - 180
+    work:
+      append: true
+      times:
+        - 2022-01-01
+        - 2022-01-02
+      values:
+        - - repeat_prev
+        - - max_last_period
+          - 180
     school:
       append: false
       times:

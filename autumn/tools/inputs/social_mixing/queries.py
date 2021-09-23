@@ -4,17 +4,36 @@ import numpy as np
 
 from autumn.tools.inputs.database import get_input_db
 from autumn.tools.inputs.demography.queries import get_population_by_agegroup
+from autumn.tools.inputs.social_mixing.build_synthetic_matrices import convert_matrices_agegroups
 
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
 MAPPING_ISO_CODE = {
     "MHL": "KIR",
 }
 
-def get_prem_mixing_matrices(country_iso_code: str):
-    out_matrices = {}
 
+def get_prem_mixing_matrices(country_iso_code: str, model_age_groups=None, model_region_name=None):
+    """
+    :param country_iso_code: modelled country's iso3 code
+    :param model_age_groups: Model age bands. Uses Prem age groups if None.
+    :param model_region_name: Region name if sub-national model.
+    :return: a dictionary containing the mixing matrices
+    """
+    out_matrices = {}
     for loc in LOCATIONS:
         out_matrices[loc] = get_country_mixing_matrix(loc, country_iso_code)
+
+    if model_age_groups is not None:
+        prem_age_groups = [int(5.*i) for i in range(16)]
+        if model_age_groups != prem_age_groups:
+            out_matrices = convert_matrices_agegroups(
+                out_matrices,
+                prem_age_groups,
+                model_age_groups,
+                country_iso_code,
+                model_region_name,
+                LOCATIONS
+            )
 
     return out_matrices
 

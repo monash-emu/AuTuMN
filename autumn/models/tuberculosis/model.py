@@ -5,6 +5,8 @@ from autumn.models.tuberculosis.parameters import Parameters
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 from autumn.tools import inputs
+from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
+from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 
 from .constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
 from .stratifications.age import get_age_strat
@@ -36,6 +38,25 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.SUSCEPTIBLE: params.start_population_size - 1,
     }
     model.set_initial_population(init_pop)
+
+    # build mixing matrix
+    if params.age_mixing:
+        if params.age_mixing.type == 'prem':
+            age_mixing_matrices = get_prem_mixing_matrices(params.iso3, params.age_breakpoints, None)
+        elif params.age_mixing.type == 'extrapolated':
+            age_mixing_matrices = build_synthetic_matrices(
+                params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,
+                requested_locations=["all_locations"]
+            )
+        else:
+            raise Exception("Invalid mixing matrix type specified in parameters")
+    else:
+        # Default to prem matrices (old model runs)
+        age_mixing_matrices = get_prem_mixing_matrices(params.iso3, params.age_breakpoints, None)
+
+    age_mixing_matrix = age_mixing_matrices["all_locations"]
+    # convert daily contact rates to yearly rates
+    age_mixing_matrix *= 365.25
 
     contact_rate = params.contact_rate
     contact_rate_latent = params.contact_rate * params.rr_infection_latent
@@ -245,7 +266,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
 
     # Age stratification.
-    age_strat = get_age_strat(params)
+    age_strat = get_age_strat(params, age_mixing_matrix)
     model.stratify_with(age_strat)
 
     # Custom, user-defined stratifications

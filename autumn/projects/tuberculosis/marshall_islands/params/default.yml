@@ -1,6 +1,12 @@
 ---
 iso3: "MHL"
 
+age_mixing:
+  # type: "prem"
+  type: extrapolated
+  source_iso3: FJI
+  age_adjust: true
+
 time:
   start: 1800.
   end: 2050.
@@ -19,10 +25,7 @@ user_defined_stratifications: # this specifies user-defined  stratifications
       majuro: .523
       ebeye: .2
       other: .277
-    mixing_matrix:
-      - [0.95, 0.025, 0.025]
-      - [0.025, 0.95, 0.025]
-      - [0.025, 0.025, 0.95]
+    prop_mixing_same_stratum: .95
     adjustments:
       infection:
         majuro: 1.
@@ -86,6 +89,7 @@ extra_params:
     50: 0.7
   rr_progression_diabetes: 5.643402828077587
   future_diabetes_multiplier: 1.
+
 
 # calibrated parameters
 contact_rate: 1.5
@@ -151,9 +155,9 @@ awareness_raising:
   relative_screening_rate: 1.25
   scale_up_range: [2018, 2019]
 
-hh_contacts_pt:
-  start_time: 2020
-  prop_smearpos_among_prev_tb: .40
-  prop_hh_transmission: .30
-  prop_hh_contacts_screened: .70
-  prop_pt_completion: .5
+#hh_contacts_pt:
+#  start_time: 2020
+#  prop_smearpos_among_prev_tb: .40
+#  prop_hh_transmission: .30
+#  prop_hh_contacts_screened: .70
+#  prop_pt_completion: .5

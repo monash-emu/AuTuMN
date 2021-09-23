@@ -12,6 +12,10 @@ time:
 iso3: null
 region: null
 
+age_mixing: null
+
+import_ltbi_cases: null
+
 # set up a parameter for the birth rate (its time-variant value will be automatically defined)
 crude_birth_rate: 1.
 

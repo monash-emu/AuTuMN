@@ -45,6 +45,7 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
             flow_name="progress",
             source_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
             dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
+            save_results=False,
         )
         model.request_output_for_flow(
             name=f"icu_admissions{cluster_extension}",
@@ -66,6 +67,7 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
                 flow_name="progress",
                 source_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster, "agegroup": agegroup},
                 dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster, "agegroup": agegroup},
+                save_results=False,
             )
             model.request_output_for_flow(
                 name=f"icu_admissions{cluster_age_extension}",
@@ -163,18 +165,18 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
             model.request_output_for_compartments(
                 f"_late_active_hospital{cluster_age_extension}",
                 compartments=[Compartment.LATE_ACTIVE],
-                strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
+                strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster, "agegroup": agegroup},
                 save_results=False,
             )
             model.request_output_for_compartments(
                 f"icu_occupancy{cluster_age_extension}",
                 compartments=[Compartment.LATE_ACTIVE],
-                strata={"clinical": Clinical.ICU, "cluster": cluster},
+                strata={"clinical": Clinical.ICU, "cluster": cluster, "agegroup": agegroup},
             )
             model.request_output_for_compartments(
                 f"_early_active_icu{cluster_age_extension}",
                 compartments=[Compartment.EARLY_ACTIVE],
-                strata={"clinical": Clinical.ICU, "cluster": cluster},
+                strata={"clinical": Clinical.ICU, "cluster": cluster, "agegroup": agegroup},
                 save_results=False,
             )
             model.request_function_output(

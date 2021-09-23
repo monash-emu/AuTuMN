@@ -25,10 +25,7 @@ user_defined_stratifications: # this specifies user-defined  stratifications
       majuro: .523
       ebeye: .2
       other: .277
-    mixing_matrix:
-      - [0.95, 0.025, 0.025]
-      - [0.025, 0.95, 0.025]
-      - [0.025, 0.025, 0.95]
+    prop_mixing_same_stratum: .95
     adjustments:
       infection:
         majuro: 1.
@@ -92,6 +89,7 @@ extra_params:
     50: 0.7
   rr_progression_diabetes: 5.643402828077587
   future_diabetes_multiplier: 1.
+
 
 # calibrated parameters
 contact_rate: 1.5

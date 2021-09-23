@@ -10,7 +10,6 @@ from autumn.settings import Region, Models
 
 # TODO: Check YouGov inputs to micro-distancing functions (just physical distancing left)
 # TODO: Write everything up as a policy brief
-# TODO: Implement age and cluster-specific vaccination coverage functions (may just be too much complexity)
 # TODO: Implement the roadmap, including school closures and mobility changes
 
 # Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis

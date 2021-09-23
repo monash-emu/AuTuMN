@@ -15,6 +15,10 @@ time:
 
 start_population_size: 2000.
 
+#import_ltbi_cases:
+#  start_time: 2000
+#  n_cases_per_year: 100
+
 # MODEL STRUCTURE
 stratify_by: ["age", "organ", "location"]
 age_breakpoints: [0, 5, 15, 35, 50]

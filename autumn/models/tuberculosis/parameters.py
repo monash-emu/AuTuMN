@@ -62,6 +62,7 @@ class Parameters:
     rr_infection_latent: float
     rr_infection_recovered: float
     time_variant_bcg_perc: dict
+    bcg_effect: str
     import_ltbi_cases: Optional[dict]
     # Detection
     time_variant_tb_screening_rate: dict

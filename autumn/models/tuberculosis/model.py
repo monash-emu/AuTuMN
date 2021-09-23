@@ -294,7 +294,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         dest_compartment = Compartment.EARLY_LATENT
         # we need to account for the fact that the flows will be replicated n_early_latent_compartments times
         n_dest_compartment = len(model._compartment_name_map[dest_compartment])
-        print(n_dest_compartment)
         rate = params.import_ltbi_cases['n_cases_per_year'] / n_dest_compartment
 
         def case_import_func(time, computed_values):

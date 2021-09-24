@@ -140,9 +140,13 @@ victorian_clusters:
           locations:
             - home
         behaviour:
-          function_type: constant
+          # Parameters of tanh function manually calibrated using notebooks/user/jtrauer/vic_microdistancing.ipynb
+          function_type: tanh
           parameters:
-            effect: 0.4421819
+            shape: 0.1
+            inflection_time: 595.
+            lower_asymptote: 0.165
+            upper_asymptote: 0.241
           locations:
             - other_locations
             - school
@@ -219,9 +223,13 @@ victorian_clusters:
           locations:
             - home
         behaviour:
-          function_type: constant
+          # Parameters of tanh function manually calibrated using notebooks/user/jtrauer/vic_microdistancing.ipynb
+          function_type: tanh
           parameters:
-            effect: 0.4421819
+            shape: 0.1
+            inflection_time: 595.
+            lower_asymptote: 0.165
+            upper_asymptote: 0.241
           locations:
             - other_locations
             - school

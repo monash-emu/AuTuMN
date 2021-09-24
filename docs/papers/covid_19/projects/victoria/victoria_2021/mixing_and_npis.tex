@@ -31,11 +31,17 @@ The functions applied here are determined by the Google mobility data according 
 
 As a hypothetical example, if 50\% of patients historically presenting to Barwon South West health services come from the City of Geelong, the mobility data for the City of Geelong will contribute 50\% of the Google mobility estimate of Barwon South West.
 
-Historical patterns of patient presentations by health service cluster were provided by the Victorian Department of Health and Human Services (DHHS).
+Historical patterns of patient presentations by health service cluster were provided by the Victorian Department of Health.
 
 \subsection{Microdistancing approach}
 In this application to Victoria, the microdistancing function \(m(t)\) is comprised of two components: physical distancing and face coverings. Both physical distancing and face coverings micro-distancing are applied to the three non-household locations, such that the microdistancing function for non-household locations is given by: \[m(t)=d(t)^2\times f(t)^2\]
 The two interventions are assumed to be independent and so are multiplicative. As for the macrodistancing functions, the two functions of time are squared to represent their effects on both the infector and the infectee in any potentially infectious interaction.
-The face covering and physical distancing functions applied for Victoria in this current analysis remain under development and have been replaced by constant functions.
+The face covering function in this analysis is set at the constant value of 0.84, because recent proportions of YouGov survey participants responding ``always" to the question ``Thinking about the last 7 days, have you worn a face mask outside your home (e.g. when on public transport, going to a supermarket, going to a main road)?" have been consistently around 84\%.
+For the physical distancing function, the proportion of participants reporting zero contacts within two metres in Victoria has increased from around 16\% to 24\% over recent months. A hyperbolic tan function was used to fit these data, as presented in Figure \ref{fig:micro_physical}.
 
-
+\begin{figure}[ht]
+ 	\resizebox{1\textwidth}{!}{\includegraphics[scale=1]{../covid_19/projects/victoria/victoria_2021/physical_distancing_fit.png}}
+    \caption{\textbf{Physical distancing micro-distancing function with data used for fitting.}}
+	\label{fig:micro_physical}
+	\title{Physical distancing micro-distancing function for metropolitan Melbourne services with data used for fitting.}
+\end{figure}

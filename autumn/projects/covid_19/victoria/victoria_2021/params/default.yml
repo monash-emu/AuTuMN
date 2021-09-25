@@ -22,11 +22,11 @@ contact_tracing:
 vaccination:
   one_dose:
     overall_efficacy: 0.49  # Average of 0.4 and 0.58
-    vacc_prop_prevent_infection: 0.9  # Approximate estimate
+    vacc_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness: 0.56  # Average of 0.5 and 0.62
   fully_vaccinated:
-    overall_efficacy: 0.9  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
-    vacc_prop_prevent_infection: 0.9  # Approximate estimate
+    overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
+    vacc_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
   roll_out_components:
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
@@ -140,9 +140,13 @@ victorian_clusters:
           locations:
             - home
         behaviour:
-          function_type: constant
+          # Parameters of tanh function manually calibrated using notebooks/user/jtrauer/vic_microdistancing.ipynb
+          function_type: tanh
           parameters:
-            effect: 0.4421819
+            shape: 0.1
+            inflection_time: 595.
+            lower_asymptote: 0.165
+            upper_asymptote: 0.241
           locations:
             - other_locations
             - school
@@ -219,9 +223,13 @@ victorian_clusters:
           locations:
             - home
         behaviour:
-          function_type: constant
+          # Parameters of tanh function manually calibrated using notebooks/user/jtrauer/vic_microdistancing.ipynb
+          function_type: tanh
           parameters:
-            effect: 0.4421819
+            shape: 0.1
+            inflection_time: 595.
+            lower_asymptote: 0.165
+            upper_asymptote: 0.241
           locations:
             - other_locations
             - school

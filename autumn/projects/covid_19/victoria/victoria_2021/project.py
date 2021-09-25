@@ -8,7 +8,6 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
 
-# TODO: Check YouGov inputs to micro-distancing functions (just physical distancing left)
 # TODO: Write everything up as a policy brief
 # TODO: Implement the roadmap, including school closures and mobility changes
 

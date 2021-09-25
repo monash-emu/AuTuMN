@@ -17,9 +17,11 @@ metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-scenario_dir_path = build_rel_path("params/")
+scenario_paths = [build_rel_path("params/scenario-1.yml")]
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
-param_set = ParameterSet(baseline=baseline_params)
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
+
+param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))

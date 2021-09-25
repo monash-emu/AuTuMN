@@ -7,8 +7,8 @@ victorian_clusters:
           append: false
           times:
             - 2021-08-05  # Schools close with lockdown 6
-            - 2021-10-05
-            - 2021-10-06  # VCE Units 3/4 onsite
+            - 2021-10-04
+            - 2021-10-05  # VCE Units 3/4 onsite
             - 2021-10-17
             - 2021-10-18  # Prep back three days, years 1 and 2 back two days
             - 2021-10-25
@@ -43,10 +43,10 @@ victorian_clusters:
           values:
             - - close_gap_to_1
               - 0.1
-            - - close_gap_to_1  # Note this is relative to the previous change, so gap is 20% closed overall
-              - 0.09
-            - - close_gap_to_1  # Similarly, this is 60% closed
-              - 0.08
+            - - close_gap_to_1  # Note this is relative to the previous change, so gap is 25% closed overall
+              - 0.135
+            - - close_gap_to_1  # Similarly, this is 50% closed
+              - 0.333
   regional:
     mobility:
       mixing:
@@ -82,7 +82,7 @@ victorian_clusters:
           values:
             - - close_gap_to_1
               - 0.1
-            - - close_gap_to_1  # Note this is relative to the previous change, so gap is 20% closed overall
-              - 0.09
-            - - close_gap_to_1  # Similarly, this is 60% closed
-              - 0.08
+            - - close_gap_to_1  # Note this is relative to the previous change, so gap is 25% closed overall
+              - 0.135
+            - - close_gap_to_1  # Similarly, this is 50% closed
+              - 0.333

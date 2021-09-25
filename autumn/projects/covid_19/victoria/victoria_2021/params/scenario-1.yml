@@ -1,4 +1,4 @@
-# Cluster stratification.
+# Based on the Vic roadmap
 victorian_clusters:
   metro:
     mobility:
@@ -21,6 +21,32 @@ victorian_clusters:
             - 0.2662  # 2.4 of 13 year levels (from 10% baseline)
             - 0.2662
             - 0.8  # Assumption
+        other_locations:
+          append: true
+          times:
+            - 2021-10-26  # Phase B
+            - 2021-11-05  # Phase C
+            - 2021-11-19  # Phase D
+          values:
+            - - close_gap_to_1
+              - 0.2
+            - - close_gap_to_1  # Note this is relative to the previous change, so gap is 40% closed overall
+              - 0.25
+            - - close_gap_to_1  # Similarly, this is 60% closed
+              - 0.3333
+        work:
+          append: true
+          times:
+            - 2021-10-26  # Phase B
+            - 2021-11-05  # Phase C
+            - 2021-11-19  # Phase D
+          values:
+            - - close_gap_to_1
+              - 0.1
+            - - close_gap_to_1  # Note this is relative to the previous change, so gap is 20% closed overall
+              - 0.09
+            - - close_gap_to_1  # Similarly, this is 60% closed
+              - 0.08
   regional:
     mobility:
       mixing:
@@ -34,3 +60,29 @@ victorian_clusters:
             - 0.37692  # Four of 13 year levels (prep to year 2 and year 12, from 10% baseline)
             - 0.37692
             - 0.8  # Assumption
+        other_locations:
+          append: true
+          times:
+            - 2021-10-26  # Phase B
+            - 2021-11-05  # Phase C
+            - 2021-11-19  # Phase D
+          values:
+            - - close_gap_to_1
+              - 0.2
+            - - close_gap_to_1  # Note this is relative to the previous change, so gap is 40% closed overall
+              - 0.25
+            - - close_gap_to_1  # Similarly, this is 60% closed
+              - 0.3333
+        work:
+          append: true
+          times:
+            - 2021-10-26  # Phase B
+            - 2021-11-05  # Phase C
+            - 2021-11-19  # Phase D
+          values:
+            - - close_gap_to_1
+              - 0.1
+            - - close_gap_to_1  # Note this is relative to the previous change, so gap is 20% closed overall
+              - 0.09
+            - - close_gap_to_1  # Similarly, this is 60% closed
+              - 0.08

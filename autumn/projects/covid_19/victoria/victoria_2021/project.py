@@ -116,7 +116,7 @@ priors = [
     ),
     TruncNormalPrior(
         "contact_rate",
-        mean=0.0948407060518152, stdev=0.00853066424442713, trunc_range=(0.005, np.inf), jumping_stdev=0.008
+        mean=0.0948407060518152, stdev=0.05, trunc_range=(0.005, np.inf), jumping_stdev=0.008
     ),
     UniformPrior(
         "victorian_clusters.intercluster_mixing",

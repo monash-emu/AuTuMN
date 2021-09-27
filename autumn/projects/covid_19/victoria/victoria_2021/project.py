@@ -116,7 +116,7 @@ priors = [
     ),
     TruncNormalPrior(
         "contact_rate",
-        mean=0.0948407060518152, stdev=0.05, trunc_range=(0.005, np.inf), jumping_stdev=0.008
+        mean=0.0948407060518152, stdev=0.03, trunc_range=(0.005, np.inf), jumping_stdev=0.008
     ),
     UniformPrior(
         "victorian_clusters.intercluster_mixing",
@@ -165,8 +165,11 @@ priors = [
     UniformPrior(
         "seasonal_force",
         (0., 0.4), jumping_stdev=0.05
-    )
-    # UniformPrior("vic_2021_seeding.seed_time", (530., 560.), jumping_stdev=5.)
+    ),
+    UniformPrior(
+        "vic_2021_seeding.seed_time",
+        (520., 550.), jumping_stdev=5.
+    ),
 ]
 
 # Load proposal sds from yml file

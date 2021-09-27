@@ -7,6 +7,7 @@ from autumn.tools.inputs.database import get_input_db
 from autumn.tools.utils.utils import apply_moving_average, COVID_BASE_DATETIME
 
 COVID_BASE_DATE = date(2019, 12, 31)
+TINY_NUMBER = 1e-6
 
 
 def get_vic_testing_numbers():
@@ -18,8 +19,7 @@ def get_vic_testing_numbers():
     date_str_to_int = lambda s: (datetime.strptime(s, "%Y-%m-%d") - COVID_BASE_DATETIME).days
     test_dates = df.date.apply(date_str_to_int).to_numpy()
     test_values = df.tests.to_numpy()
-    epsilon = 1e-6  # A really tiny number to avoid having any zeros
-    avg_vals = np.array(apply_moving_average(test_values, 7)) + epsilon
+    avg_vals = np.array(apply_moving_average(test_values, 7)) + TINY_NUMBER
     return test_dates, avg_vals
 
 
@@ -39,8 +39,7 @@ def get_dhhs_testing_numbers(cluster: str = None):
 
     test_dates = (pd.to_datetime(df.date) - pd.datetime(2019, 12, 31)).dt.days.to_numpy()
     test_values = df.test.to_numpy()
-    epsilon = 1e-6  # A really tiny number to avoid having any zeros
-    avg_vals = np.array(apply_moving_average(test_values, 7)) + epsilon
+    avg_vals = np.array(apply_moving_average(test_values, 7)) + TINY_NUMBER
     return test_dates, avg_vals
 
 
@@ -78,8 +77,7 @@ def get_dhhs_vaccination_numbers(
 
     vac_dates = df.date_index.to_numpy()
     coverage_values = df.cml_coverage.to_numpy()
-    epsilon = 1e-6  # A really tiny number to avoid having any zeros
-    avg_vals = np.array(apply_moving_average(coverage_values, 7)) + epsilon
+    avg_vals = np.array(apply_moving_average(coverage_values, 7)) + TINY_NUMBER
     return vac_dates, avg_vals
 
 

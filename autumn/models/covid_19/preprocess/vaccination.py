@@ -197,7 +197,10 @@ def add_vaccination_flows(
     if vic_phase == 1:
 
         # Get the cluster-specific vaccination numbers
-        coverage = get_dhhs_vaccination_numbers(additional_strata["cluster"].upper(), start_age=15)[1].max()
+        coverage = get_dhhs_vaccination_numbers(
+            additional_strata["cluster"].upper(),
+            start_age=roll_out_component.age_min
+        )[1].max()
 
         # Make sure we're dealing with reasonably sensible coverage values and place a ceiling just in case
         # coverage = cluster_vacc / cluster_pop
@@ -214,13 +217,13 @@ def add_vaccination_flows(
     elif vic_phase == 2:
 
         # Calculate the most recent statewide coverage
-        statewide_coverage = max(get_dhhs_vaccination_numbers()[1])
-        #statewide_coverage = statewide_vacc / total_pop
+        statewide_coverage = get_dhhs_vaccination_numbers(
+            start_age=roll_out_component.age_min
+        )[1].max()
 
         # Increase to the end of the simulation period
-        coverage = min(
-            (roll_out_component.supply_period_coverage.coverage - statewide_coverage) / (1. - statewide_coverage), 1.
-        )
+        coverage = (roll_out_component.supply_period_coverage.coverage - statewide_coverage) / \
+                   (1. - statewide_coverage)
 
         # Make sure we're dealing with reasonably sensible coverage values
         assert 0. <= coverage <= 1.

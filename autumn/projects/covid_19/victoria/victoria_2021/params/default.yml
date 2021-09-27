@@ -30,12 +30,11 @@ vaccination:
     vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
   roll_out_components:
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
-      supply_period_coverage:
-        coverage: 0.  # Ignore, not used but part of parameter validation
+      vic_supply_to_history:
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 649  # 9th September is 618 (current date), lagged by two weeks
     - age_min: 15
-      supply_period_coverage:
+      vic_supply_to_target:
         coverage: 0.9  # Final statewide value that we will reach over the next month
         start_time: 649
         end_time: 679

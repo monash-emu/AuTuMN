@@ -355,6 +355,21 @@ class VaccCoveragePeriod(BaseModel):
         return values
 
 
+class VicHistoryPeriod(BaseModel):
+    """
+    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time.
+    """
+
+    start_time: float
+    end_time: float
+
+    @root_validator(allow_reuse=True)
+    def check_times(cls, values):
+        msg = f"End time: {values['start_time']} before start time: {values['end_time']}"
+        assert values["start_time"] <= values["end_time"], msg
+        return values
+
+
 class RollOutFunc(BaseModel):
     """
     Provides the parameters needed to construct a phase of vaccination roll-out.
@@ -362,14 +377,20 @@ class RollOutFunc(BaseModel):
 
     age_min: Optional[float]
     age_max: Optional[float]
-    supply_period_coverage: Optional[VaccCoveragePeriod]
     supply_timeseries: Optional[TimeSeries]
+    supply_period_coverage: Optional[VaccCoveragePeriod]
+    vic_supply_to_history: Optional[VicHistoryPeriod]
+    vic_supply_to_target: Optional[VaccCoveragePeriod]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
-        p, ts = values.get("supply_period_coverage"), values.get("supply_timeseries")
-        has_supply = bool(p) != bool(ts)
-        assert has_supply, "Roll out function must have a period or timeseries for supply."
+        components = \
+            values.get("supply_period_coverage"), \
+            values.get("supply_timeseries"), \
+            values.get("vic_supply_to_history"), \
+            values.get("vic_supply_to_target")
+        has_supply = (int(bool(i_comp)) for i_comp in components)
+        assert sum(has_supply) == 1, "Roll out function must have just one period or timeseries for supply"
         if "age_min" in values:
             assert 0. <= values["age_min"], f"Minimum age is negative: {values['age_min']}"
         if "age_max" in values:

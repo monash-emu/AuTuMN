@@ -23,7 +23,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(350).moving_average(window=7).downsample(step=7)
-death_ts = ts_set.get("infection_deaths").truncate_start_time(350)
+death_ts = ts_set.get("infection_deaths").truncate_start_time(548)
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(death_ts),
@@ -40,7 +40,7 @@ priors = [
     UniformPrior("infectious_seed", [150.0, 350.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.008, 0.01]),
-    UniformPrior("infection_fatality.multiplier", [0.25, 0.65]),
+    UniformPrior("infection_fatality.multiplier", [0.25, 0.85]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [1.7, 2.3]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.65, 0.95]),
     #VoC

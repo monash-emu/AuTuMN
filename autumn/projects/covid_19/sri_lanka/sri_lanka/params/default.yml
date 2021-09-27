@@ -111,6 +111,22 @@ mobility:
         - 1
         - 1
         - 0
+    other_locations:
+      append: true
+      times:
+        - 2021-10-01 #lockdown ends
+        - 2021-12-31
+      values:
+        - - repeat_prev
+        - 1.
+    work:
+      append: true
+      times:
+        - 2021-10-01 #lockdown ends
+        - 2021-12-31
+      values:
+        - - repeat_prev
+        - 1.0
 
 voc_emergence:
   alpha_beta:

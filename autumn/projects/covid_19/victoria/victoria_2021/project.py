@@ -8,8 +8,8 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
 
-# TODO: Write everything up as a policy brief
-# TODO: Implement the roadmap, including school closures and mobility changes
+# TODO: Look at vaccination by age group - possibly change to a computed value process
+# TODO: Move to contact rate prior based on 2020 analysis - merge in from branch
 
 # Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis
 metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]

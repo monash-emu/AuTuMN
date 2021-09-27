@@ -318,23 +318,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Vic 2021 code is not generalisable
         if is_region_vic2021:
             for i_component, roll_out_component in enumerate(vacc_params.roll_out_components):
-                total_adult_pop = sum(total_pops[3:])
-                cluster_adults_pops = {
-                    cluster: cluster_strat.population_split[cluster] * total_adult_pop for
-                    cluster in cluster_strat.strata
-                }
                 for cluster in cluster_strat.strata:
                     add_vaccination_flows(
                         model, vacc_params.roll_out_components[i_component], age_strat.strata,
-                        params.vaccination.one_dose, i_component + 1, additional_strata={"cluster": cluster},
-                        cluster_pop=cluster_adults_pops[cluster], total_pop=total_adult_pop
+                        params.vaccination.one_dose, additional_strata={"cluster": cluster},
                     )
         else:
             for roll_out_component in vacc_params.roll_out_components:
                 coverage_override = vacc_params.coverage_override if vacc_params.coverage_override else None
                 add_vaccination_flows(
-                    model, roll_out_component, age_strat.strata, params.vaccination.one_dose,
-                    0, coverage_override
+                    model, roll_out_component, age_strat.strata, params.vaccination.one_dose, coverage_override
                 )
 
         # Add transition from single dose to fully vaccinated

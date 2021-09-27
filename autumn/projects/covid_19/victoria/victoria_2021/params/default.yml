@@ -36,7 +36,7 @@ vaccination:
         end_time: 649  # 9th September is 618 (current date), lagged by two weeks
     - age_min: 15
       supply_period_coverage:
-        coverage: 0.88  # Interpreted as the average statewide value to be reached at this time
+        coverage: 0.9  # Final statewide value that we will reach over the next month
         start_time: 649
         end_time: 679
 

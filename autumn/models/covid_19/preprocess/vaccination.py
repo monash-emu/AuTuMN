@@ -197,7 +197,7 @@ def add_vaccination_flows(
     if vic_phase == 1:
 
         # Get the cluster-specific vaccination numbers
-        coverage = get_dhhs_vaccination_numbers(additional_strata["cluster"].upper())[1].max()
+        coverage = get_dhhs_vaccination_numbers(additional_strata["cluster"].upper(), start_age=15)[1].max()
 
         # Make sure we're dealing with reasonably sensible coverage values and place a ceiling just in case
         # coverage = cluster_vacc / cluster_pop

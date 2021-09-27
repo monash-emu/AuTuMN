@@ -149,7 +149,7 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
         model.request_function_output(
             name=f"_early_active_icu_proportion{cluster_extension}",
             func=lambda patients: patients * proportion_icu_patients_in_hospital,
-            sources=["_early_active_icu"],
+            sources=[f"_early_active_icu{cluster_extension}"],
             save_results=False,
         )
         model.request_aggregate_output(
@@ -182,7 +182,7 @@ def request_healthcare_outputs(model: CompartmentalModel, sojourn_periods, is_re
             model.request_function_output(
                 name=f"_early_active_icu_proportion{cluster_age_extension}",
                 func=lambda patients: patients * proportion_icu_patients_in_hospital,
-                sources=["_early_active_icu"],
+                sources=[f"_early_active_icu{cluster_age_extension}"],
                 save_results=False,
             )
             model.request_aggregate_output(

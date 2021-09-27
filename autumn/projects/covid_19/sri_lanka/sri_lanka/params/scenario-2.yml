@@ -1,64 +1,50 @@
-description: Scenario 2,50% vaccination by 14th Sep. Until Sep 21 lockdown. After that lower increase in mobility. 40% school opening
+description: Scenario 1, Until Oct 01 lockdown. After that faster increase in mobility. Primary schools open Oct 15
 time:
-  start: 624 # 15th Sep 2021
+  start: 640 # 01st Oct 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-09-21
-        - 2021-09-22
-        - 2021-09-28
-        - 2021-09-29
-        - 2021-10-05
-        - 2021-10-06
-        - 2021-10-12
-        - 2021-10-13
-        - 2021-10-19
-        - 2021-12-31
+        - 2021-10-01
+        - 2021-10-02
+        - 2021-11-01
+        - 2021-11-02
+        - 2021-12-01
+        - 2021-12-02
       values:
         - - repeat_prev
-        - 0.6
-        - 0.6
-        - 0.65
-        - 0.65
-        - 0.70
-        - 0.70
-        - 0.75
-        - 0.75
-        - 1.00
+        - 0.8
+        - 0.8
+        - 0.9
+        - 0.9
+        - 1.04
+
     work:
       append: true
       times:
-        - 2021-09-21
-        - 2021-09-22
-        - 2021-09-28
-        - 2021-09-29
-        - 2021-10-05
-        - 2021-10-06
-        - 2021-10-12
-        - 2021-10-13
-        - 2021-10-19
-        - 2021-12-31
+        - 2021-10-01
+        - 2021-10-02
+        - 2021-11-01
+        - 2021-11-02
+        - 2021-12-01
+        - 2021-12-02
       values:
         - - repeat_prev
-        - 0.5
-        - 0.5
-        - 0.55
-        - 0.55
-        - 0.60
-        - 0.60
-        - 0.65
-        - 0.65
-        - 1.00
+        - 0.7
+        - 0.7
+        - 0.75
+        - 0.75
+        - 0.85
     school:
       append: false
       times:
-        - 2021-09-30 # All schools close
-        - 2021-10-01 # primary schools open (40% of schools)
+        - 2021-10-14 # All schools close
+        - 2021-10-15 # primary schools open (40% of schools)
       values:
         - 0.
         - 0.4
+
 
 

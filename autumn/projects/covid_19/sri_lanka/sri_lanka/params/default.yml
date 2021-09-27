@@ -112,6 +112,7 @@ mobility:
         - 1
         - 0
 
+
 voc_emergence:
   alpha_beta:
     start_time: 410

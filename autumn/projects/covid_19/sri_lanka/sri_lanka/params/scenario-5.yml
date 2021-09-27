@@ -1,0 +1,33 @@
+description: Scenario 3,What if strict lockdown was initiated from July 11 - Aug 25 (same duration as actual lockdown)
+time:
+  start: 457 # 10th July 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-07-10 #lockdown starts
+        - 2021-07-11
+        - 2021-08-25
+        - 2021-08-26
+      values:
+        - - repeat_prev
+        - 0.329
+        - 0.329
+        - 0.8
+
+    work:
+      append: true
+      times:
+        - 2021-07-10 #lockdown starts
+        - 2021-07-11
+        - 2021-08-25
+        - 2021-08-26
+      values:
+        - - repeat_prev
+        - 0.311
+        - 0.311
+        - 0.6
+
+

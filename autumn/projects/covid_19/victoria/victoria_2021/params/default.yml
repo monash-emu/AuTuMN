@@ -23,11 +23,11 @@ vaccination:
   one_dose:
     overall_efficacy: 0.49  # Average of 0.4 and 0.58
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
-    vacc_reduce_infectiousness: 0.56  # Average of 0.5 and 0.62
+    vacc_reduce_infectiousness: 0.25  # Using same reference, but more effect for Alpha than for Delta
   fully_vaccinated:
     overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
-    vacc_reduce_infectiousness: 0.77  # Average of 0.7 and 0.84
+    vacc_reduce_infectiousness: 0.25  # Using same reference, but more effect for Alpha than for Delta
   roll_out_components:
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
       vic_supply_to_history:

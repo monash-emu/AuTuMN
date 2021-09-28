@@ -495,7 +495,12 @@ class ContactTracing(BaseModel):
 
     @ validator("assumed_prev", allow_reuse=True)
     def check_prevalence(val):
-        assert 0. <= val, f"Contact tracing assumed prevalence must not be negative: {val}"
+        assert 0. <= val <= 1., f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
+        return val
+
+    @ validator("assumed_trace_prop", allow_reuse=True)
+    def check_prevalence(val):
+        assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
     # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated

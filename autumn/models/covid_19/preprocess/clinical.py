@@ -1,14 +1,20 @@
 import numpy as np
+from typing import Any, Callable
+
 from summer import Overwrite
 from summer.adjust import AdjustmentComponent
 
 from autumn.models.covid_19.constants import Clinical, Compartment, CLINICAL_STRATA, DEATH_CLINICAL_STRATA
 from autumn.models.covid_19.preprocess import adjusterprocs
 from autumn.models.covid_19.model import preprocess
-from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
+from autumn.models.covid_19.preprocess.testing import (
+    get_testing_numbers_for_region, inflate_test_data, create_cdr_function
+)
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools import inputs
 from autumn.tools.utils.utils import apply_odds_ratio_to_multiple_proportions, subdivide_props
+from autumn.tools.utils.utils import apply_moving_average
+from autumn.tools.curve import scale_up_function
 
 NUM_AGE_STRATA = 16
 ALLOWED_ROUNDING_ERROR = 6
@@ -198,18 +204,50 @@ def get_all_adjustments(
     }
 
     """
+    Sort out case detection rate from testing numbers.
+    """
+
+    # Get the testing population denominator
+    testing_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year)
+
+    # Get the numbers of tests performed
+    test_dates, test_values = get_testing_numbers_for_region(country.iso3, pop.region)
+
+    # Convert test numbers to per capita testing rates
+    per_capita_tests = [i_tests / sum(testing_pops) for i_tests in test_values]
+
+    # Smooth the testing data if requested
+    if testing_to_detection.smoothing_period:
+        smoothed_per_capita_tests = apply_moving_average(per_capita_tests, testing_to_detection.smoothing_period)
+    else:
+        smoothed_per_capita_tests = per_capita_tests
+
+    # Scale testing with a time-variant request parameter
+    if testing_to_detection.test_multiplier:
+        smoothed_inflated_per_capita_tests = inflate_test_data(
+            testing_to_detection.test_multiplier, smoothed_per_capita_tests
+        )
+    else:
+        smoothed_inflated_per_capita_tests = smoothed_per_capita_tests
+
+    # Calculate CDRs and the resulting CDR function over time
+    cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
+        testing_to_detection.assumed_tests_parameter,
+        testing_to_detection.assumed_cdr_parameter,
+    )
+
+    # Get the final CDR function
+    cdr_function = scale_up_function(
+        test_dates,
+        [cdr_from_tests_func(i_test_rate) for i_test_rate in smoothed_inflated_per_capita_tests],
+        smoothness=0.2, method=4, bound_low=0.,
+    )
+
+    """
     Entry adjustments.
     """
 
-    # Get the empiric data
-    testing_pop = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year)
-
-    # Create the function
-    get_detected_proportion = find_cdr_function_from_test_data(
-        testing_to_detection, country.iso3, testing_pop, subregion=pop.region,
-    )
-
-    entry_adjs = get_entry_adjustments(abs_props, get_detected_proportion, within_early_exposed)
+    entry_adjs = get_entry_adjustments(abs_props, cdr_function, within_early_exposed)
 
     # These are the systems that will compute (in a vectorised fashion) the adjustments added using AdjustmentComponents
     adjuster_systems = {
@@ -288,4 +326,4 @@ def get_all_adjustments(
     Return all the adjustments.
     """
 
-    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, get_detected_proportion, adjuster_systems
+    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, cdr_function, adjuster_systems

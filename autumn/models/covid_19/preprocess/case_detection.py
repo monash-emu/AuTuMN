@@ -39,7 +39,7 @@ def build_detected_proportion_func(
     test_multiplier = testing.test_multiplier if testing.test_multiplier else None
 
     # Get the empiric data
-    testing_pop, testing_region = get_testing_pop(agegroup_strata, country, pop)
+    testing_pop, testing_region = get_testing_pop(country, pop)
 
     # Create the function
     detected_proportion = find_cdr_function_from_test_data(

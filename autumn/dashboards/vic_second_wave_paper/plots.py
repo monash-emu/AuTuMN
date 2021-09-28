@@ -28,7 +28,6 @@ from autumn.tools.utils.utils import apply_moving_average
 from autumn.tools.inputs import get_mobility_data
 from autumn.tools.project import get_project
 
-
 from autumn.tools.streamlit.utils import create_downloadable_csv, Dashboard
 
 dash = Dashboard()
@@ -659,7 +658,7 @@ def plot_cdr_curves(
     country = Country
     country.iso3 = "AUS"
 
-    testing_pop, testing_region = get_testing_pop(agegroup_strata, country, pop)
+    testing_pop, testing_region = get_testing_pop(country, pop)
 
     detected_proportion = []
     for assumed_cdr_parameter in sampled_test_to_detect_vals:

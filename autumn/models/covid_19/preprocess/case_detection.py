@@ -5,9 +5,10 @@ from summer.compute import ComputedValueProcessor
 from autumn.models.covid_19.parameters import Country, Population, TestingToDetection
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.tools import inputs
+from autumn.models.covid_19.constants import AGEGROUP_STRATA
 
 
-def get_testing_pop(agegroup_strata: List[str], country: Country, pop: Population) -> Tuple[list, str]:
+def get_testing_pop(country: Country, pop: Population) -> Tuple[list, str]:
     """
     Returns the age-stratified population used for case detection testing.
     Use state denominator for testing rates for the Victorian health cluster models and temporarily use
@@ -17,7 +18,7 @@ def get_testing_pop(agegroup_strata: List[str], country: Country, pop: Populatio
     testing_region = "Victoria" if country.iso3 == "AUS" else pop.region
     testing_year = 2020 if country.iso3 == "AUS" else pop.year
     testing_pop = inputs.get_population_by_agegroup(
-        agegroup_strata, country.iso3, testing_region, year=testing_year
+        AGEGROUP_STRATA, country.iso3, testing_region, year=testing_year
     )
     return testing_pop, testing_region
 

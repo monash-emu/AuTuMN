@@ -23,9 +23,7 @@ def get_testing_pop(country: Country, pop: Population) -> Tuple[list, str]:
     return testing_pop, testing_region
 
 
-def build_detected_proportion_func(
-        agegroup_strata: List[str], country: Country, pop: Population, testing: TestingToDetection,
-):
+def build_detected_proportion_func(country: Country, pop: Population, testing: TestingToDetection):
     """
     Returns a time varying function that gives us the proportion of cases detected.
     There is a previous version that uses a hyperbolic tan function that can be pulled out of earlier versions of the

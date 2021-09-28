@@ -5,7 +5,7 @@ from summer.adjust import AdjustmentComponent
 from autumn.models.covid_19.constants import Clinical, Compartment, CLINICAL_STRATA, DEATH_CLINICAL_STRATA
 from autumn.models.covid_19.preprocess import adjusterprocs
 from autumn.models.covid_19.model import preprocess
-from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
+from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools import inputs
 from autumn.tools.utils.utils import apply_odds_ratio_to_multiple_proportions, subdivide_props
@@ -201,13 +201,20 @@ def get_all_adjustments(
     Entry adjustments.
     """
 
-    get_detected_proportion = build_detected_proportion_func(country, pop, testing_to_detection)
+    # Get the empiric data
+    testing_pop = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year)
+
+    # Create the function
+    get_detected_proportion = find_cdr_function_from_test_data(
+        testing_to_detection, country.iso3, testing_pop, subregion=pop.region,
+    )
+
     entry_adjs = get_entry_adjustments(abs_props, get_detected_proportion, within_early_exposed)
 
     # These are the systems that will compute (in a vectorised fashion) the adjustments added using AdjustmentComponents
     adjuster_systems = {
-        'isolated': adjusterprocs.AbsPropIsolatedSystem(within_early_exposed),
-        'sympt_non_hosp': adjusterprocs.AbsPropSymptNonHospSystem(within_early_exposed)
+        "isolated": adjusterprocs.AbsPropIsolatedSystem(within_early_exposed),
+        "sympt_non_hosp": adjusterprocs.AbsPropSymptNonHospSystem(within_early_exposed)
     }
 
     """

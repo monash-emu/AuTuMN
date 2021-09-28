@@ -36,10 +36,7 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
     return lambda tests_per_capita: 1. - np.exp(exponent_multiplier * tests_per_capita)
 
 
-def find_cdr_function_from_test_data(
-    assumed_tests_parameter, assumed_cdr_parameter, smoothing_period, country_iso3, total_pops, subregion=None,
-    test_multiplier=None,
-):
+def find_cdr_function_from_test_data(testing, country_iso3, total_pops, subregion=None):
 
     # Get the appropriate testing data
     if country_iso3 == "AUS":
@@ -65,13 +62,14 @@ def find_cdr_function_from_test_data(
 
     # Smooth the testing data if requested
     smoothed_per_capita_tests = (
-        apply_moving_average(per_capita_tests, smoothing_period)
-        if smoothing_period > 1
+        apply_moving_average(per_capita_tests, testing.smoothing_period)
+        if testing.smoothing_period > 1
         else per_capita_tests
     )
 
     # scale testing with time-variant parameter
-    if test_multiplier is not None:
+    if testing.test_multiplier:
+        test_multiplier = testing.test_multiplier
 
         # add test datapoints to original series so we can scale-up
         for time, value in zip(test_multiplier.times, test_multiplier.values):
@@ -91,7 +89,10 @@ def find_cdr_function_from_test_data(
         smoothed_per_capita_tests = new_per_capita_tests
 
     # Calculate CDRs and the resulting CDR function over time
-    cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
+    cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
+        testing.assumed_tests_parameter,
+        testing.assumed_cdr_parameter,
+    )
     return scale_up_function(
         test_dates,
         [cdr_from_tests_func(i_test_rate) for i_test_rate in smoothed_per_capita_tests],

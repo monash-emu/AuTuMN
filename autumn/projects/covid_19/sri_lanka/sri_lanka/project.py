@@ -23,7 +23,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(350).moving_average(window=7).downsample(step=7)
-death_ts = ts_set.get("infection_deaths").truncate_start_time(562)
+death_ts = ts_set.get("infection_deaths").truncate_start_time(350)
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(death_ts),
@@ -36,18 +36,18 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.02, 0.024]),
-    UniformPrior("infectious_seed", [75.0, 250.0]),
+    UniformPrior("contact_rate", [0.018, 0.023]),
+    UniformPrior("infectious_seed", [210.0, 280.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0085, 0.01]),
-    UniformPrior("infection_fatality.multiplier", [0.4, 0.85]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [1.7, 2.3]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.65, 0.95]),
-    #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [395, 425]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.9, 3.15]),
-    UniformPrior("voc_emergence.delta.start_time", [475, 550]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [5.0, 5.7]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.04, 0.062]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [410, 435]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.75, 3.0]),
+    UniformPrior("voc_emergence.delta.start_time", [440, 465]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [3.3, 4.0]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.1, 0.8]),
+    UniformPrior("infection_fatality.multiplier", [2.0, 3.2]),
+    # vaccination
+    UniformPrior("vaccination.fully_vaccinated.vacc_prop_prevent_infection", [0, 1.0]),
 ]
 
 # Load proposal sds from yml file

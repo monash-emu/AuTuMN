@@ -1,47 +1,17 @@
-description: schools closed. Mobility at other locations and workplaces increased. 60% coverage by Jan 1st
+description: schools open on Nov 1st. No change to mobility at other locations and workplaces. 70% coverage by Jan 1st
 
 time:
-  start: 626  # 16 Sep 2021
+  start: 671  # 01 Nov 2021
 
 mobility:
   mixing:
-    other_locations:
-      append: true
-      times:
-        - 2021-09-30
-        - 2021-10-01
-      values:
-        - - repeat_prev
-        - - max_last_period
-          - 180
-    work:
-      append: true
-      times:
-        - 2021-09-30
-        - 2021-10-01
-      values:
-        - - repeat_prev
-        - - max_last_period
-          - 180
     school:
       append: false
       times:
-        - 2021-09-30
-        - 2021-10-01 # All schools close
+        - 2021-10-31
+        - 2021-11-01 # All schools open
       values:
         - 0.
-        - 0
+        - 1
 
-vaccination:
-  roll_out_components:
-    - age_min: 15 # 76.6% of the total population is 15+
-      supply_period_coverage:
-        coverage: 0.522 #40% of the total population vaccinated
-        start_time: 481 # 25 Apr 2021
-        end_time: 624 # 15 Sep 2021
-    - age_min: 15
-      supply_period_coverage:
-        coverage: 0.546 # 60% of coverage
-        start_time: 625 # 16 Sep 2021
-        end_time: 732 # 01 Jan 2022
 

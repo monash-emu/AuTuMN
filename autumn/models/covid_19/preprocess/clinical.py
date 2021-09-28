@@ -266,6 +266,7 @@ def get_all_adjustments(
     """
     Find death and survival rates from death proportions and sojourn times.
     """
+
     death_rates = {
         stratum: relative_death_props[stratum] * within_late_rates[stratum]
         for stratum in DEATH_CLINICAL_STRATA

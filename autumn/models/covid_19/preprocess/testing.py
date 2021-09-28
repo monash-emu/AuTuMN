@@ -1,18 +1,16 @@
 from typing import Any, Callable
-
 import numpy as np
 
 from autumn.tools.inputs.testing.eur_testing_data import get_uk_testing_numbers, get_eu_testing_numbers
 from autumn.tools.inputs.covid_au.queries import get_vic_testing_numbers
 from autumn.tools.curve import scale_up_function
-from autumn.tools.inputs.covid_au.queries import get_dhhs_testing_numbers
 from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 from autumn.tools.inputs.covid_lka.queries import get_lka_testing_numbers
 from autumn.tools.inputs.owid.queries import get_international_testing_numbers
 from autumn.tools.utils.utils import apply_moving_average
 
 
-def create_cdr_function(assumed_tests: int, assumed_cdr: float):
+def create_cdr_function(assumed_tests: int, assumed_cdr: float) -> Callable:
     """
     Factory function for finding CDRs from number of tests done in setting modelled
     To work out the function, only one parameter is needed, so this can be estimated from one known point on the curve,
@@ -26,14 +24,14 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
     Function to provide CDR for a certain number of tests
     """
 
-    assert assumed_tests >= 0, "Number of tests at certain CDR must be positive"
-    assert 1. >= assumed_cdr >= 0., "CDR for given number of tests must be between zero and one"
-
     # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - exp(-b * t)
     exponent_multiplier = np.log(1. - assumed_cdr) / assumed_tests
 
     # Construct the function based on this parameter
-    return lambda tests_per_capita: 1. - np.exp(exponent_multiplier * tests_per_capita)
+    def cdr_function(tests_per_capita):
+        return 1. - np.exp(exponent_multiplier * tests_per_capita)
+
+    return cdr_function
 
 
 def find_cdr_function_from_test_data(testing, country_iso3, total_pops, subregion=None):
@@ -61,11 +59,10 @@ def find_cdr_function_from_test_data(testing, country_iso3, total_pops, subregio
     per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
 
     # Smooth the testing data if requested
-    smoothed_per_capita_tests = (
-        apply_moving_average(per_capita_tests, testing.smoothing_period)
-        if testing.smoothing_period > 1
-        else per_capita_tests
-    )
+    if testing.smoothing_period:
+        smoothed_per_capita_tests = apply_moving_average(
+            per_capita_tests, testing.smoothing_period
+        )
 
     # scale testing with time-variant parameter
     if testing.test_multiplier:
@@ -93,6 +90,7 @@ def find_cdr_function_from_test_data(testing, country_iso3, total_pops, subregio
         testing.assumed_tests_parameter,
         testing.assumed_cdr_parameter,
     )
+
     return scale_up_function(
         test_dates,
         [cdr_from_tests_func(i_test_rate) for i_test_rate in smoothed_per_capita_tests],

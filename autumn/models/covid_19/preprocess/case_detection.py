@@ -1,18 +1,19 @@
-from typing import List
+from typing import List, Tuple
+
+from summer.compute import ComputedValueProcessor
 
 from autumn.models.covid_19.parameters import Country, Population, TestingToDetection
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.tools import inputs
 
-from summer.compute import ComputedValueProcessor
 
-
-def get_testing_pop(agegroup_strata: List[str], country: Country, pop: Population):
+def get_testing_pop(agegroup_strata: List[str], country: Country, pop: Population) -> Tuple[list, str]:
     """
-    Returns the age stratified population used for case detection testing.
+    Returns the age-stratified population used for case detection testing.
     Use state denominator for testing rates for the Victorian health cluster models and temporarily use
     Philippines regional pops for all the Philippines sub-regions
     """
+
     testing_region = "Victoria" if country.iso3 == "AUS" else pop.region
     testing_year = 2020 if country.iso3 == "AUS" else pop.year
     testing_pop = inputs.get_population_by_agegroup(
@@ -52,6 +53,7 @@ class CdrProc(ComputedValueProcessor):
     """
     Calculate prevalence from the active disease compartments.
     """
+
     def __init__(self, detected_proportion_func):
         self.detected_proportion_func = detected_proportion_func
 
@@ -59,5 +61,5 @@ class CdrProc(ComputedValueProcessor):
         """
         Calculate the actual prevalence during run-time
         """
-        return self.detected_proportion_func(time)
 
+        return self.detected_proportion_func(time)

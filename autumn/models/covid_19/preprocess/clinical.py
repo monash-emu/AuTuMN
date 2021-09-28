@@ -204,7 +204,7 @@ def get_all_adjustments(
     get_detected_proportion = build_detected_proportion_func(AGEGROUP_STRATA, country, pop, testing_to_detection)
     entry_adjs = get_entry_adjustments(abs_props, get_detected_proportion, within_early_exposed)
 
-    # These are the systems that will compute (in a vectorized fashion) the adjustments added using AdjustmentComponents
+    # These are the systems that will compute (in a vectorised fashion) the adjustments added using AdjustmentComponents
     adjuster_systems = {
         'isolated': adjusterprocs.AbsPropIsolatedSystem(within_early_exposed),
         'sympt_non_hosp': adjusterprocs.AbsPropSymptNonHospSystem(within_early_exposed)

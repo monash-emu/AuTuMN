@@ -65,7 +65,7 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float) -> Callable:
     return cdr_function
 
 
-def inflate_test_data(test_multiplier: float, smoothed_per_capita_tests: list) -> list:
+def inflate_test_data(test_multiplier: float, test_dates: list, smoothed_per_capita_tests: list) -> list:
     """
     Apply inflation factor to test numbers if requested.
     Used in the Philippines applications only.
@@ -116,7 +116,7 @@ def find_cdr_function_from_test_data(
     # Scale testing with a time-variant request parameter
     if test_detect_params.test_multiplier:
         smoothed_inflated_per_capita_tests = inflate_test_data(
-            test_detect_params.test_multiplier, smoothed_per_capita_tests
+            test_detect_params.test_multiplier, test_dates, smoothed_per_capita_tests
         )
     else:
         smoothed_inflated_per_capita_tests = smoothed_per_capita_tests

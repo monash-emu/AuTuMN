@@ -65,30 +65,29 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float) -> Callable:
     return cdr_function
 
 
-def inflate_test_data(test_multiplier: float, test_dates: list, smoothed_per_capita_tests: list) -> list:
+def inflate_test_data(test_multiplier: float, test_dates: list, test_values: list) -> list:
     """
     Apply inflation factor to test numbers if requested.
     Used in the Philippines applications only.
     """
 
-    # Add test datapoints to original series so we can scale-up
+    # Add future test datapoints to original series so we can scale-up
+    latest_per_capita_tests = test_values[-1]
     for time, value in zip(test_multiplier.times, test_multiplier.values):
-        latest_per_capita_tests = smoothed_per_capita_tests[-1]
         if time not in test_dates:
             test_dates = np.append(test_dates, [time])
-            smoothed_per_capita_tests.append(latest_per_capita_tests)
+            test_values.append(latest_per_capita_tests)
 
     # Reorder the data
-    zipped_lists = zip(test_dates, smoothed_per_capita_tests)
-    sorted_pairs = sorted(zipped_lists)
+    sorted_pairs = sorted(zip(test_dates, test_values))
     tuples = zip(*sorted_pairs)
-    test_dates, smoothed_per_capita_tests = [list(tup) for tup in tuples]
+    test_dates, test_values = [list(tup) for tup in tuples]
 
+    # Create scale-up function
     testing_scale_up = scale_up_function(test_multiplier.times, test_multiplier.values, method=4)
-    new_per_capita_tests = [smoothed_per_capita_tests[i] * testing_scale_up(t) for i, t in enumerate(test_dates)]
-    smoothed_per_capita_tests = new_per_capita_tests
 
-    return smoothed_per_capita_tests
+    # Scale up added tests
+    return [test_values[val] * testing_scale_up(time) for val, time in enumerate(test_dates)]
 
 
 def find_cdr_function_from_test_data(
@@ -120,6 +119,8 @@ def find_cdr_function_from_test_data(
         )
     else:
         smoothed_inflated_per_capita_tests = smoothed_per_capita_tests
+
+    assert all((val >= 0. for val in smoothed_inflated_per_capita_tests))
 
     # Calculate CDRs and the resulting CDR function over time
     cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(

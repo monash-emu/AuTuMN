@@ -17,6 +17,8 @@ STANDARD_COL = [
     "icu_occupancy",
     "accum_deaths",
     "infection_deaths",
+    "hospital_admissions",
+    "icu_admissions",
 ]
 
 AGE_GROUPS = list(range(0, 80, 5))

@@ -84,7 +84,7 @@ class PrevalenceProc(ComputedValueProcessor):
 
 class PropDetectedTracedProc(ComputedValueProcessor):
     """
-    Calculate the proportion of detected cases which have their contacts traced.
+    Calculate the proportion of contacts of successfully detected cases which are traced.
     """
 
     def __init__(self, trace_param, floor):
@@ -95,13 +95,15 @@ class PropDetectedTracedProc(ComputedValueProcessor):
         """
         Formula for calculating the proportion from the already-processed contact tracing parameter,
         which has been worked out in the get_tracing_param function above.
-        Ensures that the proportion is bounded [0, 1]
         """
 
-        prop_of_detected_traced = \
-            self.floor + (1. - self.floor) * np.exp(-computed_values["prevalence"] * self.trace_param)
-        msg = f"floor: {prop_of_detected_traced}\n prev: {computed_values['prevalence']}\n param: {self.trace_param}"
-        assert 0. <= prop_of_detected_traced <= 1., msg
+        # Decreasing exponential function of current prevalence descending from one to the floor value
+        current_prevalence = computed_values["prevalence"]
+        prop_of_detected_traced = self.floor + (1. - self.floor) * np.exp(-current_prevalence * self.trace_param)
+
+        msg = f"Proportion of detectable contacts detected not between floor value and 1: {prop_of_detected_traced}"
+        assert self.floor <= prop_of_detected_traced <= 1., msg
+
         return prop_of_detected_traced
 
 

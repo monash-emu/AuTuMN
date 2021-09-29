@@ -16,4 +16,4 @@ param_set = ParameterSet(baseline=baseline_params)
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 targets = [NormalTarget(timeseries=ts_set["notifications"])]
 calibration = Calibration(priors=priors, targets=targets)
-project = Project(Region.GRAMPIANS, Models.COVID_19, build_model, param_set, calibration)
+project = Project(Region.LODDON_MALLEE, Models.COVID_19, build_model, param_set, calibration)

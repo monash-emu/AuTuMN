@@ -38,6 +38,15 @@ register_project(
     "autumn.projects.covid_19.victoria.victoria_2021.project",
 )
 
+
+register_project(
+    Models.COVID_19,
+    Region.NORTH_METRO,
+    "autumn.projects.covid_19.victoria.north_metro.project",
+)
+
+
+
 # COVID: European mixing optmization
 register_project(
     Models.COVID_19,

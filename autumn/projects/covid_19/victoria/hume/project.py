@@ -23,4 +23,4 @@ targets = [
     )
 ]
 calibration = Calibration(priors=priors, targets=targets)
-project = Project(Region.HUME, Models.EXAMPLE, build_model, param_set, calibration)
+project = Project(Region.HUME, Models.COVID_19, build_model, param_set, calibration)

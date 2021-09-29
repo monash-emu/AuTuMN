@@ -541,7 +541,14 @@ class Parameters:
     clinical_stratification: ClinicalStratification
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
+    vic_status: str
     victorian_clusters: Optional[VictorianClusterStratification]
     vic_2021_seeding: Optional[Vic2021Seeding]
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]
+
+    @validator("vic_status", allow_reuse=True)
+    def check_status(val):
+        vic_options = ("non_vic", "vic_super_2020", "vic_super_2021", "vic_region_2021")
+        assert val in vic_options, f"Vic option {val} not one of the available options"
+        return val

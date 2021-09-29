@@ -8,7 +8,7 @@ mixing_matrices:
   source_iso3: GBR
 
 population:
-  region: north_metro
+  region: south_metro
 country:
   iso3: AUS
 

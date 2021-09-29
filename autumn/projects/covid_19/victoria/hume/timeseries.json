@@ -1,5 +1,5 @@
 {
-  "prevalence_infectious": {
+  "notifications": {
     "times": [25.0, 30.0],
     "values": [7.0, 5.0]
   }

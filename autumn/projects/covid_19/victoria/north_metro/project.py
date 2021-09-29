@@ -117,4 +117,4 @@ plot_spec_filepath = build_rel_path("targets.secret.json")
 with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
-project = Project(Region.NORTH_METRO, Models.EXAMPLE, build_model, param_set, calibration)
+project = Project(Region.NORTH_METRO, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec)

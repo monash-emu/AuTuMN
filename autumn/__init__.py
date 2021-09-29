@@ -46,6 +46,48 @@ register_project(
 )
 
 
+register_project(
+    Models.COVID_19,
+    Region.SOUTH_EAST_METRO,
+    "autumn.projects.covid_19.victoria.south_east_metro.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.SOUTH_METRO,
+    "autumn.projects.covid_19.victoria.south_metro.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.WEST_METRO,
+    "autumn.projects.covid_19.victoria.west_metro.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.BARWON_SOUTH_WEST,
+    "autumn.projects.covid_19.victoria.barwon_south_west.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.GIPPSLAND,
+    "autumn.projects.covid_19.victoria.gippsland.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.GRAMPIANS,
+    "autumn.projects.covid_19.victoria.grampians.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.HUME,
+    "autumn.projects.covid_19.victoria.hume.project",
+)
+
 
 # COVID: European mixing optmization
 register_project(

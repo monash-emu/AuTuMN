@@ -1,19 +1,15 @@
-awareness_raising.relative_screening_rate: 1.3704723623650445
-contact_rate: 0.005
-extra_params.rr_progression_diabetes: 4.986704174120089
-infect_death_rate_dict.smear_negative: 0.017241534770594067
-infect_death_rate_dict.smear_positive: 0.3352064285383473
-notificationsXlocation_ebeye_dispersion_param: 9.584571984584663
-notificationsXlocation_majuro_dispersion_param: 43.608408102243615
-progression_multiplier: 1.8305968017496705
-pt_efficacy: 0.8352999329293371
-rr_infection_latent: 0.38557385412602785
-rr_infection_recovered: 0.44338978106446403
-self_recovery_rate_dict.smear_negative: 0.0730063900785943
-self_recovery_rate_dict.smear_positive: 0.17948774376162888
-start_population_size: 418.39514196570616
-time_variant_tb_screening_rate.upper_asymptote: 0.5414189304520918
-# time_variant_tb_screening_rate.inflection_time: 2012.3532479784524
-# time_variant_tb_screening_rate.shape: 0.08166034697836569
-user_defined_stratifications.location.adjustments.detection.ebeye: 1.8802685161189143
-user_defined_stratifications.location.adjustments.detection.other: 1.2947835605223585
+awareness_raising.relative_screening_rate: 1.4500159441354645
+contact_rate: 0.006649581210402339
+extra_params.rr_progression_diabetes: 4.982073800418706
+infect_death_rate_dict.smear_negative: 0.02324336316626449
+infect_death_rate_dict.smear_positive: 0.3388636845842077
+progression_multiplier: 1.7936856491069202
+pt_efficacy: 0.8409878187146413
+rr_infection_latent: 0.3085893800291443
+rr_infection_recovered: 0.8632560953827038
+self_recovery_rate_dict.smear_negative: 0.073
+self_recovery_rate_dict.smear_positive: 0.28761211899867645
+start_population_size: 622.4852815249842
+time_variant_tb_screening_rate.upper_asymptote: 0.47159730588071075
+user_defined_stratifications.location.adjustments.detection.ebeye: 1.634500773231247
+user_defined_stratifications.location.adjustments.detection.other: 1.408189734414723

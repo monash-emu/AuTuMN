@@ -1,6 +1,6 @@
 description: BASELINE
 
-vic_status: "non_vic"
+vic_status: "vic_region_2021"
 
 infectious_seed: 0.
 seasonal_force: 0.

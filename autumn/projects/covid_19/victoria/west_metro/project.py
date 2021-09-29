@@ -14,12 +14,11 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("contact_rate", [0.025, 0.05]),
-    UniformPrior("recovery_rate", [0.9, 1.2]),
 ]
 targets = [
     NormalTarget(
-        timeseries=ts_set["prevalence_infectious"],
-        time_weights=list(range(1, len(ts_set["prevalence_infectious"].times) + 1)),
+        timeseries=ts_set["notifications"],
+        time_weights=list(range(1, len(ts_set["notifications"].times) + 1)),
     )
 ]
 calibration = Calibration(priors=priors, targets=targets)

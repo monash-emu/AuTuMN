@@ -190,6 +190,18 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
             name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways
         )
 
+    # Split by child and adult
+    paed_notifications = (f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3])
+    adult_notifications = (f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:])
+    model.request_aggregate_output(
+        name="notificationsXpaediatric",
+        sources=paed_notifications
+    )
+    model.request_aggregate_output(
+        name="notificationsXadult",
+        sources=adult_notifications
+    )
+
     # Victorian cluster model outputs
     clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else ()
 

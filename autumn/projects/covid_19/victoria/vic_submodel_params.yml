@@ -69,3 +69,80 @@ sojourn:
       proportions:
         early: 0.5
         late: 0.5
+
+
+mobility:
+  region: null
+  age_mixing: null
+  npi_effectiveness: {}
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - parks
+      - transit_stations
+  smooth_google_data: false # Whether to apply a 7-day moving average
+  square_mobility_effect: true
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-07-15
+        - 2021-07-16  # Schools close with lockdown 5
+        - 2021-07-26
+        - 2021-07-27  # Schools re-open after lockdown 5
+        - 2021-08-04
+        - 2021-08-05  # Schools close with lockdown 6
+      values:
+        - 1.
+        - 0.1
+        - 0.1
+        - 1.
+        - 1.
+        - 0.1
+
+  microdistancing:
+    home_reduction:
+      function_type: constant
+      parameters:
+        effect: 0.
+      locations:
+        - home
+    behaviour:
+      # Parameters of tanh function manually calibrated using notebooks/user/jtrauer/vic_microdistancing.ipynb
+      function_type: tanh
+      parameters:
+        shape: 0.1
+        inflection_time: 595.
+        lower_asymptote: 0.165
+        upper_asymptote: 0.241
+      locations:
+        - other_locations
+        - school
+        - work
+    behaviour_adjuster:
+      function_type: constant
+      parameters:
+        effect: 0.3
+      locations:
+        - other_locations
+        - school
+        - work
+    face_coverings: # Mandatory face coverings
+      function_type: constant
+      parameters:
+        effect: 0.84
+      locations:
+        - other_locations
+        - school
+        - work
+    face_coverings_adjuster:
+      function_type: constant
+      parameters:
+        effect: 0.3
+      locations:
+        - other_locations
+        - school
+        - work

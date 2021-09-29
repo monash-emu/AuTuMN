@@ -8,37 +8,10 @@ from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools import inputs
-from autumn.tools.utils.utils import (
-    apply_odds_ratio_to_proportion,
-    repeat_list_elements,
-)
+from autumn.tools.utils.utils import apply_odds_ratio_to_multiple_proportions, subdivide_props
 
 NUM_AGE_STRATA = 16
 ALLOWED_ROUNDING_ERROR = 6
-
-
-"""
-General data processing functions.
-"""
-
-# FIXME: Move these out of Covid model, for re-use for other conditions
-
-
-def apply_odds_ratio_to_multiple_proportions(props, adjuster):
-    """
-    Very simple, but just because it is used a few times.
-    """
-    return [apply_odds_ratio_to_proportion(i_prop, adjuster) for i_prop in props]
-
-
-def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
-    """
-    Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
-    proportions provided (split_props).
-    """
-    split_arr = base_props * split_props
-    complement_arr = base_props * (1. - split_props)
-    return split_arr, complement_arr
 
 
 """
@@ -46,7 +19,7 @@ Used in multiple sections - both entries and deaths.
 """
 
 
-def get_absolute_strata_proportions(symptomatic_props, icu_props, hospital_props):
+def get_absolute_strata_proportions(symptomatic_props: list, icu_props: float, hospital_props: list):
     """
     Returns the proportion of people in each clinical stratum.
     ie: Given all the people people who are infected, what proportion are in each strata?

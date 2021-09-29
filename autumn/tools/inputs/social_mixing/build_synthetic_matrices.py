@@ -8,7 +8,6 @@ from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 from autumn.tools.inputs import get_population_by_agegroup
 from autumn.tools.inputs.demography.queries import _check_age_breakpoints
 
-
 SOURCE_MATRICES_PATH = os.path.join(INPUT_DATA_PATH, "social-mixing", "socialmixr_outputs")
 
 # Year when the contact survey was conducted (nearest multiple of 5)
@@ -25,51 +24,57 @@ REFERENCE_YEAR = {
     "BEL": 2005,
     "NLD": 2005,
     "LUX": 2005,
+    "FJI": 2015,
 }
 
 
 def build_synthetic_matrices(
-        modelled_country_iso3, proxy_country_iso3, modelled_age_breaks, age_adjust, modelled_region_name=None
+        modelled_country_iso3, proxy_country_iso3, modelled_age_breaks, age_adjust, modelled_region_name=None,
+        requested_locations=LOCATIONS
 ):
     """
     :param modelled_country_iso3: The name of the modelled country
     :param proxy_country_iso3: The name of the country from which we want to source the contact matrix
     :param modelled_age_breaks: Lower bounds of the modelled age brackets
+    :param age_adjust: Whether to apply adjustment based on population age distribution
     :param modelled_region_name: Name of sub-region if applicable
+    :param requested_locations: List of locations for which a matrix should be built
     :return: dictionary containing the location-specific contact matrices for the modelled country
     """
+
     # Load contact matrices for the source country
-    source_matrices, source_age_breaks = load_socialmixr_matrices(proxy_country_iso3)
+    source_matrices, source_age_breaks = load_socialmixr_matrices(proxy_country_iso3, requested_locations)
 
     # adjust matrices for modelled region's age distribution
     if age_adjust:
         age_adjusted_matrices = adjust_matrices_for_age_distribution(
-            source_matrices, proxy_country_iso3, modelled_country_iso3, source_age_breaks, modelled_region_name
+            source_matrices, proxy_country_iso3, modelled_country_iso3, source_age_breaks, modelled_region_name, requested_locations
         )
     else:
         age_adjusted_matrices = source_matrices
 
     # convert matrices to match modelled age groups
     model_ready_matrices = convert_matrices_agegroups(
-        age_adjusted_matrices, source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name
+        age_adjusted_matrices, source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name, requested_locations
     )
 
     return model_ready_matrices
 
 
-def load_socialmixr_matrices(proxy_country_iso3):
+def load_socialmixr_matrices(proxy_country_iso3, requested_locations):
     """
     Load location-specific matrices.
     Note that the matrices obtained from socialmixr use the convention that c_{i,j} is the average number of contacts
     aged j that an index of age i has.
     :param proxy_country_iso3: the ISO3 code of the country from which we read the socialmixer contact rates
+    :param requested_locations: List of requested locations
     :return: location-specific contact matrices (in a dictionary) and list of associated lower age bounds
     """
     available_source_countries = os.listdir(SOURCE_MATRICES_PATH)
     assert proxy_country_iso3 in available_source_countries, f"No socialmixr data found for {proxy_country_iso3}"
 
     matrices = {}
-    for i, location in enumerate(LOCATIONS):
+    for i, location in enumerate(requested_locations):
         matrix_path = os.path.join(SOURCE_MATRICES_PATH, proxy_country_iso3, f"{location}.csv")
         msg = f"Could not find the required file {matrix_path}"
         assert f"{location}.csv" in os.listdir(os.path.join(SOURCE_MATRICES_PATH, proxy_country_iso3)), msg
@@ -95,7 +100,8 @@ def load_socialmixr_matrices(proxy_country_iso3):
 
 
 def adjust_matrices_for_age_distribution(
-    source_matrices, proxy_country_iso3, modelled_country_iso3, source_age_breaks, modelled_region_name=None
+    source_matrices, proxy_country_iso3, modelled_country_iso3, source_age_breaks, modelled_region_name=None,
+    requested_locations=LOCATIONS
 ):
     """
     Converts matrix based on the age distribution of the proxy country and that of the modelled country
@@ -104,6 +110,7 @@ def adjust_matrices_for_age_distribution(
     :param modelled_country_iso3: the ISO3 code of the modelled country
     :param source_age_breaks: age breaks used in the source matrices
     :param modelled_region_name: name of a sub-region (if applicable)
+    :param requested_locations: List of requested locations
     :return: contact matrices adjusted for the modelled country's age distribution (dictionary)
     """
 
@@ -126,7 +133,7 @@ def adjust_matrices_for_age_distribution(
 
     # Make population adjustment by multiplying matrices' columns by age-specific population ratios
     age_adjusted_matrices = {}
-    for location in LOCATIONS:
+    for location in requested_locations:
         age_adjusted_matrices[location] = np.dot(source_matrices[location], diag_age_pop_ratio)
 
     return age_adjusted_matrices
@@ -164,7 +171,7 @@ def find_source_age_group_contributions(
 
 
 def convert_matrices_agegroups(
-    matrices, source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name=None
+    matrices, source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name=None, requested_locations=LOCATIONS
 ):
     """
     Transform the contact matrices to match the model age stratification.
@@ -173,6 +180,7 @@ def convert_matrices_agegroups(
     :param modelled_age_breaks: the requested model's age breaks
     :param modelled_country_iso3: the ISO3 code of the modelled country
     :param modelled_region_name: name of a sub-region (if applicable)
+    :param requested_locations: List of requested locations
     :return: contact matrices based on model's age stratification (dictionary)
     """
     source_age_break_contributions = find_source_age_group_contributions(
@@ -184,12 +192,10 @@ def convert_matrices_agegroups(
 
     # Build the output contact matrices based on the calculated age group contributions
     model_ready_matrices = {}
-    for location in LOCATIONS:
+    for location in requested_locations:
         base_matrix = matrices[location]
         output_matrix = np.zeros((n_modelled_groups, n_modelled_groups))
         for i_model in range(n_modelled_groups):
-
-            # FIXME: Romain, please check this - using the rows both times, which is what I think we should do
             i_contributions = source_age_break_contributions[i_model, :].reshape(n_source_groups, 1)
             for j_model in range(n_modelled_groups):
                 j_contributions = source_age_break_contributions[j_model, :].reshape(n_source_groups, 1)
@@ -205,10 +211,11 @@ def convert_matrices_agegroups(
 
         model_ready_matrices[location] = output_matrix
 
-    _check_model_ready_matrices(model_ready_matrices)
-    clean_matrices = _clean_up_model_ready_matrices(model_ready_matrices)
+    if requested_locations == LOCATIONS:
+        _check_model_ready_matrices(model_ready_matrices)
+        model_ready_matrices = _clean_up_model_ready_matrices(model_ready_matrices)
 
-    return clean_matrices
+    return model_ready_matrices
 
 
 def _get_pop_props_by_age(age_breaks, country_iso3, region_name=None, reference_year=2020):

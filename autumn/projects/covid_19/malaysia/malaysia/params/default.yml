@@ -5,7 +5,7 @@ infectious_seed: 100.
 
 time:
   start: 180
-  end: 913 # july 1, 2022
+  end: 943 # july 30, 2022
 
 country:
   iso3: MYS
@@ -28,7 +28,7 @@ vaccination:
         end_time: 624 # 15 Sep 2021
     - age_min: 15
       supply_period_coverage:
-        coverage: 0.3 # 80% of coverage
+        coverage: 0.7 # 70% of coverage
         start_time: 625 # 16 Sep 2021
         end_time: 732 # 01 Jan 2022
 

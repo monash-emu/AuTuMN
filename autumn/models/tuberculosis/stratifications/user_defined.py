@@ -11,12 +11,26 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
     Stratify all model compartments based on a user-defined stratification request.
     """
     requested_strata = details["strata"]
-
     strat = Stratification(name, requested_strata, COMPARTMENTS)
 
     strat.set_population_split(details["proportions"])
     if "mixing_matrix" in details:
         mixing_matrix = np.array([row for row in details["mixing_matrix"]])
+        strat.set_mixing_matrix(mixing_matrix)
+    elif "prop_mixing_same_stratum" in details:
+        n_strata = len(requested_strata)
+        mixing_matrix = np.zeros((n_strata, n_strata))
+        for i in range(n_strata):
+            for j in range(n_strata):
+                # for someone in stratum i, what proportion of their contacts occur with someone from stratum j?
+                if i == j:
+                    mixing_matrix[i, j] = details['prop_mixing_same_stratum']
+                else:
+                    prop_pop_j = details["proportions"][requested_strata[j]]
+                    prop_pop_non_i = sum([details["proportions"][requested_strata[k]] for k in range(n_strata) if k != i])
+                    assert prop_pop_non_i > 0.
+                    mixing_matrix[i, j] = (1 - details['prop_mixing_same_stratum']) * prop_pop_j / prop_pop_non_i
+
         strat.set_mixing_matrix(mixing_matrix)
 
     # Pre-process generic flow adjustments

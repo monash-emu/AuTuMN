@@ -16,6 +16,7 @@ contact_tracing:
   quarantine_infect_multiplier: 0.2
   floor: 0.
 
+
 vaccination:
   fully_vaccinated:
     overall_efficacy: 0.7

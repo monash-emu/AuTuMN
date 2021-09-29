@@ -163,10 +163,30 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     return modified_proportion
 
 
+def apply_odds_ratio_to_multiple_proportions(props, adjuster):
+    """
+    Very simple, but just because it is used a few times.
+    """
+
+    return [apply_odds_ratio_to_proportion(i_prop, adjuster) for i_prop in props]
+
+
+def subdivide_props(base_props: numpy.ndarray, split_props: numpy.ndarray):
+    """
+    Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
+    proportions provided (split_props).
+    """
+
+    split_arr = base_props * split_props
+    complement_arr = base_props * (1. - split_props)
+    return split_arr, complement_arr
+
+
 def list_element_wise_division(a, b):
     """
     Performs element-wise division between two lists and returns zeros where denominator is zero.
     """
+
     return numpy.divide(a, b, out=numpy.zeros_like(a), where=b != 0.0)
 
 
@@ -178,6 +198,7 @@ def update_mle_from_remote_calibration(model, region, run_id=None):
     :param run_id: Optional run identifier such as 'covid_19/calabarzon/1626941419/5495a75'. If None, the latest run is
     considered.
     """
+
     s3_client = get_s3_client()
 
     if run_id is None:
@@ -255,6 +276,7 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
 
     if args:
         secrets.write(file_path, *args)
+
 
 def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)

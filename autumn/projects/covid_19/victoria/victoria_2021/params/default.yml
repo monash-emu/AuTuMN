@@ -238,7 +238,7 @@ victorian_clusters:
         behaviour_adjuster:
           function_type: constant
           parameters:
-            effect: 0.
+            effect: 0.3
           locations:
             - other_locations
             - school

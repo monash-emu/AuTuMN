@@ -372,6 +372,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         request_recovered_outputs(model, is_region_vic)
 
+    print()
+    print()
+
     # Contact tracing-related outputs
     if params.contact_tracing:
         request_tracing_outputs(model)

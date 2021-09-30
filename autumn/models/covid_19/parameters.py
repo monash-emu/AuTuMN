@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE
+from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -549,6 +549,6 @@ class Parameters:
 
     @validator("vic_status", allow_reuse=True)
     def check_status(val):
-        vic_options = ("non_vic", "vic_super_2020", "vic_super_2021", "vic_region_2021")
+        vic_options = VIC_MODEL_OPTIONS
         assert val in vic_options, f"Invalid option selected for Vic status: {val}"
         return val

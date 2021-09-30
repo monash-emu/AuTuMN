@@ -19,7 +19,8 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet, region=Region.MAN
     notifications_ts = ts_set.get("notifications").truncate_start_time(cutoff_time)
     n = len(notifications_ts.times)
     max_weight = 10.
-    notification_weights = [1.0 for _ in range(n - 90)] + [1.0 + (i + 1) * (max_weight - 1.) / 90 for i in range(90)]
+    n_weighted_points = 30
+    notification_weights = [1.0 for _ in range(n - n_weighted_points)] + [1.0 + (i + 1) * (max_weight - 1.) / n_weighted_points for i in range(n_weighted_points)]
 
     # Only use most recent datapoint for icu occupancy
     icu_occupancy_ts = ts_set.get("icu_occupancy")[-1]
@@ -35,7 +36,7 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet, region=Region.MAN
         NormalTarget(accum_deaths_ts),
     ]
 
-    cdr_range = [0.02, 0.03]
+    cdr_range = [0.01, 0.03]
     if region == Region.CALABARZON:
         cdr_range = [0.05, 0.20]
 

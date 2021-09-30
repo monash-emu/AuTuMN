@@ -2,6 +2,10 @@
 country:
   iso3: PHL
 
+mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
+  type: extrapolated
+  source_iso3: HKG
+
 time:
   start: 40.
   end: 913.
@@ -59,7 +63,7 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 1.5
   delta:
-    start_time: 500
+    start_time: 470 #500
     entry_rate: 10.
     seed_duration: 10.
     contact_rate_multiplier: 2.5

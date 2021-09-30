@@ -141,17 +141,29 @@ def main():
 
     for cluster in CLUSTER_MAP.values():
 
+        # TARGET_MAP_DHHS = {
+        #     f"notifications_for_cluster_{cluster.lower()}": "cluster_cases",
+        #     f"hospital_occupancy_for_cluster_{cluster.lower()}": "value_hosp",
+        #     f"icu_occupancy_for_cluster_{cluster.lower()}": "value_icu",
+        #     f"icu_admissions_for_cluster_{cluster.lower()}": "admittedtoicu",
+        #     f"hospital_admissions_for_cluster_{cluster.lower()}": "nadmissions",
+        # }
+
+        cluster_secrets_file = os.path.join(
+            PROJECTS_PATH, "covid_19", "victoria", cluster.lower(), "targets.secret.json"
+        )
+
         TARGET_MAP_DHHS = {
-            f"notifications_for_cluster_{cluster.lower()}": "cluster_cases",
-            f"hospital_occupancy_for_cluster_{cluster.lower()}": "value_hosp",
-            f"icu_occupancy_for_cluster_{cluster.lower()}": "value_icu",
-            f"icu_admissions_for_cluster_{cluster.lower()}": "admittedtoicu",
-            f"hospital_admissions_for_cluster_{cluster.lower()}": "nadmissions",
+            "notifications": "cluster_cases",
+            "hospital_occupancy": "value_hosp",
+            "icu_occupancy": "value_icu",
+            "icu_admissions": "admittedtoicu",
+            "hospital_admissions": "nadmissions",
         }
 
         cluster_df = cases.loc[cases.cluster_id == cluster]
 
-        update_timeseries(TARGET_MAP_DHHS, cluster_df, COVID_VIC2021_TARGETS_CSV, password)
+        update_timeseries(TARGET_MAP_DHHS, cluster_df, cluster_secrets_file, password)
 
     cases.fillna(np.inf, inplace=True)
     vic_df = cases.groupby("date_index").sum(skipna=True).reset_index()
@@ -163,7 +175,7 @@ def main():
         "icu_occupancy": "value_icu",
         "icu_admissions": "admittedtoicu",
         "hospital_admissions": "nadmissions",
-        "infection_deaths": "cluster_deaths"
+        "infection_deaths": "cluster_deaths",
     }
 
     update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VIC2021_TARGETS_CSV, password)
@@ -365,4 +377,3 @@ def load_deaths(df):
 
 if __name__ == "__main__":
     main()
-

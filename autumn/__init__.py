@@ -88,6 +88,11 @@ register_project(
     "autumn.projects.covid_19.victoria.hume.project",
 )
 
+register_project(
+    Models.COVID_19,
+    Region.LODDON_MALLEE,
+    "autumn.projects.covid_19.victoria.loddon_mallee.project",
+)
 
 # COVID: European mixing optmization
 register_project(

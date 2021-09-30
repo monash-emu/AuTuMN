@@ -751,7 +751,7 @@ def get_uncertainty_df(calib_dir_path, mcmc_tables, targets):
         max_run = mcmc_all_df["run"].max()
         half_max = max_run // 2
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
     return uncertainty_df
 
 
@@ -824,6 +824,6 @@ def get_uncertainty_db(mcmc_tables, targets, calib_dir_path):
         max_run = mcmc_all_df["run"].max()
         half_max = max_run // 2
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
 
     return uncertainty_df

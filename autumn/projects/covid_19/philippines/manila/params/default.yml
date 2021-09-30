@@ -38,3 +38,17 @@ mobility:
           - 0.4  # 550
           - 0.4  # 484
           - 0.6  # 486
+
+# Vaccination-related
+vaccination:
+  roll_out_components:
+    - age_min: 20  # the 20+ age group covers 64.8% of the total NCR population
+      supply_period_coverage:
+        coverage: .71  # calculated such that 46% of the total NCR population is fully vaccinated by 18 Sep
+        start_time: 426 # 1 Mar 2021
+        end_time: 627 # 18 Sep 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .31  # to reach 80% of 20+ fully-vaccinated by end of year 2021
+        start_time: 627 # 18 Sep 2021
+        end_time: 731 # 31 Dec 2021

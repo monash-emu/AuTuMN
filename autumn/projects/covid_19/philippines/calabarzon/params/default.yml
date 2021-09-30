@@ -9,4 +9,46 @@ mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix
 
 mobility:
   region: Calabarzon
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 200
+          - 210
+          - 240
+          - 300
+          - 400
+          - 430
+          - 440
+          - 450
+          - 530
+          - 550
+          - 584 # ECQ starts
+          - 586
+        values:
+          - .1  # 200
+          - 1   # 210
+          - 1   # 240
+          - .7  # 300
+          - .3  # 400
+          - .1  # 430
+          - .8  # 440
+          - 1.  # 450
+          - 1.  # 530
+          - 0.4  # 550
+          - 0.4  # 484
+          - 0.6  # 486
 
+# Vaccination-related
+vaccination:
+  roll_out_components:
+    - age_min: 20  # the 20+ age group covers 62.1% of the total Calabarzon population
+      supply_period_coverage:
+        coverage: .24  # calculated such that 15% of the total Calabarzon population is fully vaccinated by 18 Sep
+        start_time: 426 # 1 Mar 2021
+        end_time: 627 # 18 Sep 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .34  #to reach 50% of 20+ fully-vaccinated by end of year 2021
+        start_time: 627 # 18 Sep 2021
+        end_time: 731 # 31 Dec 2021

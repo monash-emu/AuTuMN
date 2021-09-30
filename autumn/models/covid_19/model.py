@@ -43,7 +43,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     params = Parameters(**params)
 
-    is_region_vic = params.vic_status in VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021
+    is_region_vic = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
 
     model = CompartmentalModel(
         times=[params.time.start, params.time.end],

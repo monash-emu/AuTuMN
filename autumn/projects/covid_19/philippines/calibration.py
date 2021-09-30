@@ -3,11 +3,12 @@ import numpy as np
 from autumn.tools.project import TimeSeriesSet
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
 from autumn.tools.calibration.targets import NormalTarget
+from autumn.settings.region import Region
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 
-def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
+def get_philippies_calibration_settings(ts_set: TimeSeriesSet, region=Region.MANILA):
     """
     Returns standard priors and targets for a Phillipines COVID model calibration.
     """
@@ -34,10 +35,14 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
         NormalTarget(accum_deaths_ts),
     ]
 
+    cdr_range = [0.02, 0.03]
+    if region == Region.CALABARZON:
+        cdr_range = [0.05, 0.20]
+
     priors = [
         # Philippines country-wide priors
         UniformPrior("contact_rate", [0.03, 0.08]),
-        UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.02, 0.03]),
+        UniformPrior("testing_to_detection.assumed_cdr_parameter", cdr_range),
         UniformPrior("infection_fatality.multiplier", [0.5, 3.]),
         UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 4.]),
         UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2., 3.]),
@@ -46,4 +51,7 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet):
         # UniformPrior("vaccination.fully_vaccinated.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
         # BetaPrior("vaccination.fully_vaccinated.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     ]
+
+
+
     return targets, priors

@@ -9,35 +9,41 @@ mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix
 
 mobility:
   region: Calabarzon
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
   microdistancing:
     behaviour:
       parameters:
         times:
           - 200
-          - 210
-          - 240
-          - 300
-          - 400
-          - 430
-          - 440
+          - 220
           - 450
-          - 530
-          - 550
-          - 584 # ECQ starts
-          - 586
+          - 460
+          - 470
+          - 475
         values:
-          - .1  # 200
-          - 1   # 210
-          - 1   # 240
-          - .7  # 300
-          - .3  # 400
-          - .1  # 430
-          - .8  # 440
-          - 1.  # 450
-          - 1.  # 530
-          - 0.4  # 550
-          - 0.4  # 484
-          - 0.6  # 486
+          - 0.2
+          - 0.7
+          - 0.7
+          - 0.5
+          - 0.5
+          - 1.
+voc_emergence:
+  alpha_beta:
+    start_time: 400
+    entry_rate: 5.
+    seed_duration: 10.
+    contact_rate_multiplier: 1.5
+  delta:
+    start_time: 550
+    entry_rate: 10.
+    seed_duration: 10.
+    contact_rate_multiplier: 2.5
 
 # Vaccination-related
 vaccination:

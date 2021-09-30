@@ -11,7 +11,7 @@ mobility:
         - 2021-05-22
       values:
         - - repeat_prev
-        - 1.0
+        - 0.8
 
     work:
       append: true
@@ -20,5 +20,4 @@ mobility:
         - 2021-05-22
       values:
         - - repeat_prev
-        - 1.0
-
+        - 0.6

@@ -88,6 +88,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Get input data
     """
+
     if params.mixing_matrices.type == "prem":
         mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
     elif params.mixing_matrices.type == "extrapolated":
@@ -95,8 +96,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust,
             pop.region
         )
-    else:
-        raise Exception("Invalid mixing matrix type specified in parameters")
 
     """
     Add intercompartmental flows

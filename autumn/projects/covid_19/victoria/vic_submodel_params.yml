@@ -1,0 +1,148 @@
+description: BASELINE
+
+vic_status: "vic_region_2021"
+
+infectious_seed: 0.
+seasonal_force: 0.
+
+mixing_matrices:
+  type: extrapolated
+  source_iso3: GBR
+
+population:
+  region: Victoria
+country:
+  iso3: AUS
+
+contact_tracing:
+  assumed_trace_prop: 0.31  # Ignore, calibrated
+  assumed_prev: 1.e-3
+  quarantine_infect_multiplier: 0.2
+  floor: 0.3
+
+time:
+  start: 454
+  end: 730
+
+testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
+  assumed_tests_parameter: 1.e-03
+  assumed_cdr_parameter: .3  # Calibrated
+  smoothing_period: 7
+
+clinical_stratification:
+
+  # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
+  # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88
+  # News article also links to some of the more important recent studies and pre-prints
+  # https://www.cbc.ca/news/health/does-delta-cause-more-severe-covid-19-here-s-what-we-know-and-don-t-1.6153470
+  props:
+
+    # Table 1.1 from NNDSS document on cases in Australia to May 2021
+    hospital:
+      props:
+        - 0.029  # 0-4
+        - 0.029  # 5-9
+        - 0.014  # 10-14
+        - 0.014  # 15-19
+        - 0.030  # 20-24
+        - 0.030  # 25-29
+        - 0.047  # 30-34
+        - 0.047  # 35-39
+        - 0.081  # 40-44
+        - 0.081  # 45-49
+        - 0.128  # 50-54
+        - 0.128  # 55-59
+        - 0.221  # 60-64
+        - 0.221  # 65-69
+        - 0.389  # 70-74
+        - 0.471  # 75+ - weighted to the observed cases in >75s as (511 / 2 + 652 + 356) / (1344 / 2 + 1230 + 783)
+
+  icu_prop: 0.16
+
+# VAHI, 1st July to 30th September
+sojourn:
+  compartment_periods:
+    hospital_late: 7.8  # FluCAN monthly Covid Epi Report to CDNA, 30th August 2020
+    icu_late: 5.9  # SPRINT-SARI Australia Project
+  compartment_periods_calculated:
+    active:
+      proportions:
+        early: 0.5
+        late: 0.5
+
+
+mobility:
+  region: null
+  age_mixing: null
+  npi_effectiveness: {}
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - parks
+      - transit_stations
+  smooth_google_data: false # Whether to apply a 7-day moving average
+  square_mobility_effect: true
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-07-15
+        - 2021-07-16  # Schools close with lockdown 5
+        - 2021-07-26
+        - 2021-07-27  # Schools re-open after lockdown 5
+        - 2021-08-04
+        - 2021-08-05  # Schools close with lockdown 6
+      values:
+        - 1.
+        - 0.1
+        - 0.1
+        - 1.
+        - 1.
+        - 0.1
+
+  microdistancing:
+    home_reduction:
+      function_type: constant
+      parameters:
+        effect: 0.
+      locations:
+        - home
+    behaviour:
+      # Parameters of tanh function manually calibrated using notebooks/user/jtrauer/vic_microdistancing.ipynb
+      function_type: tanh
+      parameters:
+        shape: 0.1
+        inflection_time: 595.
+        lower_asymptote: 0.165
+        upper_asymptote: 0.241
+      locations:
+        - other_locations
+        - school
+        - work
+    behaviour_adjuster:
+      function_type: constant
+      parameters:
+        effect: 0.3
+      locations:
+        - other_locations
+        - school
+        - work
+    face_coverings: # Mandatory face coverings
+      function_type: constant
+      parameters:
+        effect: 0.84
+      locations:
+        - other_locations
+        - school
+        - work
+    face_coverings_adjuster:
+      function_type: constant
+      parameters:
+        effect: 0.3
+      locations:
+        - other_locations
+        - school
+        - work

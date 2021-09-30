@@ -1,5 +1,7 @@
 description: BASELINE
 
+vic_status: "vic_super_2021"
+
 infectious_seed: 0.
 seasonal_force: 0.
 
@@ -236,7 +238,7 @@ victorian_clusters:
         behaviour_adjuster:
           function_type: constant
           parameters:
-            effect: 0.
+            effect: 0.3
           locations:
             - other_locations
             - school

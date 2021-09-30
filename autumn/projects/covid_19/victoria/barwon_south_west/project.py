@@ -16,6 +16,10 @@ param_set = ParameterSet(baseline=baseline_params)
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(454)
-targets = [NormalTarget(timeseries=notifications_ts)]
+hospital_admissions_ts = ts_set.get("hospital_admissions").truncate_start_time(454)
+targets = [
+    NormalTarget(timeseries=notifications_ts),
+    NormalTarget(timeseries=hospital_admissions_ts)
+]
 calibration = Calibration(priors=priors, targets=targets)
 project = Project(Region.BARWON_SOUTH_WEST, Models.COVID_19, build_model, param_set, calibration)

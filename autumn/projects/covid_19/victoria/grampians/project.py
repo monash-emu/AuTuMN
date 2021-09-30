@@ -9,7 +9,8 @@ from autumn.projects.covid_19.victoria.region_calibration import priors
 # Load and configure model parameters
 vic_base_path = build_rel_path("../vic_submodel_params.yml")
 vic_regional_path = build_rel_path("../vic_regional_submodel_params.yml")
-baseline_params = base_params.update(vic_base_path).update(vic_regional_path)
+cluster_path = build_rel_path("./params/default.yml")
+baseline_params = base_params.update(vic_base_path).update(vic_regional_path).update(cluster_path)
 param_set = ParameterSet(baseline=baseline_params)
 
 # Load and configure calibration settings

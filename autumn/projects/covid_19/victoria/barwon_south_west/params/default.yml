@@ -1,9 +1,8 @@
 description: BASELINE
 
-
 population:
-  region: LODDON_MALLEE
+  region: BARWON_SOUTH_WEST
   year: 2020
-
+  
 mobility:
-  region: LODDON_MALLEE
+  region: BARWON_SOUTH_WEST

@@ -12,7 +12,7 @@ baseline_params = base_params.update(vic_base_path)
 param_set = ParameterSet(baseline=baseline_params)
 
 # Load and configure calibration settings
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
+ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 targets = [NormalTarget(timeseries=ts_set["notifications"])]
 calibration = Calibration(priors=priors, targets=targets)
 project = Project(Region.SOUTH_EAST_METRO, Models.COVID_19, build_model, param_set, calibration)

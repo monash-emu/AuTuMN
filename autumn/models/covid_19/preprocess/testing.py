@@ -122,7 +122,7 @@ def find_cdr_function_from_test_data(
 
     assert all((val >= 0. for val in smoothed_inflated_per_capita_tests))
 
-    # Calculate CDRs and the resulting CDR function over time
+    # Calculate CDRs and the resulting CDR function
     cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
         test_detect_params.assumed_tests_parameter,
         test_detect_params.assumed_cdr_parameter,

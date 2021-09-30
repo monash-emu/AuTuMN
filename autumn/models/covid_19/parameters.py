@@ -187,6 +187,11 @@ class MixingMatrices(BaseModel):
     source_iso3: Optional[str]
     age_adjust: bool  # Only relevant if 'extrapolated' selected
 
+    @validator("type", allow_reuse=True)
+    def check_type(val):
+        assert val in ("extrapolated", "prem"), f"Mixing matrix request not permitted: {val}"
+        return val
+
 
 class AgeStratification(BaseModel):
     """

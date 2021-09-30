@@ -34,7 +34,7 @@ def add_uncertainty_quantiles(database_path: str, targets: dict):
 
 
 def calculate_mcmc_uncertainty(
-    mcmc_df: pd.DataFrame, do_df: pd.DataFrame, targets: dict
+    mcmc_df: pd.DataFrame, do_df: pd.DataFrame, targets: dict, use_weights: bool = False
 ) -> pd.DataFrame:
     """
     Calculate quantiles from a table of weighted values.
@@ -45,7 +45,7 @@ def calculate_mcmc_uncertainty(
     return _calculate_mcmc_uncertainty(df, targets)
 
 
-def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict) -> pd.DataFrame:
+def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict, use_weights: bool = False) -> pd.DataFrame:
     """
     Calculate quantiles from a table of weighted values.
     See calc_mcmc_weighted_values for how these weights are calculated.
@@ -70,8 +70,12 @@ def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict) -> pd.DataFrame
                 output_name = target["output_key"]
                 if not output_name in masked_df.columns:
                     continue
-
-                weighted_values = np.repeat(masked_df[output_name], masked_df["weight"])
+                
+                if use_weights:
+                    weighted_values = np.repeat(masked_df[output_name], masked_df["weight"])
+                else:
+                    weighted_values = masked_df[output_name]
+                    
                 quantile_vals = np.quantile(weighted_values, quantiles)
                 for q_idx, q_value in enumerate(quantile_vals):
                     datum = {

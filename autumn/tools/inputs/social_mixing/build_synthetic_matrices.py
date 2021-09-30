@@ -232,6 +232,9 @@ def _get_proportion_between_ages_among_agegroup(
     """
     Work out the proportion of population aged within age_range_numerator among the age group age_range_denominator
     """
+    if age_range_numerator == age_range_denominator:
+        return 1.
+
     numerator_low, numerator_up = age_range_numerator
     denominator_low, denominator_up = age_range_denominator
 

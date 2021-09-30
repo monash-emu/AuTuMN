@@ -1,14 +1,16 @@
 import numpy as np
+
 from summer import Overwrite
 from summer.adjust import AdjustmentComponent
 
 from autumn.models.covid_19.constants import Clinical, Compartment, CLINICAL_STRATA, DEATH_CLINICAL_STRATA
 from autumn.models.covid_19.preprocess import adjusterprocs
 from autumn.models.covid_19.model import preprocess
-from autumn.models.covid_19.preprocess.case_detection import build_detected_proportion_func
+from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools import inputs
 from autumn.tools.utils.utils import apply_odds_ratio_to_multiple_proportions, subdivide_props
+
 
 NUM_AGE_STRATA = 16
 ALLOWED_ROUNDING_ERROR = 6
@@ -201,13 +203,14 @@ def get_all_adjustments(
     Entry adjustments.
     """
 
-    get_detected_proportion = build_detected_proportion_func(AGEGROUP_STRATA, country, pop, testing_to_detection)
-    entry_adjs = get_entry_adjustments(abs_props, get_detected_proportion, within_early_exposed)
+    cdr_function = find_cdr_function_from_test_data(testing_to_detection, country.iso3, pop.region, pop.year)
 
-    # These are the systems that will compute (in a vectorized fashion) the adjustments added using AdjustmentComponents
+    entry_adjs = get_entry_adjustments(abs_props, cdr_function, within_early_exposed)
+
+    # These are the systems that will compute (in a vectorised fashion) the adjustments added using AdjustmentComponents
     adjuster_systems = {
-        'isolated': adjusterprocs.AbsPropIsolatedSystem(within_early_exposed),
-        'sympt_non_hosp': adjusterprocs.AbsPropSymptNonHospSystem(within_early_exposed)
+        "isolated": adjusterprocs.AbsPropIsolatedSystem(within_early_exposed),
+        "sympt_non_hosp": adjusterprocs.AbsPropSymptNonHospSystem(within_early_exposed)
     }
 
     """
@@ -259,6 +262,7 @@ def get_all_adjustments(
     """
     Find death and survival rates from death proportions and sojourn times.
     """
+
     death_rates = {
         stratum: relative_death_props[stratum] * within_late_rates[stratum]
         for stratum in DEATH_CLINICAL_STRATA
@@ -280,4 +284,4 @@ def get_all_adjustments(
     Return all the adjustments.
     """
 
-    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, get_detected_proportion, adjuster_systems
+    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, cdr_function, adjuster_systems

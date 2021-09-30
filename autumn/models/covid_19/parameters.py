@@ -268,6 +268,21 @@ class TestingToDetection(BaseModel):
     smoothing_period: int
     test_multiplier: Optional[TimeSeries]
 
+    @validator("assumed_tests_parameter", allow_reuse=True)
+    def check_assumed_tests_positive(val):
+        assert 0. <= val, f"Assumed tests is negative: {val}"
+        return val
+
+    @validator("assumed_cdr_parameter", allow_reuse=True)
+    def check_assumed_cdr_is_proportion(val):
+        assert 0. <= val <= 1., f"Assumed CDR parameter is not in range [0, 1]: {val}"
+        return val
+
+    @validator("smoothing_period", allow_reuse=True)
+    def check_smoothing_period(val):
+        assert 1 < val, f"Smoothing period must be greater than 1: {val}"
+        return val
+
 
 class SusceptibilityHeterogeneity(BaseModel):
     """
@@ -485,7 +500,12 @@ class ContactTracing(BaseModel):
 
     @ validator("assumed_prev", allow_reuse=True)
     def check_prevalence(val):
-        assert 0. <= val, f"Contact tracing assumed prevalence must not be negative: {val}"
+        assert 0. <= val <= 1., f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
+        return val
+
+    @ validator("assumed_trace_prop", allow_reuse=True)
+    def check_prevalence(val):
+        assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
     # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated

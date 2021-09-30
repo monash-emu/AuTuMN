@@ -1,39 +1,25 @@
 import numpy as np
 import numba
 
-from autumn.models.covid_19.constants import (
-    Compartment,
-    INFECTIOUS_COMPARTMENTS,
-    Clinical,
-    CLINICAL_STRATA,
-    NOTIFICATION_CLINICAL_STRATA
-)
-
 from summer.compute import ComputedValueProcessor, find_sum
 
+from autumn.models.covid_19.constants import (
+    Compartment, INFECTIOUS_COMPARTMENTS, Clinical, CLINICAL_STRATA, NOTIFICATION_CLINICAL_STRATA
+)
 
-def get_tracing_param(assumed_trace_prop, assumed_prev, floor):
+
+def get_tracing_param(assumed_trace_prop: float, assumed_prev: float, floor: float) -> float:
     """
     Calculate multiplier for the relationship between traced proportion and prevalence for use in the next function.
 
-    Solving:
+    Solving the following equation to get the returned value:
     floor + (1 - floor) exp -(result * assumed_prev) = assumed_trace_prop
-
-    for result.
     """
 
-    assert 0. <= assumed_trace_prop <= 1.001
-    assert 0. <= assumed_prev <= 1.
+    # FIXME: Unable to move this to parameter validation, not sure why
     assert floor < assumed_trace_prop, "Assumed trace proportion less than or equal to contact tracing floor"
+
     return -np.log((assumed_trace_prop - floor) / (1. - floor)) / assumed_prev
-
-
-def get_traced_prop(trace_param, prev):
-    """
-    Function for the proportion of detected people who are traced.
-    """
-
-    return np.exp(-prev * trace_param)
 
 
 def contact_tracing_func(time, computed_values):
@@ -44,17 +30,10 @@ def contact_tracing_func(time, computed_values):
     return computed_values["traced_flow_rate"]
 
 
-def get_infectiousness_level(compartment, clinical, non_sympt_infect_multiplier, late_infect_multiplier):
-    if clinical == Clinical.NON_SYMPT:
-        return non_sympt_infect_multiplier
-    elif compartment == Compartment.LATE_ACTIVE and clinical in NOTIFICATION_CLINICAL_STRATA:
-        return late_infect_multiplier[clinical]
-    else:
-        return 1.
-
-
 @numba.jit(nopython=True)
-def get_proportion_detect_force_infection(compartment_values, notif_comps, notif_levels, non_notif_comps, non_notif_levels):
+def get_proportion_detect_force_infection(
+        compartment_values, notif_comps, notif_levels, non_notif_comps, non_notif_levels
+):
     """
     Calculate the proportion of the force of infection arising from ever-detected individuals
     See PropIndexDetectedProc for details on calling this function
@@ -80,14 +59,16 @@ def get_proportion_detect_force_infection(compartment_values, notif_comps, notif
 
 class PrevalenceProc(ComputedValueProcessor):
     """
-    Calculate prevalence from the active disease compartments.
+    Track the current prevalence of all the active disease compartments for later use to determine the efficiency of
+    contact tracing.
     """
+
     def __init__(self):
         self.active_comps = None
 
     def prepare_to_run(self, compartments, flows):
         """
-        Identify the compartments with active disease for the prevalence calculation
+        Identify the compartments with active disease for the prevalence calculation.
         """
 
         self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
@@ -95,7 +76,7 @@ class PrevalenceProc(ComputedValueProcessor):
 
     def process(self, compartment_values, computed_values, time):
         """
-        Calculate the actual prevalence during run-time
+        Calculate the current prevalence during run-time.
         """
 
         return find_sum(compartment_values[self.active_comps]) / find_sum(compartment_values)
@@ -103,8 +84,9 @@ class PrevalenceProc(ComputedValueProcessor):
 
 class PropDetectedTracedProc(ComputedValueProcessor):
     """
-    Calculate the proportion of detected cases which have their contacts traced.
+    Calculate the proportion of contacts of successfully detected cases which are traced.
     """
+
     def __init__(self, trace_param, floor):
         self.trace_param = trace_param
         self.floor = floor
@@ -113,13 +95,15 @@ class PropDetectedTracedProc(ComputedValueProcessor):
         """
         Formula for calculating the proportion from the already-processed contact tracing parameter,
         which has been worked out in the get_tracing_param function above.
-        Ensures that the proportion is bounded [0, 1]
         """
 
-        prop_of_detected_traced = \
-            self.floor + (1. - self.floor) * np.exp(-computed_values["prevalence"] * self.trace_param)
-        msg = f"floor: {prop_of_detected_traced}\n prev: {computed_values['prevalence']}\n param: {self.trace_param}"
-        assert 0. <= prop_of_detected_traced <= 1., msg
+        # Decreasing exponential function of current prevalence descending from one to the floor value
+        current_prevalence = computed_values["prevalence"]
+        prop_of_detected_traced = self.floor + (1. - self.floor) * np.exp(-current_prevalence * self.trace_param)
+
+        msg = f"Proportion of detectable contacts detected not between floor value and 1: {prop_of_detected_traced}"
+        assert self.floor <= prop_of_detected_traced <= 1., msg
+
         return prop_of_detected_traced
 
 
@@ -137,17 +121,18 @@ class PropIndexDetectedProc(ComputedValueProcessor):
         Identify the infectious compartments for the prevalence calculation by infection stage and clinical status.
         Also captures the infectiousness levels by infection stage and clinical status.
         """
-        notif_comps = []
-        non_notif_comps = []
-        notif_levels = []
-        non_notif_levels = []
+        notif_comps, non_notif_comps, notif_levels, non_notif_levels = [], [], [], []
 
         for compartment in INFECTIOUS_COMPARTMENTS:
             for clinical in CLINICAL_STRATA:
                 
-                infectiousness_level = get_infectiousness_level(
-                    compartment, clinical, self.non_sympt_infect_multiplier, self.late_infect_multiplier)
-            
+                if clinical == Clinical.NON_SYMPT:
+                    infectiousness_level = self.non_sympt_infect_multiplier
+                elif compartment == Compartment.LATE_ACTIVE and clinical in NOTIFICATION_CLINICAL_STRATA:
+                    infectiousness_level = self.late_infect_multiplier[clinical]
+                else:
+                    infectiousness_level = 1.
+
                 # Get all the matching compartments for the current infectious/stratification level
                 cur_comps = [idx for idx, comp in enumerate(compartments) if
                      comp.has_name(compartment) and
@@ -173,7 +158,9 @@ class PropIndexDetectedProc(ComputedValueProcessor):
         """
 
         # Call the optimised numba JIT version of this function (we cannot JIT directly on the class member function)
-        return get_proportion_detect_force_infection(compartment_values, self.notif_comps, self.notif_levels, self.non_notif_comps, self.non_notif_levels)
+        return get_proportion_detect_force_infection(
+            compartment_values, self.notif_comps, self.notif_levels, self.non_notif_comps, self.non_notif_levels
+        )
 
 
 class TracedFlowRateProc(ComputedValueProcessor):

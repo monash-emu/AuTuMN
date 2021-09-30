@@ -1,35 +1,19 @@
-description: Vaccination continues until 31 Dec / Restrictions lifted on 31 Dec
+description: 30% onsite learning on 1 Dec 2021
 
 time:
-  start: 627  # 18 Sep 2021
+  start: 670  # 31 Oct 2021
 
 mobility:
   mixing:
-    other_locations:
-      append: true
-      times:
-        - 2021-12-31
-        - 2022-01-02
-      values:
-        - - repeat_prev
-        - 1.
-    work:
-      append: true
-      times:
-        - 2021-12-31
-        - 2022-01-02
-      values:
-        - - repeat_prev
-        - 1.
     school:
       append: false
       times:
-        - 2021-12-31
-        - 2022-01-02
+        - 2020-03-15
+        - 2020-03-16
+        - 2021-12-01
+        - 2021-12-03
       values:
-        - 0.
         - 1.
-
-vaccination_risk:  # props do not matter. AEs are calculated in notebook anyway
-  prop_astrazeneca: 0.
-  prop_mrna: 1.
+        - 0.
+        - 0.
+        - 0.3

@@ -1,4 +1,4 @@
-description: Scenario 5,What if 2-month less strict lockdown was initiated from July 11 - Sep 11
+description: Scenario 8,What if 2-month less strict lockdown was initiated from July 11 - Sep 11
 time:
   start: 457 # 10th July 2021
 
@@ -53,5 +53,3 @@ mobility:
         - 0.498
         - 0.498
         - 0.6
-
-

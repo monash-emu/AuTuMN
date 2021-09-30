@@ -1,4 +1,4 @@
-description: Scenario 3,What if strict lockdown was initiated from July 11 - Aug 25 (same duration as actual lockdown)
+description: Scenario 5,What if strict lockdown was initiated from July 11 - Aug 25 (same duration as actual lockdown)
 time:
   start: 457 # 10th July 2021
 
@@ -29,5 +29,3 @@ mobility:
         - 0.311
         - 0.311
         - 0.6
-
-

@@ -1,4 +1,4 @@
-description: Scenario 4,What if less strict lockdown was initiated from April 21 - June 21
+description: Scenario 6,What if less strict lockdown was initiated from April 21 - June 21
 time:
   start: 476 # 20th April 2021
 
@@ -53,5 +53,3 @@ mobility:
         - 0.498
         - 0.498
         - 0.6
-
-

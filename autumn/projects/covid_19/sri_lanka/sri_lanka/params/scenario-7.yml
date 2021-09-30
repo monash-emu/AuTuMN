@@ -1,4 +1,4 @@
-description: Scenario 5,What if less strict lockdown was initiated from July 11 - Aug 25
+description: Scenario 7,What if less strict lockdown was initiated from July 11 - Aug 25
 time:
   start: 457 # 10th July 2021
 
@@ -53,5 +53,3 @@ mobility:
         - 0.498
         - 0.498
         - 0.6
-
-

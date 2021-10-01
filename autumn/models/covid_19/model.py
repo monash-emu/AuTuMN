@@ -11,7 +11,7 @@ from .preprocess.seasonality import get_seasonal_forcing
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
-    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH,
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes,
 )
 
 from . import preprocess
@@ -43,7 +43,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     params = Parameters(**params)
 
-    is_region_vic = params.vic_status in ("vic_super_2020", "vic_super_2021")
+    is_region_vic = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
 
     model = CompartmentalModel(
         times=[params.time.start, params.time.end],
@@ -88,19 +88,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Get input data
     """
-    if params.mixing_matrices:
-        if params.mixing_matrices.type == 'prem':
-            mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
-        elif params.mixing_matrices.type == 'extrapolated':
-            mixing_matrices = build_synthetic_matrices(
-                country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust,
-                pop.region
-            )
-        else:
-            raise Exception("Invalid mixing matrix type specified in parameters")
-    else:
-        # Default to prem matrices (old model runs)
+
+    if params.mixing_matrices.type == "prem":
         mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
+    elif params.mixing_matrices.type == "extrapolated":
+        mixing_matrices = build_synthetic_matrices(
+            country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust,
+            pop.region
+        )
 
     """
     Add intercompartmental flows
@@ -218,7 +213,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(cluster_strat)
         mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)
 
-    if params.vic_status == "vic_super_2021":
+    if params.vic_status == VicModelTypes.VIC_SUPER_2021:
         seed_start_time = params.vic_2021_seeding.seed_time
 
         for stratum in cluster_strat.strata:
@@ -317,7 +312,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         vacc_params = params.vaccination
 
         # Vic 2021 code is not generalisable
-        if params.vic_status == "vic_super_2021":
+        if params.vic_status == VicModelTypes.VIC_SUPER_2021:
             for i_component, roll_out_component in enumerate(vacc_params.roll_out_components):
                 for cluster in cluster_strat.strata:
                     add_vaccination_flows(
@@ -344,7 +339,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 )
 
     # Dive into summer internals to over-write mixing matrix
-    if params.vic_status in ("vic_super_2020", "vic_super_2021"):
+    if is_region_vic:
         model._mixing_matrices = [mixing_matrix_function]
 
     # Find the total population, used by multiple output types
@@ -371,9 +366,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         request_history_outputs(model)
     else:
         request_recovered_outputs(model, is_region_vic)
-
-    print()
-    print()
 
     # Contact tracing-related outputs
     if params.contact_tracing:

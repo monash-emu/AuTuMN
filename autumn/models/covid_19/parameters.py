@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE
+from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -187,6 +187,11 @@ class MixingMatrices(BaseModel):
     source_iso3: Optional[str]
     age_adjust: bool  # Only relevant if 'extrapolated' selected
 
+    @validator("type", allow_reuse=True)
+    def check_type(val):
+        assert val in ("extrapolated", "prem"), f"Mixing matrix request not permitted: {val}"
+        return val
+
 
 class AgeStratification(BaseModel):
     """
@@ -262,6 +267,21 @@ class TestingToDetection(BaseModel):
     assumed_cdr_parameter: float
     smoothing_period: int
     test_multiplier: Optional[TimeSeries]
+
+    @validator("assumed_tests_parameter", allow_reuse=True)
+    def check_assumed_tests_positive(val):
+        assert 0. <= val, f"Assumed tests is negative: {val}"
+        return val
+
+    @validator("assumed_cdr_parameter", allow_reuse=True)
+    def check_assumed_cdr_is_proportion(val):
+        assert 0. <= val <= 1., f"Assumed CDR parameter is not in range [0, 1]: {val}"
+        return val
+
+    @validator("smoothing_period", allow_reuse=True)
+    def check_smoothing_period(val):
+        assert 1 < val, f"Smoothing period must be greater than 1: {val}"
+        return val
 
 
 class SusceptibilityHeterogeneity(BaseModel):
@@ -480,7 +500,12 @@ class ContactTracing(BaseModel):
 
     @ validator("assumed_prev", allow_reuse=True)
     def check_prevalence(val):
-        assert 0. <= val, f"Contact tracing assumed prevalence must not be negative: {val}"
+        assert 0. <= val <= 1., f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
+        return val
+
+    @ validator("assumed_trace_prop", allow_reuse=True)
+    def check_prevalence(val):
+        assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
     # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated
@@ -549,6 +574,6 @@ class Parameters:
 
     @validator("vic_status", allow_reuse=True)
     def check_status(val):
-        vic_options = ("non_vic", "vic_super_2020", "vic_super_2021", "vic_region_2021")
+        vic_options = VIC_MODEL_OPTIONS
         assert val in vic_options, f"Invalid option selected for Vic status: {val}"
         return val

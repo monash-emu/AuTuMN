@@ -187,12 +187,12 @@ def add_clinical_adjustments_to_strat(
 
 def add_vaccination_flows(
         model, roll_out_component, age_strata, one_dose, coverage_override=None, vic_cluster=None,
-        additional_strata={},
+        additional_strata="",
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
-    cluster_stratum = {"cluster": additional_strata}
+    cluster_stratum = {"cluster": additional_strata} if additional_strata else {}
 
     # First phase of the Victorian roll-out, informed by vaccination data
     if roll_out_component.vic_supply_to_history:

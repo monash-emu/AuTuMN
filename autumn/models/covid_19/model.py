@@ -217,7 +217,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         seed_start_time = params.vic_2021_seeding.seed_time
 
         for stratum in cluster_strat.strata:
-            seed = params.vic_2021_seeding.__getattribute__(stratum)
+            seed = params.vic_2021_seeding.clusters.__getattribute__(stratum)
 
             # Function must be bound in loop with optional argument
             def model_seed_func(time, computed_values, seed=seed):
@@ -229,6 +229,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest=Compartment.EARLY_EXPOSED,
                 dest_strata={"cluster": stratum.replace("-", "_")},
             )
+
+    elif params.vic_status == VicModelTypes.VIC_REGION_2021:
+        seed_start_time = params.vic_2021_seeding.seed_time
+        seed = params.vic_2021_seeding.seed
+
+        def model_seed_func(time, computed_values, seed=seed):
+            return seed if seed_start_time < time < seed_start_time + 5. else 0.
+
+        model.add_importation_flow(
+            "seed",
+            model_seed_func,
+            dest=Compartment.EARLY_EXPOSED,
+        )
 
     # Contact tracing stratification
     if params.contact_tracing:

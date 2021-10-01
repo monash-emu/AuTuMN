@@ -334,7 +334,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                         age_strat.strata,
                         params.vaccination.one_dose,
                         vic_cluster=cluster,
-                        additional_strata={"cluster": cluster},
+                        cluster_stratum={"cluster": cluster},
                     )
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
             add_vaccination_flows(

@@ -312,8 +312,7 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
-class Vic2021Seeding(BaseModel):
-    seed_time: float
+class Vic2021ClusterSeeds(BaseModel):
     north_metro: float
     south_east_metro: float
     south_metro: float
@@ -329,6 +328,18 @@ class Vic2021Seeding(BaseModel):
         for region in Region.VICTORIA_SUBREGIONS:
             region_name = region.replace("-", "_")
             assert 0. <= values[region_name], f"Seed value for cluster {region_name} is negative"
+        return values
+
+
+class Vic2021Seeding(BaseModel):
+    seed_time: float
+    clusters: Optional[Vic2021ClusterSeeds]
+    seed: Optional[float]
+
+    @root_validator(allow_reuse=True)
+    def check_request(cls, values):
+        msg = "Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled"
+        assert int(bool(values["clusters"])) + int(bool(values["clusters"])) == 1, msg
         return values
 
 

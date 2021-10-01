@@ -13,7 +13,7 @@ Select the all the '<>.encrypted.json' file and  data/secret-hashes.json and pus
 
 This readme documents the Philippines target calibration data update process.
 
-1. Update \autumun\inputs\covid_phl\fetch.py Testing numbers - do this before a rebuild of inputs.db
+1. Update \autumun\inputs\covid_phl\fetch.py Testing numbers - do this before a rebuild of inputs.secret.db
 The daily data link is available from this [link](https://drive.google.com/drive/folders/1ZPPcVU4M7T-dtRyUceb0pMAd8ickYf8o).
 On page 5 of the Readme there will be a link to the daily data folder e.g. Link to DOH Data Drop (09/08): https://bit.ly/2F8oypc.
 *alternate link DoH data: https://ncovtracker.doh.gov.ph/ (click on box in top right labeled "Download COVID-19 COH Data Drop")*
@@ -22,7 +22,7 @@ Once in the google drive folder right-click file "DOH COVID Data Drop_ YYYYMMDD 
 e.g. https://drive.google.com/file/d/1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C/view?usp=sharing
 Update \autumun\inputs\covid_phl\fetch.py DATA URL = '1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C'
 
-2. Now update inputs.db by executing the following at your python environment shell/conda prompt
+2. Now update inputs.secret.db by executing the following at your python environment shell/conda prompt
     python -m autumn db fetch
     python -m autumn db build
 

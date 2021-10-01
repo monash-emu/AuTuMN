@@ -38,7 +38,7 @@ logs/
 *ipynb_checkpoints*
 
 # Track input database.
-!data/inputs/inputs.db
+!data/inputs/inputs.secret.db
 
 # Website stuff
 node_modules/

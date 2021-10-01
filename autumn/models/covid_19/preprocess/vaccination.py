@@ -187,7 +187,7 @@ def add_clinical_adjustments_to_strat(
 
 def add_vaccination_flows(
         model, roll_out_component, age_strata, one_dose, coverage_override=None, vic_cluster=None,
-        additional_strata="",
+        additional_strata={},
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)

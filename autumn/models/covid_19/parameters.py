@@ -338,8 +338,9 @@ class Vic2021Seeding(BaseModel):
 
     @root_validator(allow_reuse=True)
     def check_request(cls, values):
-        msg = "Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled"
-        assert int(bool(values["clusters"])) + int(bool(values["clusters"])) == 1, msg
+        n_requests = int(bool(values["clusters"])) + int(bool(values["seed"]))
+        msg = f"Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled: {n_requests}"
+        assert n_requests == 1, msg
         return values
 
 

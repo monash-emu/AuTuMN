@@ -2,7 +2,12 @@ description: BASELINE
 
 vic_status: "vic_region_2021"
 
-infectious_seed: 1.
+vic_2021_seeding:
+  seed_time: 570
+  seed: 1.
+
+contact_rate: 0.075
+infectious_seed: 0.
 seasonal_force: 0.
 
 mixing_matrices:

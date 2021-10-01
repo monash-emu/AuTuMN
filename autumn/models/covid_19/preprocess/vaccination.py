@@ -186,18 +186,20 @@ def add_clinical_adjustments_to_strat(
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose, coverage_override=None, additional_strata={},
+        model, roll_out_component, age_strata, one_dose, coverage_override=None, vic_cluster=None,
+        additional_strata="",
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
+    cluster_stratum = {"cluster": additional_strata}
 
     # First phase of the Victorian roll-out, informed by vaccination data
     if roll_out_component.vic_supply_to_history:
 
         # Get the cluster-specific historical vaccination numbers
         coverage = get_dhhs_vaccination_numbers(
-            additional_strata["cluster"].upper(),
+            vic_cluster.upper(),
             start_age=roll_out_component.age_min
         )[1].max()
 
@@ -260,9 +262,9 @@ def add_vaccination_flows(
 
         for eligible_age_group in eligible_age_groups:
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
-            _source_strata.update(additional_strata)
+            _source_strata.update(cluster_stratum)
             _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
-            _dest_strata.update(additional_strata)
+            _dest_strata.update(cluster_stratum)
             if roll_out_component.supply_period_coverage or \
                     roll_out_component.vic_supply_to_target or \
                     roll_out_component.vic_supply_to_history:
@@ -293,9 +295,9 @@ def add_vaccination_flows(
         # Add blank flows to make things simpler when we come to doing the outputs
         for ineligible_age_group in ineligible_age_groups:
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": ineligible_age_group}
-            _source_strata.update(additional_strata)
+            _source_strata.update(cluster_stratum)
             _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": ineligible_age_group}
-            _dest_strata.update(additional_strata)
+            _dest_strata.update(cluster_stratum)
             model.add_transition_flow(
                 name="vaccination",
                 fractional_rate=0.,

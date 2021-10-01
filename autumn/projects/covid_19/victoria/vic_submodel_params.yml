@@ -26,7 +26,7 @@ time:
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
-  assumed_cdr_parameter: .3  # Calibrated
+  assumed_cdr_parameter: .07  # Calibrated
   smoothing_period: 7
 
 clinical_stratification:

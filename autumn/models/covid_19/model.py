@@ -329,14 +329,31 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             for i_component, roll_out_component in enumerate(vacc_params.roll_out_components):
                 for cluster in cluster_strat.strata:
                     add_vaccination_flows(
-                        model, vacc_params.roll_out_components[i_component], age_strat.strata,
-                        params.vaccination.one_dose, additional_strata={"cluster": cluster},
+                        model,
+                        vacc_params.roll_out_components[i_component],
+                        age_strat.strata,
+                        params.vaccination.one_dose,
+                        vic_cluster=cluster,
+                        cluster_stratum={"cluster": cluster},
                     )
+        elif params.vic_status == VicModelTypes.VIC_REGION_2021:
+            add_vaccination_flows(
+                model,
+                vacc_params.roll_out_components[0],
+                age_strat.strata,
+                params.vaccination.one_dose,
+                vic_cluster=params.population.region
+            )
+
         else:
             for roll_out_component in vacc_params.roll_out_components:
                 coverage_override = vacc_params.coverage_override if vacc_params.coverage_override else None
                 add_vaccination_flows(
-                    model, roll_out_component, age_strat.strata, params.vaccination.one_dose, coverage_override
+                    model,
+                    roll_out_component,
+                    age_strat.strata,
+                    params.vaccination.one_dose,
+                    coverage_override
                 )
 
         # Add transition from single dose to fully vaccinated

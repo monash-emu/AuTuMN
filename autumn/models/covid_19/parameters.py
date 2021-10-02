@@ -420,7 +420,8 @@ class RollOutFunc(BaseModel):
             values.get("supply_period_coverage"), \
             values.get("supply_timeseries"), \
             values.get("vic_supply_to_history"), \
-            values.get("vic_supply_to_target")
+            values.get("vic_supply_to_target"), \
+            values.get("vic_supply_region_to_target")
         has_supply = (int(bool(i_comp)) for i_comp in components)
         assert sum(has_supply) == 1, "Roll out function must have just one period or timeseries for supply"
         if "age_min" in values:

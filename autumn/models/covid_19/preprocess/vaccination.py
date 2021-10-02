@@ -237,6 +237,9 @@ def add_vaccination_flows(
             roll_out_component.vic_supply_to_target.end_time,
         )
 
+    elif roll_out_component.vic_supply_region_to_target:
+        print("hi there")
+
     # Coverage based vaccination
     elif roll_out_component.supply_period_coverage:
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(

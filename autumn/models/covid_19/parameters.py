@@ -413,6 +413,7 @@ class RollOutFunc(BaseModel):
     supply_period_coverage: Optional[VaccCoveragePeriod]
     vic_supply_to_history: Optional[VicHistoryPeriod]
     vic_supply_to_target: Optional[VaccCoveragePeriod]
+    vic_supply_region_to_target: Optional[VaccCoveragePeriod]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):

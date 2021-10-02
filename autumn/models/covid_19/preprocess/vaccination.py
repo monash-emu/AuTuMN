@@ -238,7 +238,27 @@ def add_vaccination_flows(
         )
 
     elif roll_out_component.vic_supply_region_to_target:
-        print("hi there")
+
+        # Get the cluster-specific historical vaccination numbers
+        previous_coverage = get_dhhs_vaccination_numbers(
+            vic_cluster.upper(),
+            start_age=roll_out_component.age_min
+        )[1].max()
+
+        # Increase to the end of the simulation period, making sure it is an increase
+        coverage = max((roll_out_component.vic_supply_region_to_target.coverage - previous_coverage), 0.) / \
+                   (1. - previous_coverage)
+
+        # Make sure we're dealing with reasonably sensible coverage values
+        assert 0. <= coverage <= 1.
+        sensible_coverage = min(coverage, 0.96)
+
+        # Create the function
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+            sensible_coverage,
+            roll_out_component.vic_supply_region_to_target.start_time,
+            roll_out_component.vic_supply_region_to_target.end_time,
+        )
 
     # Coverage based vaccination
     elif roll_out_component.supply_period_coverage:
@@ -271,7 +291,8 @@ def add_vaccination_flows(
             _dest_strata.update(cluster_stratum)
             if roll_out_component.supply_period_coverage or \
                     roll_out_component.vic_supply_to_target or \
-                    roll_out_component.vic_supply_to_history:
+                    roll_out_component.vic_supply_to_history or \
+                    roll_out_component.vic_supply_region_to_target:
 
                 # The roll-out function is applied as a rate that multiplies the source compartments
                 model.add_transition_flow(

@@ -4,11 +4,11 @@ vic_status: "vic_region_2021"
 
 vic_2021_seeding:
   seed_time: 570
-  seed: 1.
+  seed: 1.5
 
-contact_rate: 0.075
+contact_rate: 0.125
 infectious_seed: 0.
-seasonal_force: 0.
+seasonal_force: 0.3
 
 mixing_matrices:
   type: extrapolated
@@ -161,7 +161,7 @@ vaccination:
   fully_vaccinated:
     overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
-    vacc_reduce_infectiousness: 0.25  # Using same reference, but more effect for Alpha than for Delta
+    vacc_reduce_infectiousness: 0.5  # Using same reference, but more effect for Alpha than for Delta
   roll_out_components:
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
       vic_supply_to_history:

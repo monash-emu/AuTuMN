@@ -326,7 +326,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Vic 2021 code is not generalisable
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            for i_component, roll_out_component in enumerate(vacc_params.roll_out_components):
+            for i_component in range(len(vacc_params.roll_out_components)):
                 for cluster in cluster_strat.strata:
                     add_vaccination_flows(
                         model,
@@ -337,13 +337,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                         cluster_stratum={"cluster": cluster},
                     )
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            add_vaccination_flows(
-                model,
-                vacc_params.roll_out_components[0],
-                age_strat.strata,
-                params.vaccination.one_dose,
-                vic_cluster=params.population.region
-            )
+            for i_component in range(len(vacc_params.roll_out_components)):
+                add_vaccination_flows(
+                    model,
+                    vacc_params.roll_out_components[i_component],
+                    age_strat.strata,
+                    params.vaccination.one_dose,
+                    vic_cluster=params.population.region
+                )
 
         else:
             for roll_out_component in vacc_params.roll_out_components:

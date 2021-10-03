@@ -60,8 +60,10 @@ def get_proportion_detect_force_infection(
     # Otherwise return the calculated proportion
     else:
         proportion_detect_force_infect = detected_force_of_infection / total_force_of_infection
+
         msg = f"Prop force infection attributable to the non-notified not in [0, 1]: {proportion_detect_force_infect}"
         assert 0. <= proportion_detect_force_infect <= 1., msg
+
         return proportion_detect_force_infect
 
 
@@ -190,7 +192,13 @@ class TracedFlowRateProc(ComputedValueProcessor):
         for traced_flow_rate gives the following:
         """
 
+        # Find the proportion of all infections that lead to contacts being traced
         traced_prop = computed_values["prop_detected_traced"] * computed_values["prop_contacts_with_detected_index"]
-        traced_flow_rate = self.incidence_flow_rate * traced_prop / max((1. - traced_prop), 1e-6)
+
+        # Use this proportion and the solution to the equation above to get teh adjustment, avoiding zero division
+        traced_incidence_adjustment = traced_prop / max((1. - traced_prop), 1e-6)
+
+        # Get and check the final value
+        traced_flow_rate = self.incidence_flow_rate * traced_incidence_adjustment
         assert 0. <= traced_flow_rate
         return traced_flow_rate

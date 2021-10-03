@@ -8,8 +8,18 @@ target_start_time = 454
 priors = [
     UniformPrior("contact_rate", [0.025, 0.05]),
 ]
-regional_target_names = ("notifications", "hospital_admissions")
-metro_target_names = ("notifications", "hospital_admissions")
+regional_target_names = (
+    "notifications",
+    "hospital_admissions"
+)
+metro_target_names = (
+    "notifications",
+    "infection_deaths",
+    "hospital_admissions",
+    "icu_admissions",
+    "hospital_occupancy",
+    "icu_occupancy",
+)
 
 
 def collate_regional_targets(ts_set):

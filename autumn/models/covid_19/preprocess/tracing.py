@@ -61,9 +61,8 @@ def get_proportion_detect_force_infection(
     else:
         proportion_detect_force_infect = detected_force_of_infection / total_force_of_infection
 
-        msg = f"Prop force infection attributable to the non-notified not in [0, 1]: {proportion_detect_force_infect}"
+        msg = "Force of infection not in range [0, 1]"
         assert 0. <= proportion_detect_force_infect <= 1., msg
-
         return proportion_detect_force_infect
 
 

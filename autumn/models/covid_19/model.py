@@ -8,6 +8,7 @@ from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.preprocess.case_detection import CdrProc
 from .preprocess.seasonality import get_seasonal_forcing
+from .preprocess.testing import find_cdr_function_from_test_data
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
@@ -157,7 +158,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     # Stratify the model by clinical status
-    clinical_strat, get_detected_proportion, adjustment_systems = get_clinical_strat(params)
+    get_detected_proportion = find_cdr_function_from_test_data(
+        params.testing_to_detection, country.iso3, pop.region, pop.year
+    )
+    clinical_strat, adjustment_systems = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
 
     # Add the adjuster systems used by the clinical stratification
@@ -208,7 +212,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             )
 
     # Stratify model by Victorian sub-region (used for Victorian cluster model)
-    if params.vic_status in ("vic_super_2020", "vic_super_2021"):
+    if params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021):
         cluster_strat = get_cluster_strat(params)
         model.stratify_with(cluster_strat)
         mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)

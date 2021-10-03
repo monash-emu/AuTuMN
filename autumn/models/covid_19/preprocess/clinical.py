@@ -6,7 +6,6 @@ from summer.adjust import AdjustmentComponent
 from autumn.models.covid_19.constants import Clinical, Compartment, CLINICAL_STRATA, DEATH_CLINICAL_STRATA
 from autumn.models.covid_19.preprocess import adjusterprocs
 from autumn.models.covid_19.model import preprocess
-from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools import inputs
 from autumn.tools.utils.utils import apply_odds_ratio_to_multiple_proportions, subdivide_props
@@ -47,7 +46,7 @@ def get_absolute_strata_proportions(symptomatic_props: list, icu_props: float, h
     }
 
 
-def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
+def get_entry_adjustments(abs_props, early_rate):
     """
     Gather together all the entry adjustments, two of which are functions of time and three are constant over time.
     """
@@ -60,22 +59,22 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
         proportion_sympt = abs_props["sympt"][age_idx]
         proportion_hosp = abs_props["hospital"][age_idx]
 
-        proportions = {'proportion_sympt': proportion_sympt, 'proportion_hosp': proportion_hosp}
+        proportions = {"proportion_sympt": proportion_sympt, "proportion_hosp": proportion_hosp}
 
         # AdjustmentComponent contains all data required for the 'isolated' system to compute the values later
-        adj_isolated_component = AdjustmentComponent(system='isolated', data=proportions)
+        adj_isolated_component = AdjustmentComponent(system="isolated", data=proportions)
         adjustments[agegroup][Clinical.SYMPT_ISOLATE] = adj_isolated_component
 
         # AdjustmentComponent contains all data required for the 'sympt_non_hosp' system to compute the values later
-        adj_sympt_non_hospital_component = AdjustmentComponent(system='sympt_non_hosp', data=proportions)
+        adj_sympt_non_hospital_component = AdjustmentComponent(system="sympt_non_hosp", data=proportions)
         adjustments[agegroup][Clinical.SYMPT_NON_HOSPITAL] = adj_sympt_non_hospital_component
 
-        # Constant flow rates.
+        # Constant flow rates
         adjustments[agegroup].update({
             stratum: abs_props[stratum][age_idx] * early_rate for stratum in DEATH_CLINICAL_STRATA
         })
 
-        # Update the summer adjustments object.
+        # Update the summer adjustments object
         adjustments[agegroup] = {
             stratum: Overwrite(adjustments[agegroup][stratum]) for stratum in CLINICAL_STRATA
         }
@@ -164,8 +163,8 @@ Master function
 
 
 def get_all_adjustments(
-        clinical_params, country, pop, raw_ifr_props, sojourn, testing_to_detection, ifr_adjuster,
-        symptomatic_adjuster, hospital_adjuster, top_bracket_overwrite=None,
+        clinical_params, country, pop, raw_ifr_props, sojourn, ifr_adjuster, symptomatic_adjuster, hospital_adjuster,
+        top_bracket_overwrite=None,
 ):
 
     """
@@ -203,9 +202,7 @@ def get_all_adjustments(
     Entry adjustments.
     """
 
-    cdr_function = find_cdr_function_from_test_data(testing_to_detection, country.iso3, pop.region, pop.year)
-
-    entry_adjs = get_entry_adjustments(abs_props, cdr_function, within_early_exposed)
+    entry_adjs = get_entry_adjustments(abs_props, within_early_exposed)
 
     # These are the systems that will compute (in a vectorised fashion) the adjustments added using AdjustmentComponents
     adjuster_systems = {
@@ -284,4 +281,4 @@ def get_all_adjustments(
     Return all the adjustments.
     """
 
-    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, cdr_function, adjuster_systems
+    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, adjuster_systems

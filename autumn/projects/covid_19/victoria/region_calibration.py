@@ -14,7 +14,7 @@ regional_target_names = (
 )
 metro_target_names = (
     "notifications",
-    "infection_deaths",
+    # "infection_deaths",
     "hospital_admissions",
     "icu_admissions",
     "hospital_occupancy",

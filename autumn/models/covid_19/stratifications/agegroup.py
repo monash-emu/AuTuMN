@@ -4,7 +4,8 @@ import numpy as np
 from summer import Multiply, Stratification
 
 from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
-from autumn.models.covid_19.model import preprocess
+from autumn.models.covid_19.preprocess.age_specific_risk import get_adjusted_age_specific_mixing
+from autumn.models.covid_19.preprocess.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.covid_19.parameters import Parameters
 from autumn.tools.utils.utils import normalise_sequence
 
@@ -36,11 +37,11 @@ def get_agegroup_strat(
         else:
             adjustment_end_time = params.time.end
 
-        params.mobility.age_mixing = preprocess.age_specific_risk.get_adjusted_age_specific_mixing(
+        params.mobility.age_mixing = get_adjusted_age_specific_mixing(
             age_categories, adjustment_start_time, adjustment_end_time, contact_rate_multiplier
         )
 
-    dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic_mixing_matrix(
+    dynamic_mixing_matrix = build_dynamic_mixing_matrix(
         mixing_matrices,
         params.mobility,
         country,

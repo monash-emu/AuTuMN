@@ -1,7 +1,7 @@
 import numpy as np
 
 from autumn.models.covid_19.constants import (
-    VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY, COMPARTMENTS
+    VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
 )
 from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
@@ -118,16 +118,16 @@ def add_clinical_adjustments_to_strat(
     Get all the adjustments in the same way for both the history and vaccination stratifications.
     """
 
-    entry_adjs, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
+    entry_adjs, death_adjs, progress_adjs, recovery_adjs, _ = get_all_adjustments(
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, params.testing_to_detection, ifr_adjuster, symptomatic_adjuster,
+        params.sojourn, ifr_adjuster, symptomatic_adjuster,
         hospital_adjuster, top_bracket_overwrite,
     )
 
     # Make these calculations for the one-dose stratum, even if this is being called by the history stratification
-    second_entry_adjs, second_death_adjs, second_progress_adjs, second_recovery_adjs, _, _ = get_all_adjustments(
+    second_entry_adjs, second_death_adjs, second_progress_adjs, second_recovery_adjs, _ = get_all_adjustments(
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, params.testing_to_detection, second_ifr_adjuster, second_sympt_adjuster,
+        params.sojourn, second_ifr_adjuster, second_sympt_adjuster,
         second_hospital_adjuster, second_top_bracket_overwrite,
     )
 

@@ -39,7 +39,7 @@ def get_proportion_detect_force_infection(
         non_notif_levels: np.ndarray
 ) -> float:
     """
-    Calculate the proportion of the force of infection that is attributable to ever-detected individuals.
+    Calculate the proportion of the force of infection that is attributable to ever-detected individuals
     See PropIndexDetectedProc for details on calling this function
     """
 
@@ -118,19 +118,19 @@ class PropIndexDetectedProc(ComputedValueProcessor):
                 else:
                     infectiousness_level = 1.
 
-                # Get all the matching compartments for the current infectious/stratification combination
-                working_compartments = [
+                # Get all the matching compartments for the current infectious/stratification level
+                working_comps = [
                     idx for idx, comp in enumerate(compartments) if
                     comp.has_name(compartment) and comp.has_stratum("clinical", clinical)
                 ]
 
-                # Store these separately as notified and non-notified lists of compartments/indices and infectiousness
+                # Store these separately as notifying and non-notifying
                 if clinical in NOTIFICATION_CLINICAL_STRATA:
-                    notif_comps += working_compartments
-                    notif_levels += [infectiousness_level] * len(working_compartments)
+                    notif_comps += working_comps
+                    notif_levels += [infectiousness_level] * len(working_comps)
                 else:
-                    non_notif_comps += working_compartments
-                    non_notif_levels += [infectiousness_level] * len(working_compartments)
+                    non_notif_comps += working_comps
+                    non_notif_levels += [infectiousness_level] * len(working_comps)
 
         # Convert the indices and levels to numpy arrays
         self.notif_comps = np.array(notif_comps, dtype=int)
@@ -191,13 +191,10 @@ class TracedFlowRateProc(ComputedValueProcessor):
         for traced_flow_rate gives the following:
         """
 
-        # Find the proportion of all infections that lead to contacts being traced
+        # Proportion of all infections that are contact traced
         traced_prop = computed_values["prop_detected_traced"] * computed_values["prop_contacts_with_detected_index"]
 
-        # Use this proportion and the solution to the equation above to get teh adjustment, avoiding zero division
-        traced_incidence_adjustment = traced_prop / max((1. - traced_prop), 1e-6)
-
-        # Get and check the final value
-        traced_flow_rate = self.incidence_flow_rate * traced_incidence_adjustment
+        # Applied to adjust the incidence flow rate
+        traced_flow_rate = self.incidence_flow_rate * traced_prop / max((1. - traced_prop), 1e-6)
         assert 0. <= traced_flow_rate
         return traced_flow_rate

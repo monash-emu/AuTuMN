@@ -1,9 +1,7 @@
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
 
-# TODO: Look at contact tracing computed values
-# TODO: Write visualisation notebook section for contact tracing
-# TODO: Work out what is going on with seeding through importation
+# TODO: Work out what is going on with seeding through importation - summer behaviour need revision
 
 # Specify the general features of the calibration
 target_start_time = 454

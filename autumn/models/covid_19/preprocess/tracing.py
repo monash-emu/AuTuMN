@@ -32,25 +32,32 @@ def contact_tracing_func(time, computed_values):
 
 @numba.jit(nopython=True)
 def get_proportion_detect_force_infection(
-        compartment_values, notif_comps, notif_levels, non_notif_comps, non_notif_levels
-):
+        compartment_values: np.ndarray,
+        notified_comps: np.ndarray,
+        notif_levels: np.ndarray,
+        non_notified_comps: np.ndarray,
+        non_notif_levels: np.ndarray
+) -> float:
     """
-    Calculate the proportion of the force of infection arising from ever-detected individuals
+    Calculate the proportion of the force of infection that is attributable to ever-detected individuals
     See PropIndexDetectedProc for details on calling this function
     """
 
     non_detected_detected_force_of_infection = 0.
-    for i, c in enumerate(non_notif_comps):
-        non_detected_detected_force_of_infection += compartment_values[c] * non_notif_levels[i]
+    for i_comp, comp in enumerate(non_notified_comps):
+        non_detected_detected_force_of_infection += compartment_values[comp] * non_notif_levels[i_comp]
         
     detected_force_of_infection = 0.
-    for i, c in enumerate(notif_comps):
-        detected_force_of_infection += compartment_values[c] * notif_levels[i]
+    for i_comp, comp in enumerate(notified_comps):
+        detected_force_of_infection += compartment_values[comp] * notif_levels[i_comp]
         
     total_force_of_infection = non_detected_detected_force_of_infection + detected_force_of_infection
 
+    # Return zero to prevent division by zero error
     if total_force_of_infection == 0.:
         return 0.
+
+    # Otherwise return the calculated proportion
     else:
         proportion_detect_force_infection = detected_force_of_infection / total_force_of_infection
         assert 0. <= proportion_detect_force_infection <= 1.
@@ -82,6 +89,63 @@ class PrevalenceProc(ComputedValueProcessor):
         return find_sum(compartment_values[self.active_comps]) / find_sum(compartment_values)
 
 
+class PropIndexDetectedProc(ComputedValueProcessor):
+    """
+    Calculate the proportion of all contacts whose index case is ever detected.
+    """
+
+    def __init__(self, non_sympt_infect_multiplier, late_infect_multiplier):
+        self.non_sympt_infect_multiplier = non_sympt_infect_multiplier
+        self.late_infect_multiplier = late_infect_multiplier
+
+    def prepare_to_run(self, compartments, flows):
+        """
+        Identify the infectious compartments for the prevalence calculation by infection stage and clinical status.
+        Also captures the infectiousness levels by infection stage and clinical status.
+        """
+        notif_comps, non_notif_comps, notif_levels, non_notif_levels = [], [], [], []
+
+        for compartment in INFECTIOUS_COMPARTMENTS:
+            for clinical in CLINICAL_STRATA:
+
+                if clinical == Clinical.NON_SYMPT:
+                    infectiousness_level = self.non_sympt_infect_multiplier
+                elif compartment == Compartment.LATE_ACTIVE and clinical in NOTIFICATION_CLINICAL_STRATA:
+                    infectiousness_level = self.late_infect_multiplier[clinical]
+                else:
+                    infectiousness_level = 1.
+
+                # Get all the matching compartments for the current infectious/stratification level
+                working_comps = [
+                    idx for idx, comp in enumerate(compartments) if
+                    comp.has_name(compartment) and comp.has_stratum("clinical", clinical)
+                ]
+
+                # Store these separately as notifying and non-notifying
+                if clinical in NOTIFICATION_CLINICAL_STRATA:
+                    notif_comps += working_comps
+                    notif_levels += [infectiousness_level] * len(working_comps)
+                else:
+                    non_notif_comps += working_comps
+                    non_notif_levels += [infectiousness_level] * len(working_comps)
+
+        # Convert the indices and levels to numpy arrays
+        self.notif_comps = np.array(notif_comps, dtype=int)
+        self.notif_levels = np.array(notif_levels, dtype=float)
+        self.non_notif_comps = np.array(non_notif_comps, dtype=int)
+        self.non_notif_levels = np.array(non_notif_levels, dtype=float)
+
+    def process(self, compartment_values, computed_values, time):
+        """
+        Calculate the proportion of the force of infection arising from ever-detected individuals
+        """
+
+        # Call the optimised numba JIT version of this function (we cannot JIT directly on the class member function)
+        return get_proportion_detect_force_infection(
+            compartment_values, self.notif_comps, self.notif_levels, self.non_notif_comps, self.non_notif_levels
+        )
+
+
 class PropDetectedTracedProc(ComputedValueProcessor):
     """
     Calculate the proportion of contacts of successfully detected cases which are traced.
@@ -107,62 +171,6 @@ class PropDetectedTracedProc(ComputedValueProcessor):
         return prop_of_detected_traced
 
 
-class PropIndexDetectedProc(ComputedValueProcessor):
-    """
-    Calculate the proportion of all contacts whose index case is ever detected.
-    """
-
-    def __init__(self, non_sympt_infect_multiplier, late_infect_multiplier):
-        self.non_sympt_infect_multiplier = non_sympt_infect_multiplier
-        self.late_infect_multiplier = late_infect_multiplier
-
-    def prepare_to_run(self, compartments, flows):
-        """
-        Identify the infectious compartments for the prevalence calculation by infection stage and clinical status.
-        Also captures the infectiousness levels by infection stage and clinical status.
-        """
-        notif_comps, non_notif_comps, notif_levels, non_notif_levels = [], [], [], []
-
-        for compartment in INFECTIOUS_COMPARTMENTS:
-            for clinical in CLINICAL_STRATA:
-                
-                if clinical == Clinical.NON_SYMPT:
-                    infectiousness_level = self.non_sympt_infect_multiplier
-                elif compartment == Compartment.LATE_ACTIVE and clinical in NOTIFICATION_CLINICAL_STRATA:
-                    infectiousness_level = self.late_infect_multiplier[clinical]
-                else:
-                    infectiousness_level = 1.
-
-                # Get all the matching compartments for the current infectious/stratification level
-                cur_comps = [idx for idx, comp in enumerate(compartments) if
-                     comp.has_name(compartment) and
-                     comp.has_stratum("clinical", clinical)]
-                
-                # Store these separately as notifying and non-notifying
-                if clinical in NOTIFICATION_CLINICAL_STRATA:
-                    notif_comps += cur_comps
-                    notif_levels += [infectiousness_level] * len(cur_comps)
-                else:
-                    non_notif_comps += cur_comps
-                    non_notif_levels += [infectiousness_level] * len(cur_comps)
-                    
-        # Convert the indices and levels to numpy arrays
-        self.notif_comps = np.array(notif_comps, dtype=int)
-        self.notif_levels = np.array(notif_levels, dtype=float)
-        self.non_notif_comps = np.array(non_notif_comps, dtype=int)
-        self.non_notif_levels = np.array(non_notif_levels, dtype=float)
-
-    def process(self, compartment_values, computed_values, time):
-        """
-        Calculate the proportion of the force of infection arising from ever-detected individuals
-        """
-
-        # Call the optimised numba JIT version of this function (we cannot JIT directly on the class member function)
-        return get_proportion_detect_force_infection(
-            compartment_values, self.notif_comps, self.notif_levels, self.non_notif_comps, self.non_notif_levels
-        )
-
-
 class TracedFlowRateProc(ComputedValueProcessor):
     """
     Calculate the transition flow rate based on the only other outflow and the proportion of all new cases traced.
@@ -180,7 +188,10 @@ class TracedFlowRateProc(ComputedValueProcessor):
         for traced_flow_rate gives the following:
         """
 
+        # Proportion of all infections that are contact traced
         traced_prop = computed_values["prop_detected_traced"] * computed_values["prop_contacts_with_detected_index"]
+
+        # Applied to adjust the incidence flow rate
         traced_flow_rate = self.incidence_flow_rate * traced_prop / max((1. - traced_prop), 1e-6)
         assert 0. <= traced_flow_rate
         return traced_flow_rate

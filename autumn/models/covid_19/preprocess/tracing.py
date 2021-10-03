@@ -59,9 +59,11 @@ def get_proportion_detect_force_infection(
 
     # Otherwise return the calculated proportion
     else:
-        proportion_detect_force_infection = detected_force_of_infection / total_force_of_infection
-        assert 0. <= proportion_detect_force_infection <= 1.
-        return proportion_detect_force_infection
+        proportion_detect_force_infect = detected_force_of_infection / total_force_of_infection
+
+        msg = "Force of infection not in range [0, 1]"
+        assert 0. <= proportion_detect_force_infect <= 1., msg
+        return proportion_detect_force_infect
 
 
 class PrevalenceProc(ComputedValueProcessor):
@@ -103,6 +105,7 @@ class PropIndexDetectedProc(ComputedValueProcessor):
         Identify the infectious compartments for the prevalence calculation by infection stage and clinical status.
         Also captures the infectiousness levels by infection stage and clinical status.
         """
+
         notif_comps, non_notif_comps, notif_levels, non_notif_levels = [], [], [], []
 
         for compartment in INFECTIOUS_COMPARTMENTS:

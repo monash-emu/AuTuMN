@@ -169,11 +169,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     for k, v in adjustment_systems.items():
         model.add_adjustment_system(k, v)
 
-    # Register the CDR function as derived value
-    model.add_computed_value_process(
-        "cdr",
-        CdrProc(get_detected_proportion)
-    )
+    # Register the CDR function as a computed value
+    model.add_computed_value_process("cdr", CdrProc(get_detected_proportion))
 
     # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern
     if params.voc_emergence:

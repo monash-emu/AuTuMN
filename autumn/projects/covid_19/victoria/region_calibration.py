@@ -8,6 +8,8 @@ target_start_time = 454
 priors = [
     UniformPrior("contact_rate", [0.025, 0.05]),
 ]
+regional_target_names = ("notifications", "hospital_admissions")
+metro_target_names = ("notifications", "hospital_admissions")
 
 
 def collate_regional_targets(ts_set):
@@ -17,7 +19,7 @@ def collate_regional_targets(ts_set):
     """
 
     targets = []
-    for target_name in ("notifications", "hospital_admissions"):
+    for target_name in regional_target_names:
         targets.append(
             NormalTarget(timeseries=ts_set.get(target_name).truncate_start_time(target_start_time))
         )
@@ -30,7 +32,7 @@ def collate_metro_targets(ts_set):
     """
 
     targets = []
-    for target_name in ("notifications", "hospital_admissions"):
+    for target_name in metro_target_names:
         targets.append(
             NormalTarget(timeseries=ts_set.get(target_name).truncate_start_time(target_start_time))
         )

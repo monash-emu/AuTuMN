@@ -436,7 +436,8 @@ class RollOutFunc(BaseModel):
 class VaccEffectiveness(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
-    vacc_reduce_infectiousness: float
+    vacc_reduce_infectiousness: Optional[float]
+    vacc_reduce_infectiousness_ratio: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
@@ -453,6 +454,14 @@ class VaccEffectiveness(BaseModel):
         assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_one_infectiousness_request(cls, values):
+        n_requests = int(bool(values["vacc_reduce_infectiousness"])) + \
+                     int(bool(values["vacc_reduce_infectiousness_ratio"]))
+        msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
+        assert n_requests < 2, msg
+        return values
+
 
 class Vaccination(BaseModel):
     second_dose_delay: float
@@ -465,6 +474,11 @@ class Vaccination(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
         assert 0. < values["second_dose_delay"], f"Delay to second dose is not positive: {values['second_dose_delay']}"
+        if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:
+            values["one_dose"]["vacc_reduce_infectiousness"] = \
+                values["fully_vaccinated"]["vacc_reduce_infectiousness"] * \
+                values["one_dose"]["vacc_reduce_infectiousness_ratio"]
+            values["one_dose"]["vacc_reduce_infectiousness_ratio"] = None
         return values
 
 

@@ -102,13 +102,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Add intercompartmental flows
     """
 
-    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate.
+    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate
     if params.seasonal_force:
-        contact_rate = get_seasonal_forcing(
-            365.0, 173.0, params.seasonal_force, params.contact_rate
-        )
+        contact_rate = get_seasonal_forcing(365., 173., params.seasonal_force, params.contact_rate)
     else:
-        # Use a static contact rate.
+        # Use a static contact rate
         contact_rate = params.contact_rate
 
     # Infection
@@ -120,9 +118,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Progression through Covid stages
+    infect_onset_rate = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
     model.add_transition_flow(
         name=INFECTIOUSNESS_ONSET,
-        fractional_rate=1. / compartment_periods[Compartment.EARLY_EXPOSED],
+        fractional_rate=infect_onset_rate,
         source=Compartment.EARLY_EXPOSED,
         dest=Compartment.LATE_EXPOSED,
     )
@@ -133,16 +132,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.LATE_EXPOSED,
         dest=Compartment.EARLY_ACTIVE,
     )
+    progress_rate = 1. / compartment_periods[Compartment.EARLY_ACTIVE]
     model.add_transition_flow(
         name=PROGRESS,
-        fractional_rate=1. / compartment_periods[Compartment.EARLY_ACTIVE],
+        fractional_rate=progress_rate,
         source=Compartment.EARLY_ACTIVE,
         dest=Compartment.LATE_ACTIVE,
     )
     # Recovery flows
+    recovery_rate = 1. / compartment_periods[Compartment.LATE_ACTIVE]
     model.add_transition_flow(
         name=RECOVERY,
-        fractional_rate=1. / compartment_periods[Compartment.LATE_ACTIVE],
+        fractional_rate=recovery_rate,
         source=Compartment.LATE_ACTIVE,
         dest=Compartment.RECOVERED,
     )
@@ -174,7 +175,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         CdrProc(get_detected_proportion)
     )
 
-    # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern.
+    # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern
     if params.voc_emergence:
         voc_params = params.voc_emergence
 
@@ -241,15 +242,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         def model_seed_func(time, computed_values, seed=seed):
             return seed if seed_start_time < time < seed_start_time + 5. else 0.
 
-        model.add_importation_flow(
-            "seed",
-            model_seed_func,
-            dest=Compartment.EARLY_EXPOSED,
-        )
+        model.add_importation_flow("seed", model_seed_func, dest=Compartment.EARLY_EXPOSED)
 
     # Contact tracing stratification
     if params.contact_tracing:
 
+        # Stratify the model structure
         tracing_strat = get_tracing_strat(
             params.contact_tracing.quarantine_infect_multiplier,
             params.clinical_stratification.late_infect_multiplier
@@ -262,13 +260,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             params.contact_tracing.assumed_prev,
             params.contact_tracing.floor,
         )
-
-        early_exposed_untraced_comps = \
-            [comp for comp in model.compartments if
-             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})]
-        early_exposed_traced_comps = \
-            [comp for comp in model.compartments if
-             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})]
 
         model.add_computed_value_process(
             "prevalence",
@@ -296,6 +287,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             tracing.TracedFlowRateProc(incidence_flow_rate)
         )
 
+        # Add the transition process to the model
+        early_exposed_untraced_comps = \
+            [comp for comp in model.compartments if
+             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})]
+        early_exposed_traced_comps = \
+            [comp for comp in model.compartments if
+             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})]
         for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
             model.add_transition_flow(
                 "tracing",

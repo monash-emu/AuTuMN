@@ -4,11 +4,11 @@ vic_status: "vic_region_2021"
 
 vic_2021_seeding:
   seed_time: 570
-  seed: 1.
+  seed: 1.5
 
-contact_rate: 0.075
+contact_rate: 0.125
 infectious_seed: 0.
-seasonal_force: 0.
+seasonal_force: 0.3
 
 mixing_matrices:
   type: extrapolated
@@ -167,3 +167,8 @@ vaccination:
       vic_supply_to_history:
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 649  # 9th September is 618 (current date), lagged by two weeks
+    - age_min: 15
+      vic_supply_region_to_target:
+        coverage: 0.9  # Final statewide value that we will reach over the next month
+        start_time: 649
+        end_time: 679

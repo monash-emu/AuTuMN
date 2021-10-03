@@ -11,7 +11,6 @@ from autumn.tools import inputs
 from autumn.tools.utils.utils import apply_odds_ratio_to_multiple_proportions, subdivide_props
 
 
-NUM_AGE_STRATA = 16
 ALLOWED_ROUNDING_ERROR = 6
 
 
@@ -29,7 +28,7 @@ def get_absolute_strata_proportions(symptomatic_props: list, icu_props: float, h
 
     # Determine the absolute proportion of early exposed who become symptomatic as opposed to asymptomatic,
     # starting with total proportions of one.
-    sympt, non_sympt = subdivide_props(np.array((1.,) * NUM_AGE_STRATA), np.array(symptomatic_props))
+    sympt, non_sympt = subdivide_props(np.array((1.,) * len(AGEGROUP_STRATA)), np.array(symptomatic_props))
 
     # Determine the absolute proportion of the symptomatics who become hospitalised vs not.
     sympt_hospital, sympt_non_hospital = subdivide_props(sympt, np.array(hospital_props))  # sympt_non_hospital not used
@@ -108,8 +107,8 @@ def get_absolute_death_proportions(abs_props, infection_fatality_props, icu_mort
     Calculate death proportions: find where the absolute number of deaths accrue.
     Represents the number of people in a strata who die given the total number of people infected.
     """
-    abs_death_props = {stratum: np.zeros(NUM_AGE_STRATA) for stratum in DEATH_CLINICAL_STRATA}
-    for age_idx in range(NUM_AGE_STRATA):
+    abs_death_props = {stratum: np.zeros(len(AGEGROUP_STRATA)) for stratum in DEATH_CLINICAL_STRATA}
+    for age_idx in range(len(AGEGROUP_STRATA)):
         target_ifr_prop = infection_fatality_props[age_idx]
 
         # Maximum deaths that could be assigned to each of the death strata ...

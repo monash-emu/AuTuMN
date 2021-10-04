@@ -36,6 +36,8 @@ steps:
       value: covid_19:johor
     - label: Kuala Lumpur (covid_19)
       value: covid_19:kuala-lumpur
+    - label: Loddon Mallee (covid_19)
+      value: covid_19:loddon-mallee
     - label: Malaysia (covid_19)
       value: covid_19:malaysia
     - label: Manila (covid_19)
@@ -119,7 +121,7 @@ steps:
       value: 'no'
     required: true
     select: Trigger full model run
-  - default: 'yes'
+  - default: 'no'
     hint: Is 1/3 of the price but sometimes randomly fails.
     key: spot-instance
     options:

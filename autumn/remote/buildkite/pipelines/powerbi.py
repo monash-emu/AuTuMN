@@ -23,7 +23,7 @@ spot_field = BooleanInputField(
     key="spot-instance",
     title="Use spot instances",
     hint="Is 1/3 of the price but sometimes randomly fails.",
-    default="yes",
+    default="no",
     type=bool,
 )
 

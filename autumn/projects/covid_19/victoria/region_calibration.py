@@ -1,12 +1,15 @@
-from autumn.tools.calibration.priors import UniformPrior
+import numpy as np
+
+from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget
 
 # TODO: Work out what is going on with seeding through importation - summer behaviour need revision
 
 # Specify the general features of the calibration
 target_start_time = 454
+# Median unadjusted posterior contact rate from 2020: 0.0463
 priors = [
-    UniformPrior("contact_rate", [0.025, 0.05]),
+    TruncNormalPrior("contact_rate", mean=0.0926, stdev=0.05, trunc_range=(0., np.inf)),
 ]
 regional_target_names = (
     "notifications",

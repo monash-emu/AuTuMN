@@ -162,12 +162,13 @@ vaccination:
     overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness: 0.5  # Using same reference, but more effect for Alpha than for Delta
+  lag: 14
   roll_out_components:
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
       vic_supply:
-        start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
-        end_time: 649  # 9th September is 618 (current date), lagged by two weeks
+        start_time: 454
+        end_time: 643
     - age_min: 15
       vic_supply:
-        start_time: 649
+        start_time: 643
         end_time: 679

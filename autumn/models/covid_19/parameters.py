@@ -465,6 +465,7 @@ class Vaccination(BaseModel):
     second_dose_delay: float
     one_dose: Optional[VaccEffectiveness]
     fully_vaccinated: VaccEffectiveness
+    lag: float
 
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]
@@ -478,6 +479,12 @@ class Vaccination(BaseModel):
                 values["one_dose"]["vacc_reduce_infectiousness_ratio"]
             values["one_dose"]["vacc_reduce_infectiousness_ratio"] = None
         return values
+
+    @validator("lag", allow_reuse=True)
+    def check_lag(val):
+        msg = f"Vaccination lag period is negative: {val}"
+        assert val >= 0., msg
+        return val
 
 
 class VaccinationRisk(BaseModel):
@@ -522,12 +529,12 @@ class ContactTracing(BaseModel):
         assert 0. <= val <= 1., f"Contact tracing infectiousness multiplier must be in range [0, 1]: {val}"
         return val
 
-    @ validator("assumed_prev", allow_reuse=True)
+    @validator("assumed_prev", allow_reuse=True)
     def check_prevalence(val):
         assert 0. <= val <= 1., f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
         return val
 
-    @ validator("assumed_trace_prop", allow_reuse=True)
+    @validator("assumed_trace_prop", allow_reuse=True)
     def check_prevalence(val):
         assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val

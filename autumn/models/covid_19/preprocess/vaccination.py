@@ -10,9 +10,6 @@ from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
 from autumn.tools.inputs.covid_au.queries import get_historical_vac_coverage, get_modelled_vac_coverage, get_both_vac_coverage
 
 
-VACCINATION_LAG = 0
-
-
 def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
     """
     Calculate the time-variant vaccination rate based on a requested coverage and roll-out window.
@@ -20,7 +17,6 @@ def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, cov
     """
 
     # Get vaccination parameters
-    print(coverage)
     coverage = coverage if coverage else coverage_override
     duration = end_time - start_time
     assert duration >= 0., f"Vaccination roll-out request is negative: {duration}"
@@ -191,7 +187,7 @@ def add_clinical_adjustments_to_strat(
 
 def add_vaccination_flows(
         model, roll_out_component, age_strata, one_dose, coverage_override=None, vic_cluster=None,
-        cluster_stratum={}, i_component=0,
+        cluster_stratum={}, i_component=0, vaccination_lag=0.,
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
@@ -208,7 +204,7 @@ def add_vaccination_flows(
 
         # Interpolate
         coverage = np.interp(
-            roll_out_component.vic_supply.end_time - VACCINATION_LAG,
+            roll_out_component.vic_supply.end_time - vaccination_lag,
             times,
             coverage_values
         )
@@ -218,7 +214,7 @@ def add_vaccination_flows(
             previous_coverage = 0.
         else:
             previous_coverage = np.interp(
-                roll_out_component.vic_supply.start_time - VACCINATION_LAG,
+                roll_out_component.vic_supply.start_time - vaccination_lag,
                 times,
                 coverage_values
             )

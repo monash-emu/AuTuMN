@@ -7,7 +7,7 @@ from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
-from autumn.tools.inputs.covid_au.queries import get_dhhs_vaccination_numbers
+from autumn.tools.inputs.covid_au.queries import get_historical_vac_coverage
 
 
 def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
@@ -199,7 +199,7 @@ def add_vaccination_flows(
     if roll_out_component.vic_supply_to_history:
 
         # Get the cluster-specific historical vaccination numbers
-        coverage = get_dhhs_vaccination_numbers(
+        coverage = get_historical_vac_coverage(
             vic_cluster.upper(),
             start_age=roll_out_component.age_min
         )[1].max()
@@ -218,7 +218,7 @@ def add_vaccination_flows(
     elif roll_out_component.vic_supply_to_target:
 
         # Calculate the most recent statewide coverage
-        statewide_coverage = get_dhhs_vaccination_numbers(
+        statewide_coverage = get_historical_vac_coverage(
             start_age=roll_out_component.age_min
         )[1].max()
 
@@ -240,7 +240,7 @@ def add_vaccination_flows(
     elif roll_out_component.vic_supply_region_to_target:
 
         # Get the cluster-specific historical vaccination numbers
-        previous_coverage = get_dhhs_vaccination_numbers(
+        previous_coverage = get_historical_vac_coverage(
             vic_cluster.upper(),
             start_age=roll_out_component.age_min
         )[1].max()

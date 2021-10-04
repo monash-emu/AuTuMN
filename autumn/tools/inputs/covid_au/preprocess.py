@@ -9,6 +9,7 @@ from .fetch import (
     MOBILITY_LGA_PATH,
     COVID_VAC_COV_CSV,
     COVID_AU_YOUGOV,
+    COVID_DHHS_MODEL_CSV,
 )
 
 
@@ -23,6 +24,8 @@ def preprocess_covid_au(input_db: Database):
     df = pd.read_csv(COVID_AU_YOUGOV)
     df = process_yougov(df)
     input_db.dump_df("yougov_vic", df)
+    df = pd.read_csv(COVID_DHHS_MODEL_CSV)
+    input_db.dump_df("vac_model",df)
 
 
 def reshape_to_clusters(lga_test):

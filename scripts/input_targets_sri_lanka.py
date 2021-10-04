@@ -38,6 +38,7 @@ def preprocess_lka_data():
     )
     df["date_index"] = (df.periodname - COVID_BASE_DATETIME).dt.days
     df = df[df.periodname <= pd.to_datetime("today")]
+    #df.loc[df.date==""]
 
     return df
 

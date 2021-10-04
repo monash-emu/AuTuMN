@@ -77,15 +77,23 @@ SHORT_TEXT_DICT = {
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)
 # https://matplotlib.org/3.1.0/gallery/color/named_colors.html
 COLORS = (
-    # Blues -1
+    # Blues
     ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
-     # Cyans -6
+    # Purples
+    ["plum", "mediumorchid", "darkviolet", "rebeccapurple"],
+    # Greens
+    ["palegreen", "mediumspringgreen", "mediumseagreen", "darkgreen"],
+    # Yellows
+    ["lightgoldenrodyellow", "palegoldenrod", "gold", "darkgoldenrod"],
+    # Orangey-browns
+    ["papayawhip", "navajowhite", "burlywood", "saddlebrown"],
+    # Cyans
     ["lightcyan", "paleturquoise", "darkcyan", "darkslategrey"],
-    # Greys -7
+    # Greys
     ["lightgrey", "darkgrey", "dimgrey", "black"],
-    # Reds -8
+    # Reds
     ["lightsalmon", "tomato", "indianred", "darkred"],
-    # Dark greens -9
+    # Dark greens
     ["mediumseagreen", "seagreen", "green", "darkgreen"],
 )
 REF_DATE = datetime.date(2019, 12, 31)

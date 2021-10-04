@@ -21,6 +21,7 @@ MOBILITY_LGA_PATH = os.path.join(
     MOBILITY_DIRPATH, "LGA to Cluster mapping dictionary with proportions.csv"
 )
 COVID_VAC_COV_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
+COVID_DHHS_MODEL_CSV = os.path.join(COVID_AU_DIRPATH, "vac_by_week_lga.secret.csv")
 
 
 CLUSTER_MAP = {

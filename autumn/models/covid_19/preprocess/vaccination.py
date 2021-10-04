@@ -1,11 +1,11 @@
 import numpy as np
 
 from autumn.models.covid_19.constants import (
-    VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY, COMPARTMENTS
+    VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
 )
 from autumn.tools.curve.scale_up import scale_up_function
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
+from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
 from autumn.tools.inputs.covid_au.queries import get_dhhs_vaccination_numbers
 
@@ -118,16 +118,16 @@ def add_clinical_adjustments_to_strat(
     Get all the adjustments in the same way for both the history and vaccination stratifications.
     """
 
-    entry_adjs, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjustments(
+    entry_adjs, death_adjs, progress_adjs, recovery_adjs, _ = get_all_adjustments(
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, params.testing_to_detection, ifr_adjuster, symptomatic_adjuster,
+        params.sojourn, ifr_adjuster, symptomatic_adjuster,
         hospital_adjuster, top_bracket_overwrite,
     )
 
     # Make these calculations for the one-dose stratum, even if this is being called by the history stratification
-    second_entry_adjs, second_death_adjs, second_progress_adjs, second_recovery_adjs, _, _ = get_all_adjustments(
+    second_entry_adjs, second_death_adjs, second_progress_adjs, second_recovery_adjs, _ = get_all_adjustments(
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, params.testing_to_detection, second_ifr_adjuster, second_sympt_adjuster,
+        params.sojourn, second_ifr_adjuster, second_sympt_adjuster,
         second_hospital_adjuster, second_top_bracket_overwrite,
     )
 
@@ -186,18 +186,21 @@ def add_clinical_adjustments_to_strat(
 
 
 def add_vaccination_flows(
-        model, roll_out_component, age_strata, one_dose, coverage_override=None, additional_strata={},
+        model, roll_out_component, age_strata, one_dose, coverage_override=None, vic_cluster=None,
+        cluster_stratum={},
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
+
+    # cluster_stratum = {"cluster": additional_strata} if additional_strata else {}
 
     # First phase of the Victorian roll-out, informed by vaccination data
     if roll_out_component.vic_supply_to_history:
 
         # Get the cluster-specific historical vaccination numbers
         coverage = get_dhhs_vaccination_numbers(
-            additional_strata["cluster"].upper(),
+            vic_cluster.upper(),
             start_age=roll_out_component.age_min
         )[1].max()
 
@@ -234,6 +237,29 @@ def add_vaccination_flows(
             roll_out_component.vic_supply_to_target.end_time,
         )
 
+    elif roll_out_component.vic_supply_region_to_target:
+
+        # Get the cluster-specific historical vaccination numbers
+        previous_coverage = get_dhhs_vaccination_numbers(
+            vic_cluster.upper(),
+            start_age=roll_out_component.age_min
+        )[1].max()
+
+        # Increase to the end of the simulation period, making sure it is an increase
+        coverage = max((roll_out_component.vic_supply_region_to_target.coverage - previous_coverage), 0.) / \
+                   (1. - previous_coverage)
+
+        # Make sure we're dealing with reasonably sensible coverage values
+        assert 0. <= coverage <= 1.
+        sensible_coverage = min(coverage, 0.96)
+
+        # Create the function
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+            sensible_coverage,
+            roll_out_component.vic_supply_region_to_target.start_time,
+            roll_out_component.vic_supply_region_to_target.end_time,
+        )
+
     # Coverage based vaccination
     elif roll_out_component.supply_period_coverage:
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
@@ -260,12 +286,13 @@ def add_vaccination_flows(
 
         for eligible_age_group in eligible_age_groups:
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
-            _source_strata.update(additional_strata)
+            _source_strata.update(cluster_stratum)
             _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
-            _dest_strata.update(additional_strata)
+            _dest_strata.update(cluster_stratum)
             if roll_out_component.supply_period_coverage or \
                     roll_out_component.vic_supply_to_target or \
-                    roll_out_component.vic_supply_to_history:
+                    roll_out_component.vic_supply_to_history or \
+                    roll_out_component.vic_supply_region_to_target:
 
                 # The roll-out function is applied as a rate that multiplies the source compartments
                 model.add_transition_flow(
@@ -293,9 +320,9 @@ def add_vaccination_flows(
         # Add blank flows to make things simpler when we come to doing the outputs
         for ineligible_age_group in ineligible_age_groups:
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": ineligible_age_group}
-            _source_strata.update(additional_strata)
+            _source_strata.update(cluster_stratum)
             _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": ineligible_age_group}
-            _dest_strata.update(additional_strata)
+            _dest_strata.update(cluster_stratum)
             model.add_transition_flow(
                 name="vaccination",
                 fractional_rate=0.,

@@ -264,12 +264,13 @@ target_output_ratio: 0.5
 
 vic_2021_seeding:
   seed_time: 545
-  north_metro: 0.2
-  south_east_metro: 0.02
-  south_metro: 0.2
-  west_metro: 0.2
-  barwon_south_west: 0.
-  gippsland: 0.
-  hume: 0.1
-  loddon_mallee: 0.
-  grampians: 0.
+  clusters:
+    north_metro: 0.2
+    south_east_metro: 0.02
+    south_metro: 0.2
+    west_metro: 0.2
+    barwon_south_west: 0.
+    gippsland: 0.
+    hume: 0.1
+    loddon_mallee: 0.
+    grampians: 0.

@@ -1,4 +1,5 @@
 import copy
+from typing import Callable
 
 from summer import Overwrite, Stratification
 
@@ -54,10 +55,9 @@ def get_clinical_strat(params: Parameters):
     """
 
     # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
-    entry_adjs, death_adjs, progress_adjs, recovery_adjs, get_detected_proportion, adj_systems = get_all_adjustments(
+    entry_adjs, death_adjs, progress_adjs, recovery_adjs, adj_systems = get_all_adjustments(
         clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
-        params.testing_to_detection, params.infection_fatality.multiplier,
-        params.clinical_stratification.props.symptomatic.multiplier,
+        params.infection_fatality.multiplier, params.clinical_stratification.props.symptomatic.multiplier,
         params.clinical_stratification.props.hospital.multiplier, params.infection_fatality.top_bracket_overwrite,
     )
 
@@ -69,4 +69,4 @@ def get_clinical_strat(params: Parameters):
         clinical_strat.add_flow_adjustments(INFECT_DEATH, death_adjs[agegroup], source_strata=source)
         clinical_strat.add_flow_adjustments(RECOVERY, recovery_adjs[agegroup], source_strata=source)
 
-    return clinical_strat, get_detected_proportion, adj_systems
+    return clinical_strat, adj_systems

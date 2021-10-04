@@ -198,7 +198,7 @@ def add_vaccination_flows(
     """
 
     # First phase of the Victorian roll-out, informed by vaccination data
-    if roll_out_component.vic_supply_to_history:
+    if roll_out_component.vic_supply:
 
         # Get the cluster-specific historical vaccination numbers
         times, coverage_values = get_both_vac_coverage(
@@ -208,7 +208,7 @@ def add_vaccination_flows(
 
         # Interpolate
         coverage = np.interp(
-            roll_out_component.vic_supply_to_history.end_time - VACCINATION_LAG,
+            roll_out_component.vic_supply.end_time - VACCINATION_LAG,
             times,
             coverage_values
         )
@@ -218,7 +218,7 @@ def add_vaccination_flows(
             previous_coverage = 0.
         else:
             previous_coverage = np.interp(
-                roll_out_component.vic_supply_to_history.start_time - VACCINATION_LAG,
+                roll_out_component.vic_supply.start_time - VACCINATION_LAG,
                 times,
                 coverage_values
             )
@@ -233,8 +233,8 @@ def add_vaccination_flows(
         # Create the function
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
             sensible_coverage,
-            roll_out_component.vic_supply_to_history.start_time,
-            roll_out_component.vic_supply_to_history.end_time,
+            roll_out_component.vic_supply.start_time,
+            roll_out_component.vic_supply.end_time,
         )
 
     # Coverage based vaccination
@@ -267,7 +267,7 @@ def add_vaccination_flows(
             _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
             _dest_strata.update(cluster_stratum)
             if roll_out_component.supply_period_coverage or \
-                    roll_out_component.vic_supply_to_history:
+                    roll_out_component.vic_supply:
 
                 # The roll-out function is applied as a rate that multiplies the source compartments
                 model.add_transition_flow(

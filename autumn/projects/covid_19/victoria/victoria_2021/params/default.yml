@@ -32,11 +32,11 @@ vaccination:
     vacc_reduce_infectiousness: 0.25  # Using same reference, but more effect for Alpha than for Delta
   roll_out_components:
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
-      vic_supply_to_history:
+      vic_supply:
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 649  # 9th September is 618 (current date), lagged by two weeks
     - age_min: 15
-      vic_supply_to_history:
+      vic_supply:
         start_time: 649
         end_time: 679
 

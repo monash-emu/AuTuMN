@@ -411,14 +411,14 @@ class RollOutFunc(BaseModel):
     age_max: Optional[float]
     supply_timeseries: Optional[TimeSeries]
     supply_period_coverage: Optional[VaccCoveragePeriod]
-    vic_supply_to_history: Optional[VicHistoryPeriod]
+    vic_supply: Optional[VicHistoryPeriod]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
         components = \
             values.get("supply_period_coverage"), \
             values.get("supply_timeseries"), \
-            values.get("vic_supply_to_history")
+            values.get("vic_supply")
         has_supply = (int(bool(i_comp)) for i_comp in components)
         assert sum(has_supply) == 1, "Roll out function must have just one period or timeseries for supply"
         if "age_min" in values:

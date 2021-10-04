@@ -7,7 +7,10 @@ from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
-from autumn.tools.inputs.covid_au.queries import get_historical_vac_coverage
+from autumn.tools.inputs.covid_au.queries import get_historical_vac_coverage, get_modelled_vac_coverage, get_both_vac_coverage
+
+
+VACCINATION_LAG = 0
 
 
 def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
@@ -193,16 +196,19 @@ def add_vaccination_flows(
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
 
-    # cluster_stratum = {"cluster": additional_strata} if additional_strata else {}
-
     # First phase of the Victorian roll-out, informed by vaccination data
     if roll_out_component.vic_supply_to_history:
 
         # Get the cluster-specific historical vaccination numbers
-        coverage = get_historical_vac_coverage(
+        times, coverage_values = get_both_vac_coverage(
             vic_cluster.upper(),
             start_age=roll_out_component.age_min
-        )[1].max()
+        )
+        coverage = np.interp(
+            roll_out_component.vic_supply_to_history.end_time - VACCINATION_LAG,
+            times,
+            coverage_values
+        )
 
         # Make sure we're dealing with reasonably sensible coverage values and place a ceiling just in case
         assert 0. <= coverage <= 1.

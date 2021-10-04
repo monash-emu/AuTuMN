@@ -4,6 +4,11 @@ INTERVENTION_RATE = {"time_variant_acf": 1.66, "time_variant_ltbi_screening": 1.
 
 BASELINE_POST_INTERVENTION_RATE = {"time_variant_acf": 0.0, "time_variant_ltbi_screening": 0.02}
 
+SA_PARAM_VALUES = {
+    "sa_importation": [0, 100, 200, 500],
+    "sa_screening": [.60, .75, .90],
+}
+
 
 def define_all_scenarios(periodic_frequencies=[2, 5, 10]):
     scenario_details = {}
@@ -191,13 +196,7 @@ def drop_all_yml_scenario_files(all_sc_params):
 # SA scenarios
 def make_sa_scenario_list(sa_type):
     sa_scenarios = []
-
-    param_values = {
-        "sa_importation": [0, 100, 200, 500],
-        "sa_screening": [.60, .75, .90],
-    }
-
-    for v in param_values[sa_type]:
+    for v in SA_PARAM_VALUES[sa_type]:
         if sa_type == "sa_importation":
             sc_dict = {
                 "time": {'start': 2015},

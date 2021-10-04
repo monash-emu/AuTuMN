@@ -168,7 +168,6 @@ vaccination:
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 649  # 9th September is 618 (current date), lagged by two weeks
     - age_min: 15
-      vic_supply_region_to_target:
-        coverage: 0.9  # Final statewide value that we will reach over the next month
+      vic_supply_to_history:
         start_time: 649
         end_time: 679

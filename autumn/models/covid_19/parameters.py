@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE
+from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -187,6 +187,11 @@ class MixingMatrices(BaseModel):
     source_iso3: Optional[str]
     age_adjust: bool  # Only relevant if 'extrapolated' selected
 
+    @validator("type", allow_reuse=True)
+    def check_type(val):
+        assert val in ("extrapolated", "prem"), f"Mixing matrix request not permitted: {val}"
+        return val
+
 
 class AgeStratification(BaseModel):
     """
@@ -263,6 +268,21 @@ class TestingToDetection(BaseModel):
     smoothing_period: int
     test_multiplier: Optional[TimeSeries]
 
+    @validator("assumed_tests_parameter", allow_reuse=True)
+    def check_assumed_tests_positive(val):
+        assert 0. <= val, f"Assumed tests is negative: {val}"
+        return val
+
+    @validator("assumed_cdr_parameter", allow_reuse=True)
+    def check_assumed_cdr_is_proportion(val):
+        assert 0. <= val <= 1., f"Assumed CDR parameter is not in range [0, 1]: {val}"
+        return val
+
+    @validator("smoothing_period", allow_reuse=True)
+    def check_smoothing_period(val):
+        assert 1 < val, f"Smoothing period must be greater than 1: {val}"
+        return val
+
 
 class SusceptibilityHeterogeneity(BaseModel):
     """
@@ -292,8 +312,7 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
-class Vic2021Seeding(BaseModel):
-    seed_time: float
+class Vic2021ClusterSeeds(BaseModel):
     north_metro: float
     south_east_metro: float
     south_metro: float
@@ -309,6 +328,19 @@ class Vic2021Seeding(BaseModel):
         for region in Region.VICTORIA_SUBREGIONS:
             region_name = region.replace("-", "_")
             assert 0. <= values[region_name], f"Seed value for cluster {region_name} is negative"
+        return values
+
+
+class Vic2021Seeding(BaseModel):
+    seed_time: float
+    clusters: Optional[Vic2021ClusterSeeds]
+    seed: Optional[float]
+
+    @root_validator(allow_reuse=True)
+    def check_request(cls, values):
+        n_requests = int(bool(values["clusters"])) + int(bool(values["seed"]))
+        msg = f"Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled: {n_requests}"
+        assert n_requests == 1, msg
         return values
 
 
@@ -381,6 +413,7 @@ class RollOutFunc(BaseModel):
     supply_period_coverage: Optional[VaccCoveragePeriod]
     vic_supply_to_history: Optional[VicHistoryPeriod]
     vic_supply_to_target: Optional[VaccCoveragePeriod]
+    vic_supply_region_to_target: Optional[VaccCoveragePeriod]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
@@ -388,7 +421,8 @@ class RollOutFunc(BaseModel):
             values.get("supply_period_coverage"), \
             values.get("supply_timeseries"), \
             values.get("vic_supply_to_history"), \
-            values.get("vic_supply_to_target")
+            values.get("vic_supply_to_target"), \
+            values.get("vic_supply_region_to_target")
         has_supply = (int(bool(i_comp)) for i_comp in components)
         assert sum(has_supply) == 1, "Roll out function must have just one period or timeseries for supply"
         if "age_min" in values:
@@ -404,7 +438,8 @@ class RollOutFunc(BaseModel):
 class VaccEffectiveness(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
-    vacc_reduce_infectiousness: float
+    vacc_reduce_infectiousness: Optional[float]
+    vacc_reduce_infectiousness_ratio: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
@@ -421,6 +456,14 @@ class VaccEffectiveness(BaseModel):
         assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_one_infectiousness_request(cls, values):
+        n_requests = int(bool(values["vacc_reduce_infectiousness"])) + \
+                     int(bool(values["vacc_reduce_infectiousness_ratio"]))
+        msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
+        assert n_requests < 2, msg
+        return values
+
 
 class Vaccination(BaseModel):
     second_dose_delay: float
@@ -433,6 +476,11 @@ class Vaccination(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
         assert 0. < values["second_dose_delay"], f"Delay to second dose is not positive: {values['second_dose_delay']}"
+        if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:
+            values["one_dose"]["vacc_reduce_infectiousness"] = \
+                values["fully_vaccinated"]["vacc_reduce_infectiousness"] * \
+                values["one_dose"]["vacc_reduce_infectiousness_ratio"]
+            values["one_dose"]["vacc_reduce_infectiousness_ratio"] = None
         return values
 
 
@@ -480,7 +528,12 @@ class ContactTracing(BaseModel):
 
     @ validator("assumed_prev", allow_reuse=True)
     def check_prevalence(val):
-        assert 0. <= val, f"Contact tracing assumed prevalence must not be negative: {val}"
+        assert 0. <= val <= 1., f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
+        return val
+
+    @ validator("assumed_trace_prop", allow_reuse=True)
+    def check_prevalence(val):
+        assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
     # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated
@@ -549,6 +602,6 @@ class Parameters:
 
     @validator("vic_status", allow_reuse=True)
     def check_status(val):
-        vic_options = ("non_vic", "vic_super_2020", "vic_super_2021", "vic_region_2021")
+        vic_options = VIC_MODEL_OPTIONS
         assert val in vic_options, f"Invalid option selected for Vic status: {val}"
         return val

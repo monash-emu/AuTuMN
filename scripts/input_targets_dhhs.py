@@ -20,6 +20,9 @@ COVID_DHHS_DEATH_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_deaths
 COVID_DHHS_CASE_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_cases.secret.csv")
 COVID_DHHS_ADMN_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_admissions.secret.csv")
 COVID_DHHS_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_vaccination.secret.csv")
+COVID_DHHS_MODEL_CSV = os.path.join(COVID_AU_DIRPATH, "vac_by_week_lga.secret.csv")
+
+
 COVID_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
 
 
@@ -140,18 +143,24 @@ def main():
         password = getpass(prompt="Enter the encryption password:")
 
     for cluster in CLUSTER_MAP.values():
+        if cluster == 'VIC':
+            continue
+
+        cluster_secrets_file = os.path.join(
+            PROJECTS_PATH, "covid_19", "victoria", cluster.lower(), "targets.secret.json"
+        )
 
         TARGET_MAP_DHHS = {
-            f"notifications_for_cluster_{cluster.lower()}": "cluster_cases",
-            f"hospital_occupancy_for_cluster_{cluster.lower()}": "value_hosp",
-            f"icu_occupancy_for_cluster_{cluster.lower()}": "value_icu",
-            f"icu_admissions_for_cluster_{cluster.lower()}": "admittedtoicu",
-            f"hospital_admissions_for_cluster_{cluster.lower()}": "nadmissions",
+            "notifications": "cluster_cases",
+            "hospital_occupancy": "value_hosp",
+            "icu_occupancy": "value_icu",
+            "icu_admissions": "admittedtoicu",
+            "hospital_admissions": "nadmissions",
         }
 
         cluster_df = cases.loc[cases.cluster_id == cluster]
 
-        update_timeseries(TARGET_MAP_DHHS, cluster_df, COVID_VIC2021_TARGETS_CSV, password)
+        update_timeseries(TARGET_MAP_DHHS, cluster_df, cluster_secrets_file, password)
 
     cases.fillna(np.inf, inplace=True)
     vic_df = cases.groupby("date_index").sum(skipna=True).reset_index()
@@ -163,7 +172,7 @@ def main():
         "icu_occupancy": "value_icu",
         "icu_admissions": "admittedtoicu",
         "hospital_admissions": "nadmissions",
-        "infection_deaths": "cluster_deaths"
+        "infection_deaths": "cluster_deaths",
     }
 
     update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VIC2021_TARGETS_CSV, password)
@@ -172,6 +181,11 @@ def main():
     df = create_vac_coverage(df)
 
     df.to_csv(COVID_VAC_CSV)
+
+    df = fetch_vac_model()
+    df = preprocess_vac_model(df)
+
+    df.to_csv(COVID_DHHS_MODEL_CSV)
 
 
 def preprocess_admissions():
@@ -363,6 +377,44 @@ def load_deaths(df):
     return df
 
 
+
+def fetch_vac_model():
+
+    
+    df = pd.read_csv(COVID_DHHS_MODEL_CSV, usecols=range(0, 6))
+    create_date_index(COVID_BASE_DATETIME, df, "week")
+    df.lga.replace(fix_lga, inplace=True)
+
+    return df
+
+def preprocess_vac_model(df):
+    
+    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
+    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+
+
+
+    df["dose_1"] = df.dose_1 * df.proportion
+    df["dose_2"] = df.dose_2 * df.proportion
+    df = df[["vaccine_brand_name", "cluster_id", "age_group", "date_index", "date", "dose_1","dose_2"]]
+
+    df = df.groupby(["vaccine_brand_name", "cluster_id", "age_group", "date_index", "date"],as_index=False).sum()
+    df.sort_values(by=["vaccine_brand_name", "cluster_id", "age_group", "date_index"], inplace=True)
+    df.vaccine_brand_name.replace({"COVID-19 Vaccine AstraZeneca":"astra_zeneca", "Pfizer Comirnaty":"pfizer"}, inplace=True)
+    df.age_group.replace({"85+": "85-89"}, inplace=True)
+    df["start_age"] = df["age_group"].apply(lambda s: int(s.split("-")[0]))
+    df["end_age"] = df["age_group"].apply(lambda s: int(s.split("-")[1]))
+
+    numeric_cols = ["dose_1","dose_2", "start_age", "end_age"]
+    df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
+
+    return df
+    
+
 if __name__ == "__main__":
     main()
+
+
 

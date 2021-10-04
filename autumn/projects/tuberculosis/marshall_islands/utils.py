@@ -188,6 +188,37 @@ def drop_all_yml_scenario_files(all_sc_params):
             yaml.dump(params_to_dump, f)
 
 
+# SA scenarios
+def make_sa_scenario_list(sa_type):
+    sa_scenarios = []
+
+    param_values = {
+        "sa_importation": [0, 100, 200, 500],
+        "sa_screening": [.60, .75, .90],
+    }
+
+    for v in param_values[sa_type]:
+        if sa_type == "sa_importation":
+            sc_dict = {
+                "time": {'start': 2015},
+                'import_ltbi_cases': {
+                    "start_time": 2016,
+                    "n_cases_per_year": v,
+                }
+            }
+        elif sa_type == "sa_screening":
+            sc_dict = {
+                "time": {'start': 2015},
+                'acf_screening_sensitivity': v,
+            }
+
+        sa_scenarios.append(
+            sc_dict
+        )
+
+    return sa_scenarios
+
+
 if __name__ == "__main__":
     all_scenarios = define_all_scenarios(periodic_frequencies=[2, 5, 10])
     drop_all_yml_scenario_files(all_scenarios)

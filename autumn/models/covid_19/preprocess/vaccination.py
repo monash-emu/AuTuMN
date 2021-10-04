@@ -190,7 +190,7 @@ def add_clinical_adjustments_to_strat(
 
 def add_vaccination_flows(
         model, roll_out_component, age_strata, one_dose, coverage_override=None, vic_cluster=None,
-        cluster_stratum={},
+        cluster_stratum={}, i_component=0,
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
@@ -210,9 +210,22 @@ def add_vaccination_flows(
             coverage_values
         )
 
+        # Always start from zero if this is the first roll-out component
+        if i_component == 0:
+            previous_coverage = 0.
+        else:
+            previous_coverage = np.interp(
+                roll_out_component.vic_supply_to_history.end_time - VACCINATION_LAG,
+                times,
+                coverage_values
+            )
+
+        # The proportion of the remaining people who will be vaccinated
+        coverage_increase = (coverage - previous_coverage) / (1. - previous_coverage)
+
         # Make sure we're dealing with reasonably sensible coverage values and place a ceiling just in case
-        assert 0. <= coverage <= 1.
-        sensible_coverage = min(coverage, 0.96)
+        assert 0. <= coverage_increase <= 1.
+        sensible_coverage = min(coverage_increase, 0.96)
 
         # Create the function
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(

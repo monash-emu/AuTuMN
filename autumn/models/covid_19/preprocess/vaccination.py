@@ -7,7 +7,7 @@ from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
-from autumn.tools.inputs.covid_au.queries import get_historical_vac_coverage, get_modelled_vac_coverage, get_both_vac_coverage
+from autumn.tools.inputs.covid_au.queries import get_both_vac_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 
 
 def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
@@ -196,11 +196,26 @@ def add_vaccination_flows(
     # First phase of the Victorian roll-out, informed by vaccination data
     if roll_out_component.vic_supply:
 
+        if roll_out_component.age_min:
+            close_enough_age_min = min(VACC_COVERAGE_START_AGES, key=lambda age: abs(age - roll_out_component.age_min))
+        else:
+            close_enough_age_min = 0
+
+        if roll_out_component.age_max:
+            close_enough_age_max = min(VACC_COVERAGE_END_AGES, key=lambda age: abs(age - roll_out_component.age_max))
+        else:
+            close_enough_age_max = 89
+
         # Get the cluster-specific historical vaccination numbers
         times, coverage_values = get_both_vac_coverage(
             vic_cluster.upper(),
-            start_age=roll_out_component.age_min
+            start_age=close_enough_age_min,
+            end_age=close_enough_age_max,
         )
+
+        # Manually adjust according to the proportion of the age band that the group is referring to
+        adjustment = 0.6 if close_enough_age_min == 12 and close_enough_age_max == 15 else 1.
+        coverage_values *= adjustment
 
         # Interpolate
         coverage = np.interp(

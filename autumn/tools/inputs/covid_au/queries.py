@@ -129,12 +129,22 @@ def get_modelled_vac_coverage(
         cluster (str, optional): The DHHS clusters as all caps with underscores. Defaults to None.
         start_age (int, optional): Vida's start age brackets {0,5,12,16,20,30,40,50,60,70,80,85}. Defaults to 0.
         end_age (int, optional): Vida's end age brackets {4,11,15,19,29,39,49,59,69,79,84,89}. Defaults to 89.
-        vaccine (str, optional): {pfizerr, astra_zeneca}. Defaults to "pfizer".
+        vaccine (str, optional): {pfizer, astra_zeneca}. Defaults to "pfizer".
         dose (str, optional): {dose_1, dose-2}. Defaults to 'dose_1'.
 
     Returns:
         tuple: two np.arrays of weekly dates and coverage
     """
+
+    msg = f"Starting age not one available from modelled vaccination coverage database: {start_age}"
+    assert start_age in (0, 5, 12, 16, 20, 30, 40, 50, 60, 70, 80, 85), msg
+    msg = f"Finishing age not one available from modelled vaccination coverage database: {end_age}"
+    assert end_age in (4, 11, 15, 19, 29, 39, 49, 59, 69, 79, 84, 89), msg
+    msg = f"Starting age ({start_age}) vaccination coverage equal to or greater than finishing age ({end_age})"
+    assert start_age < end_age, msg
+    msg = f"Requested vaccine not available: {vaccine}"
+    assert vaccine in ("pfizer", "astra_zeneca"), msg
+
     input_db = get_input_db()
 
     cond_map = {
@@ -191,6 +201,7 @@ def get_pop(cluster, start_age, end_age, input_db):
     )
     pop = pop.population.sum()
     return pop
+
 
 def update_cond_map(cluster, cond_map):
     if cluster is None:

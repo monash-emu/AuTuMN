@@ -213,6 +213,7 @@ def add_vaccination_flows(
             end_age=close_enough_age_max,
         )
 
+        # Manually adjust according to the proportion of the age band that the group is referring to
         adjustment = 0.6 if close_enough_age_min == 12 and close_enough_age_max == 15 else 1.
         coverage_values *= adjustment
 

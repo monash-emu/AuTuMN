@@ -4,9 +4,11 @@ INTERVENTION_RATE = {"time_variant_acf": 1.66, "time_variant_ltbi_screening": 1.
 
 BASELINE_POST_INTERVENTION_RATE = {"time_variant_acf": 0.0, "time_variant_ltbi_screening": 0.02}
 
+# international immigration: 1,434 between April 2006 and March 2011 (5 years)
+N_IMMIGRANTS = 300  # per year
 SA_PARAM_VALUES = {
-    "sa_importation": [0, 100, 200, 500],
-    "sa_screening": [.60, .75, .90],
+    "sa_importation": [0, .1, .20, .30, .40],  # proportion of immigrants infected with LTBI
+    "sa_screening": [0.5, .6, .7, .8, .9],
 }
 
 
@@ -202,13 +204,13 @@ def make_sa_scenario_list(sa_type):
                 "time": {'start': 2015},
                 'import_ltbi_cases': {
                     "start_time": 2016,
-                    "n_cases_per_year": v,
+                    "n_cases_per_year": v * N_IMMIGRANTS,
                 }
             }
         elif sa_type == "sa_screening":
             sc_dict = {
                 "time": {'start': 2015},
-                'acf_screening_sensitivity': v,
+                'ltbi_screening_sensitivity': v,
             }
 
         sa_scenarios.append(

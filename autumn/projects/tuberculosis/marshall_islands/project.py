@@ -9,14 +9,25 @@ from autumn.models.tuberculosis import base_params, build_model
 from autumn.settings import Region, Models
 
 from autumn.projects.tuberculosis.calibration_utils import get_natural_history_priors_from_cid
+from autumn.projects.tuberculosis.marshall_islands.utils import make_sa_scenario_list
+
+ANALYSIS = "main"
+# ANALYSIS = "sa_importation"
+# ANALYSIS = "sa_screening"
 
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 12)]
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
-scenario_params = [baseline_params.update(p) for p in scenario_paths]
+
+if ANALYSIS == "main":
+    scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 12)]
+    scenario_params = [baseline_params.update(p) for p in scenario_paths]
+else:
+    all_scenario_dicts = make_sa_scenario_list(ANALYSIS)
+    scenario_params = [baseline_params.update(p) for p in all_scenario_dicts]
+
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration targets

@@ -1,6 +1,7 @@
 from summer import CompartmentalModel
 from summer.adjust import Multiply, Overwrite
 
+from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.models.covid_19.constants import Vaccination
@@ -159,8 +160,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     # Stratify the model by clinical status
+    if pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS:
+        override_test_region = "Victoria"
+    else:
+        override_test_region = None
+
     get_detected_proportion = find_cdr_function_from_test_data(
-        params.testing_to_detection, country.iso3, pop.region, pop.year
+        params.testing_to_detection, country.iso3, override_test_region, pop.year
     )
     clinical_strat, adjustment_systems = get_clinical_strat(params)
     model.stratify_with(clinical_strat)

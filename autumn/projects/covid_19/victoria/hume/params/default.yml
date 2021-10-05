@@ -1,5 +1,11 @@
 description: BASELINE
 
+contact_rate: 0.31
+
+vic_2021_seeding:
+  seed_time: 590
+  seed: 0.05
+
 population:
   region: HUME
   year: 2020

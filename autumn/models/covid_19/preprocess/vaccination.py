@@ -197,10 +197,12 @@ def add_vaccination_flows(
     if roll_out_component.vic_supply:
 
         database_age_min = 0
+        adjustment = 1.
         if roll_out_component.age_min == 15:  # Close enough not to need adjustment
             database_age_min = 16
-        elif roll_out_component.age_min == 10:  # Will need to adjust
+        elif roll_out_component.age_min == 10:
             database_age_min = 12
+            adjustment = 0.6
         database_age_max = roll_out_component.age_max if roll_out_component.age_max else 89
 
         # Get the cluster-specific historical vaccination numbers
@@ -209,6 +211,8 @@ def add_vaccination_flows(
             start_age=database_age_min,
             end_age=database_age_max,
         )
+
+        coverage_values *= adjustment
 
         # Interpolate
         coverage = np.interp(

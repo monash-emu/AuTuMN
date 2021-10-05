@@ -68,9 +68,9 @@ clinical_stratification:
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
-    hospital_late: 7.8  # FluCAN monthly Covid Epi Report to CDNA, 30th August 2020
-    icu_early: 13.189283389438017  # Median posterior estimate from 2020
-    icu_late: 5.9  # SPRINT-SARI Australia Project
+    hospital_late: 4.9  # (4 * 2.75 + 103 * 5.048544 + 18 * 4.555556) / (4 + 103 + 18)
+    icu_early: 13.189283389438017  # Need to calculate - pre-ICU hospital period 5.74 - 4.31 = 1.43 seems too short
+    icu_late: 4.31  # mean((3.84, 3.96, 4.07, 4.19, 4.31, 4.43, 4.55, 4.67, 4.78))
   compartment_periods_calculated:
     exposed:
       total_period: 6.095798813756773  # Median posterior estimate from 2020
@@ -168,39 +168,85 @@ vaccination:
     vacc_reduce_infectiousness: 0.5  # Using same reference, but more effect for Alpha than for Delta
   lag: 14
   roll_out_components:
-    - age_min: 0
+    - age_min: 15
       vic_supply:
         start_time: 454
         end_time: 484
-    - age_min: 0
+    - age_min: 15
       vic_supply:
         start_time: 484
         end_time: 514
-    - age_min: 0
+    - age_min: 15
       vic_supply:
         start_time: 514
         end_time: 544
-    - age_min: 0
+    - age_min: 15
       vic_supply:
         start_time: 544
         end_time: 574
-    - age_min: 0
+    - age_min: 15
       vic_supply:
         start_time: 574
         end_time: 604
-    - age_min: 0
+    - age_min: 15
       vic_supply:
         start_time: 604
         end_time: 634
-    - age_min: 0
+    - age_min: 15
       vic_supply:
         start_time: 634
         end_time: 664
-    - age_min: 0
+    - age_min: 15
       vic_supply:
         start_time: 664
         end_time: 694
-    - age_min: 0
+    - age_min: 15
+      vic_supply:
+        start_time: 694
+        end_time: 724
+
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 454
+        end_time: 484
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 484
+        end_time: 514
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 514
+        end_time: 544
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 544
+        end_time: 574
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 574
+        end_time: 604
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 604
+        end_time: 634
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 634
+        end_time: 664
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 664
+        end_time: 694
+    - age_min: 10
+      age_max: 15
       vic_supply:
         start_time: 694
         end_time: 724

@@ -14,6 +14,7 @@ from autumn.tools.calibration.targets import NormalTarget
 
 # Specify the general features of the calibration
 target_start_time = 454
+
 # Median unadjusted posterior contact rate from 2020: 0.0463
 priors = [
     TruncNormalPrior("contact_rate", mean=0.0926, stdev=0.05, trunc_range=(0., np.inf)),

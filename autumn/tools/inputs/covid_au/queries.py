@@ -76,16 +76,6 @@ def get_historical_vac_coverage(
     return vac_dates, avg_vals
 
 
-def update_cond_map(cluster, cond_map):
-    if cluster is None:
-        cluster = "Victoria"
-
-    elif cluster is not None:
-        cluster = cluster.upper()
-        cond_map["cluster_id"] = cluster
-    return cond_map
-
-
 
 def get_historical_vac_num(input_db, cond_map):
     df = input_db.query(

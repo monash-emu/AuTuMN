@@ -116,7 +116,7 @@ mobility:
     home_reduction:
       function_type: constant
       parameters:
-        effect: 0.
+        effect: 0.206
       locations:
         - home
     behaviour:

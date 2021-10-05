@@ -7,7 +7,7 @@ from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
-from autumn.tools.inputs.covid_au.queries import get_historical_vac_coverage, get_modelled_vac_coverage, get_both_vac_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
+from autumn.tools.inputs.covid_au.queries import get_both_vac_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 
 
 def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):

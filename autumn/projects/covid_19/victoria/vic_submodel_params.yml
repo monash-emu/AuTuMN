@@ -164,39 +164,39 @@ vaccination:
     vacc_reduce_infectiousness: 0.5  # Using same reference, but more effect for Alpha than for Delta
   lag: 14
   roll_out_components:
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 454
         end_time: 484
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 484
         end_time: 514
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 514
         end_time: 544
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 544
         end_time: 574
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 574
         end_time: 604
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 604
         end_time: 634
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 634
         end_time: 664
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 664
         end_time: 694
-    - age_min: 15
+    - age_min: 0
       vic_supply:
         start_time: 694
         end_time: 724

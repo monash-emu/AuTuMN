@@ -8,6 +8,8 @@ from autumn.tools.utils.utils import apply_moving_average, COVID_BASE_DATETIME
 
 COVID_BASE_DATE = date(2019, 12, 31)
 TINY_NUMBER = 1e-6
+VACC_COVERAGE_START_AGES = (0, 5, 12, 16, 20, 30, 40, 50, 60, 70, 80, 85)
+VACC_COVERAGE_END_AGES = (4, 11, 15, 19, 29, 39, 49, 59, 69, 79, 84, 89)
 
 
 def get_vic_testing_numbers():
@@ -137,9 +139,9 @@ def get_modelled_vac_coverage(
     """
 
     msg = f"Starting age not one available from modelled vaccination coverage database: {start_age}"
-    assert start_age in (0, 5, 12, 16, 20, 30, 40, 50, 60, 70, 80, 85), msg
+    assert start_age in VACC_COVERAGE_START_AGES, msg
     msg = f"Finishing age not one available from modelled vaccination coverage database: {end_age}"
-    assert end_age in (4, 11, 15, 19, 29, 39, 49, 59, 69, 79, 84, 89), msg
+    assert end_age in VACC_COVERAGE_END_AGES, msg
     msg = f"Starting age ({start_age}) vaccination coverage equal to or greater than finishing age ({end_age})"
     assert start_age < end_age, msg
     msg = f"Requested vaccine not available: {vaccine}"

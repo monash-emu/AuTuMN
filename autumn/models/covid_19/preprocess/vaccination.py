@@ -196,10 +196,18 @@ def add_vaccination_flows(
     # First phase of the Victorian roll-out, informed by vaccination data
     if roll_out_component.vic_supply:
 
+        database_age_min = 0
+        if roll_out_component.age_min == 15:  # Close enough not to need adjustment
+            database_age_min = 16
+        elif roll_out_component.age_min == 10:  # Will need to adjust
+            database_age_min = 12
+        database_age_max = roll_out_component.age_max if roll_out_component.age_max else 89
+
         # Get the cluster-specific historical vaccination numbers
         times, coverage_values = get_both_vac_coverage(
             vic_cluster.upper(),
-            start_age=roll_out_component.age_min
+            start_age=database_age_min,
+            end_age=database_age_max,
         )
 
         # Interpolate

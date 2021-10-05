@@ -1,3 +1,5 @@
+import json
+
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.models.covid_19 import base_params, build_model
@@ -14,4 +16,7 @@ param_set = ParameterSet(baseline=baseline_params)
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 targets = collate_metro_targets(ts_set)
 calibration = Calibration(priors=priors, targets=targets)
-project = Project(Region.SOUTH_METRO, Models.COVID_19, build_model, param_set, calibration)
+plot_spec_filepath = build_rel_path("targets.secret.json")
+with open(plot_spec_filepath) as f:
+    plot_spec = json.load(f)
+project = Project(Region.SOUTH_METRO, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec)

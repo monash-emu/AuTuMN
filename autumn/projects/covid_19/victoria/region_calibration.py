@@ -5,6 +5,8 @@ from autumn.tools.calibration.targets import NormalTarget
 
 # TODO: Work out what is going on with seeding through importation - summer behaviour need revision
 # TODO: Add visualisation of raw Google inputs to inputs notebook
+# TODO: Sort out the caps/lower dash/underscore issue in Vic regions naming
+# TODO: Add varying time to second dose
 
 # Specify the general features of the calibration
 target_start_time = 454

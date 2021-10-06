@@ -1,8 +1,15 @@
 import yaml
 
-INTERVENTION_RATE = {"time_variant_acf": 1.66, "time_variant_ltbi_screening": 1.66}
+INTERVENTION_RATE = {"time_variant_acf": 1.2, "time_variant_ltbi_screening": .87}
 
-BASELINE_POST_INTERVENTION_RATE = {"time_variant_acf": 0.0, "time_variant_ltbi_screening": 0.02}
+BASELINE_POST_INTERVENTION_RATE = {"time_variant_acf": 0.0, "time_variant_ltbi_screening": 0.0}
+
+# international immigration: 1,434 between April 2006 and March 2011 (5 years)
+N_IMMIGRANTS = 300  # per year
+SA_PARAM_VALUES = {
+    "sa_importation": [0, .1, .20, .30, .40],  # proportion of immigrants infected with LTBI
+    "sa_screening": [0.5, .6, .7, .8, .9],
+}
 
 
 def define_all_scenarios(periodic_frequencies=[2, 5, 10]):
@@ -22,7 +29,10 @@ def define_all_scenarios(periodic_frequencies=[2, 5, 10]):
     scenario_details[sc_idx]["params"] = {
         "time_variant_acf": [],
         "time_variant_ltbi_screening": [],
-        "awareness_raising": {},
+        "awareness_raising": {
+            "relative_screening_rate": 1.,
+            "scale_up_range": [3000, 3001]
+        },
     }
 
     """
@@ -96,7 +106,7 @@ def get_periodic_sc_params(frequency, type="ACF"):
         },
         {
             "stratum_filter": {"location": "majuro"},
-            "time_variant_screening_rate": {2018: 0.0, 2018.01: 1.66, 2019: 1.66, 2019.01: 0.0},
+            "time_variant_screening_rate": {2018: 0.0, 2018.01: INTERVENTION_RATE["time_variant_acf"], 2019: INTERVENTION_RATE["time_variant_acf"], 2019.01: 0.0},
         },
     ]
     params["time_variant_ltbi_screening"] = [
@@ -104,25 +114,25 @@ def get_periodic_sc_params(frequency, type="ACF"):
             "stratum_filter": {"location": "majuro"},
             "time_variant_screening_rate": {
                 2018: 0.0,
-                2018.01: 1.66,
-                2019: 1.66,
+                2018.01: INTERVENTION_RATE["time_variant_ltbi_screening"],
+                2019: INTERVENTION_RATE["time_variant_ltbi_screening"],
                 2019.01: BASELINE_POST_INTERVENTION_RATE["time_variant_ltbi_screening"],
             },
         },
-        {
-            "stratum_filter": {"location": "ebeye"},
-            "time_variant_screening_rate": {
-                2018.01: 0.0,
-                2019: BASELINE_POST_INTERVENTION_RATE["time_variant_ltbi_screening"],
-            },
-        },
-        {
-            "stratum_filter": {"location": "other"},
-            "time_variant_screening_rate": {
-                2018.01: 0.0,
-                2019: BASELINE_POST_INTERVENTION_RATE["time_variant_ltbi_screening"],
-            },
-        },
+        # {
+        #     "stratum_filter": {"location": "ebeye"},
+        #     "time_variant_screening_rate": {
+        #         2018.01: 0.0,
+        #         2019: BASELINE_POST_INTERVENTION_RATE["time_variant_ltbi_screening"],
+        #     },
+        # },
+        # {
+        #     "stratum_filter": {"location": "other"},
+        #     "time_variant_screening_rate": {
+        #         2018.01: 0.0,
+        #         2019: BASELINE_POST_INTERVENTION_RATE["time_variant_ltbi_screening"],
+        #     },
+        # },
     ]
 
     interventions_to_add = (
@@ -180,12 +190,36 @@ def drop_all_yml_scenario_files(all_sc_params):
             continue
 
         params_to_dump = sc_details["params"]
-        params_to_dump["parent"] = "apps/tuberculosis/regions/marshall_islands/params/default.yml"
-        params_to_dump["time"] = {"start": 2016, "critical_ranges": [[2017.0, 2049.0]]}
+        params_to_dump["time"] = {"start": 2016}
 
         param_file_path = f"params/scenario-{sc_idx}.yml"
         with open(param_file_path, "w") as f:
             yaml.dump(params_to_dump, f)
+
+
+# SA scenarios
+def make_sa_scenario_list(sa_type):
+    sa_scenarios = []
+    for v in SA_PARAM_VALUES[sa_type]:
+        if sa_type == "sa_importation":
+            sc_dict = {
+                "time": {'start': 2015},
+                'import_ltbi_cases': {
+                    "start_time": 2016,
+                    "n_cases_per_year": v * N_IMMIGRANTS,
+                }
+            }
+        elif sa_type == "sa_screening":
+            sc_dict = {
+                "time": {'start': 2015},
+                'ltbi_screening_sensitivity': v,
+            }
+
+        sa_scenarios.append(
+            sc_dict
+        )
+
+    return sa_scenarios
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 6)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(5, 7)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
@@ -36,18 +36,18 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.018, 0.021]),
-    UniformPrior("infectious_seed", [210.0, 280.0]),
+    UniformPrior("contact_rate", [0.021, 0.025]),
+    UniformPrior("infectious_seed", [150.0, 350.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.04, 0.062]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [410, 435]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.8, 3.0]),
-    UniformPrior("voc_emergence.delta.start_time", [456, 465]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [3.3, 4.0]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 0.8]),
-    UniformPrior("infection_fatality.multiplier", [2.0, 3.2]),
-    # vaccination
-    UniformPrior("vaccination.fully_vaccinated.vacc_prop_prevent_infection", [0.45, 0.85]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.008, 0.0095]),
+    UniformPrior("infection_fatality.multiplier", [0.5, 0.65]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [2.15, 2.4]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.75, 0.95]),
+    #VoC
+    UniformPrior("voc_emergence.alpha_beta.start_time", [395, 425]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.9, 3.1]),
+    UniformPrior("voc_emergence.delta.start_time", [490, 550]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [4.75, 5.2])
 ]
 
 # Load proposal sds from yml file

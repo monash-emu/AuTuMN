@@ -42,7 +42,7 @@ def calculate_mcmc_uncertainty(
     """
     df = pd.merge(do_df, mcmc_df, on=["run", "chain"])
     df.drop(columns=["loglikelihood", "ap_loglikelihood", "accept"], inplace=True)
-    return _calculate_mcmc_uncertainty(df, targets)
+    return _calculate_mcmc_uncertainty(df, targets, use_weights)
 
 
 def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict, use_weights: bool = False) -> pd.DataFrame:
@@ -75,7 +75,7 @@ def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict, use_weights: bo
                     weighted_values = np.repeat(masked_df[output_name], masked_df["weight"])
                 else:
                     weighted_values = masked_df[output_name]
-                    
+
                 quantile_vals = np.quantile(weighted_values, quantiles)
                 for q_idx, q_value in enumerate(quantile_vals):
                     datum = {

@@ -4,11 +4,15 @@ contact_rate: 0.0215
 infectious_seed: 200
 
 time:
-  start: 240
+  start: 150
   end: 791 # march 1st 2022
 
 country:
   iso3: LKA
+
+mixing_matrices:
+  type: extrapolated
+  source_iso3: CHN
 
 contact_tracing:
   assumed_trace_prop: 0.05
@@ -16,11 +20,10 @@ contact_tracing:
   quarantine_infect_multiplier: 0.2
   floor: 0.
 
-
 vaccination:
   fully_vaccinated:
     overall_efficacy: 0.7
-    vacc_prop_prevent_infection: 1
+    vacc_prop_prevent_infection: 0.7
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.32
@@ -45,6 +48,15 @@ clinical_stratification:
   icu_prop: 0.04
 
 mobility:
+  smooth_google_data: false # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
   microdistancing:
     behaviour:
       function_type: tanh
@@ -103,12 +115,12 @@ mobility:
 voc_emergence:
   alpha_beta:
     start_time: 410
-    entry_rate: 1.
+    entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 1.3 # LSHTM's estimate
   delta:
     start_time: 548 # July 01
-    entry_rate: 1.
+    entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
 

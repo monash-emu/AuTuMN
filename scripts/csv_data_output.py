@@ -102,10 +102,10 @@ def get_files(country):
 phl["region"] = get_files(phl)
 mys["region"] = get_files(mys)
 lka["region"] = get_files(lka)
-npl["region"] = get_files(npl)
-vic["region"] = get_files(vic)
+#npl["region"] = get_files(npl)
+#vic["region"] = get_files(vic)
 
-country = {"lka": lka, "phl": phl, "mys": mys, "npl": npl, "vic": vic}
+country = {"lka": lka, "phl": phl, "mys": mys, }#"npl": npl, "vic": vic}
 
 for ctry in country:
 
@@ -174,4 +174,4 @@ for ctry in country:
 
     df.to_csv(f"{ctry}_data.csv")
 
-upload_csv(["lka", "phl", "mys", "npl"])
+upload_csv(["lka", "phl", "mys"])

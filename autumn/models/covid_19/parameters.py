@@ -312,8 +312,7 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
-class Vic2021Seeding(BaseModel):
-    seed_time: float
+class Vic2021ClusterSeeds(BaseModel):
     north_metro: float
     south_east_metro: float
     south_metro: float
@@ -329,6 +328,19 @@ class Vic2021Seeding(BaseModel):
         for region in Region.VICTORIA_SUBREGIONS:
             region_name = region.replace("-", "_")
             assert 0. <= values[region_name], f"Seed value for cluster {region_name} is negative"
+        return values
+
+
+class Vic2021Seeding(BaseModel):
+    seed_time: float
+    clusters: Optional[Vic2021ClusterSeeds]
+    seed: Optional[float]
+
+    @root_validator(allow_reuse=True)
+    def check_request(cls, values):
+        n_requests = int(bool(values["clusters"])) + int(bool(values["seed"]))
+        msg = f"Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled: {n_requests}"
+        assert n_requests == 1, msg
         return values
 
 
@@ -399,16 +411,14 @@ class RollOutFunc(BaseModel):
     age_max: Optional[float]
     supply_timeseries: Optional[TimeSeries]
     supply_period_coverage: Optional[VaccCoveragePeriod]
-    vic_supply_to_history: Optional[VicHistoryPeriod]
-    vic_supply_to_target: Optional[VaccCoveragePeriod]
+    vic_supply: Optional[VicHistoryPeriod]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
         components = \
             values.get("supply_period_coverage"), \
             values.get("supply_timeseries"), \
-            values.get("vic_supply_to_history"), \
-            values.get("vic_supply_to_target")
+            values.get("vic_supply")
         has_supply = (int(bool(i_comp)) for i_comp in components)
         assert sum(has_supply) == 1, "Roll out function must have just one period or timeseries for supply"
         if "age_min" in values:
@@ -424,7 +434,8 @@ class RollOutFunc(BaseModel):
 class VaccEffectiveness(BaseModel):
     overall_efficacy: float
     vacc_prop_prevent_infection: float
-    vacc_reduce_infectiousness: float
+    vacc_reduce_infectiousness: Optional[float]
+    vacc_reduce_infectiousness_ratio: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
@@ -441,11 +452,20 @@ class VaccEffectiveness(BaseModel):
         assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_one_infectiousness_request(cls, values):
+        n_requests = int(bool(values["vacc_reduce_infectiousness"])) + \
+                     int(bool(values["vacc_reduce_infectiousness_ratio"]))
+        msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
+        assert n_requests < 2, msg
+        return values
+
 
 class Vaccination(BaseModel):
     second_dose_delay: float
     one_dose: Optional[VaccEffectiveness]
     fully_vaccinated: VaccEffectiveness
+    lag: float
 
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]
@@ -453,7 +473,18 @@ class Vaccination(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
         assert 0. < values["second_dose_delay"], f"Delay to second dose is not positive: {values['second_dose_delay']}"
+        if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:
+            values["one_dose"]["vacc_reduce_infectiousness"] = \
+                values["fully_vaccinated"]["vacc_reduce_infectiousness"] * \
+                values["one_dose"]["vacc_reduce_infectiousness_ratio"]
+            values["one_dose"]["vacc_reduce_infectiousness_ratio"] = None
         return values
+
+    @validator("lag", allow_reuse=True)
+    def check_lag(val):
+        msg = f"Vaccination lag period is negative: {val}"
+        assert val >= 0., msg
+        return val
 
 
 class VaccinationRisk(BaseModel):
@@ -498,12 +529,12 @@ class ContactTracing(BaseModel):
         assert 0. <= val <= 1., f"Contact tracing infectiousness multiplier must be in range [0, 1]: {val}"
         return val
 
-    @ validator("assumed_prev", allow_reuse=True)
+    @validator("assumed_prev", allow_reuse=True)
     def check_prevalence(val):
         assert 0. <= val <= 1., f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
         return val
 
-    @ validator("assumed_trace_prop", allow_reuse=True)
+    @validator("assumed_trace_prop", allow_reuse=True)
     def check_prevalence(val):
         assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val

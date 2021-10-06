@@ -191,8 +191,8 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
         )
 
     # Split by child and adult
-    paed_notifications = (f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3])
-    adult_notifications = (f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:])
+    paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]]
+    adult_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:]]
     model.request_aggregate_output(
         name="notificationsXpaediatric",
         sources=paed_notifications

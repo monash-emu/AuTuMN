@@ -2,8 +2,13 @@ description: BASELINE
 
 vic_status: "vic_region_2021"
 
+vic_2021_seeding:
+  seed_time: 570
+  seed: 1.5
+
+contact_rate: 0.215
 infectious_seed: 0.
-seasonal_force: 0.
+seasonal_force: 0.3
 
 mixing_matrices:
   type: extrapolated
@@ -15,7 +20,7 @@ country:
   iso3: AUS
 
 contact_tracing:
-  assumed_trace_prop: 0.31  # Ignore, calibrated
+  assumed_trace_prop: 0.4
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2
   floor: 0.3
@@ -26,10 +31,11 @@ time:
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
-  assumed_cdr_parameter: .3  # Calibrated
+  assumed_cdr_parameter: 0.179
   smoothing_period: 7
 
 clinical_stratification:
+  non_sympt_infect_multiplier: 0.509  # Median posterior estimate from 2020
 
   # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
   # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88
@@ -57,19 +63,22 @@ clinical_stratification:
         - 0.389  # 70-74
         - 0.471  # 75+ - weighted to the observed cases in >75s as (511 / 2 + 652 + 356) / (1344 / 2 + 1230 + 783)
 
-  icu_prop: 0.16
+  icu_prop: 0.1875980041535647  # Median posterior estimate from 2020
 
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
-    hospital_late: 7.8  # FluCAN monthly Covid Epi Report to CDNA, 30th August 2020
-    icu_late: 5.9  # SPRINT-SARI Australia Project
+    hospital_late: 4.9  # (4 * 2.75 + 103 * 5.048544 + 18 * 4.555556) / (4 + 103 + 18)
+    icu_early: 13.189283389438017  # Need to calculate - pre-ICU hospital period 5.74 - 4.31 = 1.43 seems too short
+    icu_late: 4.31  # mean((3.84, 3.96, 4.07, 4.19, 4.31, 4.43, 4.55, 4.67, 4.78))
   compartment_periods_calculated:
+    exposed:
+      total_period: 6.095798813756773  # Median posterior estimate from 2020
     active:
+      total_period: 6.431724510638751  # Median posterior estimate from 2020
       proportions:
         early: 0.5
         late: 0.5
-
 
 mobility:
   region: null
@@ -107,7 +116,7 @@ mobility:
     home_reduction:
       function_type: constant
       parameters:
-        effect: 0.
+        effect: 0.206
       locations:
         - home
     behaviour:
@@ -125,7 +134,7 @@ mobility:
     behaviour_adjuster:
       function_type: constant
       parameters:
-        effect: 0.3
+        effect: 0.3336881545907932  # Median posterior estimate from 2020
       locations:
         - other_locations
         - school
@@ -141,8 +150,103 @@ mobility:
     face_coverings_adjuster:
       function_type: constant
       parameters:
-        effect: 0.3
+        effect: 0.4590192843551404
       locations:
         - other_locations
         - school
         - work
+
+# Vaccination effectiveness parameters taken from https://www.medrxiv.org/content/10.1101/2021.08.18.21262237v1
+vaccination:
+  one_dose:
+    overall_efficacy: 0.49  # Average of 0.4 and 0.58
+    vacc_prop_prevent_infection: 0.95  # Approximate estimate
+    vacc_reduce_infectiousness_ratio: 0.5
+  fully_vaccinated:
+    overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
+    vacc_prop_prevent_infection: 0.95  # Approximate estimate
+    vacc_reduce_infectiousness: 0.5  # Using same reference, but more effect for Alpha than for Delta
+  lag: 14
+  roll_out_components:
+    - age_min: 15
+      vic_supply:
+        start_time: 454
+        end_time: 484
+    - age_min: 15
+      vic_supply:
+        start_time: 484
+        end_time: 514
+    - age_min: 15
+      vic_supply:
+        start_time: 514
+        end_time: 544
+    - age_min: 15
+      vic_supply:
+        start_time: 544
+        end_time: 574
+    - age_min: 15
+      vic_supply:
+        start_time: 574
+        end_time: 604
+    - age_min: 15
+      vic_supply:
+        start_time: 604
+        end_time: 634
+    - age_min: 15
+      vic_supply:
+        start_time: 634
+        end_time: 664
+    - age_min: 15
+      vic_supply:
+        start_time: 664
+        end_time: 694
+    - age_min: 15
+      vic_supply:
+        start_time: 694
+        end_time: 724
+
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 454
+        end_time: 484
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 484
+        end_time: 514
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 514
+        end_time: 544
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 544
+        end_time: 574
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 574
+        end_time: 604
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 604
+        end_time: 634
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 634
+        end_time: 664
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 664
+        end_time: 694
+    - age_min: 10
+      age_max: 15
+      vic_supply:
+        start_time: 694
+        end_time: 724

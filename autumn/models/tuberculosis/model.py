@@ -312,7 +312,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         location_strata,
         params.time_variant_tb_screening_rate,
         implement_acf,
-        implement_ltbi_screening
+        implement_ltbi_screening,
+        params.pt_efficacy
     )
 
     return model

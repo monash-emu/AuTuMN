@@ -1,6 +1,7 @@
 from summer import CompartmentalModel
 from summer.adjust import Multiply, Overwrite
 
+from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.models.covid_19.constants import Vaccination
@@ -159,8 +160,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     # Stratify the model by clinical status
+    if pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS:
+        override_test_region = "Victoria"
+    else:
+        override_test_region = None
+
     get_detected_proportion = find_cdr_function_from_test_data(
-        params.testing_to_detection, country.iso3, pop.region, pop.year
+        params.testing_to_detection, country.iso3, override_test_region, pop.year
     )
     clinical_strat, adjustment_systems = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
@@ -325,24 +331,26 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Vic 2021 code is not generalisable
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            for i_component in range(len(vacc_params.roll_out_components)):
+            for component in vacc_params.roll_out_components:
                 for cluster in cluster_strat.strata:
                     add_vaccination_flows(
                         model,
-                        vacc_params.roll_out_components[i_component],
+                        component,
                         age_strat.strata,
                         params.vaccination.one_dose,
                         vic_cluster=cluster,
                         cluster_stratum={"cluster": cluster},
                     )
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            for i_component in range(len(vacc_params.roll_out_components)):
+            for i_comp, component in enumerate(vacc_params.roll_out_components):
                 add_vaccination_flows(
                     model,
-                    vacc_params.roll_out_components[i_component],
+                    component,
                     age_strat.strata,
                     params.vaccination.one_dose,
-                    vic_cluster=params.population.region
+                    vic_cluster=params.population.region,
+                    i_component=i_comp,
+                    vaccination_lag=vacc_params.lag,
                 )
 
         else:

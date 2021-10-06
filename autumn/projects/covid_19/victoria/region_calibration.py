@@ -17,9 +17,9 @@ target_start_time = 454
 
 # Median unadjusted posterior contact rate from 2020: 0.0463
 priors = [
-    TruncNormalPrior("contact_rate", mean=0.0926, stdev=0.1, trunc_range=(0., np.inf)),
-    UniformPrior("seasonal_force", [0., 0.3], jumping_stdev=0.05),
-    UniformPrior("vaccination.fully_vaccinated.vacc_reduce_infectiousness", [0.1, 0.3]),
+    UniformPrior("contact_rate", (0.1, 0.3), jumping_stdev=0.05),
+    UniformPrior("seasonal_force", (0., 0.3), jumping_stdev=0.05),
+    UniformPrior("vaccination.fully_vaccinated.vacc_reduce_infectiousness", (0.1, 0.3)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.1, 0.25), jumping_stdev=0.04),
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",

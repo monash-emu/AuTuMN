@@ -119,6 +119,7 @@ acf_screening_sensitivity: .75
 time_variant_ltbi_screening: []
 ltbi_screening_sensitivity: .75
 pt_efficacy: .7
+pt_sae_prop: .016  # 3HP
 pt_destination_compartment: "recovered" # either 'recovered' or 'susceptible'
 
 awareness_raising: {}

@@ -16,13 +16,20 @@ def _pdfilt(df, fstr):
         '>=': 'ge',
         '==': 'eq'
     }
-    return df[df[column].__getattribute__(op_table[op])(float(value))]
+    try:
+        # Assume most things are floating point values; fall back to string otherwise
+        value = float(value)
+    except:
+        pass
+
+    return df[df[column].__getattribute__(op_table[op])(value)]
 
 def pdfilt(df: pd.DataFrame, filters: List[str]) -> pd.DataFrame:
     """Return a filtered DataFrame, filtered by strings of form
     'column op value'
     E.g
     'mycolumn > 21.5'
+    'valuetype == notifications'
 
     Args:
         df (pd.DataFrame): DataFrame to filter

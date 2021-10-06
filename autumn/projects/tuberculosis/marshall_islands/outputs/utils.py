@@ -17,6 +17,7 @@ OUTPUT_TITLES = {
     "population_size": "Population size",
     "screening_rate": "Rate of passive TB screening (/year)",
     "cumulative_pt": "Cumulative number of PTs",
+    "cumulative_pt_sae": "Cummulative serious adverse effects from PT",
 }
 
 REGION_TITLES = {

@@ -14,8 +14,9 @@ def request_outputs(
     location_strata: List[str],
     time_variant_tb_screening_rate,
     implement_acf: bool,
-    implement_ltbi=False,
-    pt_efficacy=1.
+    implement_ltbi_screening=False,
+    pt_efficacy=1.,
+    pt_sae_prop=0.
 ):
     out = OutputBuilder(model, location_strata)
 
@@ -98,7 +99,7 @@ def request_outputs(
     model.request_function_output("screening_rate", get_screening_rate, [])
 
     # Track cumulative number of preventive treatments provided from 2016
-    if implement_ltbi:
+    if implement_ltbi_screening:
         model.request_output_for_flow("pt_early_raw", "preventive_treatment_early", save_results=False)
         model.request_output_for_flow("pt_late_raw", "preventive_treatment_late", save_results=False)
         model.request_aggregate_output("pt_raw", ["pt_early_raw", "pt_late_raw"], save_results=False)
@@ -111,6 +112,20 @@ def request_outputs(
             save_results=False,
         )
         model.request_cumulative_output("cumulative_pt", "pt", start_time=2016., save_results=True)
+        model.request_function_output(
+            name="cumulative_pt_sae",
+            func=lambda x: x * pt_sae_prop,
+            sources=["cumulative_pt"],
+            save_results=True,
+        )
+    else:  # just record zeroes if PT not implemented
+        for zero_output in ["cumulative_pt", "cumulative_pt_sae"]:
+            model.request_function_output(
+                name=zero_output,
+                func=lambda x: 0.,
+                sources=["incidence"],  # could be any source output
+                save_results=True,
+            )
 
 
 class OutputBuilder:

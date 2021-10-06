@@ -35,7 +35,7 @@ def _register_display_hooks():
     try:
         ip = get_ipython()
     except:
-        pass
+        return
 
     def generator_formatter(generator, pp, cycle):
         """Print generators as if they were lists

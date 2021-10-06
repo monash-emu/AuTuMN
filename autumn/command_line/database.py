@@ -30,8 +30,13 @@ def build_input_db():
     Build a new input database from input data files.
     """
     from autumn.tools.inputs import build_input_database
+    from autumn.command_line.secrets import write_secret
+    from autumn.tools.inputs.database import INPUT_DB_PATH
+
 
     build_input_database(rebuild=True)
+    # Idea is to chain the encryption together with the db rebuild.
+    write_secret(INPUT_DB_PATH) # I'm trying to encrypt the new inputs.secret.db. But it throws an error!
 
 
 @db.command("feather2sql")

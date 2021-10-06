@@ -8,7 +8,7 @@ vic_2021_seeding:
 
 contact_rate: 0.215
 infectious_seed: 0.
-seasonal_force: 0.15
+#seasonal_force: 0.15
 
 mixing_matrices:
   type: extrapolated

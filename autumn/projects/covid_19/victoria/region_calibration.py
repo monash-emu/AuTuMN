@@ -21,10 +21,10 @@ priors = [
         "contact_rate",
         (0.1, 0.3), jumping_stdev=0.05
     ),
-    UniformPrior(
-        "seasonal_force",
-        (0., 0.3), jumping_stdev=0.05
-    ),
+    # UniformPrior(
+    #     "seasonal_force",
+    #     (0., 0.3), jumping_stdev=0.05
+    # ),
     UniformPrior(
         "vaccination.fully_vaccinated.vacc_reduce_infectiousness",
         (0.1, 0.3)

@@ -83,6 +83,12 @@ plot_spec_filepath = build_rel_path("timeseries.json")
 with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
+diff_output_requests = [
+    ["cumulative_diseased", "ABSOLUTE"],
+    ["cumulative_deaths", "ABSOLUTE"],
+    ["cumulative_pt", "ABSOLUTE"],
+    ["cumulative_pt_sae", "ABSOLUTE"],
+]
 
 project = Project(
     Region.MARSHALL_ISLANDS,
@@ -91,4 +97,5 @@ project = Project(
     param_set,
     calibration,
     plots=plot_spec,
+    diff_output_requests=diff_output_requests,
 )

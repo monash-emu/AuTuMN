@@ -21,7 +21,6 @@ priors = [
     UniformPrior("seasonal_force", [0., 0.3], jumping_stdev=0.05),
     UniformPrior("vaccination.fully_vaccinated.vacc_reduce_infectiousness", [0.1, 0.3]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.1, 0.25), jumping_stdev=0.04),
-    UniformPrior("vic_2021_seeding.seed_time", (570, 590), jumping_stdev=4),
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",
         mean=6.095798813756773, stdev=0.7810560402997285, trunc_range=(1.0, np.inf), jumping_stdev=0.5

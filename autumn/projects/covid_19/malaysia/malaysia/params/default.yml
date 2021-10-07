@@ -128,3 +128,4 @@ contact_tracing:
   floor: 0.
 
 waning_immunity_duration: 365
+stratify_by_infection_history: true

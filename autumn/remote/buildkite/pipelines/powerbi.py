@@ -22,8 +22,8 @@ urunid_field = TextInputField(
 branch_field = TextInputField(
     key="branch",
     title="Model git branch name",
-    hint="Specify which branch to use for the powerbi job - leave empty to use the original commit",
-    default="",
+    hint="Specify which branch to use for the powerbi job - leave as default to use the original run commit",
+    default="use_original_commit",
     type=str,
 )
 spot_field = BooleanInputField(

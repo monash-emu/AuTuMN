@@ -10,9 +10,9 @@ steps:
     key: urunid
     required: true
     text: Candidate run id
-  - default: ''
-    hint: Specify which branch to use for the powerbi job - leave empty to use the
-      original commit
+  - default: use_original_commit
+    hint: Specify which branch to use for the powerbi job - leave as default to use
+      the original run commit
     key: branch
     required: true
     text: Model git branch name

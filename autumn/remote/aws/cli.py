@@ -207,7 +207,7 @@ def run_full_model(job, run, burn_in, sample, latest_code, branch, is_spot):
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
 @click.option("--urunid", type=str, default="mle")
-@click.option("--branch", type=str, default="")
+@click.option("--branch", type=str, default="use_original_commit")
 @click.option("--spot", is_flag=True)
 def run_powerbi_cli(job, run, urunid, branch, spot):
     run_powerbi(job, run, urunid, branch, spot)

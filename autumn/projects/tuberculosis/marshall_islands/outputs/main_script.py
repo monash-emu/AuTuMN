@@ -34,7 +34,7 @@ def make_all_rmi_plots(analysis="main"):
     pri.main(output_path)
 
     # posterior table
-    pos.main(data_path, output_path)
+    # pos.main(data_path, output_path)
 
     # counterfactual outputs
     ctf.main(data_path, output_path)
@@ -46,5 +46,10 @@ def make_all_rmi_plots(analysis="main"):
     dia.main(data_path, output_path)
 
 
-for analysis in ["main", "flexible_cdr"]:
+for analysis in ["main", "rmi_bcg_mortality", "rmi_constant_cdr", "rmi_more_intermixing"]:
+    print(f"Plotting outputs for analysis {analysis}")
     make_all_rmi_plots(analysis)
+    for _ in range(5):
+        print()
+    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+

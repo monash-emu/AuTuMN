@@ -1,31 +1,19 @@
-description: 30% vaccine coverage / 30% increased mobility / 50% increased testing
+description: 30% onsite learning on 1 Jan 2022
+
+time:
+  start: 670  # 31 Oct 2021
+
 mobility:
   mixing:
-    other_locations:
-      append: true
+    school:
+      append: false
       times:
-      - 572
-      - 574
+        - 2020-03-15
+        - 2020-03-16
+        - 2022-01-01
+        - 2022-01-03
       values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.3
-    work:
-      append: true
-      times:
-      - 572
-      - 574
-      values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.3
-testing_to_detection:
-  test_multiplier:
-    times:
-    - 572
-    - 574
-    values:
-    - 1.0
-    - 1.5
-time:
-  start: 573
+        - 1.
+        - 0.
+        - 0.
+        - 0.3

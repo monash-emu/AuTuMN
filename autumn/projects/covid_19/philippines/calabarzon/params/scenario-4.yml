@@ -1,23 +1,7 @@
-description: 30% vaccine coverage / 50% increased mobility / baseline testing
-mobility:
-  mixing:
-    other_locations:
-      append: true
-      times:
-      - 572
-      - 574
-      values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.5
-    work:
-      append: true
-      times:
-      - 572
-      - 574
-      values:
-      - - repeat_prev
-      - - scale_prev
-        - 1.5
+description: No vaccine counterfactual
+
 time:
-  start: 573
+  start: 426  # 1 Mar 2021
+
+vaccination:
+  roll_out_components: []

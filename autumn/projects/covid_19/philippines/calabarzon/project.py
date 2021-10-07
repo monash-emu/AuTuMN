@@ -23,7 +23,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-targets, priors = get_philippies_calibration_settings(ts_set)
+targets, priors = get_philippies_calibration_settings(ts_set, region=Region.CALABARZON)
 
 # Load proposal sds from yml file
 use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))

@@ -11,6 +11,7 @@ universal_death_rate: 0. # Compulsory parameter for all models, even though ther
 infectious_seed: 10 # Initial condition for infectious
 contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 seasonal_force: null
+vic_status: "non_vic"
 
 #
 mixing_matrices:
@@ -184,9 +185,15 @@ vaccination:
     overall_efficacy: 0.
     vacc_prop_prevent_infection: 0.
     vacc_reduce_infectiousness: 0.
-  one_dose: null
+    vacc_reduce_infectiousness_ratio: null
+  one_dose:
+    overall_efficacy: 0.
+    vacc_prop_prevent_infection: 0.
+    vacc_reduce_infectiousness: 0.
+    vacc_reduce_infectiousness_ratio: null
   # Time from receiving first dose to second, based on the days from Vic achieving the same coverage with one and two
   second_dose_delay: 43.
+  lag: 0.
   roll_out_components: []
 
 vaccination_risk:

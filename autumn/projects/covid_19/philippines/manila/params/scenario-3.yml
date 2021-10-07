@@ -1,7 +1,7 @@
-description: 30% onsite learning on 1 Jan 2022
+description: 30% onsite learning on 1 Jan 2022 / 50% other mobility increase
 
 time:
-  start: 670  # 31 Oct 2021
+  start: 731  # 31 Dec 2021
 
 mobility:
   mixing:
@@ -17,3 +17,19 @@ mobility:
         - 0.
         - 0.
         - 0.3
+    work:
+      append: true
+      times:
+        - 2022-01-01
+        - 2022-01-03
+      values:
+        - ['repeat_prev']
+        - ['scale_prev_up_to_1', 1.50]
+    other_locations:
+      append: true
+      times:
+        - 2022-01-01
+        - 2022-01-03
+      values:
+        - ['repeat_prev']
+        - ['scale_prev_up_to_1', 1.50]

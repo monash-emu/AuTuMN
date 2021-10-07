@@ -74,3 +74,6 @@ vaccination:
 
 vaccination_risk:
   calculate: false
+
+stratify_by_infection_history: true
+waning_immunity_duration: 365.

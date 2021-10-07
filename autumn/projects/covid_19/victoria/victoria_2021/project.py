@@ -8,14 +8,8 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
 
-# TODO: Check YouGov inputs to micro-distancing functions (face coverings and physical distancing)
-#  - need to get Mili to do this, data at https://github.com/YouGov-Data/covid-19-tracker/blob/master/data/australia.zip
-# TODO: Calibrate to statewide deaths
-# TODO: See how shorter hospitalisation duration goes
-# TODO: Consider turning seasonal forcing on
-# TODO: Write everything up as a policy brief
-# TODO: Write the methods up as a technical document
-# TODO: Implement age and cluster-specific vaccination coverage functions (may just be too much complexity)
+# TODO: Look at vaccination by age group - possibly change to a computed value process
+# TODO: Move to contact rate prior based on 2020 analysis - merge in from branch
 
 # Note I have changed this to the Metro clusters only - unlike in the Victoria 2020 analysis
 metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
@@ -23,9 +17,11 @@ metro_clusters = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-scenario_dir_path = build_rel_path("params/")
+scenario_paths = [build_rel_path("params/scenario-1.yml")]
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
-param_set = ParameterSet(baseline=baseline_params)
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
+
+param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))

@@ -1,11 +1,19 @@
-description: 30% vaccine coverage / baseline mobility / 50% increased testing
-testing_to_detection:
-  test_multiplier:
-    times:
-    - 572
-    - 574
-    values:
-    - 1.0
-    - 1.5
+description: 30% onsite learning on 1 Nov 2021
+
 time:
-  start: 573
+  start: 670  # 31 Oct 2021
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-15
+        - 2020-03-16
+        - 2021-11-01
+        - 2021-11-03
+      values:
+        - 1.
+        - 0.
+        - 0.
+        - 0.3

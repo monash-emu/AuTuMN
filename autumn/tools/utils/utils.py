@@ -283,7 +283,7 @@ def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns={datecol.lower():'date'},inplace=True)
     df.date = pd.to_datetime(
     df["date"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
-)
-    df["date_index"] = (df.date - COVID_BASE_DATETIME).dt.days
+).dt.date
+    df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
 
     return df

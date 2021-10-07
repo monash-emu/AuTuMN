@@ -9,7 +9,6 @@ import streamlit as st
 import yaml
 
 from autumn.models.covid_19.parameters import Country, Population
-from autumn.models.covid_19.preprocess.case_detection import get_testing_pop
 from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
 from autumn.tools import plots
 from autumn.tools.plots.calibration.plots import get_epi_params, calculate_r_hats
@@ -23,11 +22,11 @@ from autumn.dashboards.calibration_results.plots import (
     get_uncertainty_df,
     write_mcmc_centiles,
 )
-from autumn.models.covid_19.constants import BASE_DATETIME
+from autumn.models.covid_19.constants import BASE_DATETIME, AGEGROUP_STRATA
 from autumn.tools.utils.utils import apply_moving_average
 from autumn.tools.inputs import get_mobility_data
 from autumn.tools.project import get_project
-
+from autumn.tools import inputs
 
 from autumn.tools.streamlit.utils import create_downloadable_csv, Dashboard
 
@@ -659,7 +658,12 @@ def plot_cdr_curves(
     country = Country
     country.iso3 = "AUS"
 
-    testing_pop, testing_region = get_testing_pop(agegroup_strata, country, pop)
+    testing_region = "Victoria" if country.iso3 == "AUS" else pop.region
+    testing_year = 2020 if country.iso3 == "AUS" else pop.year
+
+    testing_pop = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, testing_region, year=testing_year)
+
+    # testing_pop, testing_region = get_testing_pop(country, pop)
 
     detected_proportion = []
     for assumed_cdr_parameter in sampled_test_to_detect_vals:

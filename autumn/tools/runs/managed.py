@@ -3,6 +3,7 @@ from pathlib import Path
 from .remote import RemoteRunData
 from .utils import website_addr_for_run
 from .powerbi import ManagedPowerBI
+from .full import ManagedFullRun
 from .calibration.managed import ManagedCalibrationRun
 
 from autumn.tools import db
@@ -15,6 +16,7 @@ class ManagedRun:
         self.local_path = self.remote.local_path_run
         self.calibration = ManagedCalibrationRun(self)
         self.powerbi = ManagedPowerBI(self)
+        self.full_run = ManagedFullRun(self)
         web_addr = website_addr_for_run(self.run_id)
         self.website_link = get_link(web_addr)
         

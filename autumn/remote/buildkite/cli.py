@@ -161,6 +161,12 @@ def full():
     else:
         logger.info("Triggering PowerBI processing.")
         pp = powerbi_pipeline
+
+        if use_latest_code:
+            pbi_branch = "master"
+        else:
+            pbi_branch = "use_original_commit"
+
         trigger_pipeline(
             label="Trigger PowerBI processing",
             target="powerbi-processing",
@@ -169,6 +175,7 @@ def full():
             meta={
                 pp.run_id_field.key: run_id,
                 pp.urunid_field.key: "mle",
+                pp.branch_field.key: pbi_branch,
                 pp.spot_field.key: pp.spot_field.get_option(is_spot),
             },
         )

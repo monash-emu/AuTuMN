@@ -163,7 +163,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS:
         override_test_region = "Victoria"
     else:
-        override_test_region = None
+        override_test_region = pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(
         params.testing_to_detection, country.iso3, override_test_region, pop.year

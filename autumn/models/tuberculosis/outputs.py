@@ -122,7 +122,7 @@ def request_outputs(
         for zero_output in ["cumulative_pt", "cumulative_pt_sae"]:
             model.request_function_output(
                 name=zero_output,
-                func=lambda x: 0.,
+                func=lambda x: x * 0.,  # uses x * 0 so we copy the size of the source output x
                 sources=["incidence"],  # could be any source output
                 save_results=True,
             )

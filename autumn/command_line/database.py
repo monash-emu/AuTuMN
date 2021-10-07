@@ -30,9 +30,6 @@ def build_input_db():
     Build a new input database from input data files.
     """
     from autumn.tools.inputs import build_input_database
-    from autumn.tools.utils import secrets
-    from autumn.tools.inputs.database import INPUT_DB_PATH
-    from getpass import getpass
 
     build_input_database(rebuild=True)
 

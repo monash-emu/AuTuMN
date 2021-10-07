@@ -1,6 +1,6 @@
 import yaml
 
-INTERVENTION_RATE = {"time_variant_acf": 1.2, "time_variant_ltbi_screening": .87}
+INTERVENTION_RATE = {"time_variant_acf": 1.66, "time_variant_ltbi_screening": .9}
 
 BASELINE_POST_INTERVENTION_RATE = {"time_variant_acf": 0.0, "time_variant_ltbi_screening": 0.0}
 

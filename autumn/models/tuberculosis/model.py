@@ -313,7 +313,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.time_variant_tb_screening_rate,
         implement_acf,
         implement_ltbi_screening,
-        params.pt_efficacy
+        params.pt_efficacy,
+        params.pt_sae_prop
     )
 
     return model

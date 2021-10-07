@@ -10,6 +10,12 @@ steps:
     key: urunid
     required: true
     text: Candidate run id
+  - default: ''
+    hint: Specify which branch to use for the powerbi job - leave empty to use the
+      original commit
+    key: branch
+    required: true
+    text: Model git branch name
   - default: 'no'
     hint: Is 1/3 of the price but sometimes randomly fails.
     key: spot-instance

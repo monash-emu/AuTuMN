@@ -10,7 +10,7 @@ from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
 from autumn.tools.inputs.covid_au.queries import get_both_vac_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 
 
-def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
+def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None, age_min = None):
     """
     Calculate the time-variant vaccination rate based on a requested coverage and roll-out window.
     Return the stepped function of time.
@@ -24,6 +24,8 @@ def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, cov
 
     # Calculate the vaccination rate from the coverage and the duration of the program
     vaccination_rate = -np.log(1. - coverage) / duration
+    if age_min == 12:  # adjusting vaccination rate for 12+ age group
+        vaccination_rate = vaccination_rate * 0.6
 
     # Create the function
     def get_vaccination_rate(time, computed_values):
@@ -254,7 +256,7 @@ def add_vaccination_flows(
             roll_out_component.supply_period_coverage.coverage,
             roll_out_component.supply_period_coverage.start_time,
             roll_out_component.supply_period_coverage.end_time,
-            coverage_override
+            coverage_override,
         )
 
     # Dose based vaccination
@@ -283,7 +285,13 @@ def add_vaccination_flows(
             if roll_out_component.supply_period_coverage or \
                     roll_out_component.vic_supply:
                 if roll_out_component.age_min == 12 and eligible_age_group == "10":
-                    fractional_rate = 0.6
+                    fractional_rate = get_vacc_roll_out_function_from_coverage(
+                                            roll_out_component.supply_period_coverage.coverage,
+                                            roll_out_component.supply_period_coverage.start_time,
+                                            roll_out_component.supply_period_coverage.end_time,
+                                            coverage_override,
+                                            roll_out_component.age_min
+                                            )
                 else:
                     fractional_rate = vaccination_roll_out_function
 

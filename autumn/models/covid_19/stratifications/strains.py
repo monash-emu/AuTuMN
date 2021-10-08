@@ -8,17 +8,14 @@ def get_strain_strat(voc_params):
     Stratify the model by strain, with two strata, being wild or "ancestral" virus type and the single
     variant of concern ("VoC").
     """
-    voc_names = list(voc_params.keys())
 
+    # Process the requests
+    voc_names = list(voc_params.keys())
     msg = f"VoC names must be different from {Strain.WILD_TYPE}"
     assert Strain.WILD_TYPE not in voc_names, msg
 
-    # Stratify model.
-    strain_strat = StrainStratification(
-        "strain",
-        [Strain.WILD_TYPE] + voc_names,
-        DISEASE_COMPARTMENTS,
-    )
+    # Stratify model
+    strain_strat = StrainStratification("strain", [Strain.WILD_TYPE] + voc_names, DISEASE_COMPARTMENTS)
 
     # Prepare population split and transmission adjustments.
     population_split = {Strain.WILD_TYPE: 1.}
@@ -37,6 +34,10 @@ def get_strain_strat(voc_params):
 
 
 def make_voc_seed_func(entry_rate, start_time, seed_duration):
+    """
+    Create a simple step function to allow seeding of the VoC strain at a particular point in time.
+    """
+
     def voc_seed_func(time, computed_values):
         return entry_rate if 0. < time - start_time < seed_duration else 0.
 

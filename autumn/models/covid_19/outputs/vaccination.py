@@ -9,10 +9,10 @@ from autumn.models.covid_19.outputs.common import request_stratified_output_for_
 
 def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
     """
-    Get the vaccination-related outputs
+    Get the vaccination-related outputs.
     """
 
-    # Track proportions vaccinated by vaccination status
+    # Track proportions vaccinated by vaccination status (depends on _total_population previously being requested)
     for vacc_stratum in VACCINATION_STRATA:
         model.request_output_for_compartments(
             name=f"_{vacc_stratum}",
@@ -28,11 +28,7 @@ def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
     model.request_function_output(
         name="at_least_one_dose_prop",
         func=lambda vacc, one_dose, pop: (vacc + one_dose) / pop,
-        sources=[
-            f"_{Vaccination.VACCINATED}",
-            f"_{Vaccination.ONE_DOSE_ONLY}",
-            "_total_population"
-        ]
+        sources=[f"_{Vaccination.VACCINATED}", f"_{Vaccination.ONE_DOSE_ONLY}", "_total_population"]
     )
 
     # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
@@ -41,41 +37,42 @@ def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
         request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
 
         for agegroup in AGEGROUP_STRATA:
+            agegroup_string = f"agegroup_{agegroup}"
             model.request_output_for_flow(
-                name=f"vaccinationXagegroup{agegroup}",
+                name=f"vaccinationX{agegroup_string}",
                 flow_name="vaccination",
                 source_strata={"agegroup": agegroup},
             )
 
             # TTS for AstraZeneca vaccines
             model.request_function_output(
-                name=f"tts_casesXagegroup_{agegroup}",
-                sources=[f"vaccinationXagegroup_{agegroup}"],
+                name=f"tts_casesX{agegroup_string}",
+                sources=[f"vaccinationX{agegroup_string}"],
                 func=lambda vaccinated:
                 vaccinated * params.vaccination_risk.tts_rate[agegroup] * params.vaccination_risk.prop_astrazeneca
             )
             model.request_function_output(
-                name=f"tts_deathsXagegroup_{agegroup}",
-                sources=[f"tts_casesXagegroup_{agegroup}"],
+                name=f"tts_deathsX{agegroup_string}",
+                sources=[f"tts_casesX{agegroup_string}"],
                 func=lambda tts_cases:
                 tts_cases * params.vaccination_risk.tts_fatality_ratio[agegroup]
             )
 
             # Myocarditis for mRNA vaccines
             model.request_function_output(
-                name=f"myocarditis_casesXagegroup_{agegroup}",
-                sources=[f"vaccinationXagegroup_{agegroup}"],
+                name=f"myocarditis_casesX{agegroup_string}",
+                sources=[f"vaccinationX{agegroup_string}"],
                 func=lambda vaccinated:
                 vaccinated * params.vaccination_risk.myocarditis_rate[agegroup] * params.vaccination_risk.prop_mrna
             )
             hospital_sources += [
-                f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.ICU}",
-                f"{PROGRESS}Xagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
+                f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.ICU}",
+                f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
             ]
 
             # Hospitalisations by age
-            hospital_sources_this_age = [s for s in hospital_sources if f"Xagegroup_{agegroup}X" in s]
+            hospital_sources_this_age = [s for s in hospital_sources if f"X{agegroup_string}X" in s]
             model.request_aggregate_output(
-                name=f"new_hospital_admissionsXagegroup_{agegroup}",
+                name=f"new_hospital_admissionsX{agegroup_string}",
                 sources=hospital_sources_this_age
             )

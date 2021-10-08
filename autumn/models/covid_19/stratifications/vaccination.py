@@ -79,7 +79,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
 
     # Apply vaccination protection against being infected
     one_dose_infection_adj = \
-        Multiply(1. - infection_efficacy[Vaccination.VACCINATED]) if is_one_dose_active else None
+        Multiply(1. - infection_efficacy[Vaccination.ONE_DOSE_ONLY]) if is_one_dose_active else None
     infection_adjustments = {
         Vaccination.UNVACCINATED: None,
         Vaccination.ONE_DOSE_ONLY: one_dose_infection_adj,

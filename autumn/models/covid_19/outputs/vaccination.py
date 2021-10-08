@@ -38,11 +38,6 @@ def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
 
         for agegroup in AGEGROUP_STRATA:
             agegroup_string = f"agegroup_{agegroup}"
-            model.request_output_for_flow(
-                name=f"vaccinationX{agegroup_string}",
-                flow_name="vaccination",
-                source_strata={"agegroup": agegroup},
-            )
 
             # TTS for AstraZeneca vaccines
             model.request_function_output(

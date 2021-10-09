@@ -11,7 +11,6 @@ country:
   iso3: LKA
 
 mixing_matrices:
-  type: extrapolated
   source_iso3: CHN
 
 contact_tracing:

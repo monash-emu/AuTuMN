@@ -42,7 +42,7 @@ COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPART
 Stratifications
 """
 
-# Age groups match the Prem matrices
+# Age groups match the standard mixing matrices
 AGEGROUP_STRATA = [str(breakpoint) for breakpoint in list(range(0, 80, 5))]
 
 

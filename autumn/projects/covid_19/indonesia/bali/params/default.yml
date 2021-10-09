@@ -3,6 +3,9 @@ description: BASELINE
 country:
   iso3: IDN
 
+mixing_matrices:
+  source_iso3: FJI
+
 population:
   region: Bali
   year: 2010

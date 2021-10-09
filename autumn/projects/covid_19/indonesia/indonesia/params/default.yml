@@ -2,6 +2,9 @@ description: BASELINE
 
 infectious_seed: 110.
 
+mixing_matrices:
+  source_iso3: FJI
+
 stratify_by_infection_history: true
 waning_immunity_duration: 240.
 

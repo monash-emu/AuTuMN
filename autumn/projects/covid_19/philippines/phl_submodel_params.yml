@@ -2,6 +2,10 @@
 country:
   iso3: PHL
 
+mixing_matrices:
+  type: extrapolated
+  source_iso3: HKG
+
 time:
   start: 40.
   end: 913.

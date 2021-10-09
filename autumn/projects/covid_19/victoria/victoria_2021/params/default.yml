@@ -6,7 +6,6 @@ infectious_seed: 0.
 seasonal_force: 0.
 
 mixing_matrices:
-  type: extrapolated
   source_iso3: GBR
 
 population:

@@ -10,7 +10,7 @@ from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
 from autumn.tools.inputs.covid_au.queries import get_both_vac_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 
 
-def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
+def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None, age_min = None):
     """
     Calculate the time-variant vaccination rate based on a requested coverage and roll-out window.
     Return the stepped function of time.
@@ -24,6 +24,8 @@ def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, cov
 
     # Calculate the vaccination rate from the coverage and the duration of the program
     vaccination_rate = -np.log(1. - coverage) / duration
+    if age_min == 12:  # adjusting vaccination rate for 12+ age group
+        vaccination_rate = vaccination_rate * 0.6
 
     # Create the function
     def get_vaccination_rate(time, computed_values):
@@ -254,7 +256,7 @@ def add_vaccination_flows(
             roll_out_component.supply_period_coverage.coverage,
             roll_out_component.supply_period_coverage.start_time,
             roll_out_component.supply_period_coverage.end_time,
-            coverage_override
+            coverage_override,
         )
 
     # Dose based vaccination
@@ -267,33 +269,47 @@ def add_vaccination_flows(
 
     # Work out eligible model age_groups
     eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
+    if roll_out_component.age_min == 12:
+        eligible_age_groups.insert(0, "10")
 
     # Find vaccination destination stratum, depending on whether one-dose vaccination stratum is active
     vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
     for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
 
         for eligible_age_group in eligible_age_groups:
+
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
             _source_strata.update(cluster_stratum)
             _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
             _dest_strata.update(cluster_stratum)
             if roll_out_component.supply_period_coverage or \
                     roll_out_component.vic_supply:
+                if roll_out_component.age_min == 12 and eligible_age_group == "10":
+                    fractional_rate = get_vacc_roll_out_function_from_coverage(
+                                            roll_out_component.supply_period_coverage.coverage,
+                                            roll_out_component.supply_period_coverage.start_time,
+                                            roll_out_component.supply_period_coverage.end_time,
+                                            coverage_override,
+                                            roll_out_component.age_min
+                                            )
+                else:
+                    fractional_rate = vaccination_roll_out_function
 
-                # The roll-out function is applied as a rate that multiplies the source compartments
                 model.add_transition_flow(
                     name="vaccination",
-                    fractional_rate=vaccination_roll_out_function,
+                    fractional_rate=fractional_rate,
                     source=compartment,
                     dest=compartment,
                     source_strata=_source_strata,
                     dest_strata=_dest_strata,
                 )
+
             else:
                 # We need to create a functional flow, which depends on the agegroup and the compartment considered
                 vaccination_roll_out_function = get_vacc_roll_out_function_from_doses(
                     time_variant_supply, compartment, eligible_age_group, eligible_age_groups
                 )
+
                 model.add_function_flow(
                     name="vaccination",
                     flow_rate_func=vaccination_roll_out_function,

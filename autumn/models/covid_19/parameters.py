@@ -539,13 +539,14 @@ class ContactTracing(BaseModel):
         assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
-    # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated
-    # @root_validator(allow_reuse=True)
-    # def assumed_trace_prop(cls, values):
-    #     if "floor" in values:
-    #         msg = f"Contact tracing assumed_trace_prop must be >= floor"
-    #         assert values["assumed_trace_prop"] >= values["floor"], msg
-    #     return values
+    @root_validator(allow_reuse=True)
+    def check_floor(cls, values):
+        if "floor" in values:
+            trace_prop = values["assumed_trace_prop"]
+            floor_prop = values["floor"]
+            msg = f"Contact tracing assumed_trace_prop must be >= floor: {trace_prop} < {floor_prop}"
+            assert trace_prop >= floor_prop, msg
+        return values
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

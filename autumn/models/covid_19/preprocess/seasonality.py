@@ -2,9 +2,7 @@ import numpy
 from typing import Callable
 
 
-def get_seasonal_forcing(
-    period: float, shift: float, forcing_magnitude: float, average_value: float
-) -> Callable:
+def get_seasonal_forcing(period: float, shift: float, forcing_magnitude: float, average_value: float) -> Callable:
     """
     Factory function to get a trigonometric/sinusoidal function (using cosine) to represent seasonal forcing of
     transmission in a model.

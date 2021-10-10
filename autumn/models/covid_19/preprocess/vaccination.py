@@ -106,6 +106,11 @@ def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_effi
         severity_efficacy = overall_efficacy * prop_infected / prop_infect_prevented
     infection_efficacy = vacc_prop_prevent_infection * overall_efficacy
 
+    msg = f"Infection efficacy not in [0, 1]: {infection_efficacy}"
+    assert 0. <= infection_efficacy <= 1., msg
+    msg = f"Severity efficacy not in [0, 1]: {severity_efficacy}"
+    assert 0. <= severity_efficacy <= 1., msg
+
     return infection_efficacy, severity_efficacy
 
 

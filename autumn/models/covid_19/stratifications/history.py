@@ -8,16 +8,18 @@ from autumn.models.covid_19.preprocess.vaccination import add_clinical_adjustmen
 def get_history_strat(params: Parameters) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
+
+    Note that we also have a recovered compartment, so people who have previously recovered are actually retained
+    within the 'naive' stratum until their immunity wanes, when they transition to treatment experienced.
+    For this reason, calculations of the proportion of the population recovered are a little more complicated - see
+    request_recovered_outputs in the history.py of the outputs folder.
     """
 
-    history_strat = Stratification(
-        "history",
-        HISTORY_STRATA,
-        COMPARTMENTS,
-    )
+    history_strat = Stratification("history", HISTORY_STRATA, COMPARTMENTS)
 
     # Everyone starts out infection-naive
-    history_strat.set_population_split({History.NAIVE: 1., History.EXPERIENCED: 0.})
+    pop_split = {History.NAIVE: 1., History.EXPERIENCED: 0.}
+    history_strat.set_population_split(pop_split)
 
     # Severity parameter for previously infected persons
     severity_adjuster_request = params.rel_prop_symptomatic_experienced

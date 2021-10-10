@@ -1,1 +1,32 @@
-description: schools open on Oct 1st. No change to mobility at other locations and workplaces. vaccinating 12+ age groups to reach total population coverage of 70% 6
+description: Opening schools on October 1st and other locations and workplaces mobility increases to pre-covid level. 80% of the total population vaccinated.
+time:
+  start: 649  # 10 Oct 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-09-30
+        - 2021-10-01
+      values:
+        - - repeat_prev
+        - - max_last_period
+          - 180
+    work:
+      append: true
+      times:
+        - 2021-09-30
+        - 2021-10-01
+      values:
+        - - repeat_prev
+        - - max_last_period
+          - 180
+    school:
+      append: false
+      times:
+        - 2021-09-30
+        - 2021-10-01 # All schools open
+      values:
+        - 0.
+        - 0.4

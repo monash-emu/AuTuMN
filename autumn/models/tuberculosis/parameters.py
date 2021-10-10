@@ -85,6 +85,7 @@ class Parameters:
     time_variant_ltbi_screening: list
     ltbi_screening_sensitivity: float
     pt_efficacy: float
+    pt_sae_prop: float
     pt_destination_compartment: str
     hh_contacts_pt: dict
     awareness_raising: Optional[dict]

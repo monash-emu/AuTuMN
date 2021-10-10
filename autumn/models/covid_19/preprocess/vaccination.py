@@ -7,7 +7,7 @@ from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
-from autumn.tools.inputs.covid_au.queries import get_historical_vac_coverage
+from autumn.tools.inputs.covid_au.queries import get_both_vac_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 
 
 def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
@@ -19,8 +19,8 @@ def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, cov
     # Get vaccination parameters
     coverage = coverage if coverage else coverage_override
     duration = end_time - start_time
-    assert duration >= 0.
-    assert 0. <= coverage <= 1.
+    assert duration >= 0., f"Vaccination roll-out request is negative: {duration}"
+    assert 0. <= coverage <= 1., f"Coverage not in [0, 1]: {coverage}"
 
     # Calculate the vaccination rate from the coverage and the duration of the program
     vaccination_rate = -np.log(1. - coverage) / duration
@@ -93,18 +93,26 @@ def get_eligible_age_groups(roll_out_component, age_strata):
     return eligible_age_groups, ineligible_age_groups
 
 
-def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_efficacy):
+def find_vaccine_action(vacc_prop_prevent_infection, overall_efficacy):
     """
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.
     """
 
-    if vacc_prop_prevent_infection == 1.:
-        severity_efficacy = 0.
-    else:
-        prop_infected = 1. - vacc_prop_prevent_infection
-        prop_infect_prevented = 1. - vacc_prop_prevent_infection * overall_efficacy
-        severity_efficacy = overall_efficacy * prop_infected / prop_infect_prevented
+    # Infection efficacy follows from how we have defined these
     infection_efficacy = vacc_prop_prevent_infection * overall_efficacy
+
+    # Severity efficacy must be calculated as the risk of severe outcomes given that the person was infected
+    if vacc_prop_prevent_infection < 1.:
+        prop_attribute_severity = 1. - vacc_prop_prevent_infection
+        prop_infect_prevented = 1. - vacc_prop_prevent_infection * overall_efficacy
+        severity_efficacy = overall_efficacy * prop_attribute_severity / prop_infect_prevented
+    else:
+        severity_efficacy = 0.
+
+    msg = f"Infection efficacy not in [0, 1]: {infection_efficacy}"
+    assert 0. <= infection_efficacy <= 1., msg
+    msg = f"Severity efficacy not in [0, 1]: {severity_efficacy}"
+    assert 0. <= severity_efficacy <= 1., msg
 
     return infection_efficacy, severity_efficacy
 
@@ -187,78 +195,87 @@ def add_clinical_adjustments_to_strat(
 
 def add_vaccination_flows(
         model, roll_out_component, age_strata, one_dose, coverage_override=None, vic_cluster=None,
-        cluster_stratum={},
+        cluster_stratum={}, vaccination_lag=0.,
 ):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
 
-    # cluster_stratum = {"cluster": additional_strata} if additional_strata else {}
+    # Work out eligible model age_groups
+    eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
+
+    # Find vaccination destination stratum, depending on whether one-dose vaccination stratum is active
+    vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
 
     # First phase of the Victorian roll-out, informed by vaccination data
-    if roll_out_component.vic_supply_to_history:
+    if roll_out_component.vic_supply:
+
+        if roll_out_component.age_min:
+            close_enough_age_min = min(VACC_COVERAGE_START_AGES, key=lambda age: abs(age - roll_out_component.age_min))
+        else:
+            close_enough_age_min = 0
+
+        if roll_out_component.age_max:
+            close_enough_age_max = min(VACC_COVERAGE_END_AGES, key=lambda age: abs(age - roll_out_component.age_max))
+        else:
+            close_enough_age_max = 89
 
         # Get the cluster-specific historical vaccination numbers
-        coverage = get_historical_vac_coverage(
+        coverage_times, coverage_values = get_both_vac_coverage(
             vic_cluster.upper(),
-            start_age=roll_out_component.age_min
-        )[1].max()
-
-        # Make sure we're dealing with reasonably sensible coverage values and place a ceiling just in case
-        assert 0. <= coverage <= 1.
-        sensible_coverage = min(coverage, 0.96)
-
-        # Create the function
-        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            sensible_coverage,
-            roll_out_component.vic_supply_to_history.start_time,
-            roll_out_component.vic_supply_to_history.end_time,
+            start_age=close_enough_age_min,
+            end_age=close_enough_age_max,
         )
 
-    elif roll_out_component.vic_supply_to_target:
+        # Manually adjust according to the proportion of the age band that the group is referring to
+        adjustment = 0.6 if close_enough_age_min == 12 and close_enough_age_max == 15 else 1.
+        coverage_values *= adjustment
 
-        # Calculate the most recent statewide coverage
-        statewide_coverage = get_historical_vac_coverage(
-            start_age=roll_out_component.age_min
-        )[1].max()
-
-        # Increase to the end of the simulation period, making sure it is an increase
-        coverage = max((roll_out_component.vic_supply_to_target.coverage - statewide_coverage), 0.) / \
-                   (1. - statewide_coverage)
-
-        # Make sure we're dealing with reasonably sensible coverage values
-        assert 0. <= coverage <= 1.
-        sensible_coverage = min(coverage, 0.96)
-
-        # Create the function
-        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            sensible_coverage,
-            roll_out_component.vic_supply_to_target.start_time,
-            roll_out_component.vic_supply_to_target.end_time,
+        # Stop at the end of the available data, even if the request is later
+        final_time = min((max(coverage_times), roll_out_component.vic_supply.end_time))
+        rollout_period_times = np.linspace(
+            roll_out_component.vic_supply.start_time,
+            final_time,
+            int(roll_out_component.vic_supply.time_interval) + 1
         )
 
-    elif roll_out_component.vic_supply_region_to_target:
+        for i_period in range(len(rollout_period_times) - 1):
+            period_start_time = rollout_period_times[i_period]
+            period_end_time = rollout_period_times[i_period + 1]
 
-        # Get the cluster-specific historical vaccination numbers
-        previous_coverage = get_historical_vac_coverage(
-            vic_cluster.upper(),
-            start_age=roll_out_component.age_min
-        )[1].max()
+            # Interpolate for coverage values, always starting from zero if this is the first roll-out period
+            period_start_coverage = np.interp(period_start_time - vaccination_lag, coverage_times, coverage_values)
+            modelled_start_coverage = 0. if i_period == 0. else period_start_coverage
+            period_end_coverage = np.interp(period_end_time - vaccination_lag, coverage_times, coverage_values)
 
-        # Increase to the end of the simulation period, making sure it is an increase
-        coverage = max((roll_out_component.vic_supply_region_to_target.coverage - previous_coverage), 0.) / \
-                   (1. - previous_coverage)
+            # The proportion of the remaining people who will be vaccinated
+            coverage_increase = (period_end_coverage - modelled_start_coverage) / (1. - modelled_start_coverage)
 
-        # Make sure we're dealing with reasonably sensible coverage values
-        assert 0. <= coverage <= 1.
-        sensible_coverage = min(coverage, 0.96)
+            # Make sure we're dealing with reasonably sensible coverage values and place a ceiling just in case
+            assert 0. <= coverage_increase <= 1.
+            sensible_coverage = min(coverage_increase, 0.96)
 
-        # Create the function
-        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            sensible_coverage,
-            roll_out_component.vic_supply_region_to_target.start_time,
-            roll_out_component.vic_supply_region_to_target.end_time,
-        )
+            # Create the function
+            vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+                sensible_coverage, period_start_time, period_end_time,
+            )
+
+            # Have to apply within the loop
+            for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
+                for eligible_age_group in eligible_age_groups:
+                    _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
+                    _source_strata.update(cluster_stratum)
+                    _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
+                    _dest_strata.update(cluster_stratum)
+
+                    model.add_transition_flow(
+                        name="vaccination",
+                        fractional_rate=vaccination_roll_out_function,
+                        source=compartment,
+                        dest=compartment,
+                        source_strata=_source_strata,
+                        dest_strata=_dest_strata,
+                    )
 
     # Coverage based vaccination
     elif roll_out_component.supply_period_coverage:
@@ -277,22 +294,13 @@ def add_vaccination_flows(
             method=4,
         )
 
-    # Work out eligible model age_groups
-    eligible_age_groups, ineligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
-
-    # Find vaccination destination stratum, depending on whether one-dose vaccination stratum is active
-    vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
     for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-
         for eligible_age_group in eligible_age_groups:
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
             _source_strata.update(cluster_stratum)
             _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
             _dest_strata.update(cluster_stratum)
-            if roll_out_component.supply_period_coverage or \
-                    roll_out_component.vic_supply_to_target or \
-                    roll_out_component.vic_supply_to_history or \
-                    roll_out_component.vic_supply_region_to_target:
+            if roll_out_component.supply_period_coverage:
 
                 # The roll-out function is applied as a rate that multiplies the source compartments
                 model.add_transition_flow(
@@ -303,7 +311,7 @@ def add_vaccination_flows(
                     source_strata=_source_strata,
                     dest_strata=_dest_strata,
                 )
-            else:
+            elif roll_out_component.supply_timeseries:
                 # We need to create a functional flow, which depends on the agegroup and the compartment considered
                 vaccination_roll_out_function = get_vacc_roll_out_function_from_doses(
                     time_variant_supply, compartment, eligible_age_group, eligible_age_groups

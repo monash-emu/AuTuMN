@@ -20,7 +20,8 @@ COVID_DHHS_DEATH_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_deaths
 COVID_DHHS_CASE_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_cases.secret.csv")
 COVID_DHHS_ADMN_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_admissions.secret.csv")
 COVID_DHHS_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_vaccination.secret.csv")
-COVID_DHHS_MODEL_CSV = os.path.join(COVID_AU_DIRPATH, "vac_by_week_lga.secret.csv")
+COVID_VIDA_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vida_vac.secret.csv")
+COVID_VIDA_POP_CSV = os.path.join(COVID_AU_DIRPATH, "vida_pop.csv")
 
 
 COVID_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
@@ -185,7 +186,7 @@ def main():
     df = fetch_vac_model()
     df = preprocess_vac_model(df)
 
-    df.to_csv(COVID_DHHS_MODEL_CSV)
+    df.to_csv(COVID_VIDA_VAC_CSV,index=False)
 
 
 def preprocess_admissions():
@@ -381,7 +382,7 @@ def load_deaths(df):
 def fetch_vac_model():
 
     
-    df = pd.read_csv(COVID_DHHS_MODEL_CSV, usecols=range(0, 6))
+    df = pd.read_csv(os.path.join(COVID_AU_DIRPATH, "vac_by_week_lga.secret.csv"), usecols=[0,1,2,3,4,5,8,])
     create_date_index(COVID_BASE_DATETIME, df, "week")
     df.lga.replace(fix_lga, inplace=True)
 

@@ -40,7 +40,6 @@ mobility:
         values: [0., 1.]
       locations:
         - other_locations
-        - school
         - work
   mixing:
     school:
@@ -74,3 +73,6 @@ vaccination:
 
 vaccination_risk:
   calculate: false
+
+stratify_by_infection_history: true
+waning_immunity_duration: 365.

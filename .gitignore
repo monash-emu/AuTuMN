@@ -37,8 +37,8 @@ logs/
 *.pkl
 *ipynb_checkpoints*
 
-# Track input database.
-!data/inputs/inputs.db
+# Track encrypted input database.
+!inputs.encrypted.db
 
 # Website stuff
 node_modules/

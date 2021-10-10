@@ -1,12 +1,13 @@
 from summer import CompartmentalModel
 from summer.adjust import Multiply, Overwrite
 
+from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.models.covid_19.preprocess.case_detection import CdrProc
+from autumn.models.covid_19.preprocess.testing import CdrProc
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.testing import find_cdr_function_from_test_data
 
@@ -25,11 +26,12 @@ from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_vaccination_flows
 from .preprocess import tracing
+from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
 from .stratifications.cluster import apply_post_cluster_strat_hacks, get_cluster_strat
 from .stratifications.tracing import get_tracing_strat
-from .stratifications.strains import get_strain_strat, make_voc_seed_func
+from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
@@ -159,8 +161,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     # Stratify the model by clinical status
+    if pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS:
+        override_test_region = "Victoria"
+    else:
+        override_test_region = pop.region
+
     get_detected_proportion = find_cdr_function_from_test_data(
-        params.testing_to_detection, country.iso3, pop.region, pop.year
+        params.testing_to_detection, country.iso3, override_test_region, pop.year
     )
     clinical_strat, adjustment_systems = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
@@ -307,7 +314,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if params.vaccination:
         vaccination_strat = get_vaccination_strat(params)
 
-        # Was going to delete this, but it is necessary - doesn't make sense to have VoC in an otherwise empty stratum
+        # This is actually necessary - doesn't make sense to have VoC in an otherwise empty stratum
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
                 vaccination_strat.add_flow_adjustments(
@@ -325,24 +332,25 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Vic 2021 code is not generalisable
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            for i_component in range(len(vacc_params.roll_out_components)):
+            for component in vacc_params.roll_out_components:
                 for cluster in cluster_strat.strata:
                     add_vaccination_flows(
                         model,
-                        vacc_params.roll_out_components[i_component],
+                        component,
                         age_strat.strata,
                         params.vaccination.one_dose,
                         vic_cluster=cluster,
                         cluster_stratum={"cluster": cluster},
                     )
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            for i_component in range(len(vacc_params.roll_out_components)):
+            for i_comp, component in enumerate(vacc_params.roll_out_components):
                 add_vaccination_flows(
                     model,
-                    vacc_params.roll_out_components[i_component],
+                    component,
                     age_strat.strata,
                     params.vaccination.one_dose,
-                    vic_cluster=params.population.region
+                    vic_cluster=params.population.region,
+                    vaccination_lag=vacc_params.lag,
                 )
 
         else:

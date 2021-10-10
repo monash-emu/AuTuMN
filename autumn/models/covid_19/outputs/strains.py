@@ -8,14 +8,14 @@ from autumn.models.covid_19.outputs.common import request_stratified_output_for_
 
 def request_strain_outputs(model: CompartmentalModel, voc_names: list):
     """
-    Outputs relating to variants of concern (VoCs)
+    Outputs relating to variants of concern (VoCs).
     """
 
     # Incidence rate for each strain implemented
     all_strains = [Strain.WILD_TYPE] + voc_names
     request_stratified_output_for_flow(model, INCIDENCE, all_strains, "strain")
 
-    # Convert to proportion
+    # Convert to a proportion
     for strain in all_strains:
         model.request_function_output(
             name=f"prop_{INCIDENCE}_strain_{strain}",

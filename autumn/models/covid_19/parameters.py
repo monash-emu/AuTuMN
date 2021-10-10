@@ -394,6 +394,7 @@ class VicHistoryPeriod(BaseModel):
 
     start_time: float
     end_time: float
+    time_interval: Optional[float]
 
     @root_validator(allow_reuse=True)
     def check_times(cls, values):
@@ -411,18 +412,14 @@ class RollOutFunc(BaseModel):
     age_max: Optional[float]
     supply_timeseries: Optional[TimeSeries]
     supply_period_coverage: Optional[VaccCoveragePeriod]
-    vic_supply_to_history: Optional[VicHistoryPeriod]
-    vic_supply_to_target: Optional[VaccCoveragePeriod]
-    vic_supply_region_to_target: Optional[VaccCoveragePeriod]
+    vic_supply: Optional[VicHistoryPeriod]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
         components = \
             values.get("supply_period_coverage"), \
             values.get("supply_timeseries"), \
-            values.get("vic_supply_to_history"), \
-            values.get("vic_supply_to_target"), \
-            values.get("vic_supply_region_to_target")
+            values.get("vic_supply")
         has_supply = (int(bool(i_comp)) for i_comp in components)
         assert sum(has_supply) == 1, "Roll out function must have just one period or timeseries for supply"
         if "age_min" in values:
@@ -469,6 +466,7 @@ class Vaccination(BaseModel):
     second_dose_delay: float
     one_dose: Optional[VaccEffectiveness]
     fully_vaccinated: VaccEffectiveness
+    lag: float
 
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]
@@ -476,12 +474,20 @@ class Vaccination(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
         assert 0. < values["second_dose_delay"], f"Delay to second dose is not positive: {values['second_dose_delay']}"
+
+        # Use ratio to calculate the infectiousness of the one dose vaccinated compared to unvaccinated
         if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:
             values["one_dose"]["vacc_reduce_infectiousness"] = \
                 values["fully_vaccinated"]["vacc_reduce_infectiousness"] * \
                 values["one_dose"]["vacc_reduce_infectiousness_ratio"]
             values["one_dose"]["vacc_reduce_infectiousness_ratio"] = None
         return values
+
+    @validator("lag", allow_reuse=True)
+    def check_lag(val):
+        msg = f"Vaccination lag period is negative: {val}"
+        assert val >= 0., msg
+        return val
 
 
 class VaccinationRisk(BaseModel):
@@ -526,23 +532,24 @@ class ContactTracing(BaseModel):
         assert 0. <= val <= 1., f"Contact tracing infectiousness multiplier must be in range [0, 1]: {val}"
         return val
 
-    @ validator("assumed_prev", allow_reuse=True)
+    @validator("assumed_prev", allow_reuse=True)
     def check_prevalence(val):
         assert 0. <= val <= 1., f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
         return val
 
-    @ validator("assumed_trace_prop", allow_reuse=True)
+    @validator("assumed_trace_prop", allow_reuse=True)
     def check_prevalence(val):
         assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
-    # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated
-    # @root_validator(allow_reuse=True)
-    # def assumed_trace_prop(cls, values):
-    #     if "floor" in values:
-    #         msg = f"Contact tracing assumed_trace_prop must be >= floor"
-    #         assert values["assumed_trace_prop"] >= values["floor"], msg
-    #     return values
+    @root_validator(allow_reuse=True)
+    def check_floor(cls, values):
+        if "floor" in values:
+            trace_prop = values["assumed_trace_prop"]
+            floor_prop = values["floor"]
+            msg = f"Contact tracing assumed_trace_prop must be >= floor: {trace_prop} < {floor_prop}"
+            assert trace_prop >= floor_prop, msg
+        return values
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

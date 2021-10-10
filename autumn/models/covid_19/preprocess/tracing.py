@@ -16,15 +16,12 @@ def get_tracing_param(assumed_trace_prop: float, assumed_prev: float, floor: flo
     floor + (1 - floor) exp -(result * assumed_prev) = assumed_trace_prop
     """
 
-    # FIXME: Unable to move this to parameter validation, not sure why
-    assert floor < assumed_trace_prop, "Assumed trace proportion less than or equal to contact tracing floor"
-
     return -np.log((assumed_trace_prop - floor) / (1. - floor)) / assumed_prev
 
 
 def contact_tracing_func(time, computed_values):
     """
-    Multiply the flow rate through by the source compartment to get the final absolute rate
+    Multiply the flow rate through by the source compartment to get the final absolute rate.
     """
 
     return computed_values["traced_flow_rate"]
@@ -39,21 +36,21 @@ def get_proportion_detect_force_infection(
         non_notif_levels: np.ndarray
 ) -> float:
     """
-    Calculate the proportion of the force of infection that is attributable to ever-detected individuals
-    See PropIndexDetectedProc for details on calling this function
+    Calculate the proportion of the force of infection that is attributable to ever-detected individuals.
+    See PropIndexDetectedProc for details on calling this function.
     """
 
-    non_detected_detected_force_of_infection = 0.
+    non_detected_force_of_infection = 0.
     for i_comp, comp in enumerate(non_notified_comps):
-        non_detected_detected_force_of_infection += compartment_values[comp] * non_notif_levels[i_comp]
+        non_detected_force_of_infection += compartment_values[comp] * non_notif_levels[i_comp]
         
     detected_force_of_infection = 0.
     for i_comp, comp in enumerate(notified_comps):
         detected_force_of_infection += compartment_values[comp] * notif_levels[i_comp]
         
-    total_force_of_infection = non_detected_detected_force_of_infection + detected_force_of_infection
+    total_force_of_infection = non_detected_force_of_infection + detected_force_of_infection
 
-    # Return zero to prevent division by zero error
+    # Return zero if force of infection is zero to prevent division by zero error
     if total_force_of_infection == 0.:
         return 0.
 
@@ -80,8 +77,11 @@ class PrevalenceProc(ComputedValueProcessor):
         Identify the compartments with active disease for the prevalence calculation.
         """
 
-        self.active_comps = np.array([idx for idx, comp in enumerate(compartments) if
-            comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)], dtype=int)
+        active_comps_list = [
+            idx for idx, comp in enumerate(compartments) if
+            comp.has_name(Compartment.EARLY_ACTIVE) or comp.has_name(Compartment.LATE_ACTIVE)
+        ]
+        self.active_comps = np.array(active_comps_list, dtype=int)
 
     def process(self, compartment_values, computed_values, time):
         """
@@ -124,7 +124,7 @@ class PropIndexDetectedProc(ComputedValueProcessor):
                     comp.has_name(compartment) and comp.has_stratum("clinical", clinical)
                 ]
 
-                # Store these separately as notifying and non-notifying
+                # Store these separately as notified and non-notified
                 if clinical in NOTIFICATION_CLINICAL_STRATA:
                     notif_comps += working_comps
                     notif_levels += [infectiousness_level] * len(working_comps)

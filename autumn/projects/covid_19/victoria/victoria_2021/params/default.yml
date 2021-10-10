@@ -35,10 +35,12 @@ vaccination:
       vic_supply:
         start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 649  # 9th September is 618 (current date), lagged by two weeks
+        time_interval: 20
     - age_min: 15
       vic_supply:
         start_time: 649
         end_time: 679
+        time_interval: 20
 
 time:
   start: 454

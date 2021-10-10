@@ -26,11 +26,12 @@ from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_vaccination_flows
 from .preprocess import tracing
+from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
 from .stratifications.cluster import apply_post_cluster_strat_hacks, get_cluster_strat
 from .stratifications.tracing import get_tracing_strat
-from .stratifications.strains import get_strain_strat, make_voc_seed_func
+from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 

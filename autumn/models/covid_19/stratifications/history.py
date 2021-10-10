@@ -18,7 +18,8 @@ def get_history_strat(params: Parameters) -> Stratification:
     history_strat = Stratification("history", HISTORY_STRATA, COMPARTMENTS)
 
     # Everyone starts out infection-naive
-    history_strat.set_population_split({History.NAIVE: 1., History.EXPERIENCED: 0.})
+    pop_split = {History.NAIVE: 1., History.EXPERIENCED: 0.}
+    history_strat.set_population_split(pop_split)
 
     # Severity parameter for previously infected persons
     severity_adjuster_request = params.rel_prop_symptomatic_experienced

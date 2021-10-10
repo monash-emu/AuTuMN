@@ -5,7 +5,7 @@ from autumn.models.covid_19.constants import (
 )
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.preprocess.vaccination import (
-    add_clinical_adjustments_to_strat, add_vaccine_infection_and_severity
+    add_clinical_adjustments_to_strat, find_vaccine_action
 )
 
 
@@ -41,7 +41,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
     }
     vaccination_effects = {Vaccination.VACCINATED: full_vacc_effects}
 
-    # Apply effects of single dose only
+    # Get effects of one dose only
     if is_one_dose_active:
         one_dose_effects = {
             "prevent_infection": params.vaccination.one_dose.vacc_prop_prevent_infection,
@@ -51,7 +51,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
 
     # Get vaccination effects from requests by dose number and mode of action
     for stratum in strata_to_adjust:
-        infection_efficacy[stratum], strat_severity_efficacy = add_vaccine_infection_and_severity(
+        infection_efficacy[stratum], strat_severity_efficacy = find_vaccine_action(
             vaccination_effects[stratum]["prevent_infection"],
             vaccination_effects[stratum]["overall_efficacy"],
         )

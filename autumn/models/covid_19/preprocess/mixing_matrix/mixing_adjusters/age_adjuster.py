@@ -3,6 +3,7 @@ from typing import Dict
 import numpy as np
 
 from autumn.models.covid_19.parameters import TimeSeries
+from autumn.models.covid_19.constants import AGEGROUP_STRATA
 from autumn.tools.curve import scale_up_function
 
 from .base_adjuster import BaseMixingAdjuster
@@ -30,33 +31,13 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
         new_mm = mixing_matrix.copy()
         rows, cols = new_mm.shape
         for i in range(rows):
-            row_agegroup = AGE_GROUPS[i]
+            row_agegroup = AGEGROUP_STRATA[i]
             row_adjust_func = self.adjustment_funcs.get(row_agegroup)
             row_multiplier = row_adjust_func(time) if row_adjust_func else 1
             for j in range(cols):
-                col_agegroup = AGE_GROUPS[j]
+                col_agegroup = AGEGROUP_STRATA[j]
                 col_adjust_func = self.adjustment_funcs.get(col_agegroup)
                 col_multiplier = col_adjust_func(time) if col_adjust_func else 1
                 new_mm[i, j] *= row_multiplier * col_multiplier
 
         return new_mm
-
-
-AGE_GROUPS = [
-    "0",
-    "5",
-    "10",
-    "15",
-    "20",
-    "25",
-    "30",
-    "35",
-    "40",
-    "45",
-    "50",
-    "55",
-    "60",
-    "65",
-    "70",
-    "75",
-]

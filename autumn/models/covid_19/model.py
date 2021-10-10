@@ -350,7 +350,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     age_strat.strata,
                     params.vaccination.one_dose,
                     vic_cluster=params.population.region,
-                    i_component=i_comp,
                     vaccination_lag=vacc_params.lag,
                 )
 

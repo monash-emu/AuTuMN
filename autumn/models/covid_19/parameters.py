@@ -394,6 +394,7 @@ class VicHistoryPeriod(BaseModel):
 
     start_time: float
     end_time: float
+    time_interval: Optional[float]
 
     @root_validator(allow_reuse=True)
     def check_times(cls, values):

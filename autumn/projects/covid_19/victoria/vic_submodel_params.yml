@@ -171,82 +171,11 @@ vaccination:
     - age_min: 15
       vic_supply:
         start_time: 454
-        end_time: 484
-    - age_min: 15
-      vic_supply:
-        start_time: 484
-        end_time: 514
-    - age_min: 15
-      vic_supply:
-        start_time: 514
-        end_time: 544
-    - age_min: 15
-      vic_supply:
-        start_time: 544
-        end_time: 574
-    - age_min: 15
-      vic_supply:
-        start_time: 574
-        end_time: 604
-    - age_min: 15
-      vic_supply:
-        start_time: 604
-        end_time: 634
-    - age_min: 15
-      vic_supply:
-        start_time: 634
-        end_time: 664
-    - age_min: 15
-      vic_supply:
-        start_time: 664
-        end_time: 694
-    - age_min: 15
-      vic_supply:
-        start_time: 694
-        end_time: 724
-
+        end_time: 763
+        time_interval: 20
     - age_min: 10
       age_max: 15
       vic_supply:
         start_time: 454
-        end_time: 484
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        start_time: 484
-        end_time: 514
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        start_time: 514
-        end_time: 544
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        start_time: 544
-        end_time: 574
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        start_time: 574
-        end_time: 604
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        start_time: 604
-        end_time: 634
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        start_time: 634
-        end_time: 664
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        start_time: 664
-        end_time: 694
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        start_time: 694
-        end_time: 724
+        end_time: 763
+        time_interval: 20

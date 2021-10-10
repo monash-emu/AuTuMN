@@ -35,7 +35,8 @@ def get_clinical_strat(params: Parameters):
     non_isolated_adjustments.update(non_isolated_adj_dict)
 
     # Apply this to both the late incubation and early active periods
-    clinical_strat.add_infectiousness_adjustments(Compartment.EARLY_ACTIVE, non_isolated_adjustments)
+    for compartment in (Compartment.LATE_EXPOSED, Compartment.EARLY_ACTIVE):
+        clinical_strat.add_infectiousness_adjustments(compartment, non_isolated_adjustments)
 
     # Start from where we left off for the late incubation and early active periods - including the asymptomatic
     late_active_adjustments = copy.copy(non_isolated_adjustments)

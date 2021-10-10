@@ -9,8 +9,12 @@ from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 ADJUSTER_SUFFIX = "_adjuster"
 
 
+def make_adjusted_microdistancing_func(microdist_func, adjuster_func):
+    return lambda t: microdist_func(t) * adjuster_func(t)
+
+
 def get_microdistancing_funcs(
-    params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool
+        params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool
 ) -> Dict[str, Callable[[float], float]]:
     """
     Returns a dictionary of time-varying functions.
@@ -21,7 +25,7 @@ def get_microdistancing_funcs(
     # Supports any number of microdistancing functions, with any user-defined names
     final_adjustments = {}
 
-    # For each Prem location ...
+    # For each mobility location ...
     for loc in LOCATIONS:
         microdist_component_funcs = []
 
@@ -54,13 +58,13 @@ def get_microdistancing_funcs(
             def microdist_composite_func(time: float) -> float:
                 power = 2 if square_mobility_effect else 1
                 return np.product(
-                    [(1.0 - func(time)) ** power for func in microdist_component_funcs]
+                    [(1. - func(time)) ** power for func in microdist_component_funcs]
                 )
 
         else:
 
             def microdist_composite_func(time: float) -> float:
-                return 1.0
+                return 1.
 
         # Get the final location-specific microdistancing functions
         final_adjustments[loc] = microdist_composite_func
@@ -68,21 +72,20 @@ def get_microdistancing_funcs(
     return final_adjustments
 
 
-def make_adjusted_microdistancing_func(microdist_func, waning_adjustment):
-        return lambda t: microdist_func(t) * waning_adjustment(t)
-
-
 def get_microdist_func_component(func_params: MicroDistancingFunc):
     """
-    Get one function of time using the standard parameter request structure for any microdistancing function or
+    Get a single function of time using the standard parameter request structure for any microdistancing function, or
     adjustment to a microdistancing function.
     """
+
     if func_params.function_type == "tanh":
         return tanh_based_scaleup(**func_params.parameters.dict())
+
     elif func_params.function_type == "empiric":
         micro_times = func_params.parameters.times
         multiplier = func_params.parameters.max_effect
         micro_vals = [multiplier * value for value in func_params.parameters.values]
         return scale_up_function(micro_times, micro_vals, method=4)
+
     elif func_params.function_type == "constant":
         return lambda time: func_params.parameters.effect

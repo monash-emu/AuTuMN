@@ -16,31 +16,27 @@ def build_dynamic_mixing_matrix(
     Build a time-varying mixing matrix
     Returns a function of time which returns a 16x16 mixing matrix.
     """
-    microdistancing_funcs = get_microdistancing_funcs(
-        mobility.microdistancing,
-        mobility.square_mobility_effect,
-    )
+
+    microdistancing_funcs = get_microdistancing_funcs(mobility.microdistancing, mobility.square_mobility_effect)
+
     mobility_funcs = get_mobility_funcs(
-        country,
-        mobility.region,
-        mobility.mixing,
-        mobility.google_mobility_locations,
-        mobility.npi_effectiveness,
-        mobility.square_mobility_effect,
-        mobility.smooth_google_data,
+        country, mobility.region, mobility.mixing, mobility.google_mobility_locations, mobility.npi_effectiveness,
+        mobility.square_mobility_effect, mobility.smooth_google_data,
     )
 
+    # Get adjusters
     location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
-    if mobility.age_mixing:
-        age_adjuster = AgeMixingAdjuster(mobility.age_mixing)
-    else:
-        age_adjuster = None
+    age_adjuster = AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None
 
     def mixing_matrix_function(time: float) -> np.ndarray:
         """
         Returns a 16x16 mixing matrix for a given time.
         """
-        mixing_matrix = np.copy(base_matrices['all_locations'])
+
+        # Base matrix
+        mixing_matrix = np.copy(base_matrices["all_locations"])
+
+        # Apply adjustments
         mixing_matrix = location_adjuster.get_adjustment(time, mixing_matrix)
         if age_adjuster:
             mixing_matrix = age_adjuster.get_adjustment(time, mixing_matrix)

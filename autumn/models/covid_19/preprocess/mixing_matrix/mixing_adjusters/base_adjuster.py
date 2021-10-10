@@ -5,7 +5,7 @@ import numpy as np
 
 class BaseMixingAdjuster(ABC):
     """
-    A class used to build a time varying mixing matrix adjustment
+    A class used to build a time-varying mixing matrix adjustment.
     """
 
     @abstractmethod
@@ -14,4 +14,5 @@ class BaseMixingAdjuster(ABC):
         Returns a new mixing matrix, modified to adjust for dynamic mixing
         changes for a given point in time.
         """
+
         pass

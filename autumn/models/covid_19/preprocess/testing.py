@@ -1,6 +1,8 @@
 from typing import Callable, Optional, Tuple, Any
 import numpy as np
 
+from summer.compute import ComputedValueProcessor
+
 from autumn.tools.inputs.testing.eur_testing_data import get_uk_testing_numbers, get_eu_testing_numbers
 from autumn.tools.inputs.covid_au.queries import get_vic_testing_numbers
 from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
@@ -10,6 +12,22 @@ from autumn.tools.inputs import get_population_by_agegroup
 from autumn.tools.utils.utils import apply_moving_average
 from autumn.tools.curve import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+
+
+class CdrProc(ComputedValueProcessor):
+    """
+    Calculate prevalence from the active disease compartments.
+    """
+
+    def __init__(self, detected_proportion_func):
+        self.detected_proportion_func = detected_proportion_func
+
+    def process(self, compartment_values, computed_values, time):
+        """
+        Calculate the actual prevalence during run-time.
+        """
+
+        return self.detected_proportion_func(time)
 
 
 def get_testing_numbers_for_region(country_iso3: str, subregion: Optional[str]) -> Tuple[list, list]:
@@ -37,6 +55,8 @@ def get_testing_numbers_for_region(country_iso3: str, subregion: Optional[str]) 
     #     test_dates, test_values = get_vnm_testing_numbers(subregion)
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
+
+    assert len(test_dates) == len(test_values), "Length of test dates and test values are not equal"
 
     return test_dates, test_values
 

@@ -93,18 +93,26 @@ def get_eligible_age_groups(roll_out_component, age_strata):
     return eligible_age_groups, ineligible_age_groups
 
 
-def add_vaccine_infection_and_severity(vacc_prop_prevent_infection, overall_efficacy):
+def find_vaccine_action(vacc_prop_prevent_infection, overall_efficacy):
     """
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.
     """
 
-    if vacc_prop_prevent_infection == 1.:
-        severity_efficacy = 0.
-    else:
-        prop_infected = 1. - vacc_prop_prevent_infection
-        prop_infect_prevented = 1. - vacc_prop_prevent_infection * overall_efficacy
-        severity_efficacy = overall_efficacy * prop_infected / prop_infect_prevented
+    # Infection efficacy follows from how we have defined these
     infection_efficacy = vacc_prop_prevent_infection * overall_efficacy
+
+    # Severity efficacy must be calculated as the risk of severe outcomes given that the person was infected
+    if vacc_prop_prevent_infection < 1.:
+        prop_attribute_severity = 1. - vacc_prop_prevent_infection
+        prop_infect_prevented = 1. - vacc_prop_prevent_infection * overall_efficacy
+        severity_efficacy = overall_efficacy * prop_attribute_severity / prop_infect_prevented
+    else:
+        severity_efficacy = 0.
+
+    msg = f"Infection efficacy not in [0, 1]: {infection_efficacy}"
+    assert 0. <= infection_efficacy <= 1., msg
+    msg = f"Severity efficacy not in [0, 1]: {severity_efficacy}"
+    assert 0. <= severity_efficacy <= 1., msg
 
     return infection_efficacy, severity_efficacy
 

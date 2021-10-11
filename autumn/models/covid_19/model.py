@@ -367,18 +367,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Add transition from single dose to fully vaccinated
         if params.vaccination.one_dose:
 
-            def second_dose_transition_func(model, compartments, compartment_values, flows, flow_rates, computed_values, time):
+            def second_dose_transition_func(
+                    model, compartments, compartment_values, flows, flow_rates, computed_values, time
+            ):
                 return 1. / params.vaccination.second_dose_delay
 
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-                # model.add_transition_flow(
-                #     name="second_dose",
-                #     fractional_rate=1. / params.vaccination.second_dose_delay,
-                #     source=compartment,
-                #     dest=compartment,
-                #     source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
-                #     dest_strata={"vaccination": Vaccination.VACCINATED},
-                # )
                 model.add_function_flow(
                     name="second_dose",
                     flow_rate_func=second_dose_transition_func,

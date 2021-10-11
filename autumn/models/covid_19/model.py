@@ -369,10 +369,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if params.vaccination.one_dose:
 
             base_delay = 1. / params.vaccination.second_dose_delay
-            reduced_delay = 1. / 21.
+            reduced_delay = 1. / 28.
 
             second_dose_transition_func = tanh_based_scaleup(
-                shape=1., inflection_time=611., lower_asymptote=base_delay, upper_asymptote=reduced_delay
+                shape=1., inflection_time=624., lower_asymptote=base_delay, upper_asymptote=reduced_delay
             )
 
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:

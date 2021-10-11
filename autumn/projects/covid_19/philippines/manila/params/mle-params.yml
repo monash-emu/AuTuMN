@@ -1,5 +1,5 @@
-clinical_stratification.props.hospital.multiplier: 0.8730809138391296
-contact_rate: 0.05574705835888388
-infection_fatality.multiplier: 0.4026167403239992
-testing_to_detection.assumed_cdr_parameter: 0.010864188122512157
-voc_emergence.delta.contact_rate_multiplier: 2.263500670543478
+clinical_stratification.props.hospital.multiplier: 1.5777714870873794
+contact_rate: 0.05585492121041706
+infection_fatality.multiplier: 0.4668567412412049
+testing_to_detection.assumed_cdr_parameter: 0.013290481196779537
+voc_emergence.delta.contact_rate_multiplier: 2.277256176407415

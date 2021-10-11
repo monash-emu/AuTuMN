@@ -24,6 +24,7 @@ vaccination:
   fully_vaccinated:
     overall_efficacy: 0.7
     vacc_prop_prevent_infection: 0.7
+  second_dose_delay: 0.0232558
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.32

@@ -7,6 +7,9 @@ time:
 country:
   iso3: VNM
 
+mixing_matrices:
+  source_iso3: CHN
+
 #mixing_matrices:
 #  type: extrapolated
 #  source_iso3: CHN

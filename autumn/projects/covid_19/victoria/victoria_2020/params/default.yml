@@ -3,7 +3,6 @@ description: BASELINE
 vic_status: "vic_super_2020"
 
 mixing_matrices:
-  type: extrapolated
   source_iso3: GBR
 
 population:

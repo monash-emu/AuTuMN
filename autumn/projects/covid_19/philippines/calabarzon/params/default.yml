@@ -4,7 +4,6 @@ population:
   region: Calabarzon
 
 mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
-  type: extrapolated
   source_iso3: HKG
 
 mobility:

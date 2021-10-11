@@ -394,6 +394,7 @@ class VicHistoryPeriod(BaseModel):
 
     start_time: float
     end_time: float
+    time_interval: Optional[float]
 
     @root_validator(allow_reuse=True)
     def check_times(cls, values):
@@ -473,6 +474,8 @@ class Vaccination(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
         assert 0. < values["second_dose_delay"], f"Delay to second dose is not positive: {values['second_dose_delay']}"
+
+        # Use ratio to calculate the infectiousness of the one dose vaccinated compared to unvaccinated
         if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:
             values["one_dose"]["vacc_reduce_infectiousness"] = \
                 values["fully_vaccinated"]["vacc_reduce_infectiousness"] * \
@@ -539,13 +542,14 @@ class ContactTracing(BaseModel):
         assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
-    # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated
-    # @root_validator(allow_reuse=True)
-    # def assumed_trace_prop(cls, values):
-    #     if "floor" in values:
-    #         msg = f"Contact tracing assumed_trace_prop must be >= floor"
-    #         assert values["assumed_trace_prop"] >= values["floor"], msg
-    #     return values
+    @root_validator(allow_reuse=True)
+    def check_floor(cls, values):
+        if "floor" in values:
+            trace_prop = values["assumed_trace_prop"]
+            floor_prop = values["floor"]
+            msg = f"Contact tracing assumed_trace_prop must be >= floor: {trace_prop} < {floor_prop}"
+            assert trace_prop >= floor_prop, msg
+        return values
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

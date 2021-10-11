@@ -77,6 +77,9 @@ def get_historical_vac_coverage(
     avg_vals = np.array(apply_moving_average(coverage_values, 7)) + TINY_NUMBER
     return vac_dates, avg_vals
 
+def update_cond_map(cluster, cond_map):
+    if cluster is None:
+        cluster = "Victoria"
 
 
 def get_historical_vac_num(input_db, cond_map):

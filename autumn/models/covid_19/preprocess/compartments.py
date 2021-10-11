@@ -11,13 +11,12 @@ def calc_compartment_periods(sojourn: Sojourn) -> Dict[str, float]:
 
     final_periods = {**sojourn.compartment_periods}
     for calc_period_name, calc_period_def in sojourn.compartment_periods_calculated.items():
-        period = calc_period_def.total_period
-        props_def = calc_period_def.proportions
-        total_props = 0
-        for comp_name, prop in props_def.items():
-            final_periods[f"{comp_name}_{calc_period_name}"] = period * prop
+        total_props = 0.
+        for comp_name, prop in calc_period_def.proportions.items():
+            new_period_dict = {f"{comp_name}_{calc_period_name}": calc_period_def.total_period * prop}
+            final_periods.update(new_period_dict)
             total_props += prop
 
-        assert total_props == 1, f"Proportions for {calc_period_name} must sum to 1"
+        assert total_props == 1., f"Proportions for must sum to 1: {calc_period_name}"
 
     return final_periods

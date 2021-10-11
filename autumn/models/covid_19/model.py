@@ -7,7 +7,7 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.models.covid_19.preprocess.case_detection import CdrProc
+from autumn.models.covid_19.preprocess.testing import CdrProc
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.testing import find_cdr_function_from_test_data
 
@@ -26,11 +26,12 @@ from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_vaccination_flows
 from .preprocess import tracing
+from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
 from .stratifications.cluster import apply_post_cluster_strat_hacks, get_cluster_strat
 from .stratifications.tracing import get_tracing_strat
-from .stratifications.strains import get_strain_strat, make_voc_seed_func
+from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
@@ -91,13 +92,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Get input data
     """
 
-    if params.mixing_matrices.type == "prem":
-        mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
-    elif params.mixing_matrices.type == "extrapolated":
+    if params.mixing_matrices.type == "extrapolated":
         mixing_matrices = build_synthetic_matrices(
             country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust,
             pop.region
         )
+    elif params.mixing_matrices.type == "prem":
+        mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
 
     """
     Add intercompartmental flows
@@ -313,7 +314,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if params.vaccination:
         vaccination_strat = get_vaccination_strat(params)
 
-        # Was going to delete this, but it is necessary - doesn't make sense to have VoC in an otherwise empty stratum
+        # This is actually necessary - doesn't make sense to have VoC in an otherwise empty stratum
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
                 vaccination_strat.add_flow_adjustments(
@@ -349,7 +350,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     age_strat.strata,
                     params.vaccination.one_dose,
                     vic_cluster=params.population.region,
-                    i_component=i_comp,
                     vaccination_lag=vacc_params.lag,
                 )
 

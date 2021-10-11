@@ -1,5 +1,4 @@
 import copy
-from typing import Callable
 
 from summer import Overwrite, Stratification
 
@@ -32,7 +31,8 @@ def get_clinical_strat(params: Parameters):
 
     # Start from blank adjustments because all strata must be specified by summer rules
     non_isolated_adjustments = {stratum: None for stratum in CLINICAL_STRATA}
-    non_isolated_adjustments.update({Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)})
+    non_isolated_adj_dict = {Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)}
+    non_isolated_adjustments.update(non_isolated_adj_dict)
 
     # Apply this to both the late incubation and early active periods
     for compartment in (Compartment.LATE_EXPOSED, Compartment.EARLY_ACTIVE):
@@ -42,10 +42,10 @@ def get_clinical_strat(params: Parameters):
     late_active_adjustments = copy.copy(non_isolated_adjustments)
 
     # Update the ones in late active who are isolated or admitted to hospital
-    for stratum in [Clinical.SYMPT_ISOLATE, Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-        late_active_adjustments.update(
-            {stratum: Overwrite(clinical_params.late_infect_multiplier[stratum])}
-        )
+    for stratum in (Clinical.SYMPT_ISOLATE, Clinical.HOSPITAL_NON_ICU, Clinical.ICU):
+        late_active_adj = Overwrite(clinical_params.late_infect_multiplier[stratum])
+        late_active_adj_dict = {stratum: late_active_adj}
+        late_active_adjustments.update(late_active_adj_dict)
 
     # Apply to the compartment
     clinical_strat.add_infectiousness_adjustments(Compartment.LATE_ACTIVE, late_active_adjustments)

@@ -10,6 +10,7 @@ from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.preprocess.testing import CdrProc
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.testing import find_cdr_function_from_test_data
+from autumn.tools.curve import tanh_based_scaleup
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
@@ -367,12 +368,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Add transition from single dose to fully vaccinated
         if params.vaccination.one_dose:
 
-            base_delay = params.vaccination.second_dose_delay
+            base_delay = 1. / params.vaccination.second_dose_delay
+            reduced_delay = 1. / 21.
 
-            def second_dose_transition_func(time, computed_values, base_delay=base_delay):
-                return 1. / base_delay
+            second_dose_transition_func = tanh_based_scaleup(
+                shape=1., inflection_time=611., lower_asymptote=base_delay, upper_asymptote=reduced_delay
+            )
 
-            for compartment in COMPARTMENTS:
+            for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
                 model.add_transition_flow(
                     name="second_dose",
                     fractional_rate=second_dose_transition_func,

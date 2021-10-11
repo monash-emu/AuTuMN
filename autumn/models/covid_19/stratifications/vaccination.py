@@ -57,8 +57,10 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
         )
 
         severity_adjustment = 1. - strat_severity_efficacy
+
+        # Hospitalisation is risk given symptomatic case, so is de facto adjusted through symptomatic adjustment
         symptomatic_adjuster[stratum], hospital_adjuster[stratum], ifr_adjuster[stratum] = \
-            severity_adjustment, severity_adjustment, severity_adjustment
+            severity_adjustment, 1., severity_adjustment
 
         # Apply the calibration adjustment parameters
         symptomatic_adjuster[stratum] *= params.clinical_stratification.props.symptomatic.multiplier

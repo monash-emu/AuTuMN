@@ -3,6 +3,9 @@ description: BASELINE
 country:
   iso3: BEL
 
+mixing_matrices:
+  source_iso3: BEL
+
 mobility:
   mixing:
     school:

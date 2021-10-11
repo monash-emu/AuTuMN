@@ -3,6 +3,9 @@ description: BASELINE
 contact_rate: 0.0231
 infectious_seed: 100.
 
+mixing_matrices:
+  source_iso3: HKG
+
 time:
   start: 180
   end: 943 # july 30, 2022

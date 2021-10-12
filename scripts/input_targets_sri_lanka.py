@@ -38,8 +38,10 @@ def preprocess_lka_data():
     )
     df["date_index"] = (df.periodname - COVID_BASE_DATETIME).dt.days
     df = df[df.periodname <= pd.to_datetime("today")]
-    #df.loc[df.date==""]
-
+    # Fix errors - email sent to sl team
+    df.loc[df.periodid==20201231, ['Sri Lanka Total bed occupancy in COVID19  ICUs',"Sri Lanka Occupied beds in ICUs"]] = [19.0,19.0]
+    df.loc[df.periodid==20210902, ['Sri Lanka Total bed occupancy in COVID19  ICUs',"Sri Lanka Occupied beds in ICUs"]] = [100,100]
+    
     return df
 
 

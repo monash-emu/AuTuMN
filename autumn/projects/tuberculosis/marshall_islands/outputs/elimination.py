@@ -38,7 +38,7 @@ def main(data_path, output_path):
 
 def plot_elimination(uncertainty_df, figure_path, is_logscale=False):
 
-    interventions = ["ACF", "ACF_LTBI", "hh_pt"]
+    interventions = ["ACF", "ACF_LTBI"]  #, "hh_pt"]
     scenario_idxs = {"ACF": [0, 5, 4, 3], "ACF_LTBI": [0, 8, 7, 6], "hh_pt": [0, 9]}
     colors_idx = {"ACF": [0, 8, 7, 1], "ACF_LTBI": [0, 8, 7, 1], "hh_pt": [0, 4]}
     alphas = {"ACF": [1.0, 0.8, 0.8, 0.7], "ACF_LTBI": [1.0, 0.8, 0.8, 0.7], "hh_pt": [1.0, 0.7]}

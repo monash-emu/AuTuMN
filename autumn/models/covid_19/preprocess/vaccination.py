@@ -339,3 +339,107 @@ def add_vaccination_flows(
                 source_strata=_source_strata,
                 dest_strata=_dest_strata,
             )
+
+
+def add_vic_regional_vacc(model, vacc_params, age_strata, one_dose, vic_cluster):
+
+    all_eligible_age_groups = []
+    for i_comp, roll_out_component in enumerate(vacc_params.roll_out_components):
+
+        # Work out eligible model age_groups
+        eligible_age_groups, _ = get_eligible_age_groups(roll_out_component, age_strata)
+        msg = "Age group requested multiple times"
+        assert not bool(set(all_eligible_age_groups) & set(eligible_age_groups)), msg
+
+        all_eligible_age_groups += eligible_age_groups
+
+        # Find vaccination destination stratum, depending on whether one-dose vaccination stratum is active
+        vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
+
+        if roll_out_component.age_min:
+            close_enough_age_min = min(VACC_COVERAGE_START_AGES, key=lambda age: abs(age - roll_out_component.age_min))
+        else:
+            close_enough_age_min = 0
+
+        if roll_out_component.age_max:
+            close_enough_age_max = min(VACC_COVERAGE_END_AGES, key=lambda age: abs(age - roll_out_component.age_max))
+        else:
+            close_enough_age_max = 89
+
+        # Get the cluster-specific historical vaccination numbers
+        coverage_times, coverage_values = get_both_vac_coverage(
+            vic_cluster.upper(),
+            start_age=close_enough_age_min,
+            end_age=close_enough_age_max,
+        )
+
+        # Manually adjust according to the proportion of the age band that the group is referring to
+        adjustment = 0.6 if close_enough_age_min == 12 and close_enough_age_max == 15 else 1.
+        coverage_values *= adjustment
+
+        # Stop at the end of the available data, even if the request is later
+        final_time = min((max(coverage_times), roll_out_component.vic_supply.end_time))
+        rollout_period_times = np.linspace(
+            roll_out_component.vic_supply.start_time,
+            final_time,
+            int(roll_out_component.vic_supply.time_interval) + 1
+        )
+
+        for i_period in range(len(rollout_period_times) - 1):
+            period_start_time = rollout_period_times[i_period]
+            period_end_time = rollout_period_times[i_period + 1]
+
+            # Interpolate for coverage values, always starting from zero if this is the first roll-out period
+            vaccination_lag = vacc_params.lag
+            period_start_coverage = np.interp(period_start_time - vaccination_lag, coverage_times, coverage_values)
+            modelled_start_coverage = 0. if i_period == 0. else period_start_coverage
+            period_end_coverage = np.interp(period_end_time - vaccination_lag, coverage_times, coverage_values)
+
+            # The proportion of the remaining people who will be vaccinated
+            coverage_increase = (period_end_coverage - modelled_start_coverage) / (1. - modelled_start_coverage)
+
+            # Make sure we're dealing with reasonably sensible coverage values and place a ceiling just in case
+            assert 0. <= coverage_increase <= 1.
+            sensible_coverage = min(coverage_increase, 0.96)
+
+            # Create the function
+            vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+                sensible_coverage, period_start_time, period_end_time,
+            )
+
+            # Have to apply within the loop
+            for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
+                for eligible_age_group in eligible_age_groups:
+                    _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
+                    _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
+                    model.add_transition_flow(
+                        name="vaccination",
+                        fractional_rate=vaccination_roll_out_function,
+                        source=compartment,
+                        dest=compartment,
+                        source_strata=_source_strata,
+                        dest_strata=_dest_strata,
+                    )
+
+    # Add blank/zero flows to make the output requests simpler
+    ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_age_groups)
+    add_zero_vacc_flows(model, ineligible_ages)
+
+
+def add_zero_vacc_flows(model, ineligible_ages):
+    """
+    Add blank/zero flows to make things simpler when we come to requesting the outputs.
+    """
+
+    for ineligible_age_group in ineligible_ages:
+        _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": ineligible_age_group}
+        _dest_strata = {"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": ineligible_age_group}
+        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
+            model.add_transition_flow(
+                name="vaccination",
+                fractional_rate=0.,
+                source=compartment,
+                dest=compartment,
+                source_strata=_source_strata,
+                dest_strata=_dest_strata,
+            )

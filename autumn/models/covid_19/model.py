@@ -24,7 +24,7 @@ from .outputs.tracing import request_tracing_outputs
 from .outputs.healthcare import request_healthcare_outputs
 from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows
+from .preprocess.vaccination import add_vaccination_flows, add_vic_regional_vacc
 from .preprocess import tracing
 from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
@@ -343,15 +343,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                         cluster_stratum={"cluster": cluster},
                     )
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            for i_comp, component in enumerate(vacc_params.roll_out_components):
-                add_vaccination_flows(
-                    model,
-                    component,
-                    age_strat.strata,
-                    params.vaccination.one_dose,
-                    vic_cluster=params.population.region,
-                    vaccination_lag=vacc_params.lag,
-                )
+            add_vic_regional_vacc(
+                model, vacc_params, age_strat.strata, params.vaccination.one_dose, params.population.region,
+            )
 
         else:
             for roll_out_component in vacc_params.roll_out_components:

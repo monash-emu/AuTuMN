@@ -364,13 +364,14 @@ def find_closest_value_in_list(list_request, value_request):
     return min(list_request, key=lambda list_value: abs(list_value - value_request))
 
 
-def add_vic_regional_vacc(model, vacc_params, age_strata, one_dose, vic_cluster):
+def add_vic_regional_vacc(model, vacc_params, age_strata, vic_cluster):
 
+    # Track all the age groups we have applied vaccination to
     all_eligible_age_groups = []
     for i_comp, roll_out_component in enumerate(vacc_params.roll_out_components):
 
         # Work out eligible model age_groups for the current roll-out request
-        eligible_age_groups, _ = get_eligible_age_groups(roll_out_component, age_strata)
+        eligible_age_groups, _ = get_eligible_age_groups(roll_out_component, age_strata)  # Will likely simplify this
         msg = "Age group requested multiple times"
         assert not bool(set(all_eligible_age_groups) & set(eligible_age_groups)), msg
         all_eligible_age_groups += eligible_age_groups
@@ -380,7 +381,7 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, one_dose, vic_cluster)
         close_enough_age_max = find_closest_value_in_list(VACC_COVERAGE_END_AGES, roll_out_component.age_max) if \
             roll_out_component.age_max else 89
 
-        # Get the cluster-specific historical vaccination numbers
+        # Get the cluster-specific historical vaccination data
         coverage_times, coverage_values = get_both_vacc_coverage(
             vic_cluster.upper(),
             start_age=close_enough_age_min,
@@ -393,20 +394,22 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, one_dose, vic_cluster)
 
         # Stop at the end of the available data, even if the request is later
         final_time = min((max(coverage_times), roll_out_component.vic_supply.end_time))
+
+        # Find all the intervals to create the step function over
         rollout_period_times = np.linspace(
             roll_out_component.vic_supply.start_time,
             final_time,
             int(roll_out_component.vic_supply.time_interval) + 1
         )
 
+        # Loop over the periods of time in the step function
         vaccination_rates = []
         end_times = []
-
         for i_period in range(len(rollout_period_times) - 1):
             period_start_time = rollout_period_times[i_period]
             period_end_time = rollout_period_times[i_period + 1]
 
-            # Interpolate for coverage values, always starting from zero if this is the first roll-out period
+            # Interpolate for coverage values, starting from zero if this is the first roll-out period
             vaccination_lag = vacc_params.lag
             period_start_coverage = np.interp(period_start_time - vaccination_lag, coverage_times, coverage_values)
             modelled_start_coverage = 0. if i_period == 0. else period_start_coverage
@@ -416,11 +419,6 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, one_dose, vic_cluster)
             coverage_increase = (period_end_coverage - modelled_start_coverage) / (1. - modelled_start_coverage)
             assert 0. <= coverage_increase <= 1.
 
-            # Create the function - remove this
-            vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-                coverage_increase, period_start_time, period_end_time,
-            )
-
             end_times.append(period_end_time)
 
             duration = period_end_time - period_start_time
@@ -429,23 +427,21 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, one_dose, vic_cluster)
             vaccination_rate = -np.log(1. - coverage_increase) / duration
             vaccination_rates.append(vaccination_rate)
 
-            # Apply to the model
-            add_vacc_flows(model, eligible_age_groups, vaccination_roll_out_function)  # *** need to move this
-
-        def get_vaccination_rate(time):
+        def get_vaccination_rate(time, computed_values):
             if time > roll_out_component.vic_supply.start_time:
                 idx = sum([int(end_time < time) for end_time in end_times])
                 if idx < len(vaccination_rates):
                     return vaccination_rates[idx]
             return 0.
 
+        # Apply the flow rates to the model
         for eligible_age_group in eligible_age_groups:
             _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
             _dest_strata = {"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group}
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
                 model.add_transition_flow(
                     name="vaccination",
-                    fractional_rate=vaccination_rate,
+                    fractional_rate=get_vaccination_rate,
                     source=compartment,
                     dest=compartment,
                     source_strata=_source_strata,

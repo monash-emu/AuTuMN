@@ -343,9 +343,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                         cluster_stratum={"cluster": cluster},
                     )
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            add_vic_regional_vacc(
-                model, vacc_params, age_strat.strata, params.vaccination.one_dose, params.population.region,
-            )
+            add_vic_regional_vacc(model, vacc_params, age_strat.strata, params.population.region)
 
         else:
             for roll_out_component in vacc_params.roll_out_components:

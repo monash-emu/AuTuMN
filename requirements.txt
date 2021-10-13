@@ -29,7 +29,6 @@ pyAesCrypt==0.4.3
 googledrivedownloader >=0.4
 statsmodels>=0.12.2
 fpdf2==2.4.2
-s3fs==2021.8.1
 
 # Testing
 pytest

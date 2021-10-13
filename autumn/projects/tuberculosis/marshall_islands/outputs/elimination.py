@@ -15,12 +15,12 @@ from autumn.tools.plots.utils import COLORS, _apply_transparency
 
 end_tb_targets = {
     "mortality": {
-        2025: 43.25,  # 75% reduction compared to 2015 (173)
-        2035: 8.65,  # 95% reduction compared to 2015 (173)
+        2025: 48.75,  # 75% reduction compared to 2015 (195)
+        2035: 9.75,  # 95% reduction compared to 2015 (195)
     },
     "incidence": {
-        2025: 253.5,  # 50% reduction compared to 2015 (507)
-        2035: 50.7,  # 90% reduction compared to 2015 (507)
+        2025: 285,  # 50% reduction compared to 2015 (570)
+        2035: 57,  # 90% reduction compared to 2015 (570)
     },
 }
 # target_colours = {2025: "limegreen", 2035: "green"}

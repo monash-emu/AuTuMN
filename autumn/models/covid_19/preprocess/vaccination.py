@@ -44,64 +44,6 @@ def get_vacc_roll_out_function_from_coverage(
     return get_vaccination_rate
 
 
-def get_vacc_roll_out_function_from_doses(
-    time_variant_supply, compartment_name, eligible_age_group, eligible_age_groups
-):
-    """
-    Work out the number of vaccinated individuals for a given agegroup and compartment name.
-    Return a time-variant function in a format that can be used to inform a functional flow.
-    """
-
-    def net_flow_func(model, compartments, compartment_values, flows, flow_rates, computed_values, time):
-        # work out the proportion of the eligible population that is in the relevant compartment
-        # FIXME: we should be able to cache the two lists below. They depend on compartment_name, eligible_age_group
-        #  and eligible_age_groups but not on time!
-        num_indices, deno_indices = [], []
-        for i, compartment in enumerate(compartments):
-            if (
-                compartment.name in VACCINE_ELIGIBLE_COMPARTMENTS
-                and compartment.strata["agegroup"] in eligible_age_groups
-                and compartment.strata["vaccination"] == "unvaccinated"
-            ):
-                deno_indices.append(i)
-                if (
-                    compartment.name == compartment_name
-                    and compartment.strata["agegroup"] == eligible_age_group
-                ):
-                    num_indices.append(i)
-
-        compartment_size = sum([compartment_values[i] for i in num_indices])
-        total_eligible_pop_size = sum([compartment_values[i] for i in deno_indices])
-        nb_vaccinated = \
-            compartment_size / total_eligible_pop_size * time_variant_supply(time) if \
-            total_eligible_pop_size >= 0.1 else 0.
-
-        return max(0, min(nb_vaccinated, compartment_size))
-
-    return net_flow_func
-
-
-def get_eligible_age_groups(roll_out_component: RollOutFunc) -> List:
-    """
-    Return a list with the model's age groups that are relevant to the requested roll_out_component.
-    """
-
-    eligible_age_groups = []
-    for agegroup in AGEGROUP_STRATA:
-
-        # Either not requested, or requested and meets that age cut-off for min or max
-        above_age_min = \
-            not roll_out_component.age_min or \
-            bool(roll_out_component.age_min) and float(agegroup) >= roll_out_component.age_min
-        below_age_max = \
-            not roll_out_component.age_max or \
-            bool(roll_out_component.age_max) and float(agegroup) < roll_out_component.age_max
-        if above_age_min and below_age_max:
-            eligible_age_groups.append(agegroup)
-
-    return eligible_age_groups
-
-
 def find_vaccine_action(vacc_prop_prevent_infection: float, overall_efficacy: float) -> Tuple[float, float]:
     """
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.
@@ -124,6 +66,27 @@ def find_vaccine_action(vacc_prop_prevent_infection: float, overall_efficacy: fl
     assert 0. <= severity_efficacy <= 1., msg
 
     return infection_efficacy, severity_efficacy
+
+
+def get_eligible_age_groups(roll_out_component: RollOutFunc) -> List:
+    """
+    Return a list with the model's age groups that are relevant to the requested roll_out_component.
+    """
+
+    eligible_age_groups = []
+    for agegroup in AGEGROUP_STRATA:
+
+        # Either not requested, or requested and meets that age cut-off for min or max
+        above_age_min = \
+            not roll_out_component.age_min or \
+            bool(roll_out_component.age_min) and float(agegroup) >= roll_out_component.age_min
+        below_age_max = \
+            not roll_out_component.age_max or \
+            bool(roll_out_component.age_max) and float(agegroup) < roll_out_component.age_max
+        if above_age_min and below_age_max:
+            eligible_age_groups.append(agegroup)
+
+    return eligible_age_groups
 
 
 def add_vacc_flows(
@@ -150,7 +113,7 @@ def add_vacc_flows(
             )
 
 
-def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams, one_dose: bool):
+def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams, vacc_dest_stratum: str):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function).
     Flexible enough to handle various user requests, but will create one flow object for each request/age group/
@@ -158,48 +121,18 @@ def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams,
     """
 
     all_eligible_agegroups = []
-    vacc_dest_stratum = None
     for roll_out_component in vacc_params.roll_out_components:
         working_agegroups = get_eligible_age_groups(roll_out_component)
         all_eligible_agegroups += working_agegroups
 
-        # Find vaccination destination stratum, depending on whether one-dose vaccination stratum is active
-        vacc_dest_stratum = Vaccination.ONE_DOSE_ONLY if one_dose else Vaccination.VACCINATED
-
         # Coverage-based vaccination
-        if roll_out_component.supply_period_coverage:
-            vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-                roll_out_component.supply_period_coverage.coverage,
-                roll_out_component.supply_period_coverage.start_time,
-                roll_out_component.supply_period_coverage.end_time,
-                vacc_params.coverage_override if vacc_params.coverage_override else None
-            )
-            add_vacc_flows(model, working_agegroups, vaccination_roll_out_function, vacc_dest_stratum)
-
-        # Dose-based vaccination
-        else:
-            time_variant_supply = scale_up_function(
-                roll_out_component.supply_timeseries.times,
-                roll_out_component.supply_timeseries.values,
-                method=4,
-            )
-            for eligible_age_group in working_agegroups:
-                _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
-                _dest_strata = {"vaccination": vacc_dest_stratum, "agegroup": eligible_age_group}
-                for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-
-                    # We need to create a functional flow, which depends on the agegroup and the compartment considered
-                    vaccination_roll_out_function = get_vacc_roll_out_function_from_doses(
-                        time_variant_supply, compartment, eligible_age_group, working_agegroups
-                    )
-                    model.add_function_flow(
-                        name="vaccination",
-                        flow_rate_func=vaccination_roll_out_function,
-                        source=compartment,
-                        dest=compartment,
-                        source_strata=_source_strata,
-                        dest_strata=_dest_strata,
-                    )
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+            roll_out_component.supply_period_coverage.coverage,
+            roll_out_component.supply_period_coverage.start_time,
+            roll_out_component.supply_period_coverage.end_time,
+            vacc_params.coverage_override if vacc_params.coverage_override else None
+        )
+        add_vacc_flows(model, working_agegroups, vaccination_roll_out_function, vacc_dest_stratum)
 
     # Add blank flows to make things simpler when we come to doing the outputs
     ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)

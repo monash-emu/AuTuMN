@@ -336,7 +336,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
             add_vic_regional_vacc(model, vacc_params, params.population.region)
         else:
-            add_requested_vacc_flows(model, vacc_params, bool(params.vaccination.one_dose))
+            dest_straum = Vaccination.ONE_DOSE_ONLY if bool(params.vaccination.one_dose) else Vaccination.VACCINATED
+            add_requested_vacc_flows(model, vacc_params, dest_straum)
 
         # Add transition from single dose to fully vaccinated
         if params.vaccination.one_dose:

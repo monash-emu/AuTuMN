@@ -1,15 +1,11 @@
 import numpy as np
-from typing import List, Callable, Optional, Tuple, Union, Dict
+from typing import List, Callable, Optional, Tuple, Union
 
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import (
-    VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
-)
+from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination
 from autumn.tools.curve.scale_up import scale_up_function
-from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
-from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 )
@@ -29,7 +25,7 @@ def get_vacc_roll_out_function_from_coverage(
 ) -> Callable:
     """
     Calculate the time-variant vaccination rate based on a requested coverage and roll-out window.
-    Return the stepped function of time.
+    Return a single stepped function of time.
     """
 
     # Get vaccination parameters
@@ -130,82 +126,6 @@ def find_vaccine_action(vacc_prop_prevent_infection: float, overall_efficacy: fl
     return infection_efficacy, severity_efficacy
 
 
-def add_clinical_adjustments_to_strat(
-        strat, unaffected_stratum, first_modified_stratum, params, symptomatic_adjuster, hospital_adjuster,
-        ifr_adjuster, top_bracket_overwrite, second_modified_stratum=None, second_sympt_adjuster=1.,
-        second_hospital_adjuster=1., second_ifr_adjuster=1., second_top_bracket_overwrite=None,
-):
-    """
-    Get all the adjustments in the same way for both the history and vaccination stratifications.
-    """
-
-    entry_adjs, death_adjs, progress_adjs, recovery_adjs, _ = get_all_adjustments(
-        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, ifr_adjuster, symptomatic_adjuster,
-        hospital_adjuster, top_bracket_overwrite,
-    )
-
-    # Make these calculations for the one-dose stratum, even if this is being called by the history stratification
-    second_entry_adjs, second_death_adjs, second_progress_adjs, second_recovery_adjs, _ = get_all_adjustments(
-        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, second_ifr_adjuster, second_sympt_adjuster,
-        second_hospital_adjuster, second_top_bracket_overwrite,
-    )
-
-    for i_age, agegroup in enumerate(AGEGROUP_STRATA):
-        for clinical_stratum in CLINICAL_STRATA:
-            relevant_strata = {
-                "agegroup": agegroup,
-                "clinical": clinical_stratum,
-            }
-
-            # Infectiousness onset adjustments *** Must be dest
-            infect_onset_adjustments = {
-                unaffected_stratum: None,
-                first_modified_stratum: entry_adjs[agegroup][clinical_stratum]
-            }
-            if second_modified_stratum:
-                infect_onset_adjustments.update(
-                    {second_modified_stratum: second_entry_adjs[agegroup][clinical_stratum]}
-                )
-            strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infect_onset_adjustments, dest_strata=relevant_strata)
-
-            # Infect death adjustments *** Must be source
-            infect_death_adjustments = {
-                unaffected_stratum: None,
-                first_modified_stratum: death_adjs[agegroup][clinical_stratum]
-            }
-            if second_modified_stratum:
-                infect_death_adjustments.update(
-                    {second_modified_stratum: second_death_adjs[agegroup][clinical_stratum]}
-                )
-            strat.add_flow_adjustments(INFECT_DEATH, infect_death_adjustments, source_strata=relevant_strata)
-
-            # Progress adjustments *** Either source, dest or both *** Note that this isn't indexed by age group
-            progress_adjustments = {
-                unaffected_stratum: None,
-                first_modified_stratum: progress_adjs[clinical_stratum]
-            }
-            if second_modified_stratum:
-                progress_adjustments.update(
-                    {second_modified_stratum: second_progress_adjs[clinical_stratum]}
-                )
-            strat.add_flow_adjustments(PROGRESS, progress_adjustments, source_strata=relevant_strata)
-
-            # Recovery adjustments *** Must be source
-            recovery_adjustments = {
-                unaffected_stratum: None,
-                first_modified_stratum: recovery_adjs[agegroup][clinical_stratum]
-            }
-            if second_modified_stratum:
-                recovery_adjustments.update(
-                    {second_modified_stratum: second_recovery_adjs[agegroup][clinical_stratum]}
-                )
-            strat.add_flow_adjustments(RECOVERY, recovery_adjustments, source_strata=relevant_strata)
-
-    return strat
-
-
 def add_vacc_flows(
         model: CompartmentalModel, age_groups: List, vaccination_rate: Union[float, Callable], dest_stratum: str,
         extra_stratum={}):
@@ -215,24 +135,26 @@ def add_vacc_flows(
     """
 
     for eligible_age_group in age_groups:
-        _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
-        _source_strata.update(extra_stratum)
-        _dest_strata = {"vaccination": dest_stratum, "agegroup": eligible_age_group}
-        _dest_strata.update(extra_stratum)
+        source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
+        source_strata.update(extra_stratum)
+        dest_strata = {"vaccination": dest_stratum, "agegroup": eligible_age_group}
+        dest_strata.update(extra_stratum)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
                 name="vaccination",
                 fractional_rate=vaccination_rate,
                 source=compartment,
                 dest=compartment,
-                source_strata=_source_strata,
-                dest_strata=_dest_strata,
+                source_strata=source_strata,
+                dest_strata=dest_strata,
             )
 
 
 def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams, one_dose: bool):
     """
-    Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
+    Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function).
+    Flexible enough to handle various user requests, but will create one flow object for each request/age group/
+    compartment combination.
     """
 
     all_eligible_agegroups = []

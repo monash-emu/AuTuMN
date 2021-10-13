@@ -432,7 +432,7 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, vic_cluster):
         # Get the piecewise function
         def get_vaccination_rate(time, computed_values):
             if time > roll_out_component.vic_supply.start_time:
-                idx = sum(time < end_times)
+                idx = sum(end_times < time)
                 if idx < len(vaccination_rates):
                     return vaccination_rates[idx]
             return 0.

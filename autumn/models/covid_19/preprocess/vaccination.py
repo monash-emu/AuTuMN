@@ -10,6 +10,10 @@ from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
 from autumn.tools.inputs.covid_au.queries import get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 
 
+def find_closest_value_in_list(list_request, value_request):
+    return min(list_request, key=lambda list_value: abs(list_value - value_request))
+
+
 def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, coverage_override=None):
     """
     Calculate the time-variant vaccination rate based on a requested coverage and roll-out window.
@@ -360,10 +364,6 @@ def add_vacc_flows(model, age_groups, vaccination_rate):
             )
 
 
-def find_closest_value_in_list(list_request, value_request):
-    return min(list_request, key=lambda list_value: abs(list_value - value_request))
-
-
 def add_vic_regional_vacc(model, vacc_params, age_strata, vic_cluster):
 
     # Track all the age groups we have applied vaccination to
@@ -403,9 +403,10 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, vic_cluster):
         )
 
         # Loop over the periods of time in the step function
-        vaccination_rates = []
-        end_times = []
-        for i_period in range(len(rollout_period_times) - 1):
+        n_periods = len(rollout_period_times) - 1
+        vaccination_rates = np.zeros(n_periods)
+        end_times = np.zeros(n_periods)
+        for i_period in range(n_periods):
             period_start_time = rollout_period_times[i_period]
             period_end_time = rollout_period_times[i_period + 1]
 
@@ -420,18 +421,18 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, vic_cluster):
             assert 0. <= coverage_increase <= 1., f"Coverage increase is not in [0, 1]: {coverage_increase}"
 
             # Find duration and add end time to list we're tracking
-            end_times.append(period_end_time)
+            end_times[i_period] = period_end_time
             duration = period_end_time - period_start_time
             assert duration >= 0., f"Vaccination roll-out request duration is negative: {duration}"
 
             # Calculate the rate from the increase in coverage
             vaccination_rate = -np.log(1. - coverage_increase) / duration
-            vaccination_rates.append(vaccination_rate)
+            vaccination_rates[i_period] = vaccination_rate
 
         # Get the piecewise function
         def get_vaccination_rate(time, computed_values):
             if time > roll_out_component.vic_supply.start_time:
-                idx = sum([int(end_time < time) for end_time in end_times])
+                idx = sum(time < end_times)
                 if idx < len(vaccination_rates):
                     return vaccination_rates[idx]
             return 0.

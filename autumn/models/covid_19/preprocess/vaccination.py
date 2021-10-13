@@ -33,7 +33,7 @@ def get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time, cov
 
     # Create the function
     def get_vaccination_rate(time, computed_values):
-        return vaccination_rate if start_time < time < end_time else 0.
+        return vaccination_rate if start_time <= time < end_time else 0.
 
     return get_vaccination_rate
 
@@ -388,8 +388,8 @@ def add_vic2021_supermodel_vacc(model, vacc_params, cluster_strata):
             end_time = min((max(coverage_times), roll_out_component.vic_supply.end_time))
 
             get_vaccination_rate = get_piecewise_vacc_func(
-                roll_out_component.vic_supply.start_time, roll_out_component.vic_supply.time_interval,
-                end_time, coverage_times, coverage_values, vacc_params.lag,
+                roll_out_component.vic_supply.start_time, end_time, roll_out_component.vic_supply.time_interval,
+                coverage_times, coverage_values, vacc_params.lag,
             )
             add_vacc_flows(model, eligible_age_groups, get_vaccination_rate, extra_stratum=cluster_stratum)
 

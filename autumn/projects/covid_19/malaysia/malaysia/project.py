@@ -18,7 +18,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 # Load and configure model parameters.
 malaysia_path = build_rel_path("../malaysia/params/default.yml")
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(5, 10)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(5, 6)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = (
     base_params.update(malaysia_path).update(default_path).update(mle_path, calibration_format=True)
@@ -46,14 +46,14 @@ priors = [
     UniformPrior("infectious_seed", [25.0, 150.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.05]),
-    UniformPrior("infection_fatality.multiplier", [1.75, 2.8]),
+    UniformPrior("infection_fatality.multiplier", [1.75, 3.5]),
     UniformPrior("clinical_stratification.icu_prop", [0.1, 0.2]),
     UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.09, 0.11]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.5, 0.7]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.4, 1.7]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.65, 2.85]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.58, 0.7]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.7]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.3, 2.85]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [320, 360]),
-    UniformPrior("voc_emergence.delta.start_time", [468, 475]),
+    UniformPrior("voc_emergence.delta.start_time", [435, 470]),
 ]
 
 # Load proposal sds from yml file

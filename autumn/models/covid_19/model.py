@@ -24,7 +24,7 @@ from .outputs.tracing import request_tracing_outputs
 from .outputs.healthcare import request_healthcare_outputs
 from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
+from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
 from .preprocess import tracing
 from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
@@ -336,9 +336,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
             add_vic_regional_vacc(model, vacc_params, params.population.region)
         else:
-            for roll_out_component in vacc_params.roll_out_components:
-                coverage_override = vacc_params.coverage_override if vacc_params.coverage_override else None
-                add_vaccination_flows(model, roll_out_component, params.vaccination.one_dose, coverage_override)
+            add_requested_vacc_flows(model, vacc_params, bool(params.vaccination.one_dose))
 
         # Add transition from single dose to fully vaccinated
         if params.vaccination.one_dose:

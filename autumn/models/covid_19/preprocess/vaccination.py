@@ -417,13 +417,15 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, vic_cluster):
 
             # The proportion of the remaining people who will be vaccinated
             coverage_increase = (period_end_coverage - modelled_start_coverage) / (1. - modelled_start_coverage)
-            assert 0. <= coverage_increase <= 1.
+            assert 0. <= coverage_increase <= 1., f"Coverage increase is not in [0, 1]: {coverage_increase}"
 
             end_times.append(period_end_time)
 
             duration = period_end_time - period_start_time
             assert duration >= 0., f"Vaccination roll-out request duration is negative: {duration}"
             assert 0. <= coverage_increase <= 1., f"Coverage not in [0, 1]: {coverage_increase}"
+
+            # Calculate the rate from the increase in coverage
             vaccination_rate = -np.log(1. - coverage_increase) / duration
             vaccination_rates.append(vaccination_rate)
 
@@ -435,18 +437,7 @@ def add_vic_regional_vacc(model, vacc_params, age_strata, vic_cluster):
             return 0.
 
         # Apply the flow rates to the model
-        for eligible_age_group in eligible_age_groups:
-            _source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
-            _dest_strata = {"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group}
-            for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-                model.add_transition_flow(
-                    name="vaccination",
-                    fractional_rate=get_vaccination_rate,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata=_source_strata,
-                    dest_strata=_dest_strata,
-                )
+        add_vacc_flows(model, eligible_age_groups, get_vaccination_rate)
 
     # Add blank/zero flows to make the output requests simpler
     ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_age_groups)

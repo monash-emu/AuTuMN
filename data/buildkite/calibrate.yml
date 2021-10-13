@@ -42,6 +42,8 @@ steps:
       value: covid_19:malaysia
     - label: Manila (covid_19)
       value: covid_19:manila
+    - label: Myanmar (covid_19)
+      value: covid_19:myanmar
     - label: Nepal (covid_19)
       value: covid_19:nepal
     - label: North Metro (covid_19)

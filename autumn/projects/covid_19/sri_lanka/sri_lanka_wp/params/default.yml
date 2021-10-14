@@ -3,6 +3,9 @@ description: BASELINE
 contact_rate: 0.0215
 infectious_seed: 200
 
+mixing_matrices:
+  source_iso3: CHN
+
 time:
   start: 240
   end: 730
@@ -93,3 +96,6 @@ voc_emergence:
     entry_rate: 1.
     seed_duration: 10.
     contact_rate_multiplier: 2.45
+
+vaccination:
+  second_dose_delay: 0.0232558

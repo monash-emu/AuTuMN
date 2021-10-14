@@ -195,6 +195,8 @@ register_project(
     "autumn.projects.covid_19.vietnam.ho_chi_minh_city.project",
 )
 
+register_project(Models.COVID_19, Region.MYANMAR, "autumn.projects.covid_19.myanmar.project")
+
 # COVID: Victoria project
 # FIXME: Parameter validation issues
 # register_project(Models.COVID_19, Region.VICTORIA, "autumn.projects.covid_19.victoria.project")

@@ -31,7 +31,8 @@ def get_clinical_strat(params: Parameters):
 
     # Start from blank adjustments because all strata must be specified by summer rules
     non_isolated_adjustments = {stratum: None for stratum in CLINICAL_STRATA}
-    non_isolated_adjustments.update({Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)})
+    non_isolated_adj_dict = {Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)}
+    non_isolated_adjustments.update(non_isolated_adj_dict)
 
     # Apply this to both the late incubation and early active periods
     for compartment in (Compartment.LATE_EXPOSED, Compartment.EARLY_ACTIVE):
@@ -41,10 +42,10 @@ def get_clinical_strat(params: Parameters):
     late_active_adjustments = copy.copy(non_isolated_adjustments)
 
     # Update the ones in late active who are isolated or admitted to hospital
-    for stratum in [Clinical.SYMPT_ISOLATE, Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-        late_active_adjustments.update(
-            {stratum: Overwrite(clinical_params.late_infect_multiplier[stratum])}
-        )
+    for stratum in (Clinical.SYMPT_ISOLATE, Clinical.HOSPITAL_NON_ICU, Clinical.ICU):
+        late_active_adj = Overwrite(clinical_params.late_infect_multiplier[stratum])
+        late_active_adj_dict = {stratum: late_active_adj}
+        late_active_adjustments.update(late_active_adj_dict)
 
     # Apply to the compartment
     clinical_strat.add_infectiousness_adjustments(Compartment.LATE_ACTIVE, late_active_adjustments)
@@ -54,10 +55,9 @@ def get_clinical_strat(params: Parameters):
     """
 
     # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
-    entry_adjs, death_adjs, progress_adjs, recovery_adjs, get_detected_proportion, adj_systems = get_all_adjustments(
+    entry_adjs, death_adjs, progress_adjs, recovery_adjs, adj_systems = get_all_adjustments(
         clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
-        params.testing_to_detection, params.infection_fatality.multiplier,
-        params.clinical_stratification.props.symptomatic.multiplier,
+        params.infection_fatality.multiplier, params.clinical_stratification.props.symptomatic.multiplier,
         params.clinical_stratification.props.hospital.multiplier, params.infection_fatality.top_bracket_overwrite,
     )
 
@@ -69,4 +69,4 @@ def get_clinical_strat(params: Parameters):
         clinical_strat.add_flow_adjustments(INFECT_DEATH, death_adjs[agegroup], source_strata=source)
         clinical_strat.add_flow_adjustments(RECOVERY, recovery_adjs[agegroup], source_strata=source)
 
-    return clinical_strat, get_detected_proportion, adj_systems
+    return clinical_strat, adj_systems

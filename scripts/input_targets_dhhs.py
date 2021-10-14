@@ -20,6 +20,10 @@ COVID_DHHS_DEATH_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_deaths
 COVID_DHHS_CASE_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_cases.secret.csv")
 COVID_DHHS_ADMN_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_admissions.secret.csv")
 COVID_DHHS_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_vaccination.secret.csv")
+COVID_VIDA_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vida_vac.secret.csv")
+COVID_VIDA_POP_CSV = os.path.join(COVID_AU_DIRPATH, "vida_pop.csv")
+
+
 COVID_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
 
 
@@ -140,14 +144,8 @@ def main():
         password = getpass(prompt="Enter the encryption password:")
 
     for cluster in CLUSTER_MAP.values():
-
-        # TARGET_MAP_DHHS = {
-        #     f"notifications_for_cluster_{cluster.lower()}": "cluster_cases",
-        #     f"hospital_occupancy_for_cluster_{cluster.lower()}": "value_hosp",
-        #     f"icu_occupancy_for_cluster_{cluster.lower()}": "value_icu",
-        #     f"icu_admissions_for_cluster_{cluster.lower()}": "admittedtoicu",
-        #     f"hospital_admissions_for_cluster_{cluster.lower()}": "nadmissions",
-        # }
+        if cluster == "VIC":
+            continue
 
         cluster_secrets_file = os.path.join(
             PROJECTS_PATH, "covid_19", "victoria", cluster.lower(), "targets.secret.json"
@@ -184,6 +182,11 @@ def main():
     df = create_vac_coverage(df)
 
     df.to_csv(COVID_VAC_CSV)
+
+    df = fetch_vac_model()
+    df = preprocess_vac_model(df)
+
+    df.to_csv(COVID_VIDA_VAC_CSV, index=False)
 
 
 def preprocess_admissions():
@@ -371,6 +374,56 @@ def load_deaths(df):
         .reset_index()
     )
     df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+
+    return df
+
+
+def fetch_vac_model():
+
+    df = pd.read_csv(
+        os.path.join(COVID_AU_DIRPATH, "vac_by_week_lga.secret.csv"),
+        usecols=[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            8,
+        ],
+    )
+    create_date_index(COVID_BASE_DATETIME, df, "week")
+    df.lga.replace(fix_lga, inplace=True)
+
+    return df
+
+
+def preprocess_vac_model(df):
+
+    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
+    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+
+    df["dose_1"] = df.dose_1 * df.proportion
+    df["dose_2"] = df.dose_2 * df.proportion
+    df = df[
+        ["vaccine_brand_name", "cluster_id", "age_group", "date_index", "date", "dose_1", "dose_2"]
+    ]
+
+    df = df.groupby(
+        ["vaccine_brand_name", "cluster_id", "age_group", "date_index", "date"], as_index=False
+    ).sum()
+    df.sort_values(by=["vaccine_brand_name", "cluster_id", "age_group", "date_index"], inplace=True)
+    df.vaccine_brand_name.replace(
+        {"COVID-19 Vaccine AstraZeneca": "astra_zeneca", "Pfizer Comirnaty": "pfizer"}, inplace=True
+    )
+    df.age_group.replace({"85+": "85-89"}, inplace=True)
+    df["start_age"] = df["age_group"].apply(lambda s: int(s.split("-")[0]))
+    df["end_age"] = df["age_group"].apply(lambda s: int(s.split("-")[1]))
+
+    numeric_cols = ["dose_1", "dose_2", "start_age", "end_age"]
+    df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
 
     return df
 

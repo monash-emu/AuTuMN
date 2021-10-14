@@ -161,6 +161,12 @@ def full():
     else:
         logger.info("Triggering PowerBI processing.")
         pp = powerbi_pipeline
+
+        if use_latest_code:
+            pbi_branch = "master"
+        else:
+            pbi_branch = "use_original_commit"
+
         trigger_pipeline(
             label="Trigger PowerBI processing",
             target="powerbi-processing",
@@ -169,6 +175,7 @@ def full():
             meta={
                 pp.run_id_field.key: run_id,
                 pp.urunid_field.key: "mle",
+                pp.branch_field.key: pbi_branch,
                 pp.spot_field.key: pp.spot_field.get_option(is_spot),
             },
         )
@@ -184,6 +191,7 @@ def powerbi():
     run_id = powerbi_pipeline.run_id_field.get_value()
     is_spot = powerbi_pipeline.spot_field.get_value()
     urunid = powerbi_pipeline.urunid_field.get_value()
+    branch = powerbi_pipeline.branch_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in powerbi_pipeline.fields}, indent=2)
     app_name, region_name, _, _ = read_run_id(run_id)
     job_name = f"{app_name}-{region_name}-{build_number}"
@@ -191,7 +199,7 @@ def powerbi():
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Running PowerBI post processing job %s with params:\n%s\n", job_name, params_str)
     # FIXME +++ Nasty hack to get powerbi job running temporarily during refactor
-    aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, branch="master", is_spot=is_spot)
+    aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, branch=branch, is_spot=is_spot)
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
 

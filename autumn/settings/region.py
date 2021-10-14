@@ -36,6 +36,7 @@ class Region:
     INDONESIA = "indonesia"
     VIETNAM = "vietnam"
     HO_CHI_MINH_CITY = "ho_chi_minh_city"
+    MYANMAR = "myanmar"
 
     REGIONS = [
         PHILIPPINES,
@@ -75,6 +76,7 @@ class Region:
         BALI,
         VIETNAM,
         HO_CHI_MINH_CITY,
+        MYANMAR
     ]
 
     MALAYSIA_REGIONS = [

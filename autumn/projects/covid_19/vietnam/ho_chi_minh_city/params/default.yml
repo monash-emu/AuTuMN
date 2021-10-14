@@ -8,8 +8,11 @@ country:
   iso3: VNM
 
 mixing_matrices:
-  type: extrapolated
-  source_iso3: HKG
+  source_iso3: CHN
+
+#mixing_matrices:
+#  type: extrapolated
+#  source_iso3: CHN
 
 population:
   region: Ho Chi Minh City
@@ -60,6 +63,7 @@ vaccination:
   fully_vaccinated:
     overall_efficacy: 0.7 # now varied
     vacc_prop_prevent_infection: 1 # now varied
+  second_dose_delay: 0.0232558
   roll_out_components:
     - supply_period_coverage:
         coverage: .1033

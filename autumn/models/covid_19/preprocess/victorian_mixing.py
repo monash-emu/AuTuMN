@@ -1,8 +1,9 @@
 """
 Builds a mixing matrix for the Victorian multi-cluster model.
+This is used in the 2020 second wave analysis for Victoria only, and is not used in the current Vic projections.
 """
-from copy import deepcopy
 
+from copy import deepcopy
 import numpy as np
 from numba import jit
 

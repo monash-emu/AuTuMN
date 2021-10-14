@@ -6,6 +6,9 @@ time:
   start: 50
   end: 731
 
+mixing_matrices:
+  source_iso3: CHN
+
 country:
   iso3: NPL
 
@@ -69,6 +72,7 @@ vaccination:
     overall_efficacy: 0.7
     vacc_prop_prevent_infection: 0.7
     vacc_reduce_infectiousness: 0.5
+  second_dose_delay: 0.0232558
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.224  # "Effective vaccination coverage", allowing first dose to be 60% effective

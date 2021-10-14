@@ -1,7 +1,39 @@
-description: No vaccine counterfactual
+description: 30% onsite learning on 1 Jan 2022 / 50% of 10-19 years-old vaccinated by 1 Jan 2022
 
 time:
-  start: 426  # 1 Mar 2021
+  start: 670
 
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-15
+        - 2020-03-16
+        - 2022-01-01
+        - 2022-01-03
+      values:
+        - 1.
+        - 0.
+        - 0.
+        - 0.3
+
+# Vaccination-related
 vaccination:
-  roll_out_components: []
+  roll_out_components:
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .90  # 89.53% of the 18+ NCR population is fully vaccinated by 6 Oct
+        start_time: 426 # 1 Mar 2021
+        end_time: 645 # 6 Oct 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .50  # to reach 95% of 20+ fully-vaccinated by end of year 2021
+        start_time: 627 # 18 Sep 2021
+        end_time: 731 # 31 Dec 2021
+    - age_min: 10
+      age_max: 19
+      supply_period_coverage:
+        coverage: .50  # to reach 50% of 10-19 fully-vaccinated by end of year 2021
+        start_time: 671 # 1 Nov 2021
+        end_time: 731 # 31 Dec 2021

@@ -42,7 +42,7 @@ COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPART
 Stratifications
 """
 
-# Age groups match the Prem matrices
+# Age groups match the standard mixing matrices
 AGEGROUP_STRATA = [str(breakpoint) for breakpoint in list(range(0, 80, 5))]
 
 
@@ -121,3 +121,22 @@ NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the oth
 PROGRESS = "progress"
 RECOVERY = "recovery"
 INFECT_DEATH = "infect_death"
+
+"""
+Vic model options
+"""
+
+
+class VicModelTypes:
+    NON_VIC = "non_vic"
+    VIC_SUPER_2020 = "vic_super_2020"
+    VIC_SUPER_2021 = "vic_super_2021"
+    VIC_REGION_2021 = "vic_region_2021"
+
+
+VIC_MODEL_OPTIONS = [
+    VicModelTypes.NON_VIC,
+    VicModelTypes.VIC_SUPER_2020,
+    VicModelTypes.VIC_SUPER_2021,
+    VicModelTypes.VIC_REGION_2021,
+]

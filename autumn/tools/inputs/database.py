@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 _input_db = None
 
-INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "inputs.db")
+INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "inputs.secret.db")
 
 
 def get_input_db():

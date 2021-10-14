@@ -24,7 +24,7 @@ def get_vacc_roll_out_function_from_coverage(
         coverage: float, start_time: float, end_time: float, coverage_override: Optional[float]
 ) -> Callable:
     """
-    Calculate the time-variant vaccination rate based on a requested coverage and roll-out window.
+    Calculate the time-variant vaccination rate, based on a requested coverage and roll-out window.
     Return a single stepped function of time.
     """
 

@@ -3,12 +3,11 @@ import numpy as np
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget
 
-# TODO: Work out what is going on with seeding through importation - summer behaviour need revision (non-urgent)
+# TODO: What is going on with seeding through importation? - summer behaviour need revision - appears correct in summer
 # TODO: Add visualisation of raw Google inputs to inputs notebook (minor)
 # TODO: Sort out the caps/lower dash/underscore issue in Vic regions naming (minor)
 # TODO: Consider a different approach to parameterising vaccine effects (including on hospital and death)
 # TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
-# TODO: Interpret contact rate as the relative infectiousness of Delta (may no longer be needed)
 # TODO: Notebook for visualising outputs after run
 
 # Specify the general features of the calibration

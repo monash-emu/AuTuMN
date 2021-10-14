@@ -461,8 +461,22 @@ class VaccEffectiveness(BaseModel):
         return values
 
 
+class TanhScaleup(BaseModel):
+    shape: float
+    inflection_time: float
+    lower_asymptote: float
+    upper_asymptote: float
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_asymptotes(cls, values):
+        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
+        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
+        assert 0. <= lower, f"Lower asymptote not in domain [0, inf]: {lower}"
+        return values
+
+
 class Vaccination(BaseModel):
-    second_dose_delay: float
+    second_dose_delay: Union[float, TanhScaleup]
     one_dose: Optional[VaccEffectiveness]
     fully_vaccinated: VaccEffectiveness
     lag: float
@@ -472,7 +486,9 @@ class Vaccination(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
-        assert 0. < values["second_dose_delay"], f"Delay to second dose is not positive: {values['second_dose_delay']}"
+        second_dose_delay = values["second_dose_delay"]
+        if type(second_dose_delay) == float:
+            assert 0. < second_dose_delay, f"Delay to second dose is not positive: {second_dose_delay}"
 
         # Use ratio to calculate the infectiousness of the one dose vaccinated compared to unvaccinated
         if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:

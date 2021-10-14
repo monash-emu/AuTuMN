@@ -165,6 +165,11 @@ vaccination:
     overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness: 0.15  # Using same reference, but more effect for Alpha than for Delta
+  second_dose_delay:
+    shape: 0.1
+    inflection_time: 624.  # Middle of September 2021, so that most scaling occurs during September
+    lower_asymptote: 0.0232558  # Baseline lag in vaccination curves, 43 days
+    upper_asymptote: 0.0357143  # Shortened lag from Dept's spreadsheet, 28 days
   lag: 14
   roll_out_components:
     - age_min: 10

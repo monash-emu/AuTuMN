@@ -191,7 +191,7 @@ vaccination:
     vacc_reduce_infectiousness: 0.
     vacc_reduce_infectiousness_ratio: null
   # Time from receiving first dose to second, based on the days from Vic achieving the same coverage with one and two
-  second_dose_delay: 43.
+  second_dose_delay: null
   lag: 0.
   roll_out_components: []
 

@@ -410,7 +410,6 @@ class RollOutFunc(BaseModel):
 
     age_min: Optional[float]
     age_max: Optional[float]
-    supply_timeseries: Optional[TimeSeries]
     supply_period_coverage: Optional[VaccCoveragePeriod]
     vic_supply: Optional[VicHistoryPeriod]
 
@@ -418,10 +417,10 @@ class RollOutFunc(BaseModel):
     def check_suppy(cls, values):
         components = \
             values.get("supply_period_coverage"), \
-            values.get("supply_timeseries"), \
             values.get("vic_supply")
-        has_supply = (int(bool(i_comp)) for i_comp in components)
-        assert sum(has_supply) == 1, "Roll out function must have just one period or timeseries for supply"
+        has_supply = [int(bool(i_comp)) for i_comp in components]
+        msg = f"Roll out request must have exactly one type of request: {sum(has_supply)} requests"
+        assert sum(has_supply) == 1, msg
         if "age_min" in values:
             assert 0. <= values["age_min"], f"Minimum age is negative: {values['age_min']}"
         if "age_max" in values:

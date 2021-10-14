@@ -24,7 +24,7 @@ from .outputs.tracing import request_tracing_outputs
 from .outputs.healthcare import request_healthcare_outputs
 from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows
+from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
 from .preprocess import tracing
 from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
@@ -330,39 +330,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Implement the process of people getting vaccinated
         vacc_params = params.vaccination
 
-        # Vic 2021 code is not generalisable
+        # Victoria vaccination code is not generalisable
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            for component in vacc_params.roll_out_components:
-                for cluster in cluster_strat.strata:
-                    add_vaccination_flows(
-                        model,
-                        component,
-                        age_strat.strata,
-                        params.vaccination.one_dose,
-                        vic_cluster=cluster,
-                        cluster_stratum={"cluster": cluster},
-                    )
+            add_vic2021_supermodel_vacc(model, vacc_params, cluster_strat.strata)
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            for i_comp, component in enumerate(vacc_params.roll_out_components):
-                add_vaccination_flows(
-                    model,
-                    component,
-                    age_strat.strata,
-                    params.vaccination.one_dose,
-                    vic_cluster=params.population.region,
-                    vaccination_lag=vacc_params.lag,
-                )
-
+            add_vic_regional_vacc(model, vacc_params, params.population.region)
         else:
-            for roll_out_component in vacc_params.roll_out_components:
-                coverage_override = vacc_params.coverage_override if vacc_params.coverage_override else None
-                add_vaccination_flows(
-                    model,
-                    roll_out_component,
-                    age_strat.strata,
-                    params.vaccination.one_dose,
-                    coverage_override
-                )
+            dest_straum = Vaccination.ONE_DOSE_ONLY if bool(params.vaccination.one_dose) else Vaccination.VACCINATED
+            add_requested_vacc_flows(model, vacc_params, dest_straum)
 
         # Add transition from single dose to fully vaccinated
         if params.vaccination.one_dose:

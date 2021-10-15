@@ -4,11 +4,11 @@ contact_rate: 0.0231
 infectious_seed: 100.
 
 mixing_matrices:
-  source_iso3: HKG
+  source_iso3: CHN
 
 time:
   start: 180
-  end: 943 # july 30, 2022
+  end: 791 # 01 March, 2022
 
 country:
   iso3: MYS

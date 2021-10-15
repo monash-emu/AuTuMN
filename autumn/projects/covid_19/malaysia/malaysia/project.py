@@ -32,7 +32,6 @@ icu_occupancy_ts = ts_set.get("icu_occupancy").truncate_start_time(210).moving_a
 infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(210).moving_average(window=7).downsample(step=7)
 targets = [
     NormalTarget(notifications_ts),
-    NormalTarget(icu_occupancy_ts),
     NormalTarget(infection_deaths_ts),
 ]
 
@@ -43,7 +42,7 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.015, 0.04]),
-    UniformPrior("infectious_seed", [250.0, 850.0]),
+    UniformPrior("infectious_seed", [500.0, 900.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.02]),
     # Microdistancing

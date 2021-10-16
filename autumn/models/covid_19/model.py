@@ -23,7 +23,6 @@ from .outputs.common import CovidOutputs, VicCovidOutputs
 from .outputs.vaccination import request_vaccination_outputs
 from .outputs.strains import request_strain_outputs
 from .outputs.tracing import request_tracing_outputs
-from .outputs.healthcare import request_healthcare_outputs
 from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
@@ -372,9 +371,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Find the total population, used by multiple output types
     model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
 
-    # Most standard outputs
-    request_healthcare_outputs(model, params.sojourn.compartment_periods, is_vic_super)
-
     """
     Set up derived output functions
     """
@@ -387,6 +383,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     outputs_tracker.request_progression()
     outputs_tracker.request_cdr()
     outputs_tracker.request_deaths()
+    outputs_tracker.request_admissions()
+    outputs_tracker.request_occupancy(params.sojourn.compartment_periods)
 
     # Vaccination
     if params.vaccination:

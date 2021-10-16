@@ -19,6 +19,7 @@ from .constants import (
 
 from . import preprocess
 from .outputs.common import request_common_outputs
+from .outputs.common import CovidOutputs, VicCovidOutputs
 from .outputs.vaccination import request_vaccination_outputs
 from .outputs.strains import request_strain_outputs
 from .outputs.tracing import request_tracing_outputs
@@ -35,7 +36,6 @@ from .stratifications.tracing import get_tracing_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
-from .outputs.common import CovidOutputs, VicCovidOutputs
 
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
@@ -373,22 +373,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
 
     # Most standard outputs
-    request_common_outputs(model, is_vic_super)
     request_healthcare_outputs(model, params.sojourn.compartment_periods, is_vic_super)
 
     """
     Set up derived output functions
     """
 
-    if is_vic_super:
-        outputs_tracker = VicCovidOutputs(model)
-    else:
-        outputs_tracker = CovidOutputs(model)
+    outputs_tracker = VicCovidOutputs(model) if is_vic_super else CovidOutputs(model)
+
     outputs_tracker.request_incidence()
     outputs_tracker.request_infection()
     outputs_tracker.request_notifications(params.contact_tracing, params.cumul_incidence_start_time)
     outputs_tracker.request_progression()
     outputs_tracker.request_cdr()
+    outputs_tracker.request_deaths()
 
     # Vaccination
     if params.vaccination:

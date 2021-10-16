@@ -8,6 +8,12 @@ from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.settings import Region
 from autumn.models.covid_19.parameters import Parameters
 
+""" *** I have no idea why I can't kill the following function *** """
+
+
+def request_common_outputs():
+    pass
+
 
 def request_stratified_output_for_flow(
         model, flow, strata, stratification, name_stem=None, filter_on="destination"
@@ -81,6 +87,11 @@ def request_stratified_output_for_compartment(
 
 
 class Outputs:
+    """
+    This class is not specific to Covid, so should be moved out of this file - but not sure whether to move it to
+    somewhere in autumn or in summer.
+    """
+
     def __init__(self, model):
         self.model = model
 
@@ -266,6 +277,33 @@ class CovidOutputs(Outputs):
     def request_cdr(self):
         self.model.request_computed_value_output("cdr")
 
+    def request_deaths(self):
+
+        # Unstratified
+        self.model.request_output_for_flow(name="infection_deaths", flow_name=INFECT_DEATH)
+        self.model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
+
+        # Stratified by age
+        self.request_stratified_output_for_flow(
+            INFECT_DEATH, AGEGROUP_STRATA, "agegroup", name_stem="infection_deaths", filter_on="source"
+        )
+        for agegroup in AGEGROUP_STRATA:
+            self.model.request_cumulative_output(
+                name=f"accum_deathsXagegroup_{agegroup}",
+                source=f"infection_deathsXagegroup_{agegroup}",
+            )
+
+        # Stratified by age and clinical stratum
+        request_double_stratified_output_for_flow(
+            self.model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup",
+            CLINICAL_STRATA, "clinical", name_stem="infection_deaths", filter_on="source"
+        )
+
+        self.request_extra_deaths()
+
+    def request_extra_deaths(self):
+        pass
+
 
 class VicCovidOutputs(CovidOutputs):
 
@@ -315,34 +353,6 @@ class VicCovidOutputs(CovidOutputs):
             "cluster", "progress_for_", filter_on="destination",
         )
 
-
-def request_common_outputs(model: CompartmentalModel, is_region_vic):
-
-    """
-    Deaths
-    """
-
-    # Unstratified
-    model.request_output_for_flow(name="infection_deaths", flow_name=INFECT_DEATH)
-    model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
-
-    # Stratified by age
-    request_stratified_output_for_flow(
-        model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup", name_stem="infection_deaths", filter_on="source"
-    )
-    for agegroup in AGEGROUP_STRATA:
-        model.request_cumulative_output(
-            name=f"accum_deathsXagegroup_{agegroup}",
-            source=f"infection_deathsXagegroup_{agegroup}",
-        )
-
-    # Stratified by age and clinical stratum
-    request_double_stratified_output_for_flow(
-        model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup",
-        CLINICAL_STRATA, "clinical", name_stem="infection_deaths", filter_on="source"
-    )
-
-    # Victoria-specific stratification by cluster
-    if is_region_vic:
+    def request_extra_deaths(self):
         clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
-        request_stratified_output_for_flow(model, INFECT_DEATH, clusters, "cluster", "source")
+        self.request_stratified_output_for_flow(INFECT_DEATH, clusters, "cluster", "source")

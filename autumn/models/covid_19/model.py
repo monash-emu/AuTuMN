@@ -35,6 +35,7 @@ from .stratifications.tracing import get_tracing_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
+from .outputs.common import Outputs
 
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
@@ -47,7 +48,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     params = Parameters(**params)
 
-    is_region_vic = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
+    is_vic_super = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
 
     model = CompartmentalModel(
         times=[params.time.start, params.time.end],
@@ -365,19 +366,25 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 )
 
     # Dive into summer internals to over-write mixing matrix
-    if is_region_vic:
+    if is_vic_super:
         model._mixing_matrices = [mixing_matrix_function]
 
     # Find the total population, used by multiple output types
     model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
 
     # Most standard outputs
-    request_common_outputs(model, params, is_region_vic)
-    request_healthcare_outputs(model, params.sojourn.compartment_periods, is_region_vic)
+    request_common_outputs(model, params, is_vic_super)
+    request_healthcare_outputs(model, params.sojourn.compartment_periods, is_vic_super)
 
     """
     Set up derived output functions
     """
+
+    outputs_tracker = Outputs(model)
+    outputs_tracker.request_incidence()
+    outputs_tracker.request_infection()
+    outputs_tracker.request_notifications(params.contact_tracing, params.cumul_incidence_start_time)
+    outputs_tracker.request_cdr()
 
     # Vaccination
     if params.vaccination:
@@ -391,7 +398,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if params.stratify_by_infection_history:
         request_history_outputs(model)
     else:
-        request_recovered_outputs(model, is_region_vic)
+        request_recovered_outputs(model, is_vic_super)
 
     # Contact tracing-related outputs
     if params.contact_tracing:

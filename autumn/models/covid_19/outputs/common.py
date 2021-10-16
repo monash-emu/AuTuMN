@@ -80,127 +80,118 @@ def request_stratified_output_for_compartment(
         )
 
 
-def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):
-    """
-    Incidence
-    """
+class Outputs:
+    def __init__(self, model):
+        self.model = model
 
-    # Unstratified
-    model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
+    def request_incidence(self):
+        """
+        Request incidence rate calculations.
+        """
 
-    # Stratified by age group
-    request_stratified_output_for_flow(model, INCIDENCE, AGEGROUP_STRATA, "agegroup")
+        # Unstratified
+        self.model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
 
-    # Stratified by age group and by clinical stratum
-    request_double_stratified_output_for_flow(
-        model, INCIDENCE, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical"
-    )
+        # Stratified by age group
+        request_stratified_output_for_flow(self.model, INCIDENCE, AGEGROUP_STRATA, "agegroup")
 
-    # Cumulative incidence
-    if params.cumul_incidence_start_time:
-        model.request_cumulative_output(
-            name=f"accum_{INCIDENCE}",
-            source=INCIDENCE,
-            start_time=params.cumul_incidence_start_time,
+        # Stratified by age group and by clinical stratum
+        request_double_stratified_output_for_flow(
+            self.model, INCIDENCE, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical"
         )
 
-    """
-    Infection
-    """
+    def request_infection(self):
+        """
+        Request infection rate calculations.
 
-    # susceptible_infection_rate functions only work for SEIR structure, would need to change for SEIRS, SEIS, etc.
-    model.request_output_for_flow("infection", INFECTION)
-    model.request_output_for_compartments("_susceptible", [Compartment.SUSCEPTIBLE], save_results=False)
-    model.request_function_output(
-        "susceptible_infection_rate",
-        func=lambda infection, susceptible: infection / susceptible,
-        sources=[INFECTION, "_susceptible"]
-    )
+        Note that susceptible_infection_rate functions only work for SEIR structure, would need to change for SEIRS,
+        SEIS, etc.
+        """
 
-    """
-    Notifications
-    """
+        self.model.request_output_for_flow("infection", INFECTION)
 
-    # Unstratified
-    notification_pathways = []
+    def request_notifications(self, contact_tracing_params, cumul_inc_start_time):
 
-    # First track all traced cases (regardless of clinical stratum)
-    if params.contact_tracing:
-        name = "progress_traced"
-        notification_pathways.append(name)
-        model.request_output_for_flow(
-            name=name,
-            flow_name="progress",
-            dest_strata={"tracing": "traced"},
-            save_results=False,
-        )
-
-    # Then track untraced cases that are passively detected (depending on clinical stratum)
-    for clinical in NOTIFICATION_CLINICAL_STRATA:
-        name = f"progress_untracedX{clinical}"
-        dest_strata = {"clinical": clinical, "tracing": "untraced"} if \
-            params.contact_tracing else \
-            {"clinical": clinical}
-        notification_pathways.append(name)
-        model.request_output_for_flow(
-            name=name,
-            flow_name="progress",
-            dest_strata=dest_strata,
-            save_results=False,
-        )
-    model.request_aggregate_output(name="notifications", sources=notification_pathways)
-
-    # Cumulative unstratified notifications
-    if params.cumul_incidence_start_time:
-        model.request_cumulative_output(
-            name=f"accum_{NOTIFICATIONS}",
-            source=NOTIFICATIONS,
-            start_time=params.cumul_incidence_start_time,
-        )
-
-    # Age-specific notifications
-    for agegroup in AGEGROUP_STRATA:
-        age_notification_pathways = []
+        # Unstratified
+        notification_pathways = []
 
         # First track all traced cases (regardless of clinical stratum)
-        if params.contact_tracing:
-            name = f"progress_tracedX{agegroup}"
-            age_notification_pathways.append(name)
-            model.request_output_for_flow(
+        if contact_tracing_params:
+            name = "progress_traced"
+            notification_pathways.append(name)
+            self.model.request_output_for_flow(
                 name=name,
                 flow_name="progress",
-                dest_strata={"tracing": "traced", "agegroup": agegroup},
+                dest_strata={"tracing": "traced"},
                 save_results=False,
             )
 
         # Then track untraced cases that are passively detected (depending on clinical stratum)
         for clinical in NOTIFICATION_CLINICAL_STRATA:
-            name = f"progress_untracedXagegroup_{agegroup}X{clinical}"
-            dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
-                params.contact_tracing else \
-                {"clinical": clinical, "agegroup": agegroup}
-            age_notification_pathways.append(name)
-            model.request_output_for_flow(
+            name = f"progress_untracedX{clinical}"
+            dest_strata = {"clinical": clinical, "tracing": "untraced"} if \
+                contact_tracing_params else \
+                {"clinical": clinical}
+            notification_pathways.append(name)
+            self.model.request_output_for_flow(
                 name=name,
                 flow_name="progress",
                 dest_strata=dest_strata,
                 save_results=False,
             )
-        model.request_aggregate_output(
-            name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways
-        )
+        self.model.request_aggregate_output(name="notifications", sources=notification_pathways)
 
-    # Split by child and adult
-    paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]]
-    adult_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:]]
-    model.request_aggregate_output(
-        name="notificationsXpaediatric",
-        sources=paed_notifications
-    )
-    model.request_aggregate_output(
-        name="notificationsXadult",
-        sources=adult_notifications
-    )
+        # Cumulative unstratified notifications
+        if cumul_inc_start_time:
+            self.model.request_cumulative_output(
+                name=f"accum_{NOTIFICATIONS}",
+                source=NOTIFICATIONS,
+                start_time=cumul_inc_start_time,
+            )
+
+        # Age-specific notifications
+        for agegroup in AGEGROUP_STRATA:
+            age_notification_pathways = []
+
+            # First track all traced cases (regardless of clinical stratum)
+            if contact_tracing_params:
+                name = f"progress_tracedX{agegroup}"
+                age_notification_pathways.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"tracing": "traced", "agegroup": agegroup},
+                    save_results=False,
+                )
+
+            # Then track untraced cases that are passively detected (depending on clinical stratum)
+            for clinical in NOTIFICATION_CLINICAL_STRATA:
+                name = f"progress_untracedXagegroup_{agegroup}X{clinical}"
+                dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
+                    contact_tracing_params else \
+                    {"clinical": clinical, "agegroup": agegroup}
+                age_notification_pathways.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata=dest_strata,
+                    save_results=False,
+                )
+            self.model.request_aggregate_output(
+                name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways
+            )
+
+        # Split by child and adult
+        paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]]
+        adult_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:]]
+        self.model.request_aggregate_output(name="notificationsXpaediatric", sources=paed_notifications)
+        self.model.request_aggregate_output(name="notificationsXadult", sources=adult_notifications)
+
+    def request_cdr(self):
+        self.model.request_computed_value_output("cdr")
+
+
+def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):
 
     # Victorian cluster model outputs
     clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else ()
@@ -236,12 +227,6 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
         model.request_aggregate_output(
             name=f"notificationsXcluster_{cluster}", sources=cluster_notification_sources
         )
-
-    """
-    Case detection
-    """
-
-    model.request_computed_value_output("cdr")
 
     """
     Progression

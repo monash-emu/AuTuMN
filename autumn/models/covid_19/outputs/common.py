@@ -11,7 +11,7 @@ from autumn.models.covid_19.parameters import Parameters
 """ *** I have no idea why I can't kill the following function *** """
 
 
-def request_common_outputs():
+def cant_kill_function():
     pass
 
 

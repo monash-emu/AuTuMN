@@ -18,7 +18,7 @@ from .constants import (
 )
 
 from . import preprocess
-from .outputs.common import request_common_outputs
+from .outputs.common import cant_kill_function
 from .outputs.common import CovidOutputs, VicCovidOutputs
 from .outputs.vaccination import request_vaccination_outputs
 from .outputs.strains import request_strain_outputs

@@ -19,10 +19,9 @@ from .constants import (
 
 from . import preprocess
 from .outputs.common import cant_kill_function
-from .outputs.common import CovidOutputs, VicCovidOutputs
+from .outputs.common import CovidOutputs
+from .outputs.victoria import VicCovidOutputs
 from .outputs.vaccination import request_vaccination_outputs
-from .outputs.strains import request_strain_outputs
-from .outputs.tracing import request_tracing_outputs
 from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
@@ -385,23 +384,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     outputs_tracker.request_deaths()
     outputs_tracker.request_admissions()
     outputs_tracker.request_occupancy(params.sojourn.compartment_periods)
+    outputs_tracker.request_tracing()
+
+    if params.voc_emergence:
+        outputs_tracker.request_strains(list(params.voc_emergence.keys()))
 
     # Vaccination
     if params.vaccination:
         request_vaccination_outputs(model, params)
-
-    # Strain-related outputs
-    if params.voc_emergence:
-        request_strain_outputs(model, list(params.voc_emergence.keys()))
 
     # Proportion of the population previously infected/exposed
     if params.stratify_by_infection_history:
         request_history_outputs(model)
     else:
         request_recovered_outputs(model, is_vic_super)
-
-    # Contact tracing-related outputs
-    if params.contact_tracing:
-        request_tracing_outputs(model)
 
     return model

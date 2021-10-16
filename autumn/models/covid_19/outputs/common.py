@@ -84,6 +84,63 @@ class Outputs:
     def __init__(self, model):
         self.model = model
 
+    def request_stratified_output_for_flow(self, flow, strata, stratification, name_stem=None, filter_on="destination"):
+        """
+        Standardise looping over stratum to pull out stratified outputs for flow.
+        """
+
+        stem = name_stem if name_stem else flow
+        for stratum in strata:
+            if filter_on == "destination":
+                self.model.request_output_for_flow(
+                    name=f"{stem}X{stratification}_{stratum}",
+                    flow_name=flow,
+                    dest_strata={stratification: stratum},
+                )
+            elif filter_on == "source":
+                self.model.request_output_for_flow(
+                    name=f"{stem}X{stratification}_{stratum}",
+                    flow_name=flow,
+                    source_strata={stratification: stratum},
+                )
+            else:
+                raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
+
+    def request_double_stratified_output_for_flow(
+            self, flow, strata_1, stratification_1, strata_2, stratification_2, name_stem=None, filter_on="destination"
+    ):
+        """
+        As for previous function, but looping over two stratifications.
+        """
+
+        stem = name_stem if name_stem else flow
+        for stratum_1 in strata_1:
+            for stratum_2 in strata_2:
+                name = f"{stem}X{stratification_1}_{stratum_1}X{stratification_2}_{stratum_2}"
+                if filter_on == "destination":
+                    self.model.request_output_for_flow(
+                        name=name,
+                        flow_name=flow,
+                        dest_strata={
+                            stratification_1: stratum_1,
+                            stratification_2: stratum_2,
+                        }
+                    )
+                elif filter_on == "source":
+                    self.model.request_output_for_flow(
+                        name=name,
+                        flow_name=flow,
+                        source_strata={
+                            stratification_1: stratum_1,
+                            stratification_2: stratum_2,
+                        }
+                    )
+                else:
+                    raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
+
+
+class CovidOutputs(Outputs):
+
     def request_incidence(self):
         """
         Request incidence rate calculations.
@@ -93,11 +150,11 @@ class Outputs:
         self.model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
 
         # Stratified by age group
-        request_stratified_output_for_flow(self.model, INCIDENCE, AGEGROUP_STRATA, "agegroup")
+        self.request_stratified_output_for_flow(INCIDENCE, AGEGROUP_STRATA, "agegroup")
 
         # Stratified by age group and by clinical stratum
-        request_double_stratified_output_for_flow(
-            self.model, INCIDENCE, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical"
+        self.request_double_stratified_output_for_flow(
+            INCIDENCE, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical"
         )
 
     def request_infection(self):
@@ -187,66 +244,79 @@ class Outputs:
         self.model.request_aggregate_output(name="notificationsXpaediatric", sources=paed_notifications)
         self.model.request_aggregate_output(name="notificationsXadult", sources=adult_notifications)
 
+        self.request_extra_notifications(contact_tracing_params, cumul_inc_start_time)
+
+    def request_extra_notifications(self, contact_tracing_params, cumul_inc_start_time):
+        pass
+
+    def request_progression(self):
+        # Unstratified
+        self.model.request_output_for_flow(name=PROGRESS, flow_name=PROGRESS)
+
+        # Stratified by age group and clinical status
+        request_double_stratified_output_for_flow(
+            self.model, PROGRESS, AGEGROUP_STRATA, "agegroup", NOTIFICATION_CLINICAL_STRATA, "clinical"
+        )
+
+        self.request_extra_progression()
+
+    def request_extra_progression(self):
+        pass
+
     def request_cdr(self):
         self.model.request_computed_value_output("cdr")
 
 
-def request_common_outputs(model: CompartmentalModel, params: Parameters, is_region_vic):
+class VicCovidOutputs(CovidOutputs):
 
-    # Victorian cluster model outputs
-    clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS] if is_region_vic else ()
+    def request_extra_notifications(self, contact_tracing_params, cumul_inc_start_time):
 
-    # Cluster-specific notifications
-    for cluster in clusters:
-        cluster_notification_sources = []
+        # Victorian cluster model outputs
+        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 
-        # First track all traced cases (regardless of clinical stratum)
-        if params.contact_tracing:
-            name = f"progress_tracedX{cluster}"
-            cluster_notification_sources.append(name)
-            model.request_output_for_flow(
-                name=name,
-                flow_name="progress",
-                dest_strata={"tracing": "traced", "cluster": cluster},
-                save_results=False,
+        # Cluster-specific notifications
+        for cluster in clusters:
+            cluster_notification_sources = []
+
+            # First track all traced cases (regardless of clinical stratum)
+            if contact_tracing_params:
+                name = f"progress_tracedX{cluster}"
+                cluster_notification_sources.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"tracing": "traced", "cluster": cluster},
+                    save_results=False,
+                )
+
+            # Then track untraced cases that are passively detected (depending on clinical stratum)
+            for clinical in NOTIFICATION_CLINICAL_STRATA:
+                name = f"progress_untracedXcluster_{cluster}X{clinical}"
+                dest_strata = {"clinical": clinical, "cluster": cluster, "tracing": "untraced"} if \
+                    contact_tracing_params else {"clinical": clinical, "cluster": cluster}
+                cluster_notification_sources.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata=dest_strata,
+                    save_results=False,
+                )
+
+            self.model.request_aggregate_output(
+                name=f"notificationsXcluster_{cluster}", sources=cluster_notification_sources
             )
 
-        # Then track untraced cases that are passively detected (depending on clinical stratum)
-        for clinical in NOTIFICATION_CLINICAL_STRATA:
-            name = f"progress_untracedXcluster_{cluster}X{clinical}"
-            dest_strata = {"clinical": clinical, "cluster": cluster, "tracing": "untraced"} if \
-                params.contact_tracing else {"clinical": clinical, "cluster": cluster}
-            cluster_notification_sources.append(name)
-            model.request_output_for_flow(
-                name=name,
-                flow_name="progress",
-                dest_strata=dest_strata,
-                save_results=False,
-            )
+    def request_extra_progression(self):
 
-        model.request_aggregate_output(
-            name=f"notificationsXcluster_{cluster}", sources=cluster_notification_sources
-        )
-
-    """
-    Progression
-    """
-
-    # Unstratified
-    model.request_output_for_flow(name=PROGRESS, flow_name=PROGRESS)
-
-    # Stratified by age group and clinical status
-    request_double_stratified_output_for_flow(
-        model, PROGRESS, AGEGROUP_STRATA, "agegroup", NOTIFICATION_CLINICAL_STRATA, "clinical"
-    )
-
-    # Stratified by cluster
-    if is_region_vic:
+        # Stratified by cluster
         request_stratified_output_for_flow(
-            model, PROGRESS,
+            self.model, PROGRESS,
             [region.replace("-", "_") for region in Region.VICTORIA_SUBREGIONS],
             "cluster", "progress_for_", filter_on="destination",
         )
+
+
+def request_common_outputs(model: CompartmentalModel, is_region_vic):
 
     """
     Deaths
@@ -274,4 +344,5 @@ def request_common_outputs(model: CompartmentalModel, params: Parameters, is_reg
 
     # Victoria-specific stratification by cluster
     if is_region_vic:
+        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
         request_stratified_output_for_flow(model, INFECT_DEATH, clusters, "cluster", "source")

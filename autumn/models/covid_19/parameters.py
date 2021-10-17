@@ -477,8 +477,8 @@ class TanhScaleup(BaseModel):
 
 class Vaccination(BaseModel):
     second_dose_delay: Union[float, TanhScaleup]
-    one_dose: Optional[VaccEffectiveness]
-    fully_vaccinated: VaccEffectiveness
+    one_dose: VaccEffectiveness
+    fully_vaccinated: Optional[VaccEffectiveness]
     lag: float
 
     roll_out_components: List[RollOutFunc]

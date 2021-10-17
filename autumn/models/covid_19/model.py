@@ -1,5 +1,5 @@
 from summer import CompartmentalModel
-from summer.adjust import Multiply, Overwrite
+from summer.adjust import Multiply
 
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
@@ -313,19 +313,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Stratify by vaccination status
     if params.vaccination:
+        is_dosing_active = bool(params.vaccination.one_dose)
+
         vaccination_strat = get_vaccination_strat(params)
 
-        # This is actually necessary - doesn't make sense to have VoC in an otherwise empty stratum
+        # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
-                vaccination_strat.add_flow_adjustments(
-                    f"seed_voc_{voc_name}",
-                    {
-                        Vaccination.VACCINATED: Multiply(1. / 2.),
-                        Vaccination.ONE_DOSE_ONLY: Overwrite(0.),
-                        Vaccination.UNVACCINATED: Multiply(1. / 2.),
-                    }
-                )
+                seed_split = {
+                    Vaccination.VACCINATED: Multiply(1.),
+                    Vaccination.ONE_DOSE_ONLY: Multiply(0.),
+                }
+                if params.vaccination.one_dose:
+                    seed_split.update({Vaccination.VACCINATED: Multiply(0.)})
+                vaccination_strat.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
+
         model.stratify_with(vaccination_strat)
 
         # Implement the process of people getting vaccinated
@@ -337,11 +339,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
             add_vic_regional_vacc(model, vacc_params, params.population.region)
         else:
-            dest_straum = Vaccination.ONE_DOSE_ONLY if bool(params.vaccination.one_dose) else Vaccination.VACCINATED
-            add_requested_vacc_flows(model, vacc_params, dest_straum)
+            add_requested_vacc_flows(model, vacc_params, Vaccination.ONE_DOSE_ONLY)
 
         # Add transition from single dose to fully vaccinated
-        if params.vaccination.one_dose:
+        if is_dosing_active:
             dose_delay_params = params.vaccination.second_dose_delay
 
             if type(dose_delay_params) == float:

@@ -1,5 +1,7 @@
 from .common import CovidOutputs
-from autumn.models.covid_19.constants import INFECT_DEATH, Compartment, PROGRESS, NOTIFICATION_CLINICAL_STRATA
+from autumn.models.covid_19.constants import (
+    INFECT_DEATH, Compartment, PROGRESS, NOTIFICATION_CLINICAL_STRATA, COMPARTMENTS
+)
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.settings import Region
 from autumn.models.covid_19.constants import Clinical
@@ -7,13 +9,17 @@ from autumn.models.covid_19.constants import Clinical
 
 class VicCovidOutputs(CovidOutputs):
 
+    def __init__(self, model, COMPARTMENTS):
+        self.model = model
+        self.model.request_output_for_compartments(
+            name="_total_population", compartments=COMPARTMENTS, save_results=False
+        )
+        self.clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+
     def request_extra_notifications(self, contact_tracing_params, cumul_inc_start_time):
 
-        # Victorian cluster model outputs
-        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
-
         # Cluster-specific notifications
-        for cluster in clusters:
+        for cluster in self.clusters:
             cluster_notification_sources = []
 
             # First track all traced cases (regardless of clinical stratum)
@@ -54,15 +60,11 @@ class VicCovidOutputs(CovidOutputs):
         )
 
     def request_extra_deaths(self):
-        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
-        self.request_stratified_output_for_flow(INFECT_DEATH, clusters, "cluster", "source")
+        self.request_stratified_output_for_flow(INFECT_DEATH, self.clusters, "cluster", "source")
 
     def request_extra_admissions(self):
 
-        # Clusters to cycle over for Vic model if needed
-        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
-
-        for cluster in clusters:
+        for cluster in self.clusters:
             cluster_extension = f"Xcluster_{cluster}"
             self.model.request_output_for_flow(
                 name=f"non_icu_admissions{cluster_extension}",
@@ -108,12 +110,8 @@ class VicCovidOutputs(CovidOutputs):
                 )
 
     def request_extra_occupancy(self):
-        """
-        Healthcare occupancy (hospital and ICU)
-        """
-        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 
-        for cluster in clusters:
+        for cluster in self.clusters:
             cluster_extension = f"Xcluster_{cluster}"
             self.model.request_output_for_compartments(
                 f"_late_active_hospital{cluster_extension}",
@@ -179,3 +177,26 @@ class VicCovidOutputs(CovidOutputs):
                         f"_early_active_icu_proportion{cluster_age_extension}",
                     ],
                 )
+
+    def request_extra_recovered(self):
+
+        for cluster in self.clusters:
+            total_name = f"_total_populationXcluster_{cluster}"
+            recovered_name = f"_recoveredXcluster_{cluster}"
+            self.model.request_output_for_compartments(
+                name=total_name,
+                compartments=COMPARTMENTS,
+                strata={"cluster": cluster},
+                save_results=False,
+            )
+            self.model.request_output_for_compartments(
+                name=recovered_name,
+                compartments=[Compartment.RECOVERED],
+                strata={"cluster": cluster},
+                save_results=False,
+            )
+            self.model.request_function_output(
+                name=f"proportion_seropositiveXcluster_{cluster}",
+                sources=[recovered_name, total_name],
+                func=lambda recovered, total: recovered / total,
+            )

@@ -20,7 +20,6 @@ from .constants import (
 from . import preprocess
 from .outputs.common import CovidOutputs
 from .outputs.victoria import VicCovidOutputs
-from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
 from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
 from .preprocess import tracing
@@ -383,17 +382,15 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         outputs_tracker.request_tracing()
     if params.voc_emergence:
         outputs_tracker.request_strains(list(params.voc_emergence.keys()))
-
-    # Vaccination
     if params.vaccination:
         outputs_tracker.request_vaccination()
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_tracker.request_vacc_aefis(params.vaccination_risk)
 
-    # Proportion of the population previously infected/exposed
     if params.stratify_by_infection_history:
-        request_history_outputs(model)
+        outputs_tracker.request_history()
     else:
-        request_recovered_outputs(model, is_vic_super)
+        outputs_tracker.request_recovered()
+        outputs_tracker.request_extra_recovered()
 
     return model

@@ -1,58 +1,12 @@
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA,
-    COMPARTMENTS, Vaccination, PROGRESS, Clinical, VACCINATION_STRATA
+    COMPARTMENTS, Vaccination, PROGRESS, Clinical, VACCINATION_STRATA, History
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
 from autumn.tools.utils.utils import list_element_wise_division
-
-
-def request_double_stratified_output_for_flow(
-        model, flow, strata_1, stratification_1, strata_2, stratification_2, name_stem=None, filter_on="destination"
-):
-    """
-    As for previous function, but looping over two stratifications.
-    """
-
-    stem = name_stem if name_stem else flow
-    for stratum_1 in strata_1:
-        for stratum_2 in strata_2:
-            name = f"{stem}X{stratification_1}_{stratum_1}X{stratification_2}_{stratum_2}"
-            if filter_on == "destination":
-                model.request_output_for_flow(
-                    name=name,
-                    flow_name=flow,
-                    dest_strata={
-                        stratification_1: stratum_1,
-                        stratification_2: stratum_2,
-                    }
-                )
-            elif filter_on == "source":
-                model.request_output_for_flow(
-                    name=name,
-                    flow_name=flow,
-                    source_strata={
-                        stratification_1: stratum_1,
-                        stratification_2: stratum_2,
-                    }
-                )
-            else:
-                raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
-
-
-def request_stratified_output_for_compartment(
-        model, request_name, compartments, strata, stratification, save_results=True
-):
-    for stratum in strata:
-        full_request_name = f"{request_name}X{stratification}_{stratum}"
-        model.request_output_for_compartments(
-            name=full_request_name,
-            compartments=compartments,
-            strata={stratification: stratum},
-            save_results=save_results,
-        )
 
 
 class Outputs:
@@ -120,6 +74,18 @@ class Outputs:
                     )
                 else:
                     raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
+
+    def request_stratified_output_for_compartment(
+            self, request_name, compartments, strata, stratification, save_results=True
+    ):
+        for stratum in strata:
+            full_request_name = f"{request_name}X{stratification}_{stratum}"
+            self.model.request_output_for_compartments(
+                name=full_request_name,
+                compartments=compartments,
+                strata={stratification: stratum},
+                save_results=save_results,
+            )
 
 
 class CovidOutputs(Outputs):
@@ -446,3 +412,86 @@ class CovidOutputs(Outputs):
                 name=f"new_hospital_admissionsX{agegroup_string}",
                 sources=hospital_sources_this_age
             )
+
+    def request_history(self):
+
+        # Note these people are called "naive", but they have actually had past Covid, immunity just hasn't yet waned
+        self.model.request_output_for_compartments(
+            name="_recovered",
+            compartments=[Compartment.RECOVERED],
+            strata={"history": History.NAIVE},
+            save_results=False,
+        )
+        self.model.request_output_for_compartments(
+            name="_experienced",
+            compartments=COMPARTMENTS,
+            strata={"history": History.EXPERIENCED},
+            save_results=False,
+        )
+        self.model.request_function_output(
+            name="proportion_seropositive",
+            sources=["_recovered", "_experienced", "_total_population"],
+            func=lambda recovered, experienced, total: (recovered + experienced) / total,
+        )
+
+        self.request_stratified_output_for_compartment(
+            "_total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
+        )
+        for agegroup in AGEGROUP_STRATA:
+            recovered_name = f"_recoveredXagegroup_{agegroup}"
+            total_name = f"_total_populationXagegroup_{agegroup}"
+            experienced_name = f"_experiencedXagegroup_{agegroup}"
+            self.model.request_output_for_compartments(
+                name=recovered_name,
+                compartments=[Compartment.RECOVERED],
+                strata={"agegroup": agegroup, "history": History.EXPERIENCED},
+                save_results=False,
+            )
+            self.model.request_output_for_compartments(
+                name=experienced_name,
+                compartments=COMPARTMENTS,
+                strata={"agegroup": agegroup, "history": History.NAIVE},
+                save_results=False,
+            )
+            self.model.request_function_output(
+                name=f"proportion_seropositiveXagegroup_{agegroup}",
+                sources=[recovered_name, experienced_name, total_name],
+                func=lambda recovered, experienced, total: (recovered + experienced) / total,
+            )
+
+    def request_recovered(self):
+
+        # Unstratified
+        self.model.request_output_for_compartments(
+            name="_recovered",
+            compartments=[Compartment.RECOVERED],
+            save_results=False
+        )
+        self.model.request_function_output(
+            name="proportion_seropositive",
+            sources=["_recovered", "_total_population"],
+            func=lambda recovered, total: recovered / total,
+        )
+
+        self.request_stratified_output_for_compartment(
+            "_total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
+        )
+
+        # Stratified by age group
+        for agegroup in AGEGROUP_STRATA:
+            recovered_name = f"_recoveredXagegroup_{agegroup}"
+            total_name = f"_total_populationXagegroup_{agegroup}"
+            self.model.request_output_for_compartments(
+                name=recovered_name,
+                compartments=[Compartment.RECOVERED],
+                strata={"agegroup": agegroup},
+                save_results=False,
+            )
+            self.model.request_function_output(
+                name=f"proportion_seropositiveXagegroup_{agegroup}",
+                sources=[recovered_name, total_name],
+                func=lambda recovered, total: recovered / total,
+            )
+
+    def request_extra_recovered(self):
+        pass

@@ -321,10 +321,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
                 seed_split = {
-                    Vaccination.VACCINATED: Multiply(1.),
+                    Vaccination.UNVACCINATED: Multiply(1.),
                     Vaccination.ONE_DOSE_ONLY: Multiply(0.),
                 }
-                if params.vaccination.one_dose:
+                if is_dosing_active:
                     seed_split.update({Vaccination.VACCINATED: Multiply(0.)})
                 vaccination_strat.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
 
@@ -339,7 +339,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
             add_vic_regional_vacc(model, vacc_params, params.population.region)
         else:
-            add_requested_vacc_flows(model, vacc_params, Vaccination.ONE_DOSE_ONLY)
+            add_requested_vacc_flows(model, vacc_params)
 
         # Add transition from single dose to fully vaccinated
         if is_dosing_active:

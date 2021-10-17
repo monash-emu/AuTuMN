@@ -113,7 +113,7 @@ def add_vacc_flows(
             )
 
 
-def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams, vacc_dest_stratum: str):
+def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function).
     Flexible enough to handle various user requests, but will create one flow object for each request/age group/

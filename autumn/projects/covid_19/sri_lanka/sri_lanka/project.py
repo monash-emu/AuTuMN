@@ -1,8 +1,9 @@
+import numpy as np
 from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, \
     use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, BetaPrior
+from autumn.tools.calibration.priors import UniformPrior, BetaPrior,TruncNormalPrior
 from autumn.tools.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
@@ -37,17 +38,18 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.021, 0.025]),
-    UniformPrior("infectious_seed", [150.0, 350.0]),
+    UniformPrior("infectious_seed", [250.0, 360.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.008, 0.0095]),
-    UniformPrior("infection_fatality.multiplier", [0.5, 0.65]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [2.15, 2.4]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.75, 0.95]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
+    UniformPrior("infection_fatality.multiplier", [0.075, 0.15]),
+    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=1.0,\
+                     stdev=0.5, trunc_range=[0.0, np.inf]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.825, 0.95]),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [395, 425]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.9, 3.1]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [375, 435]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.0]),
     UniformPrior("voc_emergence.delta.start_time", [490, 550]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [4.75, 5.2])
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.75])
 ]
 
 # Load proposal sds from yml file

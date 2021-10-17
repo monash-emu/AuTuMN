@@ -34,7 +34,7 @@ def request_vaccination_outputs(model: CompartmentalModel, params: Parameters):
     # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
     if len(params.vaccination.roll_out_components) > 0 and params.vaccination_risk.calculate:
         hospital_sources = []
-        request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup")
+        request_stratified_output_for_flow(model, "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source")
 
         for agegroup in AGEGROUP_STRATA:
             agegroup_string = f"agegroup_{agegroup}"

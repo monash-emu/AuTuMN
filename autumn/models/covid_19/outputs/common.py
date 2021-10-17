@@ -92,8 +92,11 @@ class Outputs:
     somewhere in autumn or in summer.
     """
 
-    def __init__(self, model):
+    def __init__(self, model, COMPARTMENTS):
         self.model = model
+        self.model.request_output_for_compartments(
+            name="_total_population", compartments=COMPARTMENTS, save_results=False
+        )
 
     def request_stratified_output_for_flow(self, flow, strata, stratification, name_stem=None, filter_on="destination"):
         """

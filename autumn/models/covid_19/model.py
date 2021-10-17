@@ -367,14 +367,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if is_vic_super:
         model._mixing_matrices = [mixing_matrix_function]
 
-    # Find the total population, used by multiple output types
-    model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
-
     """
     Set up derived output functions
     """
 
-    outputs_tracker = VicCovidOutputs(model) if is_vic_super else CovidOutputs(model)
+    outputs_tracker = VicCovidOutputs(model, COMPARTMENTS) if is_vic_super else CovidOutputs(model, COMPARTMENTS)
 
     outputs_tracker.request_incidence()
     outputs_tracker.request_infection()
@@ -384,7 +381,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     outputs_tracker.request_deaths()
     outputs_tracker.request_admissions()
     outputs_tracker.request_occupancy(params.sojourn.compartment_periods)
-    outputs_tracker.request_tracing()
+    if params.contact_tracing:
+        outputs_tracker.request_tracing()
 
     if params.voc_emergence:
         outputs_tracker.request_strains(list(params.voc_emergence.keys()))

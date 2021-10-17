@@ -18,7 +18,6 @@ from .constants import (
 )
 
 from . import preprocess
-from .outputs.common import cant_kill_function
 from .outputs.common import CovidOutputs
 from .outputs.victoria import VicCovidOutputs
 from .outputs.history import request_history_outputs, request_recovered_outputs

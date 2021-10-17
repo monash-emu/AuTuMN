@@ -434,10 +434,10 @@ class CovidOutputs(Outputs):
             sources=[f"_{Vaccination.VACCINATED}", f"_{Vaccination.ONE_DOSE_ONLY}", "_total_population"]
         )
 
-    def request_vacc_aefis(self, vacc_params):
+    def request_vacc_aefis(self, vacc_params, vacc_risk_params):
 
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
-        if len(vacc_params.roll_out_components) > 0 and vacc_params.calculate:
+        if len(vacc_params.roll_out_components) > 0 and vacc_risk_params.calculate:
             hospital_sources = []
             request_stratified_output_for_flow(self.model, "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source")
 
@@ -449,13 +449,13 @@ class CovidOutputs(Outputs):
                     name=f"tts_casesX{agegroup_string}",
                     sources=[f"vaccinationX{agegroup_string}"],
                     func=lambda vaccinated:
-                    vaccinated * vacc_params.tts_rate[agegroup] * vacc_params.prop_astrazeneca
+                    vaccinated * vacc_risk_params.tts_rate[agegroup] * vacc_risk_params.prop_astrazeneca
                 )
                 self.model.request_function_output(
                     name=f"tts_deathsX{agegroup_string}",
                     sources=[f"tts_casesX{agegroup_string}"],
                     func=lambda tts_cases:
-                    tts_cases * vacc_params.tts_fatality_ratio[agegroup]
+                    tts_cases * vacc_risk_params.tts_fatality_ratio[agegroup]
                 )
 
                 # Myocarditis for mRNA vaccines
@@ -463,7 +463,7 @@ class CovidOutputs(Outputs):
                     name=f"myocarditis_casesX{agegroup_string}",
                     sources=[f"vaccinationX{agegroup_string}"],
                     func=lambda vaccinated:
-                    vaccinated * vacc_params.myocarditis_rate[agegroup] * vacc_params.prop_mrna
+                    vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna
                 )
                 hospital_sources += [
                     f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.ICU}",

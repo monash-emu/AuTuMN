@@ -14,7 +14,8 @@ from autumn.tools.curve import tanh_based_scaleup
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
-    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes, VACCINE_ELIGIBLE_COMPARTMENTS
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes, VACCINE_ELIGIBLE_COMPARTMENTS,
+    VACCINATION_STRATA
 )
 
 from . import preprocess
@@ -36,9 +37,7 @@ from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
-base_params = Params(
-    build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
-)
+base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -293,12 +292,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
 
         # Add the transition process to the model
-        early_exposed_untraced_comps = \
-            [comp for comp in model.compartments if
-             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})]
-        early_exposed_traced_comps = \
-            [comp for comp in model.compartments if
-             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})]
+        early_exposed_untraced_comps = [
+            comp for comp in model.compartments if
+            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})
+        ]
+        early_exposed_traced_comps = [
+            comp for comp in model.compartments if
+            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})
+        ]
         for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
             model.add_transition_flow(
                 "tracing",
@@ -314,18 +315,15 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Stratify by vaccination status
     if params.vaccination:
         is_dosing_active = bool(params.vaccination.one_dose)
+        vacc_strata = VACCINATION_STRATA if is_dosing_active else VACCINATION_STRATA[:2]
 
-        vaccination_strat = get_vaccination_strat(params)
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, is_dosing_active)
 
         # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
-                seed_split = {
-                    Vaccination.UNVACCINATED: Multiply(1.),
-                    Vaccination.ONE_DOSE_ONLY: Multiply(0.),
-                }
-                if is_dosing_active:
-                    seed_split.update({Vaccination.VACCINATED: Multiply(0.)})
+                seed_split = {stratum: Multiply(0.) for stratum in vacc_strata}
+                seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
                 vaccination_strat.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
 
         model.stratify_with(vaccination_strat)

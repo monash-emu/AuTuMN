@@ -1,9 +1,8 @@
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import COMPARTMENTS, Vaccination, PROGRESS, Clinical
+from autumn.models.covid_19.constants import COMPARTMENTS, Vaccination, PROGRESS, Clinical, VACCINATION_STRATA
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
-from autumn.models.covid_19.stratifications.vaccination import VACCINATION_STRATA
 from autumn.models.covid_19.outputs.common import request_stratified_output_for_flow
 
 

@@ -9,31 +9,6 @@ from autumn.models.covid_19.stratifications.strains import Strain
 from autumn.tools.utils.utils import list_element_wise_division
 
 
-def request_stratified_output_for_flow(
-        model, flow, strata, stratification, name_stem=None, filter_on="destination"
-):
-    """
-    Standardise looping over stratum to pull out stratified outputs for flow.
-    """
-
-    stem = name_stem if name_stem else flow
-    for stratum in strata:
-        if filter_on == "destination":
-            model.request_output_for_flow(
-                name=f"{stem}X{stratification}_{stratum}",
-                flow_name=flow,
-                dest_strata={stratification: stratum},
-            )
-        elif filter_on == "source":
-            model.request_output_for_flow(
-                name=f"{stem}X{stratification}_{stratum}",
-                flow_name=flow,
-                source_strata={stratification: stratum},
-            )
-        else:
-            raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
-
-
 def request_double_stratified_output_for_flow(
         model, flow, strata_1, stratification_1, strata_2, stratification_2, name_stem=None, filter_on="destination"
 ):
@@ -262,8 +237,8 @@ class CovidOutputs(Outputs):
         self.model.request_output_for_flow(name=PROGRESS, flow_name=PROGRESS)
 
         # Stratified by age group and clinical status
-        request_double_stratified_output_for_flow(
-            self.model, PROGRESS, AGEGROUP_STRATA, "agegroup", NOTIFICATION_CLINICAL_STRATA, "clinical"
+        self.request_double_stratified_output_for_flow(
+            PROGRESS, AGEGROUP_STRATA, "agegroup", NOTIFICATION_CLINICAL_STRATA, "clinical"
         )
 
         self.request_extra_progression()
@@ -291,8 +266,8 @@ class CovidOutputs(Outputs):
             )
 
         # Stratified by age and clinical stratum
-        request_double_stratified_output_for_flow(
-            self.model, INFECT_DEATH, AGEGROUP_STRATA, "agegroup",
+        self.request_double_stratified_output_for_flow(
+            INFECT_DEATH, AGEGROUP_STRATA, "agegroup",
             CLINICAL_STRATA, "clinical", name_stem="infection_deaths", filter_on="source"
         )
 
@@ -397,7 +372,7 @@ class CovidOutputs(Outputs):
 
         # Incidence rate for each strain implemented
         all_strains = [Strain.WILD_TYPE] + voc_names
-        request_stratified_output_for_flow(self.model, INCIDENCE, all_strains, "strain")
+        self.request_stratified_output_for_flow(INCIDENCE, all_strains, "strain")
 
         # Convert to a proportion
         for strain in all_strains:
@@ -433,7 +408,7 @@ class CovidOutputs(Outputs):
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
         hospital_sources = []
         self.request_stratified_output_for_flow(
-            self.model, "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source"
+            "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source"
         )
 
         for agegroup in AGEGROUP_STRATA:

@@ -41,7 +41,7 @@ class Outputs:
                     source_strata={stratification: stratum},
                 )
             else:
-                raise ValueError(f"filter_on should be either 'source' or 'destination', found {filter_on}")
+                raise ValueError(f"filter_on should be either 'source' or 'destination': {filter_on}")
 
     def request_double_stratified_output_for_flow(
             self, flow, strata_1, stratification_1, strata_2, stratification_2, name_stem=None, filter_on="destination"
@@ -91,9 +91,6 @@ class Outputs:
 class CovidOutputs(Outputs):
 
     def request_incidence(self):
-        """
-        Request incidence rate calculations.
-        """
 
         # Unstratified
         self.model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
@@ -199,6 +196,7 @@ class CovidOutputs(Outputs):
         pass
 
     def request_progression(self):
+
         # Unstratified
         self.model.request_output_for_flow(name=PROGRESS, flow_name=PROGRESS)
 
@@ -213,6 +211,7 @@ class CovidOutputs(Outputs):
         pass
 
     def request_cdr(self):
+
         self.model.request_computed_value_output("cdr")
 
     def request_deaths(self):
@@ -240,6 +239,7 @@ class CovidOutputs(Outputs):
         self.request_extra_deaths()
 
     def request_extra_deaths(self):
+
         pass
 
     def request_admissions(self):
@@ -270,6 +270,7 @@ class CovidOutputs(Outputs):
         self.request_extra_admissions()
 
     def request_extra_admissions(self):
+
         pass
 
     def request_occupancy(self, sojourn_periods):
@@ -317,6 +318,7 @@ class CovidOutputs(Outputs):
         self.request_extra_occupancy()
 
     def request_extra_occupancy(self):
+
         pass
 
     def request_tracing(self):
@@ -494,4 +496,5 @@ class CovidOutputs(Outputs):
             )
 
     def request_extra_recovered(self):
+
         pass

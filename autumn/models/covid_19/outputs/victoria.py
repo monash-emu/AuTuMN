@@ -60,6 +60,7 @@ class VicCovidOutputs(CovidOutputs):
         )
 
     def request_extra_deaths(self):
+
         self.request_stratified_output_for_flow(INFECT_DEATH, self.clusters, "cluster", "source")
 
     def request_extra_admissions(self):

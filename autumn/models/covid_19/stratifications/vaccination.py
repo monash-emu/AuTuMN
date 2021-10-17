@@ -46,7 +46,7 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
             "prevent_infection": params.vaccination.fully_vaccinated.vacc_prop_prevent_infection,
             "overall_efficacy": params.vaccination.fully_vaccinated.overall_efficacy,
         }
-        vaccination_effects = {Vaccination.VACCINATED: full_vacc_effects}
+        vaccination_effects.update({Vaccination.VACCINATED: full_vacc_effects})
 
     # Get vaccination effects from requests by dose number and mode of action
     for stratum in strata_to_adjust:

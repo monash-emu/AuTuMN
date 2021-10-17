@@ -387,9 +387,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Vaccination
     if params.vaccination:
         outputs_tracker.request_vaccination()
-        outputs_tracker.request_vacc_aefis(params.vaccination)
-
-        # request_vaccination_outputs(model, params)
+        if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
+            outputs_tracker.request_vacc_aefis(params.vaccination_risk)
 
     # Proportion of the population previously infected/exposed
     if params.stratify_by_infection_history:

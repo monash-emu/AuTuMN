@@ -8,12 +8,6 @@ from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
 from autumn.tools.utils.utils import list_element_wise_division
 
-""" *** I have no idea why I can't kill the following function *** """
-
-
-def cant_kill_function():
-    pass
-
 
 def request_stratified_output_for_flow(
         model, flow, strata, stratification, name_stem=None, filter_on="destination"
@@ -434,46 +428,46 @@ class CovidOutputs(Outputs):
             sources=[f"_{Vaccination.VACCINATED}", f"_{Vaccination.ONE_DOSE_ONLY}", "_total_population"]
         )
 
-    def request_vacc_aefis(self, vacc_params, vacc_risk_params):
+    def request_vacc_aefis(self, vacc_risk_params):
 
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
-        if len(vacc_params.roll_out_components) > 0 and vacc_risk_params.calculate:
-            hospital_sources = []
-            request_stratified_output_for_flow(self.model, "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source")
+        hospital_sources = []
+        self.request_stratified_output_for_flow(
+            self.model, "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source"
+        )
 
-            for agegroup in AGEGROUP_STRATA:
-                agegroup_string = f"agegroup_{agegroup}"
+        for agegroup in AGEGROUP_STRATA:
+            agegroup_string = f"agegroup_{agegroup}"
 
-                # TTS for AstraZeneca vaccines
-                self.model.request_function_output(
-                    name=f"tts_casesX{agegroup_string}",
-                    sources=[f"vaccinationX{agegroup_string}"],
-                    func=lambda vaccinated:
-                    vaccinated * vacc_risk_params.tts_rate[agegroup] * vacc_risk_params.prop_astrazeneca
-                )
-                self.model.request_function_output(
-                    name=f"tts_deathsX{agegroup_string}",
-                    sources=[f"tts_casesX{agegroup_string}"],
-                    func=lambda tts_cases:
-                    tts_cases * vacc_risk_params.tts_fatality_ratio[agegroup]
-                )
+            # TTS for AstraZeneca vaccines
+            self.model.request_function_output(
+                name=f"tts_casesX{agegroup_string}",
+                sources=[f"vaccinationX{agegroup_string}"],
+                func=lambda vaccinated:
+                vaccinated * vacc_risk_params.tts_rate[agegroup] * vacc_risk_params.prop_astrazeneca
+            )
+            self.model.request_function_output(
+                name=f"tts_deathsX{agegroup_string}",
+                sources=[f"tts_casesX{agegroup_string}"],
+                func=lambda tts_cases:
+                tts_cases * vacc_risk_params.tts_fatality_ratio[agegroup]
+            )
 
-                # Myocarditis for mRNA vaccines
-                self.model.request_function_output(
-                    name=f"myocarditis_casesX{agegroup_string}",
-                    sources=[f"vaccinationX{agegroup_string}"],
-                    func=lambda vaccinated:
-                    vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna
-                )
-                hospital_sources += [
-                    f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.ICU}",
-                    f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
-                ]
+            # Myocarditis for mRNA vaccines
+            self.model.request_function_output(
+                name=f"myocarditis_casesX{agegroup_string}",
+                sources=[f"vaccinationX{agegroup_string}"],
+                func=lambda vaccinated:
+                vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna
+            )
+            hospital_sources += [
+                f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.ICU}",
+                f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
+            ]
 
-                # Hospitalisations by age
-                hospital_sources_this_age = [s for s in hospital_sources if f"X{agegroup_string}X" in s]
-                self.model.request_aggregate_output(
-                    name=f"new_hospital_admissionsX{agegroup_string}",
-                    sources=hospital_sources_this_age
-                )
-
+            # Hospitalisations by age
+            hospital_sources_this_age = [s for s in hospital_sources if f"X{agegroup_string}X" in s]
+            self.model.request_aggregate_output(
+                name=f"new_hospital_admissionsX{agegroup_string}",
+                sources=hospital_sources_this_age
+            )

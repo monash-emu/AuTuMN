@@ -1,9 +1,9 @@
 from autumn.models.covid_19.constants import (
-    INFECT_DEATH, INFECTION, Compartment, PROGRESS, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA
+    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA,
+    COMPARTMENTS, Vaccination, PROGRESS, Clinical, VACCINATION_STRATA
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
-from autumn.models.covid_19.constants import Clinical
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
 from autumn.tools.utils.utils import list_element_wise_division
@@ -412,3 +412,68 @@ class CovidOutputs(Outputs):
                 func=lambda strain_inc, total_inc: list_element_wise_division(strain_inc, total_inc),
                 sources=[f"{INCIDENCE}Xstrain_{strain}", INCIDENCE]
             )
+
+    def request_vaccination(self):
+
+        # Track proportions vaccinated by vaccination status (depends on _total_population previously being requested)
+        for vacc_stratum in VACCINATION_STRATA:
+            self.model.request_output_for_compartments(
+                name=f"_{vacc_stratum}",
+                compartments=COMPARTMENTS,
+                strata={"vaccination": vacc_stratum},
+                save_results=False,
+            )
+            self.model.request_function_output(
+                name=f"proportion_{vacc_stratum}",
+                sources=[f"_{vacc_stratum}", "_total_population"],
+                func=lambda vaccinated, total: vaccinated / total,
+            )
+        self.model.request_function_output(
+            name="at_least_one_dose_prop",
+            func=lambda vacc, one_dose, pop: (vacc + one_dose) / pop,
+            sources=[f"_{Vaccination.VACCINATED}", f"_{Vaccination.ONE_DOSE_ONLY}", "_total_population"]
+        )
+
+    def request_vacc_aefis(self, vacc_params):
+
+        # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
+        if len(vacc_params.roll_out_components) > 0 and vacc_params.calculate:
+            hospital_sources = []
+            request_stratified_output_for_flow(self.model, "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source")
+
+            for agegroup in AGEGROUP_STRATA:
+                agegroup_string = f"agegroup_{agegroup}"
+
+                # TTS for AstraZeneca vaccines
+                self.model.request_function_output(
+                    name=f"tts_casesX{agegroup_string}",
+                    sources=[f"vaccinationX{agegroup_string}"],
+                    func=lambda vaccinated:
+                    vaccinated * vacc_params.tts_rate[agegroup] * vacc_params.prop_astrazeneca
+                )
+                self.model.request_function_output(
+                    name=f"tts_deathsX{agegroup_string}",
+                    sources=[f"tts_casesX{agegroup_string}"],
+                    func=lambda tts_cases:
+                    tts_cases * vacc_params.tts_fatality_ratio[agegroup]
+                )
+
+                # Myocarditis for mRNA vaccines
+                self.model.request_function_output(
+                    name=f"myocarditis_casesX{agegroup_string}",
+                    sources=[f"vaccinationX{agegroup_string}"],
+                    func=lambda vaccinated:
+                    vaccinated * vacc_params.myocarditis_rate[agegroup] * vacc_params.prop_mrna
+                )
+                hospital_sources += [
+                    f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.ICU}",
+                    f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
+                ]
+
+                # Hospitalisations by age
+                hospital_sources_this_age = [s for s in hospital_sources if f"X{agegroup_string}X" in s]
+                self.model.request_aggregate_output(
+                    name=f"new_hospital_admissionsX{agegroup_string}",
+                    sources=hospital_sources_this_age
+                )
+

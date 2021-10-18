@@ -337,7 +337,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         dose_delay_params = params.vaccination.second_dose_delay
         is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines strata number
         vacc_strata = VACCINATION_STRATA if is_dosing_active else VACCINATION_STRATA[:2]
-
         vaccination_strat = get_vaccination_strat(params, vacc_strata, is_dosing_active)
 
         # Simplest approach is to assign all the VoC infectious seed to the unvaccinated

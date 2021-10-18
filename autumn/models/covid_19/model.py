@@ -310,7 +310,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Stratify by vaccination status
     if params.vaccination:
-        is_dosing_active = bool(params.vaccination.one_dose)
+        is_dosing_active = bool(params.vaccination.second_dose_delay)
         vacc_strata = VACCINATION_STRATA if is_dosing_active else VACCINATION_STRATA[:2]
 
         vaccination_strat = get_vaccination_strat(params, vacc_strata, is_dosing_active)
@@ -367,7 +367,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Set up derived output functions
     """
 
-    outputs_builder = VicCovidOutputsBuilder(model, COMPARTMENTS) if is_vic_super else CovidOutputsBuilder(model, COMPARTMENTS)
+    outputs_builder = VicCovidOutputsBuilder(model, COMPARTMENTS) if \
+        is_vic_super else CovidOutputsBuilder(model, COMPARTMENTS)
 
     outputs_builder.request_incidence()
     outputs_builder.request_infection()
@@ -382,7 +383,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if params.voc_emergence:
         outputs_builder.request_strains(list(params.voc_emergence.keys()))
     if params.vaccination:
-        outputs_builder.request_vaccination()
+        outputs_builder.request_vaccination(is_dosing_active)
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
 

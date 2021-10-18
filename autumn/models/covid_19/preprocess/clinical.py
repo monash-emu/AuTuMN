@@ -306,11 +306,12 @@ def add_clinical_adjustments_to_strat(
     )
 
     # Make these calculations for the one-dose stratum, even if this is being called by the history stratification
-    second_entry_adjs, second_death_adjs, second_progress_adjs, second_recovery_adjs, _ = get_all_adjustments(
-        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, second_ifr_adjuster, second_sympt_adjuster,
-        second_hospital_adjuster, second_top_bracket_overwrite,
-    )
+    if second_modified_stratum:
+        second_entry_adjs, second_death_adjs, second_progress_adjs, second_recovery_adjs, _ = get_all_adjustments(
+            params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+            params.sojourn, second_ifr_adjuster, second_sympt_adjuster,
+            second_hospital_adjuster, second_top_bracket_overwrite,
+        )
 
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
         for clinical_stratum in CLINICAL_STRATA:

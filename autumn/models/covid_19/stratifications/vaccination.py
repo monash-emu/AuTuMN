@@ -77,10 +77,10 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         hospital_adjuster[Vaccination.ONE_DOSE_ONLY],
         ifr_adjuster[Vaccination.ONE_DOSE_ONLY],
         params.infection_fatality.top_bracket_overwrite,
-        second_modified_stratum=Vaccination.VACCINATED,
-        second_sympt_adjuster=symptomatic_adjuster[Vaccination.VACCINATED] if is_dosing_active else 1.,
-        second_hospital_adjuster=symptomatic_adjuster[Vaccination.VACCINATED] if is_dosing_active else 1.,
-        second_ifr_adjuster=symptomatic_adjuster[Vaccination.VACCINATED] if is_dosing_active else 1.,
+        second_modified_stratum=Vaccination.VACCINATED if is_dosing_active else None,
+        second_sympt_adjuster=symptomatic_adjuster[Vaccination.VACCINATED] if is_dosing_active else None,
+        second_hospital_adjuster=symptomatic_adjuster[Vaccination.VACCINATED] if is_dosing_active else None,
+        second_ifr_adjuster=symptomatic_adjuster[Vaccination.VACCINATED] if is_dosing_active else None,
         second_top_bracket_overwrite=params.infection_fatality.top_bracket_overwrite,
     )
 

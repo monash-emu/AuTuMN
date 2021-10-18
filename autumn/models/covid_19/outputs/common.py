@@ -272,10 +272,12 @@ class CovidOutputsBuilder(OutputsBuilder):
                 sources=[f"{INCIDENCE}Xstrain_{strain}", INCIDENCE]
             )
 
-    def request_vaccination(self):
+    def request_vaccination(self, is_dosing_active):
+
+        vacc_strata = VACCINATION_STRATA if is_dosing_active else VACCINATION_STRATA[:-1]
 
         # Track proportions vaccinated by vaccination status (depends on _total_population previously being requested)
-        for vacc_stratum in VACCINATION_STRATA:
+        for vacc_stratum in vacc_strata:
             self.model.request_output_for_compartments(
                 name=f"_{vacc_stratum}",
                 compartments=COMPARTMENTS,
@@ -287,11 +289,13 @@ class CovidOutputsBuilder(OutputsBuilder):
                 sources=[f"_{vacc_stratum}", "_total_population"],
                 func=lambda vaccinated, total: vaccinated / total,
             )
-        self.model.request_function_output(
-            name="at_least_one_dose_prop",
-            func=lambda vacc, one_dose, pop: (vacc + one_dose) / pop,
-            sources=[f"_{Vaccination.VACCINATED}", f"_{Vaccination.ONE_DOSE_ONLY}", "_total_population"]
-        )
+
+        if is_dosing_active:
+            self.model.request_function_output(
+                name="at_least_one_dose_prop",
+                func=lambda vacc, one_dose, pop: (vacc + one_dose) / pop,
+                sources=[f"_{Vaccination.VACCINATED}", f"_{Vaccination.ONE_DOSE_ONLY}", "_total_population"]
+            )
 
     def request_vacc_aefis(self, vacc_risk_params):
 

@@ -19,12 +19,8 @@ from .constants import (
 )
 
 from . import preprocess
-from .outputs.common import request_common_outputs
-from .outputs.vaccination import request_vaccination_outputs
-from .outputs.strains import request_strain_outputs
-from .outputs.tracing import request_tracing_outputs
-from .outputs.healthcare import request_healthcare_outputs
-from .outputs.history import request_history_outputs, request_recovered_outputs
+from .outputs.common import CovidOutputsBuilder
+from .outputs.victoria import VicCovidOutputsBuilder
 from .parameters import Parameters
 from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
 from .preprocess import tracing
@@ -46,7 +42,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     params = Parameters(**params)
 
-    is_region_vic = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
+    is_vic_super = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
 
     model = CompartmentalModel(
         times=[params.time.start, params.time.end],
@@ -364,36 +360,36 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 )
 
     # Dive into summer internals to over-write mixing matrix
-    if is_region_vic:
+    if is_vic_super:
         model._mixing_matrices = [mixing_matrix_function]
-
-    # Find the total population, used by multiple output types
-    model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
-
-    # Most standard outputs
-    request_common_outputs(model, params, is_region_vic)
-    request_healthcare_outputs(model, params.sojourn.compartment_periods, is_region_vic)
 
     """
     Set up derived output functions
     """
 
-    # Vaccination
-    if params.vaccination:
-        request_vaccination_outputs(model, params)
+    outputs_builder = VicCovidOutputsBuilder(model, COMPARTMENTS) if is_vic_super else CovidOutputsBuilder(model, COMPARTMENTS)
 
-    # Strain-related outputs
-    if params.voc_emergence:
-        request_strain_outputs(model, list(params.voc_emergence.keys()))
-
-    # Proportion of the population previously infected/exposed
-    if params.stratify_by_infection_history:
-        request_history_outputs(model)
-    else:
-        request_recovered_outputs(model, is_region_vic)
-
-    # Contact tracing-related outputs
+    outputs_builder.request_incidence()
+    outputs_builder.request_infection()
+    outputs_builder.request_notifications(params.contact_tracing, params.cumul_incidence_start_time)
+    outputs_builder.request_progression()
+    outputs_builder.request_cdr()
+    outputs_builder.request_deaths()
+    outputs_builder.request_admissions()
+    outputs_builder.request_occupancy(params.sojourn.compartment_periods)
     if params.contact_tracing:
-        request_tracing_outputs(model)
+        outputs_builder.request_tracing()
+    if params.voc_emergence:
+        outputs_builder.request_strains(list(params.voc_emergence.keys()))
+    if params.vaccination:
+        outputs_builder.request_vaccination()
+        if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
+            outputs_builder.request_vacc_aefis(params.vaccination_risk)
+
+    if params.stratify_by_infection_history:
+        outputs_builder.request_history()
+    else:
+        outputs_builder.request_recovered()
+        outputs_builder.request_extra_recovered()
 
     return model

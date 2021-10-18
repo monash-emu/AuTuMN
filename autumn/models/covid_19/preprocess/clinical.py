@@ -1,12 +1,13 @@
 import numpy as np
+from typing import Tuple, List
 
 from summer import Overwrite
-from summer.adjust import AdjustmentComponent
+from summer.adjust import AdjustmentComponent, AdjustmentSystem
 
 from autumn.models.covid_19.constants import Clinical, Compartment, DEATH_CLINICAL_STRATA
-from autumn.models.covid_19.preprocess import adjusterprocs
 from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.models.covid_19.parameters import Country, Population, Sojourn
 from autumn.tools.inputs.demography.queries import convert_ifr_agegroups
 from autumn.tools.utils.utils import apply_odds_ratio_to_multiple_proportions, subdivide_props
 from autumn.models.covid_19.constants import INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
@@ -14,6 +15,95 @@ from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 
 
 ALLOWED_ROUNDING_ERROR = 6
+
+
+def get_abs_prop_isolated(proportion_sympt, proportion_hosp, cdr) -> np.ndarray:
+    """
+    Returns the absolute proportion of infected becoming isolated at home.
+    Isolated people are those who are detected but not sent to hospital.
+
+    Args:
+        proportion_sympt ([type]): Float or np.ndarray
+        proportion_hosp ([type]): Float or np.ndarray
+        cdr ([type]): Float
+
+    Returns:
+        [np.ndarray]: Output value
+    """
+
+    target_prop_detected = proportion_sympt * cdr
+    return np.maximum(0., target_prop_detected - proportion_hosp)
+
+
+class AbsPropIsolatedSystem(AdjustmentSystem):
+    """
+    Returns the absolute rate of infected becoming isolated at home.
+    Isolated people are those who are detected but not sent to hospital.
+    """
+
+    def __init__(self, early_rate: float):
+        """
+        Initialise the system
+
+        Args:
+            early_rate (float): Rate by which all output is scaled
+        """
+        self.early_rate = early_rate
+
+    def prepare_to_run(self, component_data: List[dict]):
+        """
+        Compile all components into arrays used for faster computation.
+
+        Args:
+            component_data (List[dict]): List containing data specific to individual flow adjusments
+        """
+
+        self.proportion_sympt = np.empty_like(component_data, dtype=float)
+        self.proportion_hosp = np.empty_like(component_data, dtype=float)
+
+        for i, component in enumerate(component_data):
+            self.proportion_sympt[i] = component["proportion_sympt"]
+            self.proportion_hosp[i] = component["proportion_hosp"]
+
+    def get_weights_at_time(self, time: float, computed_values: dict) -> np.ndarray:
+        cdr = computed_values["cdr"]
+        return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr) * self.early_rate
+
+
+class AbsPropSymptNonHospSystem(AdjustmentSystem):
+    """
+    Returns the absolute rate of infected becoming symptomatic, including both detected and undetected symptomatic.
+    """
+
+    def __init__(self, early_rate: float):
+        """
+        Initialise the system
+
+        Args:
+            early_rate (float): Rate by which all output is scaled
+        """
+        self.early_rate = early_rate
+
+    def prepare_to_run(self, component_data: List[dict]):
+        """
+        Compile all components into arrays used for fast computation.
+
+        Args:
+            component_data (List[dict]): List containing data specific to individual flow adjustments
+        """
+
+        self.proportion_sympt = np.empty_like(component_data, dtype=float)
+        self.proportion_hosp = np.empty_like(component_data, dtype=float)
+
+        for i, component in enumerate(component_data):
+            self.proportion_sympt[i] = component["proportion_sympt"]
+            self.proportion_hosp[i] = component["proportion_hosp"]
+
+    def get_weights_at_time(self, time: float, computed_values: dict) -> np.ndarray:
+        cdr = computed_values["cdr"]
+        prop_isolated = get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr)
+        prop_sympt_non_hospital = self.proportion_sympt - self.proportion_hosp - prop_isolated
+        return prop_sympt_non_hospital * self.early_rate
 
 
 def get_rate_adjustments(rates: dict) -> dict:
@@ -130,22 +220,39 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
     return abs_death_props
 
 
+def process_ifrs(raw_ifr_props, ifr_adjuster, top_bracket_overwrite, country, pop):
+
+    # Scale raw IFR values according to adjuster parameter
+    adjusted_ifr_props = apply_odds_ratio_to_multiple_proportions(raw_ifr_props, ifr_adjuster)
+
+    # Convert from provided age groups to model age groups
+    final_ifr_props = convert_ifr_agegroups(adjusted_ifr_props, country.iso3, pop.region, pop.year)
+
+    # Over-write the oldest age bracket, if that's what's being done in the model
+    if top_bracket_overwrite:
+        final_ifr_props[-1] = top_bracket_overwrite
+
+    return final_ifr_props
+
+
 """
 Master functions
 """
 
 
 def get_all_adjustments(
-        clinical_params, country, pop, raw_ifr_props, sojourn, ifr_adjuster, symptomatic_adjuster, hospital_adjuster,
-        top_bracket_overwrite=None,
-):
+        clinical_params, country: Country, pop: Population, raw_ifr_props: list, sojourn: Sojourn,
+        ifr_adjuster: float, symptomatic_adjuster: float, hospital_adjuster: float, top_bracket_overwrite=None,
+) -> Tuple[dict, dict, dict, dict, dict]:
 
     """
     Preliminary processing.
     """
 
     # Apply odds ratio adjusters to proportions needing to be adjusted
-    hospital_props = apply_odds_ratio_to_multiple_proportions(clinical_params.props.hospital.props, hospital_adjuster)
+    hospital_props = apply_odds_ratio_to_multiple_proportions(
+        clinical_params.props.hospital.props, hospital_adjuster
+    )
     adjusted_symptomatic_props = apply_odds_ratio_to_multiple_proportions(
         clinical_params.props.symptomatic.props, symptomatic_adjuster
     )
@@ -179,8 +286,8 @@ def get_all_adjustments(
 
     # These are the systems that will compute (in a vectorised fashion) the adjustments added using AdjustmentComponents
     adjuster_systems = {
-        "isolated": adjusterprocs.AbsPropIsolatedSystem(within_early_exposed),
-        "sympt_non_hosp": adjusterprocs.AbsPropSymptNonHospSystem(within_early_exposed)
+        "isolated": AbsPropIsolatedSystem(within_early_exposed),
+        "sympt_non_hosp": AbsPropSymptNonHospSystem(within_early_exposed)
     }
 
     """
@@ -199,15 +306,7 @@ def get_all_adjustments(
     Numerator: deaths, denominator: all infected
     """
 
-    # Scale raw IFR values according to adjuster parameter
-    adjusted_ifr_props = apply_odds_ratio_to_multiple_proportions(raw_ifr_props, ifr_adjuster)
-
-    # Convert from provided age groups to model age groups
-    final_ifr_props = convert_ifr_agegroups(adjusted_ifr_props, country.iso3, pop.region, pop.year)
-
-    # Over-write the oldest age bracket, if that's what's being done in the model
-    if top_bracket_overwrite:
-        final_ifr_props[-1] = top_bracket_overwrite
+    final_ifr_props = process_ifrs(raw_ifr_props, ifr_adjuster, top_bracket_overwrite, country, pop)
 
     """
     Work out the proportion of people entering each stratum who die in that stratum (for each age group).
@@ -218,15 +317,12 @@ def get_all_adjustments(
 
     # The proportion of people entering each stratum who die in that stratum
     # Numerator: deaths in stratum, denominator: everyone
-    abs_death_props = get_absolute_death_proportions(
-        abs_props, final_ifr_props, clinical_params.icu_mortality_prop
-    )
+    abs_death_props = get_absolute_death_proportions(abs_props, final_ifr_props, clinical_params.icu_mortality_prop)
 
     # The resulting proportion
     # Numerator: deaths in stratum, denominator: people entering stratum
     relative_death_props = {
-        stratum: np.array(abs_death_props[stratum]) / np.array(abs_props[stratum]) for
-        stratum in DEATH_CLINICAL_STRATA
+        stratum: np.array(abs_death_props[stratum]) / np.array(abs_props[stratum]) for stratum in DEATH_CLINICAL_STRATA
     }
 
     """
@@ -234,13 +330,11 @@ def get_all_adjustments(
     """
 
     death_rates = {
-        stratum: relative_death_props[stratum] * within_late_rates[stratum]
-        for stratum in DEATH_CLINICAL_STRATA
+        stratum: relative_death_props[stratum] * within_late_rates[stratum] for stratum in DEATH_CLINICAL_STRATA
     }
-    # The survival proportions are the complement of the death proportions.
+    # The survival proportions are the complement of the death proportions
     survival_rates = {
-        stratum: (1. - relative_death_props[stratum]) * within_late_rates[stratum]
-        for stratum in DEATH_CLINICAL_STRATA
+        stratum: (1. - relative_death_props[stratum]) * within_late_rates[stratum] for stratum in DEATH_CLINICAL_STRATA
     }
 
     """

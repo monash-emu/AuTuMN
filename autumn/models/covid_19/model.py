@@ -1,5 +1,5 @@
 from summer import CompartmentalModel
-from summer.adjust import Multiply, Overwrite
+from summer.adjust import Multiply
 
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices

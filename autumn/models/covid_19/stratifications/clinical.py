@@ -45,7 +45,7 @@ def get_clinical_strat(params: Parameters):
     clinical_strat.add_infectiousness_adjustments(Compartment.LATE_ACTIVE, late_active_adjustments)
 
     """
-    Adjust infection death rates for hospital patients (ICU and non-ICU)
+    Make all the adjustments to flows.
     """
 
     # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications

@@ -454,8 +454,9 @@ class VaccEffectiveness(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_one_infectiousness_request(cls, values):
-        n_requests = int(bool(values["vacc_reduce_infectiousness"])) + \
-                     int(bool(values["vacc_reduce_infectiousness_ratio"]))
+        n_requests = sum(
+            [int(bool(values[option])) for option in ["vacc_reduce_infectiousness", "vacc_reduce_infectiousness_ratio"]]
+        )
         msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
         assert n_requests < 2, msg
         return values

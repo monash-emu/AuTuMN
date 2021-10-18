@@ -40,10 +40,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
     """
+
     params = Parameters(**params)
 
+    # Main differences to model structure determined by whether model is Victoria super-model
     is_vic_super = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
 
+    # Create the model object
     model = CompartmentalModel(
         times=[params.time.start, params.time.end],
         compartments=COMPARTMENTS,
@@ -63,8 +66,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if idx_cache:
             model._set_derived_outputs_index_cache(idx_cache)
 
-    # Time periods calculated from periods (ie "sojourn times")
+    """
+    Create the total population.
+    """
+
+    # Distribute infectious seed across infectious split sub-compartments
     compartment_periods = preprocess.compartments.calc_compartment_periods(params.sojourn)
+    total_disease_time = sum([compartment_periods[comp] for comp in DISEASE_COMPARTMENTS])
+    init_pop = {
+        comp: params.infectious_seed * compartment_periods[comp] / total_disease_time
+        for comp in DISEASE_COMPARTMENTS
+    }
 
     # Get country population by age-group
     country = params.country
@@ -73,31 +85,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year
     )
 
-    # Distribute infectious seed across infectious split sub-compartments
-    total_disease_time = sum([compartment_periods[comp] for comp in DISEASE_COMPARTMENTS])
-    init_pop = {
-        comp: params.infectious_seed * compartment_periods[comp] / total_disease_time
-        for comp in DISEASE_COMPARTMENTS
-    }
-
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
     model.set_initial_population(init_pop)
 
     """
-    Get input data
-    """
-
-    if params.mixing_matrices.type == "extrapolated":
-        mixing_matrices = build_synthetic_matrices(
-            country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust,
-            pop.region
-        )
-    elif params.mixing_matrices.type == "prem":
-        mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
-
-    """
-    Add intercompartmental flows
+    Add intercompartmental flows.
     """
 
     # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate
@@ -152,11 +145,25 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.LATE_ACTIVE,
     )
 
-    # Stratify the model by age group
+    """
+    Age group stratification.
+    """
+
+    if params.mixing_matrices.type == "extrapolated":
+        mixing_matrices = build_synthetic_matrices(
+            country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust,
+            pop.region
+        )
+    elif params.mixing_matrices.type == "prem":
+        mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
+
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices)
     model.stratify_with(age_strat)
 
-    # Stratify the model by clinical status
+    """
+    Clinical stratification.
+    """
+
     if pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS:
         override_test_region = "Victoria"
     else:
@@ -168,14 +175,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     clinical_strat, adjustment_systems = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
 
-    # Add the adjuster systems used by the clinical stratification
     for k, v in adjustment_systems.items():
         model.add_adjustment_system(k, v)
 
-    # Register the CDR function as a computed value
+    """
+    Case detection.
+    """
+
     model.add_computed_value_process("cdr", CdrProc(get_detected_proportion))
 
-    # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern
+    """
+    Variants of concern stratification.
+    """
+
     if params.voc_emergence:
         voc_params = params.voc_emergence
 
@@ -195,7 +207,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest_strata={"strain": voc_name},
             )
 
-    # Infection history stratification
+    """
+    Infection history stratification.
+    """
+
     if params.stratify_by_infection_history:
         history_strat = get_history_strat(params)
         model.stratify_with(history_strat)
@@ -212,7 +227,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest_strata={"history": History.EXPERIENCED},
             )
 
-    # Stratify model by Victorian sub-region (used for Victorian cluster model)
+    """
+    Victorian cluster stratification (for the Vic super-models only)
+    """
+
     if params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021):
         cluster_strat = get_cluster_strat(params)
         model.stratify_with(cluster_strat)
@@ -244,10 +262,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         model.add_importation_flow("seed", model_seed_func, dest=Compartment.EARLY_EXPOSED)
 
-    # Contact tracing stratification
+    """
+    Contact tracing stratification.
+    """
+
     if params.contact_tracing:
 
-        # Stratify the model structure
+        # Stratify
         tracing_strat = get_tracing_strat(
             params.contact_tracing.quarantine_infect_multiplier,
             params.clinical_stratification.late_infect_multiplier
@@ -308,7 +329,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             )
             # +++ FIXME: convert this to transition flow with new computed_values aware flow param
 
-    # Stratify by vaccination status
+    """
+    Vaccination status stratification.
+    """
+
     if params.vaccination:
         dose_delay_params = params.vaccination.second_dose_delay
         is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines strata number

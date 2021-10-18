@@ -73,6 +73,7 @@ vaccination:
     overall_efficacy: 0.6
     vacc_prop_prevent_infection: 0.65
     vacc_reduce_infectiousness: 0.5
+  second_dose_delay: 0.0232558
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.444  # 39 + 7.4 million vaccinated in population of 104418788 aged 20-49 years (modelled population)

@@ -4,9 +4,8 @@ from autumn.models.covid_19.constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, VACCINATION_STRATA, VACCINATED_STRATA, INFECTION
 )
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.preprocess.vaccination import (
-    add_clinical_adjustments_to_strat, find_vaccine_action
-)
+from autumn.models.covid_19.preprocess.vaccination import find_vaccine_action
+from autumn.models.covid_19.preprocess.clinical import add_clinical_adjustments_to_strat
 
 
 def get_vaccination_strat(params: Parameters) -> Stratification:

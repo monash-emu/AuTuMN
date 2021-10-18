@@ -327,7 +327,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest_strata=traced.strata,
                 expected_flow_count=1,
             )
-            # +++ FIXME: convert this to transition flow with new computed_values aware flow param
 
     """
     Vaccination status stratification.

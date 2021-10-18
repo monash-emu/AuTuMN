@@ -1,5 +1,5 @@
 from summer import CompartmentalModel
-from summer.adjust import Multiply
+from summer.adjust import Multiply, Overwrite
 
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
@@ -318,9 +318,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
-                seed_split = {stratum: Multiply(0.) for stratum in vacc_strata}
-                seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
-                vaccination_strat.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
+
+                seed_split = \
+                    {Vaccination.ONE_DOSE_ONLY: Multiply(0.), Vaccination.UNVACCINATED: Multiply(1. / 2.), Vaccination.VACCINATED: Multiply(1. / 2.)} if \
+                        is_dosing_active else {Vaccination.ONE_DOSE_ONLY: Multiply(1. / 2.), Vaccination.UNVACCINATED: Multiply(1. / 2.)}
+
+                vaccination_strat.add_flow_adjustments(
+                    f"seed_voc_{voc_name}", seed_split
+                )
 
         model.stratify_with(vaccination_strat)
 

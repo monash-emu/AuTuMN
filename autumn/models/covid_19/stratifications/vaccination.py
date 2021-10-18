@@ -3,7 +3,7 @@ from typing import List
 from summer import Multiply, Stratification
 
 from autumn.models.covid_19.constants import (
-    COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, VACCINATED_STRATA, INFECTION
+    COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
 )
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.preprocess.vaccination import find_vaccine_action
@@ -27,7 +27,6 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     Preliminary processing.
     """
 
-    strata_to_adjust = VACCINATED_STRATA if is_dosing_active else [Vaccination.ONE_DOSE_ONLY]
     infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = \
         {}, {}, {}, {}, {}
 
@@ -47,7 +46,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         vaccination_effects.update({Vaccination.VACCINATED: full_vacc_effects})
 
     # Get vaccination effects from requests by dose number and mode of action
-    for stratum in strata_to_adjust:
+    for stratum in vacc_strata[1:]:
         infection_efficacy[stratum], strat_severity_efficacy = find_vaccine_action(
             vaccination_effects[stratum]["prevent_infection"],
             vaccination_effects[stratum]["overall_efficacy"],

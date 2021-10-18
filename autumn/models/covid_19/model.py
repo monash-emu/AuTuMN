@@ -319,10 +319,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
 
-                seed_split = \
-                    {Vaccination.ONE_DOSE_ONLY: Multiply(0.), Vaccination.UNVACCINATED: Multiply(1. / 2.), Vaccination.VACCINATED: Multiply(1. / 2.)} if \
-                        is_dosing_active else {Vaccination.ONE_DOSE_ONLY: Multiply(1. / 2.), Vaccination.UNVACCINATED: Multiply(1. / 2.)}
-
+                seed_split = {stratum: Multiply(0.) for stratum in vacc_strata}
+                seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
                 vaccination_strat.add_flow_adjustments(
                     f"seed_voc_{voc_name}", seed_split
                 )

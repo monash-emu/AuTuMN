@@ -3,13 +3,7 @@ import copy
 from summer import Overwrite, Stratification
 
 from autumn.models.covid_19.constants import (
-    INFECTIOUS_COMPARTMENTS,
-    Clinical,
-    Compartment,
-    CLINICAL_STRATA,
-    INFECTIOUSNESS_ONSET,
-    PROGRESS,
-    INFECT_DEATH,
+    INFECTIOUS_COMPARTMENTS, Clinical, Compartment, CLINICAL_STRATA, INFECTIOUSNESS_ONSET, PROGRESS, INFECT_DEATH,
     RECOVERY,
 )
 from autumn.models.covid_19.parameters import Parameters

@@ -73,6 +73,7 @@ vaccination:
   fully_vaccinated:
     overall_efficacy: 0.7
     vacc_prop_prevent_infection: 0.7
+  second_dose_delay: 0.0232558
 
 vaccination_risk:
   calculate: false

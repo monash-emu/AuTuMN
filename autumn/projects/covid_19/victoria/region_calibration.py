@@ -3,14 +3,11 @@ import numpy as np
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget
 
-# TODO: Work out what is going on with seeding through importation - summer behaviour need revision
-# TODO: Add visualisation of raw Google inputs to inputs notebook
-# TODO: Sort out the caps/lower dash/underscore issue in Vic regions naming
-# TODO: Add time-varying time to second dose
-# TODO: Add more detail to age-specific vaccination rates
-# TODO: Add effect of vaccination on death
-# TODO: Allow for increased severity of Delta
-# TODO: Interpret contact rate as the relative infectiousness of Delta
+# TODO: Add visualisation of raw Google inputs to inputs notebook (minor)
+# TODO: Sort out the caps/lower dash/underscore issue in Vic regions naming (minor)
+# TODO: Consider a different approach to parameterising vaccine effects (including on hospital and death)
+# TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
+# TODO: Notebook for visualising outputs after run
 
 # Specify the general features of the calibration
 target_start_time = 454

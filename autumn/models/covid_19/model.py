@@ -10,10 +10,11 @@ from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.preprocess.testing import CdrProc
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.testing import find_cdr_function_from_test_data
+from autumn.tools.curve import tanh_based_scaleup
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
-    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes,
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes, VACCINE_ELIGIBLE_COMPARTMENTS
 )
 
 from . import preprocess
@@ -24,7 +25,7 @@ from .outputs.tracing import request_tracing_outputs
 from .outputs.healthcare import request_healthcare_outputs
 from .outputs.history import request_history_outputs, request_recovered_outputs
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows
+from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
 from .preprocess import tracing
 from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
@@ -330,46 +331,33 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Implement the process of people getting vaccinated
         vacc_params = params.vaccination
 
-        # Vic 2021 code is not generalisable
+        # Victoria vaccination code is not generalisable
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            for component in vacc_params.roll_out_components:
-                for cluster in cluster_strat.strata:
-                    add_vaccination_flows(
-                        model,
-                        component,
-                        age_strat.strata,
-                        params.vaccination.one_dose,
-                        vic_cluster=cluster,
-                        cluster_stratum={"cluster": cluster},
-                    )
+            add_vic2021_supermodel_vacc(model, vacc_params, cluster_strat.strata)
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            for i_comp, component in enumerate(vacc_params.roll_out_components):
-                add_vaccination_flows(
-                    model,
-                    component,
-                    age_strat.strata,
-                    params.vaccination.one_dose,
-                    vic_cluster=params.population.region,
-                    vaccination_lag=vacc_params.lag,
-                )
-
+            add_vic_regional_vacc(model, vacc_params, params.population.region)
         else:
-            for roll_out_component in vacc_params.roll_out_components:
-                coverage_override = vacc_params.coverage_override if vacc_params.coverage_override else None
-                add_vaccination_flows(
-                    model,
-                    roll_out_component,
-                    age_strat.strata,
-                    params.vaccination.one_dose,
-                    coverage_override
-                )
+            dest_straum = Vaccination.ONE_DOSE_ONLY if bool(params.vaccination.one_dose) else Vaccination.VACCINATED
+            add_requested_vacc_flows(model, vacc_params, dest_straum)
 
         # Add transition from single dose to fully vaccinated
         if params.vaccination.one_dose:
-            for compartment in COMPARTMENTS:
+            dose_delay_params = params.vaccination.second_dose_delay
+
+            if type(dose_delay_params) == float:
+                second_dose_transition_func = dose_delay_params
+            else:
+                second_dose_transition_func = tanh_based_scaleup(
+                    shape=params.vaccination.second_dose_delay.shape,
+                    inflection_time=dose_delay_params.inflection_time,
+                    lower_asymptote=dose_delay_params.lower_asymptote,
+                    upper_asymptote=dose_delay_params.upper_asymptote,
+                )
+
+            for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
                 model.add_transition_flow(
                     name="second_dose",
-                    fractional_rate=1. / params.vaccination.second_dose_delay,
+                    fractional_rate=second_dose_transition_func,
                     source=compartment,
                     dest=compartment,
                     source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},

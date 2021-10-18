@@ -1,7 +1,7 @@
 description: Scenario 5, Until Oct 01 lockdown. After that slower increase in mobility. Primary schools open Oct 15
 time:
   start: 640 # 01st Oct 2021
-  end: 883 # June 1st 2022
+
 
 mobility:
   mixing:

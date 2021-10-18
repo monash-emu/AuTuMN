@@ -7,10 +7,10 @@ from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
 from autumn.tools.utils.utils import list_element_wise_division
-from autumn.tools.utils.outputs import Outputs
+from autumn.tools.utils.outputsbuilder import OutputsBuilder
 
 
-class CovidOutputs(Outputs):
+class CovidOutputsBuilder(OutputsBuilder):
 
     def request_incidence(self):
 

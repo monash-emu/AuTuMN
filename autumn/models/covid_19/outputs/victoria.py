@@ -1,4 +1,4 @@
-from .common import CovidOutputs
+from .common import CovidOutputsBuilder
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, Compartment, PROGRESS, NOTIFICATION_CLINICAL_STRATA, COMPARTMENTS
 )
@@ -7,7 +7,7 @@ from autumn.settings import Region
 from autumn.models.covid_19.constants import Clinical
 
 
-class VicCovidOutputs(CovidOutputs):
+class VicCovidOutputsBuilder(CovidOutputsBuilder):
 
     def __init__(self, model, COMPARTMENTS):
         self.model = model

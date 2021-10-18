@@ -18,8 +18,8 @@ from .constants import (
 )
 
 from . import preprocess
-from .outputs.common import CovidOutputs
-from .outputs.victoria import VicCovidOutputs
+from .outputs.common import CovidOutputsBuilder
+from .outputs.victoria import VicCovidOutputsBuilder
 from .parameters import Parameters
 from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
 from .preprocess import tracing
@@ -368,29 +368,29 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Set up derived output functions
     """
 
-    outputs_tracker = VicCovidOutputs(model, COMPARTMENTS) if is_vic_super else CovidOutputs(model, COMPARTMENTS)
+    outputs_builder = VicCovidOutputsBuilder(model, COMPARTMENTS) if is_vic_super else CovidOutputsBuilder(model, COMPARTMENTS)
 
-    outputs_tracker.request_incidence()
-    outputs_tracker.request_infection()
-    outputs_tracker.request_notifications(params.contact_tracing, params.cumul_incidence_start_time)
-    outputs_tracker.request_progression()
-    outputs_tracker.request_cdr()
-    outputs_tracker.request_deaths()
-    outputs_tracker.request_admissions()
-    outputs_tracker.request_occupancy(params.sojourn.compartment_periods)
+    outputs_builder.request_incidence()
+    outputs_builder.request_infection()
+    outputs_builder.request_notifications(params.contact_tracing, params.cumul_incidence_start_time)
+    outputs_builder.request_progression()
+    outputs_builder.request_cdr()
+    outputs_builder.request_deaths()
+    outputs_builder.request_admissions()
+    outputs_builder.request_occupancy(params.sojourn.compartment_periods)
     if params.contact_tracing:
-        outputs_tracker.request_tracing()
+        outputs_builder.request_tracing()
     if params.voc_emergence:
-        outputs_tracker.request_strains(list(params.voc_emergence.keys()))
+        outputs_builder.request_strains(list(params.voc_emergence.keys()))
     if params.vaccination:
-        outputs_tracker.request_vaccination()
+        outputs_builder.request_vaccination()
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
-            outputs_tracker.request_vacc_aefis(params.vaccination_risk)
+            outputs_builder.request_vacc_aefis(params.vaccination_risk)
 
     if params.stratify_by_infection_history:
-        outputs_tracker.request_history()
+        outputs_builder.request_history()
     else:
-        outputs_tracker.request_recovered()
-        outputs_tracker.request_extra_recovered()
+        outputs_builder.request_recovered()
+        outputs_builder.request_extra_recovered()
 
     return model

@@ -272,9 +272,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 sources=[f"{INCIDENCE}Xstrain_{strain}", INCIDENCE]
             )
 
-    def request_vaccination(self, is_dosing_active):
-
-        vacc_strata = VACCINATION_STRATA if is_dosing_active else VACCINATION_STRATA[:-1]
+    def request_vaccination(self, is_dosing_active, vacc_strata):
 
         # Track proportions vaccinated by vaccination status (depends on _total_population previously being requested)
         for vacc_stratum in vacc_strata:

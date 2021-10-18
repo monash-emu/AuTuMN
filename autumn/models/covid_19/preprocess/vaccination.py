@@ -4,20 +4,12 @@ from typing import List, Callable, Optional, Tuple, Union
 from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination
-from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 )
+from autumn.tools.utils.utils import find_closest_value_in_list
 from autumn.models.covid_19.parameters import Vaccination as VaccParams, RollOutFunc
-
-
-def find_closest_value_in_list(list_request: List, value_request: int) -> int:
-    """
-    Find the closest value within one list to the value of interest.
-    """
-
-    return min(list_request, key=lambda list_value: abs(list_value - value_request))
 
 
 def get_vacc_roll_out_function_from_coverage(

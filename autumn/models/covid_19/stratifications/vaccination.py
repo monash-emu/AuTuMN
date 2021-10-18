@@ -2,9 +2,7 @@ from typing import List
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import (
-    COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
-)
+from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.preprocess.vaccination import find_vaccine_action
 from autumn.models.covid_19.preprocess.clinical import add_clinical_adjustments_to_strat
@@ -27,8 +25,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     Preliminary processing.
     """
 
-    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = \
-        {}, {}, {}, {}, {}
+    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = {}, {}, {}, {}, {}
 
     # Get vaccination effect parameters in the form needed for the model
     one_dose_effects = {
@@ -95,7 +92,6 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     Vaccination effect against infectiousness.
     """
 
-    # These parameters can be used directly
     infectiousness_adjustments = {
         Vaccination.UNVACCINATED: None,
         Vaccination.ONE_DOSE_ONLY: Multiply(1. - params.vaccination.one_dose.vacc_reduce_infectiousness),

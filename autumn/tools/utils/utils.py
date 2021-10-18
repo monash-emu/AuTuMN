@@ -9,6 +9,7 @@ import os
 import numpy
 import pandas as pd
 from datetime import datetime
+from typing import List
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
@@ -287,3 +288,11 @@ def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
 
     return df
+
+
+def find_closest_value_in_list(list_request: List, value_request: int) -> int:
+    """
+    Find the closest value within one list to the value of interest.
+    """
+
+    return min(list_request, key=lambda list_value: abs(list_value - value_request))

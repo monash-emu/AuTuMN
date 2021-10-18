@@ -310,7 +310,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Stratify by vaccination status
     if params.vaccination:
-        is_dosing_active = bool(params.vaccination.second_dose_delay)
+        dose_delay_params = params.vaccination.second_dose_delay
+        is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines strata number
         vacc_strata = VACCINATION_STRATA if is_dosing_active else VACCINATION_STRATA[:2]
 
         vaccination_strat = get_vaccination_strat(params, vacc_strata, is_dosing_active)
@@ -318,12 +319,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
-
                 seed_split = {stratum: Multiply(0.) for stratum in vacc_strata}
                 seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
-                vaccination_strat.add_flow_adjustments(
-                    f"seed_voc_{voc_name}", seed_split
-                )
+                vaccination_strat.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
 
         model.stratify_with(vaccination_strat)
 
@@ -332,7 +330,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Victoria vaccination code is not generalisable
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            add_vic2021_supermodel_vacc(model, vacc_params, cluster_strat.strata)
+            add_vic2021_supermodel_vacc(model, vacc_params, cluster_strat.strata)  # Considering killing this
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
             add_vic_regional_vacc(model, vacc_params, params.population.region)
         else:
@@ -340,8 +338,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Add transition from single dose to fully vaccinated
         if is_dosing_active:
-            dose_delay_params = params.vaccination.second_dose_delay
-
             if type(dose_delay_params) == float:
                 second_dose_transition_func = dose_delay_params
             else:
@@ -386,7 +382,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if params.voc_emergence:
         outputs_builder.request_strains(list(params.voc_emergence.keys()))
     if params.vaccination:
-        outputs_builder.request_vaccination(is_dosing_active)
+        outputs_builder.request_vaccination(is_dosing_active, vacc_strata)
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
 

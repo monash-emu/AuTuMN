@@ -66,8 +66,8 @@ priors = [
     UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.4]),
 
     # Vaccination parameters (independent sampling)
-    UniformPrior("vaccination.fully_vaccinated.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
-    BetaPrior("vaccination.fully_vaccinated.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
+    UniformPrior("vaccination.one_dose.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
+    BetaPrior("vaccination.one_dose.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
 ]
 
 calibration = Calibration(priors, targets)

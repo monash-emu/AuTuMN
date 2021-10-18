@@ -14,7 +14,8 @@ from autumn.tools.curve import tanh_based_scaleup
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
-    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes, VACCINE_ELIGIBLE_COMPARTMENTS
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes, VACCINE_ELIGIBLE_COMPARTMENTS,
+    VACCINATION_STRATA
 )
 
 from . import preprocess
@@ -32,9 +33,7 @@ from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
-base_params = Params(
-    build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
-)
+base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -289,12 +288,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
 
         # Add the transition process to the model
-        early_exposed_untraced_comps = \
-            [comp for comp in model.compartments if
-             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})]
-        early_exposed_traced_comps = \
-            [comp for comp in model.compartments if
-             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})]
+        early_exposed_untraced_comps = [
+            comp for comp in model.compartments if
+            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})
+        ]
+        early_exposed_traced_comps = [
+            comp for comp in model.compartments if
+            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})
+        ]
         for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
             model.add_transition_flow(
                 "tracing",
@@ -309,19 +310,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Stratify by vaccination status
     if params.vaccination:
-        vaccination_strat = get_vaccination_strat(params)
+        dose_delay_params = params.vaccination.second_dose_delay
+        is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines strata number
+        vacc_strata = VACCINATION_STRATA if is_dosing_active else VACCINATION_STRATA[:2]
 
-        # This is actually necessary - doesn't make sense to have VoC in an otherwise empty stratum
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, is_dosing_active)
+
+        # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
         if params.voc_emergence:
             for voc_name, characteristics in voc_params.items():
-                vaccination_strat.add_flow_adjustments(
-                    f"seed_voc_{voc_name}",
-                    {
-                        Vaccination.VACCINATED: Multiply(1. / 2.),
-                        Vaccination.ONE_DOSE_ONLY: Overwrite(0.),
-                        Vaccination.UNVACCINATED: Multiply(1. / 2.),
-                    }
-                )
+                seed_split = {stratum: Multiply(0.) for stratum in vacc_strata}
+                seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
+                vaccination_strat.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
+
         model.stratify_with(vaccination_strat)
 
         # Implement the process of people getting vaccinated
@@ -329,17 +330,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Victoria vaccination code is not generalisable
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            add_vic2021_supermodel_vacc(model, vacc_params, cluster_strat.strata)
+            add_vic2021_supermodel_vacc(model, vacc_params, cluster_strat.strata)  # Considering killing this
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
             add_vic_regional_vacc(model, vacc_params, params.population.region)
         else:
-            dest_straum = Vaccination.ONE_DOSE_ONLY if bool(params.vaccination.one_dose) else Vaccination.VACCINATED
-            add_requested_vacc_flows(model, vacc_params, dest_straum)
+            add_requested_vacc_flows(model, vacc_params)
 
         # Add transition from single dose to fully vaccinated
-        if params.vaccination.one_dose:
-            dose_delay_params = params.vaccination.second_dose_delay
-
+        if is_dosing_active:
             if type(dose_delay_params) == float:
                 second_dose_transition_func = dose_delay_params
             else:
@@ -368,7 +366,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Set up derived output functions
     """
 
-    outputs_builder = VicCovidOutputsBuilder(model, COMPARTMENTS) if is_vic_super else CovidOutputsBuilder(model, COMPARTMENTS)
+    outputs_builder = VicCovidOutputsBuilder(model, COMPARTMENTS) if \
+        is_vic_super else CovidOutputsBuilder(model, COMPARTMENTS)
 
     outputs_builder.request_incidence()
     outputs_builder.request_infection()
@@ -383,7 +382,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if params.voc_emergence:
         outputs_builder.request_strains(list(params.voc_emergence.keys()))
     if params.vaccination:
-        outputs_builder.request_vaccination()
+        outputs_builder.request_vaccination(is_dosing_active, vacc_strata)
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
 

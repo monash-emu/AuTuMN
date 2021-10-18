@@ -17,7 +17,7 @@ def get_strain_strat(voc_params):
     # Stratify model
     strain_strat = StrainStratification("strain", [Strain.WILD_TYPE] + voc_names, DISEASE_COMPARTMENTS)
 
-    # Prepare population split and transmission adjustments.
+    # Prepare population split and transmission adjustments
     population_split = {Strain.WILD_TYPE: 1.}
     transmissibility_adjustment = {Strain.WILD_TYPE: None}
     for voc_name in voc_names:

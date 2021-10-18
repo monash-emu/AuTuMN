@@ -17,6 +17,3 @@ testing_to_detection:
   assumed_tests_parameter: 1.e-04
   assumed_cdr_parameter: 0.06
   smoothing_period: 14
-
-vaccination:
-  second_dose_delay: 0.0232558

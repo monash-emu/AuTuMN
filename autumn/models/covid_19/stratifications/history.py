@@ -2,7 +2,7 @@ from summer import Stratification
 
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.constants import COMPARTMENTS, History, HISTORY_STRATA
-from autumn.models.covid_19.preprocess.clinical import add_clinical_adjustments_to_strat
+from autumn.models.covid_19.preprocess.clinical import get_clinical_adjustments_for_strat, add_clinical_adjustments_to_strat
 
 
 def get_history_strat(params: Parameters) -> Stratification:
@@ -26,9 +26,11 @@ def get_history_strat(params: Parameters) -> Stratification:
     severity_adjuster_experienced = params.rel_prop_symptomatic_experienced if severity_adjuster_request else 1.
 
     # Add the clinical adjustments parameters as overwrites in the same way as for vaccination
-    history_strat = add_clinical_adjustments_to_strat(
-        history_strat, History.NAIVE, History.EXPERIENCED, params, severity_adjuster_experienced,
+    flow_adjs = get_clinical_adjustments_for_strat(
+        History.NAIVE, History.EXPERIENCED, params, severity_adjuster_experienced,
         severity_adjuster_experienced, severity_adjuster_experienced, params.infection_fatality.top_bracket_overwrite,
     )
+
+    history_strat = add_clinical_adjustments_to_strat(history_strat, flow_adjs)
 
     return history_strat

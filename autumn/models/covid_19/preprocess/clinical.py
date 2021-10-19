@@ -302,8 +302,8 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def add_clinical_adjustments_to_strat(
-        strat, unaffected_stratum, first_modified_stratum, params, symptomatic_adjuster, hospital_adjuster,
+def get_clinical_adjustments_for_strat(
+        unaffected_stratum, first_modified_stratum, params, symptomatic_adjuster, hospital_adjuster,
         ifr_adjuster, top_bracket_overwrite, second_modified_stratum=None, second_sympt_adjuster=1.,
         second_hospital_adjuster=1., second_ifr_adjuster=1., second_top_bracket_overwrite=None,
 ):
@@ -326,42 +326,71 @@ def add_clinical_adjustments_to_strat(
                 second_hospital_adjuster, second_top_bracket_overwrite,
             )
 
+    flow_adjs = {}
     for agegroup in AGEGROUP_STRATA:
+        flow_adjs[agegroup] = {}
         for clinical_stratum in CLINICAL_STRATA:
-            working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
 
             # *** Note that this is not indexed by age group
-            flow_adjs = {
+            flow_adjs[agegroup][clinical_stratum] = {
                 PROGRESS: {
                     unaffected_stratum: None,
                     first_modified_stratum: adjs[PROGRESS][clinical_stratum]
                 }
             }
             for transition in AGE_CLINICAL_TRANSITIONS:
-                flow_adjs[transition] = {
+                flow_adjs[agegroup][clinical_stratum][transition] = {
                     unaffected_stratum: None,
                     first_modified_stratum: adjs[transition][agegroup][clinical_stratum]
                 }
 
             if second_modified_stratum:
-                flow_adjs[PROGRESS].update(
+                flow_adjs[agegroup][clinical_stratum][PROGRESS].update(
                     {second_modified_stratum: second_adjs[PROGRESS][clinical_stratum]}
                 )
                 for transition in AGE_CLINICAL_TRANSITIONS:
-                    flow_adjs[transition].update(
+                    flow_adjs[agegroup][clinical_stratum][transition].update(
                         {second_modified_stratum: second_adjs[transition][agegroup][clinical_stratum]}
                     )
 
+    return flow_adjs
+
+
+def add_clinical_adjustments_to_strat(strat, flow_adjs):
+    """
+    Add the clinical adjustments defined in the previous functions to a stratification.
+    """
+
+    for agegroup in AGEGROUP_STRATA:
+        for clinical_stratum in CLINICAL_STRATA:
+            working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
+
             # *** Must be dest
-            strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, flow_adjs[INFECTIOUSNESS_ONSET], dest_strata=working_strata)
+            strat.add_flow_adjustments(
+                INFECTIOUSNESS_ONSET,
+                flow_adjs[agegroup][clinical_stratum][INFECTIOUSNESS_ONSET],
+                dest_strata=working_strata
+            )
 
             # Can be either source or dest
-            strat.add_flow_adjustments(PROGRESS, flow_adjs[PROGRESS], source_strata=working_strata)
+            strat.add_flow_adjustments(
+                PROGRESS,
+                flow_adjs[agegroup][clinical_stratum][PROGRESS],
+                source_strata=working_strata
+            )
 
             # *** Must be source
-            strat.add_flow_adjustments(INFECT_DEATH, flow_adjs[INFECT_DEATH], source_strata=working_strata)
+            strat.add_flow_adjustments(
+                INFECT_DEATH,
+                flow_adjs[agegroup][clinical_stratum][INFECT_DEATH],
+                source_strata=working_strata
+            )
 
             # *** Must be source
-            strat.add_flow_adjustments(RECOVERY, flow_adjs[RECOVERY], source_strata=working_strata)
+            strat.add_flow_adjustments(
+                RECOVERY,
+                flow_adjs[agegroup][clinical_stratum][RECOVERY],
+                source_strata=working_strata
+            )
 
     return strat

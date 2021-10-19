@@ -5,7 +5,7 @@ from summer import Multiply, Stratification
 from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.preprocess.vaccination import find_vaccine_action
-from autumn.models.covid_19.preprocess.clinical import add_clinical_adjustments_to_strat
+from autumn.models.covid_19.preprocess.clinical import get_clinical_adjustments_for_strat, add_clinical_adjustments_to_strat
 
 
 def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_active: bool) -> Stratification:
@@ -64,8 +64,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     """
 
     # Add the clinical adjustments parameters as overwrites in the same way as for history stratification
-    vacc_strat = add_clinical_adjustments_to_strat(
-        vacc_strat,
+    flow_adjs = get_clinical_adjustments_for_strat(
         Vaccination.UNVACCINATED,
         Vaccination.ONE_DOSE_ONLY,
         params,
@@ -79,6 +78,8 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         second_ifr_adjuster=symptomatic_adjuster[Vaccination.VACCINATED] if is_dosing_active else None,
         second_top_bracket_overwrite=params.infection_fatality.top_bracket_overwrite,
     )
+
+    vacc_strat = add_clinical_adjustments_to_strat(vacc_strat, flow_adjs)
 
     """
     Vaccination effect against infection.

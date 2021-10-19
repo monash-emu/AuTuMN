@@ -94,7 +94,5 @@ vaccination:
         start_time: 628 # 19 Sep 2021
         end_time: 731 # 31 Dec 2021
 
-
-
 vaccination_risk:
   calculate: true

@@ -1,7 +1,7 @@
 import numpy as np
-from typing import List
+from typing import List, Dict
 
-from summer import Overwrite
+from summer import Overwrite, Stratification
 from summer.adjust import AdjustmentComponent, AdjustmentSystem
 
 from autumn.models.covid_19.constants import Clinical, Compartment, FIXED_STRATA, AGE_CLINICAL_TRANSITIONS
@@ -263,7 +263,7 @@ def get_all_adjustments(
     all_adjustments[INFECTIOUSNESS_ONSET] = get_entry_adjustments(abs_props, within_early_exposed)
 
     """
-    Progress adjustments.
+    Progression adjustments.
     """
 
     within_early_rates = {
@@ -302,23 +302,23 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_blank_adjustments_for_strat(unaffected_stratum):
+def get_blank_adjustments_for_strat(unaffected_stratum: str) -> Dict[str, dict]:
     """
     Start from an essentially blank set of flow adjustments, with Nones for the unadjusted stratum.
     """
 
     flow_adjs = {}
+    all_adjusted_transitions = [PROGRESS, *AGE_CLINICAL_TRANSITIONS]
     for agegroup in AGEGROUP_STRATA:
         flow_adjs[agegroup] = {}
         for clinical_stratum in CLINICAL_STRATA:
-            flow_adjs[agegroup][clinical_stratum] = {
-                transition: {unaffected_stratum: None} for transition in [PROGRESS, *AGE_CLINICAL_TRANSITIONS]
-            }
+            blank_adj = {transition: {unaffected_stratum: None} for transition in all_adjusted_transitions}
+            flow_adjs[agegroup][clinical_stratum] = blank_adj
 
     return flow_adjs
 
 
-def update_adjustments_for_strat(stratum_to_modify, flow_adjustments, adjustments):
+def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict, adjustments: dict) -> Dict[str, dict]:
     """
     Add the flow adjustments to the blank adjustments (as created above by get_blank_adjustments_for_strat) or a
     progressively extended working adjustments object.
@@ -327,9 +327,11 @@ def update_adjustments_for_strat(stratum_to_modify, flow_adjustments, adjustment
     for agegroup in AGEGROUP_STRATA:
         for clinical_stratum in CLINICAL_STRATA:
 
-            # *** Note that progression is not indexed by age group
+            # *** Note that PROGRESS is not indexed by age group
             modification = {stratum_to_modify: adjustments[PROGRESS][clinical_stratum]}
             flow_adjustments[agegroup][clinical_stratum][PROGRESS].update(modification)
+
+            # ... but the other transition processes are
             for transition in AGE_CLINICAL_TRANSITIONS:
                 modification = {stratum_to_modify: adjustments[transition][agegroup][clinical_stratum]}
                 flow_adjustments[agegroup][clinical_stratum][transition].update(modification)
@@ -337,7 +339,7 @@ def update_adjustments_for_strat(stratum_to_modify, flow_adjustments, adjustment
     return flow_adjustments
 
 
-def add_clinical_adjustments_to_strat(strat, flow_adjs):
+def add_clinical_adjustments_to_strat(strat: Stratification, flow_adjs: Dict[str, dict]) -> Stratification:
     """
     Add the clinical adjustments defined in the previous functions to a stratification.
     """

@@ -235,11 +235,6 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
     return abs_death_props
 
 
-"""
-Master functions
-"""
-
-
 def get_all_adjustments(
         clinical_params, country: Country, pop: Population, raw_ifr_props: list, sojourn: Sojourn,
         ifr_adjuster: float, sympt_adjuster: float, hospital_adjuster: float, top_bracket_overwrite=None,
@@ -275,10 +270,10 @@ def get_all_adjustments(
         Clinical.HOSPITAL_NON_ICU: 1. / sojourn.compartment_periods["hospital_early"],
         Clinical.ICU: 1. / sojourn.compartment_periods["icu_early"]
     }
-    progress_adjs = {}
+    all_adjustments[PROGRESS] = {}
     for stratum in CLINICAL_STRATA:
         progress_rate = Overwrite(within_early_rates[stratum]) if stratum in within_early_rates else None
-        progress_adjs.update({stratum: progress_rate})
+        all_adjustments[PROGRESS].update({stratum: progress_rate})
 
     """
     Death and recovery adjustments.

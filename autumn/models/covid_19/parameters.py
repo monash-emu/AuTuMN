@@ -85,6 +85,12 @@ class Sojourn(BaseModel):
         total_period: float
         proportions: Dict[str, float]
 
+        @validator("proportions", allow_reuse=True)
+        def check_props(props):
+            prop_sum = sum(props.values())
+            assert prop_sum == 1., f"Requested period proportions do not sum to one: {prop_sum}"
+            return props
+
     # Mean time in days spent in each compartment
     compartment_periods: Dict[str, float]
     # Mean time spent in each compartment, defined via proportions

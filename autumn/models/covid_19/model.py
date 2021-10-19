@@ -200,15 +200,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(strain_strat)
 
         # Use importation flows to seed VoC cases
-        for voc_name, characteristics in voc_params.items():
-            voc_seed_func = make_voc_seed_func(
-                characteristics.entry_rate, characteristics.start_time, characteristics.seed_duration
-            )
+        for voc_name, voc_values in voc_params.items():
+            voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
             model.add_importation_flow(
-                f"seed_voc_{voc_name}",
-                voc_seed_func,
-                dest=Compartment.EARLY_EXPOSED,
-                dest_strata={"strain": voc_name},
+                f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}
             )
 
     """
@@ -344,7 +339,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
         if params.voc_emergence:
-            for voc_name, characteristics in voc_params.items():
+            for voc_name, voc_values in voc_params.items():
                 seed_split = {stratum: Multiply(0.) for stratum in vacc_strata}
                 seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
                 vaccination_strat.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)

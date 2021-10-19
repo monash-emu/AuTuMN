@@ -1,10 +1,10 @@
 import numpy as np
-from typing import Tuple, List
+from typing import List
 
 from summer import Overwrite
 from summer.adjust import AdjustmentComponent, AdjustmentSystem
 
-from autumn.models.covid_19.constants import Clinical, Compartment, FIXED_CLINICAL_STRATA
+from autumn.models.covid_19.constants import Clinical, Compartment, FIXED_CLINICAL_STRATA, AGE_CLINICAL_TRANSITIONS
 from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.parameters import Country, Population, Sojourn
@@ -383,7 +383,6 @@ def add_clinical_adjustments_to_strat(
                 second_hospital_adjuster, second_top_bracket_overwrite,
             )
 
-    age_clinical_transitions = [INFECTIOUSNESS_ONSET, INFECT_DEATH, RECOVERY]
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
         for clinical_stratum in CLINICAL_STRATA:
             relevant_strata = {
@@ -398,7 +397,7 @@ def add_clinical_adjustments_to_strat(
                     first_modified_stratum: adjs[PROGRESS][clinical_stratum]
                 }
             }
-            for transition in age_clinical_transitions:
+            for transition in AGE_CLINICAL_TRANSITIONS:
                 flow_adjustments[transition] = {
                     unaffected_stratum: None,
                     first_modified_stratum: adjs[transition][agegroup][clinical_stratum]
@@ -408,7 +407,7 @@ def add_clinical_adjustments_to_strat(
                 flow_adjustments[PROGRESS].update(
                     {second_modified_stratum: second_adjs[PROGRESS][clinical_stratum]}
                 )
-                for transition in age_clinical_transitions:
+                for transition in AGE_CLINICAL_TRANSITIONS:
                     flow_adjustments[transition].update(
                         {second_modified_stratum: second_adjs[transition][agegroup][clinical_stratum]}
                     )

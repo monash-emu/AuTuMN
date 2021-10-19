@@ -3,8 +3,7 @@ import copy
 from summer import Overwrite, Stratification
 
 from autumn.models.covid_19.constants import (
-    INFECTIOUS_COMPARTMENTS, Clinical, Compartment, CLINICAL_STRATA, INFECTIOUSNESS_ONSET, PROGRESS, INFECT_DEATH,
-    RECOVERY,
+    INFECTIOUS_COMPARTMENTS, Clinical, Compartment, CLINICAL_STRATA, PROGRESS, AGE_CLINICAL_TRANSITIONS
 )
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
@@ -56,11 +55,11 @@ def get_clinical_strat(params: Parameters):
     )
 
     # Assign all the adjustments to the summer model
+
     for agegroup in AGEGROUP_STRATA:
         source = {"agegroup": agegroup}
-        clinical_strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, adjs[INFECTIOUSNESS_ONSET][agegroup], source_strata=source)
         clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)
-        clinical_strat.add_flow_adjustments(INFECT_DEATH, adjs[INFECT_DEATH][agegroup], source_strata=source)
-        clinical_strat.add_flow_adjustments(RECOVERY, adjs[RECOVERY][agegroup], source_strata=source)
+        for transition in AGE_CLINICAL_TRANSITIONS:
+            clinical_strat.add_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)
 
     return clinical_strat

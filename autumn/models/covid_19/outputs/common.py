@@ -342,6 +342,7 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Aggregate using larger age-groups
         aggregated_age_groups = {
+            "10_14": ["10"],
             "15_19": ["15"],
         }
         for age_min in [20 + i*10 for i in range(5)]:

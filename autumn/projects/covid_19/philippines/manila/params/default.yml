@@ -83,15 +83,20 @@ vaccination:
         end_time: 600 # 22 Aug 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: .75  # to reach 95% of 20+ one-dose-vaccinated by 18 Sep
+        coverage: .60  # to reach 92% of 20+ one-dose-vaccinated by 18 Oct
         start_time: 601 # 23 Aug 2021
-        end_time: 627 # 18 Sep 2021
+        end_time: 657 # 18 Oct 2021
     ##############  Assumed future roll-out ################
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .99  # to reach the remaining unvaccinated 20+ population by EoY
+        start_time: 658 # 19 Oct 2021
+        end_time: 731 # 31 Dec 2021
     - age_min: 15
       age_max: 19
       supply_period_coverage:
-        coverage: .50  # to reach 50% of 20+ one-dose-vaccinated by End of Year
-        start_time: 628 # 19 Sep 2021
+        coverage: .20  # to reach 20% of 15-19 one-dose-vaccinated by End of Year
+        start_time: 658 # 19 Oct 2021
         end_time: 731 # 31 Dec 2021
 
 vaccination_risk:

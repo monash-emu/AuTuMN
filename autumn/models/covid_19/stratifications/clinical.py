@@ -28,7 +28,7 @@ def get_clinical_strat(params: Parameters):
     for compartment in INFECTIOUS_COMPARTMENTS[:-1]:
         clinical_strat.add_infectiousness_adjustments(compartment, non_isolated_adjustments)
 
-    # Start from where we left off for the first two compartments and update for the isolated/hospitalised (last three)
+    # Pick up where we left for the first two compartments and update for the isolated/hospitalised (last three strata)
     late_active_adjustments = copy.copy(non_isolated_adjustments)
     for stratum in CLINICAL_STRATA[2:]:
         late_active_adj = Overwrite(clinical_params.late_infect_multiplier[stratum])

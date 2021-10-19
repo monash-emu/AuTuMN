@@ -296,6 +296,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             )
 
     def request_vacc_aefis(self, vacc_risk_params):
+        risk_multiplier = vacc_risk_params.risk_multiplier
 
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
         hospital_sources = []
@@ -311,7 +312,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 name=f"tts_casesX{agegroup_string}",
                 sources=[f"vaccinationX{agegroup_string}"],
                 func=lambda vaccinated:
-                vaccinated * vacc_risk_params.tts_rate[agegroup] * vacc_risk_params.prop_astrazeneca
+                vaccinated * vacc_risk_params.tts_rate[agegroup] * vacc_risk_params.prop_astrazeneca * risk_multiplier
             )
             self.model.request_function_output(
                 name=f"tts_deathsX{agegroup_string}",
@@ -325,7 +326,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 name=f"myocarditis_casesX{agegroup_string}",
                 sources=[f"vaccinationX{agegroup_string}"],
                 func=lambda vaccinated:
-                vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna
+                vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna * risk_multiplier
             )
             hospital_sources += [
                 f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.ICU}",

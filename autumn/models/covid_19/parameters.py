@@ -517,11 +517,13 @@ class Vaccination(BaseModel):
 
 class VaccinationRisk(BaseModel):
     calculate: bool
+    cumul_start_time: Optional[float]
     prop_astrazeneca: float
     prop_mrna: float
     tts_rate: Dict[str, float]
     tts_fatality_ratio: Dict[str, float]
     myocarditis_rate: Dict[str, float]
+    risk_multiplier: float
 
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_risk_ranges(cls, values):

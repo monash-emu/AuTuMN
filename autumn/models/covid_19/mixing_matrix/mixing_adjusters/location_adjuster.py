@@ -2,7 +2,7 @@ from typing import Callable, Dict
 import numpy as np
 
 from .base_adjuster import BaseMixingAdjuster
-from autumn.models.covid_19.strat_processing.mixing_matrix.mobility import LOCATIONS
+from autumn.models.covid_19.mixing_matrix.mobility import LOCATIONS
 
 
 class LocationMixingAdjuster(BaseMixingAdjuster):

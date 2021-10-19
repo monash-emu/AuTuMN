@@ -326,14 +326,11 @@ def add_clinical_adjustments_to_strat(
                 second_hospital_adjuster, second_top_bracket_overwrite,
             )
 
-    for i_age, agegroup in enumerate(AGEGROUP_STRATA):
+    for agegroup in AGEGROUP_STRATA:
         for clinical_stratum in CLINICAL_STRATA:
-            working_strata = {
-                "agegroup": agegroup,
-                "clinical": clinical_stratum,
-            }
+            working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
 
-            # *** Note that this isn't indexed by age group
+            # *** Note that this is not indexed by age group
             flow_adjs = {
                 PROGRESS: {
                     unaffected_stratum: None,

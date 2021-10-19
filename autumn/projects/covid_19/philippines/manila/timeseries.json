@@ -3375,195 +3375,195 @@
     "output_key": "abs_diff_cumulative_tts_casesXagg_age_15_19",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_casesXagg_age_20_29": {
     "title": "abs_diff_cumulative_tts_casesXagg_age_20_29",
     "output_key": "abs_diff_cumulative_tts_casesXagg_age_20_29",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_casesXagg_age_30_39": {
     "title": "abs_diff_cumulative_tts_casesXagg_age_30_39",
     "output_key": "abs_diff_cumulative_tts_casesXagg_age_30_39",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_casesXagg_age_40_49": {
     "title": "abs_diff_cumulative_tts_casesXagg_age_40_49",
     "output_key": "abs_diff_cumulative_tts_casesXagg_age_40_49",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_casesXagg_age_50_59": {
     "title": "abs_diff_cumulative_tts_casesXagg_age_50_59",
     "output_key": "abs_diff_cumulative_tts_casesXagg_age_50_59",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_casesXagg_age_60_69": {
     "title": "abs_diff_cumulative_tts_casesXagg_age_60_69",
     "output_key": "abs_diff_cumulative_tts_casesXagg_age_60_69",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_casesXagg_age_70_plus": {
     "title": "abs_diff_cumulative_tts_casesXagg_age_70_plus",
     "output_key": "abs_diff_cumulative_tts_casesXagg_age_70_plus",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_deathsXagg_age_15_19": {
     "title": "abs_diff_cumulative_tts_deathsXagg_age_15_19",
     "output_key": "abs_diff_cumulative_tts_deathsXagg_age_15_19",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_deathsXagg_age_20_29": {
     "title": "abs_diff_cumulative_tts_deathsXagg_age_20_29",
     "output_key": "abs_diff_cumulative_tts_deathsXagg_age_20_29",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_deathsXagg_age_30_39": {
     "title": "abs_diff_cumulative_tts_deathsXagg_age_30_39",
     "output_key": "abs_diff_cumulative_tts_deathsXagg_age_30_39",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_deathsXagg_age_40_49": {
     "title": "abs_diff_cumulative_tts_deathsXagg_age_40_49",
     "output_key": "abs_diff_cumulative_tts_deathsXagg_age_40_49",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_deathsXagg_age_50_59": {
     "title": "abs_diff_cumulative_tts_deathsXagg_age_50_59",
     "output_key": "abs_diff_cumulative_tts_deathsXagg_age_50_59",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_deathsXagg_age_60_69": {
     "title": "abs_diff_cumulative_tts_deathsXagg_age_60_69",
     "output_key": "abs_diff_cumulative_tts_deathsXagg_age_60_69",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_tts_deathsXagg_age_70_plus": {
     "title": "abs_diff_cumulative_tts_deathsXagg_age_70_plus",
     "output_key": "abs_diff_cumulative_tts_deathsXagg_age_70_plus",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_myocarditis_casesXagg_age_15_19": {
     "title": "abs_diff_cumulative_myocarditis_casesXagg_age_15_19",
     "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_15_19",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_myocarditis_casesXagg_age_20_29": {
     "title": "abs_diff_cumulative_myocarditis_casesXagg_age_20_29",
     "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_20_29",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_myocarditis_casesXagg_age_30_39": {
     "title": "abs_diff_cumulative_myocarditis_casesXagg_age_30_39",
     "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_30_39",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_myocarditis_casesXagg_age_40_49": {
     "title": "abs_diff_cumulative_myocarditis_casesXagg_age_40_49",
     "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_40_49",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_myocarditis_casesXagg_age_50_59": {
     "title": "abs_diff_cumulative_myocarditis_casesXagg_age_50_59",
     "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_50_59",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_myocarditis_casesXagg_age_60_69": {
     "title": "abs_diff_cumulative_myocarditis_casesXagg_age_60_69",
     "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_60_69",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_myocarditis_casesXagg_age_70_plus": {
     "title": "abs_diff_cumulative_myocarditis_casesXagg_age_70_plus",
     "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_70_plus",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_hospital_admissionsXagg_age_15_19": {
     "title": "abs_diff_cumulative_hospital_admissionsXagg_age_15_19",
     "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_15_19",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_hospital_admissionsXagg_age_20_29": {
     "title": "abs_diff_cumulative_hospital_admissionsXagg_age_20_29",
     "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_20_29",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_hospital_admissionsXagg_age_30_39": {
     "title": "abs_diff_cumulative_hospital_admissionsXagg_age_30_39",
     "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_30_39",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_hospital_admissionsXagg_age_40_49": {
     "title": "abs_diff_cumulative_hospital_admissionsXagg_age_40_49",
     "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_40_49",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_hospital_admissionsXagg_age_50_59": {
     "title": "abs_diff_cumulative_hospital_admissionsXagg_age_50_59",
     "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_50_59",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_hospital_admissionsXagg_age_60_69": {
     "title": "abs_diff_cumulative_hospital_admissionsXagg_age_60_69",
     "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_60_69",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "abs_diff_cumulative_hospital_admissionsXagg_age_70_plus": {
     "title": "abs_diff_cumulative_hospital_admissionsXagg_age_70_plus",
     "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_70_plus",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   }
 }

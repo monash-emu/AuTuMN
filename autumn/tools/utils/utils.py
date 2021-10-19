@@ -9,7 +9,7 @@ import os
 import numpy
 import pandas as pd
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
@@ -172,7 +172,7 @@ def apply_odds_ratio_to_props(props, adjuster):
     return [apply_odds_ratio_to_proportion(i_prop, adjuster) for i_prop in props]
 
 
-def subdivide_props(base_props: numpy.ndarray, split_props: numpy.ndarray):
+def subdivide_props(base_props: numpy.ndarray, split_props: Union[numpy.ndarray, float]) -> numpy.ndarray:
     """
     Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
     proportions provided (split_props).

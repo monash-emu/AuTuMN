@@ -7,7 +7,7 @@ from summer.adjust import AdjustmentComponent, AdjustmentSystem
 from autumn.models.covid_19.constants import Clinical, Compartment, FIXED_STRATA, AGE_CLINICAL_TRANSITIONS
 from autumn.models.covid_19.model import preprocess
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
-from autumn.models.covid_19.parameters import Country, Population, Sojourn
+from autumn.models.covid_19.parameters import Country, Population, Sojourn, ClinicalStratification
 from autumn.tools.inputs.demography.queries import convert_ifr_agegroups
 from autumn.tools.utils.utils import apply_odds_ratio_to_props, subdivide_props
 from autumn.models.covid_19.constants import INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
@@ -99,7 +99,7 @@ class AbsPropSymptNonHospSystem(AdjustmentSystem):
         return prop_sympt_non_hospital * self.early_rate
 
 
-def get_rate_adjustments(rates: dict) -> dict:
+def get_rate_adjustments(rates: dict) -> Dict[str, dict]:
     """
     This function just converts the values in nested dictionaries into Overwrite objects for use by the summer model
     object - where applicable, and None where not.
@@ -115,7 +115,9 @@ def get_rate_adjustments(rates: dict) -> dict:
     return rate_adjustments
 
 
-def get_fixed_abs_strata_props(symptomatic_props: list, icu_props: float, hospital_props: list) -> dict:
+def get_fixed_abs_strata_props(
+        symptomatic_props: list, icu_props: float, hospital_props: list
+) -> Dict[str, np.ndarray]:
     """
     Returns the proportion of people in each clinical stratum.
     ie: Given all the people people who are infected, what proportion are in each strata?
@@ -142,7 +144,7 @@ def get_fixed_abs_strata_props(symptomatic_props: list, icu_props: float, hospit
     }
 
 
-def get_entry_adjustments(abs_props: dict, early_rate: float) -> dict:
+def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]:
     """
     Gather together all the entry adjustments, two of which are functions of time and three are constant over time.
     """
@@ -236,9 +238,10 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
 
 
 def get_all_adjustments(
-        clinical_params, country: Country, pop: Population, raw_ifr_props: list, sojourn: Sojourn,
-        ifr_adjuster: float, sympt_adjuster: float, hospital_adjuster: float, top_bracket_overwrite=None,
-) -> dict:
+        clinical_params: ClinicalStratification, country: Country, pop: Population, raw_ifr_props: list,
+        sojourn: Sojourn, ifr_adjuster: float, sympt_adjuster: float, hospital_adjuster: float,
+        top_bracket_overwrite=None,
+) -> Dict[str, dict]:
     """
     Preliminary processing.
     """
@@ -291,6 +294,7 @@ def get_all_adjustments(
     abs_death_props = get_absolute_death_proportions(abs_props, final_ifr_props, clinical_params.icu_mortality_prop)
 
     # The resulting proportion. Numerator: deaths in stratum, denominator: people entering stratum
+    # This could be over-written here by the the probability of death given ICU or hospital admission if preferred
     rel_death_props = {strat: np.array(abs_death_props[strat]) / np.array(abs_props[strat]) for strat in FIXED_STRATA}
 
     # Convert to rates and then to summer Overwrite objects

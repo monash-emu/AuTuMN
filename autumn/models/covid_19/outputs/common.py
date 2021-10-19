@@ -336,9 +336,35 @@ class CovidOutputsBuilder(OutputsBuilder):
             # Hospitalisations by age
             hospital_sources_this_age = [s for s in hospital_sources if f"X{agegroup_string}X" in s]
             self.model.request_aggregate_output(
-                name=f"new_hospital_admissionsX{agegroup_string}",
+                name=f"hospital_admissionsX{agegroup_string}",
                 sources=hospital_sources_this_age
             )
+
+        # Aggregate using larger age-groups
+        aggregated_age_groups = {
+            "15_19": ["15"],
+        }
+        for age_min in [20 + i*10 for i in range(5)]:
+            age_max = age_min + 9
+            aggregated_age_groups[f"{age_min}_{age_max}"] = [str(age_min), str(age_min + 5)]
+        aggregated_age_groups["70_plus"] = ["70", "75"]
+
+        cumul_start_time = None if not vacc_risk_params.cumul_start_time else vacc_risk_params.cumul_start_time
+        for output_type in ["tts_cases", "tts_deaths", "myocarditis_cases", "hospital_admissions"]:
+            for aggregated_age_group, agegroups in aggregated_age_groups.items():
+                agg_output = f"{output_type}Xagg_age_{aggregated_age_group}"
+                agg_output_sources = [f"{output_type}Xagegroup_{agegroup}" for agegroup in agegroups]
+                self.model.request_aggregate_output(
+                    name=agg_output,
+                    sources=agg_output_sources
+                )
+
+                # cumulative output calculation
+                self.model.request_cumulative_output(
+                    name=f"cumulative_{agg_output}",
+                    source=agg_output,
+                    start_time=cumul_start_time
+                )
 
     def request_history(self):
 

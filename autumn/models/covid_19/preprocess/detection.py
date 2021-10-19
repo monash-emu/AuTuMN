@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple, Any
+from typing import Callable, Optional, Tuple, Any, List
 import numpy as np
 
 from summer.compute import ComputedValueProcessor
@@ -85,7 +85,7 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float) -> Callable:
     return cdr_function
 
 
-def inflate_test_data(test_multiplier: float, test_dates: list, test_values: list) -> list:
+def inflate_test_data(test_multiplier: float, test_dates: list, test_values: list) -> List[float]:
     """
     Apply inflation factor to test numbers if requested.
     Used in the Philippines applications only.

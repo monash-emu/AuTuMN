@@ -415,16 +415,16 @@ def add_clinical_adjustments_to_strat(
                         {second_modified_stratum: second_adjs[transition][agegroup][clinical_stratum]}
                     )
 
-    # *** Must be dest
-    strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, flow_adjustments[INFECTIOUSNESS_ONSET], dest_strata=relevant_strata)
+            # *** Must be dest
+            strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, flow_adjustments[INFECTIOUSNESS_ONSET], dest_strata=relevant_strata)
 
-    # *** Must be source
-    strat.add_flow_adjustments(INFECT_DEATH, flow_adjustments[INFECT_DEATH], source_strata=relevant_strata)
+            # *** Must be source
+            strat.add_flow_adjustments(INFECT_DEATH, flow_adjustments[INFECT_DEATH], source_strata=relevant_strata)
 
-    # *** Either source, dest or both
-    strat.add_flow_adjustments(PROGRESS, flow_adjustments[PROGRESS], source_strata=relevant_strata)
+            # *** Either source, dest or both
+            strat.add_flow_adjustments(PROGRESS, flow_adjustments[PROGRESS], source_strata=relevant_strata)
 
-    # *** Must be source
-    strat.add_flow_adjustments(RECOVERY, flow_adjustments[RECOVERY], source_strata=relevant_strata)
+            # *** Must be source
+            strat.add_flow_adjustments(RECOVERY, flow_adjustments[RECOVERY], source_strata=relevant_strata)
 
     return strat

@@ -302,58 +302,39 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_clinical_adjustments_for_strat(
-        unaffected_stratum, first_modified_stratum, params, symptomatic_adjuster, hospital_adjuster,
-        ifr_adjuster, top_bracket_overwrite, second_modified_stratum=None, second_sympt_adjuster=1.,
-        second_hospital_adjuster=1., second_ifr_adjuster=1., second_top_bracket_overwrite=None,
-):
+def get_blank_adjustments_for_strat(unaffected_stratum):
     """
-    Get all the adjustments in the same way for both the history and vaccination stratifications.
+    Start from an essentially blank set of flow adjustments, with Nones for the unadjusted stratum.
     """
-
-    adjs = get_all_adjustments(
-        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, ifr_adjuster, symptomatic_adjuster,
-        hospital_adjuster, top_bracket_overwrite,
-    )
-
-    # Make these calculations for the one-dose stratum, even if this is being called by the history stratification
-    if second_modified_stratum:
-        second_adjs = \
-            get_all_adjustments(
-                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-                params.sojourn, second_ifr_adjuster, second_sympt_adjuster,
-                second_hospital_adjuster, second_top_bracket_overwrite,
-            )
 
     flow_adjs = {}
     for agegroup in AGEGROUP_STRATA:
         flow_adjs[agegroup] = {}
         for clinical_stratum in CLINICAL_STRATA:
-
-            # *** Note that this is not indexed by age group
             flow_adjs[agegroup][clinical_stratum] = {
-                PROGRESS: {
-                    unaffected_stratum: None,
-                    first_modified_stratum: adjs[PROGRESS][clinical_stratum]
-                }
+                transition: {unaffected_stratum: None} for transition in [PROGRESS, *AGE_CLINICAL_TRANSITIONS]
             }
-            for transition in AGE_CLINICAL_TRANSITIONS:
-                flow_adjs[agegroup][clinical_stratum][transition] = {
-                    unaffected_stratum: None,
-                    first_modified_stratum: adjs[transition][agegroup][clinical_stratum]
-                }
-
-            if second_modified_stratum:
-                flow_adjs[agegroup][clinical_stratum][PROGRESS].update(
-                    {second_modified_stratum: second_adjs[PROGRESS][clinical_stratum]}
-                )
-                for transition in AGE_CLINICAL_TRANSITIONS:
-                    flow_adjs[agegroup][clinical_stratum][transition].update(
-                        {second_modified_stratum: second_adjs[transition][agegroup][clinical_stratum]}
-                    )
 
     return flow_adjs
+
+
+def update_adjustments_for_strat(stratum_to_modify, flow_adjustments, adjustments):
+    """
+    Add the flow adjustments to the blank adjustments (as created above by get_blank_adjustments_for_strat) or a
+    progressively extended working adjustments object.
+    """
+
+    for agegroup in AGEGROUP_STRATA:
+        for clinical_stratum in CLINICAL_STRATA:
+
+            # *** Note that progression is not indexed by age group
+            modification = {stratum_to_modify: adjustments[PROGRESS][clinical_stratum]}
+            flow_adjustments[agegroup][clinical_stratum][PROGRESS].update(modification)
+            for transition in AGE_CLINICAL_TRANSITIONS:
+                modification = {stratum_to_modify: adjustments[transition][agegroup][clinical_stratum]}
+                flow_adjustments[agegroup][clinical_stratum][transition].update(modification)
+
+    return flow_adjustments
 
 
 def add_clinical_adjustments_to_strat(strat, flow_adjs):

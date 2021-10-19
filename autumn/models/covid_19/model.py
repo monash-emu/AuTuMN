@@ -11,6 +11,7 @@ from autumn.models.covid_19.preprocess.testing import CdrProc
 from .preprocess.seasonality import get_seasonal_forcing
 from .preprocess.testing import find_cdr_function_from_test_data
 from autumn.tools.curve import tanh_based_scaleup
+from autumn.models.covid_19.preprocess.compartments import calc_compartment_periods
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
@@ -24,6 +25,7 @@ from .outputs.victoria import VicCovidOutputsBuilder
 from .parameters import Parameters
 from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
 from .preprocess import tracing
+from .preprocess.clinical import AbsPropIsolatedSystem, AbsPropSymptNonHospSystem
 from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
@@ -172,17 +174,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     get_detected_proportion = find_cdr_function_from_test_data(
         params.testing_to_detection, country.iso3, override_test_region, pop.year
     )
-    clinical_strat, adjustment_systems = get_clinical_strat(params)
+    clinical_strat = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
-
-    for k, v in adjustment_systems.items():
-        model.add_adjustment_system(k, v)
 
     """
     Case detection.
     """
 
     model.add_computed_value_process("cdr", CdrProc(get_detected_proportion))
+
+    compartment_periods = calc_compartment_periods(params.sojourn)
+    within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
+    model.add_adjustment_system("isolated", AbsPropIsolatedSystem(within_early_exposed))
+    model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
 
     """
     Variants of concern stratification.

@@ -49,7 +49,7 @@ def get_clinical_strat(params: Parameters):
     """
 
     # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
-    entry_adjs, death_adjs, progress_adjs, recovery_adjs, adj_systems = get_all_adjustments(
+    adjs = get_all_adjustments(
         clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
         params.infection_fatality.multiplier, params.clinical_stratification.props.symptomatic.multiplier,
         params.clinical_stratification.props.hospital.multiplier, params.infection_fatality.top_bracket_overwrite,
@@ -58,9 +58,9 @@ def get_clinical_strat(params: Parameters):
     # Assign all the adjustments to the summer model
     for agegroup in AGEGROUP_STRATA:
         source = {"agegroup": agegroup}
-        clinical_strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, entry_adjs[agegroup], source_strata=source)
-        clinical_strat.add_flow_adjustments(PROGRESS, progress_adjs, source_strata=source)
-        clinical_strat.add_flow_adjustments(INFECT_DEATH, death_adjs[agegroup], source_strata=source)
-        clinical_strat.add_flow_adjustments(RECOVERY, recovery_adjs[agegroup], source_strata=source)
+        clinical_strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, adjs[INFECTIOUSNESS_ONSET][agegroup], source_strata=source)
+        clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)
+        clinical_strat.add_flow_adjustments(INFECT_DEATH, adjs[INFECT_DEATH][agegroup], source_strata=source)
+        clinical_strat.add_flow_adjustments(RECOVERY, adjs[RECOVERY][agegroup], source_strata=source)
 
-    return clinical_strat, adj_systems
+    return clinical_strat

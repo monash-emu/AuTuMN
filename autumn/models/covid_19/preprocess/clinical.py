@@ -251,7 +251,7 @@ Master functions
 def get_all_adjustments(
         clinical_params, country: Country, pop: Population, raw_ifr_props: list, sojourn: Sojourn,
         ifr_adjuster: float, symptomatic_adjuster: float, hospital_adjuster: float, top_bracket_overwrite=None,
-) -> Tuple[dict, dict, dict, dict, dict]:
+) -> dict:
 
     """
     Preliminary processing.
@@ -287,12 +287,6 @@ def get_all_adjustments(
     """
 
     entry_adjs = get_entry_adjustments(abs_props, within_early_exposed)
-
-    # These are the systems that will compute (in a vectorised fashion) the adjustments added using AdjustmentComponents
-    adjuster_systems = {
-        "isolated": AbsPropIsolatedSystem(within_early_exposed),
-        "sympt_non_hosp": AbsPropSymptNonHospSystem(within_early_exposed)
-    }
 
     """
     Progress adjustments.
@@ -352,7 +346,12 @@ def get_all_adjustments(
     Return all the adjustments.
     """
 
-    return entry_adjs, death_adjs, progress_adjs, recovery_adjs, adjuster_systems
+    return {
+        INFECTIOUSNESS_ONSET: entry_adjs,
+        INFECT_DEATH: death_adjs,
+        PROGRESS: progress_adjs,
+        RECOVERY: recovery_adjs,
+    }
 
 
 """
@@ -369,8 +368,7 @@ def add_clinical_adjustments_to_strat(
     Get all the adjustments in the same way for both the history and vaccination stratifications.
     """
 
-    adjs = {}
-    adjs[INFECTIOUSNESS_ONSET], adjs[INFECT_DEATH], adjs[PROGRESS], adjs[RECOVERY], _ = get_all_adjustments(
+    adjs = get_all_adjustments(
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
         params.sojourn, ifr_adjuster, symptomatic_adjuster,
         hospital_adjuster, top_bracket_overwrite,
@@ -378,13 +376,12 @@ def add_clinical_adjustments_to_strat(
 
     # Make these calculations for the one-dose stratum, even if this is being called by the history stratification
     if second_modified_stratum:
-        second_adjs = {}
-        second_adjs[INFECTIOUSNESS_ONSET], second_adjs[INFECT_DEATH], second_adjs[PROGRESS], \
-        second_adjs[RECOVERY], _ = get_all_adjustments(
-            params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, second_ifr_adjuster, second_sympt_adjuster,
-            second_hospital_adjuster, second_top_bracket_overwrite,
-        )
+        second_adjs = \
+            get_all_adjustments(
+                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+                params.sojourn, second_ifr_adjuster, second_sympt_adjuster,
+                second_hospital_adjuster, second_top_bracket_overwrite,
+            )
 
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
         for clinical_stratum in CLINICAL_STRATA:

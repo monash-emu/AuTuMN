@@ -12,7 +12,7 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 def get_clinical_strat(params: Parameters):
     """
-    Stratify the infectious compartments of the covid model by "clinical" status.
+    Stratify the infectious compartments of the covid model by "clinical" status, into five groups.
     """
 
     clinical_strat = Stratification("clinical", CLINICAL_STRATA, INFECTIOUS_COMPARTMENTS)
@@ -22,23 +22,17 @@ def get_clinical_strat(params: Parameters):
     Infectiousness adjustments.
     """
 
-    # Start from blank adjustments because all strata must be specified by summer rules
+    # Start from blank adjustments, then apply to both the late incubation and early active compartments
     non_isolated_adjustments = {stratum: None for stratum in CLINICAL_STRATA}
-    non_isolated_adj_dict = {Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)}
-    non_isolated_adjustments.update(non_isolated_adj_dict)
-
-    # Apply this to both the late incubation and early active periods
+    non_isolated_adjustments.update({Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)})
     for compartment in INFECTIOUS_COMPARTMENTS[:-1]:
         clinical_strat.add_infectiousness_adjustments(compartment, non_isolated_adjustments)
 
-    # Start from where we left off for the late incubation and early active periods - including the asymptomatic
+    # Start from where we left off for the first two compartments and update for the isolated/hospitalised (last three)
     late_active_adjustments = copy.copy(non_isolated_adjustments)
-
-    # Update the ones in late active who are isolated or admitted to hospital
-    for stratum in (Clinical.SYMPT_ISOLATE, Clinical.HOSPITAL_NON_ICU, Clinical.ICU):
+    for stratum in CLINICAL_STRATA[2:]:
         late_active_adj = Overwrite(clinical_params.late_infect_multiplier[stratum])
-        late_active_adj_dict = {stratum: late_active_adj}
-        late_active_adjustments.update(late_active_adj_dict)
+        late_active_adjustments.update({stratum: late_active_adj})
 
     # Apply to the compartment
     clinical_strat.add_infectiousness_adjustments(Compartment.LATE_ACTIVE, late_active_adjustments)
@@ -55,10 +49,9 @@ def get_clinical_strat(params: Parameters):
     )
 
     # Assign all the adjustments to the summer model
-
     for agegroup in AGEGROUP_STRATA:
         source = {"agegroup": agegroup}
-        clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)
+        clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified
         for transition in AGE_CLINICAL_TRANSITIONS:
             clinical_strat.add_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)
 

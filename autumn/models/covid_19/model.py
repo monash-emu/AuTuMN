@@ -25,7 +25,7 @@ from .outputs.victoria import VicCovidOutputsBuilder
 from .parameters import Parameters
 from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
 from .preprocess import tracing
-from .preprocess.clinical import AbsPropIsolatedSystem, AbsPropSymptNonHospSystem
+from .preprocess.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .preprocess.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
@@ -185,7 +185,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     compartment_periods = calc_compartment_periods(params.sojourn)
     within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
-    model.add_adjustment_system("isolated", AbsPropIsolatedSystem(within_early_exposed))
+    model.add_adjustment_system("isolated", AbsRateIsolatedSystem(within_early_exposed))
     model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
 
     """

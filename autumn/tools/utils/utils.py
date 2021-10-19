@@ -164,7 +164,7 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     return modified_proportion
 
 
-def apply_odds_ratio_to_multiple_proportions(props, adjuster):
+def apply_odds_ratio_to_props(props, adjuster):
     """
     Very simple, but just because it is used a few times.
     """

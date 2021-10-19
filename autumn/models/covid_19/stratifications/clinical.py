@@ -20,7 +20,7 @@ def get_clinical_strat(params: Parameters):
     clinical_params = params.clinical_stratification
 
     """
-    Infectiousness adjustments
+    Infectiousness adjustments.
     """
 
     # Start from blank adjustments because all strata must be specified by summer rules
@@ -29,7 +29,7 @@ def get_clinical_strat(params: Parameters):
     non_isolated_adjustments.update(non_isolated_adj_dict)
 
     # Apply this to both the late incubation and early active periods
-    for compartment in (Compartment.LATE_EXPOSED, Compartment.EARLY_ACTIVE):
+    for compartment in INFECTIOUS_COMPARTMENTS[:-1]:
         clinical_strat.add_infectiousness_adjustments(compartment, non_isolated_adjustments)
 
     # Start from where we left off for the late incubation and early active periods - including the asymptomatic

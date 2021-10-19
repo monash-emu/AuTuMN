@@ -6,7 +6,7 @@ from autumn.models.covid_19.constants import (
     INFECTIOUS_COMPARTMENTS, Clinical, Compartment, CLINICAL_STRATA, PROGRESS, AGE_CLINICAL_TRANSITIONS
 )
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.preprocess.clinical import get_all_adjustments
+from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 

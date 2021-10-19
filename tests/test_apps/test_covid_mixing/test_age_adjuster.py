@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 from autumn.models.covid_19.parameters import TimeSeries
-from autumn.models.covid_19.preprocess.mixing_matrix.mixing_adjusters import (
+from autumn.models.covid_19.strat_processing.mixing_matrix.mixing_adjusters import (
     AgeMixingAdjuster,
 )
 

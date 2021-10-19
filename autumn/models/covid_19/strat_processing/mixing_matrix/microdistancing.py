@@ -3,7 +3,7 @@ from typing import Callable, Dict
 import numpy as np
 
 from autumn.models.covid_19.parameters import MicroDistancingFunc
-from autumn.models.covid_19.preprocess.mixing_matrix.mobility import LOCATIONS
+from autumn.models.covid_19.strat_processing.mixing_matrix.mobility import LOCATIONS
 from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 
 ADJUSTER_SUFFIX = "_adjuster"

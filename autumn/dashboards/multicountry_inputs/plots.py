@@ -2,7 +2,7 @@ import random
 
 import streamlit as st
 
-from autumn.models.covid_19.preprocess.detection import find_cdr_function_from_test_data
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from autumn.tools import inputs, plots
 from autumn.utils.params import load_params
 

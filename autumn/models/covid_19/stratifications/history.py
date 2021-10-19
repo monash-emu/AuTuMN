@@ -2,7 +2,7 @@ from summer import Stratification
 
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.constants import COMPARTMENTS, History, HISTORY_STRATA
-from autumn.models.covid_19.preprocess.clinical import (
+from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
     update_adjustments_for_strat
 )

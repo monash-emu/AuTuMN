@@ -7,11 +7,11 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.models.covid_19.preprocess.detection import CdrProc
+from autumn.models.covid_19.detection import CdrProc
 from .utils import get_seasonal_forcing
-from .preprocess.detection import find_cdr_function_from_test_data
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from autumn.tools.curve import tanh_based_scaleup
-from autumn.models.covid_19.preprocess.compartments import calc_compartment_periods
+from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
@@ -19,14 +19,13 @@ from .constants import (
     VACCINATION_STRATA
 )
 
-from . import preprocess
 from .outputs.common import CovidOutputsBuilder
 from .outputs.victoria import VicCovidOutputsBuilder
 from .parameters import Parameters
-from .preprocess.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
-from .preprocess import tracing
-from .preprocess.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
-from .preprocess.strains import make_voc_seed_func
+from .strat_processing.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
+from .strat_processing import tracing
+from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
+from .strat_processing.strains import make_voc_seed_func
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
 from .stratifications.cluster import apply_post_cluster_strat_hacks, get_cluster_strat
@@ -73,7 +72,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     # Distribute infectious seed across infectious split sub-compartments
-    compartment_periods = preprocess.compartments.calc_compartment_periods(params.sojourn)
+    compartment_periods = calc_compartment_periods(params.sojourn)
     total_disease_time = sum([compartment_periods[comp] for comp in DISEASE_COMPARTMENTS])
     init_pop = {
         comp: params.infectious_seed * compartment_periods[comp] / total_disease_time

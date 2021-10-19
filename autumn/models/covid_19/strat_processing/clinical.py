@@ -5,7 +5,7 @@ from summer import Overwrite, Stratification
 from summer.adjust import AdjustmentComponent, AdjustmentSystem
 
 from autumn.models.covid_19.constants import Clinical, Compartment, FIXED_STRATA, AGE_CLINICAL_TRANSITIONS
-from autumn.models.covid_19.model import preprocess
+from autumn.models.covid_19.utils import calc_compartment_periods
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.parameters import Country, Population, Sojourn, ClinicalStratification
 from autumn.tools.inputs.demography.queries import convert_ifr_agegroups
@@ -256,7 +256,7 @@ def get_all_adjustments(
     abs_props = get_fixed_abs_strata_props(adjusted_symptomatic_props, clinical_params.icu_prop, hospital_props)
 
     # Work out all the relevant sojourn times and the associated total rates at which they exit the compartments
-    compartment_periods = preprocess.compartments.calc_compartment_periods(sojourn)
+    compartment_periods = calc_compartment_periods(sojourn)
 
     """
     Entry adjustments.

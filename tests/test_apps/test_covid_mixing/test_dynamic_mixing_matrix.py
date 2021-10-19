@@ -6,11 +6,11 @@ from pandas.core import base
 
 from autumn.models.covid_19.constants import BASE_DATE
 from autumn.models.covid_19.parameters import Country, Mobility
-from autumn.models.covid_19.preprocess.mixing_matrix import (
+from autumn.models.covid_19.strat_processing.mixing_matrix import (
     build_dynamic_mixing_matrix,
     mobility,
 )
-from autumn.models.covid_19.preprocess.mixing_matrix.mixing_adjusters import (
+from autumn.models.covid_19.strat_processing.mixing_matrix.mixing_adjusters import (
     location_adjuster,
 )
 from autumn.tools.inputs import get_country_mixing_matrix

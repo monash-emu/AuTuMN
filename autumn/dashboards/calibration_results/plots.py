@@ -7,7 +7,7 @@ import pandas as pd
 import streamlit as st
 import yaml
 
-from autumn.models.covid_19.preprocess.detection import find_cdr_function_from_test_data
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from autumn.tools import db, inputs, plots
 from autumn.tools.plots.calibration.plots import (
     find_shortest_chain_length,

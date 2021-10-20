@@ -5,10 +5,7 @@ TODO: Test more mixing matrix functionality
 """
 import pytest
 
-from autumn.models.covid_19.preprocess.mixing_matrix.mobility import (
-    parse_values,
-    update_mixing_data,
-)
+from autumn.models.covid_19.mixing_matrix.mobility import parse_values, update_mixing_data
 
 
 @pytest.mark.parametrize(

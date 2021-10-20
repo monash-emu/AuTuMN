@@ -272,10 +272,10 @@ class CovidOutputsBuilder(OutputsBuilder):
                 sources=[f"{INCIDENCE}Xstrain_{strain}", INCIDENCE]
             )
 
-    def request_vaccination(self):
+    def request_vaccination(self, is_dosing_active, vacc_strata):
 
         # Track proportions vaccinated by vaccination status (depends on _total_population previously being requested)
-        for vacc_stratum in VACCINATION_STRATA:
+        for vacc_stratum in vacc_strata:
             self.model.request_output_for_compartments(
                 name=f"_{vacc_stratum}",
                 compartments=COMPARTMENTS,
@@ -287,13 +287,16 @@ class CovidOutputsBuilder(OutputsBuilder):
                 sources=[f"_{vacc_stratum}", "_total_population"],
                 func=lambda vaccinated, total: vaccinated / total,
             )
-        self.model.request_function_output(
-            name="at_least_one_dose_prop",
-            func=lambda vacc, one_dose, pop: (vacc + one_dose) / pop,
-            sources=[f"_{Vaccination.VACCINATED}", f"_{Vaccination.ONE_DOSE_ONLY}", "_total_population"]
-        )
+
+        if is_dosing_active:
+            self.model.request_function_output(
+                name="at_least_one_dose_prop",
+                func=lambda vacc, one_dose, pop: (vacc + one_dose) / pop,
+                sources=[f"_{Vaccination.VACCINATED}", f"_{Vaccination.ONE_DOSE_ONLY}", "_total_population"]
+            )
 
     def request_vacc_aefis(self, vacc_risk_params):
+        risk_multiplier = vacc_risk_params.risk_multiplier
 
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
         hospital_sources = []
@@ -309,7 +312,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 name=f"tts_casesX{agegroup_string}",
                 sources=[f"vaccinationX{agegroup_string}"],
                 func=lambda vaccinated:
-                vaccinated * vacc_risk_params.tts_rate[agegroup] * vacc_risk_params.prop_astrazeneca
+                vaccinated * vacc_risk_params.tts_rate[agegroup] * vacc_risk_params.prop_astrazeneca * risk_multiplier
             )
             self.model.request_function_output(
                 name=f"tts_deathsX{agegroup_string}",
@@ -323,7 +326,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 name=f"myocarditis_casesX{agegroup_string}",
                 sources=[f"vaccinationX{agegroup_string}"],
                 func=lambda vaccinated:
-                vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna
+                vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna * risk_multiplier
             )
             hospital_sources += [
                 f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.ICU}",
@@ -333,9 +336,35 @@ class CovidOutputsBuilder(OutputsBuilder):
             # Hospitalisations by age
             hospital_sources_this_age = [s for s in hospital_sources if f"X{agegroup_string}X" in s]
             self.model.request_aggregate_output(
-                name=f"new_hospital_admissionsX{agegroup_string}",
+                name=f"hospital_admissionsX{agegroup_string}",
                 sources=hospital_sources_this_age
             )
+
+        # Aggregate using larger age-groups
+        aggregated_age_groups = {
+            "15_19": ["15"],
+        }
+        for age_min in [20 + i*10 for i in range(5)]:
+            age_max = age_min + 9
+            aggregated_age_groups[f"{age_min}_{age_max}"] = [str(age_min), str(age_min + 5)]
+        aggregated_age_groups["70_plus"] = ["70", "75"]
+
+        cumul_start_time = None if not vacc_risk_params.cumul_start_time else vacc_risk_params.cumul_start_time
+        for output_type in ["tts_cases", "tts_deaths", "myocarditis_cases", "hospital_admissions"]:
+            for aggregated_age_group, agegroups in aggregated_age_groups.items():
+                agg_output = f"{output_type}Xagg_age_{aggregated_age_group}"
+                agg_output_sources = [f"{output_type}Xagegroup_{agegroup}" for agegroup in agegroups]
+                self.model.request_aggregate_output(
+                    name=agg_output,
+                    sources=agg_output_sources
+                )
+
+                # cumulative output calculation
+                self.model.request_cumulative_output(
+                    name=f"cumulative_{agg_output}",
+                    source=agg_output,
+                    start_time=cumul_start_time
+                )
 
     def request_history(self):
 

@@ -4,20 +4,12 @@ from typing import List, Callable, Optional, Tuple, Union
 from summer import CompartmentalModel
 
 from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination
-from autumn.tools.curve.scale_up import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 )
+from autumn.tools.utils.utils import find_closest_value_in_list
 from autumn.models.covid_19.parameters import Vaccination as VaccParams, RollOutFunc
-
-
-def find_closest_value_in_list(list_request: List, value_request: int) -> int:
-    """
-    Find the closest value within one list to the value of interest.
-    """
-
-    return min(list_request, key=lambda list_value: abs(list_value - value_request))
 
 
 def get_vacc_roll_out_function_from_coverage(
@@ -90,8 +82,8 @@ def get_eligible_age_groups(roll_out_component: RollOutFunc) -> List:
 
 
 def add_vacc_flows(
-        model: CompartmentalModel, age_groups: List, vaccination_rate: Union[float, Callable], dest_stratum: str,
-        extra_stratum={}):
+        model: CompartmentalModel, age_groups: List, vaccination_rate: Union[float, Callable], extra_stratum={}
+):
     """
     Add vaccination flows from function or value that has previously been specified - including zero flows for to make
     the derived outputs requests simpler.
@@ -100,7 +92,7 @@ def add_vacc_flows(
     for eligible_age_group in age_groups:
         source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
         source_strata.update(extra_stratum)
-        dest_strata = {"vaccination": dest_stratum, "agegroup": eligible_age_group}
+        dest_strata = {"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group}
         dest_strata.update(extra_stratum)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
@@ -113,7 +105,7 @@ def add_vacc_flows(
             )
 
 
-def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams, vacc_dest_stratum: str):
+def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams):
     """
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function).
     Flexible enough to handle various user requests, but will create one flow object for each request/age group/
@@ -132,11 +124,11 @@ def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams,
             roll_out_component.supply_period_coverage.end_time,
             vacc_params.coverage_override if vacc_params.coverage_override else None
         )
-        add_vacc_flows(model, working_agegroups, vaccination_roll_out_function, vacc_dest_stratum)
+        add_vacc_flows(model, working_agegroups, vaccination_roll_out_function)
 
     # Add blank flows to make things simpler when we come to doing the outputs
     ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
-    add_vacc_flows(model, ineligible_ages, 0., vacc_dest_stratum)
+    add_vacc_flows(model, ineligible_ages, 0.)
 
 
 def get_piecewise_vacc_func(
@@ -225,11 +217,11 @@ def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cl
         )
 
         # Apply the vaccination rate function to the model
-        add_vacc_flows(model, working_agegroups, get_vaccination_rate, Vaccination.ONE_DOSE_ONLY)
+        add_vacc_flows(model, working_agegroups, get_vaccination_rate)
 
     # Add blank/zero flows to make the output requests simpler
     ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
-    add_vacc_flows(model, ineligible_ages, 0., Vaccination.ONE_DOSE_ONLY)
+    add_vacc_flows(model, ineligible_ages, 0.)
 
 
 def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_strata: str):
@@ -264,11 +256,8 @@ def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_
                 roll_out_component.vic_supply.start_time, end_time, roll_out_component.vic_supply.time_interval,
                 coverage_times, coverage_values, vacc_params.lag,
             )
-            add_vacc_flows(
-                model, eligible_age_groups, get_vaccination_rate, Vaccination.ONE_DOSE_ONLY,
-                extra_stratum=cluster_stratum
-            )
+            add_vacc_flows(model, eligible_age_groups, get_vaccination_rate, extra_stratum=cluster_stratum)
 
             # Add blank flows to make things simpler when we come to doing the outputs
             ineligible_ages = set(AGEGROUP_STRATA) - set(eligible_age_groups)
-            add_vacc_flows(model, ineligible_ages, 0., Vaccination.ONE_DOSE_ONLY, extra_stratum=cluster_stratum)
+            add_vacc_flows(model, ineligible_ages, 0., extra_stratum=cluster_stratum)

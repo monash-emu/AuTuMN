@@ -186,6 +186,20 @@ def get_population_by_agegroup(
     return [int(p) for p in population]
 
 
+def convert_ifr_agegroups(raw_ifr_props: list, iso3: str, pop_region: str, pop_year: int) -> list:
+    """
+    Converts the IFRs from the age groups they were provided in to the ones needed for the model.
+    """
+
+    # Work out the proportion of 80+ years old among the 75+ population
+    elderly_populations = get_population_by_agegroup([0, 75, 80], iso3, pop_region, year=pop_year)
+    prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
+
+    # Calculate 75+ age bracket as weighted average between 75-79 and 80+
+    ifr_over75 = raw_ifr_props[-1] * prop_over_80 + raw_ifr_props[-2] * (1. - prop_over_80)
+    return [*raw_ifr_props[:-2], ifr_over75]
+
+
 def downsample_rate(
     orig_rates: List[float], orig_bins: List[float], orig_step: float, new_bins: List[float]
 ):

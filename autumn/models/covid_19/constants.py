@@ -88,7 +88,7 @@ NOTIFICATION_CLINICAL_STRATA = [
     Clinical.ICU,
 ]
 
-DEATH_CLINICAL_STRATA = [
+FIXED_STRATA = [
     Clinical.NON_SYMPT,
     Clinical.HOSPITAL_NON_ICU,
     Clinical.ICU,
@@ -116,6 +116,9 @@ NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the oth
 PROGRESS = "progress"
 RECOVERY = "recovery"
 INFECT_DEATH = "infect_death"
+
+AGE_CLINICAL_TRANSITIONS = [INFECTIOUSNESS_ONSET, INFECT_DEATH, RECOVERY]
+
 
 """
 Vic model options

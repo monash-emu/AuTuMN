@@ -1,7 +1,5 @@
 from autumn.models.covid_19.parameters import MicroDistancingFunc
-from autumn.models.covid_19.preprocess.mixing_matrix.microdistancing import (
-    get_microdistancing_funcs,
-)
+from autumn.models.covid_19.mixing_matrix.microdistancing import get_microdistancing_funcs
 from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 
 LOCATIONS = ["work", "home"]

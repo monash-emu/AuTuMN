@@ -2,7 +2,6 @@ from summer import CompartmentalModel
 from summer.adjust import Multiply
 
 from autumn.settings.region import Region
-from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
@@ -18,7 +17,6 @@ from .constants import (
     INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes, VACCINE_ELIGIBLE_COMPARTMENTS,
     VACCINATION_STRATA
 )
-
 from .outputs.common import CovidOutputsBuilder
 from .outputs.victoria import VicCovidOutputsBuilder
 from .parameters import Parameters
@@ -49,7 +47,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Create the model object
     model = CompartmentalModel(
-        times=[params.time.start, params.time.end],
+        times=(params.time.start, params.time.end),
         compartments=COMPARTMENTS,
         infectious_compartments=INFECTIOUS_COMPARTMENTS,
         timestep=params.time.step,
@@ -82,9 +80,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Get country population by age-group
     country = params.country
     pop = params.population
-    total_pops = inputs.get_population_by_agegroup(
-        AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year
-    )
+    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
@@ -95,11 +91,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate
-    if params.seasonal_force:
-        contact_rate = get_seasonal_forcing(365., 173., params.seasonal_force, params.contact_rate)
-    else:
-        # Use a static contact rate
-        contact_rate = params.contact_rate
+    contact_rate = get_seasonal_forcing(365., 173., params.seasonal_force, params.contact_rate) if \
+        params.seasonal_force else params.contact_rate
 
     # Infection
     model.add_infection_frequency_flow(
@@ -150,13 +143,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Age group stratification.
     """
 
-    if params.mixing_matrices.type == "extrapolated":
-        mixing_matrices = build_synthetic_matrices(
-            country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust,
-            pop.region
-        )
-    elif params.mixing_matrices.type == "prem":
-        mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
+    mixing_matrices = build_synthetic_matrices(
+        country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust, pop.region
+    )
 
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices)
     model.stratify_with(age_strat)
@@ -165,10 +154,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Clinical stratification.
     """
 
-    if pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS:
-        override_test_region = "Victoria"
-    else:
-        override_test_region = pop.region
+    override_test_region = "Victoria" if \
+        pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS else pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(
         params.testing_to_detection, country.iso3, override_test_region, pop.year

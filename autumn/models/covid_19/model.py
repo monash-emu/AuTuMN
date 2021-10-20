@@ -320,10 +320,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if params.vaccination:
         dose_delay_params = params.vaccination.second_dose_delay
         is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines stratification by dosing
-
-
-        is_waning_vacc_immunity = True
-
+        is_waning_vacc_immunity = params.vaccination.vacc_wane
 
         # Work out the strata to be implemented
         vacc_strata = VACCINATION_STRATA[:2]

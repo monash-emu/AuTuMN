@@ -2,7 +2,9 @@ from typing import List
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
+from autumn.models.covid_19.constants import (
+    COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION, VACCINATION_STRATA
+)
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.strat_processing.vaccination import find_vaccine_action
 from autumn.models.covid_19.strat_processing.clinical import (
@@ -11,7 +13,9 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_active: bool) -> Stratification:
+def get_vaccination_strat(
+        params: Parameters, vacc_strata: List, is_dosing_active: bool, is_waning_active: bool
+) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
@@ -46,7 +50,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         vaccination_effects.update({Vaccination.VACCINATED: full_vacc_effects})
 
     # Get vaccination effects from requests by dose number and mode of action
-    for stratum in vacc_strata[1:]:
+    for stratum in vacc_strata[1: 3]:
         infection_efficacy[stratum], strat_severity_efficacy = find_vaccine_action(
             vaccination_effects[stratum]["prevent_infection"],
             vaccination_effects[stratum]["overall_efficacy"],
@@ -72,7 +76,11 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         params.sojourn, ifr_adjuster[Vaccination.ONE_DOSE_ONLY], symptomatic_adjuster[Vaccination.ONE_DOSE_ONLY],
         hospital_adjuster[Vaccination.ONE_DOSE_ONLY]
     )
-    flow_adjs = get_blank_adjustments_for_strat(Vaccination.UNVACCINATED)
+
+    unadjusted_strata = [Vaccination.UNVACCINATED]
+    if is_waning_active:
+        unadjusted_strata += VACCINATION_STRATA[3:]
+    flow_adjs = get_blank_adjustments_for_strat(unadjusted_strata)
     flow_adjs = update_adjustments_for_strat(Vaccination.ONE_DOSE_ONLY, flow_adjs, adjs)
 
     # Apply for the fully vaccinated if active
@@ -93,17 +101,17 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     """
 
     infection_adjustments = {stratum: Multiply(1. - infection_efficacy[stratum]) for stratum in infection_efficacy}
-    infection_adjustments.update({Vaccination.UNVACCINATED: None})
+    infection_adjustments.update({stratum: None for stratum in unadjusted_strata})
     vacc_strat.add_flow_adjustments(INFECTION, infection_adjustments)
 
     """
     Vaccination effect against infectiousness.
     """
 
-    infectiousness_adjustments = {
-        Vaccination.UNVACCINATED: None,
-        Vaccination.ONE_DOSE_ONLY: Multiply(1. - params.vaccination.one_dose.vacc_reduce_infectiousness),
-    }
+    infectiousness_adjustments = {stratum: None for stratum in unadjusted_strata}
+    infectiousness_adjustments.update(
+        {Vaccination.ONE_DOSE_ONLY: Multiply(1. - params.vaccination.one_dose.vacc_reduce_infectiousness)}
+    )
     if is_dosing_active:
         infectiousness_adjustments.update({
             Vaccination.VACCINATED: Multiply(1. - params.vaccination.fully_vaccinated.vacc_reduce_infectiousness)

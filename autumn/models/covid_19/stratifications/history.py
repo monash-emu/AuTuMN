@@ -34,7 +34,7 @@ def get_history_strat(params: Parameters) -> Stratification:
         params.sojourn, severity_adjuster_experienced, severity_adjuster_experienced,
         1., params.infection_fatality.top_bracket_overwrite,
     )
-    flow_adjs = get_blank_adjustments_for_strat(History.NAIVE)
+    flow_adjs = get_blank_adjustments_for_strat([History.NAIVE])
     flow_adjs = update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs)
     history_strat = add_clinical_adjustments_to_strat(history_strat, flow_adjs)
 

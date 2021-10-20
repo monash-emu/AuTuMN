@@ -319,9 +319,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     if params.vaccination:
         dose_delay_params = params.vaccination.second_dose_delay
-        is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines strata number
-        vacc_strata = VACCINATION_STRATA if is_dosing_active else VACCINATION_STRATA[:2]
-        vaccination_strat = get_vaccination_strat(params, vacc_strata, is_dosing_active)
+        is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines stratification by dosing
+
+
+        is_waning_vacc_immunity = True
+
+
+        # Work out the strata to be implemented
+        vacc_strata = VACCINATION_STRATA[:2]
+        if is_dosing_active:
+            vacc_strata.append(Vaccination.VACCINATED)
+        if is_waning_vacc_immunity:
+            assert is_dosing_active, f"Vaccination stratification doesn't support waning immunity without dosing"
+            vacc_strata += [Vaccination.PART_WANED, Vaccination.WANED]
+
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, is_dosing_active, is_waning_vacc_immunity)
 
         # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
         if params.voc_emergence:

@@ -442,6 +442,7 @@ class VaccEffectiveness(BaseModel):
     vacc_prop_prevent_infection: float
     vacc_reduce_infectiousness: Optional[float]
     vacc_reduce_infectiousness_ratio: Optional[float]
+    vacc_reduce_hospitalisation: Optional[float]
     vacc_reduce_death: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)

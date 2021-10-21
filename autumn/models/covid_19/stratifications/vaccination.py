@@ -36,6 +36,9 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         effectiveness_keys = ["vacc_prop_prevent_infection", "overall_efficacy"]
         if getattr(params.vaccination, stratum).vacc_reduce_death:
             effectiveness_keys.append("vacc_reduce_death")
+        if getattr(params.vaccination, stratum).vacc_reduce_hospitalisation:
+            effectiveness_keys.append("vacc_reduce_hospitalisation")
+
         vacc_effects = {key: getattr(getattr(params.vaccination, stratum), key) for key in effectiveness_keys}
         vaccination_effects[stratum] = vacc_effects
 
@@ -54,6 +57,8 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         # Use the standard severity adjustment if no specific request for reducing death
         ifr_adjuster[stratum] = 1. - vaccination_effects[stratum]["vacc_reduce_death"] if \
             "vacc_reduce_death" in vaccination_effects[stratum] else severity_adjustment
+        hospital_adjuster[stratum] = 1. - vaccination_effects[stratum]["vacc_reduce_hospitalisation"] if \
+            "vacc_reduce_hospitalisation" in vaccination_effects[stratum] else 1.
 
         # Apply the calibration adjusters
         symptomatic_adjuster[stratum] *= params.clinical_stratification.props.symptomatic.multiplier

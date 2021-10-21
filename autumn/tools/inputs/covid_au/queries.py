@@ -77,6 +77,9 @@ def get_historical_vac_coverage(
     avg_vals = np.array(apply_moving_average(coverage_values, 7)) + TINY_NUMBER
     return vac_dates, avg_vals
 
+def update_cond_map(cluster, cond_map):
+    if cluster is None:
+        cluster = "Victoria"
 
 
 def get_historical_vac_num(input_db, cond_map):
@@ -95,7 +98,7 @@ def get_modelled_vac_num(input_db, cond_map, dose):
     return df
 
 
-def get_both_vac_coverage(cluster: str=None, start_age: int=0, end_age: int=89, dose="dose_1"):
+def get_both_vacc_coverage(cluster: str=None, start_age: int=0, end_age: int=89, dose="dose_1"):
     """
     Use the following function (get_modelled_vac_coverage) to get the same data out for both vaccines from data provided
     by Vida at the Department.

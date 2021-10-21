@@ -176,5 +176,34 @@
     "times": [],
     "values": [],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+
+  "abs_diff_cumulative_deaths": {
+    "title": "Cumulative deaths (abs diff)",
+    "output_key": "abs_diff_cumulative_deaths",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "abs_diff_cumulative_diseased": {
+    "title": "Cumulative incidence (abs diff)",
+    "output_key": "abs_diff_cumulative_diseased",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "abs_diff_cumulative_pt": {
+    "title": "Cumulative PT (abs diff)",
+    "output_key": "abs_diff_cumulative_pt",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "abs_diff_cumulative_pt_sae": {
+    "title": "Cumulative SAEs (abs diff)",
+    "output_key": "abs_diff_cumulative_pt_sae",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   }
 }

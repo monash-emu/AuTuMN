@@ -1,11 +1,8 @@
 from typing import Callable, Dict
-
 import numpy as np
 
 from .base_adjuster import BaseMixingAdjuster
-
-# Locations that can be used for mixing
-LOCATIONS = ["home", "other_locations", "school", "work"]
+from autumn.models.covid_19.mixing_matrix.mobility import LOCATIONS
 
 
 class LocationMixingAdjuster(BaseMixingAdjuster):
@@ -19,7 +16,10 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
         mobility_funcs: Dict[str, Callable[[float], float]],
         microdistancing_funcs: Dict[str, Callable[[float], float]],
     ):
-        """Build the time variant location adjustment functions"""
+        """
+        Build the time variant location adjustment functions.
+        """
+
         self.mobility_funcs = mobility_funcs
         self.microdistancing_funcs = microdistancing_funcs
 
@@ -31,11 +31,12 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
         Apply time-varying location adjustments.
         Returns a new mixing matrix, modified to adjust for dynamic mixing changes for a given point in time.
         """
-        for loc_key in LOCATIONS:
-            # Start the adjustment value for each location from a value of 1 for "no adjustment".
-            loc_adjustment = 1
 
-            # Adjust for Google Mobility data.
+        # Start the adjustment value for each location from a value of 1 for "no adjustment"
+        for loc_key in LOCATIONS:
+            loc_adjustment = 1.
+
+            # Adjust for Google mobility data
             mobility_func = self.mobility_funcs.get(loc_key)
             if mobility_func:
                 loc_adjustment *= mobility_func(time)
@@ -46,6 +47,6 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
                 loc_adjustment *= microdistancing_func(time)
 
             # Apply adjustment by subtracting the contacts that need to come off
-            mixing_matrix += (loc_adjustment - 1) * self.matrix_components[loc_key]
+            mixing_matrix += (loc_adjustment - 1.) * self.matrix_components[loc_key]
 
         return mixing_matrix

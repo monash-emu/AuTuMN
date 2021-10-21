@@ -13,10 +13,9 @@ contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 seasonal_force: null
 vic_status: "non_vic"
 
-#
-mixing_matrices:
-  type: "prem"
-  age_adjust: true  # Note that this is not relevant unless "empiric" selected for type
+mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
+  type: extrapolated
+  age_adjust: true
 
 # Integration times
 time:
@@ -192,31 +191,32 @@ vaccination:
     vacc_reduce_infectiousness: 0.
     vacc_reduce_infectiousness_ratio: null
   # Time from receiving first dose to second, based on the days from Vic achieving the same coverage with one and two
-  second_dose_delay: 43.
+  second_dose_delay: null
   lag: 0.
   roll_out_components: []
 
 vaccination_risk:
   calculate: false
+  risk_multiplier: 1.
   prop_astrazeneca: 1.
   prop_mrna: 0.
   tts_rate: # Source: https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
-    0: 2.5e-5
-    5: 2.5e-5
-    10: 2.5e-5
-    15: 2.5e-5
-    20: 2.5e-5
-    25: 2.5e-5
-    30: 2.5e-5
-    35: 2.5e-5
-    40: 2.5e-5
-    45: 2.5e-5
-    50: 2.7e-5
-    55: 2.7e-5
-    60: 1.6e-5
-    65: 1.6e-5
+    0: 1.9e-5
+    5: 1.9e-5
+    10: 1.9e-5
+    15: 1.9e-5
+    20: 1.9e-5
+    25: 1.9e-5
+    30: 1.9e-5
+    35: 1.9e-5
+    40: 1.9e-5
+    45: 1.9e-5
+    50: 3.0e-5
+    55: 3.0e-5
+    60: 1.5e-5
+    65: 1.5e-5
     70: 2.1e-5
-    75: 1.8e-5
+    75: 1.7e-5
 
   tts_fatality_ratio: # Source: https://www.gov.uk/government/publications/coronavirus-covid-19-vaccine-adverse-reactions/coronavirus-vaccine-summary-of-yellow-card-reporting
     0: .25  # No data available for this group. We assume the same fatality ratio as for 18-29 years old.
@@ -237,22 +237,22 @@ vaccination_risk:
     75: .18
 
   myocarditis_rate:
-    0: 3.57e-5  # assumed same as 12-17 category
-    5: 3.57e-5 # assumed same as 12-17 category
-    10: 3.57e-5  # from 12-17 category
-    15: 3.2e-5  # average of 12-17 and 18-24 categories
-    20: 2.7e-5  # from 18-24 category
-    25: 0.90e-5
-    30: 0.43e-5
-    35: 0.43e-5
-    40: 0.29e-5
-    45: 0.29e-5
-    50: 0.10e-5
-    55: 0.10e-5
-    60: 0.10e-5
-    65: 0.05e-5
-    70: 0.05e-5
-    75: 0.05e-5
+    0: 42.6e-6  # assumed same as 12-15 category
+    5: 42.6e-6 # assumed same as 12-15 category
+    10: 42.6e-6  # from 12-15 category
+    15: 54.3e-6  # average of 16-17 and 18-24 categories
+    20: 37.1e-6  # from 18-24 category
+    25: 11.1e-6
+    30: 6.8e-6
+    35: 6.8e-6
+    40: 4.4e-6
+    45: 4.4e-6
+    50: 0.5e-6
+    55: 0.5e-6
+    60: 0.5e-6
+    65: 0.4e-6
+    70: 0.4e-6
+    75: 0.4e-6
 
 # Contact tracing-related
 contact_tracing: null

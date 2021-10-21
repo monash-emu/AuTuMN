@@ -5,7 +5,7 @@ from summer import CompartmentalModel, Multiply, Stratification
 
 from autumn.models.covid_19.constants import COMPARTMENTS, Compartment
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.preprocess.victorian_mixing import (
+from autumn.models.covid_19.strat_processing.cluster import (
     build_victorian_mixing_matrix_func,
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA

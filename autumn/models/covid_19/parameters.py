@@ -85,6 +85,12 @@ class Sojourn(BaseModel):
         total_period: float
         proportions: Dict[str, float]
 
+        @validator("proportions", allow_reuse=True)
+        def check_props(props):
+            prop_sum = sum(props.values())
+            assert prop_sum == 1., f"Requested period proportions do not sum to one: {prop_sum}"
+            return props
+
     # Mean time in days spent in each compartment
     compartment_periods: Dict[str, float]
     # Mean time spent in each compartment, defined via proportions
@@ -394,6 +400,7 @@ class VicHistoryPeriod(BaseModel):
 
     start_time: float
     end_time: float
+    time_interval: Optional[float]
 
     @root_validator(allow_reuse=True)
     def check_times(cls, values):
@@ -409,7 +416,6 @@ class RollOutFunc(BaseModel):
 
     age_min: Optional[float]
     age_max: Optional[float]
-    supply_timeseries: Optional[TimeSeries]
     supply_period_coverage: Optional[VaccCoveragePeriod]
     vic_supply: Optional[VicHistoryPeriod]
 
@@ -417,10 +423,10 @@ class RollOutFunc(BaseModel):
     def check_suppy(cls, values):
         components = \
             values.get("supply_period_coverage"), \
-            values.get("supply_timeseries"), \
             values.get("vic_supply")
-        has_supply = (int(bool(i_comp)) for i_comp in components)
-        assert sum(has_supply) == 1, "Roll out function must have just one period or timeseries for supply"
+        has_supply = [int(bool(i_comp)) for i_comp in components]
+        msg = f"Roll out request must have exactly one type of request: {sum(has_supply)} requests"
+        assert sum(has_supply) == 1, msg
         if "age_min" in values:
             assert 0. <= values["age_min"], f"Minimum age is negative: {values['age_min']}"
         if "age_max" in values:
@@ -454,17 +460,35 @@ class VaccEffectiveness(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_one_infectiousness_request(cls, values):
-        n_requests = int(bool(values["vacc_reduce_infectiousness"])) + \
-                     int(bool(values["vacc_reduce_infectiousness_ratio"]))
+        n_requests = sum(
+            [int(bool(values[option])) for option in ["vacc_reduce_infectiousness", "vacc_reduce_infectiousness_ratio"]]
+        )
         msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
         assert n_requests < 2, msg
         return values
 
 
+class TanhScaleup(BaseModel):
+    shape: float
+    inflection_time: float
+    lower_asymptote: float
+    upper_asymptote: float
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_asymptotes(cls, values):
+        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
+        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
+        assert 0. <= lower, f"Lower asymptote not in domain [0, inf]: {lower}"
+        return values
+
+
 class Vaccination(BaseModel):
-    second_dose_delay: float
-    one_dose: Optional[VaccEffectiveness]
-    fully_vaccinated: VaccEffectiveness
+
+    # *** This parameter determines whether the model is stratified into three rather than two vaccination strata
+    second_dose_delay: Optional[Union[float, TanhScaleup]]
+
+    one_dose: VaccEffectiveness
+    fully_vaccinated: Optional[VaccEffectiveness]
     lag: float
 
     roll_out_components: List[RollOutFunc]
@@ -472,7 +496,11 @@ class Vaccination(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
-        assert 0. < values["second_dose_delay"], f"Delay to second dose is not positive: {values['second_dose_delay']}"
+        second_dose_delay = values["second_dose_delay"]
+        if type(second_dose_delay) == float:
+            assert 0. < second_dose_delay, f"Delay to second dose is not positive: {second_dose_delay}"
+
+        # Use ratio to calculate the infectiousness of the one dose vaccinated compared to unvaccinated
         if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:
             values["one_dose"]["vacc_reduce_infectiousness"] = \
                 values["fully_vaccinated"]["vacc_reduce_infectiousness"] * \
@@ -489,11 +517,13 @@ class Vaccination(BaseModel):
 
 class VaccinationRisk(BaseModel):
     calculate: bool
+    cumul_start_time: Optional[float]
     prop_astrazeneca: float
     prop_mrna: float
     tts_rate: Dict[str, float]
     tts_fatality_ratio: Dict[str, float]
     myocarditis_rate: Dict[str, float]
+    risk_multiplier: float
 
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_risk_ranges(cls, values):
@@ -539,13 +569,14 @@ class ContactTracing(BaseModel):
         assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
-    # FIXME: Doesn't work - possibly something about one of the validation parameters being calibrated
-    # @root_validator(allow_reuse=True)
-    # def assumed_trace_prop(cls, values):
-    #     if "floor" in values:
-    #         msg = f"Contact tracing assumed_trace_prop must be >= floor"
-    #         assert values["assumed_trace_prop"] >= values["floor"], msg
-    #     return values
+    @root_validator(allow_reuse=True)
+    def check_floor(cls, values):
+        if "floor" in values:
+            trace_prop = values["assumed_trace_prop"]
+            floor_prop = values["floor"]
+            msg = f"Contact tracing assumed_trace_prop must be >= floor: {trace_prop} < {floor_prop}"
+            assert trace_prop >= floor_prop, msg
+        return values
 
 
 class AgeSpecificRiskMultiplier(BaseModel):

@@ -1,19 +1,12 @@
-description: 30% onsite learning on 1 Nov 2021
+description: No vaccine at all
 
 time:
-  start: 670  # 31 Oct 2021
+  start: 426  # when vaccine roll-out sctually started
 
-mobility:
-  mixing:
-    school:
-      append: false
-      times:
-        - 2020-03-15
-        - 2020-03-16
-        - 2021-11-01
-        - 2021-11-03
-      values:
-        - 1.
-        - 0.
-        - 0.
-        - .3
+vaccination:
+  roll_out_components:
+    - age_min: 20  # use this dummy component to prevent issues with AEFIs calculations
+      supply_period_coverage:
+        coverage: .000000001
+        start_time: 426
+        end_time: 430

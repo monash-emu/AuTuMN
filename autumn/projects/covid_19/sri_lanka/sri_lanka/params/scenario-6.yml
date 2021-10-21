@@ -1,43 +1,26 @@
-description: Scenario 6, Until Oct 01 lockdown. After that faster increase in mobility. Primary schools open Oct 15
+description: Workplace and other mobility 100%. Primary schools open on Oct 15
 time:
-  start: 640 # 01st Oct 2021
-  end: 883 # June 1st 2022
+  start: 650 # 11th Oct 2021
+
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-10-01
-        - 2021-10-02
-        - 2021-11-01
-        - 2021-11-02
-        - 2021-12-01
-        - 2021-12-02
+        - 2021-10-14
+        - 2021-10-15
       values:
         - - repeat_prev
-        - 0.8
-        - 0.8
-        - 0.9
-        - 0.9
-        - 1.04
-
+        - 1.0
     work:
       append: true
       times:
-        - 2021-10-01
-        - 2021-10-02
-        - 2021-11-01
-        - 2021-11-02
-        - 2021-12-01
-        - 2021-12-02
+        - 2021-10-14
+        - 2021-10-15
       values:
         - - repeat_prev
-        - 0.7
-        - 0.7
-        - 0.75
-        - 0.75
-        - 0.85
+        - 1.0
     school:
       append: false
       times:

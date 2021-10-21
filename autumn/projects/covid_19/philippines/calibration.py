@@ -36,7 +36,7 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet, region=Region.MAN
         NormalTarget(accum_deaths_ts),
     ]
 
-    cdr_range = [0.01, 0.03]
+    cdr_range = [0.005, 0.03]
     if region == Region.CALABARZON:
         cdr_range = [0.05, 0.20]
 
@@ -44,13 +44,13 @@ def get_philippies_calibration_settings(ts_set: TimeSeriesSet, region=Region.MAN
         # Philippines country-wide priors
         UniformPrior("contact_rate", [0.03, 0.08]),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", cdr_range),
-        UniformPrior("infection_fatality.multiplier", [0.5, 3.]),
+        UniformPrior("infection_fatality.multiplier", [0.3, 3.]),
         UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 4.]),
         UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2., 3.]),
 
         # Vaccination parameters (independent sampling)
-        # UniformPrior("vaccination.fully_vaccinated.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
-        # BetaPrior("vaccination.fully_vaccinated.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
+        # UniformPrior("vaccination.one_dose.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
+        # BetaPrior("vaccination.one_dose.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
     ]
 
 

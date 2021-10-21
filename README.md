@@ -164,13 +164,15 @@ You will need to ensure that the latest date in all user-specified mixing data p
 To rebuild the database with new data, run:
 
 ```bash
+python -m autumn secrets read 
 python -m autumn db build
+python -m autumn secrets write data/inputs/inputs.secret.db
 ```
 
 Once you are satisfied that all your models work again (run the tests), commit your changes and push up:
 
 - The updated CSV files
-- The updated `data/inputs/inputs.secret.db` file
+- The updated `data/inputs/inputs.encrypted.db` file
 - Any required changes to model parameters (eg. dynamic mixing dates)
 
 Note that all of our CSV and XLSX files are stored using [Git Large File Storage](https://docs.github.com/en/github/managing-large-files/versioning-large-files) in GitHub. You can install Git LFS [here](https://git-lfs.github.com/).

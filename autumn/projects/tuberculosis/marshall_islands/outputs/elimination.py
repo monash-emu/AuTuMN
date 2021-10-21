@@ -15,12 +15,12 @@ from autumn.tools.plots.utils import COLORS, _apply_transparency
 
 end_tb_targets = {
     "mortality": {
-        2025: 43.25,  # 75% reduction compared to 2015 (173)
-        2035: 8.65,  # 95% reduction compared to 2015 (173)
+        2025: 48.75,  # 75% reduction compared to 2015 (195)
+        2035: 9.75,  # 95% reduction compared to 2015 (195)
     },
     "incidence": {
-        2025: 253.5,  # 50% reduction compared to 2015 (507)
-        2035: 50.7,  # 90% reduction compared to 2015 (507)
+        2025: 285,  # 50% reduction compared to 2015 (570)
+        2035: 57,  # 90% reduction compared to 2015 (570)
     },
 }
 # target_colours = {2025: "limegreen", 2035: "green"}
@@ -38,7 +38,7 @@ def main(data_path, output_path):
 
 def plot_elimination(uncertainty_df, figure_path, is_logscale=False):
 
-    interventions = ["ACF", "ACF_LTBI", "hh_pt"]
+    interventions = ["ACF", "ACF_LTBI"]  #, "hh_pt"]
     scenario_idxs = {"ACF": [0, 5, 4, 3], "ACF_LTBI": [0, 8, 7, 6], "hh_pt": [0, 9]}
     colors_idx = {"ACF": [0, 8, 7, 1], "ACF_LTBI": [0, 8, 7, 1], "hh_pt": [0, 4]}
     alphas = {"ACF": [1.0, 0.8, 0.8, 0.7], "ACF_LTBI": [1.0, 0.8, 0.8, 0.7], "hh_pt": [1.0, 0.7]}

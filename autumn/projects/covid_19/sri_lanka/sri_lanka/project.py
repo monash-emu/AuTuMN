@@ -1,8 +1,9 @@
+import numpy as np
 from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, \
     use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, BetaPrior
+from autumn.tools.calibration.priors import UniformPrior, BetaPrior,TruncNormalPrior
 from autumn.tools.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
@@ -15,7 +16,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(5, 7)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 6)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
@@ -36,18 +37,19 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.021, 0.025]),
-    UniformPrior("infectious_seed", [150.0, 350.0]),
+    UniformPrior("contact_rate", [0.024, 0.027]),
+    UniformPrior("infectious_seed", [250.0, 360.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.008, 0.0095]),
-    UniformPrior("infection_fatality.multiplier", [0.5, 0.65]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [2.15, 2.4]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.75, 0.95]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
+    UniformPrior("infection_fatality.multiplier", [0.11, 0.6]),
+    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=1.0,\
+                     stdev=0.5, trunc_range=[0.0, np.inf]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.825, 0.95]),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [395, 425]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.9, 3.1]),
-    UniformPrior("voc_emergence.delta.start_time", [490, 550]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [4.75, 5.2])
+    UniformPrior("voc_emergence.alpha_beta.start_time", [375, 435]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.0]),
+    UniformPrior("voc_emergence.delta.start_time", [475, 530]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.75])
 ]
 
 # Load proposal sds from yml file

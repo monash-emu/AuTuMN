@@ -42,7 +42,7 @@ COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPART
 Stratifications
 """
 
-# Age groups match the Prem matrices
+# Age groups match the standard mixing matrices
 AGEGROUP_STRATA = [str(breakpoint) for breakpoint in list(range(0, 80, 5))]
 
 
@@ -88,7 +88,7 @@ NOTIFICATION_CLINICAL_STRATA = [
     Clinical.ICU,
 ]
 
-DEATH_CLINICAL_STRATA = [
+FIXED_STRATA = [
     Clinical.NON_SYMPT,
     Clinical.HOSPITAL_NON_ICU,
     Clinical.ICU,
@@ -96,11 +96,6 @@ DEATH_CLINICAL_STRATA = [
 
 VACCINATION_STRATA = [
     Vaccination.UNVACCINATED,
-    Vaccination.ONE_DOSE_ONLY,
-    Vaccination.VACCINATED,
-]
-
-VACCINATED_STRATA = [
     Vaccination.ONE_DOSE_ONLY,
     Vaccination.VACCINATED,
 ]
@@ -121,6 +116,9 @@ NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the oth
 PROGRESS = "progress"
 RECOVERY = "recovery"
 INFECT_DEATH = "infect_death"
+
+AGE_CLINICAL_TRANSITIONS = [INFECTIOUSNESS_ONSET, INFECT_DEATH, RECOVERY]
+
 
 """
 Vic model options

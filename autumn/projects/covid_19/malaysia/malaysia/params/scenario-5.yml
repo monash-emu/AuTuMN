@@ -1,7 +1,7 @@
-description: schools open on Oct 1st. No change to mobility at other locations and workplaces. 70% coverage by Jan 1st
+description: schools open on Oct 1st. No change to mobility at other locations and workplaces. 80% total coverage by Jan 1st
 
 time:
-  start: 639  # 30 Sep 2021
+  start: 649  # 10 Oct 2021
 
 mobility:
   mixing:
@@ -9,9 +9,17 @@ mobility:
       append: false
       times:
         - 2021-09-30
-        - 2021-10-01 # All schools open
+        - 2021-10-01 # 40% schools open
+        - 2021-12-10 #60% schools open
+        - 2021-12-11 #school break
+        - 2022-01-03 #school break
+        - 2022-01-04 #100% schools open
       values:
         - 0.
-        - 1
+        - 0.4
+        - 0.6
+        - 0.0
+        - 0.0
+        - 1.0
 
 

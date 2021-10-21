@@ -3,6 +3,9 @@ description: BASELINE
 infectious_seed: 200
 contact_rate: 0.13
 
+mixing_matrices:
+  source_iso3: HKG
+
 population:
   region: Sabah
   year: 2019

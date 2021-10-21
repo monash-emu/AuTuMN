@@ -289,21 +289,27 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         organ_strat = get_organ_strat(params)
         model.stratify_with(organ_strat)
 
+
     # Add importation flows
     if params.import_ltbi_cases:
-        dest_compartment = Compartment.EARLY_LATENT
-        # we need to account for the fact that the flows will be replicated n_early_latent_compartments times
-        n_dest_compartment = len(model._compartment_name_map[dest_compartment])
-        rate = params.import_ltbi_cases['n_cases_per_year'] / n_dest_compartment
+        prop_early = 0.10  # assuming 10% of migrants with LTBI have been infected in the 6 months preceding their arrival.
 
-        def case_import_func(time, computed_values):
-            return rate if time >= params.import_ltbi_cases['start_time'] else 0.
+        dest_cpt_fractions = {
+            Compartment.EARLY_LATENT: prop_early,
+            Compartment.LATE_LATENT: 1. - prop_early,
+        }
 
-        model.add_importation_flow(
-            "ltbi_importation",
-            case_import_func,
-            dest=dest_compartment,
-        )
+        for dest_compartment, fraction in dest_cpt_fractions.items():
+            # we need to account for the fact that the flows will be replicated n_dest_compartment times
+            n_dest_compartment = len(model._compartment_name_map[dest_compartment])
+            rate = fraction * params.import_ltbi_cases['n_cases_per_year'] / n_dest_compartment
+            case_import_func = make_case_import_func(rate, params.import_ltbi_cases['start_time'])
+
+            model.add_importation_flow(
+                f"ltbi_importation_{dest_compartment}",
+                case_import_func,
+                dest=dest_compartment,
+            )
 
     # Derived outputs
     request_outputs(
@@ -318,3 +324,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     return model
+
+
+def make_case_import_func(rate, start_time):
+
+    def case_import(time, computed_values):
+        return rate if time >= start_time else 0.
+
+    return case_import

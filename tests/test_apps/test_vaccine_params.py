@@ -1,5 +1,5 @@
 import pytest
-from autumn.models.covid_19.preprocess.vaccination import add_vaccine_infection_and_severity
+from autumn.models.covid_19.strat_processing.vaccination import find_vaccine_action
 
 VACCINE_PARAM_TESTS = [
     # overall_eff, vacc_prevention, infection_efficacy, severity_efficacy
@@ -22,7 +22,7 @@ def test_vaccine_params(overall_eff, vacc_prevention, infection_efficacy, severi
     Checking that converted parameters end up in the correct range, given sensible requests.
 
     """
-    actual_infection_efficacy, actual_severity_efficacy = add_vaccine_infection_and_severity(
+    actual_infection_efficacy, actual_severity_efficacy = find_vaccine_action(
         vacc_prevention, overall_eff
     )
     assert round(actual_infection_efficacy, 3) == infection_efficacy

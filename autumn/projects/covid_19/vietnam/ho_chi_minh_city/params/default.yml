@@ -7,6 +7,9 @@ time:
 country:
   iso3: VNM
 
+mixing_matrices:
+  source_iso3: CHN
+
 #mixing_matrices:
 #  type: extrapolated
 #  source_iso3: CHN
@@ -57,7 +60,7 @@ testing_to_detection:
 
 # Vaccination-related
 vaccination:
-  fully_vaccinated:
+  one_dose:
     overall_efficacy: 0.7 # now varied
     vacc_prop_prevent_infection: 1 # now varied
   roll_out_components:

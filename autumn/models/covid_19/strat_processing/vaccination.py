@@ -36,6 +36,14 @@ def get_vacc_roll_out_function_from_coverage(
     return get_vaccination_rate
 
 
+def get_hosp_given_case_effect(vacc_reduce_hospitalisation, overall_efficacy):
+    """
+    Clearly this doesn't do anything yet - just a placeholder.
+    """
+
+    return 0.
+
+
 def find_vaccine_action(vacc_prop_prevent_infection: float, overall_efficacy: float) -> Tuple[float, float]:
     """
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.

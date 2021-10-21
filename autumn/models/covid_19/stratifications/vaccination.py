@@ -4,7 +4,7 @@ from summer import Multiply, Stratification
 
 from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.strat_processing.vaccination import find_vaccine_action
+from autumn.models.covid_19.strat_processing.vaccination import find_vaccine_action, get_hosp_given_case_effect
 from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
     update_adjustments_for_strat
@@ -33,31 +33,34 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
 
     # Get vaccination effect parameters in the form needed for the model
     for stratum in vacc_strata[1:]:
+
+        # Parameters to directly pull out
         effectiveness_keys = ["vacc_prop_prevent_infection", "overall_efficacy"]
-        if getattr(params.vaccination, stratum).vacc_reduce_death:
+        stratum_vacc_params = getattr(params.vaccination, stratum)
+        if stratum_vacc_params.vacc_reduce_death:
             effectiveness_keys.append("vacc_reduce_death")
-        if getattr(params.vaccination, stratum).vacc_reduce_hospitalisation:
-            effectiveness_keys.append("vacc_reduce_hospitalisation")
+        vaccination_effects[stratum] = {key: getattr(stratum_vacc_params, key) for key in effectiveness_keys}
 
-        vacc_effects = {key: getattr(getattr(params.vaccination, stratum), key) for key in effectiveness_keys}
-        vaccination_effects[stratum] = vacc_effects
-
-        # Get vaccination effects from requests by dose number and mode of action
-        vaccination_effects[stratum]["infection_efficacy"], strat_severity_efficacy = find_vaccine_action(
+        # Parameters that need to be processed
+        vaccination_effects[stratum]["infection_efficacy"], \
+            vaccination_effects[stratum]["severity_efficacy"] = find_vaccine_action(
             vaccination_effects[stratum]["vacc_prop_prevent_infection"],
             vaccination_effects[stratum]["overall_efficacy"],
         )
+        if stratum_vacc_params.vacc_reduce_hospitalisation:
+            vaccination_effects[stratum]["vacc_reduce_hosp_given_case"] = get_hosp_given_case_effect(
+                stratum_vacc_params.vacc_reduce_hospitalisation,
+                vaccination_effects[stratum]["overall_efficacy"],
+            )
 
-        severity_adjustment = 1. - strat_severity_efficacy
+        severity_adjustment = 1. - vaccination_effects[stratum]["severity_efficacy"]
 
-        # Hospitalisation is risk given symptomatic case, so is de facto adjusted through symptomatic adjustment
         symptomatic_adjuster[stratum] = severity_adjustment
-        hospital_adjuster[stratum] = 1.
 
         # Use the standard severity adjustment if no specific request for reducing death
         ifr_adjuster[stratum] = 1. - vaccination_effects[stratum]["vacc_reduce_death"] if \
             "vacc_reduce_death" in vaccination_effects[stratum] else severity_adjustment
-        hospital_adjuster[stratum] = 1. - vaccination_effects[stratum]["vacc_reduce_hospitalisation"] if \
+        hospital_adjuster[stratum] = 1. - vaccination_effects[stratum]["vacc_reduce_hosp_given_case"] if \
             "vacc_reduce_hospitalisation" in vaccination_effects[stratum] else 1.
 
         # Apply the calibration adjusters

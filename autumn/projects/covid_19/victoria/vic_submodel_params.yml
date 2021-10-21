@@ -161,11 +161,13 @@ vaccination:
     overall_efficacy: 0.49  # Average of 0.4 and 0.58
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness_ratio: 0.5
+    vacc_reduce_hospitalisation: 0.8  # This doesn't do anything yet
     vacc_reduce_death: 0.9
   fully_vaccinated:
     overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness: 0.15  # Using same reference, but more effect for Alpha than for Delta
+    vacc_reduce_hospitalisation: 0.8  # This doesn't do anything yet
     vacc_reduce_death: 0.9
   second_dose_delay:
     shape: 0.1

@@ -28,10 +28,10 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     Preliminary processing.
     """
 
-    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = {}, {}, {}, {}, {}
+    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster, \
+        vaccination_effects = {}, {}, {}, {}, {}, {}
 
     # Get vaccination effect parameters in the form needed for the model
-    vaccination_effects = {}
     for stratum in vacc_strata[1:]:
         effectiveness_keys = ["vacc_prop_prevent_infection", "overall_efficacy"]
         if getattr(params.vaccination, stratum).vacc_reduce_death:
@@ -40,7 +40,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         vaccination_effects[stratum] = vacc_effects
 
         # Get vaccination effects from requests by dose number and mode of action
-        infection_efficacy[stratum], strat_severity_efficacy = find_vaccine_action(
+        vaccination_effects[stratum]["infection_efficacy"], strat_severity_efficacy = find_vaccine_action(
             vaccination_effects[stratum]["vacc_prop_prevent_infection"],
             vaccination_effects[stratum]["overall_efficacy"],
         )
@@ -89,7 +89,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     Vaccination effect against infection.
     """
 
-    infection_adjustments = {stratum: Multiply(1. - infection_efficacy[stratum]) for stratum in infection_efficacy}
+    infection_adjustments = {stratum: Multiply(1. - vaccination_effects[stratum]["infection_efficacy"]) for stratum in infection_efficacy}
     infection_adjustments.update({Vaccination.UNVACCINATED: None})
     vacc_strat.add_flow_adjustments(INFECTION, infection_adjustments)
 

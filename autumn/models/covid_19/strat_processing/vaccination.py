@@ -36,7 +36,7 @@ def get_vacc_roll_out_function_from_coverage(
     return get_vaccination_rate
 
 
-def get_hosp_given_case_effect(vacc_reduce_hosp_given_case, case_effect):
+def get_hosp_given_case_effect(vacc_reduce_hosp_given_case: float, case_effect: float) -> float:
     """
     Calculate the effect of vaccination on hospitalisation in cases.
     Note that this calculation is only intended for the situation where the effect on hospitalisation is at least as

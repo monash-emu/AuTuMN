@@ -11,11 +11,13 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_active: bool) -> Stratification:
+def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
     """
+
+    vaccinated_strata = vacc_strata[1:]
 
     vacc_strat = Stratification("vaccination", vacc_strata, COMPARTMENTS)
 
@@ -32,7 +34,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
         vaccination_effects = {}, {}, {}, {}, {}, {}
 
     # Get vaccination effect parameters in the form needed for the model
-    for stratum in vacc_strata[1:]:
+    for stratum in vaccinated_strata:
 
         # Parameters to directly pull out
         raw_effectiveness_keys = ["vacc_prop_prevent_infection", "overall_efficacy"]
@@ -68,23 +70,14 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     """
 
     # Add the clinical adjustments parameters as overwrites in the same way as for history stratification
-    adjs = get_all_adjustments(
-        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, ifr_adjuster[Vaccination.ONE_DOSE_ONLY], symptomatic_adjuster[Vaccination.ONE_DOSE_ONLY],
-        hospital_adjuster[Vaccination.ONE_DOSE_ONLY]
-    )
     flow_adjs = get_blank_adjustments_for_strat(Vaccination.UNVACCINATED)
-    flow_adjs = update_adjustments_for_strat(Vaccination.ONE_DOSE_ONLY, flow_adjs, adjs)
 
-    # Apply for the fully vaccinated if active
-    if is_dosing_active:
-        second_adjs = \
-            get_all_adjustments(
-                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-                params.sojourn, ifr_adjuster[Vaccination.VACCINATED], symptomatic_adjuster[Vaccination.VACCINATED],
-                hospital_adjuster[Vaccination.VACCINATED], params.infection_fatality.top_bracket_overwrite,
-            )
-        flow_adjs = update_adjustments_for_strat(Vaccination.VACCINATED, flow_adjs, second_adjs)
+    for stratum in vaccinated_strata:
+        adjs = get_all_adjustments(
+            params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+            params.sojourn, ifr_adjuster[stratum], symptomatic_adjuster[stratum], hospital_adjuster[stratum]
+        )
+        flow_adjs = update_adjustments_for_strat(stratum, flow_adjs, adjs)
 
     # Apply to the stratification object
     vacc_strat = add_clinical_adjustments_to_strat(vacc_strat, flow_adjs)
@@ -93,25 +86,23 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     Vaccination effect against infection.
     """
 
-    infection_adjustments = {
-        stratum: Multiply(1. - vaccination_effects[stratum]["infection_efficacy"]) for stratum in vacc_strata[1:]
+    infection_adjustments = {Vaccination.UNVACCINATED: None}
+    strata_adjs = {
+        stratum: Multiply(1. - vaccination_effects[stratum]["infection_efficacy"]) for stratum in vaccinated_strata
     }
-    infection_adjustments.update({Vaccination.UNVACCINATED: None})
+    infection_adjustments.update(strata_adjs)
     vacc_strat.add_flow_adjustments(INFECTION, infection_adjustments)
 
     """
     Vaccination effect against infectiousness.
     """
 
-    infectiousness_adjustments = {
-        Vaccination.UNVACCINATED: None,
-        Vaccination.ONE_DOSE_ONLY: Multiply(1. - params.vaccination.one_dose.vacc_reduce_infectiousness),
+    infectiousness_adjustments = {Vaccination.UNVACCINATED: None}
+    strata_adjs = {
+        stratum: Multiply(1. - getattr(getattr(params.vaccination, stratum), "vacc_reduce_infectiousness")) for
+        stratum in vaccinated_strata
     }
-    if is_dosing_active:
-        infectiousness_adjustments.update({
-            Vaccination.VACCINATED: Multiply(1. - params.vaccination.fully_vaccinated.vacc_reduce_infectiousness)
-        })
-
+    infectiousness_adjustments.update(strata_adjs)
     for compartment in DISEASE_COMPARTMENTS:
         vacc_strat.add_infectiousness_adjustments(compartment, infectiousness_adjustments)
 

@@ -185,12 +185,14 @@ vaccination:
     vacc_prop_prevent_infection: 0.
     vacc_reduce_infectiousness: 0.
     vacc_reduce_infectiousness_ratio: null
+    vacc_reduce_hospitalisation: null
     vacc_reduce_death: null
   one_dose:
     overall_efficacy: 0.
     vacc_prop_prevent_infection: 0.
     vacc_reduce_infectiousness: 0.
     vacc_reduce_infectiousness_ratio: null
+    vacc_reduce_hospitalisation: null
     vacc_reduce_death: null
   # Time from receiving first dose to second, based on the days from Vic achieving the same coverage with one and two
   second_dose_delay: null

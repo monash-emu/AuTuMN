@@ -89,7 +89,9 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List, is_dosing_activ
     Vaccination effect against infection.
     """
 
-    infection_adjustments = {stratum: Multiply(1. - vaccination_effects[stratum]["infection_efficacy"]) for stratum in infection_efficacy}
+    infection_adjustments = {
+        stratum: Multiply(1. - vaccination_effects[stratum]["infection_efficacy"]) for stratum in vacc_strata[1:]
+    }
     infection_adjustments.update({Vaccination.UNVACCINATED: None})
     vacc_strat.add_flow_adjustments(INFECTION, infection_adjustments)
 

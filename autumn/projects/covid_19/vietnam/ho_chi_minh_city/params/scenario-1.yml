@@ -1,0 +1,42 @@
+description: Scenario 1, Lockdown is eased at the speed of 20% per 2 weeks until 80%, school partially opens on 01/11, then fully reopens on 01/12/2021
+time:
+  start: 639 # 01 October 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-10-01 #lockdown ends
+        - 2021-10-15
+        - 2021-10-31
+        - 2021-11-15
+      values:
+        - - repeat_prev
+        - 0.4
+        - 0.6
+        - 0.8
+
+    work:
+      append: true
+      times:
+        - 2021-10-01 #lockdown ends
+        - 2021-10-15
+        - 2021-10-31
+        - 2021-11-15
+      values:
+        - - repeat_prev
+        - 0.4
+        - 0.6
+        - 0.8
+
+      school:
+        append: true
+        times:
+          - 2021-10-01 #lockdown ends
+          - 2021-11-01
+          - 2021-12-01
+        values:
+          - - repeat_prev
+          - 0.6
+          - 1

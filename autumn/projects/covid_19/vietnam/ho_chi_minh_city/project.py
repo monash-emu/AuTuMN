@@ -9,25 +9,25 @@ from autumn.settings import Region, Models
 import numpy as np
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
-from autumn.projects.covid_19.vietnam.ho_chi_minh_city.scenario_builder import get_all_scenario_dicts
+# from autumn.projects.covid_19.vietnam.ho_chi_minh_city.scenario_builder import get_all_scenario_dicts
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-
-# scenario_dir_path = build_rel_path("params/")
-# scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
-
 mle_path = build_rel_path("params/mle-params.yml")
+scenario_dir_path = build_rel_path("params/")
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+
+
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 
-all_scenario_dicts = get_all_scenario_dicts()
-scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_dicts]
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 cutoff_time = 518  # 1 June 2021
+# definition?
 hosp_endtime = 582
-n_inflated_weight = 35
+n_inflated_weight = 35  # for automatic calibration
 
 targets = []
 for output_name in ["notifications", "hospital_occupancy", "infection_deaths"]:

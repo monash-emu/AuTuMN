@@ -8,7 +8,7 @@ mixing_matrices:
 
 time:
   start: 180
-  end: 791 # 01 March, 2022
+  end: 913 # end of June, 2022
 
 country:
   iso3: MYS

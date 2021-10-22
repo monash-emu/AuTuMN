@@ -483,10 +483,15 @@ class VaccEffectiveness(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_effect_ratios(cls, values):
+        overall_effect = values["overall_efficacy"]
         if values["vacc_reduce_hospitalisation"]:
-            assert values["vacc_reduce_hospitalisation"] >= values["overall_efficacy"]
+            hospital_effect = values["vacc_reduce_hospitalisation"]
+            msg = f"Hospitalisation efect: {hospital_effect} should not exceed overall effect: {overall_effect}"
+            assert hospital_effect >= overall_effect, msg
         if values["vacc_reduce_death"]:
-            assert values["vacc_reduce_death"] >= values["overall_efficacy"]
+            death_effect = values["vacc_reduce_death"]
+            msg = f"Death effect: {death_effect} should not exceed overall effect: {overall_effect}"
+            assert death_effect >= overall_effect, msg
         return values
 
 

@@ -180,41 +180,41 @@ vaccination:
       age_max: 15
       vic_supply:
         start_time: 454
-        end_time: 763  # 31st January 2022 (a bit later than needed)
+        end_time: 900  # 31st January 2022 (a bit later than needed)
         time_interval: 20  # Enough to give a smooth fit
 
     - age_min: 15
       age_max: 30
       vic_supply:
         start_time: 454
-        end_time: 763
+        end_time: 900
         time_interval: 20
     - age_min: 30
       age_max: 40
       vic_supply:
         start_time: 454
-        end_time: 763
+        end_time: 900
         time_interval: 20
     - age_min: 40
       age_max: 50
       vic_supply:
         start_time: 454
-        end_time: 763
+        end_time: 900
         time_interval: 20
     - age_min: 50
       age_max: 60
       vic_supply:
         start_time: 454
-        end_time: 763
+        end_time: 900
         time_interval: 20
     - age_min: 60
       age_max: 70
       vic_supply:
         start_time: 454
-        end_time: 763
+        end_time: 900
         time_interval: 20
     - age_min: 70
       vic_supply:
         start_time: 454
-        end_time: 763
+        end_time: 900
         time_interval: 20

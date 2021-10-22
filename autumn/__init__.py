@@ -38,13 +38,17 @@ register_project(
     "autumn.projects.covid_19.victoria.victoria_2021.project",
 )
 
+# register_project(
+#     Models.COVID_19,
+#     Region.NORTH_METRO,
+#     "autumn.projects.covid_19.victoria.north_metro.project",
+# )
 
 register_project(
     Models.COVID_19,
-    Region.NORTH_METRO,
-    "autumn.projects.covid_19.victoria.north_metro.project",
+    Region.NORTH_EAST_METRO,
+    "autumn.projects.covid_19.victoria.north_east_metro.project",
 )
-
 
 register_project(
     Models.COVID_19,
@@ -52,11 +56,11 @@ register_project(
     "autumn.projects.covid_19.victoria.south_east_metro.project",
 )
 
-register_project(
-    Models.COVID_19,
-    Region.SOUTH_METRO,
-    "autumn.projects.covid_19.victoria.south_metro.project",
-)
+# register_project(
+#     Models.COVID_19,
+#     Region.SOUTH_METRO,
+#     "autumn.projects.covid_19.victoria.south_metro.project",
+# )
 
 register_project(
     Models.COVID_19,

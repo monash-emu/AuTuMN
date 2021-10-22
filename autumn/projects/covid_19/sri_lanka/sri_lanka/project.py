@@ -49,7 +49,10 @@ priors = [
     UniformPrior("voc_emergence.alpha_beta.start_time", [375, 435]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.0]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.75])
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 6.00]),
+    # vaccination parameters
+    BetaPrior("vaccination.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9]),
+    UniformPrior("vaccination.vacc_reduce_infectiousness", [0.0, 0.5]),
 ]
 
 # Load proposal sds from yml file

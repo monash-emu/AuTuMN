@@ -442,6 +442,8 @@ class VaccEffectiveness(BaseModel):
     vacc_prop_prevent_infection: float
     vacc_reduce_infectiousness: Optional[float]
     vacc_reduce_infectiousness_ratio: Optional[float]
+    vacc_reduce_hospitalisation: Optional[float]
+    vacc_reduce_death: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
@@ -454,7 +456,7 @@ class VaccEffectiveness(BaseModel):
         return val
 
     @validator("vacc_reduce_infectiousness", pre=True, allow_reuse=True)
-    def check_overall_efficacy(val):
+    def check_infectiousness_efficacy(val):
         assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
@@ -465,6 +467,31 @@ class VaccEffectiveness(BaseModel):
         )
         msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
         assert n_requests < 2, msg
+        return values
+
+    @validator("vacc_reduce_hospitalisation", pre=True, allow_reuse=True)
+    def check_hospitalisation_effect(val):
+        if val:
+            assert 0. <= val <= 1., f"Reduction in hospitalisation risk should be in [0, 1]: {val}"
+        return val
+
+    @validator("vacc_reduce_death", pre=True, allow_reuse=True)
+    def check_death_efficacy(val):
+        if val:
+            assert 0. <= val <= 1., f"Reduction in risk of death should be in [0, 1]: {val}"
+        return val
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_effect_ratios(cls, values):
+        overall_effect = values["overall_efficacy"]
+        if values["vacc_reduce_hospitalisation"]:
+            hospital_effect = values["vacc_reduce_hospitalisation"]
+            msg = f"Hospitalisation efect: {hospital_effect} should not exceed overall effect: {overall_effect}"
+            assert hospital_effect >= overall_effect, msg
+        if values["vacc_reduce_death"]:
+            death_effect = values["vacc_reduce_death"]
+            msg = f"Death effect: {death_effect} should not exceed overall effect: {overall_effect}"
+            assert death_effect >= overall_effect, msg
         return values
 
 

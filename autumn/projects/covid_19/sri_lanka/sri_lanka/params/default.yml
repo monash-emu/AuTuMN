@@ -23,6 +23,7 @@ vaccination:
   one_dose:
     overall_efficacy: 0.7
     vacc_prop_prevent_infection: 0.7
+    vacc_reduce_infectiousness: 0
   roll_out_components:
     - age_min: 15
       supply_period_coverage:

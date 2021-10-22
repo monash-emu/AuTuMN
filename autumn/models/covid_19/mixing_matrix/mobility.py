@@ -123,6 +123,30 @@ def update_mixing_data(
     mixing = {k: {"values": v["values"], "times": v["times"]} for k, v in mixing.items()}
     return mixing
 
+def get_mobility_specific_period(
+    country: str,
+    region: str,
+    google_mobility_locations: Dict[str, List[str]],
+    split_dates: List[float],
+) -> Dict[str, Callable[[float], float]]:
+    """
+    Loads google mobility data, splits it for the requested time duration
+    and then returns a mobility function for each location.
+    """
+    google_mobility_values, google_mobility_days = get_mobility_data(
+        country, region, BASE_DATETIME, google_mobility_locations
+    )
+
+    spilt_google_mobility_values = {}
+    first_timepoint_index = google_mobility_days.index(split_dates[0])
+    second_timepoint_index = google_mobility_days.index(split_dates[1])
+
+    for loc in google_mobility_values:
+        spilt_google_mobility_values[loc] = google_mobility_values[loc][first_timepoint_index:second_timepoint_index]
+
+    split_google_mobility_days = google_mobility_days[first_timepoint_index:second_timepoint_index]
+    return split_google_mobility_days, spilt_google_mobility_values
+
 
 def parse_values(values):
     """

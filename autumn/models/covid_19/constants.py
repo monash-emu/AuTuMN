@@ -56,8 +56,8 @@ class Clinical:
 
 class Vaccination:
     UNVACCINATED = "unvaccinated"
-    ONE_DOSE_ONLY = "one_dose_only"
-    VACCINATED = "vaccinated"
+    ONE_DOSE_ONLY = "one_dose"
+    VACCINATED = "fully_vaccinated"
 
 
 class Strain:

@@ -116,9 +116,8 @@ class Region:
     ]
 
     VICTORIA_METRO = [
-        # NORTH_METRO, Need to remove these as they are not mapped to the new HSP
         SOUTH_EAST_METRO,
-        # SOUTH_METRO, Need to remove these as they are not mapped to the new HSP
+        NORTH_EAST_METRO,
         WEST_METRO,
     ]
 

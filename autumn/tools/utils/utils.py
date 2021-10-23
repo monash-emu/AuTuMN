@@ -9,6 +9,7 @@ import os
 import numpy
 import pandas as pd
 from datetime import datetime
+from typing import List, Union
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
@@ -163,7 +164,7 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     return modified_proportion
 
 
-def apply_odds_ratio_to_multiple_proportions(props, adjuster):
+def apply_odds_ratio_to_props(props, adjuster):
     """
     Very simple, but just because it is used a few times.
     """
@@ -171,7 +172,7 @@ def apply_odds_ratio_to_multiple_proportions(props, adjuster):
     return [apply_odds_ratio_to_proportion(i_prop, adjuster) for i_prop in props]
 
 
-def subdivide_props(base_props: numpy.ndarray, split_props: numpy.ndarray):
+def subdivide_props(base_props: numpy.ndarray, split_props: Union[numpy.ndarray, float]) -> numpy.ndarray:
     """
     Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
     proportions provided (split_props).
@@ -287,3 +288,11 @@ def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
 
     return df
+
+
+def find_closest_value_in_list(list_request: List, value_request: int) -> int:
+    """
+    Find the closest value within one list to the value of interest.
+    """
+
+    return min(list_request, key=lambda list_value: abs(list_value - value_request))

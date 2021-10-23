@@ -85,6 +85,12 @@ class Sojourn(BaseModel):
         total_period: float
         proportions: Dict[str, float]
 
+        @validator("proportions", allow_reuse=True)
+        def check_props(props):
+            prop_sum = sum(props.values())
+            assert prop_sum == 1., f"Requested period proportions do not sum to one: {prop_sum}"
+            return props
+
     # Mean time in days spent in each compartment
     compartment_periods: Dict[str, float]
     # Mean time spent in each compartment, defined via proportions
@@ -436,6 +442,8 @@ class VaccEffectiveness(BaseModel):
     vacc_prop_prevent_infection: float
     vacc_reduce_infectiousness: Optional[float]
     vacc_reduce_infectiousness_ratio: Optional[float]
+    vacc_reduce_hospitalisation: Optional[float]
+    vacc_reduce_death: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
@@ -448,16 +456,42 @@ class VaccEffectiveness(BaseModel):
         return val
 
     @validator("vacc_reduce_infectiousness", pre=True, allow_reuse=True)
-    def check_overall_efficacy(val):
+    def check_infectiousness_efficacy(val):
         assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
     @root_validator(pre=True, allow_reuse=True)
     def check_one_infectiousness_request(cls, values):
-        n_requests = int(bool(values["vacc_reduce_infectiousness"])) + \
-                     int(bool(values["vacc_reduce_infectiousness_ratio"]))
+        n_requests = sum(
+            [int(bool(values[option])) for option in ["vacc_reduce_infectiousness", "vacc_reduce_infectiousness_ratio"]]
+        )
         msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
         assert n_requests < 2, msg
+        return values
+
+    @validator("vacc_reduce_hospitalisation", pre=True, allow_reuse=True)
+    def check_hospitalisation_effect(val):
+        if val:
+            assert 0. <= val <= 1., f"Reduction in hospitalisation risk should be in [0, 1]: {val}"
+        return val
+
+    @validator("vacc_reduce_death", pre=True, allow_reuse=True)
+    def check_death_efficacy(val):
+        if val:
+            assert 0. <= val <= 1., f"Reduction in risk of death should be in [0, 1]: {val}"
+        return val
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_effect_ratios(cls, values):
+        overall_effect = values["overall_efficacy"]
+        if values["vacc_reduce_hospitalisation"]:
+            hospital_effect = values["vacc_reduce_hospitalisation"]
+            msg = f"Hospitalisation efect: {hospital_effect} should not exceed overall effect: {overall_effect}"
+            assert hospital_effect >= overall_effect, msg
+        if values["vacc_reduce_death"]:
+            death_effect = values["vacc_reduce_death"]
+            msg = f"Death effect: {death_effect} should not exceed overall effect: {overall_effect}"
+            assert death_effect >= overall_effect, msg
         return values
 
 
@@ -476,9 +510,12 @@ class TanhScaleup(BaseModel):
 
 
 class Vaccination(BaseModel):
-    second_dose_delay: Union[float, TanhScaleup]
-    one_dose: Optional[VaccEffectiveness]
-    fully_vaccinated: VaccEffectiveness
+
+    # *** This parameter determines whether the model is stratified into three rather than two vaccination strata
+    second_dose_delay: Optional[Union[float, TanhScaleup]]
+
+    one_dose: VaccEffectiveness
+    fully_vaccinated: Optional[VaccEffectiveness]
     lag: float
 
     roll_out_components: List[RollOutFunc]
@@ -507,11 +544,13 @@ class Vaccination(BaseModel):
 
 class VaccinationRisk(BaseModel):
     calculate: bool
+    cumul_start_time: Optional[float]
     prop_astrazeneca: float
     prop_mrna: float
     tts_rate: Dict[str, float]
     tts_fatality_ratio: Dict[str, float]
     myocarditis_rate: Dict[str, float]
+    risk_multiplier: float
 
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_risk_ranges(cls, values):

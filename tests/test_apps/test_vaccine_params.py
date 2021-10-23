@@ -1,5 +1,5 @@
 import pytest
-from autumn.models.covid_19.preprocess.vaccination import find_vaccine_action
+from autumn.models.covid_19.strat_processing.vaccination import find_vaccine_action
 
 VACCINE_PARAM_TESTS = [
     # overall_eff, vacc_prevention, infection_efficacy, severity_efficacy

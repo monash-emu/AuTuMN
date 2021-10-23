@@ -4,11 +4,11 @@ contact_rate: 0.0231
 infectious_seed: 100.
 
 mixing_matrices:
-  source_iso3: HKG
+  source_iso3: CHN
 
 time:
   start: 180
-  end: 943 # july 30, 2022
+  end: 791 # 01 March, 2022
 
 country:
   iso3: MYS
@@ -20,24 +20,28 @@ clinical_stratification:
       multiplier: 1.5
 
 vaccination:
-  fully_vaccinated:
+  one_dose:
     overall_efficacy: 0.7
     vacc_prop_prevent_infection: 0.7
-  second_dose_delay: 0.0232558
   roll_out_components:
     - age_min: 10 # 84.7% of the total population is 10+
       supply_period_coverage:
-        coverage: 0.71 #60% of the total population vaccinated
+        coverage: 0.83 #70% of the total population vaccinated
         start_time: 481 # 25 Apr 2021
-        end_time: 640 # 01 Oct 2021
+        end_time: 657 # 18 Oct 2021
     - age_min: 10
       supply_period_coverage:
-        coverage: 0.82 # 80% of total population coverage
-        start_time: 641 # 02 Oct 2021
+        coverage: 0.68 # 80% of total population coverage
+        start_time: 658 # 19 Oct 2021
         end_time: 732 # 01 Jan 2022
 
 vaccination_risk:
   calculate: true
+  cumul_start_time: 658
+  # We'll use the same scenario to model both AZ and mRNA:
+  prop_astrazeneca: 1.
+  prop_mrna: 1.
+  risk_multiplier: 1.  # varied
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

@@ -1,5 +1,7 @@
 description: BASELINE
 
+contact_rate: 0.135
+
 population:
   region: WEST_METRO
   year: 2020

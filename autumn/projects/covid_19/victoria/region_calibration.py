@@ -4,10 +4,12 @@ from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget
 
 # TODO: Add visualisation of raw Google inputs to inputs notebook (minor)
-# TODO: Sort out the caps/lower dash/underscore issue in Vic regions naming (minor)
-# TODO: Consider a different approach to parameterising vaccine effects (including on hospital and death)
 # TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
 # TODO: Notebook for visualising outputs after run
+# TODO: Understand why vaccination roll-out not hitting targets in recent times
+# TODO: Implement Dave's baseline vaccination parameters
+# TODO: Calibrate with adjusted vaccination parameters
+# TODO: Revise roadmap scenario
 
 # Specify the general features of the calibration
 target_start_time = 454

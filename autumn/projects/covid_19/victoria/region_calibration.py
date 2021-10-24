@@ -41,18 +41,18 @@ priors = [
         mean=6.431724510638751, stdev=0.6588899585941116, trunc_range=(3.0, np.inf), jumping_stdev=0.4
     ),
 ]
+
+# Put all these in for now for a manual calibration
 regional_target_names = (
     "notifications",
-    "hospital_admissions"
-)
-metro_target_names = (
-    "notifications",
-    # "infection_deaths",
+    "infection_deaths",
     "hospital_admissions",
-    "icu_admissions",
     "hospital_occupancy",
-    "icu_occupancy",
+    "icu_admissions",
+    "icu_occupancy"
 )
+
+metro_target_names = ()
 
 
 def collate_regional_targets(ts_set):

@@ -20,7 +20,7 @@ target_start_time = 454
 priors = [
     UniformPrior(
         "contact_rate",
-        (0.1, 0.3), jumping_stdev=0.05
+        (0.1, 0.2), jumping_stdev=0.05
     ),
     # UniformPrior(
     #     "seasonal_force",
@@ -32,7 +32,7 @@ priors = [
     ),
     UniformPrior(
         "testing_to_detection.assumed_cdr_parameter",
-        (0.1, 0.25), jumping_stdev=0.04
+        (0.05, 0.18), jumping_stdev=0.04
     ),
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",

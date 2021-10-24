@@ -12,14 +12,16 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
-
+from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_all_scenario_dicts
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 6)]
+# scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 6)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
-scenario_params = [baseline_params.update(p) for p in scenario_paths]
+all_scenario_dicts = get_all_scenario_dicts("LKA")
+# scenario_params = [baseline_params.update(p) for p in scenario_paths]
+scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_dicts]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
@@ -49,7 +51,10 @@ priors = [
     UniformPrior("voc_emergence.alpha_beta.start_time", [375, 435]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.0]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.75])
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 6.00]),
+    # vaccination parameters
+    BetaPrior("vaccination.one_dose.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9]),
+    UniformPrior("vaccination.one_dose.vacc_reduce_infectiousness", [0.0, 0.5]),
 ]
 
 # Load proposal sds from yml file

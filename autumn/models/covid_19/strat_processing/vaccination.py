@@ -36,6 +36,22 @@ def get_vacc_roll_out_function_from_coverage(
     return get_vaccination_rate
 
 
+def get_hosp_given_case_effect(vacc_reduce_hosp_given_case: float, case_effect: float) -> float:
+    """
+    Calculate the effect of vaccination on hospitalisation in cases.
+    Note that this calculation is only intended for the situation where the effect on hospitalisation is at least as
+    great as the effect on becoming a case.
+    """
+
+    msg = "Hospitalisation effect less than the effect on becoming a case"
+    assert vacc_reduce_hosp_given_case >= case_effect, msg
+    effect = 1. - (1. - vacc_reduce_hosp_given_case) / (1. - case_effect)
+
+    # Should be impossible for the following assertion to fail, but anyway
+    assert 0. <= effect <= 1., f"Effect of vaccination on hospitalisation given case: {effect}"
+    return effect
+
+
 def find_vaccine_action(vacc_prop_prevent_infection: float, overall_efficacy: float) -> Tuple[float, float]:
     """
     Calculating the vaccine efficacy in preventing infection and leading to severe infection.

@@ -149,19 +149,19 @@ def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams)
 
 def get_piecewise_vacc_func(
         start_time: float, end_time: float, time_intervals: int, coverage_times: List, coverage_values: list,
-        vaccination_lag: float) -> Callable:
+        vaccination_lag: float
+) -> Callable:
     """
     Creates a vaccination roll-out rate function of time with values determined by sequentially increasing coverage
     values.
     """
 
     # Find all the intervals to create the step function over
-    rollout_period_times = np.linspace(start_time, end_time, int(time_intervals) + 1)
+    rollout_period_times = np.linspace(start_time, end_time, time_intervals + 1)
 
     # Loop over the periods of time in the step function
-    n_periods = len(rollout_period_times) - 1
-    vaccination_rates = np.zeros(n_periods)
-    for i_period in range(n_periods):
+    vaccination_rates = np.zeros(time_intervals)
+    for i_period in range(time_intervals):
         period_start_time = rollout_period_times[i_period]
         period_end_time = rollout_period_times[i_period + 1]
 

@@ -408,6 +408,10 @@ class VicHistoryPeriod(BaseModel):
         assert values["start_time"] <= values["end_time"], msg
         return values
 
+    @validator("time_interval", allow_reuse=True)
+    def convert_time_interval_to_int(val):
+        return int(val)
+
 
 class RollOutFunc(BaseModel):
     """

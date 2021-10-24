@@ -155,7 +155,7 @@ def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams)
     add_vacc_flows(model, ineligible_ages, 0.)
 
 
-def get_piecewise_vacc_func(
+def get_piecewise_vacc_rates(
         start_time: float, end_time: float, time_intervals: int, coverage_times: List, coverage_values: list,
         vaccination_lag: float
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -207,7 +207,9 @@ def get_piecewise_rollout(start_time: float, end_times: list, vaccination_rates:
     return get_vaccination_rate
 
 
-def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cluster_name: str):
+def add_vic_regional_vacc(
+        model: CompartmentalModel, vacc_params: VaccParams, cluster_name: str, model_start_time: float
+):
     """
     Apply vaccination to the Victoria regional cluster models.
     """
@@ -235,18 +237,17 @@ def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cl
         adjustment = 0.6 if close_enough_age_min == 12 and close_enough_age_max == 15 else 1.
         coverage_values *= adjustment
 
-        # Get start and end times
-        start_time = agegroup_component.vic_supply.start_time
+        # Get end times
         end_time = min((max(coverage_times), agegroup_component.vic_supply.end_time))  # Stop at end of available data
 
         # Get the vaccination rate function of time
-        rollout_period_times, vaccination_rates = get_piecewise_vacc_func(
-            start_time, end_time, agegroup_component.vic_supply.time_interval, coverage_times, coverage_values,
+        rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
+            model_start_time, end_time, agegroup_component.vic_supply.time_interval, coverage_times, coverage_values,
             vacc_params.lag
         )
 
         # Apply the vaccination rate function to the model
-        vacc_rate_func = get_piecewise_rollout(start_time, rollout_period_times[1:], vaccination_rates)
+        vacc_rate_func = get_piecewise_rollout(model_start_time, rollout_period_times[1:], vaccination_rates)
         add_vacc_flows(model, working_agegroups, vacc_rate_func)
 
     # Add blank/zero flows to make the output requests simpler
@@ -282,7 +283,7 @@ def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_
             # Stop at the end of the available data, even if the request is later
             end_time = min((max(coverage_times), roll_out_component.vic_supply.end_time))
 
-            get_vaccination_rate = get_piecewise_vacc_func(
+            get_vaccination_rate = get_piecewise_vacc_rates(
                 roll_out_component.vic_supply.start_time, end_time, roll_out_component.vic_supply.time_interval,
                 coverage_times, coverage_values, vacc_params.lag,
             )

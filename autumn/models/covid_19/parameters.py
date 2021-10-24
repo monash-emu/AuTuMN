@@ -398,15 +398,8 @@ class VicHistoryPeriod(BaseModel):
     Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time.
     """
 
-    start_time: float
     end_time: float
     time_interval: Optional[float]
-
-    @root_validator(allow_reuse=True)
-    def check_times(cls, values):
-        msg = f"End time: {values['start_time']} before start time: {values['end_time']}"
-        assert values["start_time"] <= values["end_time"], msg
-        return values
 
     @validator("time_interval", allow_reuse=True)
     def convert_time_interval_to_int(val):

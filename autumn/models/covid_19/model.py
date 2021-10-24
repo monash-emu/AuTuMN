@@ -339,7 +339,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
             add_vic2021_supermodel_vacc(model, vacc_params, cluster_strat.strata)  # Considering killing this
         elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            add_vic_regional_vacc(model, vacc_params, params.population.region)
+            add_vic_regional_vacc(model, vacc_params, params.population.region, params.time.start)
         else:
             add_requested_vacc_flows(model, vacc_params)
 

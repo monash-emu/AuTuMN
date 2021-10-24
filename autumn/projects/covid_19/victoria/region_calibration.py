@@ -7,6 +7,7 @@ from autumn.tools.calibration.targets import NormalTarget
 # TODO: Revise roadmap scenario
 # TODO: Implement realistic vaccination parameters
 # TODO: Get Mili to sort out North East Metro
+# TODO: Sort out the targets missing from from mid-August - hospital admissions, ICU admission and deaths
 # TODO: Get tests passing on Vic super-models (possibly by just deleting them)
 # TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
 # TODO: Notebook for visualising outputs after run
@@ -49,8 +50,6 @@ regional_target_names = (
 )
 metro_target_names = (
     "notifications",
-    "hospital_admissions",
-    "icu_admissions",
     "hospital_occupancy",
     "icu_occupancy",
 )

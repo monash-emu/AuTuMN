@@ -2,10 +2,6 @@ description: BASELINE
 
 contact_rate: 0.191
 
-vic_2021_seeding:
-  seed_time: 580
-  seed: 0.1
-
 population:
   region: BARWON_SOUTH_WEST
   year: 2020

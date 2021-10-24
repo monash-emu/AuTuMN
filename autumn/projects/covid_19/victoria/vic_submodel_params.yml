@@ -3,8 +3,8 @@ description: BASELINE
 vic_status: "vic_region_2021"
 
 vic_2021_seeding:
-  seed_time: 570
-  seed: 1.5
+  seed_time: 580
+  seed: 0.1
 
 contact_rate: 0.11
 infectious_seed: 0.

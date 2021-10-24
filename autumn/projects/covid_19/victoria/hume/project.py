@@ -16,8 +16,6 @@ scenario_path = build_rel_path("../regional_roadmap.yml")
 scenario_params = [baseline_params.update(scenario_path)]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
-priors += [UniformPrior("vic_2021_seeding.seed_time", (570, 590), jumping_stdev=4)]
-
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 targets = collate_regional_targets(ts_set)

@@ -3,13 +3,14 @@ import numpy as np
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget
 
-# TODO: Add visualisation of raw Google inputs to inputs notebook (minor)
+# TODO: Plot the roadmap scenario with the baseline
+# TODO: Revise roadmap scenario
+# TODO: Implement realistic vaccination parameters
+# TODO: Get Mili to sort out North East Metro
+# TODO: Get tests passing on Vic super-models (possibly by just deleting them)
 # TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
 # TODO: Notebook for visualising outputs after run
 # TODO: Understand why vaccination roll-out not hitting targets in recent times
-# TODO: Implement Dave's baseline vaccination parameters
-# TODO: Calibrate with adjusted vaccination parameters
-# TODO: Revise roadmap scenario
 
 # Specify the general features of the calibration
 target_start_time = 454
@@ -42,17 +43,17 @@ priors = [
     ),
 ]
 
-# Put all these in for now for a manual calibration
 regional_target_names = (
     "notifications",
-    "infection_deaths",
-    "hospital_admissions",
-    "hospital_occupancy",
-    "icu_admissions",
-    "icu_occupancy"
+    "hospital_admissions"
 )
-
-metro_target_names = ()
+metro_target_names = (
+    "notifications",
+    "hospital_admissions",
+    "icu_admissions",
+    "hospital_occupancy",
+    "icu_occupancy",
+)
 
 
 def collate_regional_targets(ts_set):

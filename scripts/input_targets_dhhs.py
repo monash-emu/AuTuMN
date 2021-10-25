@@ -190,6 +190,7 @@ def main():
     df = preprocess_vac_model(df)
 
     df.to_csv(COVID_VIDA_VAC_CSV, index=False)
+    update_vida_pop()
 
 
 def preprocess_admissions():
@@ -430,6 +431,22 @@ def preprocess_vac_model(df):
 
     return df
 
+
+def update_vida_pop():
+
+    df = fetch_vac_model()
+    df = df[['lga', 'age_group','popn']].drop_duplicates()
+    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
+    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+    df['popn'] = df['popn'] * df['proportion']
+    df = df[['cluster_id','age_group','popn']].groupby(['cluster_id', 'age_group'], as_index=False).sum()
+    df.age_group.replace({"85+": "85-89"}, inplace=True)
+    df["start_age"] = df["age_group"].apply(lambda s: int(s.split("-")[0]))
+    df["end_age"] = df["age_group"].apply(lambda s: int(s.split("-")[1]))
+    df.to_csv(COVID_VIDA_POP_CSV)
+
+    
 
 if __name__ == "__main__":
     main()

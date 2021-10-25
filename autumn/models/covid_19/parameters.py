@@ -398,6 +398,7 @@ class VicHistoryPeriod(BaseModel):
     Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time.
     """
 
+    start_time: float
     end_time: float
     time_interval: Optional[float]
 

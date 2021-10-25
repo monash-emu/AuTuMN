@@ -242,8 +242,8 @@ def add_vic_regional_vacc(
 
         # Get the vaccination rate function of time
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
-            model_start_time, end_time, agegroup_component.vic_supply.time_interval, coverage_times, coverage_values,
-            vacc_params.lag
+            agegroup_component.vic_supply.start_time, end_time, agegroup_component.vic_supply.time_interval,
+            coverage_times, coverage_values, vacc_params.lag
         )
 
         # Apply the vaccination rate function to the model

@@ -444,7 +444,7 @@ def update_vida_pop():
     df.age_group.replace({"85+": "85-89"}, inplace=True)
     df["start_age"] = df["age_group"].apply(lambda s: int(s.split("-")[0]))
     df["end_age"] = df["age_group"].apply(lambda s: int(s.split("-")[1]))
-    df.to_csv(COVID_VIDA_POP_CSV)
+    df.to_csv(COVID_VIDA_POP_CSV, index = False)
 
     
 

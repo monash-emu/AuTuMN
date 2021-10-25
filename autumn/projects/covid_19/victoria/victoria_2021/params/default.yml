@@ -31,14 +31,13 @@ vaccination:
     vacc_reduce_infectiousness: 0.25  # Using same reference, but more effect for Alpha than for Delta
   second_dose_delay: 0.0232558
   roll_out_components:
+    # FIXME: *** This code has changed and may not be in a way that actually does what it's supposed to ***
     - age_min: 15  # Assume coverage only applies to the 15+ age group (given only the 16+ are eligible)
       vic_supply:
-        start_time: 454  # 15th March is 440 (negligible vaccine coverage date), lagged by two weeks
         end_time: 649  # 9th September is 618 (current date), lagged by two weeks
         time_interval: 20
     - age_min: 15
       vic_supply:
-        start_time: 649
         end_time: 679
         time_interval: 20
 
@@ -95,8 +94,9 @@ sojourn:
 # Cluster stratification.
 victorian_clusters:
   intercluster_mixing: 0.02  # Ignore, calibrated
-  contact_rate_multiplier_north_metro: 1.  # Ignore, calibrated
-  contact_rate_multiplier_south_metro: 1.  # Ignore, calibrated
+  contact_rate_multiplier_north_east_metro: 1.  # Ignore, calibrated
+  contact_rate_multiplier_south_east_metro: 1.  # Ignore, calibrated
+  contact_rate_multiplier_west_metro: 1.
   contact_rate_multiplier_barwon_south_west: 1.  # Ignore, calibrated
   contact_rate_multiplier_regional: 1.  # Ignore, calibrated
 
@@ -266,9 +266,8 @@ target_output_ratio: 0.5
 vic_2021_seeding:
   seed_time: 545
   clusters:
-    north_metro: 0.2
-    south_east_metro: 0.02
-    south_metro: 0.2
+    north_east_metro: 0.2
+    south_east_metro: 0.2
     west_metro: 0.2
     barwon_south_west: 0.
     gippsland: 0.

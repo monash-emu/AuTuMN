@@ -70,7 +70,7 @@ clinical_stratification:
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
-    hospital_late: 4.9  # (4 * 2.75 + 103 * 5.048544 + 18 * 4.555556) / (4 + 103 + 18)
+    hospital_late: 4.234  # (1.918919 * 74 + 3.542373 * 590 + 6.747826 * 230 + 5 * 2) / (74 + 590 + 230 + 2)
     icu_early: 13.189283389438017  # Need to calculate - pre-ICU hospital period 5.74 - 4.31 = 1.43 seems too short
     icu_late: 4.31  # mean((3.84, 3.96, 4.07, 4.19, 4.31, 4.43, 4.55, 4.67, 4.78))
   compartment_periods_calculated:
@@ -179,38 +179,15 @@ vaccination:
     upper_asymptote: 0.0357143  # Shortened lag from Dept's spreadsheet, 28 days
   lag: 14
   roll_out_components:
-    - age_min: 10
-      age_max: 15
-      vic_supply:
-        end_time: 900  # 31st January 2022 (a bit later than needed)
-        time_interval: 100  # Enough to give a smooth fit
-
-    - age_min: 15
-      age_max: 30
-      vic_supply:
-        end_time: 900
-        time_interval: 100
-    - age_min: 30
-      age_max: 40
-      vic_supply:
-        end_time: 900
-        time_interval: 100
-    - age_min: 40
-      age_max: 50
-      vic_supply:
-        end_time: 900
-        time_interval: 100
-    - age_min: 50
-      age_max: 60
-      vic_supply:
-        end_time: 900
-        time_interval: 100
-    - age_min: 60
-      age_max: 70
-      vic_supply:
-        end_time: 900
-        time_interval: 100
-    - age_min: 70
-      vic_supply:
-        end_time: 900
-        time_interval: 100
+    - vic_supply:
+        start_time: 454
+        end_time: 830
+        time_intervals: 100
+        age_breaks:
+          - 10
+          - 15
+          - 30
+          - 40
+          - 50
+          - 60
+          - 70

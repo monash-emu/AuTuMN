@@ -310,8 +310,9 @@ class RegionalClusterStratification(BaseModel):
 
 class VictorianClusterStratification(BaseModel):
     intercluster_mixing: float
-    contact_rate_multiplier_north_metro: float
-    contact_rate_multiplier_south_metro: float
+    contact_rate_multiplier_north_east_metro: float
+    contact_rate_multiplier_west_metro: float
+    contact_rate_multiplier_south_east_metro: float
     contact_rate_multiplier_barwon_south_west: float
     contact_rate_multiplier_regional: float
     metro: MetroClusterStratification
@@ -319,9 +320,8 @@ class VictorianClusterStratification(BaseModel):
 
 
 class Vic2021ClusterSeeds(BaseModel):
-    north_metro: float
+    north_east_metro: float
     south_east_metro: float
-    south_metro: float
     west_metro: float
     barwon_south_west: float
     gippsland: float
@@ -342,9 +342,9 @@ class Vic2021Seeding(BaseModel):
     clusters: Optional[Vic2021ClusterSeeds]
     seed: Optional[float]
 
-    @root_validator(allow_reuse=True)
+    @root_validator(pre=True, allow_reuse=True)
     def check_request(cls, values):
-        n_requests = int(bool(values["clusters"])) + int(bool(values["seed"]))
+        n_requests = int(bool(values.get("clusters"))) + int(bool(values.get("seed")))
         msg = f"Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled: {n_requests}"
         assert n_requests == 1, msg
         return values

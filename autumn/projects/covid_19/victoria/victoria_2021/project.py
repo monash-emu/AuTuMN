@@ -22,7 +22,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
-target_start_time = 600
+target_start_time = 550
 
 # For all the cluster targets, a universal calibrated parameter called "target_output_ratio" is used to scale the
 # dispersion parameter of the targets' normal likelihoods.

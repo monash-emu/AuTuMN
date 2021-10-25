@@ -347,7 +347,7 @@ def process_zip_files():
         for each in os.listdir(COVID_AU_DIRPATH):
             if file in each:
                 pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(files_map[file])
-                os.remove(os.path.join(COVID_AU_DIRPATH, each))
+                #os.remove(os.path.join(COVID_AU_DIRPATH, each))
 
 
 def preprocess_deaths():

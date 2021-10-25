@@ -1,6 +1,9 @@
 description: BASELINE
 
-contact_rate: 0.31
+contact_rate: 0.17
+
+vic_2021_seeding:
+  seed_time: 605
 
 population:
   region: GRAMPIANS

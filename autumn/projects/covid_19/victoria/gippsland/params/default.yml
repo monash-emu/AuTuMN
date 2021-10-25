@@ -1,6 +1,10 @@
 description: BASELINE
 
-contact_rate: 0.29
+contact_rate: 0.19
+
+vic_2021_seeding:
+  seed_time: 605
+  seed: 0.4
 
 population:
   region: GIPPSLAND

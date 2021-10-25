@@ -19,6 +19,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 targets = collate_regional_targets(ts_set)
+priors[0] = [UniformPrior("contact_rate", (0.1, 0.24), jumping_stdev=0.05)]  # Needs to go a bit higher for some reason
 calibration = Calibration(priors=priors, targets=targets)
 plot_spec_filepath = build_rel_path("targets.secret.json")
 with open(plot_spec_filepath) as f:

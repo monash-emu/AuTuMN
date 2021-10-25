@@ -50,8 +50,8 @@ regional_target_names = (
 )
 metro_target_names = (
     "notifications",
-    "hospital_occupancy",
-    "icu_occupancy",
+    "hospital_admissions",
+    "icu_admissions",
 )
 
 

@@ -10,6 +10,7 @@ from autumn.tools.calibration.targets import NormalTarget
 # TODO: Get tests passing on Vic super-models (possibly by just deleting them)
 # TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
 # TODO: Notebook for visualising outputs after run
+# TODO: See if we can get deaths as a target too
 
 # Specify the general features of the calibration
 target_start_time = 454
@@ -20,13 +21,9 @@ priors = [
         "contact_rate",
         (0.1, 0.2), jumping_stdev=0.05
     ),
-    # UniformPrior(
-    #     "seasonal_force",
-    #     (0., 0.3), jumping_stdev=0.05
-    # ),
     UniformPrior(
-        "vaccination.one_dose.vacc_reduce_infectiousness",
-        (0.1, 0.3)
+        "vaccination.fully_vaccinated.vacc_reduce_infectiousness",
+        (0.05, 0.3)
     ),
     UniformPrior(
         "testing_to_detection.assumed_cdr_parameter",
@@ -62,7 +59,7 @@ def collate_regional_targets(ts_set):
     targets = []
     for target_name in regional_target_names:
         targets.append(
-            NormalTarget(timeseries=ts_set.get(target_name).truncate_start_time(target_start_time))
+            NormalTarget(timeseries=ts_set.get(target_name).truncate_times(target_start_time, 660))
         )
     return targets
 

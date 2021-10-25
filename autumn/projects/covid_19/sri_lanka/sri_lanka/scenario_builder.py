@@ -1,12 +1,32 @@
 from autumn.models.covid_19.mixing_matrix.mobility import get_mobility_specific_period
 
-scenario_start_time = [505, 476, 556]  # 505 - 20 May, 476 - 21st April,  556 - 9th July 2021
+scenario_start_time = [505, 476, 556, 481]  # 505 - 20 May, 476 - 21st April,  556 - 9th July 2021, 481 - 25 April
 lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from April 21 - June 21",
-                  "What if lockdown was initiated from July 10 - Oct 01"]
+                  "What if lockdown was initiated from July 10 - Oct 01", "No vaccination"]
+
+
+def get_vaccine_roll_out(lockdown_scenario):
+    age_mins = [15, 15]
+    roll_out_components = []
+    start_time = [481, 655]
+    end_time = [655, 732]
+
+    for i_age_min, age_min in enumerate(age_mins):
+
+        if lockdown_scenario == 3:
+            coverage = [0.00001, 0.00001]  # no vaccine scenario
+        else:
+            coverage = [0.7587, 0.18]  # no vaccine scenario
+
+        component = {"supply_period_coverage":
+                         {"coverage": coverage[i_age_min], "start_time": start_time[i_age_min], "end_time": end_time[i_age_min]},}
+        component["age_min"] = age_min
+        roll_out_components.append(component)
+    return roll_out_components
 
 
 def get_all_scenario_dicts(country: str):
-    num_scenarios = 3
+    num_scenarios = 4
     all_scenario_dicts = []
 
     for i_lockdown_scenario in [*range(0, num_scenarios)]:
@@ -15,6 +35,7 @@ def get_all_scenario_dicts(country: str):
             "time": {"start": scenario_start_time[i_lockdown_scenario]},
             "description": "scenario:"+f"{i_lockdown_scenario+1}" + f" {lockdown_title[i_lockdown_scenario]}",
             "mobility": {"mixing": {}},
+            "vaccination": {"roll_out_components": []}
         }
         # mobility parameters
         if i_lockdown_scenario == 0:
@@ -51,8 +72,8 @@ def get_all_scenario_dicts(country: str):
 
             # In the scenario from August 21 - Oct 01 applying average mobility observed after lockdown
             # workplaces: 0.7 and other locations 0.9
-            times3 = [*range(599, 641)]
-            values3 = {'work': [0.6] * len(times3), 'other_locations': [0.8] * len(times3)}
+            times3 = [*range(599, 640)]
+            values3 = {'work': [0.7] * len(times2), 'other_locations': [0.9] * len(times2)}
 
             # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown)
             times4, values4 = get_mobility_specific_period(country, None,
@@ -60,15 +81,15 @@ def get_all_scenario_dicts(country: str):
                                                             'other_locations': ['retail_and_recreation',
                                                                                 'grocery_and_pharmacy',
                                                                                 'transit_stations'],
-                                                            'home': ['residential']}, [641, 645])
+                                                            'home': ['residential']}, [640, 645])
 
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {
                     "append": True,
                     "times": [scenario_start_time[i_lockdown_scenario]] + times1 + times5 +
-                             times2 + times3 + times4 + [times4[-1] + 1],
+                              times2 + times3 + times4 + [times4[-1] + 1],
                     "values": [["repeat_prev"]] + values1[key_loc] + values5[key_loc] +
-                              values2[key_loc] + values3[key_loc] + values4[key_loc] + [["repeat_prev"]]
+                              values2[key_loc] + values3 + values4[key_loc] + [["repeat_prev"]]
                 }
         if i_lockdown_scenario == 2:  # What if lockdown was initiated from July 10 - Oct 01
             # lockdown mobility from 21Aug -01 Oct
@@ -83,7 +104,7 @@ def get_all_scenario_dicts(country: str):
             times1 = [*range(557, 599)]
 
             # In the scenario, from Aug 21 - Oct 01 applying average mobility observed during lockdown
-            # workplaces: 0.4 and other locations 0.4
+            # workplaces: 0.3 and other locations 0.3
             times3 = [*range(599, 641)]
             values3 = {'work': [0.3] * len(times3), 'other_locations': [0.3] * len(times3)}
 
@@ -103,7 +124,10 @@ def get_all_scenario_dicts(country: str):
                     "values": [["repeat_prev"]] + values1[key_loc] + values3[key_loc] +
                               values4[key_loc] + [["repeat_prev"]]
                 }
+
+        # vaccination parameters
+        scenario_dict["vaccination"]["roll_out_components"] = get_vaccine_roll_out(i_lockdown_scenario)
+
         all_scenario_dicts.append(scenario_dict)
-
-
     return all_scenario_dicts
+

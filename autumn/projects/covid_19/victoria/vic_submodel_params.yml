@@ -70,7 +70,7 @@ clinical_stratification:
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
-    hospital_late: 4.9  # (4 * 2.75 + 103 * 5.048544 + 18 * 4.555556) / (4 + 103 + 18)
+    hospital_late: 4.234  # (1.918919 * 74 + 3.542373 * 590 + 6.747826 * 230 + 5 * 2) / (74 + 590 + 230 + 2)
     icu_early: 13.189283389438017  # Need to calculate - pre-ICU hospital period 5.74 - 4.31 = 1.43 seems too short
     icu_late: 4.31  # mean((3.84, 3.96, 4.07, 4.19, 4.31, 4.43, 4.55, 4.67, 4.78))
   compartment_periods_calculated:

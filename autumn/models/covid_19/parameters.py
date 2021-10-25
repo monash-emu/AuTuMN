@@ -236,12 +236,12 @@ class ClinicalStratification(BaseModel):
     non_sympt_infect_multiplier: float
 
     @validator("icu_prop", allow_reuse=True)
-    def check_coverage(val):
+    def check_icu_prop(val):
         assert 0. <= val <= 1., f"Proportion of hospitalised patients admitted to ICU is not in [0, 1]: {val}"
         return val
 
     @validator("icu_mortality_prop", allow_reuse=True)
-    def check_coverage(val):
+    def check_icu_ceiling(val):
         assert 0. <= val <= 1., f"Ceiling for proportion of ICU patients dying is not in [0, 1]: {val}"
         return val
 
@@ -393,16 +393,17 @@ class VaccCoveragePeriod(BaseModel):
         return values
 
 
-class VicHistoryPeriod(BaseModel):
+class VicPiecewiseFunc(BaseModel):
     """
     Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time.
     """
 
     start_time: float
     end_time: float
-    time_interval: Optional[float]
+    time_intervals: float
+    age_breaks: List[float]
 
-    @validator("time_interval", allow_reuse=True)
+    @validator("time_intervals", allow_reuse=True)
     def convert_time_interval_to_int(val):
         return int(val)
 
@@ -415,7 +416,7 @@ class RollOutFunc(BaseModel):
     age_min: Optional[float]
     age_max: Optional[float]
     supply_period_coverage: Optional[VaccCoveragePeriod]
-    vic_supply: Optional[VicHistoryPeriod]
+    vic_supply: Optional[VicPiecewiseFunc]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):

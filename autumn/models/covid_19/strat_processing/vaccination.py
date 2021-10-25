@@ -85,7 +85,7 @@ def find_vaccine_action(vacc_prop_prevent_infection: float, overall_efficacy: fl
     return infection_efficacy, severity_efficacy
 
 
-def get_eligible_age_groups(roll_out_component: RollOutFunc) -> List:
+def get_eligible_age_groups(age_min, age_max) -> List:
     """
     Return a list with the model's age groups that are relevant to the requested roll_out_component.
     """
@@ -94,12 +94,8 @@ def get_eligible_age_groups(roll_out_component: RollOutFunc) -> List:
     for agegroup in AGEGROUP_STRATA:
 
         # Either not requested, or requested and meets that age cut-off for min or max
-        above_age_min = \
-            not roll_out_component.age_min or \
-            bool(roll_out_component.age_min) and float(agegroup) >= roll_out_component.age_min
-        below_age_max = \
-            not roll_out_component.age_max or \
-            bool(roll_out_component.age_max) and float(agegroup) < roll_out_component.age_max
+        above_age_min = not age_min or bool(age_min) and float(agegroup) >= age_min
+        below_age_max = not age_max or bool(age_max) and float(agegroup) < age_max
         if above_age_min and below_age_max:
             eligible_age_groups.append(agegroup)
 
@@ -141,7 +137,7 @@ def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams)
     all_eligible_agegroups = []
     for roll_out_component in vacc_params.roll_out_components:
         coverage_requests = roll_out_component.supply_period_coverage
-        working_agegroups = get_eligible_age_groups(roll_out_component)
+        working_agegroups = get_eligible_age_groups(roll_out_component.age_min, roll_out_component.age_max)
         all_eligible_agegroups += working_agegroups
 
         # Coverage-based vaccination
@@ -216,33 +212,30 @@ def add_vic_regional_vacc(
 
     # Track all the age groups we have applied vaccination to as we loop over components with different age requests
     all_eligible_agegroups = []
-    for agegroup_component in vacc_params.roll_out_components:
-        working_agegroups = get_eligible_age_groups(agegroup_component)
-        msg = "An age group has been requested multiple times"
-        assert not bool(set(all_eligible_agegroups) & set(working_agegroups)), msg
+    roll_out_params = vacc_params.roll_out_components[0].vic_supply
+    age_breaks = roll_out_params.age_breaks
+    for i_age, age_min in enumerate(age_breaks):
+        age_max = VACC_COVERAGE_END_AGES[-1] if i_age == len(age_breaks) - 1 else age_breaks[i_age + 1]
+        working_agegroups = get_eligible_age_groups(age_min, age_max)
         all_eligible_agegroups += working_agegroups
 
         # Get the cluster-specific historical vaccination data
-        close_enough_age_min = find_closest_value_in_list(VACC_COVERAGE_START_AGES, agegroup_component.age_min) if \
-            agegroup_component.age_min else 0
-        close_enough_age_max = find_closest_value_in_list(VACC_COVERAGE_END_AGES, agegroup_component.age_max) if \
-            agegroup_component.age_max else 89
+        close_enough_age_min = find_closest_value_in_list(VACC_COVERAGE_START_AGES, age_min)
+        close_enough_age_max = find_closest_value_in_list(VACC_COVERAGE_END_AGES, age_max)
         coverage_times, coverage_values = get_both_vacc_coverage(
-            cluster_name.upper(),
-            start_age=close_enough_age_min,
-            end_age=close_enough_age_max,
+            cluster_name.upper(), start_age=close_enough_age_min, end_age=close_enough_age_max,
         )
 
-        # Manually adjust according to the proportion of the age band that the group is referring to - should generalise
-        adjustment = 0.6 if close_enough_age_min == 12 and close_enough_age_max == 15 else 1.
-        coverage_values *= adjustment
+        # The first age group should be adjusted for partial coverage of that age group
+        if i_age == 0:
+            coverage_values *= (close_enough_age_max - close_enough_age_min) / (age_max - age_min)
 
-        # Get end times
-        end_time = min((max(coverage_times), agegroup_component.vic_supply.end_time))  # Stop at end of available data
+        # Get end times, stopping at end of available data
+        end_time = min((max(coverage_times), roll_out_params.end_time))
 
         # Get the vaccination rate function of time
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
-            agegroup_component.vic_supply.start_time, end_time, agegroup_component.vic_supply.time_interval,
+            roll_out_params.start_time, end_time, roll_out_params.time_intervals,
             coverage_times, coverage_values, vacc_params.lag
         )
 
@@ -263,7 +256,7 @@ def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_
     for roll_out_component in vacc_params.roll_out_components:
 
         # Work out eligible model age_groups
-        eligible_age_groups = get_eligible_age_groups(roll_out_component)
+        eligible_age_groups = get_eligible_age_groups(roll_out_component.age_min, roll_out_component.age_max)
 
         close_enough_age_min = find_closest_value_in_list(VACC_COVERAGE_START_AGES, roll_out_component.age_min) if \
             roll_out_component.age_min else 0
@@ -284,7 +277,7 @@ def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_
             end_time = min((max(coverage_times), roll_out_component.vic_supply.end_time))
 
             get_vaccination_rate = get_piecewise_vacc_rates(
-                roll_out_component.vic_supply.start_time, end_time, roll_out_component.vic_supply.time_interval,
+                roll_out_component.vic_supply.start_time, end_time, roll_out_component.vic_supply.time_intervals,
                 coverage_times, coverage_values, vacc_params.lag,
             )
             add_vacc_flows(model, eligible_age_groups, get_vaccination_rate, extra_stratum=cluster_stratum)

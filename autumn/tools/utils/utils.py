@@ -279,12 +279,26 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
         secrets.write(file_path, *args)
 
 
+
 def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
-    df.rename(columns={datecol.lower():'date'},inplace=True)
-    df.date = pd.to_datetime(
-    df["date"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
-).dt.date
+    df.rename(columns={datecol.lower(): "date"}, inplace=True)
+
+    formats = ["%Y-%m-%d", "%d/%m/%Y"]
+
+    for fmt in formats:
+
+        try:
+            df.date = pd.to_datetime(
+                df["date"], errors="raise", format=fmt, infer_datetime_format=False
+            ).dt.date
+
+        except:
+            continue
+
+        else:
+            print("Sucess")
+
     df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
 
     return df

@@ -46,8 +46,8 @@ steps:
       value: covid_19:myanmar
     - label: Nepal (covid_19)
       value: covid_19:nepal
-    - label: North Metro (covid_19)
-      value: covid_19:north-metro
+    - label: North East Metro (covid_19)
+      value: covid_19:north-east-metro
     - label: Penang (covid_19)
       value: covid_19:penang
     - label: Philippines (covid_19)
@@ -58,8 +58,6 @@ steps:
       value: covid_19:selangor
     - label: South East Metro (covid_19)
       value: covid_19:south-east-metro
-    - label: South Metro (covid_19)
-      value: covid_19:south-metro
     - label: Spain (covid_19)
       value: covid_19:spain
     - label: Sri_Lanka (covid_19)
@@ -70,10 +68,6 @@ steps:
       value: covid_19:sweden
     - label: United Kingdom (covid_19)
       value: covid_19:united-kingdom
-    - label: Victoria_2020 (covid_19)
-      value: covid_19:victoria_2020
-    - label: Victoria_2021 (covid_19)
-      value: covid_19:victoria_2021
     - label: Vietnam (covid_19)
       value: covid_19:vietnam
     - label: West Metro (covid_19)

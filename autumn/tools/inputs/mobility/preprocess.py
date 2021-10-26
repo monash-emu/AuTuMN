@@ -10,9 +10,16 @@ from .fetch import MOBILITY_CSV_PATH
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"
 MOBILITY_DIRPATH = os.path.join(INPUT_DATA_PATH, "mobility")
-MOBILITY_LGA_PATH = os.path.join(
+
+DHHS_LGA_TO_CLUSTER = os.path.join(
     MOBILITY_DIRPATH, "LGA to Cluster mapping dictionary with proportions.csv"
 )
+
+DHHS_LGA_TO_HSP = os.path.join(
+    INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv"
+)
+
+MOBILITY_LGA_PATH = DHHS_LGA_TO_HSP # Swap with DHHS_LGA_TO_CLUSTER to obtain previous mapping
 
 COUNTRY_NAME_ISO3_MAP = {
     "Bolivia": "BOL",

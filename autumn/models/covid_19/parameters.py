@@ -236,12 +236,12 @@ class ClinicalStratification(BaseModel):
     non_sympt_infect_multiplier: float
 
     @validator("icu_prop", allow_reuse=True)
-    def check_coverage(val):
+    def check_icu_prop(val):
         assert 0. <= val <= 1., f"Proportion of hospitalised patients admitted to ICU is not in [0, 1]: {val}"
         return val
 
     @validator("icu_mortality_prop", allow_reuse=True)
-    def check_coverage(val):
+    def check_icu_ceiling(val):
         assert 0. <= val <= 1., f"Ceiling for proportion of ICU patients dying is not in [0, 1]: {val}"
         return val
 
@@ -310,8 +310,9 @@ class RegionalClusterStratification(BaseModel):
 
 class VictorianClusterStratification(BaseModel):
     intercluster_mixing: float
-    contact_rate_multiplier_north_metro: float
-    contact_rate_multiplier_south_metro: float
+    contact_rate_multiplier_north_east_metro: float
+    contact_rate_multiplier_west_metro: float
+    contact_rate_multiplier_south_east_metro: float
     contact_rate_multiplier_barwon_south_west: float
     contact_rate_multiplier_regional: float
     metro: MetroClusterStratification
@@ -319,9 +320,8 @@ class VictorianClusterStratification(BaseModel):
 
 
 class Vic2021ClusterSeeds(BaseModel):
-    north_metro: float
+    north_east_metro: float
     south_east_metro: float
-    south_metro: float
     west_metro: float
     barwon_south_west: float
     gippsland: float
@@ -342,9 +342,9 @@ class Vic2021Seeding(BaseModel):
     clusters: Optional[Vic2021ClusterSeeds]
     seed: Optional[float]
 
-    @root_validator(allow_reuse=True)
+    @root_validator(pre=True, allow_reuse=True)
     def check_request(cls, values):
-        n_requests = int(bool(values["clusters"])) + int(bool(values["seed"]))
+        n_requests = int(bool(values.get("clusters"))) + int(bool(values.get("seed")))
         msg = f"Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled: {n_requests}"
         assert n_requests == 1, msg
         return values
@@ -393,20 +393,19 @@ class VaccCoveragePeriod(BaseModel):
         return values
 
 
-class VicHistoryPeriod(BaseModel):
+class VicPiecewiseFunc(BaseModel):
     """
     Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time.
     """
 
     start_time: float
     end_time: float
-    time_interval: Optional[float]
+    time_intervals: float
+    age_breaks: List[float]
 
-    @root_validator(allow_reuse=True)
-    def check_times(cls, values):
-        msg = f"End time: {values['start_time']} before start time: {values['end_time']}"
-        assert values["start_time"] <= values["end_time"], msg
-        return values
+    @validator("time_intervals", allow_reuse=True)
+    def convert_time_interval_to_int(val):
+        return int(val)
 
 
 class RollOutFunc(BaseModel):
@@ -417,7 +416,7 @@ class RollOutFunc(BaseModel):
     age_min: Optional[float]
     age_max: Optional[float]
     supply_period_coverage: Optional[VaccCoveragePeriod]
-    vic_supply: Optional[VicHistoryPeriod]
+    vic_supply: Optional[VicPiecewiseFunc]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
@@ -442,6 +441,8 @@ class VaccEffectiveness(BaseModel):
     vacc_prop_prevent_infection: float
     vacc_reduce_infectiousness: Optional[float]
     vacc_reduce_infectiousness_ratio: Optional[float]
+    vacc_reduce_hospitalisation: Optional[float]
+    vacc_reduce_death: Optional[float]
 
     @validator("overall_efficacy", pre=True, allow_reuse=True)
     def check_overall_efficacy(val):
@@ -454,7 +455,7 @@ class VaccEffectiveness(BaseModel):
         return val
 
     @validator("vacc_reduce_infectiousness", pre=True, allow_reuse=True)
-    def check_overall_efficacy(val):
+    def check_infectiousness_efficacy(val):
         assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
@@ -465,6 +466,31 @@ class VaccEffectiveness(BaseModel):
         )
         msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
         assert n_requests < 2, msg
+        return values
+
+    @validator("vacc_reduce_hospitalisation", pre=True, allow_reuse=True)
+    def check_hospitalisation_effect(val):
+        if val:
+            assert 0. <= val <= 1., f"Reduction in hospitalisation risk should be in [0, 1]: {val}"
+        return val
+
+    @validator("vacc_reduce_death", pre=True, allow_reuse=True)
+    def check_death_efficacy(val):
+        if val:
+            assert 0. <= val <= 1., f"Reduction in risk of death should be in [0, 1]: {val}"
+        return val
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_effect_ratios(cls, values):
+        overall_effect = values["overall_efficacy"]
+        if values["vacc_reduce_hospitalisation"]:
+            hospital_effect = values["vacc_reduce_hospitalisation"]
+            msg = f"Hospitalisation efect: {hospital_effect} should not exceed overall effect: {overall_effect}"
+            assert hospital_effect >= overall_effect, msg
+        if values["vacc_reduce_death"]:
+            death_effect = values["vacc_reduce_death"]
+            msg = f"Death effect: {death_effect} should not exceed overall effect: {overall_effect}"
+            assert death_effect >= overall_effect, msg
         return values
 
 

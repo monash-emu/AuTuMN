@@ -15,8 +15,8 @@ from autumn.settings import Region
 CLUSTER_STRATA = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 
 cluster_contact_groups = {
-    "south_and_east": [Region.SOUTH_EAST_METRO, Region.SOUTH_METRO],
-    "north_and_west": [Region.WEST_METRO, Region.NORTH_METRO],
+    "south_and_east": [Region.SOUTH_EAST_METRO],
+    "north_and_west": [Region.WEST_METRO, Region.NORTH_EAST_METRO],
     "regional": [i_region for i_region in Region.VICTORIA_RURAL if i_region != Region.BARWON_SOUTH_WEST]
 }
 
@@ -47,9 +47,9 @@ def get_cluster_strat(params: Parameters) -> Stratification:
     for cluster in Region.VICTORIA_SUBREGIONS:
         cluster_name = cluster.replace("-", "_")
         if cluster in cluster_contact_groups["south_and_east"]:
-            multiplier_name = f"contact_rate_multiplier_{Region.SOUTH_METRO.replace('-', '_')}"
+            multiplier_name = f"contact_rate_multiplier_{Region.SOUTH_EAST_METRO.replace('-', '_')}"
         elif cluster in cluster_contact_groups["north_and_west"]:
-            multiplier_name = f"contact_rate_multiplier_{Region.NORTH_METRO.replace('-', '_')}"
+            multiplier_name = f"contact_rate_multiplier_{Region.NORTH_EAST_METRO.replace('-', '_')}"
         elif cluster in cluster_contact_groups["regional"]:
             multiplier_name = "contact_rate_multiplier_regional"
         else:
@@ -138,14 +138,14 @@ def get_vic_cluster_adjacency_matrix(off_diagonal_value):
 
     # Data should really be in the parameters file, but this is likely to be temporary
     adjacency_dict = {
-        Region.BARWON_SOUTH_WEST: [Region.WEST_METRO, Region.NORTH_METRO, Region.GRAMPIANS],
-        Region.GRAMPIANS: [Region.LODDON_MALLEE, Region.WEST_METRO, Region.NORTH_METRO],
-        Region.LODDON_MALLEE: [Region.HUME, Region.NORTH_METRO, Region.WEST_METRO],
-        Region.HUME: [Region.GIPPSLAND, Region.NORTH_METRO, Region.SOUTH_EAST_METRO],
-        Region.GIPPSLAND: [Region.SOUTH_EAST_METRO, Region.SOUTH_METRO],
-        Region.WEST_METRO: [Region.NORTH_METRO],
-        Region.NORTH_METRO: [Region.SOUTH_EAST_METRO],
-        Region.SOUTH_EAST_METRO: [Region.SOUTH_METRO],
+        Region.BARWON_SOUTH_WEST: [Region.WEST_METRO, Region.NORTH_EAST_METRO, Region.GRAMPIANS],
+        Region.GRAMPIANS: [Region.LODDON_MALLEE, Region.WEST_METRO, Region.NORTH_EAST_METRO],
+        Region.LODDON_MALLEE: [Region.HUME, Region.NORTH_EAST_METRO, Region.WEST_METRO],
+        Region.HUME: [Region.GIPPSLAND, Region.NORTH_EAST_METRO, Region.SOUTH_EAST_METRO],
+        Region.GIPPSLAND: [Region.SOUTH_EAST_METRO],
+        Region.WEST_METRO: [Region.NORTH_EAST_METRO, Region.SOUTH_EAST_METRO],
+        Region.NORTH_EAST_METRO: [Region.SOUTH_EAST_METRO, Region.WEST_METRO],
+        Region.SOUTH_EAST_METRO: [Region.NORTH_EAST_METRO, Region.WEST_METRO],
     }
 
     # Start from matrix of zeros

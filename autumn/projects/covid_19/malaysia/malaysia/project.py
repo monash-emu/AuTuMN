@@ -18,7 +18,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 # Load and configure model parameters.
 malaysia_path = build_rel_path("../malaysia/params/default.yml")
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 3)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(13, 14)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = (
     base_params.update(malaysia_path).update(default_path).update(mle_path, calibration_format=True)
@@ -51,7 +51,7 @@ priors = [
     UniformPrior("clinical_stratification.icu_prop", [0.05, 0.15]),
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.6]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.8, 1.5]),
-    UniformPrior("infection_fatality.multiplier", [0.1, 1.0]),
+    UniformPrior("infection_fatality.multiplier", [0.7, 1.25]),
     # VoC parameters
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.7]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
@@ -75,7 +75,7 @@ with open(plot_spec_filepath) as f:
 
 # create differential outputs request
 output_types_to_differentiate = ["tts_cases", "tts_deaths", "myocarditis_cases", "hospital_admissions"]
-agg_agegroups = ["10-14", "15_19", "20_29", "30_39", "40_49", "50_59", "60_69", "70_plus"]
+agg_agegroups = ["15_19", "20_29", "30_39", "40_49", "50_59", "60_69", "70_plus"]
 diff_output_requests = [[f"cumulative_{output_type}Xagg_age_{aggregated_age_group}", "ABSOLUTE"]
                         for output_type in output_types_to_differentiate
                         for aggregated_age_group in agg_agegroups]

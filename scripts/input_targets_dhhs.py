@@ -9,6 +9,7 @@ from autumn.tools.utils.utils import COVID_BASE_DATETIME
 from autumn.tools.utils.utils import create_date_index
 from autumn.settings import PASSWORD_ENVAR
 from getpass import getpass
+from autumn.tools.utils import secrets
 
 
 # Use OWID csv for notification and death numbers.
@@ -190,6 +191,7 @@ def main():
     df = preprocess_vac_model(df)
 
     df.to_csv(COVID_VIDA_VAC_CSV, index=False)
+    secrets.write(COVID_VIDA_VAC_CSV, password)
     update_vida_pop()
 
 

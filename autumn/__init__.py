@@ -38,12 +38,6 @@ register_project(
     "autumn.projects.covid_19.victoria.victoria_2021.project",
 )
 
-# register_project(
-#     Models.COVID_19,
-#     Region.NORTH_METRO,
-#     "autumn.projects.covid_19.victoria.north_metro.project",
-# )
-
 register_project(
     Models.COVID_19,
     Region.NORTH_EAST_METRO,
@@ -55,12 +49,6 @@ register_project(
     Region.SOUTH_EAST_METRO,
     "autumn.projects.covid_19.victoria.south_east_metro.project",
 )
-
-# register_project(
-#     Models.COVID_19,
-#     Region.SOUTH_METRO,
-#     "autumn.projects.covid_19.victoria.south_metro.project",
-# )
 
 register_project(
     Models.COVID_19,
@@ -139,9 +127,11 @@ register_project(
     Region.CENTRAL_VISAYAS,
     "autumn.projects.covid_19.philippines.central_visayas.project",
 )
+
 register_project(
     Models.COVID_19, Region.DAVAO_CITY, "autumn.projects.covid_19.philippines.davao_city.project"
 )
+
 register_project(
     Models.COVID_19,
     Region.DAVAO_REGION,
@@ -178,10 +168,6 @@ register_project(Models.COVID_19, Region.NEPAL, "autumn.projects.covid_19.nepal.
 register_project(
     Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.sri_lanka.project"
 )
-register_project(
-    Models.COVID_19, Region.SRI_LANKA_WP, "autumn.projects.covid_19.sri_lanka.sri_lanka_wp.project"
-)
-
 
 # Indonesia & Bali
 register_project(Models.COVID_19, Region.BALI, "autumn.projects.covid_19.indonesia.bali.project")

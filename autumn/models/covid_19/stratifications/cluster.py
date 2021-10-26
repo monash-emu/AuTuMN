@@ -15,6 +15,8 @@ from autumn.settings import Region
 CLUSTER_STRATA = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 
 cluster_contact_groups = {
+    "south_and_east": [Region.SOUTH_EAST_METRO],
+    "north_and_west": [Region.WEST_METRO, Region.NORTH_EAST_METRO],
     "regional": [i_region for i_region in Region.VICTORIA_RURAL if i_region != Region.BARWON_SOUTH_WEST]
 }
 

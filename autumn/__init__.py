@@ -26,17 +26,17 @@ register_project(Models.EXAMPLE, Region.PHILIPPINES, "autumn.projects.example.ph
 register_project(Models.EXAMPLE, Region.VICTORIA_2020, "autumn.projects.example.victoria.project")
 
 # COVID: Victoria state-wide super-model
-# register_project(
-#     Models.COVID_19,
-#     Region.VICTORIA_2020,
-#     "autumn.projects.covid_19.victoria.victoria_2020.project",
-# )
+register_project(
+    Models.COVID_19,
+    Region.VICTORIA_2020,
+    "autumn.projects.covid_19.victoria.victoria_2020.project",
+)
 
-# register_project(
-#     Models.COVID_19,
-#     Region.VICTORIA_2021,
-#     "autumn.projects.covid_19.victoria.victoria_2021.project",
-# )
+register_project(
+    Models.COVID_19,
+    Region.VICTORIA_2021,
+    "autumn.projects.covid_19.victoria.victoria_2021.project",
+)
 
 # register_project(
 #     Models.COVID_19,

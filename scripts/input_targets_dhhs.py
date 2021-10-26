@@ -32,59 +32,63 @@ COVID_DHHS_POSTCODE_LGA_CSV = os.path.join(COVID_AU_DIRPATH, "postcode lphu conc
 COVID_VIC2021_TARGETS_CSV = os.path.join(
     PROJECTS_PATH, "covid_19", "victoria", "victoria_2021", "targets.secret.json"
 )
-COVID_DHHS_CLUSTERS_CSV = os.path.join(
+
+LGA_TO_CLUSTER = os.path.join(
     INPUT_DATA_PATH, "mobility", "LGA to Cluster mapping dictionary with proportions.csv"
 )
 
-CLUSTER_MAP = {
-    1: "NORTH_METRO",
-    2: "SOUTH_EAST_METRO",
-    3: "SOUTH_METRO",
-    4: "WEST_METRO",
-    5: "BARWON_SOUTH_WEST",
-    6: "GIPPSLAND",
-    7: "GRAMPIANS",
-    8: "HUME",
-    9: "LODDON_MALLEE",
-    0: "VIC",
-}
+LGA_TO_HSP = os.path.join(
+    INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv"
+)
+
+COVID_DHHS_MAPING = LGA_TO_HSP
+
+df = pd.read_csv(COVID_DHHS_MAPING)
+map_id = df[['cluster_id','cluster_name']].drop_duplicates()
+map_id['cluster_name'] = map_id['cluster_name'].str.upper().str.replace("&","").str.replace("  ","_").str.replace(" ","_")
+
+
+#map_id = dict(map_id.values)
+
+CLUSTER_MAP = dict(map_id.values)
 
 CHRIS_MAP = {
+    "St Vincents Hospital": "NORTH_EAST_METRO",
+    "St Vincents Private Hospital Fitzroy": "NORTH_EAST_METRO",
+    "Austin Hospital": "NORTH_EAST_METRO",
+    "Northern Hospital, The [Epping]": "NORTH_EAST_METRO",
+    "Bays Hospital, The [Mornington]": "SOUTH_EAST_METRO",
+    "Frankston Hospital": "SOUTH_EAST_METRO",
+    "Peninsula Private Hospital [Frankston]": "SOUTH_EAST_METRO",
+    "Warringal Private Hospital [Heidelberg]": "NORTH_EAST_METRO",
+    "Holmesglen Private Hospital ": "SOUTH_EAST_METRO",
     "Royal Childrens Hospital [Parkville]": "WEST_METRO",
-    "Alfred, The [Prahran]": "SOUTH_METRO",
-    "Cabrini Malvern": "SOUTH_METRO",
+    "Alfred, The [Prahran]": "SOUTH_EAST_METRO",
+    "Cabrini Malvern": "SOUTH_EAST_METRO",
     "Ballarat Health Services [Base Campus]": "GRAMPIANS",
     "Albury Wodonga Health - Albury": "HUME",
     "Epworth Freemasons": "WEST_METRO",
     "Sunshine Hospital": "WEST_METRO",
     "Western Hospital [Footscray]": "WEST_METRO",
-    "St Vincents Hospital": "NORTH_METRO",
     "Bendigo Hospital, The": "LODDON_MALLEE",
-    "Bays Hospital, The [Mornington]": "SOUTH_METRO",
     "Latrobe Regional Hospital [Traralgon]": "GIPPSLAND",
-    "Peninsula Private Hospital [Frankston]": "SOUTH_METRO",
     "Royal Melbourne Hospital - City Campus": "WEST_METRO",
     "Melbourne Private Hospital, The [Parkville]": "WEST_METRO",
     "St John of God Geelong Hospital": "BARWON_SOUTH_WEST",
-    "Maroondah Hospital [East Ringwood]": "SOUTH_EAST_METRO",
-    "Frankston Hospital": "SOUTH_METRO",
-    "St Vincents Private Hospital Fitzroy": "NORTH_METRO",
+    "Maroondah Hospital [East Ringwood]": "NORTH_EAST_METRO",
     "New Mildura Base Hospital": "LODDON_MALLEE",
-    "Box Hill Hospital": "SOUTH_EAST_METRO",
-    "Austin Hospital": "NORTH_METRO",
-    "Angliss Hospital": "SOUTH_EAST_METRO",
+    "Box Hill Hospital": "NORTH_EAST_METRO",
+    "Angliss Hospital": "NORTH_EAST_METRO",
     "Geelong Hospital": "BARWON_SOUTH_WEST",
     "Monash Medical Centre [Clayton]": "SOUTH_EAST_METRO",
     "Goulburn Valley Health [Shepparton]": "HUME",
-    "Warringal Private Hospital [Heidelberg]": "NORTH_METRO",
     "St John of God Ballarat Hospital": "GRAMPIANS",
-    "Epworth Eastern Hospital": "SOUTH_EAST_METRO",
+    "Epworth Eastern Hospital": "NORTH_EAST_METRO",
     "South West Healthcare [Warrnambool]": "BARWON_SOUTH_WEST",
     "Northeast Health Wangaratta": "HUME",
     "Mercy Public Hospitals Inc [Werribee]": "WEST_METRO",
     "Epworth Hospital [Richmond]": "WEST_METRO",
-    "Holmesglen Private Hospital ": "SOUTH_METRO",
-    "Knox Private Hospital [Wantirna]": "SOUTH_EAST_METRO",
+    "Knox Private Hospital [Wantirna]": "NORTH_EAST_METRO",
     "St John of God Bendigo Hospital": "LODDON_MALLEE",
     "Wimmera Base Hospital [Horsham]": "GRAMPIANS",
     "Valley Private Hospital, The [Mulgrave]": "SOUTH_EAST_METRO",
@@ -92,7 +96,6 @@ CHRIS_MAP = {
     "Epworth Geelong": "BARWON_SOUTH_WEST",
     "Monash Children's Hospital": "SOUTH_EAST_METRO",
     "Central Gippsland Health Service [Sale]": "GIPPSLAND",
-    "Northern Hospital, The [Epping]": "NORTH_METRO",
     "Dandenong Campus": "SOUTH_EAST_METRO",
     "Hamilton Base Hospital": "BARWON_SOUTH_WEST",
     "St John of God Berwick Hospital": "SOUTH_EAST_METRO",
@@ -187,6 +190,7 @@ def main():
     df = preprocess_vac_model(df)
 
     df.to_csv(COVID_VIDA_VAC_CSV, index=False)
+    update_vida_pop()
 
 
 def preprocess_admissions():
@@ -199,7 +203,7 @@ def preprocess_admissions():
 
 def load_admissions(df):
 
-    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
     df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
     df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
     df.cluster_id.replace(CLUSTER_MAP, inplace=True)
@@ -228,7 +232,7 @@ def preprocess_cases():
 
 
 def load_cases(df):
-    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
 
     df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
 
@@ -301,7 +305,7 @@ def preprocess_vac():
 
 def create_vac_coverage(df):
 
-    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
     cluster_map_df["cluster_pop"] = cluster_map_df.proportion * cluster_map_df.population
     cluster_map_df.cluster_id.replace(CLUSTER_MAP, inplace=True)
 
@@ -360,7 +364,7 @@ def preprocess_deaths():
 
 
 def load_deaths(df):
-    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
 
     df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
 
@@ -400,7 +404,7 @@ def fetch_vac_model():
 
 def preprocess_vac_model(df):
 
-    cluster_map_df = pd.read_csv(COVID_DHHS_CLUSTERS_CSV)
+    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
     df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
     df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
     df.cluster_id.replace(CLUSTER_MAP, inplace=True)
@@ -428,5 +432,23 @@ def preprocess_vac_model(df):
     return df
 
 
+def update_vida_pop():
+
+    df = fetch_vac_model()
+    df = df[['lga', 'age_group','popn']].drop_duplicates()
+    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
+    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+    df['popn'] = df['popn'] * df['proportion']
+    df = df[['cluster_id','age_group','popn']].groupby(['cluster_id', 'age_group'], as_index=False).sum()
+    df.age_group.replace({"85+": "85-89"}, inplace=True)
+    df["start_age"] = df["age_group"].apply(lambda s: int(s.split("-")[0]))
+    df["end_age"] = df["age_group"].apply(lambda s: int(s.split("-")[1]))
+    df.to_csv(COVID_VIDA_POP_CSV, index = False)
+
+    
+
 if __name__ == "__main__":
     main()
+
+

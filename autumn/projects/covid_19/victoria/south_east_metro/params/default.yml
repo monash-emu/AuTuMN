@@ -1,10 +1,10 @@
 description: BASELINE
 
-contact_rate: 0.26
+contact_rate: 0.151
 
 vic_2021_seeding:
-  seed_time: 580
-  seed: 0.5
+  seed_time: 585
+  seed: 2.
 
 population:
   region: SOUTH_EAST_METRO

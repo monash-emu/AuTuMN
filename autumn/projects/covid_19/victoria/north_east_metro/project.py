@@ -22,4 +22,4 @@ calibration = Calibration(priors=priors, targets=targets)
 plot_spec_filepath = build_rel_path("targets.secret.json")
 with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
-project = Project(Region.NORTH_METRO, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec)
+project = Project(Region.NORTH_EAST_METRO, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec)

@@ -172,14 +172,16 @@ def apply_odds_ratio_to_props(props, adjuster):
     return [apply_odds_ratio_to_proportion(i_prop, adjuster) for i_prop in props]
 
 
-def subdivide_props(base_props: numpy.ndarray, split_props: Union[numpy.ndarray, float]) -> numpy.ndarray:
+def subdivide_props(
+    base_props: numpy.ndarray, split_props: Union[numpy.ndarray, float]
+) -> numpy.ndarray:
     """
     Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
     proportions provided (split_props).
     """
 
     split_arr = base_props * split_props
-    complement_arr = base_props * (1. - split_props)
+    complement_arr = base_props * (1.0 - split_props)
     return split_arr, complement_arr
 
 
@@ -261,12 +263,12 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
     with open(file_path, mode="r") as f:
         targets = json.load(f)
 
-    df.sort_values(by=['date_index'], inplace=True)
+    df.sort_values(by=["date_index"], inplace=True)
 
     for key, val in TARGETS_MAPPING.items():
 
         if val in df.columns and key in targets.keys():
-                
+
             # Drop the NaN value rows from df before writing data.
             temp_df = df[["date_index", val]].dropna(0, subset=[val])
 

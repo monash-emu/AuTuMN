@@ -3,11 +3,14 @@ import numpy as np
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget
 
-# TODO: Add visualisation of raw Google inputs to inputs notebook (minor)
-# TODO: Sort out the caps/lower dash/underscore issue in Vic regions naming (minor)
-# TODO: Consider a different approach to parameterising vaccine effects (including on hospital and death)
+# TODO: Revise roadmap scenario
+# TODO: Implement realistic vaccination parameters
+# TODO: Get Mili to sort out North East Metro
+# TODO: Sort out the targets missing from from mid-August - hospital admissions, ICU admission and deaths
+# TODO: Get tests passing on Vic super-models (possibly by just deleting them)
 # TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
 # TODO: Notebook for visualising outputs after run
+# TODO: See if we can get deaths as a target too
 
 # Specify the general features of the calibration
 target_start_time = 454
@@ -16,19 +19,15 @@ target_start_time = 454
 priors = [
     UniformPrior(
         "contact_rate",
-        (0.1, 0.3), jumping_stdev=0.05
+        (0.1, 0.2), jumping_stdev=0.05
     ),
-    # UniformPrior(
-    #     "seasonal_force",
-    #     (0., 0.3), jumping_stdev=0.05
-    # ),
     UniformPrior(
-        "vaccination.one_dose.vacc_reduce_infectiousness",
-        (0.1, 0.3)
+        "vaccination.fully_vaccinated.vacc_reduce_infectiousness",
+        (0.05, 0.3)
     ),
     UniformPrior(
         "testing_to_detection.assumed_cdr_parameter",
-        (0.1, 0.25), jumping_stdev=0.04
+        (0.05, 0.18), jumping_stdev=0.04
     ),
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",
@@ -39,17 +38,14 @@ priors = [
         mean=6.431724510638751, stdev=0.6588899585941116, trunc_range=(3.0, np.inf), jumping_stdev=0.4
     ),
 ]
+
 regional_target_names = (
     "notifications",
-    "hospital_admissions"
 )
 metro_target_names = (
     "notifications",
-    # "infection_deaths",
     "hospital_admissions",
     "icu_admissions",
-    "hospital_occupancy",
-    "icu_occupancy",
 )
 
 
@@ -75,6 +71,6 @@ def collate_metro_targets(ts_set):
     targets = []
     for target_name in metro_target_names:
         targets.append(
-            NormalTarget(timeseries=ts_set.get(target_name).truncate_start_time(target_start_time))
+            NormalTarget(timeseries=ts_set.get(target_name).truncate_times(target_start_time, 660))
         )
     return targets

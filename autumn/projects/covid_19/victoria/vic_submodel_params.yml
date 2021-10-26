@@ -3,10 +3,10 @@ description: BASELINE
 vic_status: "vic_region_2021"
 
 vic_2021_seeding:
-  seed_time: 570
-  seed: 1.5
+  seed_time: 580
+  seed: 0.2
 
-contact_rate: 0.215
+contact_rate: 0.11
 infectious_seed: 0.
 #seasonal_force: 0.15
 
@@ -19,10 +19,10 @@ country:
   iso3: AUS
 
 contact_tracing:
-  assumed_trace_prop: 0.4
+  assumed_trace_prop: 0.85
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2
-  floor: 0.3
+  floor: 0.5
 
 time:
   start: 454
@@ -30,8 +30,11 @@ time:
 
 testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
-  assumed_cdr_parameter: 0.179
+  assumed_cdr_parameter: 0.1
   smoothing_period: 7
+
+infection_fatality:
+  multiplier: 2.
 
 clinical_stratification:
   non_sympt_infect_multiplier: 0.509  # Median posterior estimate from 2020
@@ -67,7 +70,7 @@ clinical_stratification:
 # VAHI, 1st July to 30th September
 sojourn:
   compartment_periods:
-    hospital_late: 4.9  # (4 * 2.75 + 103 * 5.048544 + 18 * 4.555556) / (4 + 103 + 18)
+    hospital_late: 4.234  # (1.918919 * 74 + 3.542373 * 590 + 6.747826 * 230 + 5 * 2) / (74 + 590 + 230 + 2)
     icu_early: 13.189283389438017  # Need to calculate - pre-ICU hospital period 5.74 - 4.31 = 1.43 seems too short
     icu_late: 4.31  # mean((3.84, 3.96, 4.07, 4.19, 4.31, 4.43, 4.55, 4.67, 4.78))
   compartment_periods_calculated:
@@ -161,14 +164,14 @@ vaccination:
     overall_efficacy: 0.49  # Average of 0.4 and 0.58
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness_ratio: 0.5
-#    vacc_reduce_hospitalisation: 0.8  # This doesn't do anything yet
-    vacc_reduce_death: 0.9
+    vacc_reduce_hospitalisation: 0.7
+    vacc_reduce_death: 0.7
   fully_vaccinated:
     overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
     vacc_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness: 0.15  # Using same reference, but more effect for Alpha than for Delta
-#    vacc_reduce_hospitalisation: 0.8  # This doesn't do anything yet
-    vacc_reduce_death: 0.9
+    vacc_reduce_hospitalisation: 0.86
+    vacc_reduce_death: 0.92
   second_dose_delay:
     shape: 0.1
     inflection_time: 624.  # Middle of September 2021, so that most scaling occurs during September
@@ -176,45 +179,15 @@ vaccination:
     upper_asymptote: 0.0357143  # Shortened lag from Dept's spreadsheet, 28 days
   lag: 14
   roll_out_components:
-    - age_min: 10
-      age_max: 15
-      vic_supply:
+    - vic_supply:
         start_time: 454
-        end_time: 763  # 31st January 2022 (a bit later than needed)
-        time_interval: 20  # Enough to give a smooth fit
-
-    - age_min: 15
-      age_max: 30
-      vic_supply:
-        start_time: 454
-        end_time: 763
-        time_interval: 20
-    - age_min: 30
-      age_max: 40
-      vic_supply:
-        start_time: 454
-        end_time: 763
-        time_interval: 20
-    - age_min: 40
-      age_max: 50
-      vic_supply:
-        start_time: 454
-        end_time: 763
-        time_interval: 20
-    - age_min: 50
-      age_max: 60
-      vic_supply:
-        start_time: 454
-        end_time: 763
-        time_interval: 20
-    - age_min: 60
-      age_max: 70
-      vic_supply:
-        start_time: 454
-        end_time: 763
-        time_interval: 20
-    - age_min: 70
-      vic_supply:
-        start_time: 454
-        end_time: 763
-        time_interval: 20
+        end_time: 830
+        time_intervals: 100
+        age_breaks:
+          - 10
+          - 15
+          - 30
+          - 40
+          - 50
+          - 60
+          - 70

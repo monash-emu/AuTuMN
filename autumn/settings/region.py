@@ -12,6 +12,7 @@ class Region:
     SWEDEN = "sweden"
     FRANCE = "france"
     SPAIN = "spain"
+    NORTH_EAST_METRO="north-east-metro"
     NORTH_METRO = "north-metro"
     SOUTH_EAST_METRO = "south-east-metro"
     SOUTH_METRO = "south-metro"
@@ -53,6 +54,7 @@ class Region:
         SPAIN,
         VICTORIA_2020,
         VICTORIA_2021,
+        NORTH_EAST_METRO,
         NORTH_METRO,
         SOUTH_EAST_METRO,
         SOUTH_METRO,
@@ -114,9 +116,8 @@ class Region:
     ]
 
     VICTORIA_METRO = [
-        NORTH_METRO,
         SOUTH_EAST_METRO,
-        SOUTH_METRO,
+        NORTH_EAST_METRO,
         WEST_METRO,
     ]
 

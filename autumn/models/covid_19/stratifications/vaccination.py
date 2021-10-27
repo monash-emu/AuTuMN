@@ -23,7 +23,9 @@ def get_vaccination_strat(params: Parameters) -> Stratification:
         params.vaccination.vacc_prop_prevent_infection,
         params.vaccination.overall_efficacy
     )
-    symptomatic_adjuster, hospital_adjuster, ifr_adjuster = (1. - severity_efficacy,) * 3
+    severity_adjustment = 1. - severity_efficacy
+
+    symptomatic_adjuster, hospital_adjuster, ifr_adjuster = [severity_adjustment, 1, severity_adjustment]
 
     # Apply the calibration adjustment parameters
     symptomatic_adjuster *= params.clinical_stratification.props.symptomatic.multiplier

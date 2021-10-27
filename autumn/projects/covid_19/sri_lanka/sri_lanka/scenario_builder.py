@@ -19,7 +19,7 @@ def get_vaccine_roll_out(lockdown_scenario):
         if lockdown_scenario == 3:
             coverage = [0.00001, 0.00001]  # no vaccine scenario
         else:
-            coverage = [0.7587, 0.18]  # no vaccine scenario
+            coverage = [0.7587, 0.18]  # vaccine scenarios
 
         component = {"supply_period_coverage":
                          {"coverage": coverage[i_age_min], "start_time": start_time[i_age_min], "end_time": end_time[i_age_min]},}
@@ -74,9 +74,9 @@ def get_all_scenario_dicts(country: str):
                                                             'home': ['residential']}, [539, 599])
 
             # In the scenario from August 21 - Oct 01 applying average mobility observed after lockdown
-            # workplaces: 0.7 and other locations 0.9
+            # workplaces: 0.65 and other locations 0.8
             times3 = [*range(599, 640)]
-            values3 = {'work': [0.7] * len(times2), 'other_locations': [0.9] * len(times2)}
+            values3 = {'work': [0.65] * len(times3), 'other_locations': [0.8] * len(times3)}
 
             # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown)
             times4, values4 = get_mobility_specific_period(country, None,
@@ -92,13 +92,13 @@ def get_all_scenario_dicts(country: str):
                     "times": [scenario_start_time[i_lockdown_scenario]] + times1 + times5 +
                               times2 + times3 + times4 + [times4[-1] + 1],
                     "values": [["repeat_prev"]] + values1[key_loc] + values5[key_loc] +
-                              values2[key_loc] + values3 + values4[key_loc] + [["repeat_prev"]]
+                              values2[key_loc] + values3[key_loc] + values4[key_loc] + [["repeat_prev"]]
                 }
         if i_lockdown_scenario == 2:  # What if lockdown was initiated from July 10 - Oct 01
             # lockdown mobility from 21Aug -01 Oct
 
             # In the scenario, from July 10 - Aug 21 applying average mobility observed during lockdown
-            # workplaces: 0.2 and other locations 0.2
+            # workplaces: 0.4 and other locations 0.4
             times3 = [*range(557, 599)]
             values3 = {'work': [0.4] * len(times3), 'other_locations': [0.4] * len(times3)}
 

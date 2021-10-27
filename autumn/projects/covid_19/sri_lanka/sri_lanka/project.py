@@ -42,7 +42,7 @@ priors = [
     UniformPrior("contact_rate", [0.024, 0.027]),
     UniformPrior("infectious_seed", [250.0, 360.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0009, 0.005]),
     UniformPrior("infection_fatality.multiplier", [0.11, 0.6]),
     TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=1.0,\
                      stdev=0.5, trunc_range=[0.0, np.inf]),

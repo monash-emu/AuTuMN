@@ -19,7 +19,7 @@ def get_vaccine_roll_out(lockdown_scenario):
         if lockdown_scenario == 3:
             coverage = [0.00001, 0.00001]  # no vaccine scenario
         else:
-            coverage = [0.7587, 0.18]  # no vaccine scenario
+            coverage = [0.7587, 0.18]  # vaccine scenarios
 
         component = {"supply_period_coverage":
                          {"coverage": coverage[i_age_min], "start_time": start_time[i_age_min], "end_time": end_time[i_age_min]},}
@@ -65,8 +65,7 @@ def get_all_scenario_dicts(country: str):
             times5 = [*range(507, 539)]
             values5 = {'work': [0.4] * len(times5), 'other_locations': [0.4] * len(times5)}
 
-            # In the scenario from June 22 - Oct 01 applying average mobility observed after lockdown
-            # workplaces: 0.7 and other locations 0.9
+            # In the scenario from June 22 - Oct 01 applying lockdown mobility
             times2 = [*range(539, 640)]
             values2 = {'work': [0.2] * len(times2), 'other_locations': [0.2] * len(times2)}
 
@@ -87,11 +86,12 @@ def get_all_scenario_dicts(country: str):
                               values2[key_loc] + values4[key_loc] + [["repeat_prev"]]
                 }
         if i_lockdown_scenario == 2:  # What if lockdown was initiated from July 10 - Oct 01
+            # lockdown mobility from 21Aug -01 Oct
 
             # In the scenario, from July 10 - Aug 21 applying average mobility observed during lockdown
-            # workplaces: 0.2 and other locations 0.2
+            # workplaces: 0.4 and other locations 0.4
             times3 = [*range(557, 599)]
-            values3 = {'work': [0.2] * len(times3), 'other_locations': [0.2] * len(times3)}
+            values3 = {'work': [0.4] * len(times3), 'other_locations': [0.4] * len(times3)}
 
             # lockdown mobility from 21Aug -01 Oct is assigned from  Aug 21 - Oct 01 in the scenario
             times1, values1 = get_mobility_specific_period(country, None,
@@ -117,44 +117,69 @@ def get_all_scenario_dicts(country: str):
                     "values": [["repeat_prev"]] + values1[key_loc] + values3[key_loc] +
                               values4[key_loc] + [["repeat_prev"]]
                 }
-
         if i_lockdown_scenario == 4:  # "Slower increase in mobility after lockdown ends on 01st October"
             for key_loc in ["other_locations", "work"]:
                 if key_loc == "other_locations":
                     scenario_dict["mobility"]["mixing"][key_loc] = {
                         "append": True,
-                        "times": [scenario_start_time[i_lockdown_scenario]] + [scenario_start_time[i_lockdown_scenario] + 1] +
-                                 [671, 672, 701, 702, 762, 763],
-                        "values": [["repeat_prev"]] + [0.75] + [0.75, 0.8, 0.8, 0.85, 0.85, 1.04]
+                        "times": [scenario_start_time[i_lockdown_scenario]] + [
+                            scenario_start_time[i_lockdown_scenario] + 1] +
+                                 [671, 672, 701, 702, 731, 732],
+                        "values": [["repeat_prev"]] + [0.85] + [0.85, 0.9, 0.9, 0.95, 0.95, 1.04]
                     }
                 if key_loc == "work":
                     scenario_dict["mobility"]["mixing"][key_loc] = {
                         "append": True,
-                        "times": [scenario_start_time[i_lockdown_scenario]] + [scenario_start_time[i_lockdown_scenario] + 1] +
-                                 [671, 672, 701, 702, 762, 763],
-                        "values": [["repeat_prev"]] + [0.6] + [0.6, 0.65, 0.65, 0.7, 0.7, 1.00]
+                        "times": [scenario_start_time[i_lockdown_scenario]] + [
+                            scenario_start_time[i_lockdown_scenario] + 1] +
+                                 [671, 672, 701, 702, 731, 732],
+                        "values": [["repeat_prev"]] + [0.7] + [0.7, 0.75, 0.75, 0.8, 0.8, 1.00]
                     }
-        # scenario 3 is the same mobility as baseline but no vaccination
+            # scenario 3 is the same mobility as baseline but no vaccination
 
         if i_lockdown_scenario == 5:  # "Faster increase in mobility after lockdown ends on 01st October"
             for key_loc in ["other_locations", "work"]:
                 if key_loc == "other_locations":
                     scenario_dict["mobility"]["mixing"][key_loc] = {
                         "append": True,
-                        "times": [scenario_start_time[i_lockdown_scenario]] + [scenario_start_time[i_lockdown_scenario] + 1],
+                        "times": [scenario_start_time[i_lockdown_scenario]] + [
+                            scenario_start_time[i_lockdown_scenario] + 1],
                         "values": [["repeat_prev"]] + [1.04]
                     }
                 if key_loc == "work":
                     scenario_dict["mobility"]["mixing"][key_loc] = {
                         "append": True,
-                        "times": [scenario_start_time[i_lockdown_scenario]] + [scenario_start_time[i_lockdown_scenario] + 1],
+                        "times": [scenario_start_time[i_lockdown_scenario]] + [
+                            scenario_start_time[i_lockdown_scenario] + 1],
                         "values": [["repeat_prev"]] + [1.0]
                     }
 
         # vaccination parameters
         scenario_dict["vaccination"]["roll_out_components"] = get_vaccine_roll_out(i_lockdown_scenario)
 
-        all_scenario_dicts.append(scenario_dict)
+        # school openings
+        if i_lockdown_scenario == 4:
 
+            scenario_dict["mobility"]["mixing"]["school"] = {
+                "append": False,
+                "times": [653, 654],
+                "values": [0.0, 0.4]
+            }
+        elif i_lockdown_scenario == 5:
+            scenario_dict["mobility"]["mixing"]["school"] = {
+                "append": False,
+                "times": [653, 654],
+                "values": [0.0, 1.0]
+            }
+        else:
+            scenario_dict["mobility"]["mixing"]["school"] = {
+                "append": False,
+                "times": [653, 654],
+                "values": [0.0, 0.0]
+            }
+
+
+        all_scenario_dicts.append(scenario_dict)
     return all_scenario_dicts
+
 

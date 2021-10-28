@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS
+from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS, VACCINATION_STRATA
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -522,16 +522,23 @@ class Vaccination(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
+
         second_dose_delay = values["second_dose_delay"]
         if type(second_dose_delay) == float:
             assert 0. < second_dose_delay, f"Delay to second dose is not positive: {second_dose_delay}"
+        return values
 
-        # Use ratio to calculate the infectiousness of the one dose vaccinated compared to unvaccinated
-        if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:
-            values["one_dose"]["vacc_reduce_infectiousness"] = \
-                values["fully_vaccinated"]["vacc_reduce_infectiousness"] * \
-                values["one_dose"]["vacc_reduce_infectiousness_ratio"]
-            values["one_dose"]["vacc_reduce_infectiousness_ratio"] = None
+    @root_validator(pre=True, allow_reuse=True)
+    def apply_ratio_adjustment(cls, values):
+
+        strata_to_adjust = VACCINATION_STRATA[1: 2]
+        for stratum in strata_to_adjust:
+            for key in values["fully_vaccinated"]:
+                ratio_key = f"{key}_ratio"
+                if ratio_key in values[stratum]:
+                    values[stratum][key] = values["fully_vaccinated"][key] * values[stratum][ratio_key]
+                    values[stratum][ratio_key] = None
+
         return values
 
     @validator("lag", allow_reuse=True)

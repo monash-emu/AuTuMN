@@ -69,7 +69,7 @@ voc_emergence:
 
 vaccination:
   one_dose:
-    overall_efficacy: 0.7
+    ve_sympt_covid: 0.7
     ve_prop_prevent_infection: 0.7
     ve_infectiousness: 0.5
   roll_out_components:

@@ -45,7 +45,7 @@ priors = [
     UniformPrior("vaccination.one_dose.ve_prop_prevent_infection", [0.0, 1.0]),
     UniformPrior("vaccination.coverage_override", [0.0, 1.0], sampling="lhs"),
     BetaPrior("vaccination.one_dose.ve_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
-    UniformPrior("vaccination.one_dose.overall_efficacy", [0.0, 1.0], sampling="lhs"),
+    UniformPrior("vaccination.one_dose.ve_sympt_covid", [0.0, 1.0], sampling="lhs"),
     UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
 ]
 

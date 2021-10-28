@@ -482,7 +482,7 @@ class VaccEffectiveness(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_effect_ratios(cls, values):
-        overall_effect = values["overall_efficacy"]
+        overall_effect = values["ve_sympt_covid"]
         if values["ve_hospitalisation"]:
             hospital_effect = values["ve_hospitalisation"]
             msg = f"Hospitalisation efect: {hospital_effect} should not exceed overall effect: {overall_effect}"

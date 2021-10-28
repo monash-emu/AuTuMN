@@ -37,7 +37,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
     for stratum in vaccinated_strata:
 
         # Parameters to directly pull out
-        raw_effectiveness_keys = ["vacc_prop_prevent_infection", "overall_efficacy"]
+        raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
         stratum_vacc_params = getattr(params.vaccination, stratum)
         if stratum_vacc_params.ve_death:
             raw_effectiveness_keys.append("ve_death")
@@ -45,12 +45,12 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
 
         # Parameters that need to be processed
         vaccination_effects[stratum]["infection_efficacy"], severity_effect = find_vaccine_action(
-            vaccination_effects[stratum]["vacc_prop_prevent_infection"],
-            vaccination_effects[stratum]["overall_efficacy"],
+            vaccination_effects[stratum]["ve_prop_prevent_infection"],
+            vaccination_effects[stratum]["ve_sympt_covid"],
         )
         if stratum_vacc_params.ve_hospitalisation:
             hospitalisation_effect = get_hosp_given_case_effect(
-                stratum_vacc_params.ve_hospitalisation, vaccination_effects[stratum]["overall_efficacy"],
+                stratum_vacc_params.ve_hospitalisation, vaccination_effects[stratum]["ve_sympt_covid"],
             )
 
         symptomatic_adjuster[stratum] = 1. - severity_effect

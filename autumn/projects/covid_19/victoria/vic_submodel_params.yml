@@ -33,9 +33,6 @@ testing_to_detection:  # Need to mention these parameters in the Supplement some
   assumed_cdr_parameter: 0.1
   smoothing_period: 7
 
-infection_fatality:
-  multiplier: 2.
-
 clinical_stratification:
   non_sympt_infect_multiplier: 0.509  # Median posterior estimate from 2020
 

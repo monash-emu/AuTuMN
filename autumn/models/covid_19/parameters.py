@@ -445,17 +445,17 @@ class VaccEffectiveness(BaseModel):
     ve_death: Optional[float]
 
     @validator("ve_sympt_covid", pre=True, allow_reuse=True)
-    def check_overall_efficacy(val):
+    def check_ve_sympt_covid(val):
         assert 0. <= val <= 1., f"Overall efficacy should be in [0, 1]: {val}"
         return val
 
     @validator("ve_prop_prevent_infection", pre=True, allow_reuse=True)
-    def check_vacc_prop_prevent_infection(val):
+    def check_ve_prop_prevent_infection(val):
         assert 0. <= val <= 1., f"Proportion of vaccine effect preventing infection should be in [0, 1]: {val}"
         return val
 
     @validator("ve_infectiousness", pre=True, allow_reuse=True)
-    def check_infectiousness_efficacy(val):
+    def check_ve_infectiousness(val):
         assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
@@ -469,13 +469,13 @@ class VaccEffectiveness(BaseModel):
         return values
 
     @validator("ve_hospitalisation", pre=True, allow_reuse=True)
-    def check_hospitalisation_effect(val):
+    def check_ve_hospitalisation(val):
         if val:
             assert 0. <= val <= 1., f"Reduction in hospitalisation risk should be in [0, 1]: {val}"
         return val
 
     @validator("ve_death", pre=True, allow_reuse=True)
-    def check_death_efficacy(val):
+    def check_ve_death(val):
         if val:
             assert 0. <= val <= 1., f"Reduction in risk of death should be in [0, 1]: {val}"
         return val
@@ -485,11 +485,11 @@ class VaccEffectiveness(BaseModel):
         overall_effect = values["ve_sympt_covid"]
         if values["ve_hospitalisation"]:
             hospital_effect = values["ve_hospitalisation"]
-            msg = f"Hospitalisation efect: {hospital_effect} should not exceed overall effect: {overall_effect}"
+            msg = f"Symptomatic Covid effect: {overall_effect} exceeds hospitalisation effect: {hospital_effect}"
             assert hospital_effect >= overall_effect, msg
         if values["ve_death"]:
             death_effect = values["ve_death"]
-            msg = f"Death effect: {death_effect} should not exceed overall effect: {overall_effect}"
+            msg = f"Symptomatic Covid effect: {overall_effect} exceeds death effect: {death_effect}"
             assert death_effect >= overall_effect, msg
         return values
 

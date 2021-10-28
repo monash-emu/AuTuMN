@@ -61,7 +61,7 @@ testing_to_detection:
 # Vaccination-related
 vaccination:
   one_dose:
-    overall_efficacy: 0.7 # now varied
+    ve_sympt_covid: 0.7 # now varied
     ve_prop_prevent_infection: 1 # now varied
   roll_out_components:
     - supply_period_coverage:

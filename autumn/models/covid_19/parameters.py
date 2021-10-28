@@ -535,7 +535,7 @@ class Vaccination(BaseModel):
         for stratum in strata_to_adjust:
             for key in values["fully_vaccinated"]:
                 ratio_key = f"{key}_ratio"
-                if ratio_key in values[stratum]:
+                if ratio_key in values[stratum] and values[stratum][ratio_key]:
                     values[stratum][key] = values["fully_vaccinated"][key] * values[stratum][ratio_key]
                     values[stratum][ratio_key] = None
 

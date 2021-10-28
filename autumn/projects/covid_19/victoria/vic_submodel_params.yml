@@ -161,17 +161,17 @@ mobility:
 # Vaccination effectiveness parameters taken from https://www.medrxiv.org/content/10.1101/2021.08.18.21262237v1
 vaccination:
   one_dose:
-    ve_sympt_covid: 0.49  # Average of 0.4 and 0.58
+    ve_sympt_covid: 0.57
     ve_prop_prevent_infection_ratio: 1.
-    ve_infectiousness_ratio: 0.5
-    ve_hospitalisation: 0.7
-    ve_death: 0.7
+    ve_infectiousness_ratio: 0.469  # 0.15 / 0.32 (ratio of one to two dose)
+    ve_hospitalisation: 0.88
+    ve_death: 0.94
   fully_vaccinated:
-    ve_sympt_covid: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
-    ve_prop_prevent_infection: 0.95  # Approximate estimate
-    ve_infectiousness: 0.15  # Using same reference, but more effect for Alpha than for Delta
-    ve_hospitalisation: 0.86
-    ve_death: 0.92
+    ve_sympt_covid: 0.73
+    ve_prop_prevent_infection: 0.95  # Very high (0.51 versus 0.57 or 0.72 versus 0.73)
+    ve_infectiousness: 0.32
+    ve_hospitalisation: 0.95
+    ve_death: 0.96
   second_dose_delay:
     shape: 0.1
     inflection_time: 624.  # Middle of September 2021, so that most scaling occurs during September

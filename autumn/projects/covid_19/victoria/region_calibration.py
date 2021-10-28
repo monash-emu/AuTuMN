@@ -22,7 +22,7 @@ priors = [
         (0.1, 0.2), jumping_stdev=0.05
     ),
     UniformPrior(
-        "vaccination.fully_vaccinated.vacc_reduce_infectiousness",
+        "vaccination.fully_vaccinated.ve_infectiousness",
         (0.05, 0.3)
     ),
     UniformPrior(

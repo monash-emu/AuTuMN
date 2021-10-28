@@ -438,7 +438,8 @@ class RollOutFunc(BaseModel):
 
 class VaccEffectiveness(BaseModel):
     ve_sympt_covid: float
-    ve_prop_prevent_infection: float
+    ve_prop_prevent_infection: Optional[float]
+    ve_prop_prevent_infection_ratio: Optional[float]
     ve_infectiousness: Optional[float]
     ve_infectiousness_ratio: Optional[float]
     ve_hospitalisation: Optional[float]
@@ -460,11 +461,17 @@ class VaccEffectiveness(BaseModel):
         return val
 
     @root_validator(pre=True, allow_reuse=True)
-    def check_one_infectiousness_request(cls, values):
+    def check_single_requests(cls, values):
         n_requests = sum(
             [int(bool(values[option])) for option in ["ve_infectiousness", "ve_infectiousness_ratio"]]
         )
         msg = f"Both ve_infectiousness and ve_infectiousness_ratio cannot be requested together"
+        assert n_requests < 2, msg
+
+        n_requests = sum(
+            [int(bool(values[option])) for option in ["ve_prop_prevent_infection", "ve_prop_prevent_infection_ratio"]]
+        )
+        msg = f"Both ve_prop_prevent_infection and ve_prop_prevent_infection_ratio cannot be requested together"
         assert n_requests < 2, msg
         return values
 

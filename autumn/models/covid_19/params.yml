@@ -183,6 +183,7 @@ vaccination:
   fully_vaccinated:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
     ve_infectiousness: 0.
     ve_infectiousness_ratio: null
     ve_hospitalisation: null
@@ -190,6 +191,7 @@ vaccination:
   one_dose:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
     ve_infectiousness: 0.
     ve_infectiousness_ratio: null
     ve_hospitalisation: null

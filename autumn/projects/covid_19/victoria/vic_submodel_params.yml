@@ -162,7 +162,7 @@ mobility:
 vaccination:
   one_dose:
     ve_sympt_covid: 0.49  # Average of 0.4 and 0.58
-    ve_prop_prevent_infection: 0.95  # Approximate estimate
+    ve_prop_prevent_infection_ratio: 1.
     ve_infectiousness_ratio: 0.5
     ve_hospitalisation: 0.7
     ve_death: 0.7

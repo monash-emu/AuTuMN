@@ -5,7 +5,10 @@ import pandas as pd
 from autumn.tools.inputs.database import get_input_db
 
 
-def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, location_map: dict):
+def get_mobility_data(
+        country_iso_code: str, region: str, base_date: datetime, location_map: dict,
+        location_props={}
+):
     """
     Get daily Google mobility data for locations, for a given country.
     Times are in days since a given base date.
@@ -41,14 +44,18 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, l
         },
     )
 
+    location_props = {
+        "work": {"workplaces": 1.},
+        "other_locations": {"retail_and_recreation": 0.25, "grocery_and_pharmacy": 0.25, "parks": 0.25, "transit_stations": 0.25},
+        "home": {"residential": 1.},
+    }
+
     # Average out Google Mobility locations into Autumn-friendly locations
     revised_location_map = {key: value for key, value in location_map.items() if value}
     for new_loc, old_locs in revised_location_map.items():
         mob_df[new_loc] = 0
         for old_loc in old_locs:
-            mob_df[new_loc] += mob_df[old_loc]
-
-        mob_df[new_loc] = mob_df[new_loc] / len(old_locs)
+            mob_df[new_loc] += mob_df[old_loc] * location_props[new_loc][old_loc]
 
     mob_df["date"] = pd.to_datetime(mob_df["date"], format="%Y-%m-%d")
     mob_df = mob_df.sort_values(["date"])

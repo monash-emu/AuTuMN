@@ -162,16 +162,16 @@ mobility:
 vaccination:
   one_dose:
     overall_efficacy: 0.49  # Average of 0.4 and 0.58
-    vacc_prop_prevent_infection: 0.95  # Approximate estimate
+    ve_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness_ratio: 0.5
-    vacc_reduce_hospitalisation: 0.7
-    vacc_reduce_death: 0.7
+    ve_hospitalisation: 0.7
+    ve_death: 0.7
   fully_vaccinated:
     overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
-    vacc_prop_prevent_infection: 0.95  # Approximate estimate
+    ve_prop_prevent_infection: 0.95  # Approximate estimate
     vacc_reduce_infectiousness: 0.15  # Using same reference, but more effect for Alpha than for Delta
-    vacc_reduce_hospitalisation: 0.86
-    vacc_reduce_death: 0.92
+    ve_hospitalisation: 0.86
+    ve_death: 0.92
   second_dose_delay:
     shape: 0.1
     inflection_time: 624.  # Middle of September 2021, so that most scaling occurs during September

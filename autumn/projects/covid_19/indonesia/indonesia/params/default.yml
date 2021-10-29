@@ -16,14 +16,6 @@ country:
   iso3: IDN
 
 mobility:
-  google_mobility_locations:  # Not mapping residential mobility to home
-    work:
-      - workplaces
-    other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - parks
-      - transit_stations
   microdistancing:
     behaviour:
       function_type: tanh

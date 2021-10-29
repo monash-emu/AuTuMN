@@ -19,8 +19,14 @@ def build_dynamic_mixing_matrix(
 
     microdistancing_funcs = get_microdistancing_funcs(mobility.microdistancing, mobility.square_mobility_effect)
 
+    google_mobility_locations = {
+        "work": {"workplaces": 1.},
+        "other_locations": {"retail_and_recreation": 0.25, "grocery_and_pharmacy": 0.25, "parks": 0.25, "transit_stations": 0.25},
+        "home": {"residential": 1.},
+    }
+
     mobility_funcs = get_mobility_funcs(
-        country, mobility.region, mobility.mixing, mobility.google_mobility_locations, mobility.npi_effectiveness,
+        country, mobility.region, mobility.mixing, google_mobility_locations, mobility.npi_effectiveness,
         mobility.square_mobility_effect, mobility.smooth_google_data,
     )
 

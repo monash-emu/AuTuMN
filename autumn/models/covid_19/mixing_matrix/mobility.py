@@ -13,7 +13,7 @@ def get_mobility_funcs(
     country: Country,
     region: str,
     mixing: Dict[str, MixingLocation],
-    google_mobility_locations: List[str],
+    google_mobility_locations: Dict[str, Dict[str, float]],
     npi_effectiveness_params: Dict[str, float],
     square_mobility_effect: bool,
     smooth_google_data: bool,
@@ -23,13 +23,6 @@ def get_mobility_funcs(
     and then returns a mobility function for each location.
     """
     google_mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
-
-    google_mobility_locations = {
-        "work": {"workplaces": 1.},
-        "other_locations": {"retail_and_recreation": 0.25, "grocery_and_pharmacy": 0.25, "parks": 0.25, "transit_stations": 0.25},
-        "home": {"residential": 1.},
-    }
-
     google_mobility_values = weighted_average_google_locations(google_mob_df, google_mobility_locations)
 
     if smooth_google_data:

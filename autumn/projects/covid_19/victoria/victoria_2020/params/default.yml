@@ -59,18 +59,16 @@ victorian_clusters:
       region: null
       age_mixing: null
       npi_effectiveness: {}
-      google_mobility_locations:
-        work:
-          - workplaces
-        other_locations:
-          - retail_and_recreation
-          - grocery_and_pharmacy
-          - parks
-          - transit_stations
-#        home:
-#          - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
+      google_mobility_locations:
+        work:
+          workplaces: 1.
+        other_locations:
+          retail_and_recreation: 0.25
+          grocery_and_pharmacy: 0.25
+          parks: 0.25
+          transit_stations: 0.25
       mixing:
         school:
           append: false
@@ -144,14 +142,12 @@ victorian_clusters:
       npi_effectiveness: {}
       google_mobility_locations:
         work:
-          - workplaces
+          workplaces: 1.
         other_locations:
-          - retail_and_recreation
-          - grocery_and_pharmacy
-          - parks
-          - transit_stations
-#        home:
-#          - residential
+          retail_and_recreation: 0.25
+          grocery_and_pharmacy: 0.25
+          parks: 0.25
+          transit_stations: 0.25
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:

@@ -80,8 +80,10 @@ testing_to_detection:
 # All figures calculated below are available at: https://bit.ly/HCMC_vaccination_status
 vaccination:
   fully_vaccinated:
-    ve_sympt_covid: 0.7084 # weighted average efficacy of all vaccines
+    ve_sympt_covid: 0.7157 # weighted average
     ve_prop_prevent_infection: 1 # now varied
+    ve_hospitalisation: 0.9160 # weighted average
+    ve_death: 0.9329 # weighted average
   second_dose_delay:  32.67 # weighted average waiting time between two doses
   roll_out_components: # --> stratify by time
     - age_min: 20

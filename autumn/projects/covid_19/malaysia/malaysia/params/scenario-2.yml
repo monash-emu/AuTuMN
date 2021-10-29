@@ -1,34 +1,8 @@
-description: No vaccine coverage from 25th April
+description: No vaccine coverage at all
 
 time:
   start: 481 # 25 April 2021
-
-mobility:
-  mixing:
-    other_locations:
-      append: true
-      times:
-        - 2022-01-01
-        - 2022-01-02
-      values:
-        - - repeat_prev
-        - 1.
-    work:
-      append: true
-      times:
-        - 2022-01-01
-        - 2022-01-02
-      values:
-        - - repeat_prev
-        - 1.
-    school:
-      append: false
-      times:
-        - 2021-12-31
-        - 2022-01-01 # All schools open
-      values:
-        - 0.4
-        - 1
+  end: 670 # 31st october 2021
 
 vaccination:
   roll_out_components:

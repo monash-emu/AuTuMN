@@ -168,6 +168,8 @@ mobility:
       grocery_and_pharmacy: 0.25
       parks: 0.25
       transit_stations: 0.25
+    home:
+      residential: 1.
   smooth_google_data: false # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}

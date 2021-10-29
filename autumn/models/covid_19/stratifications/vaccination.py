@@ -37,29 +37,29 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
     for stratum in vaccinated_strata:
 
         # Parameters to directly pull out
-        raw_effectiveness_keys = ["vacc_prop_prevent_infection", "overall_efficacy"]
+        raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
         stratum_vacc_params = getattr(params.vaccination, stratum)
-        if stratum_vacc_params.vacc_reduce_death:
-            raw_effectiveness_keys.append("vacc_reduce_death")
+        if stratum_vacc_params.ve_death:
+            raw_effectiveness_keys.append("ve_death")
         vaccination_effects[stratum] = {key: getattr(stratum_vacc_params, key) for key in raw_effectiveness_keys}
 
         # Parameters that need to be processed
         vaccination_effects[stratum]["infection_efficacy"], severity_effect = find_vaccine_action(
-            vaccination_effects[stratum]["vacc_prop_prevent_infection"],
-            vaccination_effects[stratum]["overall_efficacy"],
+            vaccination_effects[stratum]["ve_prop_prevent_infection"],
+            vaccination_effects[stratum]["ve_sympt_covid"],
         )
-        if stratum_vacc_params.vacc_reduce_hospitalisation:
+        if stratum_vacc_params.ve_hospitalisation:
             hospitalisation_effect = get_hosp_given_case_effect(
-                stratum_vacc_params.vacc_reduce_hospitalisation, vaccination_effects[stratum]["overall_efficacy"],
+                stratum_vacc_params.ve_hospitalisation, vaccination_effects[stratum]["ve_sympt_covid"],
             )
 
         symptomatic_adjuster[stratum] = 1. - severity_effect
 
         # Use the standard severity adjustment if no specific request for reducing death
-        ifr_adjuster[stratum] = 1. - vaccination_effects[stratum]["vacc_reduce_death"] if \
-            "vacc_reduce_death" in vaccination_effects[stratum] else 1. - severity_effect
+        ifr_adjuster[stratum] = 1. - vaccination_effects[stratum]["ve_death"] if \
+            "ve_death" in vaccination_effects[stratum] else 1. - severity_effect
         hospital_adjuster[stratum] = 1. - hospitalisation_effect if \
-            "vacc_reduce_hospitalisation" in vaccination_effects[stratum] else 1.
+            "ve_hospitalisation" in vaccination_effects[stratum] else 1.
 
         # Apply the calibration adjusters
         symptomatic_adjuster[stratum] *= params.clinical_stratification.props.symptomatic.multiplier
@@ -99,7 +99,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
 
     infectiousness_adjustments = {Vaccination.UNVACCINATED: None}
     strata_adjs = {
-        stratum: Multiply(1. - getattr(getattr(params.vaccination, stratum), "vacc_reduce_infectiousness")) for
+        stratum: Multiply(1. - getattr(getattr(params.vaccination, stratum), "ve_infectiousness")) for
         stratum in vaccinated_strata
     }
     infectiousness_adjustments.update(strata_adjs)

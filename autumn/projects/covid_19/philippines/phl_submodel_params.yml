@@ -71,13 +71,13 @@ cumul_incidence_start_time: 670
 # Vaccination-related
 vaccination:
   one_dose:
-    overall_efficacy: 0.49  # Average of 0.4 and 0.58
-    vacc_prop_prevent_infection: 0.95  # Approximate estimate
-    vacc_reduce_infectiousness_ratio: 0.5
+    ve_sympt_covid: 0.49  # Average of 0.4 and 0.58
+    ve_prop_prevent_infection: 0.95  # Approximate estimate
+    ve_infectiousness_ratio: 0.5
   fully_vaccinated:
-    overall_efficacy: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
-    vacc_prop_prevent_infection: 0.95  # Approximate estimate
-    vacc_reduce_infectiousness: 0.15  # Using same reference, but more effect for Alpha than for Delta
+    ve_sympt_covid: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
+    ve_prop_prevent_infection: 0.95  # Approximate estimate
+    ve_infectiousness: 0.15  # Using same reference, but more effect for Alpha than for Delta
   second_dose_delay: 30
 
 vaccination_risk:

@@ -11,10 +11,7 @@ from autumn.settings import PASSWORD_ENVAR
 from getpass import getpass
 from autumn.tools.utils import secrets
 
-
-# Use OWID csv for notification and death numbers.
 COVID_AU_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_au")
-
 
 CHRIS_CSV = os.path.join(COVID_AU_DIRPATH, "monitoringreport.secret.csv")
 COVID_DHHS_DEATH_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_deaths.secret.csv")
@@ -24,9 +21,7 @@ COVID_DHHS_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_vaccinat
 COVID_VIDA_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vida_vac.secret.csv")
 COVID_VIDA_POP_CSV = os.path.join(COVID_AU_DIRPATH, "vida_pop.csv")
 
-
 COVID_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
-
 
 COVID_DHHS_POSTCODE_LGA_CSV = os.path.join(COVID_AU_DIRPATH, "postcode lphu concordance.csv")
 
@@ -34,74 +29,85 @@ COVID_VIC2021_TARGETS_CSV = os.path.join(
     PROJECTS_PATH, "covid_19", "victoria", "victoria_2021", "targets.secret.json"
 )
 
+# Two different mappings
 LGA_TO_CLUSTER = os.path.join(
     INPUT_DATA_PATH, "mobility", "LGA to Cluster mapping dictionary with proportions.csv"
 )
 
-LGA_TO_HSP = os.path.join(
-    INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv"
+LGA_TO_HSP = os.path.join(INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv")
+
+COVID_DHHS_MAPING = LGA_TO_HSP  # This is the new mapping
+
+cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
+
+map_id = cluster_map_df[["cluster_id", "cluster_name"]].drop_duplicates()
+map_id["cluster_name"] = (
+    map_id["cluster_name"]
+    .str.upper()
+    .str.replace("&", "")
+    .str.replace("  ", "_")
+    .str.replace(" ", "_")
 )
-
-COVID_DHHS_MAPING = LGA_TO_HSP
-
-df = pd.read_csv(COVID_DHHS_MAPING)
-map_id = df[['cluster_id','cluster_name']].drop_duplicates()
-map_id['cluster_name'] = map_id['cluster_name'].str.upper().str.replace("&","").str.replace("  ","_").str.replace(" ","_")
-
-
-#map_id = dict(map_id.values)
 
 CLUSTER_MAP = dict(map_id.values)
 
 CHRIS_MAP = {
+    # North east metro
     "St Vincents Hospital": "NORTH_EAST_METRO",
     "St Vincents Private Hospital Fitzroy": "NORTH_EAST_METRO",
     "Austin Hospital": "NORTH_EAST_METRO",
     "Northern Hospital, The [Epping]": "NORTH_EAST_METRO",
+    "Warringal Private Hospital [Heidelberg]": "NORTH_EAST_METRO",
+    "Maroondah Hospital [East Ringwood]": "NORTH_EAST_METRO",
+    "Box Hill Hospital": "NORTH_EAST_METRO",
+    "Angliss Hospital": "NORTH_EAST_METRO",
+    "Epworth Eastern Hospital": "NORTH_EAST_METRO",
+    "Knox Private Hospital [Wantirna]": "NORTH_EAST_METRO",
+    # South east metro
     "Bays Hospital, The [Mornington]": "SOUTH_EAST_METRO",
     "Frankston Hospital": "SOUTH_EAST_METRO",
     "Peninsula Private Hospital [Frankston]": "SOUTH_EAST_METRO",
-    "Warringal Private Hospital [Heidelberg]": "NORTH_EAST_METRO",
     "Holmesglen Private Hospital ": "SOUTH_EAST_METRO",
-    "Royal Childrens Hospital [Parkville]": "WEST_METRO",
     "Alfred, The [Prahran]": "SOUTH_EAST_METRO",
     "Cabrini Malvern": "SOUTH_EAST_METRO",
-    "Ballarat Health Services [Base Campus]": "GRAMPIANS",
-    "Albury Wodonga Health - Albury": "HUME",
-    "Epworth Freemasons": "WEST_METRO",
-    "Sunshine Hospital": "WEST_METRO",
-    "Western Hospital [Footscray]": "WEST_METRO",
-    "Bendigo Hospital, The": "LODDON_MALLEE",
-    "Latrobe Regional Hospital [Traralgon]": "GIPPSLAND",
-    "Royal Melbourne Hospital - City Campus": "WEST_METRO",
-    "Melbourne Private Hospital, The [Parkville]": "WEST_METRO",
-    "St John of God Geelong Hospital": "BARWON_SOUTH_WEST",
-    "Maroondah Hospital [East Ringwood]": "NORTH_EAST_METRO",
-    "New Mildura Base Hospital": "LODDON_MALLEE",
-    "Box Hill Hospital": "NORTH_EAST_METRO",
-    "Angliss Hospital": "NORTH_EAST_METRO",
-    "Geelong Hospital": "BARWON_SOUTH_WEST",
     "Monash Medical Centre [Clayton]": "SOUTH_EAST_METRO",
-    "Goulburn Valley Health [Shepparton]": "HUME",
-    "St John of God Ballarat Hospital": "GRAMPIANS",
-    "Epworth Eastern Hospital": "NORTH_EAST_METRO",
-    "South West Healthcare [Warrnambool]": "BARWON_SOUTH_WEST",
-    "Northeast Health Wangaratta": "HUME",
-    "Mercy Public Hospitals Inc [Werribee]": "WEST_METRO",
-    "Epworth Hospital [Richmond]": "WEST_METRO",
-    "Knox Private Hospital [Wantirna]": "NORTH_EAST_METRO",
-    "St John of God Bendigo Hospital": "LODDON_MALLEE",
-    "Wimmera Base Hospital [Horsham]": "GRAMPIANS",
     "Valley Private Hospital, The [Mulgrave]": "SOUTH_EAST_METRO",
-    "John Fawkner - Moreland Private Hospital": "WEST_METRO",
-    "Epworth Geelong": "BARWON_SOUTH_WEST",
     "Monash Children's Hospital": "SOUTH_EAST_METRO",
-    "Central Gippsland Health Service [Sale]": "GIPPSLAND",
     "Dandenong Campus": "SOUTH_EAST_METRO",
-    "Hamilton Base Hospital": "BARWON_SOUTH_WEST",
     "St John of God Berwick Hospital": "SOUTH_EAST_METRO",
     "Casey Hospital": "SOUTH_EAST_METRO",
+    # West metro
+    "Royal Childrens Hospital [Parkville]": "WEST_METRO",
+    "Sunshine Hospital": "WEST_METRO",
+    "Epworth Freemasons": "WEST_METRO",
+    "Western Hospital [Footscray]": "WEST_METRO",
+    "Melbourne Private Hospital, The [Parkville]": "WEST_METRO",
+    "Royal Melbourne Hospital - City Campus": "WEST_METRO",
+    "Mercy Public Hospitals Inc [Werribee]": "WEST_METRO",
+    "Epworth Hospital [Richmond]": "WEST_METRO",
+    "John Fawkner - Moreland Private Hospital": "WEST_METRO",
+    # Grampians
+    "Ballarat Health Services [Base Campus]": "GRAMPIANS",
+    "St John of God Ballarat Hospital": "GRAMPIANS",
+    "Wimmera Base Hospital [Horsham]": "GRAMPIANS",
+    # Loddon malle
+    "Bendigo Hospital, The": "LODDON_MALLEE",
+    "New Mildura Base Hospital": "LODDON_MALLEE",
+    "St John of God Bendigo Hospital": "LODDON_MALLEE",
     "Mildura Base Public Hospital": "LODDON_MALLEE",
+    # Barwon south west
+    "St John of God Geelong Hospital": "BARWON_SOUTH_WEST",
+    "Geelong Hospital": "BARWON_SOUTH_WEST",
+    "South West Healthcare [Warrnambool]": "BARWON_SOUTH_WEST",
+    "Epworth Geelong": "BARWON_SOUTH_WEST",
+    "Hamilton Base Hospital": "BARWON_SOUTH_WEST",
+    # Hume
+    "Albury Wodonga Health - Albury": "HUME",
+    "Goulburn Valley Health [Shepparton]": "HUME",
+    "Northeast Health Wangaratta": "HUME",
+    # Gippsland
+    "Latrobe Regional Hospital [Traralgon]": "GIPPSLAND",
+    "Central Gippsland Health Service [Sale]": "GIPPSLAND",
 }
 
 CHRIS_HOSPITAL = "Confirmed COVID ‘+’ cases admitted to your hospital"
@@ -182,38 +188,50 @@ def main():
 
     update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VIC2021_TARGETS_CSV, password)
 
+    # True vaccination numbers
     df = preprocess_vac()
     df = create_vac_coverage(df)
 
-    df.to_csv(COVID_VAC_CSV)
+    df.to_csv(COVID_VAC_CSV, index=False)
 
+    # Vida's vaccination model
     df = fetch_vac_model()
+    update_vida_pop(df)
     df = preprocess_vac_model(df)
 
     df.to_csv(COVID_VIDA_VAC_CSV, index=False)
     secrets.write(COVID_VIDA_VAC_CSV, password)
-    update_vida_pop()
+
+
+def merge_with_mapping_df(df, left_col_name):
+
+    df = df.merge(cluster_map_df, left_on=[left_col_name], right_on=["lga_name"], how="left")
+    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
+    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+
+    return df
+
+
+def preprocess_csv(csv_file, col_name):
+    df = pd.read_csv(csv_file)
+    df = create_date_index(COVID_BASE_DATETIME, df, col_name)
+    return df
 
 
 def preprocess_admissions():
-    df = pd.read_csv(COVID_DHHS_ADMN_CSV)
-    df = create_date_index(COVID_BASE_DATETIME, df, "AdmissionDate")
 
+    df = preprocess_csv(COVID_DHHS_ADMN_CSV, "AdmissionDate")
     df.lga.replace(fix_lga, inplace=True)
+
     return df
 
 
 def load_admissions(df):
 
-    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
-    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
-    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
-    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
-
+    df = merge_with_mapping_df(df, "lga")
     df[["admittedtoicu", "ventilated", "nadmissions"]] = df[
         ["admittedtoicu", "ventilated", "nadmissions"]
     ].multiply(df["proportion"], axis="index")
-
     df = (
         df[["cluster_id", "date_index", "nadmissions", "admittedtoicu", "ventilated"]]
         .groupby(["cluster_id", "date_index"])
@@ -225,8 +243,8 @@ def load_admissions(df):
 
 
 def preprocess_cases():
-    df = pd.read_csv(COVID_DHHS_CASE_CSV)
-    df = create_date_index(COVID_BASE_DATETIME, df, "DiagnosisDate")
+
+    df = preprocess_csv(COVID_DHHS_CASE_CSV, "DiagnosisDate")
     df = df.groupby(["date_index", "lga"]).sum().reset_index()
     df.lga.replace(fix_lga, inplace=True)
 
@@ -234,12 +252,8 @@ def preprocess_cases():
 
 
 def load_cases(df):
-    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
 
-    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
-
-    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
-
+    df = merge_with_mapping_df(df, "lga")
     df["cluster_cases"] = df.nnewcases * df.proportion
     df = (
         df[["date_index", "cluster_id", "cluster_cases"]]
@@ -247,7 +261,6 @@ def load_cases(df):
         .sum()
         .reset_index()
     )
-    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
     return df
 
 
@@ -288,16 +301,16 @@ def load_chris_df(load: str):
 
 
 def preprocess_vac():
+    "Convert DHHS true vaccinations numbers to LGA"
 
-    df = pd.read_csv(COVID_DHHS_VAC_CSV)
+    df = preprocess_csv(COVID_DHHS_VAC_CSV, "EncounterDate")
+
     postcode_lga = (
         pd.read_csv(COVID_DHHS_POSTCODE_LGA_CSV, usecols=[0, 1])
         .groupby(["postcode", "lga_name_2018"])
         .size()
         .reset_index()
     )
-
-    df = create_date_index(COVID_BASE_DATETIME, df, "EncounterDate")
 
     df = df.merge(postcode_lga, on="postcode", how="left")
     df.lga_name_2018.replace(fix_lga, inplace=True)
@@ -306,14 +319,9 @@ def preprocess_vac():
 
 
 def create_vac_coverage(df):
+    "Creates an aggregated vaccination coveragecsv for inputs db vic_2021(true vaccination numbers)"
 
-    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
-    cluster_map_df["cluster_pop"] = cluster_map_df.proportion * cluster_map_df.population
-    cluster_map_df.cluster_id.replace(CLUSTER_MAP, inplace=True)
-
-    df = df.merge(cluster_map_df, left_on=["lga_name_2018"], right_on=["lga_name"], how="left")
-    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
-    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+    df = merge_with_mapping_df(df, "lga_name_2018")
 
     df["n"] = df.n * df.proportion
 
@@ -326,12 +334,18 @@ def create_vac_coverage(df):
 
     df.sort_values(by=["cluster_id", "agegroup", "date_index"], inplace=True)
 
-    df.agegroup.replace({"90-94": "85-89", "95-99": "85-89", "100+": "85-89"}, inplace=True)
-    df["start_age"] = df["agegroup"].apply(lambda s: int(s.split("-")[0]))
-    df["end_age"] = df["agegroup"].apply(lambda s: int(s.split("-")[1]))
+    df = create_age_cols(df, {"90-94": "85-89", "95-99": "85-89", "100+": "85-89"})
 
     numeric_cols = ["dosenumber", "n", "start_age", "end_age"]
     df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
+
+    return df
+
+
+def create_age_cols(df, age_map):
+    df.agegroup.replace(age_map, inplace=True)
+    df["start_age"] = df["agegroup"].apply(lambda s: int(s.split("-")[0]))
+    df["end_age"] = df["agegroup"].apply(lambda s: int(s.split("-")[1]))
 
     return df
 
@@ -349,8 +363,10 @@ def process_zip_files():
     for file in files_map:
         for each in os.listdir(COVID_AU_DIRPATH):
             if file in each:
-                pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(files_map[file])
-                #os.remove(os.path.join(COVID_AU_DIRPATH, each))
+                pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(
+                    files_map[file], index=False
+                )
+                # os.remove(os.path.join(COVID_AU_DIRPATH, each))
 
 
 def preprocess_deaths():
@@ -366,12 +382,8 @@ def preprocess_deaths():
 
 
 def load_deaths(df):
-    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
 
-    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
-
-    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
-
+    df = merge_with_mapping_df(df, "lga")
     df["cluster_deaths"] = df.n * df.proportion
     df = (
         df[["date_index", "cluster_id", "cluster_deaths"]]
@@ -379,7 +391,6 @@ def load_deaths(df):
         .sum()
         .reset_index()
     )
-    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
 
     return df
 
@@ -406,10 +417,7 @@ def fetch_vac_model():
 
 def preprocess_vac_model(df):
 
-    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
-    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
-    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
-    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
+    df = merge_with_mapping_df(df, "lga")
 
     df["dose_1"] = df.dose_1 * df.proportion
     df["dose_2"] = df.dose_2 * df.proportion
@@ -434,23 +442,23 @@ def preprocess_vac_model(df):
     return df
 
 
-def update_vida_pop():
+def update_vida_pop(df):
 
-    df = fetch_vac_model()
-    df = df[['lga', 'age_group','popn']].drop_duplicates()
-    cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
-    df = df.merge(cluster_map_df, left_on=["lga"], right_on=["lga_name"], how="left")
-    df.cluster_id.replace(CLUSTER_MAP, inplace=True)
-    df['popn'] = df['popn'] * df['proportion']
-    df = df[['cluster_id','age_group','popn']].groupby(['cluster_id', 'age_group'], as_index=False).sum()
+    df = df[["lga", "age_group", "popn"]].drop_duplicates()
+    df = merge_with_mapping_df(df, "lga")
+
+    df["popn"] = df["popn"] * df["proportion"]
+    df = (
+        df[["cluster_id", "age_group", "popn"]]
+        .groupby(["cluster_id", "age_group"], as_index=False)
+        .sum()
+    )
     df.age_group.replace({"85+": "85-89"}, inplace=True)
     df["start_age"] = df["age_group"].apply(lambda s: int(s.split("-")[0]))
     df["end_age"] = df["age_group"].apply(lambda s: int(s.split("-")[1]))
-    df.to_csv(COVID_VIDA_POP_CSV, index = False)
 
-    
+    df.to_csv(COVID_VIDA_POP_CSV, index=False)
+
 
 if __name__ == "__main__":
     main()
-
-

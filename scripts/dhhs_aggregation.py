@@ -1,3 +1,11 @@
+#
+#  Victoria Cluster Aggregation Script
+#  Call this directly from the base of the repo;
+#  python scripts/dhhs_aggregation.py
+#
+#  Configuration is done in the constants below (VIC_CLUSTERS, AGGREGATE_OUTPUT ,COMMIT_SHA RUN_IDS)
+#
+
 import pandas as pd
 import numpy as np
 
@@ -33,7 +41,7 @@ def as_ordinal_runs(do_df):
     dfpt = do_df.pivot_table(index=['scenario','ordinal_id','times'])
     return dfpt
 
-
+# Cluster names as specified in autumn/settings/region.py
 VIC_CLUSTERS = [
     "BARWON_SOUTH_WEST",
     "GIPPSLAND",
@@ -47,7 +55,7 @@ VIC_CLUSTERS = [
 
 # The output keys of interest
 # These will be included for each cluster, as well as the state level aggregate
-AGGREGATE_OUTPUT = [
+AGGREGATE_OUTPUTS = [
     "incidence",
     "notifications",
     "hospital_occupancy",
@@ -58,6 +66,7 @@ AGGREGATE_OUTPUT = [
     "icu_admissions",
 ]
 
+# Mapping of cluster id to run_id
 RUN_IDS = {
     'barwon-south-west': 'covid_19/barwon-south-west/1635203341/e17f4a0',
     'gippsland': 'covid_19/gippsland/1635166443/153a938',
@@ -128,7 +137,7 @@ def create_csv():
     GRAND_COLLECTION = []
 
     collected = []
-    for input_key in AGGREGATE_OUTPUT:
+    for input_key in AGGREGATE_OUTPUTS:
         collected.append(pdfilt(agg_udf, f"type=={input_key}"))
 
     filt_agg = pd.concat(collected, ignore_index=True)
@@ -149,7 +158,7 @@ def create_csv():
         cmdf['time'] = cmdf.index
 
         collected = []
-        for input_key in AGGREGATE_OUTPUT:
+        for input_key in AGGREGATE_OUTPUTS:
             collected.append(pdfilt(cmdf, f"type=={input_key}"))
             
         final = pd.concat(collected, ignore_index=True)
@@ -165,7 +174,7 @@ def create_csv():
         else:
             mle_accum = mle_accum + do_df
 
-        for input_key in AGGREGATE_OUTPUT:
+        for input_key in AGGREGATE_OUTPUTS:
             cmdf = do_df[input_key].melt(ignore_index=False)
             cmdf['time'] = cmdf.index
             cmdf['type'] = input_key
@@ -175,7 +184,7 @@ def create_csv():
 
             GRAND_COLLECTION.append(cmdf)
 
-    for input_key in AGGREGATE_OUTPUT:
+    for input_key in AGGREGATE_OUTPUTS:
         vic_df = mle_accum[input_key].melt(ignore_index=False)
         vic_df['time'] = cmdf.index
         vic_df['type'] = input_key

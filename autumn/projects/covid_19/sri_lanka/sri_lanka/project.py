@@ -16,7 +16,7 @@ from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_al
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-# scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 6)]
+#scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 6)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 all_scenario_dicts = get_all_scenario_dicts("LKA")
@@ -51,10 +51,7 @@ priors = [
     UniformPrior("voc_emergence.alpha_beta.start_time", [375, 435]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.0]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 6.00]),
-    # vaccination parameters
-    BetaPrior("vaccination.one_dose.vacc_prop_prevent_infection", mean=0.7, ci=[0.5, 0.9]),
-    UniformPrior("vaccination.one_dose.vacc_reduce_infectiousness", [0.0, 0.5]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.75]),
 ]
 
 # Load proposal sds from yml file

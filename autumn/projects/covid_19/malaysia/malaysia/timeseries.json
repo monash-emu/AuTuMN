@@ -650,7 +650,14 @@
       653,
       654,
       655,
-      656
+      656,
+      657,
+      658,
+      659,
+      660,
+      661,
+      662,
+      663
     ],
     "values": [
       0,
@@ -1259,7 +1266,14 @@
       8084,
       7420,
       7509,
-      6145
+      6145,
+      5434,
+      5745,
+      5516,
+      6210,
+      6630,
+      5828,
+      5666
     ],
     "quantiles": [
       0.025,
@@ -1852,7 +1866,14 @@
       653,
       654,
       655,
-      656
+      656,
+      657,
+      658,
+      659,
+      660,
+      661,
+      662,
+      663
     ],
     "values": [
       2,
@@ -2434,7 +2455,14 @@
       88,
       89,
       88,
-      63
+      63,
+      72,
+      69,
+      76,
+      96,
+      78,
+      42,
+      46
     ],
     "quantiles": [
       0.025,
@@ -3020,7 +3048,14 @@
       653,
       654,
       655,
-      656
+      656,
+      657,
+      658,
+      659,
+      660,
+      661,
+      662,
+      663
     ],
     "values": [
       1019,
@@ -3595,7 +3630,14 @@
       6266,
       5970,
       5576,
-      5760
+      5760,
+      5933,
+      5444,
+      5372,
+      5111,
+      5321,
+      5051,
+      4795
     ],
     "quantiles": [
       0.025,
@@ -4181,7 +4223,14 @@
       653,
       654,
       655,
-      656
+      656,
+      657,
+      658,
+      659,
+      660,
+      661,
+      662,
+      663
     ],
     "values": [
       69,
@@ -4756,7 +4805,14 @@
       702,
       703,
       694,
-      688
+      688,
+      679,
+      676,
+      666,
+      666,
+      643,
+      619,
+      603
     ],
     "quantiles": [
       0.025,
@@ -4779,228 +4835,251 @@
       0.975
     ]
   },
-  "abs_diff_cumulative_tts_casesXagg_age_10_14": {
-    "title": "abs_diff_cumulative_tts_casesXagg_age_10_14",
-    "output_key": "abs_diff_cumulative_tts_casesXagg_age_10_14",
+  "cdr": {
+    "output_key": "cdr",
+    "title": "Proportion detected among symptomatic",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_casesXagg_age_15_19": {
-    "title": "abs_diff_cumulative_tts_casesXagg_age_15_19",
-    "output_key": "abs_diff_cumulative_tts_casesXagg_age_15_19",
+  "prop_incidence_strain_alpha_beta": {
+    "title": "Prop. of alpha/beta VoC in incident cases ",
+    "output_key": "prop_incidence_strain_alpha_beta",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_casesXagg_age_20_29": {
-    "title": "abs_diff_cumulative_tts_casesXagg_age_20_29",
-    "output_key": "abs_diff_cumulative_tts_casesXagg_age_20_29",
+  "prop_incidence_strain_delta": {
+    "title": "Prop. of delta VoC in incident cases ",
+    "output_key": "prop_incidence_strain_delta",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_casesXagg_age_30_39": {
-    "title": "abs_diff_cumulative_tts_casesXagg_age_30_39",
-    "output_key": "abs_diff_cumulative_tts_casesXagg_age_30_39",
+  "proportion_seropositiveXagegroup_0": {
+    "output_key": "proportion_seropositiveXagegroup_0",
+    "title": "seropositive prop (age 0)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_casesXagg_age_40_49": {
-    "title": "abs_diff_cumulative_tts_casesXagg_age_40_49",
-    "output_key": "abs_diff_cumulative_tts_casesXagg_age_40_49",
+  "proportion_seropositiveXagegroup_5": {
+    "output_key": "proportion_seropositiveXagegroup_5",
+    "title": "seropositive prop (age 5)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_casesXagg_age_50_59": {
-    "title": "abs_diff_cumulative_tts_casesXagg_age_50_59",
-    "output_key": "abs_diff_cumulative_tts_casesXagg_age_50_59",
+  "proportion_seropositiveXagegroup_10": {
+    "output_key": "proportion_seropositiveXagegroup_10",
+    "title": "seropositive prop (age 10)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_casesXagg_age_60_69": {
-    "title": "abs_diff_cumulative_tts_casesXagg_age_60_69",
-    "output_key": "abs_diff_cumulative_tts_casesXagg_age_60_69",
+  "proportion_seropositiveXagegroup_15": {
+    "output_key": "proportion_seropositiveXagegroup_15",
+    "title": "seropositive prop (age 15)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_casesXagg_age_70_plus": {
-    "title": "abs_diff_cumulative_tts_casesXagg_age_70_plus",
-    "output_key": "abs_diff_cumulative_tts_casesXagg_age_70_plus",
+  "proportion_seropositiveXagegroup_20": {
+    "output_key": "proportion_seropositiveXagegroup_20",
+    "title": "seropositive prop (age 20)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_deathsXagg_age_10_14": {
-    "title": "abs_diff_cumulative_tts_deathsXagg_age_10_14",
-    "output_key": "abs_diff_cumulative_tts_deathsXagg_age_10_14",
+  "proportion_seropositiveXagegroup_25": {
+    "output_key": "proportion_seropositiveXagegroup_25",
+    "title": "seropositive prop (age 25)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_deathsXagg_age_15_19": {
-    "title": "abs_diff_cumulative_tts_deathsXagg_age_15_19",
-    "output_key": "abs_diff_cumulative_tts_deathsXagg_age_15_19",
+  "proportion_seropositiveXagegroup_30": {
+    "output_key": "proportion_seropositiveXagegroup_30",
+    "title": "seropositive prop (age 30)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_deathsXagg_age_20_29": {
-    "title": "abs_diff_cumulative_tts_deathsXagg_age_20_29",
-    "output_key": "abs_diff_cumulative_tts_deathsXagg_age_20_29",
+  "proportion_seropositiveXagegroup_35": {
+    "output_key": "proportion_seropositiveXagegroup_35",
+    "title": "seropositive prop (age 35)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_deathsXagg_age_30_39": {
-    "title": "abs_diff_cumulative_tts_deathsXagg_age_30_39",
-    "output_key": "abs_diff_cumulative_tts_deathsXagg_age_30_39",
+  "proportion_seropositiveXagegroup_40": {
+    "output_key": "proportion_seropositiveXagegroup_40",
+    "title": "seropositive prop (age 40)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_deathsXagg_age_40_49": {
-    "title": "abs_diff_cumulative_tts_deathsXagg_age_40_49",
-    "output_key": "abs_diff_cumulative_tts_deathsXagg_age_40_49",
+  "proportion_seropositiveXagegroup_45": {
+    "output_key": "proportion_seropositiveXagegroup_45",
+    "title": "seropositive prop (age 45)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_deathsXagg_age_50_59": {
-    "title": "abs_diff_cumulative_tts_deathsXagg_age_50_59",
-    "output_key": "abs_diff_cumulative_tts_deathsXagg_age_50_59",
+  "proportion_seropositiveXagegroup_50": {
+    "output_key": "proportion_seropositiveXagegroup_50",
+    "title": "seropositive prop (age 50)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_deathsXagg_age_60_69": {
-    "title": "abs_diff_cumulative_tts_deathsXagg_age_60_69",
-    "output_key": "abs_diff_cumulative_tts_deathsXagg_age_60_69",
+  "proportion_seropositiveXagegroup_55": {
+    "output_key": "proportion_seropositiveXagegroup_55",
+    "title": "seropositive prop (age 55)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_tts_deathsXagg_age_70_plus": {
-    "title": "abs_diff_cumulative_tts_deathsXagg_age_70_plus",
-    "output_key": "abs_diff_cumulative_tts_deathsXagg_age_70_plus",
+  "proportion_seropositiveXagegroup_60": {
+    "output_key": "proportion_seropositiveXagegroup_60",
+    "title": "seropositive prop (age 60)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_myocarditis_casesXagg_age_10_14": {
-    "title": "abs_diff_cumulative_myocarditis_casesXagg_age_10_14",
-    "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_10_14",
+  "proportion_seropositiveXagegroup_65": {
+    "output_key": "proportion_seropositiveXagegroup_65",
+    "title": "seropositive prop (age 65)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_myocarditis_casesXagg_age_15_19": {
-    "title": "abs_diff_cumulative_myocarditis_casesXagg_age_15_19",
-    "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_15_19",
+  "proportion_seropositiveXagegroup_70": {
+    "output_key": "proportion_seropositiveXagegroup_70",
+    "title": "seropositive prop (age 70)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
-  "abs_diff_cumulative_myocarditis_casesXagg_age_20_29": {
-    "title": "abs_diff_cumulative_myocarditis_casesXagg_age_20_29",
-    "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_20_29",
+  "proportion_seropositiveXagegroup_75": {
+    "output_key": "proportion_seropositiveXagegroup_75",
+    "title": "seropositive prop (age 75)",
     "times": [],
     "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_myocarditis_casesXagg_age_30_39": {
-    "title": "abs_diff_cumulative_myocarditis_casesXagg_age_30_39",
-    "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_30_39",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_myocarditis_casesXagg_age_40_49": {
-    "title": "abs_diff_cumulative_myocarditis_casesXagg_age_40_49",
-    "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_40_49",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_myocarditis_casesXagg_age_50_59": {
-    "title": "abs_diff_cumulative_myocarditis_casesXagg_age_50_59",
-    "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_50_59",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_myocarditis_casesXagg_age_60_69": {
-    "title": "abs_diff_cumulative_myocarditis_casesXagg_age_60_69",
-    "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_60_69",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_myocarditis_casesXagg_age_70_plus": {
-    "title": "abs_diff_cumulative_myocarditis_casesXagg_age_70_plus",
-    "output_key": "abs_diff_cumulative_myocarditis_casesXagg_age_70_plus",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_hospital_admissionsXagg_age_10_14": {
-    "title": "abs_diff_cumulative_hospital_admissionsXagg_age_10_14",
-    "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_10_14",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_hospital_admissionsXagg_age_15_19": {
-    "title": "abs_diff_cumulative_hospital_admissionsXagg_age_15_19",
-    "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_15_19",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_hospital_admissionsXagg_age_20_29": {
-    "title": "abs_diff_cumulative_hospital_admissionsXagg_age_20_29",
-    "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_20_29",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_hospital_admissionsXagg_age_30_39": {
-    "title": "abs_diff_cumulative_hospital_admissionsXagg_age_30_39",
-    "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_30_39",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_hospital_admissionsXagg_age_40_49": {
-    "title": "abs_diff_cumulative_hospital_admissionsXagg_age_40_49",
-    "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_40_49",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_hospital_admissionsXagg_age_50_59": {
-    "title": "abs_diff_cumulative_hospital_admissionsXagg_age_50_59",
-    "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_50_59",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_hospital_admissionsXagg_age_60_69": {
-    "title": "abs_diff_cumulative_hospital_admissionsXagg_age_60_69",
-    "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_60_69",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "abs_diff_cumulative_hospital_admissionsXagg_age_70_plus": {
-    "title": "abs_diff_cumulative_hospital_admissionsXagg_age_70_plus",
-    "output_key": "abs_diff_cumulative_hospital_admissionsXagg_age_70_plus",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
 }

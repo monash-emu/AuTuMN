@@ -48,9 +48,7 @@ targets = [
 
 # Add multiplier for most services, except use South Metro for South East Metro, use North Metro for West Metro
 cluster_priors = []
-regions_for_multipliers = [
-    reg for reg in Region.VICTORIA_METRO if reg not in (Region.SOUTH_EAST_METRO, Region.WEST_METRO)
-]
+regions_for_multipliers = Region.VICTORIA_METRO
 regions_for_multipliers.append(Region.BARWON_SOUTH_WEST)
 
 for region in regions_for_multipliers:

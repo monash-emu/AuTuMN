@@ -9,6 +9,7 @@ from .covid_au.preprocess import preprocess_covid_au
 from .covid_phl.preprocess import preprocess_covid_phl
 from .covid_lka.preprocess import preprocess_covid_lka
 from .covid_vnm.preprocess import preprocess_covid_vnm
+from .covid_mmr.preprocess import preprocess_covid_mmr
 from .demography.preprocess import preprocess_demography
 from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data
@@ -61,6 +62,9 @@ def build_input_database(rebuild: bool = False):
 
         with Timer("Ingesting COVID VNM data."):
             preprocess_covid_vnm(input_db)
+
+        with Timer("Ingesting COVID MMR data."):
+            preprocess_covid_mmr(input_db)
 
         with Timer("Ingesting Our World in Data data."):
             preprocess_our_world_in_data(input_db)

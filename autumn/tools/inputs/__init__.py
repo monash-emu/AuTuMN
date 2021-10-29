@@ -1,6 +1,7 @@
 from autumn.tools.inputs.covid_au.fetch import fetch_covid_au_data
 from autumn.tools.inputs.covid_au.queries import get_vic_testing_numbers
 from autumn.tools.inputs.covid_phl.fetch import fetch_covid_phl_data
+from autumn.tools.inputs.covid_mmr.fetch import fetch_covid_mmr_data
 from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 from autumn.tools.inputs.database import build_input_database
 from autumn.tools.inputs.demography.queries import (
@@ -39,3 +40,6 @@ def fetch_input_data():
 
     with Timer("Fetching OWID data."):
         fetch_owid_data()
+        
+    with Timer("Fetching COVID MMR data."):
+        fetch_covid_mmr_data()

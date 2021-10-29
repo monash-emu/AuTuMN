@@ -22,7 +22,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Add calibration targets and priors
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
-target_start_time = 600
+target_start_time = 550
 
 # For all the cluster targets, a universal calibrated parameter called "target_output_ratio" is used to scale the
 # dispersion parameter of the targets' normal likelihoods.
@@ -50,9 +50,7 @@ targets.append(
 
 # Add multiplier for most services, except use South Metro for South East Metro, use North Metro for West Metro
 cluster_priors = []
-regions_for_multipliers = [
-    reg for reg in Region.VICTORIA_METRO if reg not in (Region.SOUTH_EAST_METRO, Region.WEST_METRO)
-]
+regions_for_multipliers = Region.VICTORIA_METRO
 regions_for_multipliers.append(Region.BARWON_SOUTH_WEST)
 
 for region in regions_for_multipliers:

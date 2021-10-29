@@ -1,20 +1,17 @@
 import os
 from datetime import datetime
-
 import numpy as np
 import pytest
 
 from autumn.tools.db import Database
 from autumn.tools.inputs import database as input_database
 from autumn.tools.inputs import (
-    get_country_mixing_matrix,
-    get_crude_birth_rate,
-    get_death_rates_by_agegroup,
-    get_life_expectancy_by_agegroup,
-    get_mobility_data,
+    get_country_mixing_matrix, get_crude_birth_rate, get_death_rates_by_agegroup, get_life_expectancy_by_agegroup,
     get_population_by_agegroup,
 )
+from autumn.tools.inputs.mobility.queries import get_mobility_data, weighted_average_google_locations
 from autumn.tools.inputs.demography.queries import downsample_quantity, downsample_rate
+
 
 @pytest.mark.github_only
 def test_build_input_database(tmpdir, monkeypatch):
@@ -42,7 +39,8 @@ def test_get_mobility_data():
         ],
     }
     base_date = datetime(2020, 1, 1, 0, 0, 0)
-    loc_mobility, days = get_mobility_data("AUS", "Victoria", base_date, google_mobility_locations)
+    google_mob_df, days = get_mobility_data("AUS", "Victoria", base_date, google_mobility_locations)
+    loc_mobility = weighted_average_google_locations(google_mob_df, google_mobility_locations)
     loc_mobility = {k: [round(i, 2) for i in v] for k, v in loc_mobility.items()}
     assert days[:10] == [45, 46, 47, 48, 49, 50, 51, 52, 53, 54]
     assert loc_mobility["work"][:10] == [

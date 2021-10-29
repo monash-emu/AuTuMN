@@ -60,12 +60,11 @@ mobility:
         - work
         - home
   mixing:
-    # Students stared to switch to full online learning since 2020-05-09.
     school:
       append: false
       times:
-        - 2020-05-09 # All schools switched to online learning, school year 2020-2021 ended
-        - 2020-05-10 # Multiple universities allow students to come back to finish the degree. Source: Tuoitre.
+        - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
+        - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
       values:
         - 0.
         - 0.1

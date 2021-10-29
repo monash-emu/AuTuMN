@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS
+from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS, VACCINATION_STRATA
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -437,59 +437,66 @@ class RollOutFunc(BaseModel):
 
 
 class VaccEffectiveness(BaseModel):
-    overall_efficacy: float
-    vacc_prop_prevent_infection: float
-    vacc_reduce_infectiousness: Optional[float]
-    vacc_reduce_infectiousness_ratio: Optional[float]
-    vacc_reduce_hospitalisation: Optional[float]
-    vacc_reduce_death: Optional[float]
+    ve_sympt_covid: float
+    ve_prop_prevent_infection: Optional[float]
+    ve_prop_prevent_infection_ratio: Optional[float]
+    ve_infectiousness: Optional[float]
+    ve_infectiousness_ratio: Optional[float]
+    ve_hospitalisation: Optional[float]
+    ve_death: Optional[float]
 
-    @validator("overall_efficacy", pre=True, allow_reuse=True)
-    def check_overall_efficacy(val):
+    @validator("ve_sympt_covid", pre=True, allow_reuse=True)
+    def check_ve_sympt_covid(val):
         assert 0. <= val <= 1., f"Overall efficacy should be in [0, 1]: {val}"
         return val
 
-    @validator("vacc_prop_prevent_infection", pre=True, allow_reuse=True)
-    def check_vacc_prop_prevent_infection(val):
+    @validator("ve_prop_prevent_infection", pre=True, allow_reuse=True)
+    def check_ve_prop_prevent_infection(val):
         assert 0. <= val <= 1., f"Proportion of vaccine effect preventing infection should be in [0, 1]: {val}"
         return val
 
-    @validator("vacc_reduce_infectiousness", pre=True, allow_reuse=True)
-    def check_infectiousness_efficacy(val):
+    @validator("ve_infectiousness", pre=True, allow_reuse=True)
+    def check_ve_infectiousness(val):
         assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
     @root_validator(pre=True, allow_reuse=True)
-    def check_one_infectiousness_request(cls, values):
+    def check_single_requests(cls, values):
         n_requests = sum(
-            [int(bool(values[option])) for option in ["vacc_reduce_infectiousness", "vacc_reduce_infectiousness_ratio"]]
+            [int(bool(values[option])) for option in ["ve_infectiousness", "ve_infectiousness_ratio"]]
         )
-        msg = f"Both vacc_reduce_infectiousness and vacc_reduce_infectiousness_ratio cannot be requested together"
+        msg = f"Both ve_infectiousness and ve_infectiousness_ratio cannot be requested together"
+        assert n_requests < 2, msg
+
+        n_requests = sum(
+            [int(bool(values[option])) for option in ["ve_prop_prevent_infection", "ve_prop_prevent_infection_ratio"]]
+        )
+        msg = f"Both ve_prop_prevent_infection and ve_prop_prevent_infection_ratio cannot be requested together"
         assert n_requests < 2, msg
         return values
 
-    @validator("vacc_reduce_hospitalisation", pre=True, allow_reuse=True)
-    def check_hospitalisation_effect(val):
+    @validator("ve_hospitalisation", pre=True, allow_reuse=True)
+    def check_ve_hospitalisation(val):
         if val:
             assert 0. <= val <= 1., f"Reduction in hospitalisation risk should be in [0, 1]: {val}"
         return val
 
-    @validator("vacc_reduce_death", pre=True, allow_reuse=True)
-    def check_death_efficacy(val):
+    @validator("ve_death", pre=True, allow_reuse=True)
+    def check_ve_death(val):
         if val:
             assert 0. <= val <= 1., f"Reduction in risk of death should be in [0, 1]: {val}"
         return val
 
     @root_validator(pre=True, allow_reuse=True)
     def check_effect_ratios(cls, values):
-        overall_effect = values["overall_efficacy"]
-        if values["vacc_reduce_hospitalisation"]:
-            hospital_effect = values["vacc_reduce_hospitalisation"]
-            msg = f"Hospitalisation efect: {hospital_effect} should not exceed overall effect: {overall_effect}"
+        overall_effect = values["ve_sympt_covid"]
+        if values["ve_hospitalisation"]:
+            hospital_effect = values["ve_hospitalisation"]
+            msg = f"Symptomatic Covid effect: {overall_effect} exceeds hospitalisation effect: {hospital_effect}"
             assert hospital_effect >= overall_effect, msg
-        if values["vacc_reduce_death"]:
-            death_effect = values["vacc_reduce_death"]
-            msg = f"Death effect: {death_effect} should not exceed overall effect: {overall_effect}"
+        if values["ve_death"]:
+            death_effect = values["ve_death"]
+            msg = f"Symptomatic Covid effect: {overall_effect} exceeds death effect: {death_effect}"
             assert death_effect >= overall_effect, msg
         return values
 
@@ -522,16 +529,23 @@ class Vaccination(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_range(cls, values):
+
         second_dose_delay = values["second_dose_delay"]
         if type(second_dose_delay) == float:
             assert 0. < second_dose_delay, f"Delay to second dose is not positive: {second_dose_delay}"
+        return values
 
-        # Use ratio to calculate the infectiousness of the one dose vaccinated compared to unvaccinated
-        if values["one_dose"]["vacc_reduce_infectiousness_ratio"]:
-            values["one_dose"]["vacc_reduce_infectiousness"] = \
-                values["fully_vaccinated"]["vacc_reduce_infectiousness"] * \
-                values["one_dose"]["vacc_reduce_infectiousness_ratio"]
-            values["one_dose"]["vacc_reduce_infectiousness_ratio"] = None
+    @root_validator(pre=True, allow_reuse=True)
+    def apply_ratio_adjustment(cls, values):
+
+        strata_to_adjust = VACCINATION_STRATA[1: 2]
+        for stratum in strata_to_adjust:
+            for key in values["fully_vaccinated"]:
+                ratio_key = f"{key}_ratio"
+                if ratio_key in values[stratum] and values[stratum][ratio_key]:
+                    values[stratum][key] = values["fully_vaccinated"][key] * values[stratum][ratio_key]
+                    values[stratum][ratio_key] = None
+
         return values
 
     @validator("lag", allow_reuse=True)

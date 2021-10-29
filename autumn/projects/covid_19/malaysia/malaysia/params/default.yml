@@ -21,8 +21,8 @@ clinical_stratification:
 
 vaccination:
   one_dose:
-    overall_efficacy: 0.7
-    vacc_prop_prevent_infection: 0.7
+    ve_sympt_covid: 0.7
+    ve_prop_prevent_infection: 0.7
   roll_out_components:
     - age_min: 10 # 84.7% of the total population is 10+
       supply_period_coverage:

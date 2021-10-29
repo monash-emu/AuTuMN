@@ -24,6 +24,12 @@ def get_mobility_funcs(
     """
     google_mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
 
+    google_mobility_locations = {
+        "work": {"workplaces": 1.},
+        "other_locations": {"retail_and_recreation": 0.25, "grocery_and_pharmacy": 0.25, "parks": 0.25, "transit_stations": 0.25},
+        "home": {"residential": 1.},
+    }
+
     google_mobility_values = weighted_average_google_locations(google_mob_df, google_mobility_locations)
 
     if smooth_google_data:
@@ -136,6 +142,12 @@ def get_mobility_specific_period(
     and then returns a mobility function for each location.
     """
     google_mob_df, google_mobility_days = get_mobility_data(country, region, BASE_DATETIME, google_mobility_locations)
+
+    google_mobility_locations = {
+        "work": {"workplaces": 1.},
+        "other_locations": {"retail_and_recreation": 0.25, "grocery_and_pharmacy": 0.25, "parks": 0.25, "transit_stations": 0.25},
+        "home": {"residential": 1.},
+    }
 
     google_mobility_values = weighted_average_google_locations(google_mob_df, google_mobility_locations)
 

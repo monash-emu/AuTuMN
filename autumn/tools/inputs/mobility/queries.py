@@ -1,11 +1,25 @@
 from datetime import datetime
-
 import pandas as pd
 
 from autumn.tools.inputs.database import get_input_db
 
 
-def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, location_map: dict):
+def weight_mobility_data(mob_df, location_map):
+
+    # Average out Google Mobility locations into Autumn-friendly locations
+    revised_location_map = {key: value for key, value in location_map.items() if value}
+    for new_loc, old_locs in revised_location_map.items():
+        mob_df[new_loc] = 0
+        for old_loc in old_locs:
+            mob_df[new_loc] += mob_df[old_loc]
+
+        mob_df[new_loc] = mob_df[new_loc] / len(old_locs)
+
+    loc_mobility_values = {loc: mob_df[loc].tolist() for loc in revised_location_map.keys()}
+    return loc_mobility_values
+
+
+def get_mobility_data(country_iso_code: str, region: str, base_date: datetime):
     """
     Get daily Google mobility data for locations, for a given country.
     Times are in days since a given base date.
@@ -45,21 +59,4 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, l
     mob_df = mob_df[mob_df["date"] >= base_date]
     days = mob_df["date"].apply(lambda d: (d - base_date).days).tolist()
 
-    loc_mobility_values = weight_mobility_data(mob_df, location_map)
-
-    return loc_mobility_values, days
-
-
-def weight_mobility_data(mob_df, location_map):
-
-    # Average out Google Mobility locations into Autumn-friendly locations
-    revised_location_map = {key: value for key, value in location_map.items() if value}
-    for new_loc, old_locs in revised_location_map.items():
-        mob_df[new_loc] = 0
-        for old_loc in old_locs:
-            mob_df[new_loc] += mob_df[old_loc]
-
-        mob_df[new_loc] = mob_df[new_loc] / len(old_locs)
-
-    loc_mobility_values = {loc: mob_df[loc].tolist() for loc in revised_location_map.keys()}
-    return loc_mobility_values
+    return mob_df, days

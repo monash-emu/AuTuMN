@@ -3,7 +3,7 @@ from typing import Callable, Dict, List
 from autumn.models.covid_19.constants import BASE_DATETIME
 from autumn.models.covid_19.parameters import Country, MixingLocation
 from autumn.tools.curve import scale_up_function
-from autumn.tools.inputs.mobility.queries import get_mobility_data
+from autumn.tools.inputs.mobility.queries import get_mobility_data, weight_mobility_data
 from autumn.tools.utils.utils import apply_moving_average
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
@@ -22,9 +22,10 @@ def get_mobility_funcs(
     Loads google mobility data, combines it with user requested timeseries data
     and then returns a mobility function for each location.
     """
-    google_mobility_values, google_mobility_days = get_mobility_data(
-        country.iso3, region, BASE_DATETIME, google_mobility_locations
-    )
+    mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
+
+    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
+
     if smooth_google_data:
         for loc in google_mobility_values:
             google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
@@ -123,6 +124,7 @@ def update_mixing_data(
     mixing = {k: {"values": v["values"], "times": v["times"]} for k, v in mixing.items()}
     return mixing
 
+
 def get_mobility_specific_period(
     country: str,
     region: str,
@@ -133,9 +135,9 @@ def get_mobility_specific_period(
     Loads google mobility data, splits it for the requested time duration
     and then returns a mobility function for each location.
     """
-    google_mobility_values, google_mobility_days = get_mobility_data(
-        country, region, BASE_DATETIME, google_mobility_locations
-    )
+    mob_df, google_mobility_days = get_mobility_data(country, region, BASE_DATETIME)
+
+    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
     spilt_google_mobility_values = {}
     first_timepoint_index = google_mobility_days.index(split_dates[0])

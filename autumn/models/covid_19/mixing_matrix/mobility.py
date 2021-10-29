@@ -3,7 +3,7 @@ from typing import Callable, Dict, List
 from autumn.models.covid_19.constants import BASE_DATETIME
 from autumn.models.covid_19.parameters import Country, MixingLocation
 from autumn.tools.curve import scale_up_function
-from autumn.tools.inputs import get_mobility_data
+from autumn.tools.inputs.mobility.queries import get_mobility_data
 from autumn.tools.utils.utils import apply_moving_average
 
 LOCATIONS = ["home", "other_locations", "school", "work"]

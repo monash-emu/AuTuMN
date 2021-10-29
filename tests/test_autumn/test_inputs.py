@@ -7,14 +7,11 @@ import pytest
 from autumn.tools.db import Database
 from autumn.tools.inputs import database as input_database
 from autumn.tools.inputs import (
-    get_country_mixing_matrix,
-    get_crude_birth_rate,
-    get_death_rates_by_agegroup,
-    get_life_expectancy_by_agegroup,
-    get_mobility_data,
-    get_population_by_agegroup,
+    get_country_mixing_matrix, get_crude_birth_rate, get_death_rates_by_agegroup, get_life_expectancy_by_agegroup,
+    get_mobility_data, get_population_by_agegroup,
 )
 from autumn.tools.inputs.demography.queries import downsample_quantity, downsample_rate
+
 
 @pytest.mark.github_only
 def test_build_input_database(tmpdir, monkeypatch):

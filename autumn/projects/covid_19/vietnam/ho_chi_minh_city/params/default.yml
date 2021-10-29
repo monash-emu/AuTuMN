@@ -72,8 +72,8 @@ mobility:
 
 
 testing_to_detection:
-  assumed_tests_parameter:
-  assumed_cdr_parameter: 0.05 # needs calibrating by MLE
+  assumed_tests_parameter: 1e-04 # Sri-Lanka model
+  assumed_cdr_parameter: 0.05 # needs calibrating
   smoothing_period: 14
 
 

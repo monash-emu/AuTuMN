@@ -38,13 +38,11 @@ def get_mobility_funcs(
     """
 
     mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
-    mob_values_df = weight_mobility_data(mob_df, google_mobility_locations)
+    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
     if smooth_google_data:
-        for loc in mob_values_df.columns:
-            mob_values_df[loc] = apply_moving_average(mob_values_df[loc], 7)
-
-    google_mobility_values = mob_values_df.to_dict(orient="list")
+        for loc in google_mobility_values.columns:
+            google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
 
     # Build mixing data timeseries
     mixing = update_mixing_data(
@@ -57,10 +55,7 @@ def get_mobility_funcs(
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
     for location, timeseries in mixing.items():
-        if square_mobility_effect:
-            loc_vals = [v ** 2 for v in timeseries["values"]]
-        else:
-            loc_vals = timeseries["values"]
+        loc_vals = [v ** 2 for v in timeseries["values"]] if square_mobility_effect else timeseries["values"]
         mobility_funcs[location] = scale_up_function(timeseries["times"], loc_vals, method=4)
 
     return mobility_funcs
@@ -82,8 +77,9 @@ def update_mixing_data(
             ), f"Mixing series length mismatch for {loc_key}"
 
         # Add historical Google mobility data to user-specified mixing params
-        mobility_values = google_mobility_values.get(loc_key)
-        if mobility_values:
+        if loc_key in google_mobility_values.columns:
+            mobility_values = google_mobility_values[loc_key].to_list()
+
             # Google mobility values for this location
             if not loc_mixing:
                 # Just insert the mobility data
@@ -153,15 +149,15 @@ def get_mobility_specific_period(
     """
 
     mob_df, google_mobility_days = get_mobility_data(country, region, BASE_DATETIME)
-    mob_values_df = weight_mobility_data(mob_df, google_mobility_locations)
+    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
     first_timepoint_index = google_mobility_days.index(split_dates[0])
     second_timepoint_index = google_mobility_days.index(split_dates[1])
 
     split_google_mobility_days = google_mobility_days[first_timepoint_index: second_timepoint_index]
     spilt_google_mobility_values = {
-        loc: mob_values_df.loc[first_timepoint_index: second_timepoint_index - 1, loc].to_list() for
-        loc in mob_values_df.columns
+        loc: google_mobility_values.loc[first_timepoint_index: second_timepoint_index - 1, loc].to_list() for
+        loc in google_mobility_values.columns
     }
     return split_google_mobility_days, spilt_google_mobility_values
 

@@ -43,11 +43,9 @@ def test_get_mobility_data():
     }
     base_date = datetime(2020, 1, 1, 0, 0, 0)
     mob_df, days = get_mobility_data("AUS", "Victoria", base_date)
-    mob_values_df = weight_mobility_data(mob_df, google_mobility_locations)
-    loc_mobility = mob_values_df.to_dict(orient='list')
-    loc_mobility = {k: [round(i, 2) for i in v] for k, v in loc_mobility.items()}
+    mob_values_df = weight_mobility_data(mob_df, google_mobility_locations).round(2)
     assert days[:10] == [45, 46, 47, 48, 49, 50, 51, 52, 53, 54]
-    assert loc_mobility["work"][:10] == [
+    assert mob_values_df["work"][:10].to_list() == [
         1.03,
         0.98,
         1.18,
@@ -59,7 +57,7 @@ def test_get_mobility_data():
         0.97,
         1.17,
     ]
-    assert loc_mobility["other_locations"][:10] == [
+    assert mob_values_df["other_locations"][:10].to_list() == [
         0.96,
         1.02,
         1.09,

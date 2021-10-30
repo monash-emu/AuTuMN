@@ -192,7 +192,7 @@ class Mobility(BaseModel):
         for location in val:
             location_total = sum(val[location].values())
             msg = f"Mobility weights don't sum to one: {location_total}"
-            assert abs(location_total - 1.) < 1e6, msg
+            assert abs(location_total - 1.) < 1e-6, msg
             msg = "Google mobility key not recognised"
             assert all([key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]), msg
         return val

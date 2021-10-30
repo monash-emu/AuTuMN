@@ -140,5 +140,10 @@ VIC_MODEL_OPTIONS = [
 ]
 
 GOOGLE_MOBILITY_LOCATIONS = [
-    "retail_and_recreation", "parks", "workplaces", "transit_stations", "grocery_and_pharmacy", "residential"
+    "retail_and_recreation",
+    "parks",
+    "workplaces",
+    "transit_stations",
+    "grocery_and_pharmacy",
+    "residential"
 ]

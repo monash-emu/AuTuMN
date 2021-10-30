@@ -3,10 +3,25 @@ from typing import Callable, Dict, List
 from autumn.models.covid_19.constants import BASE_DATETIME
 from autumn.models.covid_19.parameters import Country, MixingLocation
 from autumn.tools.curve import scale_up_function
-from autumn.tools.inputs.mobility.queries import get_mobility_data, weight_mobility_data
+from autumn.tools.inputs.mobility.queries import get_mobility_data
 from autumn.tools.utils.utils import apply_moving_average
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
+
+
+def weight_mobility_data(mob_df, location_map):
+    """
+    Get weighted average for each modelled location from Google mobility estimates.
+    """
+
+    revised_location_map = {key: value for key, value in location_map.items() if value}
+    for model_loc, google_locs in revised_location_map.items():
+        mob_df[model_loc] = 0
+        for g_loc in google_locs:
+            mob_df[model_loc] += mob_df[g_loc] * revised_location_map[model_loc][g_loc]
+
+    loc_mobility_values = {loc: mob_df[loc].tolist() for loc in revised_location_map.keys()}
+    return loc_mobility_values
 
 
 def get_mobility_funcs(

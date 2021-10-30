@@ -12,13 +12,8 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime):
     """
 
     input_db = get_input_db()
-    mob_df = input_db.query(
-        "mobility",
-        conditions={
-            "iso3": country_iso_code,
-            "region": region or None,
-        },
-    )
+    conditions = {"iso3": country_iso_code, "region": region or None}
+    mob_df = input_db.query("mobility", conditions=conditions)
     mob_df["date"] = pd.to_datetime(mob_df["date"], format="%Y-%m-%d")
     mob_df = mob_df.sort_values(["date"])
     mob_df = mob_df[mob_df["date"] >= base_date]

@@ -20,8 +20,7 @@ def weight_mobility_data(mob_df, location_map):
         for g_loc in google_locs:
             mob_df[model_loc] += mob_df[g_loc] * revised_location_map[model_loc][g_loc]
 
-    loc_mobility_values = {loc: mob_df[loc].tolist() for loc in revised_location_map.keys()}
-    return loc_mobility_values
+    return mob_df[revised_location_map.keys()]
 
 
 def get_mobility_funcs(
@@ -37,13 +36,15 @@ def get_mobility_funcs(
     Loads google mobility data, combines it with user requested timeseries data
     and then returns a mobility function for each location.
     """
-    mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
 
-    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
+    mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
+    mob_values_df = weight_mobility_data(mob_df, google_mobility_locations)
 
     if smooth_google_data:
-        for loc in google_mobility_values:
-            google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
+        for loc in mob_values_df.columns:
+            mob_values_df[loc] = apply_moving_average(mob_values_df[loc], 7)
+
+    google_mobility_values = mob_values_df.to_dict(orient="list")
 
     # Build mixing data timeseries
     mixing = update_mixing_data(
@@ -150,18 +151,18 @@ def get_mobility_specific_period(
     Loads google mobility data, splits it for the requested time duration
     and then returns a mobility function for each location.
     """
+
     mob_df, google_mobility_days = get_mobility_data(country, region, BASE_DATETIME)
+    mob_values_df = weight_mobility_data(mob_df, google_mobility_locations)
 
-    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
-
-    spilt_google_mobility_values = {}
     first_timepoint_index = google_mobility_days.index(split_dates[0])
     second_timepoint_index = google_mobility_days.index(split_dates[1])
 
-    for loc in google_mobility_values:
-        spilt_google_mobility_values[loc] = google_mobility_values[loc][first_timepoint_index:second_timepoint_index]
-
-    split_google_mobility_days = google_mobility_days[first_timepoint_index:second_timepoint_index]
+    split_google_mobility_days = google_mobility_days[first_timepoint_index: second_timepoint_index]
+    spilt_google_mobility_values = {
+        loc: mob_values_df.loc[first_timepoint_index: second_timepoint_index - 1, loc].to_list() for
+        loc in mob_values_df.columns
+    }
     return split_google_mobility_days, spilt_google_mobility_values
 
 

@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS, VACCINATION_STRATA
+from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -189,6 +189,12 @@ class Mobility(BaseModel):
 
     @validator("google_mobility_locations", allow_reuse=True)
     def check_location_weights(val):
+        for location in val:
+            location_total = sum(val[location].values())
+            msg = f"Mobility weights don't sum to one: {location_total}"
+            assert location_total == 1., msg
+            msg = "Google mobility key not recognised"
+            assert all([key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]), msg
         return val
 
 

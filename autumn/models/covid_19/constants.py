@@ -138,3 +138,7 @@ VIC_MODEL_OPTIONS = [
     VicModelTypes.VIC_SUPER_2021,
     VicModelTypes.VIC_REGION_2021,
 ]
+
+GOOGLE_MOBILITY_LOCATIONS = [
+    "retail_and_recreation", "parks", "workplaces", "transit_stations", "grocery_and_pharmacy", "residential"
+]

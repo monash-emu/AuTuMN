@@ -83,14 +83,6 @@ mobility:
   region: null
   age_mixing: null
   npi_effectiveness: {}
-  google_mobility_locations:
-    work:
-      - workplaces
-    other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - parks
-      - transit_stations
   smooth_google_data: false # Whether to apply a 7-day moving average
   square_mobility_effect: true
   mixing:

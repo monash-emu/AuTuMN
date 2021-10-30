@@ -53,11 +53,11 @@ def get_all_scenario_dicts(country: str):
 
             # lockdown mobility from 21May -21 June
             times1, values1 = get_mobility_specific_period(country, None,
-                                                           {'work': ['workplaces'],
-                                                            'other_locations': ['retail_and_recreation',
-                                                                                'grocery_and_pharmacy',
-                                                                                'transit_stations'],
-                                                            'home': ['residential']}, [507, 537])
+                                                           {'work': {'workplaces': 1.},
+                                                            'other_locations': {'retail_and_recreation': 0.333,
+                                                                                'grocery_and_pharmacy': 0.333,
+                                                                                'transit_stations': 0.334},
+                                                            'home': {'residential': 1.}}, [507, 537])
 
             times1 = [*range(477, 507)]  # lockdown values from May 21 - June 21 is assigned from April 21 -May 20
 
@@ -67,11 +67,11 @@ def get_all_scenario_dicts(country: str):
 
             # mobility from 22 June -21st August
             times2, values2 = get_mobility_specific_period(country, None,
-                                                           {'work': ['workplaces'],
-                                                            'other_locations': ['retail_and_recreation',
-                                                                                'grocery_and_pharmacy',
-                                                                                'transit_stations'],
-                                                            'home': ['residential']}, [539, 599])
+                                                           {'work': {'workplaces': 1.},
+                                                            'other_locations': {'retail_and_recreation': 0.333,
+                                                                                'grocery_and_pharmacy': 0.333,
+                                                                                'transit_stations': 0.334},
+                                                            'home': {'residential': 1.}}, [539, 599])
 
             # In the scenario from August 21 - Oct 01 applying average mobility observed after lockdown
             # workplaces: 0.65 and other locations 0.8
@@ -80,11 +80,11 @@ def get_all_scenario_dicts(country: str):
 
             # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown)
             times4, values4 = get_mobility_specific_period(country, None,
-                                                           {'work': ['workplaces'],
-                                                            'other_locations': ['retail_and_recreation',
-                                                                                'grocery_and_pharmacy',
-                                                                                'transit_stations'],
-                                                            'home': ['residential']}, [640, 645])
+                                                           {'work': {'workplaces': 1.},
+                                                            'other_locations': {'retail_and_recreation': 0.333,
+                                                                                'grocery_and_pharmacy': 0.333,
+                                                                                'transit_stations': 0.334},
+                                                            'home': {'residential': 1.}}, [640, 645])
 
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {
@@ -104,19 +104,19 @@ def get_all_scenario_dicts(country: str):
 
             # lockdown mobility from 21Aug -01 Oct is assigned from  Aug 21 - Oct 01 in the scenario
             times1, values1 = get_mobility_specific_period(country, None,
-                                                           {'work': ['workplaces'],
-                                                            'other_locations': ['retail_and_recreation',
-                                                                                'grocery_and_pharmacy',
-                                                                                'transit_stations'],
-                                                            'home': ['residential']}, [599, 641])
+                                                           {'work': {'workplaces': 1.},
+                                                            'other_locations': {'retail_and_recreation': 0.333,
+                                                                                'grocery_and_pharmacy': 0.333,
+                                                                                'transit_stations': 0.334},
+                                                            'home': {'residential': 1.}}, [599, 641])
 
             # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown)
             times4, values4 = get_mobility_specific_period(country, None,
-                                                           {'work': ['workplaces'],
-                                                            'other_locations': ['retail_and_recreation',
-                                                                                'grocery_and_pharmacy',
-                                                                                'transit_stations'],
-                                                            'home': ['residential']}, [641, 645])
+                                                           {'work': {'workplaces': 1.},
+                                                            'other_locations': {'retail_and_recreation': 0.333,
+                                                                                'grocery_and_pharmacy': 0.333,
+                                                                                'transit_stations': 0.334},
+                                                            'home': {'residential': 1.}}, [641, 645])
 
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {

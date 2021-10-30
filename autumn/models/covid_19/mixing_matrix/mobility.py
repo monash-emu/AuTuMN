@@ -128,7 +128,7 @@ def update_mixing_data(
 def get_mobility_specific_period(
     country: str,
     region: str,
-    google_mobility_locations: Dict[str, List[str]],
+    google_mobility_locations: Dict[str, Dict[str, float]],
     split_dates: List[float],
 ) -> Dict[str, Callable[[float], float]]:
     """

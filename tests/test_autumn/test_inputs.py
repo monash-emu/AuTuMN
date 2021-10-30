@@ -31,20 +31,19 @@ def test_build_input_database(tmpdir, monkeypatch):
 
 def test_get_mobility_data():
     google_mobility_locations = {
-        "work": ["workplaces"],
-        "other_locations": [
-            "retail_and_recreation",
-            "grocery_and_pharmacy",
-            "parks",
-            "transit_stations",
-        ],
+        "work":
+            {"workplaces": 1.},
+        "other_locations":
+            {"retail_and_recreation": 0.25,
+             "grocery_and_pharmacy": 0.25,
+             "parks": 0.25,
+             "transit_stations": 0.25},
+        "home":
+            {"residential": 1.},
     }
     base_date = datetime(2020, 1, 1, 0, 0, 0)
     mob_df, days = get_mobility_data("AUS", "Victoria", base_date)
-
     loc_mobility = weight_mobility_data(mob_df, google_mobility_locations)
-
-
     loc_mobility = {k: [round(i, 2) for i in v] for k, v in loc_mobility.items()}
     assert days[:10] == [45, 46, 47, 48, 49, 50, 51, 52, 53, 54]
     assert loc_mobility["work"][:10] == [

@@ -27,13 +27,6 @@ testing_to_detection:
 mobility:
   smooth_google_data: true # whether to apply a 7-day moving average
   square_mobility_effect: true
-  google_mobility_locations:
-    work:
-      - workplaces
-    other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - transit_stations
   microdistancing:
     behaviour:
       function_type: empiric

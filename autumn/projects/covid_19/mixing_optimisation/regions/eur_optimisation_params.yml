@@ -15,16 +15,6 @@ stratify_by_infection_history: true
 waning_immunity_duration: 526  # to get 50% immune after 1 year (Faria et al, Science 2021)
 
 mobility:
-  google_mobility_locations:
-    work:
-      - workplaces
-    other_locations:
-      # Parks not included
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - transit_stations
-    # This is now needed because there is an entry in the master parameters file and dictionaries overwite recursively
-    home: []
   smooth_google_data: true
   microdistancing: # increasing function, starting from 0 (no microdistancing) ending at upper_asymptote
     behaviour:

@@ -11,9 +11,7 @@ def weight_mobility_data(mob_df, location_map):
     for new_loc, old_locs in revised_location_map.items():
         mob_df[new_loc] = 0
         for old_loc in old_locs:
-            mob_df[new_loc] += mob_df[old_loc]
-
-        mob_df[new_loc] = mob_df[new_loc] / len(old_locs)
+            mob_df[new_loc] += mob_df[old_loc] * revised_location_map[new_loc][old_loc]
 
     loc_mobility_values = {loc: mob_df[loc].tolist() for loc in revised_location_map.keys()}
     return loc_mobility_values

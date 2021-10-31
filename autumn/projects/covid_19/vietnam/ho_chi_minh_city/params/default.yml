@@ -77,7 +77,7 @@ testing_to_detection:
 
 
 # Vaccination-related
-# All information provided here are historical. Last update: 15th Oct, 2021.
+# All information provided here are HISTORICAL. Last update: 31st Oct, 2021.
 # All figures calculated below are available at: https://bit.ly/HCMC_vaccination_status
 vaccination:
   fully_vaccinated:
@@ -132,3 +132,8 @@ vaccination:
         coverage: 0.2394
         start_time: 640 # 01 Oct 2021
         end_time: 654 # 15 Oct 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2505
+        start_time: 654 # 15 Oct 2021
+        end_time: 670 # 31 Oct 2021

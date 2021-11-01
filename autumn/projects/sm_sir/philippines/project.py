@@ -22,5 +22,14 @@ targets = [
 ]
 calibration = Calibration(priors=priors, targets=targets)
 
+
+# FIXME: Replace with flexible Python plot request API.
+import json
+
+plot_spec_filepath = build_rel_path("timeseries.json")
+with open(plot_spec_filepath) as f:
+    plot_spec = json.load(f)
+
+
 # Create and register the project.
-project = Project(Region.PHILIPPINES, Models.SM_SIR, build_model, param_set, calibration)
+project = Project(Region.PHILIPPINES, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)

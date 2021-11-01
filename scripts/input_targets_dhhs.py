@@ -353,10 +353,10 @@ def create_age_cols(df, age_map):
 def process_zip_files():
 
     files_map = {
-        "nAdmissions_by_AdmissionDate_LGA_Age_Acquired_AdmittedToICU_Ventilated": COVID_DHHS_ADMN_CSV,
-        "nEncounters_by_EncounterDate_Postcode_AgeGroup_isPfizer_DoseNumber": COVID_DHHS_VAC_CSV,
-        "NewCases_by_DiagnosisDate_LGA_Age_Acquired": COVID_DHHS_CASE_CSV,
-        "deaths_LGA_age": COVID_DHHS_DEATH_CSV,
+        "_Admissions_Table": COVID_DHHS_ADMN_CSV,
+        "_Vacc_Table": COVID_DHHS_VAC_CSV,
+        "_Cases_Table": COVID_DHHS_CASE_CSV,
+        "_Deaths_Table": COVID_DHHS_DEATH_CSV,
         "monitoringreport.csv": CHRIS_CSV,
     }
 
@@ -371,7 +371,7 @@ def process_zip_files():
 
 def preprocess_deaths():
 
-    df = pd.read_csv(COVID_DHHS_DEATH_CSV, usecols=[1, 2, 3, 4])
+    df = pd.read_csv(COVID_DHHS_DEATH_CSV)
     df = df[~df.DateOfDeath.isna()]
 
     df = create_date_index(COVID_BASE_DATETIME, df, "DateofDeath")
@@ -384,7 +384,7 @@ def preprocess_deaths():
 def load_deaths(df):
 
     df = merge_with_mapping_df(df, "lga")
-    df["cluster_deaths"] = df.n * df.proportion
+    df["cluster_deaths"] = df.ndeaths * df.proportion
     df = (
         df[["date_index", "cluster_id", "cluster_deaths"]]
         .groupby(["date_index", "cluster_id"])

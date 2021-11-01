@@ -18,7 +18,7 @@ from autumn.tools.utils.utils import create_date_index
 
 
 COVID_LKA_DATACSV = os.path.join(INPUT_DATA_PATH, "covid_lka", "data.csv")
-COVID_LKA_REGION = {"sri_lanka": "Sri Lanka", "sri_lanka_wp": "Western PDHS"}
+COVID_LKA_REGION = {"sri_lanka": "Sri Lanka"}
 COVID_LKA_TARGETS = os.path.join(
     PROJECTS_PATH, "covid_19", "sri_lanka", "sri_lanka", "timeseries.json"
 )

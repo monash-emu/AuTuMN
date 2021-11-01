@@ -17,8 +17,7 @@ priors = [
 ]
 targets = [
     NormalTarget(
-        timeseries=ts_set["incidence"],
-        time_weights=list(range(1, len(ts_set["incidence"].times) + 1)),
+        timeseries=ts_set["incidence"]
     )
 ]
 calibration = Calibration(priors=priors, targets=targets)

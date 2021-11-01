@@ -3,7 +3,6 @@ import numpy as np
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
 from autumn.tools.calibration.targets import NormalTarget
 
-# TODO: Revise roadmap scenario
 # TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
 # TODO: See if we can get deaths as a target too
 
@@ -14,7 +13,7 @@ target_start_time = 454
 priors = [
     UniformPrior(
         "contact_rate",
-        (0.1, 0.2), jumping_stdev=0.05
+        (0.05, 0.15), jumping_stdev=0.05
     ),
     UniformPrior(
         "testing_to_detection.assumed_cdr_parameter",

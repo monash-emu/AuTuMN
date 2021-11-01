@@ -50,10 +50,10 @@ MICRODISTANCING_OPTI_PARAMS = {
     # apply mild microdistancing
     "behaviour": {
         "parameters": {
-            "lower_asymptote": 0.10,
-            "upper_asymptote": 0.10,
+            "start_asymptote": 0.10,
+            "end_asymptote": 0.10,
         }
     },
     # remove the behaviour adjuster's effect
-    "behaviour_adjuster": {"parameters": {"lower_asymptote": 1.0, "upper_asymptote": 1.0}},
+    "behaviour_adjuster": {"parameters": {"start_asymptote": 1.0, "end_asymptote": 1.0}},
 }

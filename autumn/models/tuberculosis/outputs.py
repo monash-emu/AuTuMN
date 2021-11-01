@@ -89,8 +89,8 @@ def request_outputs(
     screening_rate_func = tanh_based_scaleup(
         time_variant_tb_screening_rate["shape"],
         time_variant_tb_screening_rate["inflection_time"],
-        time_variant_tb_screening_rate["lower_asymptote"],
-        time_variant_tb_screening_rate["upper_asymptote"],
+        time_variant_tb_screening_rate["start_asymptote"],
+        time_variant_tb_screening_rate["end_asymptote"],
     )
 
     def get_screening_rate():

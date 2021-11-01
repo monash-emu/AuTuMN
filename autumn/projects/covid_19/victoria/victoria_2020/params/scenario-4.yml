@@ -28,7 +28,7 @@ victorian_clusters:
       microdistancing:
         face_coverings:
           parameters:
-            upper_asymptote: 0.130469
+            end_asymptote: 0.130469
 
   regional:
     mobility:
@@ -53,7 +53,7 @@ victorian_clusters:
       microdistancing:
         face_coverings:
           parameters:
-            upper_asymptote: 0.130469
+            end_asymptote: 0.130469
 
 infection_fatality:
   top_bracket_overwrite: 0.06216691045755533

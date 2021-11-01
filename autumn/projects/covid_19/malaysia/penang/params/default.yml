@@ -16,4 +16,4 @@ mobility:
   microdistancing:
     behaviour:
       parameters:
-        upper_asymptote: 0.2
+        end_asymptote: 0.2

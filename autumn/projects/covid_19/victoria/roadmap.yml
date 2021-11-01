@@ -1,0 +1,35 @@
+time:
+  start: 664
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-10-25
+        - 2021-10-26  # All students back on-site at least part-time
+        - 2021-11-23
+        - 2021-11-24  # All students should be fully back, phase D reached
+      values:
+        - 0.2662
+        - 0.8  # Assumption
+        - 0.8
+        - 1.
+    other_locations:
+      append: true
+      times:
+        - 2021-11-24  # Phase D
+      values:
+        - - close_gap_to_1
+          - 0.7
+    work:
+      append: true
+      times:
+        - 2021-11-24  # Phase D
+      values:
+        - - close_gap_to_1
+          - 0.7
+  microdistancing:
+    face_coverings:
+      parameters:
+        end_asymptote: 0.6

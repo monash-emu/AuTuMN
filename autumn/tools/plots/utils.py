@@ -16,7 +16,7 @@ PLOT_TEXT_DICT = {
     "progression_multiplier": "progression multiplier",
     "time_variant_tb_screening_rate.shape": "screening profile (max gradient)",
     "time_variant_tb_screening_rate.inflection_time": "screening profile (inflection time), year",
-    "time_variant_tb_screening_rate.upper_asymptote": "screening profile (final rate), per year",
+    "time_variant_tb_screening_rate.end_asymptote": "screening profile (final rate), per year",
     "user_defined_stratifications.location.adjustments.detection.ebeye": "rel. screening rate (Ebeye)",
     "user_defined_stratifications.location.adjustments.detection.other": "rel. screening rate (Other Isl.)",
     "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
@@ -114,8 +114,8 @@ def get_plot_text_dict(
         text = text.replace("victorian_clusters.contact_rate_multiplier_", "")
     if "victorian_clusters." in param_string:
         text = text.replace("victorian_clusters.metro.mobility.microdistancing", "")
-    if "upper_asymptote" in param_string:
-        text = text.replace("parameters.upper_asymptote", "")
+    if "end_asymptote" in param_string:
+        text = text.replace("parameters.end_asymptote", "")
     if capitalise_first_letter:
         text = text[0].upper() + text[1:]
     if remove_underscore:

@@ -3,7 +3,6 @@ import numpy as np
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
 from autumn.tools.calibration.targets import NormalTarget
 
-# TODO: Revise roadmap scenario
 # TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
 # TODO: See if we can get deaths as a target too
 

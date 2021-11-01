@@ -13,7 +13,7 @@ target_start_time = 454
 priors = [
     UniformPrior(
         "contact_rate",
-        (0.1, 0.2), jumping_stdev=0.05
+        (0.05, 0.15), jumping_stdev=0.05
     ),
     UniformPrior(
         "testing_to_detection.assumed_cdr_parameter",

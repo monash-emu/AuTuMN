@@ -1,12 +1,54 @@
 from typing import Callable, Dict, List
+import numpy as np
+import pandas as pd
 
 from autumn.models.covid_19.constants import BASE_DATETIME
 from autumn.models.covid_19.parameters import Country, MixingLocation
 from autumn.tools.curve import scale_up_function
-from autumn.tools.inputs import get_mobility_data
+from autumn.tools.inputs.mobility.queries import get_mobility_data
 from autumn.tools.utils.utils import apply_moving_average
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
+
+
+def weight_mobility_data(google_mob_df, location_map):
+    """
+    Get weighted average for each modelled location from Google mobility estimates.
+    Uses the user-specified request to define the mapping of Google mobility locations to the modelled locations.
+    Modelled locations are:
+        - work
+        - other_locations
+        - home
+    Google mobility locations are:
+        - retail_and_recreation
+        - grocery_and_pharmacy
+        - parks
+        - transit_stations
+        - residential
+        - workplaces
+
+    A standard example mapping (that we commonly use) would be:
+    {
+    'work':
+        {'workplaces': 1.0},
+    'other_locations':
+        {'retail_and_recreation': 0.25, 'grocery_and_pharmacy': 0.25, 'parks': 0.25, 'transit_stations': 0.25},
+    'home':
+        {'residential': 1.0}
+    }
+    Values for the sub-dictionaries for each modelled location must sum to one
+    - this is confirmed in parameter validation.
+
+    If a location is not specified, that location will not be scaled - this will be sorted out in later stages of
+    processing.
+    """
+
+    model_mob_df = pd.DataFrame(np.zeros((len(google_mob_df), len(location_map))), columns=list(location_map.keys()))
+    for model_loc, google_locs in location_map.items():
+        for g_loc in google_locs:
+            model_mob_df[model_loc] += google_mob_df[g_loc] * location_map[model_loc][g_loc]
+
+    return model_mob_df
 
 
 def get_mobility_funcs(
@@ -22,11 +64,12 @@ def get_mobility_funcs(
     Loads google mobility data, combines it with user requested timeseries data
     and then returns a mobility function for each location.
     """
-    google_mobility_values, google_mobility_days = get_mobility_data(
-        country.iso3, region, BASE_DATETIME, google_mobility_locations
-    )
+
+    mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
+    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
+
     if smooth_google_data:
-        for loc in google_mobility_values:
+        for loc in google_mobility_values.columns:
             google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
 
     # Build mixing data timeseries
@@ -40,10 +83,7 @@ def get_mobility_funcs(
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
     for location, timeseries in mixing.items():
-        if square_mobility_effect:
-            loc_vals = [v ** 2 for v in timeseries["values"]]
-        else:
-            loc_vals = timeseries["values"]
+        loc_vals = [v ** 2 for v in timeseries["values"]] if square_mobility_effect else timeseries["values"]
         mobility_funcs[location] = scale_up_function(timeseries["times"], loc_vals, method=4)
 
     return mobility_funcs
@@ -65,8 +105,9 @@ def update_mixing_data(
             ), f"Mixing series length mismatch for {loc_key}"
 
         # Add historical Google mobility data to user-specified mixing params
-        mobility_values = google_mobility_values.get(loc_key)
-        if mobility_values:
+        if loc_key in google_mobility_values.columns:
+            mobility_values = google_mobility_values[loc_key].to_list()
+
             # Google mobility values for this location
             if not loc_mixing:
                 # Just insert the mobility data
@@ -123,28 +164,29 @@ def update_mixing_data(
     mixing = {k: {"values": v["values"], "times": v["times"]} for k, v in mixing.items()}
     return mixing
 
+
 def get_mobility_specific_period(
     country: str,
     region: str,
-    google_mobility_locations: Dict[str, List[str]],
+    google_mobility_locations: Dict[str, Dict[str, float]],
     split_dates: List[float],
 ) -> Dict[str, Callable[[float], float]]:
     """
     Loads google mobility data, splits it for the requested time duration
     and then returns a mobility function for each location.
     """
-    google_mobility_values, google_mobility_days = get_mobility_data(
-        country, region, BASE_DATETIME, google_mobility_locations
-    )
 
-    spilt_google_mobility_values = {}
+    google_mob_data, google_mobility_days = get_mobility_data(country, region, BASE_DATETIME)
+    mobility_values = weight_mobility_data(google_mob_data, google_mobility_locations)
+
     first_timepoint_index = google_mobility_days.index(split_dates[0])
     second_timepoint_index = google_mobility_days.index(split_dates[1])
 
-    for loc in google_mobility_values:
-        spilt_google_mobility_values[loc] = google_mobility_values[loc][first_timepoint_index:second_timepoint_index]
-
-    split_google_mobility_days = google_mobility_days[first_timepoint_index:second_timepoint_index]
+    split_google_mobility_days = google_mobility_days[first_timepoint_index: second_timepoint_index]
+    spilt_google_mobility_values = {
+        loc: mobility_values.loc[first_timepoint_index: second_timepoint_index - 1, loc].to_list() for
+        loc in mobility_values.columns
+    }
     return split_google_mobility_days, spilt_google_mobility_values
 
 

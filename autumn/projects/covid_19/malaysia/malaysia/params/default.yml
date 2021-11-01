@@ -53,11 +53,14 @@ mobility:
   square_mobility_effect: true
   google_mobility_locations:
     work:
-      - workplaces
+      workplaces: 1.
     other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - transit_stations
+      retail_and_recreation: 0.333333
+      grocery_and_pharmacy: 0.333334
+      transit_stations: 0.333333
+      parks: 0.
+    home:
+      residential: 1.
   microdistancing:
     behaviour:
       function_type: tanh

@@ -2,12 +2,15 @@ from summer import CompartmentalModel
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 
+from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
 from datetime import date, datetime
 
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
+
+COMPARTMENTS = ["susceptible", "infectious", "recovered"]
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -20,7 +23,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
-        compartments=["susceptible", "infectious", "recovered"],
+        compartments=COMPARTMENTS,
         infectious_compartments=["infectious"],
         timestep=params.time.step,
         ref_date=BASE_DATE
@@ -78,5 +81,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Set up derived output functions
     """
+    outputs_builder = SmSirOutputsBuilder(model, COMPARTMENTS)
+    outputs_builder.request_incidence()
 
     return model

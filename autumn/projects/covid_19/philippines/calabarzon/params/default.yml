@@ -8,13 +8,6 @@ mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix
 
 mobility:
   region: Calabarzon
-  google_mobility_locations:
-    work:
-      - workplaces
-    other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - transit_stations
   microdistancing:
     behaviour:
       parameters:

@@ -5,7 +5,7 @@ clinical_stratification.props.symptomatic.multiplier: 1.5135219508767888
 contact_rate: 0.03446709169182245
 infection_deaths_dispersion_param: 0.7161826904105082
 infectious_seed: 110.62041407018785
-mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.2701189190554558
+mobility.microdistancing.behaviour.parameters.end_asymptote: 0.2701189190554558
 notifications_dispersion_param: 126.4485589404112
 sojourn.compartment_periods_calculated.active.total_period: 5.418448538264194
 sojourn.compartment_periods_calculated.exposed.total_period: 5.765464465650991

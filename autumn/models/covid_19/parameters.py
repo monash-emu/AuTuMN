@@ -102,6 +102,19 @@ class Sojourn(BaseModel):
         return periods
 
 
+class TanhScaleup(BaseModel):
+    shape: float
+    inflection_time: float
+    start_asymptote: float
+    end_asymptote: float
+
+    @validator("shape", allow_reuse=True)
+    def check_shape(val):
+        msg = f"Shape parameter negative: {val}, change order of asymptotes if desired gradient is the reversed"
+        assert 0. <= val, msg
+        return val
+
+
 class MixingLocation(BaseModel):
     # Whether to append or overwrite times / values
     append: bool
@@ -138,21 +151,6 @@ class EmpiricMicrodistancingParams(BaseModel):
         return values
 
 
-class TanhMicrodistancingParams(BaseModel):
-    shape: float
-    inflection_time: float
-    lower_asymptote: float
-    upper_asymptote: float
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_asymptotes(cls, values):
-        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
-        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
-        assert 0. <= lower <= 1., "Lower asymptote not in domain [0, 1]"
-        assert 0. <= upper <= 1., "Upper asymptote not in domain [0, 1]"
-        return values
-
-
 class ConstantMicrodistancingParams(BaseModel):
     effect: float
 
@@ -165,7 +163,7 @@ class ConstantMicrodistancingParams(BaseModel):
 class MicroDistancingFunc(BaseModel):
     function_type: str
     parameters: Union[
-        EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams
+        EmpiricMicrodistancingParams, TanhScaleup, ConstantMicrodistancingParams
     ]
     locations: List[str]
 
@@ -508,20 +506,6 @@ class VaccEffectiveness(BaseModel):
             death_effect = values["ve_death"]
             msg = f"Symptomatic Covid effect: {overall_effect} exceeds death effect: {death_effect}"
             assert death_effect >= overall_effect, msg
-        return values
-
-
-class TanhScaleup(BaseModel):
-    shape: float
-    inflection_time: float
-    lower_asymptote: float
-    upper_asymptote: float
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_asymptotes(cls, values):
-        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
-        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
-        assert 0. <= lower, f"Lower asymptote not in domain [0, inf]: {lower}"
         return values
 
 

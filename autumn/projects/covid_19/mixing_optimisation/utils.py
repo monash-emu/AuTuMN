@@ -61,7 +61,7 @@ def get_prior_distributions_for_opti():
             "distri_params": [60, 130],
         },
         {
-            "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
+            "param_name": "mobility.microdistancing.behaviour.parameters.end_asymptote",
             "distribution": "uniform",
             "distri_params": [0.25, 0.80],
         },
@@ -71,7 +71,7 @@ def get_prior_distributions_for_opti():
         #     "distri_params": [130, 250],
         # },
         # {
-        #     "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
+        #     "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.start_asymptote",
         #     "distribution": "uniform",
         #     "distri_params": [0.4, 1.0],
         # },

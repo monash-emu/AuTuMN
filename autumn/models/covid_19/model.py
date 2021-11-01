@@ -351,8 +351,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 second_dose_transition_func = tanh_based_scaleup(
                     shape=params.vaccination.second_dose_delay.shape,
                     inflection_time=dose_delay_params.inflection_time,
-                    lower_asymptote=dose_delay_params.lower_asymptote,
-                    upper_asymptote=dose_delay_params.upper_asymptote,
+                    start_asymptote=dose_delay_params.start_asymptote,
+                    end_asymptote=dose_delay_params.end_asymptote,
                 )
 
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:

@@ -1,18 +1,18 @@
 description: BASELINE
 
 time:
-  start: 485 #457  # 1 Apr 2021
+  start: 485 # 29 Apr 2021
   end: 912
 
 country:
   iso3: VNM
 
 mixing_matrices:
-  source_iso3: CHN
+  source_iso3: HKG
 
-#mixing_matrices:
-#  type: extrapolated
-#  source_iso3: CHN
+# mixing_matrices:
+  # type: extrapolated
+  # source_iso3: HKG
 
 population:
   region: Ho Chi Minh City
@@ -35,43 +35,105 @@ mobility:
     behaviour:
       function_type: empiric
       parameters:
-        max_effect: .2
-        times: [560, 575]
-        values: [0., 1.]
+        max_effect: .2 # estimated from the Philipines paper
+        times:
+          - 485 # 29/04/2021, first community case of COVID-19 detected in Ho Chi Minh City
+          - 505 # 19/05/2021, two new cases first detected after 20 days without any new case
+          - 518 # 01/06/2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
+          - 546 # 29/06/2021, Directive No.10 of HCMC's authorities in place
+          - 556 # 09/07/2021, Directive No.16 of the PM in place city-wide
+          - 573 # 26/07/2021, curfew from 6PM to 6AM
+          - 601 # 23/08/2021, total lockdown implemented
+          - 640 # 01/10/2021, lockdown started to ease
+        values:
+          - 0
+          - 0.2
+          - 0.4
+          - 0.5
+          - 0.7
+          - 0.85
+          - 1.
+          - 0.6
       locations:
         - other_locations
         - school
         - work
         - home
   mixing:
-    # Consider schools are closed for now
     school:
       append: false
       times:
-        - 2020-01-01
+        - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
+        - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
       values:
         - 0.
+        - 0.1
+
 
 testing_to_detection:
-  assumed_tests_parameter: 1.e-4
-  assumed_cdr_parameter: 0.05
+  assumed_tests_parameter: 1e-04 # Sri-Lanka model
+  assumed_cdr_parameter: 0.05 # needs calibrating
   smoothing_period: 14
 
 
 # Vaccination-related
+# All information provided here are HISTORICAL. Last update: 31st Oct, 2021.
+# All figures calculated below are available at: https://bit.ly/HCMC_vaccination_status
 vaccination:
-  one_dose:
-    ve_sympt_covid: 0.7 # now varied
+  fully_vaccinated:
+    ve_sympt_covid: 0.7157 # weighted average
     ve_prop_prevent_infection: 1 # now varied
-  roll_out_components:
-    - supply_period_coverage:
-        coverage: .1033
-        start_time: 558 # 11 July 2021
-        end_time: 596 # 18 Aug 2021
-      age_min: 20
-      age_max: 64
-    - supply_period_coverage:
-        coverage: .2901
-        start_time: 558 # 11 July 2021
-        end_time: 596 # 18 Aug 2021
-      age_min: 65
+    ve_hospitalisation: 0.9160 # weighted average
+    ve_death: 0.9329 # weighted average
+  second_dose_delay:  32.67 # weighted average waiting time between two doses
+  roll_out_components: # --> stratify by time
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .001226
+        start_time: 485 # 29th April 2021
+        end_time: 518 # 01st June 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .006267
+        start_time: 518 # 01 June 2021
+        end_time: 545 # 28 June 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.001289
+        start_time: 545 # 28 June 2021
+        end_time: 556 # 09 July 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.001910
+        start_time: 556 # 09 July 2021
+        end_time: 572 # 25 July 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.0284
+        start_time: 572 # 25 July 2021
+        end_time: 593 # 15 Aug 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.0384
+        start_time: 593 # 15 Aug 2021
+        end_time: 610 # 01 Sep 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.1957
+        start_time: 610 # 01 Sep 2021
+        end_time: 624 # 15 Sep 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2915
+        start_time: 624 # 15 Sep 2021
+        end_time: 640 # 01 Oct 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2394
+        start_time: 640 # 01 Oct 2021
+        end_time: 654 # 15 Oct 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2505
+        start_time: 654 # 15 Oct 2021
+        end_time: 670 # 31 Oct 2021

@@ -100,8 +100,8 @@ victorian_clusters:
           parameters:
             shape: 0.262764
             inflection_time: 197. # 15th July
-            lower_asymptote: 0.2803973
-            upper_asymptote: 0.4421819
+            start_asymptote: 0.2803973
+            end_asymptote: 0.4421819
           locations:
             - other_locations
             - school
@@ -121,8 +121,8 @@ victorian_clusters:
           parameters:
             shape: 0.5261693
             inflection_time: 208. # Mandated 11:59pm Wednesday 22nd July, but inflection date from fit was 26th July
-            lower_asymptote: 0.130469
-            upper_asymptote: 0.9143849
+            start_asymptote: 0.130469
+            end_asymptote: 0.9143849
           locations:
             - other_locations
             - school
@@ -184,8 +184,8 @@ victorian_clusters:
           parameters:
             shape: 0.262764
             inflection_time: 197. # 15th July
-            lower_asymptote: 0.2803973
-            upper_asymptote: 0.4421819
+            start_asymptote: 0.2803973
+            end_asymptote: 0.4421819
           locations:
             - other_locations
             - school
@@ -205,8 +205,8 @@ victorian_clusters:
           parameters:
             shape: 0.5261693
             inflection_time: 218. # Mandated 11:59pm Sunday 2nd August, but putting ten days after Metro for consistency
-            lower_asymptote: 0.130469
-            upper_asymptote: 0.9143849
+            start_asymptote: 0.130469
+            end_asymptote: 0.9143849
           locations:
             - other_locations
             - school

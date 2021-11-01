@@ -27,3 +27,7 @@ mobility:
         - 2021-11-24  # Phase D
       values:
         - 1.
+  microdistancing:
+    face_coverings:
+      parameters:
+        end_asymptote: 0.6

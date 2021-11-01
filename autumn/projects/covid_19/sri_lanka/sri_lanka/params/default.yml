@@ -63,8 +63,8 @@ mobility:
       parameters:
         shape: .02
         inflection_time: 380. # 1st February 2021
-        lower_asymptote: 0.
-        upper_asymptote: 0.4
+        start_asymptote: 0.
+        end_asymptote: 0.4
       locations:
         - other_locations
         - school

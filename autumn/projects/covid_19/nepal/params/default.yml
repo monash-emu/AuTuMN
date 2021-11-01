@@ -46,8 +46,8 @@ mobility:
       parameters:
         shape: .1
         inflection_time: 280
-        lower_asymptote: 0.
-        upper_asymptote: 0.34
+        start_asymptote: 0.
+        end_asymptote: 0.34
       locations:
         - other_locations
         - school

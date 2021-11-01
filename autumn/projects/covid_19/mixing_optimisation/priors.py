@@ -25,12 +25,12 @@ PRIORS = [
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 1.5]),
     # Micro-distancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.inflection_time", [60, 130]),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.upper_asymptote", [0.25, 0.80]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", [0.25, 0.80]),
     # UniformPrior(
     #     "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time", [130, 250]
     # ),
     # UniformPrior(
-    #     "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote", [0.4, 1.0]
+    #     "mobility.microdistancing.behaviour_adjuster.parameters.start_asymptote", [0.4, 1.0]
     # ),
     # UniformPrior("elderly_mixing_reduction.relative_reduction", [0.0, 0.5]),
 ]

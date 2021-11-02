@@ -62,10 +62,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     # transmission
     if params.activate_random_process:
-        # build the random process
+        # build the random process, using default values and coefficients
         rp = RandomProcess(order=2, period=7, start_time=params.time.start, end_time=params.time.end)
 
-        # set coefficients and values if specified
+        # set coefficients and values if specified in the parameters
         rp_params = params.random_process
         if rp_params.values:
             msg = f"Incorrect number of specified random process values. Expected {len(rp.values)}, found {len(rp_params.values)}."
@@ -77,6 +77,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             msg = f"Incorrect number of specified coefficients. Expected {len(rp.coefficients)}, found {len(rp_params.coefficients)}."
             assert len(rp.coefficients) == len(rp_params.coefficients), msg
             rp.coefficients = rp_params.coefficients
+
+        # FIXME: Need to check with David S. as this does not look good.
+        model.random_processes = rp
 
         # Create function returning exp(W), where W is the random process
         contact_rate = rp.create_random_process_function(transform_func=lambda w: params.contact_rate * exp(w))

@@ -657,3 +657,4 @@ class Parameters:
     # universal_death_rate: float
     infectious_seed: float
     infection_duration: float
+    activate_random_process: bool

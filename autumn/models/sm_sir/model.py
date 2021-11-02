@@ -1,6 +1,8 @@
 from summer import CompartmentalModel
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
+from autumn.tools.random_process import RandomProcess
+from math import exp
 
 from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
@@ -58,10 +60,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Add intercompartmental flows.
     """
+    # transmission
+    if params.activate_random_process:
+        # build the random process
+        rp = RandomProcess(order=2, period=7, start_time=params.time.start, end_time=params.time.end)
 
-    contact_rate = params.contact_rate
+        # FIXME: set values and coefficients
 
-    # Infection
+
+        # Create function returning exp(W), where W is the random process
+        contact_rate = rp.create_random_process_function(transform_func=lambda w: params.contact_rate * exp(w))
+    else:
+        contact_rate = params.contact_rate
+
     model.add_infection_frequency_flow(
         name="infection",
         contact_rate=contact_rate,

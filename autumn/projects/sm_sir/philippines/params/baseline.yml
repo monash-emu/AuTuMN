@@ -1,2 +1,3 @@
 ---
-contact_rate: 0.4
+infectious_seed: 100.
+contact_rate: 0.15

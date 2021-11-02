@@ -46,7 +46,12 @@ class RandomProcess:
         else:
             values = [transform_func(v) for v in self.values]
 
-        return scale_up_function(self.update_times, values, method=4)
+        sc_func = scale_up_function(self.update_times, values, method=4)
+
+        def random_process_function(t, computed_values):
+            return sc_func(t)
+
+        return random_process_function
 
     def evaluate_rp_loglikelihood(self):
         """

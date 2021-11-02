@@ -9,8 +9,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_params = base_params.update(build_rel_path("params/default.yml"))
-scenario_1_params = default_params.update(build_rel_path("params/scenario-1.yml"))
-param_set = ParameterSet(baseline=default_params, scenarios=[scenario_1_params])
+param_set = ParameterSet(baseline=default_params, scenarios=[])
 
 # Load and configure calibration settings.
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))

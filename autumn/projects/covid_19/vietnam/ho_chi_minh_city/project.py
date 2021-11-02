@@ -25,7 +25,6 @@ scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_d
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-n_inflated_weight = 35
 
 targets = []
 for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:

@@ -13,11 +13,11 @@ target_start_time = 454
 priors = [
     UniformPrior(
         "contact_rate",
-        (0.05, 0.15), jumping_stdev=0.05
+        (0.05, 0.18), jumping_stdev=0.05
     ),
     UniformPrior(
         "vic_2021_seeding.seed_time",
-        (560., 580.), jumping_stdev=1.,
+        (560., 600.), jumping_stdev=1.,
     ),
     UniformPrior(
         "testing_to_detection.assumed_cdr_parameter",
@@ -33,11 +33,11 @@ priors = [
     ),
     BetaPrior(
         "vaccination.fully_vaccinated.ve_infectiousness",
-        mean=0.32, ci=(0.2, 0.44),
+        mean=0.32, ci=(0.15, 0.5),
     ),
     BetaPrior(
         "vaccination.fully_vaccinated.ve_prop_prevent_infection",
-        mean=0.95, ci=(0.9, 0.98),
+        mean=0.95, ci=(0.85, 0.98),
     ),
 ]
 

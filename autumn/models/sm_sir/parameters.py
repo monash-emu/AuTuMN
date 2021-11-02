@@ -636,6 +636,12 @@ class AgeSpecificRiskMultiplier(BaseModel):
     contact_rate_multiplier: float
 
 
+class RandomProcess(BaseModel):
+    coefficients: Optional[List[float]]
+    noise_sd: Optional[float]
+    values: Optional[List[float]]
+
+
 class ParamConfig:
     """
     Config for parameter models
@@ -657,4 +663,7 @@ class Parameters:
     # universal_death_rate: float
     infectious_seed: float
     infection_duration: float
+
+    # Random process
     activate_random_process: bool
+    random_process: Optional[RandomProcess]

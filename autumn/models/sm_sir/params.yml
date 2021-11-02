@@ -15,3 +15,4 @@ infectious_seed: 1
 infection_duration: 8
 
 activate_random_process: True
+random_process: null

@@ -65,8 +65,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # build the random process
         rp = RandomProcess(order=2, period=7, start_time=params.time.start, end_time=params.time.end)
 
-        # FIXME: set values and coefficients
-
+        # set coefficients and values if specified
+        rp_params = params.random_process
+        if rp_params.values:
+            msg = f"Incorrect number of specified random process values. Expected {len(rp.values)}, found {len(rp_params.values)}."
+            assert len(rp.values) == len(rp_params.values), msg
+            rp.values = rp_params.values
+        if rp_params.noise_sd:
+            rp.noise_sd = rp_params.noise_sd
+        if rp_params.coefficients:
+            msg = f"Incorrect number of specified coefficients. Expected {len(rp.coefficients)}, found {len(rp_params.coefficients)}."
+            assert len(rp.coefficients) == len(rp_params.coefficients), msg
+            rp.coefficients = rp_params.coefficients
 
         # Create function returning exp(W), where W is the random process
         contact_rate = rp.create_random_process_function(transform_func=lambda w: params.contact_rate * exp(w))

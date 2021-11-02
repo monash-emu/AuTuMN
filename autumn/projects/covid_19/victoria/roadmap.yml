@@ -32,4 +32,4 @@ mobility:
   microdistancing:
     face_coverings:
       parameters:
-        end_asymptote: 0.6
+        end_asymptote: 0.5

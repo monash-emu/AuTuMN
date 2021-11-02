@@ -1,12 +1,14 @@
 from math import ceil
 from math import log, sqrt, pi
 
+from autumn.tools.curve import scale_up_function
+
 
 class RandomProcess:
     """
     Defines a random process using an auto-regressive model.
     If n is the order, the process is defined as follows:
-      ->  W_k = coeff_1 * W_{k-1} + ... + coeff_n * W{k-n}  + epsilon_k ,
+      W_k = coeff_1 * W_{k-1} + ... + coeff_n * W{k-n}  + epsilon_k ,
     where epsilon_k ~ Normal(0, sigma), and coeff_i are real constants.
     Initial conditions:
     W_0 = epsilon_0
@@ -33,9 +35,22 @@ class RandomProcess:
         self.update_times = [start_time + i * period for i in range(n_updates)]
         self.values = [0.] * n_updates
 
+    def create_random_process_function(self, transform_func=None):
+        """
+        Create a time-variant function to be used in the main model code where the random process is implemented.
+        :param transform_func: function used to transform the R interval into the desired interval
+        :return: a time-variant function
+        """
+        if transform_func is None:
+            values = self.values
+        else:
+            values = [transform_func(v) for v in self.values]
+
+        return scale_up_function(self.update_times, values, method=4)
+
     def evaluate_rp_loglikelihood(self):
         """
-        Evaluate the log-likelihood of a set of values, given the AR coefficients and a value of noise standard deviation
+        Evaluate the log-likelihood of the process's values, given the AR coefficients and a value of noise standard deviation
         :return: the loglikelihood (float)
         """
         # calculate the centre of the normal distribution followed by each W_t

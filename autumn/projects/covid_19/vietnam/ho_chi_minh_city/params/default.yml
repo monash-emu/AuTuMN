@@ -23,6 +23,17 @@ mobility:
   # Google mobility data
   smooth_google_data: true # whether to apply a 7-day moving average
   square_mobility_effect: true
+  # Google mobility weightings
+  google_mobility_locations:
+    work:
+      worlplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.4
+      grocery_and_pharmacy: 0.3
+      parks: 0.2
+      transit_stations: 0.1
+    home:
+      residental: 1.
   # Micro distancing
   microdistancing:
     behaviour:

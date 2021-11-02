@@ -180,8 +180,8 @@ vaccination:
   second_dose_delay:
     shape: 0.1
     inflection_time: 624.  # Middle of September 2021, so that most scaling occurs during September
-    start_asymptote: 0.0232558  # Baseline lag in vaccination curves, 43 days
-    end_asymptote: 0.0357143  # Shortened lag from Dept's spreadsheet, 28 days
+    start_asymptote: 43.  # Baseline lag in vaccination curves, 43 days
+    end_asymptote: 28.  # Shortened lag from Dept's spreadsheet, 28 days
   lag: 14
   roll_out_components:
     - vic_supply:

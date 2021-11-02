@@ -5,6 +5,7 @@ from autumn.tools.calibration import Calibration
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.covid_19.victoria.region_calibration import priors, collate_metro_targets
+from autumn.tools.calibration.priors import UniformPrior
 
 # Load and configure model parameters
 vic_base_path = build_rel_path("../vic_submodel_params.yml")

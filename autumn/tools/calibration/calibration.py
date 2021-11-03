@@ -91,11 +91,18 @@ class Calibration:
         seed: int = None,
         initial_jumping_stdev_ratio: float = 0.25,
         jumping_stdev_adjustment: float = 0.5,
+        random_process=None
     ):
         """
         Defines a new calibration.
         """
         self.all_priors = [p.to_dict() for p in priors]
+
+        self.includes_random_process = False
+        if random_process is not None:
+            self.random_process = random_process
+            self.set_up_random_process()
+
         self.targets = [t.to_dict() for t in targets]
         self.targets = remove_early_points_to_prevent_crash(self.targets, self.all_priors)
 
@@ -151,6 +158,42 @@ class Calibration:
         np.random.set_state(_extra['rng'])
 
         #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
+
+    def set_up_random_process(self):
+        self.includes_random_process = True
+
+        # add priors for coefficients, using 80% weight for the first order, splitting remaining 20% between remaining orders
+        order = self.random_process.order
+        if order == 1:
+            coeff_means = [1.]
+        else:
+            coeff_means = [.8] + [.2 / (order - 1)] * (order - 1)
+        for i, coeff_mean in enumerate(coeff_means):
+            self.all_priors.append({
+                "param_name": f"rp_coeff_{i + 1}",
+                "distribution": "trunc_normal",
+                "distri_params": [coeff_mean, 0.05],
+                "trunc_range": [0., 1.],
+            })
+
+        # add prior for noise sd
+        self.all_priors.append({
+            "param_name": "rp_noise_sd",
+            "distribution": "trunc_normal",
+            "distri_params": [.1, .01],
+            "trunc_range": [0., np.inf],
+        })
+
+        # add priors for rp values
+        n_values = len(self.random_process.values)
+        self.all_priors += [
+            {
+                "param_name": f"rp_value_{i_val}",
+                "distribution": "uniform",
+                "distri_params": [-2., 2.],
+                "skip_evaluation": True
+            } for i_val in range(n_values)
+        ]
 
     def split_priors_by_type(self):
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
@@ -330,9 +373,20 @@ class Calibration:
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for param_name, value in proposed_params.items():
-            param_updates[param_name] = value
-
+            if not param_name.startswith("rp_"):
+                param_updates[param_name] = value
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
+
+        if self.includes_random_process:
+            rp_param_updates = {
+                "random_process": {
+                    "coefficients": [proposed_params[f"rp_coeff_{i + 1}"] for i in range(self.random_process.order)],
+                    "noise_sd": proposed_params["rp_noise_sd"],
+                    "values": [proposed_params[f"rp_value_{k}"] for k in range(len(self.random_process.values))]
+                }
+            }
+
+            iter_params = iter_params.update(rp_param_updates, calibration_format=False)
 
         if self._is_first_run:
             self.build_options = dict(enable_validation = True)
@@ -834,6 +888,9 @@ class Calibration:
         logp = 0.0
         for param_name, value in all_params_dict.items():
             prior_dict = [d for d in self.all_priors if d["param_name"] == param_name][0]
+            if "skip_evaluation" in prior_dict:
+                if prior_dict["skip_evaluation"]:
+                    continue
             logp += calculate_prior(prior_dict, value, log=True)
 
         return logp
@@ -1116,6 +1173,12 @@ def read_current_parameter_values(priors, model_parameters):
         if param_dict["param_name"].endswith("dispersion_param"):
             assert param_dict["distribution"] == "uniform"
             starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
+        elif param_dict["param_name"].startswith("rp_coeff_"):
+            starting_points[param_dict["param_name"]] = param_dict["distri_params"][0]
+        elif param_dict["param_name"] == "rp_noise_sd":
+            starting_points[param_dict["param_name"]] = param_dict["distri_params"][0]
+        elif param_dict["param_name"].startswith("rp_value_"):
+            starting_points[param_dict["param_name"]] = 0.
         else:
             starting_points[param_dict["param_name"]] = read_param_value_from_string(
                 model_parameters, param_dict["param_name"]

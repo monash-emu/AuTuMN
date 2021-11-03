@@ -18,10 +18,18 @@ priors = [
 ]
 targets = [
     NormalTarget(
-        timeseries=ts_set["incidence"]
+        timeseries=ts_set["incidence"].truncate_end_time(365)
     )
 ]
-calibration = Calibration(priors=priors, targets=targets)
+
+# FIXME: this should not be necessary
+if baseline_params.to_dict()["activate_random_process"]:
+    m = build_model(baseline_params.to_dict())
+    rp = m.random_processes
+else:
+    rp = None
+
+calibration = Calibration(priors=priors, targets=targets, random_process=rp)
 
 # FIXME: Replace with flexible Python plot request API.
 import json

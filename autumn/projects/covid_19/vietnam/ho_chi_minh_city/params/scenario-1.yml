@@ -38,7 +38,7 @@ mobility:
         - 0.2
 
     school:
-      append: true
+      append: false
       times:
         - 2022-01-02
         - 2021-01-16

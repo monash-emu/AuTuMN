@@ -377,16 +377,25 @@ class Calibration:
                 param_updates[param_name] = value
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
 
+        # Update random process parameters before running the model
         if self.includes_random_process:
+            proposed_rp_coefficients = [proposed_params[f"rp_coeff_{i + 1}"] for i in range(self.random_process.order)]
+            proposed_rp_noise_sd = proposed_params["rp_noise_sd"]
+            proposed_rp_values = [proposed_params[f"rp_value_{k}"] for k in range(len(self.random_process.values))]
             rp_param_updates = {
                 "random_process": {
-                    "coefficients": [proposed_params[f"rp_coeff_{i + 1}"] for i in range(self.random_process.order)],
-                    "noise_sd": proposed_params["rp_noise_sd"],
-                    "values": [proposed_params[f"rp_value_{k}"] for k in range(len(self.random_process.values))]
+                    "coefficients": proposed_rp_coefficients,
+                    "noise_sd": proposed_rp_noise_sd,
+                    "values": proposed_rp_values
                 }
             }
 
             iter_params = iter_params.update(rp_param_updates, calibration_format=False)
+
+            # Update the random_process attribute with the current rp config for later likelihood evaluation
+            self.random_process.coefficients = proposed_rp_coefficients
+            self.random_process.noise_sd = proposed_rp_noise_sd
+            self.random_process.values = proposed_rp_values
 
         if self._is_first_run:
             self.build_options = dict(enable_validation = True)
@@ -639,6 +648,10 @@ class Calibration:
 
                 # Evaluate log-prior.
                 proposed_logprior = self.logprior(all_params_dict)
+
+                # Evaluate the log-likelihood of the random process if applicable
+                if self.includes_random_process:
+                    proposed_logprior += self.random_process.evaluate_rp_loglikelihood()
 
                 # posterior distribution
                 proposed_log_posterior = proposed_loglike + proposed_logprior

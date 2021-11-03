@@ -40,14 +40,14 @@ mobility:
     school:
       append: false
       times:
-        - 2021-01-01
-        - 2022-01-20
+        - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
+        - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
         - 2022-01-02
         - 2021-01-16
         - 2022-01-30
       values:
         - 0.
-        - 0.1 # universities start to open
+        - 0.1
         - 0.4
         - 0.7
         - 1.0

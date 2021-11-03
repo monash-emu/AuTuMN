@@ -1,0 +1,77 @@
+description: >
+  SCENARIO 1: Social distancing returns to 60% on 02nd Oct, 2021 and is eased at 20% every 3 weeks.
+  60% and 90% of the population aged 10-20 will be fully vaccinated on 15th Dec 2021 and 31st Jan, 2022, respectively.
+  Vaccination for the 20+ age group continues at the speed of 800000 new fully vaccinated people per month for the next two months,
+  which means approximately 90% of the population this age will be fully vaccinated.
+  Schools start to reopen on 02nd Jan 2022 at 30% every 2 weeks.
+
+time:
+  start: 640 # 01st Oct 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-10-01 # lockdown eased
+        - 2021-10-02
+        - 2021-10-23
+        - 2021-11-13
+      values:
+        - - repeat_prev
+        - 0.6
+        - 0.4
+        - 0.2
+
+    work:
+      append: true
+      times:
+        - 2021-10-01 # lockdown eased
+        - 2021-10-02
+        - 2021-10-23
+        - 2021-11-13
+      values:
+        - - repeat_prev
+        - 0.6
+        - 0.4
+        - 0.2
+
+    school:
+      append: false
+      times:
+        - 2021-05-09
+        - 2021-10-20
+        - 2022-01-02
+        - 2021-01-16
+        - 2022-01-30
+      values:
+        - 0.
+        - 0.1
+        - 0.4
+        - 0.7
+        - 1.0
+
+vaccination:
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.6
+        start_time: 666 # 27th Oct 2021
+        end_time: 715 # 15th Dec 2021
+      age_min: 10
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.75
+        start_time: 715 # 15th Dec 2021
+        end_time: 762 # 31st Jan 2021
+      age_min: 10
+      age_max: 19
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.3289
+        start_time: 670 # 31st Oct 2021
+        end_time: 700 # 30th Nov 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.4901
+        start_time: 700 # 30th Nov 2021
+        end_time: 731 # 31st Dec 2021

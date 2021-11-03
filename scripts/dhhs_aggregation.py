@@ -68,18 +68,18 @@ AGGREGATE_OUTPUTS = [
 
 # Mapping of cluster id to run_id
 RUN_IDS = {
-    'barwon-south-west': 'covid_19/barwon-south-west/1635203341/e17f4a0',
-    'gippsland': 'covid_19/gippsland/1635166443/153a938',
-    'grampians': 'covid_19/grampians/1635166473/153a938',
-    'hume': 'covid_19/hume/1635166677/153a938',
-    'north-east-metro': 'covid_19/north-east-metro/1635204422/94ea65b',
-    'south-east-metro': 'covid_19/south-east-metro/1635166421/153a938',
-    'loddon-mallee': 'covid_19/loddon-mallee/1635166635/153a938',
-    'west-metro': 'covid_19/west-metro/1635166421/153a938'
+    'barwon-south-west': 'covid_19/barwon-south-west/1635849471/6ed04a9',
+    'gippsland': 'covid_19/gippsland/1635849364/6ed04a9',
+    'grampians': 'covid_19/grampians/1635849367/6ed04a9',
+    'hume': 'covid_19/hume/1635849378/6ed04a9',
+    'north-east-metro': 'covid_19/north-east-metro/1635850532/a0a460c',
+    'south-east-metro': 'covid_19/south-east-metro/1635850494/a0a460c',
+    'loddon-mallee': 'covid_19/loddon-mallee/1635849425/6ed04a9',
+    'west-metro': 'covid_19/west-metro/1635850489/a0a460c'
 }
 
 # Used for filename only (ie doesn't affect data) unless specified below - see comments in main script
-COMMIT_SHA = "153a938"
+COMMIT_SHA = "6ed04a9"
 
 
 def create_csv():
@@ -186,7 +186,7 @@ def create_csv():
 
     for input_key in AGGREGATE_OUTPUTS:
         vic_df = mle_accum[input_key].melt(ignore_index=False)
-        vic_df['time'] = cmdf.index
+        vic_df['time'] = vic_df.index
         vic_df['type'] = input_key
         vic_df['region'] = 'VICTORIA'
         vic_df.reset_index(drop=True, inplace=True)
@@ -200,7 +200,8 @@ def create_csv():
 
     out_df = final_df[['region','scenario','time','type','value','quantile']]
 
-    cur_time = datetime.fromtimestamp(time.time())
+    cur_time = datetime.fromtimestamp(time())
+    
     dt_str = cur_time.strftime("%Y-%m-%dT%H-%M-%S")
 
     csv_fn = f"vic-forecast-{COMMIT_SHA}-{dt_str}.csv"

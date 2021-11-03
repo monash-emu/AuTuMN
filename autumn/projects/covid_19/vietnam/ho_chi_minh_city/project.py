@@ -25,24 +25,12 @@ scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_d
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-cutoff_time = 518  # 1 June 2021
-hosp_endtime = 582
 n_inflated_weight = 35
 
 targets = []
-for output_name in ["notifications", "hospital_occupancy", "infection_deaths"]:
-    if output_name == "hospital_occupancy":
-        series = ts_set.get(output_name).truncate_start_time(cutoff_time).truncate_end_time(hosp_endtime).moving_average(window=7)
-    else:
-        series = ts_set.get(output_name).truncate_start_time(cutoff_time).moving_average(window=7)
-
-    n = len(series.times)
-    max_weight = 10.
-    weights = [1.0 for _ in range(n - n_inflated_weight)] + [1.0 + (i + 1) * (max_weight - 1.) / n_inflated_weight for i in range(n_inflated_weight)]
-
-    targets.append(
-        NormalTarget(series, time_weights=weights)
-    )
+for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:
+    series = ts_set.get(output_name).moving_average(window=7)
+    targets.append(NormalTarget(series))
 
 priors = [
     TruncNormalPrior(

@@ -16,7 +16,7 @@ mobility:
       times:
         - 2021-10-01 # lockdown eased
         - 2021-10-02
-        - 2021-10-22
+        - 2021-10-23
         - 2021-11-13
       values:
         - - repeat_prev
@@ -29,8 +29,8 @@ mobility:
       times:
         - 2021-10-01 # lockdown eased
         - 2021-10-02
-        - 2021-11-11
-        - 2021-12-02
+        - 2021-10-23
+        - 2021-11-13
       values:
         - - repeat_prev
         - 0.6

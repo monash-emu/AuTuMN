@@ -1,19 +1,48 @@
 description: BASELINE
 
-contact_rate: 1.5
-
 time:
-  start: 500
-  end: 791 # march 1st 2022
+  start: 330.
+  end: 791.  # Start March 2022
+
+infectious_seed: 200.
+
+contact_rate: 0.04
+
+testing_to_detection:
+  assumed_tests_parameter: 1.e-04
+  assumed_cdr_parameter: 0.008
+  smoothing_period: 7
+
+contact_tracing:
+  assumed_trace_prop: 0.25
+  assumed_prev: 1.e-3
+  quarantine_infect_multiplier: 0.2
+  floor: 0.2
+
+vaccination:
+  one_dose:
+    ve_sympt_covid: 0.3
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness_ratio: 0.5
+    ve_hospitalisation: 0.7
+    ve_death: 0.8
+  fully_vaccinated:
+    ve_sympt_covid: 0.5
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness: 0.3
+    ve_hospitalisation: 0.7
+    ve_death: 0.8
+  lag: 14
+  second_dose_delay: 30.
+  roll_out_components:
+    - age_min: 10
+      supply_period_coverage:
+        coverage: 0.15
+        start_time: 487  # Start May 2021
+        end_time: 731  # End 2021
 
 country:
   iso3: MMR
 
 mixing_matrices:
   source_iso3: CHN
-
-# PLEASE REVIEW THIS  
-testing_to_detection:
-  assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.06
-  smoothing_period: 14

@@ -15,11 +15,9 @@ DHHS_LGA_TO_CLUSTER = os.path.join(
     MOBILITY_DIRPATH, "LGA to Cluster mapping dictionary with proportions.csv"
 )
 
-DHHS_LGA_TO_HSP = os.path.join(
-    INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv"
-)
+DHHS_LGA_TO_HSP = os.path.join(INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv")
 
-MOBILITY_LGA_PATH = DHHS_LGA_TO_HSP # Swap with DHHS_LGA_TO_CLUSTER to obtain previous mapping
+MOBILITY_LGA_PATH = DHHS_LGA_TO_HSP  # Swap with DHHS_LGA_TO_CLUSTER to obtain previous mapping
 
 COUNTRY_NAME_ISO3_MAP = {
     "Bolivia": "BOL",
@@ -143,7 +141,7 @@ def preprocess_mobility(input_db: Database, country_df):
     ] = "Kuala Lumpur"
 
     # Create a copy of mobility data for Sri Lanka's western province
-    sri_lanka_wp = mob_df[mob_df.country_region=='Sri Lanka'].copy()
+    sri_lanka_wp = mob_df[mob_df.country_region == "Sri Lanka"].copy()
     sri_lanka_wp.sub_region_1 = "western province"
 
     mob_df = mob_df.append(sri_lanka_wp)
@@ -208,7 +206,19 @@ def reshape_to_clusters(gm_df):
     hc_pop = lga_df.groupby(["cluster_name"]).sum().reset_index()[["cluster_name", "lga_pop_prop"]]
     hc_pop.rename(columns={"lga_pop_prop": "hc_pop"}, inplace=True)
     lga_df = pd.merge(lga_df, hc_pop, how="left", left_on="cluster_name", right_on="cluster_name")
-    lga_df = pd.merge(lga_df, gm_df, how="left", left_on="lga_name", right_on="sub_region_1")
+
+    gm_lga = set(gm_df["sub_region_1"])
+    dhhs_lga = set(lga_df["lga_name"])
+
+    # Two-way check. Only allow for 'Victoria' and 'Unincorporated Vic'.
+    safe_merge = [
+        gm_lga.difference(dhhs_lga) == {"Victoria"},
+        dhhs_lga.difference(gm_lga) == {"Unincorporated Vic"},
+    ]
+    if all(safe_merge):
+        lga_df = pd.merge(lga_df, gm_df, how="left", left_on="lga_name", right_on="sub_region_1")
+    else:
+        raise AssertionError("LGA naming changed by Google update VIC_LGA_MAP")
 
     list_of_columns = [
         "retail_and_recreation_percent_change_from_baseline",
@@ -240,5 +250,3 @@ def reshape_to_clusters(gm_df):
     cluster_df.rename(columns={"cluster_name": "sub_region_1"}, inplace=True)
 
     return cluster_df
-
-

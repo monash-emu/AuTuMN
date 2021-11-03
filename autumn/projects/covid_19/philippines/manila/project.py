@@ -24,9 +24,10 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 targets, priors = get_philippies_calibration_settings(ts_set)
 
-priors.append(
-    UniformPrior("vaccination_risk.risk_multiplier", [0.8, 1.2], sampling="lhs"),
-)
+# Below prior for risk-benefit analysis only
+# priors.append(
+#     UniformPrior("vaccination_risk.risk_multiplier", [0.8, 1.2], sampling="lhs"),
+# )
 
 # Load proposal sds from yml file
 use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))

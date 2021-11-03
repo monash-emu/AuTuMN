@@ -1,9 +1,9 @@
 description: >
   SCENARIO 1: Lockdown returns to 60% on 02nd Oct, 2021 and is eased at 20% every 3 weeks.
   60% of the population aged 10-20 are fully vaccinated on 15th Dec, 2021,
-  and the remaining will be fully vaccinated on 31st Jan, 2022.
+  and 90% will be fully vaccinated on 31st Jan, 2022.
   Vaccination for the 20+ age group continues at the speed of 1 million newly vaccinated people per month
-  until 100% people are vaccinated.
+  for the next two months.
   Schools reopen on 02nd Jan 2022 at 30% every 2 weeks.
 
 time:
@@ -40,8 +40,8 @@ mobility:
     school:
       append: false
       times:
-        - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
-        - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
+        - 2021-05-09
+        - 2021-10-20
         - 2022-01-02
         - 2021-01-16
         - 2022-01-30
@@ -61,7 +61,7 @@ vaccination:
       age_min: 10
       age_max: 19
     - supply_period_coverage:
-        coverage: 1.0
+        coverage: 0.75
         start_time: 715 # 15th Dec 2021
         end_time: 762 # 31st Jan 2021
       age_min: 10
@@ -76,8 +76,3 @@ vaccination:
         coverage: 0.6982
         start_time: 700 # 30th Nov 2021
         end_time: 731 # 31st Dec 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 1.0
-        start_time: 731 # 31st Dec 2021
-        end_time: 762 # 31st Jan 2022

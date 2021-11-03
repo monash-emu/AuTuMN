@@ -12,8 +12,9 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 # Load and configure calibration settings.
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.025, 0.05]),
-    UniformPrior("recovery_rate", [0.9, 1.2]),
+    UniformPrior("contact_rate", [0.1, 0.2]),
+    UniformPrior("infection_duration", [5, 12]),
+    UniformPrior("infectious_seed", [1, 100]),
 ]
 targets = [
     NormalTarget(
@@ -21,7 +22,6 @@ targets = [
     )
 ]
 calibration = Calibration(priors=priors, targets=targets)
-
 
 # FIXME: Replace with flexible Python plot request API.
 import json

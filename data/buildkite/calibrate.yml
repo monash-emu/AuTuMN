@@ -62,12 +62,14 @@ steps:
       value: covid_19:spain
     - label: Sri_Lanka (covid_19)
       value: covid_19:sri_lanka
-    - label: Sri_Lanka_Wp (covid_19)
-      value: covid_19:sri_lanka_wp
     - label: Sweden (covid_19)
       value: covid_19:sweden
     - label: United Kingdom (covid_19)
       value: covid_19:united-kingdom
+    - label: Victoria_2020 (covid_19)
+      value: covid_19:victoria_2020
+    - label: Victoria_2021 (covid_19)
+      value: covid_19:victoria_2021
     - label: Vietnam (covid_19)
       value: covid_19:vietnam
     - label: West Metro (covid_19)
@@ -76,6 +78,8 @@ steps:
       value: sir_example:philippines
     - label: Victoria_2020 (sir_example)
       value: sir_example:victoria_2020
+    - label: Philippines (sm_sir)
+      value: sm_sir:philippines
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)

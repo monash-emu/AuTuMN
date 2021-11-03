@@ -43,14 +43,14 @@ with open(plot_spec_filepath) as f:
 
 
 # create differential outputs request
-output_types_to_differentiate = ["tts_cases", "tts_deaths", "myocarditis_cases", "hospital_admissions"]
-agg_agegroups = ["15_19", "20_29", "30_39", "40_49", "50_59", "60_69", "70_plus"]
-diff_output_requests = [[f"cumulative_{output_type}Xagg_age_{aggregated_age_group}", "ABSOLUTE"]
-                        for output_type in output_types_to_differentiate
-                        for aggregated_age_group in agg_agegroups]
+# output_types_to_differentiate = ["tts_cases", "tts_deaths", "myocarditis_cases", "hospital_admissions"]
+# agg_agegroups = ["15_19", "20_29", "30_39", "40_49", "50_59", "60_69", "70_plus"]
+# diff_output_requests = [[f"cumulative_{output_type}Xagg_age_{aggregated_age_group}", "ABSOLUTE"]
+#                         for output_type in output_types_to_differentiate
+#                         for aggregated_age_group in agg_agegroups]
 
 project = Project(
-    Region.MANILA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec, diff_output_requests=diff_output_requests,
+    Region.MANILA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec,# diff_output_requests=diff_output_requests,
 )
 
 # from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning

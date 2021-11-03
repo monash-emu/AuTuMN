@@ -50,13 +50,13 @@ mobility:
 
 vaccination:
   roll_out_components:
-    - supply period coverage:
+    - supply_period_coverage:
         coverage: 0.6
         start_time: 666 # 27th Oct 2021
         end_time: 715 # 15th Dec 2021
       age_min: 10
       age_max: 19
-    - supply period coverage:
+    - supply_period_coverage:
         coverage: 1.0
         start_time: 715 # 15th Dec 2021
         end_time: 762 # 31st Jan 2021

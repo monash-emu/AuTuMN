@@ -346,13 +346,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Add transition from single dose to fully vaccinated
         if is_dosing_active:
             if type(dose_delay_params) == float:
-                second_dose_transition_func = dose_delay_params
+                second_dose_transition_func = 1. / dose_delay_params
             else:
                 second_dose_transition_func = tanh_based_scaleup(
                     shape=params.vaccination.second_dose_delay.shape,
                     inflection_time=dose_delay_params.inflection_time,
-                    start_asymptote=dose_delay_params.start_asymptote,
-                    end_asymptote=dose_delay_params.end_asymptote,
+                    start_asymptote=1. / dose_delay_params.start_asymptote,
+                    end_asymptote=1. / dose_delay_params.end_asymptote,
                 )
 
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:

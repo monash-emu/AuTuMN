@@ -525,8 +525,12 @@ class Vaccination(BaseModel):
     def check_vacc_range(cls, values):
 
         second_dose_delay = values["second_dose_delay"]
-        if type(second_dose_delay) == float:
-            assert 0. < second_dose_delay, f"Delay to second dose is not positive: {second_dose_delay}"
+        msg = f"Days to second dose is less than one"
+        if isinstance(second_dose_delay, (float, int)):
+            assert second_dose_delay > 1., msg
+        elif type(second_dose_delay) == TanhScaleup:
+            assert second_dose_delay["start_asymptote"] > 1., msg
+            assert second_dose_delay["end_asymptote"] > 1., msg
         return values
 
     @root_validator(pre=True, allow_reuse=True)

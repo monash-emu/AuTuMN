@@ -33,7 +33,7 @@ vaccination:
     ve_hospitalisation: 0.7
     ve_death: 0.8
   lag: 14
-  second_dose_delay: 0.03
+  second_dose_delay: 30.
   roll_out_components:
     - age_min: 10
       supply_period_coverage:

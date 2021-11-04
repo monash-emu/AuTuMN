@@ -47,30 +47,9 @@ mobility:
       times:
         - 2020-03-15
         - 2020-03-16
-        - 2021-12-31
-        - 2022-01-02
       values:
         - 1.
         - 0.
-        - 0.
-        - 1.
-    work:
-      append: true
-      times:
-        - 2021-12-31
-        - 2022-01-02
-      values:
-        - ['repeat_prev']
-        - 1.
-    other_locations:
-      append: true
-      times:
-        - 2021-12-31
-        - 2022-01-02
-      values:
-        - ['repeat_prev']
-        - 1.
-
 
 # Vaccination-related
 vaccination:

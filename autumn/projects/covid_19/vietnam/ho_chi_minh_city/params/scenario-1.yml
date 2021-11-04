@@ -1,8 +1,7 @@
 description: >
   SCENARIO 1: Social distancing returns to 60% on 02nd Oct, 2021 and is eased at 20% every 3 weeks.
   60% and 90% of the population aged 10-20 will be fully vaccinated on 15th Dec 2021 and 31st Jan, 2022, respectively.
-  Vaccination for the 20+ age group continues at the speed of 800000 new fully vaccinated people per month for the next two months,
-  which means approximately 90% of the population this age will be fully vaccinated.
+  Vaccination for the 20+ age group continues at the speed of 400000 new fully vaccinated people per month for the next five months.
   Schools start to reopen on 02nd Jan 2022 at 30% every 2 weeks.
 
 time:
@@ -51,6 +50,7 @@ mobility:
         - 0.7
         - 1.0
 
+# All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/HCMC_vaccination_status
 vaccination:
   roll_out_components:
     - supply_period_coverage:
@@ -67,11 +67,31 @@ vaccination:
       age_max: 19
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.3289
+        coverage: 0.2644
         start_time: 670 # 31st Oct 2021
         end_time: 700 # 30th Nov 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.4901
+        coverage: 0.1968
         start_time: 700 # 30th Nov 2021
         end_time: 731 # 31st Dec 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2450
+        start_time: 731 # 31st Dec 2021
+        end_time: 762 # 31st Jan 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.3246
+        start_time: 762 # 31st Jan 2022
+        end_time: 790 # 28th Feb 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.4806
+        start_time: 790 # 28th Feb 2022
+        end_time: 821 # 31st Mar 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.9253
+        start_time: 821 # 31st Mar 2022
+        end_time: 851 # 30th Apr 2022

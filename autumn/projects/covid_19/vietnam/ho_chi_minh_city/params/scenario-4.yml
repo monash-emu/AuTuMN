@@ -1,0 +1,91 @@
+description: >
+  SCENARIO 3: Social distancing returns to 60% on 02nd Oct, 2021 and is eased at 20% every 3 weeks.
+  40%, 60% and 80% of the population aged 10-20 will be fully vaccinated on 15th Dec 2021, 31st Jan 2022 and 15th Mar 2022, respectively.
+  Vaccination for the 20+ age group continues at the speed of 600000 new fully vaccinated people per month for the next five months.
+  Schools start to reopen on 10th Dec 2021 at 30% every 2 weeks.
+
+time:
+  start: 640 # 01st Oct 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-10-01 # lockdown eased
+        - 2021-10-02
+        - 2021-10-23
+        - 2021-11-13
+      values:
+        - - repeat_prev
+        - 0.6
+        - 0.4
+        - 0.2
+
+    work:
+      append: true
+      times:
+        - 2021-10-01 # lockdown eased
+        - 2021-10-02
+        - 2021-10-23
+        - 2021-11-13
+      values:
+        - - repeat_prev
+        - 0.6
+        - 0.4
+        - 0.2
+
+    school:
+      append: false
+      times:
+        - 2021-05-09
+        - 2021-10-20
+        - 2021-12-10
+        - 2021-12-24
+        - 2022-01-05
+      values:
+        - 0.
+        - 0.1
+        - 0.4
+        - 0.7
+        - 1.0
+
+# All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/HCMC_vaccination_status
+vaccination:
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.4
+        start_time: 666 # 27th Oct 2021
+        end_time: 715 # 15th Dec 2021
+      age_min: 10
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.33
+        start_time: 715 # 15th Dec 2021
+        end_time: 762 # 31st Jan 2022
+      age_min: 10
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.5
+        start_time: 762 # 31st Jan 2022
+        end_time: 805 # 15th Mar 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2466
+        start_time: 670 # 31st Oct 2021
+        end_time: 700 # 30th Nov 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.3275
+        start_time: 700 # 30th Nov 2021
+        end_time: 731 # 31st Dec 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.4869
+        start_time: 731 # 31st Dec 2021
+        end_time: 762 # 31st Jan 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.9490
+        start_time: 762 # 31st Jan 2022
+        end_time: 790 # 28th Feb 2022

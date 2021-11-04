@@ -69,6 +69,8 @@ vaccination:
         coverage: 0.5
         start_time: 762 # 31st Jan 2022
         end_time: 805 # 15th Mar 2022
+      age_min: 10
+      age_max: 19
     - age_min: 20
       supply_period_coverage:
         coverage: 0.2466

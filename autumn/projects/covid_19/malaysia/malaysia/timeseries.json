@@ -4943,6 +4943,202 @@
       0.975
     ]
   },
+  "ICU_occupancyXagegroup_5": {
+    "output_key": "ICU_occupancyXagegroup_5",
+    "title": "ICU occupancy (age 5)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_10": {
+    "output_key": "ICU_occupancyXagegroup_10",
+    "title": "ICU occupancy (age 10)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_15": {
+    "output_key": "ICU_occupancyXagegroup_15",
+    "title": "ICU occupancy (age 15)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_20": {
+    "output_key": "ICU_occupancyXagegroup_20",
+    "title": "ICU occupancy (age 20)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_25": {
+    "output_key": "ICU_occupancyXagegroup_25",
+    "title": "ICU occupancy (age 25)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_30": {
+    "output_key": "ICU_occupancyXagegroup_30",
+    "title": "ICU occupancy (age 30)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_35": {
+    "output_key": "ICU_occupancyXagegroup_35",
+    "title": "ICU occupancy (age 35)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_40": {
+    "output_key": "ICU_occupancyXagegroup_40",
+    "title": "ICU occupancy (age 40)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_45": {
+    "output_key": "ICU_occupancyXagegroup_45",
+    "title": "ICU occupancy (age 45)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_50": {
+    "output_key": "ICU_occupancyXagegroup_50",
+    "title": "ICU occupancy (age 50)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_55": {
+    "output_key": "ICU_occupancyXagegroup_55",
+    "title": "ICU occupancy (age 55)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_60": {
+    "output_key": "ICU_occupancyXagegroup_60",
+    "title": "ICU occupancy (age 60)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_65": {
+    "output_key": "ICU_occupancyXagegroup_65",
+    "title": "ICU occupancy (age 65)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_70": {
+    "output_key": "ICU_occupancyXagegroup_70",
+    "title": "ICU occupancy (age 70)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "ICU_occupancyXagegroup_75": {
+    "output_key": "ICU_occupancyXagegroup_75",
+    "title": "ICU occupancy (age 75)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+
   "proportion_seropositiveXagegroup_0": {
     "output_key": "proportion_seropositiveXagegroup_0",
     "title": "seropositive prop (age 0)",

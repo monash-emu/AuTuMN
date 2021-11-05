@@ -237,6 +237,16 @@ class CovidOutputsBuilder(OutputsBuilder):
             ],
         )
 
+        # stratified by age group
+        for agegroup in AGEGROUP_STRATA:
+            icu_name = f"ICU_occupancyXagegroup_{agegroup}"
+            self.model.request_output_for_compartments(
+                name=icu_name,
+                compartments=[Compartment.LATE_ACTIVE],
+                strata={"clinical": Clinical.ICU, "agegroup": agegroup},
+                save_results=True,
+            )
+
         self.request_extra_occupancy()
 
     def request_extra_occupancy(self):
@@ -449,3 +459,4 @@ class CovidOutputsBuilder(OutputsBuilder):
     def request_extra_recovered(self):
 
         pass
+

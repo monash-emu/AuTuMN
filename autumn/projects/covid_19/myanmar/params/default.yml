@@ -1,23 +1,23 @@
 description: BASELINE
 
 time:
-  start: 330.
-  end: 791.  # Start March 2022
+  start: 470.  # 1st March 2021
+  end: 675.  # 5th November 2021
 
 infectious_seed: 200.
 
-contact_rate: 0.04
+contact_rate: 0.08
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.008
+  assumed_cdr_parameter: 0.001
   smoothing_period: 7
 
 contact_tracing:
-  assumed_trace_prop: 0.25
+  assumed_trace_prop: 0.2
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2
-  floor: 0.2
+  floor: 0.1
 
 vaccination:
   one_dose:
@@ -37,7 +37,7 @@ vaccination:
   roll_out_components:
     - age_min: 10
       supply_period_coverage:
-        coverage: 0.15
+        coverage: 0.3
         start_time: 487  # Start May 2021
         end_time: 731  # End 2021
 

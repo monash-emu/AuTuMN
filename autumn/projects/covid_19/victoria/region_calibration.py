@@ -17,6 +17,10 @@ priors = [
         (560., 600.), jumping_stdev=1.,
     ),
     UniformPrior(
+        "vic_2021_seeding.seed_time",
+        (560., 580.), jumping_stdev=1.,
+    ),
+    UniformPrior(
         "testing_to_detection.assumed_cdr_parameter",
         (0.05, 0.18), jumping_stdev=0.04
     ),

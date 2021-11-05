@@ -1,7 +1,7 @@
 description: BASELINE
 
 time:
-  start: 485 # 29 Apr 2021
+  start: 485 # 29th Apr 2021
   end: 912
 
 country:
@@ -41,14 +41,14 @@ mobility:
       parameters:
         max_effect: .2 # estimated from the Philipines paper
         times:
-          - 485 # 29/04/2021, first community case of COVID-19 detected in Ho Chi Minh City
-          - 505 # 19/05/2021, two new cases first detected after 20 days without any new case
-          - 518 # 01/06/2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
-          - 546 # 29/06/2021, Directive No.10 of HCMC's authorities in place
-          - 556 # 09/07/2021, Directive No.16 of the PM in place city-wide
-          - 573 # 26/07/2021, curfew from 6PM to 6AM
-          - 601 # 23/08/2021, total lockdown implemented
-          - 640 # 01/10/2021, lockdown started to ease
+          - 485 # 29th April 2021, first community case of COVID-19 detected in Ho Chi Minh City
+          - 505 # 19th May 2021, two new cases first detected after 20 days without any new case
+          - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
+          - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place
+          - 556 # 09th Jul 2021, Directive No.16 of the PM in place city-wide
+          - 573 # 26th Jul 2021, curfew from 6PM to 6AM
+          - 601 # 23th Aug 2021, total lockdown implemented
+          - 640 # 01st Oct 2021, lockdown started to ease
         values:
           - 0
           - 0.2
@@ -99,45 +99,45 @@ vaccination:
     - age_min: 20
       supply_period_coverage:
         coverage: .006267
-        start_time: 518 # 01 June 2021
-        end_time: 545 # 28 June 2021
+        start_time: 518 # 01st June 2021
+        end_time: 545 # 28th June 2021
     - age_min: 20
       supply_period_coverage:
         coverage: 0.001289
-        start_time: 545 # 28 June 2021
-        end_time: 556 # 09 July 2021
+        start_time: 545 # 28th June 2021
+        end_time: 556 # 09th July 2021
     - age_min: 20
       supply_period_coverage:
         coverage: 0.001910
-        start_time: 556 # 09 July 2021
-        end_time: 572 # 25 July 2021
+        start_time: 556 # 09th July 2021
+        end_time: 572 # 25th July 2021
     - age_min: 20
       supply_period_coverage:
         coverage: 0.0284
-        start_time: 572 # 25 July 2021
-        end_time: 593 # 15 Aug 2021
+        start_time: 572 # 25th July 2021
+        end_time: 593 # 15th Aug 2021
     - age_min: 20
       supply_period_coverage:
         coverage: 0.0384
-        start_time: 593 # 15 Aug 2021
-        end_time: 610 # 01 Sep 2021
+        start_time: 593 # 15th Aug 2021
+        end_time: 610 # 01st Sep 2021
     - age_min: 20
       supply_period_coverage:
         coverage: 0.1957
-        start_time: 610 # 01 Sep 2021
-        end_time: 624 # 15 Sep 2021
+        start_time: 610 # 01st Sep 2021
+        end_time: 624 # 15th Sep 2021
     - age_min: 20
       supply_period_coverage:
         coverage: 0.2915
-        start_time: 624 # 15 Sep 2021
-        end_time: 640 # 01 Oct 2021
+        start_time: 624 # 15th Sep 2021
+        end_time: 640 # 01st Oct 2021
     - age_min: 20
       supply_period_coverage:
         coverage: 0.2394
-        start_time: 640 # 01 Oct 2021
-        end_time: 654 # 15 Oct 2021
+        start_time: 640 # 01st Oct 2021
+        end_time: 654 # 15th Oct 2021
     - age_min: 20
       supply_period_coverage:
         coverage: 0.2505
-        start_time: 654 # 15 Oct 2021
-        end_time: 670 # 31 Oct 2021
+        start_time: 654 # 15th Oct 2021
+        end_time: 670 # 31st Oct 2021

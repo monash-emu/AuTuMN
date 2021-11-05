@@ -1,3 +1,5 @@
+import json
+
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
@@ -9,8 +11,7 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters.
 default_params = base_params.update(build_rel_path("params/default.yml"))
-scenario_1_params = default_params.update(build_rel_path("params/scenario-1.yml"))
-param_set = ParameterSet(baseline=default_params, scenarios=[scenario_1_params])
+param_set = ParameterSet(baseline=default_params, scenarios=[])
 
 # Load and configure calibration settings.
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
@@ -22,10 +23,15 @@ targets = [
 ]
 
 priors = [
-    # Global COVID priors
     *COVID_GLOBAL_PRIORS,
-    UniformPrior("contact_rate", [0.025, 0.05]),
-        
+    UniformPrior("contact_rate", (0.025, 0.05), jumping_stdev=0.008),
+    UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.015), jumping_stdev=0.002),
 ]
 calibration = Calibration(priors=priors, targets=targets)
-project = Project(Region.MYANMAR, Models.COVID_19, build_model, param_set, calibration)
+
+plot_spec_filepath = build_rel_path("timeseries.json")
+with open(plot_spec_filepath) as f:
+    plot_spec = json.load(f)
+
+project = Project(Region.MYANMAR, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec)

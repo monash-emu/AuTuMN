@@ -1,23 +1,25 @@
 description: BASELINE
 
 time:
-  start: 470.  # 1st March 2021
+  start: 470.
   end: 675.  # 5th November 2021
 
 infectious_seed: 200.
 
-contact_rate: 0.08
+contact_rate: 0.07
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.001
+  assumed_cdr_parameter: 0.002
   smoothing_period: 7
 
-contact_tracing:
-  assumed_trace_prop: 0.2
-  assumed_prev: 1.e-3
-  quarantine_infect_multiplier: 0.2
-  floor: 0.1
+clinical_stratification:
+  props:
+    hospital:
+      multiplier: 0.4
+
+infection_fatality:
+  multiplier: 0.15
 
 vaccination:
   one_dose:

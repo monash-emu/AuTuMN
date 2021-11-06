@@ -17,7 +17,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
     First create the stratification object and split the starting population.
     """
 
-    vaccinated_strata = vacc_strata[1:]
+    vaccinated_strata = vacc_strata[1: 3]
 
     vacc_strat = Stratification("vaccination", vacc_strata, COMPARTMENTS)
 
@@ -70,7 +70,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
     """
 
     # Add the clinical adjustments parameters as overwrites in the same way as for history stratification
-    flow_adjs = get_blank_adjustments_for_strat(Vaccination.UNVACCINATED)
+    flow_adjs = get_blank_adjustments_for_strat([Vaccination.UNVACCINATED])
 
     for stratum in vaccinated_strata:
         adjs = get_all_adjustments(

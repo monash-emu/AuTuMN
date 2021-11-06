@@ -514,6 +514,9 @@ class Vaccination(BaseModel):
     # *** This parameter determines whether the model is stratified into three rather than two vaccination strata
     second_dose_delay: Optional[Union[float, TanhScaleup]]
 
+    # *** This parameter determines whether waning immunity is applied
+    vacc_wane: bool
+
     one_dose: VaccEffectiveness
     fully_vaccinated: Optional[VaccEffectiveness]
     lag: float

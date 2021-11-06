@@ -198,6 +198,7 @@ vaccination:
     ve_death: null
   # Time from receiving first dose to second, based on the days from Vic achieving the same coverage with one and two
   second_dose_delay: null
+  vacc_wane: false
   lag: 0.
   roll_out_components: []
 

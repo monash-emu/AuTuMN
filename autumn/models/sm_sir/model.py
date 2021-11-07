@@ -63,7 +63,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # transmission
     if params.activate_random_process:
         # build the random process, using default values and coefficients
-        rp = RandomProcess(order=2, period=7, start_time=params.time.start, end_time=params.time.end)
+        rp = RandomProcess(order=2, period=30, start_time=params.time.start, end_time=params.time.end)
 
         # set coefficients and values if specified in the parameters
         rp_params = params.random_process

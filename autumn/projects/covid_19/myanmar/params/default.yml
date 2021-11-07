@@ -1,22 +1,25 @@
 description: BASELINE
 
 time:
-  start: 470.
+  start: 455.
   end: 675.  # 5th November 2021
 
-infectious_seed: 200.
+infectious_seed: 100.
 
 contact_rate: 0.07
 
+stratify_by_infection_history: true
+waning_immunity_duration: 365.
+
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.002
+  assumed_cdr_parameter: 0.003
   smoothing_period: 7
 
 clinical_stratification:
   props:
     hospital:
-      multiplier: 0.4
+      multiplier: 0.15
 
 infection_fatality:
   multiplier: 0.15
@@ -35,7 +38,7 @@ vaccination:
     ve_hospitalisation: 0.7
     ve_death: 0.8
   lag: 14
-  second_dose_delay: 30.
+  second_dose_delay: 50.
   roll_out_components:
     - age_min: 10
       supply_period_coverage:

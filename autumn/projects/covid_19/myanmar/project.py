@@ -15,8 +15,8 @@ param_set = ParameterSet(baseline=default_params, scenarios=[])
 
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(471)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(471)
+notifications_ts = ts_set.get("notifications").truncate_start_time(500)
+infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(500)
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(infection_deaths_ts),
@@ -24,9 +24,10 @@ targets = [
 
 priors = [
     *COVID_GLOBAL_PRIORS,
-    UniformPrior("contact_rate", (0.025, 0.05), jumping_stdev=0.008),
+    UniformPrior("contact_rate", (0.02, 0.2), jumping_stdev=0.01),
     UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.015), jumping_stdev=0.002),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.001, 0.01), jumping_stdev=0.002),
+    UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

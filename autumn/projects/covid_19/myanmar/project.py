@@ -19,10 +19,10 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(500)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(500)
+infection_deaths_ts = ts_set.get("infection_deaths").truncate_times(578, 579)
 targets = [
     NormalTarget(notifications_ts),
-    # NormalTarget(infection_deaths_ts),
+    NormalTarget(infection_deaths_ts),
 ]
 
 priors = [

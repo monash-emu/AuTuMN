@@ -26,7 +26,7 @@ sojourn:
   compartment_periods:
     hospital_early: 7.
     hospital_late: 7.
-    icu_early: 10.
+    icu_early: 7.
     icu_late: 7.
 
 vaccination:

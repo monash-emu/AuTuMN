@@ -53,9 +53,7 @@ def get_testing_numbers_for_region(country_iso3: str, subregion: Optional[str]) 
     elif country_iso3 == "LKA":
         test_dates, test_values = get_lka_testing_numbers()
     elif country_iso3 == "MMR":
-        test_dates, test_values = get_mmr_testing_numbers()
-    # elif subregion is not None and country_iso3 == "VNM":
-    #     test_dates, test_values = get_vnm_testing_numbers(subregion)
+        test_dates, test_values = get_mmr_testing_numbers()    
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
 

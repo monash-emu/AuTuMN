@@ -21,7 +21,7 @@ COVID_VNM_HCMC_TARGETS = os.path.join(
 )
 COVID_VMN_HCMC_CASES_CSV = os.path.join(INPUT_DATA_PATH, "covid_vnm", "cases.csv")
 COVID_VNM_HCMC_TEST_CSV = os.path.join(INPUT_DATA_PATH, "covid_vnm", "testing.csv")
-COVID_VNM_HCMC_URL = "https://docs.google.com/spreadsheets/d/1CKCT9uOfKNuF4KNs8vKnr3y-hokkg9kv/export?format=xlsx&id=1CKCT9uOfKNuF4KNs8vKnr3y-hokkg9kv"
+COVID_VNM_HCMC_URL = "https://docs.google.com/spreadsheets/d/11Z4HyBomVjI9VCbQrGFfti9CwAe_PZM6tbSzv7IA9LI/export?format=xlsx&id=11Z4HyBomVjI9VCbQrGFfti9CwAe_PZM6tbSzv7IA9LI"
 
 TARGET_MAP_VNM = {
     "notifications": "new_cases",
@@ -29,9 +29,10 @@ TARGET_MAP_VNM = {
 }
 
 TARGET_MAP_VNM_HCMC = {
-    "notifications": "daily_reported_cases",
-    "infection_deaths": "daily_death",
-    "hospital_occupancy": "total_severe_cases",
+    "notifications": "notifications",
+    "infection_deaths": "infection_deaths",
+    "hospital_occupancy": "hospital_occupancy",
+    "icu_occupancy":"icu_occupancy",
 }
 
 
@@ -39,22 +40,16 @@ def preprocess_vnm_data():
     df = pd.read_csv(COVID_OWID)
     df = df[df.iso_code == "VNM"]
     df = create_date_index(COVID_BASE_DATETIME, df, "date")
-    df = df[df.date <= pd.to_datetime("today")]
+    df = df[df.date <= pd.to_datetime("today").date()]
 
     return df
 
-
+# Update VNM targets per OWID
 df = preprocess_vnm_data()
 update_timeseries(TARGET_MAP_VNM, df, COVID_VNM_TARGETS)
 
-df_cases = pd.read_excel(COVID_VNM_HCMC_URL, sheet_name=["Reported cases"])["Reported cases"]
-df_cases = create_date_index(COVID_BASE_DATETIME, df_cases, "Date")
+# Update HCMC targets
+df_cases = pd.read_excel(COVID_VNM_HCMC_URL, usecols=[1,2,3,4,5])
+df_cases = create_date_index(COVID_BASE_DATETIME, df_cases, "Unnamed:_1")
 df_cases.to_csv(COVID_VMN_HCMC_CASES_CSV)
 update_timeseries(TARGET_MAP_VNM_HCMC, df_cases, COVID_VNM_HCMC_TARGETS)
-
-df_testing = pd.read_excel(COVID_VNM_HCMC_URL, skiprows=[0, 2], sheet_name=["Testing"])["Testing"]
-df_testing = create_date_index(COVID_BASE_DATETIME, df_testing, "Date")
-df_testing.rename(columns={"sum.1": "daily_test"}, inplace=True)
-df_testing["region"] = "Ho Chi Minh City"
-df_testing = df_testing[["date", "date_index", "region", "daily_test"]][1:]
-df_testing.to_csv(COVID_VNM_HCMC_TEST_CSV)

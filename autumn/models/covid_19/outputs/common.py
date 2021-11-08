@@ -239,12 +239,49 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # stratified by age group
         for agegroup in AGEGROUP_STRATA:
+            late_hospital_name = f"late_hospitalXagegroup_{agegroup}"
+            self.model.request_output_for_compartments(
+                name=late_hospital_name,
+                compartments=[Compartment.LATE_ACTIVE],
+                strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
+                save_results=False,
+            )
+
+        for agegroup in AGEGROUP_STRATA:
             icu_name = f"ICU_occupancyXagegroup_{agegroup}"
             self.model.request_output_for_compartments(
                 name=icu_name,
                 compartments=[Compartment.LATE_ACTIVE],
                 strata={"clinical": Clinical.ICU, "agegroup": agegroup},
-                save_results=True,
+                save_results=False,
+            )
+
+        for agegroup in AGEGROUP_STRATA:
+            icu_ealy_name = f"early_active_icuXagegroup_{agegroup}"
+            self.model.request_output_for_compartments(
+                name=icu_ealy_name,
+                compartments=[Compartment.EARLY_ACTIVE],
+                strata={"clinical": Clinical.ICU, "agegroup": agegroup},
+                save_results=False,
+            )
+
+        for agegroup in AGEGROUP_STRATA:
+            icu_early_proportion_name = f"early_active_icu_proportionXagegroup_{agegroup}"
+            self.model.request_function_output(
+                name=icu_early_proportion_name,
+                func=lambda patients: patients * self.proportion_icu_patients_in_hospital,
+                sources=[icu_ealy_name],
+                save_results=False,
+            )
+
+        for agegroup in AGEGROUP_STRATA:
+            self.model.request_aggregate_output(
+                name=f"hospital_occupancyXagegroup_{agegroup}",
+                sources=[
+                    "late_hospital_name",
+                    "icu_name",
+                    "icu_early_proportion_name",
+                ],
             )
 
         self.request_extra_occupancy()

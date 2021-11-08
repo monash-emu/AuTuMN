@@ -1,5 +1,11 @@
 description: BASELINE
 
+country:
+  iso3: MMR
+
+mixing_matrices:
+  source_iso3: CHN
+
 time:
   start: 330.
   end: 883.
@@ -15,14 +21,6 @@ testing_to_detection:
   assumed_tests_parameter: 1.e-04
   assumed_cdr_parameter: 0.01
   smoothing_period: 7
-
-#clinical_stratification:
-#  props:
-#    hospital:
-#      multiplier: 0.5
-#
-infection_fatality:
-  multiplier: 0.5
 
 vaccination:
   one_dose:
@@ -45,9 +43,3 @@ vaccination:
         coverage: 0.3
         start_time: 487  # Start May 2021
         end_time: 731  # End 2021
-
-country:
-  iso3: MMR
-
-mixing_matrices:
-  source_iso3: CHN

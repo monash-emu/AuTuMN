@@ -39,7 +39,7 @@ def preprocess_vnm_data():
     df = pd.read_csv(COVID_OWID)
     df = df[df.iso_code == "VNM"]
     df = create_date_index(COVID_BASE_DATETIME, df, "date")
-    df = df[df.date <= pd.to_datetime("today")]
+    df = df[df.date <= pd.to_datetime("today").date()]
 
     return df
 
@@ -58,3 +58,5 @@ df_testing.rename(columns={"sum.1": "daily_test"}, inplace=True)
 df_testing["region"] = "Ho Chi Minh City"
 df_testing = df_testing[["date", "date_index", "region", "daily_test"]][1:]
 df_testing.to_csv(COVID_VNM_HCMC_TEST_CSV)
+
+

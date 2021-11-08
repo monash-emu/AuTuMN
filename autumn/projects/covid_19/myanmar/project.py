@@ -19,7 +19,7 @@ notifications_ts = ts_set.get("notifications").truncate_start_time(471)
 infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(471)
 targets = [
     NormalTarget(notifications_ts),
-    # NormalTarget(infection_deaths_ts),
+    NormalTarget(infection_deaths_ts),
 ]
 
 priors = [

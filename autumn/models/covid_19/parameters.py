@@ -519,6 +519,8 @@ class Vaccination(BaseModel):
 
     one_dose: VaccEffectiveness
     fully_vaccinated: Optional[VaccEffectiveness]
+    part_waned: Optional[VaccEffectiveness]
+    waned: Optional[VaccEffectiveness]
     lag: float
 
     roll_out_components: List[RollOutFunc]

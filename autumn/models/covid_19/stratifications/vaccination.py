@@ -14,13 +14,14 @@ from autumn.models.covid_19.strat_processing.clinical import (
 
 
 def get_vaccination_strat(
-        params: Parameters, vacc_strata: List, is_dosing_active: bool, is_waning_vacc_immunity: bool
+        params: Parameters, vacc_strata: List, is_waning_vacc_immunity: bool
 ) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
     """
 
+    # Need to change this - currently a place-holder
     vaccinated_strata = vacc_strata[1: 3]
 
     vacc_strat = Stratification("vaccination", vacc_strata, COMPARTMENTS)
@@ -106,10 +107,12 @@ def get_vaccination_strat(
     Vaccination effect against infectiousness.
     """
 
+    infectiousness_adjustment_strata = VACCINATION_STRATA[1:]
+
     infectiousness_adjustments = {stratum: None for stratum in unadjusted_strata}
     strata_adjs = {
         stratum: Multiply(1. - getattr(getattr(params.vaccination, stratum), "ve_infectiousness")) for
-        stratum in vaccinated_strata
+        stratum in infectiousness_adjustment_strata
     }
     infectiousness_adjustments.update(strata_adjs)
     for compartment in DISEASE_COMPARTMENTS:

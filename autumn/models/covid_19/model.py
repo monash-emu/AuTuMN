@@ -334,7 +334,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             raise ValueError(msg)
 
         # Get the vaccination stratification object
-        vaccination_strat = get_vaccination_strat(params, vacc_strata, is_dosing_active, is_waning_vacc_immunity)
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, is_waning_vacc_immunity)
 
         # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
         if params.voc_emergence:

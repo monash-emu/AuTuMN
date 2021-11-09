@@ -2,7 +2,9 @@ from typing import List
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
+from autumn.models.covid_19.constants import (
+    COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION, VACCINATION_STRATA
+)
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.strat_processing.vaccination import find_vaccine_action, get_hosp_given_case_effect
 from autumn.models.covid_19.strat_processing.clinical import (
@@ -11,7 +13,9 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratification:
+def get_vaccination_strat(
+        params: Parameters, vacc_strata: List, is_dosing_active: bool, is_waning_vacc_immunity: bool
+) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
@@ -69,8 +73,13 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
     Vaccination effect against severe outcomes.
     """
 
+    unadjusted_strata = [Vaccination.UNVACCINATED]
+    if is_waning_vacc_immunity:
+        unadjusted_strata += VACCINATION_STRATA[3:]
+    flow_adjs = get_blank_adjustments_for_strat(unadjusted_strata)
+
     # Add the clinical adjustments parameters as overwrites in the same way as for history stratification
-    flow_adjs = get_blank_adjustments_for_strat([Vaccination.UNVACCINATED])
+    # flow_adjs = get_blank_adjustments_for_strat([Vaccination.UNVACCINATED])
 
     for stratum in vaccinated_strata:
         adjs = get_all_adjustments(
@@ -86,7 +95,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
     Vaccination effect against infection.
     """
 
-    infection_adjustments = {Vaccination.UNVACCINATED: None}
+    infection_adjustments = {stratum: None for stratum in unadjusted_strata}
     strata_adjs = {
         stratum: Multiply(1. - vaccination_effects[stratum]["infection_efficacy"]) for stratum in vaccinated_strata
     }
@@ -97,7 +106,7 @@ def get_vaccination_strat(params: Parameters, vacc_strata: List) -> Stratificati
     Vaccination effect against infectiousness.
     """
 
-    infectiousness_adjustments = {Vaccination.UNVACCINATED: None}
+    infectiousness_adjustments = {stratum: None for stratum in unadjusted_strata}
     strata_adjs = {
         stratum: Multiply(1. - getattr(getattr(params.vaccination, stratum), "ve_infectiousness")) for
         stratum in vaccinated_strata

@@ -11,7 +11,7 @@ from .computed_values.random_process_compute import RandomProcessProc
 
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
-base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
+base_params = Params(build_rel_path("params.yml"), validate=False)
 
 COMPARTMENTS = ["susceptible", "infectious", "recovered"]
 
@@ -123,7 +123,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
-
 
     return model
 

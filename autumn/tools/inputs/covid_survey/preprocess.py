@@ -3,7 +3,7 @@ import os
 
 from autumn.tools.db import Database
 from autumn.tools.utils.utils import create_date_index, COVID_BASE_DATETIME
-from autumn.models.covid_19.constants import BASE_DATETIME
+
 from autumn.settings import INPUT_DATA_PATH
 
 from .fetch import COVID_SURVEY_PATH
@@ -18,19 +18,19 @@ def preprocess_covid_survey(input_db: Database):
     df = get_mask()
     input_db.dump_df("survey_mask", df)
 
-
 def get_mask():
     df = pd.concat(map(pd.read_csv, MASKS))
     df.loc[:, "survey_date"] = pd.to_datetime(
         df["survey_date"], format="%Y%m%d", infer_datetime_format=False
     )
-    create_date_index(BASE_DATETIME, df, "survey_date")
+    create_date_index(COVID_BASE_DATETIME, df, "survey_date")
     df = df[
         [
             "iso_code",
             "region",
             "date",
             "date_index",
+            "sample_size",
             "percent_mc",
             "mc_se",
             "percent_mc_unw",

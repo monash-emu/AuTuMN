@@ -61,15 +61,12 @@ def build_input_database(rebuild: bool = False):
         with Timer("Ingesting COVID LKA data."):
             preprocess_covid_lka(input_db)
 
-        with Timer("Ingesting COVID VNM data."):
-            preprocess_covid_vnm(input_db)
-
         with Timer("Ingesting COVID MMR data."):
             preprocess_covid_mmr(input_db)
-        
-        with Timer("Ingesting COVID survey data."):
+
+        with Timer("Ingesting COVID survey data"):
             preprocess_covid_survey(input_db)
-        
+
         with Timer("Ingesting Our World in Data data."):
             preprocess_our_world_in_data(input_db)
 

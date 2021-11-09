@@ -8,6 +8,19 @@ time:
   start: 640 # 01st Oct 2021
 
 mobility:
+  microdistancing:
+    behavior:
+      parameters:
+        times:
+          - 640 # 01st Oct, 2021, lockdown started to ease
+          - 641 # 02nd Oct 2021
+          - 662 # 23rd Oct 2021
+          - 683 # 13th Nov 2021
+        values:
+          - 0.8
+          - 0.6
+          - 0.4
+          - 0.2
   mixing:
     other_locations:
       append: true

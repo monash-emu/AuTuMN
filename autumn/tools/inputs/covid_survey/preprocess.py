@@ -23,9 +23,11 @@ def preproc_csv(files):
     create_date_index(COVID_BASE_DATETIME, df, "survey_date")
     return df
 
+
 def preprocess_covid_survey(input_db: Database):
     df = get_mask()
     input_db.dump_df("survey_mask", df)
+
     df = get_avoid_contact()
     input_db.dump_df("survey_avoid_contact", df)
 
@@ -49,7 +51,6 @@ def get_mask():
 
     return df
 
-
 def get_avoid_contact():
     df = preproc_csv(AVOID_CONTACT)
     df = df[
@@ -67,6 +68,3 @@ def get_avoid_contact():
     ]
 
     return df
-
-
-

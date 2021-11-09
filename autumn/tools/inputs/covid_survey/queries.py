@@ -31,4 +31,5 @@ def get_survey_results(iso3, col_name, table_name):
     if not valid_values:
         raise AssertionError("Percentage values out of logical bounds")
 
+
     return dates, values

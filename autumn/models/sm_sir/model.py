@@ -7,6 +7,7 @@ from math import exp
 from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
 from datetime import date, datetime
+from .computed_values.random_process_compute import RandomProcessProc
 
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
@@ -65,7 +66,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # build the random process, using default values and coefficients
         rp = RandomProcess(order=2, period=30, start_time=params.time.start, end_time=params.time.end)
 
-        # set coefficients and values if specified in the parameters
+        # set rp coefficients and values if specified in the parameters
         rp_params = params.random_process
         if rp_params.values:
             msg = f"Incorrect number of specified random process values. Expected {len(rp.values)}, found {len(rp_params.values)}."
@@ -78,11 +79,23 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             assert len(rp.coefficients) == len(rp_params.coefficients), msg
             rp.coefficients = rp_params.coefficients
 
-        # FIXME: Need to check with David S. as this does not look good.
+        # FIXME: Check with David S. as adding a non-standard attribute to the model is probably not good practice.
         model.random_processes = rp
 
         # Create function returning exp(W), where W is the random process
-        contact_rate = rp.create_random_process_function(transform_func=lambda w: params.contact_rate * exp(w))
+        rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
+
+        def contact_rate(t, computed_values):
+            return params.contact_rate * rp_time_variant_func(t)
+
+        # FIXME: Also check with David S. The approach below seems a bit convoluted
+        # store random process as a computed value to make it available as an output
+        model.add_computed_value_process(
+            "transformed_random_process",
+            RandomProcessProc(
+                rp_time_variant_func
+            )
+        )
     else:
         contact_rate = params.contact_rate
 
@@ -107,5 +120,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     outputs_builder = SmSirOutputsBuilder(model, COMPARTMENTS)
     outputs_builder.request_incidence()
+
+    if params.activate_random_process:
+        outputs_builder.request_random_process_outputs()
+
 
     return model

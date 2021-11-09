@@ -1223,6 +1223,19 @@
       0.75,
       0.975
     ]
+  },
+  "transformed_random_process": {
+    "output_key": "transformed_random_process",
+    "title": "Transformed random process",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
 }
 

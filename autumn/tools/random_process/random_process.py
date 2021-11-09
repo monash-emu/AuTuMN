@@ -48,7 +48,7 @@ class RandomProcess:
 
         sc_func = scale_up_function(self.update_times, values, method=4)
 
-        def random_process_function(t, computed_values):
+        def random_process_function(t):
             return sc_func(t)
 
         return random_process_function

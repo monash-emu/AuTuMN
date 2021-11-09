@@ -44,4 +44,4 @@ vaccination:
         start_time: 658 # 19 Oct 2021
         end_time: 732 # 01 Jan 2022
 
-
+cumul_incidence_start_time: 624

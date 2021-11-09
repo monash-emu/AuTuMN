@@ -137,3 +137,5 @@ contact_tracing:
 
 waning_immunity_duration: 365
 stratify_by_infection_history: true
+
+cumul_incidence_start_time: 482

@@ -20,7 +20,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
     """
-
+    convert_random_process_params(params)
     params = Parameters(**params)
 
     # Create the model object
@@ -126,3 +126,29 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
 
     return model
+
+
+def convert_random_process_params(params):
+    """
+    Converts random process parameters issued from calibration into the required format
+    :param params: parameter dictionary
+    """
+    if "rp_noise_sd" in params:
+        params['random_process']["noise_sd"] = params["rp_noise_sd"]
+        del params["rp_noise_sd"]
+
+    rp_coef_indices = [int(key[9:]) for key in params if key.startswith("rp_coeff_")]
+    if len(rp_coef_indices) > 0:
+        rp_coef_indices.sort()
+        params['random_process']["coefficients"] = [params[f"rp_coeff_{k}"] for k in rp_coef_indices]
+
+        for k in rp_coef_indices:
+            del params[f"rp_coeff_{k}"]
+
+    rp_values_indices = [int(key[9:]) for key in params if key.startswith("rp_value_")]
+    if len(rp_values_indices) > 0:
+        rp_values_indices.sort()
+        params['random_process']["values"] = [params[f"rp_value_{k}"] for k in rp_values_indices]
+
+        for k in rp_values_indices:
+            del params[f"rp_value_{k}"]

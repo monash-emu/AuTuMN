@@ -1,9 +1,11 @@
 import json
 
+import numpy as np
+
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.tools.calibration.targets import NormalTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
@@ -18,11 +20,14 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(200)
+notifications_ts_1 = ts_set.get("notifications").truncate_times(200, 542)
+notifications_ts_2 = ts_set.get("notifications").truncate_times(543, 645)
+notifications_ts_3 = ts_set.get("notifications").truncate_start_time(646)
 infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(200)
 targets = [
-    NormalTarget(notifications_ts),
-    # NormalTarget(infection_deaths_ts),
+    NormalTarget(notifications_ts_1),
+    TruncNormalTarget(notifications_ts_2, trunc_range=(1200., np.inf)),
+    NormalTarget(notifications_ts_3),
 ]
 
 priors = [

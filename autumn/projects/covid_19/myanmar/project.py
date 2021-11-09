@@ -32,7 +32,7 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.015), jumping_stdev=0.002),
     UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.),
     UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", (0.1, 0.3), jumping_stdev=0.05),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.75, 2.25), jumping_stdev=0.1),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.85, 2.3), jumping_stdev=0.1),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

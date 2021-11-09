@@ -1227,8 +1227,8 @@
   "transformed_random_process": {
     "output_key": "transformed_random_process",
     "title": "Transformed random process",
-    "times": [],
-    "values": [],
+    "times": [1, 364],
+    "values": [1, 1],
     "quantiles": [
       0.025,
       0.25,

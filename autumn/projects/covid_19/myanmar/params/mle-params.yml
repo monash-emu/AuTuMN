@@ -1,6 +1,8 @@
-contact_rate: 0.055
-infectious_seed: 200.
-sojourn.compartment_periods_calculated.active.total_period: 5.346605423038365
-sojourn.compartment_periods_calculated.exposed.total_period: 2.9765522444285235
-testing_to_detection.assumed_cdr_parameter: 0.009400011225504823
-waning_immunity_duration: 649.0992180352991
+contact_rate: 0.053332500263118976
+infectious_seed: 424.7332827396239
+mobility.microdistancing.behaviour.parameters.end_asymptote: 0.2066870322109277
+sojourn.compartment_periods_calculated.active.total_period: 5.4074546826290195
+sojourn.compartment_periods_calculated.exposed.total_period: 2.007298447514694
+testing_to_detection.assumed_cdr_parameter: 0.0054355639219387485
+voc_emergence.delta.contact_rate_multiplier: 1.8091656661942583
+waning_immunity_duration: 324.4183708087361

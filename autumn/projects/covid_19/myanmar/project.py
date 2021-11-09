@@ -20,14 +20,14 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts_1 = ts_set.get("notifications").truncate_times(200, 542)
-notifications_ts_2 = ts_set.get("notifications").truncate_times(543, 645)
-notifications_ts_3 = ts_set.get("notifications").truncate_start_time(646)
+pre_wave_notifications = ts_set.get("notifications").truncate_times(200, 549)
+main_wave_notifications = ts_set.get("notifications").truncate_times(550, 635)
+post_wave_notifications = ts_set.get("notifications").truncate_start_time(636)
 infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(200)
 targets = [
-    NormalTarget(notifications_ts_1),
-    TruncNormalTarget(notifications_ts_2, trunc_range=(1200., np.inf)),
-    NormalTarget(notifications_ts_3),
+    NormalTarget(pre_wave_notifications),
+    TruncNormalTarget(main_wave_notifications, trunc_range=(35., np.inf)),
+    NormalTarget(post_wave_notifications),
 ]
 
 priors = [

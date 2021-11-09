@@ -12,6 +12,7 @@ CSV_FILES = [
     os.path.join(INPUT_DATA_PATH, "covid_survey", file) for file in os.listdir(COVID_SURVEY_PATH)
 ]
 MASKS = [file for file in CSV_FILES if "mask_" in file]
+
 AVOID_CONTACT = [file for file in CSV_FILES if "avoid_contact" in file]
 
 def preproc_csv(files):
@@ -23,15 +24,18 @@ def preproc_csv(files):
     create_date_index(COVID_BASE_DATETIME, df, "survey_date")
     return df
 
+
 def preprocess_covid_survey(input_db: Database):
     df = get_mask()
     input_db.dump_df("survey_mask", df)
+
     df = get_avoid_contact()
     input_db.dump_df("survey_avoid_contact", df)
 
 
 def get_mask():
     df = preproc_csv(MASKS)
+
 
     df = df[
         [
@@ -48,7 +52,6 @@ def get_mask():
     ]
 
     return df
-
 
 def get_avoid_contact():
     df = preproc_csv(AVOID_CONTACT)
@@ -67,6 +70,3 @@ def get_avoid_contact():
     ]
 
     return df
-
-
-

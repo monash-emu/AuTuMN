@@ -8,6 +8,7 @@ TODAY = (pd.to_datetime("today").date() - COVID_BASE_DATETIME.date()).days
 
 
 def get_percent_mc(iso3: str = None, col_name: str = "percent_mc"):
+
     return get_survey_results(iso3, col_name, "survey_mask")
 
 
@@ -26,9 +27,11 @@ def get_survey_results(iso3, col_name, table_name):
         values <= 1
     )  # Assuming it's the percentage column for now.
 
+
     if not valid_dates:
         raise AssertionError("Date index out of range")
     if not valid_values:
         raise AssertionError("Percentage values out of logical bounds")
+
 
     return dates, values

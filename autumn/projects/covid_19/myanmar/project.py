@@ -18,19 +18,21 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(500)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_times(578, 579)
+notifications_ts = ts_set.get("notifications").truncate_start_time(200)
+infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(200)
 targets = [
     NormalTarget(notifications_ts),
-    NormalTarget(infection_deaths_ts),
+    # NormalTarget(infection_deaths_ts),
 ]
 
 priors = [
     *COVID_GLOBAL_PRIORS,
-    UniformPrior("contact_rate", (0.02, 0.2), jumping_stdev=0.01),
+    UniformPrior("contact_rate", (0.02, 0.12), jumping_stdev=0.01),
     UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.001, 0.01), jumping_stdev=0.002),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.015), jumping_stdev=0.002),
     UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", (0.1, 0.3), jumping_stdev=0.05),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.5, 2.8), jumping_stdev=0.1),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

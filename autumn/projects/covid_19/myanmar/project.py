@@ -26,7 +26,7 @@ post_wave_notifications = ts_set.get("notifications").truncate_start_time(636)
 infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(200)
 targets = [
     NormalTarget(pre_wave_notifications),
-    TruncNormalTarget(main_wave_notifications, trunc_range=(35., np.inf)),
+    NormalTarget(main_wave_notifications),
     NormalTarget(post_wave_notifications),
 ]
 

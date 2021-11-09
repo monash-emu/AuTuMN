@@ -8,9 +8,12 @@ time:
   start: 640 # 01st Oct 2021
 
 mobility:
+  # Micro distancing
   microdistancing:
     behavior:
+      function_type: empiric
       parameters:
+        max_effect: .2
         times:
           - 640 # 01st Oct, 2021, lockdown started to ease
           - 641 # 02nd Oct 2021
@@ -21,6 +24,11 @@ mobility:
           - 0.6
           - 0.4
           - 0.2
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
   mixing:
     other_locations:
       append: true

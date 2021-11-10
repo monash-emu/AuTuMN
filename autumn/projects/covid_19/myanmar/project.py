@@ -4,7 +4,7 @@ import numpy as np
 
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
+from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import NormalTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
@@ -31,7 +31,12 @@ targets = [
 ]
 
 priors = [
-    *COVID_GLOBAL_PRIORS,
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.exposed.total_period",
+        mean=5.5, stdev=0.5, trunc_range=[1.0, np.inf]),
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.active.total_period",
+        mean=6.5, stdev=0.77, trunc_range=[4.0, np.inf]),
     UniformPrior("contact_rate", (0.02, 0.12), jumping_stdev=0.01),
     UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.015), jumping_stdev=0.002),

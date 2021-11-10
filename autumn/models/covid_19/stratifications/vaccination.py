@@ -34,12 +34,13 @@ def get_vaccination_strat(
     """
     Preliminary processing.
     """
+    # FIXME: should really make this a function and move to strat_processing.
 
     infection_effect, severity_effect, symptomatic_adjuster, hospital_adjuster, ifr_adjuster, \
         vaccination_effects = {}, {}, {}, {}, {}, {}
 
     # Get vaccination effect parameters in the form needed for the model
-    for stratum in vaccinated_strata:
+    for stratum in VACCINATION_STRATA[1:]:
 
         # Parameters to directly pull out
         raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
@@ -75,12 +76,11 @@ def get_vaccination_strat(
     """
 
     unadjusted_strata = [Vaccination.UNVACCINATED]
+
+    # Temporary approach, not adjusting the waned immunity strata
     if is_waning_vacc_immunity:
         unadjusted_strata += VACCINATION_STRATA[3:]
     flow_adjs = get_blank_adjustments_for_strat(unadjusted_strata)
-
-    # Add the clinical adjustments parameters as overwrites in the same way as for history stratification
-    # flow_adjs = get_blank_adjustments_for_strat([Vaccination.UNVACCINATED])
 
     for stratum in vaccinated_strata:
         adjs = get_all_adjustments(
@@ -107,7 +107,8 @@ def get_vaccination_strat(
     Vaccination effect against infectiousness.
     """
 
-    infectiousness_adjustment_strata = VACCINATION_STRATA[1:]
+    # Temporary variable to separate out the infectiousness adjustments from the other ones
+    infectiousness_adjustment_strata = VACCINATION_STRATA[1:] if is_waning_vacc_immunity else vaccinated_strata
 
     infectiousness_adjustments = {stratum: None for stratum in unadjusted_strata}
     strata_adjs = {

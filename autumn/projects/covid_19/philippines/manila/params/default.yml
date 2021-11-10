@@ -68,7 +68,7 @@ vaccination:
     ##############  Assumed future roll-out ################
     - age_min: 20
       supply_period_coverage:
-        coverage: .99  # to reach the remaining unvaccinated 20+ population by EoY
+        coverage: .375  # to reach 95% of the 20+ population by EoY
         start_time: 658 # 19 Oct 2021
         end_time: 731 # 31 Dec 2021
     - age_min: 10

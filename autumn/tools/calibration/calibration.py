@@ -373,29 +373,15 @@ class Calibration:
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for param_name, value in proposed_params.items():
-            if not param_name.startswith("rp_"):
-                param_updates[param_name] = value
+            # if not param_name.startswith("rp_"):
+            param_updates[param_name] = value
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
 
-        # Update random process parameters before running the model
+        # Update the random_process attribute with the current rp config for later likelihood evaluation
         if self.includes_random_process:
-            proposed_rp_coefficients = [proposed_params[f"rp_coeff_{i + 1}"] for i in range(self.random_process.order)]
-            proposed_rp_noise_sd = proposed_params["rp_noise_sd"]
-            proposed_rp_values = [proposed_params[f"rp_value_{k}"] for k in range(len(self.random_process.values))]
-            rp_param_updates = {
-                "random_process": {
-                    "coefficients": proposed_rp_coefficients,
-                    "noise_sd": proposed_rp_noise_sd,
-                    "values": proposed_rp_values
-                }
-            }
-
-            iter_params = iter_params.update(rp_param_updates, calibration_format=False)
-
-            # Update the random_process attribute with the current rp config for later likelihood evaluation
-            self.random_process.coefficients = proposed_rp_coefficients
-            self.random_process.noise_sd = proposed_rp_noise_sd
-            self.random_process.values = proposed_rp_values
+            self.random_process.coefficients = [proposed_params[f"rp_coeff_{i + 1}"] for i in range(self.random_process.order)]
+            self.random_process.noise_sd = proposed_params["rp_noise_sd"]
+            self.random_process.values = [proposed_params[f"rp_value_{k}"] for k in range(len(self.random_process.values))]
 
         if self._is_first_run:
             self.build_options = dict(enable_validation = True)

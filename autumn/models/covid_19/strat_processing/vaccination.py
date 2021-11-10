@@ -3,7 +3,7 @@ from typing import List, Callable, Optional, Tuple, Union
 
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination
+from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, VACCINATION_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
@@ -285,3 +285,42 @@ def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_
             # Add blank flows to make things simpler when we come to doing the outputs
             ineligible_ages = set(AGEGROUP_STRATA) - set(eligible_age_groups)
             add_vacc_flows(model, ineligible_ages, 0., extra_stratum=cluster_stratum)
+
+
+def get_vacc_effects_by_stratum(symptomatic_adjuster, hospital_adjuster, ifr_adjuster, params):
+
+    vaccination_effects = {}
+
+    # Get vaccination effect parameters in the form needed for the model
+    for stratum in VACCINATION_STRATA[1:]:
+
+        # Parameters to directly pull out
+        raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
+        stratum_vacc_params = getattr(params.vaccination, stratum)
+        if stratum_vacc_params.ve_death:
+            raw_effectiveness_keys.append("ve_death")
+        vaccination_effects[stratum] = {key: getattr(stratum_vacc_params, key) for key in raw_effectiveness_keys}
+
+        # Parameters that need to be processed
+        vaccination_effects[stratum]["infection_efficacy"], severity_effect = find_vaccine_action(
+            vaccination_effects[stratum]["ve_prop_prevent_infection"],
+            vaccination_effects[stratum]["ve_sympt_covid"],
+        )
+        if stratum_vacc_params.ve_hospitalisation:
+            hospitalisation_effect = get_hosp_given_case_effect(
+                stratum_vacc_params.ve_hospitalisation, vaccination_effects[stratum]["ve_sympt_covid"],
+            )
+
+        symptomatic_adjuster[stratum] = 1. - severity_effect
+
+        # Use the standard severity adjustment if no specific request for reducing death
+        ifr_adjuster[stratum] = 1. - vaccination_effects[stratum]["ve_death"] if \
+            "ve_death" in vaccination_effects[stratum] else 1. - severity_effect
+        hospital_adjuster[stratum] = 1. - hospitalisation_effect if \
+            "ve_hospitalisation" in vaccination_effects[stratum] else 1.
+
+        # Apply the calibration adjusters
+        symptomatic_adjuster[stratum] *= params.clinical_stratification.props.symptomatic.multiplier
+        ifr_adjuster[stratum] *= params.infection_fatality.multiplier
+
+    return vaccination_effects

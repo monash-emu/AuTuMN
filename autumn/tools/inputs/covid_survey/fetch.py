@@ -10,7 +10,6 @@ COVID_SURVEY_PATH = os.path.join(INPUT_DATA_PATH, "covid_survey")
 TODAY = pd.to_datetime("today").date().strftime("%Y%m%d")
 
 
-
 countries = ["Australia", "Malaysia", "Myanmar", "Philippines", "Sri Lanka"]
 indicators = ["mask","avoid_contact"]
 

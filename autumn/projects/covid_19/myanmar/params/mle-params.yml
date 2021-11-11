@@ -1,8 +1,8 @@
-contact_rate: 0.05019860789980081
-infectious_seed: 301.75601718230314
-mobility.microdistancing.behaviour.parameters.end_asymptote: 0.2190868128434496
-sojourn.compartment_periods_calculated.active.total_period: 6.681319246386329
-sojourn.compartment_periods_calculated.exposed.total_period: 1.7139376636644963
-testing_to_detection.assumed_cdr_parameter: 0.005024959192400513
-voc_emergence.delta.contact_rate_multiplier: 1.9056225483268927
-waning_immunity_duration: 664.7091613893161
+contact_rate: 0.050844859207575935
+infectious_seed: 258.4265129314291
+mobility.microdistancing.behaviour.parameters.end_asymptote: 0.21760001947747926
+sojourn.compartment_periods_calculated.active.total_period: 6.515969045644141
+sojourn.compartment_periods_calculated.exposed.total_period: 2.5
+testing_to_detection.assumed_cdr_parameter: 0.005056661549108201
+voc_emergence.delta.contact_rate_multiplier: 1.8558725091077626
+waning_immunity_duration: 703.2179911022408

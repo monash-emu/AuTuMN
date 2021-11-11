@@ -1,5 +1,4 @@
 from summer import CompartmentalModel
-from summer.adjust import Multiply
 
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
@@ -9,7 +8,6 @@ from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.detection import CdrProc
 from .utils import get_seasonal_forcing
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
-from autumn.tools.curve import tanh_based_scaleup
 from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (
@@ -24,6 +22,7 @@ from .strat_processing.vaccination import add_requested_vacc_flows, add_vic_regi
 from .strat_processing import tracing
 from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
+from .strat_processing.vaccination import get_second_dose_delay_rate
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
 from .stratifications.cluster import apply_post_cluster_strat_hacks, get_cluster_strat
@@ -317,10 +316,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Vaccination status stratification.
     """
 
-    if params.vaccination:
-        dose_delay_params = params.vaccination.second_dose_delay
+    vacc_params = params.vaccination
+    if vacc_params:
+        dose_delay_params = vacc_params.second_dose_delay
         is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines stratification by dosing
-        is_waning_vacc_immunity = params.vaccination.vacc_wane
+        is_waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
 
         # Work out the strata to be implemented
         if not is_dosing_active and not is_waning_vacc_immunity:
@@ -335,18 +335,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Get the vaccination stratification object
         vaccination_strat = get_vaccination_strat(params, vacc_strata)
-
-        # Simplest approach is to assign all the VoC infectious seed to the unvaccinated
-        if params.voc_emergence:
-            for voc_name, voc_values in voc_params.items():
-                seed_split = {stratum: Multiply(0.) for stratum in vacc_strata}
-                seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
-                vaccination_strat.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
-
         model.stratify_with(vaccination_strat)
-
-        # Implement the process of people getting vaccinated
-        vacc_params = params.vaccination
 
         # Victoria vaccination code is not generalisable
         if params.vic_status == VicModelTypes.VIC_SUPER_2021:
@@ -358,24 +347,35 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Add transition from single dose to fully vaccinated
         if is_dosing_active:
-            if type(dose_delay_params) == float:
-                second_dose_transition_func = 1. / dose_delay_params
-            else:
-                second_dose_transition_func = tanh_based_scaleup(
-                    shape=params.vaccination.second_dose_delay.shape,
-                    inflection_time=dose_delay_params.inflection_time,
-                    start_asymptote=1. / dose_delay_params.start_asymptote,
-                    end_asymptote=1. / dose_delay_params.end_asymptote,
-                )
-
+            second_dose_transition = get_second_dose_delay_rate(dose_delay_params)
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
                 model.add_transition_flow(
                     name="second_dose",
-                    fractional_rate=second_dose_transition_func,
+                    fractional_rate=second_dose_transition,
                     source=compartment,
                     dest=compartment,
                     source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
                     dest_strata={"vaccination": Vaccination.VACCINATED},
+                )
+
+        # Add the waning immunity progressions through the strata
+        if is_waning_vacc_immunity:
+            for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
+                model.add_transition_flow(
+                    name="part_wane",
+                    fractional_rate=1. / vacc_params.vacc_full_effect_duration,
+                    source=compartment,
+                    dest=compartment,
+                    source_strata={"vaccination": Vaccination.VACCINATED},
+                    dest_strata={"vaccination": Vaccination.PART_WANED},
+                )
+                model.add_transition_flow(
+                    name="part_wane",
+                    fractional_rate=1. / vacc_params.vacc_part_effect_duration,
+                    source=compartment,
+                    dest=compartment,
+                    source_strata={"vaccination": Vaccination.PART_WANED},
+                    dest_strata={"vaccination": Vaccination.WANED},
                 )
 
     # Dive into summer internals to over-write mixing matrix
@@ -401,7 +401,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         outputs_builder.request_tracing()
     if params.voc_emergence:
         outputs_builder.request_strains(list(params.voc_emergence.keys()))
-    if params.vaccination:
+    if vacc_params:
         outputs_builder.request_vaccination(is_dosing_active, vacc_strata)
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)

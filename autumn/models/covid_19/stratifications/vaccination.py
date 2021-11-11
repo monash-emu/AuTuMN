@@ -31,7 +31,7 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
     pop_split[Vaccination.UNVACCINATED] = 1.
     stratification.set_population_split(pop_split)
 
-    # Preliminary processing
+    # Preliminaries
     infection_effect, severity_effect, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = {}, {}, {}, {}, {}
     vaccination_effects = get_vacc_effects_by_stratum(symptomatic_adjuster, hospital_adjuster, ifr_adjuster, params)
 
@@ -58,5 +58,12 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
     infectiousness_adjustments.update(adjs)
     for compartment in DISEASE_COMPARTMENTS:
         stratification.add_infectiousness_adjustments(compartment, infectiousness_adjustments)
+
+    # Simplest approach for VoCs is to assign all the VoC infectious seed to the unvaccinated
+    if params.voc_emergence:
+        for voc_name, voc_values in params.voc_emergence.items():
+            seed_split = {stratum: Multiply(0.) for stratum in vacc_strata}
+            seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
+            stratification.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
 
     return stratification

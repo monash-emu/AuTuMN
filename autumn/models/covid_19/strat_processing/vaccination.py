@@ -10,6 +10,28 @@ from autumn.tools.inputs.covid_au.queries import (
 )
 from autumn.tools.utils.utils import find_closest_value_in_list
 from autumn.models.covid_19.parameters import Vaccination as VaccParams, RollOutFunc
+from autumn.tools.curve import tanh_based_scaleup
+
+
+def get_second_dose_delay_rate(dose_delay_params):
+    """
+    Get the rate of progression from partially to fully vaccinated.
+
+    :param dose_delay_params:
+    :type dose_delay_params:
+    :return:
+    :rtype:
+    """
+
+    if type(dose_delay_params) == float:
+        return 1. / dose_delay_params
+    else:
+        return tanh_based_scaleup(
+            shape=dose_delay_params.shape,
+            inflection_time=dose_delay_params.inflection_time,
+            start_asymptote=1. / dose_delay_params.start_asymptote,
+            end_asymptote=1. / dose_delay_params.end_asymptote,
+        )
 
 
 def get_rate_from_coverage_and_duration(coverage_increase: float, duration: float) -> float:

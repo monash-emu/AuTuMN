@@ -32,30 +32,28 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
     stratification.set_population_split(pop_split)
 
     # Preliminaries
-    infection_effect, severity_effect, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = {}, {}, {}, {}, {}
-    vaccination_effects = get_vacc_effects_by_stratum(symptomatic_adjuster, hospital_adjuster, ifr_adjuster, params)
+    vaccination_effects, symptomatic_adjusters, hospital_adjusters, ifr_adjusters = get_vacc_effects_by_stratum(params)
 
     # Vaccination effect against severe outcomes
     flow_adjs = get_blank_adjustments_for_strat(unadjusted_strata)
     for stratum in vacc_strata:
-        adjs = get_all_adjustments(
+        severity_adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjuster[stratum], symptomatic_adjuster[stratum], hospital_adjuster[stratum]
+            params.sojourn, ifr_adjusters[stratum], symptomatic_adjusters[stratum], hospital_adjusters[stratum]
         )
-        flow_adjs = update_adjustments_for_strat(stratum, flow_adjs, adjs)
-
+        flow_adjs = update_adjustments_for_strat(stratum, flow_adjs, severity_adjs)
     stratification = add_clinical_adjustments_to_strat(stratification, flow_adjs)
 
     # Vaccination effect against infection
     infection_adjustments = {stratum: None for stratum in unadjusted_strata}
-    adjs = {strat: Multiply(1. - vaccination_effects[strat]["infection_efficacy"]) for strat in vacc_strata}
-    infection_adjustments.update(adjs)
+    infect_adjs = {strat: Multiply(1. - vaccination_effects[strat]["infection_efficacy"]) for strat in vacc_strata}
+    infection_adjustments.update(infect_adjs)
     stratification.add_flow_adjustments(INFECTION, infection_adjustments)
 
     # Vaccination effect against infectiousness
     infectiousness_adjustments = {stratum: None for stratum in unadjusted_strata}
-    adjs = {strat: Multiply(1. - getattr(getattr(vacc_params, strat), "ve_infectiousness")) for strat in vacc_strata}
-    infectiousness_adjustments.update(adjs)
+    infectiousness_adjs = {s: Multiply(1. - getattr(getattr(vacc_params, s), "ve_infectiousness")) for s in vacc_strata}
+    infectiousness_adjustments.update(infectiousness_adjs)
     for compartment in DISEASE_COMPARTMENTS:
         stratification.add_infectiousness_adjustments(compartment, infectiousness_adjustments)
 

@@ -325,13 +325,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Work out the strata to be implemented
         if not is_dosing_active and not is_waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 2]
+        elif not is_dosing_active and is_waning_vacc_immunity:
+            vacc_strata = VACCINATION_STRATA[: 2] + VACCINATION_STRATA[3:]
         elif is_dosing_active and not is_waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 3]
         elif is_dosing_active and is_waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA
-        else:
-            msg = f"Vaccination stratification doesn't support waning immunity without dosing"
-            raise ValueError(msg)
 
         # Get the vaccination stratification object
         vaccination_strat = get_vaccination_strat(params, vacc_strata)
@@ -360,13 +359,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Add the waning immunity progressions through the strata
         if is_waning_vacc_immunity:
+            wane_origin_stratum = Vaccination.VACCINATED if is_dosing_active else Vaccination.ONE_DOSE_ONLY
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
                 model.add_transition_flow(
                     name="part_wane",
                     fractional_rate=1. / vacc_params.vacc_full_effect_duration,
                     source=compartment,
                     dest=compartment,
-                    source_strata={"vaccination": Vaccination.VACCINATED},
+                    source_strata={"vaccination": wane_origin_stratum},
                     dest_strata={"vaccination": Vaccination.PART_WANED},
                 )
                 model.add_transition_flow(

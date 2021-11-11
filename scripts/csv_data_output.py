@@ -29,7 +29,7 @@ phl = {
         "manila",
         "philippines",
     ],
-    "columns": STANDARD_COL + ["accum_incidence", "accum_notifications"],
+    "columns": STANDARD_COL,
 }
 mys = {
     "region": ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"],

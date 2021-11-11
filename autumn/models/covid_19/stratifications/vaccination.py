@@ -2,9 +2,7 @@ from typing import List
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import (
-    COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION, VACCINATION_STRATA
-)
+from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
@@ -13,79 +11,52 @@ from autumn.models.covid_19.strat_processing.clinical import (
 from autumn.models.covid_19.strat_processing.vaccination import get_vacc_effects_by_stratum
 
 
-def get_vaccination_strat(
-        params: Parameters, vacc_strata: List, is_waning_vacc_immunity: bool
-) -> Stratification:
+def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
     """
 
-    # Need to change this - currently a place-holder
-    vaccinated_strata = vacc_strata[1: 3]
+    vacc_params = params.vaccination
 
-    vacc_strat = Stratification("vaccination", vacc_strata, COMPARTMENTS)
+    # Create the stratum
+    stratification = Stratification("vaccination", all_strata, COMPARTMENTS)
 
-    # Everyone starts out unvaccinated
-    pop_split = {stratum: 0. for stratum in vacc_strata}
+    # Unaffected and affected strata
+    unadjusted_strata = all_strata[: 1]  # Slice to create single element list
+    vacc_strata = all_strata[1:]
+
+    # Initial conditions, everyone unvaccinated
+    pop_split = {stratum: 0. for stratum in all_strata}
     pop_split[Vaccination.UNVACCINATED] = 1.
-    vacc_strat.set_population_split(pop_split)
+    stratification.set_population_split(pop_split)
 
-    """
-    Preliminary processing.
-    """
-
+    # Preliminary processing
     infection_effect, severity_effect, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = {}, {}, {}, {}, {}
-
     vaccination_effects = get_vacc_effects_by_stratum(symptomatic_adjuster, hospital_adjuster, ifr_adjuster, params)
 
-    """
-    Vaccination effect against severe outcomes.
-    """
-
-    unadjusted_strata = [Vaccination.UNVACCINATED]
-
-    # Temporary approach, not adjusting the waned immunity strata
-    if is_waning_vacc_immunity:
-        unadjusted_strata += VACCINATION_STRATA[3:]
+    # Vaccination effect against severe outcomes
     flow_adjs = get_blank_adjustments_for_strat(unadjusted_strata)
-
-    for stratum in vaccinated_strata:
+    for stratum in vacc_strata:
         adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
             params.sojourn, ifr_adjuster[stratum], symptomatic_adjuster[stratum], hospital_adjuster[stratum]
         )
         flow_adjs = update_adjustments_for_strat(stratum, flow_adjs, adjs)
 
-    # Apply to the stratification object
-    vacc_strat = add_clinical_adjustments_to_strat(vacc_strat, flow_adjs)
+    stratification = add_clinical_adjustments_to_strat(stratification, flow_adjs)
 
-    """
-    Vaccination effect against infection.
-    """
-
-    # Temporary variable to separate out the infectiousness adjustments from the other ones
-    new_adjustment_strata = VACCINATION_STRATA[1:] if is_waning_vacc_immunity else vaccinated_strata
-
+    # Vaccination effect against infection
     infection_adjustments = {stratum: None for stratum in unadjusted_strata}
-    strata_adjs = {
-        stratum: Multiply(1. - vaccination_effects[stratum]["infection_efficacy"]) for
-        stratum in new_adjustment_strata
-    }
-    infection_adjustments.update(strata_adjs)
-    vacc_strat.add_flow_adjustments(INFECTION, infection_adjustments)
+    adjs = {strat: Multiply(1. - vaccination_effects[strat]["infection_efficacy"]) for strat in vacc_strata}
+    infection_adjustments.update(adjs)
+    stratification.add_flow_adjustments(INFECTION, infection_adjustments)
 
-    """
-    Vaccination effect against infectiousness.
-    """
-
+    # Vaccination effect against infectiousness
     infectiousness_adjustments = {stratum: None for stratum in unadjusted_strata}
-    strata_adjs = {
-        stratum: Multiply(1. - getattr(getattr(params.vaccination, stratum), "ve_infectiousness")) for
-        stratum in new_adjustment_strata
-    }
-    infectiousness_adjustments.update(strata_adjs)
+    adjs = {strat: Multiply(1. - getattr(getattr(vacc_params, strat), "ve_infectiousness")) for strat in vacc_strata}
+    infectiousness_adjustments.update(adjs)
     for compartment in DISEASE_COMPARTMENTS:
-        vacc_strat.add_infectiousness_adjustments(compartment, infectiousness_adjustments)
+        stratification.add_infectiousness_adjustments(compartment, infectiousness_adjustments)
 
-    return vacc_strat
+    return stratification

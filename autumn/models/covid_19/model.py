@@ -370,7 +370,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     dest_strata={"vaccination": Vaccination.PART_WANED},
                 )
                 model.add_transition_flow(
-                    name="part_wane",
+                    name="full_wane",
                     fractional_rate=1. / vacc_params.vacc_part_effect_duration,
                     source=compartment,
                     dest=compartment,

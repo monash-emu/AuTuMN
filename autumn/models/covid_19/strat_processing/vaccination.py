@@ -312,8 +312,8 @@ def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_
 def get_stratum_vacc_effect(params, stratum):
 
     # Parameters to directly pull out
-    raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
     stratum_vacc_params = getattr(params.vaccination, stratum)
+    raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
     if stratum_vacc_params.ve_death:
         raw_effectiveness_keys.append("ve_death")
     vacc_effects = {key: getattr(stratum_vacc_params, key) for key in raw_effectiveness_keys}

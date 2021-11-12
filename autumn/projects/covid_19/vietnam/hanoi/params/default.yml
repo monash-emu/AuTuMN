@@ -1,7 +1,7 @@
 description: BASELINE
 
 time:
-  start: 485 # 29th Apr 2021
+  start: 480 # 29th Apr 2021
   end: 912
 
 country:
@@ -15,11 +15,11 @@ mixing_matrices:
   # source_iso3: HKG
 
 population:
-  region: Ho Chi Minh City
+  region: Hanoi
   year: 2019
 
 mobility:
-  region: Ho Chi Minh City
+  region: Hanoi
   # Google mobility data
   smooth_google_data: true # whether to apply a 7-day moving average
   square_mobility_effect: true

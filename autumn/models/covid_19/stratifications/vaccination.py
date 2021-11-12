@@ -8,7 +8,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
     update_adjustments_for_strat
 )
-from autumn.models.covid_19.strat_processing.vaccination import get_vacc_effects_by_stratum
+from autumn.models.covid_19.strat_processing.vaccination import get_stratum_vacc_effect
 
 
 def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratification:
@@ -32,21 +32,27 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
     stratification.set_population_split(pop_split)
 
     # Preliminaries
-    vaccination_effects, symptomatic_adjusters, hospital_adjusters, ifr_adjusters = get_vacc_effects_by_stratum(params)
+    ve_infection, ve_severity, sympt_adjusters, hosp_adjusters, ifr_adjusters, vacc_effects = {}, {}, {}, {}, {}, {}
 
-    # Vaccination effect against severe outcomes
+    # Get vaccination effect parameters in the form needed for the model
     flow_adjs = get_blank_adjustments_for_strat(unadjusted_strata)
     for stratum in vacc_strata:
+        vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(params, stratum)
+
+        # Vaccination effect against severe outcomes
+        sympt_adjuster *= params.clinical_stratification.props.symptomatic.multiplier
+        ifr_adjuster *= params.infection_fatality.multiplier
+
         severity_adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjusters[stratum], symptomatic_adjusters[stratum], hospital_adjusters[stratum]
+            params.sojourn, ifr_adjuster, sympt_adjuster, hosp_adjuster
         )
         flow_adjs = update_adjustments_for_strat(stratum, flow_adjs, severity_adjs)
     stratification = add_clinical_adjustments_to_strat(stratification, flow_adjs)
 
     # Vaccination effect against infection
     infection_adjustments = {stratum: None for stratum in unadjusted_strata}
-    infect_adjs = {strat: Multiply(1. - vaccination_effects[strat]["infection_efficacy"]) for strat in vacc_strata}
+    infect_adjs = {stratum: Multiply(1. - vacc_effects[stratum]["infection_efficacy"]) for stratum in vacc_strata}
     infection_adjustments.update(infect_adjs)
     stratification.add_flow_adjustments(INFECTION, infection_adjustments)
 

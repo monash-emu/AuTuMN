@@ -309,42 +309,32 @@ def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_
             add_vacc_flows(model, ineligible_ages, 0., extra_stratum=cluster_stratum)
 
 
-def get_vacc_effects_by_stratum(params):
-    # FIXME: Need to check this.
-    # Get vaccination effect parameters in the form needed for the model
+def get_stratum_vacc_effect(params, stratum):
 
-    vaccination_effects, symptomatic_adjusters, hospital_adjusters, ifr_adjusters = {}, {}, {}, {}
-    for stratum in VACCINATION_STRATA[1:]:
+    # Parameters to directly pull out
+    raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
+    stratum_vacc_params = getattr(params.vaccination, stratum)
+    if stratum_vacc_params.ve_death:
+        raw_effectiveness_keys.append("ve_death")
+    vacc_effects = {key: getattr(stratum_vacc_params, key) for key in raw_effectiveness_keys}
 
-        # Parameters to directly pull out
-        raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
-        stratum_vacc_params = getattr(params.vaccination, stratum)
-        if stratum_vacc_params.ve_death:
-            raw_effectiveness_keys.append("ve_death")
-        stratum_effects = {key: getattr(stratum_vacc_params, key) for key in raw_effectiveness_keys}
-
-        # Parameters that need to be processed
-        stratum_effects["infection_efficacy"], severity_effect = find_vaccine_action(
-            stratum_effects["ve_prop_prevent_infection"],
-            stratum_effects["ve_sympt_covid"],
+    # Parameters that need to be processed
+    vacc_effects["infection_efficacy"], severity_effect = find_vaccine_action(
+        vacc_effects["ve_prop_prevent_infection"], vacc_effects["ve_sympt_covid"],
+    )
+    if stratum_vacc_params.ve_hospitalisation:
+        hospitalisation_effect = get_hosp_given_case_effect(
+            stratum_vacc_params.ve_hospitalisation, vacc_effects["ve_sympt_covid"],
         )
-        if stratum_vacc_params.ve_hospitalisation:
-            hospitalisation_effect = get_hosp_given_case_effect(
-                stratum_vacc_params.ve_hospitalisation, stratum_effects["ve_sympt_covid"],
-            )
 
-        symptomatic_adjusters[stratum] = 1. - severity_effect
+    sympt_adjuster = 1. - severity_effect
 
-        # Use the standard severity adjustment if no specific request for reducing death
-        ifr_adjusters[stratum] = 1. - stratum_effects["ve_death"] if \
-            "ve_death" in stratum_effects else 1. - severity_effect
-        hospital_adjusters[stratum] = 1. - hospitalisation_effect if \
-            "ve_hospitalisation" in stratum_effects else 1.
+    # Use the standard severity adjustment if no specific request for reducing death
+    ifr_adjuster = 1. - vacc_effects["ve_death"] if "ve_death" in vacc_effects else 1. - severity_effect
+    hospital_adjuster = 1. - hospitalisation_effect if "ve_hospitalisation" in vacc_effects else 1.
 
-        # Apply the calibration adjusters
-        symptomatic_adjusters[stratum] *= params.clinical_stratification.props.symptomatic.multiplier
-        ifr_adjusters[stratum] *= params.infection_fatality.multiplier
+    # Apply the calibration adjusters
+    sympt_adjuster *= params.clinical_stratification.props.symptomatic.multiplier
+    ifr_adjuster *= params.infection_fatality.multiplier
 
-        vaccination_effects[stratum] = stratum_effects
-
-    return vaccination_effects, symptomatic_adjusters, hospital_adjusters, ifr_adjusters
+    return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster

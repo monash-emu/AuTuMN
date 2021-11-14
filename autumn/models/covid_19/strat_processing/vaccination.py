@@ -6,7 +6,7 @@ from summer import CompartmentalModel
 from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, VACCINATION_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
-    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES, get_lka_vacc_coverage
+    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES, get_dummy_vacc_coverage
 )
 from autumn.tools.utils.utils import find_closest_value_in_list
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
@@ -275,10 +275,15 @@ def add_lka_vacc(model: CompartmentalModel, vacc_params: VaccParams, model_start
     for agegroup in AGEGROUP_STRATA:
 
         # Note this must return something for every age group to stop outputs calculation crashing
-        coverage_times, coverage_values = get_lka_vacc_coverage(agegroup)
+        coverage_times, coverage_values = get_dummy_vacc_coverage(agegroup)
 
-        # Better ways to do this, but to avoid any unexpected behaviours ensure roll-out is within run period
-        assert model_start_time < coverage_times[0]
+        # If model starting after
+        if model_start_time > coverage_times[0]:
+            starting_coverage = np.interp(model_start_time, coverage_times, coverage_values)
+            coverage_times = [model_start_time] + [time for time in coverage_times if time > model_start_time]
+            coverage_values = [starting_coverage] + coverage_values[-len(coverage_times) + 1:]
+
+        # Need to do something similar here as for start times
         assert model_end_time > coverage_times[-1]
 
         # Get the vaccination rate function of time from the coverage values

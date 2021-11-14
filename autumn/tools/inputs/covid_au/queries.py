@@ -98,7 +98,7 @@ def get_modelled_vac_num(input_db, cond_map, dose):
     return df
 
 
-def get_lka_vacc_coverage(age_group):
+def get_dummy_vacc_coverage(age_group):
     """
     Dummy function with arbitrary numbers.
     Would need to be populated with actual values for each age group.

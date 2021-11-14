@@ -1,15 +1,37 @@
 import numpy as np
-from typing import List, Callable, Optional, Tuple, Union
+from typing import List, Callable, Tuple, Union
 
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination
+from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, VACCINATION_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
 )
 from autumn.tools.utils.utils import find_closest_value_in_list
-from autumn.models.covid_19.parameters import Vaccination as VaccParams, RollOutFunc
+from autumn.models.covid_19.parameters import Vaccination as VaccParams
+from autumn.tools.curve import tanh_based_scaleup
+
+
+def get_second_dose_delay_rate(dose_delay_params):
+    """
+    Get the rate of progression from partially to fully vaccinated.
+
+    :param dose_delay_params:
+    :type dose_delay_params:
+    :return:
+    :rtype:
+    """
+
+    if type(dose_delay_params) == float:
+        return 1. / dose_delay_params
+    else:
+        return tanh_based_scaleup(
+            shape=dose_delay_params.shape,
+            inflection_time=dose_delay_params.inflection_time,
+            start_asymptote=1. / dose_delay_params.start_asymptote,
+            end_asymptote=1. / dose_delay_params.end_asymptote,
+        )
 
 
 def get_rate_from_coverage_and_duration(coverage_increase: float, duration: float) -> float:
@@ -285,3 +307,34 @@ def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_
             # Add blank flows to make things simpler when we come to doing the outputs
             ineligible_ages = set(AGEGROUP_STRATA) - set(eligible_age_groups)
             add_vacc_flows(model, ineligible_ages, 0., extra_stratum=cluster_stratum)
+
+
+def get_stratum_vacc_effect(params, stratum):
+
+    # Parameters to directly pull out
+    stratum_vacc_params = getattr(params.vaccination, stratum)
+    raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
+    if stratum_vacc_params.ve_death:
+        raw_effectiveness_keys.append("ve_death")
+    vacc_effects = {key: getattr(stratum_vacc_params, key) for key in raw_effectiveness_keys}
+
+    # Parameters that need to be processed
+    vacc_effects["infection_efficacy"], severity_effect = find_vaccine_action(
+        vacc_effects["ve_prop_prevent_infection"], vacc_effects["ve_sympt_covid"],
+    )
+    if stratum_vacc_params.ve_hospitalisation:
+        hospitalisation_effect = get_hosp_given_case_effect(
+            stratum_vacc_params.ve_hospitalisation, vacc_effects["ve_sympt_covid"],
+        )
+
+    sympt_adjuster = 1. - severity_effect
+
+    # Use the standard severity adjustment if no specific request for reducing death
+    ifr_adjuster = 1. - vacc_effects["ve_death"] if "ve_death" in vacc_effects else 1. - severity_effect
+    hospital_adjuster = 1. - hospitalisation_effect if "ve_hospitalisation" in vacc_effects else 1.
+
+    # Apply the calibration adjusters
+    sympt_adjuster *= params.clinical_stratification.props.symptomatic.multiplier
+    ifr_adjuster *= params.infection_fatality.multiplier
+
+    return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster

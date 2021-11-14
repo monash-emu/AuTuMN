@@ -270,21 +270,12 @@ def add_vic_regional_vacc(
     add_vacc_flows(model, ineligible_ages, 0.)
 
 
-def add_lka_vacc(model: CompartmentalModel, vacc_params: VaccParams, model_start_time: float, model_end_time: float):
+def add_dummy_vacc(model: CompartmentalModel, vacc_params: VaccParams, model_start_time: float):
 
     for agegroup in AGEGROUP_STRATA:
 
         # Note this must return something for every age group to stop outputs calculation crashing
         coverage_times, coverage_values = get_dummy_vacc_coverage(agegroup)
-
-        # If model starting after
-        if model_start_time > coverage_times[0]:
-            starting_coverage = np.interp(model_start_time, coverage_times, coverage_values)
-            coverage_times = [model_start_time] + [time for time in coverage_times if time > model_start_time]
-            coverage_values = [starting_coverage] + coverage_values[-len(coverage_times) + 1:]
-
-        # Need to do something similar here as for start times
-        assert model_end_time > coverage_times[-1]
 
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(

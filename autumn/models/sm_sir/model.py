@@ -65,21 +65,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # build the random process, using default values and coefficients
         rp = RandomProcess(order=2, period=30, start_time=params.time.start, end_time=params.time.end)
 
-        # set rp coefficients and values if specified in the parameters
-        rp_params = params.random_process
-        if rp_params.values:
-            msg = f"Incorrect number of specified random process values. Expected {len(rp.values)}, found {len(rp_params.values)}."
-            assert len(rp.values) == len(rp_params.values), msg
-            rp.values = rp_params.values
-        if rp_params.noise_sd:
-            rp.noise_sd = rp_params.noise_sd
-        if rp_params.coefficients:
-            msg = f"Incorrect number of specified coefficients. Expected {len(rp.coefficients)}, found {len(rp_params.coefficients)}."
-            assert len(rp.coefficients) == len(rp_params.coefficients), msg
-            rp.coefficients = rp_params.coefficients
+        # update random process details based on the model parameters
+        rp.update_config_from_params(params.random_process)
 
         # FIXME: Check with David S. as adding a non-standard attribute to the model is probably not good practice.
-        model.random_processes = rp
+        model.random_process = rp
 
         # Create function returning exp(W), where W is the random process
         rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
@@ -87,7 +77,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         def contact_rate(t, computed_values):
             return params.contact_rate * rp_time_variant_func(t)
 
-        # FIXME: Also check with David S. The approach below seems a bit convoluted
         # store random process as a computed value to make it available as an output
         model.add_computed_value_process(
             "transformed_random_process",

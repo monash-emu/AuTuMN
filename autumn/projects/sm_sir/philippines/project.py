@@ -26,7 +26,7 @@ targets = [
 # FIXME: this should not be necessary
 if baseline_params.to_dict()["activate_random_process"]:
     m = build_model(baseline_params.to_dict())
-    rp = m.random_processes
+    rp = m.random_process
 else:
     rp = None
 

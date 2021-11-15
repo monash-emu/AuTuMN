@@ -35,6 +35,18 @@ class RandomProcess:
         self.update_times = [start_time + i * period for i in range(n_updates)]
         self.values = [0.] * n_updates
 
+    def update_config_from_params(self, rp_params):
+        if rp_params.values:
+            msg = f"Incorrect number of specified random process values. Expected {len(self.values)}, found {len(rp_params.values)}."
+            assert len(self.values) == len(rp_params.values), msg
+            self.values = rp_params.values
+        if rp_params.noise_sd:
+            self.noise_sd = rp_params.noise_sd
+        if rp_params.coefficients:
+            msg = f"Incorrect number of specified coefficients. Expected {len(self.coefficients)}, found {len(rp_params.coefficients)}."
+            assert len(self.coefficients) == len(rp_params.coefficients), msg
+            self.coefficients = rp_params.coefficients
+
     def create_random_process_function(self, transform_func=None):
         """
         Create a time-variant function to be used in the main model code where the random process is implemented.

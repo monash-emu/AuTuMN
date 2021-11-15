@@ -170,7 +170,7 @@ class Calibration:
             coeff_means = [.8] + [.2 / (order - 1)] * (order - 1)
         for i, coeff_mean in enumerate(coeff_means):
             self.all_priors.append({
-                "param_name": f"rp_coeff_{i + 1}",
+                "param_name":  f"random_process.coefficients({i})",
                 "distribution": "trunc_normal",
                 "distri_params": [coeff_mean, 0.05],
                 "trunc_range": [0., 1.],
@@ -178,7 +178,7 @@ class Calibration:
 
         # add prior for noise sd
         self.all_priors.append({
-            "param_name": "rp_noise_sd",
+            "param_name": "random_process.noise_sd",
             "distribution": "uniform",
             "distri_params": [0.01, 1.],
         })
@@ -187,7 +187,7 @@ class Calibration:
         n_values = len(self.random_process.values)
         self.all_priors += [
             {
-                "param_name": f"rp_value_{i_val}",
+                "param_name": f"random_process.values({i_val})",
                 "distribution": "uniform",
                 "distri_params": [-2., 2.],
                 "skip_evaluation": True
@@ -377,9 +377,9 @@ class Calibration:
 
         # Update the random_process attribute with the current rp config for later likelihood evaluation
         if self.includes_random_process:
-            self.random_process.coefficients = [proposed_params[f"rp_coeff_{i + 1}"] for i in range(self.random_process.order)]
-            self.random_process.noise_sd = proposed_params["rp_noise_sd"]
-            self.random_process.values = [0.] + [proposed_params[f"rp_value_{k}"] for k in range(1, len(self.random_process.values))]
+            self.random_process.coefficients = [proposed_params[f"random_process.coefficients({i})"] for i in range(self.random_process.order)]
+            self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
+            self.random_process.values = [0.] + [proposed_params[f"random_process.values({k})"] for k in range(1, len(self.random_process.values))]
 
         if self._is_first_run:
             self.build_options = dict(enable_validation = True)
@@ -1169,15 +1169,6 @@ def read_current_parameter_values(priors, model_parameters):
         if param_dict["param_name"].endswith("dispersion_param"):
             assert param_dict["distribution"] == "uniform"
             starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
-        elif param_dict["param_name"] not in model_parameters:
-            if param_dict["param_name"].startswith("rp_coeff_"):
-                starting_points[param_dict["param_name"]] = param_dict["distri_params"][0]
-            elif param_dict["param_name"] == "rp_noise_sd":
-                starting_points[param_dict["param_name"]] = param_dict["distri_params"][0]
-            elif param_dict["param_name"].startswith("rp_value_"):
-                starting_points[param_dict["param_name"]] = 0.
-            else:
-                raise ValueError(f"{param_dict['param_name']} not found in default model parameters")
         else:
             starting_points[param_dict["param_name"]] = read_param_value_from_string(
                 model_parameters, param_dict["param_name"]

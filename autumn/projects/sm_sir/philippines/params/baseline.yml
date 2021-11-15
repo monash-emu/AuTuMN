@@ -3,7 +3,7 @@ infectious_seed: 100.
 contact_rate: 0.15
 
 random_process:
-  coefficients: [.5, .5]
+  coefficients: [.8, .2]
   noise_sd: 0.2
-  # values: []
+  values: [0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0]
 

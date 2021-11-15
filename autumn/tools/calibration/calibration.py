@@ -191,7 +191,7 @@ class Calibration:
                 "distribution": "uniform",
                 "distri_params": [-2., 2.],
                 "skip_evaluation": True
-            } for i_val in range(n_values)
+            } for i_val in range(1, n_values)  # the very first value will be fixed to 0.
         ]
 
     def split_priors_by_type(self):
@@ -372,7 +372,6 @@ class Calibration:
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for param_name, value in proposed_params.items():
-            # if not param_name.startswith("rp_"):
             param_updates[param_name] = value
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
 
@@ -380,7 +379,7 @@ class Calibration:
         if self.includes_random_process:
             self.random_process.coefficients = [proposed_params[f"rp_coeff_{i + 1}"] for i in range(self.random_process.order)]
             self.random_process.noise_sd = proposed_params["rp_noise_sd"]
-            self.random_process.values = [proposed_params[f"rp_value_{k}"] for k in range(len(self.random_process.values))]
+            self.random_process.values = [0.] + [proposed_params[f"rp_value_{k}"] for k in range(1, len(self.random_process.values))]
 
         if self._is_first_run:
             self.build_options = dict(enable_validation = True)

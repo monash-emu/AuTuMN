@@ -147,7 +147,7 @@ def convert_random_process_params(params):
     rp_values_indices = [int(key[9:]) for key in params if key.startswith("rp_value_")]
     if len(rp_values_indices) > 0:
         rp_values_indices.sort()
-        params['random_process']["values"] = [params[f"rp_value_{k}"] for k in rp_values_indices]
+        params['random_process']["values"] = [0] + [params[f"rp_value_{k}"] for k in rp_values_indices]
 
         for k in rp_values_indices:
             del params[f"rp_value_{k}"]

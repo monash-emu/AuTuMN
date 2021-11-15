@@ -1,7 +1,5 @@
 description: BASELINE
 
-vic_status: "vic_region_2021"
-
 infection_fatality:
   multiplier: 2.
 

@@ -148,8 +148,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Clinical stratification.
     """
 
-    override_test_region = "Victoria" if \
-        pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS else pop.region
+    is_region_vic = pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS
+    override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(
         params.testing_to_detection, country.iso3, override_test_region, pop.year
@@ -297,7 +297,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable
-        if params.vic_status == VicModelTypes.VIC_REGION_2021:
+        if is_region_vic:
             add_vic_regional_vacc(model, vacc_params, params.population.region, params.time.start)
         elif params.vaccination.standard_supply:
             apply_standard_vacc_coverage(model, vacc_params.lag, params.time.start, params.country.iso3)

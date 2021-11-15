@@ -11,7 +11,6 @@ universal_death_rate: 0. # Compulsory parameter for all models, even though ther
 infectious_seed: 10 # Initial condition for infectious
 contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 seasonal_force: null
-vic_status: "non_vic"
 
 mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
   type: extrapolated

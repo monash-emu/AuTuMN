@@ -6,7 +6,7 @@ from summer import CompartmentalModel
 from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, VACCINATION_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
-    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES
+    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES, get_standard_vacc_coverage
 )
 from autumn.tools.utils.utils import find_closest_value_in_list
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
@@ -210,7 +210,7 @@ def get_piecewise_vacc_rates(
     return rollout_period_times, vaccination_rates
 
 
-def get_piecewise_rollout(start_time: float, end_times: list, vaccination_rates: list) -> Callable:
+def get_piecewise_rollout(start_time: float, end_times: list, vaccination_rates: np.ndarray) -> Callable:
     """
     Turn the vaccination rates and end times into a piecewise roll-out function.
     """
@@ -268,6 +268,26 @@ def add_vic_regional_vacc(
     # Add blank/zero flows to make the output requests simpler
     ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
     add_vacc_flows(model, ineligible_ages, 0.)
+
+
+def apply_standard_vacc_coverage(model: CompartmentalModel, vacc_lag: float, model_start_time: float, iso3: str):
+
+    for agegroup in AGEGROUP_STRATA:
+
+        # Note this must return something for every age group to stop outputs calculation crashing
+        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup)
+
+        # Get the vaccination rate function of time from the coverage values
+        rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
+            coverage_times[0], coverage_times[-1], len(coverage_times), coverage_times, coverage_values, vacc_lag
+        )
+
+        # Apply the vaccination rate function to the model
+        vacc_rate_func = get_piecewise_rollout(model_start_time, rollout_period_times[1:], vaccination_rates)
+        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
+            model.add_transition_flow(
+                name="vaccination", fractional_rate=vacc_rate_func, source=compartment, dest=compartment
+            )
 
 
 def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_strata: str):

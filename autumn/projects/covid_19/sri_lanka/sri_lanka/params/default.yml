@@ -125,3 +125,4 @@ voc_emergence:
     contact_rate_multiplier: 2.2
 
 waning_immunity_duration: 365
+stratify_by_infection_history: true

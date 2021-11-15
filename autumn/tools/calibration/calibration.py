@@ -179,9 +179,8 @@ class Calibration:
         # add prior for noise sd
         self.all_priors.append({
             "param_name": "rp_noise_sd",
-            "distribution": "trunc_normal",
-            "distri_params": [.1, .01],
-            "trunc_range": [0., np.inf],
+            "distribution": "uniform",
+            "distri_params": [0.01, 1.],
         })
 
         # add priors for rp values

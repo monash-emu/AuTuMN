@@ -6,7 +6,7 @@ from summer import CompartmentalModel
 from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination, VACCINATION_STRATA
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
-    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES, get_dummy_vacc_coverage
+    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES, get_standard_vacc_coverage
 )
 from autumn.tools.utils.utils import find_closest_value_in_list
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
@@ -270,16 +270,16 @@ def add_vic_regional_vacc(
     add_vacc_flows(model, ineligible_ages, 0.)
 
 
-def add_dummy_vacc(model: CompartmentalModel, vacc_params: VaccParams, model_start_time: float):
+def apply_standard_vacc_coverage(model: CompartmentalModel, vacc_lag: float, model_start_time: float):
 
     for agegroup in AGEGROUP_STRATA:
 
         # Note this must return something for every age group to stop outputs calculation crashing
-        coverage_times, coverage_values = get_dummy_vacc_coverage(agegroup)
+        coverage_times, coverage_values = get_standard_vacc_coverage(agegroup)
 
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
-            coverage_times[0], coverage_times[-1], len(coverage_times), coverage_times, coverage_values, vacc_params.lag
+            coverage_times[0], coverage_times[-1], len(coverage_times), coverage_times, coverage_values, vacc_lag
         )
 
         # Apply the vaccination rate function to the model

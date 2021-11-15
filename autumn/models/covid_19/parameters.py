@@ -524,7 +524,7 @@ class Vaccination(BaseModel):
     waned: Optional[VaccEffectiveness]
     lag: float
 
-    lka_supply: bool
+    standard_supply: bool
 
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]

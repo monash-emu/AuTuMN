@@ -270,45 +270,6 @@ def add_vic_regional_vacc(
     add_vacc_flows(model, ineligible_ages, 0.)
 
 
-def add_vic2021_supermodel_vacc(model: CompartmentalModel, vacc_params, cluster_strata: str):
-    """
-    *** This appears to be working, but would need to be checked if we went back to using this approach ***
-    """
-
-    for roll_out_component in vacc_params.roll_out_components:
-
-        # Work out eligible model age_groups
-        eligible_age_groups = get_eligible_age_groups(roll_out_component.age_min, roll_out_component.age_max)
-
-        close_enough_age_min = find_closest_value_in_list(VACC_COVERAGE_START_AGES, roll_out_component.age_min) if \
-            roll_out_component.age_min else 0
-        close_enough_age_max = find_closest_value_in_list(VACC_COVERAGE_END_AGES, roll_out_component.age_max) if \
-            roll_out_component.age_max else 89
-
-        for vic_cluster in cluster_strata:
-            cluster_stratum = {"cluster": vic_cluster}
-
-            # Get the cluster-specific historical vaccination numbers
-            coverage_times, coverage_values = get_both_vacc_coverage(
-                vic_cluster.upper(),
-                start_age=close_enough_age_min,
-                end_age=close_enough_age_max,
-            )
-
-            # Stop at the end of the available data, even if the request is later
-            end_time = min((max(coverage_times), roll_out_component.vic_supply.end_time))
-
-            get_vaccination_rate = get_piecewise_vacc_rates(
-                roll_out_component.vic_supply.start_time, end_time, roll_out_component.vic_supply.time_intervals,
-                coverage_times, coverage_values, vacc_params.lag,
-            )
-            add_vacc_flows(model, eligible_age_groups, get_vaccination_rate, extra_stratum=cluster_stratum)
-
-            # Add blank flows to make things simpler when we come to doing the outputs
-            ineligible_ages = set(AGEGROUP_STRATA) - set(eligible_age_groups)
-            add_vacc_flows(model, ineligible_ages, 0., extra_stratum=cluster_stratum)
-
-
 def get_stratum_vacc_effect(params, stratum):
 
     # Parameters to directly pull out

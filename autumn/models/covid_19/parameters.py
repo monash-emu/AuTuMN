@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
+from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -316,17 +316,6 @@ class RegionalClusterStratification(BaseModel):
     mobility: Mobility
 
 
-class VictorianClusterStratification(BaseModel):
-    intercluster_mixing: float
-    contact_rate_multiplier_north_east_metro: float
-    contact_rate_multiplier_west_metro: float
-    contact_rate_multiplier_south_east_metro: float
-    contact_rate_multiplier_barwon_south_west: float
-    contact_rate_multiplier_regional: float
-    metro: MetroClusterStratification
-    regional: RegionalClusterStratification
-
-
 class Vic2021ClusterSeeds(BaseModel):
     north_east_metro: float
     south_east_metro: float
@@ -388,7 +377,7 @@ class VaccCoveragePeriod(BaseModel):
     start_time: float
     end_time: float
 
-    @validator("coverage")
+    @validator("coverage", allow_reuse=True)
     def check_coverage(val):
         if val:
             assert 0. <= val <= 1., f"Requested coverage for phase of vaccination program is not in [0, 1]: {val}"
@@ -428,9 +417,7 @@ class RollOutFunc(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
-        components = \
-            values.get("supply_period_coverage"), \
-            values.get("vic_supply")
+        components = values.get("supply_period_coverage"), values.get("vic_supply")
         has_supply = [int(bool(i_comp)) for i_comp in components]
         msg = f"Roll out request must have exactly one type of request: {sum(has_supply)} requests"
         assert sum(has_supply) == 1, msg
@@ -674,14 +661,6 @@ class Parameters:
     clinical_stratification: ClinicalStratification
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
-    vic_status: str  # Four way switch, using a string
-    victorian_clusters: Optional[VictorianClusterStratification]
     vic_2021_seeding: Optional[Vic2021Seeding]
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]
-
-    @validator("vic_status", allow_reuse=True)
-    def check_status(val):
-        vic_options = VIC_MODEL_OPTIONS
-        assert val in vic_options, f"Invalid option selected for Vic status: {val}"
-        return val

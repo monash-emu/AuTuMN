@@ -270,12 +270,12 @@ def add_vic_regional_vacc(
     add_vacc_flows(model, ineligible_ages, 0.)
 
 
-def apply_standard_vacc_coverage(model: CompartmentalModel, vacc_lag: float, model_start_time: float):
+def apply_standard_vacc_coverage(model: CompartmentalModel, vacc_lag: float, model_start_time: float, iso3: str):
 
     for agegroup in AGEGROUP_STRATA:
 
         # Note this must return something for every age group to stop outputs calculation crashing
-        coverage_times, coverage_values = get_standard_vacc_coverage(agegroup)
+        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup)
 
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(

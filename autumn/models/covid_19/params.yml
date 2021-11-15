@@ -218,7 +218,7 @@ vaccination:
   vacc_part_effect_duration: null
   lag: 0.
   roll_out_components: []
-  lka_supply: false
+  standard_supply: false
 
 vaccination_risk:
   calculate: false

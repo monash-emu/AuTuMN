@@ -98,18 +98,28 @@ def get_modelled_vac_num(input_db, cond_map, dose):
     return df
 
 
-def get_standard_vacc_coverage(age_group):
+def get_standard_vacc_coverage(iso3, age_group):
     """
     Dummy function with arbitrary numbers.
     Would need to be populated with actual values for each age group.
     Note that with the current structure, this function must return something for each age group.
     """
 
-    times = [365, 395, 425, 455, 485, 515, 545, 575, 605, 635, 665, 695, 725]
-    if int(age_group) < 15:
-        values = [0.] * 13
+    if iso3 == "LKA":
+        times = [365, 395, 425, 455, 485, 515, 545, 575, 605, 635, 665, 695, 725]
+        if int(age_group) < 15:
+            values = [0.] * 13
+        else:
+            values = [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9, 0.9, 0.9]
+    elif iso3 == "MMR":
+        times = [365, 395, 425, 455, 485, 515, 545, 575, 605, 635, 665, 695, 725]
+        if int(age_group) < 15:
+            values = [0.] * 13
+        else:
+            values = [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9, 0.9, 0.9]
     else:
-        values = [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9, 0.9, 0.9]
+        raise ValueError(f"No vaccination coverage information available for this country: {iso3}")
+
     return times, values
 
 

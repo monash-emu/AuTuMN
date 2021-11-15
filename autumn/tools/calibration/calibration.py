@@ -626,7 +626,6 @@ class Calibration:
             all_params_dict = {**iterative_samples_dict, **independent_samples}
 
             if is_within_prior_support:
-
                 # Evaluate log-likelihood.
                 proposed_loglike = self.loglikelihood(all_params_dict)
 
@@ -1170,12 +1169,15 @@ def read_current_parameter_values(priors, model_parameters):
         if param_dict["param_name"].endswith("dispersion_param"):
             assert param_dict["distribution"] == "uniform"
             starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
-        elif param_dict["param_name"].startswith("rp_coeff_"):
-            starting_points[param_dict["param_name"]] = param_dict["distri_params"][0]
-        elif param_dict["param_name"] == "rp_noise_sd":
-            starting_points[param_dict["param_name"]] = param_dict["distri_params"][0]
-        elif param_dict["param_name"].startswith("rp_value_"):
-            starting_points[param_dict["param_name"]] = 0.
+        elif param_dict["param_name"] not in model_parameters:
+            if param_dict["param_name"].startswith("rp_coeff_"):
+                starting_points[param_dict["param_name"]] = param_dict["distri_params"][0]
+            elif param_dict["param_name"] == "rp_noise_sd":
+                starting_points[param_dict["param_name"]] = param_dict["distri_params"][0]
+            elif param_dict["param_name"].startswith("rp_value_"):
+                starting_points[param_dict["param_name"]] = 0.
+            else:
+                raise ValueError(f"{param_dict['param_name']} not found in default model parameters")
         else:
             starting_points[param_dict["param_name"]] = read_param_value_from_string(
                 model_parameters, param_dict["param_name"]

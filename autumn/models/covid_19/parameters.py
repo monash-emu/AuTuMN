@@ -316,6 +316,37 @@ class RegionalClusterStratification(BaseModel):
     mobility: Mobility
 
 
+class Vic2021ClusterSeeds(BaseModel):
+    north_east_metro: float
+    south_east_metro: float
+    west_metro: float
+    barwon_south_west: float
+    gippsland: float
+    hume: float
+    loddon_mallee: float
+    grampians: float
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_seeds(cls, values):
+        for region in Region.VICTORIA_SUBREGIONS:
+            region_name = region.replace("-", "_")
+            assert 0. <= values[region_name], f"Seed value for cluster {region_name} is negative"
+        return values
+
+
+class Vic2021Seeding(BaseModel):
+    seed_time: float
+    clusters: Optional[Vic2021ClusterSeeds]
+    seed: Optional[float]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_request(cls, values):
+        n_requests = int(bool(values.get("clusters"))) + int(bool(values.get("seed")))
+        msg = f"Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled: {n_requests}"
+        assert n_requests == 1, msg
+        return values
+
+
 class VocComponent(BaseModel):
     """
     Parameters defining the emergence profile of the Variants of Concerns
@@ -386,7 +417,9 @@ class RollOutFunc(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
-        components = values.get("supply_period_coverage"), values.get("vic_supply")
+        components = \
+            values.get("supply_period_coverage"), \
+            values.get("vic_supply")
         has_supply = [int(bool(i_comp)) for i_comp in components]
         msg = f"Roll out request must have exactly one type of request: {sum(has_supply)} requests"
         assert sum(has_supply) == 1, msg
@@ -629,6 +662,7 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     vic_status: str  # Four way switch, using a string
+    vic_2021_seeding: Optional[Vic2021Seeding]
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]
 

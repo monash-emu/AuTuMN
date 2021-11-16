@@ -98,7 +98,7 @@ def get_modelled_vac_num(input_db, cond_map, dose):
     return df
 
 
-def get_standard_vacc_coverage(iso3, age_group):
+def get_standard_vacc_coverage(iso3, age_group, age_pops):
     """
     Dummy function with arbitrary numbers.
     Would need to be populated with actual values for each age group.
@@ -108,19 +108,71 @@ def get_standard_vacc_coverage(iso3, age_group):
     if iso3 == "LKA":
         times = [365, 395, 425, 455, 485, 515, 545, 575, 605, 635, 665, 695, 725]
         if int(age_group) < 15:
-            values = [0.] * 13
+            coverage_values = [0.] * 13
         else:
-            values = [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9, 0.9, 0.9]
+            coverage_values = [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9, 0.9, 0.9]
     elif iso3 == "MMR":
-        times = [365, 395, 425, 455, 485, 515, 545, 575, 605, 635, 665, 695, 725]
-        if int(age_group) < 15:
-            values = [0.] * 13
-        else:
-            values = [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9, 0.9, 0.9]
-    else:
-        raise ValueError(f"No vaccination coverage information available for this country: {iso3}")
+        times = [
+            393,  # 27th Jan 2021
+            499,  # 13th May
+            522,  # 5th June
+            599,  # 21st Aug
+            606,  # 28th Aug
+            613,  # 4th Sept
+            620,  # 11th Sept
+            627,  # 18th Sept
+            634,  # 25th Sept
+            641,  # 2nd Oct
+            648,  # 9th Oct
+            655,  # 16th Oct
+            662,  # 23rd Oct
+            665,  # 26th Oct
+            670,  # 31st Oct
+            678,  # 8th Nov
+            731,  # 31st December 2021
+            1096,  # 31st December 2022
+        ]
 
-    return times, values
+        # For the adult population
+        if int(age_group) >= 15:
+            adult_denominator = sum(age_pops[3:])
+
+            # Slide 5 of Mya Yee Mon's PowerPoint sent on 12th November - applied to the 15+ population only
+            at_least_one_dose = [
+                104865,
+                1772177,
+                1840758,
+                4456857,
+                4683410,
+                4860264,
+                4944654,
+                5530365,
+                7205913,
+                8390746,
+                9900823,
+                11223285,
+                12387573,
+                12798322,
+                13244996,
+                13905795,
+            ]
+
+            # Convert doses to coverage
+            coverage_values = [i_doses / adult_denominator for i_doses in at_least_one_dose]
+
+            # Add future targets
+            coverage_values += [0.4, 0.7]
+
+        # For the children, no vaccination
+        else:
+            coverage_values = [0.] * len(times)
+
+    else:
+        raise ValueError(f"No standard vaccination coverage information available for this country: {iso3}")
+
+    assert len(times) == len(coverage_values)
+    assert all((0. <= i_coverage <= 1. for i_coverage in coverage_values))
+    return times, coverage_values
 
 
 def get_both_vacc_coverage(cluster: str=None, start_age: int=0, end_age: int=89, dose="dose_1"):

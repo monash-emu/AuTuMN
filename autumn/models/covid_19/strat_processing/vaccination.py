@@ -270,12 +270,14 @@ def add_vic_regional_vacc(
     add_vacc_flows(model, ineligible_ages, 0.)
 
 
-def apply_standard_vacc_coverage(model: CompartmentalModel, vacc_lag: float, model_start_time: float, iso3: str):
+def apply_standard_vacc_coverage(
+        model: CompartmentalModel, vacc_lag: float, model_start_time: float, iso3: str, age_pops,
+):
 
     for agegroup in AGEGROUP_STRATA:
 
         # Note this must return something for every age group to stop outputs calculation crashing
-        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup)
+        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops)
 
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
@@ -286,7 +288,12 @@ def apply_standard_vacc_coverage(model: CompartmentalModel, vacc_lag: float, mod
         vacc_rate_func = get_piecewise_rollout(model_start_time, rollout_period_times[1:], vaccination_rates)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
-                name="vaccination", fractional_rate=vacc_rate_func, source=compartment, dest=compartment
+                name="vaccination",
+                fractional_rate=vacc_rate_func,
+                source=compartment,
+                dest=compartment,
+                source_strata={"agegroup": agegroup, "vaccination": "unvaccinated"},
+                dest_strata={"vaccination": "one_dose"}
             )
 
 

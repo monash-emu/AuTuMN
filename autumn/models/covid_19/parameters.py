@@ -640,7 +640,6 @@ class Parameters:
     infectious_seed: float
     voc_emergence: Optional[Dict[str, VocComponent]]
     age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
-    stratify_by_infection_history: bool
     waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
     vaccination_risk: Optional[VaccinationRisk]
@@ -664,3 +663,9 @@ class Parameters:
     vic_2021_seeding: Optional[Vic2021Seeding]
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]
+
+    @validator("waning_immunity_duration", allow_reuse=True)
+    def check_immunity_duration(val):
+        if type(val) == float:
+            assert val > 0., f"Waning immunity duration request is not positive: {val}"
+        return val

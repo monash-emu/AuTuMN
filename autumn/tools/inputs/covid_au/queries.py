@@ -113,7 +113,8 @@ def get_standard_vacc_coverage(iso3, age_group, age_pops):
             coverage_values = [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9, 0.9, 0.9]
     elif iso3 == "MMR":
         times = [
-            393,  # 27th Jan 2021
+            366,  # 1st Jan 2021
+            393,  # 27th Jan
             499,  # 13th May
             522,  # 5th June
             599,  # 21st Aug
@@ -139,6 +140,7 @@ def get_standard_vacc_coverage(iso3, age_group, age_pops):
 
             # Slide 5 of Mya Yee Mon's PowerPoint sent on 12th November - applied to the 15+ population only
             at_least_one_dose = [
+                0,
                 104865,
                 1772177,
                 1840758,

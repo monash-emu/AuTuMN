@@ -60,19 +60,19 @@ vaccination:
     ve_hospitalisation: 0.7
     ve_death: 0.8
   part_waned:
-    ve_sympt_covid: 0.3
+    ve_sympt_covid: 0.25
     ve_prop_prevent_infection: 0.8
-    ve_infectiousness: 0.5
+    ve_infectiousness: 0.15
     ve_hospitalisation: 0.7
     ve_death: 0.8
   waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_infectiousness: 0.
-    ve_hospitalisation: 0.5
-    ve_death: 0.5
+    ve_hospitalisation: 0.35
+    ve_death: 0.4
   lag: 14
   standard_supply: true
   second_dose_delay: 60.
-  vacc_full_effect_duration: 180.
+  vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.

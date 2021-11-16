@@ -34,10 +34,11 @@ priors = [
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.active.total_period",
         mean=6.5, stdev=0.77, trunc_range=[4.0, np.inf]),
-    UniformPrior("contact_rate", (0.02, 0.12), jumping_stdev=0.01),
+    UniformPrior("contact_rate", (0.035, 0.08), jumping_stdev=0.01),
     UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.012), jumping_stdev=0.002),
     UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.),
+    UniformPrior("vaccination.vacc_part_effect_duration", (180., 730.), jumping_stdev=90.),
     UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", (0.1, 0.3), jumping_stdev=0.05),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.8, 2.2), jumping_stdev=0.1),
 ]

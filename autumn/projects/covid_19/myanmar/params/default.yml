@@ -8,7 +8,7 @@ mixing_matrices:
 
 time:
   start: 198
-  end: 883.
+  end: 1096
 
 mobility:
   microdistancing:
@@ -61,3 +61,4 @@ vaccination:
     ve_death: 0.8
   lag: 14
   standard_supply: true
+  second_dose_delay: 45.

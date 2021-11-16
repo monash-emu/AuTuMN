@@ -61,4 +61,6 @@ vaccination:
     ve_death: 0.8
   lag: 14
   standard_supply: true
-  second_dose_delay: 45.
+  second_dose_delay: 60.
+  vacc_full_effect_duration: 180.
+  vacc_part_effect_duration: 360.

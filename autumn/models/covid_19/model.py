@@ -169,6 +169,24 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
 
     """
+    Variants of concern stratification.
+    """
+
+    if params.voc_emergence:
+        voc_params = params.voc_emergence
+
+        # Build and apply stratification
+        strain_strat = get_strain_strat(voc_params)
+        model.stratify_with(strain_strat)
+
+        # Use importation flows to seed VoC cases
+        for voc_name, voc_values in voc_params.items():
+            voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
+            model.add_importation_flow(
+                f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}
+            )
+
+    """
     Contact tracing stratification.
     """
 
@@ -232,24 +250,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 source_strata=untraced.strata,
                 dest_strata=traced.strata,
                 expected_flow_count=1,
-            )
-
-    """
-    Variants of concern stratification.
-    """
-
-    if params.voc_emergence:
-        voc_params = params.voc_emergence
-
-        # Build and apply stratification
-        strain_strat = get_strain_strat(voc_params)
-        model.stratify_with(strain_strat)
-
-        # Use importation flows to seed VoC cases
-        for voc_name, voc_values in voc_params.items():
-            voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
-            model.add_importation_flow(
-                f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}
             )
 
     """

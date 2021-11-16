@@ -259,16 +259,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if vacc_params:
         dose_delay_params = vacc_params.second_dose_delay
         is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines stratification by dosing
-        is_waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
+        waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
 
         # Work out the strata to be implemented
-        if not is_dosing_active and not is_waning_vacc_immunity:
+        if not is_dosing_active and not waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 2]
-        elif not is_dosing_active and is_waning_vacc_immunity:
+        elif not is_dosing_active and waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 2] + VACCINATION_STRATA[3:]
-        elif is_dosing_active and not is_waning_vacc_immunity:
+        elif is_dosing_active and not waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 3]
-        elif is_dosing_active and is_waning_vacc_immunity:
+        elif is_dosing_active and waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object
@@ -297,12 +297,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 )
 
         # Add the waning immunity progressions through the strata
-        if is_waning_vacc_immunity:
+        if waning_vacc_immunity:
             wane_origin_stratum = Vaccination.VACCINATED if is_dosing_active else Vaccination.ONE_DOSE_ONLY
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
                 model.add_transition_flow(
                     name="part_wane",
-                    fractional_rate=1. / vacc_params.vacc_full_effect_duration,
+                    fractional_rate=1. / waning_vacc_immunity,
                     source=compartment,
                     dest=compartment,
                     source_strata={"vaccination": wane_origin_stratum},

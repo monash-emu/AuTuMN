@@ -1,27 +1,50 @@
 description: BASELINE
 
+country:
+  iso3: MMR
+
+mixing_matrices:
+  source_iso3: CHN
+
 time:
-  start: 455.
+  start: 198
   end: 883.
 
-infectious_seed: 100.
-
-contact_rate: 0.07
+mobility:
+  microdistancing:
+    behaviour:
+      function_type: tanh
+      parameters:
+        shape: 0.04
+        inflection_time: 285.
+        start_asymptote: 0.
+        end_asymptote: 0.22  # Will be calibrated
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
 
 waning_immunity_duration: 365.
 
+voc_emergence:
+  delta:
+    start_time: 365.
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 1.85  # Will be calibrated
+
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.003
+  assumed_cdr_parameter: 0.02  # Ignore, calibrated
   smoothing_period: 7
 
-clinical_stratification:
-  props:
-    hospital:
-      multiplier: 0.15
-
-infection_fatality:
-  multiplier: 0.15
+sojourn:
+  compartment_periods:
+    hospital_early: 7.
+    hospital_late: 7.
+    icu_early: 7.
+    icu_late: 7.
 
 vaccination:
   one_dose:
@@ -44,9 +67,3 @@ vaccination:
         coverage: 0.3
         start_time: 487  # Start May 2021
         end_time: 731  # End 2021
-
-country:
-  iso3: MMR
-
-mixing_matrices:
-  source_iso3: CHN

@@ -1,33 +1,48 @@
 import json
 
+import numpy as np
+
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
+from autumn.tools.calibration.targets import NormalTarget, TruncNormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 
 # Load and configure model parameters
-default_params = base_params.update(build_rel_path("params/default.yml"))
-param_set = ParameterSet(baseline=default_params, scenarios=[])
+mle_path = build_rel_path("params/mle-params.yml")
+default_path = build_rel_path("params/default.yml")
+baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
+
+param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(500)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(500)
+pre_wave_notifications = ts_set.get("notifications").truncate_times(200, 549)
+main_wave_notifications = ts_set.get("notifications").truncate_times(550, 635)
+post_wave_notifications = ts_set.get("notifications").truncate_start_time(636)
+infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(200)
 targets = [
-    NormalTarget(notifications_ts),
-    NormalTarget(infection_deaths_ts),
+    NormalTarget(pre_wave_notifications),
+    NormalTarget(main_wave_notifications),
+    NormalTarget(post_wave_notifications),
 ]
 
 priors = [
-    *COVID_GLOBAL_PRIORS,
-    UniformPrior("contact_rate", (0.02, 0.2), jumping_stdev=0.01),
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.exposed.total_period",
+        mean=5.5, stdev=0.5, trunc_range=[1.0, np.inf]),
+    TruncNormalPrior(
+        "sojourn.compartment_periods_calculated.active.total_period",
+        mean=6.5, stdev=0.77, trunc_range=[4.0, np.inf]),
+    UniformPrior("contact_rate", (0.02, 0.12), jumping_stdev=0.01),
     UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.001, 0.01), jumping_stdev=0.002),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.015), jumping_stdev=0.002),
     UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", (0.1, 0.3), jumping_stdev=0.05),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.85, 2.3), jumping_stdev=0.1),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

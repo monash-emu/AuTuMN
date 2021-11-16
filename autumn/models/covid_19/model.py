@@ -322,21 +322,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Infection history stratification.
     """
 
-    if params.stratify_by_infection_history:
+    if params.waning_immunity_duration:
         history_strat = get_history_strat(params)
         model.stratify_with(history_strat)
 
         # Waning immunity (if requested)
         # Note that this approach would mean that the recovered in the naive class have actually previously had Covid
-        if params.waning_immunity_duration:
-            model.add_transition_flow(
-                name="waning_immunity",
-                fractional_rate=1. / params.waning_immunity_duration,
-                source=Compartment.RECOVERED,
-                dest=Compartment.SUSCEPTIBLE,
-                source_strata={"history": History.NAIVE},
-                dest_strata={"history": History.EXPERIENCED},
-            )
+        model.add_transition_flow(
+            name="waning_immunity",
+            fractional_rate=1. / params.waning_immunity_duration,
+            source=Compartment.RECOVERED,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"history": History.NAIVE},
+            dest_strata={"history": History.EXPERIENCED},
+        )
 
     """
     Set up derived output functions
@@ -361,7 +360,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
 
-    if params.stratify_by_infection_history:
+    if params.waning_immunity_duration:
         outputs_builder.request_history()
     else:
         outputs_builder.request_recovered()

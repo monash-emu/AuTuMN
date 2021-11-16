@@ -640,7 +640,6 @@ class Parameters:
     infectious_seed: float
     voc_emergence: Optional[Dict[str, VocComponent]]
     age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
-    stratify_by_infection_history: bool
     waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
     vaccination_risk: Optional[VaccinationRisk]

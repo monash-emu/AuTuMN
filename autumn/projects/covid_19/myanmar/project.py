@@ -20,14 +20,11 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-pre_wave_notifications = ts_set.get("notifications").truncate_times(200, 549)
-main_wave_notifications = ts_set.get("notifications").truncate_times(550, 635)
-post_wave_notifications = ts_set.get("notifications").truncate_start_time(636)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(200)
+notifications = ts_set.get("notifications")
+infection_deaths = ts_set.get("infection_deaths")
 targets = [
-    NormalTarget(pre_wave_notifications),
-    NormalTarget(main_wave_notifications),
-    NormalTarget(post_wave_notifications),
+    NormalTarget(notifications),
+    # NormalTarget(infection_deaths)
 ]
 
 priors = [
@@ -39,10 +36,10 @@ priors = [
         mean=6.5, stdev=0.77, trunc_range=[4.0, np.inf]),
     UniformPrior("contact_rate", (0.02, 0.12), jumping_stdev=0.01),
     UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.015), jumping_stdev=0.002),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.012), jumping_stdev=0.002),
     UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.),
     UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", (0.1, 0.3), jumping_stdev=0.05),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.85, 2.3), jumping_stdev=0.1),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.8, 2.2), jumping_stdev=0.1),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

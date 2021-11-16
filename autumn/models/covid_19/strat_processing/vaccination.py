@@ -288,7 +288,12 @@ def apply_standard_vacc_coverage(
         vacc_rate_func = get_piecewise_rollout(model_start_time, rollout_period_times[1:], vaccination_rates)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
-                name="vaccination", fractional_rate=vacc_rate_func, source=compartment, dest=compartment
+                name="vaccination",
+                fractional_rate=vacc_rate_func,
+                source=compartment,
+                dest=compartment,
+                source_strata={"agegroup": agegroup, "vaccination": "unvaccinated"},
+                dest_strata={"vaccination": "one_dose"}
             )
 
 

@@ -280,7 +280,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if is_region_vic:
             add_vic_regional_vacc(model, vacc_params, params.population.region, params.time.start)
         elif params.vaccination.standard_supply:
-            apply_standard_vacc_coverage(model, vacc_params.lag, params.time.start, params.country.iso3)
+            apply_standard_vacc_coverage(model, vacc_params.lag, params.time.start, params.country.iso3, total_pops)
         else:
             add_requested_vacc_flows(model, vacc_params)
 

@@ -322,7 +322,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Infection history stratification.
     """
 
-    if params.waning_immunity_duration:
+    is_waning_immunity = bool(params.waning_immunity_duration)
+    if is_waning_immunity:
         history_strat = get_history_strat(params)
         model.stratify_with(history_strat)
 
@@ -360,7 +361,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
 
-    if params.waning_immunity_duration:
+    if is_waning_immunity:
         outputs_builder.request_history()
     else:
         outputs_builder.request_recovered()

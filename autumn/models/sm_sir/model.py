@@ -68,12 +68,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # update random process details based on the model parameters
         rp.update_config_from_params(params.random_process)
 
-        # FIXME: Check with David S. as adding a non-standard attribute to the model is probably not good practice.
-        model.random_process = rp
-
         # Create function returning exp(W), where W is the random process
         rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
 
+        # Create the time-variant contact rate
         def contact_rate(t, computed_values):
             return params.contact_rate * rp_time_variant_func(t)
 

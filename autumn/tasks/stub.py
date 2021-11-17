@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.logger(__name__)
+logger = logging.getLogger(__name__)
 
 def run_stub(**kwargs):
     logger.info(kwargs)

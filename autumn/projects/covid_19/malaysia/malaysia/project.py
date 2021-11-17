@@ -36,7 +36,6 @@ infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(210) #.
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(infection_deaths_ts),
-    NormalTarget(icu_occupancy_ts),
 ]
 
 priors = [

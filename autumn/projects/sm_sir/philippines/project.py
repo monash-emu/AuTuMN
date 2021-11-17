@@ -15,7 +15,7 @@ ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("contact_rate", [0.1, 0.2]),
     UniformPrior("infection_duration", [5, 12]),
-    UniformPrior("infectious_seed", [1, 100]),
+    UniformPrior("infectious_seed", [1, 200]),
 ]
 targets = [
     NormalTarget(

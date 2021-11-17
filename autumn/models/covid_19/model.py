@@ -12,20 +12,17 @@ from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
-    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes, VACCINE_ELIGIBLE_COMPARTMENTS,
-    VACCINATION_STRATA
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VACCINE_ELIGIBLE_COMPARTMENTS, VACCINATION_STRATA
 )
 from .outputs.common import CovidOutputsBuilder
-from .outputs.victoria import VicCovidOutputsBuilder
 from .parameters import Parameters
-from .strat_processing.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, add_vic2021_supermodel_vacc
+from .strat_processing.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, apply_standard_vacc_coverage
 from .strat_processing import tracing
 from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
 from .strat_processing.vaccination import get_second_dose_delay_rate
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
-from .stratifications.cluster import apply_post_cluster_strat_hacks, get_cluster_strat
 from .stratifications.tracing import get_tracing_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
@@ -40,9 +37,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     params = Parameters(**params)
-
-    # Main differences to model structure determined by whether model is Victoria super-model
-    is_vic_super = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
 
     # Create the model object
     model = CompartmentalModel(
@@ -153,8 +147,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Clinical stratification.
     """
 
-    override_test_region = "Victoria" if \
-        pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS else pop.region
+    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS
+    override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(
         params.testing_to_detection, country.iso3, override_test_region, pop.year
@@ -190,61 +184,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             model.add_importation_flow(
                 f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}
             )
-
-    """
-    Infection history stratification.
-    """
-
-    if params.stratify_by_infection_history:
-        history_strat = get_history_strat(params)
-        model.stratify_with(history_strat)
-
-        # Waning immunity (if requested)
-        # Note that this approach would mean that the recovered in the naive class have actually previously had Covid
-        if params.waning_immunity_duration:
-            model.add_transition_flow(
-                name="waning_immunity",
-                fractional_rate=1. / params.waning_immunity_duration,
-                source=Compartment.RECOVERED,
-                dest=Compartment.SUSCEPTIBLE,
-                source_strata={"history": History.NAIVE},
-                dest_strata={"history": History.EXPERIENCED},
-            )
-
-    """
-    Victorian cluster stratification (for the Vic super-models only)
-    """
-
-    if params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021):
-        cluster_strat = get_cluster_strat(params)
-        model.stratify_with(cluster_strat)
-        mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)
-
-    if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-        seed_start_time = params.vic_2021_seeding.seed_time
-
-        for stratum in cluster_strat.strata:
-            seed = params.vic_2021_seeding.clusters.__getattribute__(stratum)
-
-            # Function must be bound in loop with optional argument
-            def model_seed_func(time, computed_values, seed=seed):
-                return seed if seed_start_time < time < seed_start_time + 5. else 0.
-
-            model.add_importation_flow(
-                "seed",
-                model_seed_func,
-                dest=Compartment.EARLY_EXPOSED,
-                dest_strata={"cluster": stratum.replace("-", "_")},
-            )
-
-    elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-        seed_start_time = params.vic_2021_seeding.seed_time
-        seed = params.vic_2021_seeding.seed
-
-        def model_seed_func(time, computed_values, seed=seed):
-            return seed if seed_start_time < time < seed_start_time + 5. else 0.
-
-        model.add_importation_flow("seed", model_seed_func, dest=Compartment.EARLY_EXPOSED)
 
     """
     Contact tracing stratification.
@@ -320,16 +259,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if vacc_params:
         dose_delay_params = vacc_params.second_dose_delay
         is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines stratification by dosing
-        is_waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
+        waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
 
         # Work out the strata to be implemented
-        if not is_dosing_active and not is_waning_vacc_immunity:
+        if not is_dosing_active and not waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 2]
-        elif not is_dosing_active and is_waning_vacc_immunity:
+        elif not is_dosing_active and waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 2] + VACCINATION_STRATA[3:]
-        elif is_dosing_active and not is_waning_vacc_immunity:
+        elif is_dosing_active and not waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 3]
-        elif is_dosing_active and is_waning_vacc_immunity:
+        elif is_dosing_active and waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object
@@ -337,10 +276,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable
-        if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            add_vic2021_supermodel_vacc(model, vacc_params, cluster_strat.strata)  # Considering killing this
-        elif params.vic_status == VicModelTypes.VIC_REGION_2021:
+        if is_region_vic:
             add_vic_regional_vacc(model, vacc_params, params.population.region, params.time.start)
+        elif params.vaccination.standard_supply:
+            apply_standard_vacc_coverage(model, vacc_params.lag, params.time.start, params.country.iso3, total_pops)
         else:
             add_requested_vacc_flows(model, vacc_params)
 
@@ -358,12 +297,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 )
 
         # Add the waning immunity progressions through the strata
-        if is_waning_vacc_immunity:
+        if waning_vacc_immunity:
             wane_origin_stratum = Vaccination.VACCINATED if is_dosing_active else Vaccination.ONE_DOSE_ONLY
             for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
                 model.add_transition_flow(
                     name="part_wane",
-                    fractional_rate=1. / vacc_params.vacc_full_effect_duration,
+                    fractional_rate=1. / waning_vacc_immunity,
                     source=compartment,
                     dest=compartment,
                     source_strata={"vaccination": wane_origin_stratum},
@@ -378,16 +317,31 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     dest_strata={"vaccination": Vaccination.WANED},
                 )
 
-    # Dive into summer internals to over-write mixing matrix
-    if is_vic_super:
-        model._mixing_matrices = [mixing_matrix_function]
+    """
+    Infection history stratification.
+    """
+
+    is_waning_immunity = bool(params.waning_immunity_duration)
+    if is_waning_immunity:
+        history_strat = get_history_strat(params)
+        model.stratify_with(history_strat)
+
+        # Waning immunity (if requested)
+        # Note that this approach would mean that the recovered in the naive class have actually previously had Covid
+        model.add_transition_flow(
+            name="waning_immunity",
+            fractional_rate=1. / params.waning_immunity_duration,
+            source=Compartment.RECOVERED,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"history": History.NAIVE},
+            dest_strata={"history": History.EXPERIENCED},
+        )
 
     """
     Set up derived output functions
     """
 
-    outputs_builder = VicCovidOutputsBuilder(model, COMPARTMENTS) if \
-        is_vic_super else CovidOutputsBuilder(model, COMPARTMENTS)
+    outputs_builder = CovidOutputsBuilder(model, COMPARTMENTS)
 
     outputs_builder.request_incidence()
     outputs_builder.request_infection()
@@ -406,7 +360,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
 
-    if params.stratify_by_infection_history:
+    if is_waning_immunity:
         outputs_builder.request_history()
     else:
         outputs_builder.request_recovered()

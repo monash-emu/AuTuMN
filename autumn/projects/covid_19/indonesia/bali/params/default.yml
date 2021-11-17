@@ -12,7 +12,6 @@ population:
 
 infectious_seed: 250.
 
-stratify_by_infection_history: true
 waning_immunity_duration: 240.
 
 time:

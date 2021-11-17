@@ -444,13 +444,13 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_output_for_compartments(
                 name=recovered_name,
                 compartments=[Compartment.RECOVERED],
-                strata={"agegroup": agegroup, "history": History.EXPERIENCED},
+                strata={"history": History.NAIVE, "agegroup": agegroup},
                 save_results=False,
             )
             self.model.request_output_for_compartments(
                 name=experienced_name,
                 compartments=COMPARTMENTS,
-                strata={"agegroup": agegroup, "history": History.NAIVE},
+                strata={"history": History.EXPERIENCED, "agegroup": agegroup},
                 save_results=False,
             )
             self.model.request_function_output(

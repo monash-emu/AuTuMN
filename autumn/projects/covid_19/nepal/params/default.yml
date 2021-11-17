@@ -12,7 +12,6 @@ mixing_matrices:
 country:
   iso3: NPL
 
-stratify_by_infection_history: true
 waning_immunity_duration: 240.
 
 testing_to_detection:

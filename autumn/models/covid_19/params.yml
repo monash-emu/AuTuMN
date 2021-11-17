@@ -3,7 +3,6 @@
 description: BASELINE
 
 voc_emergence: null # Emergence of Variants of Concern
-stratify_by_infection_history: false # Note that the current code may not allocate imported cases to the right stratum
 waning_immunity_duration: null
 rel_prop_symptomatic_experienced: null
 infect_death: 0. # Compulsory parameter that is completely overwritten in stratification, rather than being modified
@@ -11,7 +10,6 @@ universal_death_rate: 0. # Compulsory parameter for all models, even though ther
 infectious_seed: 10 # Initial condition for infectious
 contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 seasonal_force: null
-vic_status: "non_vic"
 
 mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
   type: extrapolated
@@ -168,15 +166,11 @@ mobility:
       grocery_and_pharmacy: 0.25
       parks: 0.25
       transit_stations: 0.25
-    home:
-      residential: 1.
   smooth_google_data: false  # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
 
 testing_to_detection: null
-
-victorian_clusters: null
 
 # Vaccination-related
 vaccination:
@@ -218,6 +212,7 @@ vaccination:
   vacc_part_effect_duration: null
   lag: 0.
   roll_out_components: []
+  standard_supply: false
 
 vaccination_risk:
   calculate: false

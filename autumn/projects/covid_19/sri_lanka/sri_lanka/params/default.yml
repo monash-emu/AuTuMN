@@ -44,9 +44,9 @@ vaccination:
     ve_infectiousness: 0.
     ve_hospitalisation: 0.35
     ve_death: 0.4
-  standard_supply: true # to get the timeseries of vaccine coverage
+  standard_supply: false # to get the timeseries of vaccine coverage
   lag: 14
-  second_dose_delay: 60.
+  second_dose_delay: 30.
   vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.
   roll_out_components:

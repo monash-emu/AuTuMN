@@ -56,7 +56,7 @@ priors = [
     UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.6]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.8, 1.5]),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.001, 0.008]),
-    UniformPrior("infection_fatality.multiplier", [0.5, 1.25]),
+    UniformPrior("infection_fatality.multiplier", [0.1, 1.2]),
     # VoC parameters
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.7]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),

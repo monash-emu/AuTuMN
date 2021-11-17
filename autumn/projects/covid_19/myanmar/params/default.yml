@@ -1,28 +1,50 @@
 description: BASELINE
 
+country:
+  iso3: MMR
+
+mixing_matrices:
+  source_iso3: CHN
+
 time:
-  start: 455.
-  end: 883.
+  start: 198
+  end: 1096
 
-infectious_seed: 100.
+mobility:
+  microdistancing:
+    behaviour:
+      function_type: tanh
+      parameters:
+        shape: 0.04
+        inflection_time: 285.
+        start_asymptote: 0.
+        end_asymptote: 0.22  # Will be calibrated
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
 
-contact_rate: 0.07
-
-stratify_by_infection_history: true
 waning_immunity_duration: 365.
+
+voc_emergence:
+  delta:
+    start_time: 365.
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 1.85  # Will be calibrated
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.003
+  assumed_cdr_parameter: 0.02  # Ignore, calibrated
   smoothing_period: 7
 
-clinical_stratification:
-  props:
-    hospital:
-      multiplier: 0.15
-
-infection_fatality:
-  multiplier: 0.15
+sojourn:
+  compartment_periods:
+    hospital_early: 7.
+    hospital_late: 7.
+    icu_early: 7.
+    icu_late: 7.
 
 vaccination:
   one_dose:
@@ -37,17 +59,20 @@ vaccination:
     ve_infectiousness: 0.3
     ve_hospitalisation: 0.7
     ve_death: 0.8
+  part_waned:
+    ve_sympt_covid: 0.25
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness: 0.15
+    ve_hospitalisation: 0.7
+    ve_death: 0.8
+  waned:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_infectiousness: 0.
+    ve_hospitalisation: 0.35
+    ve_death: 0.4
   lag: 14
-  second_dose_delay: 50.
-  roll_out_components:
-    - age_min: 10
-      supply_period_coverage:
-        coverage: 0.3
-        start_time: 487  # Start May 2021
-        end_time: 731  # End 2021
-
-country:
-  iso3: MMR
-
-mixing_matrices:
-  source_iso3: CHN
+  standard_supply: true
+  second_dose_delay: 60.
+  vacc_full_effect_duration: 90.
+  vacc_part_effect_duration: 360.

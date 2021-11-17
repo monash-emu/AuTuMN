@@ -3,7 +3,7 @@ infection_duration: 7.789265671525521
 infectious_seed: 99.87083766796485
 random_process.coefficients(0): 0.7999135547645141
 random_process.coefficients(1): 0.18006507001891867
-random_process.noise_sd: 0.11550537744531233
+random_process.noise_sd: 0.5
 random_process.values(1): 0.030340903239811645
 random_process.values(10): -0.39626005571467293
 random_process.values(11): -0.236421400375751

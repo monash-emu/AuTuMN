@@ -2,7 +2,7 @@ from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model
+from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
 # Load and configure model parameters.
@@ -23,10 +23,9 @@ targets = [
     )
 ]
 
-# FIXME: this should not be necessary
 if baseline_params.to_dict()["activate_random_process"]:
-    m = build_model(baseline_params.to_dict())
-    rp = m.random_process
+    time_params = baseline_params.to_dict()["time"]
+    rp = set_up_random_process(time_params['start'], time_params['end'])
 else:
     rp = None
 

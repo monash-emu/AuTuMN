@@ -163,7 +163,11 @@ def get_standard_vacc_coverage(iso3, age_group, age_pops):
             coverage_values = [i_doses / adult_denominator for i_doses in at_least_one_dose]
 
             # Add future targets
-            coverage_values += [0.4, 0.7]
+            target_inflation_for_age = sum(age_pops) / adult_denominator
+            target_all_age_coverage = [0.4, 0.7]
+            target_adult_coverage = [target_inflation_for_age * i_cov for i_cov in target_all_age_coverage]
+            assert all([0. <= i_cov <= 1. for i_cov in target_adult_coverage])
+            coverage_values += target_adult_coverage
 
         # For the children, no vaccination
         else:

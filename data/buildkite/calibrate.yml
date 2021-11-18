@@ -24,6 +24,8 @@ steps:
       value: covid_19:gippsland
     - label: Grampians (covid_19)
       value: covid_19:grampians
+    - label: Hanoi (covid_19)
+      value: covid_19:hanoi
     - label: Ho_Chi_Minh_City (covid_19)
       value: covid_19:ho_chi_minh_city
     - label: Hume (covid_19)
@@ -62,8 +64,6 @@ steps:
       value: covid_19:spain
     - label: Sri_Lanka (covid_19)
       value: covid_19:sri_lanka
-    - label: Sri_Lanka_Wp (covid_19)
-      value: covid_19:sri_lanka_wp
     - label: Sweden (covid_19)
       value: covid_19:sweden
     - label: United Kingdom (covid_19)
@@ -74,8 +74,6 @@ steps:
       value: covid_19:west-metro
     - label: Philippines (sir_example)
       value: sir_example:philippines
-    - label: Victoria_2020 (sir_example)
-      value: sir_example:victoria_2020
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)

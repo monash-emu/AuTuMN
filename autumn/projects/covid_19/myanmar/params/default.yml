@@ -44,7 +44,7 @@ sojourn:
     hospital_early: 7.
     hospital_late: 7.
     icu_early: 7.
-    icu_late: 7.
+    icu_late: 10.
 
 vaccination:
   one_dose:

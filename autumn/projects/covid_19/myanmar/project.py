@@ -34,7 +34,7 @@ priors = [
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.active.total_period",
         mean=6.5, stdev=0.77, trunc_range=[4.0, np.inf]),
-    UniformPrior("contact_rate", (0.035, 0.08), jumping_stdev=0.01),
+    UniformPrior("contact_rate", (0.048, 0.08), jumping_stdev=0.01),  # Tighten up the lower limit to avoid wild runs
     UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.012), jumping_stdev=0.002),
     UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.),

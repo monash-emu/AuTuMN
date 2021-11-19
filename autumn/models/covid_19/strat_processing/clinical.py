@@ -174,28 +174,6 @@ def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]
     return adjustments
 
 
-def process_ifrs(
-        raw_ifr_props: list, ifr_adjuster: float, top_bracket_overwrite: float, country: Country, pop: Population
-) -> list:
-    """
-    This just provides the final IFRs from the raw IFRs in the same data structure as they came, except that the list
-    is one element shorter to match the age brackets of the model.
-    Numerator: deaths, denominator: all infected.
-    """
-
-    # Scale raw IFR values according to adjuster parameter
-    adjusted_ifr_props = apply_odds_ratio_to_props(raw_ifr_props, ifr_adjuster)
-
-    # Convert from provided age groups to model age groups
-    final_ifr_props = convert_ifr_agegroups(adjusted_ifr_props, country.iso3, pop.region, pop.year)
-
-    # Over-write the oldest age bracket, if that's what's being done in the model
-    if top_bracket_overwrite:
-        final_ifr_props[-1] = top_bracket_overwrite
-
-    return final_ifr_props
-
-
 def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: list, icu_mortality_prop: float) -> dict:
     """
     Calculate death proportions: find where the absolute number of deaths accrue.
@@ -240,7 +218,6 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
 def get_all_adjustments(
         clinical_params: ClinicalStratification, country: Country, pop: Population, raw_ifr_props: list,
         sojourn: Sojourn, ifr_adjuster: float, sympt_adjuster: float, hospital_adjuster: float,
-        top_bracket_overwrite=None,
 ) -> Dict[str, dict]:
     """
     Preliminary processing.
@@ -288,7 +265,11 @@ def get_all_adjustments(
         Clinical.ICU: 1. / sojourn.compartment_periods["icu_late"],
     }
 
-    final_ifr_props = process_ifrs(raw_ifr_props, ifr_adjuster, top_bracket_overwrite, country, pop)
+    # Scale raw IFR values according to adjuster parameter
+    adjusted_ifr_props = apply_odds_ratio_to_props(raw_ifr_props, ifr_adjuster)
+
+    # Convert from provided age groups to model age groups
+    final_ifr_props = convert_ifr_agegroups(adjusted_ifr_props, country.iso3, pop.region, pop.year)
 
     # The proportion of those entering each stratum who die. Numerator: deaths in stratum, denominator: everyone
     abs_death_props = get_absolute_death_proportions(abs_props, final_ifr_props, clinical_params.icu_mortality_prop)

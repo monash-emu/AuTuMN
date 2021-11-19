@@ -45,7 +45,7 @@ def get_clinical_strat(params: Parameters):
     adjs = get_all_adjustments(
         clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
         params.infection_fatality.multiplier, params.clinical_stratification.props.symptomatic.multiplier,
-        params.clinical_stratification.props.hospital.multiplier, params.infection_fatality.top_bracket_overwrite,
+        params.clinical_stratification.props.hospital.multiplier,
     )
 
     # Assign all the adjustments to the summer model

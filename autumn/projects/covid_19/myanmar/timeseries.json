@@ -16,6 +16,23 @@
       0.99
     ]
   },
+  "cdr": {
+    "title": "Case detection rate",
+    "output_key": "cdr",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      0.9,
+      0.975,
+      0.99
+    ]
+  },
   "notifications": {
     "output_key": "notifications",
     "title": "Daily number of confirmed cases",
@@ -2763,6 +2780,23 @@
   "proportion_seropositive": {
     "title": "Seropositive proportion",
     "output_key": "proportion_seropositive",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      0.9,
+      0.975,
+      0.99
+    ]
+  },
+  "prop_incidence_strain_delta": {
+    "title": "Proportion Delta",
+    "output_key": "prop_incidence_strain_delta",
     "times": [],
     "values": [],
     "quantiles": [

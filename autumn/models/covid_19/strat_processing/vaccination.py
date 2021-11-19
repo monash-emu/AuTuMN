@@ -18,6 +18,7 @@ from autumn.tools.utils.utils import find_closest_value_in_list
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
+from autumn.tools.inputs.covid_mmr.queries import base_mmr_vac_doses
 
 
 
@@ -402,14 +403,20 @@ def get_standard_vacc_coverage(iso3, agegroup, age_pops, params):
 
 def get_mmr_vac_coverage(age_group, age_pops, params):
 
-    times = params.vaccination.one_dose.times # extract the time points
+    times, at_least_one_dose = base_mmr_vac_doses()
+
+    has_user_input = hasattr(params.vaccination.one_dose, "times" ) and hasattr(params.vaccination.one_dose, 'values')
+        
+    if has_user_input:
+        times.extend(params.vaccination.one_dose.times)
+        at_least_one_dose.extend(params.vaccination.one_dose.values)
 
     # For the adult population
     if int(age_group) >= 15:
         adult_denominator = sum(age_pops[3:])
 
         # Slide 5 of Mya Yee Mon's PowerPoint sent on 12th November - applied to the 15+ population only
-        at_least_one_dose = params.vaccination.one_dose.values # extract the dose number
+        # at_least_one_dose = params.vaccination.one_dose.values # extract the dose number
 
         # Convert doses to coverage
         coverage_values = [i_doses / adult_denominator for i_doses in at_least_one_dose]

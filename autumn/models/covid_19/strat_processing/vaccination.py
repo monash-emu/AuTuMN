@@ -317,7 +317,8 @@ def apply_standard_vacc_coverage(
     vacc_lag: float,
     model_start_time: float,
     iso3: str,
-    age_pops,    
+    age_pops,
+    params,    
 ):
 
     for agegroup in AGEGROUP_STRATA:

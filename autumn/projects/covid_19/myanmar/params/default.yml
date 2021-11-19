@@ -44,15 +44,15 @@ sojourn:
     hospital_early: 7.
     hospital_late: 7.
     icu_early: 7.
-    icu_late: 7.
+    icu_late: 10.
 
 vaccination:
   one_dose:
-    ve_sympt_covid: 0.3
+    ve_sympt_covid: 0.28
     ve_prop_prevent_infection: 0.8
     ve_infectiousness_ratio: 0.5
-    ve_hospitalisation: 0.7
-    ve_death: 0.8
+    ve_hospitalisation: 0.42
+    ve_death: 0.42
     times: 
       - 731  # 31st December 2021
       - 1096  # 31st December 2022
@@ -60,23 +60,23 @@ vaccination:
       - 13244996
       - 13905795
   fully_vaccinated:
-    ve_sympt_covid: 0.5
+    ve_sympt_covid: 0.56
     ve_prop_prevent_infection: 0.8
     ve_infectiousness: 0.3
-    ve_hospitalisation: 0.7
-    ve_death: 0.8
+    ve_hospitalisation: 0.84
+    ve_death: 0.84
   part_waned:
-    ve_sympt_covid: 0.25
+    ve_sympt_covid: 0.28
     ve_prop_prevent_infection: 0.8
     ve_infectiousness: 0.15
-    ve_hospitalisation: 0.7
-    ve_death: 0.8
+    ve_hospitalisation: 0.84
+    ve_death: 0.84
   waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_infectiousness: 0.
-    ve_hospitalisation: 0.35
-    ve_death: 0.4
+    ve_hospitalisation: 0.5
+    ve_death: 0.5
   lag: 14
   standard_supply: true
   second_dose_delay: 60.

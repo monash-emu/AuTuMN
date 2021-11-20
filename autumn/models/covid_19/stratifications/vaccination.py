@@ -40,7 +40,7 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
             params.sojourn, ifr_adjuster, sympt_adjuster, hosp_adjuster
         )
-        flow_adjs = update_adjustments_for_strat(stratum, flow_adjs, severity_adjs)
+        update_adjustments_for_strat(stratum, flow_adjs, severity_adjs)
     stratification = add_clinical_adjustments_to_strat(stratification, flow_adjs)
 
     # Vaccination effect against infection

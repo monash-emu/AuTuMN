@@ -321,8 +321,6 @@ def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict,
                 modification = {stratum_to_modify: adjustments[transition][agegroup][clinical_stratum]}
                 flow_adjustments[agegroup][clinical_stratum][transition].update(modification)
 
-    return flow_adjustments
-
 
 def add_clinical_adjustments_to_strat(strat: Stratification, flow_adjs: Dict[str, dict]) -> Stratification:
     """

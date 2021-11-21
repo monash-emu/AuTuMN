@@ -287,15 +287,20 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_blank_adjustments_for_strat(flow_adjs: dict) -> Dict[str, dict]:
+def get_blank_adjustments_for_strat(transitions) -> Dict[str, dict]:
     """
-    Start from an essentially blank set of flow adjustments, with Nones for the unadjusted stratum.
+    Start from a blank set of flow adjustments.
     """
 
-    all_adjusted_transitions = [PROGRESS, *AGE_CLINICAL_TRANSITIONS]
+    flow_adjs = {}
     for agegroup in AGEGROUP_STRATA:
+        flow_adjs[agegroup] = {}
         for clinical_stratum in CLINICAL_STRATA:
-            flow_adjs[agegroup][clinical_stratum] = {transition: {} for transition in all_adjusted_transitions}
+            flow_adjs[agegroup][clinical_stratum] = {}
+            for transition in transitions:
+                flow_adjs[agegroup][clinical_stratum][transition] = {}
+
+    return flow_adjs
 
 
 def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict, adjustments: dict) -> Dict[str, dict]:
@@ -317,7 +322,9 @@ def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict,
                 flow_adjustments[agegroup][clinical_stratum][transition].update(modification)
 
 
-def add_clinical_adjustments_to_strat(strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum) -> Stratification:
+def add_clinical_adjustments_to_strat(
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum
+) -> Stratification:
     """
     Add the clinical adjustments defined in the previous functions to a stratification.
     """

@@ -342,5 +342,3 @@ def add_clinical_adjustments_to_strat(strat: Stratification, flow_adjs: Dict[str
             # *** Must be source
             recovery_adjs = flow_adjs[agegroup][clinical_stratum][RECOVERY]
             strat.add_flow_adjustments(RECOVERY, recovery_adjs, source_strata=working_strata)
-
-    return strat

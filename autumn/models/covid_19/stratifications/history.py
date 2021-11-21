@@ -37,6 +37,6 @@ def get_history_strat(params: Parameters) -> Stratification:
     flow_adjs = {agegroup: {} for agegroup in AGEGROUP_STRATA}
     get_blank_adjustments_for_strat(flow_adjs, History.NAIVE)
     update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs)
-    history_strat = add_clinical_adjustments_to_strat(history_strat, flow_adjs)
+    add_clinical_adjustments_to_strat(history_strat, flow_adjs)
 
     return history_strat

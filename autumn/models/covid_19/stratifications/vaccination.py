@@ -2,7 +2,9 @@ from typing import List
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
+from autumn.models.covid_19.constants import (
+    AGE_CLINICAL_TRANSITIONS, PROGRESS, COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
+)
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
@@ -30,7 +32,7 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
     ve_infection, ve_severity, sympt_adjusters, hosp_adjusters, ifr_adjusters, vacc_effects = {}, {}, {}, {}, {}, {}
 
     # Get vaccination effect parameters in the form needed for the model
-    flow_adjs = get_blank_adjustments_for_strat(all_strata[0])
+    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
     vacc_strata = all_strata[1:]  # Affected strata are all but the first
     for stratum in vacc_strata:
         vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(params, stratum)
@@ -40,8 +42,8 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
             params.sojourn, ifr_adjuster, sympt_adjuster, hosp_adjuster
         )
-        flow_adjs = update_adjustments_for_strat(stratum, flow_adjs, severity_adjs)
-    stratification = add_clinical_adjustments_to_strat(stratification, flow_adjs)
+        update_adjustments_for_strat(stratum, flow_adjs, severity_adjs)
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED)
 
     # Vaccination effect against infection
     infection_adjustments = {all_strata[0]: None}

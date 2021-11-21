@@ -1,7 +1,9 @@
 from summer import Stratification
 
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.constants import COMPARTMENTS, History, HISTORY_STRATA
+from autumn.models.covid_19.constants import (
+    AGE_CLINICAL_TRANSITIONS, PROGRESS, COMPARTMENTS, History, HISTORY_STRATA
+)
 from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
     update_adjustments_for_strat
@@ -33,8 +35,8 @@ def get_history_strat(params: Parameters) -> Stratification:
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
         params.sojourn, severity_adjuster_experienced, severity_adjuster_experienced, 1.
     )
-    flow_adjs = get_blank_adjustments_for_strat(History.NAIVE)
-    flow_adjs = update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs)
-    history_strat = add_clinical_adjustments_to_strat(history_strat, flow_adjs)
+    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
+    update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs)
+    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE)
 
     return history_strat

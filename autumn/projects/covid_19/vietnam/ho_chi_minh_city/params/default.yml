@@ -99,58 +99,58 @@ vaccination:
   second_dose_delay:  32.67 # weighted average waiting time between two doses
   lag: 14
   roll_out_components: # --> stratify by time
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: .001130
+        coverage: .001235
         start_time: 485 # 29th April 2021
         end_time: 518 # 01st June 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: .005848
+        coverage: .006387
         start_time: 518 # 01st June 2021
         end_time: 545 # 28th June 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.001190
+        coverage: 0.001301
         start_time: 545 # 28th June 2021
         end_time: 556 # 09th July 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.001768
+        coverage: 0.001932
         start_time: 556 # 09th July 2021
         end_time: 572 # 25th July 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.0263
+        coverage: 0.0288
         start_time: 572 # 25th July 2021
         end_time: 593 # 15th Aug 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.0354
+        coverage: 0.0388
         start_time: 593 # 15th Aug 2021
         end_time: 610 # 01st Sep 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.1797
+        coverage: 0.1976
         start_time: 610 # 01st Sep 2021
         end_time: 624 # 15th Sep 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.2637
+        coverage: 0.2965
         start_time: 624 # 15th Sep 2021
         end_time: 640 # 01st Oct 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.2112
+        coverage: 0.2485
         start_time: 640 # 01st Oct 2021
         end_time: 654 # 15th Oct 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.0499
+        coverage: 0.0616
         start_time: 654 # 15th Oct 2021
         end_time: 670 # 31st Oct 2021
-    - age_min: 15
+    - age_min: 20
       supply_period_coverage:
-        coverage: 0.0376
+        coverage: 0.0470
         start_time: 670 # 31st Oct 2021
         end_time: 685 # 15th Nov 2021

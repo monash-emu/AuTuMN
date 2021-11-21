@@ -287,20 +287,16 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_blank_adjustments_for_strat(unaffected_stratum: str) -> Dict[str, dict]:
+def get_blank_adjustments_for_strat(flow_adjs: dict, unaffected_stratum: str) -> Dict[str, dict]:
     """
     Start from an essentially blank set of flow adjustments, with Nones for the unadjusted stratum.
     """
 
-    flow_adjs = {}
     all_adjusted_transitions = [PROGRESS, *AGE_CLINICAL_TRANSITIONS]
     for agegroup in AGEGROUP_STRATA:
-        flow_adjs[agegroup] = {}
         for clinical_stratum in CLINICAL_STRATA:
             blank_transition_adj = {transition: {unaffected_stratum: None} for transition in all_adjusted_transitions}
             flow_adjs[agegroup][clinical_stratum] = blank_transition_adj
-
-    return flow_adjs
 
 
 def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict, adjustments: dict) -> Dict[str, dict]:

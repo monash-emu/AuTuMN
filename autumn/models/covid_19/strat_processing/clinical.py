@@ -328,31 +328,19 @@ def add_clinical_adjustments_to_strat(strat: Stratification, flow_adjs: Dict[str
             working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
 
             # *** Must be dest
-            strat.add_flow_adjustments(
-                INFECTIOUSNESS_ONSET,
-                flow_adjs[agegroup][clinical_stratum][INFECTIOUSNESS_ONSET],
-                dest_strata=working_strata
-            )
+            infectious_onset_adjs = flow_adjs[agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
+            strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
             # Can be either source or dest
-            strat.add_flow_adjustments(
-                PROGRESS,
-                flow_adjs[agegroup][clinical_stratum][PROGRESS],
-                source_strata=working_strata
-            )
+            progress_adjs = flow_adjs[agegroup][clinical_stratum][PROGRESS]
+            strat.add_flow_adjustments(PROGRESS, progress_adjs, source_strata=working_strata)
 
             # *** Must be source
-            strat.add_flow_adjustments(
-                INFECT_DEATH,
-                flow_adjs[agegroup][clinical_stratum][INFECT_DEATH],
-                source_strata=working_strata
-            )
+            infect_death_adjs = flow_adjs[agegroup][clinical_stratum][INFECT_DEATH]
+            strat.add_flow_adjustments(INFECT_DEATH, infect_death_adjs, source_strata=working_strata)
 
             # *** Must be source
-            strat.add_flow_adjustments(
-                RECOVERY,
-                flow_adjs[agegroup][clinical_stratum][RECOVERY],
-                source_strata=working_strata
-            )
+            recovery_adjs = flow_adjs[agegroup][clinical_stratum][RECOVERY]
+            strat.add_flow_adjustments(RECOVERY, recovery_adjs, source_strata=working_strata)
 
     return strat

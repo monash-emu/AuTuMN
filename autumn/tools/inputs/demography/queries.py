@@ -181,7 +181,7 @@ def get_population_by_agegroup(
     # Inflate population from 9 to 12 million to account for workers coming from other regions
     # Information communicated by Hoang Anh via Slack on 19 Aug 2021
     if region == "Ho Chi Minh City":
-        population = [p * 12. / 9. for p in population]
+        population = [p * 11. / 9. for p in population]
 
     return [int(p) for p in population]
 

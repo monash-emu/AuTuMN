@@ -208,7 +208,7 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
             ifr_prop - abs_death_props[Clinical.ICU][age_idx] - abs_death_props[Clinical.HOSPITAL_NON_ICU][age_idx]
         abs_death_props[Clinical.NON_SYMPT][age_idx] = max(0., target_asympt_mortality)
 
-        # Double-check everything sums up properly - it should be impossible for this to fail, but just being paranoid
+        # Double-check everything sums up properly - it should be impossible for this to fail
         total_death_props = sum([abs_death_props[stratum][age_idx] for stratum in FIXED_STRATA])
         assert round(total_death_props, ALLOWED_ROUNDING_ERROR) == round(ifr_prop, ALLOWED_ROUNDING_ERROR)
 
@@ -275,7 +275,7 @@ def get_all_adjustments(
     abs_death_props = get_absolute_death_proportions(abs_props, final_ifr_props, clinical_params.icu_mortality_prop)
 
     # The resulting proportion. Numerator: deaths in stratum, denominator: people entering stratum
-    # This could be over-written here by the the probability of death given ICU or hospital admission if preferred
+    # This could be over-written here by the probability of death given ICU or hospital admission if preferred
     rel_death_props = {strat: np.array(abs_death_props[strat]) / np.array(abs_props[strat]) for strat in FIXED_STRATA}
 
     # Convert to rates and then to summer Overwrite objects

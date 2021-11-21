@@ -13,7 +13,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 from autumn.models.covid_19.strat_processing.vaccination import get_stratum_vacc_effect
 
 
-def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratification:
+def get_vaccination_strat(params: Parameters, all_strata: List, vocs) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
@@ -32,18 +32,23 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
     ve_infection, ve_severity, sympt_adjusters, hosp_adjusters, ifr_adjusters, vacc_effects = {}, {}, {}, {}, {}, {}
 
     # Get vaccination effect parameters in the form needed for the model
-    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
+    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS], vocs)
     vacc_strata = all_strata[1:]  # Affected strata are all but the first
-    for stratum in vacc_strata:
-        vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(params, stratum)
 
-        # Get and apply the severity modifications (in the same way as for history stratification)
-        severity_adjs = get_all_adjustments(
-            params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjuster, sympt_adjuster, hosp_adjuster
-        )
-        update_adjustments_for_strat(stratum, flow_adjs, severity_adjs)
-    add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED)
+    voc_severity = {voc: 1. for voc in vocs}
+    voc_severity["delta"] = 2.
+
+    for stratum in vacc_strata:
+        for voc in vocs:
+            vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(params, stratum)
+
+            # Get and apply the severity modifications (in the same way as for history stratification)
+            severity_adjs = get_all_adjustments(
+                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+                params.sojourn, ifr_adjuster, sympt_adjuster, hosp_adjuster
+            )
+            update_adjustments_for_strat(stratum, flow_adjs, severity_adjs, vocs)
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED, vocs)
 
     # Vaccination effect against infection
     infection_adjustments = {all_strata[0]: None}

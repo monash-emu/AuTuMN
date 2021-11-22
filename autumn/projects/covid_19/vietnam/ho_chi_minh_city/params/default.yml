@@ -99,11 +99,11 @@ vaccination:
     ve_hospitalisation: 0.8856 # weighted average
     ve_death: 0.9004 # weighted average
   part_waned:
-    ve_sympt_covid: 0.00
-    ve_prop_prevent_infection: 0.00
-    ve_infectiousness: 0.00
-    ve_hospitalization: 0.00
-    ve_death: 0.00
+    ve_sympt_covid: 0.4879
+    ve_prop_prevent_infection: 0.95
+    ve_infectiousness: 0.2285
+    ve_hospitalization: 0.7453
+    ve_death: 0.7654
   waned:
     ve_sympt_covid: 0.00
     ve_prop_prevent_infection: 0.00

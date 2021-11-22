@@ -90,7 +90,7 @@ vaccination:
     ve_sympt_covid: 0.5122
     ve_prop_prevent_infection_ratio: 0.9 # one dose AZ has a quite lower efficacy towards infection
     ve_infectiousness_ratio: 0.3125
-    ve_hospitalization: 0.8107
+    ve_hospitalisation: 0.8107
     ve_death: 0.8922
   fully_vaccinated:
     ve_sympt_covid: 0.6474 # weighted average
@@ -102,13 +102,13 @@ vaccination:
     ve_sympt_covid: 0.4879
     ve_prop_prevent_infection: 0.95
     ve_infectiousness: 0.2285
-    ve_hospitalization: 0.7453
+    ve_hospitalisation: 0.7453
     ve_death: 0.7654
   waned:
     ve_sympt_covid: 0.00
     ve_prop_prevent_infection: 0.00
     ve_infectiousness: 0.00
-    ve_hospitalization: 0.5 # Myanmar
+    ve_hospitalisation: 0.5 # Myanmar
     ve_death: 0.5 # Myanmar
   lag: 14
   standard_supply: false

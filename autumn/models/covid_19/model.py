@@ -147,10 +147,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Variants of concern stratification.
     """
 
-    # strains_to_adjust = {strat: 1. for strat in strain_strat.strata} if params.voc_emergence else {"wild": 1.}
-    # strains_to_adjust["delta"] = 2.
-    strains_to_adjust = {"wild": 1., "delta": 1.}
-
     if params.voc_emergence:
         voc_params = params.voc_emergence
 
@@ -165,6 +161,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}
             )
 
+        strains_to_adjust = {strat: 1. for strat in strain_strat.strata}
+        strains_to_adjust["delta"] = 2.
+    else:
+        strains_to_adjust = {"wild": 1.}
 
     """
     Clinical stratification.
@@ -189,8 +189,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
     model.add_adjustment_system("isolated", AbsRateIsolatedSystem(within_early_exposed))
     model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
-
-
 
     """
     Contact tracing stratification.
@@ -275,7 +273,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             vacc_strata = VACCINATION_STRATA[: 2] + VACCINATION_STRATA[3:]
         elif is_dosing_active and not waning_vacc_immunity:
             vacc_strata = VACCINATION_STRATA[: 3]
-        elif is_dosing_active and waning_vacc_immunity:
+        else:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object

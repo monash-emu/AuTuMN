@@ -10,7 +10,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_history_strat(params: Parameters) -> Stratification:
+def get_history_strat(params: Parameters, vocs) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
 
@@ -35,8 +35,9 @@ def get_history_strat(params: Parameters) -> Stratification:
         params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
         params.sojourn, severity_adjuster_experienced, severity_adjuster_experienced, 1.
     )
-    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-    update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs)
-    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE)
+    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS], vocs)
+    for voc in vocs:
+        update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
+    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, vocs)
 
     return history_strat

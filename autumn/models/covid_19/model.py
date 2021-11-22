@@ -323,7 +323,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     is_waning_immunity = bool(params.waning_immunity_duration)
     if is_waning_immunity:
-        history_strat = get_history_strat(params)
+        history_strat = get_history_strat(params, strain_strat.strata)
         model.stratify_with(history_strat)
 
         # Waning immunity (if requested)

@@ -255,6 +255,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Vaccination status stratification.
     """
 
+    strains_to_adjust = strain_strat.strata if params.voc_emergence else ["wild"]
     vacc_params = params.vaccination
     if vacc_params:
         dose_delay_params = vacc_params.second_dose_delay
@@ -272,7 +273,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object
-        vaccination_strat = get_vaccination_strat(params, vacc_strata, strain_strat.strata)
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, strains_to_adjust)
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable
@@ -323,7 +324,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     is_waning_immunity = bool(params.waning_immunity_duration)
     if is_waning_immunity:
-        history_strat = get_history_strat(params, strain_strat.strata)
+        history_strat = get_history_strat(params, strains_to_adjust)
         model.stratify_with(history_strat)
 
         # Waning immunity (if requested)

@@ -90,7 +90,7 @@ vaccination:
   one_dose:
     ve_sympt_covid: 0.5122
     ve_prop_prevent_infection: 0.9 # one dose AZ has a quite lower efficacy towards infection
-    ve_infectiousness_ratio: 0.3125
+    ve_infectiousness_ratio: 0.3125 # 0.0861 / 0.2758
     ve_hospitalisation: 0.8107
     ve_death: 0.8922
   fully_vaccinated:

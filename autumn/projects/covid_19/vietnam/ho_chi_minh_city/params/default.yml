@@ -102,14 +102,14 @@ vaccination:
     ve_sympt_covid: 0.00
     ve_prop_prevent_infection: 0.00
     ve_infectiousness: 0.00
-    ve_hospitalization: 0.5 # Myanmar
-    ve_death: 0.5 # Myanmar
+    ve_hospitalization: 0.00
+    ve_death: 0.00
   waned:
     ve_sympt_covid: 0.00
     ve_prop_prevent_infection: 0.00
     ve_infectiousness: 0.00
-    ve_hospitalization: 0.00
-    ve_death: 0.00
+    ve_hospitalization: 0.5 # Myanmar
+    ve_death: 0.5 # Myanmar
   lag: 14
   standard_supply: false
   second_dose_delay:  32.67 # weighted average waiting time between two doses

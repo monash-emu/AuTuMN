@@ -98,8 +98,23 @@ vaccination:
     ve_infectiousness: 0.2758
     ve_hospitalisation: 0.8856 # weighted average
     ve_death: 0.9004 # weighted average
-  second_dose_delay:  32.67 # weighted average waiting time between two doses
+  part_waned:
+    ve_sympt_covid: 0.00
+    ve_prop_prevent_infection: 0.00
+    ve_infectiousness: 0.00
+    ve_hospitalization: 0.5 # Myanmar
+    ve_death: 0.5 # Myanmar
+  waned:
+    ve_sympt_covid: 0.00
+    ve_prop_prevent_infection: 0.00
+    ve_infectiousness: 0.00
+    ve_hospitalization: 0.00
+    ve_death: 0.00
   lag: 14
+  standard_supply: false
+  second_dose_delay:  32.67 # weighted average waiting time between two doses
+  vacc_full_effect_duration: 90. # 3 months
+  vacc_part_effect_duration: 180. # 6 months
   roll_out_components: # --> stratify by time
     - age_min: 20
       supply_period_coverage:

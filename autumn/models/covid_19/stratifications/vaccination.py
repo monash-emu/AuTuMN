@@ -38,7 +38,7 @@ def get_vaccination_strat(params: Parameters, all_strata: list, vocs: Dict[str, 
     for stratum in vacc_strata:
         for voc in vocs.keys():
             vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(
-                params, stratum, vocs[voc]
+                params, stratum, voc_effect=vocs[voc]
             )
 
             # Get and apply the severity modifications (in the same way as for history stratification)

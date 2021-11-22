@@ -144,32 +144,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     """
-    Clinical stratification.
-    """
-
-    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS
-    override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
-
-    get_detected_proportion = find_cdr_function_from_test_data(
-        params.testing_to_detection, country.iso3, override_test_region, pop.year
-    )
-    clinical_strat = get_clinical_strat(params)
-    model.stratify_with(clinical_strat)
-
-    """
-    Case detection.
-    """
-
-    model.add_computed_value_process("cdr", CdrProc(get_detected_proportion))
-
-    compartment_periods = calc_compartment_periods(params.sojourn)
-    within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
-    model.add_adjustment_system("isolated", AbsRateIsolatedSystem(within_early_exposed))
-    model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
-
-    """
     Variants of concern stratification.
     """
+
+    # strains_to_adjust = {strat: 1. for strat in strain_strat.strata} if params.voc_emergence else {"wild": 1.}
+    # strains_to_adjust["delta"] = 2.
+    strains_to_adjust = {"wild": 1., "delta": 1.}
 
     if params.voc_emergence:
         voc_params = params.voc_emergence
@@ -184,6 +164,33 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             model.add_importation_flow(
                 f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}
             )
+
+
+    """
+    Clinical stratification.
+    """
+
+    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS
+    override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
+
+    get_detected_proportion = find_cdr_function_from_test_data(
+        params.testing_to_detection, country.iso3, override_test_region, pop.year
+    )
+    clinical_strat = get_clinical_strat(params, strains_to_adjust)
+    model.stratify_with(clinical_strat)
+
+    """
+    Case detection.
+    """
+
+    model.add_computed_value_process("cdr", CdrProc(get_detected_proportion))
+
+    compartment_periods = calc_compartment_periods(params.sojourn)
+    within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
+    model.add_adjustment_system("isolated", AbsRateIsolatedSystem(within_early_exposed))
+    model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
+
+
 
     """
     Contact tracing stratification.
@@ -255,7 +262,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Vaccination status stratification.
     """
 
-    strains_to_adjust = {strat: 1. for strat in strain_strat.strata} if params.voc_emergence else {"wild": 1.}
     vacc_params = params.vaccination
     if vacc_params:
         dose_delay_params = vacc_params.second_dose_delay

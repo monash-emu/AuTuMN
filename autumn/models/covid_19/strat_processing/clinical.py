@@ -334,24 +334,17 @@ def add_clinical_adjustments_to_strat(
     for agegroup in AGEGROUP_STRATA:
         for voc in vocs:
             for clinical_stratum in CLINICAL_STRATA:
-                working_strata = {"agegroup": agegroup, "clinical": clinical_stratum, "strain": voc}
+                working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
+                voc_strat = {"strain": voc} if len(vocs) > 1 else {}
+                working_strata.update(voc_strat)
 
                 # *** Must be dest
                 infectious_onset_adjs = flow_adjs[agegroup][voc][clinical_stratum][INFECTIOUSNESS_ONSET]
                 infectious_onset_adjs[unaffected_stratum] = None
                 strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
-                # Can be either source or dest
-                progress_adjs = flow_adjs[agegroup][voc][clinical_stratum][PROGRESS]
-                progress_adjs[unaffected_stratum] = None
-                strat.add_flow_adjustments(PROGRESS, progress_adjs, source_strata=working_strata)
-
-                # *** Must be source
-                infect_death_adjs = flow_adjs[agegroup][voc][clinical_stratum][INFECT_DEATH]
-                infect_death_adjs[unaffected_stratum] = None
-                strat.add_flow_adjustments(INFECT_DEATH, infect_death_adjs, source_strata=working_strata)
-
-                # *** Must be source
-                recovery_adjs = flow_adjs[agegroup][voc][clinical_stratum][RECOVERY]
-                recovery_adjs[unaffected_stratum] = None
-                strat.add_flow_adjustments(RECOVERY, recovery_adjs, source_strata=working_strata)
+                # *** Progress can be either source, dest or both, but infect_death and recovery must be source
+                for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
+                    adjs = flow_adjs[agegroup][voc][clinical_stratum][transition]
+                    adjs[unaffected_stratum] = None
+                    strat.add_flow_adjustments(transition, adjs, source_strata=working_strata)

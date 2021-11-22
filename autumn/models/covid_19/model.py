@@ -255,7 +255,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Vaccination status stratification.
     """
 
-    strains_to_adjust = strain_strat.strata if params.voc_emergence else ["wild"]
+    strains_to_adjust = strain_strat.strata if params.voc_emergence else ["not_applicable"]
     vacc_params = params.vaccination
     if vacc_params:
         dose_delay_params = vacc_params.second_dose_delay

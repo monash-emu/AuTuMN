@@ -1,3 +1,5 @@
+from typing import List
+
 from summer import Stratification
 
 from autumn.models.covid_19.parameters import Parameters
@@ -10,7 +12,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_history_strat(params: Parameters, vocs) -> Stratification:
+def get_history_strat(params: Parameters, vocs: List[str]) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
 

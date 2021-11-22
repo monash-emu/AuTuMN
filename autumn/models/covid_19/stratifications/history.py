@@ -31,12 +31,16 @@ def get_history_strat(params: Parameters, vocs) -> Stratification:
     severity_adjuster_experienced = params.rel_prop_symptomatic_experienced if severity_adjuster_request else 1.
 
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
-    adjs = get_all_adjustments(
-        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, severity_adjuster_experienced, severity_adjuster_experienced, 1.
-    )
     flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS], vocs)
+    voc_severity = {voc: 1. for voc in vocs}
     for voc in vocs:
+        severity_adjuster_experienced *= voc_severity[voc]
+
+        adjs = get_all_adjustments(
+            params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+            params.sojourn, severity_adjuster_experienced, severity_adjuster_experienced, 1.
+        )
+
         update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
     add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, vocs)
 

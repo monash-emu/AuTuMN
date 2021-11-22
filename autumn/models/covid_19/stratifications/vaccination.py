@@ -35,12 +35,13 @@ def get_vaccination_strat(params: Parameters, all_strata: List, vocs) -> Stratif
     flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS], vocs)
     vacc_strata = all_strata[1:]  # Affected strata are all but the first
 
+    # *** Dummy code for now - check that behaviour unchanged
     voc_severity = {voc: 1. for voc in vocs}
-    voc_severity["delta"] = 2.
 
     for stratum in vacc_strata:
         for voc in vocs:
-            vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(params, stratum)
+            voc_effect = voc_severity[voc]
+            vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(params, stratum, voc_effect)
 
             # Get and apply the severity modifications (in the same way as for history stratification)
             severity_adjs = get_all_adjustments(

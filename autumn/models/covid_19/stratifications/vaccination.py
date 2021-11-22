@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict
 
 from summer import Multiply, Stratification
 
@@ -13,7 +13,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 from autumn.models.covid_19.strat_processing.vaccination import get_stratum_vacc_effect
 
 
-def get_vaccination_strat(params: Parameters, all_strata: list, vocs: List[str]) -> Stratification:
+def get_vaccination_strat(params: Parameters, all_strata: list, vocs: Dict[str, float]) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
@@ -35,14 +35,10 @@ def get_vaccination_strat(params: Parameters, all_strata: list, vocs: List[str])
     flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS], vocs)
     vacc_strata = all_strata[1:]  # Affected strata are all but the first
 
-    # *** Dummy code for now - to check that behaviour unchanged
-    voc_severity = {voc: 1. for voc in vocs}
-
     for stratum in vacc_strata:
-        for voc in vocs:
-            voc_effect = voc_severity[voc]
+        for voc in vocs.keys():
             vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(
-                params, stratum, voc_effect
+                params, stratum, vocs[voc]
             )
 
             # Get and apply the severity modifications (in the same way as for history stratification)

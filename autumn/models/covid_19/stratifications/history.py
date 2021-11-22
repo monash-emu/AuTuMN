@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict
 
 from summer import Stratification
 
@@ -12,7 +12,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_history_strat(params: Parameters, vocs: List[str]) -> Stratification:
+def get_history_strat(params: Parameters, vocs: Dict[str, float]) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
 
@@ -34,9 +34,8 @@ def get_history_strat(params: Parameters, vocs: List[str]) -> Stratification:
 
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
     flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS], vocs)
-    voc_severity = {voc: 1. for voc in vocs}
-    for voc in vocs:
-        severity_adjuster_experienced *= voc_severity[voc]
+    for voc in vocs.keys():
+        severity_adjuster_experienced *= vocs[voc]
 
         adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,

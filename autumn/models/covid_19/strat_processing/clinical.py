@@ -174,28 +174,6 @@ def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]
     return adjustments
 
 
-def process_ifrs(
-        raw_ifr_props: list, ifr_adjuster: float, top_bracket_overwrite: float, country: Country, pop: Population
-) -> list:
-    """
-    This just provides the final IFRs from the raw IFRs in the same data structure as they came, except that the list
-    is one element shorter to match the age brackets of the model.
-    Numerator: deaths, denominator: all infected.
-    """
-
-    # Scale raw IFR values according to adjuster parameter
-    adjusted_ifr_props = apply_odds_ratio_to_props(raw_ifr_props, ifr_adjuster)
-
-    # Convert from provided age groups to model age groups
-    final_ifr_props = convert_ifr_agegroups(adjusted_ifr_props, country.iso3, pop.region, pop.year)
-
-    # Over-write the oldest age bracket, if that's what's being done in the model
-    if top_bracket_overwrite:
-        final_ifr_props[-1] = top_bracket_overwrite
-
-    return final_ifr_props
-
-
 def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: list, icu_mortality_prop: float) -> dict:
     """
     Calculate death proportions: find where the absolute number of deaths accrue.
@@ -230,7 +208,7 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
             ifr_prop - abs_death_props[Clinical.ICU][age_idx] - abs_death_props[Clinical.HOSPITAL_NON_ICU][age_idx]
         abs_death_props[Clinical.NON_SYMPT][age_idx] = max(0., target_asympt_mortality)
 
-        # Double-check everything sums up properly - it should be impossible for this to fail, but just being paranoid
+        # Double-check everything sums up properly - it should be impossible for this to fail
         total_death_props = sum([abs_death_props[stratum][age_idx] for stratum in FIXED_STRATA])
         assert round(total_death_props, ALLOWED_ROUNDING_ERROR) == round(ifr_prop, ALLOWED_ROUNDING_ERROR)
 
@@ -240,7 +218,6 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
 def get_all_adjustments(
         clinical_params: ClinicalStratification, country: Country, pop: Population, raw_ifr_props: list,
         sojourn: Sojourn, ifr_adjuster: float, sympt_adjuster: float, hospital_adjuster: float,
-        top_bracket_overwrite=None,
 ) -> Dict[str, dict]:
     """
     Preliminary processing.
@@ -288,13 +265,17 @@ def get_all_adjustments(
         Clinical.ICU: 1. / sojourn.compartment_periods["icu_late"],
     }
 
-    final_ifr_props = process_ifrs(raw_ifr_props, ifr_adjuster, top_bracket_overwrite, country, pop)
+    # Scale raw IFR values according to adjuster parameter
+    adjusted_ifr_props = apply_odds_ratio_to_props(raw_ifr_props, ifr_adjuster)
+
+    # Convert from provided age groups to model age groups
+    final_ifr_props = convert_ifr_agegroups(adjusted_ifr_props, country.iso3, pop.region, pop.year)
 
     # The proportion of those entering each stratum who die. Numerator: deaths in stratum, denominator: everyone
     abs_death_props = get_absolute_death_proportions(abs_props, final_ifr_props, clinical_params.icu_mortality_prop)
 
     # The resulting proportion. Numerator: deaths in stratum, denominator: people entering stratum
-    # This could be over-written here by the the probability of death given ICU or hospital admission if preferred
+    # This could be over-written here by the probability of death given ICU or hospital admission if preferred
     rel_death_props = {strat: np.array(abs_death_props[strat]) / np.array(abs_props[strat]) for strat in FIXED_STRATA}
 
     # Convert to rates and then to summer Overwrite objects
@@ -306,18 +287,18 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_blank_adjustments_for_strat(unaffected_stratum: str) -> Dict[str, dict]:
+def get_blank_adjustments_for_strat(transitions) -> Dict[str, dict]:
     """
-    Start from an essentially blank set of flow adjustments, with Nones for the unadjusted stratum.
+    Start from a blank set of flow adjustments.
     """
 
     flow_adjs = {}
-    all_adjusted_transitions = [PROGRESS, *AGE_CLINICAL_TRANSITIONS]
     for agegroup in AGEGROUP_STRATA:
         flow_adjs[agegroup] = {}
         for clinical_stratum in CLINICAL_STRATA:
-            blank_transition_adj = {transition: {unaffected_stratum: None} for transition in all_adjusted_transitions}
-            flow_adjs[agegroup][clinical_stratum] = blank_transition_adj
+            flow_adjs[agegroup][clinical_stratum] = {}
+            for transition in transitions:
+                flow_adjs[agegroup][clinical_stratum][transition] = {}
 
     return flow_adjs
 
@@ -340,10 +321,10 @@ def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict,
                 modification = {stratum_to_modify: adjustments[transition][agegroup][clinical_stratum]}
                 flow_adjustments[agegroup][clinical_stratum][transition].update(modification)
 
-    return flow_adjustments
 
-
-def add_clinical_adjustments_to_strat(strat: Stratification, flow_adjs: Dict[str, dict]) -> Stratification:
+def add_clinical_adjustments_to_strat(
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum
+) -> Stratification:
     """
     Add the clinical adjustments defined in the previous functions to a stratification.
     """
@@ -353,31 +334,21 @@ def add_clinical_adjustments_to_strat(strat: Stratification, flow_adjs: Dict[str
             working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
 
             # *** Must be dest
-            strat.add_flow_adjustments(
-                INFECTIOUSNESS_ONSET,
-                flow_adjs[agegroup][clinical_stratum][INFECTIOUSNESS_ONSET],
-                dest_strata=working_strata
-            )
+            infectious_onset_adjs = flow_adjs[agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
+            infectious_onset_adjs[unaffected_stratum] = None
+            strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
             # Can be either source or dest
-            strat.add_flow_adjustments(
-                PROGRESS,
-                flow_adjs[agegroup][clinical_stratum][PROGRESS],
-                source_strata=working_strata
-            )
+            progress_adjs = flow_adjs[agegroup][clinical_stratum][PROGRESS]
+            progress_adjs[unaffected_stratum] = None
+            strat.add_flow_adjustments(PROGRESS, progress_adjs, source_strata=working_strata)
 
             # *** Must be source
-            strat.add_flow_adjustments(
-                INFECT_DEATH,
-                flow_adjs[agegroup][clinical_stratum][INFECT_DEATH],
-                source_strata=working_strata
-            )
+            infect_death_adjs = flow_adjs[agegroup][clinical_stratum][INFECT_DEATH]
+            infect_death_adjs[unaffected_stratum] = None
+            strat.add_flow_adjustments(INFECT_DEATH, infect_death_adjs, source_strata=working_strata)
 
             # *** Must be source
-            strat.add_flow_adjustments(
-                RECOVERY,
-                flow_adjs[agegroup][clinical_stratum][RECOVERY],
-                source_strata=working_strata
-            )
-
-    return strat
+            recovery_adjs = flow_adjs[agegroup][clinical_stratum][RECOVERY]
+            recovery_adjs[unaffected_stratum] = None
+            strat.add_flow_adjustments(RECOVERY, recovery_adjs, source_strata=working_strata)

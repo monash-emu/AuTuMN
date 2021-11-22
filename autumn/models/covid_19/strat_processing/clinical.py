@@ -305,7 +305,9 @@ def get_blank_adjustments_for_strat(transitions, voc_strata) -> Dict[str, dict]:
     return flow_adjs
 
 
-def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict, adjustments: dict, voc) -> Dict[str, dict]:
+def update_adjustments_for_strat(
+        stratum_to_modify: str, flow_adjustments: dict, adjustments: dict, voc: str
+) -> Dict[str, dict]:
     """
     Add the flow adjustments to the blank adjustments (as created above by get_blank_adjustments_for_strat) or a
     progressively extended working adjustments object.
@@ -325,7 +327,7 @@ def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict,
 
 
 def add_clinical_adjustments_to_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum, vocs
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum, vocs: Dict[str, float]
 ) -> Stratification:
     """
     Add the clinical adjustments defined in the previous functions to a stratification.

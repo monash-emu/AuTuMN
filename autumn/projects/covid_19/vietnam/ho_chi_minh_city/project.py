@@ -55,10 +55,10 @@ priors = [
     BetaPrior("vaccination.one_dose.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
 
     # Partly-waned immunity of vaccine
-    BetaPrior("vaccination.part_waned.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
-    UniformPrior("vaccination.part_waned.ve_infectiousness", [0.2, 0.3], jumping_stdev=0.001),
-    BetaPrior("vaccination.part_waned.ve_hospitalisation", mean=0.75, ci=[0.65, 0.85], sampling="lhs"),
-    BetaPrior("vaccination.part_waned.ve_death", mean=0.8, ci=[0.7, 0.9], sampling="lhs")
+    TruncNormalPrior("vaccination.part_waned.ve_sympt_covid", mean=0.5, stdev=0.02, truc_range=(0.4, 0.6)),
+    TruncNormalPrior("vaccination.part_waned.ve_infectiousness", mean=0.5, stdev=0.02, truc_range=(0.2, 0.3)),
+    TruncNormalPrior("vaccination.part_waned.ve_hospitalisation", mean=0.75, stdev=0.02, truc_range=(0.65, 0.85)),
+    TruncNormalPrior("vaccination.part_waned.ve_death", mean=0.8, stdev=0.02, truc_range=(0.7, 0.9))
 ]
 
 calibration = Calibration(priors, targets)

@@ -15,7 +15,7 @@ from autumn.tools.inputs.covid_au.queries import (
     VACC_COVERAGE_END_AGES,  # get_standard_vacc_coverage
 )
 from autumn.tools.utils.utils import find_closest_value_in_list
-from autumn.models.covid_19.parameters import Vaccination as VaccParams
+from autumn.models.covid_19.parameters import Vaccination as VaccParams, TimeSeries
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_vac_doses
@@ -393,11 +393,10 @@ def get_standard_vacc_coverage(iso3, agegroup, age_pops, params):
 
     vac_cov_map = {"MMR": get_mmr_vac_coverage, "LKA": get_lka_vac_coverage}
 
-    times, coverage_values = vac_cov_map[iso3](agegroup, age_pops, params)
+    time_series = vac_cov_map[iso3](agegroup, age_pops, params)
 
-    assert len(times) == len(coverage_values)
-    assert all((0.0 <= i_coverage <= 1.0 for i_coverage in coverage_values))
-    return times, coverage_values
+    assert all((0.0 <= i_coverage <= 1.0 for i_coverage in time_series.values))
+    return time_series.times, time_series.values
 
 
 
@@ -434,4 +433,4 @@ def get_mmr_vac_coverage(age_group, age_pops, params):
     else:
         coverage_values = [0.0] * len(times)
 
-    return times, coverage_values
+    return TimeSeries(times=times, values=coverage_values)

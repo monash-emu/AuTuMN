@@ -41,7 +41,7 @@ def get_vaccination_strat(params: Parameters, all_strata: list, voc_ifr_effects:
 
             # Collate the vaccination effects together
             vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(
-                params, stratum, stratified_adjusters[voc]["ifr"], stratified_adjusters[voc]["hosp"]
+                params, stratum, stratified_adjusters[voc]
             )
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum

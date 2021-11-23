@@ -13,7 +13,9 @@ from autumn.models.covid_19.strat_processing.clinical import (
 from autumn.models.covid_19.strat_processing.vaccination import get_stratum_vacc_effect
 
 
-def get_vaccination_strat(params: Parameters, all_strata: list, vocs: Dict[str, float]) -> Stratification:
+def get_vaccination_strat(
+        params: Parameters, all_strata: list, voc_ifr_effect: Dict[str, float], voc_hosp_effect: Dict[str, float]
+) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
@@ -35,13 +37,13 @@ def get_vaccination_strat(params: Parameters, all_strata: list, vocs: Dict[str, 
     vacc_strata = all_strata[1:]  # Affected strata are all but the first
 
     flow_adjs = {}
-    for voc in vocs.keys():
+    for voc in voc_ifr_effect.keys():
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
         for stratum in vacc_strata:
 
             # Collate the vaccination effects together
             vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(
-                params, stratum, vocs[voc]
+                params, stratum, voc_ifr_effect[voc]
             )
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
@@ -52,7 +54,7 @@ def get_vaccination_strat(params: Parameters, all_strata: list, vocs: Dict[str, 
 
             # Get them into the format needed to be applied to the model
             update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
-    add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED, vocs)
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED, voc_ifr_effect)
 
     # Vaccination effect against infection
     infect_adjs = {stratum: Multiply(1. - vacc_effects[stratum]["infection_efficacy"]) for stratum in vacc_strata}

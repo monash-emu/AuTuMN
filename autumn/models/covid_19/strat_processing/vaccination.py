@@ -349,7 +349,7 @@ def apply_standard_vacc_coverage(
             )
 
 
-def get_stratum_vacc_effect(params, stratum, voc_effect=1.):
+def get_stratum_vacc_effect(params, stratum, voc_effect):
 
     # Parameters to directly pull out
     stratum_vacc_params = getattr(params.vaccination, stratum)

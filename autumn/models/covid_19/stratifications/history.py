@@ -12,7 +12,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_history_strat(params: Parameters, vocs: Dict[str, float]) -> Stratification:
+def get_history_strat(params: Parameters, voc_ifr_effects: Dict[str, float], voc_hosp_effects: Dict[str, float]) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
 
@@ -35,19 +35,23 @@ def get_history_strat(params: Parameters, vocs: Dict[str, float]) -> Stratificat
 
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
     flow_adjs = {}
-    for voc in vocs.keys():
+    for voc in voc_ifr_effects.keys():
 
         # Get the adjustments by clinical status and age group applicable to this VoC
-        ifr_adjuster_experienced *= vocs[voc]
+        ifr_adjuster_experienced *= params.infection_fatality.multiplier * voc_ifr_effects[voc]
+
+        # Note that this deliberately isn't adjusted for history status
+        hosp_adjuster_experienced = params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc]
+
         adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjuster_experienced, sympt_adjuster_experienced, 1.
+            params.sojourn, ifr_adjuster_experienced, sympt_adjuster_experienced, hosp_adjuster_experienced
         )
 
         # Get them into the format needed to be applied to the model
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
         update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
 
-    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, vocs)
+    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, voc_ifr_effects)
 
     return history_strat

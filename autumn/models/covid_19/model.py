@@ -147,7 +147,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Variants of concern stratification.
     """
 
-    strain_severity = {"wild": 1.}
+    voc_ifr_effects = {"wild": 1.}
+    voc_hosp_effects = {"wild": 1.}
     if params.voc_emergence:
         voc_params = params.voc_emergence
 
@@ -163,7 +164,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             )
 
         # Get the adjustments to the IFR for each strain (if not requested, will have defaulted to a value of one)
-        strain_severity.update({strat: params.voc_emergence[strat].ifr_multiplier for strat in strain_strat.strata[1:]})
+        voc_ifr_effects.update({s: params.voc_emergence[s].ifr_multiplier for s in strain_strat.strata[1:]})
+        voc_hosp_effects.update({s: params.voc_emergence[s].hosp_multiplier for s in strain_strat.strata[1:]})
 
     """
     Clinical stratification.
@@ -175,7 +177,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     get_detected_proportion = find_cdr_function_from_test_data(
         params.testing_to_detection, country.iso3, override_test_region, pop.year
     )
-    clinical_strat = get_clinical_strat(params, strain_severity)
+    clinical_strat = get_clinical_strat(params, voc_ifr_effects, voc_hosp_effects)
     model.stratify_with(clinical_strat)
 
     """
@@ -276,7 +278,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object
-        vaccination_strat = get_vaccination_strat(params, vacc_strata, strain_severity)
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, voc_ifr_effects, voc_hosp_effects)
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable
@@ -327,7 +329,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     is_waning_immunity = bool(params.waning_immunity_duration)
     if is_waning_immunity:
-        history_strat = get_history_strat(params, strain_severity)
+        history_strat = get_history_strat(params, voc_ifr_effects, voc_hosp_effects)
         model.stratify_with(history_strat)
 
         # Waning immunity (if requested)

@@ -30,19 +30,6 @@ priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,
 
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.exposed.total_period",
-        mean=4,
-        stdev=0.97,
-        trunc_range=[1.0, np.inf],
-    ),
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.active.total_period",
-        mean=6.5,
-        stdev=0.77,
-        trunc_range=[4.0, np.inf],
-    ),
-
     # Regional parameters
     UniformPrior("infectious_seed", [1, 20]),
     UniformPrior("contact_rate", [0.035, 0.055]),

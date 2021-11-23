@@ -11,7 +11,7 @@ from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
-def get_clinical_strat(params: Parameters, voc_ifr_effects: Dict[str, float], voc_hosp_effects: Dict[str, float]):
+def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]]) -> Stratification:
     """
     Stratify the infectious compartments of the covid model by "clinical" status, into five groups.
     """
@@ -42,16 +42,12 @@ def get_clinical_strat(params: Parameters, voc_ifr_effects: Dict[str, float], vo
     Make all the adjustments to flows.
     """
 
-    for voc in voc_ifr_effects.keys():
-
-        ifr_adjuster = params.infection_fatality.multiplier * voc_ifr_effects[voc]
-        hosp_adjuster = params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc]
-        sympt_adjuster = params.clinical_stratification.props.symptomatic.multiplier
+    for voc in stratified_adjusters.keys():
 
         # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
         adjs = get_all_adjustments(
             clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
-            ifr_adjuster, sympt_adjuster, hosp_adjuster,
+            stratified_adjusters[voc]["ifr"], stratified_adjusters[voc]["sympt"], stratified_adjusters[voc]["hosp"],
         )
 
         # Assign all the adjustments to the summer model

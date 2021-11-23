@@ -171,13 +171,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Clinical stratification.
     """
 
+    stratified_adjusters = {}
+    for voc in voc_ifr_effects.keys():
+        stratified_adjusters[voc] = {
+            "ifr": params.infection_fatality.multiplier * voc_ifr_effects[voc],
+            "hosp": params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc],
+            "sympt": params.clinical_stratification.props.symptomatic.multiplier,
+        }
+
     is_region_vic = pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS
     override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(
         params.testing_to_detection, country.iso3, override_test_region, pop.year
     )
-    clinical_strat = get_clinical_strat(params, voc_ifr_effects, voc_hosp_effects)
+    clinical_strat = get_clinical_strat(params, stratified_adjusters)
     model.stratify_with(clinical_strat)
 
     """
@@ -327,17 +335,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Infection history stratification.
     """
 
-    stratified_adjusters = {}
-    for voc in voc_ifr_effects.keys():
-        stratified_adjusters[voc] = {
-            "ifr": params.infection_fatality.multiplier * voc_ifr_effects[voc],
-            "hosp": params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc],
-            "sympt": params.clinical_stratification.props.symptomatic.multiplier,
-        }
-
     is_waning_immunity = bool(params.waning_immunity_duration)
     if is_waning_immunity:
-        history_strat = get_history_strat(params, voc_ifr_effects, voc_hosp_effects, stratified_adjusters)
+        history_strat = get_history_strat(params, voc_ifr_effects, stratified_adjusters)
         model.stratify_with(history_strat)
 
         # Waning immunity (if requested)

@@ -1,3 +1,5 @@
+from typing import Dict
+
 from summer import Stratification
 
 from autumn.models.covid_19.parameters import Parameters
@@ -10,7 +12,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_history_strat(params: Parameters) -> Stratification:
+def get_history_strat(params: Parameters, vocs: Dict[str, float]) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
 
@@ -28,15 +30,18 @@ def get_history_strat(params: Parameters) -> Stratification:
 
     # Severity parameter for previously infected persons
     severity_adjuster_request = params.rel_prop_symptomatic_experienced
-    severity_adjuster_experienced = params.rel_prop_symptomatic_experienced if severity_adjuster_request else 1.
+    ifr_adjuster_experienced = params.rel_prop_symptomatic_experienced if severity_adjuster_request else 1.
+    sympt_adjuster_experienced = ifr_adjuster_experienced
 
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
-    adjs = get_all_adjustments(
-        params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-        params.sojourn, severity_adjuster_experienced, severity_adjuster_experienced, 1.
-    )
-    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-    update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs)
-    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE)
+    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS], vocs)
+    for voc in vocs.keys():
+        ifr_adjuster_experienced *= vocs[voc]
+        adjs = get_all_adjustments(
+            params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+            params.sojourn, ifr_adjuster_experienced, sympt_adjuster_experienced, 1.
+        )
+        update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
+    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, vocs)
 
     return history_strat

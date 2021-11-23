@@ -287,7 +287,7 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_blank_adjustments_for_strat(transitions) -> Dict[str, dict]:
+def get_blank_adjustments_for_strat(transitions, voc_strata) -> Dict[str, dict]:
     """
     Start from a blank set of flow adjustments.
     """
@@ -295,15 +295,19 @@ def get_blank_adjustments_for_strat(transitions) -> Dict[str, dict]:
     flow_adjs = {}
     for agegroup in AGEGROUP_STRATA:
         flow_adjs[agegroup] = {}
-        for clinical_stratum in CLINICAL_STRATA:
-            flow_adjs[agegroup][clinical_stratum] = {}
-            for transition in transitions:
-                flow_adjs[agegroup][clinical_stratum][transition] = {}
+        for voc in voc_strata:
+            flow_adjs[agegroup][voc] = {}
+            for clinical_stratum in CLINICAL_STRATA:
+                flow_adjs[agegroup][voc][clinical_stratum] = {}
+                for transition in transitions:
+                    flow_adjs[agegroup][voc][clinical_stratum][transition] = {}
 
     return flow_adjs
 
 
-def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict, adjustments: dict) -> Dict[str, dict]:
+def update_adjustments_for_strat(
+        stratum_to_modify: str, flow_adjustments: dict, adjustments: dict, voc: str
+) -> Dict[str, dict]:
     """
     Add the flow adjustments to the blank adjustments (as created above by get_blank_adjustments_for_strat) or a
     progressively extended working adjustments object.
@@ -314,41 +318,35 @@ def update_adjustments_for_strat(stratum_to_modify: str, flow_adjustments: dict,
 
             # *** Note that PROGRESS is not indexed by age group
             modification = {stratum_to_modify: adjustments[PROGRESS][clinical_stratum]}
-            flow_adjustments[agegroup][clinical_stratum][PROGRESS].update(modification)
+            flow_adjustments[agegroup][voc][clinical_stratum][PROGRESS].update(modification)
 
             # ... but the other transition processes are
             for transition in AGE_CLINICAL_TRANSITIONS:
                 modification = {stratum_to_modify: adjustments[transition][agegroup][clinical_stratum]}
-                flow_adjustments[agegroup][clinical_stratum][transition].update(modification)
+                flow_adjustments[agegroup][voc][clinical_stratum][transition].update(modification)
 
 
 def add_clinical_adjustments_to_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum, vocs: Dict[str, float]
 ) -> Stratification:
     """
     Add the clinical adjustments defined in the previous functions to a stratification.
     """
 
     for agegroup in AGEGROUP_STRATA:
-        for clinical_stratum in CLINICAL_STRATA:
-            working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
+        for voc in vocs:
+            for clinical_stratum in CLINICAL_STRATA:
+                working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
+                voc_strat = {"strain": voc} if len(vocs) > 1 else {}
+                working_strata.update(voc_strat)
 
-            # *** Must be dest
-            infectious_onset_adjs = flow_adjs[agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
-            infectious_onset_adjs[unaffected_stratum] = None
-            strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
+                # *** Must be dest
+                infectious_onset_adjs = flow_adjs[agegroup][voc][clinical_stratum][INFECTIOUSNESS_ONSET]
+                infectious_onset_adjs[unaffected_stratum] = None
+                strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
-            # Can be either source or dest
-            progress_adjs = flow_adjs[agegroup][clinical_stratum][PROGRESS]
-            progress_adjs[unaffected_stratum] = None
-            strat.add_flow_adjustments(PROGRESS, progress_adjs, source_strata=working_strata)
-
-            # *** Must be source
-            infect_death_adjs = flow_adjs[agegroup][clinical_stratum][INFECT_DEATH]
-            infect_death_adjs[unaffected_stratum] = None
-            strat.add_flow_adjustments(INFECT_DEATH, infect_death_adjs, source_strata=working_strata)
-
-            # *** Must be source
-            recovery_adjs = flow_adjs[agegroup][clinical_stratum][RECOVERY]
-            recovery_adjs[unaffected_stratum] = None
-            strat.add_flow_adjustments(RECOVERY, recovery_adjs, source_strata=working_strata)
+                # *** Progress can be either source, dest or both, but infect_death and recovery must be source
+                for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
+                    adjs = flow_adjs[agegroup][voc][clinical_stratum][transition]
+                    adjs[unaffected_stratum] = None
+                    strat.add_flow_adjustments(transition, adjs, source_strata=working_strata)

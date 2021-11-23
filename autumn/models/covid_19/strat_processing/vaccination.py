@@ -6,13 +6,12 @@ from summer import CompartmentalModel
 from autumn.models.covid_19.constants import (
     VACCINE_ELIGIBLE_COMPARTMENTS,
     Vaccination,
-    VACCINATION_STRATA,
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage,
     VACC_COVERAGE_START_AGES,
-    VACC_COVERAGE_END_AGES,  # get_standard_vacc_coverage
+    VACC_COVERAGE_END_AGES,
 )
 from autumn.tools.utils.utils import find_closest_value_in_list
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
@@ -350,7 +349,7 @@ def apply_standard_vacc_coverage(
             )
 
 
-def get_stratum_vacc_effect(params, stratum):
+def get_stratum_vacc_effect(params, stratum, voc_effect=1.):
 
     # Parameters to directly pull out
     stratum_vacc_params = getattr(params.vaccination, stratum)
@@ -373,16 +372,13 @@ def get_stratum_vacc_effect(params, stratum):
     sympt_adjuster = 1.0 - severity_effect
 
     # Use the standard severity adjustment if no specific request for reducing death
-    ifr_adjuster = (
-        1.0 - vacc_effects["ve_death"] if "ve_death" in vacc_effects else 1.0 - severity_effect
-    )
-    hospital_adjuster = (
-        1.0 - hospitalisation_effect if "ve_hospitalisation" in vacc_effects else 1.0
-    )
+    ifr_adjuster = (1.0 - vacc_effects["ve_death"] if "ve_death" in vacc_effects else 1.0 - severity_effect)
+    hospital_adjuster = (1.0 - hospitalisation_effect if "ve_hospitalisation" in vacc_effects else 1.0)
 
     # Apply the calibration adjusters
+
     sympt_adjuster *= params.clinical_stratification.props.symptomatic.multiplier
-    ifr_adjuster *= params.infection_fatality.multiplier
+    ifr_adjuster *= params.infection_fatality.multiplier * voc_effect
 
     return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster
 

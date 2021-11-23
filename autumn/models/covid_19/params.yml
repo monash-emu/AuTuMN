@@ -4,7 +4,6 @@ description: BASELINE
 
 voc_emergence: null # Emergence of Variants of Concern
 waning_immunity_duration: null
-rel_prop_symptomatic_experienced: null
 infect_death: 0. # Compulsory parameter that is completely overwritten in stratification, rather than being modified
 universal_death_rate: 0. # Compulsory parameter for all models, even though there are no population-wide deaths
 infectious_seed: 10 # Initial condition for infectious

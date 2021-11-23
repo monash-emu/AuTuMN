@@ -654,7 +654,6 @@ class Parameters:
     waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
     vaccination_risk: Optional[VaccinationRisk]
-    rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float
     n_steps_fixed_proposal: int

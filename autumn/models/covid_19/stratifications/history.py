@@ -28,24 +28,18 @@ def get_history_strat(params: Parameters, voc_ifr_effects: Dict[str, float], voc
     pop_split = {History.NAIVE: 1., History.EXPERIENCED: 0.}
     history_strat.set_population_split(pop_split)
 
-    # Severity parameter for previously infected persons
-    severity_adjuster_request = params.rel_prop_symptomatic_experienced
-    ifr_adjuster_experienced = params.rel_prop_symptomatic_experienced if severity_adjuster_request else 1.
-    sympt_adjuster_experienced = ifr_adjuster_experienced
-
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
     flow_adjs = {}
     for voc in voc_ifr_effects.keys():
 
         # Get the adjustments by clinical status and age group applicable to this VoC
-        ifr_adjuster_experienced *= params.infection_fatality.multiplier * voc_ifr_effects[voc]
-
-        # Note that this deliberately isn't adjusted for history status
+        ifr_adjuster_experienced = params.infection_fatality.multiplier * voc_ifr_effects[voc]
         hosp_adjuster_experienced = params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc]
+        sympt_adjuster = params.clinical_stratification.props.symptomatic.multiplier
 
         adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjuster_experienced, sympt_adjuster_experienced, hosp_adjuster_experienced
+            params.sojourn, ifr_adjuster_experienced, sympt_adjuster, hosp_adjuster_experienced
         )
 
         # Get them into the format needed to be applied to the model

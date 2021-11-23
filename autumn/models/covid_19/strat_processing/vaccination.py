@@ -396,7 +396,6 @@ def get_standard_vacc_coverage(iso3, agegroup, age_pops, params):
     return time_series.times, time_series.values
 
 
-
 def get_mmr_vac_coverage(age_group, age_pops, params):
 
     times, at_least_one_dose = base_mmr_vac_doses()

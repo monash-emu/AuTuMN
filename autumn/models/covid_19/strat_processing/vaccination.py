@@ -318,13 +318,13 @@ def apply_standard_vacc_coverage(
     model_start_time: float,
     iso3: str,
     age_pops,
-    params,    
+    one_dose_vacc_params,
 ):
 
     for agegroup in AGEGROUP_STRATA:
 
         # Note this must return something for every age group to stop outputs calculation crashing
-        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, params)
+        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params)
 
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
@@ -385,25 +385,25 @@ def get_stratum_vacc_effect(params, stratum, voc_adjusters):
     return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster
 
 
-def get_standard_vacc_coverage(iso3, agegroup, age_pops, params):
+def get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params):
 
     vac_cov_map = {"MMR": get_mmr_vac_coverage, "LKA": get_lka_vac_coverage}
 
-    time_series = vac_cov_map[iso3](agegroup, age_pops, params)
+    time_series = vac_cov_map[iso3](agegroup, age_pops, one_dose_vacc_params)
 
     assert all((0.0 <= i_coverage <= 1.0 for i_coverage in time_series.values))
     return time_series.times, time_series.values
 
 
-def get_mmr_vac_coverage(age_group, age_pops, params):
+def get_mmr_vac_coverage(age_group, age_pops, one_dose_vacc_params):
 
     times, at_least_one_dose = base_mmr_vac_doses()
 
-    has_user_input = hasattr(params.vaccination.one_dose, "vac_coverage" )
+    has_user_input = hasattr(one_dose_vacc_params, "vac_coverage")
         
     if has_user_input:
-        times.extend(params.vaccination.one_dose.vac_coverage.times)
-        at_least_one_dose.extend(params.vaccination.one_dose.vac_coverage.values)
+        times.extend(one_dose_vacc_params.vac_coverage.times)
+        at_least_one_dose.extend(one_dose_vacc_params.vac_coverage.values)
 
     # For the adult population
     if int(age_group) >= 15:

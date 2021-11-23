@@ -69,7 +69,7 @@ priors = [
 
     # Partly-waned immunity of vaccine
     BetaPrior("vaccination.part_waned.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
-    UniformPrior("vaccination.part_wanted.ve_infectiousness", [0.2, 0.3], jumping_stdev=0.001),
+    UniformPrior("vaccination.part_waned.ve_infectiousness", [0.2, 0.3], jumping_stdev=0.001),
     BetaPrior("vaccination.part_waned.ve_hospitalisation", mean=0.75, ci=[0.6, 0.9], sampling="lhs"),
     BetaPrior("vaccination.part_waned.ve_death", mean=0.75, ci=[0.6, 0.9], sampling="lhs")
 ]

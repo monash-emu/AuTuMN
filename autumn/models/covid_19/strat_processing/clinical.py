@@ -287,33 +287,30 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_blank_adjustments_for_strat(transitions: list, voc_strata: List[str]) -> Dict[str, dict]:
+def get_blank_adjustments_for_strat(transitions: list) -> Dict[str, dict]:
     """
     Provide a blank set of flow adjustments to be populated by the update_adjustments_for_strat function below.
 
     Args:
         transitions: All the transition flows we will be modifying through the clinical stratification process
-        voc_strata: All the VoCs being implemented
 
     Returns:
-        Dictionary of dictionaries of dictionaries of dictionaries of blank dictionaries to be populated later
+        Dictionary of dictionaries of dictionaries of blank dictionaries to be populated later
 
     """
 
     flow_adjs = {}
     for agegroup in AGEGROUP_STRATA:
         flow_adjs[agegroup] = {}
-        for voc in voc_strata:
-            flow_adjs[agegroup][voc] = {}
-            for clinical_stratum in CLINICAL_STRATA:
-                flow_adjs[agegroup][voc][clinical_stratum] = {}
-                for transition in transitions:
-                    flow_adjs[agegroup][voc][clinical_stratum][transition] = {}
+        for clinical_stratum in CLINICAL_STRATA:
+            flow_adjs[agegroup][clinical_stratum] = {}
+            for transition in transitions:
+                flow_adjs[agegroup][clinical_stratum][transition] = {}
 
     return flow_adjs
 
 
-def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments: dict, voc: str):
+def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments: dict):
     """
     Add the flow adjustments to the blank adjustments created above by get_blank_adjustments_for_strat.
 
@@ -321,7 +318,6 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
         strat: The current stratification that we're modifying here
         flow_adjustments: Tiered dictionary containing the adjustments
         adjustments: Adjustments in the format that they are returned by get_all_adjustments
-        voc: The current VoC being considered, the VoC loop being external to this function
 
     """
 
@@ -331,12 +327,12 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
 
             # *** Note that PROGRESS is not indexed by age group
             modification = {strat: adjustments[PROGRESS][clinical_stratum]}
-            flow_adjustments[agegroup][voc][clinical_stratum][PROGRESS].update(modification)
+            flow_adjustments[agegroup][clinical_stratum][PROGRESS].update(modification)
 
             # ... but the other transition processes are
             for transition in AGE_CLINICAL_TRANSITIONS:
                 modification = {strat: adjustments[transition][agegroup][clinical_stratum]}
-                flow_adjustments[agegroup][voc][clinical_stratum][transition].update(modification)
+                flow_adjustments[agegroup][clinical_stratum][transition].update(modification)
 
 
 def add_clinical_adjustments_to_strat(
@@ -361,22 +357,21 @@ def add_clinical_adjustments_to_strat(
     """
 
     # Loop over other stratifications that may affect these parameters, i.e. age group, VoC status and clinical status
-    for agegroup in AGEGROUP_STRATA:
-        for voc in vocs:
+    for voc in vocs:
+        for agegroup in AGEGROUP_STRATA:
             for clinical_stratum in CLINICAL_STRATA:
 
                 # The other model strata that we want to limit these adjustments to
-                working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
                 voc_strat = {"strain": voc} if len(vocs) > 1 else {}
-                working_strata.update(voc_strat)
+                working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}.update(voc_strat)
 
                 # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
-                infectious_onset_adjs = flow_adjs[agegroup][voc][clinical_stratum][INFECTIOUSNESS_ONSET]
+                infectious_onset_adjs = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
                 infectious_onset_adjs[unaffected_stratum] = None
                 strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
                 # * Progress can be either source, dest(ination) or both, but infect_death and recovery must be source *
                 for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
-                    adjs = flow_adjs[agegroup][voc][clinical_stratum][transition]
+                    adjs = flow_adjs[voc][agegroup][clinical_stratum][transition]
                     adjs[unaffected_stratum] = None
                     strat.add_flow_adjustments(transition, adjs, source_strata=working_strata)

@@ -49,7 +49,7 @@ priors = [
 
     # Vaccination parameters (independent sampling)
     UniformPrior("vaccination.one_dose.ve_prop_prevent_infection", [0, 1], sampling="lhs"),
-    BetaPrior("vaccination.one_dose.ve_sympt_covid", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
+    BetaPrior("vaccination.one_dose.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
 ]
 
 calibration = Calibration(priors, targets)

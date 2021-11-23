@@ -53,12 +53,13 @@ vaccination:
     ve_infectiousness_ratio: 0.5
     ve_hospitalisation: 0.42
     ve_death: 0.42
-    times: 
-      - 731  # 31st December 2021
-      - 1096  # 31st December 2022
-    values:
-      - 13244996
-      - 13905795
+    vac_coverage:
+      times: 
+        - 731  # 31st December 2021
+        - 1096  # 31st December 2022
+      values:
+        - 13244996
+        - 13905795
   fully_vaccinated:
     ve_sympt_covid: 0.56
     ve_prop_prevent_infection: 0.8

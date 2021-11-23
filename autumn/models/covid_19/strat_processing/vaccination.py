@@ -405,11 +405,11 @@ def get_mmr_vac_coverage(age_group, age_pops, params):
 
     times, at_least_one_dose = base_mmr_vac_doses()
 
-    has_user_input = hasattr(params.vaccination.one_dose, "times" ) and hasattr(params.vaccination.one_dose, 'values')
+    has_user_input = hasattr(params.vaccination.one_dose, "vac_coverage" )
         
     if has_user_input:
-        times.extend(params.vaccination.one_dose.times)
-        at_least_one_dose.extend(params.vaccination.one_dose.values)
+        times.extend(params.vaccination.one_dose.vac_coverage.times)
+        at_least_one_dose.extend(params.vaccination.one_dose.vac_coverage.values)
 
     # For the adult population
     if int(age_group) >= 15:

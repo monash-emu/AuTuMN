@@ -71,17 +71,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Create function returning exp(W), where W is the random process
         rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
 
-        # Create the time-variant contact rate
-        def contact_rate(t, computed_values):
-            return params.contact_rate * rp_time_variant_func(t)
-
         # store random process as a computed value to make it available as an output
         model.add_computed_value_process(
             "transformed_random_process",
             RandomProcessProc(
                 rp_time_variant_func
             )
-        )
+        )        
+        
+        # Create the time-variant contact rate that uses our computed random process
+        def contact_rate(t, computed_values):
+            return params.contact_rate * computed_values["transformed_random_process"]
+
     else:
         contact_rate = params.contact_rate
 

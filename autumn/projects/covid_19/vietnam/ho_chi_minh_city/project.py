@@ -51,8 +51,8 @@ priors = [
     UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
 
     # Vaccination parameters (independent sampling)
-    UniformPrior("vaccination.one_dose.ve_prop_prevent_infection", [0, 1], sampling="lhs"),
-    BetaPrior("vaccination.one_dose.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
+    TruncNormalPrior("vaccination.one_dose.ve_prop_prevent_infection", mean=0.9, stdev=0.02, truc_range=(0.8, 1)),
+    TruncNormalPrior("vaccination.one_dose.ve_sympt_covid", mean=0.5, stdev=0.02, truc_range=(0.4, 0.6)),
 
     # Partly-waned immunity of vaccine
     TruncNormalPrior("vaccination.part_waned.ve_sympt_covid", mean=0.5, stdev=0.02, truc_range=(0.4, 0.6)),

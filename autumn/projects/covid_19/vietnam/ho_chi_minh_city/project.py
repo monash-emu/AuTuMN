@@ -27,6 +27,9 @@ for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospi
     targets.append(NormalTarget(series))
 
 priors = [
+    # Global COVID priors
+    *COVID_GLOBAL_PRIORS,
+
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",
         mean=4,
@@ -39,17 +42,36 @@ priors = [
         stdev=0.77,
         trunc_range=[4.0, np.inf],
     ),
+
+    # Regional parameters
     UniformPrior("infectious_seed", [1, 20]),
     UniformPrior("contact_rate", [0.035, 0.055]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.]),
-    UniformPrior("infection_fatality.multiplier", [0.5, 3.]),
 
+    # Health system-related
+    UniformPrior("clinical_stratification.icu_prop", [0.01, 0.1]),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.5, 1.5]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.]),
+    UniformPrior("infection_fatality.multiplier", [0.1, 2.5]),
+
+    # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.002, 0.007]),
+
+    # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.4]),
+
+    # Waning immunity
+    UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
 
     # Vaccination parameters (independent sampling)
     UniformPrior("vaccination.one_dose.ve_prop_prevent_infection", [0, 1], sampling="lhs"),
     BetaPrior("vaccination.one_dose.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
+
+    # Partly-waned immunity of vaccine
+    BetaPrior("vaccination.part_waned.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
+    UniformPrior("vaccination.part_wanted.ve_infectiousness", [0.2, 0.3], jumping_stdev=0.001),
+    BetaPrior("vaccination.part_waned.ve_hospitalisation", mean=0.75, ci=[0.6, 0.9], sampling="lhs"),
+    BetaPrior("vaccination.part_waned.ve_death", mean=0.75, ci=[0.6, 0.9], sampling="lhs")
 ]
 
 calibration = Calibration(priors, targets)

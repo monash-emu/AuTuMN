@@ -41,7 +41,7 @@ def get_history_strat(params: Parameters, voc_ifr_effects: Dict[str, float], voc
         ifr_adjuster_experienced *= voc_ifr_effects[voc]
         adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjuster_experienced, sympt_adjuster_experienced, 1.
+            params.sojourn, ifr_adjuster_experienced, sympt_adjuster_experienced, voc_hosp_effects[voc]
         )
 
         # Get them into the format needed to be applied to the model

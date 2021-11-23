@@ -442,6 +442,8 @@ class VaccEffectiveness(BaseModel):
     ve_infectiousness_ratio: Optional[float]
     ve_hospitalisation: Optional[float]
     ve_death: Optional[float]
+    vac_coverage: Optional[TimeSeries]
+    
 
     @validator("ve_sympt_covid", pre=True, allow_reuse=True)
     def check_ve_sympt_covid(val):

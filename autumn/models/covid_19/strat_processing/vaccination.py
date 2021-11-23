@@ -14,10 +14,11 @@ from autumn.tools.inputs.covid_au.queries import (
     VACC_COVERAGE_END_AGES,
 )
 from autumn.tools.utils.utils import find_closest_value_in_list
-from autumn.models.covid_19.parameters import Vaccination as VaccParams
+from autumn.models.covid_19.parameters import Vaccination as VaccParams, TimeSeries
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
-from autumn.tools.inputs.covid_mmr.queries import get_mmr_vac_coverage
+from autumn.tools.inputs.covid_mmr.queries import base_mmr_vac_doses
+
 
 
 def get_second_dose_delay_rate(dose_delay_params):
@@ -317,12 +318,13 @@ def apply_standard_vacc_coverage(
     model_start_time: float,
     iso3: str,
     age_pops,
+    params,    
 ):
 
     for agegroup in AGEGROUP_STRATA:
 
         # Note this must return something for every age group to stop outputs calculation crashing
-        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops)
+        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, params)
 
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
@@ -383,12 +385,48 @@ def get_stratum_vacc_effect(params, stratum, voc_effect):
     return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster
 
 
-def get_standard_vacc_coverage(iso3, agegroup, age_pops):
+def get_standard_vacc_coverage(iso3, agegroup, age_pops, params):
 
     vac_cov_map = {"MMR": get_mmr_vac_coverage, "LKA": get_lka_vac_coverage}
 
-    times, coverage_values = vac_cov_map[iso3](agegroup, age_pops)
+    time_series = vac_cov_map[iso3](agegroup, age_pops, params)
 
-    assert len(times) == len(coverage_values)
-    assert all((0.0 <= i_coverage <= 1.0 for i_coverage in coverage_values))
-    return times, coverage_values
+    assert all((0.0 <= i_coverage <= 1.0 for i_coverage in time_series.values))
+    return time_series.times, time_series.values
+
+
+
+def get_mmr_vac_coverage(age_group, age_pops, params):
+
+    times, at_least_one_dose = base_mmr_vac_doses()
+
+    has_user_input = hasattr(params.vaccination.one_dose, "vac_coverage" )
+        
+    if has_user_input:
+        times.extend(params.vaccination.one_dose.vac_coverage.times)
+        at_least_one_dose.extend(params.vaccination.one_dose.vac_coverage.values)
+
+    # For the adult population
+    if int(age_group) >= 15:
+        adult_denominator = sum(age_pops[3:])
+
+        # Slide 5 of Mya Yee Mon's PowerPoint sent on 12th November - applied to the 15+ population only
+        # at_least_one_dose = params.vaccination.one_dose.values # extract the dose number
+
+        # Convert doses to coverage
+        coverage_values = [i_doses / adult_denominator for i_doses in at_least_one_dose]
+
+        # Add future targets
+        target_inflation_for_age = sum(age_pops) / adult_denominator
+        target_all_age_coverage = [0.4, 0.7]
+        target_adult_coverage = [
+            target_inflation_for_age * i_cov for i_cov in target_all_age_coverage
+        ]
+        assert all([0.0 <= i_cov <= 1.0 for i_cov in target_adult_coverage])
+        coverage_values += target_adult_coverage
+
+    # For the children, no vaccination
+    else:
+        coverage_values = [0.0] * len(times)
+
+    return TimeSeries(times=times, values=coverage_values)

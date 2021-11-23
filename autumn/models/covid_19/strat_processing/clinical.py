@@ -327,8 +327,8 @@ def update_adjustments_for_strat(
 
 
 def add_clinical_adjustments_to_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum, vocs: Dict[str, float]
-) -> Stratification:
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: Dict[str, float]
+):
     """
     Add the clinical adjustments created in update_adjustments_for_strat to a stratification.
 

@@ -287,9 +287,17 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_blank_adjustments_for_strat(transitions, voc_strata) -> Dict[str, dict]:
+def get_blank_adjustments_for_strat(transitions: list, voc_strata: List[str]) -> Dict[str, dict]:
     """
-    Start from a blank set of flow adjustments.
+    Provide a blank set of flow adjustments to be populated by the update_adjustments_for_strat function below.
+
+    Args:
+        transitions: All the transition flows we will be modifying through the clinical stratification process
+        voc_strata: All the VoCs being implemented
+
+    Returns:
+        Dictionary of dictionaries of dictionaries of dictionaries of blank dictionaries to be populated later
+
     """
 
     flow_adjs = {}
@@ -305,24 +313,29 @@ def get_blank_adjustments_for_strat(transitions, voc_strata) -> Dict[str, dict]:
     return flow_adjs
 
 
-def update_adjustments_for_strat(
-        stratum_to_modify: str, flow_adjustments: dict, adjustments: dict, voc: str
-) -> Dict[str, dict]:
+def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments: dict, voc: str):
     """
-    Add the flow adjustments to the blank adjustments (as created above by get_blank_adjustments_for_strat) or a
-    progressively extended working adjustments object.
+    Add the flow adjustments to the blank adjustments created above by get_blank_adjustments_for_strat.
+
+    Args:
+        strat: The current stratification that we're modifying here
+        flow_adjustments: Tiered dictionary containing the adjustments
+        adjustments: Adjustments in the format that they are returned by get_all_adjustments
+        voc: The current VoC being considered, the VoC loop being external to this function
+
     """
 
+    # Loop over the stratifications that affect these flow rates, other than VoC stratification
     for agegroup in AGEGROUP_STRATA:
         for clinical_stratum in CLINICAL_STRATA:
 
             # *** Note that PROGRESS is not indexed by age group
-            modification = {stratum_to_modify: adjustments[PROGRESS][clinical_stratum]}
+            modification = {strat: adjustments[PROGRESS][clinical_stratum]}
             flow_adjustments[agegroup][voc][clinical_stratum][PROGRESS].update(modification)
 
             # ... but the other transition processes are
             for transition in AGE_CLINICAL_TRANSITIONS:
-                modification = {stratum_to_modify: adjustments[transition][agegroup][clinical_stratum]}
+                modification = {strat: adjustments[transition][agegroup][clinical_stratum]}
                 flow_adjustments[agegroup][voc][clinical_stratum][transition].update(modification)
 
 

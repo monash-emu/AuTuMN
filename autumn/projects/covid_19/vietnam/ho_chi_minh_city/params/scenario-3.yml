@@ -96,8 +96,8 @@ vaccination:
         coverage: 0.2972 # 40% of 60% of population aged 10-14
         start_time: 666 # 27th Oct 2021
         end_time: 715 # 15th Dec 2021
-        age_min: 15
-        age_max: 19
+      age_min: 15
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.2115 # 60% of 60% of population aged 10-14
         start_time: 715 # 15th Dec 2021

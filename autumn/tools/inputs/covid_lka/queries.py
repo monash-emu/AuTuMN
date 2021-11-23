@@ -2,6 +2,7 @@ import numpy as np
 
 from autumn.tools.inputs.database import get_input_db
 from autumn.tools.inputs.demography.queries import get_population_by_agegroup
+from autumn.models.covid_19.parameters import TimeSeries
 
 def get_lka_testing_numbers():
     """
@@ -46,7 +47,7 @@ def get_lka_vac_coverage(age_group):
     if any([coverage_too_large,unequal_len]):
         AssertionError("Unrealistic coverage")
     
-    return times, coverage_values
+    return TimeSeries(times=times, values=coverage_values)
 
 
 

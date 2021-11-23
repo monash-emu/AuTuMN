@@ -325,7 +325,7 @@ def apply_standard_vacc_coverage(
     for agegroup in AGEGROUP_STRATA:
 
         # Note this must return something for every age group to stop outputs calculation crashing
-        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, params) # PROBLEM HERE! Need to get the params object to pass down.
+        coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, params)
 
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(

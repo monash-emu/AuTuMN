@@ -20,7 +20,7 @@ def get_lka_testing_numbers():
 
     return test_dates, test_values
 
-def get_lka_vac_coverage(age_group):
+def get_lka_vac_coverage(age_group, age_pops=None, params=None):
     """ Provides vaccination coverage for a given age.
     It is assumed all ages above 14 have uniform coverage"""
 

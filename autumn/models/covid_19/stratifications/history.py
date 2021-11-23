@@ -12,7 +12,9 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def get_history_strat(params: Parameters, voc_ifr_effects: Dict[str, float], voc_hosp_effects: Dict[str, float]) -> Stratification:
+def get_history_strat(
+        params: Parameters, voc_ifr_effects: Dict[str, float], stratified_adjusters: Dict[str, Dict[str, float]],
+) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
 
@@ -32,14 +34,10 @@ def get_history_strat(params: Parameters, voc_ifr_effects: Dict[str, float], voc
     flow_adjs = {}
     for voc in voc_ifr_effects.keys():
 
-        # Get the adjustments by clinical status and age group applicable to this VoC
-        ifr_adjuster_experienced = params.infection_fatality.multiplier * voc_ifr_effects[voc]
-        hosp_adjuster_experienced = params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc]
-        sympt_adjuster = params.clinical_stratification.props.symptomatic.multiplier
-
         adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjuster_experienced, sympt_adjuster, hosp_adjuster_experienced
+            params.sojourn, stratified_adjusters[voc]["ifr"], stratified_adjusters[voc]["sympt"],
+            stratified_adjusters[voc]["hosp"]
         )
 
         # Get them into the format needed to be applied to the model

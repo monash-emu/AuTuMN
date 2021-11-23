@@ -327,9 +327,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Infection history stratification.
     """
 
+    stratified_adjusters = {}
+    for voc in voc_ifr_effects.keys():
+        stratified_adjusters[voc] = {
+            "ifr": params.infection_fatality.multiplier * voc_ifr_effects[voc],
+            "hosp": params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc],
+            "sympt": params.clinical_stratification.props.symptomatic.multiplier,
+        }
+
     is_waning_immunity = bool(params.waning_immunity_duration)
     if is_waning_immunity:
-        history_strat = get_history_strat(params, voc_ifr_effects, voc_hosp_effects)
+        history_strat = get_history_strat(params, voc_ifr_effects, voc_hosp_effects, stratified_adjusters)
         model.stratify_with(history_strat)
 
         # Waning immunity (if requested)

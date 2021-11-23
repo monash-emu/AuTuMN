@@ -355,6 +355,7 @@ class VocComponent(BaseModel):
     seed_duration: Optional[float]
     contact_rate_multiplier: Optional[float]
     ifr_multiplier: Optional[float]
+    hosp_multiplier: Optional[float]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):
@@ -368,6 +369,11 @@ class VocComponent(BaseModel):
             assert 1. <= values["ifr_multiplier"], "VoC effect on mortality is less than one"
         else:
             values["ifr_multiplier"] = 1.
+        if "hosp_multiplier" in values:
+            hosp_multiplier = values["hosp_multiplier"]
+            assert 1. <= hosp_multiplier, f"VoC effect on hospitalisation is less than one: {hosp_multiplier}"
+        else:
+            values["hosp_multiplier"] = 1.
         return values
 
 

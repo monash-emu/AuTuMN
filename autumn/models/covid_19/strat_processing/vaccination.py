@@ -351,7 +351,7 @@ def apply_standard_vacc_coverage(
             )
 
 
-def get_stratum_vacc_effect(params, stratum, voc_effect):
+def get_stratum_vacc_effect(params, stratum, voc_ifr_effect, voc_hosp_effect):
 
     # Parameters to directly pull out
     stratum_vacc_params = getattr(params.vaccination, stratum)
@@ -380,7 +380,7 @@ def get_stratum_vacc_effect(params, stratum, voc_effect):
     # Apply the calibration adjusters
 
     sympt_adjuster *= params.clinical_stratification.props.symptomatic.multiplier
-    ifr_adjuster *= params.infection_fatality.multiplier * voc_effect
+    ifr_adjuster *= params.infection_fatality.multiplier * voc_ifr_effect
 
     return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster
 

@@ -11,7 +11,7 @@ from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
-def get_clinical_strat(params: Parameters, vocs: Dict[str, float]):
+def get_clinical_strat(params: Parameters, voc_ifr_effects: Dict[str, float], voc_hosp_effects: Dict[str, float]):
     """
     Stratify the infectious compartments of the covid model by "clinical" status, into five groups.
     """
@@ -42,9 +42,9 @@ def get_clinical_strat(params: Parameters, vocs: Dict[str, float]):
     Make all the adjustments to flows.
     """
 
-    for voc in vocs.keys():
+    for voc in voc_ifr_effects.keys():
 
-        ifr_adjuster = params.infection_fatality.multiplier * vocs[voc]
+        ifr_adjuster = params.infection_fatality.multiplier * voc_ifr_effects[voc]
 
         # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
         adjs = get_all_adjustments(

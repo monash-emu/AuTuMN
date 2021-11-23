@@ -287,28 +287,25 @@ def get_all_adjustments(
     return all_adjustments
 
 
-def get_blank_adjustments_for_strat(transitions: list, voc_strata: List[str]) -> Dict[str, dict]:
+def get_blank_adjustments_for_strat(transitions: list) -> Dict[str, dict]:
     """
     Provide a blank set of flow adjustments to be populated by the update_adjustments_for_strat function below.
 
     Args:
         transitions: All the transition flows we will be modifying through the clinical stratification process
-        voc_strata: All the VoCs being implemented
 
     Returns:
-        Dictionary of dictionaries of dictionaries of dictionaries of blank dictionaries to be populated later
+        Dictionary of dictionaries of dictionaries of blank dictionaries to be populated later
 
     """
 
     flow_adjs = {}
-    for voc in voc_strata:
-        flow_adjs[voc] = {}
-        for agegroup in AGEGROUP_STRATA:
-            flow_adjs[voc][agegroup] = {}
-            for clinical_stratum in CLINICAL_STRATA:
-                flow_adjs[voc][agegroup][clinical_stratum] = {}
-                for transition in transitions:
-                    flow_adjs[voc][agegroup][clinical_stratum][transition] = {}
+    for agegroup in AGEGROUP_STRATA:
+        flow_adjs[agegroup] = {}
+        for clinical_stratum in CLINICAL_STRATA:
+            flow_adjs[agegroup][clinical_stratum] = {}
+            for transition in transitions:
+                flow_adjs[agegroup][clinical_stratum][transition] = {}
 
     return flow_adjs
 

@@ -34,8 +34,9 @@ def get_history_strat(params: Parameters, vocs: Dict[str, float]) -> Stratificat
     sympt_adjuster_experienced = ifr_adjuster_experienced
 
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
-    flow_adjs = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS], vocs)
+    flow_adjs = {}
     for voc in vocs.keys():
+        flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
         ifr_adjuster_experienced *= vocs[voc]
         adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,

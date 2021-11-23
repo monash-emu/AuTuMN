@@ -177,64 +177,64 @@ vaccination:
         start_time: 485 # 29th Apr 2021
         end_time: 518 # 01st Jun 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.00189
         start_time: 518 # 01st Jun 2021
         end_time: 545 # 28th Jun 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.000383
         start_time: 545 # 28th Jun 2021
         end_time: 556 # 09th Jul 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.000568
         start_time: 556 # 09th Jul 2021
         end_time: 572 # 25th Jul 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.00846
         start_time: 572 # 25th Jul 2021
         end_time: 593 # 15th Aug 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.011185
         start_time: 593 # 15th Aug 2021
         end_time: 610 # 01st Sep 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.05534
         start_time: 610 # 01st Sep 2021
         end_time: 624 # 15th Sep 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.070507
         start_time: 624 # 15th Sep 2021
         end_time: 640 # 01st Oct 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.044739
         start_time: 640 # 01st Oct 2021
         end_time: 654 # 15th Oct 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.008727
         start_time: 654 # 15th Oct 2021
         end_time: 670 # 31st Oct 2021
       age_min: 15
-      age_max: 20
+      age_max: 19
     - supply_period_coverage:
         coverage: 0.006306
         start_time: 670 # 31st Oct 2021
         end_time: 685 # 15th Nov 2021
       age_min: 15
-      age_max: 20
+      age_max: 19

@@ -38,15 +38,19 @@ def get_vaccination_strat(params: Parameters, all_strata: list, vocs: Dict[str, 
     for voc in vocs.keys():
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
         for stratum in vacc_strata:
+
+            # Collate the vaccination effects together
             vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(
                 params, stratum, vocs[voc]
             )
 
-            # Get and apply the severity modifications (in the same way as for history stratification)
+            # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
             adjs = get_all_adjustments(
                 params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
                 params.sojourn, ifr_adjuster, sympt_adjuster, hosp_adjuster
             )
+
+            # Get them into the format needed to be applied to the model
             update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
     add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED, vocs)
 

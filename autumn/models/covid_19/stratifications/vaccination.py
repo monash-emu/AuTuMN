@@ -13,7 +13,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 from autumn.models.covid_19.strat_processing.vaccination import get_stratum_vacc_effect
 
 
-def get_vaccination_strat(params: Parameters, all_strata: list, voc_ifr_effects: Dict[str, float], voc_hosp_effects: Dict[str, float]) -> Stratification:
+def get_vaccination_strat(params: Parameters, all_strata: list, voc_ifr_effects: Dict[str, float], voc_hosp_effects: Dict[str, float], stratified_adjusters) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
@@ -41,7 +41,7 @@ def get_vaccination_strat(params: Parameters, all_strata: list, voc_ifr_effects:
 
             # Collate the vaccination effects together
             vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(
-                params, stratum, voc_ifr_effects[voc], voc_hosp_effects[voc]
+                params, stratum, stratified_adjusters[voc]
             )
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum

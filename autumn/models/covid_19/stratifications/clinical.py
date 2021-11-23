@@ -50,8 +50,7 @@ def get_clinical_strat(params: Parameters, voc_ifr_effects: Dict[str, float], vo
         # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
         adjs = get_all_adjustments(
             clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
-            ifr_adjuster, params.clinical_stratification.props.symptomatic.multiplier,
-            hosp_adjuster,
+            ifr_adjuster, params.clinical_stratification.props.symptomatic.multiplier, hosp_adjuster,
         )
 
         # Assign all the adjustments to the summer model

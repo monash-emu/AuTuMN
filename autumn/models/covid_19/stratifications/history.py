@@ -38,10 +38,14 @@ def get_history_strat(params: Parameters, voc_ifr_effects: Dict[str, float], voc
     for voc in voc_ifr_effects.keys():
 
         # Get the adjustments by clinical status and age group applicable to this VoC
-        ifr_adjuster_experienced *= voc_ifr_effects[voc]
+        ifr_adjuster_experienced *= params.infection_fatality.multiplier * voc_ifr_effects[voc]
+
+        # Note that this deliberately isn't adjusted for history status
+        hosp_adjuster_experienced = params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc]
+
         adjs = get_all_adjustments(
             params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjuster_experienced, sympt_adjuster_experienced, voc_hosp_effects[voc]
+            params.sojourn, ifr_adjuster_experienced, sympt_adjuster_experienced, hosp_adjuster_experienced
         )
 
         # Get them into the format needed to be applied to the model

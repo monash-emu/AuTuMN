@@ -379,8 +379,10 @@ def get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params):
 
     time_series = vac_cov_map[iso3](agegroup, age_pops, one_dose_vacc_params)
 
-    assert all((0.0 <= i_coverage <= 1.0 for i_coverage in time_series.values))
+    # A couple of standard checks
+    check_list_increasing(time_series.times)
     check_list_increasing(time_series.values)
+    assert all((0.0 <= i_coverage <= 1.0 for i_coverage in time_series.values))
 
     return time_series.times, time_series.values
 

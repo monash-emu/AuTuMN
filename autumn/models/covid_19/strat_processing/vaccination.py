@@ -13,7 +13,7 @@ from autumn.tools.inputs.covid_au.queries import (
     VACC_COVERAGE_START_AGES,
     VACC_COVERAGE_END_AGES,
 )
-from autumn.tools.utils.utils import find_closest_value_in_list
+from autumn.tools.utils.utils import find_closest_value_in_list, check_list_increasing
 from autumn.models.covid_19.parameters import Vaccination as VaccParams, TimeSeries
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
@@ -407,5 +407,7 @@ def get_mmr_vac_coverage(age_group, age_pops, one_dose_vacc_params):
     # For the children, no vaccination
     else:
         coverage_values = [0.0] * len(times)
+
+    check_list_increasing(coverage_values)
 
     return TimeSeries(times=times, values=coverage_values)

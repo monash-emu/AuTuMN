@@ -387,10 +387,6 @@ def get_mmr_vac_coverage(age_group, age_pops, one_dose_vacc_params):
 
     times, at_least_one_dose = base_mmr_vac_doses()
 
-    if one_dose_vacc_params.doses:
-        times.extend(one_dose_vacc_params.doses.times)
-        at_least_one_dose.extend(one_dose_vacc_params.doses.values)
-
     # For the adult population
     if int(age_group) >= 15:
         adult_denominator = sum(age_pops[3:])
@@ -398,16 +394,16 @@ def get_mmr_vac_coverage(age_group, age_pops, one_dose_vacc_params):
         # Convert doses to coverage
         coverage_values = [i_doses / adult_denominator for i_doses in at_least_one_dose]
 
+        # Extend with user requests
         if one_dose_vacc_params.coverage:
             times.extend(one_dose_vacc_params.coverage.times)
             coverage_values.extend(one_dose_vacc_params.coverage.values)
-
-        assert all([0.0 <= i_cov <= 1.0 for i_cov in coverage_values])
 
     # For the children, no vaccination
     else:
         coverage_values = [0.0] * len(times)
 
     check_list_increasing(coverage_values)
+    assert all([0.0 <= i_cov <= 1.0 for i_cov in coverage_values])
 
     return TimeSeries(times=times, values=coverage_values)

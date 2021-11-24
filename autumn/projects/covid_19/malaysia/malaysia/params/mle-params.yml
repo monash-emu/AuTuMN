@@ -8,4 +8,3 @@ voc_emergence.alpha_beta.contact_rate_multiplier: 1.5886184436779327
 voc_emergence.alpha_beta.start_time: 361.73688779714536
 voc_emergence.delta.contact_rate_multiplier: 3.2004140457514287
 voc_emergence.delta.start_time: 482.41208620916143
-infection_deaths_dispersion_param: 5.1530311549683809

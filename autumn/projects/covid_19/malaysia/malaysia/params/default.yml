@@ -7,7 +7,7 @@ mixing_matrices:
   source_iso3: CHN
 
 time:
-  start: 70
+  start: 100
   end: 670 # 31st october 2021    791 # 01 March, 2022
 
 country:
@@ -121,7 +121,7 @@ mobility:
 
 voc_emergence:
   alpha_beta:
-    start_time: 450 #15 Jan 2021
+    start_time: 500 #14 May 2021
     entry_rate: 1.
     seed_duration: 10.
     contact_rate_multiplier: 1.56
@@ -145,6 +145,7 @@ sojourn:
       total_period: 3.9
     active:
       total_period: 6.36
+
 
 icu_occupancy_dispersion_param: 80.14141955570402
 infection_deaths_dispersion_param: 5.1530311549683809

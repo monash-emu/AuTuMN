@@ -42,17 +42,17 @@ targets = [
 priors = [
     # Regional parameters
     UniformPrior("contact_rate", [0.015, 0.04]),
-    UniformPrior("infectious_seed", [450.0, 950.0]),
+    UniformPrior("infectious_seed", [75.0, 300.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.003, 0.015]),
     # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", [0.008, 0.04]),
     # Health system-related
     UniformPrior("clinical_stratification.icu_prop", [0.03, 0.1]),
-    UniformPrior("infection_fatality.multiplier", [0.1, 1.2]),
+    UniformPrior("infection_fatality.multiplier", [0.1, 0.7]),
     # VoC parameters
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.7]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.9]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [300, 600]),
     #UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.6, 3.25]),
     #UniformPrior("voc_emergence.delta.start_time", [468, 500]),
 

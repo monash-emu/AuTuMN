@@ -1,0 +1,20 @@
+description: return to baseline mobility
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-12-01
+        - 2022-12-02
+      values:
+        - - repeat_prev
+        - 1.
+    work:
+      append: true
+      times:
+        - 2021-12-01
+        - 2022-12-02
+      values:
+        - - repeat_prev
+        - 1.

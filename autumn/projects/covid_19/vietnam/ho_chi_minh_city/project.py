@@ -48,7 +48,7 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.002, 0.015]),
 
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.02, 0.4], jumping_stdev=0.01),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.02, 0.4]),
 
     # Waning immunity
     # UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),

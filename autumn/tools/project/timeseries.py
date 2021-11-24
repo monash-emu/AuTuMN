@@ -91,6 +91,37 @@ class TimeSeries:
                 values=self.values[:end_idx],
             )
 
+    def multiple_truncations(self, truncations: list):
+        """
+        Truncate the time series to multiple time periods of interest.
+
+        Args:
+            truncations: User requests of any number of time periods of interest
+
+        Returns:
+            TimeSeries: TimeSeries with times and values truncated to periods of interest
+        """
+
+        indices = []
+        for i_period, period in enumerate(truncations):
+
+            # Check requests are correct
+            assert len(period) == 2, f"Truncation interval has length: {len(period)}"
+            assert all([type(time) == int for time in period]), f"Truncation intervals should be submitted as int type"
+            assert period[0] <= period[1], f"Truncation end time before start time: {period[0]}, {period[1]}"
+
+            # Gather up all the indices for the various truncation intervals
+            indices.extend([idx for idx in range(len(self.times)) if period[0] <= self.times[idx] <= period[1]])
+
+        # Discourage overlapping truncation intervals, which would likely be a mistake in the request
+        assert len(indices) == len(set(indices))
+
+        return TimeSeries(
+            self.name,
+            times=[self.times[idx] for idx in indices],
+            values=[self.values[idx] for idx in indices],
+        )
+
 
 class TimeSeriesSet:
     """

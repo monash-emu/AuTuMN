@@ -60,6 +60,8 @@ def base_mmr_vac_doses():
         11223285,
         12387573,
         12798322,
+        13244996,
+        13905795,
     ]
 
     return times, values

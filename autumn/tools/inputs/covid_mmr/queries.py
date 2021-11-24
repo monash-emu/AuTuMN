@@ -21,6 +21,8 @@ def get_mmr_testing_numbers():
 
 
 def base_mmr_vac_doses():
+    # Slide 5 of Mya Yee Mon's PowerPoint sent on 12th November - applied to the 15+ population only
+
     """Will move this to inputs db"""
     times = [
         366,  # 1st Jan 2021

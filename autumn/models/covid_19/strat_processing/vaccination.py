@@ -313,12 +313,7 @@ def add_vic_regional_vacc(
 
 
 def apply_standard_vacc_coverage(
-    model: CompartmentalModel,
-    vacc_lag: float,
-    model_start_time: float,
-    iso3: str,
-    age_pops,
-    one_dose_vacc_params,
+    model: CompartmentalModel, vacc_lag: float, model_start_time: float, iso3: str, age_pops, one_dose_vacc_params,
 ):
 
     for agegroup in AGEGROUP_STRATA:
@@ -328,18 +323,11 @@ def apply_standard_vacc_coverage(
 
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
-            coverage_times[0],
-            coverage_times[-1],
-            len(coverage_times),
-            coverage_times,
-            coverage_values,
-            vacc_lag,
+            coverage_times[0], coverage_times[-1], len(coverage_times), coverage_times, coverage_values, vacc_lag,
         )
 
         # Apply the vaccination rate function to the model
-        vacc_rate_func = get_piecewise_rollout(
-            model_start_time, rollout_period_times[1:], vaccination_rates
-        )
+        vacc_rate_func = get_piecewise_rollout(model_start_time, rollout_period_times[1:], vaccination_rates)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
                 name="vaccination",
@@ -399,30 +387,22 @@ def get_mmr_vac_coverage(age_group, age_pops, one_dose_vacc_params):
 
     times, at_least_one_dose = base_mmr_vac_doses()
 
-    has_user_input = hasattr(one_dose_vacc_params, "vac_coverage")
-        
-    if has_user_input:
-        times.extend(one_dose_vacc_params.vac_coverage.times)
-        at_least_one_dose.extend(one_dose_vacc_params.vac_coverage.values)
+    if one_dose_vacc_params.doses:
+        times.extend(one_dose_vacc_params.doses.times)
+        at_least_one_dose.extend(one_dose_vacc_params.doses.values)
 
     # For the adult population
     if int(age_group) >= 15:
         adult_denominator = sum(age_pops[3:])
 
-        # Slide 5 of Mya Yee Mon's PowerPoint sent on 12th November - applied to the 15+ population only
-        # at_least_one_dose = params.vaccination.one_dose.values # extract the dose number
-
         # Convert doses to coverage
         coverage_values = [i_doses / adult_denominator for i_doses in at_least_one_dose]
 
-        # Add future targets
-        target_inflation_for_age = sum(age_pops) / adult_denominator
-        target_all_age_coverage = [0.4, 0.7]
-        target_adult_coverage = [
-            target_inflation_for_age * i_cov for i_cov in target_all_age_coverage
-        ]
-        assert all([0.0 <= i_cov <= 1.0 for i_cov in target_adult_coverage])
-        coverage_values += target_adult_coverage
+        if one_dose_vacc_params.coverage:
+            times.extend(one_dose_vacc_params.coverage.times)
+            coverage_values.extend(one_dose_vacc_params.coverage.values)
+
+        assert all([0.0 <= i_cov <= 1.0 for i_cov in coverage_values])
 
     # For the children, no vaccination
     else:

@@ -46,13 +46,14 @@ priors = [
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.003, 0.015]),
     # Health system-related
-    UniformPrior("clinical_stratification.icu_prop", [0.01, 0.07]),
+    UniformPrior("clinical_stratification.icu_prop", [0.03, 0.15]),
     UniformPrior("infection_fatality.multiplier", [0.1, 0.7]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.09, 0.5]),
     # VoC parameters
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.9]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [300, 420]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.6, 3.25]),
-    UniformPrior("voc_emergence.delta.start_time", [468, 500]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.6, 3.5]),
+    UniformPrior("voc_emergence.delta.start_time", [468, 520]),
 ]
 
 # Load proposal sds from yml file

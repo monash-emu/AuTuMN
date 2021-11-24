@@ -30,6 +30,9 @@ priors = [
     # Global COVID priors
     # *COVID_GLOBAL_PRIORS,
 
+    # Starting date
+    UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
+
     # Regional parameters
     UniformPrior("infectious_seed", [1, 20]),
     UniformPrior("contact_rate", [0.035, 0.055]),

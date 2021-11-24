@@ -40,30 +40,19 @@ targets = [
 ]
 
 priors = [
-    # Global COVID priors
-    *COVID_GLOBAL_PRIORS,
-    # Dispersion parameters based on targets
-    *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.015, 0.04]),
-    UniformPrior("infectious_seed", [450.0, 950.0]),
+    UniformPrior("infectious_seed", [400, 900.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.003, 0.015]),
-    # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", [0.008, 0.04]),
     # Health system-related
-    UniformPrior("clinical_stratification.icu_prop", [0.03, 0.1]),
-    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 0.6]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.8, 1.5]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.001, 0.008]),
-    UniformPrior("infection_fatality.multiplier", [0.1, 1.2]),
+    UniformPrior("clinical_stratification.icu_prop", [0.01, 0.07]),
+    UniformPrior("infection_fatality.multiplier", [0.1, 0.7]),
     # VoC parameters
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.7]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [300, 400]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.9]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [300, 420]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [2.6, 3.25]),
     UniformPrior("voc_emergence.delta.start_time", [468, 500]),
-    # risk benefit
-    UniformPrior("vaccination_risk.risk_multiplier", [0.8, 1.2], sampling="lhs")
 ]
 
 # Load proposal sds from yml file

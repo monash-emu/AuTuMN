@@ -30,9 +30,9 @@ scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_d
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(210).truncate_end_time(548)
-icu_occupancy_ts = ts_set.get("icu_occupancy").truncate_start_time(210).moving_average(window=7).downsample(step=7).truncate_end_time(548)
-infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(210).truncate_end_time(548) #.moving_average(window=7).downsample(step=7)
+notifications_ts = ts_set.get("notifications").truncate_start_time(210)
+icu_occupancy_ts = ts_set.get("icu_occupancy").truncate_start_time(210).moving_average(window=7).downsample(step=7)
+infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(210)#.moving_average(window=7).downsample(step=7)
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(infection_deaths_ts),

@@ -380,6 +380,8 @@ def get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params):
     time_series = vac_cov_map[iso3](agegroup, age_pops, one_dose_vacc_params)
 
     assert all((0.0 <= i_coverage <= 1.0 for i_coverage in time_series.values))
+    check_list_increasing(time_series.values)
+
     return time_series.times, time_series.values
 
 
@@ -402,8 +404,5 @@ def get_mmr_vac_coverage(age_group, age_pops, one_dose_vacc_params):
     # For the children, no vaccination
     else:
         coverage_values = [0.0] * len(times)
-
-    check_list_increasing(coverage_values)
-    assert all([0.0 <= i_cov <= 1.0 for i_cov in coverage_values])
 
     return TimeSeries(times=times, values=coverage_values)

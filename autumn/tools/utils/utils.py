@@ -281,7 +281,6 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
         secrets.write(file_path, *args)
 
 
-
 def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
     df.rename(columns={datecol.lower(): "date"}, inplace=True)

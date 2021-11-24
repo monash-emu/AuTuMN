@@ -38,8 +38,9 @@ targets = [
     NormalTarget(infection_deaths_ts),
     NormalTarget(icu_occupancy_ts),
 ]
-
+dispersion_targets = [NormalTarget(infection_deaths_ts)]
 priors = [
+    *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.015, 0.04]),
     UniformPrior("infectious_seed", [400, 900.0]),

@@ -35,7 +35,7 @@ priors = [
 
     # Regional parameters
     UniformPrior("infectious_seed", [1, 100]),
-    UniformPrior("contact_rate", [0.035, 0.055]),
+    UniformPrior("contact_rate", [0.035, 0.1]),
 
     # Health system-related
     # UniformPrior("clinical_stratification.icu_prop", [0.01, 0.1]),

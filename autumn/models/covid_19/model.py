@@ -286,14 +286,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object
-        vaccination_strat = get_vaccination_strat(params, vacc_strata, voc_ifr_effects, voc_hosp_effects, stratified_adjusters)
+        vaccination_strat = get_vaccination_strat(
+            params, vacc_strata, voc_ifr_effects, voc_hosp_effects, stratified_adjusters
+        )
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable
         if is_region_vic:
             add_vic_regional_vacc(model, vacc_params, params.population.region, params.time.start)
         elif params.vaccination.standard_supply:
-            apply_standard_vacc_coverage(model, vacc_params.lag, params.time.start, params.country.iso3, total_pops, params)
+            apply_standard_vacc_coverage(
+                model, vacc_params.lag, params.time.start, params.country.iso3, total_pops, params.vaccination.one_dose
+            )
         else:
             add_requested_vacc_flows(model, vacc_params)
 

@@ -28,10 +28,10 @@ for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospi
 
 priors = [
     # Global COVID priors
-    # *COVID_GLOBAL_PRIORS,
+    *COVID_GLOBAL_PRIORS,
 
     # Starting date
-    UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
+    # UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
 
     # Regional parameters
     UniformPrior("infectious_seed", [1, 20]),

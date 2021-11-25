@@ -240,19 +240,32 @@ def get_piecewise_vacc_rates(
     return rollout_period_times, vaccination_rates
 
 
-def get_piecewise_rollout(
-    start_time: float, end_times: list, vaccination_rates: np.ndarray
-) -> Callable:
+def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) -> Callable:
     """
     Turn the vaccination rates and end times into a piecewise roll-out function.
+    Called by the Victoria progressive vaccination coverage function and by the more generalisable standard vacc
+    coverage function, which are responsible for calculating the rates based on the coverage values at the requested
+    points in time.
+
+    Args:
+        end_times: Sequence of the times at which the vaccination rate periods end
+        vaccination_rates: The per capita rate of vaccination during the period ending at that end time
+
+    Returns:
+        Piecewise function in a summer-ready format of the rates of vaccination over time
+
     """
 
+    assert len(end_times) == len(vaccination_rates), "Number of vaccination periods (end times) and rates differs"
+
+    # Function defined in the standard format for function-based standard transition flows
     def get_vaccination_rate(time, computed_values):
-        if time > start_time:
-            idx = sum(end_times < time)
-            if idx < len(vaccination_rates):
-                return vaccination_rates[idx]
-        return 0.0
+
+        # Identify the index of the first list element greater than the time of interest
+        idx = sum(end_times < time)
+
+        # Return zero if the time is after the last end time, otherwise take the vaccination rate
+        return 0.0 if idx >= len(vaccination_rates) else vaccination_rates[idx]
 
     return get_vaccination_rate
 
@@ -302,9 +315,7 @@ def add_vic_regional_vacc(
         )
 
         # Apply the vaccination rate function to the model
-        vacc_rate_func = get_piecewise_rollout(
-            model_start_time, rollout_period_times[1:], vaccination_rates
-        )
+        vacc_rate_func = get_piecewise_rollout(rollout_period_times[1:], vaccination_rates)
         add_vacc_flows(model, working_agegroups, vacc_rate_func)
 
     # Add blank/zero flows to make the output requests simpler
@@ -327,7 +338,7 @@ def apply_standard_vacc_coverage(
         )
 
         # Apply the vaccination rate function to the model
-        vacc_rate_func = get_piecewise_rollout(model_start_time, rollout_period_times[1:], vaccination_rates)
+        vacc_rate_func = get_piecewise_rollout(rollout_period_times[1:], vaccination_rates)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
                 name="vaccination",

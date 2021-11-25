@@ -135,7 +135,7 @@ def plot_timeseries_with_uncertainty(
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
-    targets = {k: v for k, v in targets.items() if v["output_key"] == "incidence"}
+    targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
 
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
 

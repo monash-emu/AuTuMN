@@ -262,7 +262,7 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
         idx = sum(end_times < time)
 
         # Return zero if the time is after the last end time, otherwise take the vaccination rate
-        return 0.0 if idx > len(vaccination_rates) else vaccination_rates[idx]
+        return 0.0 if idx >= len(vaccination_rates) else vaccination_rates[idx]
 
     return get_vaccination_rate
 

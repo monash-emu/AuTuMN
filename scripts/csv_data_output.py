@@ -29,7 +29,7 @@ phl = {
         "manila",
         "philippines",
     ],
-    "columns": STANDARD_COL + ["accum_incidence", "accum_notifications"],
+    "columns": STANDARD_COL,
 }
 mys = {
     "region": ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"],
@@ -86,10 +86,6 @@ def upload_csv(country_list):
         os.remove(f"{ctry}_data.csv")
 
 
-
-
-
-
 def get_files(country):
     return {
         region: os.path.join(DATA_PATH, each)
@@ -102,10 +98,14 @@ def get_files(country):
 phl["region"] = get_files(phl)
 mys["region"] = get_files(mys)
 lka["region"] = get_files(lka)
-#npl["region"] = get_files(npl)
-#vic["region"] = get_files(vic)
+# npl["region"] = get_files(npl)
+# vic["region"] = get_files(vic)
 
-country = {"lka": lka, "phl": phl, "mys": mys, }#"npl": npl, "vic": vic}
+country = {
+    "lka": lka,
+    "phl": phl,
+    "mys": mys,
+}  # "npl": npl, "vic": vic}
 
 for ctry in country:
 

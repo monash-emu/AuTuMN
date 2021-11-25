@@ -58,6 +58,8 @@ class Vaccination:
     UNVACCINATED = "unvaccinated"
     ONE_DOSE_ONLY = "one_dose"
     VACCINATED = "fully_vaccinated"
+    PART_WANED = "part_waned"
+    WANED = "waned"
 
 
 class Strain:
@@ -98,6 +100,8 @@ VACCINATION_STRATA = [
     Vaccination.UNVACCINATED,
     Vaccination.ONE_DOSE_ONLY,
     Vaccination.VACCINATED,
+    Vaccination.PART_WANED,
+    Vaccination.WANED
 ]
 
 HISTORY_STRATA = [
@@ -127,15 +131,11 @@ Vic model options
 
 class VicModelTypes:
     NON_VIC = "non_vic"
-    VIC_SUPER_2020 = "vic_super_2020"
-    VIC_SUPER_2021 = "vic_super_2021"
     VIC_REGION_2021 = "vic_region_2021"
 
 
 VIC_MODEL_OPTIONS = [
     VicModelTypes.NON_VIC,
-    VicModelTypes.VIC_SUPER_2020,
-    VicModelTypes.VIC_SUPER_2021,
     VicModelTypes.VIC_REGION_2021,
 ]
 

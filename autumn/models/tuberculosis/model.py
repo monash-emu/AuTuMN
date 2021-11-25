@@ -140,8 +140,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         screening_rate_func = tanh_based_scaleup(
             func_params["shape"],
             func_params["inflection_time"],
-            func_params["lower_asymptote"],
-            func_params["upper_asymptote"],
+            func_params["start_asymptote"],
+            func_params["end_asymptote"],
         )
 
         def detection_rate(t, cv=None):

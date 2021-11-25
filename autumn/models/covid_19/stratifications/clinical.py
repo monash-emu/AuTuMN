@@ -1,4 +1,5 @@
 import copy
+from typing import Dict
 
 from summer import Overwrite, Stratification
 
@@ -10,7 +11,7 @@ from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
-def get_clinical_strat(params: Parameters):
+def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]]) -> Stratification:
     """
     Stratify the infectious compartments of the covid model by "clinical" status, into five groups.
     """
@@ -41,18 +42,19 @@ def get_clinical_strat(params: Parameters):
     Make all the adjustments to flows.
     """
 
-    # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
-    adjs = get_all_adjustments(
-        clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
-        params.infection_fatality.multiplier, params.clinical_stratification.props.symptomatic.multiplier,
-        params.clinical_stratification.props.hospital.multiplier, params.infection_fatality.top_bracket_overwrite,
-    )
+    for voc in stratified_adjusters.keys():
 
-    # Assign all the adjustments to the summer model
-    for agegroup in AGEGROUP_STRATA:
-        source = {"agegroup": agegroup}
-        clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified
-        for transition in AGE_CLINICAL_TRANSITIONS:
-            clinical_strat.add_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)
+        # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
+        adjs = get_all_adjustments(
+            clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
+            stratified_adjusters[voc]["ifr"], stratified_adjusters[voc]["sympt"], stratified_adjusters[voc]["hosp"],
+        )
+
+        # Assign all the adjustments to the summer model
+        for agegroup in AGEGROUP_STRATA:
+            source = {"agegroup": agegroup, "strain": voc}
+            clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified
+            for transition in AGE_CLINICAL_TRANSITIONS:
+                clinical_strat.add_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)
 
     return clinical_strat

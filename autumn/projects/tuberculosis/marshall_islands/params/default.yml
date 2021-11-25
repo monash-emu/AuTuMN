@@ -82,8 +82,8 @@ time_variant_tsr: # should always be > 0
 time_variant_tb_screening_rate:
   shape: .1 # The shape parameter to the tanh-based curve
   inflection_time: 1990. # Point at which curve inflects
-  lower_asymptote: 0. # Starting value - lower asymptote
-  upper_asymptote: 0.4057634920539735
+  start_asymptote: 0. # Starting value - lower asymptote
+  end_asymptote: 0.4057634920539735
 
 extra_params:
   prop_diabetes:

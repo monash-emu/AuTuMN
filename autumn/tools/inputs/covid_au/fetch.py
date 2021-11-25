@@ -42,4 +42,4 @@ CLUSTER_MAP = {
 def fetch_covid_au_data():
     pd.read_csv(DATA_URL).to_csv(COVID_AU_CSV_PATH)
 
-    pd.read_csv(YOUGOV_URL).to_csv(COVID_AU_YOUGOV)
+    pd.read_csv(YOUGOV_URL).to_csv(COVID_AU_YOUGOV, index=False)

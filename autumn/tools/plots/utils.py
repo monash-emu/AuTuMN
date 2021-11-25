@@ -16,7 +16,7 @@ PLOT_TEXT_DICT = {
     "progression_multiplier": "progression multiplier",
     "time_variant_tb_screening_rate.shape": "screening profile (max gradient)",
     "time_variant_tb_screening_rate.inflection_time": "screening profile (inflection time), year",
-    "time_variant_tb_screening_rate.upper_asymptote": "screening profile (final rate), per year",
+    "time_variant_tb_screening_rate.end_asymptote": "screening profile (final rate), per year",
     "user_defined_stratifications.location.adjustments.detection.ebeye": "rel. screening rate (Ebeye)",
     "user_defined_stratifications.location.adjustments.detection.other": "rel. screening rate (Other Isl.)",
     "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
@@ -54,7 +54,6 @@ PLOT_TEXT_DICT = {
     "prop_detected_traced": "Proportion traced among detected cases",
     "prop_contacts_with_detected_index": "Proportion of contacts whose index is detected",
     "prop_contacts_quarantined": "Proportion quarantined among all contacts",
-    "infection_fatality.top_bracket_overwrite": "75 and above IFR",
     "victorian_clusters.contact_rate_multiplier_north_metro": "north and west metro",
     "victorian_clusters.contact_rate_multiplier_south_metro": "south and south east metro",
     "prop_incidence_strain_delta": "Proportion of Delta variant in new cases",
@@ -114,8 +113,8 @@ def get_plot_text_dict(
         text = text.replace("victorian_clusters.contact_rate_multiplier_", "")
     if "victorian_clusters." in param_string:
         text = text.replace("victorian_clusters.metro.mobility.microdistancing", "")
-    if "upper_asymptote" in param_string:
-        text = text.replace("parameters.upper_asymptote", "")
+    if "end_asymptote" in param_string:
+        text = text.replace("parameters.end_asymptote", "")
     if capitalise_first_letter:
         text = text[0].upper() + text[1:]
     if remove_underscore:

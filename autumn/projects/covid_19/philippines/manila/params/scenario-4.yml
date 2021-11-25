@@ -1,0 +1,35 @@
+description: 80% of the 10-19 y.o. at least one dose by end of year / 100% school reopening 1 Jan 2022
+
+time:
+  start: 657
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-15
+        - 2020-03-16
+        - 2021-12-31
+        - 2022-01-02
+      values:
+        - 1.
+        - 0.
+        - 0.
+        - 1.
+    work:
+      append: true
+      times:
+        - 2021-12-31
+        - 2022-01-02
+      values:
+        - ['repeat_prev']
+        - ['scale_prev_up_to_1', 1.2]
+    other_locations:
+      append: true
+      times:
+        - 2021-12-31
+        - 2022-01-02
+      values:
+        - ['repeat_prev']
+        - ['scale_prev_up_to_1', 1.2]

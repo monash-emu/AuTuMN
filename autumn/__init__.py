@@ -23,20 +23,7 @@ register_project(Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.ph
 
 # Example projects
 register_project(Models.EXAMPLE, Region.PHILIPPINES, "autumn.projects.example.philippines.project")
-register_project(Models.EXAMPLE, Region.VICTORIA_2020, "autumn.projects.example.victoria.project")
 
-# COVID: Victoria state-wide super-model
-register_project(
-    Models.COVID_19,
-    Region.VICTORIA_2020,
-    "autumn.projects.covid_19.victoria.victoria_2020.project",
-)
-
-register_project(
-    Models.COVID_19,
-    Region.VICTORIA_2021,
-    "autumn.projects.covid_19.victoria.victoria_2021.project",
-)
 
 register_project(
     Models.COVID_19,
@@ -184,6 +171,13 @@ register_project(
     Region.HO_CHI_MINH_CITY,
     "autumn.projects.covid_19.vietnam.ho_chi_minh_city.project",
 )
+
+register_project(
+    Models.COVID_19,
+    Region.HANOI,
+    "autumn.projects.covid_19.vietnam.hanoi.project",
+)
+
 
 register_project(Models.COVID_19, Region.MYANMAR, "autumn.projects.covid_19.myanmar.project")
 

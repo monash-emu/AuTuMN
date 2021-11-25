@@ -1,6 +1,7 @@
 description: BASELINE
 
-vic_status: "vic_region_2021"
+infection_fatality:
+  multiplier: 2.
 
 vic_2021_seeding:
   seed_time: 580
@@ -126,8 +127,8 @@ mobility:
       parameters:
         shape: 0.1
         inflection_time: 595.
-        lower_asymptote: 0.165
-        upper_asymptote: 0.241
+        start_asymptote: 0.165
+        end_asymptote: 0.241
       locations:
         - other_locations
         - school
@@ -141,9 +142,12 @@ mobility:
         - school
         - work
     face_coverings: # Mandatory face coverings
-      function_type: constant
+      function_type: tanh  # Even though this is constant, set as tanh for modification in the roadmap scenario
       parameters:
-        effect: 0.84
+        shape: 0.5  # Transition over about a week, when we turn down the face coverings usage in the roadmap scenario
+        inflection_time: 694.  # 24th November 2021
+        start_asymptote: 0.84
+        end_asymptote: 0.84
       locations:
         - other_locations
         - school
@@ -151,7 +155,7 @@ mobility:
     face_coverings_adjuster:
       function_type: constant
       parameters:
-        effect: 0.4590192843551404
+        effect: 0.25
       locations:
         - other_locations
         - school
@@ -174,8 +178,8 @@ vaccination:
   second_dose_delay:
     shape: 0.1
     inflection_time: 624.  # Middle of September 2021, so that most scaling occurs during September
-    lower_asymptote: 0.0232558  # Baseline lag in vaccination curves, 43 days
-    upper_asymptote: 0.0357143  # Shortened lag from Dept's spreadsheet, 28 days
+    start_asymptote: 43.  # Baseline lag in vaccination curves, 43 days
+    end_asymptote: 28.  # Shortened lag from Dept's spreadsheet, 28 days
   lag: 14
   roll_out_components:
     - vic_supply:

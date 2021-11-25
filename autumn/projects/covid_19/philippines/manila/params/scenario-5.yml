@@ -1,0 +1,50 @@
+description: 50% of the 10-19 y.o. at least one dose by end of year / 100% school reopening 1 Jan 2022
+
+time:
+  start: 657
+
+vaccination:
+  roll_out_components:
+    ##############  Assumed future roll-out ################
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .99  # to reach the remaining unvaccinated 20+ population by EoY
+        start_time: 658 # 19 Oct 2021
+        end_time: 731 # 31 Dec 2021
+    - age_min: 10
+      age_max: 19
+      supply_period_coverage:
+        coverage: .50  # to reach 80% of 10-19 one-dose-vaccinated by End of Year
+        start_time: 658 # 19 Oct 2021
+        end_time: 731 # 31 Dec 2021
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-15
+        - 2020-03-16
+        - 2021-12-31
+        - 2022-01-02
+      values:
+        - 1.
+        - 0.
+        - 0.
+        - 1.
+    work:
+      append: true
+      times:
+        - 2021-12-31
+        - 2022-01-02
+      values:
+        - ['repeat_prev']
+        - ['scale_prev_up_to_1', 1.2]
+    other_locations:
+      append: true
+      times:
+        - 2021-12-31
+        - 2022-01-02
+      values:
+        - ['repeat_prev']
+        - ['scale_prev_up_to_1', 1.2]

@@ -4,11 +4,9 @@ Script for loading LKA data into calibration targets and default.yml
 """
 import json
 
-
 import os
 import pandas as pd
 from datetime import datetime
-
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
@@ -39,9 +37,21 @@ def preprocess_lka_data():
     df["date_index"] = (df.periodname - COVID_BASE_DATETIME).dt.days
     df = df[df.periodname <= pd.to_datetime("today")]
     # Fix errors - email sent to sl team
-    df.loc[df.periodid==20201231, ['Sri Lanka Total bed occupancy in COVID19  ICUs',"Sri Lanka Occupied beds in ICUs"]] = [19.0,19.0]
-    df.loc[df.periodid==20210902, ['Sri Lanka Total bed occupancy in COVID19  ICUs',"Sri Lanka Occupied beds in ICUs"]] = [100,100]
-    
+    df.loc[
+        df.periodid == 20201231,
+        [
+            "Sri Lanka Total bed occupancy in COVID19  ICUs",
+            "Sri Lanka Occupied beds in ICUs (Source: DPRD)",
+        ],
+    ] = [19.0, 19.0]
+    df.loc[
+        df.periodid == 20210902,
+        [
+            "Sri Lanka Total bed occupancy in COVID19  ICUs",
+            "Sri Lanka Occupied beds in ICUs (Source: DPRD)",
+        ],
+    ] = [100, 100]
+
     return df
 
 

@@ -1,4 +1,7 @@
-description: no vaccine
+description: no further vaccination
 
-time:
-  start: 500
+vaccination:
+  one_dose:
+    coverage:
+      times: []
+      values: []

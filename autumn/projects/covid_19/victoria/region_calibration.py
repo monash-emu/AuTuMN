@@ -3,10 +3,6 @@ import numpy as np
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
 from autumn.tools.calibration.targets import NormalTarget
 
-# TODO: Revise roadmap scenario
-# TODO: Allow for increased severity of Delta (may be needed with vaccination changes)
-# TODO: See if we can get deaths as a target too
-
 # Specify the general features of the calibration
 target_start_time = 454
 
@@ -14,7 +10,15 @@ target_start_time = 454
 priors = [
     UniformPrior(
         "contact_rate",
-        (0.1, 0.2), jumping_stdev=0.05
+        (0.05, 0.18), jumping_stdev=0.05
+    ),
+    UniformPrior(
+        "vic_2021_seeding.seed_time",
+        (560., 600.), jumping_stdev=1.,
+    ),
+    UniformPrior(
+        "vic_2021_seeding.seed_time",
+        (560., 580.), jumping_stdev=1.,
     ),
     UniformPrior(
         "testing_to_detection.assumed_cdr_parameter",
@@ -30,11 +34,11 @@ priors = [
     ),
     BetaPrior(
         "vaccination.fully_vaccinated.ve_infectiousness",
-        mean=0.32, ci=(0.2, 0.44),
+        mean=0.32, ci=(0.15, 0.5),
     ),
     BetaPrior(
         "vaccination.fully_vaccinated.ve_prop_prevent_infection",
-        mean=0.95, ci=(0.9, 0.98),
+        mean=0.95, ci=(0.85, 0.98),
     ),
 ]
 
@@ -69,7 +73,5 @@ def collate_metro_targets(ts_set):
 
     targets = []
     for target_name in metro_target_names:
-        targets.append(
-            NormalTarget(timeseries=ts_set.get(target_name).truncate_times(target_start_time, 660))
-        )
+        targets.append(NormalTarget(timeseries=ts_set.get(target_name).truncate_times(target_start_time, 660)))
     return targets

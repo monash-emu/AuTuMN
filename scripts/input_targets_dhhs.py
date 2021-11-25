@@ -167,6 +167,7 @@ def main():
             "icu_occupancy": "value_icu",
             "icu_admissions": "admittedtoicu",
             "hospital_admissions": "nadmissions",
+            "infection_deaths": "cluster_deaths"
         }
 
         cluster_df = cases.loc[cases.cluster_id == cluster]
@@ -366,7 +367,7 @@ def process_zip_files():
                 pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(
                     files_map[file], index=False
                 )
-                # os.remove(os.path.join(COVID_AU_DIRPATH, each))
+                os.remove(os.path.join(COVID_AU_DIRPATH, each))
 
 
 def preprocess_deaths():

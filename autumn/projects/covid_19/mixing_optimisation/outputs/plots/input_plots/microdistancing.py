@@ -19,9 +19,9 @@ FIGURE_PATH = os.path.join(
 
 PARAMS = {
     "mobility.microdistancing.behaviour.parameters.inflection_time": 61,
-    "mobility.microdistancing.behaviour.parameters.upper_asymptote": 0.4,
+    "mobility.microdistancing.behaviour.parameters.end_asymptote": 0.4,
     "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time": 183,
-    "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote": 0.75,
+    "mobility.microdistancing.behaviour_adjuster.parameters.start_asymptote": 0.75,
 }
 
 
@@ -34,8 +34,8 @@ def make_microdistancing_plot(params=PARAMS):
     micro_emergence_func = tanh_based_scaleup(
         shape=0.05,
         inflection_time=params["mobility.microdistancing.behaviour.parameters.inflection_time"],
-        lower_asymptote=0,
-        upper_asymptote=params["mobility.microdistancing.behaviour.parameters.upper_asymptote"],
+        start_asymptote=0,
+        end_asymptote=params["mobility.microdistancing.behaviour.parameters.end_asymptote"],
     )
 
     micro_wane_func = tanh_based_scaleup(
@@ -43,10 +43,10 @@ def make_microdistancing_plot(params=PARAMS):
         inflection_time=params[
             "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time"
         ],
-        lower_asymptote=params[
-            "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote"
+        start_asymptote=params[
+            "mobility.microdistancing.behaviour_adjuster.parameters.start_asymptote"
         ],
-        upper_asymptote=1,
+        end_asymptote=1,
     )
 
     md_func = lambda t: 1.0 - micro_emergence_func(t) * micro_wane_func(t)

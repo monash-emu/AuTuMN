@@ -57,8 +57,8 @@ def get_organ_strat(params: Parameters) -> Stratification:
     screening_rate_func = tanh_based_scaleup(
         params.time_variant_tb_screening_rate["shape"],
         params.time_variant_tb_screening_rate["inflection_time"],
-        params.time_variant_tb_screening_rate["lower_asymptote"],
-        params.time_variant_tb_screening_rate["upper_asymptote"],
+        params.time_variant_tb_screening_rate["end_asymptote"],
+        params.time_variant_tb_screening_rate["start_asymptote"],
     )
     if params.awareness_raising:
         awaireness_linear_scaleup = make_linear_curve(

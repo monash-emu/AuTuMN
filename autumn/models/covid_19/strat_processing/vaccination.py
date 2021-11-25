@@ -244,7 +244,8 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
     """
     Turn the vaccination rates and end times into a piecewise roll-out function.
     Called by the Victoria progressive vaccination coverage function and by the more generalisable standard vacc
-    coverage function.
+    coverage function, which are responsible for calculating the rates based on the coverage values at the requested
+    points in time.
 
     Args:
         end_times: Sequence of the times at which the vaccination rate periods end
@@ -254,6 +255,8 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
         Piecewise function in a summer-ready format of the rates of vaccination over time
 
     """
+
+    assert len(end_times) == len(vaccination_rates), "Number of vaccination periods (end times) and rates differs"
 
     # Function defined in the standard format for function-based standard transition flows
     def get_vaccination_rate(time, computed_values):

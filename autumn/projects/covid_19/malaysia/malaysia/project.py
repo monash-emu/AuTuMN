@@ -40,24 +40,12 @@ targets = [
 ]
 
 priors = [
-    # Regional parameters
     UniformPrior("contact_rate", [0.015, 0.04]),
-    UniformPrior("infectious_seed", [400, 900.0]),
-    # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.003, 0.015]),
-    # Health system-related
-    UniformPrior("clinical_stratification.icu_prop", [0.03, 0.15]),
-    UniformPrior("infection_fatality.multiplier", [0.08, 0.35]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.09, 0.5]),
-    # VoC parameters
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.3, 1.9]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [300, 420]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [3.0, 3.5]),
-    UniformPrior("voc_emergence.delta.start_time", [480, 495]),
+    UniformPrior("voc_emergence.delta.ifr_multiplier", [3, 9.5]),
 ]
 
 # Load proposal sds from yml file
-use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+# use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(priors, targets)
 

@@ -65,7 +65,7 @@ df_cases.to_csv(HCMC_DATA_CSV)
 update_timeseries(TARGET_MAP_HCMC, df_cases, HCMC_TIMESERIES)
 
 # Update HANOI targets
-df_cases = pd.read_excel(HANOI_DATA_URL)
+df_cases = pd.read_excel(HANOI_DATA_URL, usecols=[0, 1, 2])
 df_cases = create_date_index(COVID_BASE_DATETIME, df_cases, "date")
 df_cases.to_csv(HANOI_DATA_CSV)
 update_timeseries(TARGET_MAP_HANOI, df_cases, HANOI_TIMESERIES)

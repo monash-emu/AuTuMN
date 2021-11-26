@@ -265,11 +265,11 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
     return get_vaccination_rate
 
 
-def add_vic_regional_vacc(
-    model: CompartmentalModel, vacc_params: VaccParams, cluster_name: str, model_start_time: float
-):
+def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cluster_name: str):
     """
     Apply vaccination to the Victoria regional cluster models.
+    This function may change and is quite bespoke to the application, so not tidied up as yet.
+
     """
 
     # Track all the age groups we have applied vaccination to as we loop over components with different age requests
@@ -350,35 +350,42 @@ def apply_standard_vacc_coverage(
                 fractional_rate=vacc_rate_func,
                 source=compartment,
                 dest=compartment,
-                source_strata={"agegroup": agegroup, "vaccination": "unvaccinated"},
-                dest_strata={"vaccination": "one_dose"},
+                source_strata={"agegroup": agegroup, "vaccination": Vaccination.UNVACCINATED},
+                dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
             )
 
 
-def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams):
+def add_vacc_rollout_request(model: CompartmentalModel, vacc_params: VaccParams):
     """
-    Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function).
-    Flexible enough to handle various user requests, but will create one flow object for each request/age group/
-    compartment combination.
+    Add the vaccination flows associated with each vaccine roll-out component.
+    Loops through each roll-out component, which may apply to some or all age groups, but just adds one rate over one
+    period of time.
+    Note that this will create one flow object for each request/age group/compartment combination, which may not be
+    inefficient.
+
+    Args:
+        model: The model object to have the flows added to
+        vacc_params: The full set of vaccination-related user requests
+
     """
 
     all_eligible_agegroups = []
     for roll_out_component in vacc_params.roll_out_components:
         coverage_requests = roll_out_component.supply_period_coverage
-        working_agegroups = get_eligible_age_groups(
-            roll_out_component.age_min, roll_out_component.age_max
-        )
+
+        # Progressively collate the age groups
+        working_agegroups = get_eligible_age_groups(roll_out_component.age_min, roll_out_component.age_max)
         all_eligible_agegroups += working_agegroups
 
-        # Coverage-based vaccination
+        # Find the rate of vaccination over the period of this request
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            coverage_requests.coverage,
-            coverage_requests.start_time,
-            coverage_requests.end_time,
+            coverage_requests.coverage, coverage_requests.start_time, coverage_requests.end_time,
         )
+
+        # Apply the vaccination flows to the model
         add_vacc_flows(model, working_agegroups, vaccination_roll_out_function)
 
-    # Add blank flows to make things simpler when we come to doing the outputs
+    # Add blank flows to make things simpler when we come to tracking the outputs
     ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
     add_vacc_flows(model, ineligible_ages, 0.0)
 

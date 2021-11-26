@@ -17,31 +17,6 @@ from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_vac_doses
 
 
-def get_second_dose_delay_rate(dose_delay_params: Union[float, TanhScaleup]):
-    """
-    Get the rate of progression from partially to fully vaccinated (i.e. one dose to two doses).
-    Currently this supports just two options, but could be extended to reflect the local context as needed.
-    The format of the request determines the format of the output.
-
-    Args:
-        dose_delay_params: The user request for the rate of transition from first to second dose.
-
-    Returns:
-        The rate of transition from the first to second dose in a summer-ready format (either float or function)
-
-    """
-
-    if type(dose_delay_params) == float:
-        return 1.0 / dose_delay_params
-    else:
-        return tanh_based_scaleup(
-            shape=dose_delay_params.shape,
-            inflection_time=dose_delay_params.inflection_time,
-            start_asymptote=1.0 / dose_delay_params.start_asymptote,
-            end_asymptote=1.0 / dose_delay_params.end_asymptote,
-        )
-
-
 def get_stratum_vacc_effect(params, stratum, voc_adjusters):
 
     # Parameters to directly pull out
@@ -118,6 +93,31 @@ def find_vaccine_action(
     return infection_efficacy, severity_efficacy
 
 
+def get_second_dose_delay_rate(dose_delay_params: Union[float, TanhScaleup]):
+    """
+    Get the rate of progression from partially to fully vaccinated (i.e. one dose to two doses).
+    Currently this supports just two options, but could be extended to reflect the local context as needed.
+    The format of the request determines the format of the output.
+
+    Args:
+        dose_delay_params: The user request for the rate of transition from first to second dose.
+
+    Returns:
+        The rate of transition from the first to second dose in a summer-ready format (either float or function)
+
+    """
+
+    if type(dose_delay_params) == float:
+        return 1.0 / dose_delay_params
+    else:
+        return tanh_based_scaleup(
+            shape=dose_delay_params.shape,
+            inflection_time=dose_delay_params.inflection_time,
+            start_asymptote=1.0 / dose_delay_params.start_asymptote,
+            end_asymptote=1.0 / dose_delay_params.end_asymptote,
+        )
+
+
 def get_rate_from_coverage_and_duration(coverage_increase: float, duration: float) -> float:
     """
     Find the vaccination rate needed to achieve a certain coverage (of the remaining unvaccinated population) over a
@@ -171,6 +171,7 @@ def get_eligible_age_groups(age_min: float, age_max: float) -> List:
 
     Returns:
         A list of all the age groups that are relevant to this implementation of vaccination
+
     """
 
     eligible_age_groups = []
@@ -186,10 +187,7 @@ def get_eligible_age_groups(age_min: float, age_max: float) -> List:
 
 
 def add_vacc_flows(
-    model: CompartmentalModel,
-    age_groups: Union[list, set],
-    vaccination_rate: Union[float, Callable],
-    extra_stratum={},
+    model: CompartmentalModel, age_groups: Union[list, set], vaccination_rate: Union[float, Callable], extra_stratum={},
 ):
     """
     Add vaccination flows from function or value that has previously been specified - including zero flows for to make
@@ -227,6 +225,7 @@ def get_piecewise_vacc_rates(
     Returns:
         End times of vaccination period, lagged for development of immunity
         Rates of vaccination during each period
+
     """
 
     error = 1e-4  # Some Vic clusters are > 1e-5 based on data provided by the Dept, this value is currently OK

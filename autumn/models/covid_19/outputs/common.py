@@ -141,6 +141,14 @@ class CovidOutputsBuilder(OutputsBuilder):
                 name=f"non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
             )
 
+        # calculating the prevalence of the non hospitalised notifications by age group
+        for agegroup in AGEGROUP_STRATA:
+
+            self.model.request_function_output(
+                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}",
+                func=lambda non_hosp_notif, notif: (non_hosp_notif/notif)*100,
+                sources=[f"non_hospitalised_notificationsXagegroup_{agegroup}", f"notificationsXagegroup_{agegroup}"],
+            )
 
         # Split by child and adult
         paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]]

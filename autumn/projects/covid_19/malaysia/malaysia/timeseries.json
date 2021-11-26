@@ -5100,7 +5100,7 @@
   },
   "non_hospitalised_notificationsXagegroup_0": {
     "output_key": "non_hospitalised_notificationsXagegroup_0",
-    "title": "non-hospitalised notifications (age 0)",
+    "title": "non hospitalised notifications (age 0)",
     "times": [],
     "values": [],
     "quantiles": [

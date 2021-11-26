@@ -296,7 +296,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             add_vic_regional_vacc(model, vacc_params, params.population.region, params.time.start)
         elif params.vaccination.standard_supply:
             apply_standard_vacc_coverage(
-                model, vacc_params.lag, params.country.iso3, total_pops, params.vaccination.one_dose
+                model, vacc_params.lag, params.country.iso3, total_pops, params.vaccination.one_dose,
+                params.description == "BASELINE"
             )
         else:
             add_requested_vacc_flows(model, vacc_params)

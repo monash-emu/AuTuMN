@@ -189,56 +189,49 @@ def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams)
 
 
 def get_piecewise_vacc_rates(
-    start_time: float,
-    end_time: float,
-    time_intervals: int,
-    coverage_times: List,
-    coverage_values: list,
-    vaccination_lag: float,
+    coverage_times: List[int], coverage_values: List[float], vaccination_lag: float,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Creates a vaccination roll-out rate function of time with values determined by sequentially increasing coverage
-    values.
+    Calculates the per capita vaccination rates over sequential periods of time based on steadily increasing vaccination
+    coverage values.
+
+    Args:
+        coverage_times: Times at which coverage values are available
+        coverage_values: Proportion of the (age-specific) population covered at each coverage time
+        vaccination_lag: Time from vaccination to developing immunological protection
+
+    Returns:
+        End times of vaccination period, lagged for development of immunity
+        Rates of vaccination during each period
     """
 
+    error = 1e-4  # Some Vic clusters are > 1e-5 based on data provided by the Dept, this value is currently OK
+    assert len(coverage_times) == len(coverage_values), "Vaccination coverage times and values not equal length"
+    starting_coverage = coverage_values[0]
+    msg = f"Not starting from zero coverage: {starting_coverage}"
+    assert abs(starting_coverage) < error, msg
 
+    # Loop over the vaccination periods, which are one fewer than the length of data submitted
+    n_intervals = len(coverage_times) - 1
+    vaccination_rates = np.zeros(n_intervals)
+    for i_period in range(n_intervals):
+        period_start_time, period_end_time = coverage_times[i_period: i_period + 2]
+        period_start_coverage, period_end_coverage = coverage_values[i_period: i_period + 2]
 
-    # Find all the intervals to create the step function over
-    rollout_period_times = np.linspace(start_time, end_time, time_intervals + 1)
-
-    # Loop over the periods of time in the step function
-    vaccination_rates = np.zeros(time_intervals)
-    for i_period in range(time_intervals):
-        period_start_time = rollout_period_times[i_period]
-        period_end_time = rollout_period_times[i_period + 1]
-
-        # Interpolate for coverage values, starting from zero if this is the first roll-out period
-        period_start_coverage = np.interp(
-            period_start_time - vaccination_lag, coverage_times, coverage_values
-        )
-        modelled_start_coverage = 0.0 if i_period == 0.0 else period_start_coverage
-        period_end_coverage = np.interp(
-            period_end_time - vaccination_lag, coverage_times, coverage_values
-        )
-
-        # Find the duration of this period
+        # Duration of the current period
         duration = period_end_time - period_start_time
         assert duration >= 0.0, f"Vaccination roll-out request duration is negative: {duration}"
 
-        # The proportion of the remaining unvaccinated people who will be vaccinated
-        coverage_increase = (period_end_coverage - modelled_start_coverage) / (
-            1.0 - modelled_start_coverage
-        )
-        assert (
-            0.0 <= coverage_increase <= 1.0
-        ), f"Coverage increase is not in [0, 1]: {coverage_increase}"
+        # The proportion of the remaining unvaccinated people who will be vaccinated during the current interval
+        coverage_increase = (period_end_coverage - period_start_coverage) / (1.0 - period_start_coverage)
+        assert 0.0 <= coverage_increase <= 1.0, f"Coverage increase is not in [0, 1]: {coverage_increase}"
 
-        # Calculate the rate from the increase in coverage
-        vaccination_rates[i_period] = get_rate_from_coverage_and_duration(
-            coverage_increase, duration
-        )
+        # Get the vaccination rate from the increase in coverage over the period
+        vaccination_rates[i_period] = get_rate_from_coverage_and_duration(coverage_increase, duration)
 
-    return rollout_period_times, vaccination_rates
+    # Lag for immunity and convert to array for use during run-time
+    vacc_times = np.asarray(coverage_times) - vaccination_lag
+    return vacc_times, vaccination_rates
 
 
 def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) -> Callable:
@@ -302,17 +295,9 @@ def add_vic_regional_vacc(
         if i_age == 0:
             coverage_values *= (close_enough_age_max - close_enough_age_min) / (age_max - age_min)
 
-        # Get end times, stopping at end of available data
-        end_time = min((max(coverage_times), roll_out_params.end_time))
-
         # Get the vaccination rate function of time
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
-            roll_out_params.start_time,
-            end_time,
-            roll_out_params.time_intervals,
-            coverage_times,
-            coverage_values,
-            vacc_params.lag,
+            coverage_times, coverage_values, vacc_params.lag,
         )
 
         # Apply the vaccination rate function to the model
@@ -326,7 +311,7 @@ def add_vic_regional_vacc(
 
 def apply_standard_vacc_coverage(
         model: CompartmentalModel, vacc_lag: float, iso3: str, age_pops: List[int],
-        one_dose_vacc_params: VaccEffectiveness
+        one_dose_vacc_params: VaccEffectiveness, scenario_status: bool
 ):
     """
     Apply estimates of vaccination coverage, based on first doses provided at several points in time that are be
@@ -338,6 +323,7 @@ def apply_standard_vacc_coverage(
         iso3: The string representing the country, to work out where to get the vaccination data from
         age_pops: The population structure by age group
         one_dose_vacc_params: The parameters relevant to this process
+        scenario_status: Whether we are working from the baseline model
 
     """
 
@@ -348,9 +334,12 @@ def apply_standard_vacc_coverage(
         coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params)
 
         # Get the vaccination rate function of time from the coverage values
-        rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(
-            coverage_times[0], coverage_times[-1], len(coverage_times), coverage_times, coverage_values, vacc_lag,
-        )
+        rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(coverage_times, coverage_values, vacc_lag)
+
+        # Vaccination program must commence after model has started
+        if scenario_status:
+            msg = "Vaccination program starts before model commencement"
+            assert rollout_period_times[0] > model.times[0] + vacc_lag, msg
 
         # Apply the vaccination rate function to the model, using the period end times and the calculated rates
         vacc_rate_func = get_piecewise_rollout(rollout_period_times[1:], vaccination_rates)

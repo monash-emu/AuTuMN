@@ -3,10 +3,7 @@ from typing import List, Callable, Tuple, Union
 
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import (
-    VACCINE_ELIGIBLE_COMPARTMENTS,
-    Vaccination,
-)
+from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage,
@@ -14,15 +11,24 @@ from autumn.tools.inputs.covid_au.queries import (
     VACC_COVERAGE_END_AGES,
 )
 from autumn.tools.utils.utils import find_closest_value_in_list, check_list_increasing
-from autumn.models.covid_19.parameters import Vaccination as VaccParams, TimeSeries, VaccEffectiveness
+from autumn.models.covid_19.parameters import Vaccination as VaccParams, TimeSeries, VaccEffectiveness, TanhScaleup
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_vac_doses
 
 
-def get_second_dose_delay_rate(dose_delay_params):
+def get_second_dose_delay_rate(dose_delay_params: Union[float, TanhScaleup]):
     """
-    Get the rate of progression from partially to fully vaccinated.
+    Get the rate of progression from partially to fully vaccinated (i.e. one dose to two doses).
+    Currently this supports just two options, but could be extended to reflect the local context as needed.
+    The format of the request determines the format of the output.
+
+    Args:
+        dose_delay_params: The user request for the rate of transition from first to second dose.
+
+    Returns:
+        The rate of transition from the first to second dose in a summer-ready format (either float or function)
+
     """
 
     if type(dose_delay_params) == float:
@@ -116,6 +122,16 @@ def get_rate_from_coverage_and_duration(coverage_increase: float, duration: floa
     """
     Find the vaccination rate needed to achieve a certain coverage (of the remaining unvaccinated population) over a
     duration of time.
+    Calculated by solving the following equation:
+        coverage_increase = 1.0 - exp(-rate * duration)
+
+    Args:
+        coverage_increase: The proportion of remaining unvaccinated people vaccinated during the period
+        duration: The time period in days over which this vaccination coverage accrues
+
+    Returns:
+        The rate needed to achieve this
+
     """
 
     assert duration >= 0.0, f"Vaccination roll-out request is negative: {duration}"
@@ -124,7 +140,7 @@ def get_rate_from_coverage_and_duration(coverage_increase: float, duration: floa
 
 
 def get_vacc_roll_out_function_from_coverage(
-    coverage: float, start_time: float, end_time: float, coverage_override: float = None
+        coverage: float, start_time: float, end_time: float, coverage_override: float = None
 ) -> Callable:
     """
     Calculate the time-variant vaccination rate, based on a requested coverage and roll-out window.
@@ -145,9 +161,16 @@ def get_vacc_roll_out_function_from_coverage(
     return get_vaccination_rate
 
 
-def get_eligible_age_groups(age_min, age_max) -> List:
+def get_eligible_age_groups(age_min: float, age_max: float) -> List:
     """
-    Return a list with the model's age groups that are relevant to the requested roll_out_component.
+    Get a list of the model's age groups that are relevant to the requested roll_out_component.
+
+    Args:
+        age_min: The minimum value of the requested age range
+        age_max: The maximum value of the requested age range
+
+    Returns:
+        A list of all the age groups that are relevant to this implementation of vaccination
     """
 
     eligible_age_groups = []

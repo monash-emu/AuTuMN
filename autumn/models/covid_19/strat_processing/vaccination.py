@@ -14,11 +14,10 @@ from autumn.tools.inputs.covid_au.queries import (
     VACC_COVERAGE_END_AGES,
 )
 from autumn.tools.utils.utils import find_closest_value_in_list, check_list_increasing
-from autumn.models.covid_19.parameters import Vaccination as VaccParams, TimeSeries
+from autumn.models.covid_19.parameters import Vaccination as VaccParams, TimeSeries, VaccEffectiveness
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_vac_doses
-
 
 
 def get_second_dose_delay_rate(dose_delay_params):
@@ -202,6 +201,8 @@ def get_piecewise_vacc_rates(
     values.
     """
 
+
+
     # Find all the intervals to create the step function over
     rollout_period_times = np.linspace(start_time, end_time, time_intervals + 1)
 
@@ -324,12 +325,26 @@ def add_vic_regional_vacc(
 
 
 def apply_standard_vacc_coverage(
-    model: CompartmentalModel, vacc_lag: float, model_start_time: float, iso3: str, age_pops, one_dose_vacc_params,
+        model: CompartmentalModel, vacc_lag: float, iso3: str, age_pops: List[int],
+        one_dose_vacc_params: VaccEffectiveness
 ):
+    """
+    Apply estimates of vaccination coverage, based on first doses provided at several points in time that are be
+    obtained from the get_standard_vacc_coverage function to the model.
 
+    Args:
+        model: The model that will have these flows added to it
+        vacc_lag: The period of time from vaccination to the development of immunity in days
+        iso3: The string representing the country, to work out where to get the vaccination data from
+        age_pops: The population structure by age group
+        one_dose_vacc_params: The parameters relevant to this process
+
+    """
+
+    # Rates are likely to differ by age group, but not by other factors
     for agegroup in AGEGROUP_STRATA:
 
-        # Note this must return something for every age group to stop outputs calculation crashing
+        # Note this function must return something for every age group to stop outputs calculation crashing
         coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params)
 
         # Get the vaccination rate function of time from the coverage values
@@ -337,7 +352,7 @@ def apply_standard_vacc_coverage(
             coverage_times[0], coverage_times[-1], len(coverage_times), coverage_times, coverage_values, vacc_lag,
         )
 
-        # Apply the vaccination rate function to the model
+        # Apply the vaccination rate function to the model, using the period end times and the calculated rates
         vacc_rate_func = get_piecewise_rollout(rollout_period_times[1:], vaccination_rates)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(

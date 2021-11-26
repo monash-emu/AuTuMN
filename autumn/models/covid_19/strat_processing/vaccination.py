@@ -11,7 +11,8 @@ from autumn.tools.inputs.covid_au.queries import (
     VACC_COVERAGE_END_AGES,
 )
 from autumn.tools.utils.utils import find_closest_value_in_list, check_list_increasing
-from autumn.models.covid_19.parameters import Parameters, Vaccination, TimeSeries, VaccEffectiveness, TanhScaleup
+from autumn.models.covid_19.parameters import Parameters, TimeSeries, VaccEffectiveness, TanhScaleup
+from autumn.models.covid_19.parameters import Vaccination as VaccParams
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_adult_vacc_doses
@@ -43,7 +44,7 @@ def get_stratum_vacc_effect(params: Parameters, stratum: str, voc_adjusters: Dic
 
     # Parameters that need to be processed
     action_args = (vacc_effects["ve_prop_prevent_infection"], vacc_effects["ve_sympt_covid"])
-    vacc_effects["infection_efficacy"], severity_effect = find_vaccine_action(action_args)
+    vacc_effects["infection_efficacy"], severity_effect = find_vaccine_action(*action_args)
     if stratum_vacc_params.ve_hospitalisation:
         hosp_args = (stratum_vacc_params.ve_hospitalisation, vacc_effects["ve_sympt_covid"])
         hospitalisation_effect = get_hosp_given_case_effect(*hosp_args)
@@ -331,7 +332,7 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
     return get_vaccination_rate
 
 
-def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: Vaccination, cluster: str):
+def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cluster: str):
     """
     Apply vaccination to the Victoria regional cluster models.
     This function may change and is quite bespoke to the application, so not tidied up yet.
@@ -419,7 +420,7 @@ def apply_standard_vacc_coverage(
             )
 
 
-def add_vacc_rollout_requests(model: CompartmentalModel, vacc_params: Vaccination):
+def add_vacc_rollout_requests(model: CompartmentalModel, vacc_params: VaccParams):
     """
     Add the vaccination flows associated with each vaccine roll-out component.
     Loops through each roll-out component, which may apply to some or all age groups, but just adds one rate over one

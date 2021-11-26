@@ -286,9 +286,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object
-        vaccination_strat = get_vaccination_strat(
-            params, vacc_strata, voc_ifr_effects, voc_hosp_effects, stratified_adjusters
-        )
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable

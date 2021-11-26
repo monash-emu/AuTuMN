@@ -5098,6 +5098,19 @@
       0.975
     ]
   },
+  "non_hospitalised_notificationsXagegroup_0": {
+    "output_key": "non_hospitalised_notificationsXagegroup_0",
+    "title": "non-hospitalised notifications (age 0)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "hospital_occupancyXagegroup_0": {
     "output_key": "hospital_occupancyXagegroup_0",
     "title": "hospital occupancy (age 0)",

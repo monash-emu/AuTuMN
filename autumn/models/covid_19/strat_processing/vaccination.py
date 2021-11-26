@@ -23,11 +23,6 @@ from autumn.tools.inputs.covid_mmr.queries import base_mmr_vac_doses
 def get_second_dose_delay_rate(dose_delay_params):
     """
     Get the rate of progression from partially to fully vaccinated.
-
-    :param dose_delay_params:
-    :type dose_delay_params:
-    :return:
-    :rtype:
     """
 
     if type(dose_delay_params) == float:
@@ -41,37 +36,38 @@ def get_second_dose_delay_rate(dose_delay_params):
         )
 
 
-def get_rate_from_coverage_and_duration(coverage_increase: float, duration: float) -> float:
-    """
-    Find the vaccination rate needed to achieve a certain coverage (of the remaining unvaccinated population) over a
-    duration of time.
-    """
+def get_stratum_vacc_effect(params, stratum, voc_adjusters):
 
-    assert duration >= 0.0, f"Vaccination roll-out request is negative: {duration}"
-    assert 0.0 <= coverage_increase <= 1.0, f"Coverage not in [0, 1]: {coverage_increase}"
-    return -np.log(1.0 - coverage_increase) / duration
+    # Parameters to directly pull out
+    stratum_vacc_params = getattr(params.vaccination, stratum)
+    raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
+    if stratum_vacc_params.ve_death:
+        raw_effectiveness_keys.append("ve_death")
+    vacc_effects = {key: getattr(stratum_vacc_params, key) for key in raw_effectiveness_keys}
 
+    # Parameters that need to be processed
+    vacc_effects["infection_efficacy"], severity_effect = find_vaccine_action(
+        vacc_effects["ve_prop_prevent_infection"],
+        vacc_effects["ve_sympt_covid"],
+    )
+    if stratum_vacc_params.ve_hospitalisation:
+        hospitalisation_effect = get_hosp_given_case_effect(
+            stratum_vacc_params.ve_hospitalisation,
+            vacc_effects["ve_sympt_covid"],
+        )
 
-def get_vacc_roll_out_function_from_coverage(
-    coverage: float, start_time: float, end_time: float, coverage_override: float = None
-) -> Callable:
-    """
-    Calculate the time-variant vaccination rate, based on a requested coverage and roll-out window.
-    Return a single stepped function of time.
-    """
+    sympt_adjuster = 1.0 - severity_effect
 
-    # Get vaccination parameters
-    coverage = coverage if coverage else coverage_override
-    duration = end_time - start_time
+    # Use the standard severity adjustment if no specific request for reducing death
+    ifr_adjuster = (1.0 - vacc_effects["ve_death"] if "ve_death" in vacc_effects else 1.0 - severity_effect)
+    hospital_adjuster = (1.0 - hospitalisation_effect if "ve_hospitalisation" in vacc_effects else 1.0)
 
-    # Calculate the vaccination rate from the coverage and the duration of the program
-    vaccination_rate = get_rate_from_coverage_and_duration(coverage, duration)
+    # Apply the calibration adjusters
+    ifr_adjuster *= voc_adjusters["ifr"]
+    hospital_adjuster *= voc_adjusters["hosp"]
+    sympt_adjuster *= voc_adjusters["sympt"]
 
-    # Create the function
-    def get_vaccination_rate(time, computed_values):
-        return vaccination_rate if start_time <= time < end_time else 0.0
-
-    return get_vaccination_rate
+    return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster
 
 
 def get_hosp_given_case_effect(vacc_reduce_hosp_given_case: float, case_effect: float) -> float:
@@ -116,6 +112,39 @@ def find_vaccine_action(
     return infection_efficacy, severity_efficacy
 
 
+def get_rate_from_coverage_and_duration(coverage_increase: float, duration: float) -> float:
+    """
+    Find the vaccination rate needed to achieve a certain coverage (of the remaining unvaccinated population) over a
+    duration of time.
+    """
+
+    assert duration >= 0.0, f"Vaccination roll-out request is negative: {duration}"
+    assert 0.0 <= coverage_increase <= 1.0, f"Coverage not in [0, 1]: {coverage_increase}"
+    return -np.log(1.0 - coverage_increase) / duration
+
+
+def get_vacc_roll_out_function_from_coverage(
+    coverage: float, start_time: float, end_time: float, coverage_override: float = None
+) -> Callable:
+    """
+    Calculate the time-variant vaccination rate, based on a requested coverage and roll-out window.
+    Return a single stepped function of time.
+    """
+
+    # Get vaccination parameters
+    coverage = coverage if coverage else coverage_override
+    duration = end_time - start_time
+
+    # Calculate the vaccination rate from the coverage and the duration of the program
+    vaccination_rate = get_rate_from_coverage_and_duration(coverage, duration)
+
+    # Create the function
+    def get_vaccination_rate(time, computed_values):
+        return vaccination_rate if start_time <= time < end_time else 0.0
+
+    return get_vaccination_rate
+
+
 def get_eligible_age_groups(age_min, age_max) -> List:
     """
     Return a list with the model's age groups that are relevant to the requested roll_out_component.
@@ -158,34 +187,6 @@ def add_vacc_flows(
                 source_strata=source_strata,
                 dest_strata=dest_strata,
             )
-
-
-def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams):
-    """
-    Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function).
-    Flexible enough to handle various user requests, but will create one flow object for each request/age group/
-    compartment combination.
-    """
-
-    all_eligible_agegroups = []
-    for roll_out_component in vacc_params.roll_out_components:
-        coverage_requests = roll_out_component.supply_period_coverage
-        working_agegroups = get_eligible_age_groups(
-            roll_out_component.age_min, roll_out_component.age_max
-        )
-        all_eligible_agegroups += working_agegroups
-
-        # Coverage-based vaccination
-        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
-            coverage_requests.coverage,
-            coverage_requests.start_time,
-            coverage_requests.end_time,
-        )
-        add_vacc_flows(model, working_agegroups, vaccination_roll_out_function)
-
-    # Add blank flows to make things simpler when we come to doing the outputs
-    ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
-    add_vacc_flows(model, ineligible_ages, 0.0)
 
 
 def get_piecewise_vacc_rates(
@@ -354,38 +355,32 @@ def apply_standard_vacc_coverage(
             )
 
 
-def get_stratum_vacc_effect(params, stratum, voc_adjusters):
+def add_requested_vacc_flows(model: CompartmentalModel, vacc_params: VaccParams):
+    """
+    Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function).
+    Flexible enough to handle various user requests, but will create one flow object for each request/age group/
+    compartment combination.
+    """
 
-    # Parameters to directly pull out
-    stratum_vacc_params = getattr(params.vaccination, stratum)
-    raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
-    if stratum_vacc_params.ve_death:
-        raw_effectiveness_keys.append("ve_death")
-    vacc_effects = {key: getattr(stratum_vacc_params, key) for key in raw_effectiveness_keys}
-
-    # Parameters that need to be processed
-    vacc_effects["infection_efficacy"], severity_effect = find_vaccine_action(
-        vacc_effects["ve_prop_prevent_infection"],
-        vacc_effects["ve_sympt_covid"],
-    )
-    if stratum_vacc_params.ve_hospitalisation:
-        hospitalisation_effect = get_hosp_given_case_effect(
-            stratum_vacc_params.ve_hospitalisation,
-            vacc_effects["ve_sympt_covid"],
+    all_eligible_agegroups = []
+    for roll_out_component in vacc_params.roll_out_components:
+        coverage_requests = roll_out_component.supply_period_coverage
+        working_agegroups = get_eligible_age_groups(
+            roll_out_component.age_min, roll_out_component.age_max
         )
+        all_eligible_agegroups += working_agegroups
 
-    sympt_adjuster = 1.0 - severity_effect
+        # Coverage-based vaccination
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(
+            coverage_requests.coverage,
+            coverage_requests.start_time,
+            coverage_requests.end_time,
+        )
+        add_vacc_flows(model, working_agegroups, vaccination_roll_out_function)
 
-    # Use the standard severity adjustment if no specific request for reducing death
-    ifr_adjuster = (1.0 - vacc_effects["ve_death"] if "ve_death" in vacc_effects else 1.0 - severity_effect)
-    hospital_adjuster = (1.0 - hospitalisation_effect if "ve_hospitalisation" in vacc_effects else 1.0)
-
-    # Apply the calibration adjusters
-    ifr_adjuster *= voc_adjusters["ifr"]
-    hospital_adjuster *= voc_adjusters["hosp"]
-    sympt_adjuster *= voc_adjusters["sympt"]
-
-    return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster
+    # Add blank flows to make things simpler when we come to doing the outputs
+    ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
+    add_vacc_flows(model, ineligible_ages, 0.0)
 
 
 def get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params):

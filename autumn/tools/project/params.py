@@ -190,7 +190,7 @@ def update_params(params: dict, updates: dict) -> dict:
 
 
 # Regex to match an array update request eg. "foo[1]"
-ARRAY_REQUEST_REGEX = r"^\w+\(-?\d\)$"
+ARRAY_REQUEST_REGEX = r"^\w+\(-?\d+\)$"
 
 
 def _update_params(params: dict, update_key: str, update_val) -> dict:

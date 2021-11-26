@@ -1,8 +1,10 @@
-from typing import List
+from typing import Dict
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
+from autumn.models.covid_19.constants import (
+    AGE_CLINICAL_TRANSITIONS, PROGRESS, COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
+)
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
@@ -11,7 +13,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
 from autumn.models.covid_19.strat_processing.vaccination import get_stratum_vacc_effect
 
 
-def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratification:
+def get_vaccination_strat(params: Parameters, all_strata: list, voc_ifr_effects: Dict[str, float], voc_hosp_effects: Dict[str, float], stratified_adjusters) -> Stratification:
     """
     This vaccination stratification ist three strata applied to all compartments of the model.
     First create the stratification object and split the starting population.
@@ -30,31 +32,38 @@ def get_vaccination_strat(params: Parameters, all_strata: List) -> Stratificatio
     ve_infection, ve_severity, sympt_adjusters, hosp_adjusters, ifr_adjusters, vacc_effects = {}, {}, {}, {}, {}, {}
 
     # Get vaccination effect parameters in the form needed for the model
-    flow_adjs = get_blank_adjustments_for_strat(all_strata[0])
     vacc_strata = all_strata[1:]  # Affected strata are all but the first
-    for stratum in vacc_strata:
-        vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(params, stratum)
 
-        # Get and apply the severity modifications (in the same way as for history stratification)
-        severity_adjs = get_all_adjustments(
-            params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, ifr_adjuster, sympt_adjuster, hosp_adjuster
-        )
-        flow_adjs = update_adjustments_for_strat(stratum, flow_adjs, severity_adjs)
-    stratification = add_clinical_adjustments_to_strat(stratification, flow_adjs)
+    flow_adjs = {}
+    for voc in voc_ifr_effects.keys():
+        flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
+        for stratum in vacc_strata:
+
+            # Collate the vaccination effects together
+            vacc_effects[stratum], sympt_adjuster, hosp_adjuster, ifr_adjuster = get_stratum_vacc_effect(
+                params, stratum, stratified_adjusters[voc]
+            )
+
+            # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
+            adjs = get_all_adjustments(
+                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+                params.sojourn, ifr_adjuster, sympt_adjuster, hosp_adjuster
+            )
+
+            # Get them into the format needed to be applied to the model
+            update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED, voc_ifr_effects)
 
     # Vaccination effect against infection
-    infection_adjustments = {all_strata[0]: None}
     infect_adjs = {stratum: Multiply(1. - vacc_effects[stratum]["infection_efficacy"]) for stratum in vacc_strata}
-    infection_adjustments.update(infect_adjs)
-    stratification.add_flow_adjustments(INFECTION, infection_adjustments)
+    infect_adjs.update({Vaccination.UNVACCINATED: None})
+    stratification.add_flow_adjustments(INFECTION, infect_adjs)
 
     # Vaccination effect against infectiousness
-    infectiousness_adjustments = {all_strata[0]: None}
     infectiousness_adjs = {s: Multiply(1. - getattr(getattr(vacc_params, s), "ve_infectiousness")) for s in vacc_strata}
-    infectiousness_adjustments.update(infectiousness_adjs)
+    infectiousness_adjs.update({Vaccination.UNVACCINATED: None})
     for compartment in DISEASE_COMPARTMENTS:
-        stratification.add_infectiousness_adjustments(compartment, infectiousness_adjustments)
+        stratification.add_infectiousness_adjustments(compartment, infectiousness_adjs)
 
     # Simplest approach for VoCs is to assign all the VoC infectious seed to the unvaccinated
     # FIXME: This can probably be deleted, once the summer importations split is fixed

@@ -184,3 +184,6 @@ register_project(Models.COVID_19, Region.MYANMAR, "autumn.projects.covid_19.myan
 # COVID: Victoria project
 # FIXME: Parameter validation issues
 # register_project(Models.COVID_19, Region.VICTORIA, "autumn.projects.covid_19.victoria.project")
+
+
+register_project(Models.SM_SIR, Region.PHILIPPINES, "autumn.projects.sm_sir.philippines.project")

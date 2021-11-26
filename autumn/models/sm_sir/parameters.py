@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
+from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -102,19 +102,6 @@ class Sojourn(BaseModel):
         return periods
 
 
-class TanhScaleup(BaseModel):
-    shape: float
-    inflection_time: float
-    start_asymptote: float
-    end_asymptote: float
-
-    @validator("shape", allow_reuse=True)
-    def check_shape(val):
-        msg = f"Shape parameter negative: {val}, change order of asymptotes if desired gradient is the reversed"
-        assert 0. <= val, msg
-        return val
-
-
 class MixingLocation(BaseModel):
     # Whether to append or overwrite times / values
     append: bool
@@ -151,6 +138,21 @@ class EmpiricMicrodistancingParams(BaseModel):
         return values
 
 
+class TanhMicrodistancingParams(BaseModel):
+    shape: float
+    inflection_time: float
+    lower_asymptote: float
+    upper_asymptote: float
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_asymptotes(cls, values):
+        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
+        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
+        assert 0. <= lower <= 1., "Lower asymptote not in domain [0, 1]"
+        assert 0. <= upper <= 1., "Upper asymptote not in domain [0, 1]"
+        return values
+
+
 class ConstantMicrodistancingParams(BaseModel):
     effect: float
 
@@ -163,7 +165,7 @@ class ConstantMicrodistancingParams(BaseModel):
 class MicroDistancingFunc(BaseModel):
     function_type: str
     parameters: Union[
-        EmpiricMicrodistancingParams, TanhScaleup, ConstantMicrodistancingParams
+        EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams
     ]
     locations: List[str]
 
@@ -261,6 +263,8 @@ class InfectionFatality(BaseModel):
 
     # Calibrated multiplier for props
     multiplier: float
+    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket
+    top_bracket_overwrite: Optional[float]
     # Proportion of people dying / total infected by age
     props: List[float]
 
@@ -314,6 +318,17 @@ class RegionalClusterStratification(BaseModel):
     mobility: Mobility
 
 
+class VictorianClusterStratification(BaseModel):
+    intercluster_mixing: float
+    contact_rate_multiplier_north_east_metro: float
+    contact_rate_multiplier_west_metro: float
+    contact_rate_multiplier_south_east_metro: float
+    contact_rate_multiplier_barwon_south_west: float
+    contact_rate_multiplier_regional: float
+    metro: MetroClusterStratification
+    regional: RegionalClusterStratification
+
+
 class Vic2021ClusterSeeds(BaseModel):
     north_east_metro: float
     south_east_metro: float
@@ -354,8 +369,6 @@ class VocComponent(BaseModel):
     entry_rate: Optional[float]
     seed_duration: Optional[float]
     contact_rate_multiplier: Optional[float]
-    ifr_multiplier: Optional[float]
-    hosp_multiplier: Optional[float]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):
@@ -365,15 +378,6 @@ class VocComponent(BaseModel):
             assert 0. <= values["contact_rate_multiplier"], "Contact rate multiplier negative"
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
-        if "ifr_multiplier" in values:
-            assert 1. <= values["ifr_multiplier"], "VoC effect on mortality is less than one"
-        else:
-            values["ifr_multiplier"] = 1.
-        if "hosp_multiplier" in values:
-            hosp_multiplier = values["hosp_multiplier"]
-            assert 1. <= hosp_multiplier, f"VoC effect on hospitalisation is less than one: {hosp_multiplier}"
-        else:
-            values["hosp_multiplier"] = 1.
         return values
 
 
@@ -386,7 +390,7 @@ class VaccCoveragePeriod(BaseModel):
     start_time: float
     end_time: float
 
-    @validator("coverage", allow_reuse=True)
+    @validator("coverage")
     def check_coverage(val):
         if val:
             assert 0. <= val <= 1., f"Requested coverage for phase of vaccination program is not in [0, 1]: {val}"
@@ -426,7 +430,9 @@ class RollOutFunc(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
-        components = values.get("supply_period_coverage"), values.get("vic_supply")
+        components = \
+            values.get("supply_period_coverage"), \
+            values.get("vic_supply")
         has_supply = [int(bool(i_comp)) for i_comp in components]
         msg = f"Roll out request must have exactly one type of request: {sum(has_supply)} requests"
         assert sum(has_supply) == 1, msg
@@ -448,9 +454,6 @@ class VaccEffectiveness(BaseModel):
     ve_infectiousness_ratio: Optional[float]
     ve_hospitalisation: Optional[float]
     ve_death: Optional[float]
-    doses: Optional[TimeSeries]
-    coverage: Optional[TimeSeries]
-    
 
     @validator("ve_sympt_covid", pre=True, allow_reuse=True)
     def check_ve_sympt_covid(val):
@@ -508,22 +511,28 @@ class VaccEffectiveness(BaseModel):
         return values
 
 
+class TanhScaleup(BaseModel):
+    shape: float
+    inflection_time: float
+    lower_asymptote: float
+    upper_asymptote: float
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_asymptotes(cls, values):
+        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
+        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
+        assert 0. <= lower, f"Lower asymptote not in domain [0, inf]: {lower}"
+        return values
+
+
 class Vaccination(BaseModel):
 
     # *** This parameter determines whether the model is stratified into three rather than two vaccination strata
     second_dose_delay: Optional[Union[float, TanhScaleup]]
 
-    # *** This first parameter (vacc_full_effect_duration) determines whether waning immunity is applied
-    vacc_full_effect_duration: Optional[Union[float, None]]
-    vacc_part_effect_duration: Optional[float]
-
     one_dose: VaccEffectiveness
     fully_vaccinated: Optional[VaccEffectiveness]
-    part_waned: Optional[VaccEffectiveness]
-    waned: Optional[VaccEffectiveness]
     lag: float
-
-    standard_supply: bool
 
     roll_out_components: List[RollOutFunc]
     coverage_override: Optional[float]
@@ -532,12 +541,8 @@ class Vaccination(BaseModel):
     def check_vacc_range(cls, values):
 
         second_dose_delay = values["second_dose_delay"]
-        msg = f"Days to second dose is less than one"
-        if isinstance(second_dose_delay, (float, int)):
-            assert second_dose_delay > 1., msg
-        elif type(second_dose_delay) == TanhScaleup:
-            assert second_dose_delay["start_asymptote"] > 1., msg
-            assert second_dose_delay["end_asymptote"] > 1., msg
+        if type(second_dose_delay) == float:
+            assert 0. < second_dose_delay, f"Delay to second dose is not positive: {second_dose_delay}"
         return values
 
     @root_validator(pre=True, allow_reuse=True)
@@ -631,6 +636,12 @@ class AgeSpecificRiskMultiplier(BaseModel):
     contact_rate_multiplier: float
 
 
+class RandomProcess(BaseModel):
+    coefficients: Optional[List[float]]
+    noise_sd: Optional[float]
+    values: Optional[List[float]]
+
+
 class ParamConfig:
     """
     Config for parameter models
@@ -644,39 +655,15 @@ class ParamConfig:
 class Parameters:
     # Metadata
     description: Optional[str]
+    country: Country
+    time: Time
     # Values
     contact_rate: float
-    seasonal_force: Optional[float]
-    infect_death: float
-    universal_death_rate: float
+    # infect_death: float
+    # universal_death_rate: float
     infectious_seed: float
-    voc_emergence: Optional[Dict[str, VocComponent]]
-    age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
-    waning_immunity_duration: Optional[float]
-    vaccination: Optional[Vaccination]
-    vaccination_risk: Optional[VaccinationRisk]
-    haario_scaling_factor: float
-    metropolis_init_rel_step_size: float
-    n_steps_fixed_proposal: int
-    cumul_incidence_start_time: Optional[float]
-    # Modular parameters
-    time: Time
-    country: Country
-    population: Population
-    sojourn: Sojourn
-    mobility: Mobility
-    mixing_matrices: Optional[MixingMatrices]
-    infection_fatality: InfectionFatality
-    age_stratification: AgeStratification
-    clinical_stratification: ClinicalStratification
-    testing_to_detection: Optional[TestingToDetection]
-    contact_tracing: Optional[ContactTracing]
-    vic_2021_seeding: Optional[Vic2021Seeding]
-    # Non_epidemiological parameters
-    target_output_ratio: Optional[float]
+    infection_duration: float
 
-    @validator("waning_immunity_duration", allow_reuse=True)
-    def check_immunity_duration(val):
-        if type(val) == float:
-            assert val > 0., f"Waning immunity duration request is not positive: {val}"
-        return val
+    # Random process
+    activate_random_process: bool
+    random_process: Optional[RandomProcess]

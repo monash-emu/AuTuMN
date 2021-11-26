@@ -25,14 +25,15 @@ Parameter processing.
 
 def get_stratum_vacc_effect(params: Parameters, stratum: str, voc_adjusters: Dict[str, float]):
     """
+    Process the vaccination parameters for the vaccination stratum being considered.
 
     Args:
-        params ():
-        stratum ():
-        voc_adjusters ():
+        params: All the model parameters
+        stratum: The vaccination stratum currently being added
+        voc_adjusters: The calibration and VoC adjusters to IFR, hospitalisation and symptomatic proportion
 
     Returns:
-
+        The processed VEs and the modified adjusters
     """
 
     # Parameters to directly pull out

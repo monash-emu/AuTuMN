@@ -16,7 +16,7 @@ from .constants import (
 )
 from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
-from .strat_processing.vaccination import add_vacc_rollout_request, add_vic_regional_vacc, apply_standard_vacc_coverage
+from .strat_processing.vaccination import add_vacc_rollout_requests, add_vic_regional_vacc, apply_standard_vacc_coverage
 from .strat_processing import tracing
 from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
@@ -300,7 +300,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 params.description == "BASELINE"
             )
         else:
-            add_vacc_rollout_request(model, vacc_params)
+            add_vacc_rollout_requests(model, vacc_params)
 
         # Add transition from single dose to fully vaccinated
         if is_dosing_active:

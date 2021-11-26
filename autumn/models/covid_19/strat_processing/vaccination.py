@@ -17,6 +17,11 @@ from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_vac_doses
 
 
+"""
+Parameter processing.
+"""
+
+
 def get_stratum_vacc_effect(params, stratum, voc_adjusters):
 
     # Parameters to directly pull out
@@ -93,6 +98,11 @@ def find_vaccine_action(
     return infection_efficacy, severity_efficacy
 
 
+"""
+Progression to second dose.
+"""
+
+
 def get_second_dose_delay_rate(dose_delay_params: Union[float, TanhScaleup]):
     """
     Get the rate of progression from partially to fully vaccinated (i.e. one dose to two doses).
@@ -118,6 +128,11 @@ def get_second_dose_delay_rate(dose_delay_params: Union[float, TanhScaleup]):
         )
 
 
+"""
+Provision of first dose, various approaches.
+"""
+
+
 def get_rate_from_coverage_and_duration(coverage_increase: float, duration: float) -> float:
     """
     Find the vaccination rate needed to achieve a certain coverage (of the remaining unvaccinated population) over a
@@ -139,22 +154,27 @@ def get_rate_from_coverage_and_duration(coverage_increase: float, duration: floa
     return -np.log(1.0 - coverage_increase) / duration
 
 
-def get_vacc_roll_out_function_from_coverage(
-        coverage: float, start_time: float, end_time: float, coverage_override: float = None
-) -> Callable:
+def get_vacc_roll_out_function_from_coverage(coverage: float, start_time: float, end_time: float) -> Callable:
     """
-    Calculate the time-variant vaccination rate, based on a requested coverage and roll-out window.
-    Return a single stepped function of time.
+    Calculate a single time-variant vaccination rate, based on a requested coverage and period for this roll-out.
+
+    Args:
+        coverage: Proportion of remaining unvaccinated people to be vaccinated during this period
+        start_time: Time at which this period of vaccination starts
+        end_time: Time at which this period of vaccination ends
+
+    Returns:
+        Function of time that steps up from zero for the vaccination period and then back down again
+
     """
 
     # Get vaccination parameters
-    coverage = coverage if coverage else coverage_override
     duration = end_time - start_time
 
     # Calculate the vaccination rate from the coverage and the duration of the program
     vaccination_rate = get_rate_from_coverage_and_duration(coverage, duration)
 
-    # Create the function
+    # Create the function in standard summer format
     def get_vaccination_rate(time, computed_values):
         return vaccination_rate if start_time <= time < end_time else 0.0
 
@@ -186,27 +206,27 @@ def get_eligible_age_groups(age_min: float, age_max: float) -> List:
     return eligible_age_groups
 
 
-def add_vacc_flows(
-    model: CompartmentalModel, age_groups: Union[list, set], vaccination_rate: Union[float, Callable], extra_stratum={},
-):
+def apply_vacc_flows(model: CompartmentalModel, age_groups: Union[list, set], vaccination_rate: Union[float, Callable]):
     """
     Add vaccination flows from function or value that has previously been specified - including zero flows for to make
     the derived outputs requests simpler.
+
+    Args:
+        model: The model having the vaccination flows applied to it
+        age_groups: The age groups to which these flows apply
+        vaccination_rate: The vaccination transition rate for this age group, in summer-ready form
+
     """
 
     for eligible_age_group in age_groups:
-        source_strata = {"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group}
-        source_strata.update(extra_stratum)
-        dest_strata = {"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group}
-        dest_strata.update(extra_stratum)
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
                 name="vaccination",
                 fractional_rate=vaccination_rate,
                 source=compartment,
                 dest=compartment,
-                source_strata=source_strata,
-                dest_strata=dest_strata,
+                source_strata={"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group},
+                dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group},
             )
 
 
@@ -228,9 +248,10 @@ def get_piecewise_vacc_rates(
 
     """
 
-    error = 1e-4  # Some Vic clusters are > 1e-5 based on data provided by the Dept, this value is currently OK
     assert len(coverage_times) == len(coverage_values), "Vaccination coverage times and values not equal length"
     starting_coverage = coverage_values[0]
+
+    error = 1e-4  # Some Vic clusters are > 1e-5 based on data provided by the Dept, this value is currently OK
     msg = f"Not starting from zero coverage: {starting_coverage}"
     assert abs(starting_coverage) < error, msg
 
@@ -290,7 +311,7 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
 def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cluster_name: str):
     """
     Apply vaccination to the Victoria regional cluster models.
-    This function may change and is quite bespoke to the application, so not tidied up as yet.
+    This function may change and is quite bespoke to the application, so not tidied up yet.
 
     """
 
@@ -325,16 +346,16 @@ def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cl
 
         # Apply the vaccination rate function to the model
         vacc_rate_func = get_piecewise_rollout(rollout_period_times[1:], vaccination_rates)
-        add_vacc_flows(model, working_agegroups, vacc_rate_func)
+        apply_vacc_flows(model, working_agegroups, vacc_rate_func)
 
     # Add blank/zero flows to make the output requests simpler
     ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
-    add_vacc_flows(model, ineligible_ages, 0.0)
+    apply_vacc_flows(model, ineligible_ages, 0.0)
 
 
 def apply_standard_vacc_coverage(
         model: CompartmentalModel, vacc_lag: float, iso3: str, age_pops: List[int],
-        one_dose_vacc_params: VaccEffectiveness, scenario_status: bool
+        one_dose_vacc_params: VaccEffectiveness, is_baseline: bool
 ):
     """
     Apply estimates of vaccination coverage, based on first doses provided at several points in time that are be
@@ -346,7 +367,7 @@ def apply_standard_vacc_coverage(
         iso3: The string representing the country, to work out where to get the vaccination data from
         age_pops: The population structure by age group
         one_dose_vacc_params: The parameters relevant to this process
-        scenario_status: Whether we are working from the baseline model
+        is_baseline: Whether we are working from the baseline model
 
     """
 
@@ -360,7 +381,7 @@ def apply_standard_vacc_coverage(
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(coverage_times, coverage_values, vacc_lag)
 
         # Vaccination program must commence after model has started
-        if scenario_status:
+        if is_baseline:
             msg = "Vaccination program starts before model commencement"
             assert rollout_period_times[0] > model.times[0] + vacc_lag, msg
 
@@ -377,7 +398,7 @@ def apply_standard_vacc_coverage(
             )
 
 
-def add_vacc_rollout_request(model: CompartmentalModel, vacc_params: VaccParams):
+def add_vacc_rollout_requests(model: CompartmentalModel, vacc_params: VaccParams):
     """
     Add the vaccination flows associated with each vaccine roll-out component.
     Loops through each roll-out component, which may apply to some or all age groups, but just adds one rate over one
@@ -405,20 +426,33 @@ def add_vacc_rollout_request(model: CompartmentalModel, vacc_params: VaccParams)
         )
 
         # Apply the vaccination flows to the model
-        add_vacc_flows(model, working_agegroups, vaccination_roll_out_function)
+        apply_vacc_flows(model, working_agegroups, vaccination_roll_out_function)
 
     # Add blank flows to make things simpler when we come to tracking the outputs
     ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
-    add_vacc_flows(model, ineligible_ages, 0.0)
+    apply_vacc_flows(model, ineligible_ages, 0.0)
 
 
-def get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params):
+def get_standard_vacc_coverage(iso3: str, agegroup: str, age_pops: List[int], one_dose_vacc_params: VaccEffectiveness):
+    """
+    Implementation of a country-specific roll-out that needs coverage values to be looked up.
 
+    Args:
+        iso3: Country identifier
+        agegroup: The age group being considered
+        age_pops: Population age structure
+        one_dose_vacc_params: Parameters governing transition to one dose stratum
+
+    Returns:
+        The times at which coverage values are available and their values
+
+    """
+
+    # Use the appropriate function to look up the coverage values
     vac_cov_map = {"MMR": get_mmr_vac_coverage, "LKA": get_lka_vac_coverage}
-
     time_series = vac_cov_map[iso3](agegroup, age_pops, one_dose_vacc_params)
 
-    # A couple of standard checks
+    # Some simple checks
     check_list_increasing(time_series.times)
     check_list_increasing(time_series.values)
     assert all((0.0 <= i_coverage <= 1.0 for i_coverage in time_series.values))

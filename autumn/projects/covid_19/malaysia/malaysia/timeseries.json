@@ -5098,6 +5098,422 @@
       0.975
     ]
   },
+  "non_hospitalised_notificationsXagegroup_0": {
+    "output_key": "non_hospitalised_notificationsXagegroup_0",
+    "title": "non hospitalised notifications (age 0)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_5": {
+    "output_key": "non_hospitalised_notificationsXagegroup_5",
+    "title": "non hospitalised notifications (age 5)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_10": {
+    "output_key": "non_hospitalised_notificationsXagegroup_10",
+    "title": "non hospitalised notifications (age 10)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_15": {
+    "output_key": "non_hospitalised_notificationsXagegroup_15",
+    "title": "non hospitalised notifications (age 15)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_20": {
+    "output_key": "non_hospitalised_notificationsXagegroup_20",
+    "title": "non hospitalised notifications (age 20)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_25": {
+    "output_key": "non_hospitalised_notificationsXagegroup_25",
+    "title": "non hospitalised notifications (age 25)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_30": {
+    "output_key": "non_hospitalised_notificationsXagegroup_30",
+    "title": "non hospitalised notifications (age 30)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_35": {
+    "output_key": "non_hospitalised_notificationsXagegroup_35",
+    "title": "non hospitalised notifications (age 35)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_40": {
+    "output_key": "non_hospitalised_notificationsXagegroup_40",
+    "title": "non hospitalised notifications (age 40)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_45": {
+    "output_key": "non_hospitalised_notificationsXagegroup_45",
+    "title": "non hospitalised notifications (age 45)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_50": {
+    "output_key": "non_hospitalised_notificationsXagegroup_50",
+    "title": "non hospitalised notifications (age 50)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_55": {
+    "output_key": "non_hospitalised_notificationsXagegroup_55",
+    "title": "non hospitalised notifications (age 55)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_60": {
+    "output_key": "non_hospitalised_notificationsXagegroup_60",
+    "title": "non hospitalised notifications (age 60)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_65": {
+    "output_key": "non_hospitalised_notificationsXagegroup_65",
+    "title": "non hospitalised notifications (age 65)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_70": {
+    "output_key": "non_hospitalised_notificationsXagegroup_70",
+    "title": "non hospitalised notifications (age 70)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hospitalised_notificationsXagegroup_75": {
+    "output_key": "non_hospitalised_notificationsXagegroup_75",
+    "title": "non hospitalised notifications (age 75)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_0": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_0",
+    "title": "prevalence_non hospitalised notifications (age 0)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_5": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_5",
+    "title": "prevalence_non hospitalised notifications (age 5)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_10": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_10",
+    "title": "prevalence_non hospitalised notifications (age 10)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_15": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_15",
+    "title": "prevalence_non hospitalised notifications (age 15)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_20": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_20",
+    "title": "prevalence_non hospitalised notifications (age 20)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_25": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_25",
+    "title": "prevalence_non hospitalised notifications (age 25)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_30": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_30",
+    "title": "prevalence_non hospitalised notifications (age 30)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_35": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_35",
+    "title": "prevalence_non hospitalised notifications (age 35)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_40": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_40",
+    "title": "prevalence_non hospitalised notifications (age 40)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_45": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_45",
+    "title": "prevalence_non hospitalised notifications (age 45)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_50": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_50",
+    "title": "prevalence_non hospitalised notifications (age 50)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_55": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_55",
+    "title": "prevalence_non hospitalised notifications (age 55)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_60": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_60",
+    "title": "prevalence_non hospitalised notifications (age 60)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_65": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_65",
+    "title": "prevalence_non hospitalised notifications (age 65)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_70": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_70",
+    "title": "prevalence_non hospitalised notifications (age 70)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prevalence_non_hospitalised_notificationsXagegroup_75": {
+    "output_key": "prevalence_non_hospitalised_notificationsXagegroup_75",
+    "title": "prevalence_non hospitalised notifications (age 75)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "hospital_occupancyXagegroup_0": {
     "output_key": "hospital_occupancyXagegroup_0",
     "title": "hospital occupancy (age 0)",

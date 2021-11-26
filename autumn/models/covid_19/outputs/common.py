@@ -106,6 +106,50 @@ class CovidOutputsBuilder(OutputsBuilder):
                 name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways
             )
 
+        # Age-specific non-hospitalised notifications
+        for agegroup in AGEGROUP_STRATA:
+            age_notification_pathways = []
+
+            # First track all traced cases (in Symptomatic ambulatory ever detected)
+            if contact_tracing_params:
+                name = f"progress_traced_non_hospitalisedX{agegroup}"
+                age_notification_pathways.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": "traced", "agegroup": agegroup},
+                    save_results=False,
+                )
+
+            # Then track untraced cases that are passively detected (depending on clinical stratum)
+            NON_HOSPITAL_CLINICAL_STRATA = [
+                Clinical.SYMPT_ISOLATE,
+            ]
+            for clinical in NON_HOSPITAL_CLINICAL_STRATA:
+                name = f"progress_untracedXagegroup__non_hospitalised_{agegroup}X{clinical}"
+                dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
+                    contact_tracing_params else \
+                    {"clinical": clinical, "agegroup": agegroup}
+                age_notification_pathways.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata=dest_strata,
+                    save_results=False,
+                )
+            self.model.request_aggregate_output(
+                name=f"non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
+            )
+
+        # calculating the prevalence of the non hospitalised notifications by age group
+        for agegroup in AGEGROUP_STRATA:
+
+            self.model.request_function_output(
+                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}",
+                func=lambda non_hosp_notif, notif: (non_hosp_notif/notif)*100,
+                sources=[f"non_hospitalised_notificationsXagegroup_{agegroup}", f"notificationsXagegroup_{agegroup}"],
+            )
+
         # Split by child and adult
         paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]]
         adult_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:]]

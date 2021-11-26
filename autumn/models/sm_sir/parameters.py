@@ -656,6 +656,7 @@ class Parameters:
     # Metadata
     description: Optional[str]
     country: Country
+    population: Population
     time: Time
     # Values
     contact_rate: float

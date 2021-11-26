@@ -3,17 +3,18 @@ from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from math import exp
+from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 
 from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
 from datetime import date, datetime
 from .computed_values.random_process_compute import RandomProcessProc
+from .constants import COMPARTMENTS, AGEGROUP_STRATA
+from .stratifications.agegroup import get_agegroup_strat
 
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
-
-COMPARTMENTS = ["susceptible", "infectious", "recovered"]
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -51,7 +52,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Get country population by age-group
     country = params.country
-    total_pops = inputs.get_population_by_agegroup(["0", "50"], country.iso3, region=None, year=2020)
+    pop = params.population
+    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, region=None, year=2020)
 
     # Assign the remainder starting population to the S compartment
     init_pop["susceptible"] = sum(total_pops) - sum(init_pop.values())
@@ -101,6 +103,15 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source="infectious",
         dest="recovered",
     )
+
+    """
+    Apply age stratification
+    """
+    mixing_matrices = build_synthetic_matrices(
+        country.iso3, "HKG", AGEGROUP_STRATA, True, pop.region
+    )
+    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"])
+    model.stratify_with(age_strat)
 
     """
     Set up derived output functions

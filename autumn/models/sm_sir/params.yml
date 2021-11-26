@@ -5,6 +5,10 @@ description: BASELINE
 country:
   iso3: PHL
 
+population:
+  region: null
+  year: 2020
+
 time:
   start: 0
   end: 365

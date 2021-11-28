@@ -31,21 +31,21 @@ targets = [
 priors = [
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",
-        mean=5.5, stdev=0.7, trunc_range=(1.0, np.inf)),
+        mean=5.5, stdev=0.7, trunc_range=(1.0, np.inf), jumping_stdev=0.5),
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.active.total_period",
-        mean=6.5, stdev=0.77, trunc_range=(4.0, np.inf)),
+        mean=6.5, stdev=0.7, trunc_range=(4.0, np.inf), jumping_stdev=0.5),
     TruncNormalPrior(
         "waning_immunity_duration",
-        mean=365., stdev=90., trunc_range=(180., np.inf)),
+        mean=365., stdev=90., trunc_range=(180., np.inf), jumping_stdev=30.),
     TruncNormalPrior(
         "vaccination.vacc_part_effect_duration",
-        mean=365., stdev=90., trunc_range=(180., np.inf)),
+        mean=365., stdev=90., trunc_range=(180., np.inf), jumping_stdev=30.),
     TruncNormalPrior(
         "voc_emergence.delta.contact_rate_multiplier",
         mean=2.0, stdev=0.1, trunc_range=(1.0, np.inf),
     ),
-    UniformPrior("voc_emergence.delta.start_time", (340., 375.), jumping_stdev=8.),  # Tighten up the lower limit to avoid wild runs
+    UniformPrior("voc_emergence.delta.start_time", (325., 375.), jumping_stdev=8.),  # Tighten up the lower limit to avoid wild runs
     UniformPrior("contact_rate", (0.05, 0.08), jumping_stdev=0.01),  # Tighten up the lower limit to avoid wild runs
     UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.012), jumping_stdev=0.002),

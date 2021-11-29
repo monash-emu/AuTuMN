@@ -25,7 +25,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     params = Parameters(**params)
 
-    # Get country and region details
+    # Get country/region details
     country = params.country
     pop = params.population
 

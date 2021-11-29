@@ -413,64 +413,19 @@ class CovidOutputsBuilder(OutputsBuilder):
                     start_time=cumul_start_time
                 )
 
-    def request_history(self):
+    def request_experienced(self):
 
-        # Note these people are called "naive", but they have actually had past Covid, immunity just hasn't yet waned
-        self.model.request_output_for_compartments(
-            name="_recovered",
-            compartments=[Compartment.RECOVERED],
-            strata={"history": History.NAIVE},
-            save_results=False,
-        )
+        # Unstratified
         self.model.request_output_for_compartments(
             name="_experienced",
             compartments=COMPARTMENTS,
             strata={"history": History.EXPERIENCED},
-            save_results=False,
-        )
-        self.model.request_function_output(
-            name="proportion_seropositive",
-            sources=["_recovered", "_experienced", "_total_population"],
-            func=lambda recovered, experienced, total: (recovered + experienced) / total,
-        )
-
-        self.request_stratified_output_for_compartment(
-            "_total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
-        )
-        for agegroup in AGEGROUP_STRATA:
-            recovered_name = f"_recoveredXagegroup_{agegroup}"
-            total_name = f"_total_populationXagegroup_{agegroup}"
-            experienced_name = f"_experiencedXagegroup_{agegroup}"
-            self.model.request_output_for_compartments(
-                name=recovered_name,
-                compartments=[Compartment.RECOVERED],
-                strata={"history": History.NAIVE, "agegroup": agegroup},
-                save_results=False,
-            )
-            self.model.request_output_for_compartments(
-                name=experienced_name,
-                compartments=COMPARTMENTS,
-                strata={"history": History.EXPERIENCED, "agegroup": agegroup},
-                save_results=False,
-            )
-            self.model.request_function_output(
-                name=f"proportion_seropositiveXagegroup_{agegroup}",
-                sources=[recovered_name, experienced_name, total_name],
-                func=lambda recovered, experienced, total: (recovered + experienced) / total,
-            )
-
-    def request_recovered(self):
-
-        # Unstratified
-        self.model.request_output_for_compartments(
-            name="_recovered",
-            compartments=[Compartment.RECOVERED],
             save_results=False
         )
         self.model.request_function_output(
             name="proportion_seropositive",
-            sources=["_recovered", "_total_population"],
-            func=lambda recovered, total: recovered / total,
+            sources=["_experienced", "_total_population"],
+            func=lambda experienced, total: experienced / total,
         )
 
         self.request_stratified_output_for_compartment(
@@ -479,20 +434,16 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age group
         for agegroup in AGEGROUP_STRATA:
-            recovered_name = f"_recoveredXagegroup_{agegroup}"
+            experienced_name = f"_experiencedXagegroup_{agegroup}"
             total_name = f"_total_populationXagegroup_{agegroup}"
             self.model.request_output_for_compartments(
-                name=recovered_name,
-                compartments=[Compartment.RECOVERED],
-                strata={"agegroup": agegroup},
+                name=experienced_name,
+                compartments=COMPARTMENTS,
+                strata={"history": History.EXPERIENCED, "agegroup": agegroup},
                 save_results=False,
             )
             self.model.request_function_output(
                 name=f"proportion_seropositiveXagegroup_{agegroup}",
-                sources=[recovered_name, total_name],
+                sources=[experienced_name, total_name],
                 func=lambda recovered, total: recovered / total,
             )
-
-    def request_extra_recovered(self):
-
-        pass

@@ -15,7 +15,6 @@ class Compartment:
     LATE_EXPOSED = "late_exposed"
     EARLY_ACTIVE = "early_active"
     LATE_ACTIVE = "late_active"
-    RECOVERED = "recovered"
 
 
 """
@@ -32,10 +31,10 @@ INFECTIOUS_COMPARTMENTS = [
 DISEASE_COMPARTMENTS = [Compartment.EARLY_EXPOSED, *INFECTIOUS_COMPARTMENTS]
 
 # People who are eligible to receive vaccination
-VACCINE_ELIGIBLE_COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED]
+VACCINE_ELIGIBLE_COMPARTMENTS = [Compartment.SUSCEPTIBLE]
 
 # All model compartments
-COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPARTMENTS]
+COMPARTMENTS = [Compartment.SUSCEPTIBLE, *DISEASE_COMPARTMENTS]
 
 
 """

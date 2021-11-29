@@ -123,7 +123,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         name=RECOVERY,
         fractional_rate=recovery_rate,
         source=Compartment.LATE_ACTIVE,
-        dest=Compartment.RECOVERED,
+        dest=Compartment.SUSCEPTIBLE,
     )
     # Infection death
     model.add_death_flow(
@@ -382,9 +382,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
 
     if is_waning_immunity:
-        outputs_builder.request_history()
-    else:
-        outputs_builder.request_recovered()
-        outputs_builder.request_extra_recovered()
+        outputs_builder.request_experienced()
 
     return model

@@ -20,7 +20,7 @@ def get_mmr_testing_numbers():
     return test_dates, test_values
 
 
-def base_mmr_vac_doses():
+def base_mmr_adult_vacc_doses():
     # Slide 5 of Mya Yee Mon's PowerPoint sent on 12th November - applied to the 15+ population only
 
     """Will move this to inputs db"""

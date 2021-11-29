@@ -16,7 +16,7 @@ from .constants import (
 )
 from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
-from .strat_processing.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, apply_standard_vacc_coverage
+from .strat_processing.vaccination import add_vacc_rollout_requests, add_vic_regional_vacc, apply_standard_vacc_coverage
 from .strat_processing import tracing
 from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
@@ -286,20 +286,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object
-        vaccination_strat = get_vaccination_strat(
-            params, vacc_strata, voc_ifr_effects, voc_hosp_effects, stratified_adjusters
-        )
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable
         if is_region_vic:
-            add_vic_regional_vacc(model, vacc_params, params.population.region, params.time.start)
+            add_vic_regional_vacc(model, vacc_params, params.population.region)
         elif params.vaccination.standard_supply:
             apply_standard_vacc_coverage(
-                model, vacc_params.lag, params.time.start, params.country.iso3, total_pops, params.vaccination.one_dose
+                model, vacc_params.lag, params.country.iso3, total_pops, params.vaccination.one_dose,
+                params.description == "BASELINE"
             )
         else:
-            add_requested_vacc_flows(model, vacc_params)
+            add_vacc_rollout_requests(model, vacc_params)
 
         # Add transition from single dose to fully vaccinated
         if is_dosing_active:

@@ -44,6 +44,6 @@ def get_history_strat(
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
         update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
 
-    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, voc_ifr_effects)
+    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, list(voc_ifr_effects.keys()))
 
     return history_strat

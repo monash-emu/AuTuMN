@@ -1,7 +1,7 @@
 description: BASELINE
 
 time:
-  start: 485 # 29th Apr 2021
+  start: 471 # 15th Apr 2021, 2 weeks before first case recognized in HCMC
   end: 912
 
 country:
@@ -41,7 +41,7 @@ mobility:
       parameters:
         max_effect: .2 # estimated from the Philipines paper
         times:
-          - 485 # 29th April 2021, first community case of COVID-19 detected in Ho Chi Minh City
+          - 471 # 15th April 2021, first community case of COVID-19 detected in Ho Chi Minh City
           - 505 # 19th May 2021, two new cases first detected after 20 days without any new case
           - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
           - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place

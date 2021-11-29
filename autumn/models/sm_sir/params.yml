@@ -18,5 +18,16 @@ contact_rate: 0.1
 infectious_seed: 1
 infection_duration: 8
 
+# Age-related parameters
+age_stratification:
+  # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
+  # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
+  susceptibility:
+    "0": 0.36 # 0-14
+    "15": 1. # 15-24
+    "25": 1. # 25-49
+    "50": 1.09 # 50-54 # weighted average of 1. for 50-64 and 1.41 for 65-69
+    "70": 1.41 # 70+
+
 activate_random_process: True
 random_process: null

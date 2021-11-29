@@ -665,6 +665,8 @@ class Parameters:
     infectious_seed: float
     infection_duration: float
 
+    age_stratification: AgeStratification
+
     # Random process
     activate_random_process: bool
     random_process: Optional[RandomProcess]

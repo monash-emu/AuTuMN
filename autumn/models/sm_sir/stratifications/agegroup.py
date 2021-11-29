@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Callable
 import numpy as np
 
-from summer import Stratification
+from summer import Stratification, Multiply
 
 from autumn.models.sm_sir.parameters import Parameters
 from autumn.models.sm_sir.constants import COMPARTMENTS, AGEGROUP_STRATA
@@ -9,7 +9,7 @@ from autumn.tools.utils.utils import normalise_sequence
 
 
 def get_agegroup_strat(
-        params: Parameters, total_pops: List[int], mixing_matrix: np.ndarray
+        params: Parameters, total_pops: List[int], mixing_matrix: np.array
 ) -> Stratification:
     """
     Age group stratification
@@ -32,7 +32,7 @@ def get_agegroup_strat(
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group
-    # age_strat.add_flow_adjustments(
-    #     "infection", {sus: Multiply(value) for sus, value in params.age_stratification.susceptibility.items()}
-    # )
+    age_strat.add_flow_adjustments(
+        "infection", {sus: Multiply(value) for sus, value in params.age_stratification.susceptibility.items()}
+    )
     return age_strat

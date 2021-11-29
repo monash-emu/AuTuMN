@@ -343,6 +343,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         history_strat = get_history_strat(params, voc_ifr_effects, stratified_adjusters)
         model.stratify_with(history_strat)
 
+        for flow in model._flows:
+            if flow.name == "recovery":
+                flow.dest.strata["history"] = "experienced"
+                flow.dest.name = flow.dest.name.replace("Xhistory_naive", "Xhistory_experienced")
+                flow.dest.name = flow.dest.name.replace("Xhistory_waned", "Xhistory_experienced")
+
         # Waning immunity (if requested)
         # Note that this approach would mean that the recovered in the naive class have actually previously had Covid
         model.add_transition_flow(
@@ -353,6 +359,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             source_strata={"history": History.NAIVE},
             dest_strata={"history": History.EXPERIENCED},
         )
+
+        duration = 365.
+        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
+            model.add_transition_flow(
+                name="late_waning_immunity",
+                fractional_rate=1. / duration,
+                source=compartment,
+                dest=compartment,
+                source_strata={"history": History.EXPERIENCED},
+                dest_strata={"history": History.WANED},
+            )
 
     """
     Set up derived output functions

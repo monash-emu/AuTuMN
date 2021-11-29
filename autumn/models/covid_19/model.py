@@ -345,8 +345,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
         for flow in [f for f in model._flows if f.name == RECOVERY]:
-            flow.dest.strata["history"] = History.EXPERIENCED
-            flow.dest._str = flow.dest.serialize()  # Need to reset the compartment's string (usually done in init)
+
+            updated_strata = flow.dest.strata.copy()
+            updated_strata["history"] = History.EXPERIENCED
+            # Find the destination compartment matching the original (but with updated history)
+            new_dest_comp = model.get_matching_compartments(flow.dest.name, updated_strata)
+            assert len(new_dest_comp) == 1, f"Multiple compartments match query for {flow.dest}"
+            flow.dest = new_dest_comp[0]
 
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(

@@ -23,8 +23,15 @@ ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 
 targets = []
 for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:
-    series = ts_set.get(output_name)
-    targets.append(NormalTarget(series))
+    if output_name == "notifications":
+        series = ts_set.get(output_name).truncate_start_time(565) # truncated to 18th July
+        targets.append(NormalTarget(series))
+    elif output_name == "infection_deaths":
+        series = ts_set.get(output_name).truncate_start_time(556) # truncated to 9th July
+        targets.append(NormalTarget(series))
+    else:
+        series = ts_set.get(output_name)
+        targets.append(NormalTarget(series))
 
 priors = [
     # Global COVID priors

@@ -4,7 +4,7 @@ from summer import Stratification, Overwrite
 
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.constants import (
-    AGE_CLINICAL_TRANSITIONS, PROGRESS, COMPARTMENTS, History, HISTORY_STRATA
+    AGE_CLINICAL_TRANSITIONS, PROGRESS, COMPARTMENTS, History, HISTORY_STRATA, INFECTION
 )
 from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
@@ -27,7 +27,11 @@ def get_history_strat(
     history_strat = Stratification("history", HISTORY_STRATA, COMPARTMENTS)
 
     # Everyone starts out infection-naive
-    pop_split = {History.NAIVE: 1., History.EXPERIENCED: 0., History.WANED: 0.}
+    pop_split = {
+        History.NAIVE: 1.,
+        History.EXPERIENCED: 0.,
+        History.WANED: 0.
+    }
     history_strat.set_population_split(pop_split)
 
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
@@ -48,7 +52,11 @@ def get_history_strat(
         history_strat, flow_adjs, [History.NAIVE, History.WANED], list(voc_ifr_effects.keys())
     )
 
-    infection_adjs = {History.NAIVE: None, History.EXPERIENCED: Overwrite(0.), History.WANED: None}
-    history_strat.add_flow_adjustments("recovery", infection_adjs)
+    infection_adjs = {
+        History.NAIVE: None,
+        History.EXPERIENCED: Overwrite(0.),
+        History.WANED: None
+    }
+    history_strat.add_flow_adjustments(INFECTION, infection_adjs)
 
     return history_strat

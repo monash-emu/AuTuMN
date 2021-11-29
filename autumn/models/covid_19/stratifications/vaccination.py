@@ -63,7 +63,7 @@ def get_vaccination_strat(
 
             # Get them into the format needed to be applied to the model
             update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
-    add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED, vocs)
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, [Vaccination.UNVACCINATED], vocs)
 
     # Vaccination effect against infection
     infect_adjs = {stratum: Multiply(1. - vacc_effects[stratum]["infection_efficacy"]) for stratum in vacc_strata}

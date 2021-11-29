@@ -337,7 +337,7 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
 
 
 def add_clinical_adjustments_to_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: list
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_strata: str, vocs: list
 ):
     """
     Add the clinical adjustments created in update_adjustments_for_strat to a stratification.
@@ -352,7 +352,7 @@ def add_clinical_adjustments_to_strat(
     Args:
         strat: The current stratification that we're modifying here
         flow_adjs: The requested adjustments created in the previous function
-        unaffected_stratum: The stratum that isn't affected and takes the default parameters
+        unaffected_strata: The stratum that isn't affected and takes the default parameters
         vocs: The variants of concern, that may have different severity levels
 
     """
@@ -369,11 +369,11 @@ def add_clinical_adjustments_to_strat(
 
                 # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
                 infectious_onset_adjs = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
-                infectious_onset_adjs[unaffected_stratum] = None
+                infectious_onset_adjs.update({strat: None for strat in unaffected_strata})
                 strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
                 # * Progress can be either source, dest(ination) or both, but infect_death and recovery must be source *
                 for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
                     adjs = flow_adjs[voc][agegroup][clinical_stratum][transition]
-                    adjs[unaffected_stratum] = None
+                    adjs.update({strat: None for strat in unaffected_strata})
                     strat.add_flow_adjustments(transition, adjs, source_strata=working_strata)

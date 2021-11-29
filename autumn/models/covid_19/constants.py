@@ -74,6 +74,7 @@ class Tracing:
 class History:
     NAIVE = "naive"
     EXPERIENCED = "experienced"
+    WANED = "waned"
 
 
 CLINICAL_STRATA = [
@@ -107,6 +108,7 @@ VACCINATION_STRATA = [
 HISTORY_STRATA = [
     History.NAIVE,
     History.EXPERIENCED,
+    History.WANED,
 ]
 
 """

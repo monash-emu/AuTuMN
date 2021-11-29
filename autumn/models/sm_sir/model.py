@@ -128,6 +128,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     outputs_builder = SmSirOutputsBuilder(model, COMPARTMENTS)
     outputs_builder.request_incidence()
+    outputs_builder.request_hospitalisations(prop_symptomatic, prop_hospital)
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

@@ -5,7 +5,7 @@ description: >
   Schools start to reopen on 02nd Jan 2022 at 30% every 2 weeks.
 
 time:
-  start: 640 # 01st Oct 2021
+  start: 685 # 15th Nov 2021
 
 mobility:
   # Micro distancing
@@ -74,39 +74,6 @@ mobility:
 # All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/HCMC_vaccination_status
 vaccination:
   roll_out_components:
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.2485
-        start_time: 640 # 01st Oct 2021
-        end_time: 654 # 15th Oct 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.0616
-        start_time: 654 # 15th Oct 2021
-        end_time: 670 # 31st Oct 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.0470
-        start_time: 670 # 31st Oct 2021
-        end_time: 685 # 15th Nov 2021
-    - supply_period_coverage:
-        coverage: 0.044739
-        start_time: 640 # 01st Oct 2021
-        end_time: 654 # 15th Oct 2021
-      age_min: 15
-      age_max: 19
-    - supply_period_coverage:
-        coverage: 0.008727
-        start_time: 654 # 15th Oct 2021
-        end_time: 670 # 31st Oct 2021
-      age_min: 15
-      age_max: 19
-    - supply_period_coverage:
-        coverage: 0.006306
-        start_time: 670 # 31st Oct 2021
-        end_time: 685 # 15th Nov 2021
-      age_min: 15
-      age_max: 19
     - supply_period_coverage:
         coverage: 0.36 # 60% of 60% of population aged 10-14
         start_time: 666 # 27th Oct 2021

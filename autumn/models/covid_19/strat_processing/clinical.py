@@ -352,7 +352,7 @@ def add_clinical_adjustments_to_strat(
     Args:
         strat: The current stratification that we're modifying here
         flow_adjs: The requested adjustments created in the previous function
-        unaffected_strata: The stratum that isn't affected and takes the default parameters
+        unaffected_stratum: The stratum that isn't affected and takes the default parameters
         vocs: The variants of concern, that may have different severity levels
 
     """

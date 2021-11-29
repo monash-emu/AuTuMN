@@ -346,8 +346,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         for flow in model._flows:
             if flow.name == "recovery":
                 flow.dest.strata["history"] = "experienced"
-                flow.dest.name = flow.dest.name.replace("Xhistory_naive", "Xhistory_experienced")
-                flow.dest.name = flow.dest.name.replace("Xhistory_waned", "Xhistory_experienced")
+                stratum_dest_str = "Xhistory_experienced"
+                new_comp_name = flow.dest.name.replace("Xhistory_naive", stratum_dest_str).replace("Xhistory_waned", stratum_dest_str)
+                flow.dest.name = new_comp_name
 
         # Waning immunity (if requested)
         # Note that this approach would mean that the recovered in the naive class have actually previously had Covid

@@ -144,11 +144,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         # calculating the prevalence of the non hospitalised notifications by age group
         for agegroup in AGEGROUP_STRATA:
             age_notification_pathways = []
-            NON_HOSPITAL_CLINICAL_STRATA = [
-                Clinical.NON_SYMPT,
-                Clinical.SYMPT_NON_HOSPITAL,
-                Clinical.SYMPT_ISOLATE,
-            ]
+
             # First track traced cases in all clinical strata except hospitalisations
             if contact_tracing_params:
                 for clinical in NOTIFICATION_CLINICAL_STRATA:
@@ -163,17 +159,16 @@ class CovidOutputsBuilder(OutputsBuilder):
 
             # Then track untraced cases (everyone in notified clinical stratum)
 
-            for clinical in NOTIFICATION_CLINICAL_STRATA:
-                name = f"progress_prevalence_untracedXagegroup__non_hospitalised_{agegroup}X{clinical}"
-                dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
+            name = f"progress_prevalence_untracedXagegroup__non_hospitalised_{agegroup}XClinical.SYMPT_ISOLATE"
+            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "tracing": "untraced", "agegroup": agegroup} if \
                     contact_tracing_params else \
-                    {"clinical": clinical, "agegroup": agegroup}
-                age_notification_pathways.append(name)
-                self.model.request_output_for_flow(
-                    name=name,
-                    flow_name="progress",
-                    dest_strata=dest_strata,
-                    save_results=False,
+                    {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}
+            age_notification_pathways.append(name)
+            self.model.request_output_for_flow(
+                 name=name,
+                 flow_name="progress",
+                 dest_strata=dest_strata,
+                 save_results=False,
                 )
             self.model.request_aggregate_output(
                 name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
@@ -261,6 +256,35 @@ class CovidOutputsBuilder(OutputsBuilder):
             "hospital_admissions",
             sources=["icu_admissions", "non_icu_admissions"]
         )
+
+        # age-specific hospital admissions
+        for agegroup in AGEGROUP_STRATA:
+
+            # calculate age-specific ICU admission
+            age_icu_name = f"icu_admissionXagegroup_{agegroup}"
+            self.model.request_output_for_flow(
+                name=age_icu_name,
+                flow_name="progress",
+                source_strata={"clinical": Clinical.ICU, "agegroup": agegroup},
+                dest_strata={"clinical": Clinical.ICU, "agegroup": agegroup},
+            )
+
+            # non-ICU admissions
+            age_non_icu_name = f"icu_non_admissionXagegroup_{agegroup}"
+            self.model.request_output_for_flow(
+                name=age_non_icu_name,
+                flow_name="progress",
+                source_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
+                dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
+                save_results=False,
+            )
+
+            # Create hospitalisation functions as sum of hospital non-ICU and ICU
+            self.model.request_aggregate_output(
+                name=f"hospital_admissionXagegroup_{agegroup}",
+                sources=[age_icu_name, age_non_icu_name]
+            )
+
 
         self.request_extra_admissions()
 

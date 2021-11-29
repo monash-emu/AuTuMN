@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
+from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS, Strain
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -679,4 +679,13 @@ class Parameters:
     def check_immunity_duration(val):
         if type(val) == float:
             assert val > 0., f"Waning immunity duration request is not positive: {val}"
+        return val
+
+    @validator("voc_emergence", allow_reuse=True)
+    def check_voc_names(val):
+        if val:
+            msg = "Requested names for VoCs are not unique"
+            assert len(set(val.keys())) == len(val.keys()), msg
+            msg = f"Strain name {Strain.WILD_TYPE} reserved for the wild-type non-VoC strain"
+            assert Strain.WILD_TYPE not in val.keys(), msg
         return val

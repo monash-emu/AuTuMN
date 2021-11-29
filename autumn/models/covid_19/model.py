@@ -344,16 +344,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(history_strat)
 
         # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
-        for flow in model._flows:
-            if flow.name == RECOVERY:
-                flow.dest.strata["history"] = History.EXPERIENCED
-                flow.dest._str = flow.dest.serialize()
+        for flow in [f for f in model._flows if f.name == RECOVERY]:
+            flow.dest.strata["history"] = History.EXPERIENCED
+            flow.dest._str = flow.dest.serialize()  # Need to reset the compartment's string (usually done in init)
 
-        duration = 365.
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
                 name="late_waning_immunity",
-                fractional_rate=1. / duration,
+                fractional_rate=1. / params.waning_immunity_duration,
                 source=compartment,
                 dest=compartment,
                 source_strata={"history": History.EXPERIENCED},

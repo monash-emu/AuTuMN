@@ -1,6 +1,6 @@
 from typing import Dict
 
-from summer import Stratification
+from summer import Stratification, Overwrite
 
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.constants import (
@@ -47,5 +47,8 @@ def get_history_strat(
     add_clinical_adjustments_to_strat(
         history_strat, flow_adjs, [History.NAIVE, History.WANED], list(voc_ifr_effects.keys())
     )
+
+    infection_adjs = {History.NAIVE: None, History.EXPERIENCED: Overwrite(0.), History.WANED: None}
+    history_strat.add_flow_adjustments("recovery", infection_adjs)
 
     return history_strat

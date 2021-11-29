@@ -257,35 +257,6 @@ class CovidOutputsBuilder(OutputsBuilder):
             sources=["icu_admissions", "non_icu_admissions"]
         )
 
-        # age-specific hospital admissions
-        for agegroup in AGEGROUP_STRATA:
-
-            # calculate age-specific ICU admission
-            age_icu_name = f"icu_admissionXagegroup_{agegroup}"
-            self.model.request_output_for_flow(
-                name=age_icu_name,
-                flow_name="progress",
-                source_strata={"clinical": Clinical.ICU, "agegroup": agegroup},
-                dest_strata={"clinical": Clinical.ICU, "agegroup": agegroup},
-            )
-
-            # non-ICU admissions
-            age_non_icu_name = f"icu_non_admissionXagegroup_{agegroup}"
-            self.model.request_output_for_flow(
-                name=age_non_icu_name,
-                flow_name="progress",
-                source_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
-                dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
-                save_results=False,
-            )
-
-            # Create hospitalisation functions as sum of hospital non-ICU and ICU
-            self.model.request_aggregate_output(
-                name=f"hospital_admissionXagegroup_{agegroup}",
-                sources=[age_icu_name, age_non_icu_name]
-            )
-
-
         self.request_extra_admissions()
 
     def request_extra_admissions(self):

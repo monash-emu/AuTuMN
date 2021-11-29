@@ -113,6 +113,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         dest="recovered",
     )
 
+    # Infection Death
+    model.add_death_flow(
+        name="infection_death",
+        death_rate=0.,  # Inconsequential value because it will be overwritten later in age stratification
+        source="infectious",
+    )
+
     """
     Apply age stratification
     """
@@ -120,7 +127,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         country.iso3, "GBR", AGEGROUP_STRATA, True, pop.region, requested_locations=["all_locations"]
     )
 
-    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"])
+    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"], ifr)
     model.stratify_with(age_strat)
 
     """

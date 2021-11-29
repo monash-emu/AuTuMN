@@ -47,9 +47,10 @@ def get_history_strat(
         # Get them into the format needed to be applied to the model
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
         update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
+        update_adjustments_for_strat(History.WANED, flow_adjs, adjs, voc)
 
     add_clinical_adjustments_to_strat(
-        history_strat, flow_adjs, [History.NAIVE, History.WANED], list(voc_ifr_effects.keys())
+        history_strat, flow_adjs, [History.NAIVE], list(voc_ifr_effects.keys())
     )
 
     infection_adjs = {

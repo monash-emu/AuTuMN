@@ -1,5 +1,6 @@
 import numpy as np
 import numba
+from typing import List, Dict
 
 from summer.compute import ComputedValueProcessor, find_sum
 
@@ -13,42 +14,53 @@ def get_tracing_param(assumed_trace_prop: float, assumed_prev: float, floor: flo
     Calculate multiplier for the relationship between traced proportion and prevalence for use in the next function.
 
     Solving the following equation to get the returned value:
-    floor + (1 - floor) exp -(result * assumed_prev) = assumed_trace_prop
+        floor + (1 - floor) exp -(result * assumed_prev) = assumed_trace_prop
+
+    Args:
+        assumed_trace_prop: The proportion traced at the point of interest
+        assumed_prev: The prevalence at the point of interest
+        floor: The minimum value for the proportion traced
+
+    Returns:
+        The exponent parameter to be used by the model in defining this relationship
+
     """
 
     return -np.log((assumed_trace_prop - floor) / (1. - floor)) / assumed_prev
 
 
-def contact_tracing_func(time, computed_values):
-    """
-    Multiply the flow rate through by the source compartment to get the final absolute rate.
-    """
-
+def traced_flow_rate(time, computed_values):
     return computed_values["traced_flow_rate"]
 
 
 @numba.jit(nopython=True)
 def get_proportion_detect_force_infection(
-        compartment_values: np.ndarray,
-        notified_comps: np.ndarray,
-        notif_levels: np.ndarray,
-        non_notified_comps: np.ndarray,
-        non_notif_levels: np.ndarray
+        comp_values: np.ndarray, notif_comps: np.ndarray, notif_levels: np.ndarray,
+        non_notif_comps: np.ndarray, non_notif_levels: np.ndarray
 ) -> float:
     """
     Calculate the proportion of the force of infection that is attributable to ever-detected individuals.
     See PropIndexDetectedProc for details on calling this function.
+
+    Args:
+        comp_values: Model compartment values
+        notif_comps: Notified compartments
+        notif_levels: Notified compartment values infectiousness levels
+        non_notif_comps: Non-notified compartments
+        non_notif_levels: Non-notified compartment values infectiousness levels
+
+    Returns:
+        Proportion of the force of infection arising from those who have been detected (or zero if FoI is zero)
     """
 
-    non_detected_force_of_infection = 0.
-    for i_comp, comp in enumerate(non_notified_comps):
-        non_detected_force_of_infection += compartment_values[comp] * non_notif_levels[i_comp]
-        
-    detected_force_of_infection = 0.
-    for i_comp, comp in enumerate(notified_comps):
-        detected_force_of_infection += compartment_values[comp] * notif_levels[i_comp]
-        
-    total_force_of_infection = non_detected_force_of_infection + detected_force_of_infection
+    # Calculate the detected and the non-detected force of infection
+    detect_foi = 0.
+    for i_comp, comp in enumerate(non_notif_comps):
+        detect_foi += comp_values[comp] * non_notif_levels[i_comp]
+    non_detect_foi = 0.
+    for i_comp, comp in enumerate(notif_comps):
+        non_detect_foi += comp_values[comp] * notif_levels[i_comp]
+    total_force_of_infection = detect_foi + non_detect_foi
 
     # Return zero if force of infection is zero to prevent division by zero error
     if total_force_of_infection == 0.:
@@ -56,10 +68,12 @@ def get_proportion_detect_force_infection(
 
     # Otherwise return the calculated proportion
     else:
-        proportion_detect_force_infect = detected_force_of_infection / total_force_of_infection
+        proportion_detect_force_infect = detect_foi / total_force_of_infection
 
+        # Should be impossible to fail this assertion
         msg = "Force of infection not in range [0, 1]"
         assert 0. <= proportion_detect_force_infect <= 1., msg
+
         return proportion_detect_force_infect
 
 
@@ -72,9 +86,14 @@ class PrevalenceProc(ComputedValueProcessor):
     def __init__(self):
         self.active_comps = None
 
-    def prepare_to_run(self, compartments, flows):
+    def prepare_to_run(self, compartments: List[Compartment], flows: list):
         """
         Identify the compartments with active disease for the prevalence calculation.
+
+        Args:
+            compartments: All the compartments in the model
+            flows: All the flows in the model
+
         """
 
         active_comps_list = [
@@ -83,9 +102,18 @@ class PrevalenceProc(ComputedValueProcessor):
         ]
         self.active_comps = np.array(active_comps_list, dtype=int)
 
-    def process(self, compartment_values, computed_values, time):
+    def process(self, compartment_values: List[float], computed_values: Dict[str, float], time: float):
         """
-        Calculate the current prevalence during run-time.
+        Now actually calculate the current prevalence during run-time.
+
+        Args:
+            compartment_values: All the model compartment values
+            computed_values: All the computed values being tracked during run-time
+            time: Current time in integration
+
+        Returns:
+            Prevalence of active disease at this point in time
+
         """
 
         return find_sum(compartment_values[self.active_comps]) / find_sum(compartment_values)
@@ -185,8 +213,7 @@ class TracedFlowRateProc(ComputedValueProcessor):
     def process(self, compartment_values, computed_values, time):
         """
         Solving the following equation:
-
-        traced_prop = traced_flow_rate / (traced_flow_rate + incidence_flow_rate)
+            traced_prop = traced_flow_rate / (traced_flow_rate + incidence_flow_rate)
 
         for traced_flow_rate gives the following:
         """

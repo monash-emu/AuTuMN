@@ -256,7 +256,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
             model.add_transition_flow(
                 "tracing",
-                tracing.contact_tracing_func,
+                tracing.traced_flow_rate,
                 Compartment.EARLY_EXPOSED,
                 Compartment.EARLY_EXPOSED,
                 source_strata=untraced.strata,

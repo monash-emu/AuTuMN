@@ -45,7 +45,7 @@ def get_history_strat(
         update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
         update_adjustments_for_strat(History.WANED, flow_adjs, adjs, voc)
 
-    add_clinical_adjustments_to_strat(history_strat, flow_adjs, [History.NAIVE], list(voc_ifr_effects.keys()))
+    add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, list(voc_ifr_effects.keys()))
 
     infection_adjs = {History.NAIVE: None, History.EXPERIENCED: Overwrite(0.), History.WANED: None}
     history_strat.add_flow_adjustments(INFECTION, infection_adjs)

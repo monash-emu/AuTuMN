@@ -16,16 +16,17 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Stratified by age group
         self.request_stratified_output_for_flow("infection_death", AGEGROUP_STRATA, "agegroup")
 
-
     def request_hospitalisations(self, prop_symptomatic, prop_hospital):
         hospital_sources = []
         # request age-stratified outputs
         for i, agegroup in enumerate(AGEGROUP_STRATA):
             output_name = f"hospital_admissionsXagegroup_{agegroup}"
             hospital_sources.append(output_name)
+            prop_symp = prop_symptomatic[i]
+            prop_hosp = prop_hospital[i]
             self.model.request_function_output(
                 name=output_name,
-                func=lambda incidence: incidence * prop_symptomatic[i] * prop_hospital[i],
+                func=make_hospitalisations_func(prop_symp, prop_hosp),
                 sources=[f"incidenceXagegroup_{agegroup}"],
             )
         # request unstratified output
@@ -33,3 +34,11 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_random_process_outputs(self,):
         self.model.request_computed_value_output("transformed_random_process")
+
+
+def make_hospitalisations_func(prop_symp, prop_hosp):
+
+    def calculate_hospitalisations(incidence):
+        return incidence * prop_symp * prop_hosp
+    
+    return calculate_hospitalisations

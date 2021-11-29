@@ -9,8 +9,10 @@ You can access this script from your CLI by running:
 import os
 import warnings
 import logging
+from importlib import import_module
 
 import click
+import json
 
 
 @click.group()
@@ -19,6 +21,13 @@ def tasks():
     Run remote task pipelines.
     """
 
+@tasks.command("generic")
+@click.argument("task_spec", type=str)
+def run_generic(task_spec: str):
+    ts_dict = json.loads(task_spec)
+    m = import_module(ts_dict['task_module'])
+    f = getattr(m, ts_dict['task_func'])
+    f(**ts_dict['task_args'])
 
 @tasks.command("calibrate")
 @click.option("--run", type=str, required=True)

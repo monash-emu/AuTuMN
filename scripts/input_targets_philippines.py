@@ -16,8 +16,8 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "13koRbKfCqsnpmWuyKSC-WpbSlN7kUkkh"  # sheet 05 daily report
-PHL_fassster_link = "1RpXuD-4YxTvgF77j0f9HzoIYHcP7dXv-"
+PHL_doh_link = "1CqYRSxya4xYxEsaUCblojpBQ6jRNlKnz"  # sheet 05 daily report
+PHL_fassster_link = "10DdkHa0OF5s4vw0hmqblODiKpxSHYFOi"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
@@ -36,7 +36,7 @@ def main():
     fassster_filename = fassster_data_filepath()
 
     # Process DoH data
-    working_df = pd.read_csv(PHL_doh_dest) # copy_davao_city_to_region(PHL_doh_dest)
+    working_df = pd.read_csv(PHL_doh_dest)  # copy_davao_city_to_region(PHL_doh_dest)
     working_df = rename_regions(
         working_df,
         "region",
@@ -50,7 +50,7 @@ def main():
     process_icu_data(working_df)
 
     # Now fassster data
-    working_df = pd.read_csv(fassster_filename) #copy_davao_city_to_region(fassster_filename)
+    working_df = pd.read_csv(fassster_filename)  # copy_davao_city_to_region(fassster_filename)
     working_df = rename_regions(working_df, "Region", "NCR", "4A", "07", "11")
     working_df = duplicate_data(working_df, "Region")
     working_df = filter_df_by_regions(working_df, "Region")
@@ -151,7 +151,14 @@ def process_notifications_data(df: pd.DataFrame):
     timeIndex = np.arange(
         min(fassster_data_agg["times"]), max(fassster_data_agg["times"]), 1.0
     ).tolist()
-    regions = ["calabarzon", "central_visayas", "manila", "davao_city","davao_region", "philippines"]
+    regions = [
+        "calabarzon",
+        "central_visayas",
+        "manila",
+        "davao_city",
+        "davao_region",
+        "philippines",
+    ]
     all_regions_x_times = pd.DataFrame(
         list(itertools.product(regions, timeIndex)), columns=["Region", "times"]
     )
@@ -182,7 +189,14 @@ def process_notifications_data(df: pd.DataFrame):
 
 
 def update_calibration_phl():
-    phl_regions = ["calabarzon", "central_visayas", "manila", "davao_city","davao_region", "philippines"]
+    phl_regions = [
+        "calabarzon",
+        "central_visayas",
+        "manila",
+        "davao_city",
+        "davao_region",
+        "philippines",
+    ]
     # read in csvs
     icu = pd.read_csv(icu_dest)
     deaths = pd.read_csv(deaths_dest)

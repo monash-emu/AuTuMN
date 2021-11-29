@@ -16,7 +16,7 @@ from .constants import (
 )
 from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
-from .strat_processing.vaccination import add_requested_vacc_flows, add_vic_regional_vacc, apply_standard_vacc_coverage
+from .strat_processing.vaccination import add_vacc_rollout_requests, add_vic_regional_vacc, apply_standard_vacc_coverage
 from .strat_processing import tracing
 from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
@@ -171,13 +171,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Clinical stratification.
     """
 
+    stratified_adjusters = {}
+    for voc in voc_ifr_effects.keys():
+        stratified_adjusters[voc] = {
+            "ifr": params.infection_fatality.multiplier * voc_ifr_effects[voc],
+            "hosp": params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc],
+            "sympt": params.clinical_stratification.props.symptomatic.multiplier,
+        }
+
     is_region_vic = pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS
     override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(
         params.testing_to_detection, country.iso3, override_test_region, pop.year
     )
-    clinical_strat = get_clinical_strat(params, voc_ifr_effects, voc_hosp_effects)
+    clinical_strat = get_clinical_strat(params, stratified_adjusters)
     model.stratify_with(clinical_strat)
 
     """
@@ -278,16 +286,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             vacc_strata = VACCINATION_STRATA
 
         # Get the vaccination stratification object
-        vaccination_strat = get_vaccination_strat(params, vacc_strata, voc_ifr_effects, voc_hosp_effects)
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable
         if is_region_vic:
-            add_vic_regional_vacc(model, vacc_params, params.population.region, params.time.start)
+            add_vic_regional_vacc(model, vacc_params, params.population.region)
         elif params.vaccination.standard_supply:
-            apply_standard_vacc_coverage(model, vacc_params.lag, params.time.start, params.country.iso3, total_pops, params)
+            apply_standard_vacc_coverage(
+                model, vacc_params.lag, params.country.iso3, total_pops, params.vaccination.one_dose,
+                params.description == "BASELINE"
+            )
         else:
-            add_requested_vacc_flows(model, vacc_params)
+            add_vacc_rollout_requests(model, vacc_params)
 
         # Add transition from single dose to fully vaccinated
         if is_dosing_active:
@@ -329,7 +340,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     is_waning_immunity = bool(params.waning_immunity_duration)
     if is_waning_immunity:
-        history_strat = get_history_strat(params, voc_ifr_effects, voc_hosp_effects)
+        history_strat = get_history_strat(params, voc_ifr_effects, stratified_adjusters)
         model.stratify_with(history_strat)
 
         # Waning immunity (if requested)

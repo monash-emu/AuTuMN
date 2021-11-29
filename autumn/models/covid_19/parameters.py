@@ -448,7 +448,8 @@ class VaccEffectiveness(BaseModel):
     ve_infectiousness_ratio: Optional[float]
     ve_hospitalisation: Optional[float]
     ve_death: Optional[float]
-    vac_coverage: Optional[TimeSeries]
+    doses: Optional[TimeSeries]
+    coverage: Optional[TimeSeries]
     
 
     @validator("ve_sympt_covid", pre=True, allow_reuse=True)
@@ -654,7 +655,6 @@ class Parameters:
     waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
     vaccination_risk: Optional[VaccinationRisk]
-    rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float
     n_steps_fixed_proposal: int

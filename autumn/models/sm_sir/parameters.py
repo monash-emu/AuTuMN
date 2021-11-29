@@ -216,7 +216,9 @@ class AgeStratification(BaseModel):
 
     # Susceptibility by age
     susceptibility: Dict[str, float]
-
+    prop_symptomatic: List[float]
+    prop_hospital: List[float]
+    ifr: List[float]
 
 class StrataProps(BaseModel):
     props: List[float]

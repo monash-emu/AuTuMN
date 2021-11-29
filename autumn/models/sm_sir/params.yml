@@ -20,14 +20,71 @@ infection_duration: 8
 
 # Age-related parameters
 age_stratification:
+  susceptibility:
   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
   # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
-  susceptibility:
     "0": 0.36 # 0-14
     "15": 1. # 15-24
     "25": 1. # 25-49
-    "50": 1.09 # 50-54 # weighted average of 1. for 50-64 and 1.41 for 65-69
+    "50": 1.09 # 50-69 # weighted average of 1. for 50-64 and 1.41 for 65-69
     "70": 1.41 # 70+
+
+  prop_symptomatic:
+  # Changed (26th August) to "Asymptomatic SARS-Cov-2 infection: A Systematic review and meta-analysis", Sah et al.
+    - 0.533  # 0-4
+    - 0.533  # 5-9
+    - 0.533  # 10-14
+    - 0.533  # 15-19
+    - 0.679  # 20-24
+    - 0.679  # 25-29
+    - 0.679  # 30-34
+    - 0.679  # 35-39
+    - 0.679  # 40-44
+    - 0.679  # 45-49
+    - 0.679  # 50-55
+    - 0.679  # 55-59
+    - 0.803  # 60-64
+    - 0.803  # 65-69
+    - 0.803  # 70-74
+    - 0.803  # 75+
+
+  prop_hospital:
+  # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
+    - 0.0777  # 0-4
+    - 0.0069  # 5-9
+    - 0.0034  # 10-14
+    - 0.0051  # 15-19
+    - 0.0068  # 20-24
+    - 0.0080  # 25-29
+    - 0.0124  # 30-34
+    - 0.0129  # 35-39
+    - 0.0190  # 40-44
+    - 0.0331  # 45-49
+    - 0.0383  # 50-54
+    - 0.0579  # 55-59
+    - 0.0617  # 60-64
+    - 0.1030  # 65-69
+    - 0.1072  # 70-74
+    - 0.0703  # 75+
+
+  ifr:
+    - 0.00003 # 0-4
+    - 0.00001 # 5-9
+    - 0.00001 # 10-14
+    - 0.00003 # 15-19
+    - 0.00006 # 20-24
+    - 0.00013 # 25-29
+    - 0.00024 # 30-34
+    - 0.00040 # 35-39
+    - 0.00075 # 40-44
+    - 0.00121 # 45-49
+    - 0.00207 # 50-54
+    - 0.00323 # 55-59
+    - 0.00456 # 60-64
+    - 0.01075 # 65-69
+    - 0.01674 # 70-74
+    - 0.03203 # 75-79
+    - 0.08292 # 80+
 
 activate_random_process: True
 random_process: null

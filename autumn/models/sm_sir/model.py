@@ -11,6 +11,8 @@ from datetime import date, datetime
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import COMPARTMENTS, AGEGROUP_STRATA
 from .stratifications.agegroup import get_agegroup_strat
+from .preprocess.age_specific_params import convert_param_agegroups
+
 
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
@@ -22,6 +24,15 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Build the compartmental model from the provided parameters.
     """
     params = Parameters(**params)
+
+    # Get country and region details
+    country = params.country
+    pop = params.population
+
+    # preprocess age-specific parameters to match model age bands
+    prop_symptomatic = convert_param_agegroups(params.age_stratification.prop_symptomatic, country.iso3, pop.region)
+    prop_hospital = convert_param_agegroups(params.age_stratification.prop_hospital, country.iso3, pop.region)
+    ifr = convert_param_agegroups(params.age_stratification.ifr, country.iso3, pop.region)
 
     # Create the model object
     model = CompartmentalModel(
@@ -51,9 +62,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     }
 
     # Get country population by age-group
-    country = params.country
-    pop = params.population
-    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, region=None, year=2020)
+    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, region=pop.region, year=2020)
 
     # Assign the remainder starting population to the S compartment
     init_pop["susceptible"] = sum(total_pops) - sum(init_pop.values())

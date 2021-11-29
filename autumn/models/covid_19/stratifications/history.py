@@ -27,11 +27,7 @@ def get_history_strat(
     history_strat = Stratification("history", HISTORY_STRATA, COMPARTMENTS)
 
     # Everyone starts out infection-naive
-    pop_split = {
-        History.NAIVE: 1.,
-        History.EXPERIENCED: 0.,
-        History.WANED: 0.
-    }
+    pop_split = {History.NAIVE: 1., History.EXPERIENCED: 0., History.WANED: 0.}
     history_strat.set_population_split(pop_split)
 
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
@@ -49,15 +45,9 @@ def get_history_strat(
         update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
         update_adjustments_for_strat(History.WANED, flow_adjs, adjs, voc)
 
-    add_clinical_adjustments_to_strat(
-        history_strat, flow_adjs, [History.NAIVE], list(voc_ifr_effects.keys())
-    )
+    add_clinical_adjustments_to_strat(history_strat, flow_adjs, [History.NAIVE], list(voc_ifr_effects.keys()))
 
-    infection_adjs = {
-        History.NAIVE: None,
-        History.EXPERIENCED: Overwrite(0.),
-        History.WANED: None
-    }
+    infection_adjs = {History.NAIVE: None, History.EXPERIENCED: Overwrite(0.), History.WANED: None}
     history_strat.add_flow_adjustments(INFECTION, infection_adjs)
 
     return history_strat

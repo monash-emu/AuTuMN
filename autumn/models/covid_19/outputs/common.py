@@ -143,11 +143,40 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # calculating the prevalence of the non hospitalised notifications by age group
         for agegroup in AGEGROUP_STRATA:
+            age_notification_pathways = []
+            NON_HOSPITAL_CLINICAL_STRATA = [
+                Clinical.NON_SYMPT,
+                Clinical.SYMPT_NON_HOSPITAL,
+                Clinical.SYMPT_ISOLATE,
+            ]
+            # First track traced cases in all clinical strata except hospitalisations
+            if contact_tracing_params:
+                for clinical in NOTIFICATION_CLINICAL_STRATA:
+                    name = f"progress_prevalence_traced_non_hospitalisedX{agegroup}X{clinical}"
+                    age_notification_pathways.append(name)
+                    self.model.request_output_for_flow(
+                        name=name,
+                        flow_name="progress",
+                        dest_strata={"clinical": clinical, "tracing": "traced", "agegroup": agegroup},
+                        save_results=False,
+                    )
 
-            self.model.request_function_output(
-                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}",
-                func=lambda non_hosp_notif, notif: (non_hosp_notif/notif)*100,
-                sources=[f"non_hospitalised_notificationsXagegroup_{agegroup}", f"notificationsXagegroup_{agegroup}"],
+            # Then track untraced cases (everyone in notified clinical stratum)
+
+            for clinical in NOTIFICATION_CLINICAL_STRATA:
+                name = f"progress_prevalence_untracedXagegroup__non_hospitalised_{agegroup}X{clinical}"
+                dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
+                    contact_tracing_params else \
+                    {"clinical": clinical, "agegroup": agegroup}
+                age_notification_pathways.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata=dest_strata,
+                    save_results=False,
+                )
+            self.model.request_aggregate_output(
+                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
             )
 
         # Split by child and adult

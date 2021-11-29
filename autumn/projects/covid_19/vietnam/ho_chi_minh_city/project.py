@@ -28,10 +28,7 @@ for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospi
 
 priors = [
     # Global COVID priors
-    # *COVID_GLOBAL_PRIORS,
-
-    # Starting date
-    UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
+    *COVID_GLOBAL_PRIORS,
 
     # Regional parameters
     UniformPrior("infectious_seed", [1, 100]),
@@ -40,7 +37,7 @@ priors = [
     # Health system-related
     # UniformPrior("clinical_stratification.icu_prop", [0.01, 0.1]),
     # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
-    # UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.5, 1.5]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.5, 1.5]),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [1, 3.5]),
     UniformPrior("infection_fatality.multiplier", [0.5, 3.0]),
 

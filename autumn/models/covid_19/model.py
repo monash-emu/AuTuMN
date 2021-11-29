@@ -338,24 +338,23 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Infection history stratification.
     """
 
-    is_waning_immunity = bool(params.waning_immunity_duration)
-    if is_waning_immunity:
-        history_strat = get_history_strat(params, voc_ifr_effects, stratified_adjusters)
-        model.stratify_with(history_strat)
+    history_strat = get_history_strat(params, voc_ifr_effects, stratified_adjusters)
+    model.stratify_with(history_strat)
 
-        # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
-        for flow in [f for f in model._flows if f.name == RECOVERY]:
+    # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
+    for flow in [f for f in model._flows if f.name == RECOVERY]:
+        updated_strata = flow.dest.strata.copy()
+        updated_strata["history"] = History.EXPERIENCED
+        # Find the destination compartment matching the original (but with updated history)
+        new_dest_comp = model.get_matching_compartments(flow.dest.name, updated_strata)
+        assert len(new_dest_comp) == 1, f"Multiple compartments match query for {flow.dest}"
+        flow.dest = new_dest_comp[0]
 
-            updated_strata = flow.dest.strata.copy()
-            updated_strata["history"] = History.EXPERIENCED
-            # Find the destination compartment matching the original (but with updated history)
-            new_dest_comp = model.get_matching_compartments(flow.dest.name, updated_strata)
-            assert len(new_dest_comp) == 1, f"Multiple compartments match query for {flow.dest}"
-            flow.dest = new_dest_comp[0]
-
+    # Apply waning immunity if present
+    if params.waning_immunity_duration:
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             model.add_transition_flow(
-                name="late_waning_immunity",
+                name="waning_immunity",
                 fractional_rate=1. / params.waning_immunity_duration,
                 source=compartment,
                 dest=compartment,
@@ -377,6 +376,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     outputs_builder.request_deaths()
     outputs_builder.request_admissions()
     outputs_builder.request_occupancy(params.sojourn.compartment_periods)
+    outputs_builder.request_experienced()
     if params.contact_tracing:
         outputs_builder.request_tracing()
     if params.voc_emergence:
@@ -385,8 +385,5 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         outputs_builder.request_vaccination(is_dosing_active, vacc_strata)
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
-
-    if is_waning_immunity:
-        outputs_builder.request_experienced()
 
     return model

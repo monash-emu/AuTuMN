@@ -3,12 +3,10 @@ from typing import List, Callable, Tuple, Union, Dict
 
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination
+from autumn.models.covid_19.constants import Vaccination, Compartment
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
-    get_both_vacc_coverage,
-    VACC_COVERAGE_START_AGES,
-    VACC_COVERAGE_END_AGES,
+    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES,
 )
 from autumn.tools.utils.utils import find_closest_value_in_list, check_list_increasing
 from autumn.models.covid_19.parameters import Parameters, TimeSeries, VaccEffectiveness, TanhScaleup
@@ -244,15 +242,14 @@ def apply_vacc_flows(model: CompartmentalModel, age_groups: Union[list, set], va
     """
 
     for eligible_age_group in age_groups:
-        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-            model.add_transition_flow(
-                name="vaccination",
-                fractional_rate=vaccination_rate,
-                source=compartment,
-                dest=compartment,
-                source_strata={"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group},
-                dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group},
-            )
+        model.add_transition_flow(
+            name="vaccination",
+            fractional_rate=vaccination_rate,
+            source=Compartment.SUSCEPTIBLE,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group},
+            dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group},
+        )
 
 
 def get_piecewise_vacc_rates(

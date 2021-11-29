@@ -12,7 +12,7 @@ from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
-    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VACCINE_ELIGIBLE_COMPARTMENTS, VACCINATION_STRATA
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VACCINATION_STRATA
 )
 from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
@@ -303,36 +303,34 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Add transition from single dose to fully vaccinated
         if is_dosing_active:
             second_dose_transition = get_second_dose_delay_rate(dose_delay_params)
-            for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-                model.add_transition_flow(
-                    name="second_dose",
-                    fractional_rate=second_dose_transition,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
-                    dest_strata={"vaccination": Vaccination.VACCINATED},
-                )
+            model.add_transition_flow(
+                name="second_dose",
+                fractional_rate=second_dose_transition,
+                source=Compartment.SUSCEPTIBLE,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
+                dest_strata={"vaccination": Vaccination.VACCINATED},
+            )
 
         # Add the waning immunity progressions through the strata
         if waning_vacc_immunity:
             wane_origin_stratum = Vaccination.VACCINATED if is_dosing_active else Vaccination.ONE_DOSE_ONLY
-            for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-                model.add_transition_flow(
-                    name="part_wane",
-                    fractional_rate=1. / waning_vacc_immunity,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata={"vaccination": wane_origin_stratum},
-                    dest_strata={"vaccination": Vaccination.PART_WANED},
-                )
-                model.add_transition_flow(
-                    name="full_wane",
-                    fractional_rate=1. / vacc_params.vacc_part_effect_duration,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata={"vaccination": Vaccination.PART_WANED},
-                    dest_strata={"vaccination": Vaccination.WANED},
-                )
+            model.add_transition_flow(
+                name="part_wane",
+                fractional_rate=1. / waning_vacc_immunity,
+                source=Compartment.SUSCEPTIBLE,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"vaccination": wane_origin_stratum},
+                dest_strata={"vaccination": Vaccination.PART_WANED},
+            )
+            model.add_transition_flow(
+                name="full_wane",
+                fractional_rate=1. / vacc_params.vacc_part_effect_duration,
+                source=Compartment.SUSCEPTIBLE,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"vaccination": Vaccination.PART_WANED},
+                dest_strata={"vaccination": Vaccination.WANED},
+            )
 
     """
     Infection history stratification.
@@ -352,15 +350,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Apply waning immunity if present
     if params.waning_immunity_duration:
-        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-            model.add_transition_flow(
-                name="waning_immunity",
-                fractional_rate=1. / params.waning_immunity_duration,
-                source=compartment,
-                dest=compartment,
-                source_strata={"history": History.EXPERIENCED},
-                dest_strata={"history": History.WANED},
-            )
+        model.add_transition_flow(
+            name="waning_immunity",
+            fractional_rate=1. / params.waning_immunity_duration,
+            source=Compartment.SUSCEPTIBLE,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"history": History.EXPERIENCED},
+            dest_strata={"history": History.WANED},
+        )
 
     """
     Set up derived output functions

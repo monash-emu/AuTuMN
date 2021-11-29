@@ -17,11 +17,16 @@ def get_history_strat(
 ) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
+    Currently three strata, with everyone entering the experienced stratum after they have recovered from an episode.
 
-    Note that we also have a recovered compartment, so people who have previously recovered are actually retained
-    within the 'naive' stratum until their immunity wanes, when they transition to treatment experienced.
-    For this reason, calculations of the proportion of the population recovered are a little more complicated - see
-    request_recovered_outputs in the history.py of the outputs folder.
+    Args:
+        params:
+        voc_ifr_effects:
+        stratified_adjusters:
+
+    Returns:
+        The history stratification summer object for application to the main model
+
     """
 
     history_strat = Stratification("history", HISTORY_STRATA, COMPARTMENTS)
@@ -40,13 +45,14 @@ def get_history_strat(
             stratified_adjusters[voc]["hosp"]
         )
 
-        # Get them into the format needed to be applied to the model
+        # Get into the format needed and apply to both the experienced and waned strata
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
         update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
         update_adjustments_for_strat(History.WANED, flow_adjs, adjs, voc)
 
     add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, list(voc_ifr_effects.keys()))
 
+    # Currently set reinfection to zero for the period of time until immunity has waned to retain previous behaviour
     infection_adjs = {History.NAIVE: None, History.EXPERIENCED: Overwrite(0.), History.WANED: None}
     history_strat.add_flow_adjustments(INFECTION, infection_adjs)
 

@@ -7,7 +7,8 @@ BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 
 class Compartment:
     """
-    A COVID-19 model compartment
+    A COVID-19 model compartment.
+
     """
 
     SUSCEPTIBLE = "susceptible"
@@ -22,23 +23,17 @@ Compartments
 """
 
 # People who are infectious
-INFECTIOUS_COMPARTMENTS = [
-    Compartment.LATE_EXPOSED,
-    Compartment.EARLY_ACTIVE,
-    Compartment.LATE_ACTIVE,
-]
+INFECTIOUS_COMPARTMENTS = [Compartment.LATE_EXPOSED, Compartment.EARLY_ACTIVE, Compartment.LATE_ACTIVE]
+
 # People who are infected, but may or may not be infectious
 DISEASE_COMPARTMENTS = [Compartment.EARLY_EXPOSED, *INFECTIOUS_COMPARTMENTS]
-
-# People who are eligible to receive vaccination
-VACCINE_ELIGIBLE_COMPARTMENTS = [Compartment.SUSCEPTIBLE]
 
 # All model compartments
 COMPARTMENTS = [Compartment.SUSCEPTIBLE, *DISEASE_COMPARTMENTS]
 
 
 """
-Stratifications
+Stratifications.
 """
 
 # Age groups match the standard mixing matrices
@@ -111,7 +106,7 @@ HISTORY_STRATA = [
 ]
 
 """
-Transitions
+Transitions.
 """
 
 INFECTION = "infection"
@@ -126,7 +121,7 @@ AGE_CLINICAL_TRANSITIONS = [INFECTIOUSNESS_ONSET, INFECT_DEATH, RECOVERY]
 
 
 """
-Vic model options
+Vic model options.
 """
 
 
@@ -141,10 +136,5 @@ VIC_MODEL_OPTIONS = [
 ]
 
 GOOGLE_MOBILITY_LOCATIONS = [
-    "retail_and_recreation",
-    "parks",
-    "workplaces",
-    "transit_stations",
-    "grocery_and_pharmacy",
-    "residential"
+    "retail_and_recreation", "parks", "workplaces", "transit_stations", "grocery_and_pharmacy", "residential"
 ]

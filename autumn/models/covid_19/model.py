@@ -345,8 +345,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
         for flow in model._flows:
-            if flow.name == "recovery":
-                flow.dest.strata["history"] = "experienced"
+            if flow.name == RECOVERY:
+                flow.dest.strata["history"] = History.EXPERIENCED
                 flow.dest._str = flow.dest.serialize()
 
         duration = 365.

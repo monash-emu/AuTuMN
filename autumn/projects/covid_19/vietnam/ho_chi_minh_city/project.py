@@ -21,10 +21,13 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 
-targets = []
-for output_name in ["infection_deaths", "icu_occupancy"]:
-    series = ts_set.get(output_name)
-    targets.append(NormalTarget(series))
+icu_occupancy = ts_set.get("icu_occupancy")
+infection_deaths = ts_set.get("infection_deaths").truncate_start_time(556)  # truncated to 9th Jul 2021
+
+targets = [
+    NormalTarget(icu_occupancy),
+    NormalTarget(infection_deaths)
+]
 
 priors = [
     # Global COVID priors

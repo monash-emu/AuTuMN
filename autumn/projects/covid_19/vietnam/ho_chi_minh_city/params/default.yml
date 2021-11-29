@@ -49,15 +49,21 @@ mobility:
           - 573 # 26th Jul 2021, curfew from 6PM to 6AM
           - 601 # 23th Aug 2021, total lockdown implemented
           - 640 # 01st Oct 2021, lockdown started to ease
+          - 641 # 02nd Oct 2021, second day after eased lockdown
+          - 654 # 15th Oct 2021, 2 weeks after eased lockdown
+          - 671 # 01st Nov 2021, 1 month after eased lockdown, restaurants are serving on-site at 50% capacity
         values:
           - 0
           - 0.2
           - 0.4
           - 0.5
           - 0.7
-          - 0.85
-          - 1.
           - 0.8
+          - 0.9
+          - 0.7
+          - 0.5
+          - 0.35
+          - 0.2
       locations:
         - other_locations
         - school

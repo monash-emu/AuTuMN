@@ -21,7 +21,13 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 
-targets = []
+infection_deaths = ts_set.get("infection_deaths").truncate_start_time(556)  # truncated to 9th Jul 2021
+
+targets = [
+    NormalTarget(infection_deaths)
+]
+
+"""
 for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:
     if output_name == "notifications":
         series = ts_set.get(output_name).truncate_start_time(565)  # truncated to 18th July
@@ -32,6 +38,7 @@ for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospi
     else:
         series = ts_set.get(output_name)
         targets.append(NormalTarget(series))
+"""
 
 priors = [
     # Global COVID priors

@@ -1,23 +1,31 @@
+from typing import Dict
+
 from summer import Overwrite, Stratification, Multiply
 
 from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Tracing, INFECTION
 
 
-def get_tracing_strat(quarantine_infect_mult, other_infect_mults) -> Stratification:
+def get_tracing_strat(quarantine_infect_mult: float, other_infect_mults: Dict[str, float]) -> Stratification:
     """
-    Contact tracing stratification to represent those detected actively through screening of first order contacts of
-    symptomatic COVID-19 patients presenting passively.
+    Create the contact tracing stratification to represent those detected actively through screening of first order
+    contacts of symptomatic COVID-19 patients presenting passively.
+
+    Args:
+        quarantine_infect_mult: Relative infectiousness of persons being quarantined
+        other_infect_mults: Relative infectiousness of other processes applied in other stratifications
+
+    Returns:
+        The strain stratification summer object
+
     """
 
     tracing_strat = Stratification("tracing", [Tracing.TRACED, Tracing.UNTRACED], DISEASE_COMPARTMENTS)
 
     # Everyone starts out untraced
-    pop_split = {Tracing.TRACED: 0., Tracing.UNTRACED: 1.}
-    tracing_strat.set_population_split(pop_split)
+    tracing_strat.set_population_split({Tracing.TRACED: 0., Tracing.UNTRACED: 1.})
 
-    # Everybody starts out untraced when they are infected
-    traced_infection_adj = {Tracing.TRACED: Multiply(0.), Tracing.UNTRACED: Multiply(1.)}
-    tracing_strat.add_flow_adjustments(INFECTION, traced_infection_adj)
+    # Everybody starts out untraced when they are first infected
+    tracing_strat.add_flow_adjustments(INFECTION, {Tracing.TRACED: Multiply(0.), Tracing.UNTRACED: Multiply(1.)})
 
     # Ensure the infectiousness adjustments are the same, which ensures that the stratification order doesn't matter
     multipliers_equal = [quarantine_infect_mult == other_infect_mults[mult] for mult in other_infect_mults]

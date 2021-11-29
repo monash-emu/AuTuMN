@@ -29,6 +29,8 @@ pyAesCrypt==0.4.3
 googledrivedownloader >=0.4
 statsmodels>=0.12.2
 fpdf2==2.4.2
+gitpython==3.1.18
+pybuildkite==1.2.1
 
 # Testing
 pytest

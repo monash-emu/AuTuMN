@@ -407,15 +407,14 @@ def apply_standard_vacc_coverage(
 
         # Apply the vaccination rate function to the model, using the period end times and the calculated rates
         vacc_rate_func = get_piecewise_rollout(rollout_period_times, vaccination_rates)
-        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-            model.add_transition_flow(
-                name="vaccination",
-                fractional_rate=vacc_rate_func,
-                source=compartment,
-                dest=compartment,
-                source_strata={"agegroup": agegroup, "vaccination": Vaccination.UNVACCINATED},
-                dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
-            )
+        model.add_transition_flow(
+            name="vaccination",
+            fractional_rate=vacc_rate_func,
+            source=Compartment.SUSCEPTIBLE,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"agegroup": agegroup, "vaccination": Vaccination.UNVACCINATED},
+            dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
+        )
 
 
 def add_vacc_rollout_requests(model: CompartmentalModel, vacc_params: VaccParams):

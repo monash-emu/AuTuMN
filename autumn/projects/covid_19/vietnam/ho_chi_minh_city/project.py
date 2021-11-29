@@ -22,7 +22,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 
 targets = []
-for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:
+for output_name in ["infection_deaths", "icu_occupancy"]:
     series = ts_set.get(output_name)
     targets.append(NormalTarget(series))
 

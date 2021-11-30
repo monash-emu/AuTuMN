@@ -422,10 +422,16 @@ class CovidOutputsBuilder(OutputsBuilder):
             strata={"history": History.EXPERIENCED},
             save_results=False
         )
+        self.model.request_output_for_compartments(
+            name="_waned",
+            compartments=COMPARTMENTS,
+            strata={"history": History.WANED},
+            save_results=False
+        )
         self.model.request_function_output(
-            name="proportion_seropositive",
-            sources=["_experienced", "_total_population"],
-            func=lambda experienced, total: experienced / total,
+            name="proportion_experienced",
+            sources=["_experienced", "_waned", "_total_population"],
+            func=lambda experienced, waned, total: (experienced + waned) / total,
         )
 
         self.request_stratified_output_for_compartment(
@@ -435,6 +441,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         # Stratified by age group
         for agegroup in AGEGROUP_STRATA:
             experienced_name = f"_experiencedXagegroup_{agegroup}"
+            waned_name = f"_wanedXagegroup_{agegroup}"
             total_name = f"_total_populationXagegroup_{agegroup}"
             self.model.request_output_for_compartments(
                 name=experienced_name,
@@ -442,8 +449,14 @@ class CovidOutputsBuilder(OutputsBuilder):
                 strata={"history": History.EXPERIENCED, "agegroup": agegroup},
                 save_results=False,
             )
+            self.model.request_output_for_compartments(
+                name=waned_name,
+                compartments=COMPARTMENTS,
+                strata={"history": History.WANED, "agegroup": agegroup},
+                save_results=False,
+            )
             self.model.request_function_output(
-                name=f"proportion_seropositiveXagegroup_{agegroup}",
-                sources=[experienced_name, total_name],
-                func=lambda recovered, total: recovered / total,
+                name=f"proportion_experiencedXagegroup_{agegroup}",
+                sources=[experienced_name, waned_name, total_name],
+                func=lambda experienced, waned, total: (experienced + waned) / total,
             )

@@ -2,15 +2,9 @@ from typing import Dict
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import (
-    AGE_CLINICAL_TRANSITIONS, PROGRESS, COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
-)
+from autumn.models.covid_19.constants import COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, INFECTION
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.strat_processing.clinical import (
-    add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
-    update_adjustments_for_strat
-)
-from autumn.models.covid_19.strat_processing.vaccination import get_stratum_vacc_history_effect
+from autumn.models.covid_19.strat_processing.vaccination import apply_immunity_to_strat
 
 
 def get_vaccination_strat(
@@ -41,27 +35,9 @@ def get_vaccination_strat(
 
     # Preliminaries
     vacc_params = params.vaccination
-    vacc_effects, flow_adjs = {}, {}
     modified_strata = all_strata[1:]  # The affected strata are all but the first, which is the unvaccinated
 
-    vocs = list(stratified_adjusters.keys())
-    for voc in vocs:
-        flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-        for stratum in modified_strata:
-
-            # Collate the vaccination effects together
-            strat_args = (params, stratum, stratified_adjusters[voc], "vaccination")
-            vacc_effects[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
-
-            # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
-            adjs = get_all_adjustments(
-                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-                params.sojourn, ifr_adj, sympt_adj, hosp_adj
-            )
-
-            # Get them into the format needed to be applied to the model
-            update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
-    add_clinical_adjustments_to_strat(stratification, flow_adjs, Vaccination.UNVACCINATED, vocs)
+    vacc_effects = apply_immunity_to_strat(stratification, params, stratified_adjusters, Vaccination.UNVACCINATED)
 
     # Vaccination effect against infection
     infect_adjs = {stratum: Multiply(1. - vacc_effects[stratum]["infection_efficacy"]) for stratum in modified_strata}

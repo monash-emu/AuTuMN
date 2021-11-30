@@ -3,7 +3,7 @@ from typing import List, Callable, Tuple, Union, Dict
 
 from summer import CompartmentalModel
 
-from autumn.models.covid_19.constants import Vaccination, Compartment
+from autumn.models.covid_19.constants import Compartment, AGE_CLINICAL_TRANSITIONS, PROGRESS, Vaccination
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES,
@@ -14,6 +14,34 @@ from autumn.models.covid_19.parameters import Vaccination as VaccParams
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_adult_vacc_doses
+from autumn.models.covid_19.strat_processing.clinical import (
+    add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
+    update_adjustments_for_strat
+)
+
+
+def apply_immunity_to_strat(stratification, params, stratified_adjusters, unaffected_stratum):
+    modified_strata = [strat for strat in stratification.strata if strat != unaffected_stratum]
+    vacc_effects, flow_adjs = {}, {}
+    vocs = list(stratified_adjusters.keys())
+    for voc in vocs:
+        flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
+        for stratum in modified_strata:
+
+            # Collate the vaccination effects together
+            strat_args = (params, stratum, stratified_adjusters[voc], stratification.name)
+            vacc_effects[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
+
+            # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
+            adjs = get_all_adjustments(
+                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+                params.sojourn, ifr_adj, sympt_adj, hosp_adj
+            )
+
+            # Get them into the format needed to be applied to the model
+            update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs)
+    return vacc_effects
 
 
 """

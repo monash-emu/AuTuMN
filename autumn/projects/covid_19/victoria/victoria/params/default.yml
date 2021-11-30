@@ -1,8 +1,2 @@
-description: BASELINE
-
-country:
-  iso3: AUS
-
-time:
-  start: 198
-  end: 1096
+contact_rate: 1.5
+recovery_rate: 1.0

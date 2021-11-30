@@ -275,14 +275,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
 
         # Work out the strata to be implemented
+        no_boost_vacc_strata = VACCINATION_STRATA[: -1]
         if not is_dosing_active and not waning_vacc_immunity:
-            vacc_strata = VACCINATION_STRATA[: 2]
+            vacc_strata = no_boost_vacc_strata[: 2]
         elif not is_dosing_active and waning_vacc_immunity:
-            vacc_strata = VACCINATION_STRATA[: 2] + VACCINATION_STRATA[3:]
+            vacc_strata = no_boost_vacc_strata[: 2] + no_boost_vacc_strata[3:]
         elif is_dosing_active and not waning_vacc_immunity:
-            vacc_strata = VACCINATION_STRATA[: 3]
+            vacc_strata = no_boost_vacc_strata[: 3]
         else:
-            vacc_strata = VACCINATION_STRATA
+            vacc_strata = no_boost_vacc_strata
+
+        # Add in the boosted stratum if boosting has been requested, but can't have this without waning immunity
+        if params.vaccination.boost_delay and waning_vacc_immunity:
+            vacc_strata.append(VACCINATION_STRATA[-1])
+        elif params.vaccination.boost_delay and not waning_vacc_immunity:
+            raise ValueError("Not permitted to have boosting without waning immunity")
 
         # Get the vaccination stratification object
         vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)
@@ -330,6 +337,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 source_strata={"vaccination": Vaccination.PART_WANED},
                 dest_strata={"vaccination": Vaccination.WANED},
             )
+
+        if params.vaccination.boost_delay:
+            for boost_eligible_stratum in [Vaccination.VACCINATED, Vaccination.WANED]:
+                model.add_transition_flow(
+                    name=f"boost_{boost_eligible_stratum}",
+                    fractional_rate=1. / params.vaccination.boost_delay,
+                    source=Compartment.SUSCEPTIBLE,
+                    dest=Compartment.SUSCEPTIBLE,
+                    source_strata={"vaccination": boost_eligible_stratum},
+                    dest_strata={"vaccination": Vaccination.BOOSTED},
+                )
 
     """
     Infection history stratification.

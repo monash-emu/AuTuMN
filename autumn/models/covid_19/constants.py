@@ -54,6 +54,7 @@ class Vaccination:
     VACCINATED = "fully_vaccinated"
     PART_WANED = "part_waned"
     WANED = "waned"
+    BOOSTED = "boosted"
 
 
 class Strain:
@@ -96,7 +97,8 @@ VACCINATION_STRATA = [
     Vaccination.ONE_DOSE_ONLY,
     Vaccination.VACCINATED,
     Vaccination.PART_WANED,
-    Vaccination.WANED
+    Vaccination.WANED,
+    Vaccination.BOOSTED,
 ]
 
 HISTORY_STRATA = [

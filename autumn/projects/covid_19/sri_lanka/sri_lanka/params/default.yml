@@ -5,7 +5,7 @@ infectious_seed: 200
 
 time:
   start: 150
-  end: 791 # march 1st 2022
+  end: 944 # Aug 1st 2022
 
 country:
   iso3: LKA
@@ -61,6 +61,8 @@ vaccination:
         start_time: 655 #16  Oct 2021
         end_time: 732 # 1 Jan 2022
 
+history:
+  natural_immunity_duration: 365.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -118,6 +120,8 @@ mobility:
         - 2021-01-12
         - 2021-05-05 # All schools close
         - 2021-05-06
+        - 2021-11-21
+        - 2021-11-22 # All schools open
       values:
         - 1.
         - 0.
@@ -137,6 +141,8 @@ mobility:
         - 1
         - 1
         - 0
+        - 0
+        - 1
 
 voc_emergence:
   alpha_beta:
@@ -144,12 +150,18 @@ voc_emergence:
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 1.3 # LSHTM's estimate
+    ifr_multiplier: 1.
   delta:
     start_time: 548 # July 01
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
-    ifr_multiplier: 1.0
+    ifr_multiplier: 1.75
+  omicron:
+    start_time: 2000 # July 01
+    entry_rate: 25.
+    seed_duration: 10.
+    contact_rate_multiplier: 13
+    ifr_multiplier: 1.75
 
-history:
-  natural_immunity_duration: 365
+

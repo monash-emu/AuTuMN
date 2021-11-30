@@ -25,23 +25,11 @@ def get_history_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[s
     history_strat = Stratification("history", HISTORY_STRATA, COMPARTMENTS)
 
     # Everyone starts out infection-naive
-    pop_split = {History.NAIVE: 1., History.EXPERIENCED: 0., History.WANED: 0.}
+    pop_split = {stratum: 0. for stratum in HISTORY_STRATA}
+    pop_split[History.NAIVE] = 1.
     history_strat.set_population_split(pop_split)
 
-    history_params = params.history
-    change_strata = HISTORY_STRATA[1:]  # The affected strata are all but the first, which is the unvaccinated
-
-    history_effects = apply_immunity_to_strat(history_strat, params, stratified_adjusters, History.NAIVE)
-
-    # Vaccination effect against infection
-    infect_adjs = {strat: Multiply(1. - history_effects[strat]["infection_efficacy"]) for strat in change_strata}
-    infect_adjs.update({History.NAIVE: None})
-    history_strat.add_flow_adjustments(INFECTION, infect_adjs)
-
-    # Vaccination effect against infectiousness
-    infectious_adjs = {s: Multiply(1. - getattr(getattr(history_params, s), "ve_infectiousness")) for s in change_strata}
-    infectious_adjs.update({History.NAIVE: None})
-    for compartment in DISEASE_COMPARTMENTS:
-        history_strat.add_infectiousness_adjustments(compartment, infectious_adjs)
+    # Immunity adjustments equivalent to vaccination approach
+    apply_immunity_to_strat(history_strat, params, stratified_adjusters, History.NAIVE)
 
     return history_strat

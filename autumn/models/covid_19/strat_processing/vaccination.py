@@ -1,9 +1,11 @@
 import numpy as np
 from typing import List, Callable, Tuple, Union, Dict
 
-from summer import CompartmentalModel
+from summer import CompartmentalModel, Multiply, Stratification
 
-from autumn.models.covid_19.constants import Compartment, AGE_CLINICAL_TRANSITIONS, PROGRESS, Vaccination
+from autumn.models.covid_19.constants import (
+    Compartment, AGE_CLINICAL_TRANSITIONS, PROGRESS, Vaccination, INFECTION, DISEASE_COMPARTMENTS
+)
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
     get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES,
@@ -20,28 +22,53 @@ from autumn.models.covid_19.strat_processing.clinical import (
 )
 
 
-def apply_immunity_to_strat(stratification, params, stratified_adjusters, unaffected_stratum):
-    modified_strata = [strat for strat in stratification.strata if strat != unaffected_stratum]
-    vacc_effects, flow_adjs = {}, {}
+def apply_immunity_to_strat(
+        stratification: Stratification, params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]],
+        unaffected_stratum: str
+):
+    """
+    Apply all the immunity effects to a stratification by immunity (either vaccination or history)
+
+    Args:
+        stratification: The current stratification being adjusted
+        params: All requested model parameters
+        stratified_adjusters: The VoC and outcome-specific adjusters
+        unaffected_stratum: The name of the unaffected stratum
+
+    """
+
+    imm_params = getattr(params, stratification.name)
+    changed_strata = [strat for strat in stratification.strata if strat != unaffected_stratum]
+    effects, flow_adjs = {}, {}
     vocs = list(stratified_adjusters.keys())
     for voc in vocs:
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-        for stratum in modified_strata:
+        for stratum in changed_strata:
 
-            # Collate the vaccination effects together
+            # Collate the effects together
             strat_args = (params, stratum, stratified_adjusters[voc], stratification.name)
-            vacc_effects[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
+            effects[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
             adjs = get_all_adjustments(
                 params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-                params.sojourn, ifr_adj, sympt_adj, hosp_adj
+                params.sojourn, sympt_adj, hosp_adj, ifr_adj
             )
 
             # Get them into the format needed to be applied to the model
             update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
     add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs)
-    return vacc_effects
+
+    # Effect against infection
+    infect_adjs = {stratum: Multiply(1. - effects[stratum]["infection_efficacy"]) for stratum in changed_strata}
+    infect_adjs.update({unaffected_stratum: None})
+    stratification.add_flow_adjustments(INFECTION, infect_adjs)
+
+    # Vaccination effect against infectiousness
+    infectious_adjs = {s: Multiply(1. - getattr(getattr(imm_params, s), "ve_infectiousness")) for s in changed_strata}
+    infectious_adjs.update({unaffected_stratum: None})
+    for compartment in DISEASE_COMPARTMENTS:
+        stratification.add_infectiousness_adjustments(compartment, infectious_adjs)
 
 
 """
@@ -49,7 +76,9 @@ Parameter processing.
 """
 
 
-def get_stratum_vacc_history_effect(params: Parameters, stratum: str, voc_adjusters: Dict[str, float], stratification: str):
+def get_stratum_vacc_history_effect(
+        params: Parameters, stratum: str, voc_adjusters: Dict[str, float], stratification: str
+):
     """
     Process the vaccination parameters for the vaccination stratum being considered.
 

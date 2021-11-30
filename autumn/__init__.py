@@ -23,19 +23,54 @@ register_project(Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.ph
 
 # Example projects
 register_project(Models.EXAMPLE, Region.PHILIPPINES, "autumn.projects.example.philippines.project")
-register_project(Models.EXAMPLE, Region.VICTORIA_2020, "autumn.projects.example.victoria.project")
 
-# COVID: Victoria state-wide super-model
+
 register_project(
     Models.COVID_19,
-    Region.VICTORIA_2020,
-    "autumn.projects.covid_19.victoria.victoria_2020.project",
+    Region.NORTH_EAST_METRO,
+    "autumn.projects.covid_19.victoria.north_east_metro.project",
 )
 
 register_project(
     Models.COVID_19,
-    Region.VICTORIA_2021,
-    "autumn.projects.covid_19.victoria.victoria_2021.project",
+    Region.SOUTH_EAST_METRO,
+    "autumn.projects.covid_19.victoria.south_east_metro.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.WEST_METRO,
+    "autumn.projects.covid_19.victoria.west_metro.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.BARWON_SOUTH_WEST,
+    "autumn.projects.covid_19.victoria.barwon_south_west.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.GIPPSLAND,
+    "autumn.projects.covid_19.victoria.gippsland.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.GRAMPIANS,
+    "autumn.projects.covid_19.victoria.grampians.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.HUME,
+    "autumn.projects.covid_19.victoria.hume.project",
+)
+
+register_project(
+    Models.COVID_19,
+    Region.LODDON_MALLEE,
+    "autumn.projects.covid_19.victoria.loddon_mallee.project",
 )
 
 # COVID: European mixing optmization
@@ -79,9 +114,11 @@ register_project(
     Region.CENTRAL_VISAYAS,
     "autumn.projects.covid_19.philippines.central_visayas.project",
 )
+
 register_project(
     Models.COVID_19, Region.DAVAO_CITY, "autumn.projects.covid_19.philippines.davao_city.project"
 )
+
 register_project(
     Models.COVID_19,
     Region.DAVAO_REGION,
@@ -118,10 +155,6 @@ register_project(Models.COVID_19, Region.NEPAL, "autumn.projects.covid_19.nepal.
 register_project(
     Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.sri_lanka.project"
 )
-register_project(
-    Models.COVID_19, Region.SRI_LANKA_WP, "autumn.projects.covid_19.sri_lanka.sri_lanka_wp.project"
-)
-
 
 # Indonesia & Bali
 register_project(Models.COVID_19, Region.BALI, "autumn.projects.covid_19.indonesia.bali.project")
@@ -139,6 +172,18 @@ register_project(
     "autumn.projects.covid_19.vietnam.ho_chi_minh_city.project",
 )
 
+register_project(
+    Models.COVID_19,
+    Region.HANOI,
+    "autumn.projects.covid_19.vietnam.hanoi.project",
+)
+
+
+register_project(Models.COVID_19, Region.MYANMAR, "autumn.projects.covid_19.myanmar.project")
+
 # COVID: Victoria project
 # FIXME: Parameter validation issues
 # register_project(Models.COVID_19, Region.VICTORIA, "autumn.projects.covid_19.victoria.project")
+
+
+register_project(Models.SM_SIR, Region.PHILIPPINES, "autumn.projects.sm_sir.philippines.project")

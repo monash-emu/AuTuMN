@@ -1,8 +1,6 @@
 class Region:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
-    VICTORIA_2020 = "victoria_2020"
-    VICTORIA_2021 = "victoria_2021"
     MANILA = "manila"
     CALABARZON = "calabarzon"
     CENTRAL_VISAYAS = "central-visayas"
@@ -12,9 +10,8 @@ class Region:
     SWEDEN = "sweden"
     FRANCE = "france"
     SPAIN = "spain"
-    NORTH_METRO = "north-metro"
+    NORTH_EAST_METRO="north-east-metro"
     SOUTH_EAST_METRO = "south-east-metro"
-    SOUTH_METRO = "south-metro"
     WEST_METRO = "west-metro"
     BARWON_SOUTH_WEST = "barwon-south-west"
     GIPPSLAND = "gippsland"
@@ -31,11 +28,12 @@ class Region:
     KUALA_LUMPUR = "kuala-lumpur"
     NEPAL = "nepal"
     SRI_LANKA = "sri_lanka"
-    SRI_LANKA_WP = "sri_lanka_wp"
     BALI = "bali"
     INDONESIA = "indonesia"
     VIETNAM = "vietnam"
     HO_CHI_MINH_CITY = "ho_chi_minh_city"
+    HANOI = "hanoi"
+    MYANMAR = "myanmar"
 
     REGIONS = [
         PHILIPPINES,
@@ -50,11 +48,8 @@ class Region:
         SWEDEN,
         FRANCE,
         SPAIN,
-        VICTORIA_2020,
-        VICTORIA_2021,
-        NORTH_METRO,
+        NORTH_EAST_METRO,
         SOUTH_EAST_METRO,
-        SOUTH_METRO,
         WEST_METRO,
         BARWON_SOUTH_WEST,
         GIPPSLAND,
@@ -70,11 +65,12 @@ class Region:
         KUALA_LUMPUR,
         NEPAL,
         SRI_LANKA,
-        SRI_LANKA_WP,
         INDONESIA,
         BALI,
         VIETNAM,
         HO_CHI_MINH_CITY,
+        HANOI,
+        MYANMAR,
     ]
 
     MALAYSIA_REGIONS = [
@@ -112,9 +108,8 @@ class Region:
     ]
 
     VICTORIA_METRO = [
-        NORTH_METRO,
         SOUTH_EAST_METRO,
-        SOUTH_METRO,
+        NORTH_EAST_METRO,
         WEST_METRO,
     ]
 

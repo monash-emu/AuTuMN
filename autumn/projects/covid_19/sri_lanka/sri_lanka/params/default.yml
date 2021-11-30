@@ -4,33 +4,61 @@ contact_rate: 0.0215
 infectious_seed: 200
 
 time:
-  start: 240
-  end: 763
+  start: 150
+  end: 791 # march 1st 2022
 
 country:
   iso3: LKA
 
-contact_tracing:
-    assumed_trace_prop: 0.05
-    assumed_prev: 1.e-3
-    quarantine_infect_multiplier: 0.2
+mixing_matrices:
+  source_iso3: CHN
 
+contact_tracing:
+  assumed_trace_prop: 0.05
+  assumed_prev: 1.e-3
+  quarantine_infect_multiplier: 0.2
+  floor: 0.
 
 vaccination:
-  overall_efficacy: 0.7
-  vacc_prop_prevent_infection: 1
+  one_dose:
+    ve_sympt_covid: 0.3
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness_ratio: 0.5
+    ve_hospitalisation: 0.7
+    ve_death: 0.8
+  fully_vaccinated:
+    ve_sympt_covid: 0.5
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness: 0.3
+    ve_hospitalisation: 0.7
+    ve_death: 0.8
+  part_waned:
+    ve_sympt_covid: 0.25
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness: 0.15
+    ve_hospitalisation: 0.7
+    ve_death: 0.8
+  waned:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_infectiousness: 0.
+    ve_hospitalisation: 0.35
+    ve_death: 0.4
+  standard_supply: false # to get the timeseries of vaccine coverage
+  lag: 14
+  second_dose_delay: 30.
+  vacc_full_effect_duration: 90.
+  vacc_part_effect_duration: 360.
   roll_out_components:
-    - supply_period_coverage:
-        coverage: 0.32
-        start_time: 481 # 25 Apr 2021
-        end_time: 608 # 30 August 2021
-    - supply_period_coverage:
-        coverage: 0.27 # 50% coverage by Aug 31
-        start_time: 609 # 31 August 2021
-        end_time: 623 # 14 Sep August 2021 (two weeks lag)
-    - supply_period_coverage:
-        coverage: 0.60 #80% coverage by Jan 1
-        start_time: 624 #15  September 2021
+    - age_min: 15
+      supply_period_coverage:
+        coverage: 0.7587 # 58% total population coverage by Oct 15
+        start_time: 481 # 25 April 2021
+        end_time: 654 # 15 Oct 2021
+    - age_min: 15
+      supply_period_coverage:
+        coverage: 0.18 #80% coverage by Jan 1 among 15+ age_group
+        start_time: 655 #16  Oct 2021
         end_time: 732 # 1 Jan 2022
 
 
@@ -43,14 +71,26 @@ clinical_stratification:
   icu_prop: 0.04
 
 mobility:
+  smooth_google_data: false # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.3334
+      grocery_and_pharmacy: 0.3333
+      transit_stations: 0.3333
+      parks: 0.
+    home:
+      residential: 1.
   microdistancing:
     behaviour:
       function_type: tanh
       parameters:
         shape: .02
         inflection_time: 380. # 1st February 2021
-        lower_asymptote: 0.
-        upper_asymptote: 0.4
+        start_asymptote: 0.
+        end_asymptote: 0.4
       locations:
         - other_locations
         - school
@@ -101,13 +141,14 @@ mobility:
 voc_emergence:
   alpha_beta:
     start_time: 410
-    entry_rate: 1.
+    entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 1.3 # LSHTM's estimate
   delta:
     start_time: 548 # July 01
-    entry_rate: 1.
+    entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
+    ifr_multiplier: 1.0
 
 waning_immunity_duration: 365

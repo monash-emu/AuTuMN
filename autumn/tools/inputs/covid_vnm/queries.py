@@ -3,7 +3,7 @@ from autumn.tools.inputs.database import get_input_db
 
 def get_vnm_testing_numbers(subregion):
     """
-    Returns daily PCR test numbers for Sri lanka
+    Returns daily PCR test numbers for Vietnam
     """
 
     input_db = get_input_db()

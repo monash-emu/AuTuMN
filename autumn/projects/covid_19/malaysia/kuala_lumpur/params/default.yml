@@ -2,6 +2,9 @@ description: BASELINE
 
 contact_rate: 0.0295
 
+mixing_matrices:
+  source_iso3: HKG
+
 time:
   start: 280
 
@@ -13,4 +16,4 @@ mobility:
   microdistancing:
     behaviour:
       parameters:
-        upper_asymptote: 0.32
+        end_asymptote: 0.32

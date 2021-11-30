@@ -16,11 +16,10 @@ from autumn.models.tuberculosis.utils import (
 )
 
 
-def get_age_strat(params: Parameters) -> AgeStratification:
+def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     strat = AgeStratification("age", params.age_breakpoints, COMPARTMENTS)
 
-    mixing_matrix = get_mixing_matrix_specific_agegroups(params.iso3, params.age_breakpoints)
-    strat.set_mixing_matrix(mixing_matrix)
+    strat.set_mixing_matrix(age_mixing_matrix)
 
     # Add an age-specific all-causes mortality rate
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(
@@ -53,7 +52,7 @@ def get_age_strat(params: Parameters) -> AgeStratification:
         if params.inflate_reactivation_for_diabetes and is_activation_flow:
             # Inflate reactivation rate to account for diabetes.
             diabetes_scale_up = tanh_based_scaleup(
-                shape=0.05, inflection_time=1980, lower_asymptote=0.0, upper_asymptote=1.0
+                shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0
             )
             future_diabetes_trend = make_linear_curve(
                 x_0=2020, x_1=2050, y_0=1, y_1=params.extra_params["future_diabetes_multiplier"]
@@ -163,7 +162,7 @@ def get_age_strat(params: Parameters) -> AgeStratification:
 
     # Add BCG effect without stratifying for BCG
     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
-    bcg_susceptibility_multilier_dict = get_parameter_dict_from_function(
+    bcg_multilier_dict = get_parameter_dict_from_function(
         bcg_wane, params.age_breakpoints
     )
     bcg_coverage_func = scale_up_function(
@@ -174,18 +173,23 @@ def get_age_strat(params: Parameters) -> AgeStratification:
         bound_up=100,
         smoothness=1.5,
     )
-    infections_adjs = {}
-    for age, multiplier in bcg_susceptibility_multilier_dict.items():
+    bcg_adjs = {}
+    for age, multiplier in bcg_multilier_dict.items():
         if multiplier < 1.0:
             average_age = get_average_age_for_bcg(age, params.age_breakpoints)
-            infections_adjs[age] = make_bcg_multiplier_func(
+            bcg_adjs[age] = make_bcg_multiplier_func(
                 bcg_coverage_func, multiplier, average_age
             )
         else:
-            infections_adjs[age] = None
+            bcg_adjs[age] = None
 
-    infections_adjs = {str(k): Multiply(v) for k, v in infections_adjs.items()}
-    strat.add_flow_adjustments("infection", infections_adjs)
+    bcg_adjs = {str(k): Multiply(v) for k, v in bcg_adjs.items()}
+
+    if params.bcg_effect == "infection":
+        flow_affected_by_bcg = "infection"
+    elif params.bcg_effect == "mortality":
+        flow_affected_by_bcg = "infect_death"
+    strat.add_flow_adjustments(flow_affected_by_bcg, bcg_adjs)
 
     return strat
 

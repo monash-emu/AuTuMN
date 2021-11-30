@@ -91,11 +91,18 @@ class Calibration:
         seed: int = None,
         initial_jumping_stdev_ratio: float = 0.25,
         jumping_stdev_adjustment: float = 0.5,
+        random_process=None
     ):
         """
         Defines a new calibration.
         """
         self.all_priors = [p.to_dict() for p in priors]
+
+        self.includes_random_process = False
+        if random_process is not None:
+            self.random_process = random_process
+            self.set_up_random_process()
+
         self.targets = [t.to_dict() for t in targets]
         self.targets = remove_early_points_to_prevent_crash(self.targets, self.all_priors)
 
@@ -152,6 +159,41 @@ class Calibration:
 
         #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
 
+    def set_up_random_process(self):
+        self.includes_random_process = True
+
+        # add priors for coefficients, using 80% weight for the first order, splitting remaining 20% between remaining orders
+        order = self.random_process.order
+        if order == 1:
+            coeff_means = [1.]
+        else:
+            coeff_means = [.8] + [.2 / (order - 1)] * (order - 1)
+        for i, coeff_mean in enumerate(coeff_means):
+            self.all_priors.append({
+                "param_name":  f"random_process.coefficients({i})",
+                "distribution": "trunc_normal",
+                "distri_params": [coeff_mean, 0.05],
+                "trunc_range": [0., 1.],
+            })
+
+        # add prior for noise sd
+        self.all_priors.append({
+            "param_name": "random_process.noise_sd",
+            "distribution": "uniform",
+            "distri_params": [0.49, 0.51],
+        })
+
+        # add priors for rp values
+        n_values = len(self.random_process.values)
+        self.all_priors += [
+            {
+                "param_name": f"random_process.values({i_val})",
+                "distribution": "uniform",
+                "distri_params": [-2., 2.],
+                "skip_evaluation": True
+            } for i_val in range(1, n_values)  # the very first value will be fixed to 0.
+        ]
+
     def split_priors_by_type(self):
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
         independent_sample_idxs = [
@@ -180,6 +222,8 @@ class Calibration:
     def tune_proposal(self, param_name, project: Project, n_points=100, relative_likelihood_reduction=0.5):
         assert param_name in self.iterative_sampling_param_names, f"{param_name} is not an iteratively sampled parameter"
         assert n_points > 1, "A minimum of two points is required to perform proposal tuning"
+
+        self._is_first_run = True
 
         # We must perform a few initialisation tasks (needs refactoring)
         # work out missing distribution params for priors
@@ -329,8 +373,13 @@ class Calibration:
         param_updates = {"time.end": self.end_time}
         for param_name, value in proposed_params.items():
             param_updates[param_name] = value
-
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
+
+        # Update the random_process attribute with the current rp config for later likelihood evaluation
+        if self.includes_random_process:
+            self.random_process.coefficients = [proposed_params[f"random_process.coefficients({i})"] for i in range(self.random_process.order)]
+            self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
+            self.random_process.values = [0.] + [proposed_params[f"random_process.values({k})"] for k in range(1, len(self.random_process.values))]
 
         if self._is_first_run:
             self.build_options = dict(enable_validation = True)
@@ -577,12 +626,15 @@ class Calibration:
             all_params_dict = {**iterative_samples_dict, **independent_samples}
 
             if is_within_prior_support:
-
                 # Evaluate log-likelihood.
                 proposed_loglike = self.loglikelihood(all_params_dict)
 
                 # Evaluate log-prior.
                 proposed_logprior = self.logprior(all_params_dict)
+
+                # Evaluate the log-likelihood of the random process if applicable
+                if self.includes_random_process:
+                    proposed_logprior += self.random_process.evaluate_rp_loglikelihood()
 
                 # posterior distribution
                 proposed_log_posterior = proposed_loglike + proposed_logprior
@@ -832,6 +884,9 @@ class Calibration:
         logp = 0.0
         for param_name, value in all_params_dict.items():
             prior_dict = [d for d in self.all_priors if d["param_name"] == param_name][0]
+            if "skip_evaluation" in prior_dict:
+                if prior_dict["skip_evaluation"]:
+                    continue
             logp += calculate_prior(prior_dict, value, log=True)
 
         return logp
@@ -920,11 +975,11 @@ class CalibrationOutputs:
         Record the model outputs for this iteration
         """
         assert model and model.outputs is not None, "No model has been run"
-        outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
+        #outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
         derived_outputs_df = db.store.build_derived_outputs_table(
             [model], run_id=iter_num, chain_id=self.chain_id
         )
-        self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
+        #self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
         self.db.append_df(db.store.Table.DERIVED, derived_outputs_df)
 
     def store_mcmc_iteration(

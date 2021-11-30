@@ -1,8 +1,9 @@
+import numpy as np
 from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, \
     use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, BetaPrior
+from autumn.tools.calibration.priors import UniformPrior, BetaPrior,TruncNormalPrior
 from autumn.tools.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
@@ -11,14 +12,16 @@ from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
-
+from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_all_scenario_dicts
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 2)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(5, 6)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
+# all_scenario_dicts = get_all_scenario_dicts("LKA")
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
+# scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_dicts]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
@@ -36,20 +39,25 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
-    UniformPrior("contact_rate", [0.018, 0.028]),
-    UniformPrior("infectious_seed", [240.0, 300.0]),
+    UniformPrior("contact_rate", [0.024, 0.027]),
+    UniformPrior("infectious_seed", [250.0, 360.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.045, 0.07]),
-    UniformPrior("voc_emergence.alpha_beta.start_time", [400, 420]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.5, 2.9]),
-    UniformPrior("voc_emergence.delta.start_time", [430, 465]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [3.4, 4.1]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.4, 0.8]),
-    UniformPrior("infection_fatality.multiplier", [2.2, 3.0])
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
+    UniformPrior("infection_fatality.multiplier", [0.11, 0.6]),
+    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=1.0,\
+                     stdev=0.5, trunc_range=[0.0, np.inf]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.825, 0.95]),
+    #VoC
+    UniformPrior("voc_emergence.alpha_beta.start_time", [375, 435]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.0]),
+    UniformPrior("voc_emergence.delta.start_time", [475, 530]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.75]),
+    # waning immunity
+    UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.)
 ]
 
 # Load proposal sds from yml file
-#use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+# use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(priors, targets)
 

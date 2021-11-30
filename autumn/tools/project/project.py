@@ -399,7 +399,8 @@ def calculate_differential_outputs(
     }
     """
     baseline_model = models[0]
-    for request, output_name in diff_output_requests:
+    for diff_output_request in diff_output_requests:
+        output_name, request = diff_output_request
         assert request in DiffOutput.REQUEST_TYPES, f"Request {request} unknown."
         # Evaluate each request.
         for model in models:
@@ -410,10 +411,10 @@ def calculate_differential_outputs(
             assert output_name in model.derived_outputs, msg
             baseline_output = baseline_model.derived_outputs[output_name]
             sc_output = model.derived_outputs[output_name]
-            idx_shift = len(baseline_output) - len(sc_output)
+            idx_shift = baseline_output.size - sc_output.size
             output_arr = np.zeros(sc_output.shape)
             calc = OUTPUT_CALCS[request]
-            new_output_name = calc(output_arr, baseline_output, sc_output, idx_shift)
+            new_output_name = calc(output_name, output_arr, baseline_output, sc_output, idx_shift)
             model.derived_outputs[new_output_name] = output_arr
 
 

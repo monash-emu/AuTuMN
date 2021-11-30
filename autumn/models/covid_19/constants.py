@@ -42,7 +42,7 @@ COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPART
 Stratifications
 """
 
-# Age groups match the Prem matrices
+# Age groups match the standard mixing matrices
 AGEGROUP_STRATA = [str(breakpoint) for breakpoint in list(range(0, 80, 5))]
 
 
@@ -56,7 +56,10 @@ class Clinical:
 
 class Vaccination:
     UNVACCINATED = "unvaccinated"
-    VACCINATED = "vaccinated"
+    ONE_DOSE_ONLY = "one_dose"
+    VACCINATED = "fully_vaccinated"
+    PART_WANED = "part_waned"
+    WANED = "waned"
 
 
 class Strain:
@@ -87,7 +90,7 @@ NOTIFICATION_CLINICAL_STRATA = [
     Clinical.ICU,
 ]
 
-DEATH_CLINICAL_STRATA = [
+FIXED_STRATA = [
     Clinical.NON_SYMPT,
     Clinical.HOSPITAL_NON_ICU,
     Clinical.ICU,
@@ -95,7 +98,10 @@ DEATH_CLINICAL_STRATA = [
 
 VACCINATION_STRATA = [
     Vaccination.UNVACCINATED,
+    Vaccination.ONE_DOSE_ONLY,
     Vaccination.VACCINATED,
+    Vaccination.PART_WANED,
+    Vaccination.WANED
 ]
 
 HISTORY_STRATA = [
@@ -114,3 +120,30 @@ NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the oth
 PROGRESS = "progress"
 RECOVERY = "recovery"
 INFECT_DEATH = "infect_death"
+
+AGE_CLINICAL_TRANSITIONS = [INFECTIOUSNESS_ONSET, INFECT_DEATH, RECOVERY]
+
+
+"""
+Vic model options
+"""
+
+
+class VicModelTypes:
+    NON_VIC = "non_vic"
+    VIC_REGION_2021 = "vic_region_2021"
+
+
+VIC_MODEL_OPTIONS = [
+    VicModelTypes.NON_VIC,
+    VicModelTypes.VIC_REGION_2021,
+]
+
+GOOGLE_MOBILITY_LOCATIONS = [
+    "retail_and_recreation",
+    "parks",
+    "workplaces",
+    "transit_stations",
+    "grocery_and_pharmacy",
+    "residential"
+]

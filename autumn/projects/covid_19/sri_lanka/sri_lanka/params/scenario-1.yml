@@ -1,27 +1,23 @@
-description: Scenario 1,50% vaccination by 14th Sep. Until Sep 06 lockdown. After that mobility level before lockdown.
+description: Scenario 1,If lockdowns were not placed
 time:
-  start: 609 # 31st August 2021
+  start: 506 # 20th May 2021
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2021-09-05
-        - 2021-09-06
+        - 2021-05-20 #lockdown starts
+        - 2021-05-22
       values:
         - - repeat_prev
-        - - average_mobility
-          - 14
+        - 0.8
+
     work:
       append: true
       times:
-        - 2021-09-05
-        - 2021-09-06
+        - 2021-05-21 #lockdown starts
+        - 2021-05-22
       values:
         - - repeat_prev
-        - - average_mobility
-          - 14
-
-
-
+        - 0.6

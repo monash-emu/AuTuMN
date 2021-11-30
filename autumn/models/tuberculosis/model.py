@@ -5,6 +5,8 @@ from autumn.models.tuberculosis.parameters import Parameters
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 from autumn.tools import inputs
+from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
+from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 
 from .constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
 from .stratifications.age import get_age_strat
@@ -36,6 +38,25 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.SUSCEPTIBLE: params.start_population_size - 1,
     }
     model.set_initial_population(init_pop)
+
+    # build mixing matrix
+    if params.age_mixing:
+        if params.age_mixing.type == 'prem':
+            age_mixing_matrices = get_prem_mixing_matrices(params.iso3, params.age_breakpoints, None)
+        elif params.age_mixing.type == 'extrapolated':
+            age_mixing_matrices = build_synthetic_matrices(
+                params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,
+                requested_locations=["all_locations"]
+            )
+        else:
+            raise Exception("Invalid mixing matrix type specified in parameters")
+    else:
+        # Default to prem matrices (old model runs)
+        age_mixing_matrices = get_prem_mixing_matrices(params.iso3, params.age_breakpoints, None)
+
+    age_mixing_matrix = age_mixing_matrices["all_locations"]
+    # convert daily contact rates to yearly rates
+    age_mixing_matrix *= 365.25
 
     contact_rate = params.contact_rate
     contact_rate_latent = params.contact_rate * params.rr_infection_latent
@@ -119,8 +140,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         screening_rate_func = tanh_based_scaleup(
             func_params["shape"],
             func_params["inflection_time"],
-            func_params["lower_asymptote"],
-            func_params["upper_asymptote"],
+            func_params["start_asymptote"],
+            func_params["end_asymptote"],
         )
 
         def detection_rate(t, cv=None):
@@ -245,7 +266,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
 
     # Age stratification.
-    age_strat = get_age_strat(params)
+    age_strat = get_age_strat(params, age_mixing_matrix)
     model.stratify_with(age_strat)
 
     # Custom, user-defined stratifications
@@ -268,6 +289,28 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         organ_strat = get_organ_strat(params)
         model.stratify_with(organ_strat)
 
+
+    # Add importation flows
+    if params.import_ltbi_cases:
+        prop_early = 0.10  # assuming 10% of migrants with LTBI have been infected in the 6 months preceding their arrival.
+
+        dest_cpt_fractions = {
+            Compartment.EARLY_LATENT: prop_early,
+            Compartment.LATE_LATENT: 1. - prop_early,
+        }
+
+        for dest_compartment, fraction in dest_cpt_fractions.items():
+            # we need to account for the fact that the flows will be replicated n_dest_compartment times
+            n_dest_compartment = len(model._compartment_name_map[dest_compartment])
+            rate = fraction * params.import_ltbi_cases['n_cases_per_year'] / n_dest_compartment
+            case_import_func = make_case_import_func(rate, params.import_ltbi_cases['start_time'])
+
+            model.add_importation_flow(
+                f"ltbi_importation_{dest_compartment}",
+                case_import_func,
+                dest=dest_compartment,
+            )
+
     # Derived outputs
     request_outputs(
         model,
@@ -275,6 +318,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         location_strata,
         params.time_variant_tb_screening_rate,
         implement_acf,
+        implement_ltbi_screening,
+        params.pt_efficacy,
+        params.pt_sae_prop
     )
 
     return model
+
+
+def make_case_import_func(rate, start_time):
+
+    def case_import(time, computed_values):
+        return rate if time >= start_time else 0.
+
+    return case_import

@@ -1,7 +1,5 @@
 from autumn.models.covid_19.parameters import MicroDistancingFunc
-from autumn.models.covid_19.preprocess.mixing_matrix.microdistancing import (
-    get_microdistancing_funcs,
-)
+from autumn.models.covid_19.mixing_matrix.microdistancing import get_microdistancing_funcs
 from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 
 LOCATIONS = ["work", "home"]
@@ -18,10 +16,10 @@ def test_microdistancing__with_tanh_func():
         "foo": {
             "function_type": "tanh",
             "parameters": {
-                "shape": -0.05,
+                "shape": 0.05,
                 "inflection_time": 275,
-                "lower_asymptote": 0.6,
-                "upper_asymptote": 1,
+                "start_asymptote": 1.,
+                "end_asymptote": 0.6,
             },
             "locations": LOCATIONS,
         }
@@ -62,10 +60,10 @@ def test_microdistancing__with_tanh_func_and_square_mobility_effect():
         "foo": {
             "function_type": "tanh",
             "parameters": {
-                "shape": -0.05,
+                "shape": 0.05,
                 "inflection_time": 275,
-                "lower_asymptote": 0.6,
-                "upper_asymptote": 1,
+                "start_asymptote": 1.,
+                "end_asymptote": 0.6,
             },
             "locations": LOCATIONS,
         }
@@ -85,10 +83,10 @@ def test_microdistancing__with_tanh_func_and_adjuster():
         "foo": {
             "function_type": "tanh",
             "parameters": {
-                "shape": -0.05,
+                "shape": 0.05,
                 "inflection_time": 275,
-                "lower_asymptote": 0.6,
-                "upper_asymptote": 1,
+                "start_asymptote": 1.,
+                "end_asymptote": 0.6,
             },
             "locations": LOCATIONS,
         },

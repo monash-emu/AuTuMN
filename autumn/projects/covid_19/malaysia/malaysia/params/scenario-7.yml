@@ -1,32 +1,37 @@
-description: Scenario 7, 50%  return to the max mobility  + 80% vaccine roll-out
+description: schools open on Oct 1st. No change to mobility at other locations and workplaces. 70% coverage by Jan 1st
 
 time:
-  start: 504 # 18th May 2021
-
-vaccination:
-
-  # Eleven months from 18th May 2021
-  roll_out_components:
-    - supply_period_coverage:
-        coverage: 0.8
-        start_time: 504.
-        end_time: 838.
+  start: 649  # 10 Oct 2021
 
 mobility:
   mixing:
-    other_locations:
-      append: true
+    school:
+      append: false
       times:
-        - 2021-03-07
+        - 2021-09-30
+        - 2021-10-01 # 40% schools open
+        - 2021-12-10 #60% schools open
+        - 2021-12-11 #school break
+        - 2022-01-03 #school break
+        - 2022-01-04 #100# schools open
       values:
-        - - close_to_max_last_period
-          - 180
-          - 0.5
-    work:
-      append: true
-      times:
-        - 2021-03-07
-      values:
-        - - close_to_max_last_period
-          - 180
-          - 0.5
+        - 0.
+        - 0.4
+        - 0.6
+        - 0.0
+        - 0.0
+        - 1.0
+
+
+vaccination:
+  roll_out_components:
+    - age_min: 10 # 84.7% of the total population is 10+
+      supply_period_coverage:
+        coverage: 0.71 #60% of the total population vaccinated
+        start_time: 481 # 25 Apr 2021
+        end_time: 640 # 01 Oct 2021
+    - age_min: 10
+      supply_period_coverage:
+        coverage: 0.41 # 70% of total population coverage
+        start_time: 641 # 02 Oct 2021
+        end_time: 732 # 01 Jan 2022

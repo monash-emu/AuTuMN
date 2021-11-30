@@ -1,33 +1,35 @@
-description: GCQ from 1 Sep / high MHS compliance sustained
+description: 80% of the 10-19 y.o. at least one dose by end of year / 50% school reopening 1 Jan 2022
 
 time:
-  start: 608  # 30 Aug 2021
+  start: 657
 
 mobility:
   mixing:
-    other_locations:
-      append: true
+    school:
+      append: false
       times:
-        - 2021-08-22
-        - 2021-09-01
-        - 2021-09-03
+        - 2020-03-15
+        - 2020-03-16
+        - 2021-12-31
+        - 2022-01-02
       values:
-        - - MECQ
-          - other_locations
-        - - MECQ
-          - other_locations
-        - - GCQ
-          - other_locations
+        - 1.
+        - 0.
+        - 0.
+        - .5
     work:
       append: true
       times:
-        - 2021-08-22
-        - 2021-09-01
-        - 2021-09-03
+        - 2021-12-31
+        - 2022-01-02
       values:
-        - - MECQ
-          - work
-        - - MECQ
-          - work
-        - - GCQ
-          - work
+        - ['repeat_prev']
+        - ['scale_prev_up_to_1', 1.2]
+    other_locations:
+      append: true
+      times:
+        - 2021-12-31
+        - 2022-01-02
+      values:
+        - ['repeat_prev']
+        - ['scale_prev_up_to_1', 1.2]

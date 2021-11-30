@@ -3,29 +3,11 @@ description: BASELINE
 population:
   region: Metro Manila
 
+mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
+  source_iso3: HKG
+
 mobility:
   region: Metro Manila
-  mixing:
-    other_locations:
-      append: true
-      times:
-        - 2021-08-20
-        - 2021-08-22
-      values:
-        - - ECQ
-          - other_locations
-        - - MECQ
-          - other_locations
-    work:
-      append: true
-      times:
-        - 2021-08-20
-        - 2021-08-22
-      values:
-        - - ECQ
-          - work
-        - - MECQ
-          - work
   microdistancing:
     behaviour:
       parameters:
@@ -42,6 +24,8 @@ mobility:
           - 550
           - 584 # ECQ starts
           - 586
+          - 610
+          - 612
         values:
           - .1  # 200
           - 1   # 210
@@ -55,3 +39,49 @@ mobility:
           - 0.4  # 550
           - 0.4  # 484
           - 0.6  # 486
+          - 0.6
+          - 1.
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-15
+        - 2020-03-16
+      values:
+        - 1.
+        - 0.
+
+# Vaccination-related
+vaccination:
+  roll_out_components:
+  ###############  Historical roll-out ####################
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .80  # 80% of the 20+ NCR population is one-dose vaccinated by 22 Aug
+        start_time: 426 # 1 Mar 2021
+        end_time: 600 # 22 Aug 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .60  # to reach 92% of 20+ one-dose-vaccinated by 18 Oct
+        start_time: 601 # 23 Aug 2021
+        end_time: 657 # 18 Oct 2021
+    ##############  Assumed future roll-out ################
+    - age_min: 20
+      supply_period_coverage:
+        coverage: .375  # to reach 95% of the 20+ population by EoY
+        start_time: 658 # 19 Oct 2021
+        end_time: 731 # 31 Dec 2021
+    - age_min: 10
+      age_max: 19
+      supply_period_coverage:
+        coverage: .80  # to reach 80% of 10-19 one-dose-vaccinated by End of Year
+        start_time: 658 # 19 Oct 2021
+        end_time: 731 # 31 Dec 2021
+
+vaccination_risk:
+  calculate: false
+  cumul_start_time: 658
+  # We'll use the same scenario to model both AZ and mRNA:
+  prop_astrazeneca: 1.
+  prop_mrna: 1.
+  risk_multiplier: 1.  # varied

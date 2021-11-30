@@ -1109,8 +1109,13 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
             output_config = t
 
     values = output_config["values"]
-    times = output_config["times"]
-    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=False)
+    target_times = output_config["times"]
+
+    n_pre = len([t for t in target_times if t < times.iloc[0]])
+    values = values[n_pre:]
+    target_times = target_times[n_pre:]
+
+    _plot_targets_to_axis(axis, values, target_times, on_uncertainty_plot=False)
 
     # Find upper limit for y-axis
     if values:
@@ -1133,7 +1138,9 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
         axis.set_ylabel("percentage", fontsize=label_font_size)
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
+
     change_xaxis_to_date(axis, ref_date, rotation=0)
+    axis.set_xlim([times.iloc[0], times.iloc[-1]])
 
     return axis
 

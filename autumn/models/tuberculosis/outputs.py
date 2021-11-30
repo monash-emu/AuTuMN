@@ -14,6 +14,9 @@ def request_outputs(
     location_strata: List[str],
     time_variant_tb_screening_rate,
     implement_acf: bool,
+    implement_ltbi_screening=False,
+    pt_efficacy=1.,
+    pt_sae_prop=0.
 ):
     out = OutputBuilder(model, location_strata)
 
@@ -86,14 +89,43 @@ def request_outputs(
     screening_rate_func = tanh_based_scaleup(
         time_variant_tb_screening_rate["shape"],
         time_variant_tb_screening_rate["inflection_time"],
-        time_variant_tb_screening_rate["lower_asymptote"],
-        time_variant_tb_screening_rate["upper_asymptote"],
+        time_variant_tb_screening_rate["start_asymptote"],
+        time_variant_tb_screening_rate["end_asymptote"],
     )
 
     def get_screening_rate():
         return screening_rate_func(model.times)
 
     model.request_function_output("screening_rate", get_screening_rate, [])
+
+    # Track cumulative number of preventive treatments provided from 2016
+    if implement_ltbi_screening:
+        model.request_output_for_flow("pt_early_raw", "preventive_treatment_early", save_results=False)
+        model.request_output_for_flow("pt_late_raw", "preventive_treatment_late", save_results=False)
+        model.request_aggregate_output("pt_raw", ["pt_early_raw", "pt_late_raw"], save_results=False)
+
+        # so far, the pt flows only include succesfully treated individuals, we need tp adjust for efficacy
+        model.request_function_output(
+            name="pt",
+            func=lambda x: x / pt_efficacy,
+            sources=["pt_raw"],
+            save_results=False,
+        )
+        model.request_cumulative_output("cumulative_pt", "pt", start_time=2016., save_results=True)
+        model.request_function_output(
+            name="cumulative_pt_sae",
+            func=lambda x: x * pt_sae_prop,
+            sources=["cumulative_pt"],
+            save_results=True,
+        )
+    else:  # just record zeroes if PT not implemented
+        for zero_output in ["cumulative_pt", "cumulative_pt_sae"]:
+            model.request_function_output(
+                name=zero_output,
+                func=lambda x: x * 0.,  # uses x * 0 so we copy the size of the source output x
+                sources=["incidence"],  # could be any source output
+                save_results=True,
+            )
 
 
 class OutputBuilder:
@@ -107,9 +139,9 @@ class OutputBuilder:
         """Normalise flow outputs to be 'per unit time (year)'"""
         return vals / self.model.timestep
 
-    def request_normalise_flow_output(self, output_name, source, save_results=True):
+    def request_normalise_flow_output(self, output_name, source, save_results=True, stratify_by_loc=True):
         self.request_output_func(
-            output_name, self._normalise_timestep, [source], save_results=save_results
+            output_name, self._normalise_timestep, [source], save_results=save_results, stratify_by_loc=stratify_by_loc
         )
 
     def request_flow_output(self, output_name, flow_name, save_results=True):
@@ -133,14 +165,15 @@ class OutputBuilder:
                 loc_output_name, loc_sources, save_results=save_results
             )
 
-    def request_output_func(self, output_name, func, sources, save_results=True):
+    def request_output_func(self, output_name, func, sources, save_results=True, stratify_by_loc=True):
         self.model.request_function_output(output_name, func, sources, save_results=save_results)
-        for location_stratum in self.locs:
-            loc_output_name = f"{output_name}Xlocation_{location_stratum}"
-            loc_sources = [f"{s}Xlocation_{location_stratum}" for s in sources]
-            self.model.request_function_output(
-                loc_output_name, func, loc_sources, save_results=save_results
-            )
+        if stratify_by_loc:
+            for location_stratum in self.locs:
+                loc_output_name = f"{output_name}Xlocation_{location_stratum}"
+                loc_sources = [f"{s}Xlocation_{location_stratum}" for s in sources]
+                self.model.request_function_output(
+                    loc_output_name, func, loc_sources, save_results=save_results
+                )
 
     def request_compartment_output(self, output_name, compartments, save_results=True):
         self.model.request_output_for_compartments(

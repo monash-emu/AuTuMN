@@ -12,6 +12,10 @@ time:
 iso3: null
 region: null
 
+age_mixing: null
+
+import_ltbi_cases: null
+
 # set up a parameter for the birth rate (its time-variant value will be automatically defined)
 crude_birth_rate: 1.
 
@@ -45,6 +49,7 @@ universal_death_rate: .014
 contact_rate: 1.4
 
 # BCG coverage
+bcg_effect: "infection"  # infection or mortality
 time_variant_bcg_perc:
   1930: 0.
   1990: 99.
@@ -71,8 +76,8 @@ progression_multiplier: 1.
 time_variant_tb_screening_rate:
   shape: 0.05 # The shape parameter to the tanh-based curve
   inflection_time: 1980. # Point at which curve inflects
-  lower_asymptote: 0. # Starting value - lower asymptote
-  upper_asymptote: 10. # End value - upper asymptote
+  start_asymptote: 0. # Starting value - lower asymptote
+  end_asymptote: 10. # End value - upper asymptote
 treatment_duration: .5
 prop_death_among_negative_tx_outcome: 0.2
 on_treatment_infect_multiplier: 0.08
@@ -114,6 +119,7 @@ acf_screening_sensitivity: .75
 time_variant_ltbi_screening: []
 ltbi_screening_sensitivity: .75
 pt_efficacy: .7
+pt_sae_prop: .016  # 3HP
 pt_destination_compartment: "recovered" # either 'recovered' or 'susceptible'
 
 awareness_raising: {}

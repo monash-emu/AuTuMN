@@ -6,10 +6,12 @@ time:
   start: 50
   end: 731
 
+mixing_matrices:
+  source_iso3: CHN
+
 country:
   iso3: NPL
 
-stratify_by_infection_history: true
 waning_immunity_duration: 240.
 
 testing_to_detection:
@@ -21,16 +23,9 @@ contact_tracing:
   assumed_trace_prop: 0.05
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2
+  floor: 0.
 
 mobility:
-  google_mobility_locations:  # Not mapping residential mobility to home
-    work:
-      - workplaces
-    other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - parks
-      - transit_stations
   mixing:
     school:
       append: false
@@ -50,8 +45,8 @@ mobility:
       parameters:
         shape: .1
         inflection_time: 280
-        lower_asymptote: 0.
-        upper_asymptote: 0.34
+        start_asymptote: 0.
+        end_asymptote: 0.34
       locations:
         - other_locations
         - school
@@ -64,9 +59,10 @@ voc_emergence:
     seed_duration: 10.
 
 vaccination:
-  overall_efficacy: 0.7
-  vacc_prop_prevent_infection: 0.7
-  vacc_reduce_infectiousness: 0.5
+  one_dose:
+    ve_sympt_covid: 0.7
+    ve_prop_prevent_infection: 0.7
+    ve_infectiousness: 0.5
   roll_out_components:
     - supply_period_coverage:
         coverage: 0.224  # "Effective vaccination coverage", allowing first dose to be 60% effective

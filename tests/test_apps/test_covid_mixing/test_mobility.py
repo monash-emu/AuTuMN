@@ -3,12 +3,10 @@ TODO: Test more mixing matrix functionality
 - test periodic interventions
 - test NPI effectiveness
 """
+import pandas as pd
 import pytest
 
-from autumn.models.covid_19.preprocess.mixing_matrix.mobility import (
-    parse_values,
-    update_mixing_data,
-)
+from autumn.models.covid_19.mixing_matrix.mobility import parse_values, update_mixing_data
 
 
 @pytest.mark.parametrize(
@@ -37,9 +35,10 @@ def test_update_mixing_data__with_only_mobility_data():
     """
     Ensure using no user-specified mixing params returns a mixing dict containing only mobility data.
     """
+
     mixing = {}
     npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
+    google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]})
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
@@ -84,7 +83,7 @@ def test_update_mixing_data__with_user_specified_values():
         },
     }
     npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
+    google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]})
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
@@ -115,7 +114,7 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
         },
     }
     npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
+    google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4]})
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
@@ -134,6 +133,7 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
     When a user specifies mixing values that should be appended to,
     and there is no Google mobility data to append to, then the app should crash.
     """
+
     mixing = {
         # Expect crash because of mispecified append
         "school": {
@@ -143,7 +143,7 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
         },
     }
     npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
+    google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4]})
     google_mobility_days = [0, 1, 2, 3]
     is_periodic_intervention = False
     periodic_int_params = None
@@ -163,6 +163,7 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
     and the min appended date is less than the max Google mobility date,
     then the appended data should overwrite historical mobility data.
     """
+
     mixing = {
         # Expect crash because of conflicting date
         "work": {
@@ -172,7 +173,7 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
         },
     }
     npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
+    google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4]})
     google_mobility_days = [0, 1, 2, 3, 4]
     actual_mixing = update_mixing_data(
         mixing,

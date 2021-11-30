@@ -7,21 +7,19 @@ import pytest
 from autumn.tools.db import Database
 from autumn.tools.inputs import database as input_database
 from autumn.tools.inputs import (
-    get_country_mixing_matrix,
-    get_crude_birth_rate,
-    get_death_rates_by_agegroup,
-    get_life_expectancy_by_agegroup,
-    get_mobility_data,
+    get_country_mixing_matrix, get_crude_birth_rate, get_death_rates_by_agegroup, get_life_expectancy_by_agegroup,
     get_population_by_agegroup,
 )
 from autumn.tools.inputs.demography.queries import downsample_quantity, downsample_rate
+from autumn.models.covid_19.mixing_matrix.mobility import get_mobility_data, weight_mobility_data
+
 
 @pytest.mark.github_only
 def test_build_input_database(tmpdir, monkeypatch):
     """
     Ensure we can build the input database with nothing crashing
     """
-    input_db_path = os.path.join(tmpdir, "inputs.db")
+    input_db_path = os.path.join(tmpdir, "inputs.secret.db")
     monkeypatch.setattr(input_database, "INPUT_DB_PATH", input_db_path)
     assert not os.path.exists(input_db_path)
     input_database.build_input_database(rebuild=True)
@@ -33,19 +31,21 @@ def test_build_input_database(tmpdir, monkeypatch):
 
 def test_get_mobility_data():
     google_mobility_locations = {
-        "work": ["workplaces"],
-        "other_locations": [
-            "retail_and_recreation",
-            "grocery_and_pharmacy",
-            "parks",
-            "transit_stations",
-        ],
+        "work":
+            {"workplaces": 1.},
+        "other_locations":
+            {"retail_and_recreation": 0.25,
+             "grocery_and_pharmacy": 0.25,
+             "parks": 0.25,
+             "transit_stations": 0.25},
+        "home":
+            {"residential": 1.},
     }
     base_date = datetime(2020, 1, 1, 0, 0, 0)
-    loc_mobility, days = get_mobility_data("AUS", "Victoria", base_date, google_mobility_locations)
-    loc_mobility = {k: [round(i, 2) for i in v] for k, v in loc_mobility.items()}
+    mob_df, days = get_mobility_data("AUS", "Victoria", base_date)
+    mob_values_df = weight_mobility_data(mob_df, google_mobility_locations).round(2)
     assert days[:10] == [45, 46, 47, 48, 49, 50, 51, 52, 53, 54]
-    assert loc_mobility["work"][:10] == [
+    assert mob_values_df["work"][:10].to_list() == [
         1.03,
         0.98,
         1.18,
@@ -57,7 +57,7 @@ def test_get_mobility_data():
         0.97,
         1.17,
     ]
-    assert loc_mobility["other_locations"][:10] == [
+    assert mob_values_df["other_locations"][:10].to_list() == [
         0.96,
         1.02,
         1.09,

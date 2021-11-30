@@ -37,8 +37,8 @@ logs/
 *.pkl
 *ipynb_checkpoints*
 
-# Track input database.
-!data/inputs/inputs.db
+# Track encrypted input database.
+!inputs.encrypted.db
 
 # Website stuff
 node_modules/
@@ -72,11 +72,12 @@ data/outputs
 *.aux
 *.gz
 *.blg
+*.out
 *.bbl
 *.toc
 apps/*/tex/*.pdf
 *.synctex*
-docs/papers/tex/*.pdf
+docs/papers/master_files/*.pdf
 !docs/papers/*/projects/*/methods_figures/*.png
 
 
@@ -720,3 +721,6 @@ apps/tuberculosis/regions/marshall_islands/outputs/figures/calibration/screening
 vic_figures/
 notebooks/user/rragonnet/lhs_start_traces_median.pdf
 notebooks/user/rragonnet/posterior_against_params.pdf
+
+# ignoring marshall islands figures and databases
+autumn/projects/tuberculosis/marshall_islands/outputs/all_outputs/*

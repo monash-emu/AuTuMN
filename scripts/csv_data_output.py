@@ -6,6 +6,8 @@ import boto3
 s3 = boto3.client("s3")
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 DATA_PATH = "M:\Documents\@Projects\Covid_consolidate\output"
+os.chdir(DATA_PATH)
+list_of_files = os.listdir(DATA_PATH)
 
 STANDARD_COL = [
     "incidence",
@@ -27,7 +29,7 @@ phl = {
         "manila",
         "philippines",
     ],
-    "columns": STANDARD_COL + ["accum_incidence", "accum_notifications"],
+    "columns": STANDARD_COL,
 }
 mys = {
     "region": ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"],
@@ -36,12 +38,52 @@ mys = {
 
 lka = {"region": ["sri_lanka"], "columns": STANDARD_COL}
 
+VIC_CLUSTERS = [
+    "BARWON_SOUTH_WEST",
+    "GIPPSLAND",
+    "GRAMPIANS",
+    "HUME",
+    "LODDON_MALLEE",
+    "NORTH_METRO",
+    "SOUTH_EAST_METRO",
+    "SOUTH_METRO",
+    "WEST_METRO",
+]
+VIC_OUTPUT = [
+    "hospital_occupancy",
+    "icu_occupancy",
+    "hospital_admissions",
+    "icu_admissions",
+    "infection_deaths",
+    "notifications",
+]
+VIC_REQUEST = [
+    f"{output}_for_cluster_{cluster.lower()}" for output in VIC_OUTPUT for cluster in VIC_CLUSTERS
+]
+
+vic = {
+    "region": ["victoria"],
+    "columns": VIC_REQUEST
+    + [
+        "notifications",
+        "hospital_occupancy",
+        "icu_occupancy",
+        "hospital_admissions",
+        "icu_admissions",
+        "infection_deaths",
+    ],
+}
+
 npl_incidence_col = [f"incidenceXagegroup_{each_age}" for each_age in AGE_GROUPS]
 npl = {"region": ["nepal"], "columns": STANDARD_COL + npl_incidence_col}
 
-os.chdir(DATA_PATH)
 
-list_of_files = os.listdir(DATA_PATH)
+def upload_csv(country_list):
+    for ctry in country_list:
+        s3.upload_file(
+            f"{ctry}_data.csv", "autumn-files", f"{ctry}_data.csv", ExtraArgs={"ACL": "public-read"}
+        )
+        os.remove(f"{ctry}_data.csv")
 
 
 def get_files(country):
@@ -56,9 +98,14 @@ def get_files(country):
 phl["region"] = get_files(phl)
 mys["region"] = get_files(mys)
 lka["region"] = get_files(lka)
-npl["region"] = get_files(npl)
+# npl["region"] = get_files(npl)
+# vic["region"] = get_files(vic)
 
-country = {"lka": lka, "phl": phl, "mys": mys, "npl": npl}
+country = {
+    "lka": lka,
+    "phl": phl,
+    "mys": mys,
+}  # "npl": npl, "vic": vic}
 
 for ctry in country:
 
@@ -94,7 +141,7 @@ for ctry in country:
             df_temp = pd.read_sql_query(query_un, conn)
             df_temp["Region"] = app_name
             df_un = df_un.append(df_temp)
-    df_un["type"] = df_un["type"] + "_Q" + df_un["quantile"].astype(str)
+    df_un["type"] = df_un["type"] + "_P" + df_un["quantile"].astype(str)
     df_un = pd.pivot_table(
         df_un, values="value", index=["Region", "time", "scenario"], columns=["type"]
     )
@@ -126,7 +173,5 @@ for ctry in country:
     df = df[col_set1 + col_set2]
 
     df.to_csv(f"{ctry}_data.csv")
-    s3.upload_file(
-        f"{ctry}_data.csv", "autumn-files", f"{ctry}_data.csv", ExtraArgs={"ACL": "public-read"}
-    )
-    os.remove(f"{ctry}_data.csv")
+
+upload_csv(["lka", "phl", "mys"])

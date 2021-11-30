@@ -2,9 +2,12 @@
 country:
   iso3: PHL
 
+mixing_matrices:
+  source_iso3: HKG
+
 time:
   start: 40.
-  end: 731.
+  end: 913.
 
 infectious_seed: 10.
 
@@ -26,11 +29,14 @@ mobility:
   square_mobility_effect: true
   google_mobility_locations:
     work:
-      - workplaces
+      workplaces: 1.
     other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - transit_stations
+      retail_and_recreation: 0.3334
+      grocery_and_pharmacy: 0.3333
+      transit_stations: 0.3333
+      parks: 0.
+    home:
+      residential: 1.
   microdistancing:
     behaviour:
       function_type: empiric
@@ -40,7 +46,6 @@ mobility:
         values: [0., 1.]
       locations:
         - other_locations
-        - school
         - work
   mixing:
     school:
@@ -59,23 +64,26 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 1.5
   delta:
-    start_time: 500
+    start_time: 470 #500
     entry_rate: 10.
     seed_duration: 10.
     contact_rate_multiplier: 2.5
 
-cumul_incidence_start_time: 608 # 30 Aug 2021
+cumul_incidence_start_time: 657
 
 # Vaccination-related
 vaccination:
-  overall_efficacy: 0.7 # now varied
-  vacc_prop_prevent_infection: 1 # now varied
-  roll_out_components:
-    - supply_period_coverage:
-        coverage: .25
-        start_time: 426 # 1 Mar 2021
-        end_time: 578 # 31 July 2021
-    - supply_period_coverage:
-        coverage: .60  # to reach 70% overall by end of year
-        start_time: 579 # 1 Aug 2021
-        end_time: 731 # 31 Dec 2021
+  one_dose:
+    ve_sympt_covid: 0.49  # Average of 0.4 and 0.58
+    ve_prop_prevent_infection: 0.95  # Approximate estimate
+    ve_infectiousness_ratio: 0.5
+  fully_vaccinated:
+    ve_sympt_covid: 0.775  # Was using the average of 0.71 and 0.84 - now reverting to clinical trials estimate
+    ve_prop_prevent_infection: 0.95  # Approximate estimate
+    ve_infectiousness: 0.15  # Using same reference, but more effect for Alpha than for Delta
+  second_dose_delay: 30
+
+vaccination_risk:
+  calculate: false
+
+waning_immunity_duration: 365.

@@ -64,9 +64,9 @@ def plot_multiscenario_uncertainty(uncertainty_df, mode, axis, output, country):
         "infection_deathsXall": "daily number of deaths (weekly average)",
         "proportion_seropositive": "proportion recovered",
         "hospital_occupancy": "number of beds",
-        "new_hospital_admissions": "new hospitalisations",
+        "hospital_admissions": "new hospitalisations",
         "icu_occupancy": "ICU beds",
-        "new_icu_admissions": "new ICU admissions",
+        "icu_admissions": "ICU admissions",
     }
 
     quantile_vals = uncertainty_df["quantile"].unique().tolist()

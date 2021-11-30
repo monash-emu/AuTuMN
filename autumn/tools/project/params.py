@@ -118,6 +118,7 @@ class Params:
     def __getitem__(self, k):
         return self.to_dict()[k]
 
+
 class ParameterSet:
     """
     A collection of model parameters, each representing a counterfactual scenario.
@@ -159,7 +160,6 @@ class ParameterSet:
         return "ParameterSet\n" + printer.pformat(self.dump_to_dict())
 
 
-
 def read_yaml_file(path: str):
     with open(path, "r") as f:
         return yaml.safe_load(f)
@@ -190,7 +190,7 @@ def update_params(params: dict, updates: dict) -> dict:
 
 
 # Regex to match an array update request eg. "foo[1]"
-ARRAY_REQUEST_REGEX = r"^\w+\(-?\d\)$"
+ARRAY_REQUEST_REGEX = r"^\w+\(-?\d+\)$"
 
 
 def _update_params(params: dict, update_key: str, update_val) -> dict:

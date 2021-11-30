@@ -9,6 +9,7 @@ import os
 import numpy
 import pandas as pd
 from datetime import datetime
+from typing import List, Union
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
@@ -163,10 +164,32 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     return modified_proportion
 
 
+def apply_odds_ratio_to_props(props, adjuster):
+    """
+    Very simple, but just because it is used a few times.
+    """
+
+    return [apply_odds_ratio_to_proportion(i_prop, adjuster) for i_prop in props]
+
+
+def subdivide_props(
+    base_props: numpy.ndarray, split_props: Union[numpy.ndarray, float]
+) -> numpy.ndarray:
+    """
+    Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
+    proportions provided (split_props).
+    """
+
+    split_arr = base_props * split_props
+    complement_arr = base_props * (1.0 - split_props)
+    return split_arr, complement_arr
+
+
 def list_element_wise_division(a, b):
     """
     Performs element-wise division between two lists and returns zeros where denominator is zero.
     """
+
     return numpy.divide(a, b, out=numpy.zeros_like(a), where=b != 0.0)
 
 
@@ -178,6 +201,7 @@ def update_mle_from_remote_calibration(model, region, run_id=None):
     :param run_id: Optional run identifier such as 'covid_19/calabarzon/1626941419/5495a75'. If None, the latest run is
     considered.
     """
+
     s3_client = get_s3_client()
 
     if run_id is None:
@@ -238,10 +262,13 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
     """
     with open(file_path, mode="r") as f:
         targets = json.load(f)
+
+    df.sort_values(by=["date_index"], inplace=True)
+
     for key, val in TARGETS_MAPPING.items():
 
         if val in df.columns and key in targets.keys():
-                
+
             # Drop the NaN value rows from df before writing data.
             temp_df = df[["date_index", val]].dropna(0, subset=[val])
 
@@ -253,12 +280,38 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
     if args:
         secrets.write(file_path, *args)
 
+
 def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
-    df.rename(columns={datecol.lower():'date'},inplace=True)
-    df.date = pd.to_datetime(
-    df["date"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
-)
-    df["date_index"] = (df.date - COVID_BASE_DATETIME).dt.days
+    df.rename(columns={datecol.lower(): "date"}, inplace=True)
+
+    formats = ["%Y-%m-%d", "%d/%m/%Y"]
+
+    for fmt in formats:
+
+        try:
+            df.date = pd.to_datetime(
+                df["date"], errors="raise", format=fmt, infer_datetime_format=False
+            ).dt.date
+
+        except:
+            continue
+
+        else:
+            print("Sucess")
+
+    df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
 
     return df
+
+
+def find_closest_value_in_list(list_request: List, value_request: int) -> int:
+    """
+    Find the closest value within one list to the value of interest.
+    """
+
+    return min(list_request, key=lambda list_value: abs(list_value - value_request))
+
+
+def check_list_increasing(list_to_check):
+    assert all(list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1))

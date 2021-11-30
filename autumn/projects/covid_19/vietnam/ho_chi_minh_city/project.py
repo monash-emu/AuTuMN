@@ -9,42 +9,27 @@ from autumn.settings import Region, Models
 import numpy as np
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
-from autumn.projects.covid_19.vietnam.ho_chi_minh_city.scenario_builder import get_all_scenario_dicts
+scenario_dir_path = build_rel_path("params/")
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-
-# scenario_dir_path = build_rel_path("params/")
-# scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
-
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
-
-all_scenario_dicts = get_all_scenario_dicts()
-scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_dicts]
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-cutoff_time = 518  # 1 June 2021
-hosp_endtime = 582
-n_inflated_weight = 35
 
 targets = []
-for output_name in ["notifications", "hospital_occupancy", "infection_deaths"]:
-    if output_name == "hospital_occupancy":
-        series = ts_set.get(output_name).truncate_start_time(cutoff_time).truncate_end_time(hosp_endtime).moving_average(window=7)
-    else:
-        series = ts_set.get(output_name).truncate_start_time(cutoff_time).moving_average(window=7)
-
-    n = len(series.times)
-    max_weight = 10.
-    weights = [1.0 for _ in range(n - n_inflated_weight)] + [1.0 + (i + 1) * (max_weight - 1.) / n_inflated_weight for i in range(n_inflated_weight)]
-
-    targets.append(
-        NormalTarget(series, time_weights=weights)
-    )
+for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:
+    series = ts_set.get(output_name)
+    targets.append(NormalTarget(series))
 
 priors = [
+    # Global COVID priors
+    *COVID_GLOBAL_PRIORS,
+
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",
         mean=4,
@@ -57,17 +42,36 @@ priors = [
         stdev=0.77,
         trunc_range=[4.0, np.inf],
     ),
+
+    # Regional parameters
     UniformPrior("infectious_seed", [1, 20]),
     UniformPrior("contact_rate", [0.035, 0.055]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.]),
-    UniformPrior("infection_fatality.multiplier", [0.5, 3.]),
 
+    # Health system-related
+    UniformPrior("clinical_stratification.icu_prop", [0.01, 0.1]),
+    UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.5, 1.5]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.]),
+    UniformPrior("infection_fatality.multiplier", [0.1, 2.5]),
+
+    # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.002, 0.007]),
+
+    # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.4]),
 
+    # Waning immunity
+    UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
+
     # Vaccination parameters (independent sampling)
-    UniformPrior("vaccination.vacc_prop_prevent_infection", [0, 1], sampling="lhs"),
-    BetaPrior("vaccination.overall_efficacy", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
+    UniformPrior("vaccination.one_dose.ve_prop_prevent_infection", [0, 1], sampling="lhs"),
+    BetaPrior("vaccination.one_dose.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
+
+    # Partly-waned immunity of vaccine
+    BetaPrior("vaccination.part_waned.ve_sympt_covid", mean=0.5, ci=[0.4, 0.6], sampling="lhs"),
+    UniformPrior("vaccination.part_waned.ve_infectiousness", [0.2, 0.3], jumping_stdev=0.001),
+    BetaPrior("vaccination.part_waned.ve_hospitalisation", mean=0.75, ci=[0.65, 0.85], sampling="lhs"),
+    BetaPrior("vaccination.part_waned.ve_death", mean=0.8, ci=[0.7, 0.9], sampling="lhs")
 ]
 
 calibration = Calibration(priors, targets)

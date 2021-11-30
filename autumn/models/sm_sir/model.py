@@ -9,7 +9,7 @@ from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
 from datetime import date, datetime
 from .computed_values.random_process_compute import RandomProcessProc
-from .constants import COMPARTMENTS, AGEGROUP_STRATA
+from .constants import COMPARTMENTS, AGEGROUP_STRATA, Compartment
 from .stratifications.agegroup import get_agegroup_strat
 from .preprocess.age_specific_params import convert_param_agegroups
 
@@ -38,7 +38,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
         compartments=COMPARTMENTS,
-        infectious_compartments=["infectious"],
+        infectious_compartments=[Compartment.INFECTIOUS],
         timestep=params.time.step,
         ref_date=BASE_DATE
     )
@@ -58,14 +58,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Create the total population.
     """
     init_pop = {
-        "infectious": params.infectious_seed
+        Compartment.INFECTIOUS: params.infectious_seed
     }
 
     # Get country population by age-group
     total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, region=pop.region, year=2020)
 
     # Assign the remainder starting population to the S compartment
-    init_pop["susceptible"] = sum(total_pops) - sum(init_pop.values())
+    init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
     model.set_initial_population(init_pop)
 
     """
@@ -100,8 +100,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.add_infection_frequency_flow(
         name="infection",
         contact_rate=contact_rate,
-        source="susceptible",
-        dest="infectious",
+        source=Compartment.SUSCEPTIBLE,
+        dest=Compartment.INFECTIOUS,
     )
 
     # Recovery
@@ -109,15 +109,15 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.add_transition_flow(
         name="recovery",
         fractional_rate=recovery_rate,
-        source="infectious",
-        dest="recovered",
+        source=Compartment.INFECTIOUS,
+        dest=Compartment.RECOVERED,
     )
 
     # Infection Death
     model.add_death_flow(
         name="infection_death",
         death_rate=0.,  # Inconsequential value because it will be overwritten later in age stratification
-        source="infectious",
+        source=Compartment.INFECTIOUS,
     )
 
     """

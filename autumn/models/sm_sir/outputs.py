@@ -1,20 +1,20 @@
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
-from .constants import AGEGROUP_STRATA
+from .constants import AGEGROUP_STRATA, FlowName
 
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_incidence(self):
-        self.model.request_output_for_flow(name="incidence", flow_name="infection")
+        self.model.request_output_for_flow(name="incidence", flow_name=FlowName.INFECTION)
 
         # Stratified by age group
-        self.request_stratified_output_for_flow("infection", AGEGROUP_STRATA, "agegroup", name_stem="incidence")
+        self.request_stratified_output_for_flow(FlowName.INFECTION, AGEGROUP_STRATA, "agegroup", name_stem="incidence")
 
     def request_mortality(self):
-        self.model.request_output_for_flow(name="infection_death", flow_name="infection_death")
+        self.model.request_output_for_flow(name="infection_death", flow_name=FlowName.INFECTION_DEATH)
 
         # Stratified by age group
-        self.request_stratified_output_for_flow("infection_death", AGEGROUP_STRATA, "agegroup")
+        self.request_stratified_output_for_flow(FlowName.INFECTION_DEATH, AGEGROUP_STRATA, "agegroup")
 
     def request_hospitalisations(self, prop_symptomatic, prop_hospital):
         hospital_sources = []

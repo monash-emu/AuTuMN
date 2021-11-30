@@ -9,7 +9,7 @@ from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
 from datetime import date, datetime
 from .computed_values.random_process_compute import RandomProcessProc
-from .constants import COMPARTMENTS, AGEGROUP_STRATA, Compartment
+from .constants import COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .preprocess.age_specific_params import convert_param_agegroups
 
@@ -98,7 +98,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         contact_rate = params.contact_rate
 
     model.add_infection_frequency_flow(
-        name="infection",
+        name=FlowName.INFECTION,
         contact_rate=contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.INFECTIOUS,
@@ -107,7 +107,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Recovery
     recovery_rate = 1. / params.infection_duration
     model.add_transition_flow(
-        name="recovery",
+        name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,
         source=Compartment.INFECTIOUS,
         dest=Compartment.RECOVERED,
@@ -115,7 +115,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Infection Death
     model.add_death_flow(
-        name="infection_death",
+        name=FlowName.INFECTION_DEATH,
         death_rate=0.,  # Inconsequential value because it will be overwritten later in age stratification
         source=Compartment.INFECTIOUS,
     )

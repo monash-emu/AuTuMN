@@ -1,11 +1,14 @@
 
 class Compartment:
-    """
-    A COVID-19 model compartment
-    """
     SUSCEPTIBLE = "susceptible"
     INFECTIOUS = "infectious"
     RECOVERED = "recovered"
+
+
+class FlowName:
+    INFECTION = "infection"
+    RECOVERY = "recovery"
+    INFECTION_DEATH = "infection_death"
 
 
 COMPARTMENTS = [

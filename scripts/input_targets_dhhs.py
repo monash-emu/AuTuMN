@@ -25,8 +25,8 @@ COVID_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
 
 COVID_DHHS_POSTCODE_LGA_CSV = os.path.join(COVID_AU_DIRPATH, "postcode lphu concordance.csv")
 
-COVID_VIC2021_TARGETS_CSV = os.path.join(
-    PROJECTS_PATH, "covid_19", "victoria", "victoria_2021", "targets.secret.json"
+COVID_VICTORIA_TARGETS_CSV = os.path.join(
+    PROJECTS_PATH, "covid_19", "victoria", "victoria", "targets.secret.json"
 )
 
 # Two different mappings
@@ -187,7 +187,7 @@ def main():
         "infection_deaths": "cluster_deaths",
     }
 
-    update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VIC2021_TARGETS_CSV, password)
+    update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VICTORIA_TARGETS_CSV, password)
 
     # True vaccination numbers
     df = preprocess_vac()

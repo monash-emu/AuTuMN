@@ -70,7 +70,7 @@ def get_proportion_detect_force_infection(
         proportion_detect_force_infect = detected_foi / total_force_of_infection
 
         # Should be impossible to fail this assertion
-        msg = f"Force of infection not in range [0, 1]: {proportion_detect_force_infect}"
+        msg = "Force of infection not in range [0, 1]"
         assert 0. <= proportion_detect_force_infect <= 1., msg
 
         return proportion_detect_force_infect

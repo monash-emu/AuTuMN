@@ -53,7 +53,7 @@ priors = [
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.75]),
     # waning immunity
-    UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.)
+    UniformPrior("history.natural_immunity_duration", (180., 730.), jumping_stdev=90.)
 ]
 
 # Load proposal sds from yml file

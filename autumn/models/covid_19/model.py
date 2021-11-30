@@ -348,10 +348,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         flow.dest = new_dest_comp[0]
 
     # Apply waning immunity if present
-    if params.waning_immunity_duration:
+    if params.history.natural_immunity_duration:
         model.add_transition_flow(
             name="waning_immunity",
-            fractional_rate=1. / params.waning_immunity_duration,
+            fractional_rate=1. / params.history.natural_immunity_duration,
             source=Compartment.SUSCEPTIBLE,
             dest=Compartment.SUSCEPTIBLE,
             source_strata={"history": History.EXPERIENCED},

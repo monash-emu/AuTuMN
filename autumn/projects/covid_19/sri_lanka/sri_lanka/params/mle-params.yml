@@ -12,4 +12,4 @@ voc_emergence.alpha_beta.contact_rate_multiplier: 3.4738531199256606
 voc_emergence.alpha_beta.start_time: 415.4535138464359
 voc_emergence.delta.contact_rate_multiplier: 8.358720630725117
 voc_emergence.delta.start_time: 507.9524385872068
-waning_immunity_duration: 661.4009530970204
+history.natural_immunity_duration: : 661.4009530970204

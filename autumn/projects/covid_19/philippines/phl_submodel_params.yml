@@ -86,4 +86,5 @@ vaccination:
 vaccination_risk:
   calculate: false
 
-waning_immunity_duration: 365.
+history:
+  natural_immunity_duration: : 365.

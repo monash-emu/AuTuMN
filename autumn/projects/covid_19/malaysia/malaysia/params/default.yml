@@ -138,4 +138,5 @@ contact_tracing:
   quarantine_infect_multiplier: 0.2
   floor: 0.
 
-waning_immunity_duration: 365
+history:
+  natural_immunity_duration: : 365

@@ -36,7 +36,7 @@ priors = [
         "sojourn.compartment_periods_calculated.active.total_period",
         mean=6.5, stdev=0.77, trunc_range=(4.0, np.inf)),
     TruncNormalPrior(
-        "waning_immunity_duration",
+        "history.natural_immunity_duration",
         mean=365., stdev=90., trunc_range=(180., np.inf)),
     TruncNormalPrior(
         "vaccination.vacc_part_effect_duration",

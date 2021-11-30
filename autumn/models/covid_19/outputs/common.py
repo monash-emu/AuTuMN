@@ -417,20 +417,20 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Unstratified
         self.model.request_output_for_compartments(
-            name="_experienced",
+            name=f"_{History.EXPERIENCED}",
             compartments=COMPARTMENTS,
             strata={"history": History.EXPERIENCED},
             save_results=False
         )
         self.model.request_output_for_compartments(
-            name="_waned",
+            name=f"_{History.WANED}",
             compartments=COMPARTMENTS,
             strata={"history": History.WANED},
             save_results=False
         )
         self.model.request_function_output(
-            name="proportion_experienced",
-            sources=["_experienced", "_waned", "_total_population"],
+            name="prop_ever_infected",
+            sources=[f"_{History.EXPERIENCED}", f"_{History.WANED}", "_total_population"],
             func=get_prop_two_numerators,
         )
 
@@ -440,8 +440,8 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age group
         for agegroup in AGEGROUP_STRATA:
-            experienced_name = f"_experiencedXagegroup_{agegroup}"
-            waned_name = f"_wanedXagegroup_{agegroup}"
+            experienced_name = f"_{History.EXPERIENCED}Xagegroup_{agegroup}"
+            waned_name = f"_{History.WANED}Xagegroup_{agegroup}"
             total_name = f"_total_populationXagegroup_{agegroup}"
             self.model.request_output_for_compartments(
                 name=experienced_name,
@@ -456,7 +456,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 save_results=False,
             )
             self.model.request_function_output(
-                name=f"proportion_experiencedXagegroup_{agegroup}",
+                name=f"prop_ever_infectedXagegroup_{agegroup}",
                 sources=[experienced_name, waned_name, total_name],
                 func=get_prop_two_numerators,
             )

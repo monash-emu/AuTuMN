@@ -32,6 +32,12 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 1.85  # Will be calibrated
     ifr_multiplier: 1.
+  omicron:
+    start_time: 2000.
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 3.
+    ifr_multiplier: 1.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

@@ -6,7 +6,7 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-summerepi==2.4.0
+summerepi==2.5.0
 
 # Data visualization
 matplotlib>=3.4.3
@@ -29,6 +29,8 @@ pyAesCrypt==6.0.0
 googledrivedownloader >=0.4
 statsmodels>=0.12.2
 fpdf2==2.4.3
+gitpython==3.1.18
+pybuildkite==1.2.1
 
 # Testing
 pytest

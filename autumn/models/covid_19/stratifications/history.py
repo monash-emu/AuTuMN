@@ -38,18 +38,19 @@ def get_history_strat(
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
     flow_adjs = {}
     for voc in voc_ifr_effects.keys():
-
-        adjs = get_all_adjustments(
-            params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-            params.sojourn, stratified_adjusters[voc]["ifr"], stratified_adjusters[voc]["sympt"],
-            stratified_adjusters[voc]["hosp"]
-        )
-
-        # Get into the format needed and apply to both the experienced and waned strata
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-        update_adjustments_for_strat(History.EXPERIENCED, flow_adjs, adjs, voc)
-        update_adjustments_for_strat(History.WANED, flow_adjs, adjs, voc)
 
+        for stratum in [History.EXPERIENCED, History.WANED]:
+
+            # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
+            adjs = get_all_adjustments(
+                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+                params.sojourn, stratified_adjusters[voc]["ifr"], stratified_adjusters[voc]["sympt"],
+                stratified_adjusters[voc]["hosp"]
+            )
+
+            # Get into the format needed and apply to both the experienced and waned strata
+            update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
     add_clinical_adjustments_to_strat(history_strat, flow_adjs, History.NAIVE, list(voc_ifr_effects.keys()))
 
     # Currently set reinfection to zero for the period of time until immunity has waned to retain previous behaviour

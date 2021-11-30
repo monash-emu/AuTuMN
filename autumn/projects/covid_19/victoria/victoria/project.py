@@ -1,3 +1,5 @@
+import json
+
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
@@ -7,9 +9,9 @@ from autumn.settings import Region, Models
 
 
 # Load and configure model parameters.
-baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
-scenario_1_params = baseline_params.update(build_rel_path("params/scenario-1.yml"))
-param_set = ParameterSet(baseline=baseline_params, scenarios=[scenario_1_params])
+default_param = base_params.update(build_rel_path("params/default.yml"))
+scenario_1_params = default_param.update(build_rel_path("params/scenario-1.yml"))
+param_set = ParameterSet(baseline=default_param, scenarios=[scenario_1_params])
 
 
 # Load and configure calibration settings.
@@ -24,4 +26,9 @@ targets = [
     # NormalTarget(infection_deaths)
 ]
 calibration = Calibration(priors=priors, targets=targets)
-project = Project(Region.VICTORIA, Models.COVID_19, build_model, param_set, calibration)
+
+plot_spec_filepath = build_rel_path("targets.secret.json")
+with open(plot_spec_filepath) as f:
+    plot_spec = json.load(f)
+
+project = Project(Region.VICTORIA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec)

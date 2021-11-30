@@ -74,7 +74,7 @@ vaccination:
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.84
     ve_death: 0.84
-  waned:
+  fully_waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_infectiousness: 0.

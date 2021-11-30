@@ -1,12 +1,12 @@
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA,
-    COMPARTMENTS, Vaccination, PROGRESS, Clinical, VACCINATION_STRATA, History
+    COMPARTMENTS, Vaccination, PROGRESS, Clinical, History
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
-from autumn.tools.utils.utils import list_element_wise_division
+from autumn.tools.utils.utils import list_element_wise_division, get_prop_two_numerators
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 
 
@@ -431,7 +431,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         self.model.request_function_output(
             name="proportion_experienced",
             sources=["_experienced", "_waned", "_total_population"],
-            func=lambda experienced, waned, total: (experienced + waned) / total,
+            func=get_prop_two_numerators,
         )
 
         self.request_stratified_output_for_compartment(
@@ -458,5 +458,5 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_function_output(
                 name=f"proportion_experiencedXagegroup_{agegroup}",
                 sources=[experienced_name, waned_name, total_name],
-                func=lambda experienced, waned, total: (experienced + waned) / total,
+                func=get_prop_two_numerators,
             )

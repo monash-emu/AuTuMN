@@ -1,9 +1,9 @@
 from typing import Dict
 
-from summer import Multiply, Stratification
+from summer import Stratification
 
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.constants import COMPARTMENTS, History, HISTORY_STRATA, INFECTION, DISEASE_COMPARTMENTS
+from autumn.models.covid_19.constants import COMPARTMENTS, History, HISTORY_STRATA
 from autumn.models.covid_19.stratifications.vaccination import apply_immunity_to_strat
 
 
@@ -13,9 +13,8 @@ def get_history_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[s
     Currently three strata, with everyone entering the experienced stratum after they have recovered from an episode.
 
     Args:
-        params:
-        voc_ifr_effects:
-        stratified_adjusters:
+        params: All model parameters
+        stratified_adjusters: VoC and severity stratification adjusters
 
     Returns:
         The history stratification summer object for application to the main model

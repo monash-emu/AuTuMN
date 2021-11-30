@@ -13,7 +13,26 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]]) -> Stratification:
     """
-    Stratify the infectious compartments of the covid model by "clinical" status, into five groups.
+    Stratify the infectious compartments of the covid model by "clinical" status, into the following five groups:
+
+        NON_SYMPT = "non_sympt"
+            Asymptomatic persons
+        SYMPT_NON_HOSPITAL = "sympt_non_hospital"
+            Symptomatic persons who are never detected or admitted to hospital
+        SYMPT_ISOLATE = "sympt_isolate"
+            Symptomatic persons who are detected by the health system and so may go on to isolate
+        HOSPITAL_NON_ICU = "hospital_non_icu"
+            Persons with sufficiently severe disease to necessitate admission to hospital, but not to ICU
+        ICU = "icu"
+            Persons with sufficiently severe disease to necessitate admission to ICU
+
+    Args:
+        params: All model parameters
+        stratified_adjusters: VoC and severity stratification adjusters
+
+    Returns:
+        The clinical stratification summer object for application to the main model
+
     """
 
     clinical_strat = Stratification("clinical", CLINICAL_STRATA, INFECTIOUS_COMPARTMENTS)
@@ -39,7 +58,7 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
     clinical_strat.add_infectiousness_adjustments(Compartment.LATE_ACTIVE, late_active_adjustments)
 
     """
-    Make all the adjustments to flows.
+    Adjustments to flows.
     """
 
     for voc in stratified_adjusters.keys():

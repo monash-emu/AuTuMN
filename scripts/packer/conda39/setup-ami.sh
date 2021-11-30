@@ -53,9 +53,18 @@ conda create -y -n autumn39 python=3.9
 conda activate autumn39
 
 # Retain this file as is to recreate, in future requirements.txt will be all we need (hopefully)
-pip3 install -r requirements/requirements39.txt
+pip3 install -r requirements39.txt
 pip3 install -e ./
 conda deactivate
+
+conda create -y -n autumn36 python=3.6
+conda activate autumn36
+
+# Retain this file as is to recreate, in future requirements.txt will be all we need (hopefully)
+pip3 install -r requirements.txt
+pip3 install -e ./
+conda deactivate
+
 
 # Give ownership of code folder to ubuntu user
 sudo chown -R ubuntu:ubuntu ~/code

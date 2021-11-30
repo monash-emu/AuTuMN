@@ -12,7 +12,7 @@ vaccination: null
 haario_scaling_factor: 3. # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
 
 history:
-  natural_immunity_duration: : 526  # to get 50% immune after 1 year (Faria et al, Science 2021)
+  natural_immunity_duration: 526  # to get 50% immune after 1 year (Faria et al, Science 2021)
 
 mobility:
   smooth_google_data: true

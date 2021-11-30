@@ -13,7 +13,7 @@ population:
 infectious_seed: 250.
 
 history:
-  natural_immunity_duration: : 240.
+  natural_immunity_duration: 240.
 
 time:
   start: 220

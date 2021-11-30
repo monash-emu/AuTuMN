@@ -6,7 +6,7 @@ mixing_matrices:
   source_iso3: CHN
 
 history:
-  natural_immunity_duration: : 240.
+  natural_immunity_duration: 240.
 
 time:
   start: 100

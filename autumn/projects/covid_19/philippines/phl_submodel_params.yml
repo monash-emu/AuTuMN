@@ -87,4 +87,4 @@ vaccination_risk:
   calculate: false
 
 history:
-  natural_immunity_duration: : 365.
+  natural_immunity_duration: 365.

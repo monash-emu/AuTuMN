@@ -139,4 +139,4 @@ contact_tracing:
   floor: 0.
 
 history:
-  natural_immunity_duration: : 365
+  natural_immunity_duration: 365

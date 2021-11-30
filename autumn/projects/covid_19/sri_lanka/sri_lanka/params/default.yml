@@ -61,8 +61,6 @@ vaccination:
         start_time: 655 #16  Oct 2021
         end_time: 732 # 1 Jan 2022
 
-history:
-  natural_immunity_duration: 365.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
@@ -164,4 +162,17 @@ voc_emergence:
     contact_rate_multiplier: 13
     ifr_multiplier: 1.75
 
-
+history:
+  experienced:
+    ve_sympt_covid: 0.8
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness_ratio: 0.3
+    ve_hospitalisation: 0.84
+    ve_death: 0.84
+  waned:
+    ve_sympt_covid: 0.28
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness: 0.15
+    ve_hospitalisation: 0.5
+    ve_death: 0.5
+  natural_immunity_duration: 365.

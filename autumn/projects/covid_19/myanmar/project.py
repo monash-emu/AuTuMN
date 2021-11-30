@@ -21,7 +21,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications = ts_set.get("notifications").multiple_truncations([[199, 415], [550, 730]])
+notifications = ts_set.get("notifications").multiple_truncations([[199, 415], [560, 730]])
 infection_deaths = ts_set.get("infection_deaths").truncate_start_time(199)
 targets = [
     NormalTarget(notifications),
@@ -46,7 +46,7 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.012), jumping_stdev=0.002),
     UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", (0.1, 0.3), jumping_stdev=0.05),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.8, 2.2), jumping_stdev=0.1),
-    UniformPrior("voc_emergence.delta.start_time", (398., 486), jumping_stdev=30.),
+    UniformPrior("voc_emergence.delta.start_time", (315., 390.), jumping_stdev=30.),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

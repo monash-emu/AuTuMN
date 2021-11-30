@@ -127,7 +127,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         country.iso3, "GBR", AGEGROUP_STRATA, True, pop.region, requested_locations=["all_locations"]
     )
 
-    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"], ifr)
+    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"], ifr, recovery_rate)
     model.stratify_with(age_strat)
 
     """

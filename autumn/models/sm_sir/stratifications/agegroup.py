@@ -9,7 +9,7 @@ from autumn.tools.utils.utils import normalise_sequence
 
 
 def get_agegroup_strat(
-        params: Parameters, total_pops: List[int], mixing_matrix: np.array, ifr: List[float]
+        params: Parameters, total_pops: List[int], mixing_matrix: np.array, ifr: List[float], recovery_rate: float
 ) -> Stratification:
     """
     Age group stratification
@@ -37,7 +37,6 @@ def get_agegroup_strat(
     )
 
     # Adjust infection death flow
-    recovery_rate = 1. / params.infection_duration
     death_rates = [recovery_rate * val / (1. - val) for val in ifr]
     age_strat.add_flow_adjustments(
         FlowName.INFECTION_DEATH,

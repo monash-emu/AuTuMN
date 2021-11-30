@@ -1,18 +1,26 @@
+from typing import Optional, Dict
+
 from summer import StrainStratification, Multiply
 
+from autumn.models.covid_19.parameters import VocComponent
 from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Strain, INFECTION
 
 
-def get_strain_strat(voc_params):
+def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]]):
     """
-    Stratify the model by strain, with two strata, being wild or "ancestral" virus type and the single
-    variant of concern ("VoC").
+    Stratify the model by strain, with two strata, being wild or "ancestral" virus type and the single variant of
+    concern ("VoC").
+
+    Args:
+        voc_params: All the VoC parameters (one VocComponent parameters object for each VoC)
+
+    Returns:
+        The strain stratification summer object
+
     """
 
     # Process the requests
     voc_names = list(voc_params.keys())
-    msg = f"VoC names must be different from: {Strain.WILD_TYPE}"
-    assert Strain.WILD_TYPE not in voc_names, msg
 
     # Stratify model
     strain_strat = StrainStratification("strain", [Strain.WILD_TYPE] + voc_names, DISEASE_COMPARTMENTS)

@@ -1,6 +1,6 @@
 import json
 
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
@@ -9,22 +9,27 @@ from autumn.settings import Region, Models
 
 
 # Load and configure model parameters.
-default_param = base_params.update(build_rel_path("params/default.yml"))
-scenario_1_params = default_param.update(build_rel_path("params/scenario-1.yml"))
-param_set = ParameterSet(baseline=default_param, scenarios=[scenario_1_params])
+default_path = build_rel_path("params/default.yml")
+baseline_params = base_params.update(default_path)
+
+scenario_dir_path = build_rel_path("params/")
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
+param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 
 # Load and configure calibration settings.
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 notifications = ts_set.get("notifications").truncate_start_time(199)
-priors = [
-    UniformPrior("contact_rate", [0.025, 0.05]),
-    UniformPrior("recovery_rate", [0.9, 1.2]),
-]
 targets = [
     NormalTarget(notifications),
     # NormalTarget(infection_deaths)
 ]
+priors = [
+    UniformPrior("contact_rate", (0.05, 0.08), jumping_stdev=0.01),
+    
+]
+
 calibration = Calibration(priors=priors, targets=targets)
 
 plot_spec_filepath = build_rel_path("targets.secret.json")

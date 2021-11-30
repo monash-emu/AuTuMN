@@ -37,13 +37,13 @@ def get_history_strat(
     history_strat.set_population_split(pop_split)
 
     history_effects, flow_adjs = {}, {}
+    modified_strata = HISTORY_STRATA[1:]  # The affected strata are all but the first, which is the unvaccinated
 
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
-    flow_adjs = {}
-    for voc in voc_ifr_effects.keys():
+    vocs = list(stratified_adjusters.keys())
+    for voc in vocs:
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-
-        for stratum in [History.EXPERIENCED, History.WANED]:
+        for stratum in modified_strata:
 
             # Collate the vaccination effects together
             strat_args = (params, stratum, stratified_adjusters[voc], "history")
@@ -52,8 +52,7 @@ def get_history_strat(
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
             adjs = get_all_adjustments(
                 params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-                params.sojourn, stratified_adjusters[voc]["ifr"], stratified_adjusters[voc]["sympt"],
-                stratified_adjusters[voc]["hosp"]
+                params.sojourn, ifr_adj, sympt_adj, hosp_adj
             )
 
             # Get into the format needed and apply to both the experienced and waned strata

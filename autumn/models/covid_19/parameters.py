@@ -585,6 +585,20 @@ class VaccinationRisk(BaseModel):
         return values
 
 
+class History(BaseModel):
+
+    experienced: Optional[VaccEffectiveness]
+    waned: Optional[VaccEffectiveness]
+
+    natural_immunity_duration: Optional[float]
+
+    @validator("natural_immunity_duration", allow_reuse=True)
+    def check_immunity_duration(val):
+        if type(val) == float:
+            assert val > 0., f"Waning immunity duration request is not positive: {val}"
+        return val
+
+
 class ContactTracing(BaseModel):
     """
     Contact tracing effectiveness that scales with disease burden parameters.
@@ -652,8 +666,8 @@ class Parameters:
     infectious_seed: float
     voc_emergence: Optional[Dict[str, VocComponent]]
     age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
-    waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
+    history: Optional[History]
     vaccination_risk: Optional[VaccinationRisk]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float
@@ -674,12 +688,6 @@ class Parameters:
     vic_2021_seeding: Optional[Vic2021Seeding]
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]
-
-    @validator("waning_immunity_duration", allow_reuse=True)
-    def check_immunity_duration(val):
-        if type(val) == float:
-            assert val > 0., f"Waning immunity duration request is not positive: {val}"
-        return val
 
     @validator("voc_emergence", allow_reuse=True)
     def check_voc_names(val):

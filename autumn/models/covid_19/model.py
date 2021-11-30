@@ -335,7 +335,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Infection history stratification.
     """
 
-    history_strat = get_history_strat(params, voc_ifr_effects, stratified_adjusters)
+    history_strat = get_history_strat(params, stratified_adjusters)
     model.stratify_with(history_strat)
 
     # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
@@ -348,10 +348,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         flow.dest = new_dest_comp[0]
 
     # Apply waning immunity if present
-    if params.waning_immunity_duration:
+    if params.history.natural_immunity_duration:
         model.add_transition_flow(
             name="waning_immunity",
-            fractional_rate=1. / params.waning_immunity_duration,
+            fractional_rate=1. / params.history.natural_immunity_duration,
             source=Compartment.SUSCEPTIBLE,
             dest=Compartment.SUSCEPTIBLE,
             source_strata={"history": History.EXPERIENCED},

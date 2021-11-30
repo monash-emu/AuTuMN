@@ -25,7 +25,8 @@ mobility:
         - work
         - home
 
-waning_immunity_duration: 365.
+history:
+  natural_immunity_duration: 365.
 
 voc_emergence:
   delta:

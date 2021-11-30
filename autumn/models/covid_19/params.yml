@@ -212,6 +212,26 @@ vaccination:
   roll_out_components: []
   standard_supply: false
 
+
+# Vaccination-related
+history:
+  experienced:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: null
+    ve_death: null
+  waned:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: null
+    ve_death: null
+
 vaccination_risk:
   calculate: false
   risk_multiplier: 1.

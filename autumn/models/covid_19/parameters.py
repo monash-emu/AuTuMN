@@ -585,6 +585,12 @@ class VaccinationRisk(BaseModel):
         return values
 
 
+class History(BaseModel):
+
+    experienced: Optional[VaccEffectiveness]
+    waned: Optional[VaccEffectiveness]
+
+
 class ContactTracing(BaseModel):
     """
     Contact tracing effectiveness that scales with disease burden parameters.
@@ -654,6 +660,7 @@ class Parameters:
     age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
     waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
+    history: Optional[History]
     vaccination_risk: Optional[VaccinationRisk]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float

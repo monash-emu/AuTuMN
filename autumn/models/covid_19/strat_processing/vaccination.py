@@ -21,7 +21,7 @@ Parameter processing.
 """
 
 
-def get_stratum_vacc_effect(params: Parameters, stratum: str, voc_adjusters: Dict[str, float]):
+def get_stratum_vacc_history_effect(params: Parameters, stratum: str, voc_adjusters: Dict[str, float], stratification: str):
     """
     Process the vaccination parameters for the vaccination stratum being considered.
 
@@ -35,7 +35,7 @@ def get_stratum_vacc_effect(params: Parameters, stratum: str, voc_adjusters: Dic
     """
 
     # Parameters to directly pull out
-    stratum_vacc_params = getattr(params.vaccination, stratum)
+    stratum_vacc_params = getattr(getattr(params, stratification), stratum)
     raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
     if stratum_vacc_params.ve_death:
         raw_effectiveness_keys.append("ve_death")

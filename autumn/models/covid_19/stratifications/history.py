@@ -10,6 +10,7 @@ from autumn.models.covid_19.strat_processing.clinical import (
     add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
     update_adjustments_for_strat
 )
+from autumn.models.covid_19.strat_processing.vaccination import get_stratum_vacc_history_effect
 
 
 def get_history_strat(
@@ -35,12 +36,18 @@ def get_history_strat(
     pop_split = {History.NAIVE: 1., History.EXPERIENCED: 0., History.WANED: 0.}
     history_strat.set_population_split(pop_split)
 
+    history_effects, flow_adjs = {}, {}
+
     # Add the clinical adjustments parameters as overwrites in a similar way as for vaccination
     flow_adjs = {}
     for voc in voc_ifr_effects.keys():
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
 
         for stratum in [History.EXPERIENCED, History.WANED]:
+
+            # Collate the vaccination effects together
+            strat_args = (params, stratum, stratified_adjusters[voc], "history")
+            history_effects[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
             adjs = get_all_adjustments(

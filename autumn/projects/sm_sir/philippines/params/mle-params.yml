@@ -1,4 +1,4 @@
-contact_rate: 0.1 # 0.15448876625869043
+contact_rate: 0.0132
 infection_duration: 7.789265671525521
 infectious_seed: 99.87083766796485
 random_process.coefficients(0): 0.7999135547645141

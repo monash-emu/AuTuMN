@@ -1,0 +1,21 @@
+description: BASELINE
+
+contact_rate: 0.085
+
+mixing_matrices:
+  source_iso3: GBR
+
+country:
+  iso3: AUS
+
+population:
+  region: Victoria
+  year: 2020
+
+mobility:
+  region: Victoria
+
+testing_to_detection:
+  assumed_tests_parameter: 1.e-03
+  assumed_cdr_parameter: 0.1
+  smoothing_period: 7

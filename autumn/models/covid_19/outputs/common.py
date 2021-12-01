@@ -1,12 +1,12 @@
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA,
-    COMPARTMENTS, Vaccination, PROGRESS, Clinical, VACCINATION_STRATA, History
+    COMPARTMENTS, Vaccination, PROGRESS, Clinical, History
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
-from autumn.tools.utils.utils import list_element_wise_division
+from autumn.tools.utils.utils import list_element_wise_division, get_prop_two_numerators
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 
 
@@ -104,6 +104,70 @@ class CovidOutputsBuilder(OutputsBuilder):
                 )
             self.model.request_aggregate_output(
                 name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways
+            )
+
+        # Age-specific non-hospitalised notifications
+        for agegroup in AGEGROUP_STRATA:
+            age_notification_pathways = []
+
+            # First track all traced cases (in Symptomatic ambulatory ever detected)
+            if contact_tracing_params:
+                name = f"progress_traced_non_hospitalisedX{agegroup}"
+                age_notification_pathways.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": "traced", "agegroup": agegroup},
+                    save_results=False,
+                )
+
+            # Then track untraced cases that are passively detected (depending on clinical stratum)
+            name = f"progress_untracedXagegroup__non_hospitalised_{agegroup}XClinical.SYMPT_ISOLATE"
+            dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
+                contact_tracing_params else \
+                {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}
+            age_notification_pathways.append(name)
+            self.model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata=dest_strata,
+                save_results=False,
+            )
+            self.model.request_aggregate_output(
+                name=f"non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
+            )
+
+        # calculating the prevalence of the non hospitalised notifications by age group
+        for agegroup in AGEGROUP_STRATA:
+            age_notification_pathways = []
+
+            # First track traced cases in all clinical strata except hospitalisations
+            if contact_tracing_params:
+                for clinical in NOTIFICATION_CLINICAL_STRATA:
+                    name = f"progress_prevalence_traced_X{agegroup}X{clinical}"
+                    age_notification_pathways.append(name)
+                    self.model.request_output_for_flow(
+                        name=name,
+                        flow_name="progress",
+                        dest_strata={"clinical": clinical, "tracing": "traced", "agegroup": agegroup},
+                        save_results=False,
+                    )
+
+            # Then track untraced cases (everyone in notified clinical stratum)
+
+            name = f"progress_prevalence_untracedXagegroup_{agegroup}XClinical.SYMPT_ISOLATE"
+            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "tracing": "untraced", "agegroup": agegroup} if \
+                contact_tracing_params else \
+                {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}
+            age_notification_pathways.append(name)
+            self.model.request_output_for_flow(
+                 name=name,
+                 flow_name="progress",
+                 dest_strata=dest_strata,
+                 save_results=False,
+                )
+            self.model.request_aggregate_output(
+                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
             )
 
         # Split by child and adult
@@ -413,64 +477,25 @@ class CovidOutputsBuilder(OutputsBuilder):
                     start_time=cumul_start_time
                 )
 
-    def request_history(self):
-
-        # Note these people are called "naive", but they have actually had past Covid, immunity just hasn't yet waned
-        self.model.request_output_for_compartments(
-            name="_recovered",
-            compartments=[Compartment.RECOVERED],
-            strata={"history": History.NAIVE},
-            save_results=False,
-        )
-        self.model.request_output_for_compartments(
-            name="_experienced",
-            compartments=COMPARTMENTS,
-            strata={"history": History.EXPERIENCED},
-            save_results=False,
-        )
-        self.model.request_function_output(
-            name="proportion_seropositive",
-            sources=["_recovered", "_experienced", "_total_population"],
-            func=lambda recovered, experienced, total: (recovered + experienced) / total,
-        )
-
-        self.request_stratified_output_for_compartment(
-            "_total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
-        )
-        for agegroup in AGEGROUP_STRATA:
-            recovered_name = f"_recoveredXagegroup_{agegroup}"
-            total_name = f"_total_populationXagegroup_{agegroup}"
-            experienced_name = f"_experiencedXagegroup_{agegroup}"
-            self.model.request_output_for_compartments(
-                name=recovered_name,
-                compartments=[Compartment.RECOVERED],
-                strata={"history": History.NAIVE, "agegroup": agegroup},
-                save_results=False,
-            )
-            self.model.request_output_for_compartments(
-                name=experienced_name,
-                compartments=COMPARTMENTS,
-                strata={"history": History.EXPERIENCED, "agegroup": agegroup},
-                save_results=False,
-            )
-            self.model.request_function_output(
-                name=f"proportion_seropositiveXagegroup_{agegroup}",
-                sources=[recovered_name, experienced_name, total_name],
-                func=lambda recovered, experienced, total: (recovered + experienced) / total,
-            )
-
-    def request_recovered(self):
+    def request_experienced(self):
 
         # Unstratified
         self.model.request_output_for_compartments(
-            name="_recovered",
-            compartments=[Compartment.RECOVERED],
+            name=f"_{History.EXPERIENCED}",
+            compartments=COMPARTMENTS,
+            strata={"history": History.EXPERIENCED},
+            save_results=False
+        )
+        self.model.request_output_for_compartments(
+            name=f"_{History.WANED}",
+            compartments=COMPARTMENTS,
+            strata={"history": History.WANED},
             save_results=False
         )
         self.model.request_function_output(
-            name="proportion_seropositive",
-            sources=["_recovered", "_total_population"],
-            func=lambda recovered, total: recovered / total,
+            name="prop_ever_infected",
+            sources=[f"_{History.EXPERIENCED}", f"_{History.WANED}", "_total_population"],
+            func=get_prop_two_numerators,
         )
 
         self.request_stratified_output_for_compartment(
@@ -479,20 +504,23 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age group
         for agegroup in AGEGROUP_STRATA:
-            recovered_name = f"_recoveredXagegroup_{agegroup}"
+            experienced_name = f"_{History.EXPERIENCED}Xagegroup_{agegroup}"
+            waned_name = f"_{History.WANED}Xagegroup_{agegroup}"
             total_name = f"_total_populationXagegroup_{agegroup}"
             self.model.request_output_for_compartments(
-                name=recovered_name,
-                compartments=[Compartment.RECOVERED],
-                strata={"agegroup": agegroup},
+                name=experienced_name,
+                compartments=COMPARTMENTS,
+                strata={"history": History.EXPERIENCED, "agegroup": agegroup},
+                save_results=False,
+            )
+            self.model.request_output_for_compartments(
+                name=waned_name,
+                compartments=COMPARTMENTS,
+                strata={"history": History.WANED, "agegroup": agegroup},
                 save_results=False,
             )
             self.model.request_function_output(
-                name=f"proportion_seropositiveXagegroup_{agegroup}",
-                sources=[recovered_name, total_name],
-                func=lambda recovered, total: recovered / total,
+                name=f"prop_ever_infectedXagegroup_{agegroup}",
+                sources=[experienced_name, waned_name, total_name],
+                func=get_prop_two_numerators,
             )
-
-    def request_extra_recovered(self):
-
-        pass

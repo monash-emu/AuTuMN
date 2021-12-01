@@ -5,7 +5,7 @@ infectious_seed: 200
 
 time:
   start: 150
-  end: 791 # march 1st 2022
+  end: 944 # Aug 1st 2022
 
 country:
   iso3: LKA
@@ -38,7 +38,7 @@ vaccination:
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.7
     ve_death: 0.8
-  waned:
+  fully_waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_infectiousness: 0.
@@ -118,6 +118,8 @@ mobility:
         - 2021-01-12
         - 2021-05-05 # All schools close
         - 2021-05-06
+        - 2021-11-21
+        - 2021-11-22 # All schools open
       values:
         - 1.
         - 0.
@@ -137,6 +139,8 @@ mobility:
         - 1
         - 1
         - 0
+        - 0
+        - 1
 
 voc_emergence:
   alpha_beta:
@@ -144,11 +148,34 @@ voc_emergence:
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 1.3 # LSHTM's estimate
+    ifr_multiplier: 1.
+    hosp_multiplier: 2.08
   delta:
     start_time: 548 # July 01
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
-    ifr_multiplier: 1.0
+    ifr_multiplier: 2.33
+    hosp_multiplier: 2.08
+  omicron:
+    start_time: 2000 # July 01
+    entry_rate: 25.
+    seed_duration: 10.
+    contact_rate_multiplier: 13
+    ifr_multiplier: 2.5
+    hosp_multiplier: 1.25
 
-waning_immunity_duration: 365
+history:
+  experienced:
+    ve_sympt_covid: 0.85
+    ve_prop_prevent_infection: 0.85
+    ve_infectiousness_ratio: 0.3
+    ve_hospitalisation: 0.87
+    ve_death: 0.87
+  waned:
+    ve_sympt_covid: 0.28
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness: 0.15
+    ve_hospitalisation: 0.5
+    ve_death: 0.5
+  natural_immunity_duration: 365.

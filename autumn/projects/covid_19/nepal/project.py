@@ -23,7 +23,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 notifications_ts = ts_set.get("notifications").truncate_start_time(210)
-seroprevalence_estimate = ts_set.get("proportion_seropositive")
+seroprevalence_estimate = ts_set.get("prop_ever_infected")
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(seroprevalence_estimate, stdev=0.1),

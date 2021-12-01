@@ -70,19 +70,19 @@ class CovidOutputsBuilder(OutputsBuilder):
             save_results=False,
         )
         for clinical in [Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-            age_all_progressions = f"_progress_untracedX{clinical}"
+            all_progressions = f"_progress_untracedX{clinical}"
             self.model.request_output_for_flow(
-                name=age_all_progressions,
+                name=all_progressions,
                 flow_name=PROGRESS,
                 dest_strata=dest_strata,
                 save_results=False,
             )
-            name = age_all_progressions[1:]
+            name = all_progressions[1:]
             notification_pathways.append(name)
             self.model.request_function_output(
                 name=name,
                 func=lambda rate: rate * hospital_reporting,
-                sources=[age_all_progressions],
+                sources=[all_progressions],
                 save_results=False,
             )
 
@@ -124,7 +124,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             )
 
             for clinical in [Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-                age_all_progressions = f"progress_untracedXagegroup_{agegroup}X{clinical}"
+                age_all_progressions = f"_progress_untracedXagegroup_{agegroup}X{clinical}"
                 self.model.request_output_for_flow(
                     name=age_all_progressions,
                     flow_name=PROGRESS,

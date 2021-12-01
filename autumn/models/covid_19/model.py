@@ -1,4 +1,5 @@
 from summer import CompartmentalModel
+from summer.compute import ComputedValueProcessor
 
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
@@ -28,6 +29,11 @@ from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
+
+
+class Time(ComputedValueProcessor):
+    def process(self, compartment_values, computed_values, time):
+        return time
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -361,6 +367,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Set up derived output functions
     """
+
+    model.add_computed_value_process("time", Time())  # Just to prove that we can track this
 
     outputs_builder = CovidOutputsBuilder(model, COMPARTMENTS)
 

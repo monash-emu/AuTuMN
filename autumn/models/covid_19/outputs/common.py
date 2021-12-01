@@ -524,3 +524,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 sources=[experienced_name, waned_name, total_name],
                 func=get_prop_two_numerators,
             )
+
+    def request_time(self):
+
+        self.model.request_computed_value_output("time")

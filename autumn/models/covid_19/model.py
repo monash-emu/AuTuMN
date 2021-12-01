@@ -265,6 +265,33 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             )
 
     """
+    Infection history stratification.
+    """
+
+    history_strat = get_history_strat(params, stratified_adjusters)
+    model.stratify_with(history_strat)
+
+    # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
+    for flow in [f for f in model._flows if f.name == RECOVERY]:
+        updated_strata = flow.dest.strata.copy()
+        updated_strata["history"] = History.EXPERIENCED
+        # Find the destination compartment matching the original (but with updated history)
+        new_dest_comp = model.get_matching_compartments(flow.dest.name, updated_strata)
+        assert len(new_dest_comp) == 1, f"Multiple compartments match query for {flow.dest}"
+        flow.dest = new_dest_comp[0]
+
+    # Apply waning immunity if present
+    if params.history.natural_immunity_duration:
+        model.add_transition_flow(
+            name="waning_immunity",
+            fractional_rate=1. / params.history.natural_immunity_duration,
+            source=Compartment.SUSCEPTIBLE,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"history": History.EXPERIENCED},
+            dest_strata={"history": History.WANED},
+        )
+
+    """
     Vaccination status stratification.
     """
 
@@ -330,33 +357,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 source_strata={"vaccination": Vaccination.PART_WANED},
                 dest_strata={"vaccination": Vaccination.WANED},
             )
-
-    """
-    Infection history stratification.
-    """
-
-    history_strat = get_history_strat(params, stratified_adjusters)
-    model.stratify_with(history_strat)
-
-    # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
-    for flow in [f for f in model._flows if f.name == RECOVERY]:
-        updated_strata = flow.dest.strata.copy()
-        updated_strata["history"] = History.EXPERIENCED
-        # Find the destination compartment matching the original (but with updated history)
-        new_dest_comp = model.get_matching_compartments(flow.dest.name, updated_strata)
-        assert len(new_dest_comp) == 1, f"Multiple compartments match query for {flow.dest}"
-        flow.dest = new_dest_comp[0]
-
-    # Apply waning immunity if present
-    if params.history.natural_immunity_duration:
-        model.add_transition_flow(
-            name="waning_immunity",
-            fractional_rate=1. / params.history.natural_immunity_duration,
-            source=Compartment.SUSCEPTIBLE,
-            dest=Compartment.SUSCEPTIBLE,
-            source_strata={"history": History.EXPERIENCED},
-            dest_strata={"history": History.WANED},
-        )
 
     """
     Set up derived output functions

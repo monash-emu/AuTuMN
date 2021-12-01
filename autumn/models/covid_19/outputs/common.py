@@ -207,11 +207,6 @@ class CovidOutputsBuilder(OutputsBuilder):
             PROGRESS, AGEGROUP_STRATA, "agegroup", NOTIFICATION_CLINICAL_STRATA, "clinical"
         )
 
-        self.request_extra_progression()
-
-    def request_extra_progression(self):
-        pass
-
     def request_cdr(self):
 
         self.model.request_computed_value_output("cdr")
@@ -363,12 +358,6 @@ class CovidOutputsBuilder(OutputsBuilder):
                     age_icu_early_in_hospital_name,
                 ],
             )
-
-        self.request_extra_occupancy()
-
-    def request_extra_occupancy(self):
-
-        pass
 
     def request_tracing(self):
 

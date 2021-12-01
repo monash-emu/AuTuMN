@@ -16,7 +16,7 @@ from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_al
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(5, 6)]
+scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(7, 9)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 # all_scenario_dicts = get_all_scenario_dicts("LKA")
@@ -42,18 +42,16 @@ priors = [
     UniformPrior("contact_rate", [0.024, 0.027]),
     UniformPrior("infectious_seed", [250.0, 360.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0008, 0.0015]),
     UniformPrior("infection_fatality.multiplier", [0.11, 0.6]),
     TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=1.0,\
                      stdev=0.5, trunc_range=[0.0, np.inf]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.825, 0.95]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.93, 0.98]),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [375, 435]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.0]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.75]),
-    # waning immunity
-    UniformPrior("waning_immunity_duration", (180., 730.), jumping_stdev=90.)
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [7.8, 10.25]),
 ]
 
 # Load proposal sds from yml file

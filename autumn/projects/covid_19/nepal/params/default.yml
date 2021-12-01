@@ -12,7 +12,8 @@ mixing_matrices:
 country:
   iso3: NPL
 
-waning_immunity_duration: 240.
+history:
+  natural_immunity_duration: 240.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

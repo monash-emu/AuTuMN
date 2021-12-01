@@ -25,14 +25,18 @@ mobility:
         - work
         - home
 
-waning_immunity_duration: 365.
-
 voc_emergence:
   delta:
     start_time: 365.
     entry_rate: 1.
     seed_duration: 10.
     contact_rate_multiplier: 1.85  # Will be calibrated
+    ifr_multiplier: 1.
+  omicron:
+    start_time: 2000.
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 3.
     ifr_multiplier: 1.
 
 testing_to_detection:
@@ -54,13 +58,13 @@ vaccination:
     ve_infectiousness_ratio: 0.5
     ve_hospitalisation: 0.42
     ve_death: 0.42
-    vac_coverage:
+    coverage:
       times: 
         - 731  # 31st December 2021
         - 1096  # 31st December 2022
       values:
-        - 13244996
-        - 13905795
+        - 0.4
+        - 0.7
   fully_vaccinated:
     ve_sympt_covid: 0.56
     ve_prop_prevent_infection: 0.8
@@ -73,7 +77,7 @@ vaccination:
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.84
     ve_death: 0.84
-  waned:
+  fully_waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_infectiousness: 0.
@@ -84,4 +88,18 @@ vaccination:
   second_dose_delay: 60.
   vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.
-  
+
+history:
+  experienced:
+    ve_sympt_covid: 0.8
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness_ratio: 0.3
+    ve_hospitalisation: 0.84
+    ve_death: 0.84
+  waned:
+    ve_sympt_covid: 0.28
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness: 0.15
+    ve_hospitalisation: 0.5
+    ve_death: 0.5
+  natural_immunity_duration: 90.

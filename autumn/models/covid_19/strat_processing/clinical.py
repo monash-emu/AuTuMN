@@ -217,7 +217,7 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
 
 def get_all_adjustments(
         clinical_params: ClinicalStratification, country: Country, pop: Population, raw_ifr_props: list,
-        sojourn: Sojourn, ifr_adjuster: float, sympt_adjuster: float, hospital_adjuster: float,
+        sojourn: Sojourn, sympt_adjuster: float, hospital_adjuster: float, ifr_adjuster: float,
 ) -> Dict[str, dict]:
     """
     Preliminary processing.
@@ -337,7 +337,7 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
 
 
 def add_clinical_adjustments_to_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: Dict[str, float]
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: list
 ):
     """
     Add the clinical adjustments created in update_adjustments_for_strat to a stratification.

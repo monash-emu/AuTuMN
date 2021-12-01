@@ -12,7 +12,8 @@ population:
 
 infectious_seed: 250.
 
-waning_immunity_duration: 240.
+history:
+  natural_immunity_duration: 240.
 
 time:
   start: 220

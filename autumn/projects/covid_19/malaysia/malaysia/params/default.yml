@@ -143,8 +143,6 @@ contact_tracing:
   quarantine_infect_multiplier: 0.2
   floor: 0.
 
-waning_immunity_duration: 365
-
 sojourn:
   compartment_periods_calculated:
     exposed:
@@ -158,3 +156,7 @@ infection_deaths_dispersion_param: 5.1530311549683809
 
 infection_fatality:
   multiplier: 0.153
+
+history:
+  natural_immunity_duration: 365
+

@@ -61,7 +61,7 @@ priors = [
     UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.4]),
 
     # Waning immunity
-    UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
+    UniformPrior("history.natural_immunity_duration", (180, 360), jumping_stdev=30.),
 
     # Vaccination parameters (independent sampling)
     UniformPrior("vaccination.one_dose.ve_prop_prevent_infection", [0, 1], sampling="lhs"),

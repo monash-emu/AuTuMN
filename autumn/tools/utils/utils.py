@@ -281,7 +281,6 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
         secrets.write(file_path, *args)
 
 
-
 def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
     df.rename(columns={datecol.lower(): "date"}, inplace=True)
@@ -312,3 +311,11 @@ def find_closest_value_in_list(list_request: List, value_request: int) -> int:
     """
 
     return min(list_request, key=lambda list_value: abs(list_value - value_request))
+
+
+def check_list_increasing(list_to_check):
+    assert all(list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1))
+
+
+def get_prop_two_numerators(numerator_1, numerator_2, denominator):
+    return (numerator_1 + numerator_2) / denominator

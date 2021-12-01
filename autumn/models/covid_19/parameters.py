@@ -686,6 +686,7 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     vic_2021_seeding: Optional[Vic2021Seeding]
+    hospital_reporting: float
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]
 
@@ -696,4 +697,9 @@ class Parameters:
             assert len(set(val.keys())) == len(val.keys()), msg
             msg = f"Strain name {Strain.WILD_TYPE} reserved for the wild-type non-VoC strain"
             assert Strain.WILD_TYPE not in val.keys(), msg
+        return val
+
+    @validator("hospital_reporting", allow_reuse=True)
+    def check_hospital_reporting(val):
+        assert 0. <= val <= 1., f"Hospital reporting fraction must be in range [0, 1]: {val}"
         return val

@@ -1,5 +1,4 @@
 from summer import CompartmentalModel
-from summer.compute import ComputedValueProcessor
 
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
@@ -14,7 +13,7 @@ from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
     INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VACCINATION_STRATA
 )
-from .outputs.common import CovidOutputsBuilder
+from .outputs.common import CovidOutputsBuilder, TimeProcess
 from .parameters import Parameters
 from .strat_processing.vaccination import add_vacc_rollout_requests, add_vic_regional_vacc, apply_standard_vacc_coverage
 from .strat_processing import tracing
@@ -29,11 +28,6 @@ from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
-
-
-class TimeProcess(ComputedValueProcessor):
-    def process(self, compartment_values, computed_values, time):
-        return time
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -368,13 +362,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Set up derived output functions
     """
 
-    model.add_computed_value_process("time_process", TimeProcess())  # Just to prove that we can track this
-
     outputs_builder = CovidOutputsBuilder(model, COMPARTMENTS)
 
     outputs_builder.request_incidence()
     outputs_builder.request_infection()
-    outputs_builder.request_notifications(params.contact_tracing, params.cumul_incidence_start_time)
+    outputs_builder.request_notifications(
+        params.contact_tracing, params.cumul_incidence_start_time, params.hospital_reporting
+    )
     outputs_builder.request_progression()
     outputs_builder.request_cdr()
     outputs_builder.request_deaths()
@@ -389,5 +383,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         outputs_builder.request_vaccination(is_dosing_active, vacc_strata)
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
+
+    # If we need to track quantities that depend on time
+    # model.add_computed_value_process("time_process", TimeProcess())
+    # outputs_builder.request_time()
 
     return model

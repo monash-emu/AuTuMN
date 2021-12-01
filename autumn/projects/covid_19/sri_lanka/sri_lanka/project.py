@@ -49,7 +49,7 @@ priors = [
     UniformPrior("contact_tracing.assumed_trace_prop", [0.93, 0.98]),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [375, 435]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.0]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.5, 4.0]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [7.25, 10.25]),
 ]

@@ -14,7 +14,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         self.model.request_output_for_flow(name="infection_death", flow_name=FlowName.INFECTION_DEATH)
 
         # Stratified by age group
-        self.request_stratified_output_for_flow(FlowName.INFECTION_DEATH, AGEGROUP_STRATA, "agegroup")
+        self.request_stratified_output_for_flow(FlowName.INFECTION_DEATH, AGEGROUP_STRATA, "agegroup", filter_on="source")
 
     def request_hospitalisations(self, prop_symptomatic, prop_hospital):
         hospital_sources = []

@@ -14,7 +14,7 @@
       0.975
     ]
   },
-  "proportion_seropositive": {
+  "prop_ever_infected": {
     "title": "Seropositive proportion",
     "output_key": "prop_ever_infected",
     "times": [

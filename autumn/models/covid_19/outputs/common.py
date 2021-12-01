@@ -106,7 +106,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 age_notification_pathways.append(name)
                 self.model.request_output_for_flow(
                     name=name,
-                    flow_name="progress",
+                    flow_name=PROGRESS,
                     dest_strata={"tracing": Tracing.TRACED, "agegroup": agegroup},
                     save_results=False,
                 )
@@ -157,15 +157,8 @@ class CovidOutputsBuilder(OutputsBuilder):
                 )
 
             # Then track untraced cases that are passively detected (depending on clinical stratum)
-            name = f"progress_untracedXagegroup__non_hospitalised_{agegroup}XClinical.SYMPT_ISOLATE"
-            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(traced_stratum)
+            name = f"progress_untracedXagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
             age_notification_pathways.append(name)
-            self.model.request_output_for_flow(
-                name=name,
-                flow_name=PROGRESS,
-                dest_strata=dest_strata,
-                save_results=False,
-            )
             aggregate_name = f"non_hospitalised_notificationsXagegroup_{agegroup}"
             self.model.request_aggregate_output(name=aggregate_name, sources=age_notification_pathways)
 
@@ -180,7 +173,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                     age_notification_pathways.append(name)
                     self.model.request_output_for_flow(
                         name=name,
-                        flow_name="progress",
+                        flow_name=PROGRESS,
                         dest_strata={"clinical": clinical, "tracing": Tracing.TRACED, "agegroup": agegroup},
                         save_results=False,
                     )

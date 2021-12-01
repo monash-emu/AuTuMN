@@ -527,4 +527,4 @@ class CovidOutputsBuilder(OutputsBuilder):
 
     def request_time(self):
 
-        self.model.request_computed_value_output("time")
+        self.model.request_computed_value_output("time_process")

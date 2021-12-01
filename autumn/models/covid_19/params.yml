@@ -195,7 +195,7 @@ vaccination:
     ve_infectiousness_ratio: null
     ve_hospitalisation: 0.
     ve_death: 0.
-  waned:
+  fully_waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_prop_prevent_infection_ratio: null

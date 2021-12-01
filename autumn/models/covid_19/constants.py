@@ -53,7 +53,7 @@ class Vaccination:
     ONE_DOSE_ONLY = "one_dose"
     VACCINATED = "fully_vaccinated"
     PART_WANED = "part_waned"
-    WANED = "waned"
+    WANED = "fully_waned"
     BOOSTED = "boosted"
 
 

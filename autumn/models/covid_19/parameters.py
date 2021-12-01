@@ -521,7 +521,7 @@ class Vaccination(BaseModel):
     one_dose: VaccEffectiveness
     fully_vaccinated: Optional[VaccEffectiveness]
     part_waned: Optional[VaccEffectiveness]
-    waned: Optional[VaccEffectiveness]
+    fully_waned: Optional[VaccEffectiveness]
     boosted: Optional[VaccEffectiveness]
     lag: float
 

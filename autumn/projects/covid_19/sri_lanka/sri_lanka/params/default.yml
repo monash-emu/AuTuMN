@@ -38,7 +38,7 @@ vaccination:
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.7
     ve_death: 0.8
-  waned:
+  fully_waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_infectiousness: 0.
@@ -149,18 +149,21 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 1.3 # LSHTM's estimate
     ifr_multiplier: 1.
+    hosp_multiplier: 1.55
   delta:
     start_time: 548 # July 01
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
-    ifr_multiplier: 1.75
+    ifr_multiplier: 2.0
+    hosp_multiplier: 1.25
   omicron:
     start_time: 2000 # July 01
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 13
     ifr_multiplier: 2.5
+    hosp_multiplier: 1.25
 
 history:
   experienced:

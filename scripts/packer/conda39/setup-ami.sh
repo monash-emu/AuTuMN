@@ -39,7 +39,7 @@ bash ~/miniconda.sh -b -p ~/miniconda
 rm ~/miniconda.sh
 
 eval "$(~/miniconda/bin/conda shell.bash hook)"
-conda init
+conda init bash
 
 source ~/.bashrc
 

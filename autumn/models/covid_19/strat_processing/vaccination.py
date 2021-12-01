@@ -1,14 +1,14 @@
 import numpy as np
 from typing import List, Callable, Tuple, Union, Dict
 
-from summer import CompartmentalModel
+from summer import CompartmentalModel, Multiply, Stratification
 
-from autumn.models.covid_19.constants import VACCINE_ELIGIBLE_COMPARTMENTS, Vaccination
+from autumn.models.covid_19.constants import (
+    Compartment, AGE_CLINICAL_TRANSITIONS, PROGRESS, Vaccination, INFECTION, DISEASE_COMPARTMENTS
+)
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.inputs.covid_au.queries import (
-    get_both_vacc_coverage,
-    VACC_COVERAGE_START_AGES,
-    VACC_COVERAGE_END_AGES,
+    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES,
 )
 from autumn.tools.utils.utils import find_closest_value_in_list, check_list_increasing
 from autumn.models.covid_19.parameters import Parameters, TimeSeries, VaccEffectiveness, TanhScaleup
@@ -16,6 +16,59 @@ from autumn.models.covid_19.parameters import Vaccination as VaccParams
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_adult_vacc_doses
+from autumn.models.covid_19.strat_processing.clinical import (
+    add_clinical_adjustments_to_strat, get_all_adjustments, get_blank_adjustments_for_strat,
+    update_adjustments_for_strat
+)
+
+
+def apply_immunity_to_strat(
+        stratification: Stratification, params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]],
+        unaffected_stratum: str
+):
+    """
+    Apply all the immunity effects to a stratification by immunity (either vaccination or history)
+
+    Args:
+        stratification: The current stratification being adjusted
+        params: All requested model parameters
+        stratified_adjusters: The VoC and outcome-specific adjusters
+        unaffected_stratum: The name of the unaffected stratum
+
+    """
+
+    imm_params = getattr(params, stratification.name)
+    changed_strata = [strat for strat in stratification.strata if strat != unaffected_stratum]
+    effects, flow_adjs = {}, {}
+    vocs = list(stratified_adjusters.keys())
+    for voc in vocs:
+        flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
+        for stratum in changed_strata:
+
+            # Collate the effects together
+            strat_args = (params, stratum, stratified_adjusters[voc], stratification.name)
+            effects[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
+
+            # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
+            adjs = get_all_adjustments(
+                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+                params.sojourn, sympt_adj, hosp_adj, ifr_adj
+            )
+
+            # Get them into the format needed to be applied to the model
+            update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs)
+
+    # Effect against infection
+    infect_adjs = {stratum: Multiply(1. - effects[stratum]["infection_efficacy"]) for stratum in changed_strata}
+    infect_adjs.update({unaffected_stratum: None})
+    stratification.add_flow_adjustments(INFECTION, infect_adjs)
+
+    # Vaccination effect against infectiousness
+    infectious_adjs = {s: Multiply(1. - getattr(getattr(imm_params, s), "ve_infectiousness")) for s in changed_strata}
+    infectious_adjs.update({unaffected_stratum: None})
+    for compartment in DISEASE_COMPARTMENTS:
+        stratification.add_infectiousness_adjustments(compartment, infectious_adjs)
 
 
 """
@@ -23,7 +76,9 @@ Parameter processing.
 """
 
 
-def get_stratum_vacc_effect(params: Parameters, stratum: str, voc_adjusters: Dict[str, float]):
+def get_stratum_vacc_history_effect(
+        params: Parameters, stratum: str, voc_adjusters: Dict[str, float], stratification: str
+):
     """
     Process the vaccination parameters for the vaccination stratum being considered.
 
@@ -37,7 +92,7 @@ def get_stratum_vacc_effect(params: Parameters, stratum: str, voc_adjusters: Dic
     """
 
     # Parameters to directly pull out
-    stratum_vacc_params = getattr(params.vaccination, stratum)
+    stratum_vacc_params = getattr(getattr(params, stratification), stratum)
     raw_effectiveness_keys = ["ve_prop_prevent_infection", "ve_sympt_covid"]
     if stratum_vacc_params.ve_death:
         raw_effectiveness_keys.append("ve_death")
@@ -244,15 +299,14 @@ def apply_vacc_flows(model: CompartmentalModel, age_groups: Union[list, set], va
     """
 
     for eligible_age_group in age_groups:
-        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-            model.add_transition_flow(
-                name="vaccination",
-                fractional_rate=vaccination_rate,
-                source=compartment,
-                dest=compartment,
-                source_strata={"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group},
-                dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group},
-            )
+        model.add_transition_flow(
+            name="vaccination",
+            fractional_rate=vaccination_rate,
+            source=Compartment.SUSCEPTIBLE,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"vaccination": Vaccination.UNVACCINATED, "agegroup": eligible_age_group},
+            dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY, "agegroup": eligible_age_group},
+        )
 
 
 def get_piecewise_vacc_rates(
@@ -410,15 +464,14 @@ def apply_standard_vacc_coverage(
 
         # Apply the vaccination rate function to the model, using the period end times and the calculated rates
         vacc_rate_func = get_piecewise_rollout(rollout_period_times, vaccination_rates)
-        for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
-            model.add_transition_flow(
-                name="vaccination",
-                fractional_rate=vacc_rate_func,
-                source=compartment,
-                dest=compartment,
-                source_strata={"agegroup": agegroup, "vaccination": Vaccination.UNVACCINATED},
-                dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
-            )
+        model.add_transition_flow(
+            name="vaccination",
+            fractional_rate=vacc_rate_func,
+            source=Compartment.SUSCEPTIBLE,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"agegroup": agegroup, "vaccination": Vaccination.UNVACCINATED},
+            dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
+        )
 
 
 def add_vacc_rollout_requests(model: CompartmentalModel, vacc_params: VaccParams):

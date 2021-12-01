@@ -39,7 +39,7 @@ targets = [
         trunc_range=[0, np.inf],
     ),
     TruncNormalTarget(
-        timeseries=ts_set.get("proportion_seropositive").truncate_times(*calib_times),
+        timeseries=ts_set.get("prop_ever_infected").truncate_times(*calib_times),
         trunc_range=[0, 1],
         stdev=0.04,
     ),

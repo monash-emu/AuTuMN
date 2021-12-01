@@ -5,7 +5,8 @@ infectious_seed: 110.
 mixing_matrices:
   source_iso3: CHN
 
-waning_immunity_duration: 240.
+history:
+  natural_immunity_duration: 240.
 
 time:
   start: 100

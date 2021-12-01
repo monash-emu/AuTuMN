@@ -34,7 +34,7 @@ else:
 # Load proposal sds from yml file
 use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
-calibration = Calibration(priors=priors, targets=targets, random_process=rp, metropolis_init="lhs")
+calibration = Calibration(priors=priors, targets=targets, random_process=rp, metropolis_init="current_params")
 
 # FIXME: Replace with flexible Python plot request API.
 import json

@@ -1,12 +1,12 @@
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA,
-    COMPARTMENTS, Vaccination, PROGRESS, Clinical, VACCINATION_STRATA, History
+    COMPARTMENTS, Vaccination, PROGRESS, Clinical, History
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
-from autumn.tools.utils.utils import list_element_wise_division
+from autumn.tools.utils.utils import list_element_wise_division, get_prop_two_numerators
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 
 
@@ -417,15 +417,21 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Unstratified
         self.model.request_output_for_compartments(
-            name="_experienced",
+            name=f"_{History.EXPERIENCED}",
             compartments=COMPARTMENTS,
             strata={"history": History.EXPERIENCED},
             save_results=False
         )
+        self.model.request_output_for_compartments(
+            name=f"_{History.WANED}",
+            compartments=COMPARTMENTS,
+            strata={"history": History.WANED},
+            save_results=False
+        )
         self.model.request_function_output(
-            name="proportion_seropositive",
-            sources=["_experienced", "_total_population"],
-            func=lambda experienced, total: experienced / total,
+            name="prop_ever_infected",
+            sources=[f"_{History.EXPERIENCED}", f"_{History.WANED}", "_total_population"],
+            func=get_prop_two_numerators,
         )
 
         self.request_stratified_output_for_compartment(
@@ -434,7 +440,8 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age group
         for agegroup in AGEGROUP_STRATA:
-            experienced_name = f"_experiencedXagegroup_{agegroup}"
+            experienced_name = f"_{History.EXPERIENCED}Xagegroup_{agegroup}"
+            waned_name = f"_{History.WANED}Xagegroup_{agegroup}"
             total_name = f"_total_populationXagegroup_{agegroup}"
             self.model.request_output_for_compartments(
                 name=experienced_name,
@@ -442,8 +449,14 @@ class CovidOutputsBuilder(OutputsBuilder):
                 strata={"history": History.EXPERIENCED, "agegroup": agegroup},
                 save_results=False,
             )
+            self.model.request_output_for_compartments(
+                name=waned_name,
+                compartments=COMPARTMENTS,
+                strata={"history": History.WANED, "agegroup": agegroup},
+                save_results=False,
+            )
             self.model.request_function_output(
-                name=f"proportion_seropositiveXagegroup_{agegroup}",
-                sources=[experienced_name, total_name],
-                func=lambda recovered, total: recovered / total,
+                name=f"prop_ever_infectedXagegroup_{agegroup}",
+                sources=[experienced_name, waned_name, total_name],
+                func=get_prop_two_numerators,
             )

@@ -18,6 +18,7 @@ class Region:
     HUME = "hume"
     LODDON_MALLEE = "loddon-mallee"
     GRAMPIANS = "grampians"
+    VICTORIA = "victoria"
     MARSHALL_ISLANDS = "marshall-islands"
     SABAH = "sabah"
     SELANGOR = "selangor"
@@ -56,6 +57,7 @@ class Region:
         HUME,
         LODDON_MALLEE,
         GRAMPIANS,
+        VICTORIA,
         MARSHALL_ISLANDS,
         MALAYSIA,
         SABAH,

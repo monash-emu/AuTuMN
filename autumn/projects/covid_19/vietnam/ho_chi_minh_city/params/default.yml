@@ -73,7 +73,8 @@ mobility:
         - 0.
         - 0.1
 
-waning_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
+history:
+  natural_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
 
 testing_to_detection:
   assumed_tests_parameter: 1e-04 # Sri-Lanka model
@@ -105,7 +106,7 @@ vaccination:
     ve_infectiousness: 0.2285
     ve_hospitalisation: 0.7453
     ve_death: 0.7654
-  waned:
+  fully_waned:
     ve_sympt_covid: 0.00
     ve_prop_prevent_infection: 0.00
     ve_infectiousness: 0.00

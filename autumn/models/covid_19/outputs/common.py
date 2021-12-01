@@ -2,7 +2,7 @@ from summer.compute import ComputedValueProcessor
 
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA,
-    COMPARTMENTS, Vaccination, PROGRESS, Clinical, History
+    COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
@@ -46,6 +46,7 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Unstratified
         notification_pathways = []
+        traced_stratum = {"tracing": Tracing.TRACED} if contact_tracing_params else {}
 
         # First track all traced cases (regardless of clinical stratum)
         if contact_tracing_params:
@@ -53,14 +54,13 @@ class CovidOutputsBuilder(OutputsBuilder):
             notification_pathways.append(name)
             self.model.request_output_for_flow(
                 name=name,
-                flow_name="progress",
-                dest_strata={"tracing": "traced"},
+                flow_name=PROGRESS,
+                dest_strata={"tracing": Tracing.TRACED},
                 save_results=False,
             )
 
         # Then track untraced cases that are passively detected (depending on clinical stratum)
-        name = f"progress_untracedX{Clinical.SYMPT_ISOLATE}"
-        traced_stratum = {"tracing": "untraced"} if contact_tracing_params else {}
+        name = f"progress_untracedXclinical_{Clinical.SYMPT_ISOLATE}"
         dest_strata = {"clinical": Clinical.SYMPT_ISOLATE}.update(traced_stratum)
         notification_pathways.append(name)
         self.model.request_output_for_flow(
@@ -70,7 +70,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             save_results=False,
         )
         for clinical in [Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-            all_progressions = f"_progress_untracedX{clinical}"
+            all_progressions = f"_progress_untracedXclinical{clinical}"
             self.model.request_output_for_flow(
                 name=all_progressions,
                 flow_name=PROGRESS,
@@ -102,18 +102,17 @@ class CovidOutputsBuilder(OutputsBuilder):
 
             # First track all traced cases (regardless of clinical stratum)
             if contact_tracing_params:
-                name = f"progress_tracedX{agegroup}"
+                name = f"progress_tracedXagegroup_{agegroup}"
                 age_notification_pathways.append(name)
                 self.model.request_output_for_flow(
                     name=name,
                     flow_name="progress",
-                    dest_strata={"tracing": "traced", "agegroup": agegroup},
+                    dest_strata={"tracing": Tracing.TRACED, "agegroup": agegroup},
                     save_results=False,
                 )
 
             # Then track untraced cases that are passively detected (depending on clinical stratum)
-            name = f"progress_untracedXagegroup_{agegroup}X{Clinical.SYMPT_ISOLATE}"
-            traced_stratum = {"tracing": "untraced"} if contact_tracing_params else {}
+            name = f"progress_untracedXagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
             dest_strata = {"clinical": clinical, "agegroup": agegroup}.update(traced_stratum)
             notification_pathways.append(name)
             self.model.request_output_for_flow(
@@ -122,9 +121,8 @@ class CovidOutputsBuilder(OutputsBuilder):
                 dest_strata=dest_strata,
                 save_results=False,
             )
-
             for clinical in [Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-                age_all_progressions = f"_progress_untracedXagegroup_{agegroup}X{clinical}"
+                age_all_progressions = f"_progress_untracedXagegroup_{agegroup}Xclinical_{clinical}"
                 self.model.request_output_for_flow(
                     name=age_all_progressions,
                     flow_name=PROGRESS,
@@ -135,14 +133,13 @@ class CovidOutputsBuilder(OutputsBuilder):
                 age_notification_pathways.append(name)
                 self.model.request_function_output(
                     name=name,
-                    func=lambda rate: rate * hospital_reporting,
+                    func=lambda rate: rate * hospital_reporting,  # Include reporting adjustment if requested
                     sources=[age_all_progressions],
                     save_results=False,
                 )
 
-            self.model.request_aggregate_output(
-                name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways
-            )
+            final_name = f"notificationsXagegroup_{agegroup}"
+            self.model.request_aggregate_output(name=final_name, sources=age_notification_pathways)
 
         # Age-specific non-hospitalised notifications
         for agegroup in AGEGROUP_STRATA:
@@ -150,73 +147,62 @@ class CovidOutputsBuilder(OutputsBuilder):
 
             # First track all traced cases (in Symptomatic ambulatory ever detected)
             if contact_tracing_params:
-                name = f"progress_traced_non_hospitalisedX{agegroup}"
+                name = f"progress_traced_non_hospitalisedXagegroup_{agegroup}"
                 age_notification_pathways.append(name)
                 self.model.request_output_for_flow(
                     name=name,
-                    flow_name="progress",
-                    dest_strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": "traced", "agegroup": agegroup},
+                    flow_name=PROGRESS,
+                    dest_strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": Tracing.TRACED, "agegroup": agegroup},
                     save_results=False,
                 )
 
             # Then track untraced cases that are passively detected (depending on clinical stratum)
             name = f"progress_untracedXagegroup__non_hospitalised_{agegroup}XClinical.SYMPT_ISOLATE"
-            dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
-                contact_tracing_params else \
-                {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}
+            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(traced_stratum)
             age_notification_pathways.append(name)
             self.model.request_output_for_flow(
                 name=name,
-                flow_name="progress",
+                flow_name=PROGRESS,
                 dest_strata=dest_strata,
                 save_results=False,
             )
-            self.model.request_aggregate_output(
-                name=f"non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
-            )
+            aggregate_name = f"non_hospitalised_notificationsXagegroup_{agegroup}"
+            self.model.request_aggregate_output(name=aggregate_name, sources=age_notification_pathways)
 
-        # calculating the prevalence of the non hospitalised notifications by age group
+        # Calculate the prevalence of the non hospitalised notifications by age group
         for agegroup in AGEGROUP_STRATA:
             age_notification_pathways = []
 
             # First track traced cases in all clinical strata except hospitalisations
             if contact_tracing_params:
                 for clinical in NOTIFICATION_CLINICAL_STRATA:
-                    name = f"progress_prevalence_traced_X{agegroup}X{clinical}"
+                    name = f"progress_prevalence_traced_Xagegroup_{agegroup}Xclinical_{clinical}"
                     age_notification_pathways.append(name)
                     self.model.request_output_for_flow(
                         name=name,
                         flow_name="progress",
-                        dest_strata={"clinical": clinical, "tracing": "traced", "agegroup": agegroup},
+                        dest_strata={"clinical": clinical, "tracing": Tracing.TRACED, "agegroup": agegroup},
                         save_results=False,
                     )
 
             # Then track untraced cases (everyone in notified clinical stratum)
-            name = f"progress_prevalence_untracedXagegroup_{agegroup}XClinical.SYMPT_ISOLATE"
-            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "tracing": "untraced", "agegroup": agegroup} if \
-                contact_tracing_params else \
-                {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}
+            name = f"progress_prevalence_untracedXagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
+            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(traced_stratum)
             age_notification_pathways.append(name)
             self.model.request_output_for_flow(
                  name=name,
-                 flow_name="progress",
+                 flow_name=PROGRESS,
                  dest_strata=dest_strata,
                  save_results=False,
                 )
-            self.model.request_aggregate_output(
-                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
-            )
+            aggregate_name = f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}"
+            self.model.request_aggregate_output(name=aggregate_name, sources=age_notification_pathways)
 
         # Split by child and adult
         paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]]
         adult_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:]]
         self.model.request_aggregate_output(name="notificationsXpaediatric", sources=paed_notifications)
         self.model.request_aggregate_output(name="notificationsXadult", sources=adult_notifications)
-
-        self.request_extra_notifications(contact_tracing_params, cumul_inc_start_time)
-
-    def request_extra_notifications(self, contact_tracing_params, cumul_inc_start_time):
-        pass
 
     def request_progression(self):
 

@@ -275,21 +275,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
 
         # Work out the strata to be implemented
-        no_boost_vacc_strata = VACCINATION_STRATA[: -1]
-        if not is_dosing_active and not waning_vacc_immunity:
-            vacc_strata = no_boost_vacc_strata[: 2]
-        elif not is_dosing_active and waning_vacc_immunity:
-            vacc_strata = no_boost_vacc_strata[: 2] + no_boost_vacc_strata[3:]
-        elif is_dosing_active and not waning_vacc_immunity:
-            vacc_strata = no_boost_vacc_strata[: 3]
+        vacc_strata = [Vaccination.UNVACCINATED, Vaccination.ONE_DOSE_ONLY]
+        if is_dosing_active:
+            vacc_strata.append(Vaccination.VACCINATED)
+            wane_origin_stratum = Vaccination.VACCINATED
         else:
-            vacc_strata = no_boost_vacc_strata
-
-        # Add in the boosted stratum if boosting has been requested, but can't have this without waning immunity
+            wane_origin_stratum = Vaccination.ONE_DOSE_ONLY
+        if waning_vacc_immunity:
+            vacc_strata.extend([Vaccination.PART_WANED, Vaccination.WANED])
         if params.vaccination.boost_delay and waning_vacc_immunity:
-            vacc_strata.append(VACCINATION_STRATA[-1])
+            vacc_strata.append(Vaccination.BOOSTED)
         elif params.vaccination.boost_delay and not waning_vacc_immunity:
-            raise ValueError("Not permitted to have boosting without waning immunity")
+            raise ValueError("Boosting not permitted unless waning immunity also implemented")
 
         # Get the vaccination stratification object
         vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)
@@ -320,7 +317,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Add the waning immunity progressions through the strata
         if waning_vacc_immunity:
-            wane_origin_stratum = Vaccination.VACCINATED if is_dosing_active else Vaccination.ONE_DOSE_ONLY
             model.add_transition_flow(
                 name="part_wane",
                 fractional_rate=1. / waning_vacc_immunity,
@@ -338,8 +334,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest_strata={"vaccination": Vaccination.WANED},
             )
 
+        # Apply the process of boosting to those who have previously received their full course of vaccination only
         if params.vaccination.boost_delay:
-            for boost_eligible_stratum in [Vaccination.VACCINATED, Vaccination.WANED]:
+            for boost_eligible_stratum in (Vaccination.VACCINATED, Vaccination.WANED):
                 model.add_transition_flow(
                     name=f"boost_{boost_eligible_stratum}",
                     fractional_rate=1. / params.vaccination.boost_delay,

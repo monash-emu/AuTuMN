@@ -512,6 +512,7 @@ class Vaccination(BaseModel):
 
     # *** This parameter determines whether the model is stratified into three rather than two vaccination strata
     second_dose_delay: Optional[Union[float, TanhScaleup]]
+    boost_delay: Optional[float]
 
     # *** This first parameter (vacc_full_effect_duration) determines whether waning immunity is applied
     vacc_full_effect_duration: Optional[Union[float, None]]
@@ -521,6 +522,7 @@ class Vaccination(BaseModel):
     fully_vaccinated: Optional[VaccEffectiveness]
     part_waned: Optional[VaccEffectiveness]
     fully_waned: Optional[VaccEffectiveness]
+    boosted: Optional[VaccEffectiveness]
     lag: float
 
     standard_supply: bool

@@ -86,6 +86,7 @@ vaccination:
   lag: 14
   standard_supply: true
   second_dose_delay: 60.
+  boost_delay: 2000.
   vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.
 

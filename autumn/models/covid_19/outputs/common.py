@@ -114,7 +114,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             # Then track untraced cases that are passively detected (depending on clinical stratum)
             name = f"progress_untracedXagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
             dest_strata = {"clinical": clinical, "agegroup": agegroup}.update(traced_stratum)
-            notification_pathways.append(name)
+            age_notification_pathways.append(name)
             self.model.request_output_for_flow(
                 name=name,
                 flow_name=PROGRESS,

@@ -1,20 +1,48 @@
 import numpy as np
 from typing import List, Dict
 
-from summer import Overwrite, Stratification
+from summer import Overwrite
 from summer.adjust import AdjustmentComponent, AdjustmentSystem
 
-from autumn.models.covid_19.constants import Clinical, Compartment, FIXED_STRATA, AGE_CLINICAL_TRANSITIONS
+from autumn.models.covid_19.constants import (
+    Clinical, Compartment, FIXED_STRATA, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
+)
 from autumn.models.covid_19.utils import calc_compartment_periods
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.parameters import Country, Population, Sojourn, ClinicalStratification
 from autumn.tools.inputs.demography.queries import convert_ifr_agegroups
 from autumn.tools.utils.utils import apply_odds_ratio_to_props, subdivide_props
-from autumn.models.covid_19.constants import INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 
 
 ALLOWED_ROUNDING_ERROR = 6
+
+"""
+Utility function.
+"""
+
+
+def get_rate_adjustments(rates: Dict[str, np.ndarray]) -> Dict[str, dict]:
+    """
+    This function simply converts the values in nested dictionaries into Overwrite objects for use by the summer model
+    object - where applicable, and None where not.
+
+    Args:
+        rates: Similarly structured to the output dictionary, but populated with the raw numbers only
+
+    Returns:
+        The collated adjustments by age group and then clinical stratum as Overwrite objects or None
+
+    """
+
+    rate_adjustments = {}
+    for i_age, age_group in enumerate(AGEGROUP_STRATA):
+        rate_adjustments[age_group] = {}
+        for stratum in CLINICAL_STRATA:
+            adjustment = rates[stratum][i_age] if stratum in rates else None
+            rate_adjustments[age_group][stratum] = Overwrite(adjustment)
+
+    return rate_adjustments
 
 
 """
@@ -173,13 +201,24 @@ def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]
     return adjustments
 
 
-def get_fixed_abs_strata_props(sympt_props: list, icu_props: float, hosp_props: list) -> Dict[str, np.ndarray]:
+def get_fixed_abs_strata_props(
+        sympt_props: List[float], icu_prop: float, hosp_props: List[float]
+) -> Dict[str, np.ndarray]:
     """
-    Returns the proportion of people in each clinical stratum.
-    ie: Given all the people people who are infected, what proportion are in each strata?
-    Each of these are stratified into 16 age groups 0-75+.
-    This is distinct from the adjuster processes above, that track the strata proportions that vary over time (strata 2
-    and 3).
+    Returns various proportions relevant to calculating the distribution moving into the clinical stratum.
+    Note that this is not for each clinical stratum and that is not what the keys of the returned dictionary are
+    (even though there are five of them).
+    Two of these are stratified into 16 age groups from zero to 75+.
+
+    Args:
+        sympt_props: Proportion of all infections that are symptomatic (by age group)
+        icu_prop: Proportion of hospitalised patients who are admitted to ICU (not age-strtified)
+        hosp_props: Proportion of symptomatic infections admitted to hospital
+
+    Returns:
+        The results of these calculations packaged up in the format expected by the other functions
+            (both entry and death/recovery splitting functions)
+
     """
 
     # Absolute proportion of early exposed who become symptomatic, rather than asymptomatic
@@ -189,7 +228,7 @@ def get_fixed_abs_strata_props(sympt_props: list, icu_props: float, hosp_props: 
     sympt_hospital, _ = subdivide_props(sympt, np.array(hosp_props))
 
     # Absolute proportion of those hospitalised who go to ICU versus those that don't
-    sympt_hospital_icu, sympt_hospital_non_icu = subdivide_props(sympt_hospital, icu_props)
+    sympt_hospital_icu, sympt_hospital_non_icu = subdivide_props(sympt_hospital, icu_prop)
 
     return {
         Clinical.NON_SYMPT: non_sympt,
@@ -203,22 +242,6 @@ def get_fixed_abs_strata_props(sympt_props: list, icu_props: float, hosp_props: 
 """
 Recovery and death related.
 """
-
-
-def get_rate_adjustments(rates: dict) -> Dict[str, dict]:
-    """
-    This function just converts the values in nested dictionaries into Overwrite objects for use by the summer model
-    object - where applicable, and None where not.
-    """
-
-    rate_adjustments = {}
-    for i_age, age_group in enumerate(AGEGROUP_STRATA):
-        rate_adjustments[age_group] = {}
-        for stratum in CLINICAL_STRATA:
-            adjustment = Overwrite(rates[stratum][i_age] if stratum in rates else None)
-            rate_adjustments[age_group][stratum] = adjustment
-
-    return rate_adjustments
 
 
 def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: list, icu_mortality_prop: float) -> dict:
@@ -260,6 +283,11 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
         assert round(total_death_props, ALLOWED_ROUNDING_ERROR) == round(ifr_prop, ALLOWED_ROUNDING_ERROR)
 
     return abs_death_props
+
+
+"""
+Master function.
+"""
 
 
 def get_all_adjustments(
@@ -333,94 +361,3 @@ def get_all_adjustments(
 
     return all_adjustments
 
-
-def get_blank_adjustments_for_strat(transitions: list) -> Dict[str, dict]:
-    """
-    Provide a blank set of flow adjustments to be populated by the update_adjustments_for_strat function below.
-
-    Args:
-        transitions: All the transition flows we will be modifying through the clinical stratification process
-
-    Returns:
-        Dictionary of dictionaries of dictionaries of blank dictionaries to be populated later
-
-    """
-
-    flow_adjs = {}
-    for agegroup in AGEGROUP_STRATA:
-        flow_adjs[agegroup] = {}
-        for clinical_stratum in CLINICAL_STRATA:
-            flow_adjs[agegroup][clinical_stratum] = {}
-            for transition in transitions:
-                flow_adjs[agegroup][clinical_stratum][transition] = {}
-
-    return flow_adjs
-
-
-def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments: dict, voc: str):
-    """
-    Add the flow adjustments to the blank adjustments created above by get_blank_adjustments_for_strat.
-
-    Args:
-        strat: The current stratification that we're modifying here
-        flow_adjustments: Tiered dictionary containing the adjustments
-        adjustments: Adjustments in the format that they are returned by get_all_adjustments
-        voc: The current VoC being considered, the VoC loop being external to this function
-
-    """
-
-    # Loop over the stratifications that affect these flow rates, other than VoC stratification
-    for agegroup in AGEGROUP_STRATA:
-        for clinical_stratum in CLINICAL_STRATA:
-
-            # *** Note that PROGRESS is not indexed by age group
-            modification = {strat: adjustments[PROGRESS][clinical_stratum]}
-            flow_adjustments[voc][agegroup][clinical_stratum][PROGRESS].update(modification)
-
-            # ... but the other transition processes are
-            for transition in AGE_CLINICAL_TRANSITIONS:
-                modification = {strat: adjustments[transition][agegroup][clinical_stratum]}
-                flow_adjustments[voc][agegroup][clinical_stratum][transition].update(modification)
-
-
-def add_clinical_adjustments_to_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: list
-):
-    """
-    Add the clinical adjustments created in update_adjustments_for_strat to a stratification.
-
-    Uses the summer method to the stratification add_flow_adjustments, that will then be applied when the stratify_with
-    is called from the model object using this stratification object.
-
-    Note:
-        Whether source or dest(ination) is requested is very important and dependent on where the clinical
-        stratification splits.
-
-    Args:
-        strat: The current stratification that we're modifying here
-        flow_adjs: The requested adjustments created in the previous function
-        unaffected_stratum: The stratum that isn't affected and takes the default parameters
-        vocs: The variants of concern, that may have different severity levels
-
-    """
-
-    # Loop over other stratifications that may affect these parameters, i.e. age group, VoC status and clinical status
-    for agegroup in AGEGROUP_STRATA:
-        for voc in vocs:
-            for clinical_stratum in CLINICAL_STRATA:
-
-                # The other model strata that we want to limit these adjustments to
-                working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
-                voc_strat = {"strain": voc} if len(vocs) > 1 else {}
-                working_strata.update(voc_strat)
-
-                # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
-                infectious_onset_adjs = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
-                infectious_onset_adjs[unaffected_stratum] = None
-                strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
-
-                # * Progress can be either source, dest(ination) or both, but infect_death and recovery must be source *
-                for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
-                    adjs = flow_adjs[voc][agegroup][clinical_stratum][transition]
-                    adjs[unaffected_stratum] = None
-                    strat.add_flow_adjustments(transition, adjs, source_strata=working_strata)

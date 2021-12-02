@@ -17,86 +17,192 @@ from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 ALLOWED_ROUNDING_ERROR = 6
 
 
-def get_abs_prop_isolated(proportion_sympt: np.ndarray, proportion_hosp: np.ndarray, cdr: float) -> np.ndarray:
+"""
+Entry-related functions/objects.
+"""
+
+
+def get_abs_prop_isolated(prop_sympt: np.ndarray, prop_hosp: np.ndarray, cdr: float) -> np.ndarray:
     """
-    Returns the absolute proportion of infected who will be isolated at home.
-    Isolated people are those who are detected but not sent to hospital.
+    Returns the absolute proportion of infected who will be isolated at home (detected but not hospitalised).
+    A floor of zero is placed on this quantity because the CDR could be less than the hospitalised proportion.
+    
+    Args:
+        prop_sympt: Proportion of all infections resulting in symptoms
+        prop_hosp: Proportion of symptomatic cases hospitalised
+        cdr: The proportion of symptomatic cases detected
+
+    Returns:
+        The proportion of all new infections that are isolated (i.e. entering the third clinical stratum)
+
     """
 
-    target_prop_detected = proportion_sympt * cdr
-    return np.maximum(0., target_prop_detected - proportion_hosp)
+    target_prop_detected = prop_sympt * cdr
+    return np.maximum(0., target_prop_detected - prop_hosp)
 
 
 class AbsRateIsolatedSystem(AdjustmentSystem):
     """
     Returns the absolute rate of infected becoming isolated at home - the third clinical stratum of the clinical
-    stratification.
-    Doesn't include those that are admitted to hospital.
+    stratification (excludes those that are admitted to hospital).
+    We need the proportion of all cases that are symptomatic and the proportion of all cases that are hospitalised to
+    work this out.
+
+    Attributes:
+        early_rate: Rate by which all output is scaled
+        prop_sympt: Proportion of all cases that are symptomatic
+        prop_hosp: Proportion of all cases that are hospitalised
+
     """
 
     def __init__(self, early_rate: float):
-        """
-        Initialise the system
-
-        Args:
-            early_rate (float): Rate by which all output is scaled
-        """
         self.early_rate = early_rate
+        self.prop_sympt = None
+        self.prop_hosp = None
 
     def prepare_to_run(self, component_data: List[dict]):
         """
         Compile all components into arrays used for faster computation.
 
         Args:
-            component_data (List[dict]): List containing data specific to individual flow adjusments
+            component_data: List containing the required data described in Attributes above
+
         """
 
-        self.proportion_sympt = np.empty_like(component_data, dtype=float)
-        self.proportion_hosp = np.empty_like(component_data, dtype=float)
+        self.prop_sympt = np.empty_like(component_data, dtype=float)
+        self.prop_hosp = np.empty_like(component_data, dtype=float)
 
         for i, component in enumerate(component_data):
-            self.proportion_sympt[i] = component["proportion_sympt"]
-            self.proportion_hosp[i] = component["proportion_hosp"]
+            self.prop_sympt[i] = component["proportion_sympt"]
+            self.prop_hosp[i] = component["proportion_hosp"]
 
     def get_weights_at_time(self, time: float, computed_values: dict) -> np.ndarray:
-        cdr = computed_values["cdr"]
-        return get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr) * self.early_rate
+        """
+        Get the final value for the absolute proportion isolated needed at run-time.
+
+        Args:
+            Standard arguments for this summer method
+
+        Returns:
+            The final calculated value
+
+        """
+
+        return get_abs_prop_isolated(self.prop_sympt, self.prop_hosp, computed_values["cdr"]) * self.early_rate
 
 
 class AbsPropSymptNonHospSystem(AdjustmentSystem):
     """
     Returns the absolute rate of infected becoming symptomatic, including both detected and undetected symptomatic.
+
+    Attributes:
+        early_rate: Rate by which all output is scaled
+
     """
 
     def __init__(self, early_rate: float):
-        """
-        Initialise the system
-
-        Args:
-            early_rate (float): Rate by which all output is scaled
-        """
         self.early_rate = early_rate
+        self.prop_sympt = None
+        self.prop_hosp = None
 
     def prepare_to_run(self, component_data: List[dict]):
         """
-        Compile all components into arrays used for fast computation.
+        Compile all components into arrays used for faster computation.
 
         Args:
-            component_data (List[dict]): List containing data specific to individual flow adjustments
+            component_data: List containing the required data described in Attributes above
+
         """
 
-        self.proportion_sympt = np.empty_like(component_data, dtype=float)
-        self.proportion_hosp = np.empty_like(component_data, dtype=float)
+        self.prop_sympt = np.empty_like(component_data, dtype=float)
+        self.prop_hosp = np.empty_like(component_data, dtype=float)
 
         for i, component in enumerate(component_data):
-            self.proportion_sympt[i] = component["proportion_sympt"]
-            self.proportion_hosp[i] = component["proportion_hosp"]
+            self.prop_sympt[i] = component["proportion_sympt"]
+            self.prop_hosp[i] = component["proportion_hosp"]
 
     def get_weights_at_time(self, time: float, computed_values: dict) -> np.ndarray:
-        cdr = computed_values["cdr"]
-        prop_isolated = get_abs_prop_isolated(self.proportion_sympt, self.proportion_hosp, cdr)
-        prop_sympt_non_hospital = self.proportion_sympt - self.proportion_hosp - prop_isolated
+        """
+        Get the final value for the absolute proportion isolated needed at run-time.
+        Here we have to calculate the absolute proportion detected and subtract it from the absolute proportion of
+        patients symptomatic but not hospitalised.
+
+        Args:
+            Standard arguments for this summer method
+
+        Returns:
+            The final calculated value
+
+        """
+
+        prop_isolated = get_abs_prop_isolated(self.prop_sympt, self.prop_hosp, computed_values["cdr"])
+        prop_sympt_non_hospital = self.prop_sympt - self.prop_hosp - prop_isolated
         return prop_sympt_non_hospital * self.early_rate
+
+
+def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]:
+    """
+    Gather together all the entry adjustments, two of which are functions of time and three are constant over time.
+
+    Args:
+        abs_props: The absolute proportions entering certain categories defined in get_fixed_abs_strata_props above
+        early_rate: The rate of transition into the compartments that are split by clinical status
+
+    Returns:
+        The adjustments (all as Overwrites) in a summer-ready format
+
+    """
+
+    adj_values, adjustments = {}, {}
+    for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
+        adj_values[agegroup], adjustments[agegroup] = {}, {}
+
+        # Get time-varying symptomatic isolated non-community rate
+        key_props = {"proportion_sympt": abs_props["sympt"][age_idx], "proportion_hosp": abs_props["hospital"][age_idx]}
+
+        # Variable flow rates, AdjustmentComponent contains data for the 'isolated' and 'sympt_non_hosp' systems
+        adj_values[agegroup][Clinical.SYMPT_ISOLATE] = AdjustmentComponent(system="isolated", data=key_props)
+        adj_values[agegroup][Clinical.SYMPT_NON_HOSPITAL] = AdjustmentComponent(system="sympt_non_hosp", data=key_props)
+
+        # Calculate the constant flow rates
+        adj_values[agegroup].update({stratum: abs_props[stratum][age_idx] * early_rate for stratum in FIXED_STRATA})
+
+        # Update the summer adjustments object
+        adjustments[agegroup] = {stratum: Overwrite(adj_values[agegroup][stratum]) for stratum in CLINICAL_STRATA}
+
+    return adjustments
+
+
+def get_fixed_abs_strata_props(sympt_props: list, icu_props: float, hosp_props: list) -> Dict[str, np.ndarray]:
+    """
+    Returns the proportion of people in each clinical stratum.
+    ie: Given all the people people who are infected, what proportion are in each strata?
+    Each of these are stratified into 16 age groups 0-75+.
+    This is distinct from the adjuster processes above, that track the strata proportions that vary over time (strata 2
+    and 3).
+    """
+
+    # Absolute proportion of early exposed who become symptomatic, rather than asymptomatic
+    sympt, non_sympt = subdivide_props(np.array((1.,) * len(AGEGROUP_STRATA)), np.array(sympt_props))
+
+    # Absolute proportion of symptomatics who become hospitalised (sympt_non_hospital not needed here)
+    sympt_hospital, _ = subdivide_props(sympt, np.array(hosp_props))
+
+    # Absolute proportion of those hospitalised who go to ICU versus those that don't
+    sympt_hospital_icu, sympt_hospital_non_icu = subdivide_props(sympt_hospital, icu_props)
+
+    return {
+        Clinical.NON_SYMPT: non_sympt,
+        "sympt": sympt,  # Not a single stratum, all those symptomatic (strata 2 to 5)
+        "hospital": sympt_hospital,  # Not a stratum, all those admitted to hospital (strata 4 and 5)
+        Clinical.ICU: sympt_hospital_icu,
+        Clinical.HOSPITAL_NON_ICU: sympt_hospital_non_icu,
+    }
+
+
+"""
+Recovery and death related.
+"""
 
 
 def get_rate_adjustments(rates: dict) -> Dict[str, dict]:
@@ -113,65 +219,6 @@ def get_rate_adjustments(rates: dict) -> Dict[str, dict]:
             rate_adjustments[age_group][stratum] = adjustment
 
     return rate_adjustments
-
-
-def get_fixed_abs_strata_props(
-        symptomatic_props: list, icu_props: float, hospital_props: list
-) -> Dict[str, np.ndarray]:
-    """
-    Returns the proportion of people in each clinical stratum.
-    ie: Given all the people people who are infected, what proportion are in each strata?
-    Each of these are stratified into 16 age groups 0-75+.
-    This is distinct from the adjuster processes above, that track the strata proportions that vary over time (strata 2
-    and 3).
-    """
-
-    # Absolute proportion of early exposed who become symptomatic, rather than asymptomatic
-    sympt, non_sympt = subdivide_props(np.array((1.,) * len(AGEGROUP_STRATA)), np.array(symptomatic_props))
-
-    # Absolute proportion of symptomatics who become hospitalised (sympt_non_hospital not needed here)
-    sympt_hospital, _ = subdivide_props(sympt, np.array(hospital_props))
-
-    # Absolute proportion of those hospitalised who go to ICU versus those that don't
-    sympt_hospital_icu, sympt_hospital_non_icu = subdivide_props(sympt_hospital, icu_props)
-
-    return {
-        Clinical.NON_SYMPT: non_sympt,
-        "sympt": sympt,  # Not a single stratum, all those symptomatic (strata 2 to 5)
-        "hospital": sympt_hospital,  # Not a stratum, all those admitted to hospital (strata 4 and 5)
-        Clinical.ICU: sympt_hospital_icu,
-        Clinical.HOSPITAL_NON_ICU: sympt_hospital_non_icu,
-    }
-
-
-def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]:
-    """
-    Gather together all the entry adjustments, two of which are functions of time and three are constant over time.
-    """
-
-    adjustments = {}
-    for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
-        adjustments[agegroup] = {}
-
-        # Get time-varying symptomatic isolated non-community rate
-        prop_sympt = abs_props["sympt"][age_idx]
-        prop_hosp = abs_props["hospital"][age_idx]
-        proportions = {"proportion_sympt": prop_sympt, "proportion_hosp": prop_hosp}
-
-        # Variable flow rates, AdjustmentComponent contains data for the 'isolated' and 'sympt_non_hosp' systems
-        adj_isolated_component = AdjustmentComponent(system="isolated", data=proportions)
-        adjustments[agegroup][Clinical.SYMPT_ISOLATE] = adj_isolated_component
-        adj_sympt_non_hospital_component = AdjustmentComponent(system="sympt_non_hosp", data=proportions)
-        adjustments[agegroup][Clinical.SYMPT_NON_HOSPITAL] = adj_sympt_non_hospital_component
-
-        # Constant flow rates
-        constant_strata_adjs = {stratum: abs_props[stratum][age_idx] * early_rate for stratum in FIXED_STRATA}
-        adjustments[agegroup].update(constant_strata_adjs)
-
-        # Update the summer adjustments object
-        adjustments[agegroup] = {stratum: Overwrite(adjustments[agegroup][stratum]) for stratum in CLINICAL_STRATA}
-
-    return adjustments
 
 
 def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: list, icu_mortality_prop: float) -> dict:

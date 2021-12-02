@@ -1,7 +1,7 @@
 description: BASELINE
 
 time:
-  start: 471 # 15th Apr 2021, 2 weeks before first case recognized in HCMC
+  start: 457 # 01st Apr 2021, 4 weeks before first case recognized in HCMC
   end: 912
 
 country:

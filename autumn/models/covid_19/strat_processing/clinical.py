@@ -154,9 +154,9 @@ def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]
         adjustments[agegroup] = {}
 
         # Get time-varying symptomatic isolated non-community rate
-        proportion_sympt = abs_props["sympt"][age_idx]
-        proportion_hosp = abs_props["hospital"][age_idx]
-        proportions = {"proportion_sympt": proportion_sympt, "proportion_hosp": proportion_hosp}
+        prop_sympt = abs_props["sympt"][age_idx]
+        prop_hosp = abs_props["hospital"][age_idx]
+        proportions = {"proportion_sympt": prop_sympt, "proportion_hosp": prop_hosp}
 
         # Variable flow rates, AdjustmentComponent contains data for the 'isolated' and 'sympt_non_hosp' systems
         adj_isolated_component = AdjustmentComponent(system="isolated", data=proportions)

@@ -114,12 +114,20 @@ Transitions.
 INFECTION = "infection"
 INFECTIOUSNESS_ONSET = "infect_onset"
 INCIDENCE = "incidence"
-NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the others
 PROGRESS = "progress"
 RECOVERY = "recovery"
 INFECT_DEATH = "infect_death"
 
 AGE_CLINICAL_TRANSITIONS = [INFECTIOUSNESS_ONSET, INFECT_DEATH, RECOVERY]
+
+
+"""
+Outputs.
+"""
+
+
+INFECTION_DEATHS = "infection_deaths"
+NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the others
 
 
 """

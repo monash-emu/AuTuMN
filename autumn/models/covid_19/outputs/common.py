@@ -3,7 +3,7 @@ from typing import List
 from summer.compute import ComputedValueProcessor
 
 from autumn.models.covid_19.constants import (
-    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA, NOTIFICATION_CLINICAL_STRATA,
+    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA, INFECTION_DEATHS,
     COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing
 )
 from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
@@ -13,9 +13,6 @@ from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
 from autumn.tools.utils.utils import get_complement_prop
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
-
-
-INFECTION_DEATHS = "infection_deaths"
 
 
 class TimeProcess(ComputedValueProcessor):
@@ -83,8 +80,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         """
 
         # Unstratified
-        notification_pathways = []
-        traced_stratum = {}
+        notification_pathways, traced_stratum = [], {}
 
         # First track all traced cases (regardless of clinical stratum)
         if is_contact_tracing:
@@ -99,19 +95,35 @@ class CovidOutputsBuilder(OutputsBuilder):
             )
 
         # Then track untraced cases that are passively detected (depending on clinical stratum)
-        for clinical in NOTIFICATION_CLINICAL_STRATA:
-            name = f"progress_untracedX{clinical}"
+        name = f"progress_{Tracing.UNTRACED}X{Clinical.SYMPT_ISOLATE}"
+        dest_strata = {"clinical": Clinical.SYMPT_ISOLATE}
+        dest_strata.update(traced_stratum)
+        notification_pathways.append(name)
+        self.model.request_output_for_flow(
+            name=name,
+            flow_name=PROGRESS,
+            dest_strata=dest_strata,
+            save_results=False,
+        )
+        for clinical in [Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
+            notified_hospitalisations = f"_{PROGRESS}_{Tracing.UNTRACED}X{clinical}"  # Underscore to adjust later
             dest_strata = {"clinical": clinical}
             dest_strata.update(traced_stratum)
-            notification_pathways.append(name)
             self.model.request_output_for_flow(
-                name=name,
+                name=notified_hospitalisations,
                 flow_name=PROGRESS,
                 dest_strata=dest_strata,
                 save_results=False,
             )
+            name = notified_hospitalisations[1:]
+            notification_pathways.append(name)
+            self.model.request_function_output(
+                name=name,
+                func=lambda result: result * hospital_reporting,
+                sources=[notified_hospitalisations],
+            )
 
-        self.model.request_aggregate_output(name="notifications", sources=notification_pathways)
+        self.model.request_aggregate_output(name=NOTIFICATIONS, sources=notification_pathways)
 
         # Cumulative unstratified notifications
         if cumul_inc_start_time:
@@ -138,8 +150,6 @@ class CovidOutputsBuilder(OutputsBuilder):
 
             # Then track untraced cases that are passively detected (depending on clinical stratum)
             name = f"progress_untracedXagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
-            dest_strata = {"clinical": clinical, "agegroup": agegroup}
-            dest_strata.update(traced_stratum)
             age_notification_pathways.append(name)
             self.model.request_output_for_flow(
                 name=name,
@@ -148,19 +158,21 @@ class CovidOutputsBuilder(OutputsBuilder):
                 save_results=False,
             )
             for clinical in [Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-                age_all_progressions = f"_progress_untracedXagegroup_{agegroup}Xclinical_{clinical}"
+                dest_strata = {"clinical": clinical, "agegroup": agegroup}
+                dest_strata.update(traced_stratum)
+                notified_hospitalisations = f"_progress_untracedXagegroup_{agegroup}Xclinical_{clinical}"
                 self.model.request_output_for_flow(
-                    name=age_all_progressions,
+                    name=notified_hospitalisations,
                     flow_name=PROGRESS,
                     dest_strata=dest_strata,
                     save_results=False,
                 )
-                name = age_all_progressions[1:]
+                name = notified_hospitalisations[1:]
                 age_notification_pathways.append(name)
                 self.model.request_function_output(
                     name=name,
                     func=lambda rate: rate * hospital_reporting,  # Include reporting adjustment if requested
-                    sources=[age_all_progressions],
+                    sources=[notified_hospitalisations],
                     save_results=False,
                 )
 

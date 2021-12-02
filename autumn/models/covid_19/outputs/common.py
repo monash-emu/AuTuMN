@@ -4,7 +4,9 @@ from summer.compute import ComputedValueProcessor
 
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA,
-    COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing
+    COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing, NOTIFICATION_CLINICAL_STRATA,
+    INFECTIOUS_COMPARTMENTS
+
 )
 from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -179,6 +181,77 @@ class CovidOutputsBuilder(OutputsBuilder):
 
             final_name = f"notificationsXagegroup_{agegroup}"
             self.model.request_aggregate_output(name=final_name, sources=age_notification_pathways)
+
+    def request_derived_notifications(self, is_contact_tracing: bool):
+        traced_stratum = {}
+        if is_contact_tracing:
+            traced_stratum.update({"tracing": Tracing.UNTRACED})
+
+        # Age-specific non-hospitalised notifications
+        for agegroup in AGEGROUP_STRATA:
+            age_notification_pathways = []
+
+            # First track all traced cases (in Symptomatic ambulatory ever detected)
+            if is_contact_tracing:
+                name = f"progress_traced_non_hospitalisedX{agegroup}"
+                age_notification_pathways.append(name)
+                self.model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": Tracing.TRACED,
+                                 "agegroup": agegroup},
+                    save_results=False,
+                )
+
+            # Then track untraced cases that are passively detected (depending on clinical stratum)
+            name = f"progress_untracedXagegroup_non_hospitalised_{agegroup}XClinical.SYMPT_ISOLATE"
+            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(traced_stratum)
+            age_notification_pathways.append(name)
+            self.model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata=dest_strata,
+                save_results=False,
+            )
+            self.model.request_aggregate_output(
+                name=f"non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
+            )
+
+        # calculating the prevalence of the non hospitalised notifications by age group
+        for agegroup in AGEGROUP_STRATA:
+            age_notification_pathways = []
+
+            # First track traced cases in all clinical strata except hospitalisations
+            if is_contact_tracing:
+                for clinical in NOTIFICATION_CLINICAL_STRATA:
+                    for compartment in INFECTIOUS_COMPARTMENTS:
+                        name = f"progress_prevalence_traced_X{agegroup}X{clinical}X{compartment}"
+                        age_notification_pathways.append(name)
+                        self.model.request_output_for_compartments(
+                            name=name,
+                            compartments=[compartment],
+                            strata={"clinical": clinical, "agegroup": agegroup, "tracing": Tracing.TRACED},
+                        )
+
+            # Then track untraced cases (everyone in notified clinical stratum)
+            compartments = [Compartment.EARLY_ACTIVE, Compartment.LATE_ACTIVE]
+            for compartment in compartments:
+                name = f"progress_prevalence_untracedXagegroup_{agegroup}XClinical.SYMPT_ISOLATEX{compartment}"
+                age_notification_pathways.append(name)
+                self.model.request_output_for_compartments(
+                    name=name,
+                    compartments=[compartment],
+                    strata={"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(traced_stratum),
+                )
+
+            self.model.request_aggregate_output(
+                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
+            )
+
+    #         self.request_extra_derived_notifications(is_contact_tracing)
+    #
+    # def request_extra_derived_notifications(self, is_contact_tracing):
+    #     pass
 
     def request_adult_paeds_notifications(self):
         """

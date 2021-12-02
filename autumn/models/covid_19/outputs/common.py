@@ -1,5 +1,5 @@
 from autumn.models.covid_19.constants import (
-    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA,
+    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA, INFECTIOUS_COMPARTMENTS,
     COMPARTMENTS, Vaccination, PROGRESS, Clinical, History
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -144,28 +144,27 @@ class CovidOutputsBuilder(OutputsBuilder):
             # First track traced cases in all clinical strata except hospitalisations
             if contact_tracing_params:
                 for clinical in NOTIFICATION_CLINICAL_STRATA:
-                    name = f"progress_prevalence_traced_X{agegroup}X{clinical}"
-                    age_notification_pathways.append(name)
-                    self.model.request_output_for_flow(
-                        name=name,
-                        flow_name="progress",
-                        dest_strata={"clinical": clinical, "tracing": "traced", "agegroup": agegroup},
-                        save_results=False,
-                    )
+                    for compartment in INFECTIOUS_COMPARTMENTS:
+                        name = f"progress_prevalence_traced_X{agegroup}X{clinical}X{compartment}"
+                        age_notification_pathways.append(name)
+                        self.model.request_output_for_compartments(
+                            name=name,
+                            compartments=[compartment],
+                            strata={"clinical": clinical, "tracing": "traced", "agegroup": agegroup},
+                        )
 
             # Then track untraced cases (everyone in notified clinical stratum)
 
-            name = f"progress_prevalence_untracedXagegroup_{agegroup}XClinical.SYMPT_ISOLATE"
-            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "tracing": "untraced", "agegroup": agegroup} if \
-                contact_tracing_params else \
-                {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}
-            age_notification_pathways.append(name)
-            self.model.request_output_for_flow(
-                 name=name,
-                 flow_name="progress",
-                 dest_strata=dest_strata,
-                 save_results=False,
+            compartments = [Compartment.EARLY_ACTIVE, Compartment.LATE_ACTIVE]
+            for compartment in compartments:
+                name = f"progress_prevalence_untracedXagegroup_{agegroup}XClinical.SYMPT_ISOLATEX{compartment}"
+                age_notification_pathways.append(name)
+                self.model.request_output_for_compartments(
+                    name=name,
+                    compartments=[compartment],
+                    strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": "untraced", "agegroup": agegroup},
                 )
+
             self.model.request_aggregate_output(
                 name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
             )

@@ -3,15 +3,15 @@ from typing import List
 from summer.compute import ComputedValueProcessor
 
 from autumn.models.covid_19.constants import (
-    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, NOTIFICATION_CLINICAL_STRATA, HISTORY_STRATA,
+    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA,
     COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing
 )
-from autumn.models.covid_19.parameters import Sojourn
+from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
-from autumn.tools.utils.utils import list_element_wise_division, get_complement_prop
+from autumn.tools.utils.utils import get_complement_prop
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 
 
@@ -247,7 +247,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         # Track non-ICU hospital admissions (transition from early to late active in hospital, non-ICU stratum)
         self.model.request_output_for_flow(
             name="non_icu_admissions",
-            flow_name="progress",
+            flow_name=PROGRESS,
             source_strata={"clinical": Clinical.HOSPITAL_NON_ICU},
             dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU},
             save_results=False,
@@ -256,13 +256,33 @@ class CovidOutputsBuilder(OutputsBuilder):
         # Track ICU admissions (transition from early to late active in ICU stratum)
         self.model.request_output_for_flow(
             name="icu_admissions",
-            flow_name="progress",
+            flow_name=PROGRESS,
             source_strata={"clinical": Clinical.ICU},
             dest_strata={"clinical": Clinical.ICU},
         )
 
         # Track all hospitalisations as the sum of hospital non-ICU and ICU
         self.model.request_aggregate_output("hospital_admissions", sources=["icu_admissions", "non_icu_admissions"])
+
+        for agegroup in AGEGROUP_STRATA:
+            self.model.request_output_for_flow(
+                name=f"non_icu_admissionsXagegroup_{agegroup}",
+                flow_name=PROGRESS,
+                source_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
+                dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
+                save_results=False,
+            )
+            self.model.request_output_for_flow(
+                name=f"icu_admissionsXagegroup_{agegroup}",
+                flow_name=PROGRESS,
+                source_strata={"clinical": Clinical.ICU, "agegroup": agegroup},
+                dest_strata={"clinical": Clinical.ICU, "agegroup": agegroup},
+                save_results=False,
+            )
+            self.model.request_aggregate_output(
+                f"hospital_admissionsXagegroup_{agegroup}",
+                sources=[f"icu_admissionsXagegroup_{agegroup}", f"non_icu_admissionsXagegroup_{agegroup}"]
+            )
 
     def request_occupancy(self, sojourn_periods: Sojourn):
         """
@@ -439,14 +459,19 @@ class CovidOutputsBuilder(OutputsBuilder):
                 sources=[f"_{Vaccination.UNVACCINATED}", "_total_population"]
             )
 
-    def request_vacc_aefis(self, vacc_risk_params):
+    def request_vacc_aefis(self, vacc_risk_params: VaccinationRisk):
+        """
+        Calculate the risk of TTS and myocarditis for the vaccines predominantly responsible for these.
+
+        Args:
+            vacc_risk_params: The parameters defining vaccine-related risk (i.e. AEFIs)
+
+        """
+
         risk_multiplier = vacc_risk_params.risk_multiplier
 
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
-        hospital_sources = []
-        self.request_stratified_output_for_flow(
-            "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source"
-        )
+        self.request_stratified_output_for_flow("vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source")
 
         for agegroup in AGEGROUP_STRATA:
             agegroup_string = f"agegroup_{agegroup}"
@@ -472,23 +497,10 @@ class CovidOutputsBuilder(OutputsBuilder):
                 func=lambda vaccinated:
                 vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna * risk_multiplier
             )
-            hospital_sources += [
-                f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.ICU}",
-                f"{PROGRESS}X{agegroup_string}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
-            ]
-
-            # Hospitalisations by age
-            hospital_sources_this_age = [s for s in hospital_sources if f"X{agegroup_string}X" in s]
-            self.model.request_aggregate_output(
-                name=f"hospital_admissionsX{agegroup_string}",
-                sources=hospital_sources_this_age
-            )
 
         # Aggregate using larger age-groups
-        aggregated_age_groups = {
-            "15_19": ["15"],
-        }
-        for age_min in [20 + i*10 for i in range(5)]:
+        aggregated_age_groups = {"15_19": ["15"]}
+        for age_min in [20 + i * 10 for i in range(5)]:
             age_max = age_min + 9
             aggregated_age_groups[f"{age_min}_{age_max}"] = [str(age_min), str(age_min + 5)]
         aggregated_age_groups["70_plus"] = ["70", "75"]
@@ -498,12 +510,9 @@ class CovidOutputsBuilder(OutputsBuilder):
             for aggregated_age_group, agegroups in aggregated_age_groups.items():
                 agg_output = f"{output_type}Xagg_age_{aggregated_age_group}"
                 agg_output_sources = [f"{output_type}Xagegroup_{agegroup}" for agegroup in agegroups]
-                self.model.request_aggregate_output(
-                    name=agg_output,
-                    sources=agg_output_sources
-                )
+                self.model.request_aggregate_output(name=agg_output, sources=agg_output_sources)
 
-                # cumulative output calculation
+                # Cumulative output calculation
                 self.model.request_cumulative_output(
                     name=f"cumulative_{agg_output}",
                     source=agg_output,

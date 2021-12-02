@@ -383,8 +383,4 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
             outputs_builder.request_vacc_aefis(params.vaccination_risk)
 
-    # If we need to track quantities that depend on time
-    # model.add_computed_value_process("time_process", TimeProcess())
-    # outputs_builder.request_time()
-
     return model

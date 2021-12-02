@@ -149,8 +149,8 @@ def run_full_model_for_chain(
             
             mcmc_run = sampled_runs_df.loc[urun]
 
-            run_id = mcmc_run["run"]
-            chain_id = mcmc_run["chain"]
+            run_id = int(mcmc_run["run"])
+            chain_id = int(mcmc_run["chain"])
             assert mcmc_run["accept"]
             logger.info("Running full model for MCMC run %s", run_id)
 

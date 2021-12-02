@@ -224,7 +224,7 @@ def get_fixed_abs_strata_props(
     # Absolute proportion of early exposed who become symptomatic, rather than asymptomatic
     sympt, non_sympt = subdivide_props(np.array((1.,) * len(AGEGROUP_STRATA)), np.array(sympt_props))
 
-    # Absolute proportion of symptomatics who become hospitalised (sympt_non_hospital not needed here)
+    # Absolute proportion of all infections who become hospitalised (sympt_non_hospital not needed here)
     sympt_hospital, _ = subdivide_props(sympt, np.array(hosp_props))
 
     # Absolute proportion of those hospitalised who go to ICU versus those that don't

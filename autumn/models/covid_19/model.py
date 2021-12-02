@@ -13,7 +13,7 @@ from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
     INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VACCINATION_STRATA
 )
-from .outputs.common import CovidOutputsBuilder
+from .outputs.common import CovidOutputsBuilder, TimeProcess
 from .parameters import Parameters
 from .strat_processing.vaccination import add_vacc_rollout_requests, add_vic_regional_vacc, apply_standard_vacc_coverage
 from .strat_processing import tracing
@@ -381,8 +381,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     outputs_builder.request_incidence()
     outputs_builder.request_infection()
-    outputs_builder.request_notifications(params.contact_tracing, params.cumul_incidence_start_time)
-    outputs_builder.request_progression()
+    notification_args = [bool(params.contact_tracing), params.cumul_incidence_start_time, params.hospital_reporting]
+    outputs_builder.request_notifications(*notification_args)
+    outputs_builder.request_adult_paeds_notifications()
     outputs_builder.request_cdr()
     outputs_builder.request_deaths()
     outputs_builder.request_admissions()

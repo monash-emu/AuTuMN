@@ -366,9 +366,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     outputs_builder.request_incidence()
     outputs_builder.request_infection()
-    notification_args = [params.contact_tracing, params.cumul_incidence_start_time, params.hospital_reporting]
+    notification_args = [bool(params.contact_tracing), params.cumul_incidence_start_time, params.hospital_reporting]
     outputs_builder.request_notifications(*notification_args)
-    outputs_builder.request_progression()
+    outputs_builder.request_adult_paeds_notifications()
     outputs_builder.request_cdr()
     outputs_builder.request_deaths()
     outputs_builder.request_admissions()

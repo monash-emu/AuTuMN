@@ -73,7 +73,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     with Timer(f"Running full models for {num_chains} chains: {chain_ids}"):
         args_list = [
             (run_id, chain_id, sampled_runs_df[sampled_runs_df['chain'] == chain_id],
-            pdfilt(mcmc_params.loc[sampled_runs_df.index], f"chain=={chain_id}"),
+            mcmc_params.loc[pdfilt(sampled_runs_df, f"chain=={chain_id}").index],
             candidates_df, quiet)
             for chain_id in chain_ids
         ]

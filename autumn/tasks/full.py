@@ -73,7 +73,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     with Timer(f"Running full models for {num_chains} chains: {chain_ids}"):
         args_list = [
             (run_id, chain_id, sampled_runs_df[sampled_runs_df['chain'] == chain_id],
-            mcmc_params.loc[pdfilt(sampled_runs_df, f"chain=={chain_id}").index],
+            mcmc_params.loc[sampled_runs_df["chain" == chain_id].index],
             candidates_df, quiet)
             for chain_id in chain_ids
         ]
@@ -208,7 +208,7 @@ def select_full_run_samples(mcmc_runs_df: pd.DataFrame, n_samples: int, burn_in:
     mle_idx = find_mle_run(df_accepted).index[0]
     df_accepted = df_accepted.drop(index=mle_idx)
     
-    post_burn = pdfilt(df_accepted, f"run >= {burn_in}")
+    post_burn = df_accepted[df_accepted['run'] >= burn_in]
     
     weights = post_burn['weight'] / post_burn['weight'].sum()
     

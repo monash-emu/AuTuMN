@@ -50,6 +50,7 @@ map_id["cluster_name"] = (
 )
 
 CLUSTER_MAP = dict(map_id.values)
+CLUSTER_MAP[0] = "VICTORIA"
 
 CHRIS_MAP = {
     # North east metro
@@ -415,8 +416,17 @@ def fetch_vac_model():
 
     return df
 
+def create_vic_total(df):
+    df = df.groupby(['date', 'age_group', 'vaccine_brand_name', 'date_index'], as_index=False).sum()
+    df['lga'] = "VICTORIA"
+    
+    return df
+
 
 def preprocess_vac_model(df):
+
+    vic_df = create_vic_total(df)
+    df = df.append(vic_df)
 
     df = merge_with_mapping_df(df, "lga")
 
@@ -445,6 +455,9 @@ def preprocess_vac_model(df):
 
 def update_vida_pop(df):
 
+    vic_df = create_vic_total(df)
+    df = df.append(vic_df)
+
     df = df[["lga", "age_group", "popn"]].drop_duplicates()
     df = merge_with_mapping_df(df, "lga")
 
@@ -459,7 +472,6 @@ def update_vida_pop(df):
     df["end_age"] = df["age_group"].apply(lambda s: int(s.split("-")[1]))
 
     df.to_csv(COVID_VIDA_POP_CSV, index=False)
-
 
 if __name__ == "__main__":
     main()

@@ -3,7 +3,7 @@ from typing import List
 from summer.compute import ComputedValueProcessor
 
 from autumn.models.covid_19.constants import (
-    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA,
+    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA, NOTIFICATION_CLINICAL_STRATA,
     COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing
 )
 from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
@@ -99,30 +99,15 @@ class CovidOutputsBuilder(OutputsBuilder):
             )
 
         # Then track untraced cases that are passively detected (depending on clinical stratum)
-        name = f"progress_untracedXclinical_{Clinical.SYMPT_ISOLATE}"
         dest_strata = {"clinical": Clinical.SYMPT_ISOLATE}
         dest_strata.update(traced_stratum)
-        notification_pathways.append(name)
-        self.model.request_output_for_flow(
-            name=name,
-            flow_name=PROGRESS,
-            dest_strata=dest_strata,
-            save_results=False,
-        )
-        for clinical in [Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-            all_progressions = f"_progress_untracedXclinical{clinical}"
+        for clinical in NOTIFICATION_CLINICAL_STRATA:
+            name = f"progress_untracedXclinical_{clinical}"
+            notification_pathways.append(name)
             self.model.request_output_for_flow(
-                name=all_progressions,
+                name=name,
                 flow_name=PROGRESS,
                 dest_strata=dest_strata,
-                save_results=False,
-            )
-            name = all_progressions[1:]
-            notification_pathways.append(name)
-            self.model.request_function_output(
-                name=name,
-                func=lambda rate: rate * hospital_reporting,
-                sources=[all_progressions],
                 save_results=False,
             )
 

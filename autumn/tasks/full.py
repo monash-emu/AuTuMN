@@ -69,11 +69,12 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     sampled_runs_df = select_full_run_samples(mcmc_runs, num_chains * sample_size, burn_in)
     candidates_df = db.process.select_pruning_candidates(sampled_runs_df, N_CANDIDATES)
 
+    chain_runs = dict((chain_id, sampled_runs_df[sampled_runs_df['chain'] == chain_id]) for chain_id in chain_ids)
 
     with Timer(f"Running full models for {num_chains} chains: {chain_ids}"):
         args_list = [
-            (run_id, chain_id, sampled_runs_df[sampled_runs_df['chain'] == chain_id],
-            mcmc_params.loc[(sampled_runs_df["chain"] == chain_id).index],
+            (run_id, chain_id, chain_runs[chain_id],
+            mcmc_params.loc[chain_runs[chain_id].index],
             candidates_df, quiet)
             for chain_id in chain_ids
         ]

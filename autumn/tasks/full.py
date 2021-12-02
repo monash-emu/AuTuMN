@@ -142,7 +142,7 @@ def run_full_model_for_chain(
         # Don't apply sampling to it - we want to see the whole parameter space that was explored.
         # OK, so this is pre-filtered for sampling - but maybe we shouldn't be storing this here anyway?
         # ie just get it from the calibration run rather than having weird duplicates everywhere...
-        dest_db.dump_df(Table.PARAMS, mcmc_params_df)
+        #dest_db.dump_df(Table.PARAMS, mcmc_params_df)
 
         outputs = []
         derived_outputs = []

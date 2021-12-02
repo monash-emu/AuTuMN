@@ -18,6 +18,10 @@ population:
   region: Ho Chi Minh City
   year: 2019
 
+clinical_stratification:
+  icu_prop: 0.25
+  icu_mortality_prop: 0.7
+
 mobility:
   region: Ho Chi Minh City
   # Google mobility data

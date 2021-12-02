@@ -319,3 +319,7 @@ def check_list_increasing(list_to_check):
 
 def get_prop_two_numerators(numerator_1, numerator_2, denominator):
     return (numerator_1 + numerator_2) / denominator
+
+
+def get_complement_prop(numerator, denominator):
+    return 1. - numerator / denominator

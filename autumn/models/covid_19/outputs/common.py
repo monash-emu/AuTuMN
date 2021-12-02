@@ -11,7 +11,7 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
-from autumn.tools.utils.utils import list_element_wise_division, get_prop_two_numerators
+from autumn.tools.utils.utils import list_element_wise_division, get_complement_prop
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 
 
@@ -435,7 +435,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         for strain in all_strains:
             self.model.request_function_output(
                 name=f"prop_{INCIDENCE}_strain_{strain}",
-                func=lambda strain_inc, total_inc: list_element_wise_division(strain_inc, total_inc),
+                func=lambda strain_inc, total_inc: strain_inc / total_inc,
                 sources=[f"{INCIDENCE}Xstrain_{strain}", INCIDENCE]
             )
 
@@ -556,17 +556,11 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         """
 
-        for stratum in HISTORY_STRATA:
-            name = f"prop_{stratum}"
-            self.model.request_output_for_compartments(
-                name=name,
-                compartments=COMPARTMENTS,
-                strata={"history": stratum},
-            )
+        self.request_stratified_output_for_compartment("prop", COMPARTMENTS, HISTORY_STRATA, "history")
         self.model.request_function_output(
             name="prop_ever_infected",
-            func=lambda naive, total: 1. - naive / total,
-            sources=[f"prop_{History.NAIVE}", "_total_population"],
+            func=get_complement_prop,
+            sources=[f"propXhistory_{History.NAIVE}", "_total_population"],
         )
 
         # Stratified by age group
@@ -583,7 +577,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                 )
             self.model.request_function_output(
                 name=f"prop_ever_infectedXagegroup_{agegroup}",
-                func=lambda naive, total: 1. - naive / total,
+                func=get_complement_prop,
                 sources=[f"prop_{History.NAIVE}Xagegroup{agegroup}", f"_total_populationXagegroup_{agegroup}"],
             )
 

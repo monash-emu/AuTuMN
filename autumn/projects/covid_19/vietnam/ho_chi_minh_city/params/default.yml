@@ -19,8 +19,8 @@ population:
   year: 2019
 
 clinical_stratification:
-  icu_prop: 0.25
-  icu_mortality_prop: 0.7
+  icu_prop: 0.2
+  icu_mortality_prop: 0.6
 
 mobility:
   region: Ho Chi Minh City

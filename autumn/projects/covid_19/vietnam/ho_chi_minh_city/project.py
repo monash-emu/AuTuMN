@@ -37,18 +37,18 @@ priors = [
     # UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
 
     # Regional parameters
-    UniformPrior("infectious_seed", [1, 20]),
+    UniformPrior("infectious_seed", [1, 10]),
     UniformPrior("contact_rate", [0.05, 0.2]),
 
     # Health system-related
     # UniformPrior("clinical_stratification.icu_prop", [0.01, 0.1]),
     # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
-    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [1, 2]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [1, 3.5]),
-    UniformPrior("infection_fatality.multiplier", [2.0, 20.0]),
+    UniformPrior("clinical_stratification.props.symptomatic.multiplier", [1.0, 2.0]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [1.0, 2.0]),
+    UniformPrior("infection_fatality.multiplier", [1.0, 3.0]),
 
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.02]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.03]),
 
     # Microdistancing
     UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.02, 0.25]),

@@ -1,5 +1,7 @@
-import numpy as np
 from typing import List, Callable, Tuple, Union, Dict
+
+import numpy as np
+import numba
 
 from summer import CompartmentalModel, Multiply, Stratification
 
@@ -357,6 +359,18 @@ def get_piecewise_vacc_rates(
     return end_times, vaccination_rates
 
 
+@numba.jit(nopython=True)
+def get_vaccination_rate_jit(end_times, vaccination_rates, time):
+
+    # Identify the index of the first list element greater than the time of interest
+    # If there is such an index, return the corresponding vaccination rate
+    for end_i, end_t in enumerate(end_times):
+        if end_t > time:
+            return vaccination_rates[end_i]
+
+    # Return zero if the time is after the last end time
+    return 0.0
+
 def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) -> Callable:
     """
     Turn the vaccination rates and end times into a piecewise roll-out function.
@@ -376,13 +390,10 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
     assert len(end_times) == len(vaccination_rates), "Number of vaccination periods (end times) and rates differs"
 
     # Function defined in the standard format for function-based standard transition flows
+
+
     def get_vaccination_rate(time, computed_values):
-
-        # Identify the index of the first list element greater than the time of interest
-        idx = sum(end_times < time)
-
-        # Return zero if the time is after the last end time, otherwise take the vaccination rate
-        return 0.0 if idx >= len(vaccination_rates) else vaccination_rates[idx]
+        return get_vaccination_rate_jit(end_times, vaccination_rates, time)
 
     return get_vaccination_rate
 

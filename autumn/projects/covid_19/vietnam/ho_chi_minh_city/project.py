@@ -37,7 +37,7 @@ priors = [
     # UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
 
     # Regional parameters
-    UniformPrior("infectious_seed", [1, 100]),
+    UniformPrior("infectious_seed", [1, 20]),
     UniformPrior("contact_rate", [0.05, 0.2]),
 
     # Health system-related

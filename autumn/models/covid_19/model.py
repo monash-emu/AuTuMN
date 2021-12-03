@@ -383,7 +383,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     outputs_builder.request_infection()
     notification_args = [bool(params.contact_tracing), params.cumul_incidence_start_time, params.hospital_reporting]
     outputs_builder.request_notifications(*notification_args)
-    outputs_builder.request_derived_notifications(bool(params.contact_tracing))
     outputs_builder.request_adult_paeds_notifications()
     outputs_builder.request_cdr()
     outputs_builder.request_deaths()
@@ -392,6 +391,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     outputs_builder.request_experienced()
     if params.contact_tracing:
         outputs_builder.request_tracing()
+        outputs_builder.request_derived_notifications(bool(params.contact_tracing))
     if params.voc_emergence:
         outputs_builder.request_strains(list(params.voc_emergence.keys()))
     if vacc_params:

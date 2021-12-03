@@ -4,7 +4,7 @@ infectious_seed: 1.2551106272187438
 sojourn.compartment_periods_calculated.active.total_period: 6.065453189734715
 sojourn.compartment_periods_calculated.exposed.total_period: 4.020777404208838
 
-testing_to_detection.assumed_cdr_parameter: 0.020051374760447115
+testing_to_detection.assumed_cdr_parameter: 0.004
 
 mobility.microdistancing.behaviour.parameters.max_effect: 0.17296849748136078
 

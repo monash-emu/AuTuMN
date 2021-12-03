@@ -21,10 +21,12 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 
-# icu_occupancy = ts_set.get("icu_occupancy")
+notifications = ts_set.get("notifications").truncate_start_time(553)
+icu_occupancy = ts_set.get("icu_occupancy")
 infection_deaths = ts_set.get("infection_deaths").truncate_start_time(556)  # truncated to 9th Jul 2021
 
 targets = [
+    NormalTarget(notifications),
     # NormalTarget(icu_occupancy),
     NormalTarget(infection_deaths)
 ]

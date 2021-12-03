@@ -188,7 +188,13 @@ class CovidOutputsBuilder(OutputsBuilder):
 
     def request_non_hosp_notifications(self):
         """
-        Needs docstring please.
+        Calculate the rate of non-hospitalised notifications over time and
+        the prevalence of the non-hospitalised notifications to reflect the number of quarantined persons.
+
+        Generates the following derived outputs:
+            non hospitalised notifications: Age specific notifications in Symptomatic ambulatory ever detected
+            prevalence non hospitalised notifications: Age specific outputs. For the traced everyone in notification
+            clinical strata and infectious compartments. For the untraced symptomatic detected in active compartments.
 
         """
 
@@ -207,7 +213,7 @@ class CovidOutputsBuilder(OutputsBuilder):
                     save_results=False,
                 )
 
-            # Then track untraced cases that are passively detected (depending on clinical stratum)
+            # Then track untraced cases in Symptomatic ambulatory ever detected
             name = f"progress_non_hosp_Xclinical_{Clinical.SYMPT_ISOLATE}Xagegroup_{agegroup}Xtraced_{Tracing.UNTRACED}"
             dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(self.untraced_stratum)
             age_notification_pathways.append(name)

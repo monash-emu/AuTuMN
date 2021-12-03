@@ -181,9 +181,6 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_aggregate_output(name=final_name, sources=age_notification_pathways)
 
     def request_derived_notifications(self, is_contact_tracing: bool):
-        # traced_stratum = {}
-        # if is_contact_tracing:
-        #     traced_stratum.update({"tracing": Tracing.UNTRACED})
 
         # Age-specific non-hospitalised notifications
         for agegroup in AGEGROUP_STRATA:

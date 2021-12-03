@@ -233,26 +233,23 @@ class CovidOutputsBuilder(OutputsBuilder):
             # First track traced cases in all clinical strata except hospitalisations
             if self.is_contact_tracing:
                 for clinical in NOTIFICATION_CLINICAL_STRATA:
-                    for compartment in INFECTIOUS_COMPARTMENTS:
-                        name = f"progress_prevalence_traced_X{agegroup}X{clinical}X{compartment}"
-                        age_notification_pathways.append(name)
-                        self.model.request_output_for_compartments(
-                            name=name,
-                            compartments=[compartment],
-                            strata={"clinical": clinical, "agegroup": agegroup, "tracing": "traced"},
-                        )
+                    name = f"progress_prevalence_traced_X{agegroup}X{clinical}"
+                    age_notification_pathways.append(name)
+                    self.model.request_output_for_compartments(
+                        name=name,
+                        compartments=[Compartment.LATE_ACTIVE],
+                        strata={"clinical": clinical, "agegroup": agegroup, "tracing": Tracing.TRACED},
+                    )
 
             # Then track untraced cases (everyone in notified clinical stratum)
-            compartments = [Compartment.EARLY_ACTIVE, Compartment.LATE_ACTIVE]
             dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(self.untraced_stratum)
-            for compartment in compartments:
-                name = f"progress_prevalence_untracedXagegroup_{agegroup}XClinical.SYMPT_ISOLATEX{compartment}"
-                age_notification_pathways.append(name)
-                self.model.request_output_for_compartments(
-                    name=name,
-                    compartments=[compartment],
-                    strata=dest_strata,
-                )
+            name = f"progress_prevalence_{Tracing.UNTRACED}Xagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
+            age_notification_pathways.append(name)
+            self.model.request_output_for_compartments(
+                name=name,
+                compartments=[Compartment.LATE_ACTIVE],
+                strata=dest_strata,
+            )
 
             self.model.request_aggregate_output(
                 name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways

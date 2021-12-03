@@ -187,7 +187,9 @@ def run_full_model_for_chain(
 
         with Timer("Saving model outputs to the database"):
             final_outputs = {}
-            final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
+            # We may not have anything in outputs
+            if len(outputs):
+                final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
             final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
             final_outputs[Table.MCMC] = sampled_runs_df
             db.store.save_model_outputs(dest_db, **final_outputs)

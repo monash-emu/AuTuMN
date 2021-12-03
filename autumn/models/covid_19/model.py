@@ -391,7 +391,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     outputs_builder.request_experienced()
     if params.contact_tracing:
         outputs_builder.request_tracing()
-        outputs_builder.request_derived_notifications(bool(params.contact_tracing))
     if params.voc_emergence:
         outputs_builder.request_strains(list(params.voc_emergence.keys()))
     if vacc_params:

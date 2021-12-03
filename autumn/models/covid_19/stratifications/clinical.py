@@ -70,8 +70,10 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
         )
 
         # Assign all the adjustments to the summer model
+        voc_stratum = {"strain": voc} if params.voc_emergence else {}  # *** Don't filter by VoC if there are no VoCs
         for agegroup in AGEGROUP_STRATA:
-            source = {"agegroup": agegroup, "strain": voc}
+            source = {"agegroup": agegroup}
+            source.update(voc_stratum)
             clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified
             for transition in AGE_CLINICAL_TRANSITIONS:
                 clinical_strat.add_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)

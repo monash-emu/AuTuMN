@@ -248,13 +248,21 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
     """
     Calculate death proportions: find where the absolute number of deaths accrue.
     Represents the number of people in a strata who die given the total number of people infected.
+
+    Args:
+        abs_props: The proportions calculated by get_fixed_abs_strata_props
+        infection_fatality_props: The final IFR proportions after any adjustments have been made
+        icu_mortality_prop: The proportion of hospital admissions dying in ICU
+
+    Returns:
+
     """
 
     abs_death_props = {stratum: np.zeros(len(AGEGROUP_STRATA)) for stratum in FIXED_STRATA}
     for age_idx in range(len(AGEGROUP_STRATA)):
         target_ifr_prop = infection_fatality_props[age_idx]
 
-        # Maximum deaths that could be assigned to each of the death strata ...
+        # Maximum deaths that can be assigned to each of the death strata based on the absolute proportions entering...
         max_asympt_prop_allowed = abs_props[Clinical.NON_SYMPT][age_idx]
         max_hosp_prop_allowed = abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]
         max_icu_prop_allowed = abs_props[Clinical.ICU][age_idx] * icu_mortality_prop  # Less than the total stratum size
@@ -274,8 +282,8 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
         abs_death_props[Clinical.HOSPITAL_NON_ICU][age_idx] = min(target_hospital_mortality, max_hosp_prop_allowed)
 
         # Absolute proportion of all patients dying out of hospital
-        target_asympt_mortality = \
-            ifr_prop - abs_death_props[Clinical.ICU][age_idx] - abs_death_props[Clinical.HOSPITAL_NON_ICU][age_idx]
+        abs_death_prop_hosp = abs_death_props[Clinical.HOSPITAL_NON_ICU][age_idx]
+        target_asympt_mortality = ifr_prop - abs_death_props[Clinical.ICU][age_idx] - abs_death_prop_hosp
         abs_death_props[Clinical.NON_SYMPT][age_idx] = max(0., target_asympt_mortality)
 
         # Double-check everything sums up properly - it should be impossible for this to fail

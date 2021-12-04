@@ -8,23 +8,27 @@ from autumn.models.covid_19.mixing_matrix.mobility import LOCATIONS
 class LocationMixingAdjuster(BaseMixingAdjuster):
     """
     Applies location based mixing adjustments (micro and macro) to a mixing matrix.
+    The functions themselves are created in the files in the directory one above this one.
+
+    Attributes:
+        mobility_funcs: The macrodistancing/mobility functions to be applied to each of the locations
+        microdistancing_funcs: The microdistancing functions to be applied to each of the locations
+        base_matrices: The mixing matrices unadjusted for the location functions
+
     """
 
     def __init__(
-        self,
-        mixing_matrices: Dict[str, np.ndarray],
-        mobility_funcs: Dict[str, Callable[[float], float]],
-        microdistancing_funcs: Dict[str, Callable[[float], float]],
+        self, base_matrices: Dict[str, np.ndarray], mobility_funcs: Dict[str, Callable[[float], float]],
+            microdistancing_funcs: Dict[str, Callable[[float], float]],
     ):
         """
-        Build the time variant location adjustment functions.
+        Create the attributes to this object, as described in attributes above.
+
         """
 
         self.mobility_funcs = mobility_funcs
         self.microdistancing_funcs = microdistancing_funcs
-
-        # Load all the location-specific mixing matrices.
-        self.matrix_components = mixing_matrices
+        self.base_matrices = base_matrices
 
     def get_adjustment(self, time: float, mixing_matrix: np.ndarray) -> np.ndarray:
         """
@@ -32,21 +36,22 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
         Returns a new mixing matrix, modified to adjust for dynamic mixing changes for a given point in time.
         """
 
-        # Start the adjustment value for each location from a value of 1 for "no adjustment"
+        # Start the adjustment value for each location from a value of one, representing no adjustment
         for loc_key in LOCATIONS:
-            loc_adjustment = 1.
+            loc_relative_mobility = 1.
 
-            # Adjust for Google mobility data
+            # Adjust for macrodistancing/mobility
             mobility_func = self.mobility_funcs.get(loc_key)
             if mobility_func:
-                loc_adjustment *= mobility_func(time)
+                loc_relative_mobility *= mobility_func(time)
 
             # Adjust for microdistancing
             microdistancing_func = self.microdistancing_funcs.get(loc_key)
             if microdistancing_func:
-                loc_adjustment *= microdistancing_func(time)
+                loc_relative_mobility *= microdistancing_func(time)
 
-            # Apply adjustment by subtracting the contacts that need to come off
-            mixing_matrix += (loc_adjustment - 1.) * self.matrix_components[loc_key]
+            # Apply the adjustment by subtracting the contacts that need to come off
+            mobility_change = (1. - loc_relative_mobility)
+            mixing_matrix -= mobility_change * self.base_matrices[loc_key]
 
         return mixing_matrix

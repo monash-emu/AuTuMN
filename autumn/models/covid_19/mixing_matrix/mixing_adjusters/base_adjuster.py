@@ -6,6 +6,8 @@ import numpy as np
 class BaseMixingAdjuster(ABC):
     """
     A class used to build a time-varying mixing matrix adjustment.
+    This could be adjusted according to the age or the location structure of the model's contact matrices.
+
     """
 
     @abstractmethod

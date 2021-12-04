@@ -55,7 +55,7 @@ def get_mobility_funcs(
     country: Country,
     region: str,
     mixing: Dict[str, MixingLocation],
-    google_mobility_locations: List[str],
+    google_mobility_locations: Dict[str, float],
     npi_effectiveness_params: Dict[str, float],
     square_mobility_effect: bool,
     smooth_google_data: bool,

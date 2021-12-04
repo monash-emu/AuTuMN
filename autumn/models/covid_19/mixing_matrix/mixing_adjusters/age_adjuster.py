@@ -17,6 +17,9 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
     *** Note that this object works quite differently from location_adjuster, which is potentially confusing
     because the both inherit from the same parent class ***
 
+    Specifically, this one adjusts the cells of the matrix according to ratios applied to their working values,
+    whereas location adjuster subtracts absolute values of the starting matrices from the current values.
+
     Attributes:
         adjustment_funcs: The adjustment functions to be applied for each age group
 

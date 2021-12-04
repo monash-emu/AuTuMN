@@ -13,6 +13,9 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
     *** Note that this object works quite differently from age_adjuster, which is potentially confusing
     because the both inherit from the same parent class ***
 
+    Specifically, this one subtracts absolute values of the starting matrices from the current values,
+    whereas age adjuster adjusts the cells of the matrix according to ratios applied to their working values.
+
     Attributes:
         mobility_funcs: The macrodistancing/mobility functions to be applied to each of the locations
         microdistancing_funcs: The microdistancing functions to be applied to each of the locations

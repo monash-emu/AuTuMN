@@ -248,13 +248,21 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
     """
     Calculate death proportions: find where the absolute number of deaths accrue.
     Represents the number of people in a strata who die given the total number of people infected.
+
+    Args:
+        abs_props: The proportions calculated by get_fixed_abs_strata_props
+        infection_fatality_props: The final IFR proportions after any adjustments have been made
+        icu_mortality_prop: The proportion of hospital admissions dying in ICU
+
+    Returns:
+
     """
 
     abs_death_props = {stratum: np.zeros(len(AGEGROUP_STRATA)) for stratum in FIXED_STRATA}
     for age_idx in range(len(AGEGROUP_STRATA)):
         target_ifr_prop = infection_fatality_props[age_idx]
 
-        # Maximum deaths that could be assigned to each of the death strata ...
+        # Maximum deaths that can be assigned to each of the death strata based on the absolute proportions entering...
         max_asympt_prop_allowed = abs_props[Clinical.NON_SYMPT][age_idx]
         max_hosp_prop_allowed = abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]
         max_icu_prop_allowed = abs_props[Clinical.ICU][age_idx] * icu_mortality_prop  # Less than the total stratum size
@@ -274,8 +282,8 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
         abs_death_props[Clinical.HOSPITAL_NON_ICU][age_idx] = min(target_hospital_mortality, max_hosp_prop_allowed)
 
         # Absolute proportion of all patients dying out of hospital
-        target_asympt_mortality = \
-            ifr_prop - abs_death_props[Clinical.ICU][age_idx] - abs_death_props[Clinical.HOSPITAL_NON_ICU][age_idx]
+        abs_death_prop_hosp = abs_death_props[Clinical.HOSPITAL_NON_ICU][age_idx]
+        target_asympt_mortality = ifr_prop - abs_death_props[Clinical.ICU][age_idx] - abs_death_prop_hosp
         abs_death_props[Clinical.NON_SYMPT][age_idx] = max(0., target_asympt_mortality)
 
         # Double-check everything sums up properly - it should be impossible for this to fail
@@ -295,6 +303,29 @@ def get_all_adjustments(
         sojourn: Sojourn, sympt_adjuster: float, hospital_adjuster: float, ifr_adjuster: float,
 ) -> Dict[str, dict]:
     """
+    Get the clinical adjustments either for the direct stratification, or as overwrites for the clinical strata of the
+    history or vaccination stratifications.
+    Collates these together into one object, which has a logical structure, although not the fully summer-ready
+    adjustments structure.
+
+    Args:
+        clinical_params: Parameters directly defining the clinical stratification
+        country: Country we are working with
+        pop: Other country-related parameters
+        raw_ifr_props: The IFRs unadjusted for anything being done in calibration or further stratifications
+        sojourn: The compartment sojourn times for this model
+        sympt_adjuster: Any adjustment to all the age-specific symptomatic proportions
+        hospital_adjuster: Any adjustment to all the age-specific proportion of symptomatic persons hospitalised
+        ifr_adjuster: Any adjustment to all the age-specific IFRs
+
+    Returns:
+        A dictionary structured with first tier of keys being the flows to be modified, the second being the age groups
+        (if the flow has differences by agegroup), the second being the clinical stratum (with all five strata
+        represented)
+
+    """
+
+    """
     Preliminary processing.
     """
 
@@ -303,35 +334,38 @@ def get_all_adjustments(
     # Apply odds ratio adjusters to proportions needing to be adjusted
     hospital_props = apply_odds_ratio_to_props(clinical_params.props.hospital.props, hospital_adjuster)
     adjusted_symptomatic_props = apply_odds_ratio_to_props(clinical_params.props.symptomatic.props, sympt_adjuster)
+    adjusted_ifr_props = apply_odds_ratio_to_props(raw_ifr_props, ifr_adjuster)
 
-    # Get the proportions that don't vary over time, not all of these are actually clinical strata
+    # Get the proportions that are fixed over time, five keys, but these do not map directly to the five clinical strata
     abs_props = get_fixed_abs_strata_props(adjusted_symptomatic_props, clinical_params.icu_prop, hospital_props)
 
     # Work out all the relevant sojourn times and the associated total rates at which they exit the compartments
     compartment_periods = calc_compartment_periods(sojourn)
 
     """
-    Entry adjustments.
+    Entry adjustments - complicated process for entering the compartments that are stratified by clinical status.
+    (See get_entry_adjustments above for details)
     """
 
     within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
     all_adjustments[INFECTIOUSNESS_ONSET] = get_entry_adjustments(abs_props, within_early_exposed)
 
     """
-    Progression adjustments.
+    Progression adjustments - simpler process that just depends on hospital admission status.
     """
 
-    within_early_rates = {
-        Clinical.HOSPITAL_NON_ICU: 1. / sojourn.compartment_periods["hospital_early"],
-        Clinical.ICU: 1. / sojourn.compartment_periods["icu_early"]
-    }
+    hosp_rate = 1. / sojourn.compartment_periods["hospital_early"]
+    icu_rate = 1. / sojourn.compartment_periods["icu_early"]
+    within_early_rates = {Clinical.HOSPITAL_NON_ICU: hosp_rate, Clinical.ICU: icu_rate}
     all_adjustments[PROGRESS] = {}
     for stratum in CLINICAL_STRATA:
         progress_rate = Overwrite(within_early_rates[stratum]) if stratum in within_early_rates else None
         all_adjustments[PROGRESS].update({stratum: progress_rate})
 
     """
-    Death and recovery adjustments.
+    Death and recovery adjustments - also more complicated to work out the absolute proportion of each age and stratum-
+    specific popoulation that will die versus recover.
+    (See get_absolute_death_proportions above)
     """
 
     within_late_rates = {
@@ -340,9 +374,6 @@ def get_all_adjustments(
         Clinical.ICU: 1. / sojourn.compartment_periods["icu_late"],
     }
 
-    # Scale raw IFR values according to adjuster parameter
-    adjusted_ifr_props = apply_odds_ratio_to_props(raw_ifr_props, ifr_adjuster)
-
     # Convert from provided age groups to model age groups
     final_ifr_props = convert_ifr_agegroups(adjusted_ifr_props, country.iso3, pop.region, pop.year)
 
@@ -350,7 +381,7 @@ def get_all_adjustments(
     abs_death_props = get_absolute_death_proportions(abs_props, final_ifr_props, clinical_params.icu_mortality_prop)
 
     # The resulting proportion. Numerator: deaths in stratum, denominator: people entering stratum
-    # This could be over-written here by the probability of death given ICU or hospital admission if preferred
+    # (This could be over-written here by the probability of death given ICU or hospital admission if preferred)
     rel_death_props = {strat: np.array(abs_death_props[strat]) / np.array(abs_props[strat]) for strat in FIXED_STRATA}
 
     # Convert to rates and then to summer Overwrite objects

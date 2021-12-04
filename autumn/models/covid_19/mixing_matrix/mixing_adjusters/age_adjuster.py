@@ -14,7 +14,7 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
     The mixing matrix is expected to be 16x16.
     This is currently unused.
 
-    *** Also, note that this object works quite differently from location_adjuster, which is potentially confusing
+    *** Note that this object works quite differently from location_adjuster, which is potentially confusing
     because the both inherit from the same parent class ***
 
     Attributes:

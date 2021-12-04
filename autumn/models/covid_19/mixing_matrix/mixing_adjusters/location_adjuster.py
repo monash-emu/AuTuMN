@@ -2,13 +2,16 @@ from typing import Callable, Dict
 import numpy as np
 
 from .base_adjuster import BaseMixingAdjuster
-from autumn.models.covid_19.mixing_matrix.mobility import LOCATIONS
+from autumn.models.covid_19.constants import LOCATIONS
 
 
 class LocationMixingAdjuster(BaseMixingAdjuster):
     """
     Applies location based mixing adjustments (micro and macro) to a mixing matrix.
     The functions themselves are created in the files in the directory one above this one.
+
+    *** Note that this object works quite differently from age_adjuster, which is potentially confusing
+    because the both inherit from the same parent class ***
 
     Attributes:
         mobility_funcs: The macrodistancing/mobility functions to be applied to each of the locations

@@ -21,8 +21,8 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 
-notifications = ts_set.get("notifications").truncate_start_time(565) # truncated to 18th Jul 2021
-icu_occupancy = ts_set.get("icu_occupancy")
+notifications = ts_set.get("notifications").multiple_truncations([[565, 575], [606, 700]])  # truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
+# icu_occupancy = ts_set.get("icu_occupancy")
 infection_deaths = ts_set.get("infection_deaths").truncate_start_time(556)  # truncated to 9th Jul 2021
 
 targets = [

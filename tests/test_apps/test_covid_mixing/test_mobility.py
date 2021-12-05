@@ -6,7 +6,7 @@ TODO: Test more mixing matrix functionality
 import pandas as pd
 import pytest
 
-from autumn.models.covid_19.mixing_matrix.mobility import parse_values, update_mixing_data
+from autumn.models.covid_19.mixing_matrix.macrodistancing import parse_values, update_mixing_data
 
 
 @pytest.mark.parametrize(
@@ -177,7 +177,6 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
     google_mobility_days = [0, 1, 2, 3, 4]
     actual_mixing = update_mixing_data(
         mixing,
-        npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
     )

@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 
 from autumn.models.covid_19.constants import BASE_DATE
 from autumn.models.covid_19.parameters import Country, Mobility
-from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix, mobility
+from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix, macrodistancing
 from autumn.tools.inputs.social_mixing.queries import get_country_mixing_matrix, get_mixing_matrix_specific_agegroups
 
 MM = np.ones([16, 16])

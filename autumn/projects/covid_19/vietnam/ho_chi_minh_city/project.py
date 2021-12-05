@@ -49,11 +49,6 @@ priors = [
     # UniformPrior("clinical_stratification.props.hospital.multiplier", [1.0, 2.0]),
     # UniformPrior("infection_fatality.multiplier", [1.0, 3.0]),
 
-    # Parameters related to the entrance of the Delta variant
-    UniformPrior("voc_emergence.delta.start_time", (485., 515.), jumping_stdev=5.),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1., 2.5), jumping_stdev=0.1),
-    UniformPrior("voc_emergence.delta.ifr_multiplier", (1., 3.), jumping_stdev=0.1),
-
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.002, 0.015]),
 

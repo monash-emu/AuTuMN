@@ -58,7 +58,7 @@ def weight_mobility_data(google_mob_df: pd.DataFrame, location_map: Dict[str, Di
 
 
 def get_mobility_funcs(
-        country: Country, region: str, mixing_requests: Dict[str, MixingLocation],
+        country: Country, region: str, mobility_requests: Dict[str, MixingLocation],
         google_mobility_locations: Dict[str, Dict[str, float]], square_mobility_effect: bool, smooth_google_data: bool,
 ) -> Dict[str, Callable[[float], float]]:
     """
@@ -68,7 +68,7 @@ def get_mobility_funcs(
     Args:
         country: Country being simulated
         region: If a sub-region of the country is being simulated, this sub-region
-        mixing_requests: The mixing location parameters
+        mobility_requests: The mixing location parameters
         google_mobility_locations: The mapping to model locations from Google mobility locations
         square_mobility_effect: See update_mixing_data
         smooth_google_data: Whether to smooth the raw Google mobility data for that location
@@ -87,12 +87,13 @@ def get_mobility_funcs(
             model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
     # Build mixing data timeseries
-    mixing_requests = update_mixing_data(mixing_requests, model_loc_mobility_values, google_mobility_days)
+    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}  # Needed as dict instead of parameters
+    mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
 
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
     exponent = 2 if square_mobility_effect else 1
-    for location, timeseries in mixing_requests.items():
+    for location, timeseries in mobility_requests.items():
         loc_vals = [v ** exponent for v in timeseries["values"]]
         mobility_funcs[location] = scale_up_function(timeseries["times"], loc_vals, method=4)
 
@@ -100,7 +101,7 @@ def get_mobility_funcs(
 
 
 def update_mixing_data(
-        mobility_requests: pd.DataFrame, google_mobility_values: pd.DataFrame, google_mobility_days: list
+        mobility_requests: dict, google_mobility_values: pd.DataFrame, google_mobility_days: list
 ):
     """
 
@@ -114,7 +115,6 @@ def update_mixing_data(
     """
 
     last_google_day = google_mobility_days[-1]
-    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
 
     # Loop over all the modelled locations
     for loc_key in LOCATIONS:

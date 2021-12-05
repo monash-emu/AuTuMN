@@ -9,7 +9,7 @@ from autumn.tools.inputs.mobility.queries import get_mobility_data
 from autumn.tools.utils.utils import apply_moving_average
 
 
-def weight_mobility_data(google_mob_df, location_map):
+def weight_mobility_data(google_mob_df: pd.DataFrame, location_map: Dict[str, Dict[str, float]]) -> pd.DataFrame:
     """
     Get weighted average for each modelled location from Google mobility estimates.
     Uses the user-specified request to define the mapping of Google mobility locations to the modelled locations.
@@ -35,10 +35,18 @@ def weight_mobility_data(google_mob_df, location_map):
         {'residential': 1.0}
     }
     Values for the sub-dictionaries for each modelled location must sum to one
-    - this is confirmed in parameter validation.
+    (which is confirmed in parameter validation).
 
     If a location is not specified, that location will not be scaled - this will be sorted out in later stages of
     processing.
+
+    Args:
+        google_mob_df: The Google mobility data provided in raw form
+        location_map: The mapping instructions from modelled locations (first keys) to Google locations (second keys)
+
+    Returns:
+        Dataframe containing the keys for scaling the modelled locations over time based on these mobility inputs
+
     """
 
     model_mob_df = pd.DataFrame(np.zeros((len(google_mob_df), len(location_map))), columns=list(location_map.keys()))
@@ -50,38 +58,49 @@ def weight_mobility_data(google_mob_df, location_map):
 
 
 def get_mobility_funcs(
-    country: Country,
-    region: str,
-    mixing: Dict[str, MixingLocation],
-    google_mobility_locations: Dict[str, float],
-    npi_effectiveness_params: Dict[str, float],
-    square_mobility_effect: bool,
-    smooth_google_data: bool,
+    country: Country, region: str, mixing: Dict[str, MixingLocation],
+    google_mobility_locations: Dict[str, Dict[str, float]], npi_effectiveness_params: Dict[str, float],
+    square_mobility_effect: bool, smooth_google_data: bool,
 ) -> Dict[str, Callable[[float], float]]:
     """
-    Loads google mobility data, combines it with user requested timeseries data
-    and then returns a mobility function for each location.
+    Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
+    each location.
+
+    Args:
+        country: Country being simulated
+        region: If a sub-region of the country is being simulated, this sub-region
+        mixing: The mixing location parameters
+        google_mobility_locations: The mapping to model locations from Google mobility locations
+        npi_effectiveness_params:
+        square_mobility_effect: See update_mixing_data
+        smooth_google_data: Whether to smooth the raw Google mobility data for that location
+
+    Returns:
+        The final mobility functions for each modelled location
+
     """
 
     mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
-    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
+    model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
+    # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
     if smooth_google_data:
-        for loc in google_mobility_values.columns:
-            google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
+        for loc in model_loc_mobility_values.columns:
+            model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
     # Build mixing data timeseries
     mixing = update_mixing_data(
         {k: v.dict() for k, v in mixing.items()},
         npi_effectiveness_params,
-        google_mobility_values,
+        model_loc_mobility_values,
         google_mobility_days,
     )
 
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
+    exponent = 2 if square_mobility_effect else 1
     for location, timeseries in mixing.items():
-        loc_vals = [v ** 2 for v in timeseries["values"]] if square_mobility_effect else timeseries["values"]
+        loc_vals = [v ** exponent for v in timeseries["values"]]
         mobility_funcs[location] = scale_up_function(timeseries["times"], loc_vals, method=4)
 
     return mobility_funcs

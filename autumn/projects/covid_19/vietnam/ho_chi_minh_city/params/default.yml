@@ -82,13 +82,7 @@ mobility:
 history:
   natural_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
 
-voc_emergence:
-  delta:
-    start_time: 500. # Will be calibrated later
-    entry_rate: 1.
-    seed_duration: 10.
-    contact_rate_multiplier: 2.15 # Will be calibrated later
-    ifr_multiplier: 1. # Will be calibrated later
+
 
 testing_to_detection:
   assumed_tests_parameter: 1e-04 # Sri-Lanka model

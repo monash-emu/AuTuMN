@@ -43,7 +43,7 @@ priors = [
     UniformPrior("contact_rate", [0.05, 0.2]),
 
     # Health system-related
-    # UniformPrior("clinical_stratification.icu_prop", [0.15, 0.2]),
+    UniformPrior("clinical_stratification.icu_prop", [0.15, 0.25]),
     # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [1.0, 2.0]),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [1.0, 2.0]),

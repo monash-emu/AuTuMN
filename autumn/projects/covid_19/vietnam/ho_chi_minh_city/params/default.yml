@@ -82,7 +82,11 @@ mobility:
 history:
   natural_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
 
-
+sojourn:
+  compartment_periods:
+    hospital_late: 8.0
+    icu_early: 10.0 # 7.7 + 2.3
+    icu_late: 18.9 # Source: https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-021-06371-6
 
 testing_to_detection:
   assumed_tests_parameter: 1e-04 # Sri-Lanka model

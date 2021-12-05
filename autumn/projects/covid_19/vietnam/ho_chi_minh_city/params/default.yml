@@ -41,9 +41,8 @@ mobility:
       parameters:
         max_effect: .2 # estimated from the Philipines paper
         times:
-          - 485 # 29th April 2021, first community case of COVID-19 detected in Ho Chi Minh City
-          - 505 # 19th May 2021, two new cases first detected after 20 days without any new case
           - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
+          - 532 # 15th Jun 2021, Directive No.15 of the PM in place city-wide for the next 2 weeks
           - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place
           - 556 # 09th Jul 2021, Directive No.16 of the PM in place city-wide
           - 573 # 26th Jul 2021, curfew from 6PM to 6AM
@@ -53,9 +52,8 @@ mobility:
           - 654 # 15th Oct 2021, 2 weeks after eased lockdown
           - 671 # 01st Nov 2021, 1 month after eased lockdown, restaurants are serving on-site at 50% capacity
         values:
-          - 0
+          - 0.3
           - 0.2
-          - 0.4
           - 0.5
           - 0.7
           - 0.8

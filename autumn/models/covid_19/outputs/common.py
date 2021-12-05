@@ -209,13 +209,13 @@ class CovidOutputsBuilder(OutputsBuilder):
                 self.model.request_output_for_flow(
                     name=name,
                     flow_name=PROGRESS,
-                    dest_strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": Tracing.TRACED, "agegroup": agegroup},
+                    dest_strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": "traced", "agegroup": agegroup},
                     save_results=False,
                 )
 
             # Then track untraced cases in Symptomatic ambulatory ever detected
             name = f"progress_non_hosp_Xclinical_{Clinical.SYMPT_ISOLATE}Xagegroup_{agegroup}Xtraced_{Tracing.UNTRACED}"
-            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(self.untraced_stratum)
+            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup, "tracing": "untraced"}
             age_notification_pathways.append(name)
             self.model.request_output_for_flow(
                 name=name,
@@ -238,11 +238,11 @@ class CovidOutputsBuilder(OutputsBuilder):
                     self.model.request_output_for_compartments(
                         name=name,
                         compartments=[Compartment.LATE_ACTIVE],
-                        strata={"clinical": clinical, "agegroup": agegroup, "tracing": Tracing.TRACED},
+                        strata={"clinical": clinical, "agegroup": agegroup, "tracing": "traced"},
                     )
 
             # Then track untraced cases (everyone in notified clinical stratum)
-            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(self.untraced_stratum)
+            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup, "tracing": "untraced"}
             name = f"progress_prevalence_{Tracing.UNTRACED}Xagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
             age_notification_pathways.append(name)
             self.model.request_output_for_compartments(

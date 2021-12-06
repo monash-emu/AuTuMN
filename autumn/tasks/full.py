@@ -177,7 +177,7 @@ def run_full_model_for_chain(
                     sc_params.to_dict()["time"]["start"] for sc_params in scenario_params
                 ]
 
-                baseline_model = project.run_baseline_model(baseline_params, bl_build_opts)
+                baseline_model = project.run_baseline_model(baseline_params, build_options=bl_build_opts)
                 sc_models = project.run_scenario_models(
                     baseline_model, scenario_params, 
                     start_times=start_times, build_options = sc_build_opts

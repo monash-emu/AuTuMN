@@ -86,8 +86,8 @@ def get_mobility_funcs(
         for loc in model_loc_mobility_values.columns:
             model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
-    # Build mixing data timeseries
-    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}  # Needed as dict instead of parameters
+    # Build mixing data timeseries (change to dict, rather than parameters object)
+    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
     mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
 
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries

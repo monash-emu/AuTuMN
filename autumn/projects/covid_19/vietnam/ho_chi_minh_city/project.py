@@ -58,6 +58,9 @@ priors = [
     # Waning immunity
     # UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
 
+    # Natural waning immunity duration
+    UniformPrior("history.natural_immunity_duration", (90, 180), jumping_stdev=30.)
+
     # Vaccination parameters (independent sampling)
     # TruncNormalPrior("vaccination.one_dose.ve_prop_prevent_infection", mean=0.9, stdev=0.02, truc_range=(0.8, 1)),
     # TruncNormalPrior("vaccination.one_dose.ve_sympt_covid", mean=0.5, stdev=0.02, truc_range=(0.4, 0.6)),

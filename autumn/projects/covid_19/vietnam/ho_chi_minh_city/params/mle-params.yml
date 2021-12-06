@@ -11,3 +11,5 @@ clinical_stratification.props.hospital.multiplier: 0.6092356762910527
 clinical_stratification.props.symptomatic.multiplier: 0.4503141398374767
 infection_fatality.multiplier: 0.671629148978709
 clinical_stratification.icu_prop: 0.1236089365920243
+
+history.natural_immunity_duration: 90.

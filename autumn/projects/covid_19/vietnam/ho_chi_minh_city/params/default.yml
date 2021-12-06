@@ -76,7 +76,7 @@ mobility:
         - 0.1
 
 history:
-  natural_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
+  natural_immunity_duration: 90. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
 
 sojourn:
   compartment_periods:

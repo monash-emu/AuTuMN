@@ -2,13 +2,11 @@ from typing import Callable, Dict, List
 import numpy as np
 import pandas as pd
 
-from autumn.models.covid_19.constants import BASE_DATETIME
+from autumn.models.covid_19.constants import BASE_DATETIME, LOCATIONS
 from autumn.models.covid_19.parameters import Country, MixingLocation
 from autumn.tools.curve import scale_up_function
 from autumn.tools.inputs.mobility.queries import get_mobility_data
 from autumn.tools.utils.utils import apply_moving_average
-
-LOCATIONS = ["home", "other_locations", "school", "work"]
 
 
 def weight_mobility_data(google_mob_df, location_map):
@@ -55,7 +53,7 @@ def get_mobility_funcs(
     country: Country,
     region: str,
     mixing: Dict[str, MixingLocation],
-    google_mobility_locations: List[str],
+    google_mobility_locations: Dict[str, float],
     npi_effectiveness_params: Dict[str, float],
     square_mobility_effect: bool,
     smooth_google_data: bool,

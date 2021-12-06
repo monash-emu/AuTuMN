@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
+from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS, Strain
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -512,6 +512,7 @@ class Vaccination(BaseModel):
 
     # *** This parameter determines whether the model is stratified into three rather than two vaccination strata
     second_dose_delay: Optional[Union[float, TanhScaleup]]
+    boost_delay: Optional[float]
 
     # *** This first parameter (vacc_full_effect_duration) determines whether waning immunity is applied
     vacc_full_effect_duration: Optional[Union[float, None]]
@@ -520,7 +521,8 @@ class Vaccination(BaseModel):
     one_dose: VaccEffectiveness
     fully_vaccinated: Optional[VaccEffectiveness]
     part_waned: Optional[VaccEffectiveness]
-    waned: Optional[VaccEffectiveness]
+    fully_waned: Optional[VaccEffectiveness]
+    boosted: Optional[VaccEffectiveness]
     lag: float
 
     standard_supply: bool
@@ -583,6 +585,20 @@ class VaccinationRisk(BaseModel):
         msg = f"Myocarditis rate is negative: {values['myocarditis_rate']}"
         assert all([0. <= val for val in values["myocarditis_rate"].values()]), msg
         return values
+
+
+class History(BaseModel):
+
+    experienced: Optional[VaccEffectiveness]
+    waned: Optional[VaccEffectiveness]
+
+    natural_immunity_duration: Optional[float]
+
+    @validator("natural_immunity_duration", allow_reuse=True)
+    def check_immunity_duration(val):
+        if type(val) == float:
+            assert val > 0., f"Waning immunity duration request is not positive: {val}"
+        return val
 
 
 class ContactTracing(BaseModel):
@@ -652,8 +668,8 @@ class Parameters:
     infectious_seed: float
     voc_emergence: Optional[Dict[str, VocComponent]]
     age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
-    waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
+    history: Optional[History]
     vaccination_risk: Optional[VaccinationRisk]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float
@@ -672,11 +688,20 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     vic_2021_seeding: Optional[Vic2021Seeding]
+    hospital_reporting: float
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]
 
-    @validator("waning_immunity_duration", allow_reuse=True)
-    def check_immunity_duration(val):
-        if type(val) == float:
-            assert val > 0., f"Waning immunity duration request is not positive: {val}"
+    @validator("voc_emergence", allow_reuse=True)
+    def check_voc_names(val):
+        if val:
+            msg = "Requested names for VoCs are not unique"
+            assert len(set(val.keys())) == len(val.keys()), msg
+            msg = f"Strain name {Strain.WILD_TYPE} reserved for the wild-type non-VoC strain"
+            assert Strain.WILD_TYPE not in val.keys(), msg
+        return val
+
+    @validator("hospital_reporting", allow_reuse=True)
+    def check_hospital_reporting(val):
+        assert 0. <= val <= 1., f"Hospital reporting fraction must be in range [0, 1]: {val}"
         return val

@@ -13,7 +13,26 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]]) -> Stratification:
     """
-    Stratify the infectious compartments of the covid model by "clinical" status, into five groups.
+    Stratify the infectious compartments of the covid model by "clinical" status, into the following five groups:
+
+        NON_SYMPT = "non_sympt"
+            Asymptomatic persons
+        SYMPT_NON_HOSPITAL = "sympt_non_hospital"
+            Symptomatic persons who are never detected or admitted to hospital
+        SYMPT_ISOLATE = "sympt_isolate"
+            Symptomatic persons who are detected by the health system and so may go on to isolate
+        HOSPITAL_NON_ICU = "hospital_non_icu"
+            Persons with sufficiently severe disease to necessitate admission to hospital, but not to ICU
+        ICU = "icu"
+            Persons with sufficiently severe disease to necessitate admission to ICU
+
+    Args:
+        params: All model parameters
+        stratified_adjusters: VoC and severity stratification adjusters
+
+    Returns:
+        The clinical stratification summer object for application to the main model
+
     """
 
     clinical_strat = Stratification("clinical", CLINICAL_STRATA, INFECTIOUS_COMPARTMENTS)
@@ -39,7 +58,7 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
     clinical_strat.add_infectiousness_adjustments(Compartment.LATE_ACTIVE, late_active_adjustments)
 
     """
-    Make all the adjustments to flows.
+    Adjustments to flows.
     """
 
     for voc in stratified_adjusters.keys():
@@ -47,12 +66,14 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
         # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
         adjs = get_all_adjustments(
             clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
-            stratified_adjusters[voc]["ifr"], stratified_adjusters[voc]["sympt"], stratified_adjusters[voc]["hosp"],
+            stratified_adjusters[voc]["sympt"], stratified_adjusters[voc]["hosp"], stratified_adjusters[voc]["ifr"],
         )
 
         # Assign all the adjustments to the summer model
+        voc_stratum = {"strain": voc} if params.voc_emergence else {}  # *** Don't filter by VoC if there are no VoCs
         for agegroup in AGEGROUP_STRATA:
-            source = {"agegroup": agegroup, "strain": voc}
+            source = {"agegroup": agegroup}
+            source.update(voc_stratum)
             clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified
             for transition in AGE_CLINICAL_TRANSITIONS:
                 clinical_strat.add_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)

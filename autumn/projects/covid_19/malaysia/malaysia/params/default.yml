@@ -1,13 +1,13 @@
 description: BASELINE
 
 contact_rate: 0.0231
-infectious_seed: 100.
+infectious_seed: 552.
 
 mixing_matrices:
   source_iso3: CHN
 
 time:
-  start: 200
+  start: 75
   end: 670 # 31st october 2021    791 # 01 March, 2022
 
 country:
@@ -18,6 +18,9 @@ clinical_stratification:
   props:
     symptomatic:
       multiplier: 1.5
+    hospital:
+      multiplier: 0.238
+  icu_prop: 0.128
 
 vaccination:
   one_dose:
@@ -45,7 +48,7 @@ vaccination_risk:
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.06
+  assumed_cdr_parameter: 0.0069
   smoothing_period: 14
 
 mobility:
@@ -67,7 +70,7 @@ mobility:
       parameters:
         shape: .1
         inflection_time: 398. # 1st February 2021
-        start_asymptote: 0.
+        start_asymptote: 0.034
         end_asymptote: 0.11
       locations:
         - other_locations
@@ -119,23 +122,42 @@ mobility:
         - 0.
         - 0.4
 
-
 voc_emergence:
   alpha_beta:
-    start_time: 381 #15 Jan 2021
+    start_time: 361.73
     entry_rate: 1.
     seed_duration: 10.
-    contact_rate_multiplier: 1.56
+    contact_rate_multiplier: 1.59
+    ifr_multiplier: 1.95
+    hosp_multiplier: 1.25
   delta:
-    start_time: 532
+    start_time: 482.412
     entry_rate: 1.
     seed_duration: 10.
-    contact_rate_multiplier: 2.56
-
+    contact_rate_multiplier: 3.2
+    ifr_multiplier: 4.75
+    hosp_multiplier: 1.175
 contact_tracing:
   assumed_trace_prop: 0.05
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2
   floor: 0.
 
-waning_immunity_duration: 365
+
+sojourn:
+  compartment_periods_calculated:
+    exposed:
+      total_period: 3.9
+    active:
+      total_period: 6.36
+
+
+icu_occupancy_dispersion_param: 80.14141955570402
+infection_deaths_dispersion_param: 5.1530311549683809
+
+infection_fatality:
+  multiplier: 0.153
+
+history:
+  natural_immunity_duration: 365
+

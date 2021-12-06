@@ -29,7 +29,7 @@ def build_dynamic_mixing_matrix(
     square, smooth = mobility.square_mobility_effect, mobility.smooth_google_data
     mobility_funcs = get_mobility_funcs(country, mobility.region, mobility.mixing, locs, square, smooth)
 
-    # Get adjusters - note that the order of these adjustments can't be reversed
+    # *** Do not apply additional mixing adjusters, because this one depends on the base matrix values ***
     location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
 
     def mixing_matrix_function(time: float) -> np.ndarray:

@@ -10,11 +10,11 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
     Applies location based mixing adjustments (micro and macro) to a mixing matrix.
     The functions themselves are created in the files in the directory one above this one.
 
-    *** Note that this object works quite differently from age_adjuster, which is potentially confusing
-    because the both inherit from the same parent class ***
+    *** Note that this object works quite differently from our previously implemented age_adjuster, which is potentially
+    confusing because the both inherit from the same parent class ***
 
     Specifically, this one subtracts absolute values of the starting matrices from the current values,
-    whereas age adjuster adjusts the cells of the matrix according to ratios applied to their working values.
+    whereas age adjuster adjusted the cells of the matrix according to ratios applied to their working values.
 
     Attributes:
         mobility_funcs: The macrodistancing/mobility functions to be applied to each of the locations
@@ -44,12 +44,10 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
 
         # Start the adjustment value for each location from a value of one, representing no adjustment
         for loc_key in LOCATIONS:
-            loc_relative_mobility = 1.
 
             # Adjust for macrodistancing/mobility
             mobility_func = self.mobility_funcs.get(loc_key)
-            if mobility_func:
-                loc_relative_mobility *= mobility_func(time)
+            loc_relative_mobility = mobility_func(time) if mobility_func else 1.
 
             # Adjust for microdistancing
             microdistancing_func = self.microdistancing_funcs.get(loc_key)

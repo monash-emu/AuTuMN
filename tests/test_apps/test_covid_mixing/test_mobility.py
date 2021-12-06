@@ -17,7 +17,7 @@ from autumn.models.covid_19.mixing_matrix.macrodistancing import parse_values, u
         ([1, 2, ["add_to_prev", 1.23], 3], [1, 2, 3.23, 3]),
         ([0.1, 0.5, ["add_to_prev_up_to_1", 0.3], 0.9], [0.1, 0.5, 0.8, 0.9]),
         ([0.1, 0.8, ["add_to_prev_up_to_1", 0.3], 0.9], [0.1, 0.8, 1, 0.9]),
-        ([1, 2, ["scale_prev", 0.5], 3], [1, 2, 0, 3]),
+        ([1, 2, ["scale_prev", 0.5], 3], [1, 2, 1, 3]),
         ([0.1, 0.95, ["scale_prev_up_to_1", 1.1], 0.5], [0.1, 0.95, 1, 0.5]),
         ([1, 2, ["scale_prev", 1.1], 3], [1, 2, 2.2, 3]),
         ([1, 2, ["scale_prev", 0.9], 3], [1, 2, 1.8, 3]),
@@ -80,7 +80,6 @@ def test_update_mixing_data__with_user_specified_values():
             "append": False,
         },
     }
-    npi_effectiveness_params = {}
     google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]})
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(

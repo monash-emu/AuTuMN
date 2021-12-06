@@ -4,7 +4,6 @@ import numpy as np
 from summer import Multiply, Stratification
 
 from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
-from autumn.models.covid_19.strat_processing.agegroup import get_adjusted_age_specific_mixing
 from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.covid_19.parameters import Parameters
 from autumn.tools.utils.utils import normalise_sequence

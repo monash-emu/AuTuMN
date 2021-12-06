@@ -92,45 +92,6 @@ def test_build_dynamic__with_no_changes():
 #     assert_allclose(mm, expected_mm, atol=0.01, verbose=True)
 
 
-def test_build_dynamic__with_age_mobility_data():
-    """
-    Ensure dynamic mixing matrix can use age-based mobility data set by the user.
-    """
-    mobility_params = {
-        "mixing": {},
-        "age_mixing": {
-            "0": {
-                "times": [0, 1, 2, 3],
-                "values": [2, 2, 2, 2],
-            },
-            "5": {
-                "times": [0, 1, 2, 3],
-                "values": [3, 3, 3, 3],
-            },
-        },
-        "microdistancing": {},
-        "square_mobility_effect": False,
-        **UNTESTED_PARAMS,
-    }
-    mm_func = build_dynamic_mixing_matrix(
-        base_matrices=MIXING_MATRICES,
-        country=Country(iso3="AUS"),
-        mobility=Mobility(**mobility_params),
-    )
-    expected_mm = MM.copy()
-    # Add adjustment of 2 to the 1st row and col for the 0-5 age bracket
-    expected_mm[0, :] *= 2
-    expected_mm[:, 0] *= 2
-    # Add adjustment of 3 to the 2nd row and col for the 5-10 age bracket
-    expected_mm[1, :] *= 3
-    expected_mm[:, 1] *= 3
-
-    mm = mm_func(0)
-    assert_allclose(mm, expected_mm, atol=0.01, verbose=True)
-    mm = mm_func(2)
-    assert_allclose(mm, expected_mm, atol=0.01, verbose=True)
-
-
 def test_build_dynamic__with_microdistancing():
     """
     Ensure dynamic mixing matrix can use microdistancing set by the user.

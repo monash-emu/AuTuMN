@@ -178,7 +178,6 @@ class Mobility(BaseModel):
 
     region: Optional[str]  # None/null means default to parent country
     mixing: Dict[str, MixingLocation]
-    age_mixing: Optional[Dict[str, TimeSeries]]
     microdistancing: Dict[str, MicroDistancingFunc]
     smooth_google_data: bool
     square_mobility_effect: bool

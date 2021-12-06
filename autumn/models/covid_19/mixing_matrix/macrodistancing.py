@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
@@ -101,24 +101,25 @@ def get_mobility_funcs(
 
 
 def update_mixing_data(
-        mobility_requests: dict, google_mobility_values: pd.DataFrame, google_mobility_days: list
-):
+        mob_values: dict, google_mobility_values: pd.DataFrame, google_mobility_days: list
+) -> Dict[str, Dict[str, float]]:
     """
+    Incorporate the user requests relating to mobility change with the Google mobility data, according to how the
+    requests have been submitted.
 
     Args:
-        mobility_requests: User requests mobility parameter object
+        mob_values: User requests mobility parameter object
         google_mobility_values: Dates for which we have Google mobility data available
         google_mobility_days: Values of Google mobility on these dates
 
     Returns:
+        The final processed mobility values by location with standard keys for each location (times and values)
 
     """
 
-    last_google_day = google_mobility_days[-1]
-
     # Loop over all the modelled locations
     for loc_key in LOCATIONS:
-        loc_mixing = mobility_requests.get(loc_key)
+        loc_mixing = mob_values.get(loc_key)
 
         # Check data lengths match
         if loc_mixing:
@@ -131,177 +132,210 @@ def update_mixing_data(
 
             # Just take the raw the mobility data for the location if no requests submitted
             if not loc_mixing:
-                mobility_requests[loc_key] = {"times": google_mobility_days, "values": mobility_values}
+                mob_values[loc_key] = {"times": google_mobility_days, "values": mobility_values}
 
             # Append user-specified mixing data to historical mobility data
             elif loc_mixing["append"]:
                 first_append_day = min(loc_mixing["times"])
-                if last_google_day < first_append_day:
-                    # Appended days happen after the Google Mobility data, so we can just append them.
-                    mobility_requests[loc_key]["times"] = google_mobility_days + loc_mixing["times"]
-                    mobility_requests[loc_key]["values"] = mobility_values + loc_mixing["values"]
 
-                # Appended days start during the Google mobility data, so we have to merge them
+                # All requested dates are after the Google Mobility data starts, so we can just join the two lists
+                if google_mobility_days[-1] < first_append_day:
+                    mob_values[loc_key]["times"] = google_mobility_days + loc_mixing["times"]
+                    mob_values[loc_key]["values"] = mobility_values + loc_mixing["values"]
+
+                # Requested days start during the Google mobility data, so we truncate the Google mobility data
                 else:
                     merge_idx = None
                     for idx, day in enumerate(google_mobility_days):
                         if day >= first_append_day:
                             merge_idx = idx
                             break
-                    mobility_requests[loc_key]["times"] = google_mobility_days[: merge_idx] + loc_mixing["times"]
-                    mobility_requests[loc_key]["values"] = mobility_values[: merge_idx] + loc_mixing["values"]
+                    mob_values[loc_key]["times"] = google_mobility_days[: merge_idx] + loc_mixing["times"]
+                    mob_values[loc_key]["values"] = mobility_values[: merge_idx] + loc_mixing["values"]
 
-            # If no data have been loaded, no need to append, just insert the user-specified data
+            # If no data have been loaded, no need to append, just use the user-specified requests directly
             else:
-                mobility_requests[loc_key] = loc_mixing
+                mob_values[loc_key] = loc_mixing
 
         # No Google mobility data, but we still have user-specified data
         elif loc_mixing:
             msg = f"Cannot 'append' for {loc_key}: no Google mobility data available."
             assert not loc_mixing["append"], msg
-            mobility_requests[loc_key] = loc_mixing
+            mob_values[loc_key] = loc_mixing
 
         # Interpret user requests if specified in a way other than absolute mobility values
         if loc_mixing:
             loc_mixing["values"] = parse_values(loc_mixing["values"])
 
-    mobility_requests = {k: {"values": v["values"], "times": v["times"]} for k, v in mobility_requests.items()}
-    return mobility_requests
+    # Reformat data so that we only have times and values as the keys within each location key, without append
+    mob_values = {k: {"values": v["values"], "times": v["times"]} for k, v in mob_values.items()}
+    return mob_values
 
 
 def get_mobility_specific_period(
-    country: str,
-    region: str,
-    google_mobility_locations: Dict[str, Dict[str, float]],
-    split_dates: List[float],
-) -> Dict[str, Callable[[float], float]]:
+    country: str, region: str, google_mobility_locations: Dict[str, Dict[str, float]], split_dates: List[float],
+) -> Tuple[pd.DataFrame, dict]:
     """
-    Loads google mobility data, splits it for the requested time duration
-    and then returns a mobility function for each location.
+    Loads google mobility data, splits it for the requested time duration and then returns a mobility function for each
+    location.
+
+    Args:
+        country: Country request
+        region: Any sub-region of the country
+        google_mobility_locations: The mapping instructions from modelled locations (first keys) to Google locations (second keys)
+        split_dates: The dates at which we want to split the data
+
+    Returns:
+        The truncated mobility dates and values
+
     """
 
     google_mob_data, google_mobility_days = get_mobility_data(country, region, BASE_DATETIME)
     mobility_values = weight_mobility_data(google_mob_data, google_mobility_locations)
 
-    first_timepoint_index = google_mobility_days.index(split_dates[0])
-    second_timepoint_index = google_mobility_days.index(split_dates[1])
+    start_idx = google_mobility_days.index(split_dates[0])
+    end_idx = google_mobility_days.index(split_dates[1])
 
-    split_google_mobility_days = google_mobility_days[first_timepoint_index: second_timepoint_index]
-    spilt_google_mobility_values = {
-        loc: mobility_values.loc[first_timepoint_index: second_timepoint_index - 1, loc].to_list() for
-        loc in mobility_values.columns
-    }
-    return split_google_mobility_days, spilt_google_mobility_values
+    mob_dates = google_mobility_days[start_idx: end_idx]
+    mob_values = {loc: mobility_values.loc[start_idx: end_idx - 1, loc].to_list() for loc in mobility_values.columns}
+    return mob_dates, mob_values
 
 
-def parse_values(values):
+def parse_values(values: List[float]) -> List[float]:
     """
-    Convert all mixing time series values to a float
+    Convert all mixing time series values to a float, using the functions below.
+
+    Args:
+        values: The starting values, which may include function-based user requests
+
+    Returns:
+        The processed values, now all floats regardless of how they started out
+
     """
     new_values = []
     for v in values:
+
+        # Apply a function to the history to get the next value
         if type(v) is list:
-            # Apply a function to the history to get the next value.
             func_name = v[0]
             args = [new_values] + v[1:]
             func = PARSE_FUNCS[func_name]
             new_val = func(*args)
+
+        # Otherwise leave unchanged
         else:
-            # Do not change.
             new_val = v
 
+        assert new_val >= 0., f"Mobility value less than zero: {new_val}"
         new_values.append(new_val)
 
     return new_values
 
 
-def repeat_prev(prev_vals: List[float]):
+def repeat_prev(prev_vals: List[float]) -> float:
     """
-    Repeats the previous seen value again
+    Repeats the last previously seen value again.
+
     """
+
     return prev_vals[-1]
 
 
-def add_to_prev(prev_vals: List[float], increment: float):
+def add_to_prev(prev_vals: List[float], increment: float) -> float:
     """
-    Add increment to previous
+    Add increment to previous.
+
     """
+
+    return prev_vals[-1] + increment
+
+
+def add_to_prev_up_to_1(prev_vals: List[float], increment: float) -> float:
+    """
+    Add increment to previous, but set ceiling at 1.
+
+    """
+
     val = prev_vals[-1] + increment
-    if val < 0:
-        return 0
+    if val > 1.0:
+        return 1.0
     else:
         return val
 
 
-def add_to_prev_up_to_1(prev_vals: List[float], increment: float):
+def scale_prev(prev_vals: List[float], fraction: float) -> float:
     """
-    Add increment to previous
+    Apply a multiplier to the previous value.
+
     """
-    val = prev_vals[-1] + increment
-    if val > 1:
-        return 1
-    elif val < 0:
-        return 0
-    else:
-        return val
+
+    return prev_vals[-1] * fraction
 
 
-def scale_prev(prev_vals: List[float], fraction: float):
+def scale_prev_up_to_1(prev_vals: List[float], multiplier: float) -> float:
     """
-    Apply a percentage to the previous value, saturating at zero
+    Apply a multiplier to the previous value, saturating at one.
+
     """
-    val = prev_vals[-1] * fraction
-    if val < 0:
-        return 0
-    else:
-        return val
+
+    val = prev_vals[-1] * multiplier
+    return val if val < 1.0 else 1.0
 
 
-def scale_prev_up_to_1(prev_vals: List[float], fraction: float):
+def close_gap_to_1(prev_vals: List[float], fraction: float) -> float:
     """
-    Apply a percentage to the previous value, saturating at one or zero
+    Reduce the difference between the last value and one (full mobility) according to the "fraction" request.
+
     """
-    val = prev_vals[-1] * fraction
-    if val > 1:
-        return 1
-    elif val < 0:
-        return 0
-    else:
-        return val
 
-
-def close_gap_to_1(prev_vals: List[float], fraction: float):
     prev_val = prev_vals[-1]
     return (1.0 - prev_val) * fraction + prev_val
 
 
-def max_last_period(prev_vals: List[float], period: int):
+def max_last_period(prev_vals: List[float], period: int) -> float:
+    """
+    The maximum mobility estimate observed over the preceding days.
+
+    """
+
     last_n_values = min(len(prev_vals), period)
     return max(prev_vals[-last_n_values:])
 
 
-def min_last_period(prev_vals: List[float], period: int):
+def min_last_period(prev_vals: List[float], period: int) -> float:
+    """
+    The minimum mobility estimate observed over the preceding days.
+
+    """
+
     last_n_values = min(len(prev_vals), period)
     return min(prev_vals[-last_n_values:])
 
 
-def average_mobility(prev_vals: List[float], period: int):
+def average_mobility(prev_vals: List[float], period: int) -> float:
+    """
+    The average mobility estimate over the preceding days.
+
+    """
+
     last_n_values = min(len(prev_vals), period)
-    return sum(prev_vals[-last_n_values:])/len(prev_vals[-last_n_values:])
+    return sum(prev_vals[-last_n_values:]) / len(prev_vals[-last_n_values:])
 
 
-def copy_mobility(prev_vals: List[float], ignore_vals: int):
+def copy_mobility(prev_vals: List[float], ignore_vals: int) -> float:
     """
-    returns the mobility level at the requested time by ignoring the last values defined by ignore_vals
+    Returns the mobility level at the requested time by ignoring the last values defined by ignore_vals.
+
     """
-    ignore_vals = ignore_vals+1
-    prev_val = (prev_vals[-ignore_vals:])
+
+    prev_val = (prev_vals[-ignore_vals + 1:])
     return prev_val[1]
 
 
-def close_to_max_last_period(prev_vals: List[float], period: int, fraction: float):
+def close_to_max_last_period(prev_vals: List[float], period: int, fraction: float) -> float:
     """
     Partial return from last mobility estimate to the highest level observed over the recent period specified.
+
     """
 
     last_n_values = min(len(prev_vals), period)
@@ -310,7 +344,7 @@ def close_to_max_last_period(prev_vals: List[float], period: int, fraction: floa
     return (max_val_last_period - prev_val) * fraction + prev_val
 
 
-# Used for the Philippines
+# Specific mobility estimates used for the Philippines
 CQ_MOBILITY = {
     # GCQ Reference period: from May 15 2021
     "GCQ": {
@@ -354,7 +388,8 @@ PARSE_FUNCS = {
     "min_last_period": min_last_period,
     "copy_mobility": copy_mobility,
     "average_mobility":average_mobility,
-    # used for the Philippines
+
+    # Used for the Philippines
     "ECQ": ecq,
     "MECQ": mecq,
     "GCQ": gcq,

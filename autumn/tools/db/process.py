@@ -88,8 +88,6 @@ def select_pruning_candidates(sampled_runs_df: pd.DataFrame, n_candidates: int, 
 
     # Load all MCMC run data to select from
 
-    #all_mcmc_df = pd.concat(load_mcmc_tables(src_db_path), ignore_index=True)
-
     #all_accepted = all_mcmc_df[all_mcmc_df["accept"] == 1]
 
     # Find the MLE candidate
@@ -166,11 +164,6 @@ def prune_final(source_db_path: str, target_db_path: str, candidates_df: pd.Data
     source_db = get_database(source_db_path)
     target_db = get_database(target_db_path)
 
-    # Find the maximum accepted loglikelihood for all runs
-    mcmc_run_df = source_db.query("mcmc_run")
-    mle_run_df = find_mle_run(mcmc_run_df)
-    mle_run_id = mle_run_df.run.iloc[0]
-    mle_chain_id = mle_run_df.chain.iloc[0]
     # Copy tables over, pruning some.
     tables_to_copy = source_db.table_names()
     for table_name in tables_to_copy:

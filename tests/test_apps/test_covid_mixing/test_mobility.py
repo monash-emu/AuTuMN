@@ -42,7 +42,6 @@ def test_update_mixing_data__with_only_mobility_data():
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
-        npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
     )
@@ -87,7 +86,6 @@ def test_update_mixing_data__with_user_specified_values():
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
-        npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
     )
@@ -118,7 +116,6 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
-        npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
     )
@@ -151,7 +148,6 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
     with pytest.raises(ValueError):
         update_mixing_data(
             mixing,
-            npi_effectiveness_params,
             google_mobility_values,
             google_mobility_days,
         )

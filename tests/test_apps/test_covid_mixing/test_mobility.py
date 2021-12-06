@@ -145,7 +145,7 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
     is_periodic_intervention = False
     periodic_int_params = None
     periodic_end_time = None
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         update_mixing_data(
             mixing,
             google_mobility_values,

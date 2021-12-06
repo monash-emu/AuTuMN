@@ -149,6 +149,11 @@ def run_full_model_for_chain(
 
         outputs = []
         derived_outputs = []
+
+        # Set up build options variables; empty for first run, these will be filled in later
+        bl_build_opts = None
+        sc_build_opts = None
+
         for urun in sampled_runs_df.index:
             
             mcmc_run = sampled_runs_df.loc[urun]
@@ -172,12 +177,30 @@ def run_full_model_for_chain(
                     sc_params.to_dict()["time"]["start"] for sc_params in scenario_params
                 ]
 
-                baseline_model = project.run_baseline_model(baseline_params)
+                baseline_model = project.run_baseline_model(baseline_params, build_options=bl_build_opts)
                 sc_models = project.run_scenario_models(
-                    baseline_model, scenario_params, start_times=start_times
+                    baseline_model, scenario_params, 
+                    start_times=start_times, build_options = sc_build_opts
                 )
 
             models = [baseline_model, *sc_models]
+
+            #Get cache info etc for build_options dict
+            #This improves performance for subsequent runs
+
+            bl_build_opts = {
+                "enable_validation": False,
+                "derived_outputs_idx_cache": baseline_model._derived_outputs_idx_cache
+            }
+
+            sc_build_opts = []
+            for scm in sc_models:
+                sc_build_opts.append(
+                    {
+                        "enable_validation": False,
+                        "derived_outputs_idx_cache": scm._derived_outputs_idx_cache
+                    }
+                )
 
             run_id = int(run_id)
             chain_id = int(chain_id)

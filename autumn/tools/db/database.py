@@ -97,12 +97,13 @@ class FileDatabase(BaseDatabase, ABC):
         It is much more memory efficient to use append_df if possible (eg. ParquetDatabase).
         """
         fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
-        write_df = df
         if os.path.exists(fpath) and append:
             # Read in existing dataframe and then append to the end of it.
             # This could be slow so ideally don't do this.
             orig_df = self.read_file(fpath)
             write_df = orig_df.append(df)
+        else:
+            write_df = df.copy()
         try:
             write_df.reset_index(drop=True, inplace=True)
         except ValueError:

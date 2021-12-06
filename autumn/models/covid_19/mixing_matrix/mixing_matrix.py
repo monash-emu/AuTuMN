@@ -4,7 +4,7 @@ import numpy as np
 from autumn.models.covid_19.parameters import Country, Mobility
 from .microdistancing import get_microdistancing_funcs
 from .mixing_adjusters import AgeMixingAdjuster, LocationMixingAdjuster
-from .mobility import get_mobility_funcs
+from .macrodistancing import get_mobility_funcs
 
 
 def build_dynamic_mixing_matrix(
@@ -27,7 +27,7 @@ def build_dynamic_mixing_matrix(
 
     locs, npi_effects = mobility.google_mobility_locations, mobility.npi_effectiveness
     square, smooth = mobility.square_mobility_effect, mobility.smooth_google_data
-    mobility_funcs = get_mobility_funcs(country, mobility.region, mobility.mixing, locs, npi_effects, square, smooth)
+    mobility_funcs = get_mobility_funcs(country, mobility.region, mobility.mixing, locs, square, smooth)
 
     # Get adjusters - note that the order of these adjustments can't be reversed
     location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)

@@ -9,7 +9,7 @@ from autumn.tools.inputs.mobility.queries import get_mobility_data
 from autumn.tools.utils.utils import apply_moving_average
 
 
-def weight_mobility_data(google_mob_df, location_map):
+def weight_mobility_data(google_mob_df: pd.DataFrame, location_map: Dict[str, Dict[str, float]]) -> pd.DataFrame:
     """
     Get weighted average for each modelled location from Google mobility estimates.
     Uses the user-specified request to define the mapping of Google mobility locations to the modelled locations.
@@ -35,10 +35,18 @@ def weight_mobility_data(google_mob_df, location_map):
         {'residential': 1.0}
     }
     Values for the sub-dictionaries for each modelled location must sum to one
-    - this is confirmed in parameter validation.
+    (which is confirmed in parameter validation).
 
     If a location is not specified, that location will not be scaled - this will be sorted out in later stages of
     processing.
+
+    Args:
+        google_mob_df: The Google mobility data provided in raw form
+        location_map: The mapping instructions from modelled locations (first keys) to Google locations (second keys)
+
+    Returns:
+        Dataframe containing the keys for scaling the modelled locations over time based on these mobility inputs
+
     """
 
     model_mob_df = pd.DataFrame(np.zeros((len(google_mob_df), len(location_map))), columns=list(location_map.keys()))
@@ -50,117 +58,115 @@ def weight_mobility_data(google_mob_df, location_map):
 
 
 def get_mobility_funcs(
-    country: Country,
-    region: str,
-    mixing: Dict[str, MixingLocation],
-    google_mobility_locations: Dict[str, float],
-    npi_effectiveness_params: Dict[str, float],
-    square_mobility_effect: bool,
-    smooth_google_data: bool,
+        country: Country, region: str, mobility_requests: Dict[str, MixingLocation],
+        google_mobility_locations: Dict[str, Dict[str, float]], square_mobility_effect: bool, smooth_google_data: bool,
 ) -> Dict[str, Callable[[float], float]]:
     """
-    Loads google mobility data, combines it with user requested timeseries data
-    and then returns a mobility function for each location.
+    Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
+    each location.
+
+    Args:
+        country: Country being simulated
+        region: If a sub-region of the country is being simulated, this sub-region
+        mobility_requests: The mixing location parameters
+        google_mobility_locations: The mapping to model locations from Google mobility locations
+        square_mobility_effect: See update_mixing_data
+        smooth_google_data: Whether to smooth the raw Google mobility data for that location
+
+    Returns:
+        The final mobility functions for each modelled location
+
     """
 
     mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
-    google_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
+    model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
+    # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
     if smooth_google_data:
-        for loc in google_mobility_values.columns:
-            google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
+        for loc in model_loc_mobility_values.columns:
+            model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
     # Build mixing data timeseries
-    mixing = update_mixing_data(
-        {k: v.dict() for k, v in mixing.items()},
-        npi_effectiveness_params,
-        google_mobility_values,
-        google_mobility_days,
-    )
+    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}  # Needed as dict instead of parameters
+    mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
 
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
-    for location, timeseries in mixing.items():
-        loc_vals = [v ** 2 for v in timeseries["values"]] if square_mobility_effect else timeseries["values"]
+    exponent = 2 if square_mobility_effect else 1
+    for location, timeseries in mobility_requests.items():
+        loc_vals = [v ** exponent for v in timeseries["values"]]
         mobility_funcs[location] = scale_up_function(timeseries["times"], loc_vals, method=4)
 
     return mobility_funcs
 
 
 def update_mixing_data(
-    mixing: dict,
-    npi_effectiveness_params: dict,
-    google_mobility_values: dict,
-    google_mobility_days: list,
+        mobility_requests: dict, google_mobility_values: pd.DataFrame, google_mobility_days: list
 ):
-    most_recent_day = google_mobility_days[-1]
+    """
+
+    Args:
+        mobility_requests: User requests mobility parameter object
+        google_mobility_values: Dates for which we have Google mobility data available
+        google_mobility_days: Values of Google mobility on these dates
+
+    Returns:
+
+    """
+
+    last_google_day = google_mobility_days[-1]
+
+    # Loop over all the modelled locations
     for loc_key in LOCATIONS:
-        loc_mixing = mixing.get(loc_key)
+        loc_mixing = mobility_requests.get(loc_key)
+
+        # Check data lengths match
         if loc_mixing:
-            # Ensure this location's mixing times and values match.
-            assert len(loc_mixing["times"]) == len(
-                loc_mixing["values"]
-            ), f"Mixing series length mismatch for {loc_key}"
+            msg = f"Mixing series length mismatch for {loc_key}"
+            assert len(loc_mixing["times"]) == len(loc_mixing["values"]), msg
 
         # Add historical Google mobility data to user-specified mixing params
         if loc_key in google_mobility_values.columns:
             mobility_values = google_mobility_values[loc_key].to_list()
 
-            # Google mobility values for this location
+            # Just take the raw the mobility data for the location if no requests submitted
             if not loc_mixing:
-                # Just insert the mobility data
-                mixing[loc_key] = {
-                    "times": google_mobility_days,
-                    "values": mobility_values,
-                }
+                mobility_requests[loc_key] = {"times": google_mobility_days, "values": mobility_values}
+
+            # Append user-specified mixing data to historical mobility data
             elif loc_mixing["append"]:
-                # Append user-specified mixing data to historical mobility data
                 first_append_day = min(loc_mixing["times"])
-                if most_recent_day < first_append_day:
+                if last_google_day < first_append_day:
                     # Appended days happen after the Google Mobility data, so we can just append them.
-                    mixing[loc_key]["times"] = google_mobility_days + loc_mixing["times"]
-                    mixing[loc_key]["values"] = mobility_values + loc_mixing["values"]
+                    mobility_requests[loc_key]["times"] = google_mobility_days + loc_mixing["times"]
+                    mobility_requests[loc_key]["values"] = mobility_values + loc_mixing["values"]
+
+                # Appended days start during the Google mobility data, so we have to merge them
                 else:
-                    # Appended days start during the Google Mobility data, so we must merge them.
                     merge_idx = None
                     for idx, day in enumerate(google_mobility_days):
                         if day >= first_append_day:
                             merge_idx = idx
                             break
-                    mixing[loc_key]["times"] = (
-                        google_mobility_days[:merge_idx] + loc_mixing["times"]
-                    )
-                    mixing[loc_key]["values"] = mobility_values[:merge_idx] + loc_mixing["values"]
+                    mobility_requests[loc_key]["times"] = google_mobility_days[: merge_idx] + loc_mixing["times"]
+                    mobility_requests[loc_key]["values"] = mobility_values[: merge_idx] + loc_mixing["values"]
 
+            # If no data have been loaded, no need to append, just insert the user-specified data
             else:
-                # Don't append, overwrite: insert the user-specified data
-                mixing[loc_key]["times"] = loc_mixing["times"]
-                mixing[loc_key]["values"] = loc_mixing["values"]
+                mobility_requests[loc_key] = loc_mixing
+
+        # No Google mobility data, but we still have user-specified data
         elif loc_mixing:
-            # No Google mobility data, but we still have user-specified data.
-            if not loc_mixing["append"]:
-                # Use user-specified data
-                mixing[loc_key]["times"] = loc_mixing["times"]
-                mixing[loc_key]["values"] = loc_mixing["values"]
-            else:
-                # User has specified "append", but there is nothing to append to.
-                msg = f"Cannot 'append' for {loc_key}: no Google mobility data available."
-                raise ValueError(msg)
+            msg = f"Cannot 'append' for {loc_key}: no Google mobility data available."
+            assert not loc_mixing["append"], msg
+            mobility_requests[loc_key] = loc_mixing
 
-        # Convert % adjustments to fractions
-        loc_mixing = mixing.get(loc_key)
+        # Interpret user requests if specified in a way other than absolute mobility values
         if loc_mixing:
             loc_mixing["values"] = parse_values(loc_mixing["values"])
 
-        # Adjust the mixing parameters by scaling them according to NPI effectiveness
-        npi_adjust_val = npi_effectiveness_params.get(loc_key)
-        if npi_adjust_val:
-            mixing[loc_key]["values"] = [
-                1 - (1 - val) * npi_adjust_val for val in mixing[loc_key]["values"]
-            ]
-
-    mixing = {k: {"values": v["values"], "times": v["times"]} for k, v in mixing.items()}
-    return mixing
+    mobility_requests = {k: {"values": v["values"], "times": v["times"]} for k, v in mobility_requests.items()}
+    return mobility_requests
 
 
 def get_mobility_specific_period(

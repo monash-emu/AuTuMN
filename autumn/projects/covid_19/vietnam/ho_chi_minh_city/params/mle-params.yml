@@ -8,6 +8,6 @@ testing_to_detection.assumed_cdr_parameter: 0.002017387602871056
 mobility.microdistancing.behaviour.parameters.max_effect: 0.021538582156071913
 
 clinical_stratification.props.hospital.multiplier: 0.8041156106112999
-clinical_stratification.props.symptomatic.multiplier: 0.7124252844089431
+# clinical_stratification.props.symptomatic.multiplier: 0.7124252844089431
 infection_fatality.multiplier: 0.5227846615418029
-clinical_stratification.icu_prop: 0.15
+# clinical_stratification.icu_prop: 0.15

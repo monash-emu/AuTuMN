@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
+from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
 from autumn.tools.calibration.targets import (
@@ -69,6 +69,9 @@ priors = [
     # TruncNormalPrior("vaccination.part_waned.ve_death", mean=0.8, stdev=0.02, truc_range=(0.7, 0.9))
 ]
 
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+
 calibration = Calibration(priors, targets)
 
 # FIXME: Replace with flexible Python plot request API.
@@ -82,3 +85,7 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.HO_CHI_MINH_CITY, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
+
+
+# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

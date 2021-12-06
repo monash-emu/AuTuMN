@@ -1,0 +1,6 @@
+infectious_seed: 0.3580313292187718
+contact_rate: 0.0021102095955646133
+clinical_stratification.props.hospital.multiplier: 0.004905065086590943
+infection_fatality.multiplier: 0.08683253891696541
+testing_to_detection.assumed_cdr_parameter: 2.2278746156815295e-05
+mobility.microdistancing.behaviour.parameters.max_effect: 0.009923415752984555

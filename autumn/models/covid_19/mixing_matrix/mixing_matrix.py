@@ -29,7 +29,7 @@ def build_dynamic_mixing_matrix(
     square, smooth = mobility.square_mobility_effect, mobility.smooth_google_data
     mobility_funcs = get_mobility_funcs(country, mobility.region, mobility.mixing, locs, square, smooth)
 
-    # Get adjusters - note that the order of these adjustments can't be reversed
+    # Get adjusters
     location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
     age_adjuster = AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None
 
@@ -41,7 +41,7 @@ def build_dynamic_mixing_matrix(
         # Base matrix
         mixing_matrix = np.copy(base_matrices["all_locations"])
 
-        # Apply adjustments
+        # Apply adjustments - *** note that the order of these adjustments can't be reversed ***
         mixing_matrix = location_adjuster.get_adjustment(time, mixing_matrix)
         return age_adjuster.get_adjustment(time, mixing_matrix) if age_adjuster else mixing_matrix
 

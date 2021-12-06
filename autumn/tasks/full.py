@@ -111,19 +111,24 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
 def run_full_model_for_chain(
     run_id: str, chain_id: int, sampled_runs_df: pd.DataFrame, 
     mcmc_params_df: pd.DataFrame, candidates_df: pd.DataFrame, quiet: bool
-    ):
+    ) -> int:
     """
     Run the full model (all time steps, all scenarios) for a subset of accepted calibration runs.
-    It works like this:
-        - We start off with a calibration chain of length C
-        - We apply "burn in" by throwing away the first B iterations of the chain, leaving us with C - B iterations
-        - We then sample runs from the chain using a "sample size" parameter S by calculating N = floor(C - B / S)
-          once we know N, we then start from the end of the chain, working backwards, and select every Nth run
-              if a run is accepted then we select it
-              if a run is not accepted, we select the first accepted run that precedes it
+    The sampling for these runs occurs in the main process, and all arguments here are specific
+    to the current chain
 
-    Once we've sampled all the runs we need, then we re-run them in full, including all their scenarios.
+    Args:
+        run_id (str): Model run id
+        chain_id (int): The current chain
+        sampled_runs_df (pd.DataFrame): mcmc_runs (samples for this chain only)
+        mcmc_params_df (pd.DataFrame): mcmc_params (samples for this chain only)
+        candidates_df (pd.DataFrame): Candidates for all chains
+        quiet (bool): Inverse of logging verbosity
+
+    Returns:
+        chain_id (int): The current chain
     """
+
     set_logging_config(not quiet, chain_id, FULL_RUN_LOG_DIR, task='full')
     #msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
     #logger.info(msg, chain_id, burn_in, sample_size)

@@ -82,7 +82,6 @@ sojourn:
 
 mobility:
   region: null
-  age_mixing: null
   smooth_google_data: false # Whether to apply a 7-day moving average
   square_mobility_effect: true
   google_mobility_locations:

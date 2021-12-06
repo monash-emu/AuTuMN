@@ -571,7 +571,7 @@ def apply_standard_vacc_coverage(
             source=Compartment.SUSCEPTIBLE,
             dest=Compartment.SUSCEPTIBLE,
             source_strata={"agegroup": agegroup, "vaccination": Vaccination.UNVACCINATED},
-            dest_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
+            dest_strata={"agegroup": agegroup, "vaccination": Vaccination.ONE_DOSE_ONLY},
         )
 
 

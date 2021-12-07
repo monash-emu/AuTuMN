@@ -48,8 +48,7 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
 
             # Adjust for macrodistancing/mobility
             mobility_func = self.mobility_funcs.get(loc_key)
-            if mobility_func:
-                loc_relative_mobility *= mobility_func(time)
+            loc_relative_mobility = mobility_func(time) if mobility_func else 1.
 
             # Adjust for microdistancing
             microdistancing_func = self.microdistancing_funcs.get(loc_key)

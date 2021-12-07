@@ -461,6 +461,7 @@ def get_vaccination_rate_jit(end_times, vaccination_rates, time):
     # Return zero if the time is after the last end time
     return 0.0
 
+
 def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) -> Callable:
     """
     Turn the vaccination rates and end times into a piecewise roll-out function.

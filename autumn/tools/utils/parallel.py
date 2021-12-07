@@ -95,6 +95,8 @@ def run_parallel_tasks(func: Callable, arg_list: List[Any], auto_exit=True):
     logger.info("Successfully ran %s parallel tasks: %s", len(success_results), success_results)
     if failure_exceptions:
         logger.info("Failed to run %s parallel tasks", len(failure_exceptions))
+        for f in failure_exceptions:
+            logger.error(f)
         if auto_exit:
             logger.error(
                 "%s / %s parallel tasks failed - exiting.", len(failure_exceptions), len(arg_list)

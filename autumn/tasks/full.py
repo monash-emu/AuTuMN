@@ -4,6 +4,7 @@ import sys
 
 import pandas as pd
 import numpy as np
+import psutil
 
 from autumn.tools import db, plots
 from autumn.tools.db.database import get_database
@@ -65,21 +66,55 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     mcmc_runs = mr.calibration.get_mcmc_runs()
     mcmc_params = mr.calibration.get_mcmc_params()
     
+    total_runs = num_chains * sample_size
+
     # Note that sample_size in the task argument is per-chain, whereas here it is all samples
-    sampled_runs_df = select_full_run_samples(mcmc_runs, num_chains * sample_size, burn_in)
+    sampled_runs_df = select_full_run_samples(mcmc_runs, total_runs, burn_in)
     candidates_df = db.process.select_pruning_candidates(sampled_runs_df, N_CANDIDATES)
 
-    chain_runs = dict((chain_id, sampled_runs_df[sampled_runs_df['chain'] == chain_id]) for chain_id in chain_ids)
+    # Allocate the runs to available number of cores as evenly as possible
+    # Get the number of _physical_ cores (hyperthreading will only muddy the waters...)
+    n_cores = psutil.cpu_count(logical=False)
 
-    with Timer(f"Running full models for {num_chains} chains: {chain_ids}"):
+    base_runs_per_core = total_runs // n_cores
+    # Number of cores that need to run 1 extra run
+    n_additional = total_runs % n_cores
+    n_base = n_cores - n_additional
+
+    subset_runs = []
+
+    brpc = base_runs_per_core
+    arpc = base_runs_per_core + 1
+
+    cur_start_idx = 0
+
+    for i in range(n_additional):
+        subset_runs.append(sampled_runs_df.iloc[cur_start_idx:cur_start_idx+arpc])
+        # This will be correct for the next iteration, hence computing at the end
+        cur_start_idx += arpc
+    for i in range(n_base):
+        subset_runs.append(sampled_runs_df.iloc[cur_start_idx:cur_start_idx+brpc])
+        cur_start_idx += brpc
+
+    # Check that we ended up with all the runs
+    assert cur_start_idx == total_runs, "Invalid run index calculation"
+
+    # Check we're using our cores correctly..
+    if len(subset_runs) < n_cores:
+        logger.warning(f"{n_cores} CPU cores, but only {len(subset_runs)} being used")
+    
+    assert len(subset_runs) <= n_cores, "Invalid CPU oversubscription"
+
+    # OK, actually run the thing...
+    with Timer(f"Running full models for {len(subset_runs)} subsets"):
         args_list = [
-            (run_id, chain_id, chain_runs[chain_id],
-            mcmc_params.loc[chain_runs[chain_id].index],
+            (run_id, subset_id, subset_runs[subset_id],
+            mcmc_params.loc[subset_runs[subset_id].index],
             candidates_df, quiet)
-            for chain_id in chain_ids
+            for subset_id in range(len(subset_runs))
         ]
         try:
-            chain_ids = run_parallel_tasks(run_full_model_for_chain, args_list, False)
+            subset_ids = run_parallel_tasks(run_full_model_for_subset, args_list, False)
             success = True
         except Exception as e:
             # Run failed but we still want to capture the logs
@@ -114,8 +149,8 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
 
 
 @report_errors
-def run_full_model_for_chain(
-    run_id: str, chain_id: int, sampled_runs_df: pd.DataFrame, 
+def run_full_model_for_subset(
+    run_id: str, subset_id: int, sampled_runs_df: pd.DataFrame, 
     mcmc_params_df: pd.DataFrame, candidates_df: pd.DataFrame, quiet: bool
     ) -> int:
     """
@@ -135,7 +170,7 @@ def run_full_model_for_chain(
         chain_id (int): The current chain
     """
 
-    set_logging_config(not quiet, chain_id, FULL_RUN_LOG_DIR, task='full')
+    set_logging_config(not quiet, subset_id, FULL_RUN_LOG_DIR, task='full')
     #msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
     #logger.info(msg, chain_id, burn_in, sample_size)
     try:
@@ -143,7 +178,7 @@ def run_full_model_for_chain(
         msg = f"Running the {project.model_name} {project.region_name} model"
         logger.info(msg)
 
-        dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{chain_id}")
+        dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{subset_id}")
         #src_db = get_database(src_db_path)
         dest_db = get_database(dest_db_path)
 
@@ -229,12 +264,12 @@ def run_full_model_for_chain(
             db.store.save_model_outputs(dest_db, **final_outputs)
 
     except Exception:
-        logger.exception("Full model run for chain %s failed", chain_id)
-        gather_exc_plus(os.path.join(FULL_RUN_LOG_DIR, f"crash-full-{chain_id}.log"))
+        logger.exception("Full model run for subset %s failed", subset_id)
+        gather_exc_plus(os.path.join(FULL_RUN_LOG_DIR, f"crash-full-{subset_id}.log"))
         raise
 
-    logger.info("Finished running full models for chain %s.", chain_id)
-    return chain_id
+    logger.info("Finished running full models for subset %s.", subset_id)
+    return subset_id
 
 def select_full_run_samples(mcmc_runs_df: pd.DataFrame, n_samples: int, burn_in: int) -> pd.DataFrame:
     

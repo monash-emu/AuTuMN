@@ -76,10 +76,17 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     # Get the number of _physical_ cores (hyperthreading will only muddy the waters...)
     n_cores = psutil.cpu_count(logical=False)
 
-    base_runs_per_core = total_runs // n_cores
-    # Number of cores that need to run 1 extra run
-    n_additional = total_runs % n_cores
-    n_base = n_cores - n_additional
+    # Really shouldn't happen, but will come up in testing...
+    if total_runs < n_cores:
+        base_runs_per_core = 1
+        n_base = total_runs
+        n_additional = 0
+    else:
+        # The usual case, of having more runs than we have cores
+        base_runs_per_core = total_runs // n_cores
+        # Number of cores that need to run 1 extra run
+        n_additional = total_runs % n_cores
+        n_base = n_cores - n_additional
 
     subset_runs = []
 
@@ -106,7 +113,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     assert len(subset_runs) <= n_cores, "Invalid CPU oversubscription"
 
     # OK, actually run the thing...
-    with Timer(f"Running full models for {len(subset_runs)} subsets"):
+    with Timer(f"Running {total_runs} full models over {len(subset_runs)} subsets"):
         args_list = [
             (run_id, subset_id, subset_runs[subset_id],
             mcmc_params.loc[subset_runs[subset_id].index],

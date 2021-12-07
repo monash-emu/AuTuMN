@@ -7,8 +7,7 @@ from autumn.tools.calibration.targets import NormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
-
-# Load and configure model parameters.
+# Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
 baseline_params = base_params.update(default_path)
 
@@ -17,8 +16,7 @@ scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
-
-# Load and configure calibration settings.
+# Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
 notifications = ts_set.get("notifications").truncate_start_time(199)
 targets = [

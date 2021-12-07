@@ -232,10 +232,13 @@ class Database(BaseDatabase):
         df.to_sql(table_name, con=self.engine, if_exists=exists_mode, index=False)
 
     def query(
-        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}
+        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {},
+        as_copy=True
     ) -> pd.DataFrame:
         """
         method to query table_name
+
+        as_copy can be False if needed for performance, but only if you promise not to modify the returned data...
         """
         column_str = ",".join(columns) if columns else "*"
         query = f"SELECT {column_str} FROM {table_name}"
@@ -275,6 +278,9 @@ class Database(BaseDatabase):
 
         if renames:
             df.rename(columns=renames, inplace=True)
+
+        if as_copy:
+            df = df.copy()
 
         return df
 

@@ -15,7 +15,7 @@ from autumn.settings import REMOTE_BASE_DIR, Region
 from autumn.tasks.calibrate import CALIBRATE_DATA_DIR
 from autumn.tasks.utils import get_project_from_run_id, set_logging_config
 from autumn.tools.utils.fs import recreate_dir
-from autumn.tools.utils.parallel import run_parallel_tasks, report_errors, gather_exc_plus
+from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from autumn.tools.utils.timer import Timer
 from autumn.tools.project import post_process_scenario_outputs
@@ -160,7 +160,6 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
         upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
 
 
-@report_errors
 def run_full_model_for_subset(
     run_id: str, subset_id: int, sampled_runs_df: pd.DataFrame, 
     mcmc_params_df: pd.DataFrame, candidates_df: pd.DataFrame, quiet: bool

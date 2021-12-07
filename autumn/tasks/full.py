@@ -32,7 +32,7 @@ FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
 TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
 
 
-def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool):
+def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool, dry_run: bool = False):
     project = get_project_from_run_id(run_id)
 
     # Set up directories for output data.
@@ -127,6 +127,11 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
             # Run failed but we still want to capture the logs
             success = False
 
+    # Dry run allows for benchmarking and testing, but won't upload any data
+    if dry_run:
+        logger.info("Dry run, exiting now without data uploads")
+        return
+
     with Timer("Uploading logs"):
         upload_to_run_s3(s3_client, run_id, FULL_RUN_LOG_DIR, quiet)
 
@@ -167,14 +172,14 @@ def run_full_model_for_subset(
 
     Args:
         run_id (str): Model run id
-        chain_id (int): The current chain
+        subset_id (int): The current subset
         sampled_runs_df (pd.DataFrame): mcmc_runs (samples for this chain only)
         mcmc_params_df (pd.DataFrame): mcmc_params (samples for this chain only)
         candidates_df (pd.DataFrame): Candidates for all chains
         quiet (bool): Inverse of logging verbosity
 
     Returns:
-        chain_id (int): The current chain
+        subset_id (int): The current subset
     """
 
     set_logging_config(not quiet, subset_id, FULL_RUN_LOG_DIR, task='full')

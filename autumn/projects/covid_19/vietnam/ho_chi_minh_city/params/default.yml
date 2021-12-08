@@ -120,9 +120,16 @@ vaccination:
     ve_infectiousness: 0.00
     ve_hospitalisation: 0.5 # Myanmar
     ve_death: 0.5 # Myanmar
+  boosted:
+    ve_sympt_covid: 0.8
+    ve_prop_prevent_infection: 0.95
+    ve_infectiousness: 0.4
+    ve_hospitalisation: 0.95
+    ve_death: 0.95
   lag: 14
   standard_supply: false
   second_dose_delay:  32.67 # weighted average waiting time between two doses
+  boost_delay: 180. # 6 months
   vacc_full_effect_duration: 90. # 3 months
   vacc_part_effect_duration: 180. # 6 months
   roll_out_components: # --> stratify by time

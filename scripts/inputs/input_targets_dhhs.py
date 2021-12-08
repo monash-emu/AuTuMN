@@ -38,6 +38,17 @@ LGA_TO_HSP = os.path.join(INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv")
 
 COVID_DHHS_MAPING = LGA_TO_HSP  # This is the new mapping
 
+TODAY = (pd.to_datetime("today") - COVID_BASE_DATETIME).days
+
+TARGET_MAP_DHHS = {
+    "notifications": "cluster_cases",
+    "hospital_occupancy": "value_hosp",
+    "icu_occupancy": "value_icu",
+    "icu_admissions": "admittedtoicu",
+    "hospital_admissions": "nadmissions",
+    "infection_deaths": "cluster_deaths",
+}
+
 cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
 
 map_id = cluster_map_df[["cluster_id", "cluster_name"]].drop_duplicates()
@@ -150,6 +161,8 @@ def main():
     cases = cases.merge(admissions, on=["date_index", "cluster_id"], how="outer")
     cases = cases.merge(deaths, on=["date_index", "cluster_id"], how="outer")
 
+    cases = cases[cases["date_index"] <= TODAY]
+
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
         password = getpass(prompt="Enter the encryption password:")
@@ -162,29 +175,11 @@ def main():
             PROJECTS_PATH, "covid_19", "victoria", cluster.lower(), "targets.secret.json"
         )
 
-        TARGET_MAP_DHHS = {
-            "notifications": "cluster_cases",
-            "hospital_occupancy": "value_hosp",
-            "icu_occupancy": "value_icu",
-            "icu_admissions": "admittedtoicu",
-            "hospital_admissions": "nadmissions",
-            "infection_deaths": "cluster_deaths",
-        }
-
         cluster_df = cases.loc[cases.cluster_id == cluster]
 
         update_timeseries(TARGET_MAP_DHHS, cluster_df, cluster_secrets_file, password)
 
     vic_df = cases.groupby("date_index").sum(skipna=True).reset_index()
-
-    TARGET_MAP_DHHS = {
-        "notifications": "cluster_cases",
-        "hospital_occupancy": "value_hosp",
-        "icu_occupancy": "value_icu",
-        "icu_admissions": "admittedtoicu",
-        "hospital_admissions": "nadmissions",
-        "infection_deaths": "cluster_deaths",
-    }
 
     update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VICTORIA_TARGETS_CSV, password)
 

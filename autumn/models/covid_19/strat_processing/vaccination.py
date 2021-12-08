@@ -403,9 +403,7 @@ def apply_vacc_flows(model: CompartmentalModel, age_groups: Union[list, set], va
         )
 
 
-def get_piecewise_vacc_rates(
-    coverage_times: List[int], coverage_values: List[float], vaccination_lag: float,
-) -> Tuple[np.ndarray, np.ndarray]:
+def get_piecewise_vacc_rates(coverage_times: List[int], coverage_values: List[float]) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculates the per capita vaccination rates over sequential periods of time based on steadily increasing vaccination
     coverage values.
@@ -446,9 +444,8 @@ def get_piecewise_vacc_rates(
         # Get the vaccination rate from the increase in coverage over the period
         vaccination_rates[i_period] = get_rate_from_coverage_and_duration(coverage_increase, duration)
 
-    # Lag for immunity and convert to array for use during run-time
-    end_times = np.asarray(coverage_times)[1:] + vaccination_lag
-    return end_times, vaccination_rates
+    # Convert to array for use during run-time
+    return np.asarray(coverage_times)[1:], vaccination_rates
 
 
 @numba.jit(nopython=True)
@@ -483,8 +480,6 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
     assert len(end_times) == len(vaccination_rates), "Number of vaccination periods (end times) and rates differs"
 
     # Function defined in the standard format for function-based standard transition flows
-
-
     def get_vaccination_rate(time, computed_values):
         return get_vaccination_rate_jit(end_times, vaccination_rates, time)
 
@@ -516,17 +511,18 @@ def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cl
         close_age_min = find_closest_value_in_list(VACC_COVERAGE_START_AGES, age_min)
         close_age_max = find_closest_value_in_list(VACC_COVERAGE_END_AGES, age_max)
         cov_times, cov_values = get_both_vacc_coverage(cluster.upper(), start_age=close_age_min, end_age=close_age_max)
+        cov_times = cov_times + vacc_params.lag
 
         model_start_vacc_idx = next(i_time for i_time, time in enumerate(cov_times) if time > model_start_time)
-        trunc_cov_values = cov_values[model_start_vacc_idx:]
+        trunc_cov_times = np.insert(cov_times[model_start_vacc_idx:], 0, model_start_time)
+        trunc_cov_values = np.insert(cov_values[model_start_vacc_idx:], 0, 0.)
 
         # The first age group should be adjusted for partial coverage of that age group
         if i_age == 0:
-            cov_values *= (close_age_max - close_age_min) / (age_max - age_min)
+            trunc_cov_values *= (close_age_max - close_age_min) / (age_max - age_min)
 
         # Get the vaccination rate function of time
-        rate_requests = (cov_times, cov_values, vacc_params.lag)
-        rollout_end_times, vaccination_rates = get_piecewise_vacc_rates(*rate_requests)
+        rollout_end_times, vaccination_rates = get_piecewise_vacc_rates(trunc_cov_times, trunc_cov_values)
 
         # Apply the vaccination rate function to the model
         vacc_rate_func = get_piecewise_rollout(rollout_end_times, vaccination_rates)
@@ -560,9 +556,10 @@ def apply_standard_vacc_coverage(
 
         # Note this function must return something for every age group to stop outputs calculation crashing
         coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params)
+        lagged_cov_times = [i + vacc_lag for i in coverage_times]
 
         # Get the vaccination rate function of time from the coverage values
-        rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(coverage_times, coverage_values, vacc_lag)
+        rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(lagged_cov_times, coverage_values)
 
         # Vaccination program must commence after model has started
         if is_baseline:

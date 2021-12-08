@@ -137,7 +137,7 @@ vaccination:
   lag: 14
   standard_supply: false
   second_dose_delay:  32.67 # weighted average waiting time between two doses
-  boost_delay: 180. # 6 months
+  boost_delay: 2000. # Equivalent to no vaccination booster
   vacc_full_effect_duration: 90. # 3 months
   vacc_part_effect_duration: 180. # 6 months
   roll_out_components: # --> stratify by time

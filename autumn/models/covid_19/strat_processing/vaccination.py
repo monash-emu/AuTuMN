@@ -4,6 +4,8 @@ import numpy as np
 import numba
 
 from summer import CompartmentalModel, Multiply, Stratification
+from summer.utils import ref_times_to_dti
+from autumn.models.covid_19.constants import BASE_DATE
 
 from autumn.models.covid_19.constants import (
     Vaccination, INFECTION, DISEASE_COMPARTMENTS, CLINICAL_STRATA, Compartment, AGE_CLINICAL_TRANSITIONS,
@@ -445,7 +447,7 @@ def get_piecewise_vacc_rates(
         vaccination_rates[i_period] = get_rate_from_coverage_and_duration(coverage_increase, duration)
 
     # Lag for immunity and convert to array for use during run-time
-    end_times = np.asarray(coverage_times)[1:] - vaccination_lag
+    end_times = np.asarray(coverage_times)[1:] + vaccination_lag
     return end_times, vaccination_rates
 
 

@@ -202,8 +202,8 @@ def get_stratum_vacc_history_effect(
     sympt_adjuster = 1.0 - severity_effect
 
     # Use the standard severity adjustment if no specific request for reducing death
-    ifr_adjuster = (1.0 - vacc_effects["ve_death"] if "ve_death" in vacc_effects else 1.0 - severity_effect)
-    hospital_adjuster = (1.0 - hospitalisation_effect if "ve_hospitalisation" in vacc_effects else 1.0)
+    ifr_adjuster = 1.0 - vacc_effects["ve_death"] if "ve_death" in vacc_effects else 1.0 - severity_effect
+    hospital_adjuster = 1.0 - hospitalisation_effect if stratum_vacc_params.ve_hospitalisation else 1.0
 
     # Apply the calibration adjusters
     ifr_adjuster *= voc_adjusters["ifr"]

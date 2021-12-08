@@ -178,7 +178,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             "sympt": params.clinical_stratification.props.symptomatic.multiplier,
         }
 
-    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS
+    vic_regions = Region.VICTORIA_SUBREGIONS + [Region.VICTORIA]
+    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in vic_regions
     override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(

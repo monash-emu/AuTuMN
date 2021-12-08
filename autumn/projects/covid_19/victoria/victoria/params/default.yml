@@ -1,9 +1,19 @@
 description: BASELINE
 
-contact_rate: 0.085
+time:
+  start: 454
+  end: 730
+
+contact_rate: 0.02
 
 mixing_matrices:
   source_iso3: GBR
+
+contact_tracing:
+  assumed_trace_prop: 0.85
+  assumed_prev: 1.e-3
+  quarantine_infect_multiplier: 0.2
+  floor: 0.5
 
 country:
   iso3: AUS
@@ -19,3 +29,37 @@ testing_to_detection:
   assumed_tests_parameter: 1.e-03
   assumed_cdr_parameter: 0.1
   smoothing_period: 7
+
+# VE parameters taken from LSHTM's Autumn–winter scenarios 2021–2022 report - https://tinyurl.com/ve-params
+vaccination:
+  one_dose:
+    ve_sympt_covid: 0.57
+    ve_prop_prevent_infection_ratio: 1.
+    ve_infectiousness_ratio: 0.469  # 0.15 / 0.32 (ratio of one to two dose) - varied with fully vaccinated parameter
+    ve_hospitalisation: 0.88
+    ve_death: 0.94
+  fully_vaccinated:
+    ve_sympt_covid: 0.73
+    ve_prop_prevent_infection: 0.95  # Very high proportions (0.51 versus 0.57 or 0.72 versus 0.73) used in calibration
+    ve_infectiousness: 0.32  # Calibrated
+    ve_hospitalisation: 0.95
+    ve_death: 0.96
+  second_dose_delay:
+    shape: 0.1
+    inflection_time: 624.  # Middle of September 2021, so that most scaling occurs during September
+    start_asymptote: 43.  # Baseline lag in vaccination curves, 43 days
+    end_asymptote: 28.  # Shortened lag from Dept's spreadsheet, 28 days
+  lag: 14
+  roll_out_components:
+    - vic_supply:
+        start_time: 454
+        end_time: 830
+        time_intervals: 100
+        age_breaks:
+          - 10
+          - 15
+          - 30
+          - 40
+          - 50
+          - 60
+          - 70

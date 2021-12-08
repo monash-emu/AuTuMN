@@ -5,7 +5,7 @@ Entry point for PyCharm users to run an application
 from autumn.settings import Region, Models
 from autumn.tools.project import get_project, run_project_locally
 
-region = Region.HO_CHI_MINH_CITY
+region = Region.VICTORIA
 model = Models.COVID_19
 
 project = get_project(model, region)

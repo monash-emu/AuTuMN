@@ -2,7 +2,9 @@ description: >
   SCENARIO 5:
   60% and 90% of the population aged 12-17 will be fully vaccinated on 15th Dec 2021 and 31st Jan 2022, respectively.
   Vaccination for the 20+ age group continues at the speed of 400000 new fully vaccinated people per month for the next six months.
-  Schools start to reopen on 13th Dec 2021 at 30% every 2 weeks.
+  Schools start to reopen on 13rd Dec 2021 at 30% every 2 weeks, mobility stays the same as of current.
+  Booster dose is not provided 6 months after the second dose.
+  The Omicron variant does not enter the city.
 
 time:
   start: 701 # 01st Dec 2021
@@ -15,8 +17,8 @@ mobility:
         - 2021-05-09
         - 2021-10-20
         - 2021-12-13
-        - 2022-01-04
-        - 2022-01-18
+        - 2021-01-03
+        - 2022-01-17
       values:
         - 0.
         - 0.1

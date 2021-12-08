@@ -491,7 +491,7 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
     return get_vaccination_rate
 
 
-def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cluster: str):
+def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cluster: str, model_start_time: float):
     """
     Apply vaccination to the Victoria regional cluster models.
     This function may change and is quite bespoke to the application, so not tidied up yet.
@@ -516,6 +516,9 @@ def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cl
         close_age_min = find_closest_value_in_list(VACC_COVERAGE_START_AGES, age_min)
         close_age_max = find_closest_value_in_list(VACC_COVERAGE_END_AGES, age_max)
         cov_times, cov_values = get_both_vacc_coverage(cluster.upper(), start_age=close_age_min, end_age=close_age_max)
+
+        model_start_vacc_idx = next(i_time for i_time, time in enumerate(cov_times) if time > model_start_time)
+        trunc_cov_values = cov_values[model_start_vacc_idx:]
 
         # The first age group should be adjusted for partial coverage of that age group
         if i_age == 0:

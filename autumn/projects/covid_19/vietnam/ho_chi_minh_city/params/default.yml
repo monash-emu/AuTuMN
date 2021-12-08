@@ -75,6 +75,14 @@ mobility:
         - 0.
         - 0.1
 
+voc_emergence:
+  omicron:
+    start_time: 2000.
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 5.
+    ifr_multiplier: 0.6
+
 history:
   natural_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
 

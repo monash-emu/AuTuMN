@@ -178,7 +178,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             "sympt": params.clinical_stratification.props.symptomatic.multiplier,
         }
 
-    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS
+    vic_regions = Region.VICTORIA_SUBREGIONS + [Region.VICTORIA]
+    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in vic_regions
     override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(
@@ -377,12 +378,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Set up derived output functions
     """
 
-    outputs_builder = CovidOutputsBuilder(model, COMPARTMENTS)
+    outputs_builder = CovidOutputsBuilder(model, COMPARTMENTS, bool(params.contact_tracing))
 
     outputs_builder.request_incidence()
     outputs_builder.request_infection()
-    notification_args = [bool(params.contact_tracing), params.cumul_incidence_start_time, params.hospital_reporting]
-    outputs_builder.request_notifications(*notification_args)
+    outputs_builder.request_notifications(params.cumul_incidence_start_time, params.hospital_reporting)
+    outputs_builder.request_non_hosp_notifications()
     outputs_builder.request_adult_paeds_notifications()
     outputs_builder.request_cdr()
     outputs_builder.request_deaths()

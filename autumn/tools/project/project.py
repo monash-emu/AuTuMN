@@ -90,7 +90,7 @@ class Project:
         scenario_params: List[Params],
         start_time: Optional[float] = None,
         start_times: Optional[List[float]] = None,
-        build_options: Optional[dict] = None
+        build_options: Optional[List[dict]] = None
     ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
@@ -104,11 +104,16 @@ class Project:
             # No start times specified - use whatever the model defaults are.
             start_times = [None] * len(scenario_params)
 
+        if build_options is None:
+            build_options = [None] * len(scenario_params)
+
         models = []
         assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
-        for start_time, params in zip(start_times, scenario_params):
+        for start_time, params, build_opt in \
+            zip(start_times, scenario_params, build_options):
+            
             params_dict = params.to_dict()
-            model = self.build_model(params_dict, build_options)
+            model = self.build_model(params_dict, build_opt)
 
             if start_time is not None:
                 # Find the initial conditions for the given start time

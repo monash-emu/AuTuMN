@@ -155,7 +155,7 @@ def main():
         password = getpass(prompt="Enter the encryption password:")
 
     for cluster in CLUSTER_MAP.values():
-        if cluster == "VIC":
+        if cluster == "VICTORIA":
             continue
 
         cluster_secrets_file = os.path.join(
@@ -168,16 +168,14 @@ def main():
             "icu_occupancy": "value_icu",
             "icu_admissions": "admittedtoicu",
             "hospital_admissions": "nadmissions",
-            "infection_deaths": "cluster_deaths"
+            "infection_deaths": "cluster_deaths",
         }
 
         cluster_df = cases.loc[cases.cluster_id == cluster]
 
         update_timeseries(TARGET_MAP_DHHS, cluster_df, cluster_secrets_file, password)
 
-    cases.fillna(np.inf, inplace=True)
     vic_df = cases.groupby("date_index").sum(skipna=True).reset_index()
-    vic_df.replace({np.inf: np.nan}, inplace=True)
 
     TARGET_MAP_DHHS = {
         "notifications": "cluster_cases",
@@ -416,10 +414,11 @@ def fetch_vac_model():
 
     return df
 
+
 def create_vic_total(df):
-    df = df.groupby(['date', 'age_group', 'vaccine_brand_name', 'date_index'], as_index=False).sum()
-    df['lga'] = "VICTORIA"
-    
+    df = df.groupby(["date", "age_group", "vaccine_brand_name", "date_index"], as_index=False).sum()
+    df["lga"] = "VICTORIA"
+
     return df
 
 
@@ -472,6 +471,7 @@ def update_vida_pop(df):
     df["end_age"] = df["age_group"].apply(lambda s: int(s.split("-")[1]))
 
     df.to_csv(COVID_VIDA_POP_CSV, index=False)
+
 
 if __name__ == "__main__":
     main()

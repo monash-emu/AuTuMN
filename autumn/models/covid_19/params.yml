@@ -220,6 +220,7 @@ vaccination:
   lag: 0.
   roll_out_components: []
   standard_supply: false
+  program_start_time: null
 
 # Vaccination-related
 history:

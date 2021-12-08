@@ -295,7 +295,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Victoria vaccination code is not generalisable
         if is_region_vic:
-            add_vic_regional_vacc(model, vacc_params, params.population.region)
+            add_vic_regional_vacc(model, vacc_params, params.population.region, params.vaccination.program_start_time)
+            if params.description == "BASELINE":
+                assert params.vaccination.program_start_time == params.time.start
+
         elif params.vaccination.standard_supply:
             apply_standard_vacc_coverage(
                 model, vacc_params.lag, params.country.iso3, total_pops, params.vaccination.one_dose,

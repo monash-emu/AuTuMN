@@ -1,13 +1,13 @@
-contact_rate: 0.21987256361347626 # 0.14041515285616255
-infectious_seed: 5.521739844141426 # 26.70006490322359
+contact_rate: 0.23243284871319198 # 0.14041515285616255
+infectious_seed: 5.535726125126404 # 26.70006490322359
 
-# sojourn.compartment_periods_calculated.active.total_period: 6.855433827625373
-# sojourn.compartment_periods_calculated.exposed.total_period: 1.0063675058764643
+sojourn.compartment_periods_calculated.active.total_period: 7.3268501571318865
+sojourn.compartment_periods_calculated.exposed.total_period: 6.246361987947623
 
-testing_to_detection.assumed_cdr_parameter: 0.0007250171053618023 # 0.0006354914360250705
-mobility.microdistancing.behaviour.parameters.max_effect: 0.3507707880097374 # 0.029714585580024693
+testing_to_detection.assumed_cdr_parameter: 0.0007181433529195046 # 0.0006354914360250705
+mobility.microdistancing.behaviour.parameters.max_effect: 0.35032757108256934 # 0.029714585580024693
 
-clinical_stratification.props.hospital.multiplier: 0.32064492412289936 # 0.30903713976044445
+clinical_stratification.props.hospital.multiplier: 0.3092908326290491 # 0.30903713976044445
 # clinical_stratification.props.symptomatic.multiplier: 0.7124252844089431
-infection_fatality.multiplier: 0.8085190027756418 # 0.6443344725684703
-# clinical_stratification.icu_prop: 0.15
+infection_fatality.multiplier: 0.8168564131697592 # 0.6443344725684703
+clinical_stratification.icu_prop: 0.16868978261827167

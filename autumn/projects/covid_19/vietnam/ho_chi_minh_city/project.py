@@ -46,14 +46,14 @@ priors = [
     UniformPrior("clinical_stratification.icu_prop", [0.14, 0.18]),
     # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
     # UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.6, 1.0]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.3, 0.5]),
-    UniformPrior("infection_fatality.multiplier", [0.8, 1.2]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.25, 0.4]),
+    UniformPrior("infection_fatality.multiplier", [0.7, 1.0]),
 
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0007, 0.0013]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0005, 0.009]),
 
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.35, 0.45]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.30, 0.40]),
 
     # Waning immunity
     # UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
@@ -87,5 +87,5 @@ project = Project(
 )
 
 
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

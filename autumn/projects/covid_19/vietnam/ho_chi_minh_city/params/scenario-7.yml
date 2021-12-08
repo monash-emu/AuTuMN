@@ -44,6 +44,10 @@ mobility:
         - 0.7
         - 1.0
 
+voc_emergence:
+  omicron:
+    start_time: 732.
+
 # All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/HCMC_vaccination_status
 vaccination:
   roll_out_components:

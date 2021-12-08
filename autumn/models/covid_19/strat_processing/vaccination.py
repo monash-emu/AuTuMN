@@ -594,15 +594,19 @@ def add_vacc_rollout_requests(model: CompartmentalModel, vacc_params: VaccParams
 
     all_eligible_agegroups = []
     for roll_out_component in vacc_params.roll_out_components:
+
+        # Get parameters and lag vaccination times
         coverage_requests = roll_out_component.supply_period_coverage
+        start_time = coverage_requests.start_time + vacc_params.lag
+        end_time = coverage_requests.end_time + vacc_params.lag
+        coverage = coverage_requests.coverage
 
         # Progressively collate the age groups
         working_agegroups = get_eligible_age_groups(roll_out_component.age_min, roll_out_component.age_max)
         all_eligible_agegroups += working_agegroups
 
         # Find the rate of vaccination over the period of this request
-        requests = (coverage_requests.coverage, coverage_requests.start_time, coverage_requests.end_time)
-        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(*requests)
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(coverage, start_time, end_time)
 
         # Apply the vaccination flows to the model
         apply_vacc_flows(model, working_agegroups, vaccination_roll_out_function)

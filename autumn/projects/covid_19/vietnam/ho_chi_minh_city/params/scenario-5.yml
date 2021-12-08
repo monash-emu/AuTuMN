@@ -1,0 +1,88 @@
+description: >
+  SCENARIO 5:
+  60% and 90% of the population aged 12-17 will be fully vaccinated on 15th Dec 2021 and 31st Jan 2022, respectively.
+  Vaccination for the 20+ age group continues at the speed of 400000 new fully vaccinated people per month for the next six months.
+  Schools start to reopen on 13th Dec 2021 at 30% every 2 weeks.
+
+time:
+  start: 701 # 01st Dec 2021
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-05-09
+        - 2021-10-20
+        - 2021-12-13
+        - 2022-01-04
+        - 2022-01-18
+      values:
+        - 0.
+        - 0.1
+        - 0.4
+        - 0.7
+        - 1.0
+
+# All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/HCMC_vaccination_status
+vaccination:
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.36 # 60% of 60% of population aged 10-14
+        start_time: 666 # 27th Oct 2021
+        end_time: 715 # 15th Dec 2021
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.28125 # 90% of 60% population aged 10-14
+        start_time: 715 # 15th Dec 2021
+        end_time: 762 # 31st Jan 2022
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.4458
+        start_time: 666 # 27th Oct 2021
+        end_time: 715 # 15th Dec 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.4023
+        start_time: 715 # 15th Dec 2021
+        end_time: 762 # 31st Jan 2022
+      age_min: 15
+      age_max: 19
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.1410
+        start_time: 685 # 15th Nov 2021
+        end_time: 700 # 30th Nov 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.1629
+        start_time: 700 # 30th Nov 2021
+        end_time: 731 # 31st Dec 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.1946
+        start_time: 731 # 31st Dec 2021
+        end_time: 762 # 31st Jan 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2417
+        start_time: 762 # 31st Jan 2022
+        end_time: 790 # 28th Feb 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.3187
+        start_time: 790 # 28th Feb 2022
+        end_time: 821 # 31st Mar 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.4678
+        start_time: 821 # 31st Mar 2022
+        end_time: 851 # 30th Apr 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.8792
+        start_time: 851 # 30th Apr 2022
+        end_time: 882 # 31st May 2022

@@ -9,6 +9,37 @@ contact_rate: 0.02
 mixing_matrices:
   source_iso3: GBR
 
+clinical_stratification:
+  non_sympt_infect_multiplier: 0.509  # Median posterior estimate from 2020
+
+  # Increase severity, more symptomatic persons and greater death rate, to account for Delta versus wild-type
+  # https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciab721/6356459 gives aOR of 1.88
+  # News article also links to some of the more important recent studies and pre-prints
+  # https://www.cbc.ca/news/health/does-delta-cause-more-severe-covid-19-here-s-what-we-know-and-don-t-1.6153470
+  props:
+
+    # Table 1.1 from NNDSS document on cases in Australia to May 2021
+    hospital:
+      props:
+        - 0.029  # 0-4
+        - 0.029  # 5-9
+        - 0.014  # 10-14
+        - 0.014  # 15-19
+        - 0.030  # 20-24
+        - 0.030  # 25-29
+        - 0.047  # 30-34
+        - 0.047  # 35-39
+        - 0.081  # 40-44
+        - 0.081  # 45-49
+        - 0.128  # 50-54
+        - 0.128  # 55-59
+        - 0.221  # 60-64
+        - 0.221  # 65-69
+        - 0.389  # 70-74
+        - 0.471  # 75+ - weighted to the observed cases in >75s as (511 / 2 + 652 + 356) / (1344 / 2 + 1230 + 783)
+
+  icu_prop: 0.1875980041535647  # Median posterior estimate from 2020
+
 contact_tracing:
   assumed_trace_prop: 0.85
   assumed_prev: 1.e-3

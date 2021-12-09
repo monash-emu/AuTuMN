@@ -11,6 +11,8 @@ from autumn.settings import Region, Models
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
 baseline_params = base_params.update(default_path)
+mle_path = build_rel_path("params/mle-params.yml")
+baseline_params = (base_params.update(default_path).update(mle_path, calibration_format=True))
 
 scenario_dir_path = build_rel_path("params/")
 scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
@@ -36,7 +38,7 @@ priors = [
     ),
     UniformPrior("vaccination.vacc_full_effect_duration", (60., 180.), jumping_stdev=15.),
     UniformPrior("mobility.microdistancing.face_coverings_adjuster.parameters.effect", (0.05, 0.3), jumping_stdev=0.04),
-    UniformPrior("infectious_seed", (20., 150.), jumping_stdev=30.),
+    UniformPrior("infectious_seed", (2., 100.), jumping_stdev=30.),
 ]
 
 calibration = Calibration(priors=priors, targets=targets)

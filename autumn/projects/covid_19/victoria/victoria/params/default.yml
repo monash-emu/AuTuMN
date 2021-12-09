@@ -49,12 +49,11 @@ mobility:
         - 1.
         - 0.1
         - 0.1
-        - 0.2  #FIXME  Should represent part-time in Regional and fully closed in Metro
-        - 0.2  #FIXME
-        - 0.4  #FIXME Should represent full-time in Regional and part time in Metro
-        - 0.4  #FIXME
-        - .6   #FIXME: may not want to use 100% if specific preventive measures are in place
-
+        - 0.2  # FIXME  Should represent part-time in Regional and fully closed in Metro
+        - 0.2  # FIXME
+        - 0.4  # FIXME Should represent full-time in Regional and part time in Metro
+        - 0.4  # FIXME
+        - .6   # FIXME: may not want to use 100% if specific preventive measures are in place
 
   microdistancing:
     home_reduction:
@@ -101,10 +100,12 @@ mobility:
         - work
 
 time:
-  start: 525
+  start: 550
   end: 730
 
-contact_rate: 0.078
+infectious_seed: 50
+
+contact_rate: 0.073
 
 mixing_matrices:
   source_iso3: GBR
@@ -123,6 +124,7 @@ clinical_stratification:
 
     # Table 1.1 from NNDSS document on cases in Australia to May 2021
     hospital:
+      multiplier: 1.5
       props:
         - 0.029  # 0-4
         - 0.029  # 5-9
@@ -151,9 +153,9 @@ sojourn:
     icu_late: 4.31  # mean((3.84, 3.96, 4.07, 4.19, 4.31, 4.43, 4.55, 4.67, 4.78))
   compartment_periods_calculated:
     exposed:
-      total_period: 6.095798813756773  # Median posterior estimate from 2020
+      total_period: 3.  # Incubation period shorter for Delta
     active:
-      total_period: 6.431724510638751  # Median posterior estimate from 2020
+      total_period: 6.  # Median posterior estimate from 2020
       proportions:
         early: 0.5
         late: 0.5
@@ -166,7 +168,7 @@ contact_tracing:
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-03
-  assumed_cdr_parameter: 0.1
+  assumed_cdr_parameter: 0.09
   smoothing_period: 7
 
 # VE parameters taken from LSHTM's Autumn–winter scenarios 2021–2022 report - https://tinyurl.com/ve-params
@@ -207,7 +209,6 @@ vaccination:
   vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.
 
-
   roll_out_components:
     - vic_supply:
         start_time: 454
@@ -221,4 +222,4 @@ vaccination:
           - 50
           - 60
           - 70
-  program_start_time: 525
+  program_start_time: 550

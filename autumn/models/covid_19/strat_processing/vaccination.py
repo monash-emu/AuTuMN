@@ -24,6 +24,37 @@ from autumn.tools.inputs.covid_mmr.queries import base_mmr_adult_vacc_doses
 from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
 
 
+def find_vacc_strata(is_dosing_active: bool, waning_vacc_immunity: bool, is_boost_delay: bool) -> Tuple[list, str]:
+    """
+    Work out the vaccination strata to be implemented in the model currently being constructed.
+
+    Args:
+        is_dosing_active: Whether one and two doses are being simulated
+        waning_vacc_immunity: Whether waning immunity is being simulated
+        is_boost_delay: Whether booster doses are being simulated
+
+    Returns:
+        The vaccination strata being implemented in this model
+        The stratum that waning immunity starts from, which depends on whether dosing is active
+
+    """
+
+    vacc_strata = [Vaccination.UNVACCINATED, Vaccination.ONE_DOSE_ONLY]
+    if is_dosing_active:
+        vacc_strata.append(Vaccination.VACCINATED)
+        wane_origin_stratum = Vaccination.VACCINATED
+    else:
+        wane_origin_stratum = Vaccination.ONE_DOSE_ONLY
+    if waning_vacc_immunity:
+        vacc_strata.extend([Vaccination.PART_WANED, Vaccination.WANED])
+    if is_boost_delay and waning_vacc_immunity:
+        vacc_strata.append(Vaccination.BOOSTED)
+    elif is_boost_delay and not waning_vacc_immunity:
+        raise ValueError("Boosting not permitted unless waning immunity also implemented")
+
+    return vacc_strata, wane_origin_stratum
+
+
 def get_blank_adjustments_for_strat(transitions: list) -> Dict[str, dict]:
     """
     Provide a blank set of flow adjustments to be populated by the update_adjustments_for_strat function below.

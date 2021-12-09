@@ -32,14 +32,13 @@ mobility:
         - 2021-07-27  # Schools re-open after lockdown 5
         - 2021-08-04
         - 2021-08-05  # Schools close with lockdown 6
-        #  For metro, part-time from October 22, full time from November 5.
-        #  For regional, part-time from October 11, full time from October 22
+        # For these estimates, see Dave's Teams spreadsheet vic_schools_data.xlsx, 9th December
         - 2021-10-10
-        - 2021-10-11 # back to part-time in Regional
+        - 2021-10-11
         - 2021-10-21
-        - 2021-10-22 # full-time in Regional and part time in Metro
+        - 2021-10-22
         - 2021-11-04
-        - 2021-11-05 # Full time in both Regional and Metro
+        - 2021-11-05
 
       values:
         - 1.
@@ -49,12 +48,11 @@ mobility:
         - 1.
         - 0.1
         - 0.1
-        - 0.2  #FIXME  Should represent part-time in Regional and fully closed in Metro
-        - 0.2  #FIXME
-        - 0.4  #FIXME Should represent full-time in Regional and part time in Metro
-        - 0.4  #FIXME
-        - .6   #FIXME: may not want to use 100% if specific preventive measures are in place
-
+        - 0.15
+        - 0.15
+        - 0.6
+        - 0.6
+        - 0.85
 
   microdistancing:
     home_reduction:
@@ -101,10 +99,12 @@ mobility:
         - work
 
 time:
-  start: 525
+  start: 550
   end: 730
 
-contact_rate: 0.078
+infectious_seed: 50
+
+contact_rate: 0.073
 
 mixing_matrices:
   source_iso3: GBR
@@ -123,6 +123,7 @@ clinical_stratification:
 
     # Table 1.1 from NNDSS document on cases in Australia to May 2021
     hospital:
+      multiplier: 1.5
       props:
         - 0.029  # 0-4
         - 0.029  # 5-9
@@ -151,9 +152,9 @@ sojourn:
     icu_late: 4.31  # mean((3.84, 3.96, 4.07, 4.19, 4.31, 4.43, 4.55, 4.67, 4.78))
   compartment_periods_calculated:
     exposed:
-      total_period: 6.095798813756773  # Median posterior estimate from 2020
+      total_period: 3.  # Incubation period shorter for Delta
     active:
-      total_period: 6.431724510638751  # Median posterior estimate from 2020
+      total_period: 6.  # Median posterior estimate from 2020
       proportions:
         early: 0.5
         late: 0.5
@@ -166,7 +167,7 @@ contact_tracing:
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-03
-  assumed_cdr_parameter: 0.1
+  assumed_cdr_parameter: 0.09
   smoothing_period: 7
 
 # VE parameters taken from LSHTM's Autumn–winter scenarios 2021–2022 report - https://tinyurl.com/ve-params
@@ -196,6 +197,13 @@ vaccination:
     ve_infectiousness: 0.
     ve_hospitalisation: 0.5
     ve_death: 0.5
+  boosted:
+    ve_sympt_covid: 0.8
+    ve_prop_prevent_infection: 0.95  # Very high proportions (0.51 versus 0.57 or 0.72 versus 0.73) used in calibration
+    ve_infectiousness: 0.32  # Calibrated
+    ve_hospitalisation: 0.97
+    ve_death: 0.97
+  boost_delay: 10000.
 
   # Transition parameters
   second_dose_delay:
@@ -206,7 +214,6 @@ vaccination:
   lag: 14
   vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.
-
 
   roll_out_components:
     - vic_supply:
@@ -221,4 +228,4 @@ vaccination:
           - 50
           - 60
           - 70
-  program_start_time: 525
+  program_start_time: 550

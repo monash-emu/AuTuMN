@@ -5,7 +5,6 @@ from summer.compute import ComputedValueProcessor
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA, INFECTION_DEATHS,
     COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing, NOTIFICATION_CLINICAL_STRATA,
-    INFECTIOUS_COMPARTMENTS
 )
 from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -513,7 +512,7 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         """
 
-        # Track proportions vaccinated by vaccination status (depends on _total_population previously being requested)
+        # Track proportions vaccinated by vaccination status (depends on total_population previously being requested)
         for vacc_stratum in vacc_strata:
             self.model.request_output_for_compartments(
                 name=f"_{vacc_stratum}",
@@ -523,7 +522,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             )
             self.model.request_function_output(
                 name=f"proportion_{vacc_stratum}",
-                sources=[f"_{vacc_stratum}", "_total_population"],
+                sources=[f"_{vacc_stratum}", "total_population"],
                 func=lambda vaccinated, total: vaccinated / total,
             )
 
@@ -531,7 +530,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_function_output(
                 name="at_least_one_dose_prop",
                 func=lambda unvacc, pop: 1. - unvacc / pop,
-                sources=[f"_{Vaccination.UNVACCINATED}", "_total_population"]
+                sources=[f"_{Vaccination.UNVACCINATED}", "total_population"]
             )
 
     def request_vacc_aefis(self, vacc_risk_params: VaccinationRisk):
@@ -609,12 +608,12 @@ class CovidOutputsBuilder(OutputsBuilder):
         self.model.request_function_output(
             name="prop_ever_infected",
             func=get_complement_prop,
-            sources=[f"propXhistory_{History.NAIVE}", "_total_population"],
+            sources=[f"propXhistory_{History.NAIVE}", "total_population"],
         )
 
         # Stratified by age group
         self.request_stratified_output_for_compartment(
-            "_total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
+            "total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
         )
         for agegroup in AGEGROUP_STRATA:
             for stratum in HISTORY_STRATA:
@@ -627,7 +626,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_function_output(
                 name=f"prop_ever_infectedXagegroup_{agegroup}",
                 func=get_complement_prop,
-                sources=[f"prop_{History.NAIVE}Xagegroup{agegroup}", f"_total_populationXagegroup_{agegroup}"],
+                sources=[f"prop_{History.NAIVE}Xagegroup{agegroup}", f"total_populationXagegroup_{agegroup}"],
             )
 
     def request_time(self):

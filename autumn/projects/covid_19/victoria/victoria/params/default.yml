@@ -51,8 +51,8 @@ mobility:
         - 0.1
         - 0.2  #FIXME  Should represent part-time in Regional and fully closed in Metro
         - 0.2  #FIXME
-        - 0.6  #FIXME Should represent full-time in Regional and part time in Metro
-        - 0.6  #FIXME
+        - 0.4  #FIXME Should represent full-time in Regional and part time in Metro
+        - 0.4  #FIXME
         - 1.
 
 

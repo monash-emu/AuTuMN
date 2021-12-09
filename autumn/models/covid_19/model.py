@@ -272,12 +272,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     vacc_params = params.vaccination
     if vacc_params:
 
-        # Determine the vaccination stratifiction structure
+        # Determine the vaccination stratification structure
         dose_delay_params = vacc_params.second_dose_delay
         is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines stratification by dosing
         waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
         is_boosting = bool(params.vaccination.boost_delay)
-        vacc_strata, wane_origin_stratum = find_vacc_strata(is_dosing_active, waning_vacc_immunity, is_boosting)
+        vacc_strata, wane_origin_stratum = find_vacc_strata(is_dosing_active, bool(waning_vacc_immunity), is_boosting)
 
         # Get the vaccination stratification object
         vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)

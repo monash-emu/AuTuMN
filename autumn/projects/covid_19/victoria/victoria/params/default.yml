@@ -197,6 +197,13 @@ vaccination:
     ve_infectiousness: 0.
     ve_hospitalisation: 0.5
     ve_death: 0.5
+  boosted:
+    ve_sympt_covid: 0.8
+    ve_prop_prevent_infection: 0.95  # Very high proportions (0.51 versus 0.57 or 0.72 versus 0.73) used in calibration
+    ve_infectiousness: 0.32  # Calibrated
+    ve_hospitalisation: 0.97
+    ve_death: 0.97
+  boost_delay: 180.
 
   # Transition parameters
   second_dose_delay:

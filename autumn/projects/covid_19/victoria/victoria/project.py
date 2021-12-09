@@ -4,7 +4,7 @@ import numpy as np
 from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.tools.calibration.targets import NormalTarget, PoissonTarget
+from autumn.tools.calibration.targets import PoissonTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 
@@ -19,10 +19,10 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings
 ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
-notifications = ts_set.get("notifications").truncate_start_time(551)
-infection_deaths = ts_set.get("infection_deaths").truncate_start_time(551)
-hosp_admissions = ts_set.get("hospital_admissions").truncate_start_time(551)
-icu_admissions = ts_set.get("icu_admissions").truncate_start_time(551)
+notifications = ts_set.get("notifications").truncate_times(551, 707)
+infection_deaths = ts_set.get("infection_deaths").truncate_times(551, 706)
+hosp_admissions = ts_set.get("hospital_admissions").truncate_times(551, 707)
+icu_admissions = ts_set.get("icu_admissions").truncate_times(551, 707)
 targets = [
     PoissonTarget(notifications),
     PoissonTarget(infection_deaths),

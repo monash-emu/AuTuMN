@@ -6,12 +6,14 @@ from autumn.models.covid_19.parameters import MicroDistancingFunc
 from autumn.models.covid_19.constants import LOCATIONS
 from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 from autumn.tools.utils.utils import return_constant_value, get_product_two_functions
+from autumn.tools.inputs.covid_survey.queries import get_percent_mc
+
 
 ADJUSTER_SUFFIX = "_adjuster"
 
 
 def get_microdistancing_funcs(
-        params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool
+        params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool, iso3: str
 ) -> Dict[str, Callable[[float], float]]:
     """
     Returns a dictionary of time-varying functions.
@@ -21,6 +23,7 @@ def get_microdistancing_funcs(
     Args:
         params: Microdistancing function requests
         square_mobility_effect: Whether to square the effect on transmission (to account for both infector and infectee)
+        iso3: ISO3 code of the modelled country
 
     Returns:
         The microdistancing functions that should be applied to each of the mobility locations
@@ -43,7 +46,7 @@ def get_microdistancing_funcs(
                 continue
 
             # Build the raw function of time according to user requests
-            microdist_func = get_microdist_func_component(func_params)
+            microdist_func = get_microdist_func_component(func_params, iso3)
 
             # Adjust an existing microdistancing function with another function if specified
             adjustment_key = f"{key}_adjuster"
@@ -54,7 +57,7 @@ def get_microdistancing_funcs(
                 assert params[f"{key}_adjuster"].locations == params[f"{key}"].locations
 
                 # An adjustment function is applied to the original function
-                waning_adjustment = get_microdist_func_component(adjustment_func_params)
+                waning_adjustment = get_microdist_func_component(adjustment_func_params, iso3)
 
             # Otherwise no adjustments
             else:
@@ -80,7 +83,7 @@ def get_microdistancing_funcs(
     return final_adjustments
 
 
-def get_microdist_func_component(func_params: MicroDistancingFunc):
+def get_microdist_func_component(func_params: MicroDistancingFunc, iso3: str):
     """
     Get a single function of time using the standard parameter request structure for any microdistancing function, or
     adjustment to a microdistancing function.
@@ -88,6 +91,7 @@ def get_microdist_func_component(func_params: MicroDistancingFunc):
 
     Args:
         func_params: The parameters used to define the microdistancing function
+        iso3: ISO3 code of the modelled country
 
     Returns:
         Function of time returning a scalar
@@ -105,3 +109,10 @@ def get_microdist_func_component(func_params: MicroDistancingFunc):
 
     elif func_params.function_type == "constant":
         return return_constant_value(func_params.parameters.effect)
+
+    elif func_params.function_type == "survey":
+        survey_data = get_percent_mc(iso3)
+        micro_times = list(survey_data[0])
+        multiplier = func_params.parameters.effect
+        micro_vals = [multiplier * value for value in survey_data[1]]
+        return scale_up_function(micro_times, micro_vals, method=4)

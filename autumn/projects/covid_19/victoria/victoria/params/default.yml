@@ -68,12 +68,9 @@ mobility:
         - school
         - work
     face_coverings: # Mandatory face coverings
-      function_type: tanh  # Even though this is constant, set as tanh for modification in the roadmap scenario
+      function_type: survey
       parameters:
-        shape: 0.5  # Transition over about a week, when we turn down the face coverings usage in the roadmap scenario
-        inflection_time: 694.  # 24th November 2021
-        start_asymptote: 0.84
-        end_asymptote: 0.84
+        effect: 0.25
       locations:
         - other_locations
         - school

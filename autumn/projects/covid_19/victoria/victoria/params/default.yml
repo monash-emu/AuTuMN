@@ -91,7 +91,7 @@ time:
   start: 525
   end: 730
 
-contact_rate: 0.02
+contact_rate: 0.078
 
 mixing_matrices:
   source_iso3: GBR

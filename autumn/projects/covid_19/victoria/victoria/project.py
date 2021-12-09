@@ -36,6 +36,7 @@ priors = [
     ),
     UniformPrior("vaccination.vacc_full_effect_duration", (60., 180.), jumping_stdev=15.),
     UniformPrior("mobility.microdistancing.face_coverings_adjuster.parameters.effect", (0.05, 0.3), jumping_stdev=0.04),
+    UniformPrior("infectious_seed", (20., 150.), jumping_stdev=30.),
 ]
 
 calibration = Calibration(priors=priors, targets=targets)

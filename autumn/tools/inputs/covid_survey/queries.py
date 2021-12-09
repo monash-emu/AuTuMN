@@ -33,6 +33,3 @@ def get_survey_results(iso3, col_name, table_name):
 
 
     return dates, values
-
-
-print(max(list(get_percent_mc("AUS")[1])))

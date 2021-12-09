@@ -34,7 +34,7 @@ else:
 # Load proposal sds from yml file
 use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
-calibration = Calibration(priors=priors, targets=targets, random_process=rp, metropolis_init="lhs")
+calibration = Calibration(priors=priors, targets=targets, random_process=rp, metropolis_init="current_params")
 
 # FIXME: Replace with flexible Python plot request API.
 import json
@@ -49,4 +49,4 @@ project = Project(Region.PHILIPPINES, Models.SM_SIR, build_model, param_set, cal
 
 
 # from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)

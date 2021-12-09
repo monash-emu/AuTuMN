@@ -13,7 +13,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 # Load and configure calibration settings.
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.1, 0.2]),
+    UniformPrior("contact_rate", [0.01, 0.02]),
     UniformPrior("infection_duration", [5, 12]),
     UniformPrior("infectious_seed", [1, 200]),
 ]

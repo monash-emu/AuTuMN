@@ -1,13 +1,103 @@
 description: BASELINE
 
+country:
+  iso3: AUS
+
+population:
+  region: Victoria
+  year: 2020
+
+mobility:
+  region: Victoria
+  age_mixing: null
+  smooth_google_data: false
+  square_mobility_effect: true
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.4
+      grocery_and_pharmacy: 0.4
+      parks: 0.1
+      transit_stations: 0.1
+    home:
+      residential: 1.
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-07-15
+        - 2021-07-16  # Schools close with lockdown 5
+        - 2021-07-26
+        - 2021-07-27  # Schools re-open after lockdown 5
+        - 2021-08-04
+        - 2021-08-05  # Schools close with lockdown 6
+      values:
+        - 1.
+        - 0.1
+        - 0.1
+        - 1.
+        - 1.
+        - 0.1
+
+  microdistancing:
+    home_reduction:
+      function_type: constant
+      parameters:
+        effect: 0.206
+      locations:
+        - home
+    behaviour:
+      # Parameters of tanh function manually calibrated using notebooks/user/jtrauer/vic_microdistancing.ipynb
+      function_type: tanh
+      parameters:
+        shape: 0.1
+        inflection_time: 595.
+        start_asymptote: 0.165
+        end_asymptote: 0.241
+      locations:
+        - other_locations
+        - school
+        - work
+    behaviour_adjuster:
+      function_type: constant
+      parameters:
+        effect: 0.3336881545907932  # Median posterior estimate from 2020
+      locations:
+        - other_locations
+        - school
+        - work
+    face_coverings: # Mandatory face coverings
+      function_type: tanh  # Even though this is constant, set as tanh for modification in the roadmap scenario
+      parameters:
+        shape: 0.5  # Transition over about a week, when we turn down the face coverings usage in the roadmap scenario
+        inflection_time: 694.  # 24th November 2021
+        start_asymptote: 0.84
+        end_asymptote: 0.84
+      locations:
+        - other_locations
+        - school
+        - work
+    face_coverings_adjuster:
+      function_type: constant
+      parameters:
+        effect: 0.25
+      locations:
+        - other_locations
+        - school
+        - work
+
 time:
-  start: 550
+  start: 525
   end: 730
 
 contact_rate: 0.02
 
 mixing_matrices:
   source_iso3: GBR
+
+infection_fatality:
+  multiplier: 2.
 
 clinical_stratification:
   non_sympt_infect_multiplier: 0.509  # Median posterior estimate from 2020
@@ -40,21 +130,26 @@ clinical_stratification:
 
   icu_prop: 0.1875980041535647  # Median posterior estimate from 2020
 
+# VAHI, 1st July to 30th September
+sojourn:
+  compartment_periods:
+    hospital_late: 4.234  # (1.918919 * 74 + 3.542373 * 590 + 6.747826 * 230 + 5 * 2) / (74 + 590 + 230 + 2)
+    icu_early: 13.189283389438017  # Need to calculate - pre-ICU hospital period 5.74 - 4.31 = 1.43 seems too short
+    icu_late: 4.31  # mean((3.84, 3.96, 4.07, 4.19, 4.31, 4.43, 4.55, 4.67, 4.78))
+  compartment_periods_calculated:
+    exposed:
+      total_period: 6.095798813756773  # Median posterior estimate from 2020
+    active:
+      total_period: 6.431724510638751  # Median posterior estimate from 2020
+      proportions:
+        early: 0.5
+        late: 0.5
+
 contact_tracing:
   assumed_trace_prop: 0.85
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2
   floor: 0.5
-
-country:
-  iso3: AUS
-
-population:
-  region: Victoria
-  year: 2020
-
-mobility:
-  region: Victoria
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-03
@@ -94,4 +189,4 @@ vaccination:
           - 50
           - 60
           - 70
-  program_start_time: 550
+  program_start_time: 525

@@ -203,7 +203,7 @@ vaccination:
     ve_infectiousness: 0.32  # Calibrated
     ve_hospitalisation: 0.97
     ve_death: 0.97
-  boost_delay: 180.
+  boost_delay: 10000.
 
   # Transition parameters
   second_dose_delay:

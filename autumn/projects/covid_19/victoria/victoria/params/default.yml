@@ -53,7 +53,7 @@ mobility:
         - 0.2  #FIXME
         - 0.4  #FIXME Should represent full-time in Regional and part time in Metro
         - 0.4  #FIXME
-        - 1.
+        - .6   #FIXME: may not want to use 100% if specific preventive measures are in place
 
 
   microdistancing:

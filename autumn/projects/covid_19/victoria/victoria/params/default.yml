@@ -155,6 +155,7 @@ testing_to_detection:
 
 # VE parameters taken from LSHTM's Autumn–winter scenarios 2021–2022 report - https://tinyurl.com/ve-params
 vaccination:
+  # Efficacy parameters
   one_dose:
     ve_sympt_covid: 0.57
     ve_prop_prevent_infection_ratio: 1.
@@ -167,12 +168,30 @@ vaccination:
     ve_infectiousness: 0.32  # Calibrated
     ve_hospitalisation: 0.95
     ve_death: 0.96
+  part_waned:
+    ve_sympt_covid: 0.28
+    ve_prop_prevent_infection: 0.8
+    ve_infectiousness: 0.15
+    ve_hospitalisation: 0.84
+    ve_death: 0.84
+  fully_waned:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_infectiousness: 0.
+    ve_hospitalisation: 0.5
+    ve_death: 0.5
+
+  # Transition parameters
   second_dose_delay:
     shape: 0.1
     inflection_time: 624.  # Middle of September 2021, so that most scaling occurs during September
     start_asymptote: 43.  # Baseline lag in vaccination curves, 43 days
     end_asymptote: 28.  # Shortened lag from Dept's spreadsheet, 28 days
   lag: 14
+  vacc_full_effect_duration: 90.
+  vacc_part_effect_duration: 360.
+
+
   roll_out_components:
     - vic_supply:
         start_time: 454

@@ -1,10 +1,10 @@
 description: >
-  SCENARIO 3:
+  SCENARIO 6:
   60% and 90% of the population aged 12-17 will be fully vaccinated on 15th Dec 2021 and 31st Jan 2022, respectively.
   Vaccination for the 20+ age group continues at the speed of 400000 new fully vaccinated people per month for the next six months.
   Schools start to reopen on 13rd Dec 2021 at 30% every 2 weeks.
   Booster dose is provided 6 months after the second dose.
-  The Omicron variant starts to invade on 01st Jan 2022.
+  The Omicron variant does not enter the city.
   Mobility goes back to normal starting from 24th Dec 2021.
 
 time:
@@ -44,10 +44,6 @@ mobility:
         - 0.4
         - 0.7
         - 1.0
-
-voc_emergence:
-  omicron:
-    start_time: 732. # 01st Jan 2022
 
 # All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/HCMC_vaccination_status
 vaccination:

@@ -32,6 +32,15 @@ mobility:
         - 2021-07-27  # Schools re-open after lockdown 5
         - 2021-08-04
         - 2021-08-05  # Schools close with lockdown 6
+        #  For metro, part-time from October 22, full time from November 5.
+        #  For regional, part-time from October 11, full time from October 22
+        - 2021-10-10
+        - 2021-10-11 # back to part-time in Regional
+        - 2021-10-21
+        - 2021-10-22 # full-time in Regional and part time in Metro
+        - 2021-11-04
+        - 2021-11-05 # Full time in both Regional and Metro
+
       values:
         - 1.
         - 0.1
@@ -39,6 +48,13 @@ mobility:
         - 1.
         - 1.
         - 0.1
+        - 0.1
+        - 0.2  #FIXME  Should represent part-time in Regional and fully closed in Metro
+        - 0.2  #FIXME
+        - 0.6  #FIXME Should represent full-time in Regional and part time in Metro
+        - 0.6  #FIXME
+        - 1.
+
 
   microdistancing:
     home_reduction:

@@ -11,15 +11,15 @@ from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (
     COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
-    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VACCINATION_STRATA
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH
 )
-from .outputs.common import CovidOutputsBuilder, TimeProcess
+from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
 from .strat_processing.vaccination import add_vacc_rollout_requests, add_vic_regional_vacc, apply_standard_vacc_coverage
 from .strat_processing import tracing
 from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
-from .strat_processing.vaccination import get_second_dose_delay_rate
+from .strat_processing.vaccination import get_second_dose_delay_rate, find_vacc_strata
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
 from .stratifications.tracing import get_tracing_strat
@@ -271,23 +271,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     vacc_params = params.vaccination
     if vacc_params:
+
+        # Determine the vaccination stratifiction structure
         dose_delay_params = vacc_params.second_dose_delay
         is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines stratification by dosing
         waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
-
-        # Work out the strata to be implemented
-        vacc_strata = [Vaccination.UNVACCINATED, Vaccination.ONE_DOSE_ONLY]
-        if is_dosing_active:
-            vacc_strata.append(Vaccination.VACCINATED)
-            wane_origin_stratum = Vaccination.VACCINATED
-        else:
-            wane_origin_stratum = Vaccination.ONE_DOSE_ONLY
-        if waning_vacc_immunity:
-            vacc_strata.extend([Vaccination.PART_WANED, Vaccination.WANED])
-        if params.vaccination.boost_delay and waning_vacc_immunity:
-            vacc_strata.append(Vaccination.BOOSTED)
-        elif params.vaccination.boost_delay and not waning_vacc_immunity:
-            raise ValueError("Boosting not permitted unless waning immunity also implemented")
+        is_boosting = bool(params.vaccination.boost_delay)
+        vacc_strata, wane_origin_stratum = find_vacc_strata(is_dosing_active, waning_vacc_immunity, is_boosting)
 
         # Get the vaccination stratification object
         vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)

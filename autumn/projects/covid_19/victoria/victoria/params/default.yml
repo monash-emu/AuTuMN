@@ -70,7 +70,7 @@ mobility:
     face_coverings: # Mandatory face coverings
       function_type: survey
       parameters:
-        effect: 0.25
+        effect: 1.
       locations:
         - other_locations
         - school
@@ -78,7 +78,7 @@ mobility:
     face_coverings_adjuster:
       function_type: constant
       parameters:
-        effect: 0.25
+        effect: 0.15
       locations:
         - other_locations
         - school

@@ -12,7 +12,7 @@ time:
 
 mobility:
   mixing:
-    other_localtions:
+    other_locations:
       append: true
       times:
         - 2021-12-23

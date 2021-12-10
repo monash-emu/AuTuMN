@@ -140,51 +140,37 @@ class CovidOutputsBuilder(OutputsBuilder):
                 start_time=cumul_inc_start_time,
             )
 
-        # Age-specific notifications
+            # Age-specific notifications
         for agegroup in AGEGROUP_STRATA:
             age_notification_pathways = []
 
             # First track all traced cases (regardless of clinical stratum)
             if self.is_contact_tracing:
-                name = f"progress_tracedXagegroup_{agegroup}"
+                name = f"progress_tracedX{agegroup}"
                 age_notification_pathways.append(name)
                 self.model.request_output_for_flow(
                     name=name,
-                    flow_name=PROGRESS,
-                    dest_strata={"tracing": Tracing.TRACED, "agegroup": agegroup},
+                    flow_name="progress",
+                    dest_strata={"tracing": "traced", "agegroup": agegroup},
                     save_results=False,
                 )
 
             # Then track untraced cases that are passively detected (depending on clinical stratum)
-            name = f"progress_untracedXagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
-            age_notification_pathways.append(name)
-            self.model.request_output_for_flow(
-                name=name,
-                flow_name=PROGRESS,
-                dest_strata=dest_strata,
-                save_results=False,
-            )
-            for clinical in [Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
-                dest_strata = {"clinical": clinical, "agegroup": agegroup}
-                dest_strata.update(self.untraced_stratum)
-                notified_hospitalisations = f"_progress_untracedXagegroup_{agegroup}Xclinical_{clinical}"
+            for clinical in NOTIFICATION_CLINICAL_STRATA:
+                name = f"progress_untracedXagegroup_{agegroup}X{clinical}"
+                dest_strata = {"clinical": clinical, "tracing": "untraced", "agegroup": agegroup} if \
+                    self.is_contact_tracing else \
+                    {"clinical": clinical, "agegroup": agegroup}
+                age_notification_pathways.append(name)
                 self.model.request_output_for_flow(
-                    name=notified_hospitalisations,
-                    flow_name=PROGRESS,
+                    name=name,
+                    flow_name="progress",
                     dest_strata=dest_strata,
                     save_results=False,
                 )
-                name = notified_hospitalisations[1:]
-                age_notification_pathways.append(name)
-                self.model.request_function_output(
-                    name=name,
-                    func=lambda rate: rate * hospital_reporting,  # Include reporting adjustment if requested
-                    sources=[notified_hospitalisations],
-                    save_results=False,
-                )
-
-            final_name = f"notificationsXagegroup_{agegroup}"
-            self.model.request_aggregate_output(name=final_name, sources=age_notification_pathways)
+            self.model.request_aggregate_output(
+                name=f"notificationsXagegroup_{agegroup}", sources=age_notification_pathways
+            )
 
     def request_non_hosp_notifications(self):
         """

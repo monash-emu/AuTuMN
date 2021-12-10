@@ -161,7 +161,7 @@ def main():
     cases = cases.merge(admissions, on=["date_index", "cluster_id"], how="outer")
     cases = cases.merge(deaths, on=["date_index", "cluster_id"], how="outer")
 
-    cases = cases[cases["date_index"] <= TODAY]
+    cases = cases[cases["date_index"] < TODAY]
 
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:

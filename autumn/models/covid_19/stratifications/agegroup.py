@@ -59,6 +59,6 @@ def get_agegroup_strat(
 
     # Adjust infection flows based on the susceptibility of the age group
     age_strat_suscept = params.age_stratification.susceptibility
-    age_strat.set_flow_adjustments(INFECTION, {sus: Multiply(value) for sus, value in age_strat_suscept.items()})
+    age_strat.add_flow_adjustments(INFECTION, {sus: Multiply(value) for sus, value in age_strat_suscept.items()})
 
     return age_strat

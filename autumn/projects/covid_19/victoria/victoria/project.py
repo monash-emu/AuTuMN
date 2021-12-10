@@ -36,7 +36,9 @@ priors = [
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period", mean=3.5, stdev=1.0, trunc_range=(2.0, np.inf)
     ),
-    UniformPrior("vaccination.vacc_full_effect_duration", (60., 180.), jumping_stdev=15.),
+    TruncNormalPrior(
+        "vaccination.vacc_full_effect_duration", mean=90., stdev=30., trunc_range=(30, np.inf), jumping_stdev=15.
+    ),
     UniformPrior("mobility.microdistancing.face_coverings_adjuster.parameters.effect", (0.05, 0.3), jumping_stdev=0.04),
     UniformPrior("infectious_seed", (2., 100.), jumping_stdev=30.),
 ]

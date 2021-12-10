@@ -10,7 +10,6 @@ from autumn.settings import Region, Models
 
 # Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
-baseline_params = base_params.update(default_path)
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = (base_params.update(default_path).update(mle_path, calibration_format=True))
 

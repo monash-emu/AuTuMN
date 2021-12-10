@@ -1,4 +1,7 @@
 description: boosting
 
+time:
+  start: 732  # 1st January 2022
+
 vaccination:
   boost_delay: 180.

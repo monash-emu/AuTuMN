@@ -77,7 +77,7 @@ def get_blank_adjustments_for_strat(transitions: list) -> Dict[str, dict]:
 
     return flow_adjs
 
-set_flow_adjustments
+
 def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments: dict, voc: str):
     """
     Add the flow adjustments to the blank adjustments created above by get_blank_adjustments_for_strat.
@@ -105,13 +105,13 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
 
 
 def add_clinical_adjustments_to_strat(
-        strat: Stratifset_flow_adjustmentsDict[str, dict], unaffected_stratum: str, vocs: list
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: list
 ):
     """
     Add the clinical adjustments created in update_adjustments_for_strat to a stratification.
 
     Uses the summer method to the stratification add_flow_adjustments, that will then be applied when the stratify_with
-    is called from the modset_flow_adjustments stratification object.
+    is called from the model object using this stratification object.
 
     Note:
         Whether source or dest(ination) is requested is very important and dependent on where the clinical
@@ -154,7 +154,7 @@ def apply_immunity_to_strat(
     """
     Apply all the immunity effects to a stratification by immunity (either vaccination or history)
 
-    Args:set_flow_adjustments
+    Args:
         stratification: The current stratification being adjusted
         params: All requested model parameters
         stratified_adjusters: The VoC and outcome-specific adjusters

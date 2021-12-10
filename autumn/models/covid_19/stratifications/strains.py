@@ -36,6 +36,6 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]]):
     strain_strat.set_population_split(population_split)
 
     # Apply transmissibility adjustments
-    strain_strat.set_flow_adjustments(INFECTION, transmissibility_adjustment)
+    strain_strat.add_flow_adjustments(INFECTION, transmissibility_adjustment)
 
     return strain_strat

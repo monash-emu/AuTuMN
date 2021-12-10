@@ -36,7 +36,7 @@ def get_organ_strat(params: Parameters) -> Stratification:
             params.infect_death_rate_dict[effective_stratum]
         )
 
-    strat.set_flow_adjustments("infect_death", infect_death_adjs)
+    strat.add_flow_adjustments("infect_death", infect_death_adjs)
 
     # Define different natural history (self recovery) by organ status
     self_recovery_adjs = {}
@@ -51,7 +51,7 @@ def get_organ_strat(params: Parameters) -> Stratification:
             params.self_recovery_rate_dict[effective_stratum]
         )
 
-    strat.set_flow_adjustments("self_recovery", self_recovery_adjs)
+    strat.add_flow_adjustments("self_recovery", self_recovery_adjs)
 
     # Define different detection rates by organ status.
     screening_rate_func = tanh_based_scaleup(
@@ -87,7 +87,7 @@ def get_organ_strat(params: Parameters) -> Stratification:
         )
 
     detection_adjs = {k: Multiply(v) for k, v in detection_adjs.items()}
-    strat.set_flow_adjustments("detection", detection_adjs)
+    strat.add_flow_adjustments("detection", detection_adjs)
 
     # Adjust the progression rates by organ using the requested incidence proportions
     splitting_proportions = {
@@ -99,7 +99,7 @@ def get_organ_strat(params: Parameters) -> Stratification:
     }
     for flow_name in ["early_activation", "late_activation"]:
         flow_adjs = {k: Multiply(v) for k, v in splitting_proportions.items()}
-        strat.set_flow_adjustments(flow_name, flow_adjs)
+        strat.add_flow_adjustments(flow_name, flow_adjs)
 
     return strat
 

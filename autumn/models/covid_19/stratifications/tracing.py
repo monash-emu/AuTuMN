@@ -25,7 +25,7 @@ def get_tracing_strat(quarantine_infect_mult: float, other_infect_mults: Dict[st
     tracing_strat.set_population_split({Tracing.TRACED: 0., Tracing.UNTRACED: 1.})
 
     # Everybody starts out untraced when they are first infected
-    tracing_strat.set_flow_adjustments(INFECTION, {Tracing.TRACED: Multiply(0.), Tracing.UNTRACED: Multiply(1.)})
+    tracing_strat.add_flow_adjustments(INFECTION, {Tracing.TRACED: Multiply(0.), Tracing.UNTRACED: Multiply(1.)})
 
     # Ensure the infectiousness adjustments are the same, which ensures that the stratification order doesn't matter
     multipliers_equal = [quarantine_infect_mult == other_infect_mults[mult] for mult in other_infect_mults]

@@ -34,7 +34,7 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     death_adjs = {str(k): Multiply(v) for k, v in universal_death_funcs.items()}
     for comp in COMPARTMENTS:
         flow_name = f"universal_death_for_{comp}"
-        strat.set_flow_adjustments(flow_name, death_adjs)
+        strat.add_flow_adjustments(flow_name, death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
     for flow_name, latency_params in params.age_specific_latency.items():
@@ -81,7 +81,7 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
                 adjs[age] = get_latency_with_diabetes
 
         adjs = {str(k): Multiply(v) for k, v in adjs.items()}
-        strat.set_flow_adjustments(flow_name, adjs)
+        strat.add_flow_adjustments(flow_name, adjs)
 
     # Set age-specific infectiousness
     for comp in INFECTIOUS_COMPS:
@@ -156,9 +156,9 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
     treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}
     treatment_relapse_adjs = {str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()}
-    strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
-    strat.set_flow_adjustments("treatment_death", treatment_death_adjs)
-    strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
+    strat.add_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
+    strat.add_flow_adjustments("treatment_death", treatment_death_adjs)
+    strat.add_flow_adjustments("relapse", treatment_relapse_adjs)
 
     # Add BCG effect without stratifying for BCG
     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
@@ -189,7 +189,7 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
         flow_affected_by_bcg = "infection"
     elif params.bcg_effect == "mortality":
         flow_affected_by_bcg = "infect_death"
-    strat.set_flow_adjustments(flow_affected_by_bcg, bcg_adjs)
+    strat.add_flow_adjustments(flow_affected_by_bcg, bcg_adjs)
 
     return strat
 

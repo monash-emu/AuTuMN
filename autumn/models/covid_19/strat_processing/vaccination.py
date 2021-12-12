@@ -4,8 +4,6 @@ import numpy as np
 import numba
 
 from summer import CompartmentalModel, Multiply, Stratification
-from summer.utils import ref_times_to_dti
-from autumn.models.covid_19.constants import BASE_DATE
 
 from autumn.models.covid_19.constants import (
     Vaccination, INFECTION, DISEASE_COMPARTMENTS, CLINICAL_STRATA, Compartment, AGE_CLINICAL_TRANSITIONS,
@@ -104,7 +102,7 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
 
 
 def add_clinical_adjustments_to_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: list
+        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: list, include_overlap: bool,
 ):
     """
     Add the clinical adjustments created in update_adjustments_for_strat to a stratification.
@@ -124,6 +122,9 @@ def add_clinical_adjustments_to_strat(
 
     """
 
+    # Add the additional condition that this is applied to the vaccinated experienced only if we're in the history strat
+    overlap_strat = {"vaccination": Vaccination.VACCINATED} if include_overlap else {}
+
     # Loop over other stratifications that may affect these parameters, i.e. age group, VoC status and clinical status
     for agegroup in AGEGROUP_STRATA:
         for voc in vocs:
@@ -133,6 +134,7 @@ def add_clinical_adjustments_to_strat(
                 working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
                 voc_strat = {"strain": voc} if len(vocs) > 1 else {}
                 working_strata.update(voc_strat)
+                working_strata.update(overlap_strat)
 
                 # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
                 infectious_onset_adjs = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
@@ -181,7 +183,11 @@ def apply_immunity_to_strat(
 
             # Get them into the format needed to be applied to the model
             update_adjustments_for_strat(stratum, flow_adjs[voc], adjs)
-    add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs)
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs, include_overlap=False)
+
+    # Just checking this is the right place to insert this code
+    if stratification.name == "history" and params.vaccination:
+        add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs, include_overlap=True)
 
     # Effect against infection
     infect_adjs = {stratum: Multiply(1. - effects[stratum]["infection_efficacy"]) for stratum in changed_strata}

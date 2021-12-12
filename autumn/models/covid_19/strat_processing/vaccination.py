@@ -186,7 +186,7 @@ def apply_immunity_to_strat(
     add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs, include_overlap=False)
 
     # Just checking this is the right place to insert this code
-    if stratification.name == "history" and params.vaccination:
+    if stratification.name == "history" and params.vaccination and params.vaccination.second_dose_delay:
         add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs, include_overlap=True)
 
     # Effect against infection

@@ -524,6 +524,7 @@ class Vaccination(BaseModel):
     fully_waned: Optional[VaccEffectiveness]
     boosted: Optional[VaccEffectiveness]
     lag: float
+    program_start_time: Optional[float]
 
     standard_supply: bool
 

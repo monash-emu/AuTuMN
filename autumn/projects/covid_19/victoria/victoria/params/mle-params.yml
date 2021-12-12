@@ -1,0 +1,5 @@
+contact_rate: 0.06784318120234685
+infectious_seed: 20.12693853517173
+mobility.microdistancing.face_coverings_adjuster.parameters.effect: 0.09377933610444542
+sojourn.compartment_periods_calculated.exposed.total_period: 3.5279736628646816
+vaccination.vacc_full_effect_duration: 177.03573183977926

@@ -78,7 +78,7 @@ def get_blank_adjustments_for_strat(transitions: list) -> Dict[str, dict]:
     return flow_adjs
 
 
-def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments: dict, voc: str):
+def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments: dict):
     """
     Add the flow adjustments to the blank adjustments created above by get_blank_adjustments_for_strat.
 
@@ -86,7 +86,6 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
         strat: The current stratification that we're modifying here
         flow_adjustments: Tiered dictionary containing the adjustments
         adjustments: Adjustments in the format that they are returned by get_all_adjustments
-        voc: The current VoC being considered, the VoC loop being external to this function
 
     """
 
@@ -96,12 +95,12 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
 
             # *** Note that PROGRESS is not indexed by age group
             modification = {strat: adjustments[PROGRESS][clinical_stratum]}
-            flow_adjustments[voc][agegroup][clinical_stratum][PROGRESS].update(modification)
+            flow_adjustments[agegroup][clinical_stratum][PROGRESS].update(modification)
 
             # ... but the other transition processes are
             for transition in AGE_CLINICAL_TRANSITIONS:
                 modification = {strat: adjustments[transition][agegroup][clinical_stratum]}
-                flow_adjustments[voc][agegroup][clinical_stratum][transition].update(modification)
+                flow_adjustments[agegroup][clinical_stratum][transition].update(modification)
 
 
 def add_clinical_adjustments_to_strat(
@@ -181,7 +180,7 @@ def apply_immunity_to_strat(
             )
 
             # Get them into the format needed to be applied to the model
-            update_adjustments_for_strat(stratum, flow_adjs, adjs, voc)
+            update_adjustments_for_strat(stratum, flow_adjs[voc], adjs)
     add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs)
 
     # Effect against infection

@@ -186,7 +186,7 @@ def set_repo_to_commit(conn: Connection, commit: str):
         conn.run("git fetch --quiet", echo=True)
         conn.run(f"git checkout --quiet {commit}", echo=True)
         # Do a pull here so we can use branch names as commits and reliably update them
-        conn.run(f"git pull --quiet {commit}", echo=True)
+        conn.run(f"git pull --quiet", echo=True)
         conn.run(f"git checkout --quiet {commit}", echo=True)
     logger.info("Done updating repo.")
 

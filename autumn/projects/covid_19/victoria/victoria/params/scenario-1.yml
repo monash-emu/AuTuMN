@@ -1,2 +1,4 @@
-contact_rate: 1.5
+description: boosting
 
+vaccination:
+  boost_delay: 180.

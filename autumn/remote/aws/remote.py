@@ -17,15 +17,15 @@ def cleanup_builds(instance):
         conn.run("sudo rm -rf /var/lib/buildkite-agent/builds/", echo=True)
 
 
-def run_powerbi(instance, run_id: str, urunid: str, branch: str):
+def run_powerbi(instance, run_id: str, urunid: str, commit: str):
     """Run PowerBI processing on the remote server"""
     run_id = run_id.lower()
     msg = "Running PowerBI processing for run %s on AWS instance %s"
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
         print_hostname(conn)
-        if branch != "use_original_commit":
-            update_repo(conn, branch=branch)
+        if commit != "use_original_commit":
+            set_repo_to_commit(conn, commit=commit)
         else:
             set_run_id(conn, run_id)
         install_requirements(conn)
@@ -37,7 +37,7 @@ def run_powerbi(instance, run_id: str, urunid: str, branch: str):
 
 
 def run_full_model(
-    instance, run_id: str, burn_in: int, sample: int, use_latest_code: bool, branch: str
+    instance, run_id: str, burn_in: int, sample: int, commit: str
 ):
     """Run full model job on the remote server"""
     run_id = run_id.lower()
@@ -45,8 +45,8 @@ def run_full_model(
     logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:
         print_hostname(conn)
-        if use_latest_code:
-            update_repo(conn, branch=branch)
+        if commit != "use_original_commit":
+            set_repo_to_commit(conn, commit=commit)
         else:
             set_run_id(conn, run_id)
 
@@ -67,7 +67,6 @@ def resume_calibration(
     baserun: str,
     num_chains: int,
     runtime: int,
-    branch: str,
 ):
     """Resume calibration job on the remote server"""
     msg = "Resuming calibration with %s chains for %s seconds on AWS instance %s."
@@ -78,7 +77,6 @@ def resume_calibration(
 
     with get_connection(instance) as conn:
         print_hostname(conn)
-        #update_repo(conn, branch=branch)
         set_run_id(conn, baserun)
         install_requirements(conn)
         read_secrets(conn)
@@ -101,7 +99,7 @@ def run_calibration(
     region_name: str,
     num_chains: int,
     runtime: int,
-    branch: str,
+    commit: str,
 ):
     """Run calibration job on the remote server"""
     msg = "Running calibration %s %s with %s chains for %s seconds on AWS instance %s."
@@ -109,7 +107,7 @@ def run_calibration(
     run_id = None
     with get_connection(instance) as conn:
         print_hostname(conn)
-        update_repo(conn, branch=branch)
+        set_repo_to_commit(conn, commit=commit)
         install_requirements(conn)
         read_secrets(conn)
         run_id = get_run_id(conn, app_name, region_name)
@@ -178,6 +176,15 @@ def update_repo(conn: Connection, branch: str = "master"):
         conn.run("git fetch --quiet", echo=True)
         conn.run(f"git checkout --quiet {branch}", echo=True)
         conn.run("git pull --quiet", echo=True)
+    logger.info("Done updating repo.")
+
+def set_repo_to_commit(conn: Connection, commit: str):
+    """Update remote Git repo to use the specified commit"""
+    logger.info(f"Updating git repository to use commit {commit}")
+    conn.sudo(f"chown -R ubuntu:ubuntu {CODE_PATH}", echo=True)
+    with conn.cd(CODE_PATH):
+        conn.run("git fetch --quiet", echo=True)
+        conn.run(f"git checkout --quiet {commit}", echo=True)
     logger.info("Done updating repo.")
 
 

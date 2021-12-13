@@ -46,7 +46,7 @@ priors = [
     UniformPrior("voc_emergence.alpha_beta.start_time", [370, 410]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [3.2, 4.5]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [7.25, 11]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [8.5, 11.5]),
 ]
 
 # Load proposal sds from yml file

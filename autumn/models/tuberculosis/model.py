@@ -309,6 +309,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 f"ltbi_importation_{dest_compartment}",
                 case_import_func,
                 dest=dest_compartment,
+                split_imports=False
             )
 
     # Derived outputs

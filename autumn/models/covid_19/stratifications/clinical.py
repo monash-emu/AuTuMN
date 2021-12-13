@@ -74,8 +74,8 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
         for agegroup in AGEGROUP_STRATA:
             source = {"agegroup": agegroup}
             source.update(voc_stratum)
-            clinical_strat.add_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified
+            clinical_strat.set_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified
             for transition in AGE_CLINICAL_TRANSITIONS:
-                clinical_strat.add_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)
+                clinical_strat.set_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)
 
     return clinical_strat

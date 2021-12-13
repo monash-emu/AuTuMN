@@ -163,7 +163,7 @@ def apply_immunity_to_strat(
 
     imm_params = getattr(params, stratification.name)
     changed_strata = [strat for strat in stratification.strata if strat != unaffected_stratum]
-    effects, flow_adjs = {}, {}
+    infect_efficacy, flow_adjs = {}, {}
     vocs = list(stratified_adjusters.keys())
     for voc in vocs:
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
@@ -171,7 +171,7 @@ def apply_immunity_to_strat(
 
             # Collate the effects together
             strat_args = (params, stratum, stratified_adjusters[voc], stratification.name)
-            effects[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
+            infect_efficacy[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
             adjs = get_all_adjustments(
@@ -184,7 +184,7 @@ def apply_immunity_to_strat(
     add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs)
 
     # Effect against infection
-    infect_adjs = {stratum: Multiply(1. - effects[stratum]["infection_efficacy"]) for stratum in changed_strata}
+    infect_adjs = {stratum: Multiply(1. - infect_efficacy[stratum]) for stratum in changed_strata}
     infect_adjs.update({unaffected_stratum: None})
     stratification.set_flow_adjustments(INFECTION, infect_adjs)
 
@@ -240,7 +240,7 @@ def get_stratum_vacc_history_effect(
     hospital_adjuster *= voc_adjusters["hosp"]
     sympt_adjuster *= voc_adjusters["sympt"]
 
-    return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster
+    return vacc_effects["infection_efficacy"], sympt_adjuster, hospital_adjuster, ifr_adjuster
 
 
 def get_hosp_given_case_effect(ve_hospitalisation: float, ve_case: float) -> float:

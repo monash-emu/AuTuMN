@@ -48,7 +48,7 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
     # Set generic flow adjustments
     for flow_name, adjustment in details["adjustments"].items():
         adj = {k: Multiply(v) for k, v in adjustment.items()}
-        strat.add_flow_adjustments(flow_name, adj)
+        strat.set_flow_adjustments(flow_name, adj)
 
     # ACF and preventive treatment interventions
     implement_acf = len(params.time_variant_acf) > 0
@@ -110,7 +110,7 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
                 intervention_adjustments[intervention_stratum] = intervention_func
 
             intervention_adjustments = {k: Multiply(v) for k, v in intervention_adjustments.items()}
-            strat.add_flow_adjustments(
+            strat.set_flow_adjustments(
                 flow_name, intervention_adjustments, source_strata={"age": str(age)}
             )
 

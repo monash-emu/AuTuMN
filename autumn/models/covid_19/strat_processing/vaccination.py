@@ -109,7 +109,7 @@ def add_clinical_adjustments_to_strat(
     """
     Add the clinical adjustments created in update_adjustments_for_strat to a stratification.
 
-    Uses the summer method to the stratification add_flow_adjustments, that will then be applied when the stratify_with
+    Uses the summer method to the stratification set_flow_adjustments, that will then be applied when the stratify_with
     is called from the model object using this stratification object.
 
     Note:
@@ -137,13 +137,13 @@ def add_clinical_adjustments_to_strat(
                 # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
                 infectious_onset_adjs = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
                 infectious_onset_adjs[unaffected_stratum] = None
-                strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
+                strat.set_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
                 # * Progress can be either source, dest(ination) or both, but infect_death and recovery must be source *
                 for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
                     adjs = flow_adjs[voc][agegroup][clinical_stratum][transition]
                     adjs[unaffected_stratum] = None
-                    strat.add_flow_adjustments(transition, adjs, source_strata=working_strata)
+                    strat.set_flow_adjustments(transition, adjs, source_strata=working_strata)
 
 
 def apply_immunity_to_strat(
@@ -186,7 +186,7 @@ def apply_immunity_to_strat(
     # Effect against infection
     infect_adjs = {stratum: Multiply(1. - effects[stratum]["infection_efficacy"]) for stratum in changed_strata}
     infect_adjs.update({unaffected_stratum: None})
-    stratification.add_flow_adjustments(INFECTION, infect_adjs)
+    stratification.set_flow_adjustments(INFECTION, infect_adjs)
 
     # Vaccination effect against infectiousness
     infectious_adjs = {s: Multiply(1. - getattr(getattr(imm_params, s), "ve_infectiousness")) for s in changed_strata}

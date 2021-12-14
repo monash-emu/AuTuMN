@@ -344,7 +344,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Infection history stratification.
     """
 
-    history_strat = get_history_strat(params, stratified_adjusters, is_dosing_active)
+    history_strat = get_history_strat(params, stratified_adjusters, vacc_params and vacc_params.second_dose_delay)
     model.stratify_with(history_strat)
 
     # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum

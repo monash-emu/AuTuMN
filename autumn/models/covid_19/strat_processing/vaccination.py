@@ -102,7 +102,8 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
 
 
 def add_clinical_adjustments_to_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], vocs: list, all_strata: list, strata_to_adjust: list, upstream_combinations: dict
+        strat: Stratification, flow_adjs: Dict[str, dict], vocs: list, strata_to_adjust: list,
+        upstream_restrictions: Dict[str, str]
 ):
     """
     Add the clinical adjustments created in update_adjustments_for_strat to a stratification.
@@ -116,8 +117,8 @@ def add_clinical_adjustments_to_strat(
 
     Args:
         strat: The current stratification that we're modifying here
-        flow_adjs: The requested adjustments created in the previous function
-        unaffected_stratum: The stratum that isn't affected and takes the default parameters
+        flow_adjs: The requested adjustments created in the previous function (in the wrong format)
+        all_strata: All the strata from the current stratification
         vocs: The variants of concern, that may have different severity levels
 
     """
@@ -131,17 +132,17 @@ def add_clinical_adjustments_to_strat(
                 working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
                 voc_strat = {"strain": voc} if len(vocs) > 1 else {}
                 working_strata.update(voc_strat)
-                working_strata.update(upstream_combinations)
+                working_strata.update(upstream_restrictions)
 
                 # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
-                infectious_onset_adjs = {stratum: None for stratum in all_strata}
+                infectious_onset_adjs = {stratum: None for stratum in strat.strata}
                 updates = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
                 infectious_onset_adjs.update({stratum: updates[stratum] for stratum in strata_to_adjust})
                 strat.set_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
                 # * Progress can be either source, dest(ination) or both, but infect_death and recovery must be source *
                 for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
-                    progress_adjs = {stratum: None for stratum in all_strata}
+                    progress_adjs = {stratum: None for stratum in strat.strata}
                     progress_adjs.update(flow_adjs[voc][agegroup][clinical_stratum][transition])
                     strat.set_flow_adjustments(transition, progress_adjs, source_strata=working_strata)
 
@@ -199,11 +200,9 @@ def apply_immunity_to_strat(
                 )
                 update_adjustments_for_strat(combination, overlap_adjs[voc], adjs)
 
-        add_clinical_adjustments_to_strat(
-            stratification, overlap_adjs, vocs, stratification.strata, readjust_strata, upstream_stratification
-        )
+        add_clinical_adjustments_to_strat(stratification, overlap_adjs, vocs, readjust_strata, upstream_stratification)
 
-    add_clinical_adjustments_to_strat(stratification, flow_adjs, vocs, stratification.strata, stratification.strata[1:], {})
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, vocs, stratification.strata[1:], {})
 
     # Effect against infection
     infect_adjs = {stratum: Multiply(1. - infect_efficacy[stratum]) for stratum in changed_strata}

@@ -8,7 +8,7 @@ from autumn.models.covid_19.strat_processing.vaccination import apply_immunity_t
 
 
 def get_vaccination_strat(
-        params: Parameters, all_strata: list, stratified_adjusters: Dict[str, Dict[str, float]], is_dosing_active: bool
+        params: Parameters, all_strata: list, stratified_adjusters: Dict[str, Dict[str, float]]
 ) -> Stratification:
     """
     Get the vaccination stratification and adjustments to apply to the model, calling the required functions in the

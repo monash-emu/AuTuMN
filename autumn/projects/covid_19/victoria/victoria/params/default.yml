@@ -175,16 +175,16 @@ vaccination:
   # Efficacy parameters
   one_dose:
     ve_sympt_covid: 0.57
-    ve_prop_prevent_infection_ratio: 1.
-    ve_infectiousness_ratio: 0.469  # 0.15 / 0.32 (ratio of one to two dose) - varied with fully vaccinated parameter
+    ve_prop_prevent_infection_ratio: 0.9
+    ve_infectiousness_ratio: 0.5  # Approximately half of the effect for the fully vaccinated
     ve_hospitalisation: 0.88
-    ve_death: 0.94
+    ve_death: 0.935
   fully_vaccinated:
     ve_sympt_covid: 0.73
-    ve_prop_prevent_infection: 0.95  # Very high proportions (0.51 versus 0.57 or 0.72 versus 0.73) used in calibration
+    ve_prop_prevent_infection: 0.9
     ve_infectiousness: 0.32  # Calibrated
-    ve_hospitalisation: 0.95
-    ve_death: 0.96
+    ve_hospitalisation: 0.945
+    ve_death: 0.955
   part_waned:
     ve_sympt_covid: 0.28
     ve_prop_prevent_infection: 0.8
@@ -198,11 +198,11 @@ vaccination:
     ve_hospitalisation: 0.5
     ve_death: 0.5
   boosted:
-    ve_sympt_covid: 0.8
-    ve_prop_prevent_infection: 0.95  # Very high proportions (0.51 versus 0.57 or 0.72 versus 0.73) used in calibration
-    ve_infectiousness: 0.32  # Calibrated
-    ve_hospitalisation: 0.97
-    ve_death: 0.97
+    ve_sympt_covid: 0.94
+    ve_prop_prevent_infection: 0.9
+    ve_infectiousness: 0.32
+    ve_hospitalisation: 0.993
+    ve_death: 0.993
   boost_delay: 10000.
 
   # Transition parameters

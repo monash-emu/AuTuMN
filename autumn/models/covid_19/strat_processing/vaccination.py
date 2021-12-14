@@ -157,7 +157,7 @@ def add_clinical_adjustments_to_sub_strat(
                 working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
                 voc_strat = {"strain": voc} if len(vocs) > 1 else {}
                 working_strata.update(voc_strat)
-                working_strata.update({upstream_stratification: upstream_strata})
+                working_strata.update({upstream_stratification: strat for strat in upstream_strata})
 
                 # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
                 infectious_onset_adjs = {stratum: None for stratum in strat.strata}
@@ -212,7 +212,7 @@ def apply_immunity_to_strat(
 
     if stratification.name == "history":
         upstream_stratification = "vaccination"
-        upstream_strata = "fully_vaccinated"
+        upstream_strata = ["fully_vaccinated"]
         readjust_strata = ["experienced", "waned"]
         for voc in vocs:
             overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])

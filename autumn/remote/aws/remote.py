@@ -181,13 +181,20 @@ def update_repo(conn: Connection, branch: str = "master"):
 def set_repo_to_commit(conn: Connection, commit: str):
     """Update remote Git repo to use the specified commit"""
     logger.info(f"Updating git repository to use commit {commit}")
+
+    if commit.startswith("branch:"):
+        commit = commit.split(':')[-1]
+        is_branch = True
+    else:
+        is_branch = False
+
     conn.sudo(f"chown -R ubuntu:ubuntu {CODE_PATH}", echo=True)
     with conn.cd(CODE_PATH):
         conn.run("git fetch --quiet", echo=True)
         conn.run(f"git checkout --quiet {commit}", echo=True)
-        # Do a pull here so we can use branch names as commits and reliably update them
-        conn.run(f"git pull --quiet", echo=True)
-        conn.run(f"git checkout --quiet {commit}", echo=True)
+        if is_branch:
+            conn.run("git pull --quiet", echo=True)
+            
     logger.info("Done updating repo.")
 
 

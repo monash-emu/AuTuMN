@@ -39,11 +39,10 @@ chains_field = TextInputField(
     default=7,
     type=int,
 )
-branch_field = TextInputField(
-    key="mcmc-branch",
-    title="Model git branch name",
-    hint="Which git branch do you want to use to run the model?",
-    default="master",
+commit_field = TextInputField(
+    key="commit",
+    title="Model git commit SHA",
+    hint="Which git commit do you want to use to run the model?",
     type=str,
 )
 runtime_field = TextInputField(
@@ -60,23 +59,15 @@ trigger_field = BooleanInputField(
     default="yes",
     type=bool,
 )
-spot_field = BooleanInputField(
-    key="spot-instance",
-    title="Use spot instances",
-    hint="Is 1/3 of the price but sometimes randomly fails.",
-    default="no",
-    type=bool,
-)
 
 fields = [
     model_field,
     chains_field,
-    branch_field,
+    commit_field,
     runtime_field,
     burn_in_field,
     sample_size_field,
     trigger_field,
-    spot_field,
 ]
 input_step = InputStep(
     key="calibration-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields

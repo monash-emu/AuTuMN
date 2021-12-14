@@ -38,7 +38,9 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
 
     # Find the full model run databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(FULL_RUN_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".feather")
+    chain_db_keys = []
+    for filename_base in ["mcmc_run", "mcmc_params", "derived_outputs"]:
+        chain_db_keys += list_s3(s3_client, key_prefix, key_suffix=f"{filename_base}.feather")
 
     # Download the full model run databases.
     with Timer(f"Downloading full model run data"):

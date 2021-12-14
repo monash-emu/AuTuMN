@@ -180,7 +180,7 @@ def apply_immunity_to_strat(
 
             # Collate the effects together
             strat_args = (params, strat, stratified_adjusters[voc], stratification.name)
-            infect_efficacy[strat], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
+            (infect_efficacy[strat], sympt_adj, hosp_adj, ifr_adj) = get_stratum_vacc_history_effect(*strat_args)
             severity_adjusters = sympt_adj, hosp_adj, ifr_adj
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
@@ -216,7 +216,7 @@ def apply_immunity_to_strat(
             overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
             for overlap in strata_to_readjust:
                 overlap_args = (params, request_name, stratified_adjusters[voc], stratification.name)
-                infect_overlap[overlap], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*overlap_args)
+                (infect_overlap[overlap], sympt_adj, hosp_adj, ifr_adj) = get_stratum_vacc_history_effect(*overlap_args)
                 severity_adjusters = sympt_adj, hosp_adj, ifr_adj
                 adjs = get_all_adjustments(*adj_base_params, *severity_adjusters)
                 update_adjustments_for_strat(overlap, overlap_adjs[voc], adjs)
@@ -236,7 +236,7 @@ Parameter processing.
 
 def get_stratum_vacc_history_effect(
         params: Parameters, stratum: str, voc_adjusters: Dict[str, float], stratification: str
-) -> Tuple[float, float, float, float]:
+) -> Tuple[float]:
     """
     Process the vaccination parameters for the vaccination stratum being considered.
 

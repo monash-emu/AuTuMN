@@ -177,13 +177,13 @@ vaccination:
   one_dose:
     ve_sympt_covid: 0.57  # LSHTM
     ve_prop_prevent_infection_ratio: 0.9  # Most of the protection against symptomatic Covid is mediated in this way
-    ve_infectiousness_ratio: 0.5  # Approximately half of the effect for the fully vaccinated
+    ve_infectiousness: 0.145  # LSHTM
     ve_hospitalisation: 0.88  # LSHTM
     ve_death: 0.935  # LSHTM
   fully_vaccinated:
     ve_sympt_covid: 0.73  # LSHTM
     ve_prop_prevent_infection: 0.9  # As for one dose
-    ve_infectiousness: 0.32  # Calibrated
+    ve_infectiousness: 0.32  # LSHTM
     ve_hospitalisation: 0.945  # LSHTM
     ve_death: 0.955  # LSHTM
   part_waned:
@@ -200,8 +200,8 @@ vaccination:
     ve_death: 0.5
   boosted:
     ve_sympt_covid: 0.94  # LSHTM
-    ve_prop_prevent_infection: 0.9
-    ve_infectiousness_ratio: 1.  # That is the same as for the fully vaccinated
+    ve_prop_prevent_infection: 0.9  # As for one dose and fully vaccinated
+    ve_infectiousness_ratio: 1.  # The same as for the fully vaccinated
     ve_hospitalisation: 0.993  # LSHTM
     ve_death: 0.993  # LSHTM
   boost_delay: 100000.  # Boosting off in the baseline scenario

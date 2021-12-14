@@ -256,10 +256,6 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     targets_df = pd.DataFrame(targets_data)
     target_db.dump_df("targets", targets_df)
 
-    logger.info("Converting outputs to PowerBI format")
-    outputs_df = source_db.query("outputs")
-    pbi_outputs_df = unpivot_outputs(outputs_df)
-    target_db.dump_df("powerbi_outputs", pbi_outputs_df)
     logger.info("Finished creating PowerBI output database at %s", target_db_path)
 
 

@@ -118,10 +118,13 @@ def add_clinical_adjustments_to_strat(
     Args:
         strat: The current stratification that we're modifying here
         flow_adjs: The requested adjustments created in the previous function (in the wrong format)
-        all_strata: All the strata from the current stratification
         vocs: The variants of concern, that may have different severity levels
+        strata_to_adjust: The strata being adjusted during this stratification round
+        upstream_restrictions: Any previously implemented stratifications to be filtered over
 
     """
+
+    assert all(s in strat.strata for s in strata_to_adjust), "Stratifications to filter on specified wrongly"
 
     # Loop over other stratifications that may affect these parameters, i.e. age group, VoC status and clinical status
     for agegroup in AGEGROUP_STRATA:

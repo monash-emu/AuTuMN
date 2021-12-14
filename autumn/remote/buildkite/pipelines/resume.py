@@ -19,13 +19,6 @@ chains_field = TextInputField(
     default=7,
     type=int,
 )
-branch_field = TextInputField(
-    key="mcmc-branch",
-    title="Model git branch name",
-    hint="Which git branch do you want to use to run the model?",
-    default="master",
-    type=str,
-)
 runtime_field = TextInputField(
     key="mcmc-runtime",
     title="Runtime",
@@ -33,27 +26,10 @@ runtime_field = TextInputField(
     default=0.5,
     type=lambda s: int(float(s) * 3600),
 )
-use_latest_code_field = BooleanInputField(
-    key="use-latest-code",
-    title="Use latest code for model run",
-    hint="Should this task use most recent push (HEAD)? If no, the calibration commit will be used",
-    type=bool,
-    default="no",
-)
-spot_field = BooleanInputField(
-    key="spot-instance",
-    title="Use spot instances",
-    hint="Is 1/3 of the price but sometimes randomly fails.",
-    default="no",
-    type=bool,
-)
 fields = [
     run_id_field,
     chains_field,
     runtime_field,
-    use_latest_code_field,
-    branch_field,
-    spot_field,
 ]
 input_step = InputStep(
     key="resume_calibration_settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields

@@ -120,14 +120,13 @@ def run():
 @click.option("--region", type=str, required=True)
 @click.option("--chains", type=int, required=True)
 @click.option("--runtime", type=int, required=True)
-@click.option("--branch", type=str, default="master")
-@click.option("--spot", is_flag=True)
+@click.option("--commit", type=str, required=True)
 @click.option("--dry", is_flag=True)
-def run_calibrate_cli(job, app, region, chains, runtime, branch, spot, dry):
-    run_calibrate(job, app, region, chains, runtime, branch, spot, dry)
+def run_calibrate_cli(job, app, region, chains, runtime, commit, dry):
+    run_calibrate(job, app, region, chains, runtime, commit, dry)
 
 
-def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
+def run_calibrate(job, app, region, chains, runtime, commit, dry):
     """
     Run a MCMC calibration on an AWS server.
     """
@@ -142,23 +141,20 @@ def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
             "app_name": app,
             "region_name": region,
             "runtime": runtime,
-            "branch": branch,
+            "commit": commit,
         }
         job_func = functools.partial(remote.run_calibration, **kwargs)
-        return _run_job(job_id, [instance_type], is_spot, job_func)
+        return _run_job(job_id, [instance_type], False, job_func)
 
 @run.command("resume_calibration")
 @click.option("--job", type=str, required=True)
 @click.option("--baserun", type=str, required=True)
 @click.option("--chains", type=int, required=True)
 @click.option("--runtime", type=int, required=True)
-@click.option("--branch", type=str, default="master")
-@click.option("--latest-code", is_flag=True)
-@click.option("--spot", is_flag=True)
-def resume_calibration_cli(job, baserun, chains, runtime, branch, spot):
-    resume_calibration(job, baserun, chains, runtime, branch, spot)
+def resume_calibration_cli(job, baserun, chains, runtime):
+    resume_calibration(job, baserun, chains, runtime)
 
-def resume_calibration(job, baserun, chains, runtime, branch, is_spot):
+def resume_calibration(job, baserun, chains, runtime):
     """
     Run a MCMC calibration on an AWS server.
     """
@@ -169,24 +165,21 @@ def resume_calibration(job, baserun, chains, runtime, branch, is_spot):
         "num_chains": chains,
         "baserun": baserun,
         "runtime": runtime,
-        "branch": branch,
     }
     job_func = functools.partial(remote.resume_calibration, **kwargs)
-    return _run_job(job_id, [instance_type], is_spot, job_func)
+    return _run_job(job_id, [instance_type], False, job_func)
 
 @run.command("full")
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
 @click.option("--burn-in", type=int, required=True)
 @click.option("--sample", type=int, required=True)
-@click.option("--latest-code", is_flag=True)
-@click.option("--branch", type=str, default="master")
-@click.option("--spot", is_flag=True)
-def run_full_model_cli(job, run, burn_in, sample, latest_code, branch, spot):
-    run_full_model(job, run, burn_in, sample, latest_code, branch, spot)
+@click.option("--commit", type=str, default="use_original_commit")
+def run_full_model_cli(job, run, burn_in, sample, commit):
+    run_full_model(job, run, burn_in, sample, commit)
 
 
-def run_full_model(job, run, burn_in, sample, latest_code, branch, is_spot):
+def run_full_model(job, run, burn_in, sample, commit):
     """
     Run the full models based off an MCMC calibration on an AWS server.
     """
@@ -196,24 +189,22 @@ def run_full_model(job, run, burn_in, sample, latest_code, branch, is_spot):
         "run_id": run,
         "burn_in": burn_in,
         "sample": sample,
-        "use_latest_code": latest_code,
-        "branch": branch,
+        "commit": commit,
     }
     job_func = functools.partial(remote.run_full_model, **kwargs)
-    _run_job(job_id, [instance_type], is_spot, job_func)
+    _run_job(job_id, [instance_type], False, job_func)
 
 
 @run.command("powerbi")
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
 @click.option("--urunid", type=str, default="mle")
-@click.option("--branch", type=str, default="use_original_commit")
-@click.option("--spot", is_flag=True)
-def run_powerbi_cli(job, run, urunid, branch, spot):
-    run_powerbi(job, run, urunid, branch, spot)
+@click.option("--commit", type=str, default="use_original_commit")
+def run_powerbi_cli(job, run, urunid, commit):
+    run_powerbi(job, run, urunid, commit)
 
 
-def run_powerbi(job, run, urunid, branch, is_spot):
+def run_powerbi(job, run, urunid, commit):
     """
     Run the collate a PowerBI database from the full model run outputs.
     """
@@ -224,9 +215,9 @@ def run_powerbi(job, run, urunid, branch, is_spot):
         EC2InstanceType.r5a_8xlarge,
         EC2InstanceType.r5a_16xlarge,
     ]
-    kwargs = {"run_id": run, "urunid": urunid, "branch": branch}
+    kwargs = {"run_id": run, "urunid": urunid, "commit": commit}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
-    _run_job(job_id, instance_types, is_spot, job_func)
+    _run_job(job_id, instance_types, False, job_func)
 
 
 def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):

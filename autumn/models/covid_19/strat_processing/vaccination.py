@@ -6,7 +6,7 @@ import numba
 from summer import CompartmentalModel, Multiply, Stratification
 
 from autumn.models.covid_19.constants import (
-    Vaccination, INFECTION, DISEASE_COMPARTMENTS, CLINICAL_STRATA, Compartment, AGE_CLINICAL_TRANSITIONS,
+    Vaccination, History, INFECTION, DISEASE_COMPARTMENTS, CLINICAL_STRATA, Compartment, AGE_CLINICAL_TRANSITIONS,
     INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
 )
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -176,7 +176,6 @@ def apply_immunity_to_strat(
 
             # Collate the effects together
             strat_args = (params, stratum, stratified_adjusters[voc], stratification.name)
-
             infect_efficacy[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
@@ -189,8 +188,8 @@ def apply_immunity_to_strat(
             update_adjustments_for_strat(stratum, flow_adjs[voc], adjs)
 
     if stratification.name == "history" and is_dosing_active:
-        upstream_stratification = {"vaccination": "fully_vaccinated"}
-        readjust_strata = ["experienced", "waned"]
+        upstream_stratification = {"vaccination": Vaccination.VACCINATED}
+        readjust_strata = [History.EXPERIENCED]
         for voc in vocs:
             overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
             for combination in readjust_strata:

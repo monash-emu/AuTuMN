@@ -280,7 +280,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         vacc_strata, wane_origin_stratum = find_vacc_strata(is_dosing_active, bool(waning_vacc_immunity), is_boosting)
 
         # Get the vaccination stratification object
-        vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters, is_dosing_active)
         model.stratify_with(vaccination_strat)
 
         # Victoria vaccination code is not generalisable
@@ -344,7 +344,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Infection history stratification.
     """
 
-    history_strat = get_history_strat(params, stratified_adjusters)
+    history_strat = get_history_strat(params, stratified_adjusters, is_dosing_active)
     model.stratify_with(history_strat)
 
     # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum

@@ -7,7 +7,7 @@ from autumn.models.covid_19.constants import COMPARTMENTS, History, HISTORY_STRA
 from autumn.models.covid_19.stratifications.vaccination import apply_immunity_to_strat
 
 
-def get_history_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]]) -> Stratification:
+def get_history_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]], is_dosing_active: bool) -> Stratification:
     """
     Stratification to represent status regarding past infection/disease with Covid.
     Currently three strata, with everyone entering the experienced stratum after they have recovered from an episode.
@@ -29,6 +29,6 @@ def get_history_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[s
     history_strat.set_population_split(pop_split)
 
     # Immunity adjustments equivalent to vaccination approach
-    apply_immunity_to_strat(history_strat, params, stratified_adjusters, History.NAIVE)
+    apply_immunity_to_strat(history_strat, params, stratified_adjusters, History.NAIVE, is_dosing_active)
 
     return history_strat

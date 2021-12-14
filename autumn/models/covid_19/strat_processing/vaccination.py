@@ -148,7 +148,7 @@ def add_clinical_adjustments_to_strat(
 
 def apply_immunity_to_strat(
         stratification: Stratification, params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]],
-        unaffected_stratum: str
+        unaffected_stratum: str, is_dosing_active: bool
 ):
     """
     Apply all the immunity effects to a stratification by immunity (either vaccination or history)
@@ -184,9 +184,8 @@ def apply_immunity_to_strat(
             # Get them into the format needed to be applied to the model
             update_adjustments_for_strat(stratum, flow_adjs[voc], adjs)
 
-    if stratification.name == "history":
-        upstream_stratification = "vaccination"
-        upstream_strata = ["fully_vaccinated"]
+    if stratification.name == "history" and is_dosing_active:
+        upstream_stratification = {"vaccination": "fully_vaccinated"}
         readjust_strata = ["experienced", "waned"]
         for voc in vocs:
             overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
@@ -201,7 +200,7 @@ def apply_immunity_to_strat(
                 update_adjustments_for_strat(combination, overlap_adjs[voc], adjs)
 
         add_clinical_adjustments_to_strat(
-            stratification, overlap_adjs, vocs, stratification.strata, readjust_strata, {upstream_stratification: strat for strat in upstream_strata}
+            stratification, overlap_adjs, vocs, stratification.strata, readjust_strata, upstream_stratification
         )
 
     add_clinical_adjustments_to_strat(stratification, flow_adjs, vocs, stratification.strata, stratification.strata[1:], {})

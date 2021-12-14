@@ -8,7 +8,7 @@ from autumn.models.covid_19.strat_processing.vaccination import apply_immunity_t
 
 
 def get_vaccination_strat(
-        params: Parameters, all_strata: list, stratified_adjusters: Dict[str, Dict[str, float]]
+        params: Parameters, all_strata: list, stratified_adjusters: Dict[str, Dict[str, float]], is_dosing_active: bool
 ) -> Stratification:
     """
     Get the vaccination stratification and adjustments to apply to the model, calling the required functions in the
@@ -34,7 +34,7 @@ def get_vaccination_strat(
     stratification.set_population_split(pop_split)
 
     # Immunity adjustments equivalent to history approach
-    apply_immunity_to_strat(stratification, params, stratified_adjusters, Vaccination.UNVACCINATED)
+    apply_immunity_to_strat(stratification, params, stratified_adjusters, Vaccination.UNVACCINATED, is_dosing_active)
 
     # Simplest approach for VoCs is to assign all the VoC infectious seed to the unvaccinated
     # FIXME: This can probably be deleted, once the summer importations split is fixed

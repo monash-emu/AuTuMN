@@ -165,14 +165,14 @@ def apply_immunity_to_strat(
 
     """
 
-    changed_strata = [strat for strat in stratification.strata if strat != unaffected_stratum]
+    strata_to_adjust = [strat for strat in stratification.strata if strat != unaffected_stratum]
     effects, flow_adjs, overlap_effects, overlap_adjs, infect_efficacy = {}, {}, {}, {}, {}
 
     # Work through the base adjusters for the stratification so that everything is covered once for the adjusted strata
     vocs = list(stratified_adjusters.keys())
     for voc in vocs:
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-        for stratum in changed_strata:
+        for stratum in strata_to_adjust:
 
             # Collate the effects together
             strat_args = (params, stratum, stratified_adjusters[voc], stratification.name)
@@ -187,34 +187,35 @@ def apply_immunity_to_strat(
             # Get them into the format needed to be applied to the model
             update_adjustments_for_strat(stratum, flow_adjs[voc], adjs)
 
-    add_clinical_adjustments_to_strat(stratification, flow_adjs, vocs, changed_strata, {})
+    add_clinical_adjustments_to_strat(stratification, flow_adjs, vocs, strata_to_adjust, {})
 
-    # # Equivalent process for the vaccinated experienced
-    # if stratification.name == "history" and is_dosing_active:
-    #     upstream_stratification = {"vaccination": Vaccination.VACCINATED}
-    #     readjust_strata = [History.EXPERIENCED]
-    #     for voc in vocs:
-    #         overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-    #         for combination in readjust_strata:
-    #
-    #             overlap_args = (params, combination, stratified_adjusters[voc], stratification.name)
-    #             overlap_effects[combination], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*overlap_args)
-    #             adjs = get_all_adjustments(
-    #                 params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-    #                 params.sojourn, sympt_adj, hosp_adj, ifr_adj
-    #             )
-    #             update_adjustments_for_strat(combination, overlap_adjs[voc], adjs)
-    #
-    #     add_clinical_adjustments_to_strat(stratification, overlap_adjs, vocs, readjust_strata, upstream_stratification)
+    # Equivalent process for the vaccinated experienced
+    if stratification.name == "history" and is_dosing_active:
+        upstream_stratification = {"vaccination": Vaccination.VACCINATED}
+        strata_to_readjust = ["experienced"]
+
+        for voc in vocs:
+            overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
+            for combination in strata_to_readjust:
+
+                overlap_args = (params, "experiencedXfully_vaccinated", stratified_adjusters[voc], stratification.name)
+                overlap_effects[combination], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*overlap_args)
+                adjs = get_all_adjustments(
+                    params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+                    params.sojourn, sympt_adj, hosp_adj, ifr_adj
+                )
+                update_adjustments_for_strat(combination, overlap_adjs[voc], adjs)
+
+        add_clinical_adjustments_to_strat(stratification, overlap_adjs, vocs, strata_to_readjust, upstream_stratification)
 
     # Effect against infection
-    infect_adjs = {stratum: Multiply(1. - infect_efficacy[stratum]) for stratum in changed_strata}
+    infect_adjs = {stratum: Multiply(1. - infect_efficacy[stratum]) for stratum in strata_to_adjust}
     infect_adjs.update({unaffected_stratum: None})
     stratification.set_flow_adjustments(INFECTION, infect_adjs)
 
     # Vaccination effect against infectiousness
     imm_params = getattr(params, stratification.name)
-    infectious_adjs = {s: Multiply(1. - getattr(getattr(imm_params, s), "ve_infectiousness")) for s in changed_strata}
+    infectious_adjs = {s: Multiply(1. - getattr(getattr(imm_params, s), "ve_infectiousness")) for s in strata_to_adjust}
     infectious_adjs.update({unaffected_stratum: None})
     for compartment in DISEASE_COMPARTMENTS:
         stratification.add_infectiousness_adjustments(compartment, infectious_adjs)
@@ -227,7 +228,7 @@ Parameter processing.
 
 def get_stratum_vacc_history_effect(
         params: Parameters, stratum: str, voc_adjusters: Dict[str, float], stratification: str
-):
+) -> Tuple[float]:
     """
     Process the vaccination parameters for the vaccination stratum being considered.
 

@@ -28,6 +28,17 @@ def add_uncertainty_quantiles(database_path: str, targets: dict):
     mcmc_df = db.query("mcmc_run")
     do_df = db.query("derived_outputs")
     logger.info("Calculating uncertainty")
+
+    all_do_keys = do_df.columns.drop(['chain','run','scenario','times'])
+    targets = targets.copy()
+    for k in all_do_keys:
+        if k not in targets:
+            targets[k] = {
+                "output_key": k,
+                "quantiles": [ 0.01, 0.025, 0.25, 0.5, 0.75, 0.975, 0.99 ]
+            }
+
+
     uncertainty_df = calculate_mcmc_uncertainty(mcmc_df, do_df, targets)
     db.dump_df("uncertainty", uncertainty_df)
     logger.info("Finished writing uncertainties")

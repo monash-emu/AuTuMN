@@ -152,7 +152,7 @@ def add_clinical_adjustments_to_strat(
 
 def apply_immunity_to_strat(
         stratification: Stratification, params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]],
-        unaffected_stratum: str, is_dosing_active: bool
+        unaffected_stratum: str
 ):
     """
     Apply all the immunity effects to a stratification by immunity (either vaccination or history)

@@ -34,7 +34,7 @@ def get_vaccination_strat(
     stratification.set_population_split(pop_split)
 
     # Immunity adjustments equivalent to history approach
-    apply_immunity_to_strat(stratification, params, stratified_adjusters, Vaccination.UNVACCINATED, is_dosing_active)
+    apply_immunity_to_strat(stratification, params, stratified_adjusters, Vaccination.UNVACCINATED)
 
     # Simplest approach for VoCs is to assign all the VoC infectious seed to the unvaccinated
     # FIXME: This can probably be deleted, once the summer importations split is fixed

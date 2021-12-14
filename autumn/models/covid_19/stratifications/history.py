@@ -29,6 +29,6 @@ def get_history_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[s
     history_strat.set_population_split(pop_split)
 
     # Immunity adjustments equivalent to vaccination approach
-    apply_immunity_to_strat(history_strat, params, stratified_adjusters, History.NAIVE, is_dosing_active)
+    apply_immunity_to_strat(history_strat, params, stratified_adjusters, History.NAIVE)
 
     return history_strat

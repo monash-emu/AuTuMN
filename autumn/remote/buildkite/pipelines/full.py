@@ -26,12 +26,12 @@ sample_size_field = TextInputField(
     type=int,
     default=100,
 )
-use_latest_code_field = BooleanInputField(
-    key="use-latest-code",
-    title="Use latest code for model run",
-    hint="Should this task use most recent push (HEAD)? If no, the calibration commit will be used",
-    type=bool,
-    default="no",
+commit_field = TextInputField(
+    key="commit",
+    title="Specify commit SHA",
+    hint="Specify git commit, or leave as default to use calibration commit",
+    type=str,
+    default="use_original_commit",
 )
 trigger_field = BooleanInputField(
     key="trigger-downstream",
@@ -40,20 +40,13 @@ trigger_field = BooleanInputField(
     type=bool,
     default="yes",
 )
-spot_field = BooleanInputField(
-    key="spot-instance",
-    title="Use spot instances",
-    hint="Is 1/3 of the price but sometimes randomly fails.",
-    default="no",
-    type=bool,
-)
+
 fields = [
     run_id_field,
     burn_in_field,
     sample_size_field,
-    use_latest_code_field,
+    commit_field,
     trigger_field,
-    spot_field,
 ]
 input_step = InputStep(
     key="full-model-run-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields

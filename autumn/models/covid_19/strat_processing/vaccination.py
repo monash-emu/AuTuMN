@@ -204,12 +204,12 @@ def apply_immunity_to_strat(
         stratification.add_infectiousness_adjustments(compartment, infectious_adjs)
 
     # Work through the same process as for the strata, but with limitation to experienced/fully vaccinated
-    if stratification.name == "history" and is_dosing_active:
+    if stratification.name == "history" and params.history.experiencedXfully_vaccinated:
 
         # Ideally this would be generalised further and moved to parameters
         upstream_stratum = {"vaccination": Vaccination.VACCINATED}
         request_name = "experiencedXfully_vaccinated"
-        strata_to_readjust = ["experienced"]
+        strata_to_readjust = [History.EXPERIENCED]
 
         # Equivalent code to above
         for voc in vocs:

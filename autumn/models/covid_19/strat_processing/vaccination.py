@@ -107,7 +107,7 @@ def add_clinical_adjustments_to_strat(
     """
     Add the clinical adjustments created in update_adjustments_for_strat to a stratification.
 
-    Uses the summer method to the stratification add_flow_adjustments, that will then be applied when the stratify_with
+    Uses the summer method to the stratification set_flow_adjustments, that will then be applied when the stratify_with
     is called from the model object using this stratification object.
 
     Note:
@@ -135,17 +135,17 @@ def add_clinical_adjustments_to_strat(
                 # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
                 infectious_onset_adjs = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
                 infectious_onset_adjs[unaffected_stratum] = None
-                strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
+                strat.set_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
                 # * Progress can be either source, dest(ination) or both, but infect_death and recovery must be source *
                 for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
                     adjs = flow_adjs[voc][agegroup][clinical_stratum][transition]
                     adjs[unaffected_stratum] = None
-                    strat.add_flow_adjustments(transition, adjs, source_strata=working_strata)
+                    strat.set_flow_adjustments(transition, adjs, source_strata=working_strata)
 
 
 def add_clinical_adjustments_to_sub_strat(
-        strat: Stratification, flow_adjs: Dict[str, dict], unaffected_stratum: str, vocs: list
+        strat: Stratification, flow_adjs: Dict[str, dict], vocs: list, readjust_strata, upstream_stratification, upstream_strata
 ):
 
     # Loop over other stratifications that may affect these parameters, i.e. age group, VoC status and clinical status
@@ -157,17 +157,19 @@ def add_clinical_adjustments_to_sub_strat(
                 working_strata = {"agegroup": agegroup, "clinical": clinical_stratum}
                 voc_strat = {"strain": voc} if len(vocs) > 1 else {}
                 working_strata.update(voc_strat)
+                working_strata.update({upstream_stratification: upstream_strata})
 
                 # * Onset must be dest(ination) because this is the point at which the clinical stratification splits *
-                infectious_onset_adjs = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
-                infectious_onset_adjs[unaffected_stratum] = None
-                strat.add_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
+                infectious_onset_adjs = {stratum: None for stratum in strat.strata}
+                updates = flow_adjs[voc][agegroup][clinical_stratum][INFECTIOUSNESS_ONSET]
+                infectious_onset_adjs.update({stratum: updates[stratum] for stratum in readjust_strata})
+                strat.set_flow_adjustments(INFECTIOUSNESS_ONSET, infectious_onset_adjs, dest_strata=working_strata)
 
                 # * Progress can be either source, dest(ination) or both, but infect_death and recovery must be source *
                 for transition in [PROGRESS, INFECT_DEATH, RECOVERY]:
-                    adjs = flow_adjs[voc][agegroup][clinical_stratum][transition]
-                    adjs[unaffected_stratum] = None
-                    strat.add_flow_adjustments(transition, adjs, source_strata=working_strata)
+                    progress_adjs = {stratum: None for stratum in strat.strata}
+                    progress_adjs.update(flow_adjs[voc][agegroup][clinical_stratum][transition])
+                    strat.set_flow_adjustments(transition, progress_adjs, source_strata=working_strata)
 
 
 def apply_immunity_to_strat(
@@ -185,22 +187,19 @@ def apply_immunity_to_strat(
 
     """
 
-    strata_combinations = ["something"]
-
     imm_params = getattr(params, stratification.name)
     changed_strata = [strat for strat in stratification.strata if strat != unaffected_stratum]
-    effects, flow_adjs, overlap_effects, overlap_adjs = {}, {}, {}, {}
+    effects, flow_adjs, overlap_effects, overlap_adjs, infect_efficacy = {}, {}, {}, {}, {}
+
     vocs = list(stratified_adjusters.keys())
     for voc in vocs:
         flow_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-        overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
         for stratum in changed_strata:
 
             # Collate the effects together
             strat_args = (params, stratum, stratified_adjusters[voc], stratification.name)
 
-            # FIXME: Returning more of the effects than we need to here
-            effects[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
+            infect_efficacy[stratum], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*strat_args)
 
             # Get the adjustments by clinical status and age group applicable to this VoC and vaccination stratum
             adjs = get_all_adjustments(
@@ -211,22 +210,32 @@ def apply_immunity_to_strat(
             # Get them into the format needed to be applied to the model
             update_adjustments_for_strat(stratum, flow_adjs[voc], adjs)
 
-        for combination in strata_combinations:
+    if stratification.name == "history":
+        upstream_stratification = "vaccination"
+        upstream_strata = "fully_vaccinated"
+        readjust_strata = ["experienced", "waned"]
+        for voc in vocs:
+            overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
+            for combination in readjust_strata:
 
-            overlap_args = (params, "experienced", stratified_adjusters[voc], "history")
-            overlap_effects[combination], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*overlap_args)
-            adjs = get_all_adjustments(
-                params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
-                params.sojourn, sympt_adj, hosp_adj, ifr_adj
-            )
-            update_adjustments_for_strat(stratum, overlap_adjs[voc], adjs)
+                overlap_args = (params, combination, stratified_adjusters[voc], stratification.name)
+                overlap_effects[combination], sympt_adj, hosp_adj, ifr_adj = get_stratum_vacc_history_effect(*overlap_args)
+                adjs = get_all_adjustments(
+                    params.clinical_stratification, params.country, params.population, params.infection_fatality.props,
+                    params.sojourn, sympt_adj, hosp_adj, ifr_adj
+                )
+                update_adjustments_for_strat(combination, overlap_adjs[voc], adjs)
+
+        add_clinical_adjustments_to_sub_strat(
+            stratification, overlap_adjs, vocs, readjust_strata, upstream_stratification, upstream_strata
+        )
 
     add_clinical_adjustments_to_strat(stratification, flow_adjs, unaffected_stratum, vocs)
 
     # Effect against infection
-    infect_adjs = {stratum: Multiply(1. - effects[stratum]["infection_efficacy"]) for stratum in changed_strata}
+    infect_adjs = {stratum: Multiply(1. - infect_efficacy[stratum]) for stratum in changed_strata}
     infect_adjs.update({unaffected_stratum: None})
-    stratification.add_flow_adjustments(INFECTION, infect_adjs)
+    stratification.set_flow_adjustments(INFECTION, infect_adjs)
 
     # Vaccination effect against infectiousness
     infectious_adjs = {s: Multiply(1. - getattr(getattr(imm_params, s), "ve_infectiousness")) for s in changed_strata}
@@ -280,7 +289,7 @@ def get_stratum_vacc_history_effect(
     hospital_adjuster *= voc_adjusters["hosp"]
     sympt_adjuster *= voc_adjusters["sympt"]
 
-    return vacc_effects, sympt_adjuster, hospital_adjuster, ifr_adjuster
+    return vacc_effects["infection_efficacy"], sympt_adjuster, hospital_adjuster, ifr_adjuster
 
 
 def get_hosp_given_case_effect(ve_hospitalisation: float, ve_case: float) -> float:

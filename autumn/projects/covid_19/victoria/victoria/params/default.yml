@@ -100,7 +100,7 @@ mobility:
 
 time:
   start: 550
-  end: 730
+  end: 1097
 
 infectious_seed: 50
 
@@ -170,40 +170,41 @@ testing_to_detection:
   assumed_cdr_parameter: 0.09
   smoothing_period: 7
 
-# VE parameters taken from LSHTM's Autumn–winter scenarios 2021–2022 report - https://tinyurl.com/ve-params
+# VE parameters taken from LSHTM's report:
+# https://cmmid.github.io/topics/covid19/reports/omicron_england/report_11_dec_2021.pdf
 vaccination:
   # Efficacy parameters
   one_dose:
-    ve_sympt_covid: 0.57
-    ve_prop_prevent_infection_ratio: 1.
-    ve_infectiousness_ratio: 0.469  # 0.15 / 0.32 (ratio of one to two dose) - varied with fully vaccinated parameter
-    ve_hospitalisation: 0.88
-    ve_death: 0.94
+    ve_sympt_covid: 0.57  # LSHTM
+    ve_prop_prevent_infection_ratio: 0.9  # Most of the protection against symptomatic Covid is mediated in this way
+    ve_infectiousness: 0.145  # LSHTM
+    ve_hospitalisation: 0.88  # LSHTM
+    ve_death: 0.935  # LSHTM
   fully_vaccinated:
-    ve_sympt_covid: 0.73
-    ve_prop_prevent_infection: 0.95  # Very high proportions (0.51 versus 0.57 or 0.72 versus 0.73) used in calibration
-    ve_infectiousness: 0.32  # Calibrated
-    ve_hospitalisation: 0.95
-    ve_death: 0.96
-  part_waned:
-    ve_sympt_covid: 0.28
-    ve_prop_prevent_infection: 0.8
-    ve_infectiousness: 0.15
-    ve_hospitalisation: 0.84
-    ve_death: 0.84
-  fully_waned:
-    ve_sympt_covid: 0.
-    ve_prop_prevent_infection: 0.
-    ve_infectiousness: 0.
-    ve_hospitalisation: 0.5
-    ve_death: 0.5
+    ve_sympt_covid: 0.73  # LSHTM
+    ve_prop_prevent_infection: 0.9  # As for one dose
+    ve_infectiousness: 0.32  # LSHTM
+    ve_hospitalisation: 0.945  # LSHTM
+    ve_death: 0.955  # LSHTM
+  part_waned:  # As for one dose
+    ve_sympt_covid: 0.57
+    ve_prop_prevent_infection: 0.6
+    ve_infectiousness: 0.145
+    ve_hospitalisation: 0.88
+    ve_death: 0.935
+  fully_waned:  # Then reduced protection against becoming a case with some preservation against severe outcomes
+    ve_sympt_covid: 0.285
+    ve_prop_prevent_infection: 0.4
+    ve_infectiousness: 0.145
+    ve_hospitalisation: 0.7
+    ve_death: 0.7
   boosted:
-    ve_sympt_covid: 0.8
-    ve_prop_prevent_infection: 0.95  # Very high proportions (0.51 versus 0.57 or 0.72 versus 0.73) used in calibration
-    ve_infectiousness: 0.32  # Calibrated
-    ve_hospitalisation: 0.97
-    ve_death: 0.97
-  boost_delay: 10000.
+    ve_sympt_covid: 0.94  # LSHTM
+    ve_prop_prevent_infection: 0.9  # As for the other categories
+    ve_infectiousness_ratio: 1.  # The same as for the fully vaccinated
+    ve_hospitalisation: 0.993  # LSHTM
+    ve_death: 0.993  # LSHTM
+  boost_delay: 100000.  # Boosting off in the baseline scenario
 
   # Transition parameters
   second_dose_delay:

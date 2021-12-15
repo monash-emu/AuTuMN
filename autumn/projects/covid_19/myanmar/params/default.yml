@@ -83,7 +83,6 @@ vaccination:
   lag: 14
   standard_supply: true
   second_dose_delay: 60.
-  boost_delay: 100000.
   vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.
 
@@ -108,7 +107,7 @@ history:
     ve_infectiousness_ratio: null
     ve_hospitalisation: 0.96
     ve_death: 0.96
-  wanedXfully_vaccinated:  # Same as for fully vaccinated
+  experiencedXpart_waned:  # Same as for fully vaccinated
     ve_sympt_covid: 0.65
     ve_prop_prevent_infection: 0.9
     ve_prop_prevent_infection_ratio: null
@@ -116,7 +115,7 @@ history:
     ve_infectiousness_ratio: null
     ve_hospitalisation: 0.93
     ve_death: 0.95
-  experiencedXpart_waned:  # Same as for fully vaccinated
+  wanedXfully_vaccinated:  # Same as for fully vaccinated
     ve_sympt_covid: 0.65
     ve_prop_prevent_infection: 0.9
     ve_prop_prevent_infection_ratio: null

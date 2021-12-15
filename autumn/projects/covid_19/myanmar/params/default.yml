@@ -53,11 +53,11 @@ sojourn:
 
 vaccination:
   one_dose:
-    ve_sympt_covid: 0.28
+    ve_sympt_covid: 0.43
     ve_prop_prevent_infection: 0.8
-    ve_infectiousness_ratio: 0.5
-    ve_hospitalisation: 0.42
-    ve_death: 0.42
+    ve_infectiousness: 0.05
+    ve_hospitalisation: 0.84
+    ve_death: 0.95
     coverage:
       times: 
         - 731  # 31st December 2021
@@ -66,11 +66,11 @@ vaccination:
         - 0.4
         - 0.7
   fully_vaccinated:
-    ve_sympt_covid: 0.56
-    ve_prop_prevent_infection: 0.8
-    ve_infectiousness: 0.3
-    ve_hospitalisation: 0.84
-    ve_death: 0.84
+    ve_sympt_covid: 0.65
+    ve_prop_prevent_infection: 0.9
+    ve_infectiousness: 0.27
+    ve_hospitalisation: 0.93
+    ve_death: 0.95
   part_waned:
     ve_sympt_covid: 0.28
     ve_prop_prevent_infection: 0.8
@@ -103,4 +103,22 @@ history:
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.5
     ve_death: 0.5
+#  experiencedXfully_vaccinated:
+#    ve_sympt_covid: 0.75
+#    ve_prop_prevent_infection: 0.9
+#    ve_infectiousness: 0.5
+#    ve_hospitalisation: 0.95
+#    ve_death: 0.95
+#  wanedXfully_vaccinated:
+#    ve_sympt_covid: 0.75
+#    ve_prop_prevent_infection: 0.9
+#    ve_infectiousness: 0.5
+#    ve_hospitalisation: 0.95
+#    ve_death: 0.95
+#  experiencedXpart_waned:
+#    ve_sympt_covid: 0.75
+#    ve_prop_prevent_infection: 0.9
+#    ve_infectiousness: 0.5
+#    ve_hospitalisation: 0.95
+#    ve_death: 0.95
   natural_immunity_duration: 90.

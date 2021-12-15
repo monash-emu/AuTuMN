@@ -206,27 +206,39 @@ def apply_immunity_to_strat(
     # Work through the same process as for the strata, but with limitation to experienced/fully vaccinated
     if stratification.name == "history" and params.history.experiencedXfully_vaccinated:
 
-        # Ideally this would be generalised further and moved to parameters
-        upstream_stratum = {"vaccination": Vaccination.VACCINATED}
-        request_name = "experiencedXfully_vaccinated"
-        strata_to_readjust = [History.EXPERIENCED]
+        strata_to_readjust_dict = {
+            "experiencedXfully_vaccinated": [History.EXPERIENCED],
+            "wanedXfully_vaccinated": [History.WANED],
+            "experiencedXpart_waned": [History.EXPERIENCED],
+        }
+        upstream_strata = {
+            "experiencedXfully_vaccinated": {"vaccination": Vaccination.VACCINATED},
+            "wanedXfully_vaccinated": {"vaccination": Vaccination.VACCINATED},
+            "experiencedXpart_waned": {"vaccination": Vaccination.PART_WANED}
+        }
 
-        # Equivalent code to above
-        for voc in vocs:
-            overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
-            for overlap in strata_to_readjust:
-                overlap_args = (params, request_name, stratified_adjusters[voc], stratification.name)
-                (infect_overlap[overlap], sympt_adj, hosp_adj, ifr_adj) = get_stratum_vacc_history_effect(*overlap_args)
-                severity_adjusters = sympt_adj, hosp_adj, ifr_adj
-                adjs = get_all_adjustments(*adj_base_params, *severity_adjusters)
-                update_adjustments_for_strat(overlap, overlap_adjs[voc], adjs)
+        for request_name in strata_to_readjust_dict.keys():
 
-        add_clinical_adjustments_to_strat(stratification, overlap_adjs, vocs, strata_to_readjust, upstream_stratum)
+            # Ideally this would be generalised further and moved to parameters
+            upstream_stratum = upstream_strata[request_name]
+            strata_to_readjust = strata_to_readjust_dict[request_name]
 
-        # Effect against infection
-        infect_adjs = {stratum: None for stratum in stratification.strata}
-        infect_adjs.update({stratum: Multiply(1. - infect_overlap[stratum]) for stratum in strata_to_readjust})
-        stratification.set_flow_adjustments(INFECTION, infect_adjs, dest_strata=upstream_stratum)
+            # Equivalent code to above
+            for voc in vocs:
+                overlap_adjs[voc] = get_blank_adjustments_for_strat([PROGRESS, *AGE_CLINICAL_TRANSITIONS])
+                for overlap in strata_to_readjust:
+                    overlap_args = (params, request_name, stratified_adjusters[voc], stratification.name)
+                    (infect_overlap[overlap], sympt_adj, hosp_adj, ifr_adj) = get_stratum_vacc_history_effect(*overlap_args)
+                    severity_adjusters = sympt_adj, hosp_adj, ifr_adj
+                    adjs = get_all_adjustments(*adj_base_params, *severity_adjusters)
+                    update_adjustments_for_strat(overlap, overlap_adjs[voc], adjs)
+
+            add_clinical_adjustments_to_strat(stratification, overlap_adjs, vocs, strata_to_readjust, upstream_stratum)
+
+            # Effect against infection
+            infect_adjs = {stratum: None for stratum in stratification.strata}
+            infect_adjs.update({stratum: Multiply(1. - infect_overlap[stratum]) for stratum in strata_to_readjust})
+            stratification.set_flow_adjustments(INFECTION, infect_adjs, dest_strata=upstream_stratum)
 
 
 """

@@ -593,6 +593,8 @@ class History(BaseModel):
     experienced: Optional[VaccEffectiveness]
     waned: Optional[VaccEffectiveness]
     experiencedXfully_vaccinated: Optional[VaccEffectiveness]
+    wanedXfully_vaccinated: Optional[VaccEffectiveness]
+    experiencedXpart_waned: Optional[VaccEffectiveness]
 
     natural_immunity_duration: Optional[float]
 

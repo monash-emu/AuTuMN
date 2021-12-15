@@ -63,18 +63,21 @@ vaccination:
     ve_sympt_covid: 0.65  # LSHTM
     ve_prop_prevent_infection: 0.9
     ve_infectiousness: 0.27  # LSHTM
+    ve_infectiousness_ratio: null
     ve_hospitalisation: 0.93  # LSHTM
     ve_death: 0.95  # LSHTM
   part_waned:
     ve_sympt_covid: 0.43
     ve_prop_prevent_infection: 0.6
     ve_infectiousness: 0.145
+    ve_infectiousness_ratio: null
     ve_hospitalisation: 0.84
     ve_death: 0.95
   fully_waned:
     ve_sympt_covid: 0.215
     ve_prop_prevent_infection: 0.8
     ve_infectiousness: 0.05
+    ve_infectiousness_ratio: null
     ve_hospitalisation: 0.7
     ve_death: 0.7
   lag: 14
@@ -88,7 +91,7 @@ history:
   experienced:
     ve_sympt_covid: 0.43
     ve_prop_prevent_infection: 0.8
-    ve_infectiousness_ratio: 0.05
+    ve_infectiousness: 0.05
     ve_hospitalisation: 0.84
     ve_death: 0.95
   waned:
@@ -100,19 +103,25 @@ history:
   experiencedXfully_vaccinated:  # LSHTM for mRNA vaccines
     ve_sympt_covid: 0.8
     ve_prop_prevent_infection: 0.9
+    ve_prop_prevent_infection_ratio: null
     ve_infectiousness: 0.37
+    ve_infectiousness_ratio: null
     ve_hospitalisation: 0.96
     ve_death: 0.96
   wanedXfully_vaccinated:  # Same as for fully vaccinated
     ve_sympt_covid: 0.65
     ve_prop_prevent_infection: 0.9
+    ve_prop_prevent_infection_ratio: null
     ve_infectiousness: 0.27
+    ve_infectiousness_ratio: null
     ve_hospitalisation: 0.93
     ve_death: 0.95
   experiencedXpart_waned:  # Same as for fully vaccinated
     ve_sympt_covid: 0.65
     ve_prop_prevent_infection: 0.9
+    ve_prop_prevent_infection_ratio: null
     ve_infectiousness: 0.27
+    ve_infectiousness_ratio: null
     ve_hospitalisation: 0.93
     ve_death: 0.95
   natural_immunity_duration: 90.

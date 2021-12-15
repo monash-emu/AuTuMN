@@ -34,8 +34,8 @@ targets = [
 
 priors = [
     # Regional parameters
-    UniformPrior("contact_rate", [0.0325, 0.05]),
-    UniformPrior("infectious_seed", [325.0, 500.0]),
+    UniformPrior("contact_rate", [0.045, 0.06]),
+    UniformPrior("infectious_seed", [350.0, 500.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.02]),
     UniformPrior("infection_fatality.multiplier", [0.12, 0.2]),

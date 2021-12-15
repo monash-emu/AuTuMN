@@ -32,9 +32,9 @@ priors = [
     TruncNormalPrior(
         "sojourn.compartment_periods_calculated.exposed.total_period",
         mean=5.5, stdev=0.7, trunc_range=(1.0, np.inf)),
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.active.total_period",
-        mean=6.5, stdev=0.77, trunc_range=(4.0, np.inf)),
+    # TruncNormalPrior(
+    #     "sojourn.compartment_periods_calculated.active.total_period",
+    #     mean=6.5, stdev=0.77, trunc_range=(4.0, np.inf)),
     # TruncNormalPrior(
     #     "history.natural_immunity_duration",
     #     mean=365., stdev=120., trunc_range=(180., np.inf)),
@@ -42,11 +42,11 @@ priors = [
     #     "vaccination.vacc_part_effect_duration",
     #     mean=365., stdev=120., trunc_range=(180., np.inf)),
     UniformPrior("contact_rate", (0.05, 0.08), jumping_stdev=0.01),  # Tighten up the lower limit to avoid wild runs
-    UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.02), jumping_stdev=0.002),
+    # UniformPrior("infectious_seed", (50., 500.), jumping_stdev=40.),
+    # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.02), jumping_stdev=0.002),
     # UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", (0.0, 0.2), jumping_stdev=0.05),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.8, 2.4), jumping_stdev=0.1),
-    UniformPrior("voc_emergence.delta.start_time", (365., 390.), jumping_stdev=30.),
+    # UniformPrior("voc_emergence.delta.start_time", (365., 390.), jumping_stdev=30.),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

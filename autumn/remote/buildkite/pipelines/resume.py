@@ -6,30 +6,22 @@ from autumn.remote.buildkite.buildkite import (
     TextInputField,
 )
 
+from .calibrate import burn_in_field, sample_size_field, trigger_field, chains_field, runtime_field
+
 run_id_field = TextInputField(
     key="run-id",
     title="Existing calibration run-id",
     hint="Which calibration run should be resumed?",
     type=str,
 )
-chains_field = TextInputField(
-    key="num-chains",
-    title="Number of MCMC chains",
-    hint="How many MCMC chains do you want to run?",
-    default=7,
-    type=int,
-)
-runtime_field = TextInputField(
-    key="mcmc-runtime",
-    title="Runtime",
-    hint="How many hours should the model run for?",
-    default=0.5,
-    type=lambda s: int(float(s) * 3600),
-)
+
 fields = [
     run_id_field,
     chains_field,
     runtime_field,
+    burn_in_field,
+    sample_size_field,
+    trigger_field
 ]
 input_step = InputStep(
     key="resume_calibration_settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields

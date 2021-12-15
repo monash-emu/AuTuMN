@@ -7,7 +7,7 @@ mixing_matrices:
   source_iso3: CHN
 
 time:
-  start: 198
+  start: 202
   end: 1096
 
 hospital_reporting: 0.5
@@ -90,10 +90,10 @@ vaccination:
 
 history:
   experienced:
-    ve_sympt_covid: 0.43
+    ve_sympt_covid: 0.65
     ve_prop_prevent_infection: 0.8
-    ve_infectiousness: 0.05
-    ve_hospitalisation: 0.84
+    ve_infectiousness: 0.27
+    ve_hospitalisation: 0.93
     ve_death: 0.95
   waned:
     ve_sympt_covid: 0.215
@@ -125,4 +125,4 @@ history:
     ve_infectiousness_ratio: null
     ve_hospitalisation: 0.93
     ve_death: 0.95
-  natural_immunity_duration: 90.
+  natural_immunity_duration: 180.

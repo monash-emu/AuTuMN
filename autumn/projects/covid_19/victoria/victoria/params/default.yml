@@ -188,13 +188,13 @@ vaccination:
     ve_death: 0.955  # LSHTM
   part_waned:  # As for one dose
     ve_sympt_covid: 0.57
-    ve_prop_prevent_infection: 0.7
+    ve_prop_prevent_infection: 0.6
     ve_infectiousness: 0.145
     ve_hospitalisation: 0.88
     ve_death: 0.935
   fully_waned:  # Then reduced protection against becoming a case with some preservation against severe outcomes
     ve_sympt_covid: 0.285
-    ve_prop_prevent_infection: 0.7
+    ve_prop_prevent_infection: 0.4
     ve_infectiousness: 0.145
     ve_hospitalisation: 0.7
     ve_death: 0.7

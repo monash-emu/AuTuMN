@@ -10,6 +10,8 @@ time:
   start: 198
   end: 1096
 
+hospital_reporting: 0.5
+
 mobility:
   microdistancing:
     behaviour:

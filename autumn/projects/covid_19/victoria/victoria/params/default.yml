@@ -100,7 +100,7 @@ mobility:
 
 time:
   start: 550
-  end: 730
+  end: 1097
 
 infectious_seed: 50
 

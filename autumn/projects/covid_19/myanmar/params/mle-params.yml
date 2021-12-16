@@ -1,10 +1,7 @@
-contact_rate: 0.074
-history.natural_immunity_duration: 365.
-infectious_seed: 250
-mobility.microdistancing.behaviour.parameters.end_asymptote: 0.1568531509239075
-sojourn.compartment_periods_calculated.active.total_period: 4.411317219042235
-sojourn.compartment_periods_calculated.exposed.total_period: 2.5406422696497697
-testing_to_detection.assumed_cdr_parameter: 0.015
-vaccination.vacc_part_effect_duration: 373.69478835162795
-voc_emergence.delta.contact_rate_multiplier: 2.
-voc_emergence.delta.start_time: 365.742575827509
+contact_rate: 0.07009589405991787
+infectious_seed: 266.7876330469702
+sojourn.compartment_periods_calculated.active.total_period: 4.60093995775132
+sojourn.compartment_periods_calculated.exposed.total_period: 2.979524360912163
+testing_to_detection.assumed_cdr_parameter: 0.0061331644976567665
+voc_emergence.delta.contact_rate_multiplier: 1.8632762310268762
+voc_emergence.delta.start_time: 377.57777836021023

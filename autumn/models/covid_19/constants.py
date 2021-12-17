@@ -86,6 +86,11 @@ NOTIFICATION_CLINICAL_STRATA = [
     Clinical.ICU,
 ]
 
+HOSTPIALISED_CLINICAL_STRATA = [
+    Clinical.HOSPITAL_NON_ICU,
+    Clinical.ICU,
+]
+
 FIXED_STRATA = [
     Clinical.NON_SYMPT,
     Clinical.HOSPITAL_NON_ICU,

@@ -29,7 +29,7 @@ def get_vaccine_roll_out(lockdown_scenario):
 
 
 def get_all_scenario_dicts(country: str):
-    num_scenarios = 6
+    num_scenarios = 4
     all_scenario_dicts = []
 
     for i_lockdown_scenario in [*range(0, num_scenarios)]:

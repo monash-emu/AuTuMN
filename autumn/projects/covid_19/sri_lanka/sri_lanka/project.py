@@ -44,9 +44,13 @@ priors = [
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.75, 3.3]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [7.5, 11.5]),
-    UniformPrior("voc_emergence.delta.ifr_multiplier", [1.0, 4.0]),
+    TruncNormalPrior(
+        "voc_emergence.delta.ifr_multiplier",
+        mean=2., stdev=1.5, trunc_range=(0., 4)),
     #waning
-    UniformPrior("history.waned.ve_death", [0.5, 1.0]),
+    TruncNormalPrior(
+        "history.waned.ve_death",
+        mean=.5, stdev=2.5, trunc_range=(0., 1)),
 ]
 
 # Load proposal sds from yml file

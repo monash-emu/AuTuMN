@@ -63,7 +63,7 @@ def get_all_scenario_dicts(country: str):
 
             # from May 20 - 21 June, the average mobility from from May 21 - June 21
             times5 = [*range(507, 539)]
-            values5 = {'work': [0.2] * len(times5), 'other_locations': [0.2] * len(times5)}
+            values5 = {'work': [0.5] * len(times5), 'other_locations': [0.5] * len(times5)}
 
             # In the scenario from June 22 - Oct 01 applying lockdown mobility
             times2 = [*range(539, 645)]

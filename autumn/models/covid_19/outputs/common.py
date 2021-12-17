@@ -5,6 +5,7 @@ from summer.compute import ComputedValueProcessor
 from autumn.models.covid_19.constants import (
     INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA, INFECTION_DEATHS,
     COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing, NOTIFICATION_CLINICAL_STRATA,
+    HOSTPIALISED_CLINICAL_STRATA,
 )
 from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
@@ -94,7 +95,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             # are identified as they are in quarantine)
             if self.is_contact_tracing:
                 traced_dest_strata = {"agegroup": agegroup, "tracing": Tracing.TRACED}
-                name = f"progress_tracedXagegroup_{agegroup}"
+                name = f"progress_{Tracing.TRACED}Xagegroup_{agegroup}"
                 notification_pathways.append(name)
                 self.model.request_output_for_flow(
                     name=name, flow_name=PROGRESS, dest_strata=traced_dest_strata, save_results=False,
@@ -102,29 +103,31 @@ class CovidOutputsBuilder(OutputsBuilder):
 
             # Then track untraced cases that are passively detected - either regardless of tracing status,
             # (empty dictionary if tracing not active) or just in the untraced group otherwise
-            for clinical in [Clinical.SYMPT_ISOLATE, Clinical.HOSPITAL_NON_ICU, Clinical.ICU]:
+            for clinical in NOTIFICATION_CLINICAL_STRATA:
 
                 # Include reporting adjustment if requested
-                reporting = hospital_reporting if clinical in (Clinical.HOSPITAL_NON_ICU, Clinical.ICU) else 1.
+                reporting = hospital_reporting if clinical in HOSTPIALISED_CLINICAL_STRATA else 1.
                 untraced_dest_strata = {"clinical": clinical, "agegroup": agegroup}
                 untraced_dest_strata.update(self.untraced_stratum)
-                notified_hospitalisations = f"_progress_untracedXagegroup_{agegroup}Xclinical_{clinical}"
+                notified_hospitalisations = f"_progress_{Tracing.UNTRACED}Xagegroup_{agegroup}Xclinical_{clinical}"
                 self.model.request_output_for_flow(
                     name=notified_hospitalisations, flow_name=PROGRESS, dest_strata=untraced_dest_strata,
                     save_results=False,
                 )
+
+                # Has to have a different name to the flow output to avoid summer error
                 name = notified_hospitalisations[1:]
                 notification_pathways.append(name)
                 self.model.request_function_output(
-                    name=name, func=lambda rate: rate * reporting, sources=[notified_hospitalisations],
+                    name=name, func=lambda rate: rate * reporting, sources=(notified_hospitalisations,),
                     save_results=False,
                 )
 
-            final_name = f"notificationsXagegroup_{agegroup}"
+            final_name = f"{NOTIFICATIONS}Xagegroup_{agegroup}"
             self.model.request_aggregate_output(name=final_name, sources=notification_pathways)
 
-        notifications_by_agegroup = [f"notificationsXagegroup_{i_age}" for i_age in AGEGROUP_STRATA]
-        self.model.request_aggregate_output(name="notifications", sources=notifications_by_agegroup)
+        notifications_by_agegroup = [f"{NOTIFICATIONS}Xagegroup_{i_age}" for i_age in AGEGROUP_STRATA]
+        self.model.request_aggregate_output(name=NOTIFICATIONS, sources=notifications_by_agegroup)
 
         # Cumulative unstratified notifications
         if cumul_inc_start_time:

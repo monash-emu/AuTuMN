@@ -46,7 +46,7 @@ priors = [
     #waning
     TruncNormalPrior(
         "history.waned.ve_death",
-        mean=.5, stdev=2.5, trunc_range=(0., 1)),
+        mean=.5, stdev=.5, trunc_range=(0.28, 1)),
 ]
 
 # Load proposal sds from yml file

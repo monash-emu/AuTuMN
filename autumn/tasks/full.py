@@ -260,16 +260,11 @@ def run_full_model_for_subset(
                 processed_outputs = post_process_scenario_outputs(
                     models, project, run_id=run_id, chain_id=chain_id
                 )
-                # Only store outputs that are required for candidate runs
-                if urun in candidates_df.index:
-                    outputs.append(processed_outputs[Table.OUTPUTS])
                 derived_outputs.append(processed_outputs[Table.DERIVED])
 
         with Timer("Saving model outputs to the database"):
             final_outputs = {}
             # We may not have anything in outputs
-            if len(outputs):
-                final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
             final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
             final_outputs[Table.MCMC] = sampled_runs_df
             db.store.save_model_outputs(dest_db, **final_outputs)

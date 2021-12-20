@@ -30,14 +30,16 @@ targets = [
     PoissonTarget(hosp_admissions),
     PoissonTarget(icu_admissions)
 ]
+incubation_period_string = "sojourn.compartment_periods_calculated.exposed.total_period"
+hosp_multiplier_string = "clinical_stratification.props.hospital.multiplier"
 priors = [
     UniformPrior("contact_rate", (0.05, 0.1), jumping_stdev=0.01),
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.exposed.total_period", mean=3.5, stdev=1.0, trunc_range=(2.0, np.inf)
-    ),
+    TruncNormalPrior(incubation_period_string, mean=3.5, stdev=1.0, trunc_range=(2.0, np.inf)),
     UniformPrior("vaccination.vacc_full_effect_duration", (60., 180.), jumping_stdev=15.),
+    UniformPrior("vaccination.vacc_part_effect_duration", (180., 360.), jumping_stdev=30.),
     UniformPrior("mobility.microdistancing.face_coverings_adjuster.parameters.effect", (0.05, 0.3), jumping_stdev=0.04),
     UniformPrior("infectious_seed", (2., 100.), jumping_stdev=30.),
+    TruncNormalPrior(hosp_multiplier_string, mean=1.0, stdev=0.5, trunc_range=(0.8, np.inf)),
 ]
 
 calibration = Calibration(priors=priors, targets=targets)

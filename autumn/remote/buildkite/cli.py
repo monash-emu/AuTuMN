@@ -104,6 +104,9 @@ def resume():
     baserun = resume_pipeline.run_id_field.get_value()
     chains = resume_pipeline.chains_field.get_value()
     runtime = resume_pipeline.runtime_field.get_value()
+    burn_in = resume_pipeline.burn_in_field.get_value()
+    sample_size = resume_pipeline.sample_size_field.get_value()
+    trigger_downstream = resume_pipeline.trigger_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in resume_pipeline.fields}, indent=2)
 
     # Decode combined app + model name from user input.
@@ -117,6 +120,27 @@ def resume():
         chains=chains,
         runtime=runtime,
     )
+
+    logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
+    if not trigger_downstream:
+        logger.info("Not triggering full model run.")
+    else:
+        logger.info("Triggering full model run.")
+        fp = full_pipeline
+        trigger_pipeline(
+            label="Trigger full model run",
+            target="full-model-run",
+            msg=f"Triggered by calibration {app_name} {region_name} (build {build_number})",
+            env={"SKIP_INPUT": "true"},
+            meta={
+                fp.run_id_field.key: run_id,
+                fp.burn_in_field.key: burn_in,
+                fp.sample_size_field.key: sample_size,
+                fp.commit_field.key: fp.commit_field.default,
+                fp.trigger_field.key: fp.trigger_field.get_option(trigger_downstream),
+            },
+        )
+
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))

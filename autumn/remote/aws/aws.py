@@ -48,7 +48,7 @@ def download_s3(s3_key, dest):
 
 def run_job(job_id: str, instance_type=None, is_spot=False):
     if not instance_type:
-        instance_type = "m6i."
+        instance_type = "m6i.4xlarge"
 
     run_instance(job_id, instance_type, is_spot)
 

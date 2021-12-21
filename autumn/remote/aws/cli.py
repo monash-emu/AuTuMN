@@ -9,7 +9,7 @@ import click
 from botocore.exceptions import ClientError
 from invoke.exceptions import UnexpectedExit
 
-from autumn.settings import EC2_INSTANCE_SPECS, EC2InstanceState, EC2InstanceType
+from autumn.settings import EC2InstanceState
 
 from . import aws, remote
 

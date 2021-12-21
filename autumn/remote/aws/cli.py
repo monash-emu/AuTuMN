@@ -32,7 +32,7 @@ def status():
 
 @aws_cli.command()
 @click.argument("job_id")
-@click.argument("instance_type", type=click.Choice(EC2_INSTANCE_SPECS.keys()))
+@click.argument("instance_type")
 def start(job_id, instance_type):
     """
     Start a job but don't stop it
@@ -131,7 +131,7 @@ def run_calibrate(job, app, region, chains, runtime, commit, dry):
     Run a MCMC calibration on an AWS server.
     """
     job_id = f"calibrate-{job}"
-    instance_type = aws.get_instance_type(2 * chains, 8)
+    instance_type = aws.get_instance_type(chains, 4, "compute")
 
     if dry:
         logger.info("Dry run, would have used instance type: %s", instance_type)
@@ -159,7 +159,7 @@ def resume_calibration(job, baserun, chains, runtime):
     Run a MCMC calibration on an AWS server.
     """
     job_id = f"resume-{job}"
-    instance_type = aws.get_instance_type(2 * chains, 8)
+    instance_type = aws.get_instance_type(chains, 4, "compute")
 
     kwargs = {
         "num_chains": chains,
@@ -184,7 +184,8 @@ def run_full_model(job, run, burn_in, sample, commit):
     Run the full models based off an MCMC calibration on an AWS server.
     """
     job_id = f"full-{job}"
-    instance_type = EC2InstanceType.r5_2xlarge
+    # Use sample//3 as a heuristic for number of cores; will change if we change the sampling API
+    instance_type = aws.get_instance_type(sample//3, 32, "compute")
     kwargs = {
         "run_id": run,
         "burn_in": burn_in,
@@ -210,10 +211,7 @@ def run_powerbi(job, run, urunid, commit):
     """
     job_id = f"powerbi-{job}"
     instance_types = [
-        EC2InstanceType.r5_8xlarge,
-        EC2InstanceType.r5d_8xlarge,
-        EC2InstanceType.r5a_8xlarge,
-        EC2InstanceType.r5a_16xlarge,
+        "r6i.4xlarge"
     ]
     kwargs = {"run_id": run, "urunid": urunid, "commit": commit}
     job_func = functools.partial(remote.run_powerbi, **kwargs)

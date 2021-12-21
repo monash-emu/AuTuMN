@@ -185,7 +185,10 @@ def run_full_model(job, run, burn_in, sample, commit):
     """
     job_id = f"full-{job}"
     # Use sample//3 as a heuristic for number of cores; will change if we change the sampling API
-    instance_type = aws.get_instance_type(sample//3, 32, "compute")
+    # Cap max cores at 64 (no larger machines available, yet)
+    n_cores = min(sample//3, 64)
+
+    instance_type = aws.get_instance_type(n_cores, 32, "compute")
     kwargs = {
         "run_id": run,
         "burn_in": burn_in,

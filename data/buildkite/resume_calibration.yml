@@ -5,7 +5,7 @@ steps:
     key: run-id
     required: true
     text: Existing calibration run-id
-  - default: '7'
+  - default: '8'
     hint: How many MCMC chains do you want to run?
     key: num-chains
     required: true

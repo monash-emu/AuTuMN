@@ -36,7 +36,7 @@ chains_field = TextInputField(
     key="num-chains",
     title="Number of MCMC chains",
     hint="How many MCMC chains do you want to run?",
-    default=7,
+    default=8,
     type=int,
 )
 commit_field = TextInputField(

@@ -1,7 +1,7 @@
 steps:
 - block: Calibration Settings
   fields:
-  - default: '7'
+  - default: '8'
     hint: How many MCMC chains do you want to run?
     key: num-chains
     required: true

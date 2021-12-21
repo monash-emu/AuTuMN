@@ -38,7 +38,7 @@ def get_instance_type(min_cores: int, min_ram: int, category: str = settings.EC2
 
     assert matching_specs, "Could not find an instance to match specs"
 
-    return min(settings.EC2_INSTANCE_SPECS[category].items(), key = lambda kv : kv[1].cores)[0]
+    return min(matching_specs.items(), key = lambda kv : kv[1].cores)[0]
 
 
 def download_s3(s3_key, dest):

@@ -20,7 +20,11 @@ TEST_RUN_ID = "test_app/test_region/111111111/zzzzzzz"
 MCMC_RUN_PATH = "data/calibration_outputs/chain-0/mcmc_run.parquet"
 MCMC_PARAMS_PATH = "data/calibration_outputs/chain-1/mcmc_params.parquet"
 
+# Increasingly unfit for purpose; marking as skip but leaving here as a reminder
+# to rewrite tasks in a way that doesn't require convoluted monkeypatching and mockery
+# in order to test
 
+@pytest.mark.skip
 @mock_s3
 def test_full_model_run_task(monkeypatch, tmpdir):
     """

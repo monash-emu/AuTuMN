@@ -44,9 +44,7 @@ priors = [
     UniformPrior("voc_emergence.alpha_beta.start_time", [400, 475]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [7.5, 11.5]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
-    TruncNormalPrior(
-        "voc_emergence.delta.ifr_multiplier",
-        mean=2., stdev=1.5, trunc_range=(0., 4)),
+    UniformPrior("voc_emergence.delta.ifr_multiplier", [1.0, 6.0]),
     #waning
     TruncNormalPrior(
         "history.waned.ve_death",

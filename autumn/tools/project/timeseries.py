@@ -6,6 +6,8 @@ import numpy as np
 from autumn.tools.utils.secrets import check_hash
 from autumn.tools.utils.utils import apply_moving_average
 
+import pandas as pd
+
 
 class TimeSeries:
     """
@@ -157,6 +159,27 @@ class TimeSeriesSet:
 
         return TimeSeriesSet(data)
 
+def load_timeseries(path: str):
+    assert path.endswith(".json"), "Timeseries can only load JSON files (.json)"
+    is_secret = ".secret." in path
+    if is_secret:
+        msg = MISSING_MESSAGE_SECRET.format(path=path)
+        assert os.path.exists(path), msg
+        check_hash(path)
+    else:
+        msg = MISSING_MESSAGE.format(path=path)
+        assert os.path.exists(path), msg
+
+    # Load the JSON
+    with open(path, "r") as f:
+        data = json.load(f)
+
+    out_df = pd.DataFrame()
+    
+    for k, v in data.items():
+        out_df[v['output_key']] = pd.Series(data=v['values'],index=v['times'])
+
+    return out_df
 
 MISSING_MESSAGE = """
 

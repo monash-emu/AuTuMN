@@ -34,7 +34,7 @@ targets = [
 
 priors = [
     # Regional parameters
-    UniformPrior("contact_rate", [0.045, 0.06]),
+    UniformPrior("contact_rate", [0.04, 0.06]),
     UniformPrior("infectious_seed", [350.0, 500.0]),
     # Detection
     UniformPrior("infection_fatality.multiplier", [0.17, 0.2]),
@@ -42,7 +42,7 @@ priors = [
     #VoC
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.75, 3.3]),
     UniformPrior("voc_emergence.alpha_beta.start_time", [400, 475]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [7.5, 11.5]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [4.125, 8.5]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
     TruncNormalPrior(
         "voc_emergence.delta.ifr_multiplier",

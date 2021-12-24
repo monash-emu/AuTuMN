@@ -2,6 +2,7 @@ from typing import List, Tuple
 from abc import ABC, abstractmethod
 
 import pandas as pd
+import numpy as np
 from summer.utils import ref_times_to_dti
 
 #from autumn.tools.project.timeseries import TimeSeries
@@ -39,8 +40,8 @@ class BaseTarget(ABC):
 
     data: pd.Series
 
-    def __init__(self, time_weights: List[float] = None):
-        self.time_weights = time_weights
+    def __init__(self, time_weights: np.ndarray = None):
+        self.time_weights = np.array(time_weights)
         self.stdev = None
         self.cis = None
 

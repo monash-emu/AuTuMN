@@ -174,12 +174,13 @@ def load_timeseries(path: str):
     with open(path, "r") as f:
         data = json.load(f)
 
-    out_df = pd.DataFrame()
+    out_dict = {}
     
+    # Build this as a dict first so that all the indices are taken into account
     for k, v in data.items():
-        out_df[k] = pd.Series(data=v['values'],index=v['times'], name=v['output_key'])
+        out_dict[k] = pd.Series(data=v['values'],index=v['times'], name=v['output_key'])
 
-    return out_df
+    return pd.DataFrame(out_dict)
 
 MISSING_MESSAGE = """
 

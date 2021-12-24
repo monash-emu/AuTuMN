@@ -145,7 +145,6 @@ class NormalTarget(BaseTarget):
 
     def __init__(self, data: pd.Series, stdev: float = None, **kwargs):
         super().__init__(data, **kwargs)
-        self.data = data
         self.stdev = stdev
         self.loglikelihood_distri = "normal"
 

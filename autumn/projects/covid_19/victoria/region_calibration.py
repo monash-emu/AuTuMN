@@ -73,5 +73,5 @@ def collate_metro_targets(ts_set):
 
     targets = []
     for target_name in metro_target_names:
-        targets.append(NormalTarget(data=ts_set[target_name].loc[target_start_time: 660]))
+        targets.append(NormalTarget(data=ts_set[target_name].loc[target_start_time:660]))
     return targets

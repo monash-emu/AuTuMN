@@ -40,8 +40,13 @@ class BaseTarget(ABC):
 
     data: pd.Series
 
-    def __init__(self, time_weights: np.ndarray = None):
-        self.time_weights = np.array(time_weights)
+    def __init__(self, data: pd.Series, time_weights: np.ndarray = None):
+        # Make things easier for calibration by sanitizing the data here
+        self.data = data.dropna()
+        if time_weights is not None:
+            self.time_weights = np.array(time_weights)
+        else:
+            self.time_weights = None
         self.stdev = None
         self.cis = None
 
@@ -60,9 +65,8 @@ class PoissonTarget(BaseTarget):
     A calibration target sampled from a Poisson distribution
     """
 
-    def __init__(self, data: pd.Series, **kwargs):
-        super().__init__(**kwargs)
-        self.data = data
+    def __init__(self, data:pd.Series, **kwargs):
+        super().__init__(data, **kwargs)
         self.loglikelihood_distri = "poisson"
 
     def to_dict(self) -> dict:
@@ -82,8 +86,7 @@ class NegativeBinomialTarget(BaseTarget):
     """
 
     def __init__(self, data: pd.Series, dispersion_param: float = None, **kwargs):
-        super().__init__(**kwargs)
-        self.data = data
+        super().__init__(data, **kwargs)
         self.dispersion_param = dispersion_param
         self.loglikelihood_distri = "negative_binomial"
 
@@ -114,8 +117,7 @@ class TruncNormalTarget(BaseTarget):
         stdev: float = None,
         **kwargs,
     ):
-        super().__init__(**kwargs)
-        self.data = data
+        super().__init__(data, **kwargs)
         self.trunc_range = trunc_range
         self.stdev = stdev
         self.loglikelihood_distri = "trunc_normal"
@@ -142,7 +144,7 @@ class NormalTarget(BaseTarget):
     """
 
     def __init__(self, data: pd.Series, stdev: float = None, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(data, **kwargs)
         self.data = data
         self.stdev = stdev
         self.loglikelihood_distri = "normal"

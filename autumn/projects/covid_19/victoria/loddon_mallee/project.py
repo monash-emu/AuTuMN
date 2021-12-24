@@ -1,6 +1,6 @@
 import json
 
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
@@ -16,7 +16,7 @@ scenario_params = [baseline_params.update(scenario_path)]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings
-ts_set = TimeSeriesSet.from_file(build_rel_path("targets.secret.json"))
+ts_set = load_timeseries(build_rel_path("targets.secret.json"))
 targets = collate_regional_targets(ts_set)
 calibration = Calibration(priors=priors, targets=targets)
 plot_spec_filepath = build_rel_path("targets.secret.json")

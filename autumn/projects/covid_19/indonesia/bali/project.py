@@ -21,11 +21,13 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
-#notifications_ts = ts_set.get("notifications").truncate_start_time(242)
-#infection_deaths_ts = ts_set.get("infection_deaths").truncate_start_time(242).downsample(7)
+#notifications_ts = ts_set["notifications"].loc[242]
+#infection_deaths_ts = ts_set["infection_deaths"].loc[242::7]
 
-notifications_ts = ts_set["notifications"][242:]
-infection_deaths_ts = ts_set["infection_deaths"][242:]
+# truncate_start_time has weird (buggy?) behaviour of truncating to the day _after_ that specified,
+# we're going to assume you actually wanted this instead...
+notifications_ts = ts_set["notifications"].loc[243:]
+infection_deaths_ts = ts_set["infection_deaths"].loc[243::7]
 
 targets = [
     NormalTarget(notifications_ts),

@@ -441,7 +441,7 @@ class Calibration:
                                 )
                                 * time_weights[i]
                             )
-                elif target.loglikelihood_distr == "poisson":
+                elif target.loglikelihood_distri == "poisson":
                     for i in range(len(data)):
                         ll += (
                             round(data[i]) * math.log(abs(model_output[i]))

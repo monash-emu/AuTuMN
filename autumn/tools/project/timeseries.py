@@ -177,7 +177,7 @@ def load_timeseries(path: str):
     out_df = pd.DataFrame()
     
     for k, v in data.items():
-        out_df[v['output_key']] = pd.Series(data=v['values'],index=v['times'])
+        out_df[k] = pd.Series(data=v['values'],index=v['times'], name=v['output_key'])
 
     return out_df
 

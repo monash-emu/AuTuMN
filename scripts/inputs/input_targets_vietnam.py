@@ -42,7 +42,11 @@ TARGET_MAP_HCMC = {
     "icu_occupancy": "icu_occupancy",
 }
 
-TARGET_MAP_HANOI = {"notifications": "notifications", "infection_deaths": "infection_deaths"}
+TARGET_MAP_HANOI = {
+    "notifications": "notifications",
+    "icu_occupancy": "icu_occupancy",
+    "infection_deaths": "infection_deaths"
+}
 
 
 def preprocess_vnm_data():
@@ -65,7 +69,7 @@ df_cases.to_csv(HCMC_DATA_CSV)
 update_timeseries(TARGET_MAP_HCMC, df_cases, HCMC_TIMESERIES)
 
 # Update HANOI targets
-df_cases = pd.read_excel(HANOI_DATA_URL, usecols=[0, 1, 2])
+df_cases = pd.read_excel(HANOI_DATA_URL, usecols=[0, 1, 2, 3])
 df_cases = create_date_index(COVID_BASE_DATETIME, df_cases, "date")
 df_cases.to_csv(HANOI_DATA_CSV)
 update_timeseries(TARGET_MAP_HANOI, df_cases, HANOI_TIMESERIES)

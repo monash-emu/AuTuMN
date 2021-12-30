@@ -33,10 +33,15 @@ targets = [
 ]
 
 priors = [
+    # Global COVID priors
+    *COVID_GLOBAL_PRIORS,
     # Regional parameters
     UniformPrior("contact_rate", [0.04, 0.06]),
     # Detection
     UniformPrior("infection_fatality.multiplier", [0.17, 0.2]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.025]),
+    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=0.075, \
+                     stdev=0.1, trunc_range=[0.0, np.inf]),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.75, 3.3]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [4.125, 8.5]),

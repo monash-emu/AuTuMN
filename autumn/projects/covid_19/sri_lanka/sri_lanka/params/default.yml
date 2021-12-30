@@ -69,9 +69,7 @@ testing_to_detection:
 
 clinical_stratification:
   icu_prop: 0.04
-  props:
-    symptomatic:
-      multiplier: 0.076
+
 
 mobility:
   smooth_google_data: false # whether to apply a 7-day moving average

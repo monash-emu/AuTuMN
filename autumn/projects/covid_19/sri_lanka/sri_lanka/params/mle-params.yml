@@ -1,6 +1,11 @@
-contact_rate: 0.04538306546501184
-history.waned.ve_death: 0.9941858788738192
-infection_fatality.multiplier: 0.184248561657048578
-voc_emergence.alpha_beta.contact_rate_multiplier: 2.812470712290112
-voc_emergence.delta.contact_rate_multiplier: 7.644754377570403
-voc_emergence.delta.ifr_multiplier: 3.933515869507874
+contact_rate: 0.044815711709222564
+history.waned.ve_death: 0.9624851520265021
+infection_fatality.multiplier: 0.17822954980480088
+infectious_seed: 482.09043480687205
+testing_to_detection.assumed_cdr_parameter: 0.0190923222917489
+voc_emergence.alpha_beta.contact_rate_multiplier: 2.802639184949942
+voc_emergence.alpha_beta.start_time: 416.4970152748342
+voc_emergence.delta.contact_rate_multiplier: 7.028833316964571
+voc_emergence.delta.ifr_multiplier: 3.959603419655418
+voc_emergence.delta.start_time: 505.7245783921957
+clinical_stratification.props.symptomatic.multiplier: 0.076

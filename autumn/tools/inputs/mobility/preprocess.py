@@ -141,8 +141,8 @@ def preprocess_mobility(input_db: Database, country_df):
     ] = "Kuala Lumpur"
 
     # Read and append mobility predictions for Vietnam
-    vnm_mob = pd.read_csv(VNM_CSV_PATH)
-    mob_df = mob_df.append(vnm_mob)
+    # vnm_mob = pd.read_csv(VNM_CSV_PATH)
+    # mob_df = mob_df.append(vnm_mob)
 
     mob_df = mob_df.append(dhhs_cluster_mobility)
 

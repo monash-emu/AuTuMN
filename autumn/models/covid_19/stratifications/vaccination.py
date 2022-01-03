@@ -42,6 +42,6 @@ def get_vaccination_strat(
         for voc_name, voc_values in params.voc_emergence.items():
             seed_split = {stratum: Multiply(0.) for stratum in all_strata[1:]}
             seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
-            stratification.add_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
+            stratification.set_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
 
     return stratification

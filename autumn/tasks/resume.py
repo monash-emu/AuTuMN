@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 
 from autumn.tools import db, plots
 from autumn.settings import REMOTE_BASE_DIR
-from autumn.tools.utils.parallel import report_errors, run_parallel_tasks, gather_exc_plus
+from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.fs import recreate_dir
 from autumn.tools.utils.s3 import upload_to_run_s3, get_s3_client, list_s3, download_from_run_s3
 from autumn.tools.utils.timer import Timer
@@ -103,7 +103,6 @@ def resume_calibration_task(run_id: str, base_run_id: str, runtime: float, num_c
     with Timer(f"Uploading final logs to AWS S3"):
         upload_to_run_s3(s3_client, run_id, 'log', quiet=not verbose)
 
-@report_errors
 def resume_calibration_chain(
     runtime: float, chain_id: int, verbose: bool
 ):

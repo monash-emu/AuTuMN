@@ -2,6 +2,7 @@ import os
 from unittest.mock import patch
 
 import numpy as np
+from numpy.testing import assert_allclose, assert_almost_equal
 
 from autumn.tools import db
 from autumn.tools.calibration import Calibration, CalibrationMode
@@ -22,7 +23,7 @@ def test_sample_starting_params_from_lhs__with_lognormal_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 0.36787944117144233}])
+    assert_almost_equal(params[0]['ice_cream_sales'],  0.36787944117144233)
 
 
 def test_sample_starting_params_from_lhs__with_beta_prior_and_one_sample():
@@ -36,7 +37,7 @@ def test_sample_starting_params_from_lhs__with_beta_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 0.04680260472064115}])
+    assert_almost_equal(params[0]['ice_cream_sales'],  0.04680260472064115)
 
 
 def test_sample_starting_params_from_lhs__with_gamma_prior_and_one_sample():
@@ -50,7 +51,7 @@ def test_sample_starting_params_from_lhs__with_gamma_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 4.932833078981056}])
+    assert_almost_equal(params[0]['ice_cream_sales'],  4.932833078981056)
 
 
 def test_sample_starting_params_from_lhs__with_uniform_prior_and_one_sample():

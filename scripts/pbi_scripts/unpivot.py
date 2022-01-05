@@ -18,7 +18,8 @@ def get_table(conn, table):
 
 def chg_col_type(df, cols):
     for col in cols:
-        df[col] = df[col].astype(float)
+        if col in df.columns:
+            df[col] = df[col].astype(float)
     
     return df
 
@@ -52,6 +53,10 @@ for each in db_files:
     df = get_table(conn, "mcmc_run")
     df = chg_col_type(df, ['accept', 'chain', 'run','weight'])
     df.to_sql("mcmc_run", conn, if_exists="replace", index=False)
+
+    df = get_table(conn, "mcmc_params")
+    df = chg_col_type(df, ['chain', 'run'])
+    df.to_sql("mcmc_params", conn, if_exists="replace", index=False)
 
     conn.close()
 

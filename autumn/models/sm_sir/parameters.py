@@ -659,6 +659,7 @@ class Parameters:
     description: Optional[str]
     country: Country
     population: Population
+    ref_mixing_iso3: str
     time: Time
     # Values
     contact_rate: float

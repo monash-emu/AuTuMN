@@ -88,5 +88,9 @@ age_stratification:
     - 0.03203 # 75-79
     - 0.08292 # 80+
 
+notification:
+  onset_to_notification_delay: 7.0
+  prop_infections_notified: .2
+
 activate_random_process: True
 random_process: null

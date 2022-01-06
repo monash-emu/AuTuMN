@@ -638,6 +638,11 @@ class AgeSpecificRiskMultiplier(BaseModel):
     contact_rate_multiplier: float
 
 
+class Notification(BaseModel):
+    onset_to_notification_delay: float
+    prop_infections_notified: float
+
+
 class RandomProcess(BaseModel):
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
@@ -667,6 +672,8 @@ class Parameters:
     # universal_death_rate: float
     infectious_seed: float
     infection_duration: float
+
+    notification: Notification
 
     age_stratification: AgeStratification
 

@@ -11,6 +11,7 @@ from datetime import date, datetime
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
+from .stratifications.immunity import get_immunity_strat
 from .preprocess.age_specific_params import convert_param_agegroups
 
 
@@ -129,6 +130,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"], ifr, recovery_rate)
     model.stratify_with(age_strat)
+
+    """
+    Apply immunity stratification
+    """
+    immunity_strat = get_immunity_strat(params)
+    model.stratify_with(immunity_strat)
 
     """
     Set up derived output functions

@@ -88,6 +88,19 @@ age_stratification:
     - 0.03203 # 75-79
     - 0.08292 # 80+
 
+
+# parameters related to immunity stratification (three strata: none / high / low)
+immunity_stratification:
+  prop_immune: .8
+  prop_high_among_immune: .5
+
+  infection_risk_reduction:
+    high: .4
+    low: .1
+  hospital_risk_reduction:
+    high: .8
+    low: .5
+
 notification:
   onset_to_notification_delay: 7.0
   prop_infections_notified: .2

@@ -220,6 +220,19 @@ class AgeStratification(BaseModel):
     prop_hospital: List[float]
     ifr: List[float]
 
+
+class ImmunityRiskReduction(BaseModel):
+    high: float
+    low: float
+
+
+class ImmunityStratification(BaseModel):
+    prop_immune: float
+    prop_high_among_immune: float
+    infection_risk_reduction: ImmunityRiskReduction
+    hospital_risk_reduction: ImmunityRiskReduction
+
+
 class StrataProps(BaseModel):
     props: List[float]
     multiplier: float
@@ -676,7 +689,7 @@ class Parameters:
     notification: Notification
 
     age_stratification: AgeStratification
-
+    immunity_stratification: ImmunityStratification
     # Random process
     activate_random_process: bool
     random_process: Optional[RandomProcess]

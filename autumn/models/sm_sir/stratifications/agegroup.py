@@ -36,11 +36,4 @@ def get_agegroup_strat(
         FlowName.INFECTION, {sus: Multiply(value) for sus, value in params.age_stratification.susceptibility.items()}
     )
 
-    # Adjust infection death flow
-    death_rates = [recovery_rate * val / (1. - val) for val in ifr]
-    age_strat.add_flow_adjustments(
-        FlowName.INFECTION_DEATH,
-        {agegroup: Overwrite(death_rates[i]) for i, agegroup in enumerate(AGEGROUP_STRATA)}
-    )
-
     return age_strat

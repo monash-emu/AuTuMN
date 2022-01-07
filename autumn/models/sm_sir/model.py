@@ -114,13 +114,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         dest=Compartment.RECOVERED,
     )
 
-    # Infection Death
-    model.add_death_flow(
-        name=FlowName.INFECTION_DEATH,
-        death_rate=0.,  # Inconsequential value because it will be overwritten later in age stratification
-        source=Compartment.INFECTIOUS,
-    )
-
     """
     Apply age stratification
     """
@@ -142,11 +135,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     outputs_builder = SmSirOutputsBuilder(model, COMPARTMENTS)
     outputs_builder.request_incidence()
-    outputs_builder.request_hospitalisations(prop_symptomatic, prop_hospital)
-    outputs_builder.request_mortality()
-
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
+
+    """
+    Calculate hospitalisations and deaths
+    """
+    # FIXME! Will need to use new type of derived outputs using delayed events triggered from other derived outputs.
 
     return model
 

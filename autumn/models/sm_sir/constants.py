@@ -8,8 +8,6 @@ class Compartment:
 class FlowName:
     INFECTION = "infection"
     RECOVERY = "recovery"
-    INFECTION_DEATH = "infection_death"
-
 
 COMPARTMENTS = [
     Compartment.SUSCEPTIBLE,

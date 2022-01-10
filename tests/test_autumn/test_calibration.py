@@ -2,6 +2,7 @@ import os
 from unittest.mock import patch
 
 import numpy as np
+import pandas as pd
 from numpy.testing import assert_allclose, assert_almost_equal
 
 from autumn.tools import db
@@ -114,15 +115,15 @@ def _prepare_params(l):
 
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import PoissonTarget
-from autumn.tools.project import TimeSeries, Project, ParameterSet, Params
+from autumn.tools.project import Project, ParameterSet, Params
 
 
 def test_calibrate_autumn_mcmc(temp_data_dir):
     priors = [UniformPrior("ice_cream_sales", [1, 5])]
     target_outputs = [
         PoissonTarget(
-            TimeSeries(
-                "shark_attacks", times=[2000, 2001, 2002, 2003, 2004], values=[3, 6, 9, 12, 15]
+            pd.Series(
+                [3, 6, 9, 12, 15], [2000, 2001, 2002, 2003, 2004], name="shark_attacks"
             )
         ),
     ]

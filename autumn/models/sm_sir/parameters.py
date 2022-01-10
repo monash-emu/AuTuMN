@@ -216,6 +216,21 @@ class AgeStratification(BaseModel):
 
     # Susceptibility by age
     susceptibility: Dict[str, float]
+    prop_symptomatic: List[float]
+    prop_hospital: List[float]
+    ifr: List[float]
+
+
+class ImmunityRiskReduction(BaseModel):
+    high: float
+    low: float
+
+
+class ImmunityStratification(BaseModel):
+    prop_immune: float
+    prop_high_among_immune: float
+    infection_risk_reduction: ImmunityRiskReduction
+    hospital_risk_reduction: ImmunityRiskReduction
 
 
 class StrataProps(BaseModel):
@@ -636,6 +651,11 @@ class AgeSpecificRiskMultiplier(BaseModel):
     contact_rate_multiplier: float
 
 
+class Notification(BaseModel):
+    onset_to_notification_delay: float
+    prop_infections_notified: float
+
+
 class RandomProcess(BaseModel):
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
@@ -656,6 +676,8 @@ class Parameters:
     # Metadata
     description: Optional[str]
     country: Country
+    population: Population
+    ref_mixing_iso3: str
     time: Time
     # Values
     contact_rate: float
@@ -664,6 +686,10 @@ class Parameters:
     infectious_seed: float
     infection_duration: float
 
+    notification: Notification
+
+    age_stratification: AgeStratification
+    immunity_stratification: ImmunityStratification
     # Random process
     activate_random_process: bool
     random_process: Optional[RandomProcess]

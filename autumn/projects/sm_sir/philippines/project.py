@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, use_tuned_proposal_sds
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
@@ -11,15 +11,15 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings.
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.1, 0.2]),
+    UniformPrior("contact_rate", [0.01, 0.02]),
     UniformPrior("infection_duration", [5, 12]),
     UniformPrior("infectious_seed", [1, 200]),
 ]
 targets = [
     NormalTarget(
-        timeseries=ts_set["incidence"].truncate_end_time(365)
+        data=ts_set["incidence"].loc[:365] #truncate_end_time(365)
     )
 ]
 

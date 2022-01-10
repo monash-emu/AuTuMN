@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, BetaPrior
 from autumn.tools.calibration.targets import (
@@ -22,8 +22,8 @@ baseline_params = (
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(270)
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
+notifications_ts = ts_set["notifications"].loc[270:]
 targets = [NormalTarget(notifications_ts)]
 priors = [
     # Global COVID priors

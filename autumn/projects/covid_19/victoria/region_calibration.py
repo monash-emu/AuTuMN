@@ -61,7 +61,7 @@ def collate_regional_targets(ts_set):
     targets = []
     for target_name in regional_target_names:
         targets.append(
-            NormalTarget(timeseries=ts_set.get(target_name).truncate_start_time(target_start_time))
+            NormalTarget(data=ts_set[target_name].loc[target_start_time:])
         )
     return targets
 
@@ -73,5 +73,5 @@ def collate_metro_targets(ts_set):
 
     targets = []
     for target_name in metro_target_names:
-        targets.append(NormalTarget(timeseries=ts_set.get(target_name).truncate_times(target_start_time, 660)))
+        targets.append(NormalTarget(data=ts_set[target_name].loc[target_start_time:660]))
     return targets

@@ -1,4 +1,6 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
+import pandas as pd
+
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
 from autumn.tools.calibration.targets import (
@@ -6,7 +8,7 @@ from autumn.tools.calibration.targets import (
 )
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
-import numpy as np
+
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 scenario_dir_path = build_rel_path("params/")
@@ -19,11 +21,14 @@ baseline_params = base_params.update(default_path).update(mle_path, calibration_
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
-notifications = ts_set.get("notifications").multiple_truncations([[511, 575], [606, 700]])  # truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
-icu_occupancy = ts_set.get("icu_occupancy").truncate_start_time(640)  # truncated to 01 Oct 2021
-infection_deaths = ts_set.get("infection_deaths").truncate_start_time(556)  # truncated to 9th Jul 2021
+#notifications = ts_set["notifications"].multiple_truncations([[511, 575], [606, 700]]) 
+# truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
+notifications = pd.concat([ts_set["notifications"].loc[511:575], ts_set["notifications"].loc[606:700]]) 
+
+icu_occupancy = ts_set["icu_occupancy"].loc[640:]  # truncated to 01 Oct 2021
+infection_deaths = ts_set["infection_deaths"].loc[556:]  # truncated to 9th Jul 2021
 
 targets = [
     NormalTarget(notifications),

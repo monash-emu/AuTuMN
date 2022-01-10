@@ -3,17 +3,21 @@ from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from math import exp
+from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 
 from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
 from datetime import date, datetime
 from .computed_values.random_process_compute import RandomProcessProc
+from .constants import COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
+from .stratifications.agegroup import get_agegroup_strat
+from .stratifications.immunity import get_immunity_strat
+from .preprocess.age_specific_params import convert_param_agegroups
+
 
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
-
-COMPARTMENTS = ["susceptible", "infectious", "recovered"]
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -22,11 +26,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     params = Parameters(**params)
 
+    # Get country/region details
+    country = params.country
+    pop = params.population
+
+    # preprocess age-specific parameters to match model age bands
+    prop_symptomatic = convert_param_agegroups(params.age_stratification.prop_symptomatic, country.iso3, pop.region)
+    prop_hospital = convert_param_agegroups(params.age_stratification.prop_hospital, country.iso3, pop.region)
+    ifr = convert_param_agegroups(params.age_stratification.ifr, country.iso3, pop.region)
+
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
         compartments=COMPARTMENTS,
-        infectious_compartments=["infectious"],
+        infectious_compartments=[Compartment.INFECTIOUS],
         timestep=params.time.step,
         ref_date=BASE_DATE
     )
@@ -46,15 +59,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Create the total population.
     """
     init_pop = {
-        "infectious": params.infectious_seed
+        Compartment.INFECTIOUS: params.infectious_seed
     }
 
     # Get country population by age-group
-    country = params.country
-    total_pops = inputs.get_population_by_agegroup(["0", "50"], country.iso3, region=None, year=2020)
+    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, region=pop.region, year=2020)
 
     # Assign the remainder starting population to the S compartment
-    init_pop["susceptible"] = sum(total_pops) - sum(init_pop.values())
+    init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
     model.set_initial_population(init_pop)
 
     """
@@ -87,29 +99,49 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         contact_rate = params.contact_rate
 
     model.add_infection_frequency_flow(
-        name="infection",
+        name=FlowName.INFECTION,
         contact_rate=contact_rate,
-        source="susceptible",
-        dest="infectious",
+        source=Compartment.SUSCEPTIBLE,
+        dest=Compartment.INFECTIOUS,
     )
 
     # Recovery
     recovery_rate = 1. / params.infection_duration
     model.add_transition_flow(
-        name="recovery",
+        name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,
-        source="infectious",
-        dest="recovered",
+        source=Compartment.INFECTIOUS,
+        dest=Compartment.RECOVERED,
     )
+
+    """
+    Apply age stratification
+    """
+    mixing_matrices = build_synthetic_matrices(
+        country.iso3, params.ref_mixing_iso3, AGEGROUP_STRATA, True, pop.region, requested_locations=["all_locations"]
+    )
+
+    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"], ifr, recovery_rate)
+    model.stratify_with(age_strat)
+
+    """
+    Apply immunity stratification
+    """
+    immunity_strat = get_immunity_strat(params)
+    model.stratify_with(immunity_strat)
 
     """
     Set up derived output functions
     """
     outputs_builder = SmSirOutputsBuilder(model, COMPARTMENTS)
     outputs_builder.request_incidence()
-
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
+
+    """
+    Calculate hospitalisations and deaths
+    """
+    # FIXME! Will need to use new type of derived outputs using delayed events triggered from other derived outputs.
 
     return model
 

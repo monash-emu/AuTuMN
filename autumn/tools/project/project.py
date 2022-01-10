@@ -190,6 +190,8 @@ class Project:
     def __repr__(self):
         return f"Project<{self.model_name}, {self.region_name}>"
 
+    def _get_path(self):
+        return _PROJECTS[self.model_name][self.region_name]
 
 LOADED_PROJECTS = set()
 

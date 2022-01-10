@@ -36,11 +36,11 @@ def get_vaccination_strat(
     # Immunity adjustments equivalent to history approach
     apply_immunity_to_strat(stratification, params, stratified_adjusters, Vaccination.UNVACCINATED)
 
-    # Simplest approach for VoCs is to assign all the VoC infectious seed to the unvaccinated
-    # FIXME: This can probably be deleted, once the summer importations split is fixed
+    # Assign all the VoC infectious seed to the unvaccinated, because otherwise we might be assigning VoC entries to a
+    # stratum that supposed to be empty (i.e. because vaccination hasn't started yet)
     if params.voc_emergence:
         for voc_name, voc_values in params.voc_emergence.items():
-            seed_split = {stratum: Multiply(0.) for stratum in all_strata[1:]}
+            seed_split = {stratum: Multiply(0.) for stratum in all_strata}
             seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
             stratification.set_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
 

@@ -60,12 +60,12 @@ mobility:
 voc_emergence: 
   alpha_beta:
     start_time: 320
-    entry_rate: 5.
+    entry_rate: 80.
     seed_duration: 10.
     contact_rate_multiplier: 1.5
   delta:
     start_time: 470 #500
-    entry_rate: 10.
+    entry_rate: 160.
     seed_duration: 10.
     contact_rate_multiplier: 2.5
 

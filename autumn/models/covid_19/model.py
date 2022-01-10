@@ -37,6 +37,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     params = Parameters(**params)
 
+    # Get country/region details
+    country = params.country
+    pop = params.population
+
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
@@ -64,15 +68,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Distribute infectious seed across infectious split sub-compartments
     compartment_periods = calc_compartment_periods(params.sojourn)
     total_disease_time = sum([compartment_periods[comp] for comp in DISEASE_COMPARTMENTS])
-    init_pop = {
-        comp: params.infectious_seed * compartment_periods[comp] / total_disease_time
-        for comp in DISEASE_COMPARTMENTS
-    }
+    seed = params.infectious_seed
+    init_pop = {comp: seed * compartment_periods[comp] / total_disease_time for comp in DISEASE_COMPARTMENTS}
 
     # Get country population by age-group
-    country = params.country
-    pop = params.population
-    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year)
+    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())

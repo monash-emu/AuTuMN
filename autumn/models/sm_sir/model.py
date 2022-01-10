@@ -24,6 +24,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
     """
+
     params = Parameters(**params)
 
     # Get country/region details
@@ -58,12 +59,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Create the total population.
     """
-    init_pop = {
-        Compartment.INFECTIOUS: params.infectious_seed
-    }
+    init_pop = {Compartment.INFECTIOUS: params.infectious_seed}
 
     # Get country population by age-group
-    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, region=pop.region, year=2020)
+    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())

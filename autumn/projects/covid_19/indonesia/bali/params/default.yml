@@ -61,7 +61,7 @@ contact_tracing:
 voc_emergence:
   delta:
     start_time: 400
-    entry_rate: 1.
+    entry_rate: 16.
     seed_duration: 10.
 
 vaccination:

@@ -141,8 +141,14 @@ def preprocess_mobility(input_db: Database, country_df):
     ] = "Kuala Lumpur"
 
     # Read and append mobility predictions for Vietnam
-    # vnm_mob = pd.read_csv(VNM_CSV_PATH)
-    # mob_df = mob_df.append(vnm_mob)
+    vnm_mob = pd.read_csv(VNM_CSV_PATH)
+    mob_df = mob_df.merge(vnm_mob, on=["date", "country_region", "sub_region_1"], how="left")
+    col_str = "workplaces_percent_change_from_baseline"
+    mob_df.loc[
+        (mob_df["country_region"] == "Vietnam") & (mob_df[f"{col_str}_x"].isna()), f"{col_str}_x"
+    ] = mob_df[f"{col_str}_y"]
+    mob_df = mob_df.drop(columns=f"{col_str}_y")
+    mob_df.rename(columns={f"{col_str}_x": col_str}, inplace=True)
 
     mob_df = mob_df.append(dhhs_cluster_mobility)
 

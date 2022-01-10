@@ -5,7 +5,6 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from .utils import get_seasonal_forcing
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data, CdrProc
 from autumn.models.covid_19.utils import calc_compartment_periods
 
@@ -82,14 +81,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Add intercompartmental flows.
     """
 
-    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate
-    contact_rate = get_seasonal_forcing(365., 173., params.seasonal_force, params.contact_rate) if \
-        params.seasonal_force else params.contact_rate
-
     # Infection
     model.add_infection_frequency_flow(
         name=INFECTION,
-        contact_rate=contact_rate,
+        contact_rate=params.contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.EARLY_EXPOSED,
     )

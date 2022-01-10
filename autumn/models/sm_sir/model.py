@@ -31,8 +31,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     pop = params.population
 
     # preprocess age-specific parameters to match model age bands
-    prop_symptomatic = convert_param_agegroups(params.age_stratification.prop_symptomatic, country.iso3, pop.region)
-    prop_hospital = convert_param_agegroups(params.age_stratification.prop_hospital, country.iso3, pop.region)
+    # prop_symptomatic = convert_param_agegroups(params.age_stratification.prop_symptomatic, country.iso3, pop.region)
+    # prop_hospital = convert_param_agegroups(params.age_stratification.prop_hospital, country.iso3, pop.region)
     ifr = convert_param_agegroups(params.age_stratification.ifr, country.iso3, pop.region)
 
     # Create the model object
@@ -135,6 +135,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     outputs_builder = SmSirOutputsBuilder(model, COMPARTMENTS)
     outputs_builder.request_incidence()
+
+    outputs_builder.request_hospital_occupancies()
+
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
 

@@ -9,6 +9,7 @@ class FlowName:
     INFECTION = "infection"
     RECOVERY = "recovery"
 
+
 COMPARTMENTS = [
     Compartment.SUSCEPTIBLE,
     Compartment.INFECTIOUS,

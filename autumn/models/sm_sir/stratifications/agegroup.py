@@ -26,13 +26,11 @@ def get_agegroup_strat(
     age_strat.set_mixing_matrix(mixing_matrix)
 
     # Set distribution of starting population
-    age_split_props = {
-        agegroup: prop for agegroup, prop in zip(AGEGROUP_STRATA, normalise_sequence(total_pops))
-    }
+    age_split_props = {agegroup: prop for agegroup, prop in zip(AGEGROUP_STRATA, normalise_sequence(total_pops))}
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group
-    age_strat.add_flow_adjustments(
+    age_strat.set_flow_adjustments(
         FlowName.INFECTION, {sus: Multiply(value) for sus, value in params.age_stratification.susceptibility.items()}
     )
 

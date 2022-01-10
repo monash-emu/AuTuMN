@@ -26,7 +26,7 @@ def get_immunity_strat(
         ImmunityStratum.HIGH: Multiply(1. - params.immunity_stratification.infection_risk_reduction.high),
         ImmunityStratum.LOW: Multiply(1. - params.immunity_stratification.infection_risk_reduction.low)
     }
-    immunity_strat.add_flow_adjustments(
+    immunity_strat.set_flow_adjustments(
         FlowName.INFECTION, infection_adjustment
     )
 

@@ -31,9 +31,9 @@ def get_agegroup_strat(
     """
 
     age_strat = Stratification("agegroup", AGEGROUP_STRATA, COMPARTMENTS)
-    country = params.country
 
     # Get dynamic age-specific mixing matrix
+    country = params.country
     dynamic_mixing_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, country)
     age_strat.set_mixing_matrix(dynamic_mixing_matrix)
 

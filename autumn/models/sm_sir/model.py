@@ -14,6 +14,7 @@ from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .stratifications.strains import get_strain_strat
+from .strat_processing.strains import make_voc_seed_func
 from .preprocess.age_specific_params import convert_param_agegroups
 
 
@@ -191,12 +192,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         strain_strat = get_strain_strat(voc_params, compartments)
         model.stratify_with(strain_strat)
 
-        # # Use importation flows to seed VoC cases
-        # for voc_name, voc_values in voc_params.items():
-        #     voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
-        #     model.add_importation_flow(
-        #         f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}, split_imports=True
-        #     )
+        # Use importation flows to seed VoC cases
+        for voc_name, voc_values in voc_params.items():
+            voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
+            model.add_importation_flow(
+                f"seed_voc_{voc_name}",
+                voc_seed_func,
+                dest=Compartment.INFECTIOUS,  # Different from Covid model, because this compartment always present here
+                dest_strata={"strain": voc_name},
+                split_imports=True
+            )
 
     """
     Apply immunity stratification

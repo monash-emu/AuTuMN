@@ -221,22 +221,6 @@ class ImmunityStratification(BaseModel):
     hospital_risk_reduction: ImmunityRiskReduction
 
 
-class StrataProps(BaseModel):
-    props: List[float]
-    multiplier: float
-
-    @validator("props", allow_reuse=True)
-    def check_props(val):
-        msg = f"Not all of list of proportions is in [0, 1]: {val}"
-        assert all([0. <= prop <= 1. for prop in val]), msg
-        return val
-
-
-class ClinicalProportions(BaseModel):
-    hospital: StrataProps
-    symptomatic: StrataProps
-
-
 class TestingToDetection(BaseModel):
     """
     Empiric approach to building the case detection rate that is based on per capita testing rates.
@@ -284,20 +268,6 @@ class VocComponent(BaseModel):
         return values
 
 
-class TanhScaleup(BaseModel):
-    shape: float
-    inflection_time: float
-    lower_asymptote: float
-    upper_asymptote: float
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_asymptotes(cls, values):
-        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
-        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
-        assert 0. <= lower, f"Lower asymptote not in domain [0, inf]: {lower}"
-        return values
-
-
 class Notification(BaseModel):
     onset_to_notification_delay: float
     prop_infections_notified: float
@@ -325,6 +295,7 @@ class Parameters:
     country: Country
     population: Population
     ref_mixing_iso3: str
+    age_groups: List[int]
     time: Time
     # Values
     contact_rate: float
@@ -337,6 +308,14 @@ class Parameters:
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification
+    voc_emergence: Optional[Dict[str, VocComponent]]
+
     # Random process
     activate_random_process: bool
     random_process: Optional[RandomProcess]
+
+    @validator("age_groups", allow_reuse=True)
+    def validate_age_groups(age_groups):
+        assert all([i_group % 5 == 0 for i_group in age_groups]), "Not all age groups are multiples of 5"
+        assert all([0 <= i_group <= 75 for i_group in age_groups]), "Age breakpoints must be from zero to 75"
+        return age_groups

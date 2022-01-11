@@ -22,7 +22,8 @@ BASE_COMPARTMENTS = [
     Compartment.RECOVERED,
 ]
 
-AGEGROUP_STRATA = ['0', '15', '25', '50', '70']
+
+WILD_TYPE = "wild_type"
 
 
 class ImmunityStratum:

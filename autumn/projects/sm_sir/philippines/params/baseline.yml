@@ -2,6 +2,18 @@
 infectious_seed: 100.
 contact_rate: 0.15
 
+voc_emergence:
+  delta:
+    start_time: 548
+    entry_rate: 5.
+    seed_duration: 10.
+    contact_rate_multiplier: 2.
+  omicron:
+    start_time: 2000
+    entry_rate: 5.
+    seed_duration: 10.
+    contact_rate_multiplier: 4.
+
 random_process:
   coefficients: [.8, .2]
   noise_sd: 0.2

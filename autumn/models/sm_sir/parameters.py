@@ -81,25 +81,13 @@ class Sojourn(BaseModel):
     Parameters for determining how long a person stays in a given compartment.
     """
 
-    class CalcPeriod(BaseModel):
-        total_period: float
-        proportions: Dict[str, float]
+    active: float
+    exposed: Optional[float]
 
-        @validator("proportions", allow_reuse=True)
-        def check_props(props):
-            prop_sum = sum(props.values())
-            assert prop_sum == 1., f"Requested period proportions do not sum to one: {prop_sum}"
-            return props
-
-    # Mean time in days spent in each compartment
-    compartment_periods: Dict[str, float]
-    # Mean time spent in each compartment, defined via proportions
-    compartment_periods_calculated: Dict[str, CalcPeriod]
-
-    @validator("compartment_periods", allow_reuse=True)
-    def check_positive(periods):
-        assert all(val >= 0. for val in periods.values()), f"Sojourn times must be non-negative, times are: {periods}"
-        return periods
+    @validator("active", allow_reuse=True)
+    def check_positive(active):
+        assert active > 0., f"Sojourn times must be non-negative, active time is: {active}"
+        return active
 
 
 class MixingLocation(BaseModel):
@@ -684,7 +672,7 @@ class Parameters:
     # infect_death: float
     # universal_death_rate: float
     infectious_seed: float
-    infection_duration: float
+    sojourn: Sojourn
 
     notification: Notification
 

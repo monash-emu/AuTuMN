@@ -18,7 +18,9 @@ time:
 
 contact_rate: 0.1
 infectious_seed: 1
-infection_duration: 8
+
+sojourn:
+  active: 8.
 
 # Age-related parameters
 age_stratification:

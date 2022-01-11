@@ -105,7 +105,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Recovery
-    recovery_rate = 1. / params.infection_duration
+    recovery_rate = 1. / params.sojourn.active
     model.add_transition_flow(
         name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,

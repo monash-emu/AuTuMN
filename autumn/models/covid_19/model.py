@@ -138,13 +138,33 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     """
-    Variants of concern stratification.
+    Preliminary calculations relating to VoCs.
     """
 
     voc_ifr_effects = {"wild": 1.}
     voc_hosp_effects = {"wild": 1.}
     if params.voc_emergence:
+
         voc_params = params.voc_emergence
+        voc_names = list(voc_params.keys())
+
+        # Get the adjustments to the IFR for each strain (if not requested, will have defaulted to a value of one)
+        voc_ifr_effects.update({s: params.voc_emergence[s].ifr_multiplier for s in voc_names})
+        voc_hosp_effects.update({s: params.voc_emergence[s].hosp_multiplier for s in voc_names})
+
+    stratified_adjusters = {}
+    for voc in voc_ifr_effects.keys():
+        stratified_adjusters[voc] = {
+            "ifr": params.infection_fatality.multiplier * voc_ifr_effects[voc],
+            "hosp": params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc],
+            "sympt": params.clinical_stratification.props.symptomatic.multiplier,
+        }
+
+    """
+    Variants of concern stratification.
+    """
+
+    if params.voc_emergence:
 
         # Build and apply stratification
         strain_strat = get_strain_strat(voc_params)
@@ -157,21 +177,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}, split_imports=True
             )
 
-        # Get the adjustments to the IFR for each strain (if not requested, will have defaulted to a value of one)
-        voc_ifr_effects.update({s: params.voc_emergence[s].ifr_multiplier for s in strain_strat.strata[1:]})
-        voc_hosp_effects.update({s: params.voc_emergence[s].hosp_multiplier for s in strain_strat.strata[1:]})
-
     """
     Clinical stratification.
     """
-
-    stratified_adjusters = {}
-    for voc in voc_ifr_effects.keys():
-        stratified_adjusters[voc] = {
-            "ifr": params.infection_fatality.multiplier * voc_ifr_effects[voc],
-            "hosp": params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc],
-            "sympt": params.clinical_stratification.props.symptomatic.multiplier,
-        }
 
     vic_regions = Region.VICTORIA_SUBREGIONS + [Region.VICTORIA]
     is_region_vic = pop.region and pop.region.replace("_", "-").lower() in vic_regions

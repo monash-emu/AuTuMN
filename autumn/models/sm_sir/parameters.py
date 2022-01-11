@@ -85,9 +85,15 @@ class Sojourn(BaseModel):
     exposed: Optional[float]
 
     @validator("active", allow_reuse=True)
-    def check_positive(active):
+    def check_active_positive(active):
         assert active > 0., f"Sojourn times must be non-negative, active time is: {active}"
         return active
+
+    @validator("exposed", allow_reuse=True)
+    def check_exposed_positive(exposed):
+        if exposed:
+            assert exposed > 0., f"Sojourn times must be non-negative, active time is: {exposed}"
+        return exposed
 
 
 class MixingLocation(BaseModel):

@@ -97,11 +97,23 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         contact_rate = params.contact_rate
 
+    # Define destination of infection and include exposed compartment if requested
+    infection_dest = Compartment.INFECTIOUS
+    if params.sojourn.exposed:
+        infection_dest = Compartment.EXPOSED
+        model.add_transition_flow(
+            name=FlowName.PROGRESSION,
+            fractional_rate=params.sojourn.exposed,
+            source=Compartment.EXPOSED,
+            dest=Compartment.INFECTIOUS,
+        )
+
+    # Include the infection process
     model.add_infection_frequency_flow(
         name=FlowName.INFECTION,
         contact_rate=contact_rate,
         source=Compartment.SUSCEPTIBLE,
-        dest=Compartment.INFECTIOUS,
+        dest=infection_dest,
     )
 
     # Recovery

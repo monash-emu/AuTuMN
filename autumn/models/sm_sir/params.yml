@@ -21,6 +21,7 @@ infectious_seed: 1
 
 sojourn:
   active: 8.
+#  exposed: 5.
 
 # Age-related parameters
 age_stratification:

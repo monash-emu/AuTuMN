@@ -651,9 +651,14 @@ class AgeSpecificRiskMultiplier(BaseModel):
     contact_rate_multiplier: float
 
 
-class Notification(BaseModel):
-    onset_to_notification_delay: float
-    prop_infections_notified: float
+class TimeDistribution(BaseModel):
+    distribution: str
+    parameters: dict
+
+
+class TimeToEvent(BaseModel):
+    notification: TimeDistribution
+    # hospitalisation: TimeDistribution
 
 
 class RandomProcess(BaseModel):
@@ -686,7 +691,8 @@ class Parameters:
     infectious_seed: float
     infection_duration: float
 
-    notification: Notification
+    prop_symptomatic_infections_notified: float
+    time_from_onset_to_event: TimeToEvent
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification

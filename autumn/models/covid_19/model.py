@@ -77,6 +77,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
     model.set_initial_population(init_pop)
 
+    vic_regions = Region.VICTORIA_SUBREGIONS + [Region.VICTORIA]
+    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in vic_regions
+
     """
     Add intercompartmental flows.
     """
@@ -181,8 +184,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Clinical stratification.
     """
 
-    vic_regions = Region.VICTORIA_SUBREGIONS + [Region.VICTORIA]
-    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in vic_regions
     override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
 
     get_detected_proportion = find_cdr_function_from_test_data(
@@ -201,72 +202,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
     model.add_adjustment_system("isolated", AbsRateIsolatedSystem(within_early_exposed))
     model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
-
-    """
-    Contact tracing stratification.
-    """
-
-    if params.contact_tracing:
-
-        # Stratify
-        tracing_strat = get_tracing_strat(
-            params.contact_tracing.quarantine_infect_multiplier,
-            params.clinical_stratification.late_infect_multiplier
-        )
-        model.stratify_with(tracing_strat)
-
-        # Contact tracing processes
-        trace_param = tracing.get_tracing_param(
-            params.contact_tracing.assumed_trace_prop,
-            params.contact_tracing.assumed_prev,
-            params.contact_tracing.floor,
-        )
-
-        model.add_computed_value_process(
-            "prevalence",
-            tracing.PrevalenceProc()
-        )
-
-        model.add_computed_value_process(
-            "prop_detected_traced",
-            tracing.PropDetectedTracedProc(
-                trace_param,
-                params.contact_tracing.floor,
-            )
-        )
-
-        model.add_computed_value_process(
-            "prop_contacts_with_detected_index",
-            tracing.PropIndexDetectedProc(
-                params.clinical_stratification.non_sympt_infect_multiplier,
-                params.clinical_stratification.late_infect_multiplier
-            )
-        )
-
-        model.add_computed_value_process(
-            "traced_flow_rate",
-            tracing.TracedFlowRateProc(incidence_flow_rate)
-        )
-
-        # Add the transition process to the model
-        early_exposed_untraced_comps = [
-            comp for comp in model.compartments if
-            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})
-        ]
-        early_exposed_traced_comps = [
-            comp for comp in model.compartments if
-            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})
-        ]
-        for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
-            model.add_transition_flow(
-                "tracing",
-                tracing.contact_tracing_func,
-                Compartment.EARLY_EXPOSED,
-                Compartment.EARLY_EXPOSED,
-                source_strata=untraced.strata,
-                dest_strata=traced.strata,
-                expected_flow_count=1,
-            )
 
     """
     Vaccination status stratification.
@@ -342,6 +277,72 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                     source_strata={"vaccination": boost_eligible_stratum},
                     dest_strata={"vaccination": Vaccination.BOOSTED},
                 )
+
+    """
+    Contact tracing stratification.
+    """
+
+    if params.contact_tracing:
+
+        # Stratify
+        tracing_strat = get_tracing_strat(
+            params.contact_tracing.quarantine_infect_multiplier,
+            params.clinical_stratification.late_infect_multiplier
+        )
+        model.stratify_with(tracing_strat)
+
+        # Contact tracing processes
+        trace_param = tracing.get_tracing_param(
+            params.contact_tracing.assumed_trace_prop,
+            params.contact_tracing.assumed_prev,
+            params.contact_tracing.floor,
+        )
+
+        model.add_computed_value_process(
+            "prevalence",
+            tracing.PrevalenceProc()
+        )
+
+        model.add_computed_value_process(
+            "prop_detected_traced",
+            tracing.PropDetectedTracedProc(
+                trace_param,
+                params.contact_tracing.floor,
+            )
+        )
+
+        model.add_computed_value_process(
+            "prop_contacts_with_detected_index",
+            tracing.PropIndexDetectedProc(
+                params.clinical_stratification.non_sympt_infect_multiplier,
+                params.clinical_stratification.late_infect_multiplier
+            )
+        )
+
+        model.add_computed_value_process(
+            "traced_flow_rate",
+            tracing.TracedFlowRateProc(incidence_flow_rate)
+        )
+
+        # Add the transition process to the model
+        early_exposed_untraced_comps = [
+            comp for comp in model.compartments if
+            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})
+        ]
+        early_exposed_traced_comps = [
+            comp for comp in model.compartments if
+            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})
+        ]
+        for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
+            model.add_transition_flow(
+                "tracing",
+                tracing.contact_tracing_func,
+                Compartment.EARLY_EXPOSED,
+                Compartment.EARLY_EXPOSED,
+                source_strata=untraced.strata,
+                dest_strata=traced.strata,
+                expected_flow_count=1,
+            )
 
     """
     Infection history stratification.

@@ -2,8 +2,7 @@
 country:
   iso3: PHL
 
-mixing_matrices:
-  source_iso3: HKG
+ref_mixing_iso3: HKG
 
 time:
   start: 40.

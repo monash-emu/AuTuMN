@@ -10,8 +10,7 @@ time:
 country:
   iso3: LKA
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: CHN
 
 contact_tracing:
   assumed_trace_prop: 0.896

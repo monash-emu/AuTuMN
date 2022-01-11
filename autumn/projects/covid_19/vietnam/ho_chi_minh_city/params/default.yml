@@ -4,15 +4,7 @@ time:
   start: 511 # 25th May 2021
   end: 1096
 
-country:
-  iso3: VNM
-
-mixing_matrices:
-  source_iso3: HKG
-
-# mixing_matrices:
-  # type: extrapolated
-  # source_iso3: HKG
+ref_mixing_iso3: HKG
 
 population:
   region: Ho Chi Minh City

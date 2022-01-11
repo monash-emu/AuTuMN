@@ -106,8 +106,7 @@ infectious_seed: 50
 
 contact_rate: 0.073
 
-mixing_matrices:
-  source_iso3: GBR
+ref_mixing_iso3: GBR
 
 infection_fatality:
   multiplier: 2.

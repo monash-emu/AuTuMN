@@ -196,17 +196,6 @@ class Mobility(BaseModel):
         return val
 
 
-class MixingMatrices(BaseModel):
-    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
-    source_iso3: Optional[str]
-    age_adjust: bool  # Only relevant if 'extrapolated' selected
-
-    @validator("type", allow_reuse=True)
-    def check_type(val):
-        assert val in ("extrapolated", "prem"), f"Mixing matrix request not permitted: {val}"
-        return val
-
-
 class AgeStratification(BaseModel):
     """
     Parameters used in age based stratification.
@@ -671,7 +660,7 @@ class Parameters:
     population: Population
     sojourn: Sojourn
     mobility: Mobility
-    mixing_matrices: Optional[MixingMatrices]
+    ref_mixing_iso3: str
     infection_fatality: InfectionFatality
     age_stratification: AgeStratification
     clinical_stratification: ClinicalStratification

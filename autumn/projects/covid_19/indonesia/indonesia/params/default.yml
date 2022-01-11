@@ -2,8 +2,7 @@ description: BASELINE
 
 infectious_seed: 110.
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: GBR
 
 history:
   natural_immunity_duration: 240.

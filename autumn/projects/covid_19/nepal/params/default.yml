@@ -6,8 +6,7 @@ time:
   start: 50
   end: 731
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: CHN
 
 country:
   iso3: NPL

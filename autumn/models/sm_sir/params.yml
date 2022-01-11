@@ -19,7 +19,7 @@ time:
 contact_rate: 0.1
 infectious_seed: 1
 
-sojourn:
+sojourns:
   active:
     total_time: 8.
 #    proportion_early: 0.5
@@ -94,6 +94,8 @@ age_stratification:
     - 0.01674 # 70-74
     - 0.03203 # 75-79
     - 0.08292 # 80+
+
+is_dynamic_mixing_matrix: false
 
 mobility:
   region: null

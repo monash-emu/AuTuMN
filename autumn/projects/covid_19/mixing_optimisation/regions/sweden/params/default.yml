@@ -3,8 +3,7 @@ description: BASELINE
 country:
   iso3: SWE
 
-mixing_matrices:
-  source_iso3: FIN
+ref_mixing_iso3: FIN
 
 mobility:
   mixing:

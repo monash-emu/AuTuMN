@@ -9,9 +9,7 @@ infectious_seed: 10 # Initial condition for infectious
 contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 seasonal_force: null
 
-mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
-  type: extrapolated
-  age_adjust: true
+ref_mixing_iso3: GBR
 
 # Integration times
 time:

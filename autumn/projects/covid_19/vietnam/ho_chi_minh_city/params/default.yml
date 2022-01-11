@@ -4,6 +4,9 @@ time:
   start: 511 # 25th May 2021
   end: 1096
 
+country:
+  iso3: VNM
+
 ref_mixing_iso3: HKG
 
 population:

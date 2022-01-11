@@ -1,17 +1,19 @@
+from datetime import date
+from math import exp
+
 from summer import CompartmentalModel
+
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
-from math import exp
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-
-from.outputs import SmSirOutputsBuilder
+from .outputs import SmSirOutputsBuilder
 from .parameters import Parameters
-from datetime import date
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
+from .stratifications.strains import get_strain_strat
 from .preprocess.age_specific_params import convert_param_agegroups
 
 
@@ -177,6 +179,24 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, params.age_groups, True, pop.region)
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices, compartments, is_dynamic_matrix=False)
     model.stratify_with(age_strat)
+
+    """
+    Apply strains stratification
+    """
+
+    if params.voc_emergence:
+        voc_params = params.voc_emergence
+
+        # Build and apply stratification
+        strain_strat = get_strain_strat(voc_params, compartments)
+        model.stratify_with(strain_strat)
+
+        # # Use importation flows to seed VoC cases
+        # for voc_name, voc_values in voc_params.items():
+        #     voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
+        #     model.add_importation_flow(
+        #         f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}, split_imports=True
+        #     )
 
     """
     Apply immunity stratification

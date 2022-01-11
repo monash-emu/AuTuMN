@@ -338,6 +338,8 @@ class Parameters:
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification
+    voc_emergence: Optional[Dict[str, VocComponent]]
+
     # Random process
     activate_random_process: bool
     random_process: Optional[RandomProcess]

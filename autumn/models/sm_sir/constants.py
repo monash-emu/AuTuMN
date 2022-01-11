@@ -23,6 +23,9 @@ BASE_COMPARTMENTS = [
 ]
 
 
+WILD_TYPE = "wild_type"
+
+
 class ImmunityStratum:
     NONE = 'none'
     HIGH = 'high'

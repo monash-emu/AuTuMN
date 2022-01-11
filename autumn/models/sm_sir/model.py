@@ -7,9 +7,9 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 
 from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
-from datetime import date, datetime
+from datetime import date
 from .computed_values.random_process_compute import RandomProcessProc
-from .constants import COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
+from .constants import BASE_COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .preprocess.age_specific_params import convert_param_agegroups
@@ -36,10 +36,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     prop_hospital = convert_param_agegroups(params.age_stratification.prop_hospital, country.iso3, pop.region)
     ifr = convert_param_agegroups(params.age_stratification.ifr, country.iso3, pop.region)
 
+    compartments = BASE_COMPARTMENTS
+    if params.sojourn.exposed:
+        compartments.append(Compartment.EXPOSED)
+        if params.sojourn.exposed.proportion_early:
+            compartments.append(Compartment.EXPOSED_LATE)
+    if params.sojourn.active.proportion_early:
+        compartments.append(Compartment.INFECTIOUS_LATE)
+
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
-        compartments=COMPARTMENTS,
+        compartments=compartments,
         infectious_compartments=[Compartment.INFECTIOUS],
         timestep=params.time.step,
         ref_date=BASE_DATE
@@ -97,19 +105,67 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         contact_rate = params.contact_rate
 
+    # Exposed compartment(s) transitions
+    infection_dest = Compartment.INFECTIOUS
+    if params.sojourn.exposed:
+        exposed_sojourn = params.sojourn.exposed.total_time
+        exposed_early_prop = params.sojourn.exposed.proportion_early
+
+        if exposed_early_prop:
+            early_sojourn = exposed_sojourn * exposed_early_prop
+            model.add_transition_flow(
+                name=FlowName.WITHIN_EXPOSED,
+                fractional_rate=1. / early_sojourn,
+                source=Compartment.EXPOSED,
+                dest=Compartment.EXPOSED_LATE,
+            )
+
+            prop_exposed_late = 1. - exposed_early_prop
+            progress_origin = Compartment.EXPOSED_LATE
+            progress_rate = 1. / exposed_sojourn / prop_exposed_late
+        else:
+            progress_origin = Compartment.EXPOSED
+            progress_rate = 1. / exposed_sojourn
+
+        infection_dest = Compartment.EXPOSED
+        model.add_transition_flow(
+            name=FlowName.PROGRESSION,
+            fractional_rate=progress_rate,
+            source=progress_origin,
+            dest=Compartment.INFECTIOUS,
+        )
+
+    # Infection transition
     model.add_infection_frequency_flow(
         name=FlowName.INFECTION,
         contact_rate=contact_rate,
         source=Compartment.SUSCEPTIBLE,
-        dest=Compartment.INFECTIOUS,
+        dest=infection_dest,
     )
 
-    # Recovery
-    recovery_rate = 1. / params.infection_duration
+    # Active compartment(s) transitions
+    active_sojourn = params.sojourn.active.total_time
+    active_early_prop = params.sojourn.active.proportion_early
+
+    if active_early_prop:
+        model.add_transition_flow(
+            name=FlowName.WITHIN_INFECTIOUS,
+            fractional_rate=1. / active_sojourn / active_early_prop,
+            source=Compartment.INFECTIOUS,
+            dest=Compartment.INFECTIOUS_LATE,
+        )
+
+        prop_active_late = 1. - active_early_prop
+        recovery_origin = Compartment.INFECTIOUS_LATE
+        recovery_rate = 1. / active_sojourn / prop_active_late
+    else:
+        recovery_origin = Compartment.INFECTIOUS
+        recovery_rate = 1. / active_sojourn
+
     model.add_transition_flow(
         name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,
-        source=Compartment.INFECTIOUS,
+        source=recovery_origin,
         dest=Compartment.RECOVERED,
     )
 
@@ -120,19 +176,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         country.iso3, params.ref_mixing_iso3, AGEGROUP_STRATA, True, pop.region, requested_locations=["all_locations"]
     )
 
-    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"])
+    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"], compartments)
     model.stratify_with(age_strat)
 
     """
     Apply immunity stratification
     """
-    immunity_strat = get_immunity_strat(params)
+    immunity_strat = get_immunity_strat(params, compartments)
     model.stratify_with(immunity_strat)
 
     """
     Set up derived output functions
     """
-    outputs_builder = SmSirOutputsBuilder(model, COMPARTMENTS)
+    outputs_builder = SmSirOutputsBuilder(model, compartments)
     outputs_builder.request_incidence()
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

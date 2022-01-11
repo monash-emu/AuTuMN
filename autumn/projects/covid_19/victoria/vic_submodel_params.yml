@@ -11,8 +11,7 @@ contact_rate: 0.11
 infectious_seed: 0.
 #seasonal_force: 0.15
 
-mixing_matrices:
-  source_iso3: GBR
+ref_mixing_iso3: GBR
 
 population:
   region: Victoria

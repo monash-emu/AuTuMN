@@ -3,8 +3,7 @@ description: BASELINE
 contact_rate: 0.0231
 infectious_seed: 552.
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: CHN
 
 time:
   start: 75

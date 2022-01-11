@@ -45,7 +45,7 @@ class TimeSeries(BaseModel):
         value_series, time_series = inputs.get("values"), inputs.get("times")
         assert len(time_series) == \
                len(value_series), \
-        f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+            f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
         return inputs
 
     @validator("times", pre=True, allow_reuse=True)
@@ -329,7 +329,9 @@ class Parameters:
     # Values
     contact_rate: float
     infectious_seed: float
-    sojourn: Sojourns
+    sojourns: Sojourns
+    is_dynamic_mixing_matrix: bool
+    mobility: Mobility
 
     notification: Notification
 

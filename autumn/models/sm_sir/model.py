@@ -37,11 +37,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     ifr = convert_param_agegroups(params.age_stratification.ifr, country.iso3, pop.region)
 
     compartments = BASE_COMPARTMENTS
-    if params.sojourn.exposed:
+    if params.sojourns.exposed:
         compartments.append(Compartment.EXPOSED)
-        if params.sojourn.exposed.proportion_early:
+        if params.sojourns.exposed.proportion_early:
             compartments.append(Compartment.EXPOSED_LATE)
-    if params.sojourn.active.proportion_early:
+    if params.sojourns.active.proportion_early:
         compartments.append(Compartment.INFECTIOUS_LATE)
 
     # Create the model object
@@ -107,9 +107,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Exposed compartment(s) transitions
     infection_dest = Compartment.INFECTIOUS
-    if params.sojourn.exposed:
-        exposed_sojourn = params.sojourn.exposed.total_time
-        exposed_early_prop = params.sojourn.exposed.proportion_early
+    if params.sojourns.exposed:
+        exposed_sojourn = params.sojourns.exposed.total_time
+        exposed_early_prop = params.sojourns.exposed.proportion_early
 
         if exposed_early_prop:
             early_sojourn = exposed_sojourn * exposed_early_prop
@@ -144,8 +144,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Active compartment(s) transitions
-    active_sojourn = params.sojourn.active.total_time
-    active_early_prop = params.sojourn.active.proportion_early
+    active_sojourn = params.sojourns.active.total_time
+    active_early_prop = params.sojourns.active.proportion_early
 
     if active_early_prop:
         model.add_transition_flow(
@@ -172,11 +172,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Apply age stratification
     """
-    mixing_matrices = build_synthetic_matrices(
-        country.iso3, params.ref_mixing_iso3, AGEGROUP_STRATA, True, pop.region, requested_locations=["all_locations"]
-    )
 
-    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"], compartments)
+    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, AGEGROUP_STRATA, True, pop.region)
+    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices, compartments, is_dynamic_matrix=False)
     model.stratify_with(age_strat)
 
     """

@@ -14,6 +14,7 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
+from autumn.tools.utils.utils import defaultconverter, convert_to_dates
 
 # shareable google drive links
 PHL_doh_link = "13W8K-X_iBRxAouIgQAjUxQ0PW-0NAqjI"  # sheet 05 daily report
@@ -212,15 +213,15 @@ def update_calibration_phl():
         with open(file_path, mode="r") as f:
             targets = json.load(f)
 
-            targets["notifications"]["times"] = list(notifications_tmp["times"])
+            targets["notifications"]["times"] = convert_to_dates(list(notifications_tmp["times"]))
             targets["notifications"]["values"] = list(notifications_tmp["mean_daily_notifications"])
-            targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
+            targets["icu_occupancy"]["times"] = convert_to_dates(list(icu_tmp["times"]))
             targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
-            targets["infection_deaths"]["times"] = list(deaths_tmp["times"])
+            targets["infection_deaths"]["times"] = convert_to_dates(list(deaths_tmp["times"]))
             targets["infection_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
 
         with open(file_path, "w") as f:
-            json.dump(targets, f, indent=2)
+            json.dump(targets, f, default=defaultconverter, indent=2)
 
 
 def remove_files(filePath1):

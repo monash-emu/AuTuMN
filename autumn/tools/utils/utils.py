@@ -8,7 +8,7 @@ import subprocess as sp
 import os
 import numpy
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Union, Callable
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
@@ -257,6 +257,10 @@ def find_latest_run_id(model, region, s3_client):
     return f"{model}/{region}/{latest_timestamp}/{commit}"
 
 
+def convert_to_dates(a_list: list) -> list:
+    return [COVID_BASE_DATETIME + timedelta(days) for days in a_list]
+
+
 def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
     """
     Simple function to update timeseries.json
@@ -273,37 +277,31 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
             # Drop the NaN value rows from df before writing data.
             temp_df = df[["date_index", val]].dropna(0, subset=[val])
 
-            targets[key]["times"] = list(temp_df["date_index"])
+            targets[key]["times"] = convert_to_dates(list(temp_df["date_index"]))
             targets[key]["values"] = list(temp_df[val])
     with open(file_path, "w") as f:
-        json.dump(targets, f, indent=2)
+        json.dump(targets, f, default=defaultconverter, indent=2)
 
     if args:
         secrets.write(file_path, *args)
 
 
-def create_date_index(COVID_BASE_DATETIME, df, datecol):
+def create_date_index(COVID_BASE_DATETIME, df, datecol, fmt="%Y-%m-%d"):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
     df.rename(columns={datecol.lower(): "date"}, inplace=True)
 
-    formats = ["%Y-%m-%d", "%d/%m/%Y"]
+    df.date = pd.to_datetime(df["date"], format=fmt, infer_datetime_format=True)
 
-    for fmt in formats:
-
-        try:
-            df.date = pd.to_datetime(
-                df["date"], errors="raise", format=fmt, infer_datetime_format=False
-            ).dt.date
-
-        except:
-            continue
-
-        else:
-            print("Sucess")
-
-    df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
+    df["date_index"] = (df.date - COVID_BASE_DATETIME).dt.days
 
     return df
+
+
+def defaultconverter(o):
+    if isinstance(o, datetime):
+        return o.date().__str__()
+    if isinstance(o, pd.datetime):
+        return o._date_repr
 
 
 def find_closest_value_in_list(list_request: List, value_request: int) -> int:
@@ -323,7 +321,7 @@ def get_prop_two_numerators(numerator_1, numerator_2, denominator):
 
 
 def get_complement_prop(numerator, denominator):
-    return 1. - numerator / denominator
+    return 1.0 - numerator / denominator
 
 
 def return_constant_value(value: float) -> Callable:

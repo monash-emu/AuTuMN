@@ -14,7 +14,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("contact_rate", [0.01, 0.02]),
-    UniformPrior("sojourn.active", [5, 12]),
+    UniformPrior("sojourn.active.total_time", [5, 12]),
     UniformPrior("infectious_seed", [1, 200]),
 ]
 targets = [

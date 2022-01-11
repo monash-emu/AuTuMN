@@ -20,8 +20,11 @@ contact_rate: 0.1
 infectious_seed: 1
 
 sojourn:
-  active: 8.
-#  exposed: 5.
+  active:
+    total_time: 8.
+    proportion_early: 0.5
+#  exposed:
+#    total_time: 5.
 
 # Age-related parameters
 age_stratification:

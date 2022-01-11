@@ -7,7 +7,7 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 
 from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
-from datetime import date, datetime
+from datetime import date
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -36,10 +36,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     prop_hospital = convert_param_agegroups(params.age_stratification.prop_hospital, country.iso3, pop.region)
     ifr = convert_param_agegroups(params.age_stratification.ifr, country.iso3, pop.region)
 
+    compartments = COMPARTMENTS
+    if params.sojourn.exposed:
+        compartments.append(Compartment.EXPOSED)
+    if params.sojourn.active.proportion_early:
+        compartments.append(Compartment.INFECTIOUS_LATE)
+
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
-        compartments=COMPARTMENTS,
+        compartments=compartments,
         infectious_compartments=[Compartment.INFECTIOUS],
         timestep=params.time.step,
         ref_date=BASE_DATE
@@ -98,12 +104,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         contact_rate = params.contact_rate
 
     # Define destination of infection and include exposed compartment if requested
-    infection_dest = Compartment.INFECTIOUS
+    infection_dest = Compartment.INFECTIOUS  # For use in the infection flow below
     if params.sojourn.exposed:
         infection_dest = Compartment.EXPOSED
         model.add_transition_flow(
             name=FlowName.PROGRESSION,
-            fractional_rate=params.sojourn.exposed,
+            fractional_rate=params.sojourn.exposed.total_time,
             source=Compartment.EXPOSED,
             dest=Compartment.INFECTIOUS,
         )
@@ -117,11 +123,22 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Recovery
-    recovery_rate = 1. / params.sojourn.active
+    recovery_origin = Compartment.INFECTIOUS
+    recovery_rate = 1. / params.sojourn.active.total_time
+    if params.sojourn.active.proportion_early:
+        recovery_origin = Compartment.INFECTIOUS_LATE
+        prop_active_late = (1. - params.sojourn.active.proportion_early)
+        recovery_rate = 1. / (params.sojourn.active.total_time * prop_active_late)
+        model.add_transition_flow(
+            name=FlowName.WITHIN_INFECTIOUS,
+            fractional_rate=1. / (params.sojourn.active.total_time * params.sojourn.active.proportion_early),
+            source=Compartment.INFECTIOUS,
+            dest=Compartment.INFECTIOUS_LATE,
+        )
     model.add_transition_flow(
         name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,
-        source=Compartment.INFECTIOUS,
+        source=recovery_origin,
         dest=Compartment.RECOVERED,
     )
 
@@ -132,19 +149,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         country.iso3, params.ref_mixing_iso3, AGEGROUP_STRATA, True, pop.region, requested_locations=["all_locations"]
     )
 
-    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"])
+    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices["all_locations"], compartments)
     model.stratify_with(age_strat)
 
     """
     Apply immunity stratification
     """
-    immunity_strat = get_immunity_strat(params)
+    immunity_strat = get_immunity_strat(params, compartments)
     model.stratify_with(immunity_strat)
 
     """
     Set up derived output functions
     """
-    outputs_builder = SmSirOutputsBuilder(model, COMPARTMENTS)
+    outputs_builder = SmSirOutputsBuilder(model, compartments)
     outputs_builder.request_incidence()
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

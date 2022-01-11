@@ -75,24 +75,30 @@ class Population(BaseModel):
     year: int
 
 
-class Sojourn(BaseModel):
+class CompartmentSojourn(BaseModel):
+
+    total_time: float
+    proportion_early: Optional[float]
+
+    @validator("total_time", allow_reuse=True)
+    def check_active_positive(total_time):
+        assert total_time > 0., f"Sojourn times must be non-negative, active time is: {total_time}"
+        return total_time
+
+    @validator("proportion_early", allow_reuse=True)
+    def check_proportion_early(proportion_early):
+        if proportion_early:
+            assert 0. <= proportion_early <= 1., f"Proportion of time in early stage not in [0, 1]: {proportion_early}"
+        return proportion_early
+
+
+class Sojourns(BaseModel):
     """
     Parameters for determining how long a person stays in a given compartment.
     """
 
-    active: float
-    exposed: Optional[float]
-
-    @validator("active", allow_reuse=True)
-    def check_active_positive(active):
-        assert active > 0., f"Sojourn times must be non-negative, active time is: {active}"
-        return active
-
-    @validator("exposed", allow_reuse=True)
-    def check_exposed_positive(exposed):
-        if exposed:
-            assert exposed > 0., f"Sojourn times must be non-negative, active time is: {exposed}"
-        return exposed
+    active: CompartmentSojourn
+    exposed: Optional[CompartmentSojourn]
 
 
 class MixingLocation(BaseModel):
@@ -322,10 +328,8 @@ class Parameters:
     time: Time
     # Values
     contact_rate: float
-    # infect_death: float
-    # universal_death_rate: float
     infectious_seed: float
-    sojourn: Sojourn
+    sojourn: Sojourns
 
     notification: Notification
 

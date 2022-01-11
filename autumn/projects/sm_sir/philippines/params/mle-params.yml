@@ -1,5 +1,5 @@
 contact_rate: 0.0132
-sojourn.active: 7.789265671525521
+sojourn.active.total_time: 7.789265671525521
 infectious_seed: 99.87083766796485
 random_process.coefficients(0): 0.7999135547645141
 random_process.coefficients(1): 0.18006507001891867

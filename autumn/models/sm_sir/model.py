@@ -111,10 +111,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     infection_dest = Compartment.INFECTIOUS
     if params.sojourn.exposed:
         exposed_sojourn = params.sojourn.exposed.total_time
+        exposed_early_prop = params.sojourn.exposed.proportion_early
 
-        if params.sojourn.exposed.proportion_early:
-            exposed_early_prop = params.sojourn.exposed.proportion_early
-            early_sojourn = params.sojourn.exposed.total_time * exposed_early_prop
+        if exposed_early_prop:
+            early_sojourn = exposed_sojourn * exposed_early_prop
             model.add_transition_flow(
                 name=FlowName.WITHIN_EXPOSED,
                 fractional_rate=1. / early_sojourn,
@@ -124,7 +124,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
             prop_exposed_late = 1. - exposed_early_prop
             progress_origin = Compartment.EXPOSED_LATE
-            progress_rate = 1. / (params.sojourn.exposed.total_time * prop_exposed_late)
+            progress_rate = 1. / exposed_sojourn / prop_exposed_late
         else:
             progress_origin = Compartment.EXPOSED
             progress_rate = 1. / exposed_sojourn
@@ -147,12 +147,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Active compartment(s) transitions
     active_sojourn = params.sojourn.active.total_time
+    active_early_prop = params.sojourn.active.proportion_early
 
-    if params.sojourn.active.proportion_early:
-        active_early_prop = params.sojourn.active.proportion_early
+    if active_early_prop:
         model.add_transition_flow(
             name=FlowName.WITHIN_INFECTIOUS,
-            fractional_rate=1. / (active_sojourn * active_early_prop),
+            fractional_rate=1. / active_sojourn / active_early_prop,
             source=Compartment.INFECTIOUS,
             dest=Compartment.INFECTIOUS_LATE,
         )

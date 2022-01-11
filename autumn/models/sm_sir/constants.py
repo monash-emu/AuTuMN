@@ -10,8 +10,8 @@ class Compartment:
 
 class FlowName:
     INFECTION = "infection"
-    PROGRESSION = "progression"
     WITHIN_EXPOSED = "within_exposed"
+    PROGRESSION = "progression"
     WITHIN_INFECTIOUS = "within_infectious"
     RECOVERY = "recovery"
 

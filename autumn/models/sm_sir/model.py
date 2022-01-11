@@ -43,8 +43,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             compartments.append(Compartment.EXPOSED_LATE)
     if params.sojourn.active.proportion_early:
         compartments.append(Compartment.INFECTIOUS_LATE)
-        if params.sojourn.active.proportion_early:
-            compartments.append(Compartment.INFECTIOUS_LATE)
 
     # Create the model object
     model = CompartmentalModel(

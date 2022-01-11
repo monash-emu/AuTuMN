@@ -4,11 +4,11 @@ import numpy as np
 from summer import Stratification, Multiply
 
 from autumn.models.sm_sir.parameters import Parameters
-from autumn.models.sm_sir.constants import COMPARTMENTS, AGEGROUP_STRATA, FlowName
+from autumn.models.sm_sir.constants import BASE_COMPARTMENTS, AGEGROUP_STRATA, FlowName
 from autumn.tools.utils.utils import normalise_sequence
 
 
-def get_agegroup_strat(params: Parameters, total_pops: List[int], mixing_matrix: np.array) -> Stratification:
+def get_agegroup_strat(params: Parameters, total_pops: List[int], mixing_matrix: np.array, compartments) -> Stratification:
     """
     Function to create the age group stratification object.
 
@@ -27,7 +27,7 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int], mixing_matrix:
 
     """
 
-    age_strat = Stratification("agegroup", AGEGROUP_STRATA, COMPARTMENTS)
+    age_strat = Stratification("agegroup", AGEGROUP_STRATA, compartments)
 
     # Heterogeneous mixing by age
     age_strat.set_mixing_matrix(mixing_matrix)

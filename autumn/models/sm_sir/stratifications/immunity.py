@@ -1,14 +1,12 @@
 from summer import Stratification, Multiply
 
 from autumn.models.sm_sir.parameters import Parameters
-from autumn.models.sm_sir.constants import COMPARTMENTS, IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_sir.constants import BASE_COMPARTMENTS, IMMUNITY_STRATA, ImmunityStratum, FlowName
 
 
-def get_immunity_strat(
-        params: Parameters
-) -> Stratification:
+def get_immunity_strat(params: Parameters, compartments) -> Stratification:
 
-    immunity_strat = Stratification("immunity", IMMUNITY_STRATA, COMPARTMENTS)
+    immunity_strat = Stratification("immunity", IMMUNITY_STRATA, compartments)
 
     # Set distribution of starting population
     p_immune = params.immunity_stratification.prop_immune

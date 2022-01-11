@@ -296,16 +296,6 @@ class TestingToDetection(BaseModel):
         return val
 
 
-class SusceptibilityHeterogeneity(BaseModel):
-    """
-    Specifies heterogeneity in susceptibility.
-    """
-
-    bins: int
-    tail_cut: float
-    coeff_var: float
-
-
 class MetroClusterStratification(BaseModel):
     mobility: Mobility
 

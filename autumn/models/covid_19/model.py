@@ -5,7 +5,6 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from .utils import get_seasonal_forcing
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data, CdrProc
 from autumn.models.covid_19.utils import calc_compartment_periods
 
@@ -37,6 +36,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     params = Parameters(**params)
 
+    # Get country/region details
+    country = params.country
+    pop = params.population
+
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
@@ -64,15 +67,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Distribute infectious seed across infectious split sub-compartments
     compartment_periods = calc_compartment_periods(params.sojourn)
     total_disease_time = sum([compartment_periods[comp] for comp in DISEASE_COMPARTMENTS])
-    init_pop = {
-        comp: params.infectious_seed * compartment_periods[comp] / total_disease_time
-        for comp in DISEASE_COMPARTMENTS
-    }
+    seed = params.infectious_seed
+    init_pop = {comp: seed * compartment_periods[comp] / total_disease_time for comp in DISEASE_COMPARTMENTS}
 
     # Get country population by age-group
-    country = params.country
-    pop = params.population
-    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year)
+    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
@@ -82,14 +81,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Add intercompartmental flows.
     """
 
-    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate
-    contact_rate = get_seasonal_forcing(365., 173., params.seasonal_force, params.contact_rate) if \
-        params.seasonal_force else params.contact_rate
-
     # Infection
     model.add_infection_frequency_flow(
         name=INFECTION,
-        contact_rate=contact_rate,
+        contact_rate=params.contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.EARLY_EXPOSED,
     )
@@ -159,7 +154,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         for voc_name, voc_values in voc_params.items():
             voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
             model.add_importation_flow(
-                f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}, split_imports=False
+                f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}, split_imports=True
             )
 
         # Get the adjustments to the IFR for each strain (if not requested, will have defaulted to a value of one)

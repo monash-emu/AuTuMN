@@ -5,6 +5,13 @@ description: BASELINE
 country:
   iso3: PHL
 
+age_groups:
+  - 0
+  - 15
+  - 25
+  - 50
+  - 70
+
 ref_mixing_iso3: GBR
 
 population:

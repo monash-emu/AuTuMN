@@ -9,7 +9,7 @@ from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
 from datetime import date
 from .computed_values.random_process_compute import RandomProcessProc
-from .constants import BASE_COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
+from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .preprocess.age_specific_params import convert_param_agegroups
@@ -32,9 +32,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     pop = params.population
 
     # preprocess age-specific parameters to match model age bands
-    prop_symptomatic = convert_param_agegroups(params.age_stratification.prop_symptomatic, country.iso3, pop.region)
-    prop_hospital = convert_param_agegroups(params.age_stratification.prop_hospital, country.iso3, pop.region)
-    ifr = convert_param_agegroups(params.age_stratification.ifr, country.iso3, pop.region)
+    age_strat_params = params.age_stratification
+    prop_sympt = convert_param_agegroups(age_strat_params.prop_symptomatic, country.iso3, pop.region, params.age_groups)
+    prop_hospital = convert_param_agegroups(age_strat_params.prop_hospital, country.iso3, pop.region, params.age_groups)
+    ifr = convert_param_agegroups(age_strat_params.ifr, country.iso3, pop.region, params.age_groups)
 
     compartments = BASE_COMPARTMENTS
     if params.sojourns.exposed:
@@ -70,7 +71,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     init_pop = {Compartment.INFECTIOUS: params.infectious_seed}
 
     # Get country population by age-group
-    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, pop.year)
+    total_pops = inputs.get_population_by_agegroup(params.age_groups, country.iso3, pop.region, pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
@@ -79,31 +80,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Add intercompartmental flows.
     """
-    # transmission
-    if params.activate_random_process:
-        # build the random process, using default values and coefficients
-        rp = set_up_random_process(params.time.start, params.time.end)
-
-        # update random process details based on the model parameters
-        rp.update_config_from_params(params.random_process)
-
-        # Create function returning exp(W), where W is the random process
-        rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
-
-        # store random process as a computed value to make it available as an output
-        model.add_computed_value_process(
-            "transformed_random_process",
-            RandomProcessProc(
-                rp_time_variant_func
-            )
-        )        
-        
-        # Create the time-variant contact rate that uses our computed random process
-        def contact_rate(t, computed_values):
-            return params.contact_rate * computed_values["transformed_random_process"]
-
-    else:
-        contact_rate = params.contact_rate
 
     # Exposed compartment(s) transitions
     infection_dest = Compartment.INFECTIOUS
@@ -135,7 +111,32 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             dest=Compartment.INFECTIOUS,
         )
 
-    # Infection transition
+    # Transmission
+    if params.activate_random_process:
+        # build the random process, using default values and coefficients
+        rp = set_up_random_process(params.time.start, params.time.end)
+
+        # update random process details based on the model parameters
+        rp.update_config_from_params(params.random_process)
+
+        # Create function returning exp(W), where W is the random process
+        rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
+
+        # store random process as a computed value to make it available as an output
+        model.add_computed_value_process(
+            "transformed_random_process",
+            RandomProcessProc(
+                rp_time_variant_func
+            )
+        )
+
+        # Create the time-variant contact rate that uses our computed random process
+        def contact_rate(t, computed_values):
+            return params.contact_rate * computed_values["transformed_random_process"]
+
+    else:
+        contact_rate = params.contact_rate
+
     model.add_infection_frequency_flow(
         name=FlowName.INFECTION,
         contact_rate=contact_rate,
@@ -173,7 +174,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply age stratification
     """
 
-    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, AGEGROUP_STRATA, True, pop.region)
+    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, params.age_groups, True, pop.region)
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices, compartments, is_dynamic_matrix=False)
     model.stratify_with(age_strat)
 
@@ -187,7 +188,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Set up derived output functions
     """
     outputs_builder = SmSirOutputsBuilder(model, compartments)
-    outputs_builder.request_incidence()
+    outputs_builder.request_incidence(params.age_groups)
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
 

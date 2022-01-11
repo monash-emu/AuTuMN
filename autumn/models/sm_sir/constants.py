@@ -22,8 +22,6 @@ BASE_COMPARTMENTS = [
     Compartment.RECOVERED,
 ]
 
-AGEGROUP_STRATA = ['0', '15', '25', '50', '70']
-
 
 class ImmunityStratum:
     NONE = 'none'

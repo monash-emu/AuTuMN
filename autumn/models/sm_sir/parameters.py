@@ -325,6 +325,7 @@ class Parameters:
     country: Country
     population: Population
     ref_mixing_iso3: str
+    age_groups: List[int]
     time: Time
     # Values
     contact_rate: float
@@ -340,3 +341,9 @@ class Parameters:
     # Random process
     activate_random_process: bool
     random_process: Optional[RandomProcess]
+
+    @validator("age_groups", allow_reuse=True)
+    def validate_age_groups(age_groups):
+        assert all([i_group % 5 == 0 for i_group in age_groups]), "Not all age groups are multiples of 5"
+        assert all([0 <= i_group <= 75 for i_group in age_groups]), "Age breakpoints must be from zero to 75"
+        return age_groups

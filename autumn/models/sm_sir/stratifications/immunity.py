@@ -1,7 +1,7 @@
 from summer import Stratification, Multiply
 
 from autumn.models.sm_sir.parameters import Parameters
-from autumn.models.sm_sir.constants import COMPARTMENTS, IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_sir.constants import BASE_COMPARTMENTS, IMMUNITY_STRATA, ImmunityStratum, FlowName
 
 
 def get_immunity_strat(params: Parameters, compartments) -> Stratification:

@@ -4,7 +4,7 @@ import numpy as np
 from summer import Stratification, Multiply
 
 from autumn.models.sm_sir.parameters import Parameters
-from autumn.models.sm_sir.constants import COMPARTMENTS, AGEGROUP_STRATA, FlowName
+from autumn.models.sm_sir.constants import BASE_COMPARTMENTS, AGEGROUP_STRATA, FlowName
 from autumn.tools.utils.utils import normalise_sequence
 
 

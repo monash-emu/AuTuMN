@@ -9,7 +9,7 @@ from.outputs import SmSirOutputsBuilder
 from .parameters import Parameters
 from datetime import date
 from .computed_values.random_process_compute import RandomProcessProc
-from .constants import COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
+from .constants import BASE_COMPARTMENTS, AGEGROUP_STRATA, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .preprocess.age_specific_params import convert_param_agegroups
@@ -36,11 +36,15 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     prop_hospital = convert_param_agegroups(params.age_stratification.prop_hospital, country.iso3, pop.region)
     ifr = convert_param_agegroups(params.age_stratification.ifr, country.iso3, pop.region)
 
-    compartments = COMPARTMENTS
+    compartments = BASE_COMPARTMENTS
     if params.sojourn.exposed:
         compartments.append(Compartment.EXPOSED)
+        if params.sojourn.exposed.proportion_early:
+            compartments.append(Compartment.EXPOSED_LATE)
     if params.sojourn.active.proportion_early:
         compartments.append(Compartment.INFECTIOUS_LATE)
+        if params.sojourn.active.proportion_early:
+            compartments.append(Compartment.INFECTIOUS_LATE)
 
     # Create the model object
     model = CompartmentalModel(
@@ -103,18 +107,37 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         contact_rate = params.contact_rate
 
-    # Define destination of infection and include exposed compartment if requested
-    infection_dest = Compartment.INFECTIOUS  # For use in the infection flow below
+    # Exposed compartment(s) transitions
+    infection_dest = Compartment.INFECTIOUS
     if params.sojourn.exposed:
+        exposed_sojourn = params.sojourn.exposed.total_time
+
+        if params.sojourn.exposed.proportion_early:
+            exposed_early_prop = params.sojourn.exposed.proportion_early
+            early_sojourn = params.sojourn.exposed.total_time * exposed_early_prop
+            model.add_transition_flow(
+                name=FlowName.WITHIN_EXPOSED,
+                fractional_rate=1. / early_sojourn,
+                source=Compartment.EXPOSED,
+                dest=Compartment.EXPOSED_LATE,
+            )
+
+            prop_exposed_late = 1. - exposed_early_prop
+            progress_origin = Compartment.EXPOSED_LATE
+            progress_rate = 1. / (params.sojourn.exposed.total_time * prop_exposed_late)
+        else:
+            progress_origin = Compartment.EXPOSED
+            progress_rate = 1. / exposed_sojourn
+
         infection_dest = Compartment.EXPOSED
         model.add_transition_flow(
             name=FlowName.PROGRESSION,
-            fractional_rate=params.sojourn.exposed.total_time,
-            source=Compartment.EXPOSED,
+            fractional_rate=progress_rate,
+            source=progress_origin,
             dest=Compartment.INFECTIOUS,
         )
 
-    # Include the infection process
+    # Infection transition
     model.add_infection_frequency_flow(
         name=FlowName.INFECTION,
         contact_rate=contact_rate,
@@ -122,19 +145,25 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         dest=infection_dest,
     )
 
-    # Recovery
-    recovery_origin = Compartment.INFECTIOUS
-    recovery_rate = 1. / params.sojourn.active.total_time
+    # Active compartment(s) transitions
+    active_sojourn = params.sojourn.active.total_time
+
     if params.sojourn.active.proportion_early:
-        recovery_origin = Compartment.INFECTIOUS_LATE
-        prop_active_late = (1. - params.sojourn.active.proportion_early)
-        recovery_rate = 1. / (params.sojourn.active.total_time * prop_active_late)
+        active_early_prop = params.sojourn.active.proportion_early
         model.add_transition_flow(
             name=FlowName.WITHIN_INFECTIOUS,
-            fractional_rate=1. / (params.sojourn.active.total_time * params.sojourn.active.proportion_early),
+            fractional_rate=1. / (active_sojourn * active_early_prop),
             source=Compartment.INFECTIOUS,
             dest=Compartment.INFECTIOUS_LATE,
         )
+
+        prop_active_late = 1. - active_early_prop
+        recovery_origin = Compartment.INFECTIOUS_LATE
+        recovery_rate = 1. / active_sojourn / prop_active_late
+    else:
+        recovery_origin = Compartment.INFECTIOUS
+        recovery_rate = 1. / active_sojourn
+
     model.add_transition_flow(
         name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,

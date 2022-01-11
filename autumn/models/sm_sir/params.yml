@@ -22,9 +22,10 @@ infectious_seed: 1
 sojourn:
   active:
     total_time: 8.
-    proportion_early: 0.5
+#    proportion_early: 0.5
 #  exposed:
 #    total_time: 5.
+#    proportion_early: 0.5
 
 # Age-related parameters
 age_stratification:

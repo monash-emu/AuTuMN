@@ -330,6 +330,7 @@ class Parameters:
     contact_rate: float
     infectious_seed: float
     sojourn: Sojourns
+    mobility: Mobility
 
     notification: Notification
 

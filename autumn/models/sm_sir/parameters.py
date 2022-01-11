@@ -221,22 +221,6 @@ class ImmunityStratification(BaseModel):
     hospital_risk_reduction: ImmunityRiskReduction
 
 
-class StrataProps(BaseModel):
-    props: List[float]
-    multiplier: float
-
-    @validator("props", allow_reuse=True)
-    def check_props(val):
-        msg = f"Not all of list of proportions is in [0, 1]: {val}"
-        assert all([0. <= prop <= 1. for prop in val]), msg
-        return val
-
-
-class ClinicalProportions(BaseModel):
-    hospital: StrataProps
-    symptomatic: StrataProps
-
-
 class TestingToDetection(BaseModel):
     """
     Empiric approach to building the case detection rate that is based on per capita testing rates.
@@ -281,20 +265,6 @@ class VocComponent(BaseModel):
             assert 0. <= values["contact_rate_multiplier"], "Contact rate multiplier negative"
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
-        return values
-
-
-class TanhScaleup(BaseModel):
-    shape: float
-    inflection_time: float
-    lower_asymptote: float
-    upper_asymptote: float
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_asymptotes(cls, values):
-        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
-        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
-        assert 0. <= lower, f"Lower asymptote not in domain [0, inf]: {lower}"
         return values
 
 

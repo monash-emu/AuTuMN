@@ -38,6 +38,13 @@ def get_clinical_strat(
     # Work out which strata are to be implemented
     if is_undetected:
         clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
+
+        def cdr_func(time):
+            return detect_prop
+
+        def non_detect_func(time):
+            return 1.0 - abs_cdr_func(time)
+
     if sympt_props:
         clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata
 
@@ -53,10 +60,10 @@ def get_clinical_strat(
             if is_undetected:
 
                 def abs_cdr_func(time):
-                    return detect_prop * sympt_prop
+                    return cdr_func(time) * sympt_prop
 
                 def abs_non_detect_func(time):
-                    return 1.0 - abs_cdr_func(time) * sympt_prop
+                    return non_detect_func(time) * sympt_prop
 
                 adjustments = {
                     ClinicalStratum.ASYMPT: Multiply(asympt_prop),
@@ -77,16 +84,9 @@ def get_clinical_strat(
     # No need for loop over age if symptomatic status not included
     else:
 
-        def abs_cdr_func(time):
-            return detect_prop
-
-        def abs_non_detect_func(time):
-            return 1.0 - abs_cdr_func(time)
-
         adjustments = {
-            ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
-            ClinicalStratum.DETECT: Multiply(abs_cdr_func),
-
+            ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_func),
+            ClinicalStratum.DETECT: Multiply(cdr_func),
         }
         clinical_strat.set_flow_adjustments(
             infectious_entry_flow,

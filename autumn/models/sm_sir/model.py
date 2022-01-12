@@ -36,7 +36,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # preprocess age-specific parameters to match model age bands
     age_strat_params = params.age_stratification
-    prop_symptomatic = convert_param_agegroups(age_strat_params.prop_symptomatic, country.iso3, pop.region, params.age_groups)
+    age_groups = params.age_groups
+    prop_symptomatic = convert_param_agegroups(age_strat_params.prop_symptomatic, country.iso3, pop.region, age_groups)
 
     compartments = BASE_COMPARTMENTS
     if params.sojourns.exposed:
@@ -72,7 +73,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     init_pop = {Compartment.INFECTIOUS: params.infectious_seed}
 
     # Get country population by age-group
-    total_pops = inputs.get_population_by_agegroup(params.age_groups, country.iso3, pop.region, pop.year)
+    total_pops = inputs.get_population_by_agegroup(age_groups, country.iso3, pop.region, pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
@@ -175,7 +176,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply age stratification
     """
 
-    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, params.age_groups, True, pop.region)
+    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, age_groups, True, pop.region)
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices, compartments, is_dynamic_matrix=False)
     model.stratify_with(age_strat)
 
@@ -212,17 +213,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     
     outputs_builder = SmSirOutputsBuilder(model, compartments)
-    outputs_builder.request_incidence(prop_symptomatic, params.age_groups)
+    outputs_builder.request_incidence(prop_symptomatic, age_groups)
     outputs_builder.request_notifications(
-        params.prop_symptomatic_infections_notified, params.time_from_onset_to_event.notification, model.times,
-        params.age_groups
+        params.prop_symptomatic_infections_notified,
+        params.time_from_onset_to_event.notification,
+        model.times,
+        age_groups
     )
     outputs_builder.request_hospitalisations(
         params.age_stratification.prop_hospital,
         params.immunity_stratification.hospital_risk_reduction,
         params.time_from_onset_to_event.hospitalisation,
         model.times,
-        params.age_groups
+        age_groups
     )
 
     if params.activate_random_process:

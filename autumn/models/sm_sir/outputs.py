@@ -1,16 +1,23 @@
-from autumn.tools.utils.outputsbuilder import OutputsBuilder
-from .constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
-import numpy as np
 from scipy import stats
+from typing import List
+import numpy as np
+
+from autumn.tools.utils.outputsbuilder import OutputsBuilder
+from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction
+from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum
 
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
-    def request_incidence(self, prop_symptomatic, age_groups):
+    def request_incidence(self, props_symptomatic: List[float], age_groups: List[int]):
         """
         Calculate incident infections. Will also calculate symptomatic incidence to simplify the calculations of
         notifications and hospitalisations.
-        :param prop_symptomatic: list of the same length as AGEGROUP_STRATA
+
+        Args:
+            props_symptomatic: List of the same length as age_groups
+            age_groups: List of the age groups' starting breakpoints
+
         """
 
         self.model.request_output_for_flow(name="incidence", flow_name=FlowName.INFECTION)
@@ -18,6 +25,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
         Stratified by age group and immunity status
         """
+
         # First calculate all incident cases, including asymptomatic
         self.request_double_stratified_output_for_flow(
             FlowName.INFECTION,
@@ -27,50 +35,60 @@ class SmSirOutputsBuilder(OutputsBuilder):
             "immunity",
             name_stem="incidence"
         )
+
         # Then calculate incident symptomatic cases
         for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
                 self.model.request_function_output(
                     name=f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}",
-                    func=make_incidence_sympt_func(prop_symptomatic[i_age]),
+                    func=make_incidence_sympt_func(props_symptomatic[i_age]),
                     sources=[f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
                     save_results=False
                 )
 
-        """
-        Stratified by age group (by aggregating double stratified outputs)
-        """
+        # Stratified by age group (by aggregating double stratified outputs)
         for agegroup in age_groups:
             for suffix in ["", "_sympt"]:
+                sources = [
+                    f"incidence{suffix}Xagegroup_{agegroup}Ximmunity_{immunity_stratum}" for
+                    immunity_stratum in IMMUNITY_STRATA
+                ]
                 self.model.request_aggregate_output(
                     name=f"incidence{suffix}Xagegroup_{agegroup}",
-                    sources=[f"incidence{suffix}Xagegroup_{agegroup}Ximmunity_{immunity_stratum}" for immunity_stratum in IMMUNITY_STRATA]
+                    sources=sources
                 )
 
-    def request_notifications(self, prop_symptomatic_infections_notified, time_from_onset_to_notification, model_times, age_groups):
+    def request_notifications(
+            self, prop_symptomatic_infections_notified: float, time_from_onset_to_notification: TimeDistribution,
+            model_times: np.ndarray, age_groups: List[int]
+    ):
         """
         Request notification calculations.
-        :param prop_symptomatic_infections_notified: proportion notified among symptomatic cases (float)
-        :param time_from_onset_to_notification: details of the statistical distribution used to model time to notification
-        :param model_times: model times
-        :param age_groups: the modelled age groups
+
+        Args:
+            prop_symptomatic_infections_notified: Proportion notified among symptomatic cases (float)
+            time_from_onset_to_notification: Details of the statistical distribution used to model time to notification
+            model_times: The model evaluation times
+            age_groups: Modelled age group lower breakpoints
+
         """
+
         # Pre-compute the probabilities of event occurrence within each time interval between model times
-        cdf_gaps = precompute_cdf_gaps(time_from_onset_to_notification, model_times)
+        density_intervals = precompute_density_intervals(time_from_onset_to_notification, model_times)
 
         # Request notifications for each age group
         notification_sources = []
         for i_age, agegroup in enumerate(age_groups):
             output_name = f"notificationsXagegroup_{agegroup}"
             notification_sources.append(output_name)
+            notifications_func = make_calc_notifications_func(prop_symptomatic_infections_notified, density_intervals)
             self.model.request_function_output(
                 name=output_name,
                 sources=[f"incidence_symptXagegroup_{agegroup}"],
-                func=make_calc_notifications_func(
-                    prop_symptomatic_infections_notified, cdf_gaps
-                ),
+                func=notifications_func,
                 save_results=False
             )
+
         # Request aggregated notifications
         self.model.request_aggregate_output(
             name="notifications",
@@ -79,21 +97,24 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_hospitalisations(
         self,
-        prop_hospital_among_symptomatic,
-        hospital_risk_reduction_by_immunity,
-        time_from_onset_to_hospitalisation,
-        model_times,
-        age_groups
+        prop_hospital_among_sympt: List[float],
+        hospital_risk_reduction_by_immunity: ImmunityRiskReduction,
+        time_from_onset_to_hospitalisation: TimeDistribution,
+        model_times: np.ndarray,
+        age_groups: List[int]
     ):
         """
         Request hospitalisation-related outputs.
-        :param prop_hospital_among_symptomatic: proportion ever hospitalised among symptomatic cases (float)
-        :param hospital_risk_reduction_by_immunity: hospital risk reduction according to immunity level
-        :param time_from_onset_to_hospitalisation: details of the statistical distribution used to model time to hospitalisation
-        :param model_times: model times
-        :param age_groups: modelled age groups
-        :return:
+
+        Args:
+            prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
+            hospital_risk_reduction_by_immunity: Hospital risk reduction according to immunity level
+            time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
+            model_times: The model evaluation times
+            age_groups: Modelled age group lower breakpoints
+
         """
+
         # Prepare a dictionary with hospital risk reduction by level of immunity
         hospital_risk_reduction = {
             ImmunityStratum.NONE: 0.,
@@ -102,23 +123,23 @@ class SmSirOutputsBuilder(OutputsBuilder):
         }
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
-        cdf_gaps = precompute_cdf_gaps(time_from_onset_to_hospitalisation, model_times)
+        interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
 
         # Request hospital admissions for each age group
         hospital_admissions_sources = []
         for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
-                hospital_risk = prop_hospital_among_symptomatic[i_age] * (1. - hospital_risk_reduction[immunity_stratum])
+                hospital_risk = prop_hospital_among_sympt[i_age] * (1. - hospital_risk_reduction[immunity_stratum])
                 output_name = f"hospital_admissionsXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
                 hospital_admissions_sources.append(output_name)
+                hospital_admissions_func = make_calc_hospital_admissions_func(hospital_risk, interval_distri_densities)
                 self.model.request_function_output(
                     name=output_name,
                     sources=[f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
-                    func=make_calc_hospital_admissions_func(
-                        hospital_risk, cdf_gaps
-                    ),
+                    func=hospital_admissions_func,
                     save_results=False
                 )
+
         # Request aggregated hospital admissions
         self.model.request_aggregate_output(
             name="hospital_admissions",
@@ -129,50 +150,69 @@ class SmSirOutputsBuilder(OutputsBuilder):
         self.model.request_computed_value_output("transformed_random_process")
 
 
-def build_statistical_distribution(distribution_details):
+def build_statistical_distribution(distribution_details: TimeDistribution):
     """
     Generate a scipy statistical distribution object that can then be used multiple times to evaluate the cdf
-    :param distribution_details: a dictionary describing the distribution
-    :return: a scipy statistical distribution object
+
+    Args:
+        distribution_details: User request parameters that define the distribution
+
+    Returns:
+        A scipy statistical distribution object
+
     """
+
     if distribution_details.distribution == "gamma":
-        shape = distribution_details.parameters['shape']
-        scale = distribution_details.parameters['mean'] / shape
+        shape = distribution_details.parameters["shape"]
+        scale = distribution_details.parameters["mean"] / shape
         return stats.gamma(a=shape, scale=scale)
     else:
         raise ValueError(f"{distribution_details.distribution} distribution not supported")
 
 
-def precompute_cdf_gaps(distribution_details, model_times):
+def precompute_density_intervals(distribution_details, model_times):
     """
     Calculate the event probability associated with every possible time interval between two model times.
-    :param distribution_details: a dictionary describing the statistical distributions
-    :param model_times: the model times
-    :return: a list of cdf gap values. Its length is len(model_times) - 1
+
+    Args:
+        distribution_details: User requests for the distribution type
+        model_times: The model evaluation times
+
+    Returns:
+        A list of the integrals of the PDF of the probability distribution of interest over each time period
+        Its length is len(model_times) - 1
+
     """
+
     distribution = build_statistical_distribution(distribution_details)
     lags = [t - model_times[0] for t in model_times]
     cdf_values = distribution.cdf(lags)
-    cdf_gaps = np.diff(cdf_values)
-    return cdf_gaps
+    interval_distri_densities = np.diff(cdf_values)
+    return interval_distri_densities
 
 
-def apply_convolution(source_output, cdf_gaps, event_proba):
+def apply_convolution(source_output: np.ndarray, density_intervals: np.ndarray, event_proba: float):
     """
-    Calculate a convoluted output.
-    :param source_output: the already computed model output on which the calculation is based
-    :param cdf_gaps: event occurence probability for every possible time interval
-    :param event_proba: overall probability of event occurrence
-    :return: a numpy array with the convoluted output
+    Calculate a convolved output.
+
+    Args:
+        source_output: Previously computed model output on which the calculation is based
+        density_intervals: Overall probability distribution of event occurring at a particular time given that it occurs
+        event_proba: Total probability of the event occurring
+
+    Retuns:
+        A numpy array of the convolved output
+
     """
-    convoluted_output = np.zeros_like(source_output)
+
+    convolved_output = np.zeros_like(source_output)
     for i in range(source_output.size):
         trunc_source_output = list(source_output[:i])
         trunc_source_output.reverse()
-        convolution_sum = sum([value * cdf_gap for (value, cdf_gap) in zip(trunc_source_output, cdf_gaps[:i])])
-        convoluted_output[i] = event_proba * convolution_sum
+        convolution_sum = sum([value * cdf_gap for (value, cdf_gap) in zip(trunc_source_output, density_intervals[:i])])
+        convolved_output[i] = event_proba * convolution_sum
 
-    return convoluted_output
+    return convolved_output
 
 
 """

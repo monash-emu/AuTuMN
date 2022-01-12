@@ -12,6 +12,7 @@ from datetime import datetime
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
+from autumn.tools.utils.utils import update_timeseries
 
 
 # start date to calculate time since Dec 31, 2019
@@ -51,14 +52,5 @@ def preprocess_npl_data():
 
 
 df = preprocess_npl_data()
-file_path = COVID_NPL_TARGETS
-with open(file_path, mode="r") as f:
-    targets = json.load(f)
-for key, val in TARGETS.items():
-    # Drop the NaN value rows from df before writing da ta.
-    temp_df = df[["date_index", val]].dropna(0, subset=[val])
-    temp_df = temp_df.sort_values(by="date_index")
-    targets[key]["times"] = list(temp_df["date_index"])
-    targets[key]["values"] = list(temp_df[val])
-with open(file_path, "w") as f:
-    json.dump(targets, f, indent=2)
+
+update_timeseries(TARGETS, df, COVID_NPL_TARGETS)

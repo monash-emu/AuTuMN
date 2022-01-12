@@ -1,5 +1,5 @@
 """
-Script for loading NPL data into calibration targets and default.yml
+Script for loading VNM data into calibration targets and default.yml
 
 """
 
@@ -45,7 +45,7 @@ TARGET_MAP_HCMC = {
 TARGET_MAP_HANOI = {
     "notifications": "notifications",
     "icu_occupancy": "icu_occupancy",
-    "infection_deaths": "infection_deaths"
+    "infection_deaths": "infection_deaths",
 }
 
 

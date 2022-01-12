@@ -12,7 +12,7 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 from autumn.tools.utils.utils import update_timeseries
 from autumn.tools.utils.utils import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
+from autumn.tools.utils.utils import defaultconverter, convert_to_dates
 
 
 LKA_DATA_2021 = os.path.join(INPUT_DATA_PATH, "covid_lka", "data_2021.csv")
@@ -33,9 +33,7 @@ TARGETS_MAP_LKA = {
 def preprocess_lka_data():
 
     df = pd.concat([pd.read_csv(file) for file in [LKA_DATA_2021, LKA_DATA_2022]])
-    df.periodname = pd.to_datetime(
-        df.periodname, errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
-    )
+    df.periodname = pd.to_datetime(df.periodname, format="%Y-%m-%d", infer_datetime_format=True)
     df["date_index"] = (df.periodname - COVID_BASE_DATETIME).dt.days
     df = df[df.periodname <= pd.to_datetime("today")]
     # Fix errors - email sent to sl team
@@ -64,17 +62,6 @@ for region, col_name in COVID_LKA_REGION.items():
 
     region_select = [each_col for each_col in df.columns if col_name in each_col]
     region_df = df[["date_index"] + region_select]
-    with open(file_path, mode="r") as f:
-        targets = json.load(f)
-    for key, val in TARGETS_MAP_LKA.items():
-        # Drop the NaN value rows from df before writing data.
-        col_select = [each_col for each_col in region_df.columns if val in each_col]
-        col_select = (
-            col_select[1] if region == "sri_lanka_wp" and key == "notifications" else col_select[0]
-        )
-        temp_df = region_df[["date_index", col_select]].dropna(0, subset=[col_select])
+    region_df.rename(columns=lambda x: x.replace("Sri Lanka ", ""), inplace=True)
 
-        targets[key]["times"] = list(temp_df["date_index"])
-        targets[key]["values"] = list(temp_df[col_select])
-    with open(file_path, "w") as f:
-        json.dump(targets, f, indent=2)
+    update_timeseries(TARGETS_MAP_LKA, region_df, COVID_LKA_TARGETS)

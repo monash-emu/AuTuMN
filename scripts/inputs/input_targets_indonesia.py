@@ -8,6 +8,7 @@ import json
 import os
 import pandas as pd
 from datetime import datetime
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
@@ -38,10 +39,7 @@ TARGETS_BALI = {
 def preprocess_idn_data():
     df = pd.read_csv(COVID_IDN_OWID)
     df = df[df.iso_code == "IDN"]
-    df.date = pd.to_datetime(
-        df.date, errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
-    )
-    df["date_index"] = (df.date - COVID_BASE_DATETIME).dt.days
+    df = create_date_index(COVID_BASE_DATETIME, df, "date")
     df = df[df.date <= pd.to_datetime("today")]
 
     return df
@@ -49,26 +47,9 @@ def preprocess_idn_data():
 
 def preprocess_bali_data():
     df = pd.read_excel(COVID_BALI_DATA, sheet_name=0)
-    df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
-    df.date = pd.to_datetime(
-        df.date, errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
-    )
-    df["date_index"] = (df.date - COVID_BASE_DATETIME).dt.days
+    df = create_date_index(COVID_BASE_DATETIME, df, "date")
 
     return df
-
-
-def update_timeseries(TARGETS, df, file_path):
-    with open(file_path, mode="r") as f:
-        targets = json.load(f)
-    for key, val in TARGETS.items():
-        # Drop the NaN value rows from df before writing data.
-        temp_df = df[["date_index", val]].dropna(0, subset=[val])
-
-        targets[key]["times"] = list(temp_df["date_index"])
-        targets[key]["values"] = list(temp_df[val])
-    with open(file_path, "w") as f:
-        json.dump(targets, f, indent=2)
 
 
 df = preprocess_idn_data()

@@ -4,9 +4,8 @@ import numpy as np
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
 from autumn.tools.utils.utils import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 from autumn.settings import PASSWORD_ENVAR
 from getpass import getpass
 from autumn.tools.utils import secrets
@@ -404,6 +403,7 @@ def fetch_vac_model():
             8,
         ],
     )
+    df["week"] = pd.to_datetime(df["week"], infer_datetime_format=True)
     create_date_index(COVID_BASE_DATETIME, df, "week")
     df.lga.replace(fix_lga, inplace=True)
 

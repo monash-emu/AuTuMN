@@ -1,3 +1,5 @@
+from typing import List
+
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from .constants import IMMUNITY_STRATA, FlowName
 import numpy as np
@@ -6,11 +8,15 @@ from scipy import stats
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
-    def request_incidence(self, prop_symptomatic, age_groups):
+    def request_incidence(self, props_symptomatic: List[float], age_groups: List[int]):
         """
         Calculate incident infections. Will also calculate symptomatic incidence to simplify the calculations of
         notifications and hospitalisations.
-        :param prop_symptomatic: list of the same length as AGEGROUP_STRATA
+
+        Args:
+            props_symptomatic: list of the same length as age_groups
+            age_groups: list of the age groups' starting breakpoints
+
         """
 
         self.model.request_output_for_flow(name="incidence", flow_name=FlowName.INFECTION)
@@ -18,6 +24,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
         Stratified by age group and immunity status
         """
+
         # First calculate all incident cases, including asymptomatic
         self.request_double_stratified_output_for_flow(
             FlowName.INFECTION,
@@ -27,33 +34,40 @@ class SmSirOutputsBuilder(OutputsBuilder):
             "immunity",
             name_stem="incidence"
         )
+
         # Then calculate incident symptomatic cases
         for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
                 self.model.request_function_output(
                     name=f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}",
-                    func=make_incidence_sympt_func(prop_symptomatic[i_age]),
+                    func=make_incidence_sympt_func(props_symptomatic[i_age]),
                     sources=[f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
                     save_results=False
                 )
 
-        """
-        Stratified by age group (by aggregating double stratified outputs)
-        """
+        # Stratified by age group (by aggregating double stratified outputs)
         for agegroup in age_groups:
             for suffix in ["", "_sympt"]:
+                sources = [
+                    f"incidence{suffix}Xagegroup_{agegroup}Ximmunity_{immunity_stratum}" for
+                    immunity_stratum in IMMUNITY_STRATA
+                ]
                 self.model.request_aggregate_output(
                     name=f"incidence{suffix}Xagegroup_{agegroup}",
-                    sources=[f"incidence{suffix}Xagegroup_{agegroup}Ximmunity_{immunity_stratum}" for immunity_stratum in IMMUNITY_STRATA]
+                    sources=sources
                 )
 
     def request_notifications(self, prop_symptomatic_infections_notified, time_from_onset_to_notification, model_times, age_groups):
         """
         Request notification calculations.
-        :param prop_symptomatic_infections_notified: proportion notified among symptomatic cases (float)
-        :param time_from_onset_to_notification: details of the statistical distribution used to model time to notification
-        :param model_times: model times
+
+        Args:
+            prop_symptomatic_infections_notified: proportion notified among symptomatic cases (float)
+            time_from_onset_to_notification: details of the statistical distribution used to model time to notification
+            model_times: model times
+
         """
+
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         cdf_gaps = precompute_cdf_gaps(time_from_onset_to_notification, model_times)
 
@@ -69,6 +83,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     prop_symptomatic_infections_notified, cdf_gaps
                 )
             )
+
         # Request aggregated notifications
         self.model.request_aggregate_output(
             name="notifications",

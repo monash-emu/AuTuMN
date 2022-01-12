@@ -134,9 +134,41 @@ immunity_stratification:
     high: .8
     low: .5
 
-notification:
-  onset_to_notification_delay: 7.0
-  prop_infections_notified: .2
+time_from_onset_to_event:
+  notification:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 7.
+#  hospitalisation:
+#    distribution: gamma
+#    parameters:
+#      shape: 5.
+#      mean: 7.
+#  icu_admission:
+#    distribution: gamma
+#    parameters:
+#      shape: 5.
+#      mean: 7.
+#  death:
+#    distribution: gamma
+#    parameters:
+#      shape: 5.
+#      mean: 7.
+#
+#hospital_stay:
+#  hospital_all:
+#    distribution: gamma
+#    parameters:
+#      shape: 5.
+#      mean: 7.
+#  icu:
+#    distribution: gamma
+#    parameters:
+#      shape: 5.
+#      mean: 7.
+
+prop_symptomatic_infections_notified: .2
 
 activate_random_process: True
 random_process: null

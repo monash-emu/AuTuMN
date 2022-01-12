@@ -36,9 +36,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # preprocess age-specific parameters to match model age bands
     age_strat_params = params.age_stratification
-    prop_sympt = convert_param_agegroups(age_strat_params.prop_symptomatic, country.iso3, pop.region, params.age_groups)
-    prop_hospital = convert_param_agegroups(age_strat_params.prop_hospital, country.iso3, pop.region, params.age_groups)
-    ifr = convert_param_agegroups(age_strat_params.ifr, country.iso3, pop.region, params.age_groups)
+    prop_symptomatic = convert_param_agegroups(age_strat_params.prop_symptomatic, country.iso3, pop.region, params.age_groups)
 
     compartments = BASE_COMPARTMENTS
     if params.sojourns.exposed:
@@ -212,15 +210,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Set up derived output functions
     """
+    
     outputs_builder = SmSirOutputsBuilder(model, compartments)
-    outputs_builder.request_incidence(params.age_groups)
+    outputs_builder.request_incidence(prop_symptomatic, params.age_groups)
+    outputs_builder.request_notifications(
+        params.prop_symptomatic_infections_notified, params.time_from_onset_to_event.notification, model.times,
+        params.age_groups
+    )
+
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
-
-    """
-    Calculate hospitalisations and deaths
-    """
-    # FIXME! Will need to use new type of derived outputs using delayed events triggered from other derived outputs.
 
     return model
 

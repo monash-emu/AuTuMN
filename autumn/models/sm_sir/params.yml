@@ -140,11 +140,11 @@ time_from_onset_to_event:
     parameters:
       shape: 5.
       mean: 7.
-#  hospitalisation:
-#    distribution: gamma
-#    parameters:
-#      shape: 5.
-#      mean: 7.
+  hospitalisation:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 7.
 #  icu_admission:
 #    distribution: gamma
 #    parameters:

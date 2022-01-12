@@ -87,13 +87,62 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 sources=[f"incidence_symptXagegroup_{agegroup}"],
                 func=make_calc_notifications_func(
                     prop_symptomatic_infections_notified, cdf_gaps
-                )
+                ),
+                save_results=False
             )
 
         # Request aggregated notifications
         self.model.request_aggregate_output(
             name="notifications",
             sources=notification_sources
+        )
+
+    def request_hospitalisations(
+        self,
+        prop_hospital_among_symptomatic,
+        hospital_risk_reduction_by_immunity,
+        time_from_onset_to_hospitalisation,
+        model_times,
+        age_groups
+    ):
+        """
+        Request hospitalisation-related outputs.
+        :param prop_hospital_among_symptomatic: proportion ever hospitalised among symptomatic cases (float)
+        :param hospital_risk_reduction_by_immunity: hospital risk reduction according to immunity level
+        :param time_from_onset_to_hospitalisation: details of the statistical distribution used to model time to hospitalisation
+        :param model_times: model times
+        :param age_groups: modelled age groups
+        :return:
+        """
+        # Prepare a dictionary with hospital risk reduction by level of immunity
+        hospital_risk_reduction = {
+            ImmunityStratum.NONE: 0.,
+            ImmunityStratum.HIGH: hospital_risk_reduction_by_immunity.high,
+            ImmunityStratum.LOW: hospital_risk_reduction_by_immunity.low
+        }
+
+        # Pre-compute the probabilities of event occurrence within each time interval between model times
+        cdf_gaps = precompute_cdf_gaps(time_from_onset_to_hospitalisation, model_times)
+
+        # Request hospital admissions for each age group
+        hospital_admissions_sources = []
+        for i_age, agegroup in enumerate(age_groups):
+            for immunity_stratum in IMMUNITY_STRATA:
+                hospital_risk = prop_hospital_among_symptomatic[i_age] * (1. - hospital_risk_reduction[immunity_stratum])
+                output_name = f"hospital_admissionsXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
+                hospital_admissions_sources.append(output_name)
+                self.model.request_function_output(
+                    name=output_name,
+                    sources=[f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
+                    func=make_calc_hospital_admissions_func(
+                        hospital_risk, cdf_gaps
+                    ),
+                    save_results=False
+                )
+        # Request aggregated hospital admissions
+        self.model.request_aggregate_output(
+            name="hospital_admissions",
+            sources=hospital_admissions_sources
         )
 
     def request_random_process_outputs(self,):
@@ -185,3 +234,12 @@ def make_incidence_sympt_func(prop_sympt):
         return prop_sympt * inc
 
     return incidence_sympt_func
+
+
+def make_calc_hospital_admissions_func(hospital_risk, cdf_gaps):
+
+    def hospital_admissions_func(incidence_sympt):
+        hospital_admissions = apply_convolution(incidence_sympt, cdf_gaps, hospital_risk)
+        return hospital_admissions
+
+    return hospital_admissions_func

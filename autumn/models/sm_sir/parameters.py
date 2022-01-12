@@ -530,7 +530,7 @@ class TimeDistribution(BaseModel):
 
 class TimeToEvent(BaseModel):
     notification: TimeDistribution
-    # hospitalisation: TimeDistribution
+    hospitalisation: TimeDistribution
 
 
 class RandomProcess(BaseModel):

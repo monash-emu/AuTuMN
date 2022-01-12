@@ -191,13 +191,13 @@ def precompute_density_intervals(distribution_details, model_times):
     return interval_distri_densities
 
 
-def apply_convolution(source_output: np.ndarray, cdf_gaps: np.ndarray, event_proba: float):
+def apply_convolution(source_output: np.ndarray, density_intervals: np.ndarray, event_proba: float):
     """
     Calculate a convolved output.
 
     Args:
         source_output: Previously computed model output on which the calculation is based
-        cdf_gaps: Overall probability distribution of event occurring at a particular time given that it occurs
+        density_intervals: Overall probability distribution of event occurring at a particular time given that it occurs
         event_proba: Total probability of the event occurring
 
     Retuns:
@@ -209,7 +209,7 @@ def apply_convolution(source_output: np.ndarray, cdf_gaps: np.ndarray, event_pro
     for i in range(source_output.size):
         trunc_source_output = list(source_output[:i])
         trunc_source_output.reverse()
-        convolution_sum = sum([value * cdf_gap for (value, cdf_gap) in zip(trunc_source_output, cdf_gaps[:i])])
+        convolution_sum = sum([value * cdf_gap for (value, cdf_gap) in zip(trunc_source_output, density_intervals[:i])])
         convolved_output[i] = event_proba * convolution_sum
 
     return convolved_output

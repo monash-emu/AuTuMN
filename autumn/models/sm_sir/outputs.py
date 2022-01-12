@@ -3,7 +3,7 @@ from typing import List
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution
-from .constants import IMMUNITY_STRATA, FlowName
+from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum
 import numpy as np
 from scipy import stats
 
@@ -149,7 +149,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         self.model.request_computed_value_output("transformed_random_process")
 
 
-def build_statistical_distribution(distribution_details: TimeDistribution) -> scipy.stats.rv_frozen:
+def build_statistical_distribution(distribution_details: TimeDistribution):
     """
     Generate a scipy statistical distribution object that can then be used multiple times to evaluate the cdf
 

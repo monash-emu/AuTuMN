@@ -35,10 +35,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     country = params.country
     pop = params.population
 
-    # preprocess age-specific parameters to match model age bands
+    # Preprocess age-specific parameters to match model age bands
     age_strat_params = params.age_stratification
     age_groups = params.age_groups
-    prop_symptomatic = convert_param_agegroups(age_strat_params.prop_symptomatic, country.iso3, pop.region, age_groups)
+    sympt_props = age_strat_params.prop_symptomatic
+    sympt_props = convert_param_agegroups(sympt_props, country.iso3, pop.region, age_groups) if sympt_props else None
 
     compartments = BASE_COMPARTMENTS
     if params.sojourns.exposed:
@@ -86,6 +87,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Exposed compartment(s) transitions
     infection_dest = Compartment.INFECTIOUS
+    infectious_entry_flow = FlowName.INFECTION
     if params.sojourns.exposed:
         exposed_sojourn = params.sojourns.exposed.total_time
         exposed_early_prop = params.sojourns.exposed.proportion_early
@@ -102,6 +104,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             prop_exposed_late = 1. - exposed_early_prop
             progress_origin = Compartment.EXPOSED_LATE
             progress_rate = 1. / exposed_sojourn / prop_exposed_late
+
         else:
             progress_origin = Compartment.EXPOSED
             progress_rate = 1. / exposed_sojourn
@@ -113,6 +116,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             source=progress_origin,
             dest=Compartment.INFECTIOUS,
         )
+        infectious_entry_flow = FlowName.PROGRESSION
 
     # Transmission
     if params.activate_random_process:
@@ -182,10 +186,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     """
-    Apply clinical stratification
+    Apply clinical stratification - must come after age stratification if asymptomatic props being used
     """
 
-    clinical_strat = get_clinical_strat(params, compartments)
+    clinical_strat = get_clinical_strat(sympt_props, compartments, age_groups, infectious_entry_flow)
     model.stratify_with(clinical_strat)
 
     """
@@ -221,7 +225,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     
     outputs_builder = SmSirOutputsBuilder(model, compartments)
-    outputs_builder.request_incidence(prop_symptomatic, age_groups)
+    outputs_builder.request_incidence(sympt_props, age_groups)
     outputs_builder.request_notifications(
         params.prop_symptomatic_infections_notified,
         params.time_from_onset_to_event.notification,

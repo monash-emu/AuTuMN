@@ -40,9 +40,9 @@ CLINICAL_STRATA = [
 
 
 class ImmunityStratum:
-    NONE = 'none'
-    HIGH = 'high'
-    LOW = 'low'
+    NONE = "none"
+    HIGH = "high"
+    LOW = "low"
 
 
 IMMUNITY_STRATA = [ImmunityStratum.NONE, ImmunityStratum.HIGH, ImmunityStratum.LOW]

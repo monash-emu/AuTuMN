@@ -2,7 +2,7 @@ import scipy
 from typing import List
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
-from autumn.models.sm_sir.parameters import TimeDistribution
+from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction
 from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum
 import numpy as np
 from scipy import stats
@@ -69,7 +69,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         Args:
             prop_symptomatic_infections_notified: Proportion notified among symptomatic cases (float)
             time_from_onset_to_notification: Details of the statistical distribution used to model time to notification
-            model_times: Model times
+            model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
 
         """
@@ -99,11 +99,11 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_hospitalisations(
         self,
-        prop_hospital_among_symptomatic,
-        hospital_risk_reduction_by_immunity,
-        time_from_onset_to_hospitalisation,
-        model_times,
-        age_groups
+        prop_hospital_among_symptomatic: List[float],
+        hospital_risk_reduction_by_immunity: ImmunityRiskReduction,
+        time_from_onset_to_hospitalisation: TimeDistribution,
+        model_times: np.ndarray,
+        age_groups: List[int]
     ):
         """
         Request hospitalisation-related outputs.
@@ -112,7 +112,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             prop_hospital_among_symptomatic: Proportion ever hospitalised among symptomatic cases (float)
             hospital_risk_reduction_by_immunity: Hospital risk reduction according to immunity level
             time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
-            model_times: Model times
+            model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
 
         """
@@ -125,7 +125,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         }
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
-        cdf_gaps = precompute_cdf_gaps(time_from_onset_to_hospitalisation, model_times)
+        interval_distri_densities = precompute_cdf_gaps(time_from_onset_to_hospitalisation, model_times)
 
         # Request hospital admissions for each age group
         hospital_admissions_sources = []
@@ -138,7 +138,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     name=output_name,
                     sources=[f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
                     func=make_calc_hospital_admissions_func(
-                        hospital_risk, cdf_gaps
+                        hospital_risk, interval_distri_densities
                     ),
                     save_results=False
                 )
@@ -178,7 +178,7 @@ def precompute_cdf_gaps(distribution_details, model_times):
 
     Args:
         distribution_details: User requests for the distribution type
-        model_times: The model evaluation times for the model
+        model_times: The model evaluation times
 
     Returns:
         A list of the integrals of the PDF of the probability distribution of interest over each time period

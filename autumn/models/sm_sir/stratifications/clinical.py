@@ -37,9 +37,9 @@ def get_clinical_strat(
     for i_age, age_group in enumerate(age_groups):
         sympt_prop = sympt_props[i_age]
         adjustments = {
-            ClinicalStratum.ASYMPT: Multiply(sympt_prop),
+            ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
             ClinicalStratum.SYMPT_NON_DETECT: Multiply(0.),
-            ClinicalStratum.DETECT: Multiply(1. - sympt_prop),
+            ClinicalStratum.DETECT: Multiply(sympt_prop),
         }
         clinical_strat.set_flow_adjustments(
             infectious_entry_flow,

@@ -192,7 +192,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     is_undetected = callable(params.detect_prop) or params.detect_prop < 1.0
-
     clinical_strat = get_clinical_strat(
         compartments, age_groups, infectious_entry_flow, params.detect_prop, is_undetected, sympt_props
     )

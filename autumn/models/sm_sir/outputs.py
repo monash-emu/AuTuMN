@@ -1,12 +1,12 @@
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
-from .constants import AGEGROUP_STRATA, IMMUNITY_STRATA,FlowName
+from .constants import IMMUNITY_STRATA, FlowName
 import numpy as np
 from scipy import stats
 
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
-    def request_incidence(self, prop_symptomatic):
+    def request_incidence(self, prop_symptomatic, age_groups):
         """
         Calculate incident infections. Will also calculate symptomatic incidence to simplify the calculations of
         notifications and hospitalisations.
@@ -28,7 +28,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             name_stem="incidence"
         )
         # Then calculate incident symptomatic cases
-        for i_age, agegroup in enumerate(AGEGROUP_STRATA):
+        for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
                 self.model.request_function_output(
                     name=f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}",
@@ -40,14 +40,14 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
         Stratified by age group (by aggregating double stratified outputs)
         """
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in age_groups:
             for suffix in ["", "_sympt"]:
                 self.model.request_aggregate_output(
                     name=f"incidence{suffix}Xagegroup_{agegroup}",
                     sources=[f"incidence{suffix}Xagegroup_{agegroup}Ximmunity_{immunity_stratum}" for immunity_stratum in IMMUNITY_STRATA]
                 )
 
-    def request_notifications(self, prop_symptomatic_infections_notified, time_from_onset_to_notification, model_times):
+    def request_notifications(self, prop_symptomatic_infections_notified, time_from_onset_to_notification, model_times, age_groups):
         """
         Request notification calculations.
         :param prop_symptomatic_infections_notified: proportion notified among symptomatic cases (float)
@@ -59,7 +59,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Request notifications for each age group
         notification_sources = []
-        for i_age, agegroup in enumerate(AGEGROUP_STRATA):
+        for i_age, agegroup in enumerate(age_groups):
             output_name = f"notificationsXagegroup_{agegroup}"
             notification_sources.append(output_name)
             self.model.request_function_output(

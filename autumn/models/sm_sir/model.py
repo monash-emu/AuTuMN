@@ -35,9 +35,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     pop = params.population
 
     # preprocess age-specific parameters to match model age bands
-    prop_symptomatic = convert_param_agegroups(age_strat_params.prop_symptomatic, country.iso3, pop.region, params.age_groups)
-    ifr = convert_param_agegroups(age_strat_params.ifr, country.iso3, pop.region, params.age_groups)
     age_strat_params = params.age_stratification
+    prop_symptomatic = convert_param_agegroups(age_strat_params.prop_symptomatic, country.iso3, pop.region, params.age_groups)
 
     compartments = BASE_COMPARTMENTS
     if params.sojourns.exposed:
@@ -213,9 +212,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     
     outputs_builder = SmSirOutputsBuilder(model, compartments)
-    outputs_builder.request_incidence(prop_symptomatic)
+    outputs_builder.request_incidence(prop_symptomatic, params.age_groups)
     outputs_builder.request_notifications(
-        params.prop_symptomatic_infections_notified, params.time_from_onset_to_event.notification, model.times
+        params.prop_symptomatic_infections_notified, params.time_from_onset_to_event.notification, model.times,
+        params.age_groups
     )
 
     if params.activate_random_process:

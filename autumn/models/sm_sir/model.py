@@ -215,7 +215,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     outputs_builder = SmSirOutputsBuilder(model, compartments)
     outputs_builder.request_incidence(prop_symptomatic, age_groups)
     outputs_builder.request_notifications(
-        params.prop_symptomatic_infections_notified, params.time_from_onset_to_event.notification, model.times,
+        params.prop_symptomatic_infections_notified,
+        params.time_from_onset_to_event.notification,
+        model.times,
         age_groups
     )
     outputs_builder.request_hospitalisations(
@@ -223,7 +225,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.immunity_stratification.hospital_risk_reduction,
         params.time_from_onset_to_event.hospitalisation,
         model.times,
-        params.age_groups
+        age_groups
     )
 
     if params.activate_random_process:

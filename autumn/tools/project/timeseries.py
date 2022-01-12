@@ -25,7 +25,7 @@ def load_timeseries(path: str):
     out_dict = {}
     
     for k, v in data.items():
-        out_dict[k] = pd.Series(data=v['values'],index=v['times'], name=v['output_key'])
+        out_dict[k] = pd.Series(data=v['values'],index=pd.DatetimeIndex(v['times']), name=v['output_key'])
 
     return out_dict
 

@@ -19,7 +19,7 @@ def get_clinical_strat(
         compartments: Unstratified model compartment types
         age_groups: Modelled age groups
         infectious_entry_flow: The name of the flow that takes people into the (first) infectious compartment(s)
-        detect_prop: Proportion of cases detected
+        detect_prop: Proportion of symptomatic cases detected
         sympt_props: Symptomatic proportions, or None if stratification by symptomatic status not required
 
     Returns:

@@ -185,7 +185,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply clinical stratification
     """
 
-    clin_strat = get_clinical_strat(params, compartments)
+    clinical_strat = get_clinical_strat(params, compartments)
+    model.stratify_with(clinical_strat)
 
     """
     Apply strains stratification

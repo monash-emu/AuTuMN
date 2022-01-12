@@ -21,4 +21,8 @@ def get_clinical_strat(params: Parameters, compartments: List[str]) -> Stratific
     # Determine compartments to stratify, dependent on whether the infectious compartment is split
     comps_to_stratify = [comp for comp in compartments if "infectious" in comp]
 
-    return None
+    clinical_strata = ["asympt", "sympt_non_detect", "detect"]
+
+    clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)
+
+    return clinical_strat

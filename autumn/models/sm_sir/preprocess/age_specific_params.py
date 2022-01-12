@@ -1,9 +1,8 @@
-from autumn.models.sm_sir.constants import AGEGROUP_STRATA
 from autumn.tools.inputs import get_population_by_agegroup
 import numpy as np
 
 
-def convert_param_agegroups(source_parameters, iso3, region):
+def convert_param_agegroups(source_parameters, iso3, region, age_groups):
     """
     Converts the source parameters to match the model age groups.
     :param source_parameters: a list of values provided by 5-year band, starting from 0-4
@@ -12,12 +11,12 @@ def convert_param_agegroups(source_parameters, iso3, region):
     total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
 
     param_values = []
-    for i, model_agegroup in enumerate(AGEGROUP_STRATA):
+    for i, model_agegroup in enumerate(age_groups):
         age_indice_low = int(int(model_agegroup) / 5.)
-        if i == len(AGEGROUP_STRATA) - 1:
+        if i == len(age_groups) - 1:
             relevant_source_indices = list(range(age_indice_low, len(source_agebreaks)))
         else:
-            age_indice_up = int(int(AGEGROUP_STRATA[i + 1]) / 5.) - 1
+            age_indice_up = int(int(age_groups[i + 1]) / 5.) - 1
             relevant_source_indices = np.arange(age_indice_low, age_indice_up + 1, 1).tolist()
 
         model_agegroup_pop = 0

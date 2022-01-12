@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import (
@@ -18,8 +18,8 @@ default_path = build_rel_path("params/default.yml")
 baseline_params = base_params.update(malaysia_path).update(default_path)
 param_set = ParameterSet(baseline=baseline_params)
 
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications")
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
+notifications_ts = ts_set["notifications"]
 targets = [NormalTarget(notifications_ts)]
 
 priors = [

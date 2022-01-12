@@ -8,7 +8,7 @@ from autumn.settings import INPUT_DATA_PATH
 
 COVID_SURVEY_PATH = os.path.join(INPUT_DATA_PATH, "covid_survey")
 TODAY = pd.to_datetime("today").date().strftime("%Y%m%d")
-
+FROM_DATE = "20200101"
 
 countries = ["Australia", "Malaysia", "Myanmar", "Philippines", "Sri Lanka"]
 indicators = ["mask","avoid_contact"]
@@ -20,12 +20,12 @@ def fetch_covid_survey_data():
         for indicator in indicators:
             if country == "Australia":
                 region = "Victoria"
-                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&region={region}&daterange=20210101-{TODAY}"
+                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&region={region}&daterange={FROM_DATE}-{TODAY}"
             elif country == "Philippines":
                 region = "National Capital Region"
-                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&region={region}&daterange=20210101-{TODAY}"
+                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&region={region}&daterange={FROM_DATE}-{TODAY}"
             else:
-                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&daterange=20210101-{TODAY}"
+                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&daterange={FROM_DATE}-{TODAY}"
 
             # request data from api
             response = requests.get(API_URL).text

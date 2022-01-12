@@ -12,6 +12,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         notifications and hospitalisations.
         :param prop_symptomatic: list of the same length as AGEGROUP_STRATA
         """
+
         self.model.request_output_for_flow(name="incidence", flow_name=FlowName.INFECTION)
 
         """
@@ -20,7 +21,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # First calculate all incident cases, including asymptomatic
         self.request_double_stratified_output_for_flow(
             FlowName.INFECTION,
-            AGEGROUP_STRATA,
+            [str(group) for group in age_groups],
             "agegroup",
             IMMUNITY_STRATA,
             "immunity",

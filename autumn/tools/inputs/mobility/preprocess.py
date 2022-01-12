@@ -5,7 +5,7 @@ import pandas as pd
 from autumn.tools.db import Database
 from autumn.settings import INPUT_DATA_PATH
 
-from .fetch import MOBILITY_CSV_PATH
+from .fetch import MOBILITY_CSV_PATH, VNM_CSV_PATH
 
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"
@@ -140,11 +140,16 @@ def preprocess_mobility(input_db: Database, country_df):
         (mob_df.sub_region_1 == "Federal Territory of Kuala Lumpur"), "sub_region_1"
     ] = "Kuala Lumpur"
 
-    # Create a copy of mobility data for Sri Lanka's western province
-    sri_lanka_wp = mob_df[mob_df.country_region == "Sri Lanka"].copy()
-    sri_lanka_wp.sub_region_1 = "western province"
+    # Read and append mobility predictions for Vietnam
+    vnm_mob = pd.read_csv(VNM_CSV_PATH)
+    mob_df = mob_df.merge(vnm_mob, on=["date", "country_region", "sub_region_1"], how="left")
+    col_str = "workplaces_percent_change_from_baseline"
+    mob_df.loc[
+        (mob_df["country_region"] == "Vietnam") & (mob_df[f"{col_str}_x"].isna()), f"{col_str}_x"
+    ] = mob_df[f"{col_str}_y"]
+    mob_df = mob_df.drop(columns=f"{col_str}_y")
+    mob_df.rename(columns={f"{col_str}_x": col_str}, inplace=True)
 
-    mob_df = mob_df.append(sri_lanka_wp)
     mob_df = mob_df.append(dhhs_cluster_mobility)
 
     # Drop all rows that have NA values in 1 or more mobility columns.

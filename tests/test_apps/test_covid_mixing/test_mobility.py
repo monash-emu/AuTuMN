@@ -6,7 +6,7 @@ TODO: Test more mixing matrix functionality
 import pandas as pd
 import pytest
 
-from autumn.models.covid_19.mixing_matrix.mobility import parse_values, update_mixing_data
+from autumn.models.covid_19.mixing_matrix.macrodistancing import parse_values, update_mixing_data
 
 
 @pytest.mark.parametrize(
@@ -17,7 +17,7 @@ from autumn.models.covid_19.mixing_matrix.mobility import parse_values, update_m
         ([1, 2, ["add_to_prev", 1.23], 3], [1, 2, 3.23, 3]),
         ([0.1, 0.5, ["add_to_prev_up_to_1", 0.3], 0.9], [0.1, 0.5, 0.8, 0.9]),
         ([0.1, 0.8, ["add_to_prev_up_to_1", 0.3], 0.9], [0.1, 0.8, 1, 0.9]),
-        ([1, 2, ["scale_prev", -1], 3], [1, 2, 0, 3]),
+        ([1, 2, ["scale_prev", 0.5], 3], [1, 2, 1, 3]),
         ([0.1, 0.95, ["scale_prev_up_to_1", 1.1], 0.5], [0.1, 0.95, 1, 0.5]),
         ([1, 2, ["scale_prev", 1.1], 3], [1, 2, 2.2, 3]),
         ([1, 2, ["scale_prev", 0.9], 3], [1, 2, 1.8, 3]),
@@ -37,12 +37,10 @@ def test_update_mixing_data__with_only_mobility_data():
     """
 
     mixing = {}
-    npi_effectiveness_params = {}
     google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]})
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
-        npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
     )
@@ -82,12 +80,10 @@ def test_update_mixing_data__with_user_specified_values():
             "append": False,
         },
     }
-    npi_effectiveness_params = {}
     google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]})
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
-        npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
     )
@@ -118,7 +114,6 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
-        npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
     )
@@ -148,10 +143,9 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
     is_periodic_intervention = False
     periodic_int_params = None
     periodic_end_time = None
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         update_mixing_data(
             mixing,
-            npi_effectiveness_params,
             google_mobility_values,
             google_mobility_days,
         )
@@ -177,7 +171,6 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
     google_mobility_days = [0, 1, 2, 3, 4]
     actual_mixing = update_mixing_data(
         mixing,
-        npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
     )

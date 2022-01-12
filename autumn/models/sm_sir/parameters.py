@@ -7,8 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VIC_MODEL_OPTIONS, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
-from autumn.settings.region import Region
+from autumn.models.covid_19.constants import BASE_DATE, GOOGLE_MOBILITY_LOCATIONS
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
@@ -46,7 +45,7 @@ class TimeSeries(BaseModel):
         value_series, time_series = inputs.get("values"), inputs.get("times")
         assert len(time_series) == \
                len(value_series), \
-        f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+            f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
         return inputs
 
     @validator("times", pre=True, allow_reuse=True)
@@ -76,30 +75,30 @@ class Population(BaseModel):
     year: int
 
 
-class Sojourn(BaseModel):
+class CompartmentSojourn(BaseModel):
+
+    total_time: float
+    proportion_early: Optional[float]
+
+    @validator("total_time", allow_reuse=True)
+    def check_active_positive(total_time):
+        assert total_time > 0., f"Sojourn times must be non-negative, active time is: {total_time}"
+        return total_time
+
+    @validator("proportion_early", allow_reuse=True)
+    def check_proportion_early(proportion_early):
+        if proportion_early:
+            assert 0. <= proportion_early <= 1., f"Proportion of time in early stage not in [0, 1]: {proportion_early}"
+        return proportion_early
+
+
+class Sojourns(BaseModel):
     """
     Parameters for determining how long a person stays in a given compartment.
     """
 
-    class CalcPeriod(BaseModel):
-        total_period: float
-        proportions: Dict[str, float]
-
-        @validator("proportions", allow_reuse=True)
-        def check_props(props):
-            prop_sum = sum(props.values())
-            assert prop_sum == 1., f"Requested period proportions do not sum to one: {prop_sum}"
-            return props
-
-    # Mean time in days spent in each compartment
-    compartment_periods: Dict[str, float]
-    # Mean time spent in each compartment, defined via proportions
-    compartment_periods_calculated: Dict[str, CalcPeriod]
-
-    @validator("compartment_periods", allow_reuse=True)
-    def check_positive(periods):
-        assert all(val >= 0. for val in periods.values()), f"Sojourn times must be non-negative, times are: {periods}"
-        return periods
+    active: CompartmentSojourn
+    exposed: Optional[CompartmentSojourn]
 
 
 class MixingLocation(BaseModel):
@@ -198,17 +197,6 @@ class Mobility(BaseModel):
         return val
 
 
-class MixingMatrices(BaseModel):
-    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
-    source_iso3: Optional[str]
-    age_adjust: bool  # Only relevant if 'extrapolated' selected
-
-    @validator("type", allow_reuse=True)
-    def check_type(val):
-        assert val in ("extrapolated", "prem"), f"Mixing matrix request not permitted: {val}"
-        return val
-
-
 class AgeStratification(BaseModel):
     """
     Parameters used in age based stratification.
@@ -231,62 +219,6 @@ class ImmunityStratification(BaseModel):
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
     hospital_risk_reduction: ImmunityRiskReduction
-
-
-class StrataProps(BaseModel):
-    props: List[float]
-    multiplier: float
-
-    @validator("props", allow_reuse=True)
-    def check_props(val):
-        msg = f"Not all of list of proportions is in [0, 1]: {val}"
-        assert all([0. <= prop <= 1. for prop in val]), msg
-        return val
-
-
-class ClinicalProportions(BaseModel):
-    hospital: StrataProps
-    symptomatic: StrataProps
-
-
-class ClinicalStratification(BaseModel):
-    """
-    Parameters used in clinical status based stratification.
-    """
-
-    props: ClinicalProportions
-    icu_prop: float  # Proportion of those hospitalised that are admitted to ICU
-    icu_mortality_prop: float  # Death proportion ceiling for ICU mortality
-    late_infect_multiplier: Dict[str, float]
-    non_sympt_infect_multiplier: float
-
-    @validator("icu_prop", allow_reuse=True)
-    def check_icu_prop(val):
-        assert 0. <= val <= 1., f"Proportion of hospitalised patients admitted to ICU is not in [0, 1]: {val}"
-        return val
-
-    @validator("icu_mortality_prop", allow_reuse=True)
-    def check_icu_ceiling(val):
-        assert 0. <= val <= 1., f"Ceiling for proportion of ICU patients dying is not in [0, 1]: {val}"
-        return val
-
-
-class InfectionFatality(BaseModel):
-    """
-    Parameters relating to death from infection.
-    """
-
-    # Calibrated multiplier for props
-    multiplier: float
-    # Alternative approach to adjusting the IFR during calibration - over-write the oldest age bracket
-    top_bracket_overwrite: Optional[float]
-    # Proportion of people dying / total infected by age
-    props: List[float]
-
-    @validator("multiplier", allow_reuse=True)
-    def check_multiplier(val):
-        assert 0. <= val, f"Multiplier applied to IFRs must be in range [0, 1]: {val}"
-        return val
 
 
 class TestingToDetection(BaseModel):
@@ -313,66 +245,6 @@ class TestingToDetection(BaseModel):
     def check_smoothing_period(val):
         assert 1 < val, f"Smoothing period must be greater than 1: {val}"
         return val
-
-
-class SusceptibilityHeterogeneity(BaseModel):
-    """
-    Specifies heterogeneity in susceptibility.
-    """
-
-    bins: int
-    tail_cut: float
-    coeff_var: float
-
-
-class MetroClusterStratification(BaseModel):
-    mobility: Mobility
-
-
-class RegionalClusterStratification(BaseModel):
-    mobility: Mobility
-
-
-class VictorianClusterStratification(BaseModel):
-    intercluster_mixing: float
-    contact_rate_multiplier_north_east_metro: float
-    contact_rate_multiplier_west_metro: float
-    contact_rate_multiplier_south_east_metro: float
-    contact_rate_multiplier_barwon_south_west: float
-    contact_rate_multiplier_regional: float
-    metro: MetroClusterStratification
-    regional: RegionalClusterStratification
-
-
-class Vic2021ClusterSeeds(BaseModel):
-    north_east_metro: float
-    south_east_metro: float
-    west_metro: float
-    barwon_south_west: float
-    gippsland: float
-    hume: float
-    loddon_mallee: float
-    grampians: float
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_seeds(cls, values):
-        for region in Region.VICTORIA_SUBREGIONS:
-            region_name = region.replace("-", "_")
-            assert 0. <= values[region_name], f"Seed value for cluster {region_name} is negative"
-        return values
-
-
-class Vic2021Seeding(BaseModel):
-    seed_time: float
-    clusters: Optional[Vic2021ClusterSeeds]
-    seed: Optional[float]
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_request(cls, values):
-        n_requests = int(bool(values.get("clusters"))) + int(bool(values.get("seed")))
-        msg = f"Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled: {n_requests}"
-        assert n_requests == 1, msg
-        return values
 
 
 class VocComponent(BaseModel):
@@ -683,19 +555,28 @@ class Parameters:
     country: Country
     population: Population
     ref_mixing_iso3: str
+    age_groups: List[int]
     time: Time
     # Values
     contact_rate: float
-    # infect_death: float
-    # universal_death_rate: float
     infectious_seed: float
-    infection_duration: float
+    sojourns: Sojourns
+    is_dynamic_mixing_matrix: bool
+    mobility: Mobility
 
     prop_symptomatic_infections_notified: float
     time_from_onset_to_event: TimeToEvent
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification
+    voc_emergence: Optional[Dict[str, VocComponent]]
+
     # Random process
     activate_random_process: bool
     random_process: Optional[RandomProcess]
+
+    @validator("age_groups", allow_reuse=True)
+    def validate_age_groups(age_groups):
+        assert all([i_group % 5 == 0 for i_group in age_groups]), "Not all age groups are multiples of 5"
+        assert all([0 <= i_group <= 75 for i_group in age_groups]), "Age breakpoints must be from zero to 75"
+        return age_groups

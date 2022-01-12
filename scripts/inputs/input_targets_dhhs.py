@@ -25,8 +25,8 @@ COVID_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
 
 COVID_DHHS_POSTCODE_LGA_CSV = os.path.join(COVID_AU_DIRPATH, "postcode lphu concordance.csv")
 
-COVID_VIC2021_TARGETS_CSV = os.path.join(
-    PROJECTS_PATH, "covid_19", "victoria", "victoria_2021", "targets.secret.json"
+COVID_VICTORIA_TARGETS_CSV = os.path.join(
+    PROJECTS_PATH, "covid_19", "victoria", "victoria", "targets.secret.json"
 )
 
 # Two different mappings
@@ -37,6 +37,17 @@ LGA_TO_CLUSTER = os.path.join(
 LGA_TO_HSP = os.path.join(INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv")
 
 COVID_DHHS_MAPING = LGA_TO_HSP  # This is the new mapping
+
+TODAY = (pd.to_datetime("today") - COVID_BASE_DATETIME).days
+
+TARGET_MAP_DHHS = {
+    "notifications": "cluster_cases",
+    "hospital_occupancy": "value_hosp",
+    "icu_occupancy": "value_icu",
+    "icu_admissions": "admittedtoicu",
+    "hospital_admissions": "nadmissions",
+    "infection_deaths": "cluster_deaths",
+}
 
 cluster_map_df = pd.read_csv(COVID_DHHS_MAPING)
 
@@ -50,6 +61,7 @@ map_id["cluster_name"] = (
 )
 
 CLUSTER_MAP = dict(map_id.values)
+CLUSTER_MAP[0] = "VICTORIA"
 
 CHRIS_MAP = {
     # North east metro
@@ -149,45 +161,27 @@ def main():
     cases = cases.merge(admissions, on=["date_index", "cluster_id"], how="outer")
     cases = cases.merge(deaths, on=["date_index", "cluster_id"], how="outer")
 
+    cases = cases[cases["date_index"] < TODAY]
+
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
         password = getpass(prompt="Enter the encryption password:")
 
     for cluster in CLUSTER_MAP.values():
-        if cluster == "VIC":
+        if cluster == "VICTORIA":
             continue
 
         cluster_secrets_file = os.path.join(
             PROJECTS_PATH, "covid_19", "victoria", cluster.lower(), "targets.secret.json"
         )
 
-        TARGET_MAP_DHHS = {
-            "notifications": "cluster_cases",
-            "hospital_occupancy": "value_hosp",
-            "icu_occupancy": "value_icu",
-            "icu_admissions": "admittedtoicu",
-            "hospital_admissions": "nadmissions",
-            "infection_deaths": "cluster_deaths"
-        }
-
         cluster_df = cases.loc[cases.cluster_id == cluster]
 
         update_timeseries(TARGET_MAP_DHHS, cluster_df, cluster_secrets_file, password)
 
-    cases.fillna(np.inf, inplace=True)
     vic_df = cases.groupby("date_index").sum(skipna=True).reset_index()
-    vic_df.replace({np.inf: np.nan}, inplace=True)
 
-    TARGET_MAP_DHHS = {
-        "notifications": "cluster_cases",
-        "hospital_occupancy": "value_hosp",
-        "icu_occupancy": "value_icu",
-        "icu_admissions": "admittedtoicu",
-        "hospital_admissions": "nadmissions",
-        "infection_deaths": "cluster_deaths",
-    }
-
-    update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VIC2021_TARGETS_CSV, password)
+    update_timeseries(TARGET_MAP_DHHS, vic_df, COVID_VICTORIA_TARGETS_CSV, password)
 
     # True vaccination numbers
     df = preprocess_vac()
@@ -354,10 +348,10 @@ def create_age_cols(df, age_map):
 def process_zip_files():
 
     files_map = {
-        "_Admissions_Table": COVID_DHHS_ADMN_CSV,
-        "_Vacc_Table": COVID_DHHS_VAC_CSV,
-        "_Cases_Table": COVID_DHHS_CASE_CSV,
-        "_Deaths_Table": COVID_DHHS_DEATH_CSV,
+        "nAdmissions_by": COVID_DHHS_ADMN_CSV,
+        "_nEncounters_by": COVID_DHHS_VAC_CSV,
+        "_NewCases_by_": COVID_DHHS_CASE_CSV,
+        "_deaths_LGA": COVID_DHHS_DEATH_CSV,
         "monitoringreport.csv": CHRIS_CSV,
     }
 
@@ -385,7 +379,7 @@ def preprocess_deaths():
 def load_deaths(df):
 
     df = merge_with_mapping_df(df, "lga")
-    df["cluster_deaths"] = df.ndeaths * df.proportion
+    df["cluster_deaths"] = df.n * df.proportion
     df = (
         df[["date_index", "cluster_id", "cluster_deaths"]]
         .groupby(["date_index", "cluster_id"])
@@ -416,7 +410,17 @@ def fetch_vac_model():
     return df
 
 
+def create_vic_total(df):
+    df = df.groupby(["date", "age_group", "vaccine_brand_name", "date_index"], as_index=False).sum()
+    df["lga"] = "VICTORIA"
+
+    return df
+
+
 def preprocess_vac_model(df):
+
+    vic_df = create_vic_total(df)
+    df = df.append(vic_df)
 
     df = merge_with_mapping_df(df, "lga")
 
@@ -444,6 +448,9 @@ def preprocess_vac_model(df):
 
 
 def update_vida_pop(df):
+
+    vic_df = create_vic_total(df)
+    df = df.append(vic_df)
 
     df = df[["lga", "age_group", "popn"]].drop_duplicates()
     df = merge_with_mapping_df(df, "lga")

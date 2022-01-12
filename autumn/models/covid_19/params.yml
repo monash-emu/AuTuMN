@@ -3,16 +3,13 @@
 description: BASELINE
 
 voc_emergence: null # Emergence of Variants of Concern
-waning_immunity_duration: null
 infect_death: 0. # Compulsory parameter that is completely overwritten in stratification, rather than being modified
 universal_death_rate: 0. # Compulsory parameter for all models, even though there are no population-wide deaths
 infectious_seed: 10 # Initial condition for infectious
 contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 seasonal_force: null
 
-mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
-  type: extrapolated
-  age_adjust: true
+ref_mixing_iso3: GBR
 
 # Integration times
 time:
@@ -196,7 +193,7 @@ vaccination:
     ve_infectiousness_ratio: null
     ve_hospitalisation: 0.
     ve_death: 0.
-  waned:
+  fully_waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_prop_prevent_infection_ratio: null
@@ -204,13 +201,44 @@ vaccination:
     ve_infectiousness_ratio: null
     ve_hospitalisation: 0.
     ve_death: 0.
+  boosted:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: 0.
+    ve_death: 0.
+
   # Time from receiving first dose to second, based on the days from Vic achieving the same coverage with one and two
   second_dose_delay: null
+  boost_delay: null
   vacc_full_effect_duration: null
   vacc_part_effect_duration: null
   lag: 0.
   roll_out_components: []
   standard_supply: false
+  program_start_time: null
+
+# Vaccination-related
+history:
+  experienced:
+    ve_sympt_covid: 1.
+    ve_prop_prevent_infection: 1.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: null
+    ve_death: null
+  waned:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: null
+    ve_death: null
+  natural_immunity_duration: null
 
 vaccination_risk:
   calculate: false
@@ -295,5 +323,7 @@ new_hospital_admissions_dispersion_param: 1.
 new_icu_admissions_dispersion_param: 1.
 infection_deaths_dispersion_param: 1.
 accum_deaths_dispersion_param: 1.
+
+hospital_reporting: 1.
 
 target_output_ratio: null

@@ -5,6 +5,13 @@ description: BASELINE
 country:
   iso3: PHL
 
+age_groups:
+  - 0
+  - 15
+  - 25
+  - 50
+  - 70
+
 ref_mixing_iso3: GBR
 
 population:
@@ -18,7 +25,14 @@ time:
 
 contact_rate: 0.1
 infectious_seed: 1
-infection_duration: 8
+
+sojourns:
+  active:
+    total_time: 8.
+#    proportion_early: 0.5
+#  exposed:
+#    total_time: 5.
+#    proportion_early: 0.5
 
 # Age-related parameters
 age_stratification:
@@ -88,6 +102,25 @@ age_stratification:
     - 0.03203 # 75-79
     - 0.08292 # 80+
 
+is_dynamic_mixing_matrix: false
+
+mobility:
+  region: null
+  mixing: {}
+  age_mixing: null
+  npi_effectiveness: {}
+  # Mapping of Google mobility locations to Prem-specific locations
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.25
+      grocery_and_pharmacy: 0.25
+      parks: 0.25
+      transit_stations: 0.25
+  smooth_google_data: false  # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  microdistancing: {}
 
 # parameters related to immunity stratification (three strata: none / high / low)
 immunity_stratification:

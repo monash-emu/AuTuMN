@@ -1,10 +1,11 @@
+from typing import List
 from summer import Stratification, Multiply
 
 from autumn.models.sm_sir.parameters import Parameters
-from autumn.models.sm_sir.constants import BASE_COMPARTMENTS, IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 
 
-def get_immunity_strat(params: Parameters, compartments) -> Stratification:
+def get_immunity_strat(params: Parameters, compartments: List[str]) -> Stratification:
 
     immunity_strat = Stratification("immunity", IMMUNITY_STRATA, compartments)
 

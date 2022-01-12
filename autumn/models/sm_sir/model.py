@@ -14,6 +14,7 @@ from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .stratifications.strains import get_strain_strat
+from .stratifications.clinical import get_clinical_strat
 from .strat_processing.strains import make_voc_seed_func
 from .preprocess.age_specific_params import convert_param_agegroups
 
@@ -179,6 +180,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, age_groups, True, pop.region)
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices, compartments, is_dynamic_matrix=False)
     model.stratify_with(age_strat)
+
+    """
+    Apply clinical stratification
+    """
+
+    clin_strat = get_clinical_strat(params, compartments)
 
     """
     Apply strains stratification

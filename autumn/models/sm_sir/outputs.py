@@ -1,6 +1,8 @@
+import scipy
 from typing import List
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
+from autumn.models.sm_sir.parameters import TimeDistribution
 from .constants import IMMUNITY_STRATA, FlowName
 import numpy as np
 from scipy import stats
@@ -14,8 +16,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         notifications and hospitalisations.
 
         Args:
-            props_symptomatic: list of the same length as age_groups
-            age_groups: list of the age groups' starting breakpoints
+            props_symptomatic: List of the same length as age_groups
+            age_groups: List of the age groups' starting breakpoints
 
         """
 
@@ -57,14 +59,18 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     sources=sources
                 )
 
-    def request_notifications(self, prop_symptomatic_infections_notified, time_from_onset_to_notification, model_times, age_groups):
+    def request_notifications(
+            self, prop_symptomatic_infections_notified: float, time_from_onset_to_notification: TimeDistribution,
+            model_times: np.ndarray, age_groups: List[int]
+    ):
         """
         Request notification calculations.
 
         Args:
-            prop_symptomatic_infections_notified: proportion notified among symptomatic cases (float)
-            time_from_onset_to_notification: details of the statistical distribution used to model time to notification
-            model_times: model times
+            prop_symptomatic_infections_notified: Proportion notified among symptomatic cases (float)
+            time_from_onset_to_notification: Details of the statistical distribution used to model time to notification
+            model_times: Model times
+            age_groups: Modelled age group lower breakpoints
 
         """
 
@@ -94,15 +100,21 @@ class SmSirOutputsBuilder(OutputsBuilder):
         self.model.request_computed_value_output("transformed_random_process")
 
 
-def build_statistical_distribution(distribution_details):
+def build_statistical_distribution(distribution_details: TimeDistribution) -> scipy.stats.rv_frozen:
     """
     Generate a scipy statistical distribution object that can then be used multiple times to evaluate the cdf
-    :param distribution_details: a dictionary describing the distribution
-    :return: a scipy statistical distribution object
+
+    Args:
+        distribution_details: User request parameters that define the distribution
+
+    Returns:
+        A scipy statistical distribution object
+
     """
+
     if distribution_details.distribution == "gamma":
-        shape = distribution_details.parameters['shape']
-        scale = distribution_details.parameters['mean'] / shape
+        shape = distribution_details.parameters["shape"]
+        scale = distribution_details.parameters["mean"] / shape
         return stats.gamma(a=shape, scale=scale)
     else:
         raise ValueError(f"{distribution_details.distribution} distribution not supported")
@@ -111,33 +123,46 @@ def build_statistical_distribution(distribution_details):
 def precompute_cdf_gaps(distribution_details, model_times):
     """
     Calculate the event probability associated with every possible time interval between two model times.
-    :param distribution_details: a dictionary describing the statistical distributions
-    :param model_times: the model times
-    :return: a list of cdf gap values. Its length is len(model_times) - 1
+
+    Args:
+        distribution_details: User requests for the distribution type
+        model_times: The model evaluation times for the model
+
+    Returns:
+        A list of the integrals of the PDF of the probability distribution of interest over each time period
+        Its length is len(model_times) - 1
+
     """
+
     distribution = build_statistical_distribution(distribution_details)
     lags = [t - model_times[0] for t in model_times]
     cdf_values = distribution.cdf(lags)
-    cdf_gaps = np.diff(cdf_values)
-    return cdf_gaps
+    interval_distri_densities = np.diff(cdf_values)
+    return interval_distri_densities
 
 
-def apply_convolution(source_output, cdf_gaps, event_proba):
+def apply_convolution(source_output: np.ndarray, cdf_gaps: np.ndarray, event_proba: float):
     """
-    Calculate a convoluted output.
-    :param source_output: the already computed model output on which the calculation is based
-    :param cdf_gaps: event occurence probability for every possible time interval
-    :param event_proba: overall probability of event occurrence
-    :return: a numpy array with the convoluted output
+    Calculate a convolved output.
+
+    Args:
+        source_output: Previously computed model output on which the calculation is based
+        cdf_gaps: Overall probability distribution of event occurring at a particular time given that it occurs
+        event_proba: Total probability of the event occurring
+
+    Retuns:
+        A numpy array of the convolved output
+
     """
-    convoluted_output = np.zeros_like(source_output)
+
+    convolved_output = np.zeros_like(source_output)
     for i in range(source_output.size):
         trunc_source_output = list(source_output[:i])
         trunc_source_output.reverse()
         convolution_sum = sum([value * cdf_gap for (value, cdf_gap) in zip(trunc_source_output, cdf_gaps[:i])])
-        convoluted_output[i] = event_proba * convolution_sum
+        convolved_output[i] = event_proba * convolution_sum
 
-    return convoluted_output
+    return convolved_output
 
 
 """

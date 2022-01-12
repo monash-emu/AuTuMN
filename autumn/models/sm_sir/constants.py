@@ -26,10 +26,23 @@ BASE_COMPARTMENTS = [
 WILD_TYPE = "wild_type"
 
 
+class ClinicalStratum:
+    ASYMPT = "asympt"
+    SYMPT_NON_DETECT = "sympt_non_detect"
+    DETECT = "detect"
+
+
+CLINICAL_STRATA = [
+    ClinicalStratum.ASYMPT,
+    ClinicalStratum.SYMPT_NON_DETECT,
+    ClinicalStratum.DETECT,
+]
+
+
 class ImmunityStratum:
-    NONE = 'none'
-    HIGH = 'high'
-    LOW = 'low'
+    NONE = "none"
+    HIGH = "high"
+    LOW = "low"
 
 
 IMMUNITY_STRATA = [ImmunityStratum.NONE, ImmunityStratum.HIGH, ImmunityStratum.LOW]

@@ -1,7 +1,7 @@
 from typing import List, Union
 
 from summer import Stratification, Multiply
-from autumn.models.sm_sir.constants import ClinicalStratum, FlowName
+from autumn.models.sm_sir.constants import ClinicalStratum
 
 
 def get_clinical_strat(
@@ -26,25 +26,30 @@ def get_clinical_strat(
     # Determine compartments to stratify, dependent on whether the infectious compartment is split
     comps_to_stratify = [comp for comp in compartments if "infectious" in comp]
 
-    # Start with the detected strata
+    # Start with the two symptomatic strata
     clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]
 
-    # Add on the asymptomatic stratum if being used
+    # Work out which strata are to be implemented
     if sympt_props:
         clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata
 
+    # Create the stratification object
     clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)
-    for i_age, age_group in enumerate(age_groups):
-        sympt_prop = sympt_props[i_age]
-        adjustments = {
-            ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
-            ClinicalStratum.SYMPT_NON_DETECT: Multiply(0.),
-            ClinicalStratum.DETECT: Multiply(sympt_prop),
-        }
-        clinical_strat.set_flow_adjustments(
-            infectious_entry_flow,
-            adjustments,
-            dest_strata={"agegroup": str(age_group)}
-        )
+
+    # Implement the splitting for symptomatic/asymptomatic status
+    if sympt_props:
+        for i_age, age_group in enumerate(age_groups):
+            sympt_prop = sympt_props[i_age]
+            asympt_prop = 1.0 - sympt_prop
+            adjustments = {
+                ClinicalStratum.ASYMPT: Multiply(asympt_prop),
+                ClinicalStratum.SYMPT_NON_DETECT: Multiply(0.),  # Temporarily set to zero
+                ClinicalStratum.DETECT: Multiply(sympt_prop),
+            }
+            clinical_strat.set_flow_adjustments(
+                infectious_entry_flow,
+                adjustments,
+                dest_strata={"agegroup": str(age_group)}
+            )
 
     return clinical_strat

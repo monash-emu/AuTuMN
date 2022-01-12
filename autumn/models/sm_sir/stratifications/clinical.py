@@ -5,7 +5,10 @@ from autumn.models.sm_sir.constants import ClinicalStratum
 
 
 def get_clinical_strat(
-        compartments: List[str], age_groups: List[int], infectious_entry_flow: str,
+        compartments: List[str],
+        age_groups: List[int],
+        infectious_entry_flow: str,
+        detect_prop: float,
         sympt_props: Union[None, List[float]],
 ) -> Stratification:
     """
@@ -23,13 +26,16 @@ def get_clinical_strat(
 
     """
 
-    # Determine compartments to stratify, dependent on whether the infectious compartment is split
+    # Identify the compartment(s) to stratify, one or two depending on whether the infectious compartment is split
     comps_to_stratify = [comp for comp in compartments if "infectious" in comp]
 
     # Start with the two symptomatic strata
-    clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]
+    clinical_strata = [ClinicalStratum.DETECT]
 
     # Work out which strata are to be implemented
+    non_detect_prop = 1.0 - detect_prop
+    if non_detect_prop > 0.0:
+        clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
     if sympt_props:
         clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata
 
@@ -41,15 +47,33 @@ def get_clinical_strat(
         for i_age, age_group in enumerate(age_groups):
             sympt_prop = sympt_props[i_age]
             asympt_prop = 1.0 - sympt_prop
-            adjustments = {
-                ClinicalStratum.ASYMPT: Multiply(asympt_prop),
-                ClinicalStratum.SYMPT_NON_DETECT: Multiply(0.),  # Temporarily set to zero
-                ClinicalStratum.DETECT: Multiply(sympt_prop),
-            }
+
+            if non_detect_prop > 0.0:
+                abs_non_detect_prop = non_detect_prop * sympt_prop
+                abs_detect_prop = detect_prop * sympt_prop
+                adjustments = {
+                    ClinicalStratum.ASYMPT: Multiply(asympt_prop),
+                    ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_prop),
+                    ClinicalStratum.DETECT: Multiply(abs_detect_prop),
+                }
+            else:
+                adjustments = {
+                    ClinicalStratum.ASYMPT: Multiply(asympt_prop),
+                    ClinicalStratum.DETECT: Multiply(sympt_prop),
+                }
             clinical_strat.set_flow_adjustments(
                 infectious_entry_flow,
                 adjustments,
                 dest_strata={"agegroup": str(age_group)}
             )
+    else:
+        adjustments = {
+            ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_prop),
+            ClinicalStratum.DETECT: Multiply(detect_prop),
+        }
+        clinical_strat.set_flow_adjustments(
+            infectious_entry_flow,
+            adjustments,
+        )
 
     return clinical_strat

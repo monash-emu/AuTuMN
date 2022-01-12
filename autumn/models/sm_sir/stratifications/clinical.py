@@ -5,18 +5,18 @@ from autumn.models.sm_sir.constants import ClinicalStratum
 
 
 def get_clinical_strat(
-        sympt_props: Union[None, List[float]], compartments: List[str], age_groups: List[int],
-        infectious_entry_flow: str
+        compartments: List[str], age_groups: List[int], infectious_entry_flow: str,
+        sympt_props: Union[None, List[float]],
 ) -> Stratification:
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
     epidemiological effect - and these are the only infectious compartments (unlike the Covid model).
 
     Args:
-        sympt_props: Symptomatic proportions, or None if stratification by symptomatic status not required
         compartments: Unstratified model compartment types
         age_groups: Modelled age groups
         infectious_entry_flow: The name of the flow that takes people into the (first) infectious compartment(s)
+        sympt_props: Symptomatic proportions, or None if stratification by symptomatic status not required
 
     Returns:
         Clinical stratification object to be applied in the main model file

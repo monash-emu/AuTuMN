@@ -189,7 +189,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply clinical stratification - must come after age stratification if asymptomatic props being used
     """
 
-    clinical_strat = get_clinical_strat(sympt_props, compartments, age_groups, infectious_entry_flow)
+    clinical_strat = get_clinical_strat(compartments, age_groups, infectious_entry_flow, sympt_props)
     model.stratify_with(clinical_strat)
 
     """

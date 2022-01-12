@@ -86,8 +86,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     # Exposed compartment(s) transitions
-    infection_dest = Compartment.INFECTIOUS
-    infectious_entry_flow = FlowName.INFECTION
     if params.sojourns.exposed:
         exposed_sojourn = params.sojourns.exposed.total_time
         exposed_early_prop = params.sojourns.exposed.proportion_early
@@ -109,14 +107,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             progress_origin = Compartment.EXPOSED
             progress_rate = 1. / exposed_sojourn
 
-        infection_dest = Compartment.EXPOSED
         model.add_transition_flow(
             name=FlowName.PROGRESSION,
             fractional_rate=progress_rate,
             source=progress_origin,
             dest=Compartment.INFECTIOUS,
         )
+
+        infection_dest = Compartment.EXPOSED
         infectious_entry_flow = FlowName.PROGRESSION
+    else:
+        infection_dest = Compartment.INFECTIOUS
+        infectious_entry_flow = FlowName.INFECTION
 
     # Transmission
     if params.activate_random_process:
@@ -189,9 +191,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply clinical stratification - must come after age stratification if asymptomatic props being used
     """
 
-    detect_prop = 1.
-
-    clinical_strat = get_clinical_strat(compartments, age_groups, infectious_entry_flow, detect_prop, sympt_props)
+    clinical_strat = get_clinical_strat(
+        compartments, age_groups, infectious_entry_flow, params.detect_prop, sympt_props
+    )
     model.stratify_with(clinical_strat)
 
     """

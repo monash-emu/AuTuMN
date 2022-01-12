@@ -26,6 +26,8 @@ time:
 contact_rate: 0.1
 infectious_seed: 1
 
+detect_prop: 1.
+
 sojourns:
   active:
     total_time: 8.

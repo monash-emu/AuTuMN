@@ -19,6 +19,7 @@ def get_clinical_strat(
         compartments: Unstratified model compartment types
         age_groups: Modelled age groups
         infectious_entry_flow: The name of the flow that takes people into the (first) infectious compartment(s)
+        detect_prop: Proportion of cases detected
         sympt_props: Symptomatic proportions, or None if stratification by symptomatic status not required
 
     Returns:
@@ -66,6 +67,8 @@ def get_clinical_strat(
                 adjustments,
                 dest_strata={"agegroup": str(age_group)}
             )
+
+    # No need for loop over age if symptomatic status not included
     else:
         adjustments = {
             ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_prop),

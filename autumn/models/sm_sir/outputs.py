@@ -107,13 +107,16 @@ class SmSirOutputsBuilder(OutputsBuilder):
     ):
         """
         Request hospitalisation-related outputs.
-        :param prop_hospital_among_symptomatic: proportion ever hospitalised among symptomatic cases (float)
-        :param hospital_risk_reduction_by_immunity: hospital risk reduction according to immunity level
-        :param time_from_onset_to_hospitalisation: details of the statistical distribution used to model time to hospitalisation
-        :param model_times: model times
-        :param age_groups: modelled age groups
-        :return:
+
+        Args:
+            prop_hospital_among_symptomatic: Proportion ever hospitalised among symptomatic cases (float)
+            hospital_risk_reduction_by_immunity: Hospital risk reduction according to immunity level
+            time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
+            model_times: Model times
+            age_groups: Modelled age group lower breakpoints
+
         """
+
         # Prepare a dictionary with hospital risk reduction by level of immunity
         hospital_risk_reduction = {
             ImmunityStratum.NONE: 0.,

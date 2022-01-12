@@ -2,6 +2,7 @@ from typing import List, Union
 
 from summer import Stratification, Multiply
 from autumn.models.sm_sir.constants import ClinicalStratum
+from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
 
 
 def get_clinical_strat(
@@ -35,16 +36,16 @@ def get_clinical_strat(
     # Start with the two symptomatic strata
     clinical_strata = [ClinicalStratum.DETECT]
 
-    # Work out which strata are to be implemented
+    # Prepare for including incomplete detection
     if is_undetected:
         clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
 
-        def cdr_func(time):
-            return detect_prop
+        cdr_func = get_cdr_func(detect_prop)
 
         def non_detect_func(time):
-            return 1.0 - abs_cdr_func(time)
+            return 1.0 - cdr_func(time)
 
+    # Prepare for including asymptomatic cases
     if sympt_props:
         clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata
 
@@ -70,6 +71,7 @@ def get_clinical_strat(
                     ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
                     ClinicalStratum.DETECT: Multiply(abs_cdr_func),
                 }
+
             else:
                 adjustments = {
                     ClinicalStratum.ASYMPT: Multiply(asympt_prop),
@@ -83,7 +85,6 @@ def get_clinical_strat(
 
     # No need for loop over age if symptomatic status not included
     else:
-
         adjustments = {
             ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_func),
             ClinicalStratum.DETECT: Multiply(cdr_func),

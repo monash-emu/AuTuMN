@@ -200,13 +200,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Apply strains stratification
     """
-
+    strain_strata = None
     if params.voc_emergence:
         voc_params = params.voc_emergence
 
         # Build and apply stratification
         strain_strat = get_strain_strat(voc_params, compartments)
         model.stratify_with(strain_strat)
+        strain_strata = strain_strat.strata
 
         # Use importation flows to seed VoC cases
         for voc_name, voc_values in voc_params.items():
@@ -230,7 +231,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     
     outputs_builder = SmSirOutputsBuilder(model, compartments)
-    outputs_builder.request_incidence(compartments, age_groups, clinical_strata)
+    outputs_builder.request_incidence(compartments, age_groups, clinical_strata, strain_strata)
     # outputs_builder.request_notifications(
     #     params.prop_symptomatic_infections_notified,
     #     params.time_from_onset_to_event.notification,

@@ -9,13 +9,16 @@ from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
-    def request_incidence(self, compartments, age_groups, clinical_strata):
+    def request_incidence(self, compartments, age_groups, clinical_strata, strain_strata):
         """
         Calculate incident disease cases. This is associated with the transition to the first state where individuals are
         potentially symptomatic.
 
         Args:
             compartments: list of model compartment names (unstratified)
+            age_groups: list of modelled age groups
+            clinical_strata: list of clinical strata
+            strain_strata: list of modelled strains (None if single strain model)
         """
 
         # Determine what flow will be used to track disease incidence
@@ -29,16 +32,24 @@ class SmSirOutputsBuilder(OutputsBuilder):
         self.model.request_output_for_flow(name="incidence", flow_name=incidence_flow)
 
         """
-        Stratified by age, clinical and immunity status
+        Fully stratified incidence outputs
         """
         for agegroup in age_groups:
             for clinical_stratum in clinical_strata:
                 for immunity_stratum in IMMUNITY_STRATA:
-                    self.model.request_output_for_flow(
-                        name=f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Ximmunity_{immunity_stratum}",
-                        flow_name=incidence_flow,
-                        dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "immunity": immunity_stratum}
-                    )
+                    if not strain_strata:
+                        self.model.request_output_for_flow(
+                            name=f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Ximmunity_{immunity_stratum}",
+                            flow_name=incidence_flow,
+                            dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "immunity": immunity_stratum}
+                        )
+                    else:
+                        for strain in strain_strata:
+                            self.model.request_output_for_flow(
+                                name=f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Xstrain_{strain}Ximmunity_{immunity_stratum}",
+                                flow_name=incidence_flow,
+                                dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "strain": strain, "immunity": immunity_stratum}
+                            )
 
     def request_notifications(
             self, prop_symptomatic_infections_notified: float, time_from_onset_to_notification: TimeDistribution,

@@ -141,7 +141,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 hospital_risk = prop_hospital_among_sympt[i_age] * (1. - hospital_risk_reduction[immunity_stratum])
                 output_name = f"hospital_admissionsXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
                 hospital_admissions_sources.append(output_name)
-                hospital_admissions_func = make_calc_hospital_admissions_func(hospital_risk, interval_distri_densities)
+                hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)
                 self.model.request_function_output(
                     name=output_name,
                     sources=[f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
@@ -184,7 +184,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_icu, model_times)
 
         # Request ICU admissions
-        icu_admissions_func = make_calc_icu_admissions_func(prop_icu_among_hospitalised, interval_distri_densities)
+        icu_admissions_func = make_calc_admissions_func(prop_icu_among_hospitalised, interval_distri_densities)
         self.model.request_function_output(
             name="icu_admissions",
             sources=["hospital_admissions"],
@@ -333,22 +333,13 @@ def make_incidence_sympt_func(prop_sympt):
     return incidence_sympt_func
 
 
-def make_calc_hospital_admissions_func(hospital_risk, cdf_gaps):
+def make_calc_admissions_func(admission_risk, cdf_gaps):
 
-    def hospital_admissions_func(incidence_sympt):
-        hospital_admissions = apply_convolution_for_event(incidence_sympt, cdf_gaps, hospital_risk)
-        return hospital_admissions
+    def admissions_func(reference_output):
+        admissions = apply_convolution_for_event(reference_output, cdf_gaps, admission_risk)
+        return admissions
 
-    return hospital_admissions_func
-
-
-def make_calc_icu_admissions_func(icu_risk, cdf_gaps):
-
-    def icu_admissions_func(hospital_admission):
-        icu_admissions = apply_convolution_for_event(hospital_admission, cdf_gaps, icu_risk)
-        return icu_admissions
-
-    return icu_admissions_func
+    return admissions_func
 
 
 def make_calc_occupancy_func(probas_stay_greater_than):

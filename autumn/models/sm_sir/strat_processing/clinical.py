@@ -3,10 +3,14 @@ from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 
 def get_cdr_func(detect_prop: float, params):
     """
+    The master function that can call various approaches to calculating the proportion of cases detected over time.
+    Currently just supporting two approaches:
+        Testing-based case detection
+        Constant case detection fraction
 
     Args:
         detect_prop: Currently just a single value representing the case detection rate over time
-        params:
+        params: All model parameters
 
     Returns:
         The case detection rate function of time
@@ -24,7 +28,6 @@ def get_cdr_func(detect_prop: float, params):
 
         def cdr_func(time, processes):
             return detect_prop
-
 
     def non_detect_func(time, processes):
         return 1.0 - cdr_func(time, processes)

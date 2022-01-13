@@ -90,11 +90,11 @@ def get_clinical_strat(
                 def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
                     return non_detect_func(time, computed_values) * age_sympt_prop
 
-                model.add_computed_value_process("abs_cdr_func", FunctionWrapper(abs_cdr_func))
-                model.add_computed_value_process("abs_non_detect_func", FunctionWrapper(abs_non_detect_func))
+                model.add_computed_value_process(f"abs_cdr_funcX{age_group}", FunctionWrapper(abs_cdr_func))
+                model.add_computed_value_process(f"abs_non_detect_funcX{age_group}", FunctionWrapper(abs_non_detect_func))
 
-                abs_undetected_func = lambda time, computed_values: computed_values["abs_non_detect_func"]
-                abs_detected_func = lambda time, computed_values: computed_values["abs_cdr_func"]
+                abs_detected_func = lambda time, computed_values: computed_values[f"abs_cdr_funcX{age_group}"]
+                abs_undetected_func = lambda time, computed_values: computed_values[f"abs_non_detect_funcX{age_group}"]
 
                 adjustments = {
                     ClinicalStratum.ASYMPT: Multiply(asympt_prop),

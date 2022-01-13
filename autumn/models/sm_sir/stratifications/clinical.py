@@ -43,11 +43,7 @@ def get_clinical_strat(
     # Prepare for including incomplete detection
     if is_undetected:
         clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
-
-        cdr_func = get_cdr_func(detect_prop, params)
-
-        def non_detect_func(time, processes):
-            return 1.0 - cdr_func(time, processes)
+        cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
 
     # Prepare for including asymptomatic cases
     if sympt_props:

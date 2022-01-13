@@ -35,20 +35,34 @@ class SmSirOutputsBuilder(OutputsBuilder):
         Fully stratified incidence outputs
         """
         for agegroup in age_groups:
-            for clinical_stratum in clinical_strata:
-                for immunity_stratum in IMMUNITY_STRATA:
-                    if not strain_strata:
+            for immunity_stratum in IMMUNITY_STRATA:
+                if not strain_strata and not clinical_strata:
+                    self.model.request_output_for_flow(
+                        name=f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}",
+                        flow_name=incidence_flow,
+                        dest_strata={"agegroup": str(agegroup), "immunity": immunity_stratum}
+                    )
+                elif not strain_strata: # model is stratified by clinical but not strain
+                    for clinical_stratum in clinical_strata:
                         self.model.request_output_for_flow(
                             name=f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Ximmunity_{immunity_stratum}",
                             flow_name=incidence_flow,
                             dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "immunity": immunity_stratum}
                         )
-                    else:
+                elif not clinical_strata: # model is stratified by strain but not clinical
+                    for strain in strain_strata:
+                        self.model.request_output_for_flow(
+                            name=f"incidenceXagegroup_{agegroup}Xstrain_{strain}Ximmunity_{immunity_stratum}",
+                            flow_name=incidence_flow,
+                            dest_strata={"agegroup": str(agegroup), "strain":strain, "immunity": immunity_stratum}
+                        )
+                else:  # model is stratified by clinical and strain
+                    for clinical_stratum in clinical_strata:
                         for strain in strain_strata:
                             self.model.request_output_for_flow(
                                 name=f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Xstrain_{strain}Ximmunity_{immunity_stratum}",
                                 flow_name=incidence_flow,
-                                dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "strain": strain, "immunity": immunity_stratum}
+                                dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "strain":strain, "immunity": immunity_stratum}
                             )
 
     def request_notifications(

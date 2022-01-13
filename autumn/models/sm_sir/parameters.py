@@ -98,7 +98,7 @@ class Sojourns(BaseModel):
     """
 
     active: CompartmentSojourn
-    exposed: Optional[CompartmentSojourn]
+    latent: Optional[CompartmentSojourn]
 
 
 class MixingLocation(BaseModel):
@@ -323,6 +323,8 @@ class Parameters:
     mobility: Mobility
     detect_prop: float
     testing_to_detection: Optional[TestingToDetection]
+    asympt_infectiousness_effect: Optional[float]
+    isolate_infectiousness_effect: Optional[float]
 
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay

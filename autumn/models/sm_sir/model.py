@@ -42,10 +42,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     sympt_props = convert_param_agegroups(sympt_props, country.iso3, pop.region, age_groups) if sympt_props else None
 
     compartments = BASE_COMPARTMENTS
-    if params.sojourns.exposed:
-        compartments.append(Compartment.EXPOSED)
-        if params.sojourns.exposed.proportion_early:
-            compartments.append(Compartment.EXPOSED_LATE)
+    if params.sojourns.latent:
+        compartments.append(Compartment.LATENT)
+        if params.sojourns.latent.proportion_early:
+            compartments.append(Compartment.LATENT_LATE)
     if params.sojourns.active.proportion_early:
         compartments.append(Compartment.INFECTIOUS_LATE)
 
@@ -85,27 +85,27 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Add intercompartmental flows.
     """
 
-    # Exposed compartment(s) transitions
-    if params.sojourns.exposed:
-        exposed_sojourn = params.sojourns.exposed.total_time
-        exposed_early_prop = params.sojourns.exposed.proportion_early
+    # Latent compartment(s) transitions
+    if params.sojourns.latent:
+        latent_sojourn = params.sojourns.latent.total_time
+        latent_early_prop = params.sojourns.latent.proportion_early
 
-        if exposed_early_prop:
-            early_sojourn = exposed_sojourn * exposed_early_prop
+        if latent_early_prop:
+            early_sojourn = latent_sojourn * latent_early_prop
             model.add_transition_flow(
-                name=FlowName.WITHIN_EXPOSED,
+                name=FlowName.WITHIN_LATENT,
                 fractional_rate=1. / early_sojourn,
-                source=Compartment.EXPOSED,
-                dest=Compartment.EXPOSED_LATE,
+                source=Compartment.LATENT,
+                dest=Compartment.LATENT_LATE,
             )
 
-            prop_exposed_late = 1. - exposed_early_prop
-            progress_origin = Compartment.EXPOSED_LATE
-            progress_rate = 1. / exposed_sojourn / prop_exposed_late
+            prop_latent_late = 1. - latent_early_prop
+            progress_origin = Compartment.LATENT_LATE
+            progress_rate = 1. / latent_sojourn / prop_latent_late
 
         else:
-            progress_origin = Compartment.EXPOSED
-            progress_rate = 1. / exposed_sojourn
+            progress_origin = Compartment.LATENT
+            progress_rate = 1. / latent_sojourn
 
         model.add_transition_flow(
             name=FlowName.PROGRESSION,
@@ -114,7 +114,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             dest=Compartment.INFECTIOUS,
         )
 
-        infection_dest = Compartment.EXPOSED
+        infection_dest = Compartment.LATENT
         infectious_entry_flow = FlowName.PROGRESSION
     else:
         infection_dest = Compartment.INFECTIOUS

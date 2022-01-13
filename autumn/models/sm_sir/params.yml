@@ -30,11 +30,14 @@ infectious_seed: 1
 
 detect_prop: 0.5
 
+asympt_infectiousness_effect: 0.5
+isolate_infectiousness_effect: 0.2
+
 sojourns:
   active:
     total_time: 8.
 #    proportion_early: 0.5
-#  exposed:
+#  latent:
 #    total_time: 5.
 #    proportion_early: 0.5
 

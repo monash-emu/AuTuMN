@@ -1,8 +1,9 @@
 from typing import List, Union
+from copy import copy
 
+from summer import Stratification, Multiply, Overwrite
 
-from summer import Stratification, Multiply
-from autumn.models.sm_sir.constants import ClinicalStratum
+from autumn.models.sm_sir.constants import ClinicalStratum, Compartment
 from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
 from autumn.models.sm_sir.parameters import Parameters
 
@@ -93,5 +94,29 @@ def get_clinical_strat(
             infectious_entry_flow,
             adjustments,
         )
+
+    # Infectiousness adjustments
+
+    asympt_infectiousness_effect = 0.5
+    isolate_infectiousness_effect = 0.5
+
+    # Start from blank adjustments
+    base_infectiousness = {stratum: None for stratum in clinical_strata}
+
+    # Account for asymptomatics being less infectious, if they are included in the model
+    if sympt_props:
+        base_infectiousness.update({ClinicalStratum.ASYMPT: Overwrite(asympt_infectiousness_effect)})
+
+    # Add in the effect of isolation if partial case detection is being simulated, otherwise only asymptomatic effect
+    isolate_infectiousness = copy(base_infectiousness)
+    if is_undetected:
+        isolate_infectiousness.update({ClinicalStratum.DETECT: Overwrite(isolate_infectiousness_effect)})
+
+    # Apply the isolation adjustments (which might be the same as the base) to the last infectious compartment
+    clinical_strat.add_infectiousness_adjustments(comps_to_stratify[-1], isolate_infectiousness)
+
+    # If there are two infectious compartments, apply the adjustment without isolation to the first one
+    if Compartment.INFECTIOUS_LATE in comps_to_stratify:
+        clinical_strat.add_infectiousness_adjustments(Compartment.INFECTIOUS, base_infectiousness)
 
     return clinical_strat

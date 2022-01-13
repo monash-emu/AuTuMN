@@ -283,7 +283,7 @@ def apply_convolution_for_event(source_output: np.ndarray, density_intervals: np
     for i in range(source_output.size):
         trunc_source_output = list(source_output[:i])
         trunc_source_output.reverse()
-        convolution_sum = sum([value * cdf_gap for (value, cdf_gap) in zip(trunc_source_output, density_intervals[:i])])
+        convolution_sum = sum([value * density_interval for (value, density_interval) in zip(trunc_source_output, density_intervals[:i])])
         convolved_output[i] = event_proba * convolution_sum
 
     return convolved_output
@@ -316,10 +316,10 @@ Below are a few factory functions used when declaring functions within loops. Th
 """
 
 
-def make_calc_notifications_func(cdf_gaps):
+def make_calc_notifications_func(density_intervals):
 
     def notifications_func(detected_incidence):
-        notifications = apply_convolution_for_event(detected_incidence, cdf_gaps, 1.)
+        notifications = apply_convolution_for_event(detected_incidence, density_intervals, 1.)
         return notifications
 
     return notifications_func
@@ -333,10 +333,10 @@ def make_incidence_sympt_func(prop_sympt):
     return incidence_sympt_func
 
 
-def make_calc_admissions_func(admission_risk, cdf_gaps):
+def make_calc_admissions_func(admission_risk, density_intervals):
 
     def admissions_func(reference_output):
-        admissions = apply_convolution_for_event(reference_output, cdf_gaps, admission_risk)
+        admissions = apply_convolution_for_event(reference_output, density_intervals, admission_risk)
         return admissions
 
     return admissions_func

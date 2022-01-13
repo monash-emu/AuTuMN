@@ -4,95 +4,104 @@ import numpy as np
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction
-from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum
+from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, ClinicalStratum
 
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
-    def request_incidence(self, props_symptomatic: List[float], age_groups: List[int]):
+    def request_incidence(self, compartments, age_groups, clinical_strata, strain_strata):
         """
-        Calculate incident infections. Will also calculate symptomatic incidence to simplify the calculations of
-        notifications and hospitalisations.
+        Calculate incident disease cases. This is associated with the transition to the first state where individuals are
+        potentially symptomatic.
 
         Args:
-            props_symptomatic: List of the same length as age_groups
-            age_groups: List of the age groups' starting breakpoints
-
+            compartments: list of model compartment names (unstratified)
+            age_groups: list of modelled age groups
+            clinical_strata: list of clinical strata
+            strain_strata: list of modelled strains (None if single strain model)
         """
 
-        self.model.request_output_for_flow(name="incidence", flow_name=FlowName.INFECTION)
+        # Determine what flow will be used to track disease incidence
+        if Compartment.INFECTIOUS_LATE in compartments:
+            incidence_flow = FlowName.WITHIN_INFECTIOUS
+        elif Compartment.EXPOSED in compartments:
+            incidence_flow = FlowName.PROGRESSION
+        else:
+            incidence_flow = FlowName.INFECTION
+
+        self.model.request_output_for_flow(name="incidence", flow_name=incidence_flow)
 
         """
-        Stratified by age group and immunity status
+        Fully stratified incidence outputs
         """
+        detected_incidence_sources = []
+        for agegroup in age_groups:
+            for immunity_stratum in IMMUNITY_STRATA:
+                if not strain_strata and not clinical_strata:
+                    output_name = f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
+                    self.model.request_output_for_flow(
+                        name=output_name,
+                        flow_name=incidence_flow,
+                        dest_strata={"agegroup": str(agegroup), "immunity": immunity_stratum}
+                    )
+                    detected_incidence_sources.append(output_name)
+                elif not strain_strata:  # model is stratified by clinical but not strain
+                    for clinical_stratum in clinical_strata:
+                        output_name = f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Ximmunity_{immunity_stratum}"
+                        self.model.request_output_for_flow(
+                            name=output_name,
+                            flow_name=incidence_flow,
+                            dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "immunity": immunity_stratum}
+                        )
+                        if clinical_stratum == ClinicalStratum.DETECT:
+                            detected_incidence_sources.append(output_name)
+                elif not clinical_strata:  # model is stratified by strain but not clinical
+                    for strain in strain_strata:
+                        output_name = f"incidenceXagegroup_{agegroup}Xstrain_{strain}Ximmunity_{immunity_stratum}"
+                        self.model.request_output_for_flow(
+                            name=output_name,
+                            flow_name=incidence_flow,
+                            dest_strata={"agegroup": str(agegroup), "strain":strain, "immunity": immunity_stratum}
+                        )
+                        detected_incidence_sources.append(output_name)
+                else:  # model is stratified by clinical and strain
+                    for clinical_stratum in clinical_strata:
+                        for strain in strain_strata:
+                            output_name = f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Xstrain_{strain}Ximmunity_{immunity_stratum}"
+                            self.model.request_output_for_flow(
+                                name=output_name,
+                                flow_name=incidence_flow,
+                                dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "strain":strain, "immunity": immunity_stratum}
+                            )
+                            if clinical_stratum == ClinicalStratum.DETECT:
+                                detected_incidence_sources.append(output_name)
 
-        # First calculate all incident cases, including asymptomatic
-        self.request_double_stratified_output_for_flow(
-            FlowName.INFECTION,
-            [str(group) for group in age_groups],
-            "agegroup",
-            IMMUNITY_STRATA,
-            "immunity",
-            name_stem="incidence"
+        self.model.request_aggregate_output(
+            name="ever_detected_incidence",
+            sources=detected_incidence_sources
         )
 
-        # Then calculate incident symptomatic cases
-        for i_age, agegroup in enumerate(age_groups):
-            for immunity_stratum in IMMUNITY_STRATA:
-                self.model.request_function_output(
-                    name=f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}",
-                    func=make_incidence_sympt_func(props_symptomatic[i_age]),
-                    sources=[f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
-                    save_results=False
-                )
-
-        # Stratified by age group (by aggregating double stratified outputs)
-        for agegroup in age_groups:
-            for suffix in ["", "_sympt"]:
-                sources = [
-                    f"incidence{suffix}Xagegroup_{agegroup}Ximmunity_{immunity_stratum}" for
-                    immunity_stratum in IMMUNITY_STRATA
-                ]
-                self.model.request_aggregate_output(
-                    name=f"incidence{suffix}Xagegroup_{agegroup}",
-                    sources=sources
-                )
-
     def request_notifications(
-            self, prop_symptomatic_infections_notified: float, time_from_onset_to_notification: TimeDistribution,
-            model_times: np.ndarray, age_groups: List[int]
+            self, time_from_onset_to_notification: TimeDistribution, model_times: np.ndarray
     ):
         """
         Request notification calculations.
 
         Args:
-            prop_symptomatic_infections_notified: Proportion notified among symptomatic cases (float)
             time_from_onset_to_notification: Details of the statistical distribution used to model time to notification
             model_times: The model evaluation times
-            age_groups: Modelled age group lower breakpoints
 
         """
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         density_intervals = precompute_density_intervals(time_from_onset_to_notification, model_times)
 
-        # Request notifications for each age group
-        notification_sources = []
-        for i_age, agegroup in enumerate(age_groups):
-            output_name = f"notificationsXagegroup_{agegroup}"
-            notification_sources.append(output_name)
-            notifications_func = make_calc_notifications_func(prop_symptomatic_infections_notified, density_intervals)
-            self.model.request_function_output(
-                name=output_name,
-                sources=[f"incidence_symptXagegroup_{agegroup}"],
-                func=notifications_func,
-                save_results=False
-            )
-
-        # Request aggregated notifications
-        self.model.request_aggregate_output(
+        # Request notifications
+        notifications_func = make_calc_notifications_func(density_intervals)
+        self.model.request_function_output(
             name="notifications",
-            sources=notification_sources
+            sources=["ever_detected_incidence"],
+            func=notifications_func,
         )
 
     def request_hospitalisations(
@@ -220,10 +229,10 @@ Below are a few factory functions used when declaring functions within loops. Th
 """
 
 
-def make_calc_notifications_func(prop_symptomatic_infections_notified, cdf_gaps):
+def make_calc_notifications_func(cdf_gaps):
 
-    def notifications_func(incidence_sympt):
-        notifications = apply_convolution(incidence_sympt, cdf_gaps, prop_symptomatic_infections_notified)
+    def notifications_func(detected_incidence):
+        notifications = apply_convolution(detected_incidence, cdf_gaps, 1.)
         return notifications
 
     return notifications_func

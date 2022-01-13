@@ -190,7 +190,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Apply clinical stratification - must come after age stratification if asymptomatic props being used
     """
-
     detect_prop = params.detect_prop
     is_undetected = callable(detect_prop) or detect_prop < 1.0
     if sympt_props:
@@ -203,17 +202,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             compartments, params, age_groups, infectious_entry_flow, detect_prop, is_undetected, sympt_props
         )
         model.stratify_with(clinical_strat)
+        clinical_strata = clinical_strat.strata
+    else:
+        clinical_strata = None
 
     """
     Apply strains stratification
     """
-
+    strain_strata = None
     if params.voc_emergence:
         voc_params = params.voc_emergence
 
         # Build and apply stratification
         strain_strat = get_strain_strat(voc_params, compartments)
         model.stratify_with(strain_strat)
+        strain_strata = strain_strat.strata
 
         # Use importation flows to seed VoC cases
         for voc_name, voc_values in voc_params.items():
@@ -237,20 +240,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     
     outputs_builder = SmSirOutputsBuilder(model, compartments)
-    outputs_builder.request_incidence(sympt_props, age_groups)
+    outputs_builder.request_incidence(compartments, age_groups, clinical_strata, strain_strata)
     outputs_builder.request_notifications(
-        params.prop_symptomatic_infections_notified,
         params.time_from_onset_to_event.notification,
-        model.times,
-        age_groups
+        model.times
     )
-    outputs_builder.request_hospitalisations(
-        params.age_stratification.prop_hospital,
-        params.immunity_stratification.hospital_risk_reduction,
-        params.time_from_onset_to_event.hospitalisation,
-        model.times,
-        age_groups
-    )
+    # outputs_builder.request_hospitalisations(
+    #     params.age_stratification.prop_hospital,
+    #     params.immunity_stratification.hospital_risk_reduction,
+    #     params.time_from_onset_to_event.hospitalisation,
+    #     model.times,
+    #     age_groups
+    # )
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

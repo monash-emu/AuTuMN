@@ -138,17 +138,17 @@ immunity_stratification:
     high: .8
     low: .5
 
-time_from_onset_to_event:
+time_from_onset_to_event:  # using time of symptom onset as reference
   notification:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 7.
+      mean: 3.
   hospitalisation:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 7.
+      mean: 5.
 #  icu_admission:
 #    distribution: gamma
 #    parameters:
@@ -171,8 +171,6 @@ time_from_onset_to_event:
 #    parameters:
 #      shape: 5.
 #      mean: 7.
-
-prop_symptomatic_infections_notified: .2
 
 activate_random_process: True
 random_process: null

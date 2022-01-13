@@ -1,7 +1,11 @@
-import numpy
 from typing import Callable, Dict
+from datetime import timedelta
+
+import numpy
 
 from autumn.models.covid_19.parameters import Sojourn
+from autumn.tools.utils.time import EpochConverter
+from autumn.models.covid_19.constants import BASE_DATETIME
 
 
 def calc_compartment_periods(sojourn: Sojourn) -> Dict[str, float]:
@@ -47,3 +51,11 @@ def get_seasonal_forcing(period: float, shift: float, forcing_magnitude: float, 
         return numpy.cos((time - shift) * 2. * numpy.pi / period) * amplitude + average_value
 
     return seasonal_forcing
+
+def get_epoch_converter() -> EpochConverter:
+    """Return an instance of a conversion class between the reference datetime and floating point offsets
+
+    Returns:
+        EpochConverter: The converter
+    """
+    return EpochConverter(BASE_DATETIME, timedelta(days=1))

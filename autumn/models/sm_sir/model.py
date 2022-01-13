@@ -190,12 +190,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Apply clinical stratification - must come after age stratification if asymptomatic props being used
     """
+    detect_prop = params.detect_prop
+    is_undetected = callable(detect_prop) or detect_prop < 1.0
+    if sympt_props:
+        msg = "Attempted to apply differential symptomatic proportions by age, but model not age stratified"
+        model_stratifications = [model._stratifications[i].name for i in range(len(model._stratifications))]
+        assert "agegroup" in model_stratifications, msg
 
-    clinical_strat = get_clinical_strat(
-        compartments, age_groups, infectious_entry_flow, params.detect_prop, sympt_props
-    )
-    model.stratify_with(clinical_strat)
-    clinical_strata = clinical_strat.strata
+    if is_undetected or sympt_props:
+        clinical_strat = get_clinical_strat(
+            compartments, params, age_groups, infectious_entry_flow, detect_prop, is_undetected, sympt_props
+        )
+        model.stratify_with(clinical_strat)
+        clinical_strata = clinical_strat.strata
+    else:
+        clinical_strata = None
 
     """
     Apply strains stratification

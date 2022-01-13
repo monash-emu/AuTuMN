@@ -14,6 +14,8 @@ age_groups:
 
 ref_mixing_iso3: GBR
 
+testing_to_detection: null
+
 population:
   region: null
   year: 2020
@@ -26,7 +28,7 @@ time:
 contact_rate: 0.1
 infectious_seed: 1
 
-detect_prop: 1.
+detect_prop: 0.5
 
 sojourns:
   active:

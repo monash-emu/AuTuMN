@@ -316,6 +316,7 @@ class Parameters:
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
     detect_prop: float
+    testing_to_detection: Optional[TestingToDetection]
 
     prop_symptomatic_infections_notified: float
     time_from_onset_to_event: TimeToEvent

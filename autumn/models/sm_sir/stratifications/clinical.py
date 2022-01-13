@@ -1,12 +1,15 @@
 from typing import List, Union
 
+
 from summer import Stratification, Multiply
 from autumn.models.sm_sir.constants import ClinicalStratum
 from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
+from autumn.models.sm_sir.parameters import Parameters
 
 
 def get_clinical_strat(
         compartments: List[str],
+        params: Parameters,
         age_groups: List[int],
         infectious_entry_flow: str,
         detect_prop: float,
@@ -19,6 +22,7 @@ def get_clinical_strat(
 
     Args:
         compartments: Unstratified model compartment types
+        params: All model parameters
         age_groups: Modelled age groups
         infectious_entry_flow: The name of the flow that takes people into the (first) infectious compartment(s)
         detect_prop: Proportion of symptomatic cases detected
@@ -40,10 +44,10 @@ def get_clinical_strat(
     if is_undetected:
         clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
 
-        cdr_func = get_cdr_func(detect_prop)
+        cdr_func = get_cdr_func(detect_prop, params)
 
-        def non_detect_func(time):
-            return 1.0 - cdr_func(time)
+        def non_detect_func(time, processes):
+            return 1.0 - cdr_func(time, processes)
 
     # Prepare for including asymptomatic cases
     if sympt_props:
@@ -60,11 +64,11 @@ def get_clinical_strat(
 
             if is_undetected:
 
-                def abs_cdr_func(time):
-                    return cdr_func(time) * sympt_prop
+                def abs_cdr_func(time, processes):
+                    return cdr_func(time, processes) * sympt_prop
 
-                def abs_non_detect_func(time):
-                    return non_detect_func(time) * sympt_prop
+                def abs_non_detect_func(time, processes):
+                    return non_detect_func(time, processes) * sympt_prop
 
                 adjustments = {
                     ClinicalStratum.ASYMPT: Multiply(asympt_prop),

@@ -1,18 +1,28 @@
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 
 
-def get_cdr_func(detect_prop: float):
+def get_cdr_func(detect_prop: float, params):
     """
-    Just need to replace this with the actual function, that will be equivalent to the old Covid model
 
     Args:
         detect_prop: Currently just a single value representing the case detection rate over time
+        params:
 
     Returns:
         The case detection rate function of time
 
     """
 
-    def cdr_func(time):
-        return detect_prop
+    testing_params = params.testing_to_detection
+    if testing_params:
+        pop_params = params.population
+        cdr_func = find_cdr_function_from_test_data(
+            testing_params, params.country.iso3, pop_params.region, pop_params.year
+        )
+
+    else:
+
+        def cdr_func(time, processes):
+            return detect_prop
 
     return cdr_func

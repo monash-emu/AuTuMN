@@ -245,13 +245,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.time_from_onset_to_event.notification,
         model.times
     )
-    # outputs_builder.request_hospitalisations(
-    #     params.age_stratification.prop_hospital,
-    #     params.immunity_stratification.hospital_risk_reduction,
-    #     params.time_from_onset_to_event.hospitalisation,
-    #     model.times,
-    #     age_groups
-    # )
+    outputs_builder.request_hospitalisations(
+        params.age_stratification.prop_hospital,
+        params.immunity_stratification.hospital_risk_reduction,
+        params.time_from_onset_to_event.hospitalisation,
+        model.times,
+        age_groups
+    )
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

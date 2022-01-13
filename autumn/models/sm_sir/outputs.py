@@ -37,8 +37,11 @@ class SmSirOutputsBuilder(OutputsBuilder):
         clinical_strata = [""] if not clinical_strata else clinical_strata
         strain_strata = [""] if not strain_strata else strain_strata
         detected_incidence_sources = []
+        incidence_sympt_sources_by_age_and_immunity = {}
         for agegroup in age_groups:
+            incidence_sympt_sources_by_age_and_immunity[agegroup] = {}
             for immunity_stratum in IMMUNITY_STRATA:
+                incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum] = []
                 for clinical_stratum in clinical_strata:
                     for strain in strain_strata:
                         output_name = f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
@@ -59,10 +62,22 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         if clinical_stratum in ["", ClinicalStratum.DETECT]:
                             detected_incidence_sources.append(output_name)
 
+                        if clinical_stratum in ["", ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]:
+                            incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum].append(output_name)
+
+        # Compute detected incidence to prepare for notifications calculations
         self.model.request_aggregate_output(
             name="ever_detected_incidence",
             sources=detected_incidence_sources
         )
+
+        # Compute symptomatic incidence by age and immunity status to prepare for hospital outputs calculations
+        for agegroup in age_groups:
+            for immunity_stratum in IMMUNITY_STRATA:
+                self.model.request_aggregate_output(
+                    name=f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}",
+                    sources=incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum]
+                )
 
     def request_notifications(
             self, time_from_onset_to_notification: TimeDistribution, model_times: np.ndarray
@@ -128,8 +143,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 self.model.request_function_output(
                     name=output_name,
                     sources=[f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
-                    func=hospital_admissions_func,
-                    save_results=False
+                    func=hospital_admissions_func
                 )
 
         # Request aggregated hospital admissions

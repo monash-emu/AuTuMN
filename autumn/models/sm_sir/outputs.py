@@ -4,59 +4,41 @@ import numpy as np
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction
-from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum
+from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment
 
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
-    def request_incidence(self, props_symptomatic: List[float], age_groups: List[int]):
+    def request_incidence(self, compartments, age_groups, clinical_strata):
         """
-        Calculate incident infections. Will also calculate symptomatic incidence to simplify the calculations of
-        notifications and hospitalisations.
+        Calculate incident disease cases. This is associated with the transition to the first state where individuals are
+        potentially symptomatic.
 
         Args:
-            props_symptomatic: List of the same length as age_groups
-            age_groups: List of the age groups' starting breakpoints
-
+            compartments: list of model compartment names (unstratified)
         """
 
-        self.model.request_output_for_flow(name="incidence", flow_name=FlowName.INFECTION)
+        # Determine what flow will be used to track disease incidence
+        if Compartment.INFECTIOUS_LATE in compartments:
+            incidence_flow = FlowName.WITHIN_INFECTIOUS
+        elif Compartment.EXPOSED in compartments:
+            incidence_flow = FlowName.PROGRESSION
+        else:
+            incidence_flow = FlowName.INFECTION
+
+        self.model.request_output_for_flow(name="incidence", flow_name=incidence_flow)
 
         """
-        Stratified by age group and immunity status
+        Stratified by age, clinical and immunity status
         """
-
-        # First calculate all incident cases, including asymptomatic
-        self.request_double_stratified_output_for_flow(
-            FlowName.INFECTION,
-            [str(group) for group in age_groups],
-            "agegroup",
-            IMMUNITY_STRATA,
-            "immunity",
-            name_stem="incidence"
-        )
-
-        # Then calculate incident symptomatic cases
-        for i_age, agegroup in enumerate(age_groups):
-            for immunity_stratum in IMMUNITY_STRATA:
-                self.model.request_function_output(
-                    name=f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}",
-                    func=make_incidence_sympt_func(props_symptomatic[i_age]),
-                    sources=[f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
-                    save_results=False
-                )
-
-        # Stratified by age group (by aggregating double stratified outputs)
         for agegroup in age_groups:
-            for suffix in ["", "_sympt"]:
-                sources = [
-                    f"incidence{suffix}Xagegroup_{agegroup}Ximmunity_{immunity_stratum}" for
-                    immunity_stratum in IMMUNITY_STRATA
-                ]
-                self.model.request_aggregate_output(
-                    name=f"incidence{suffix}Xagegroup_{agegroup}",
-                    sources=sources
-                )
+            for clinical_stratum in clinical_strata:
+                for immunity_stratum in IMMUNITY_STRATA:
+                    self.model.request_output_for_flow(
+                        name=f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Ximmunity_{immunity_stratum}",
+                        flow_name=incidence_flow,
+                        dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "immunity": immunity_stratum}
+                    )
 
     def request_notifications(
             self, prop_symptomatic_infections_notified: float, time_from_onset_to_notification: TimeDistribution,

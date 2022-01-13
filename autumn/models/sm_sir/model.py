@@ -195,6 +195,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         compartments, age_groups, infectious_entry_flow, params.detect_prop, sympt_props
     )
     model.stratify_with(clinical_strat)
+    clinical_strata = clinical_strat.strata
 
     """
     Apply strains stratification
@@ -229,20 +230,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     
     outputs_builder = SmSirOutputsBuilder(model, compartments)
-    outputs_builder.request_incidence(sympt_props, age_groups)
-    outputs_builder.request_notifications(
-        params.prop_symptomatic_infections_notified,
-        params.time_from_onset_to_event.notification,
-        model.times,
-        age_groups
-    )
-    outputs_builder.request_hospitalisations(
-        params.age_stratification.prop_hospital,
-        params.immunity_stratification.hospital_risk_reduction,
-        params.time_from_onset_to_event.hospitalisation,
-        model.times,
-        age_groups
-    )
+    outputs_builder.request_incidence(compartments, age_groups, clinical_strata)
+    # outputs_builder.request_notifications(
+    #     params.prop_symptomatic_infections_notified,
+    #     params.time_from_onset_to_event.notification,
+    #     model.times,
+    #     age_groups
+    # )
+    # outputs_builder.request_hospitalisations(
+    #     params.age_stratification.prop_hospital,
+    #     params.immunity_stratification.hospital_risk_reduction,
+    #     params.time_from_onset_to_event.hospitalisation,
+    #     model.times,
+    #     age_groups
+    # )
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

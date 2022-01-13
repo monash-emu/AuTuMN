@@ -60,11 +60,11 @@ def get_clinical_strat(
 
             if is_undetected:
 
-                def abs_cdr_func(time, processes):
-                    return cdr_func(time, processes) * sympt_prop
+                def abs_cdr_func(time, processes, age_sympt_prop=sympt_prop):
+                    return cdr_func(time, processes) * age_sympt_prop
 
-                def abs_non_detect_func(time, processes):
-                    return non_detect_func(time, processes) * sympt_prop
+                def abs_non_detect_func(time, processes, age_sympt_prop=sympt_prop):
+                    return non_detect_func(time, processes) * age_sympt_prop
 
                 adjustments = {
                     ClinicalStratum.ASYMPT: Multiply(asympt_prop),

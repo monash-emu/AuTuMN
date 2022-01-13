@@ -34,47 +34,30 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
         Fully stratified incidence outputs
         """
+        clinical_strata = [""] if not clinical_strata else clinical_strata
+        strain_strata = [""] if not strain_strata else strain_strata
         detected_incidence_sources = []
         for agegroup in age_groups:
             for immunity_stratum in IMMUNITY_STRATA:
-                if not strain_strata and not clinical_strata:
-                    output_name = f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
-                    self.model.request_output_for_flow(
-                        name=output_name,
-                        flow_name=incidence_flow,
-                        dest_strata={"agegroup": str(agegroup), "immunity": immunity_stratum}
-                    )
-                    detected_incidence_sources.append(output_name)
-                elif not strain_strata:  # model is stratified by clinical but not strain
-                    for clinical_stratum in clinical_strata:
-                        output_name = f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Ximmunity_{immunity_stratum}"
-                        self.model.request_output_for_flow(
-                            name=output_name,
-                            flow_name=incidence_flow,
-                            dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "immunity": immunity_stratum}
-                        )
-                        if clinical_stratum == ClinicalStratum.DETECT:
-                            detected_incidence_sources.append(output_name)
-                elif not clinical_strata:  # model is stratified by strain but not clinical
+                for clinical_stratum in clinical_strata:
                     for strain in strain_strata:
-                        output_name = f"incidenceXagegroup_{agegroup}Xstrain_{strain}Ximmunity_{immunity_stratum}"
+                        output_name = f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
+                        dest_strata={"agegroup": str(agegroup), "immunity": immunity_stratum}
+                        if len(clinical_stratum) > 0:
+                            output_name += f"Xclinical_{clinical_stratum}"
+                            dest_strata["clinical"] = clinical_stratum
+                        if len(strain) > 0:
+                            output_name += f"Xstrain_{strain}"
+                            dest_strata["strain"] = strain
+
                         self.model.request_output_for_flow(
                             name=output_name,
                             flow_name=incidence_flow,
-                            dest_strata={"agegroup": str(agegroup), "strain":strain, "immunity": immunity_stratum}
+                            dest_strata=dest_strata
                         )
-                        detected_incidence_sources.append(output_name)
-                else:  # model is stratified by clinical and strain
-                    for clinical_stratum in clinical_strata:
-                        for strain in strain_strata:
-                            output_name = f"incidenceXagegroup_{agegroup}Xclinical_{clinical_stratum}Xstrain_{strain}Ximmunity_{immunity_stratum}"
-                            self.model.request_output_for_flow(
-                                name=output_name,
-                                flow_name=incidence_flow,
-                                dest_strata={"agegroup": str(agegroup), "clinical": clinical_stratum, "strain":strain, "immunity": immunity_stratum}
-                            )
-                            if clinical_stratum == ClinicalStratum.DETECT:
-                                detected_incidence_sources.append(output_name)
+
+                        if clinical_stratum in ["", ClinicalStratum.DETECT]:
+                            detected_incidence_sources.append(output_name)
 
         self.model.request_aggregate_output(
             name="ever_detected_incidence",

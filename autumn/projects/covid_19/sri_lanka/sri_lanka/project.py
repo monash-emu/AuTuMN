@@ -1,4 +1,5 @@
 import numpy as np
+import datetime as dt
 from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths, \
     use_tuned_proposal_sds
@@ -9,7 +10,10 @@ from autumn.tools.calibration.targets import (
     get_dispersion_priors_for_gaussian_targets,
 )
 from autumn.models.covid_19 import base_params, build_model
+from autumn.models.covid_19.utils import get_epoch_converter
 from autumn.settings import Region, Models
+
+ec = get_epoch_converter()
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_all_scenario_dicts
@@ -25,8 +29,11 @@ scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
-notifications_ts = ts_set["notifications"].rolling(7).mean().loc[350::7]
-death_ts = ts_set["infection_deaths"].loc[350:]
+
+targets_start = dt.datetime(2020,12,15)
+
+notifications_ts = ts_set["notifications"].rolling(7).mean().loc[targets_start::7]
+death_ts = ts_set["infection_deaths"].loc[targets_start:]
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(death_ts),
@@ -38,14 +45,14 @@ priors = [
     *get_dispersion_priors_for_gaussian_targets(targets),
     # Regional parameters
     UniformPrior("contact_rate", [0.024, 0.027]),
-    UniformPrior("infectious_seed", [275.0, 450.0]),
+    UniformPrior("infectious_seed", ec.dtf(["2020-10-01", "2021-03-25"])),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.025]),
     UniformPrior("infection_fatality.multiplier", [0.09, 0.13]),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [370, 410]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", ec.dtf(["2021-01-04", "2021-02-13"])),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [3.2, 4.5]),
-    UniformPrior("voc_emergence.delta.start_time", [475, 530]),
+    UniformPrior("voc_emergence.delta.start_time", ec.dtf(["2021-04-19", "2021-06-13"])),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [8.5, 11.5]),
 ]
 

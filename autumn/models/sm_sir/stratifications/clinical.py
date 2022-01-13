@@ -1,13 +1,35 @@
 from typing import List, Union
 
+from summer.compute import ComputedValueProcessor
+from summer import Stratification, Multiply, CompartmentalModel
 
-from summer import Stratification, Multiply
 from autumn.models.sm_sir.constants import ClinicalStratum
 from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
 from autumn.models.sm_sir.parameters import Parameters
 
 
+class FunctionOfTime(ComputedValueProcessor):
+    """
+    Very basic processor that just stores a time-varying function.
+    """
+
+    def __init__(self, function_of_time: callable):
+        """
+        Initialise with just the function of time.
+
+        Args:
+            function_of_time: The function
+
+        """
+
+        self.function_of_time = function_of_time
+
+    def process(self, compartment_values, computed_values, time):
+        return self.function_of_time(time)
+
+
 def get_clinical_strat(
+        model: CompartmentalModel,
         compartments: List[str],
         params: Parameters,
         age_groups: List[int],
@@ -44,6 +66,8 @@ def get_clinical_strat(
     if is_undetected:
         clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
         cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
+        model.add_computed_value_process("cdr", FunctionOfTime(cdr_func))
+        model.add_computed_value_process("undetected_prop", FunctionOfTime(non_detect_func))
 
     # Prepare for including asymptomatic cases
     if sympt_props:

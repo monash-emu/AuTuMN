@@ -98,7 +98,7 @@ class Sojourns(BaseModel):
     """
 
     active: CompartmentSojourn
-    exposed: Optional[CompartmentSojourn]
+    latent: Optional[CompartmentSojourn]
 
 
 class MixingLocation(BaseModel):

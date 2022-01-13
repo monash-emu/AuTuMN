@@ -156,11 +156,48 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Request aggregated hospital occupancy
         probas_stay_greater_than = precompute_probas_stay_greater_than(hospital_stay_duration, model_times)
-        hospital_occupancy_func = make_calc_hospital_occupancy_func(probas_stay_greater_than)
+        hospital_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
         self.model.request_function_output(
             name="hospital_occupancy",
             sources=["hospital_admissions"],
             func=hospital_occupancy_func
+        )
+
+    def request_icu_outputs(
+        self,
+        prop_icu_among_hospitalised: float,
+        time_from_hospitalisation_to_icu: TimeDistribution,
+        icu_stay_duration: TimeDistribution,
+        model_times: np.ndarray
+    ):
+        """
+        Request ICU-related outputs.
+
+        Args:
+            prop_icu_among_hospitalised: Proportion ever requiring ICU stay among hospitalised cases (float)
+            time_from_hospitalisation_to_icu: Details of the statistical distribution for the time to ICU admission
+            icu_stay_duration: Details of the statistical distribution for ICU stay duration
+            model_times: The model evaluation times
+        """
+
+        # Pre-compute the probabilities of event occurrence within each time interval between model times
+        interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_icu, model_times)
+
+        # Request ICU admissions
+        icu_admissions_func = make_calc_icu_admissions_func(prop_icu_among_hospitalised, interval_distri_densities)
+        self.model.request_function_output(
+            name="icu_admissions",
+            sources=["hospital_admissions"],
+            func=icu_admissions_func
+        )
+
+        # Request ICU occupancy
+        probas_stay_greater_than = precompute_probas_stay_greater_than(icu_stay_duration, model_times)
+        icu_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
+        self.model.request_function_output(
+            name="icu_occupancy",
+            sources=["icu_admissions"],
+            func=icu_occupancy_func
         )
 
     def request_random_process_outputs(self,):
@@ -305,10 +342,19 @@ def make_calc_hospital_admissions_func(hospital_risk, cdf_gaps):
     return hospital_admissions_func
 
 
-def make_calc_hospital_occupancy_func(probas_stay_greater_than):
+def make_calc_icu_admissions_func(icu_risk, cdf_gaps):
 
-    def hospital_occupancy_func(hospital_admissions):
-        hospital_occupancy = apply_convolution_for_occupancy(hospital_admissions, probas_stay_greater_than)
-        return hospital_occupancy
+    def icu_admissions_func(hospital_admission):
+        icu_admissions = apply_convolution_for_event(hospital_admission, cdf_gaps, icu_risk)
+        return icu_admissions
 
-    return hospital_occupancy_func
+    return icu_admissions_func
+
+
+def make_calc_occupancy_func(probas_stay_greater_than):
+
+    def occupancy_func(admissions):
+        occupancy = apply_convolution_for_occupancy(admissions, probas_stay_greater_than)
+        return occupancy
+
+    return occupancy_func

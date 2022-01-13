@@ -283,11 +283,12 @@ class TimeDistribution(BaseModel):
 class TimeToEvent(BaseModel):
     notification: TimeDistribution
     hospitalisation: TimeDistribution
+    icu_admission: TimeDistribution
 
 
 class HospitalStay(BaseModel):
     hospital_all: TimeDistribution
-    # icu: TimeDistribution
+    icu: TimeDistribution
 
 
 class RandomProcess(BaseModel):
@@ -325,6 +326,7 @@ class Parameters:
 
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay
+    prop_icu_among_hospitalised: float
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification

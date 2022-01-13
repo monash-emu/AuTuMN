@@ -253,6 +253,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.times,
         age_groups
     )
+    outputs_builder.request_icu_outputs(
+        params.prop_icu_among_hospitalised,
+        params.time_from_onset_to_event.icu_admission,
+        params.hospital_stay.icu,
+        model.times
+    )
+
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

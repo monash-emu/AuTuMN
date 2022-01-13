@@ -317,7 +317,6 @@ class Parameters:
     mobility: Mobility
     detect_prop: float
 
-    prop_symptomatic_infections_notified: float
     time_from_onset_to_event: TimeToEvent
 
     age_stratification: AgeStratification

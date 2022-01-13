@@ -8,24 +8,24 @@ from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
 from autumn.models.sm_sir.parameters import Parameters
 
 
-class FunctionOfTime(ComputedValueProcessor):
+class FunctionWrapper(ComputedValueProcessor):
     """
     Very basic processor that just stores a time-varying function.
     """
 
-    def __init__(self, function_of_time: callable):
+    def __init__(self, function_to_wrap: callable):
         """
         Initialise with just the function of time.
 
         Args:
-            function_of_time: The function
+            function_to_wrap: The function
 
         """
 
-        self.function_of_time = function_of_time
+        self.adjustment_wrapper = function_to_wrap
 
     def process(self, compartment_values, computed_values, time):
-        return self.function_of_time(time)
+        return self.adjustment_wrapper(time, computed_values)
 
 
 def get_clinical_strat(
@@ -66,8 +66,8 @@ def get_clinical_strat(
     if is_undetected:
         clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
         cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
-        model.add_computed_value_process("cdr", FunctionOfTime(cdr_func))
-        model.add_computed_value_process("undetected_prop", FunctionOfTime(non_detect_func))
+        model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
+        model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
 
     # Prepare for including asymptomatic cases
     if sympt_props:
@@ -84,16 +84,22 @@ def get_clinical_strat(
 
             if is_undetected:
 
-                def abs_cdr_func(time, processes):
-                    return cdr_func(time, processes) * sympt_prop
+                def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
+                    return cdr_func(time, computed_values) * age_sympt_prop
 
-                def abs_non_detect_func(time, processes):
-                    return non_detect_func(time, processes) * sympt_prop
+                def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
+                    return non_detect_func(time, computed_values) * age_sympt_prop
+
+                model.add_computed_value_process("abs_cdr_func", FunctionWrapper(abs_cdr_func))
+                model.add_computed_value_process("abs_non_detect_func", FunctionWrapper(abs_non_detect_func))
+
+                abs_undetected_func = lambda time, computed_values: computed_values["abs_non_detect_func"]
+                abs_detected_func = lambda time, computed_values: computed_values["abs_cdr_func"]
 
                 adjustments = {
                     ClinicalStratum.ASYMPT: Multiply(asympt_prop),
-                    ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
-                    ClinicalStratum.DETECT: Multiply(abs_cdr_func),
+                    ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_undetected_func),
+                    ClinicalStratum.DETECT: Multiply(abs_detected_func),
                 }
 
             else:
@@ -109,9 +115,12 @@ def get_clinical_strat(
 
     # No need for loop over age if symptomatic status not included
     else:
+        undetected_prop_func = lambda time, computed_values: computed_values["undetected_prop"]
+        detected_prop_func = lambda time, computed_values: computed_values["cdr"]
+
         adjustments = {
-            ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_func),
-            ClinicalStratum.DETECT: Multiply(cdr_func),
+            ClinicalStratum.SYMPT_NON_DETECT: Multiply(undetected_prop_func),
+            ClinicalStratum.DETECT: Multiply(detected_prop_func),
         }
         clinical_strat.set_flow_adjustments(
             infectious_entry_flow,

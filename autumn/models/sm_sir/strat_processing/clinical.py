@@ -26,10 +26,10 @@ def get_cdr_func(detect_prop: float, params):
 
     else:
 
-        def cdr_func(time, processes):
+        def cdr_func(time, computed_values):
             return detect_prop
 
-    def non_detect_func(time, processes):
-        return 1.0 - cdr_func(time, processes)
+    def non_detect_func(time, computed_values):
+        return 1.0 - cdr_func(time, computed_values)
 
     return cdr_func, non_detect_func

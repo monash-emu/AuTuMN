@@ -24,7 +24,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Determine what flow will be used to track disease incidence
         if Compartment.INFECTIOUS_LATE in compartments:
             incidence_flow = FlowName.WITHIN_INFECTIOUS
-        elif Compartment.EXPOSED in compartments:
+        elif Compartment.LATENT in compartments:
             incidence_flow = FlowName.PROGRESSION
         else:
             incidence_flow = FlowName.INFECTION

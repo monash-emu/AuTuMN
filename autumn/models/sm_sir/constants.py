@@ -1,8 +1,8 @@
 
 class Compartment:
     SUSCEPTIBLE = "susceptible"
-    EXPOSED = "exposed"
-    EXPOSED_LATE = "exposed_late"
+    LATENT = "latent"
+    LATENT_LATE = "latent_late"
     INFECTIOUS = "infectious"
     INFECTIOUS_LATE = "infectious_late"
     RECOVERED = "recovered"
@@ -10,7 +10,7 @@ class Compartment:
 
 class FlowName:
     INFECTION = "infection"
-    WITHIN_EXPOSED = "within_exposed"
+    WITHIN_LATENT = "within_latent"
     PROGRESSION = "progression"
     WITHIN_INFECTIOUS = "within_infectious"
     RECOVERY = "recovery"

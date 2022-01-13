@@ -160,12 +160,13 @@ time_from_onset_to_event:  # using time of symptom onset as reference
 #      shape: 5.
 #      mean: 7.
 #
-#hospital_stay:
-#  hospital_all:
-#    distribution: gamma
-#    parameters:
-#      shape: 5.
-#      mean: 7.
+
+hospital_stay:
+  hospital_all:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 7.
 #  icu:
 #    distribution: gamma
 #    parameters:

@@ -249,6 +249,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.age_stratification.prop_hospital,
         params.immunity_stratification.hospital_risk_reduction,
         params.time_from_onset_to_event.hospitalisation,
+        params.hospital_stay.hospital_all,
         model.times,
         age_groups
     )

@@ -107,6 +107,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         prop_hospital_among_sympt: List[float],
         hospital_risk_reduction_by_immunity: ImmunityRiskReduction,
         time_from_onset_to_hospitalisation: TimeDistribution,
+        hospital_stay_duration: TimeDistribution,
         model_times: np.ndarray,
         age_groups: List[int]
     ):
@@ -117,6 +118,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
             hospital_risk_reduction_by_immunity: Hospital risk reduction according to immunity level
             time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
+            hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
 
@@ -150,6 +152,15 @@ class SmSirOutputsBuilder(OutputsBuilder):
         self.model.request_aggregate_output(
             name="hospital_admissions",
             sources=hospital_admissions_sources
+        )
+
+        # Request aggregated hospital occupancy
+        probas_stay_greater_than = precompute_probas_stay_greater_than(hospital_stay_duration, model_times)
+        hospital_occupancy_func = make_calc_hospital_occupancy_func(probas_stay_greater_than)
+        self.model.request_function_output(
+            name="hospital_occupancy",
+            sources=["hospital_admissions"],
+            func=hospital_occupancy_func
         )
 
     def request_random_process_outputs(self,):
@@ -197,7 +208,27 @@ def precompute_density_intervals(distribution_details, model_times):
     return interval_distri_densities
 
 
-def apply_convolution(source_output: np.ndarray, density_intervals: np.ndarray, event_proba: float):
+def precompute_probas_stay_greater_than(distribution_details, model_times):
+    """
+    Calculate the probability that duration of stay is greater than every possible time interval between two model times.
+
+    Args:
+        distribution_details: User requests for the distribution type
+        model_times: The model evaluation times
+
+    Returns:
+        A list of the values of 1 - CDF for the probability distribution of interest over each time period
+        Its length is len(model_times)
+
+    """
+    distribution = build_statistical_distribution(distribution_details)
+    lags = [t - model_times[0] for t in model_times]
+    cdf_values = distribution.cdf(lags)
+    probas_stay_greater_than = 1 - cdf_values
+    return probas_stay_greater_than
+
+
+def apply_convolution_for_event(source_output: np.ndarray, density_intervals: np.ndarray, event_proba: float):
     """
     Calculate a convolved output.
 
@@ -221,6 +252,28 @@ def apply_convolution(source_output: np.ndarray, density_intervals: np.ndarray, 
     return convolved_output
 
 
+def apply_convolution_for_occupancy(source_output: np.ndarray, probas_stay_greater_than: np.ndarray):
+    """
+    Calculate a convolved output.
+
+    Args:
+        source_output: Previously computed model output on which the calculation is based
+        probas_stay_greater_than: Probability that duration of stay is greater than every possible time interval between two model times
+
+    Retuns:
+        A numpy array of the convolved output
+
+    """
+
+    convolved_output = np.zeros_like(source_output)
+    for i in range(source_output.size):
+        trunc_source_output = list(source_output[:i + 1])
+        trunc_source_output.reverse()
+        convolved_output[i] = sum([value * p_greater_than for (value, p_greater_than) in zip(trunc_source_output, probas_stay_greater_than[:i+1])])
+
+    return convolved_output
+
+
 """
 Below are a few factory functions used when declaring functions within loops. This should prevent issues.
 """
@@ -229,7 +282,7 @@ Below are a few factory functions used when declaring functions within loops. Th
 def make_calc_notifications_func(cdf_gaps):
 
     def notifications_func(detected_incidence):
-        notifications = apply_convolution(detected_incidence, cdf_gaps, 1.)
+        notifications = apply_convolution_for_event(detected_incidence, cdf_gaps, 1.)
         return notifications
 
     return notifications_func
@@ -246,7 +299,16 @@ def make_incidence_sympt_func(prop_sympt):
 def make_calc_hospital_admissions_func(hospital_risk, cdf_gaps):
 
     def hospital_admissions_func(incidence_sympt):
-        hospital_admissions = apply_convolution(incidence_sympt, cdf_gaps, hospital_risk)
+        hospital_admissions = apply_convolution_for_event(incidence_sympt, cdf_gaps, hospital_risk)
         return hospital_admissions
 
     return hospital_admissions_func
+
+
+def make_calc_hospital_occupancy_func(probas_stay_greater_than):
+
+    def hospital_occupancy_func(hospital_admissions):
+        hospital_occupancy = apply_convolution_for_occupancy(hospital_admissions, probas_stay_greater_than)
+        return hospital_occupancy
+
+    return hospital_occupancy_func

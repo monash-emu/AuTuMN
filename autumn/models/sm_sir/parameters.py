@@ -285,6 +285,11 @@ class TimeToEvent(BaseModel):
     hospitalisation: TimeDistribution
 
 
+class HospitalStay(BaseModel):
+    hospital_all: TimeDistribution
+    # icu: TimeDistribution
+
+
 class RandomProcess(BaseModel):
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
@@ -319,6 +324,7 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
 
     time_from_onset_to_event: TimeToEvent
+    hospital_stay: HospitalStay
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification

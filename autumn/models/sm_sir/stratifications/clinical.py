@@ -96,21 +96,20 @@ def get_clinical_strat(
         )
 
     # Infectiousness adjustments
-
-    asympt_infectiousness_effect = 0.5
-    isolate_infectiousness_effect = 0.5
+    asympt_effect = params.asympt_infectiousness_effect
+    isolate_effect = params.isolate_infectiousness_effect
 
     # Start from blank adjustments
     base_infectiousness = {stratum: None for stratum in clinical_strata}
 
     # Account for asymptomatics being less infectious, if they are included in the model
     if sympt_props:
-        base_infectiousness.update({ClinicalStratum.ASYMPT: Overwrite(asympt_infectiousness_effect)})
+        base_infectiousness.update({ClinicalStratum.ASYMPT: Overwrite(asympt_effect)})
 
     # Add in the effect of isolation if partial case detection is being simulated, otherwise only asymptomatic effect
     isolate_infectiousness = copy(base_infectiousness)
     if is_undetected:
-        isolate_infectiousness.update({ClinicalStratum.DETECT: Overwrite(isolate_infectiousness_effect)})
+        isolate_infectiousness.update({ClinicalStratum.DETECT: Overwrite(isolate_effect)})
 
     # Apply the isolation adjustments (which might be the same as the base) to the last infectious compartment
     clinical_strat.add_infectiousness_adjustments(comps_to_stratify[-1], isolate_infectiousness)

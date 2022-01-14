@@ -10,7 +10,7 @@ population:
   year: 2020
 
 time:
-  start: 700
+  start: 650
   end: 800
 
 activate_random_process: False
@@ -20,7 +20,7 @@ contact_rate: 0.15
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .1  # could be varied in uncertainty
+  prop_high_among_immune: .2  # varied in uncertainty
 
 voc_emergence: null
 #  delta:

@@ -13,13 +13,15 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.01, 0.02]),
-    UniformPrior("sojourns.active.total_time", [5, 12]),
+    UniformPrior("contact_rate", [0.1, 0.2]),
+    UniformPrior("sojourns.active.total_time", [5, 10]),
     UniformPrior("infectious_seed", [1, 200]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [.1, .3]),
+    UniformPrior("immunity_stratification.prop_high_among_immune", [.1, .3])
 ]
 targets = [
     NormalTarget(
-        data=ts_set["incidence"].loc[:365] #truncate_end_time(365)
+        data=ts_set["icu_occupancy"].loc[725:]
     )
 ]
 

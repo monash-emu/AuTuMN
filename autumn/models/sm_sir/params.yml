@@ -171,13 +171,13 @@ hospital_stay:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 3. # FIXME: need an estimate
+      mean: 4.5 # NSW data: https://aci.health.nsw.gov.au/__data/assets/pdf_file/0007/698785/20220112-COVID-19-Risk-Monitoring-Dashboard.pdf
 
   icu:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 7. # FIXME: need an estimate
+      mean: 4.7 # NSW data: https://aci.health.nsw.gov.au/__data/assets/pdf_file/0007/698785/20220112-COVID-19-Risk-Monitoring-Dashboard.pdf
 
 activate_random_process: True
 random_process: null

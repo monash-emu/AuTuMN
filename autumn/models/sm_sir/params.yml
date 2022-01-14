@@ -152,28 +152,31 @@ time_from_onset_to_event:  # using time of symptom onset as reference
     parameters:
       shape: 5.
       mean: 5.
-#  icu_admission:
-#    distribution: gamma
-#    parameters:
-#      shape: 5.
-#      mean: 7.
+  icu_admission:  # using time of hospitalisation as reference
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 7.
 #  death:
 #    distribution: gamma
 #    parameters:
 #      shape: 5.
 #      mean: 7.
 #
-#hospital_stay:
-#  hospital_all:
-#    distribution: gamma
-#    parameters:
-#      shape: 5.
-#      mean: 7.
-#  icu:
-#    distribution: gamma
-#    parameters:
-#      shape: 5.
-#      mean: 7.
+
+prop_icu_among_hospitalised: .20
+
+hospital_stay:
+  hospital_all:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 7.
+  icu:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 7.
 
 activate_random_process: True
 random_process: null

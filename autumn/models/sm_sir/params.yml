@@ -135,28 +135,28 @@ immunity_stratification:
   prop_high_among_immune: .5
 
   infection_risk_reduction:
-    high: .4
-    low: .1
+    high: .4  # FIXME: need an estimate
+    low: .1  # FIXME: need an estimate
   hospital_risk_reduction:
-    high: .8
-    low: .5
+    high: .8  # FIXME: need an estimate
+    low: .5  # FIXME: need an estimate
 
 time_from_onset_to_event:  # using time of symptom onset as reference
   notification:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 3.
+      mean: 3. # FIXME: need an estimate
   hospitalisation:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 5.
+      mean: 5. # FIXME: need an estimate
   icu_admission:  # using time of hospitalisation as reference
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 7.
+      mean: 2. # FIXME: need an estimate
 #  death:
 #    distribution: gamma
 #    parameters:
@@ -164,19 +164,20 @@ time_from_onset_to_event:  # using time of symptom onset as reference
 #      mean: 7.
 #
 
-prop_icu_among_hospitalised: .20
+prop_icu_among_hospitalised: .08  # NSW data
 
 hospital_stay:
   hospital_all:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 7.
+      mean: 3. # FIXME: need an estimate
+
   icu:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 7.
+      mean: 7. # FIXME: need an estimate
 
 activate_random_process: True
 random_process: null

@@ -132,14 +132,14 @@ mobility:
 # parameters related to immunity stratification (three strata: none / high / low)
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .5
+  prop_high_among_immune: .1
 
-  infection_risk_reduction:
-    high: .4  # FIXME: need an estimate
-    low: .1  # FIXME: need an estimate
-  hospital_risk_reduction:
-    high: .8  # FIXME: need an estimate
-    low: .5  # FIXME: need an estimate
+  infection_risk_reduction:  # FIXME check source with Dave (that's using the figure showing VE against symptomatic disease)
+    high: .60
+    low: 0.
+  hospital_risk_reduction:  # based on UKHSA report (13/11/22)
+    high: .90
+    low: .50
 
 time_from_onset_to_event:  # using time of symptom onset as reference
   notification:

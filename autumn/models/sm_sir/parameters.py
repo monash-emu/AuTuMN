@@ -317,13 +317,6 @@ class VocComponent(BaseModel):
         return values
 
 
-class AgeSpecificRiskMultiplier(BaseModel):
-    age_categories: List[str]
-    adjustment_start_time: Optional[int]
-    adjustment_end_time: Optional[int]
-    contact_rate_multiplier: float
-
-
 class TimeDistribution(BaseModel):
     distribution: str
     parameters: dict

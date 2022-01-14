@@ -92,29 +92,29 @@ testing_to_detection:
 
 
 # Vaccination-related
-# All information provided here are HISTORICAL. Last update: 31st Oct, 2021.
+# All information provided here are HISTORICAL. Last update: 15th Jan, 2022.
 # All figures calculated below are available at: https://bit.ly/Hanoi_vaccination_status
 # To illustrate the vaccination for under 18, we illustrate the population in three parts: over 20, 15 - 20, and under 15
 # Before 15/11, only individuals over 18 are fully vaccinated.
 vaccination:
   one_dose:
-    ve_sympt_covid: 0.5122
+    ve_sympt_covid: 0.5226
     ve_prop_prevent_infection: 0.9 # one dose AZ has a quite lower efficacy towards infection
-    ve_infectiousness_ratio: 0.3125 # 0.0861 / 0.2758
-    ve_hospitalisation: 0.8107
-    ve_death: 0.8922
+    ve_infectiousness_ratio: 0.3292 # 0.0931 / 0.2828
+    ve_hospitalisation: 0.8249
+    ve_death: 0.9043
   fully_vaccinated:
-    ve_sympt_covid: 0.6474 # weighted average
+    ve_sympt_covid: 0.6616 # weighted average
     ve_prop_prevent_infection: 0.95 # high proportion with all types of vaccines
-    ve_infectiousness: 0.2758
-    ve_hospitalisation: 0.8856 # weighted average
-    ve_death: 0.9004 # weighted average
+    ve_infectiousness: 0.2828
+    ve_hospitalisation: 0.8993 # weighted average
+    ve_death: 0.9138 # weighted average
   part_waned:
-    ve_sympt_covid: 0.4879
-    ve_prop_prevent_infection: 0.95
-    ve_infectiousness: 0.2285
-    ve_hospitalisation: 0.7453
-    ve_death: 0.7654
+    ve_sympt_covid: 0.4984
+    ve_prop_prevent_infection: 0.95 # high proportion with all types of vaccines
+    ve_infectiousness: 0.2348
+    ve_hospitalisation: 0.7600
+    ve_death: 0.7793
   fully_waned:
     ve_sympt_covid: 0.00
     ve_prop_prevent_infection: 0.00

@@ -1,14 +1,39 @@
 from typing import List, Union
 from copy import copy
 
-from summer import Stratification, Multiply, Overwrite
+from summer import Stratification, Multiply, Overwrite, CompartmentalModel
+from summer.compute import ComputedValueProcessor
 
 from autumn.models.sm_sir.constants import ClinicalStratum, Compartment
 from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
 from autumn.models.sm_sir.parameters import Parameters
 
 
+class FunctionWrapper(ComputedValueProcessor):
+    """
+    Very basic processor that wraps a time/computed values function
+    of the type used in flow and adjusters
+
+    FIXME:
+    This is such a basic use case, it probably belongs in summer
+
+    """
+
+    def __init__(self, function_to_wrap: callable):
+        """
+        Initialise with just the param function
+        Args:
+            function_to_wrap: The function
+        """
+
+        self.wrapped_function = function_to_wrap
+
+    def process(self, compartment_values, computed_values, time):
+        return self.wrapped_function(time, computed_values)
+
+
 def get_clinical_strat(
+        model: CompartmentalModel,
         compartments: List[str],
         params: Parameters,
         age_groups: List[int],
@@ -45,6 +70,8 @@ def get_clinical_strat(
     if is_undetected:
         clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
         cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
+        model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
+        model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
 
     # Prepare for including asymptomatic cases
     if sympt_props:
@@ -61,11 +88,11 @@ def get_clinical_strat(
 
             if is_undetected:
 
-                def abs_cdr_func(time, processes, age_sympt_prop=sympt_prop):
-                    return cdr_func(time, processes) * age_sympt_prop
+                def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
+                    return computed_values["cdr"] * age_sympt_prop
 
-                def abs_non_detect_func(time, processes, age_sympt_prop=sympt_prop):
-                    return non_detect_func(time, processes) * age_sympt_prop
+                def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
+                    return computed_values["undetected_prop"] * age_sympt_prop
 
                 adjustments = {
                     ClinicalStratum.ASYMPT: Multiply(asympt_prop),

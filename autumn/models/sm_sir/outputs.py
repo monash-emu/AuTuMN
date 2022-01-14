@@ -34,6 +34,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
         Fully stratified incidence outputs
         """
+
         clinical_strata = [""] if not clinical_strata else clinical_strata
         strain_strata = [""] if not strain_strata else strain_strata
         detected_incidence_sources = []
@@ -45,7 +46,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 for clinical_stratum in clinical_strata:
                     for strain in strain_strata:
                         output_name = f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
-                        dest_strata={"agegroup": str(agegroup), "immunity": immunity_stratum}
+                        dest_strata = {"agegroup": str(agegroup), "immunity": immunity_stratum}
                         if len(clinical_stratum) > 0:
                             output_name += f"Xclinical_{clinical_stratum}"
                             dest_strata["clinical"] = clinical_stratum
@@ -178,6 +179,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             time_from_hospitalisation_to_icu: Details of the statistical distribution for the time to ICU admission
             icu_stay_duration: Details of the statistical distribution for ICU stay duration
             model_times: The model evaluation times
+
         """
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
@@ -258,6 +260,7 @@ def precompute_probas_stay_greater_than(distribution_details, model_times):
         Its length is len(model_times)
 
     """
+
     distribution = build_statistical_distribution(distribution_details)
     lags = [t - model_times[0] for t in model_times]
     cdf_values = distribution.cdf(lags)
@@ -274,7 +277,7 @@ def apply_convolution_for_event(source_output: np.ndarray, density_intervals: np
         density_intervals: Overall probability distribution of event occurring at a particular time given that it occurs
         event_proba: Total probability of the event occurring
 
-    Retuns:
+    Returns:
         A numpy array of the convolved output
 
     """
@@ -283,7 +286,9 @@ def apply_convolution_for_event(source_output: np.ndarray, density_intervals: np
     for i in range(source_output.size):
         trunc_source_output = list(source_output[:i])
         trunc_source_output.reverse()
-        convolution_sum = sum([value * density_interval for (value, density_interval) in zip(trunc_source_output, density_intervals[:i])])
+        trunc_intervals = density_intervals[:i]
+        components = [value * density_interval for value, density_interval in zip(trunc_source_output, trunc_intervals)]
+        convolution_sum = sum(components)
         convolved_output[i] = event_proba * convolution_sum
 
     return convolved_output
@@ -297,18 +302,20 @@ def apply_convolution_for_occupancy(source_output: np.ndarray, probas_stay_great
         source_output: Previously computed model output on which the calculation is based
         probas_stay_greater_than: Probability that duration of stay is greater than every possible time interval between two model times
 
-    Retuns:
+    Returns:
         A numpy array of the convolved output
 
     """
 
-    convolved_output = np.zeros_like(source_output)
+    convolved_outputs = np.zeros_like(source_output)
     for i in range(source_output.size):
         trunc_source_output = list(source_output[:i + 1])
+        trunc_probas = probas_stay_greater_than[:i + 1]
         trunc_source_output.reverse()
-        convolved_output[i] = sum([value * p_greater_than for (value, p_greater_than) in zip(trunc_source_output, probas_stay_greater_than[:i+1])])
+        components = [value * p_greater_than for value, p_greater_than in zip(trunc_source_output, trunc_probas)]
+        convolved_outputs[i] = sum(components)
 
-    return convolved_output
+    return convolved_outputs
 
 
 """

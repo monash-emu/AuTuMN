@@ -208,7 +208,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
 def build_statistical_distribution(distribution_details: TimeDistribution):
     """
-    Generate a scipy statistical distribution object that can then be used multiple times to evaluate the cdf
+    Generate a scipy statistical distribution object that can then be used multiple times to evaluate the cdf.
+    Available named distributions should be listed in the parameters.py file, currently only gamma, will be extended.
 
     Args:
         distribution_details: User request parameters that define the distribution
@@ -222,8 +223,6 @@ def build_statistical_distribution(distribution_details: TimeDistribution):
         shape = distribution_details.parameters["shape"]
         scale = distribution_details.parameters["mean"] / shape
         return stats.gamma(a=shape, scale=scale)
-    else:
-        raise ValueError(f"{distribution_details.distribution} distribution not supported")
 
 
 def precompute_density_intervals(distribution_details, model_times):

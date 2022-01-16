@@ -321,6 +321,13 @@ class TimeDistribution(BaseModel):
     distribution: str
     parameters: dict
 
+    @validator("distribution", allow_reuse=True)
+    def check_distribution(distribution):
+        supported_distributions = ("gamma",)
+        msg = f"Requested time distribution not supported: {distribution}"
+        assert distribution in supported_distributions, msg
+        return distribution
+
 
 class TimeToEvent(BaseModel):
     notification: TimeDistribution

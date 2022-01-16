@@ -245,7 +245,7 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     logger.info("Adding 'targets' table")
     targets_data = []
     for target in project.calibration.targets:
-         targets_data.append([{'key': target.data.name, 'times': idx, 'value': v} for idx,v in target.data.iteritems()])
+         targets_data += [{'key': target.data.name, 'times': idx, 'value': v} for idx,v in target.data.iteritems()]
 
     targets_df = pd.DataFrame(targets_data)
     target_db.dump_df("targets", targets_df)

@@ -5,7 +5,16 @@ description: BASELINE
 country:
   iso3: PHL
 
+age_groups:
+  - 0
+  - 15
+  - 25
+  - 50
+  - 70
+
 ref_mixing_iso3: GBR
+
+testing_to_detection: null
 
 population:
   region: null
@@ -18,7 +27,19 @@ time:
 
 contact_rate: 0.1
 infectious_seed: 1
-infection_duration: 8
+
+detect_prop: 0.5
+
+asympt_infectiousness_effect: 0.5
+isolate_infectiousness_effect: 0.2
+
+sojourns:
+  active:
+    total_time: 8.
+#    proportion_early: 0.5
+#  latent:
+#    total_time: 5.
+#    proportion_early: 0.5
 
 # Age-related parameters
 age_stratification:
@@ -88,22 +109,75 @@ age_stratification:
     - 0.03203 # 75-79
     - 0.08292 # 80+
 
+is_dynamic_mixing_matrix: false
+
+mobility:
+  region: null
+  mixing: {}
+  age_mixing: null
+  npi_effectiveness: {}
+  # Mapping of Google mobility locations to Prem-specific locations
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.25
+      grocery_and_pharmacy: 0.25
+      parks: 0.25
+      transit_stations: 0.25
+  smooth_google_data: false  # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  microdistancing: {}
 
 # parameters related to immunity stratification (three strata: none / high / low)
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .5
+  prop_high_among_immune: .1
 
-  infection_risk_reduction:
-    high: .4
-    low: .1
-  hospital_risk_reduction:
-    high: .8
-    low: .5
+  infection_risk_reduction:  # FIXME check source with Dave (that's using the figure showing VE against symptomatic disease)
+    high: .60
+    low: 0.
+  hospital_risk_reduction:  # based on UKHSA report (13/11/22)
+    high: .90
+    low: .50
 
-notification:
-  onset_to_notification_delay: 7.0
-  prop_infections_notified: .2
+time_from_onset_to_event:  # using time of symptom onset as reference
+  notification:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 3. # FIXME: need an estimate
+  hospitalisation:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 5. # FIXME: need an estimate
+  icu_admission:  # using time of hospitalisation as reference
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 2. # FIXME: need an estimate
+#  death:
+#    distribution: gamma
+#    parameters:
+#      shape: 5.
+#      mean: 7.
+#
+
+prop_icu_among_hospitalised: .08  # NSW data
+
+hospital_stay:
+  hospital_all:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 3. # South Africa data
+      
+  icu:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 4.7 # NSW data: https://aci.health.nsw.gov.au/__data/assets/pdf_file/0007/698785/20220112-COVID-19-Risk-Monitoring-Dashboard.pdf
 
 activate_random_process: True
 random_process: null

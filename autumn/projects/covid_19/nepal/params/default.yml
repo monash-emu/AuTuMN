@@ -6,8 +6,7 @@ time:
   start: 50
   end: 731
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: CHN
 
 country:
   iso3: NPL
@@ -56,7 +55,7 @@ mobility:
 voc_emergence:
   delta:
     start_time: 400
-    entry_rate: 1.
+    entry_rate: 16.
     seed_duration: 10.
 
 vaccination:

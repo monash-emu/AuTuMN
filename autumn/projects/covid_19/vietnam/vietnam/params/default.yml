@@ -7,8 +7,7 @@ time:
 country:
   iso3: VNM
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: CHN
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-4

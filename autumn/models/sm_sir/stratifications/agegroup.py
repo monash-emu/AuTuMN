@@ -3,12 +3,16 @@ import numpy as np
 
 from summer import Stratification, Multiply
 
+from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.sm_sir.parameters import Parameters
-from autumn.models.sm_sir.constants import COMPARTMENTS, AGEGROUP_STRATA, FlowName
+from autumn.models.sm_sir.constants import FlowName
 from autumn.tools.utils.utils import normalise_sequence
 
 
-def get_agegroup_strat(params: Parameters, total_pops: List[int], mixing_matrix: np.array) -> Stratification:
+def get_agegroup_strat(
+        params: Parameters, total_pops: List[int], mixing_matrices: np.array, compartments: List[str],
+        is_dynamic_matrix: bool,
+) -> Stratification:
     """
     Function to create the age group stratification object.
 
@@ -20,20 +24,24 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int], mixing_matrix:
     Args:
         params: All model parameters
         total_pops: The population distribution by age
-        mixing_matrix: The static age-specific mixing matrix
+        mixing_matrices: The static age-specific mixing matrix
+        compartments: All the model compartments
+        is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
 
     Returns:
         The age stratification summer object
 
     """
 
-    age_strat = Stratification("agegroup", AGEGROUP_STRATA, COMPARTMENTS)
+    age_strat = Stratification("agegroup", params.age_groups, compartments)
 
     # Heterogeneous mixing by age
-    age_strat.set_mixing_matrix(mixing_matrix)
+    dynamic_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, params.country)
+    final_matrix = mixing_matrices["all_locations"] if is_dynamic_matrix else dynamic_matrix
+    age_strat.set_mixing_matrix(final_matrix)
 
     # Set distribution of starting population
-    age_split_props = {agegroup: prop for agegroup, prop in zip(AGEGROUP_STRATA, normalise_sequence(total_pops))}
+    age_split_props = {str(agegroup): prop for agegroup, prop in zip(params.age_groups, normalise_sequence(total_pops))}
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group

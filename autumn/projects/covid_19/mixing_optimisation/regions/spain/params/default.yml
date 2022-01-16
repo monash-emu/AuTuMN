@@ -3,8 +3,7 @@ description: BASELINE
 country:
   iso3: ESP
 
-mixing_matrices:
-  source_iso3: ITA
+ref_mixing_iso3: ITA
 
 mobility:
   mixing:

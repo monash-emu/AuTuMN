@@ -7,12 +7,7 @@ time:
 country:
   iso3: VNM
 
-mixing_matrices:
-  source_iso3: HKG
-
-# mixing_matrices:
-  # type: extrapolated
-  # source_iso3: HKG
+ref_mixing_iso3: HKG
 
 population:
   region: Ho Chi Minh City
@@ -84,7 +79,7 @@ mobility:
 voc_emergence:
   omicron:
     start_time: 2000.
-    entry_rate: 1.
+    entry_rate: 16.
     seed_duration: 10.
     contact_rate_multiplier: 5.
     ifr_multiplier: 1.

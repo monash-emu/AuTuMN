@@ -3,8 +3,7 @@ description: BASELINE
 contact_rate: 0.0231
 infectious_seed: 552.
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: CHN
 
 time:
   start: 75
@@ -125,14 +124,14 @@ mobility:
 voc_emergence:
   alpha_beta:
     start_time: 361.73
-    entry_rate: 1.
+    entry_rate: 16.
     seed_duration: 10.
     contact_rate_multiplier: 1.59
     ifr_multiplier: 1.95
     hosp_multiplier: 1.25
   delta:
     start_time: 482.412
-    entry_rate: 1.
+    entry_rate: 16.
     seed_duration: 10.
     contact_rate_multiplier: 3.2
     ifr_multiplier: 4.75

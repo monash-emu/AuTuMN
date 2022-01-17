@@ -252,6 +252,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
     outputs_builder.request_hospitalisations(
         hospital_props,
+        params.hospital_prop_multiplier,
         params.immunity_stratification.hospital_risk_reduction,
         params.time_from_onset_to_event.hospitalisation,
         params.hospital_stay.hospital_all,
@@ -264,7 +265,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.hospital_stay.icu,
         model.times
     )
-
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

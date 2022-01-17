@@ -5,7 +5,7 @@ import numpy as np
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction
 from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, ClinicalStratum
-
+from autumn.tools.utils.utils import apply_odds_ratio_to_props
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
@@ -106,6 +106,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
     def request_hospitalisations(
         self,
         prop_hospital_among_sympt: List[float],
+        hospital_prop_multiplier: float,
         hospital_risk_reduction_by_immunity: ImmunityRiskReduction,
         time_from_onset_to_hospitalisation: TimeDistribution,
         hospital_stay_duration: TimeDistribution,
@@ -117,6 +118,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         Args:
             prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
+            hospital_prop_multiplier: Multiplier applied as an odds ratio adjustment
             hospital_risk_reduction_by_immunity: Hospital risk reduction according to immunity level
             time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
             hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
@@ -124,6 +126,9 @@ class SmSirOutputsBuilder(OutputsBuilder):
             age_groups: Modelled age group lower breakpoints
 
         """
+
+        # Asjudter hospital proportions using multiplier
+        adjusted_prop_hospital_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
 
         # Prepare a dictionary with hospital risk reduction by level of immunity
         hospital_risk_reduction = {
@@ -139,7 +144,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         hospital_admissions_sources = []
         for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
-                hospital_risk = prop_hospital_among_sympt[i_age] * (1. - hospital_risk_reduction[immunity_stratum])
+                hospital_risk = adjusted_prop_hospital_among_sympt[i_age] * (1. - hospital_risk_reduction[immunity_stratum])
                 output_name = f"hospital_admissionsXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
                 hospital_admissions_sources.append(output_name)
                 hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)

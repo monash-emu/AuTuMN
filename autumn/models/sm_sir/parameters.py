@@ -329,6 +329,7 @@ class Parameters:
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay
     prop_icu_among_hospitalised: float
+    hospital_prop_multiplier: float
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification

@@ -227,8 +227,6 @@ def build_statistical_distribution(distribution_details: TimeDistribution):
         shape = distribution_details.parameters["shape"]
         scale = distribution_details.parameters["mean"] / shape
         return stats.gamma(a=shape, scale=scale)
-    else:
-        raise ValueError(f"{distribution_details.distribution} distribution not supported")
 
 
 def precompute_density_intervals(distribution_details, model_times):

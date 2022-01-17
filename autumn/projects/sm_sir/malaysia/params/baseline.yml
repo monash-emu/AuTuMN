@@ -1,162 +1,39 @@
-description: BASELINE
+---
 
-contact_rate: 0.0231
-infectious_seed: 552.
+country:
+  iso3: MYS
 
 ref_mixing_iso3: CHN
+
+population:
+  year: 2020
 
 time:
   start: 75
   end: 670 # 31st october 2021    791 # 01 March, 2022
 
-country:
-  iso3: MYS
+activate_random_process: False
 
-clinical_stratification:
-  non_sympt_infect_multiplier: 0.25
-  props:
-    symptomatic:
-      multiplier: 1.5
-    hospital:
-      multiplier: 0.238
-  icu_prop: 0.128
+contact_rate: 0.0231
+infectious_seed: 552.
 
-vaccination:
-  one_dose:
-    ve_sympt_covid: 0.7
-    ve_prop_prevent_infection: 0.7
-  roll_out_components:
-    - age_min: 10 # 84.7% of the total population is 10+
-      supply_period_coverage:
-        coverage: 0.89 #75% of the total population vaccinated
-        start_time: 481 # 25 Apr 2021
-        end_time: 678 # 8 Nov 2021
-    - age_min: 10
-      supply_period_coverage:
-        coverage: 0.52 # 80% of total population coverage
-        start_time: 679 # 09 Nov 2021
-        end_time: 732 # 01 Jan 2022
+immunity_stratification:
+  prop_immune: .8
+  prop_high_among_immune: .2  # varied in uncertainty
 
-vaccination_risk:
-  calculate: true
-  cumul_start_time: 658
-  # We'll use the same scenario to model both AZ and mRNA:
-  prop_astrazeneca: 1.
-  prop_mrna: 1.
-  risk_multiplier: 1.  # varied
+voc_emergence: null
+#  delta:
+#    start_time: 548
+#    entry_rate: 5.
+#    seed_duration: 10.
+#    contact_rate_multiplier: 2.
+#  omicron:
+#    start_time: 2000
+#    entry_rate: 5.
+#    seed_duration: 10.
+#    contact_rate_multiplier: 4.
 
 testing_to_detection:
-  assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.0069
+  assumed_tests_parameter: 1.e-4
+  assumed_cdr_parameter: 0.2
   smoothing_period: 14
-
-mobility:
-  smooth_google_data: false # whether to apply a 7-day moving average
-  square_mobility_effect: true
-  google_mobility_locations:
-    work:
-      workplaces: 1.
-    other_locations:
-      retail_and_recreation: 0.333333
-      grocery_and_pharmacy: 0.333334
-      transit_stations: 0.333333
-      parks: 0.
-    home:
-      residential: 1.
-  microdistancing:
-    behaviour:
-      function_type: tanh
-      parameters:
-        shape: .1
-        inflection_time: 398. # 1st February 2021
-        start_asymptote: 0.034
-        end_asymptote: 0.11
-      locations:
-        - other_locations
-        - school
-        - work
-  mixing:
-    school:
-      append: false
-      times:
-        - 2020-03-16 # All schools close
-        - 2020-03-17
-        - 2020-06-24 # Secondary exam years
-        - 2020-06-25
-        - 2020-07-15 # Primary exam years
-        - 2020-07-16
-        - 2020-07-22 # Schools reopen
-        - 2020-07-23
-        - 2020-10-13 # Schools partially close again
-        - 2020-10-14
-        - 2020-11-08 # Schools fully close again
-        - 2020-11-09
-        - 2021-03-06 # All but high schools re-open
-        - 2021-03-07
-        - 2021-04-03 # Full school re-openings
-        - 2021-04-04
-        - 2021-05-01
-        - 2021-05-02 # Schools fully close again
-        - 2021-09-30
-        - 2021-10-01 # 40% of schools open
-      values:
-        - 1.
-        - 0.
-        - 0.
-        - 0.2
-        - 0.2
-        - 0.35
-        - 0.35
-        - 1.
-        - 1.
-        - 0.64
-        - 0.64
-        - 0.
-        - 0.
-        - 0.5
-        - 0.5
-        - 1.
-        - 1.
-        - 0.
-        - 0.
-        - 0.4
-
-voc_emergence:
-  alpha_beta:
-    start_time: 361.73
-    entry_rate: 16.
-    seed_duration: 10.
-    contact_rate_multiplier: 1.59
-    ifr_multiplier: 1.95
-    hosp_multiplier: 1.25
-  delta:
-    start_time: 482.412
-    entry_rate: 16.
-    seed_duration: 10.
-    contact_rate_multiplier: 3.2
-    ifr_multiplier: 4.75
-    hosp_multiplier: 1.175
-contact_tracing:
-  assumed_trace_prop: 0.05
-  assumed_prev: 1.e-3
-  quarantine_infect_multiplier: 0.2
-  floor: 0.
-
-
-sojourn:
-  compartment_periods_calculated:
-    exposed:
-      total_period: 3.9
-    active:
-      total_period: 6.36
-
-
-icu_occupancy_dispersion_param: 80.14141955570402
-infection_deaths_dispersion_param: 5.1530311549683809
-
-infection_fatality:
-  multiplier: 0.153
-
-history:
-  natural_immunity_duration: 365
-

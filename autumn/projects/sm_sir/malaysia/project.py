@@ -23,6 +23,7 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 notifications_ts = ts_set["notifications"].loc[210:]
 icu_occupancy_ts = ts_set["icu_occupancy"].rolling(7).mean().loc[210::7]
 infection_deaths_ts = ts_set["infection_deaths"].loc[210:]
+
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(infection_deaths_ts),
@@ -31,7 +32,6 @@ targets = [
 
 priors = [
     UniformPrior("contact_rate", [0.015, 0.04]),
-    UniformPrior("voc_emergence.delta.ifr_multiplier", [3, 9.5]),
 ]
 
 
@@ -39,12 +39,12 @@ if baseline_params.to_dict()["activate_random_process"]:
     time_params = baseline_params.to_dict()["time"]
     rp = set_up_random_process(time_params["start"], time_params["end"])
 
-
+    # rp = None  # use this when tuning proposal jumping steps
 else:
     rp = None
 
 # Load proposal sds from yml file
-use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+# use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
@@ -62,3 +62,7 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.MALAYSIA, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
 )
+
+
+# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)

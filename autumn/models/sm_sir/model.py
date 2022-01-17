@@ -38,8 +38,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Preprocess age-specific parameters to match model age bands
     age_strat_params = params.age_stratification
     age_groups = params.age_groups
+
     sympt_props = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(sympt_props, country.iso3, pop.region, age_groups) if sympt_props else None
+
+    hospital_props = age_strat_params.prop_hospital
+    hospital_props = convert_param_agegroups(hospital_props, country.iso3, pop.region, age_groups) if hospital_props else None
+
 
     compartments = BASE_COMPARTMENTS
     if params.sojourns.latent:
@@ -246,7 +251,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.times
     )
     outputs_builder.request_hospitalisations(
-        params.age_stratification.prop_hospital,
+        hospital_props,
         params.immunity_stratification.hospital_risk_reduction,
         params.time_from_onset_to_event.hospitalisation,
         params.hospital_stay.hospital_all,

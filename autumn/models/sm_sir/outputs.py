@@ -7,18 +7,22 @@ from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduct
 from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, ClinicalStratum
 from autumn.tools.utils.utils import apply_odds_ratio_to_props
 
+
 class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_incidence(self, compartments, age_groups, clinical_strata, strain_strata):
         """
-        Calculate incident disease cases. This is associated with the transition to the first state where individuals are
-        potentially symptomatic.
+        Calculate incident disease cases. This is associated with the transition to the first state where individuals
+        are infectious and potentially symptomatic.
+        Note that this differs from the approach in the covid_19 model, which took entry to the first "active"
+        compartment to represent the onset of symptoms, which infectiousness starting before this.
 
         Args:
             compartments: list of model compartment names (unstratified)
             age_groups: list of modelled age groups
             clinical_strata: list of clinical strata
             strain_strata: list of modelled strains (None if single strain model)
+
         """
 
         # Determine what flow will be used to track disease incidence

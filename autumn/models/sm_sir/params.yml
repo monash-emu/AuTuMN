@@ -109,6 +109,8 @@ age_stratification:
     - 0.03203 # 75-79
     - 0.08292 # 80+
 
+hospital_prop_multiplier: 1.
+
 is_dynamic_mixing_matrix: false
 
 mobility:

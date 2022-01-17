@@ -76,6 +76,9 @@ class Population(BaseModel):
 
 
 class CompartmentSojourn(BaseModel):
+    """
+    Compartment sojourn times, meaning the mean period of time spent in a compartment.
+    """
 
     total_time: float
     proportion_early: Optional[float]
@@ -133,7 +136,8 @@ class EmpiricMicrodistancingParams(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
         value, time_series = values.get("values"), values.get("times")
-        assert len(time_series) == len(value), f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value)}"
+        msg = f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value)}"
+        assert len(time_series) == len(value), msg
         return values
 
 
@@ -142,6 +146,10 @@ class TanhMicrodistancingParams(BaseModel):
     inflection_time: float
     lower_asymptote: float
     upper_asymptote: float
+
+    @validator("shape", allow_reuse=True)
+    def shape_is_positive(shape):
+        assert shape >= 0., "Shape parameter for tanh-microdistancing function must be non-negative"
 
     @root_validator(pre=True, allow_reuse=True)
     def check_asymptotes(cls, values):
@@ -208,10 +216,41 @@ class AgeStratification(BaseModel):
     prop_hospital: List[float]
     ifr: List[float]
 
+    @validator("susceptibility", allow_reuse=True)
+    def sympt_is_prop(susceptibility):
+        msg = "susceptibility not all in domain [0, 1]"
+        assert all([0. <= i_sympt <= 1. for i_sympt in susceptibility.values()]), msg
+        return susceptibility
+
+    @validator("prop_symptomatic", allow_reuse=True)
+    def sympt_is_prop(prop_symptomatic):
+        assert all([0. <= i_sympt <= 1. for i_sympt in prop_symptomatic]), "prop_symptomatic not all in domain [0, 1]"
+        return prop_symptomatic
+
+    @validator("prop_hospital", allow_reuse=True)
+    def hosp_is_prop(prop_hospital):
+        assert all([0. <= i_hosp <= 1. for i_hosp in prop_hospital]), "prop_hospital not all in domain [0, 1]"
+        return prop_hospital
+
+    @validator("ifr", allow_reuse=True)
+    def ifrs_are_props(ifr):
+        assert all([0. <= i_ifr <= 1. for i_ifr in ifr]), "IFRs not all in domain [0, 1]"
+        return ifr
+
 
 class ImmunityRiskReduction(BaseModel):
     high: float
     low: float
+
+    @validator("high", allow_reuse=True)
+    def high_is_prop(high):
+        assert 0. <= high <= 1., "high not in domain [0, 1]"
+        return high
+
+    @validator("low", allow_reuse=True)
+    def low_is_prop(low):
+        assert 0. <= low <= 1., "low not in domain [0, 1]"
+        return low
 
 
 class ImmunityStratification(BaseModel):
@@ -219,6 +258,16 @@ class ImmunityStratification(BaseModel):
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
     hospital_risk_reduction: ImmunityRiskReduction
+
+    @validator("prop_immune", allow_reuse=True)
+    def immune_is_prop(prop_immune):
+        assert 0. <= prop_immune <= 1., "prop_immune not in domain [0, 1]"
+        return prop_immune
+
+    @validator("prop_high_among_immune", allow_reuse=True)
+    def high_immune_is_prop(prop_high_among_immune):
+        assert 0. <= prop_high_among_immune <= 1., "prop_high_among_immune not in domain [0, 1]"
+        return prop_high_among_immune
 
 
 class TestingToDetection(BaseModel):
@@ -268,16 +317,16 @@ class VocComponent(BaseModel):
         return values
 
 
-class AgeSpecificRiskMultiplier(BaseModel):
-    age_categories: List[str]
-    adjustment_start_time: Optional[int]
-    adjustment_end_time: Optional[int]
-    contact_rate_multiplier: float
-
-
 class TimeDistribution(BaseModel):
     distribution: str
     parameters: dict
+
+    @validator("distribution", allow_reuse=True)
+    def check_distribution(distribution):
+        supported_distributions = ("gamma",)
+        msg = f"Requested time distribution not supported: {distribution}"
+        assert distribution in supported_distributions, msg
+        return
 
 
 class TimeToEvent(BaseModel):

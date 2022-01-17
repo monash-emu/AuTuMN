@@ -131,8 +131,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
-        # Asjudter hospital proportions using multiplier
-        adjusted_prop_hospital_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
+        # Adjusted hospital proportions
+        adjusted_prop_hosp_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
 
         # Prepare a dictionary with hospital risk reduction by level of immunity
         hospital_risk_reduction = {
@@ -148,7 +148,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         hospital_admissions_sources = []
         for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
-                hospital_risk = adjusted_prop_hospital_among_sympt[i_age] * (1. - hospital_risk_reduction[immunity_stratum])
+                risk_reduction = 1. - hospital_risk_reduction[immunity_stratum]
+                hospital_risk = adjusted_prop_hosp_among_sympt[i_age] * risk_reduction
                 output_name = f"hospital_admissionsXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
                 hospital_admissions_sources.append(output_name)
                 hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)
@@ -256,7 +257,7 @@ def precompute_density_intervals(distribution_details, model_times):
 
 def precompute_probas_stay_greater_than(distribution_details, model_times):
     """
-    Calculate the probability that duration of stay is greater than every possible time interval between two model times.
+    Calculate the probability that duration of stay is greater than every possible time interval between two model times
 
     Args:
         distribution_details: User requests for the distribution type
@@ -307,10 +308,11 @@ def apply_convolution_for_occupancy(source_output: np.ndarray, probas_stay_great
 
     Args:
         source_output: Previously computed model output on which the calculation is based
-        probas_stay_greater_than: Probability that duration of stay is greater than every possible time interval between two model times
+        probas_stay_greater_than: Probability that duration of stay is greater than each possible time interval between
+        two model times
 
     Returns:
-        A numpy array of the convolved output
+        A numpy array for the convolved output
 
     """
 
@@ -337,14 +339,6 @@ def make_calc_notifications_func(density_intervals):
         return notifications
 
     return notifications_func
-
-
-def make_incidence_sympt_func(prop_sympt):
-
-    def incidence_sympt_func(inc):
-        return prop_sympt * inc
-
-    return incidence_sympt_func
 
 
 def make_calc_admissions_func(admission_risk, density_intervals):

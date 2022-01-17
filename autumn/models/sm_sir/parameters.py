@@ -326,7 +326,7 @@ class TimeDistribution(BaseModel):
         supported_distributions = ("gamma",)
         msg = f"Requested time distribution not supported: {distribution}"
         assert distribution in supported_distributions, msg
-        return
+        return distribution
 
 
 class TimeToEvent(BaseModel):

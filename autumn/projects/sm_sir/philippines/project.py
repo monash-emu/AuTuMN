@@ -24,10 +24,10 @@ priors = [
 
     # Hospital-related
     UniformPrior("hospital_prop_multiplier", [.5, 2.]),
-    UniformPrior("time_from_onset_to_event.hospitalisation.distribution.mean", [2, 7]),
+    UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2., 7.]),
     UniformPrior("prop_icu_among_hospitalised", [.05, .20]),
-    UniformPrior("hospital_stay.hospital_all.distribution.mean", [2, 5]),
-    UniformPrior("hospital_stay.icu.distribution.mean", [3, 7]),
+    UniformPrior("hospital_stay.hospital_all.parameters.mean", [2., 5.]),
+    UniformPrior("hospital_stay.icu.parameters.mean", [3., 7.]),
 ]
 
 targets = [
@@ -62,4 +62,4 @@ project = Project(Region.PHILIPPINES, Models.SM_SIR, build_model, param_set, cal
 
 
 # from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=100, relative_likelihood_reduction=0.2)
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)

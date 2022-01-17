@@ -17,8 +17,19 @@ priors = [
     UniformPrior("sojourns.active.total_time", [5, 10]),
     UniformPrior("infectious_seed", [1, 200]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [.1, .3]),
-    UniformPrior("immunity_stratification.prop_high_among_immune", [.1, .3])
+
+    # Pre-existing immunity
+    UniformPrior("immunity_stratification.prop_immune", [.7, .9]),
+    UniformPrior("immunity_stratification.prop_high_among_immune", [.1, .3]),
+
+    # Hospital-related
+    UniformPrior("hospital_prop_multiplier", [.5, 2.]),
+    UniformPrior("time_from_onset_to_event.hospitalisation.distribution.mean", [2, 7]),
+    UniformPrior("prop_icu_among_hospitalised", [.05, .20]),
+    UniformPrior("hospital_stay.hospital_all.distribution.mean", [2, 5]),
+    UniformPrior("hospital_stay.icu.distribution.mean", [3, 7]),
 ]
+
 targets = [
     NormalTarget(
         data=ts_set["icu_occupancy"].loc[725:]

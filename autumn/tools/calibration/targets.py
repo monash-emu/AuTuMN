@@ -8,34 +8,6 @@ from summer.utils import ref_times_to_dti
 #from autumn.tools.project.timeseries import TimeSeries
 from .priors import UniformPrior
 
-
-def convert_targets_to_dict(raw_targets):
-    """
-    Take the raw targets data structure, which is a list that you have to dig the targets out of
-    and convert it into a dictionary with the names of the targets being the keys.
-
-    """
-    targets_dict = {}
-    for i_target in range(len(raw_targets)):
-        output_key = raw_targets[i_target]["output_key"]
-        targets_dict[output_key] = {
-            "times": raw_targets[i_target]["years"],
-            "values": raw_targets[i_target]["values"]
-        }
-    return targets_dict
-
-
-def get_target_series(raw_targets, ref_date, output):
-    """
-    Extends the previous function to return the times and values of a particular requested output as a pandas series.
-    """
-
-    processed_targets = convert_targets_to_dict(raw_targets)
-    times_series = ref_times_to_dti(ref_date, processed_targets[output]["times"])
-    values_series = pd.Series(data=processed_targets[output]["values"], index=times_series)
-    return times_series, values_series
-
-
 class BaseTarget(ABC):
 
     data: pd.Series
@@ -50,15 +22,6 @@ class BaseTarget(ABC):
         self.stdev = None
         self.cis = None
 
-    @abstractmethod
-    def to_dict(self) -> dict:
-        """Returns the target as a dict... for now"""
-        target = {}
-        if self.time_weights:
-            target["time_weights"] = self.time_weights
-
-        return target
-
 
 class PoissonTarget(BaseTarget):
     """
@@ -68,16 +31,6 @@ class PoissonTarget(BaseTarget):
     def __init__(self, data:pd.Series, **kwargs):
         super().__init__(data, **kwargs)
         self.loglikelihood_distri = "poisson"
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        return {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "poisson",
-        }
 
 
 class NegativeBinomialTarget(BaseTarget):
@@ -89,20 +42,6 @@ class NegativeBinomialTarget(BaseTarget):
         super().__init__(data, **kwargs)
         self.dispersion_param = dispersion_param
         self.loglikelihood_distri = "negative_binomial"
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "negative_binomial",
-        }
-        if self.dispersion_param:
-            target['dispersion_param'] = self.dispersion_param
-
-        return target
 
 
 class TruncNormalTarget(BaseTarget):
@@ -122,21 +61,6 @@ class TruncNormalTarget(BaseTarget):
         self.stdev = stdev
         self.loglikelihood_distri = "trunc_normal"
 
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "trunc_range": self.trunc_range,
-            "loglikelihood_distri": "trunc_normal",
-        }
-        if self.stdev:
-            target["sd"] = self.stdev
-
-        return target
-
 
 class NormalTarget(BaseTarget):
     """
@@ -147,20 +71,6 @@ class NormalTarget(BaseTarget):
         super().__init__(data, **kwargs)
         self.stdev = stdev
         self.loglikelihood_distri = "normal"
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "normal",
-        }
-        if self.stdev:
-            target["sd"] = self.stdev
-
-        return target
 
 
 def get_dispersion_priors_for_gaussian_targets(targets: List[BaseTarget]):

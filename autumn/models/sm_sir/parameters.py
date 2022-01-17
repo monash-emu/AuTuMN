@@ -14,6 +14,39 @@ from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 BaseModel.Config.extra = Extra.forbid
 
 
+def get_check_prop(name):
+
+    msg = f"Parameter '{name}' not in domain [0, 1], but is intended as a proportion"
+
+    def check_prop(value: float) -> float:
+        assert 0. <= value <= 1., msg
+        return value
+
+    return check_prop
+
+
+def get_check_non_neg(name):
+
+    msg = f"Parameter '{name}' is negative, but is intended to be non-negative"
+
+    def check_non_neg(value: float) -> float:
+        assert 0. <= value, msg
+        return value
+
+    return check_non_neg
+
+
+def get_check_all_positive(name):
+
+    msg = f"Parameter '{name}' contains values outside [0, 1], but is intended as a list of proportions"
+
+    def check_all_pos(values: float) -> float:
+        assert all([0. <= i_value <= 1. for i_value in values]), msg
+        return values
+
+    return check_all_pos
+
+
 class Time(BaseModel):
     """
     Parameters to define the model time period and evaluation steps.
@@ -83,16 +116,8 @@ class CompartmentSojourn(BaseModel):
     total_time: float
     proportion_early: Optional[float]
 
-    @validator("total_time", allow_reuse=True)
-    def check_active_positive(total_time):
-        assert total_time > 0., f"Sojourn times must be non-negative, active time is: {total_time}"
-        return total_time
-
-    @validator("proportion_early", allow_reuse=True)
-    def check_proportion_early(proportion_early):
-        if proportion_early:
-            assert 0. <= proportion_early <= 1., f"Proportion of time in early stage not in [0, 1]: {proportion_early}"
-        return proportion_early
+    check_active_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
+    check_prop_early = validator("proportion_early", allow_reuse=True)(get_check_prop("proportion_early"))
 
 
 class Sojourns(BaseModel):
@@ -128,10 +153,7 @@ class EmpiricMicrodistancingParams(BaseModel):
     times: List[float]
     values: List[float]
 
-    @validator("max_effect", allow_reuse=True)
-    def effect_domain(effect):
-        assert 0. <= effect <= 1.
-        return effect
+    check_max_effect = validator("max_effect", allow_reuse=True)(get_check_prop("max_effect"))
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
@@ -147,6 +169,9 @@ class TanhMicrodistancingParams(BaseModel):
     lower_asymptote: float
     upper_asymptote: float
 
+    check_lower_asymptote = validator("lower_asymptote", allow_reuse=True)(get_check_prop("lower_asymptote"))
+    check_upper_asymptote = validator("upper_asymptote", allow_reuse=True)(get_check_prop("upper_asymptote"))
+
     @validator("shape", allow_reuse=True)
     def shape_is_positive(shape):
         assert shape >= 0., "Shape parameter for tanh-microdistancing function must be non-negative"
@@ -155,18 +180,13 @@ class TanhMicrodistancingParams(BaseModel):
     def check_asymptotes(cls, values):
         lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
         assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
-        assert 0. <= lower <= 1., "Lower asymptote not in domain [0, 1]"
-        assert 0. <= upper <= 1., "Upper asymptote not in domain [0, 1]"
         return values
 
 
 class ConstantMicrodistancingParams(BaseModel):
     effect: float
 
-    @validator("effect", allow_reuse=True)
-    def effect_domain(effect):
-        assert 0. <= effect <= 1., "Microdistancing effect not in domain [0, 1]"
-        return effect
+    check_effect_domain = validator("effect", allow_reuse=True)(get_check_prop("effect"))
 
 
 class MicroDistancingFunc(BaseModel):
@@ -218,39 +238,21 @@ class AgeStratification(BaseModel):
 
     @validator("susceptibility", allow_reuse=True)
     def sympt_is_prop(susceptibility):
-        msg = "susceptibility not all in domain [0, 1]"
-        assert all([0. <= i_sympt <= 1. for i_sympt in susceptibility.values()]), msg
+        msg = "Some age-specific susceptibility values are negative"
+        assert all([0. <= i_sympt for i_sympt in susceptibility.values()]), msg
         return susceptibility
 
-    @validator("prop_symptomatic", allow_reuse=True)
-    def sympt_is_prop(prop_symptomatic):
-        assert all([0. <= i_sympt <= 1. for i_sympt in prop_symptomatic]), "prop_symptomatic not all in domain [0, 1]"
-        return prop_symptomatic
-
-    @validator("prop_hospital", allow_reuse=True)
-    def hosp_is_prop(prop_hospital):
-        assert all([0. <= i_hosp <= 1. for i_hosp in prop_hospital]), "prop_hospital not all in domain [0, 1]"
-        return prop_hospital
-
-    @validator("ifr", allow_reuse=True)
-    def ifrs_are_props(ifr):
-        assert all([0. <= i_ifr <= 1. for i_ifr in ifr]), "IFRs not all in domain [0, 1]"
-        return ifr
+    check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_positive("prop_symptomatic"))
+    check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_positive("prop_hospital"))
+    check_ifr_props = validator("ifr", allow_reuse=True)(get_check_all_positive("ifr"))
 
 
 class ImmunityRiskReduction(BaseModel):
     high: float
     low: float
 
-    @validator("high", allow_reuse=True)
-    def high_is_prop(high):
-        assert 0. <= high <= 1., "high not in domain [0, 1]"
-        return high
-
-    @validator("low", allow_reuse=True)
-    def low_is_prop(low):
-        assert 0. <= low <= 1., "low not in domain [0, 1]"
-        return low
+    check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
+    check_low = validator("low", allow_reuse=True)(get_check_prop("low"))
 
 
 class ImmunityStratification(BaseModel):
@@ -259,15 +261,8 @@ class ImmunityStratification(BaseModel):
     infection_risk_reduction: ImmunityRiskReduction
     hospital_risk_reduction: ImmunityRiskReduction
 
-    @validator("prop_immune", allow_reuse=True)
-    def immune_is_prop(prop_immune):
-        assert 0. <= prop_immune <= 1., "prop_immune not in domain [0, 1]"
-        return prop_immune
-
-    @validator("prop_high_among_immune", allow_reuse=True)
-    def high_immune_is_prop(prop_high_among_immune):
-        assert 0. <= prop_high_among_immune <= 1., "prop_high_among_immune not in domain [0, 1]"
-        return prop_high_among_immune
+    check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
+    check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(get_check_prop("prop_high_among_immune"))
 
 
 class TestingToDetection(BaseModel):
@@ -280,15 +275,8 @@ class TestingToDetection(BaseModel):
     smoothing_period: int
     test_multiplier: Optional[TimeSeries]
 
-    @validator("assumed_tests_parameter", allow_reuse=True)
-    def check_assumed_tests_positive(val):
-        assert 0. <= val, f"Assumed tests is negative: {val}"
-        return val
-
-    @validator("assumed_cdr_parameter", allow_reuse=True)
-    def check_assumed_cdr_is_proportion(val):
-        assert 0. <= val <= 1., f"Assumed CDR parameter is not in range [0, 1]: {val}"
-        return val
+    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(get_check_non_neg("assumed_tests_parameter"))
+    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(get_check_prop("assumed_cdr_parameter"))
 
     @validator("smoothing_period", allow_reuse=True)
     def check_smoothing_period(val):

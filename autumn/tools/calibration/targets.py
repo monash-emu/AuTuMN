@@ -50,15 +50,6 @@ class BaseTarget(ABC):
         self.stdev = None
         self.cis = None
 
-    @abstractmethod
-    def to_dict(self) -> dict:
-        """Returns the target as a dict... for now"""
-        target = {}
-        if self.time_weights:
-            target["time_weights"] = self.time_weights
-
-        return target
-
 
 class PoissonTarget(BaseTarget):
     """
@@ -68,16 +59,6 @@ class PoissonTarget(BaseTarget):
     def __init__(self, data:pd.Series, **kwargs):
         super().__init__(data, **kwargs)
         self.loglikelihood_distri = "poisson"
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        return {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "poisson",
-        }
 
 
 class NegativeBinomialTarget(BaseTarget):
@@ -89,20 +70,6 @@ class NegativeBinomialTarget(BaseTarget):
         super().__init__(data, **kwargs)
         self.dispersion_param = dispersion_param
         self.loglikelihood_distri = "negative_binomial"
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "negative_binomial",
-        }
-        if self.dispersion_param:
-            target['dispersion_param'] = self.dispersion_param
-
-        return target
 
 
 class TruncNormalTarget(BaseTarget):
@@ -122,21 +89,6 @@ class TruncNormalTarget(BaseTarget):
         self.stdev = stdev
         self.loglikelihood_distri = "trunc_normal"
 
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "trunc_range": self.trunc_range,
-            "loglikelihood_distri": "trunc_normal",
-        }
-        if self.stdev:
-            target["sd"] = self.stdev
-
-        return target
-
 
 class NormalTarget(BaseTarget):
     """
@@ -147,20 +99,6 @@ class NormalTarget(BaseTarget):
         super().__init__(data, **kwargs)
         self.stdev = stdev
         self.loglikelihood_distri = "normal"
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "normal",
-        }
-        if self.stdev:
-            target["sd"] = self.stdev
-
-        return target
 
 
 def get_dispersion_priors_for_gaussian_targets(targets: List[BaseTarget]):

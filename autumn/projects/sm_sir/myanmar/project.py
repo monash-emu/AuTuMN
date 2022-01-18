@@ -52,7 +52,7 @@ priors = [
     ),
     UniformPrior(
         "contact_rate", (0.05, 0.08), jumping_stdev=0.01
-    ),  # Tighten up the lower limit to avoid wild runs
+    ),  # Tighten up the lower limit to avoid wild runss
     UniformPrior("infectious_seed", (50.0, 500.0), jumping_stdev=40.0),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.012), jumping_stdev=0.002),
     UniformPrior(

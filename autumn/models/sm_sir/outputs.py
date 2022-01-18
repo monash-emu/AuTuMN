@@ -275,6 +275,32 @@ def precompute_probas_stay_greater_than(distribution_details, model_times):
     probas_stay_greater_than = 1 - cdf_values
     return probas_stay_greater_than
 
+def convolve_probability(source_output: np.ndarray, density_intervals: np.ndarray, scale: float = 1.0, lag: int = 1) -> np.ndarray:
+    """
+    Calculate a convolved output.
+
+    Args:
+        source_output: Previously computed model output on which the calculation is based
+        density_intervals: Overall probability density of occurence at particular timestep
+        scale: Total probability scale of event occuring
+        lag: Lag in output; defaults to 1 to reflect that events cannot occur at the same time
+
+    Returns:
+        A numpy array of the convolved output
+
+    """
+    convolved_output = np.zeros_like(source_output)
+
+    offset = 1 - lag
+    
+    for i in range(source_output.size):
+        trunc_source_output = source_output[:i+offset][::-1]
+        trunc_intervals = density_intervals[:i+offset]
+        convolution_sum = (trunc_source_output * trunc_intervals).sum()
+        convolved_output[i] = scale * convolution_sum
+
+    return convolved_output
+
 
 def apply_convolution_for_event(source_output: np.ndarray, density_intervals: np.ndarray, event_proba: float):
     """
@@ -290,16 +316,7 @@ def apply_convolution_for_event(source_output: np.ndarray, density_intervals: np
 
     """
 
-    convolved_output = np.zeros_like(source_output)
-    for i in range(source_output.size):
-        trunc_source_output = list(source_output[:i])
-        trunc_source_output.reverse()
-        trunc_intervals = density_intervals[:i]
-        components = [value * density_interval for value, density_interval in zip(trunc_source_output, trunc_intervals)]
-        convolution_sum = sum(components)
-        convolved_output[i] = event_proba * convolution_sum
-
-    return convolved_output
+    return convolve_probability(source_output, density_intervals, scale=event_proba)
 
 
 def apply_convolution_for_occupancy(source_output: np.ndarray, probas_stay_greater_than: np.ndarray):
@@ -316,15 +333,7 @@ def apply_convolution_for_occupancy(source_output: np.ndarray, probas_stay_great
 
     """
 
-    convolved_outputs = np.zeros_like(source_output)
-    for i in range(source_output.size):
-        trunc_source_output = list(source_output[:i + 1])
-        trunc_probas = probas_stay_greater_than[:i + 1]
-        trunc_source_output.reverse()
-        components = [value * p_greater_than for value, p_greater_than in zip(trunc_source_output, trunc_probas)]
-        convolved_outputs[i] = sum(components)
-
-    return convolved_outputs
+    return convolve_probability(source_output, probas_stay_greater_than, lag=0)
 
 
 """

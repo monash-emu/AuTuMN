@@ -136,122 +136,101 @@ vaccination:
   roll_out_components: # --> stratify by time
     - age_min: 20
       supply_period_coverage:
-        coverage: .001235
-        start_time: 485 # 29th April 2021
-        end_time: 518 # 01st June 2021
+        coverage: .004802
+        start_time: 491 # 05th May 2021
+        end_time: 570 # 23rd July 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: .006387
-        start_time: 518 # 01st June 2021
-        end_time: 545 # 28th June 2021
+        coverage: .106309
+        start_time: 570 # 23rd July 2021
+        end_time: 628 # 19th Sep 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.001301
-        start_time: 545 # 28th June 2021
-        end_time: 556 # 09th July 2021
+        coverage: 0.333630
+        start_time: 628 # 19th Sep 2021
+        end_time: 650 # 11th Oct 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.001932
-        start_time: 556 # 09th July 2021
-        end_time: 572 # 25th July 2021
+        coverage: 0.169678
+        start_time: 650 # 11th Oct 2021
+        end_time: 669 # 30th Oct 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.0288
-        start_time: 572 # 25th July 2021
-        end_time: 593 # 15th Aug 2021
+        coverage: 0.426765
+        start_time: 669 # 30th Oct 2021
+        end_time: 691 # 21th Nov 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.0388
-        start_time: 593 # 15th Aug 2021
-        end_time: 610 # 01st Sep 2021
+        coverage: 0.101286
+        start_time: 691 # 21th Nov 2021
+        end_time: 714 # 14th Dec 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.1976
-        start_time: 610 # 01st Sep 2021
-        end_time: 624 # 15th Sep 2021
+        coverage: 0.04454
+        start_time: 714 # 14th Dec 2021
+        end_time: 730 # 30th Dec 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.2965
-        start_time: 624 # 15th Sep 2021
-        end_time: 640 # 01st Oct 2021
+        coverage: 0.050288
+        start_time: 730 # 30th Dec 2021
+        end_time: 746 # 15th Jan 2022
     - supply_period_coverage:
-        coverage: 0.000366
-        start_time: 485 # 29th Apr 2021
-        end_time: 518 # 01st Jun 2021
+        coverage: .001473
+        start_time: 491 # 05th May 2021
+        end_time: 570 # 23rd July 2021
       age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.00189
-        start_time: 518 # 01st Jun 2021
-        end_time: 545 # 28th Jun 2021
+        coverage: .032507
+        start_time: 570 # 23rd July 2021
+        end_time: 628 # 19th Sep 2021
       age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.000383
-        start_time: 545 # 28th Jun 2021
-        end_time: 556 # 09th Jul 2021
+        coverage: 0.094237
+        start_time: 628 # 19th Sep 2021
+        end_time: 650 # 11th Oct 2021
       age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.000568
-        start_time: 556 # 09th Jul 2021
-        end_time: 572 # 25th Jul 2021
+        coverage: 0.035260
+        start_time: 650 # 11th Oct 2021
+        end_time: 669 # 30th Oct 2021
       age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.00846
-        start_time: 572 # 25th Jul 2021
-        end_time: 593 # 15th Aug 2021
+        coverage: 0.076327
+        start_time: 669 # 30th Oct 2021
+        end_time: 691 # 21th Nov 2021
       age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.011185
-        start_time: 593 # 15th Aug 2021
-        end_time: 610 # 01st Sep 2021
+        coverage: 0.011242
+        start_time: 691 # 21th Nov 2021
+        end_time: 714 # 14th Dec 2021
       age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.05534
-        start_time: 610 # 01st Sep 2021
-        end_time: 624 # 15th Sep 2021
+        coverage: 0.401164
+        start_time: 714 # 14th Dec 2021
+        end_time: 730 # 30th Dec 2021
       age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.070507
-        start_time: 624 # 15th Sep 2021
-        end_time: 640 # 01st Oct 2021
-      age_min: 15
-      age_max: 19
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.2485
-        start_time: 640 # 01st Oct 2021
-        end_time: 654 # 15th Oct 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.0616
-        start_time: 654 # 15th Oct 2021
-        end_time: 670 # 31st Oct 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.0470
-        start_time: 670 # 31st Oct 2021
-        end_time: 685 # 15th Nov 2021
-    - supply_period_coverage:
-        coverage: 0.044739
-        start_time: 640 # 01st Oct 2021
-        end_time: 654 # 15th Oct 2021
+        coverage: 0.008092
+        start_time: 730 # 30th Dec 2021
+        end_time: 746 # 15th Jan 2022
       age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.008727
-        start_time: 654 # 15th Oct 2021
-        end_time: 670 # 31st Oct 2021
-      age_min: 15
-      age_max: 19
+        coverage: 0.425844
+        start_time: 714 # 14th Dec 2021
+        end_time: 730 # 30th Dec 2021
+      age_min: 10
+      age_max: 14
     - supply_period_coverage:
-        coverage: 0.006306
-        start_time: 670 # 31st Oct 2021
-        end_time: 685 # 15th Nov 2021
-      age_min: 15
-      age_max: 19
+        coverage: 0.020485
+        start_time: 730 # 30th Dec 2021
+        end_time: 746 # 15th Jan 2022
+      age_min: 10
+      age_max: 14

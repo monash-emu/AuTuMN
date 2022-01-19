@@ -10,7 +10,7 @@ class Region:
     SWEDEN = "sweden"
     FRANCE = "france"
     SPAIN = "spain"
-    NORTH_EAST_METRO="north-east-metro"
+    NORTH_EAST_METRO = "north-east-metro"
     SOUTH_EAST_METRO = "south-east-metro"
     WEST_METRO = "west-metro"
     BARWON_SOUTH_WEST = "barwon-south-west"
@@ -35,6 +35,7 @@ class Region:
     HO_CHI_MINH_CITY = "ho_chi_minh_city"
     HANOI = "hanoi"
     MYANMAR = "myanmar"
+    BANGLADESH = "bangladesh"
 
     REGIONS = [
         PHILIPPINES,
@@ -73,6 +74,7 @@ class Region:
         HO_CHI_MINH_CITY,
         HANOI,
         MYANMAR,
+        BANGLADESH,
     ]
 
     MALAYSIA_REGIONS = [

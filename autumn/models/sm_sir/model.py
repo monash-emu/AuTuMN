@@ -243,8 +243,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Set up derived output functions
     """
-    
     outputs_builder = SmSirOutputsBuilder(model, compartments)
+
+    # Track CDR function if case detection is implemented
+    if is_undetected:
+        outputs_builder.request_cdr()
+
     outputs_builder.request_incidence(compartments, age_groups, clinical_strata, strain_strata)
     outputs_builder.request_notifications(
         params.time_from_onset_to_event.notification,

@@ -2,6 +2,7 @@ class Region:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     MANILA = "manila"
+    NCR = "national-capital-region"
     CALABARZON = "calabarzon"
     CENTRAL_VISAYAS = "central-visayas"
     UNITED_KINGDOM = "united-kingdom"
@@ -40,6 +41,7 @@ class Region:
     REGIONS = [
         PHILIPPINES,
         MANILA,
+        NCR,
         CALABARZON,
         CENTRAL_VISAYAS,
         DAVAO_CITY,

@@ -100,7 +100,7 @@ testing_to_detection:
 # All information provided here are HISTORICAL. Last update: 15th Jan, 2022.
 # All figures calculated below are available at: https://bit.ly/Hanoi_vaccination_status
 # To illustrate the vaccination for under 18, we illustrate the population in three parts: over 20, 15 - 20, and under 15
-# Before 15/11, only individuals over 18 are fully vaccinated.
+# Before 23/11, only individuals over 18 are fully vaccinated.
 vaccination:
   one_dose:
     ve_sympt_covid: 0.5226

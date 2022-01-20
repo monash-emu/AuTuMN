@@ -9,9 +9,9 @@ from autumn.tools.project import (
     use_tuned_proposal_sds,
 )
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
+from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.covid_19 import base_params, build_model
+from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
@@ -19,13 +19,13 @@ from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 scenario_dir_path = build_rel_path("params/")
 
 # Load and configure model parameters.
-default_path = build_rel_path("params/default.yml")
-scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 mle_path = build_rel_path("params/mle-params.yml")
-baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
-scenario_params = [baseline_params.update(p) for p in scenario_paths]
-param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
+baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
+    mle_path, calibration_format=True
+)
+param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
+# Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 # notifications = ts_set["notifications"].multiple_truncations([[511, 575], [606, 700]])
@@ -38,6 +38,7 @@ icu_occupancy = ts_set["icu_occupancy"].loc[640:]  # truncated to 01 Oct 2021
 infection_deaths = ts_set["infection_deaths"].loc[556:]  # truncated to 9th Jul 2021
 
 targets = [NormalTarget(notifications), NormalTarget(icu_occupancy), NormalTarget(infection_deaths)]
+
 
 priors = [
     # Global COVID priors
@@ -69,10 +70,21 @@ priors = [
     # TruncNormalPrior("vaccination.part_waned.ve_death", mean=0.8, stdev=0.02, truc_range=(0.7, 0.9))
 ]
 
+
+if baseline_params.to_dict()["activate_random_process"]:
+    time_params = baseline_params.to_dict()["time"]
+    rp = set_up_random_process(time_params["start"], time_params["end"])
+
+    # rp = None  # use this when tuning proposal jumping steps
+else:
+    rp = None
+
 # Load proposal sds from yml file
 use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
-calibration = Calibration(priors, targets)
+calibration = Calibration(
+    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
+)
 
 # FIXME: Replace with flexible Python plot request API.
 import json
@@ -82,10 +94,11 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 
+# Create and register the project.
 project = Project(
-    Region.HO_CHI_MINH_CITY, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
+    Region.HO_CHI_MINH_CITY, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
 )
 
 
 # from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)

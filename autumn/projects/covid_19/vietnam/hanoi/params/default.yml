@@ -39,23 +39,23 @@ mobility:
       parameters:
         max_effect: .2 # estimated from the Philipines paper
         times:
-          - 485 # 29th April 2021, first community case of COVID-19 detected in Ho Chi Minh City
-          - 505 # 19th May 2021, two new cases first detected after 20 days without any new case
-          - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
-          - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place
-          - 556 # 09th Jul 2021, Directive No.16 of the PM in place city-wide
-          - 573 # 26th Jul 2021, curfew from 6PM to 6AM
-          - 601 # 23th Aug 2021, total lockdown implemented
-          - 640 # 01st Oct 2021, lockdown started to ease
+          - 491 # 05th May 2021, first day with more than 10 community cases in Hanoi
+          - 511 # 25th May 2021, in-person dining banned and hair salons are closed
+          - 539 # 22nd Jun 2021, in-person dining and hair salon services resumed at 50% capacity
+          - 560 # 13th Jul 2021, in-person dining and hair salons are once again closed due to the surge of new new cases
+          - 571 # 24th Jul 2021, Directive No.16 of the Prime Minister in place city-wide
+          - 615 # 06th Sep 2021, The city is divided into 3 zones, with Directive No.16 in place at Zone 1 and Directive No. 15 in place at Zones 2 and 3
+          - 630 # 21st Sep 2021, Directive No. 15 of the PM implemented city-waide,in-person dining and hair salons are allowed at 50% capacity until 21:00 daily
+          - 653 # 14th Oct 2021, Directive No. 128 from the Prime Minister temporarily suspended the practice of Directive No. 15, 16 and 19 nationwide
         values:
-          - 0
-          - 0.2
-          - 0.4
+          - 0.3
           - 0.5
-          - 0.7
-          - 0.85
-          - 1.
+          - 0.3
+          - 0.5
           - 0.8
+          - 0.7
+          - 0.5
+          - 0.3
       locations:
         - other_locations
         - school

@@ -10,6 +10,13 @@ from autumn.tools.utils.utils import apply_odds_ratio_to_props
 
 class SmSirOutputsBuilder(OutputsBuilder):
 
+    def request_cdr(self):
+        """
+        Register the CDR computed value as a derived output.
+
+        """
+        self.model.request_computed_value_output("cdr")
+
     def request_incidence(self, compartments, age_groups, clinical_strata, strain_strata):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one

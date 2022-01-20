@@ -3,7 +3,6 @@ from autumn.tools.project import (
     ParameterSet,
     load_timeseries,
     build_rel_path,
-    use_tuned_proposal_sds,
 )
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
@@ -20,14 +19,16 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
-notifications_ts = ts_set["notifications"].loc[210:]
-icu_occupancy_ts = ts_set["icu_occupancy"].rolling(7).mean().loc[210::7]
-infection_deaths_ts = ts_set["infection_deaths"].loc[210:]
+notifications_ts = ts_set["notifications"]
+icu_occupancy_ts = ts_set["icu_occupancy"]
+infection_deaths_ts = ts_set["infection_deaths"]
+hospital_ts = ts_set["hospital_occupancy"]
 
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(infection_deaths_ts),
     NormalTarget(icu_occupancy_ts),
+    NormalTarget(hospital_ts)
 ]
 
 priors = [

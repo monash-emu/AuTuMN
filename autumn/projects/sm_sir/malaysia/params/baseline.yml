@@ -8,9 +8,15 @@ ref_mixing_iso3: CHN
 population:
   year: 2020
 
+sojourns:
+  active:
+    total_time: 6.
+  latent:
+    total_time: 4.
+
 time:
-  start: 75
-  end: 670 # 31st october 2021    791 # 01 March, 2022
+  start: 365.
+  end: 751
 
 activate_random_process: False
 

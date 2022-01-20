@@ -1,5 +1,6 @@
 from datetime import date
 from math import exp
+from typing import List
 
 from summer import CompartmentalModel
 
@@ -8,7 +9,7 @@ from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters
+from .parameters import Parameters, Sojourns
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -22,6 +23,33 @@ from .preprocess.age_specific_params import convert_param_agegroups
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
+
+
+def get_compartments(sojourns: Sojourns) -> List[str]:
+    """
+    Find the model compartments that are applicable to the parameter requests, based on the sojourn times structure.
+        - Start with just the base SIR structure
+        - Add in the latent compartment if there is a latent period request
+        - Add in a second serial latent compartment if there is a proportion of the latent period early
+        - Add in a second serial active compartment if there is a proportion of the active period early
+
+    Args:
+        sojourns: User requested sojourn times
+
+    Returns:
+        The names of the model compartments to be implemented.
+
+    """
+
+    compartments = BASE_COMPARTMENTS
+    if sojourns.latent:
+        compartments.append(Compartment.LATENT)
+        if sojourns.latent.proportion_early:
+            compartments.append(Compartment.LATENT_LATE)
+    if sojourns.active.proportion_early:
+        compartments.append(Compartment.INFECTIOUS_LATE)
+
+    return compartments
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -42,17 +70,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     sympt_props = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(sympt_props, country.iso3, pop.region, age_groups) if sympt_props else None
 
-    hospital_props = age_strat_params.prop_hospital
-    hospital_props = convert_param_agegroups(hospital_props, country.iso3, pop.region, age_groups) if hospital_props else None
+    hosp_props = age_strat_params.prop_hospital
+    hosp_props = convert_param_agegroups(hosp_props, country.iso3, pop.region, age_groups) if hosp_props else None
 
-
-    compartments = BASE_COMPARTMENTS
-    if params.sojourns.latent:
-        compartments.append(Compartment.LATENT)
-        if params.sojourns.latent.proportion_early:
-            compartments.append(Compartment.LATENT_LATE)
-    if params.sojourns.active.proportion_early:
-        compartments.append(Compartment.INFECTIOUS_LATE)
+    # Determine the compartments
+    compartments = get_compartments(params.sojourns)
 
     # Create the model object
     model = CompartmentalModel(
@@ -255,7 +277,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.times
     )
     outputs_builder.request_hospitalisations(
-        hospital_props,
+        hosp_props,
         params.hospital_prop_multiplier,
         params.immunity_stratification.hospital_risk_reduction,
         params.time_from_onset_to_event.hospitalisation,

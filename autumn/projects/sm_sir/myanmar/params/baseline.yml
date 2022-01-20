@@ -12,6 +12,12 @@ time:
   start: 198
   end: 1096
 
+sojourns:
+  active:
+    total_time: 6.
+  latent:
+    total_time: 4.
+
 activate_random_process: False
 
 infectious_seed: 100.

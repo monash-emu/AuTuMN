@@ -6,6 +6,12 @@ country:
 
 ref_mixing_iso3: HKG
 
+sojourns:
+  active:
+    total_time: 6.
+  latent:
+    total_time: 4.
+
 population:
   region: Ho Chi Minh City
   year: 2019

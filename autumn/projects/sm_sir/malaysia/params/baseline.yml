@@ -10,7 +10,7 @@ population:
 
 time:
   start: 365.
-  end: 751 # 31st october 2021    791 # 01 March, 2022
+  end: 751
 
 activate_random_process: False
 

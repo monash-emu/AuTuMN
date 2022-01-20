@@ -66,10 +66,12 @@ mobility:
       append: false
       times:
         - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
-        - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
+        - 2021-12-06 # Students in high school (Grade 10, 11 and 12) city-wide are allowed to go back to face-to-face learning
+        - 2021-12-25 # Students of high risk communes are requested to return to online learning due to the surge of new cases
       values:
         - 0.
-        - 0.1
+        - 0.15
+        - 0.075
 
 voc_emergence:
   omicron:

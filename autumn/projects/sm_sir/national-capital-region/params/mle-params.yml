@@ -1,4 +1,8 @@
-contact_rate: 0.068
-infectious_seed: 50
+contact_rate: 0.06
+infectious_seed: 100
 immunity_stratification.prop_immune: .85
 immunity_stratification.prop_high_among_immune: .10
+
+prop_icu_among_hospitalised: .15
+hospital_prop_multiplier: .5
+hospital_stay.icu.parameters.mean: 7.

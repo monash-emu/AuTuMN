@@ -21,7 +21,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.1, 0.2]),
+    UniformPrior("contact_rate", [0.04, 0.08]),
     UniformPrior("sojourns.active.total_time", [5, 10]),
     UniformPrior("infectious_seed", [1, 400]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.01, 0.05]),
@@ -33,14 +33,17 @@ priors = [
         "immunity_stratification.prop_high_among_immune", [0.05, 0.20]
     ),  # Among people with at least one dose, 5% had received a booster by 29 Dec.
     # Hospital-related
-    UniformPrior("hospital_prop_multiplier", [0.5, 2.0]),
+    UniformPrior("hospital_prop_multiplier", [0.2, 1.]),
     UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
     UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
     UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 5.0]),
-    UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 7.0]),
+    UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
 ]
 
-targets = [NormalTarget(data=ts_set["icu_occupancy"].loc[725:])]
+targets = [
+    NormalTarget(data=ts_set["icu_occupancy"].loc[725:]),
+    NormalTarget(data=ts_set["hospital_occupancy"].loc[725:])
+]
 
 if baseline_params.to_dict()["activate_random_process"]:
     time_params = baseline_params.to_dict()["time"]

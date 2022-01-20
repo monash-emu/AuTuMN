@@ -9,8 +9,8 @@ population:
   year: 2020
 
 time:
-  start: 75
-  end: 670 # 31st october 2021    791 # 01 March, 2022
+  start: 365.
+  end: 751 # 31st october 2021    791 # 01 March, 2022
 
 activate_random_process: False
 

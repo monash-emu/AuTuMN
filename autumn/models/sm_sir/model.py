@@ -260,6 +260,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Set up derived output functions
     """
+
     outputs_builder = SmSirOutputsBuilder(model, base_compartments)
 
     # Track CDR function if case detection is implemented

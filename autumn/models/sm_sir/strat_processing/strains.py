@@ -28,7 +28,7 @@ def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: floa
     return voc_seed_func
 
 
-def seed_vocs(model: CompartmentalModel, voc_params: Dict[VocComponent], seed_compartment: str):
+def seed_vocs(model: CompartmentalModel, voc_params: Dict[str, VocComponent], seed_compartment: str):
     """
     Use importation flows to seed VoC cases.
 

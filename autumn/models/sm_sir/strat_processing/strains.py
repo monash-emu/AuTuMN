@@ -8,10 +8,6 @@ def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: floa
     """
     Create a simple step function to allow seeding of the VoC strain at a particular point in time.
 
-    *** Note that the entry rate will get repeated for each compartment as the requested compartments for entry
-    are progressively stratified after this process is applied (but are split over the previous stratifications of the
-    compartment to which this is applied). ***
-
     Args:
         entry_rate: The entry rate
         start_time: The requested time at which seeding should start
@@ -33,6 +29,10 @@ def seed_vocs(model: CompartmentalModel, voc_params: Dict[str, VocComponent], se
     Use importation flows to seed VoC cases.
 
     Generally seeding to the infectious compartment, because unlike Covid model, this compartment always present.
+
+    Note that the entry rate will get repeated for each compartment as the requested compartments for entry are
+    progressively stratified after this process is applied (but are split over the previous stratifications of the
+    compartment to which this is applied, because the split_imports argument is True).
 
     Args:
         model: The summer model object

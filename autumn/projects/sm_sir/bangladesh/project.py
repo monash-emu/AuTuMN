@@ -22,10 +22,14 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("contact_rate", [0.1, 0.2]),
-    UniformPrior("infectious_seed", [1, 400]),
+    UniformPrior("infectious_seed", [1, 400])
 ]
 
-targets = [NormalTarget(data=ts_set["icu_occupancy"].loc[725:])]
+targets = [
+    NormalTarget(data=ts_set["notifications"]),
+    NormalTarget(data=ts_set["icu_occupancy"]),
+    NormalTarget(data=ts_set["infection_deaths"]),
+]
 
 if baseline_params.to_dict()["activate_random_process"]:
     time_params = baseline_params.to_dict()["time"]

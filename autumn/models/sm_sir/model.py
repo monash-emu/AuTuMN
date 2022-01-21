@@ -211,8 +211,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply age stratification
     """
 
-    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, age_groups, True, pop.region)
-    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices, base_compartments, is_dynamic_matrix=False)
+    mixing_matrices = build_synthetic_matrices(
+        country.iso3,
+        params.ref_mixing_iso3,
+        age_groups,
+        True,  # Always age-adjust, could change this to being a parameter
+        pop.region
+    )
+    age_strat = get_agegroup_strat(
+        params,
+        total_pops,
+        mixing_matrices,
+        base_compartments,
+        params.is_dynamic_mixing_matrix
+    )
     model.stratify_with(age_strat)
 
     """

@@ -23,7 +23,7 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 targets = []
 for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:
-    series = ts_set[output_name].rolling(7).mean()
+    series = ts_set[output_name].loc[491:].rolling(7).mean()  # truncate from May 05th, 2021
     targets.append(NormalTarget(series))
 
 priors = [

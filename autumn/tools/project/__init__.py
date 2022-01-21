@@ -9,4 +9,4 @@ from .project import (
     use_tuned_proposal_sds,
 )
 from .params import ParameterSet, Params
-from .timeseries import TimeSeriesSet, TimeSeries
+from .timeseries import load_timeseries

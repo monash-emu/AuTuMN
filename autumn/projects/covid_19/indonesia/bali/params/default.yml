@@ -3,8 +3,7 @@ description: BASELINE
 country:
   iso3: IDN
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: CHN
 
 population:
   region: Bali
@@ -61,7 +60,7 @@ contact_tracing:
 voc_emergence:
   delta:
     start_time: 400
-    entry_rate: 1.
+    entry_rate: 16.
     seed_duration: 10.
 
 vaccination:

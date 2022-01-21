@@ -348,10 +348,10 @@ def create_age_cols(df, age_map):
 def process_zip_files():
 
     files_map = {
-        "_Admissions_Table": COVID_DHHS_ADMN_CSV,
-        "_Vacc_Table": COVID_DHHS_VAC_CSV,
-        "_Cases_Table": COVID_DHHS_CASE_CSV,
-        "_Deaths_Table": COVID_DHHS_DEATH_CSV,
+        "nAdmissions_by": COVID_DHHS_ADMN_CSV,
+        "_nEncounters_by": COVID_DHHS_VAC_CSV,
+        "_NewCases_by_": COVID_DHHS_CASE_CSV,
+        "_deaths_LGA": COVID_DHHS_DEATH_CSV,
         "monitoringreport.csv": CHRIS_CSV,
     }
 
@@ -379,7 +379,7 @@ def preprocess_deaths():
 def load_deaths(df):
 
     df = merge_with_mapping_df(df, "lga")
-    df["cluster_deaths"] = df.ndeaths * df.proportion
+    df["cluster_deaths"] = df.n * df.proportion
     df = (
         df[["date_index", "cluster_id", "cluster_deaths"]]
         .groupby(["date_index", "cluster_id"])

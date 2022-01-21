@@ -8,6 +8,7 @@ import os
 import sys
 from datetime import datetime
 
+
 import numpy as np
 import pandas as pd
 from google_drive_downloader import GoogleDriveDownloader as gdd
@@ -16,14 +17,15 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "1-lWpiTzBO4gDvIl1gZC0g97--4obk0vZ"  # sheet 05 daily report
-PHL_fassster_link = "158Opz0FdHMq7Wwl7kTy3ERbbiFg4uKZr"
+PHL_doh_link = "1V3BKZwiXBFdzocPsfDySo05ogLTQQfF_"  # sheet 05 daily report
+PHL_fassster_link = "1rETnQICpbBVUgLVwCXHBaQpieDg5oWYx"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
 PHL_doh_dest = os.path.join(phl_inputs_dir, "PHL_icu.csv")
 PHL_fassster_dest = os.path.join(phl_inputs_dir, "PHL_ConfirmedCases.zip")
-icu_dest = os.path.join(phl_inputs_dir, "PHL_icu_processed.csv")
+icu_o_dest = os.path.join(phl_inputs_dir, "PHL_icu_processed.csv")
+hosp_o_dest = os.path.join(phl_inputs_dir, "PHL_hosp_processed.csv")
 deaths_dest = os.path.join(phl_inputs_dir, "PHL_deaths_processed.csv")
 notifications_dest = os.path.join(phl_inputs_dir, "PHL_notifications_processed.csv")
 
@@ -47,7 +49,8 @@ def main():
     )
     working_df = duplicate_data(working_df, "region")
     working_df = filter_df_by_regions(working_df, "region")
-    process_icu_data(working_df)
+    process_occupancy_data(working_df, "icu")
+    process_occupancy_data(working_df, "hospital")
 
     # Now fassster data
     working_df = pd.read_csv(fassster_filename)  # copy_davao_city_to_region(fassster_filename)
@@ -95,8 +98,7 @@ def duplicate_data(df: pd.DataFrame, regionSpelling):
     # df = pd.read_csv(filePath)
     data_dup = df.copy()
     data_dup[regionSpelling] = "philippines"
-    newdf = df.append(data_dup)
-    return newdf
+    return df.append(data_dup)
 
 
 def filter_df_by_regions(df: pd.DataFrame, regionSpelling):
@@ -109,18 +111,27 @@ def filter_df_by_regions(df: pd.DataFrame, regionSpelling):
         "davao_region",
         "philippines",
     ]
-    df_regional = df[df[regionSpelling].isin(regions)]
-    return df_regional
+    return df[df[regionSpelling].isin(regions)]
 
 
-def process_icu_data(df: pd.DataFrame):
+def process_occupancy_data(df: pd.DataFrame, occupancy_type: str) -> None:
+
+    if occupancy_type.lower() == "hospital":
+        dest = hosp_o_dest
+        col = "beds_ward_o"
+    elif occupancy_type.lower() == "icu":
+        dest = icu_o_dest
+        col = "icu_o"
+
     df.loc[:, "reportdate"] = pd.to_datetime(df["reportdate"])
     df["times"] = df.reportdate - COVID_BASE_DATETIME
     df["times"] = df["times"] / np.timedelta64(1, "D")
-    icu_occ = df.groupby(["region", "times"], as_index=False).sum(min_count=1)[
-        ["region", "times", "icu_o"]
+    df_occ = df.groupby(["region", "times"], as_index=False).sum(min_count=1)[
+        ["region", "times", col]
     ]
-    icu_occ.to_csv(icu_dest)
+    df_occ.to_csv(dest)
+
+    return None
 
 
 def process_accumulated_death_data(df: pd.DataFrame):
@@ -198,13 +209,16 @@ def update_calibration_phl():
         "philippines",
     ]
     # read in csvs
-    icu = pd.read_csv(icu_dest)
+    icu_occ = pd.read_csv(icu_o_dest)
     deaths = pd.read_csv(deaths_dest)
     notifications = pd.read_csv(notifications_dest)
+    hosp_occ = pd.read_csv(hosp_o_dest)
+
     for region in phl_regions:
-        icu_tmp = icu.loc[icu["region"] == region]
+        icu_tmp = icu_occ.loc[icu_occ["region"] == region]
         deaths_tmp = deaths.loc[deaths["Region"] == region]
         notifications_tmp = notifications.loc[notifications["Region"] == region]
+        hosp_tmp = hosp_occ.loc[hosp_occ["region"] == region]
         file_path = os.path.join(
             PROJECTS_PATH, "covid_19", "philippines", region, "timeseries.json"
         )
@@ -218,6 +232,8 @@ def update_calibration_phl():
             targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
             targets["infection_deaths"]["times"] = list(deaths_tmp["times"])
             targets["infection_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
+            targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
+            targets["hospital_occupancy"]["values"] = list(hosp_tmp["beds_ward_o"])
 
         with open(file_path, "w") as f:
             json.dump(targets, f, indent=2)
@@ -227,7 +243,7 @@ def remove_files(filePath1):
     os.remove(filePath1)
     os.remove(PHL_fassster_dest)
     os.remove(PHL_doh_dest)
-    os.remove(icu_dest)
+    os.remove(icu_o_dest)
     os.remove(deaths_dest)
     os.remove(notifications_dest)
 

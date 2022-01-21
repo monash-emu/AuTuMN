@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
@@ -10,8 +10,8 @@ from autumn.settings import Region, Models
 baseline_params = base_params.update(build_rel_path("params/default.yml"))
 scenario_params = [baseline_params.update(build_rel_path(f"params/scenario-1.yml"))]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-prev_inf_ts = ts_set.get("prevalence_infectious")
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
+prev_inf_ts = ts_set["prevalence_infectious"]
 targets = [NormalTarget(prev_inf_ts, time_weights=list(range(1, len(prev_inf_ts) + 1)))]
 priors = [
     UniformPrior("contact_rate", [0.0, 200.0]),

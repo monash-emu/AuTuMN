@@ -2,8 +2,7 @@ description: BASELINE
 
 infectious_seed: 110.
 
-mixing_matrices:
-  source_iso3: CHN
+ref_mixing_iso3: CHN
 
 history:
   natural_immunity_duration: 240.
@@ -57,7 +56,7 @@ contact_tracing:
 voc_emergence:
   delta:
     start_time: 360
-    entry_rate: 1.
+    entry_rate: 16.
     seed_duration: 10.
 
 vaccination:

@@ -45,7 +45,7 @@ TARGET_MAP_HCMC = {
 TARGET_MAP_HANOI = {
     "notifications": "notifications",
     "icu_occupancy": "icu_occupancy",
-    "infection_deaths": "infection_deaths"
+    "infection_deaths": "infection_deaths",
 }
 
 
@@ -53,6 +53,7 @@ def preprocess_vnm_data():
     df = pd.read_csv(COVID_OWID)
     df = df[df.iso_code == "VNM"]
     df = create_date_index(COVID_BASE_DATETIME, df, "date")
+    df = df[df["new_deaths"] >= 0]
     df = df[df.date <= pd.to_datetime("today").date()]
 
     return df

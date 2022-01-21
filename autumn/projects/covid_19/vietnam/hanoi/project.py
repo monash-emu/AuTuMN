@@ -69,3 +69,7 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.HANOI, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
+
+# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+

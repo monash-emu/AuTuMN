@@ -1,7 +1,7 @@
 description: BASELINE
 
 time:
-  start: 480 # 29th Apr 2021
+  start: 491 # 05th May 2021
   end: 912
 
 country:
@@ -27,8 +27,6 @@ mobility:
       grocery_and_pharmacy: 0.3
       parks: 0.2
       transit_stations: 0.1
-    home:
-      residential: 1.
   # Micro distancing
   microdistancing:
     behaviour:
@@ -36,23 +34,23 @@ mobility:
       parameters:
         max_effect: .2 # estimated from the Philipines paper
         times:
-          - 485 # 29th April 2021, first community case of COVID-19 detected in Ho Chi Minh City
-          - 505 # 19th May 2021, two new cases first detected after 20 days without any new case
-          - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
-          - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place
-          - 556 # 09th Jul 2021, Directive No.16 of the PM in place city-wide
-          - 573 # 26th Jul 2021, curfew from 6PM to 6AM
-          - 601 # 23th Aug 2021, total lockdown implemented
-          - 640 # 01st Oct 2021, lockdown started to ease
+          - 491 # 05th May 2021, first day with more than 10 community cases in Hanoi
+          - 511 # 25th May 2021, in-person dining banned and hair salons are closed
+          - 539 # 22nd Jun 2021, in-person dining and hair salon services resumed at 50% capacity
+          - 560 # 13th Jul 2021, in-person dining and hair salons are once again closed due to the surge of new new cases
+          - 571 # 24th Jul 2021, Directive No.16 of the Prime Minister in place city-wide
+          - 615 # 06th Sep 2021, The city is divided into 3 zones, with Directive No.16 in place at Zone 1 and Directive No. 15 in place at Zones 2 and 3
+          - 630 # 21st Sep 2021, Directive No. 15 of the PM implemented city-waide,in-person dining and hair salons are allowed at 50% capacity until 21:00 daily
+          - 653 # 14th Oct 2021, Directive No. 128 from the Prime Minister temporarily suspended the practice of Directive No. 15, 16 and 19 nationwide
         values:
-          - 0
-          - 0.2
-          - 0.4
+          - 0.3
           - 0.5
-          - 0.7
-          - 0.85
-          - 1.
+          - 0.3
+          - 0.5
           - 0.8
+          - 0.7
+          - 0.5
+          - 0.3
       locations:
         - other_locations
         - school
@@ -63,11 +61,29 @@ mobility:
       append: false
       times:
         - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
-        - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
+        - 2021-12-06 # Students in high school (Grade 10, 11 and 12) city-wide are allowed to go back to face-to-face learning
+        - 2021-12-25 # Students of high risk communes are requested to return to online learning due to the surge of new cases
       values:
         - 0.
-        - 0.1
+        - 0.15
+        - 0.075
 
+voc_emergence:
+  omicron:
+    start_time: 2000.
+    entry_rate: 1.
+    seed_duration: 10.
+    contact_rate_multiplier: 5.
+    ifr_multiplier: 1.
+
+sojourn:
+  compartment_periods:
+    hospital_late: 8.0
+    icu_early: 10.0 # 7.7 + 2.3
+    icu_late: 18.9 # Source: https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-021-06371-6
+
+history:
+  natural_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
 
 testing_to_detection:
   assumed_tests_parameter: 1e-04 # Sri-Lanka model
@@ -76,63 +92,146 @@ testing_to_detection:
 
 
 # Vaccination-related
-# All information provided here are HISTORICAL. Last update: 31st Oct, 2021.
-# All figures calculated below are available at: https://bit.ly/HCMC_vaccination_status
+# All information provided here are HISTORICAL. Last update: 15th Jan, 2022.
+# All figures calculated below are available at: https://bit.ly/Hanoi_vaccination_status
+# To illustrate the vaccination for under 18, we illustrate the population in three parts: over 20, 15 - 20, and under 15
+# Before 23/11, only individuals over 18 are fully vaccinated.
+# This vaccination scheme assumes that all 2nd doses given between 14/12/2021 to 30/12/2021 are for individuals aged 12-17 years.
 vaccination:
+  one_dose:
+    ve_sympt_covid: 0.5226
+    ve_prop_prevent_infection: 0.9 # one dose AZ has a quite lower efficacy towards infection
+    ve_infectiousness_ratio: 0.3292 # 0.0931 / 0.2828
+    ve_hospitalisation: 0.8249
+    ve_death: 0.9043
   fully_vaccinated:
-    ve_sympt_covid: 0.7157 # weighted average
-    ve_prop_prevent_infection: 1 # now varied
-    ve_hospitalisation: 0.9160 # weighted average
-    ve_death: 0.9329 # weighted average
-  second_dose_delay:  32.67 # weighted average waiting time between two doses
+    ve_sympt_covid: 0.6616 # weighted average
+    ve_prop_prevent_infection: 0.95 # high proportion with all types of vaccines
+    ve_infectiousness: 0.2828
+    ve_hospitalisation: 0.8993 # weighted average
+    ve_death: 0.9138 # weighted average
+  part_waned:
+    ve_sympt_covid: 0.4984
+    ve_prop_prevent_infection: 0.95 # high proportion with all types of vaccines
+    ve_infectiousness: 0.2348
+    ve_hospitalisation: 0.7600
+    ve_death: 0.7793
+  fully_waned:
+    ve_sympt_covid: 0.00
+    ve_prop_prevent_infection: 0.00
+    ve_infectiousness: 0.00
+    ve_hospitalisation: 0.5 # Myanmar
+    ve_death: 0.5 # Myanmar
+  boosted:
+    ve_sympt_covid: 0.8
+    ve_prop_prevent_infection: 0.95
+    ve_infectiousness: 0.4
+    ve_hospitalisation: 0.95
+    ve_death: 0.95
+  lag: 14
+  standard_supply: false
+  second_dose_delay: 25.33 # weighted average waiting time between two doses
+  boost_delay: 2000. # Equivalent to no vaccination booster
+  vacc_full_effect_duration: 90. # 3 months
+  vacc_part_effect_duration: 180. # 6 months
   roll_out_components: # --> stratify by time
     - age_min: 20
       supply_period_coverage:
-        coverage: .001226
-        start_time: 485 # 29th April 2021
-        end_time: 518 # 01st June 2021
+        coverage: .004802
+        start_time: 491 # 05th May 2021
+        end_time: 570 # 23rd July 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: .006267
-        start_time: 518 # 01st June 2021
-        end_time: 545 # 28th June 2021
+        coverage: .106309
+        start_time: 570 # 23rd July 2021
+        end_time: 628 # 19th Sep 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.001289
-        start_time: 545 # 28th June 2021
-        end_time: 556 # 09th July 2021
+        coverage: 0.333630
+        start_time: 628 # 19th Sep 2021
+        end_time: 650 # 11th Oct 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.001910
-        start_time: 556 # 09th July 2021
-        end_time: 572 # 25th July 2021
+        coverage: 0.169678
+        start_time: 650 # 11th Oct 2021
+        end_time: 669 # 30th Oct 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.0284
-        start_time: 572 # 25th July 2021
-        end_time: 593 # 15th Aug 2021
+        coverage: 0.426765
+        start_time: 669 # 30th Oct 2021
+        end_time: 691 # 21th Nov 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.0384
-        start_time: 593 # 15th Aug 2021
-        end_time: 610 # 01st Sep 2021
+        coverage: 0.101286
+        start_time: 691 # 21th Nov 2021
+        end_time: 714 # 14th Dec 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.1957
-        start_time: 610 # 01st Sep 2021
-        end_time: 624 # 15th Sep 2021
+        coverage: 0.04454
+        start_time: 714 # 14th Dec 2021
+        end_time: 730 # 30th Dec 2021
     - age_min: 20
       supply_period_coverage:
-        coverage: 0.2915
-        start_time: 624 # 15th Sep 2021
-        end_time: 640 # 01st Oct 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.2394
-        start_time: 640 # 01st Oct 2021
-        end_time: 654 # 15th Oct 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.2505
-        start_time: 654 # 15th Oct 2021
-        end_time: 670 # 31st Oct 2021
+        coverage: 0.050288
+        start_time: 730 # 30th Dec 2021
+        end_time: 746 # 15th Jan 2022
+    - supply_period_coverage:
+        coverage: .001473
+        start_time: 491 # 05th May 2021
+        end_time: 570 # 23rd July 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: .032507
+        start_time: 570 # 23rd July 2021
+        end_time: 628 # 19th Sep 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.094237
+        start_time: 628 # 19th Sep 2021
+        end_time: 650 # 11th Oct 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.035260
+        start_time: 650 # 11th Oct 2021
+        end_time: 669 # 30th Oct 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.076327
+        start_time: 669 # 30th Oct 2021
+        end_time: 691 # 21th Nov 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.011242
+        start_time: 691 # 21th Nov 2021
+        end_time: 714 # 14th Dec 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.401164
+        start_time: 714 # 14th Dec 2021
+        end_time: 730 # 30th Dec 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.008092
+        start_time: 730 # 30th Dec 2021
+        end_time: 746 # 15th Jan 2022
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.425844
+        start_time: 714 # 14th Dec 2021
+        end_time: 730 # 30th Dec 2021
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.020485
+        start_time: 730 # 30th Dec 2021
+        end_time: 746 # 15th Jan 2022
+      age_min: 10
+      age_max: 14

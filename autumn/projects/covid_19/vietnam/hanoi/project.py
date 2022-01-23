@@ -23,33 +23,37 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 targets = []
 for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:
-    series = ts_set[output_name].rolling(7).mean()
+    series = ts_set[output_name].loc[491:].rolling(7).mean()  # truncate from May 05th, 2021
     targets.append(NormalTarget(series))
 
 priors = [
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.exposed.total_period",
-        mean=4,
-        stdev=0.97,
-        trunc_range=[1.0, np.inf],
-    ),
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.active.total_period",
-        mean=6.5,
-        stdev=0.77,
-        trunc_range=[4.0, np.inf],
-    ),
-    UniformPrior("infectious_seed", [1, 20]),
-    UniformPrior("contact_rate", [0.035, 0.055]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 3.]),
-    UniformPrior("infection_fatality.multiplier", [0.5, 3.]),
-
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.002, 0.007]),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.1, 0.4]),
-
+    # Global COVID priors
+    *COVID_GLOBAL_PRIORS,
+    # Starting date
+    # UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
+    # Regional parameters
+    UniformPrior("infectious_seed", [5, 15]),
+    UniformPrior("contact_rate", [0.2, 0.25]),
+    # Health system-related
+    UniformPrior("clinical_stratification.icu_prop", [0.14, 0.18]),
+    # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
+    # UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.6, 1.0]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.25, 0.4]),
+    UniformPrior("infection_fatality.multiplier", [0.7, 1.0]),
+    # Detection
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0005, 0.009]),
+    # Microdistancing
+    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.30, 0.40]),
+    # Waning immunity
+    # UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
     # Vaccination parameters (independent sampling)
-    UniformPrior("vaccination.one_dose.ve_prop_prevent_infection", [0, 1], sampling="lhs"),
-    BetaPrior("vaccination.one_dose.ve_sympt_covid", mean=0.7, ci=[0.5, 0.9], sampling="lhs"),
+    # TruncNormalPrior("vaccination.one_dose.ve_prop_prevent_infection", mean=0.9, stdev=0.02, truc_range=(0.8, 1)),
+    # TruncNormalPrior("vaccination.one_dose.ve_sympt_covid", mean=0.5, stdev=0.02, truc_range=(0.4, 0.6)),
+    # Partly-waned immunity of vaccine
+    # TruncNormalPrior("vaccination.part_waned.ve_sympt_covid", mean=0.5, stdev=0.02, truc_range=(0.4, 0.6)),
+    # TruncNormalPrior("vaccination.part_waned.ve_infectiousness", mean=0.5, stdev=0.02, truc_range=(0.2, 0.3)),
+    # TruncNormalPrior("vaccination.part_waned.ve_hospitalisation", mean=0.75, stdev=0.02, truc_range=(0.65, 0.85)),
+    # TruncNormalPrior("vaccination.part_waned.ve_death", mean=0.8, stdev=0.02, truc_range=(0.7, 0.9))
 ]
 
 calibration = Calibration(priors, targets)

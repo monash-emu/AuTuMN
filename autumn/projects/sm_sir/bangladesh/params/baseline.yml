@@ -9,8 +9,8 @@ population:
   year: 2020
 
 time:
-  start: 650
-  end: 800
+  start: 365.
+  end: 751
 
 activate_random_process: False
 

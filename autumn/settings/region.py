@@ -37,6 +37,8 @@ class Region:
     HANOI = "hanoi"
     MYANMAR = "myanmar"
     BANGLADESH = "bangladesh"
+    DHAKA = "dhaka"
+    COXS_BAZAR = "coxs_bazar"
 
     REGIONS = [
         PHILIPPINES,

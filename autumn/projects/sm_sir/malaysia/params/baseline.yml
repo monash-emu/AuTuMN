@@ -11,10 +11,10 @@ population:
 sojourns:
   active:
     total_time: 6.
-    proportion_early: 0.333
+#    proportion_early: 0.333
   latent:
     total_time: 4.
-    proportion_early: 0.5
+#    proportion_early: 0.5
 
 time:
   start: 515.

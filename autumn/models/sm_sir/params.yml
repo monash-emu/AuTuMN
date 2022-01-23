@@ -118,7 +118,7 @@ mobility:
   mixing: {}
   age_mixing: null
   npi_effectiveness: {}
-  # Mapping of mobility to matrix locations - better not to have home/residential here, so it can be toggled on and off
+  # Mapping of Google mobility locations to Prem-specific locations
   google_mobility_locations:
     work:
       workplaces: 1.

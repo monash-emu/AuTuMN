@@ -8,7 +8,7 @@ SM_SIR_PROJECTS = list(_PROJECTS[Models.SM_SIR].keys())
 
 
 @pytest.mark.local_only
-@pytest.mark.parametrize("project_name", ["myanmar", "ho_chi_minh_city", "bangladesh", "malaysia"])
+@pytest.mark.parametrize("project_name", SM_SIR_PROJECTS)
 def test_run_models_partial(project_name):
     """
     Smoke test: ensure we can build and run each default model with nothing crashing.

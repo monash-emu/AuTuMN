@@ -19,6 +19,11 @@ REGION_PATH = {
     region: os.path.join(PROJECTS_PATH, "covid_19", "malaysia", region, "timeseries.json")
     for region in REGIONS
 }
+
+SM_SIR_PATH = {
+    "malaysia": os.path.join(PROJECTS_PATH, "sm_sir", "malaysia", "malaysia", "timeseries.json")
+}
+
 FILES = ["cases_malaysia", "deaths_malaysia", "hospital", "icu", "cases_state", "deaths_state"]
 
 TARGETS = {
@@ -58,20 +63,19 @@ def preproces_mys_data():
                     df = df.groupby("date_index").sum()
                     df.reset_index(inplace=True)
                 if file in {"cases_malaysia", "deaths_malaysia", "hospital", "icu"}:
-                    df = df[df.date_index >=50]
+                    df = df[df.date_index >= 50]
                     update_timeseries(TARGETS[region], df, REGION_PATH[region])
+                    update_timeseries(TARGETS[region], df, SM_SIR_PATH[region])
 
-            else:
-
-                if file not in {"cases_malaysia", "deaths_malaysia"}:
-                    if region not in {"penang", "kuala_lumpur"}:
-                        df = df[df.state.str.lower() == region]
-                    if region == "penang":
-                        df = df[df.state.str.lower() == "pulau pinang"]
-                    if region == "kuala_lumpur":
-                        df = df[df.state.str.lower() == "w.p. kuala lumpur"]
-                    df = df[df.date_index >=50]
-                    update_timeseries(TARGETS[region], df, REGION_PATH[region])
+            elif file not in {"cases_malaysia", "deaths_malaysia"}:
+                if region not in {"penang", "kuala_lumpur"}:
+                    df = df[df.state.str.lower() == region]
+                if region == "penang":
+                    df = df[df.state.str.lower() == "pulau pinang"]
+                if region == "kuala_lumpur":
+                    df = df[df.state.str.lower() == "w.p. kuala lumpur"]
+                df = df[df.date_index >= 50]
+                update_timeseries(TARGETS[region], df, REGION_PATH[region])
 
 
 fetch_mys_data()

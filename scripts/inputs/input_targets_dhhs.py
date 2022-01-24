@@ -355,12 +355,10 @@ def process_zip_files():
         "monitoringreport.csv": CHRIS_CSV,
     }
 
-    for file in files_map:
+    for file, value in files_map.items():
         for each in os.listdir(COVID_AU_DIRPATH):
             if file in each:
-                pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(
-                    files_map[file], index=False
-                )
+                pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(value, index=False)
                 os.remove(os.path.join(COVID_AU_DIRPATH, each))
 
 

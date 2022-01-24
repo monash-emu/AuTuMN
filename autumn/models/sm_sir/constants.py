@@ -16,6 +16,7 @@ class FlowName:
     WITHIN_INFECTIOUS = "within_infectious"
     RECOVERY = "recovery"
     WANING = "waning"
+    REINFECTION = "reinfection"
 
 
 BASE_COMPARTMENTS = [

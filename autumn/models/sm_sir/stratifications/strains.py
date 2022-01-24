@@ -44,4 +44,6 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     # Apply transmissibility adjustments
     strain_strat.set_flow_adjustments(FlowName.INFECTION, transmissibility_adjustment)
 
+    strain_strat.set_flow_adjustments(FlowName.REINFECTION, {"wild_type": Multiply(0.), "omicron": None})
+
     return strain_strat

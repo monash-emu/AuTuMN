@@ -271,6 +271,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     strain_strata = None
     if params.voc_emergence:
+
+        model.add_infection_frequency_flow(
+            name=FlowName.REINFECTION,
+            contact_rate=contact_rate,
+            source=Compartment.RECOVERED,
+            dest=infection_dest,
+        )
+
         voc_params = params.voc_emergence
 
         # Build and apply stratification

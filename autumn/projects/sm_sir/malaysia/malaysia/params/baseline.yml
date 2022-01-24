@@ -16,16 +16,16 @@ sojourns:
     total_time: 4.
 #    proportion_early: 0.5
   recovered:
-    total_time: 90.
+    total_time: 180.
 
 time:
-  start: 515.
-  end: 751.
+  start: 430.
+  end: 800.
 
 activate_random_process: False
 
-contact_rate: 0.0231
-infectious_seed: 552.
+contact_rate: 0.055
+infectious_seed: 10000.
 
 immunity_stratification:
   prop_immune: .6
@@ -40,5 +40,15 @@ voc_emergence: null
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-3
-  assumed_cdr_parameter: 0.08
+  assumed_cdr_parameter: 0.12
   smoothing_period: 14
+
+is_dynamic_mixing_matrix: true
+
+hospital_stay:
+  hospital_all:
+    parameters:
+      mean: 8.
+  icu:
+    parameters:
+      mean: 10.

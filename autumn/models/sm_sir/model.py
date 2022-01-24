@@ -41,7 +41,9 @@ def get_compartments(sojourns: Sojourns) -> List[str]:
 
     """
 
-    compartments = BASE_COMPARTMENTS
+    # Make a copy, we really don't want to append to something that's meant to be a constant...
+    compartments = BASE_COMPARTMENTS.copy()
+    
     if sojourns.latent:
         compartments.append(Compartment.LATENT)
         if sojourns.latent.proportion_early:

@@ -1,118 +1,93 @@
 description: >
-  SCENARIO 1: Social distancing returns to 60% on 02nd Oct, 2021 and is eased at 20% every 3 weeks.
-  60% and 90% of the population aged 10-20 will be fully vaccinated on 15th Dec 2021 and 31st Jan 2022, respectively.
-  Vaccination for the 20+ age group continues at the speed of 400000 new fully vaccinated people per month for the next six months.
-  Schools start to reopen on 02nd Jan 2022 at 30% every 2 weeks.
+  SCENARIO 1:
+  Vaccination continues at the speed of 500000 and 100000 new fully vaccinated people per month, within the 18+ and 12-17 age group respectively, for the next six months.
+  Mobility reduced to -50% from Feb 1st to Feb 14th, then -30% from Feb 15th to Mar 14th, and returns to -10% from Mar 15th onwards.
+  University students and students grade 7-12 (first 50% of all students) return to school from Feb 14th, the remaining 50% (students grade 1-2 and kindergarten)
+  return to school 2 weeks later.
+  The Omicron variant does not emerge within the city.
 
 time:
-  start: 640 # 01st Oct 2021
+  start: 763 # 01st Feb 2022
 
 mobility:
-  # Micro distancing
   microdistancing:
     behavior:
-      function_type: empiric
       parameters:
-        max_effect: .2
         times:
-          - 640 # 01st Oct, 2021, lockdown started to ease
-          - 641 # 02nd Oct 2021
-          - 662 # 23rd Oct 2021
-          - 683 # 13th Nov 2021
+          - 763 # 01st Feb 2022
+          - 777 # 15th Feb 2022
+          - 805 # 15th Mar 2022
         values:
-          - 0.8
-          - 0.6
-          - 0.4
-          - 0.2
-      locations:
-        - other_locations
-        - school
-        - work
-        - home
+          - 0.5
+          - 0.3
+          - 0.1
   mixing:
-    other_locations:
-      append: true
-      times:
-        - 2021-10-01 # lockdown eased
-        - 2021-10-02
-        - 2021-10-23
-        - 2021-11-13
-      values:
-        - - repeat_prev
-        - 0.4
-        - 0.6
-        - 0.8
-
-    work:
-      append: true
-      times:
-        - 2021-10-01 # lockdown eased
-        - 2021-10-02
-        - 2021-10-23
-        - 2021-11-13
-      values:
-        - - repeat_prev
-        - 0.6
-        - 0.4
-        - 0.2
-
     school:
       append: false
       times:
         - 2021-05-09
-        - 2021-10-20
-        - 2022-01-02
-        - 2022-01-16
-        - 2022-01-30
+        - 2021-12-06
+        - 2021-12-25
+        - 2022-02-14
+        - 2022-02-28
       values:
         - 0.
-        - 0.1
-        - 0.4
-        - 0.7
-        - 1.0
+        - 0.15
+        - 0.075
+        - 0.5
+        - 1.
 
-# All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/HCMC_vaccination_status
+# All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/Hanoi_vaccination_status
 vaccination:
   roll_out_components:
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.303250
+        start_time: 746 # 15th Jan 2022
+        end_time: 777 # 15th Feb 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.435236
+        start_time: 777 # 15th Feb 2022
+        end_time: 805 # 15th Mar 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.770650
+        start_time: 805 # 15th Mar 2022
+        end_time: 836 # 15th Apr 2022
     - supply_period_coverage:
-        coverage: 0.6
-        start_time: 666 # 27th Oct 2021
-        end_time: 715 # 15th Dec 2021
-      age_min: 10
+        coverage: 0.157257
+        start_time: 746 # 15th Jan 2022
+        end_time: 777 # 15th Feb 2022
+      age_min: 15
       age_max: 19
     - supply_period_coverage:
-        coverage: 0.75
-        start_time: 715 # 15th Dec 2021
-        end_time: 762 # 31st Jan 2022
-      age_min: 10
+        coverage: 0.186602
+        start_time: 777 # 15th Feb 2022
+        end_time: 805 # 15th Mar 2022
+      age_min: 15
       age_max: 19
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.1644
-        start_time: 670 # 31st Oct 2021
-        end_time: 700 # 30th Nov 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.1968
-        start_time: 700 # 30th Nov 2021
-        end_time: 731 # 31st Dec 2021
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.2450
-        start_time: 731 # 31st Dec 2021
-        end_time: 762 # 31st Jan 2022
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.3246
-        start_time: 762 # 31st Jan 2022
-        end_time: 790 # 28th Feb 2022
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.4806
-        start_time: 790 # 28th Feb 2022
-        end_time: 821 # 31st Mar 2022
-    - age_min: 20
-      supply_period_coverage:
-        coverage: 0.9253
-        start_time: 821 # 31st Mar 2022
-        end_time: 851 # 30th Apr 2022
+    - supply_period_coverage:
+        coverage: 0.229410
+        start_time: 805 # 15th Mar 2022
+        end_time: 836 # 15th Apr 2022
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.128053
+        start_time: 746 # 15th Jan 2022
+        end_time: 777 # 15th Feb 2022
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.146859
+        start_time: 777 # 15th Feb 2022
+        end_time: 805 # 15th Mar 2022
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.172140
+        start_time: 805 # 15th Mar 2022
+        end_time: 836 # 15th Apr 2022
+      age_min: 10
+      age_max: 14

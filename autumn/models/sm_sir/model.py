@@ -41,16 +41,19 @@ def get_compartments(sojourns: Sojourns) -> List[str]:
 
     """
 
-    compartments = BASE_COMPARTMENTS
+    # Make a copy, we really don't want to append to something that's meant to be a constant...
+    compartments = BASE_COMPARTMENTS.copy()
+    
     if sojourns.latent:
         compartments.append(Compartment.LATENT)
         if sojourns.latent.proportion_early:
             compartments.append(Compartment.LATENT_LATE)
     if sojourns.active.proportion_early:
         compartments.append(Compartment.INFECTIOUS_LATE)
+    if sojourns.recovered:
+        compartments.append(Compartment.WANED)
 
     return compartments
-
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -180,6 +183,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.SUSCEPTIBLE,
         dest=infection_dest,
     )
+    if "waned" in base_compartments:
+        model.add_infection_frequency_flow(
+            name=FlowName.INFECTION,
+            contact_rate=contact_rate,
+            source=Compartment.WANED,
+            dest=infection_dest,
+        )
 
     # Active compartment(s) transitions
     active_sojourn = params.sojourns.active.total_time
@@ -200,12 +210,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         recovery_origin = Compartment.INFECTIOUS
         recovery_rate = 1. / active_sojourn
 
+    # Recovery and waning
     model.add_transition_flow(
         name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,
         source=recovery_origin,
         dest=Compartment.RECOVERED,
     )
+    if "waned" in base_compartments:
+        model.add_transition_flow(
+            name=FlowName.WANING,
+            fractional_rate=1. / params.sojourns.recovered.total_time,
+            source=Compartment.RECOVERED,
+            dest=Compartment.WANED,
+        )
 
     """
     Apply age stratification

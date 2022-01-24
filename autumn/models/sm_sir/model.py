@@ -248,6 +248,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Apply clinical stratification - must come after age stratification if asymptomatic props being used
     """
+
     detect_prop = params.detect_prop
     is_undetected = callable(detect_prop) or detect_prop < 1.0
     if sympt_props:

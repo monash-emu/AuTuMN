@@ -31,12 +31,12 @@ immunity_stratification:
   prop_immune: .6
   prop_high_among_immune: .2  # varied in uncertainty
 
-voc_emergence: null
-#  omicron:
-#    start_time: 2000
-#    entry_rate: 5.
-#    seed_duration: 10.
-#    contact_rate_multiplier: 4.
+voc_emergence:
+  omicron:
+    start_time: 730.
+    entry_rate: 5.
+    seed_duration: 10.
+    contact_rate_multiplier: 3.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-3

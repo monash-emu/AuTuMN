@@ -16,7 +16,7 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
 
     Args:
         voc_params: All the VoC parameters (one VocComponent parameters object for each VoC)
-        compartments: All the model compartments
+        compartments: All the model's base compartment types
 
     Returns:
         The strain stratification summer object

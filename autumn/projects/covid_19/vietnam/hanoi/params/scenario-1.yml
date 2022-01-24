@@ -2,8 +2,8 @@ description: >
   SCENARIO 1:
   Vaccination continues at the speed of 500000 and 100000 new fully vaccinated people per month, within the 18+ and 12-17 age group respectively, for the next six months.
   Mobility reduced to -50% from Feb 1st to Feb 14th, then -30% from Feb 15th to Mar 14th, and returns to -10% from Mar 15th onwards.
-  University students and students grade 7-12 (first 50% of all students) return to school from Feb 14th, the remaining 50% (students grade 1-2 and kindergarten)
-  return to school 2 weeks later.
+  Students grade 7-12 (first 50% of all students) return to school from Feb 8th, university students (next 25% of all students)
+  return to school from Feb 21st, and the remaining 50% (students grade 1-2 and kindergarten) return to school from Mar 7th.
   The Omicron variant does not emerge within the city.
 
 time:
@@ -35,12 +35,14 @@ mobility:
         - 2021-05-09
         - 2021-12-06
         - 2021-12-25
-        - 2022-02-14
-        - 2022-02-28
+        - 2022-02-08
+        - 2022-02-21
+        - 2022-03-07
       values:
         - 0.
         - 0.15
         - 0.075
+        - 0.25
         - 0.5
         - 1.
 

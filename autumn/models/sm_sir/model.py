@@ -272,13 +272,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     strain_strata = None
     if params.voc_emergence:
 
-        model.add_infection_frequency_flow(
-            name=FlowName.REINFECTION,
-            contact_rate=contact_rate,
-            source=Compartment.RECOVERED,
-            dest=infection_dest,
-        )
-
         voc_params = params.voc_emergence
 
         # Build and apply stratification
@@ -288,6 +281,22 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
+
+        modification = 0.5
+        if callable(contact_rate):
+            def modified_contact_rate(t, c):
+                return contact_rate(t, c) * modification
+        else:
+            modified_contact_rate = contact_rate * modification
+
+        model.add_infection_frequency_flow(
+            name=FlowName.REINFECTION,
+            contact_rate=modified_contact_rate,
+            source=Compartment.RECOVERED,
+            dest=infection_dest,
+            dest_strata={"strain": "delta"},
+            source_strata={"strain": "omicron"},
+        )
 
     """
     Apply immunity stratification

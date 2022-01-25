@@ -35,7 +35,7 @@ priors = [
     UniformPrior("infectious_seed", [1, 15]),
     UniformPrior("contact_rate", [0.05, 0.15]),
     # Health system-related
-    UniformPrior("clinical_stratification.icu_prop", [0.15, 0.2]),
+    UniformPrior("clinical_stratification.icu_prop", [0.15, 0.25]),
     # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
     # UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.6, 1.0]),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [1., 2.]),
@@ -43,7 +43,7 @@ priors = [
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.01]),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.45, 0.65]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.55, 0.75]),
     # Waning immunity
     # UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
     # Vaccination parameters (independent sampling)

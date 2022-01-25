@@ -282,21 +282,28 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
 
-        modification = 0.5
-        if callable(contact_rate):
-            def modified_contact_rate(t, c):
-                return contact_rate(t, c) * modification
-        else:
-            modified_contact_rate = contact_rate * modification
+        immune_escape = {
+            "omicron": {"wild_type": 0.5}
+        }
 
-        model.add_infection_frequency_flow(
-            name=FlowName.REINFECTION,
-            contact_rate=modified_contact_rate,
-            source=Compartment.RECOVERED,
-            dest=infection_dest,
-            dest_strata={"strain": "delta"},
-            source_strata={"strain": "omicron"},
-        )
+        for infecting_strain, infected_strains in immune_escape.items():
+            for infected_strain in infected_strains:
+
+                modification = 1. - immune_escape[infecting_strain][infected_strain]
+                if callable(contact_rate):
+                    def modified_contact_rate(t, c):
+                        return contact_rate(t, c) * modification
+                else:
+                    modified_contact_rate = contact_rate * modification
+
+                model.add_infection_frequency_flow(
+                    name=FlowName.REINFECTION,
+                    contact_rate=modified_contact_rate,
+                    source=Compartment.RECOVERED,
+                    dest=infection_dest,
+                    dest_strata={"strain": infecting_strain},
+                    source_strata={"strain": infected_strain},
+                )
 
     """
     Apply immunity stratification

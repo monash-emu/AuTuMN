@@ -37,7 +37,6 @@ voc_emergence:
     entry_rate: 100.
     seed_duration: 10.
     contact_rate_multiplier: 1.
-    wild_type_immune_escape: 0.5
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-3

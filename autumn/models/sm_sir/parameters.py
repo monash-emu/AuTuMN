@@ -294,7 +294,6 @@ class VocComponent(BaseModel):
     entry_rate: Optional[float]
     seed_duration: Optional[float]
     contact_rate_multiplier: Optional[float]
-    wild_type_immune_escape: Optional[float]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):

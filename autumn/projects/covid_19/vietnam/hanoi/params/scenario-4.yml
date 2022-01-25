@@ -1,5 +1,5 @@
 description: >
-  SCENARIO 2 (MODERATE-1 SCENARIO):
+  SCENARIO 4 (WORST SCENARIO):
   Vaccination continues at the speed of 500000 and 100000 new fully vaccinated people per month, within the 18+ and 12-17 age group respectively, for the next six months.
   Mobility remains at -30% until Feb 28th, and returns to -10% from Mar 1st onwards.
   Students grade 7-12 (first 50% of all students) return to school from Feb 8th, university students (next 25% of all students)
@@ -17,9 +17,7 @@ mobility:
         max_effect: 0.6419436416651728
         times:
           - 763 # 01st Feb 2022
-          - 791 # 01st Mar 2022
         values:
-          - 0.3
           - 0.1
       locations:
         - other_locations

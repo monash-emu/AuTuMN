@@ -14,7 +14,7 @@ mobility:
     behavior:
       function_type: empiric
       parameters:
-        max_effect: 0.6246357954211068
+        max_effect: 0.6762344861285476
         times:
           - 763 # 01st Feb 2022
         values:

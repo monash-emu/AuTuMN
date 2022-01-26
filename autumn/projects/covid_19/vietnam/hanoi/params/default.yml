@@ -126,8 +126,8 @@ vaccination:
     ve_sympt_covid: 0.75
     ve_prop_prevent_infection: 0.9
     ve_infectiousness: 0.35
-    ve_hospitalisation: 0.9
-    ve_death: 0.9
+    ve_hospitalisation: 0.9 # https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(21)02249-2/fulltext
+    ve_death: 0.8 # https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(21)02249-2/fulltext
   lag: 14
   standard_supply: false
   second_dose_delay: 25.33 # weighted average waiting time between two doses

@@ -1,9 +1,10 @@
 description: >
-  SCENARIO 1:
+  SCENARIO 1 - LATE BOOSTER DOSE:
   Vaccination continues at the speed of 500000 and 100000 new fully vaccinated people per month, within the 18+ and 12-17 age group respectively, for the next six months.
   Mobility reduced to -50% from Feb 1st to Feb 14th, then -30% from Feb 15th to Mar 14th, and returns to -10% from Mar 15th onwards.
   Students grade 7-12 (first 50% of all students) return to school from Feb 8th, university students (next 25% of all students)
   return to school from Feb 21st, and the remaining 50% (students grade 1-2 and kindergarten) return to school from Mar 7th.
+  Booster dose is given approximately 4.5 months (135 days) after the second dose (1.2 months later than expected).
   The Omicron variant does not emerge within the city.
 
 time:
@@ -48,6 +49,7 @@ mobility:
 
 # All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/Hanoi_vaccination_status
 vaccination:
+  boost_delay: 135. # Booster given approx. 4.5 months after second dose
   roll_out_components:
     - age_min: 20
       supply_period_coverage:

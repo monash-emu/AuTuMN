@@ -40,6 +40,11 @@ Bali sub region population
 Vietnam Ho Chi Minh City population
 Details are in /data/inputs/covid_vnm/README.md
 
+Bangladesh
+Population data provided by Bangladesh Bureau of Statistics endorsed on 28 December 2021.
+File is BD_PopulationProjection_2021_BBS.xlsx located in data/inputs/covid_bgd
+
+
 ### [WPP2019_FERT_F03_CRUDE_BIRTH_RATE](<https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/2_Fertility/WPP2019_FERT_F03_CRUDE_BIRTH_RATE.xlsx>)
 
 Used for crude birth rate

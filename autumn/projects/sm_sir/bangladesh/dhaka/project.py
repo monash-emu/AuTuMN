@@ -3,6 +3,7 @@ from autumn.tools.project import (
     ParameterSet,
     load_timeseries,
     build_rel_path,
+    use_tuned_proposal_sds,
 )
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
@@ -19,22 +20,16 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
-notifications_ts = ts_set["notifications"]
-icu_occupancy_ts = ts_set["icu_occupancy"]
-infection_deaths_ts = ts_set["infection_deaths"]
-hospital_ts = ts_set["hospital_occupancy"]
+priors = [
+    UniformPrior("contact_rate", [0.1, 0.2]),
+    UniformPrior("infectious_seed", [1, 400])
+]
 
 targets = [
-    NormalTarget(notifications_ts),
-    NormalTarget(infection_deaths_ts),
-    NormalTarget(icu_occupancy_ts),
-    NormalTarget(hospital_ts)
+    NormalTarget(data=ts_set["notifications"]),
+    NormalTarget(data=ts_set["icu_occupancy"]),
+    NormalTarget(data=ts_set["infection_deaths"]),
 ]
-
-priors = [
-    UniformPrior("contact_rate", [0.015, 0.04]),
-]
-
 
 if baseline_params.to_dict()["activate_random_process"]:
     time_params = baseline_params.to_dict()["time"]
@@ -61,7 +56,7 @@ with open(plot_spec_filepath) as f:
 
 # Create and register the project.
 project = Project(
-    Region.MALAYSIA, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+    Region.DHAKA, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
 )
 
 

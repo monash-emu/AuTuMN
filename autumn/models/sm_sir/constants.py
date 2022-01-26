@@ -6,7 +6,6 @@ class Compartment:
     INFECTIOUS = "infectious"
     INFECTIOUS_LATE = "infectious_late"
     RECOVERED = "recovered"
-    WANED = "waned"
 
 
 class FlowName:
@@ -15,7 +14,6 @@ class FlowName:
     PROGRESSION = "progression"
     WITHIN_INFECTIOUS = "within_infectious"
     RECOVERY = "recovery"
-    WANING = "waning"
 
 
 BASE_COMPARTMENTS = [

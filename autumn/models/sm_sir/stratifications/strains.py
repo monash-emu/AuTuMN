@@ -11,9 +11,6 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     Stratify the model by strain, with at least two strata, being wild or "ancestral" virus type and the variants of
     concern ("VoC").
 
-    We are now stratifying all the compartments, including the recovered ones. The recovered compartment stratified by
-    strain represents people whose last infection was with that strain.
-
     Args:
         voc_params: All the VoC parameters (one VocComponent parameters object for each VoC)
         compartments: All the model compartments

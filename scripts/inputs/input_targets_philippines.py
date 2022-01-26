@@ -17,8 +17,8 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "1C_U2MbI5LCK1Cx35ZxWUxZbiKwKVMPz9"  # sheet 05 daily report
-PHL_fassster_link = "19P25r5sYvXT0IWwTd0x3jj-XtEZwh13d"
+PHL_doh_link = "1V3BKZwiXBFdzocPsfDySo05ogLTQQfF_"  # sheet 05 daily report
+PHL_fassster_link = "1rETnQICpbBVUgLVwCXHBaQpieDg5oWYx"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
@@ -75,7 +75,7 @@ def fassster_data_filepath():
     fassster_filename = [
         filename
         for filename in os.listdir(phl_inputs_dir)
-        if filename.startswith("ConfirmedCases_Final_") or filename.startswith("2022")
+        if filename.startswith("ConfirmedCases_Final_")
     ]
     fassster_filename = os.path.join(phl_inputs_dir, fassster_filename[0])
     return fassster_filename
@@ -199,29 +199,12 @@ def process_notifications_data(df: pd.DataFrame):
     fassster_data_final.to_csv(notifications_dest)
 
 
-def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, file_path):
-    with open(file_path, mode="r") as f:
-        targets = json.load(f)
-
-        targets["notifications"]["times"] = list(notifications_tmp["times"])
-        targets["notifications"]["values"] = list(notifications_tmp["mean_daily_notifications"])
-        targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
-        targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
-        targets["infection_deaths"]["times"] = list(deaths_tmp["times"])
-        targets["infection_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
-        targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
-        targets["hospital_occupancy"]["values"] = list(hosp_tmp["beds_ward_o"])
-
-    with open(file_path, "w") as f:
-        json.dump(targets, f, indent=2)
-
-
 def update_calibration_phl():
     phl_regions = [
         "calabarzon",
         "central_visayas",
         "manila",
-        # "davao_city",
+        "davao_city",
         "davao_region",
         "philippines",
     ]
@@ -236,17 +219,24 @@ def update_calibration_phl():
         deaths_tmp = deaths.loc[deaths["Region"] == region]
         notifications_tmp = notifications.loc[notifications["Region"] == region]
         hosp_tmp = hosp_occ.loc[hosp_occ["region"] == region]
-        COVID_PHL_TS = os.path.join(
+        file_path = os.path.join(
             PROJECTS_PATH, "covid_19", "philippines", region, "timeseries.json"
         )
-        write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, COVID_PHL_TS)
 
-        SM_SIR_NCR_TS = os.path.join(
-            PROJECTS_PATH, "sm_sir", "philippines", "national-capital-region", "timeseries.json"
-        )
+        with open(file_path, mode="r") as f:
+            targets = json.load(f)
 
-        if region == "manila":
-            write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, SM_SIR_NCR_TS)
+            targets["notifications"]["times"] = list(notifications_tmp["times"])
+            targets["notifications"]["values"] = list(notifications_tmp["mean_daily_notifications"])
+            targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
+            targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
+            targets["infection_deaths"]["times"] = list(deaths_tmp["times"])
+            targets["infection_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
+            targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
+            targets["hospital_occupancy"]["values"] = list(hosp_tmp["beds_ward_o"])
+
+        with open(file_path, "w") as f:
+            json.dump(targets, f, indent=2)
 
 
 def remove_files(filePath1):

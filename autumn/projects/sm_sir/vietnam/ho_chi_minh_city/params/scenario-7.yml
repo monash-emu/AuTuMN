@@ -1,0 +1,94 @@
+description: >
+  SCENARIO 3:
+  60% and 90% of the population aged 12-17 will be fully vaccinated on 15th Dec 2021 and 31st Jan 2022, respectively.
+  Vaccination for the 20+ age group continues at the speed of 400000 new fully vaccinated people per month for the next six months.
+  Booster dose is provided 6 months after the second dose.
+  The Omicron variant does not emerge within the city.
+  Mobility goes back to normal starting from 24th Dec 2021.
+
+time:
+  start: 701 # 01st Dec 2021
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-12-23
+        - 2021-12-24
+      values:
+        - - repeat_prev
+        - 1.
+
+    work:
+      append: true
+      times:
+        - 2021-12-23
+        - 2021-12-24
+      values:
+        - - repeat_prev
+        - 1.
+
+# All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/HCMC_vaccination_status
+vaccination:
+  boost_delay: 180. # 3 months
+  roll_out_components:
+    - supply_period_coverage:
+        coverage: 0.36 # 60% of 60% of population aged 10-14
+        start_time: 666 # 27th Oct 2021
+        end_time: 715 # 15th Dec 2021
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.28125 # 90% of 60% population aged 10-14
+        start_time: 715 # 15th Dec 2021
+        end_time: 762 # 31st Jan 2022
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.4458
+        start_time: 666 # 27th Oct 2021
+        end_time: 715 # 15th Dec 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.4023
+        start_time: 715 # 15th Dec 2021
+        end_time: 762 # 31st Jan 2022
+      age_min: 15
+      age_max: 19
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.1410
+        start_time: 685 # 15th Nov 2021
+        end_time: 700 # 30th Nov 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.1629
+        start_time: 700 # 30th Nov 2021
+        end_time: 731 # 31st Dec 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.1946
+        start_time: 731 # 31st Dec 2021
+        end_time: 762 # 31st Jan 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2417
+        start_time: 762 # 31st Jan 2022
+        end_time: 790 # 28th Feb 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.3187
+        start_time: 790 # 28th Feb 2022
+        end_time: 821 # 31st Mar 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.4678
+        start_time: 821 # 31st Mar 2022
+        end_time: 851 # 30th Apr 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.8792
+        start_time: 851 # 30th Apr 2022
+        end_time: 882 # 31st May 2022

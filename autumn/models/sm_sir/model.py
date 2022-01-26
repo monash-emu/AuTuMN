@@ -16,7 +16,7 @@ from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import make_voc_seed_func
+from .strat_processing.strains import seed_vocs
 from .preprocess.age_specific_params import convert_param_agegroups
 
 
@@ -41,13 +41,17 @@ def get_compartments(sojourns: Sojourns) -> List[str]:
 
     """
 
-    compartments = BASE_COMPARTMENTS
+    # Make a copy, we really don't want to append to something that's meant to be a constant...
+    compartments = BASE_COMPARTMENTS.copy()
+    
     if sojourns.latent:
         compartments.append(Compartment.LATENT)
         if sojourns.latent.proportion_early:
             compartments.append(Compartment.LATENT_LATE)
     if sojourns.active.proportion_early:
         compartments.append(Compartment.INFECTIOUS_LATE)
+    if sojourns.recovered:
+        compartments.append(Compartment.WANED)
 
     return compartments
 
@@ -74,12 +78,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     hosp_props = convert_param_agegroups(hosp_props, country.iso3, pop.region, age_groups) if hosp_props else None
 
     # Determine the compartments
-    compartments = get_compartments(params.sojourns)
+    base_compartments = get_compartments(params.sojourns)
 
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
-        compartments=compartments,
+        compartments=base_compartments,
         infectious_compartments=[Compartment.INFECTIOUS],
         timestep=params.time.step,
         ref_date=BASE_DATE
@@ -179,6 +183,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.SUSCEPTIBLE,
         dest=infection_dest,
     )
+    if "waned" in base_compartments:
+        model.add_infection_frequency_flow(
+            name=FlowName.INFECTION,
+            contact_rate=contact_rate,
+            source=Compartment.WANED,
+            dest=infection_dest,
+        )
 
     # Active compartment(s) transitions
     active_sojourn = params.sojourns.active.total_time
@@ -199,19 +210,39 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         recovery_origin = Compartment.INFECTIOUS
         recovery_rate = 1. / active_sojourn
 
+    # Recovery and waning
     model.add_transition_flow(
         name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,
         source=recovery_origin,
         dest=Compartment.RECOVERED,
     )
+    if "waned" in base_compartments:
+        model.add_transition_flow(
+            name=FlowName.WANING,
+            fractional_rate=1. / params.sojourns.recovered.total_time,
+            source=Compartment.RECOVERED,
+            dest=Compartment.WANED,
+        )
 
     """
     Apply age stratification
     """
 
-    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, age_groups, True, pop.region)
-    age_strat = get_agegroup_strat(params, total_pops, mixing_matrices, compartments, is_dynamic_matrix=False)
+    mixing_matrices = build_synthetic_matrices(
+        country.iso3,
+        params.ref_mixing_iso3,
+        age_groups,
+        True,  # Always age-adjust, could change this to being a parameter
+        pop.region
+    )
+    age_strat = get_agegroup_strat(
+        params,
+        total_pops,
+        mixing_matrices,
+        base_compartments,
+        params.is_dynamic_mixing_matrix
+    )
     model.stratify_with(age_strat)
 
     """
@@ -226,7 +257,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     if is_undetected or sympt_props:
         clinical_strat = get_clinical_strat(
-            model, compartments, params, age_groups, infectious_entry_flow, detect_prop, is_undetected, sympt_props
+            model, base_compartments, params, age_groups, infectious_entry_flow, detect_prop, is_undetected, sympt_props
         )
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
@@ -236,42 +267,37 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Apply strains stratification
     """
+
     strain_strata = None
     if params.voc_emergence:
         voc_params = params.voc_emergence
 
         # Build and apply stratification
-        strain_strat = get_strain_strat(voc_params, compartments)
+        strain_strat = get_strain_strat(voc_params, base_compartments)
         model.stratify_with(strain_strat)
         strain_strata = strain_strat.strata
 
-        # Use importation flows to seed VoC cases
-        for voc_name, voc_values in voc_params.items():
-            voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
-            model.add_importation_flow(
-                f"seed_voc_{voc_name}",
-                voc_seed_func,
-                dest=Compartment.INFECTIOUS,  # Different from Covid model, because this compartment always present here
-                dest_strata={"strain": voc_name},
-                split_imports=True
-            )
+        # Seed the VoCs from the point in time
+        seed_vocs(model, voc_params, Compartment.INFECTIOUS)
 
     """
     Apply immunity stratification
     """
-    immunity_strat = get_immunity_strat(params, compartments)
+
+    immunity_strat = get_immunity_strat(params, base_compartments)
     model.stratify_with(immunity_strat)
 
     """
     Set up derived output functions
     """
-    outputs_builder = SmSirOutputsBuilder(model, compartments)
+
+    outputs_builder = SmSirOutputsBuilder(model, base_compartments)
 
     # Track CDR function if case detection is implemented
     if is_undetected:
         outputs_builder.request_cdr()
 
-    outputs_builder.request_incidence(compartments, age_groups, clinical_strata, strain_strata)
+    outputs_builder.request_incidence(base_compartments, age_groups, clinical_strata, strain_strata)
     outputs_builder.request_notifications(
         params.time_from_onset_to_event.notification,
         model.times

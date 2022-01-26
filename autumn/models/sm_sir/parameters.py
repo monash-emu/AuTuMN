@@ -127,6 +127,7 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: Optional[CompartmentSojourn]
+    recovered: Optional[CompartmentSojourn]
 
 
 class MixingLocation(BaseModel):

@@ -22,7 +22,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 targets = []
-for output_name in ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]:
+for output_name in ["notifications", "infection_deaths", "icu_occupancy"]:
     series = ts_set[output_name].loc[491:].rolling(7).mean()  # truncate from May 05th, 2021
     targets.append(NormalTarget(series))
 
@@ -32,18 +32,18 @@ priors = [
     # Starting date
     # UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
     # Regional parameters
-    UniformPrior("infectious_seed", [5, 15]),
-    UniformPrior("contact_rate", [0.2, 0.25]),
+    UniformPrior("infectious_seed", [1, 5]),
+    UniformPrior("contact_rate", [0.05, 0.15]),
     # Health system-related
-    UniformPrior("clinical_stratification.icu_prop", [0.14, 0.18]),
+    UniformPrior("clinical_stratification.icu_prop", [0.15, 0.2]),
     # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
     # UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.6, 1.0]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.25, 0.4]),
-    UniformPrior("infection_fatality.multiplier", [0.7, 1.0]),
+    UniformPrior("clinical_stratification.props.hospital.multiplier", [1.5, 2.]),
+    UniformPrior("infection_fatality.multiplier", [0.6, 0.8]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0005, 0.009]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.30, 0.40]),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.55, 0.75]),
     # Waning immunity
     # UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
     # Vaccination parameters (independent sampling)
@@ -69,3 +69,7 @@ with open(plot_spec_filepath) as f:
 project = Project(
     Region.HANOI, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
+
+# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+

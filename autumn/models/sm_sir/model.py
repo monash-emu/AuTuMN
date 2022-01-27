@@ -297,9 +297,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             }
         }
 
+        # Considering recovery with one particular modelled strain ...
         for infected_strain, infecting_strains in cross_protection_params.items():
+            infected_strain_params = cross_protection_params[infected_strain]
+            msg = "Strain cross immunity incorrectly specified"
+            assert list(infected_strain_params.keys()) == strain_strat.strata, msg
+
+            # ... and its protection against infection with a new index strain.
             for infecting_strain in infecting_strains:
                 strain_combination_protections = cross_protection_params[infected_strain][infecting_strain]
+                expected_flows_list = [FlowName.EARLY_REINFECTION, FlowName.LATE_REINFECTION]
+                msg = "Flows to which strain cross immunity applied incorrectly specified"
+                assert list(strain_combination_protections.keys()) == expected_flows_list, msg
 
                 # Apply the modification to the early recovered compartment
                 modification = 1. - strain_combination_protections[FlowName.EARLY_REINFECTION]

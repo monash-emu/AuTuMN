@@ -16,22 +16,13 @@ from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import seed_vocs
+from .strat_processing.strains import seed_vocs, add_strain_cross_protection
 from .preprocess.age_specific_params import convert_param_agegroups
 
 
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
-
-
-def modify_function_or_value(function_or_value, modification):
-    if callable(function_or_value):
-        def modified_contact_rate(t, c):
-            return function_or_value(t, c) * modification
-        return modified_contact_rate
-    else:
-        return function_or_value * modification
 
 
 def get_compartments(sojourns: Sojourns) -> List[str]:
@@ -297,41 +288,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             }
         }
 
-        # Considering recovery with one particular modelled strain ...
-        for infected_strain, infecting_strains in cross_protection_params.items():
-            infected_strain_params = cross_protection_params[infected_strain]
-            msg = "Strain cross immunity incorrectly specified"
-            assert list(infected_strain_params.keys()) == strain_strat.strata, msg
-
-            # ... and its protection against infection with a new index strain.
-            for infecting_strain in infecting_strains:
-                strain_combination_protections = cross_protection_params[infected_strain][infecting_strain]
-                expected_flows_list = [FlowName.EARLY_REINFECTION, FlowName.LATE_REINFECTION]
-                msg = "Flows to which strain cross immunity applied incorrectly specified"
-                assert list(strain_combination_protections.keys()) == expected_flows_list, msg
-
-                # Apply the modification to the early recovered compartment
-                modification = 1. - strain_combination_protections[FlowName.EARLY_REINFECTION]
-                model.add_infection_frequency_flow(
-                    name=FlowName.EARLY_REINFECTION,
-                    contact_rate=modify_function_or_value(contact_rate, modification),
-                    source=Compartment.RECOVERED,
-                    dest=infection_dest,
-                    source_strata={"strain": infected_strain},
-                    dest_strata={"strain": infecting_strain},
-                )
-
-                # Apply the immunity-specific protection to the late recovered or "waned" compartment
-                modification = 1. - strain_combination_protections[FlowName.LATE_REINFECTION]
-                if "waned" in base_compartments:
-                    model.add_infection_frequency_flow(
-                        name=FlowName.LATE_REINFECTION,
-                        contact_rate=modify_function_or_value(contact_rate, modification),
-                        source=Compartment.WANED,
-                        dest=infection_dest,
-                        source_strata={"strain": infected_strain},
-                        dest_strata={"strain": infecting_strain},
-                    )
+        add_strain_cross_protection(
+            model, base_compartments, infection_dest, contact_rate, strain_strat.strata, cross_protection_params
+        )
 
     """
     Apply immunity stratification

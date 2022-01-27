@@ -25,6 +25,15 @@ BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 
+def modify_function_or_value(function_or_value, modification):
+    if callable(function_or_value):
+        def modified_contact_rate(t, c):
+            return function_or_value(t, c) * modification
+        return modified_contact_rate
+    else:
+        return function_or_value * modification
+
+
 def get_compartments(sojourns: Sojourns) -> List[str]:
     """
     Find the model compartments that are applicable to the parameter requests, based on the sojourn times structure.
@@ -183,13 +192,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.SUSCEPTIBLE,
         dest=infection_dest,
     )
-    if "waned" in base_compartments:
-        model.add_infection_frequency_flow(
-            name=FlowName.INFECTION,
-            contact_rate=contact_rate,
-            source=Compartment.WANED,
-            dest=infection_dest,
-        )
 
     # Active compartment(s) transitions
     active_sojourn = params.sojourns.active.total_time
@@ -282,28 +284,45 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
 
-        immune_escape = {
-            "omicron": {"wild_type": 0.5}
+        # FIXME: This needs to move to parameterisation somehow (of course)
+        # This dictionary is organised by the strain being infected first and then by the infecting strain
+        cross_protection_params = {
+            "wild_type": {
+                "wild_type": {"early_reinfection": 1., "late_reinfection": 0.},
+                "omicron": {"early_reinfection": 0., "late_reinfection": 0.},
+            },
+            "omicron": {
+                "wild_type": {"early_reinfection": 1., "late_reinfection": 1.},
+                "omicron": {"early_reinfection": 1., "late_reinfection": 0.},
+            }
         }
 
-        for infecting_strain, infected_strains in immune_escape.items():
-            for infected_strain in infected_strains:
+        for infected_strain, infecting_strains in cross_protection_params.items():
+            for infecting_strain in infecting_strains:
+                strain_combination_protections = cross_protection_params[infected_strain][infecting_strain]
 
-                modification = 1. - immune_escape[infecting_strain][infected_strain]
-                if callable(contact_rate):
-                    def modified_contact_rate(t, c):
-                        return contact_rate(t, c) * modification
-                else:
-                    modified_contact_rate = contact_rate * modification
-
+                # Apply the modification to the early recovered compartment
+                modification = 1. - strain_combination_protections[FlowName.EARLY_REINFECTION]
                 model.add_infection_frequency_flow(
-                    name=FlowName.REINFECTION,
-                    contact_rate=modified_contact_rate,
+                    name=FlowName.EARLY_REINFECTION,
+                    contact_rate=modify_function_or_value(contact_rate, modification),
                     source=Compartment.RECOVERED,
                     dest=infection_dest,
-                    dest_strata={"strain": infecting_strain},
                     source_strata={"strain": infected_strain},
+                    dest_strata={"strain": infecting_strain},
                 )
+
+                # Apply the immunity-specific protection to the late recovered or "waned" compartment
+                modification = 1. - strain_combination_protections[FlowName.LATE_REINFECTION]
+                if "waned" in base_compartments:
+                    model.add_infection_frequency_flow(
+                        name=FlowName.LATE_REINFECTION,
+                        contact_rate=modify_function_or_value(contact_rate, modification),
+                        source=Compartment.WANED,
+                        dest=infection_dest,
+                        source_strata={"strain": infected_strain},
+                        dest_strata={"strain": infecting_strain},
+                    )
 
     """
     Apply immunity stratification

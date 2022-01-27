@@ -20,14 +20,11 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
-priors = [
-    UniformPrior("contact_rate", [0.1, 0.2]),
-    UniformPrior("infectious_seed", [1, 400])
-]
+priors = [UniformPrior("contact_rate", [0.1, 0.2]), UniformPrior("infectious_seed", [1, 400])]
 
 targets = [
     NormalTarget(data=ts_set["notifications"]),
-    NormalTarget(data=ts_set["icu_occupancy"]),
+    # NormalTarget(data=ts_set["icu_occupancy"]),
     NormalTarget(data=ts_set["infection_deaths"]),
 ]
 
@@ -55,9 +52,7 @@ with open(plot_spec_filepath) as f:
 
 
 # Create and register the project.
-project = Project(
-    Region.DHAKA, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
-)
+project = Project(Region.DHAKA, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)
 
 
 # from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning

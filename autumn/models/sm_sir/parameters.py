@@ -294,6 +294,7 @@ class VocComponent(BaseModel):
     entry_rate: Optional[float]
     seed_duration: Optional[float]
     contact_rate_multiplier: Optional[float]
+    immune_escape: float
 
     @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):
@@ -304,6 +305,8 @@ class VocComponent(BaseModel):
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
         return values
+
+    check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
 
 
 class TimeDistribution(BaseModel):

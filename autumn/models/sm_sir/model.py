@@ -296,7 +296,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply immunity stratification
     """
 
-    immunity_strat = get_immunity_strat(params, base_compartments)
+    vacc_immune_escape = {
+        "wild_type": 0.,
+        "omicron": 0.,
+    }
+
+    immunity_strat = get_immunity_strat(params, base_compartments, vacc_immune_escape)
     model.stratify_with(immunity_strat)
 
     """

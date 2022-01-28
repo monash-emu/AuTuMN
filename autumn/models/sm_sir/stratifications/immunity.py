@@ -5,7 +5,7 @@ from autumn.models.sm_sir.parameters import Parameters
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 
 
-def get_immunity_strat(params: Parameters, compartments: List[str]) -> Stratification:
+def get_immunity_strat(params: Parameters, compartments: List[str], vacc_immune_escape) -> Stratification:
 
     immunity_strat = Stratification("immunity", IMMUNITY_STRATA, compartments)
 
@@ -19,14 +19,39 @@ def get_immunity_strat(params: Parameters, compartments: List[str]) -> Stratific
     }
     immunity_strat.set_population_split(immunity_split_props)
 
-    # Adjust infection flows based on the susceptibility of the age group
-    infection_adjustment = {
-        ImmunityStratum.NONE: Multiply(1.),
-        ImmunityStratum.HIGH: Multiply(1. - params.immunity_stratification.infection_risk_reduction.high),
-        ImmunityStratum.LOW: Multiply(1. - params.immunity_stratification.infection_risk_reduction.low)
-    }
-    immunity_strat.set_flow_adjustments(
-        FlowName.INFECTION, infection_adjustment
-    )
+    # Consider each strain separately
+    for strain in vacc_immune_escape:
+
+        # The modification applied to the immunity effect because of vaccine escape properties of the strain
+        strain_escape = 1. - vacc_immune_escape[strain]
+
+        # The multipliers calculated from the effect of immunity and the effect of the strain
+        immunity_effects = params.immunity_stratification.infection_risk_reduction
+        high_immune_multiplier = 1. - immunity_effects.high * strain_escape
+        low_immune_multiplier = 1. - immunity_effects.low * strain_escape
+
+        # Adjust infection flows based on the susceptibility of the age group
+        infection_adjustment = {
+            ImmunityStratum.NONE: None,
+            ImmunityStratum.HIGH: Multiply(high_immune_multiplier),
+            ImmunityStratum.LOW: Multiply(low_immune_multiplier)
+        }
+
+        # Apply the adjustments to all of the different infection flows implemented
+        immunity_strat.set_flow_adjustments(
+            FlowName.INFECTION,
+            infection_adjustment,
+            dest_strata={"strain": strain},
+        )
+        immunity_strat.set_flow_adjustments(
+            FlowName.EARLY_REINFECTION,
+            infection_adjustment,
+            dest_strata={"strain": strain},
+        )
+        immunity_strat.set_flow_adjustments(
+            FlowName.LATE_REINFECTION,
+            infection_adjustment,
+            dest_strata={"strain": strain},
+        )
 
     return immunity_strat

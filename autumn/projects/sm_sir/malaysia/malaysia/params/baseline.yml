@@ -32,12 +32,37 @@ immunity_stratification:
   prop_high_among_immune: .2
 
 voc_emergence:
+  wild_type:
+    starting_strain: true
+    seed_prop: 1.
+    start_time: 1000.
+    entry_rate: 0.
+    seed_duration: 0.
+    contact_rate_multiplier: null
+    immune_escape: 0.
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.
+        late_reinfection: 1.
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.
   omicron:
+    starting_strain: false
+    seed_prop: 0.
     start_time: 730.
     entry_rate: 100.
     seed_duration: 10.
     contact_rate_multiplier: 1.
     immune_escape: 0.
+    cross_protection:
+      wild_type:
+        early_reinfection: 0.
+        late_reinfection: 0.
+      omicron:
+        early_reinfection: 0.
+        late_reinfection: 0.
+
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-3

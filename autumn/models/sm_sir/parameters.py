@@ -290,18 +290,19 @@ class VocComponent(BaseModel):
     Parameters defining the emergence profile of the Variants of Concerns
     """
 
+    starting_strain: bool
+    seed_prop: float
     start_time: Optional[float]
     entry_rate: Optional[float]
     seed_duration: Optional[float]
-    contact_rate_multiplier: Optional[float]
+    contact_rate_multiplier: Union[float, None]
     immune_escape: float
+    cross_protection: Dict[str, Dict[str, float]]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):
         if "seed_duration" in values:
             assert 0. <= values["seed_duration"], "Seed duration negative"
-        if "contact_rate_multiplier" in values:
-            assert 0. <= values["contact_rate_multiplier"], "Contact rate multiplier negative"
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
         return values

@@ -33,7 +33,6 @@ mobility:
       times:
         - 2022-01-25 # first day when Google mobility data is not available
         - 2022-02-01
-        - 2022-03-01
       values:
         - - repeat_prev
         - 0.75

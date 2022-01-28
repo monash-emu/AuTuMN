@@ -79,6 +79,8 @@ class Region:
         HANOI,
         MYANMAR,
         BANGLADESH,
+        DHAKA,
+        COXS_BAZAR,
     ]
 
     MALAYSIA_REGIONS = [

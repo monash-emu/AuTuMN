@@ -6,7 +6,8 @@ country:
 ref_mixing_iso3: HKG
 
 population:
-  year: 2020
+  # region: FDMN NOTE - USING BGD population for now.
+  year: 2021
 
 time:
   start: 365.

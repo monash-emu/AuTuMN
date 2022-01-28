@@ -7,10 +7,13 @@ import pandas as pd
 from sqlalchemy import column
 
 from autumn.tools.db import Database
-from autumn.settings import INPUT_DATA_PATH
+from autumn.settings import INPUT_DATA_PATH, region
 
 POP_DIRPATH = os.path.join(INPUT_DATA_PATH, "world-population")
 BGD_POP = os.path.join(INPUT_DATA_PATH, "covid_bgd", "BD_PopulationProjection_2021_BBS.xlsx")
+ROHINGYA_POP = os.path.join(
+    INPUT_DATA_PATH, "covid_bgd", "UNHCR Population Factsheet  Block Level Data.xlsx"
+)
 
 
 def preprocess_demography(input_db: Database):
@@ -252,9 +255,12 @@ def read_population_df(loc_df: pd.DataFrame):
     pop_df = pop_df.join(ages_df)
     pop_df = pop_df.drop(columns="variable")
 
-    # Get and append 2021 Bangladesh population
+    # Get and append 2021 Bangladesh and Rohingya population
     pop_bgd = get_bangladesh_pop(BGD_POP)
     pop_df = pop_df.append(pop_bgd)
+
+    pop_rohingya = get_rohingya_pop(ROHINGYA_POP)
+    pop_df = pop_df.append(pop_rohingya)
 
     # Ensure all numbers are actually numbers
     numeric_cols = ["year", "start_age", "end_age", "population"]
@@ -304,38 +310,100 @@ def get_bangladesh_pop(str: BGD_POP) -> pd.DataFrame:
 
     # Read and filter for row.
     bgd_df = pd.read_excel(BGD_POP, sheet_name="AgeGroup")
+    dhk_df = bgd_df.loc[(bgd_df["District"] == "Dhaka") & (bgd_df["Sex"] == "Total")]
     bgd_df = bgd_df.loc[(bgd_df["Division"] == "Bangladesh") & (bgd_df["Sex"] == "Total")]
 
+    dhk_df = extract_pop(dhk_df)
+    bgd_df = extract_pop(bgd_df)
+
+    dhk_df = add_pop_cols(dhk_df, "BGD", region="Dhaka district", year="2021")
+    bgd_df = add_pop_cols(bgd_df, "BGD", year="2021")
+
+    bgd_df = bgd_df.append(dhk_df)
+
+    bgd_df = unpivot_df(bgd_df)
+    return bgd_df
+
+
+def extract_pop(df: pd.DataFrame) -> pd.DataFrame:
+    """Preprocess the population dataframe for Bangladesh and Dhaka city"""
+
     # Create 0-4 age group total and delete columns.
-    bgd_df["0-4"] = (
-        bgd_df["0 Year"]
-        + bgd_df["1 Year"]
-        + bgd_df["2 Years"]
-        + bgd_df["3 Years"]
-        + bgd_df["4 Years"]
-    )
-    bgd_df.drop(columns=["0 Year", "1 Year", "2 Years", "3 Years", "4 Years", "Sex"], inplace=True)
+    df["0-4"] = df.loc[:, ["0 Year", "1 Year", "2 Years", "3 Years", "4 Years"]].sum(axis=1)
+    df.drop(columns=["0 Year", "1 Year", "2 Years", "3 Years", "4 Years", "Sex"], inplace=True)
 
     # Fix column names and create additional ones.
-    bgd_df.rename(columns=lambda x: x.lower().rstrip("years and abov").strip(), inplace=True)
-    bgd_df.rename(columns={"divisi": "country", "district": "iso3", "80": "80-84"}, inplace=True)
-    bgd_df["iso3"] = "BGD"
-    bgd_df["region"] = None
-    bgd_df["year"] = "2021"
+    df.rename(columns=lambda x: x.lower().rstrip("years and abov").strip(), inplace=True)
+    df.rename(columns={"divisi": "country", "district": "iso3", "80": "80-84"}, inplace=True)
+
+    return df
+
+
+def unpivot_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Unpivot the dataframe and splits the age brackets into columns"""
 
     # identify age group columns and unpivot
-    agegroup_cols = [c for c in bgd_df.columns if "-" in c]
-    bgd_df = bgd_df.melt(
+    agegroup_cols = [c for c in df.columns if "-" in c or c.endswith("+")]
+    df = df.melt(
         id_vars=["country", "iso3", "region", "year"],
         value_vars=agegroup_cols,
         value_name="population",
     )
 
-    bgd_df["population"] = bgd_df["population"] / 1000  # Divide to match UN pop data
+    df["population"] = df["population"] / 1000  # Divide to match UN pop data
 
     # Create start and end age groups.
-    bgd_df["start_age"] = bgd_df["variable"].apply(lambda s: int(s.split("-")[0]))
-    bgd_df["end_age"] = bgd_df["variable"].apply(lambda s: int(s.split("-")[1]))
-    bgd_df.drop(columns="variable", inplace=True)
+    df["start_age"] = df["variable"].apply(lambda s: int(s.split("-")[0]))
+    df["end_age"] = df["variable"].apply(lambda s: int(s.split("-")[1]))
+    df.drop(columns="variable", inplace=True)
+    return df
 
-    return bgd_df
+
+def add_pop_cols(
+    df: pd.DataFrame, iso3: str, country: str = None, region: str = None, year: str = None
+) -> pd.DataFrame:
+    """Add missing population columns to the dataframe"""
+
+    if "country" not in df.columns:
+        df["country"] = country
+    df["iso3"] = iso3
+    df["region"] = region
+    df["year"] = year
+
+    return df
+
+
+def get_rohingya_pop(ROHINGYA_POP: str) -> pd.DataFrame:
+    """Reshape the Rohingya population dataframe"""
+
+    df = pd.read_excel(ROHINGYA_POP, usecols=list(range(8, 20)), skiprows=6)
+    df = df.tail(1)
+    df["0-4"] = df.loc[
+        :, ["below 1 year Infant", "Unnamed: 9", "between 1-4 year Children", "Unnamed: 11"]
+    ].sum(axis=1)
+
+    df["5-11"] = df.loc[:, ["between 5-11 year Children", "Unnamed: 13"]].sum(axis=1)
+    df["12-17"] = df.loc[:, ["between 12-17 year Children", "Unnamed: 15"]].sum(axis=1)
+    df["18-59"] = df.loc[:, ["between 18-59 year Adult", "Unnamed: 17"]].sum(axis=1)
+    df["60-100"] = df.loc[:, ["60+ Elderly", "Unnamed: 19"]].sum(axis=1)
+
+    df = add_pop_cols(df, "BGD", "Bangladesh", "FDMN", "2021")
+    df.drop(
+        columns=[
+            "below 1 year Infant",
+            "Unnamed: 9",
+            "between 1-4 year Children",
+            "Unnamed: 11",
+            "between 5-11 year Children",
+            "Unnamed: 13",
+            "between 12-17 year Children",
+            "Unnamed: 15",
+            "between 18-59 year Adult",
+            "Unnamed: 17",
+            "60+ Elderly",
+            "Unnamed: 19",
+        ],
+        inplace=True,
+    )
+
+    return unpivot_df(df)

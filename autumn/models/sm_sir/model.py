@@ -287,7 +287,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         }
 
         add_strain_cross_protection(
-            model, base_compartments, infection_dest, contact_rate, strain_strat.strata, cross_protection_params
+            model, base_compartments, infection_dest, contact_rate, strain_strat.strata, params.voc_emergence
         )
 
         strain_strata = strain_strat.strata

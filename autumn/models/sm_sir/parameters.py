@@ -285,6 +285,14 @@ class TestingToDetection(BaseModel):
         return val
 
 
+class CrossImmunity(BaseModel):
+    early_reinfection: float
+    late_reinfection: float
+
+    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(get_check_prop("early_reinfection"))
+    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(get_check_prop("late_reinfection"))
+
+
 class VocComponent(BaseModel):
     """
     Parameters defining the emergence profile of the Variants of Concerns
@@ -297,7 +305,7 @@ class VocComponent(BaseModel):
     seed_duration: Optional[float]
     contact_rate_multiplier: Union[float, None]
     immune_escape: float
-    cross_protection: Dict[str, Dict[str, float]]
+    cross_protection: Dict[str, CrossImmunity]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):

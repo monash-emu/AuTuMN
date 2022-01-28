@@ -262,7 +262,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply strains stratification
     """
 
-    strain_strata = None
     if params.voc_emergence:
 
         voc_params = params.voc_emergence
@@ -270,7 +269,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Build and apply stratification
         strain_strat = get_strain_strat(voc_params, base_compartments)
         model.stratify_with(strain_strat)
-        strain_strata = strain_strat.strata
 
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
@@ -292,6 +290,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             model, base_compartments, infection_dest, contact_rate, strain_strat.strata, cross_protection_params
         )
 
+        strain_strata = strain_strat.strata
+
+    else:
+        strain_strata = [""]
+
     """
     Apply immunity stratification
     """
@@ -301,7 +304,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         "omicron": 0.,
     }
 
-    immunity_strat = get_immunity_strat(params, base_compartments, vacc_immune_escape)
+    immunity_strat = get_immunity_strat(params, base_compartments, strain_strata, vacc_immune_escape)
     model.stratify_with(immunity_strat)
 
     """

@@ -8,7 +8,8 @@ from autumn.models.sm_sir.parameters import Parameters
 def get_immunity_strat(
         params: Parameters,
         compartments: List[str],
-        vacc_immune_escape: Dict[str, float]
+        strain_strata: List[str],
+        vacc_immune_escape: Dict[str, float],
 ) -> Stratification:
     """
     This stratification is intended to capture immunity considerations other than the inter-strain immunity issues,
@@ -17,10 +18,11 @@ def get_immunity_strat(
     Args:
         params: All model parameters
         compartments: Base model compartments
-        vacc_immune_escape: The extent to which each modelled strain is a vaccine-escape
+        vacc_immune_escape: The extent to which each modelled strain is a immune-escape
+        strain_strata: The strains being implemented in the model
 
     Returns:
-        Summer Stratification object to capture immunity
+        The summer Stratification object that captures immunity from anything other than cross-immunity between strains
 
     """
 
@@ -36,15 +38,13 @@ def get_immunity_strat(
     }
     immunity_strat.set_population_split(immunity_split_props)
 
-    strains = vacc_immune_escape.keys() if params.voc_emergence else ["no_strains"]
-
     # Consider each strain separately
-    for strain in strains:
+    for strain in strain_strata:
 
-        dest_filter = None if strain == "no_strains" else {"strain": strain}
+        dest_filter = None if strain == "" else {"strain": strain}
 
         # The modification applied to the immunity effect because of vaccine escape properties of the strain
-        strain_escape = 1. if strain == "no_strains" else 1. - vacc_immune_escape[strain]
+        strain_escape = 1. if strain == "" else 1. - vacc_immune_escape[strain]
 
         # The multipliers calculated from the effect of immunity and the effect of the strain
         immunity_effects = params.immunity_stratification.infection_risk_reduction

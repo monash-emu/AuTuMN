@@ -44,18 +44,18 @@ def get_immunity_strat(
         dest_filter = None if strain == "no_strains" else {"strain": strain}
 
         # The modification applied to the immunity effect because of vaccine escape properties of the strain
-        strain_escape = 1. - vacc_immune_escape[strain]
+        strain_escape = 1. if strain == "no_strains" else 1. - vacc_immune_escape[strain]
 
         # The multipliers calculated from the effect of immunity and the effect of the strain
         immunity_effects = params.immunity_stratification.infection_risk_reduction
-        high_immune_multiplier = 1. - immunity_effects.high * strain_escape
-        low_immune_multiplier = 1. - immunity_effects.low * strain_escape
+        high_multiplier = Multiply(1. - immunity_effects.high * strain_escape)
+        low_multiplier = Multiply(1. - immunity_effects.low * strain_escape)
 
         # Adjust infection flows based on the susceptibility of the age group
         infection_adjustment = {
             ImmunityStratum.NONE: None,
-            ImmunityStratum.HIGH: Multiply(high_immune_multiplier),
-            ImmunityStratum.LOW: Multiply(low_immune_multiplier)
+            ImmunityStratum.HIGH: high_multiplier,
+            ImmunityStratum.LOW: low_multiplier
         }
 
         # Apply the adjustments to all of the different infection flows implemented

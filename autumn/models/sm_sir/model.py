@@ -273,19 +273,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
 
-        # FIXME: This needs to move to parameterisation somehow (of course)
-        # This dictionary is organised by the strain being infected first and then by the infecting strain
-        cross_protection_params = {
-            "wild_type": {
-                "wild_type": {"early_reinfection": 1., "late_reinfection": 0.},
-                "omicron": {"early_reinfection": 0., "late_reinfection": 0.},
-            },
-            "omicron": {
-                "wild_type": {"early_reinfection": 1., "late_reinfection": 1.},
-                "omicron": {"early_reinfection": 1., "late_reinfection": 0.},
-            }
-        }
-
         add_strain_cross_protection(
             model, base_compartments, infection_dest, contact_rate, strain_strat.strata, params.voc_emergence
         )

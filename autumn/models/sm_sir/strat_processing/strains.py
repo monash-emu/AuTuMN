@@ -2,6 +2,7 @@ from typing import Dict, List, Union
 
 from summer import CompartmentalModel
 
+from autumn.tools.utils.utils import modify_function_or_value
 from autumn.models.sm_sir.constants import Compartment, FlowName
 from autumn.models.sm_sir.parameters import VocComponent
 
@@ -56,15 +57,6 @@ def seed_vocs(model: CompartmentalModel, voc_params: Dict[str, VocComponent], se
             dest_strata={"strain": voc_name},
             split_imports=True
         )
-
-
-def modify_function_or_value(function_or_value, modification):
-    if callable(function_or_value):
-        def modified_contact_rate(t, c):
-            return function_or_value(t, c) * modification
-        return modified_contact_rate
-    else:
-        return function_or_value * modification
 
 
 def add_strain_cross_protection(

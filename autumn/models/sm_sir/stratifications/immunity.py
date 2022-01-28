@@ -1,11 +1,28 @@
-from typing import List
+from typing import List, Dict
 from summer import Stratification, Multiply
 
-from autumn.models.sm_sir.parameters import Parameters
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_sir.parameters import Parameters
 
 
-def get_immunity_strat(params: Parameters, compartments: List[str], vacc_immune_escape) -> Stratification:
+def get_immunity_strat(
+        params: Parameters,
+        compartments: List[str],
+        vacc_immune_escape: Dict[str, float]
+) -> Stratification:
+    """
+    This stratification is intended to capture immunity considerations other than the inter-strain immunity issues,
+    which are previously considered in the strain stratification.
+
+    Args:
+        params: All model parameters
+        compartments: Base model compartments
+        vacc_immune_escape: The extent to which each modelled strain is a vaccine-escape
+
+    Returns:
+        Summer Stratification object to capture immunity
+
+    """
 
     immunity_strat = Stratification("immunity", IMMUNITY_STRATA, compartments)
 
@@ -19,8 +36,12 @@ def get_immunity_strat(params: Parameters, compartments: List[str], vacc_immune_
     }
     immunity_strat.set_population_split(immunity_split_props)
 
+    strains = vacc_immune_escape.keys() if params.voc_emergence else ["no_strains"]
+
     # Consider each strain separately
-    for strain in vacc_immune_escape:
+    for strain in strains:
+
+        dest_filter = None if strain == "no_strains" else {"strain": strain}
 
         # The modification applied to the immunity effect because of vaccine escape properties of the strain
         strain_escape = 1. - vacc_immune_escape[strain]
@@ -38,20 +59,7 @@ def get_immunity_strat(params: Parameters, compartments: List[str], vacc_immune_
         }
 
         # Apply the adjustments to all of the different infection flows implemented
-        immunity_strat.set_flow_adjustments(
-            FlowName.INFECTION,
-            infection_adjustment,
-            dest_strata={"strain": strain},
-        )
-        immunity_strat.set_flow_adjustments(
-            FlowName.EARLY_REINFECTION,
-            infection_adjustment,
-            dest_strata={"strain": strain},
-        )
-        immunity_strat.set_flow_adjustments(
-            FlowName.LATE_REINFECTION,
-            infection_adjustment,
-            dest_strata={"strain": strain},
-        )
+        for flow_type in [FlowName.INFECTION, FlowName.EARLY_REINFECTION, FlowName.LATE_REINFECTION]:
+            immunity_strat.set_flow_adjustments(flow_type, infection_adjustment, dest_strata=dest_filter)
 
     return immunity_strat

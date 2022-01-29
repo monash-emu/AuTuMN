@@ -20,12 +20,6 @@ class FlowName:
     LATE_REINFECTION = "late_reinfection"
 
 
-infection_flows = [
-    FlowName.INFECTION,
-    FlowName.EARLY_REINFECTION,
-    FlowName.LATE_REINFECTION,
-]
-
 BASE_COMPARTMENTS = [
     Compartment.SUSCEPTIBLE,
     Compartment.INFECTIOUS,

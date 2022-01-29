@@ -16,7 +16,7 @@ from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import seed_vocs, add_strain_cross_protection
+from .strat_processing.strains import seed_vocs
 from .preprocess.age_specific_params import convert_param_agegroups
 
 

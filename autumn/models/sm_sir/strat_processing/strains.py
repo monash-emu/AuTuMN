@@ -1,9 +1,7 @@
-from typing import Dict, List, Union
+from typing import Dict
 
 from summer import CompartmentalModel
 
-from autumn.tools.utils.utils import modify_function_or_value
-from autumn.models.sm_sir.constants import Compartment, FlowName
 from autumn.models.sm_sir.parameters import VocComponent
 
 
@@ -57,59 +55,3 @@ def seed_vocs(model: CompartmentalModel, voc_params: Dict[str, VocComponent], se
             dest_strata={"strain": voc_name},
             split_imports=True
         )
-
-
-def add_strain_cross_protection(
-        model: CompartmentalModel,
-        base_compartments: List[str],
-        infection_dest: str,
-        contact_rate: Union[float, callable],
-        strain_strata: List[str],
-        voc_params: Dict[str, VocComponent]
-):
-    """
-    Apply infection flows for the early and late recovered compartments, accounting for cross immunity between strains.
-
-    Args:
-        model: The summer model object to be modified
-        base_compartments: The base compartment names
-        infection_dest: The name of the compartment that people enter as they are infected
-        contact_rate: The contact rate, which may be constant or time-varying
-        strain_strata: The names of the strains being implemented
-        voc_params: The parameters that govern cross-infection
-
-    """
-
-    # Considering recovery with one particular modelled strain ...
-    for infected_strain, infected_strain_params in voc_params.items():
-        infected_strain_cross_protection = infected_strain_params.cross_protection
-        cross_protection_strains = list(infected_strain_cross_protection.keys())
-        msg = "Strain cross immunity incorrectly specified"
-        assert cross_protection_strains == strain_strata, msg
-
-        # ... and its protection against infection with a new index strain.
-        for infecting_strain in cross_protection_strains:
-            strain_combination_protections = infected_strain_cross_protection[infecting_strain]
-
-            # Apply the modification to the early recovered compartment
-            modification = 1. - strain_combination_protections.early_reinfection
-            model.add_infection_frequency_flow(
-                name=FlowName.EARLY_REINFECTION,
-                contact_rate=modify_function_or_value(contact_rate, modification),
-                source=Compartment.RECOVERED,
-                dest=infection_dest,
-                source_strata={"strain": infected_strain},
-                dest_strata={"strain": infecting_strain},
-            )
-
-            # Apply the immunity-specific protection to the late recovered or "waned" compartment
-            modification = 1. - strain_combination_protections.late_reinfection
-            if "waned" in base_compartments:
-                model.add_infection_frequency_flow(
-                    name=FlowName.LATE_REINFECTION,
-                    contact_rate=modify_function_or_value(contact_rate, modification),
-                    source=Compartment.WANED,
-                    dest=infection_dest,
-                    source_strata={"strain": infected_strain},
-                    dest_strata={"strain": infecting_strain},
-                )

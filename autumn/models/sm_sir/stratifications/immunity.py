@@ -41,14 +41,14 @@ def get_immunity_strat(
 
     # The multipliers calculated from the effect of immunity only
     immunity_effects = immunity_params.infection_risk_reduction
-    high_multiplier = 1. - immunity_effects.high
     low_multiplier = 1. - immunity_effects.low
+    high_multiplier = 1. - immunity_effects.high
 
     # Adjust infection flows based on the susceptibility of the age group
     infection_adjustment = {
-        ImmunityStratum.NONE: 1.,
+        ImmunityStratum.NONE: None,
+        ImmunityStratum.LOW: low_multiplier,
         ImmunityStratum.HIGH: high_multiplier,
-        ImmunityStratum.LOW: low_multiplier
     }
 
     # Apply the adjustments to all of the different infection flows implemented
@@ -61,30 +61,31 @@ def get_immunity_strat(
     for infected_strain, infected_strain_params in voc_params.items():
 
         # The modification applied to the immunity effect because of vaccine escape properties of the strain
-        strain_escape = 1. if infected_strain in ("", "wild_type") else 1. - voc_params[infected_strain].immune_escape
+        strain_effect = 1. if infected_strain in ("", "wild_type") else 1. - voc_params[infected_strain].immune_escape
 
         # The multipliers calculated from the effect of immunity and the effect of the strain
-        immunity_effects = immunity_params.infection_risk_reduction
-        low_multiplier = 1. - immunity_effects.low * strain_escape
-        high_multiplier = 1. - immunity_effects.high * strain_escape
+        strain_infection_adjustment = {
+            ImmunityStratum.NONE: 1.,
+            ImmunityStratum.LOW: 1. - immunity_effects.low * strain_effect,
+            ImmunityStratum.HIGH: 1. - immunity_effects.high * strain_effect,
+        }
 
         infected_strain_cross_protection = infected_strain_params.cross_protection
-        cross_protection_strains = list(infected_strain_cross_protection.keys())
         msg = "Strain cross immunity incorrectly specified"
-        assert cross_protection_strains == strain_strata, msg
+        assert list(infected_strain_cross_protection.keys()) == strain_strata, msg
 
         # ... and its protection against infection with a new index strain.
-        for infecting_strain in cross_protection_strains:
+        for infecting_strain in strain_strata:
             strain_combination_protections = infected_strain_cross_protection[infecting_strain]
 
             source_filter = {"strain": infected_strain}
             dest_filter = {"strain": infecting_strain}
 
             # Apply the modification to the early recovered compartment
-            cross_protection = 1. - strain_combination_protections.early_reinfection
+            cross_effect = 1. - strain_combination_protections.early_reinfection
             adjusters = {
-                strat: Multiply(cross_protection * multiplier) for
-                strat, multiplier in infection_adjustment.items()
+                strat: Multiply(cross_effect * multiplier) for
+                strat, multiplier in strain_infection_adjustment.items()
             }
 
             immunity_strat.set_flow_adjustments(
@@ -95,10 +96,10 @@ def get_immunity_strat(
             )
 
             # Apply the immunity-specific protection to the late recovered or "waned" compartment
-            cross_protection = 1. - strain_combination_protections.late_reinfection
+            cross_effect = 1. - strain_combination_protections.late_reinfection
             adjusters = {
-                strat: Multiply(cross_protection * multiplier) for
-                strat, multiplier in infection_adjustment.items()
+                strat: Multiply(cross_effect * multiplier) for
+                strat, multiplier in strain_infection_adjustment.items()
             }
             if "waned" in compartments:
                 immunity_strat.set_flow_adjustments(

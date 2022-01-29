@@ -177,12 +177,26 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         contact_rate = params.contact_rate
 
+    # Infection flows
     model.add_infection_frequency_flow(
         name=FlowName.INFECTION,
         contact_rate=contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=infection_dest,
     )
+    model.add_infection_frequency_flow(
+        name=FlowName.EARLY_REINFECTION,
+        contact_rate=contact_rate,
+        source=Compartment.RECOVERED,
+        dest=infection_dest,
+    )
+    if "waned" in base_compartments:
+        model.add_infection_frequency_flow(
+            name=FlowName.LATE_REINFECTION,
+            contact_rate=contact_rate,
+            source=Compartment.WANED,
+            dest=infection_dest,
+        )
 
     # Active compartment(s) transitions
     active_sojourn = params.sojourns.active.total_time
@@ -272,10 +286,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
-
-        add_strain_cross_protection(
-            model, base_compartments, infection_dest, contact_rate, strain_strat.strata, params.voc_emergence
-        )
 
         strain_strata = strain_strat.strata
 

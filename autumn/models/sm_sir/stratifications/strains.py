@@ -47,6 +47,8 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     msg = "Starting strain should have a null contact rate multiplier"
     assert voc_params[starting_strain].contact_rate_multiplier is None, msg
     transmissibility_adjustments = {strain: Multiply(voc_params[strain].contact_rate_multiplier) for strain in strains}
+
+    # FIXME: Need to extend this to any number of infection processes
     strain_strat.set_flow_adjustments(FlowName.INFECTION, transmissibility_adjustments)
 
     return strain_strat

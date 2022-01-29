@@ -39,29 +39,70 @@ def get_immunity_strat(
     }
     immunity_strat.set_population_split(immunity_split_props)
 
-    # Consider each strain separately
-    for strain in strain_strata:
+    # The multipliers calculated from the effect of immunity only
+    immunity_effects = immunity_params.infection_risk_reduction
+    high_multiplier = Multiply(1. - immunity_effects.high)
+    low_multiplier = Multiply(1. - immunity_effects.low)
 
-        # Allow for models in which strains are or are not being implemented
-        dest_filter = None if strain == "" else {"strain": strain}
+    # Adjust infection flows based on the susceptibility of the age group
+    infection_adjustment = {
+        ImmunityStratum.NONE: None,
+        ImmunityStratum.HIGH: high_multiplier,
+        ImmunityStratum.LOW: low_multiplier
+    }
+
+    # Apply the adjustments to all of the different infection flows implemented
+    immunity_strat.set_flow_adjustments(FlowName.INFECTION, infection_adjustment)
+
+    # Considering recovery with one particular modelled strain ...
+    for infected_strain, infected_strain_params in voc_params.items():
 
         # The modification applied to the immunity effect because of vaccine escape properties of the strain
-        strain_escape = 1. if strain in ("", "wild_type") else 1. - voc_params[strain].immune_escape
+        strain_escape = 1. if infected_strain in ("", "wild_type") else 1. - voc_params[infected_strain].immune_escape
 
         # The multipliers calculated from the effect of immunity and the effect of the strain
         immunity_effects = immunity_params.infection_risk_reduction
-        high_multiplier = Multiply(1. - immunity_effects.high * strain_escape)
-        low_multiplier = Multiply(1. - immunity_effects.low * strain_escape)
+        low_multiplier = 1. - immunity_effects.low * strain_escape
+        high_multiplier = 1. - immunity_effects.high * strain_escape
 
-        # Adjust infection flows based on the susceptibility of the age group
-        infection_adjustment = {
-            ImmunityStratum.NONE: None,
-            ImmunityStratum.HIGH: high_multiplier,
-            ImmunityStratum.LOW: low_multiplier
-        }
+        infected_strain_cross_protection = infected_strain_params.cross_protection
+        cross_protection_strains = list(infected_strain_cross_protection.keys())
+        msg = "Strain cross immunity incorrectly specified"
+        assert cross_protection_strains == strain_strata, msg
 
-        # Apply the adjustments to all of the different infection flows implemented
-        for flow_type in infection_flows:
-            immunity_strat.set_flow_adjustments(flow_type, infection_adjustment, dest_strata=dest_filter)
+        # ... and its protection against infection with a new index strain.
+        for infecting_strain in cross_protection_strains:
+            strain_combination_protections = infected_strain_cross_protection[infecting_strain]
+
+            source_filter = {"strain": infected_strain}
+            dest_filter = {"strain": infecting_strain}
+
+            # Apply the modification to the early recovered compartment
+            cross_protection = 1. - strain_combination_protections.early_reinfection
+
+            immunity_strat.set_flow_adjustments(
+                FlowName.EARLY_REINFECTION,
+                {
+                    ImmunityStratum.NONE: Multiply(cross_protection),
+                    ImmunityStratum.LOW: Multiply(cross_protection * low_multiplier),
+                    ImmunityStratum.HIGH: Multiply(cross_protection * high_multiplier),
+                },
+                source_strata=source_filter,
+                dest_strata=dest_filter,
+            )
+
+            # Apply the immunity-specific protection to the late recovered or "waned" compartment
+            cross_protection = 1. - strain_combination_protections.late_reinfection
+            if "waned" in compartments:
+                immunity_strat.set_flow_adjustments(
+                    FlowName.LATE_REINFECTION,
+                    {
+                        ImmunityStratum.NONE: Multiply(cross_protection),
+                        ImmunityStratum.LOW: Multiply(cross_protection * low_multiplier),
+                        ImmunityStratum.HIGH: Multiply(cross_protection * high_multiplier),
+                    },
+                    source_strata=source_filter,
+                    dest_strata=dest_filter,
+                )
 
     return immunity_strat

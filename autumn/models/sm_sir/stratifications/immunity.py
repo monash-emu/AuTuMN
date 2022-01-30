@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 from summer import Stratification, Multiply
 
-from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName, Compartment
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 
 
@@ -27,6 +27,7 @@ def get_immunity_strat(
 
     """
 
+    # Create the immunity stratification, which applies to all compartments
     immunity_strat = Stratification("immunity", IMMUNITY_STRATA, compartments)
 
     # Set distribution of starting population
@@ -41,68 +42,47 @@ def get_immunity_strat(
 
     # The multipliers calculated from the effect of immunity only
     immunity_effects = immunity_params.infection_risk_reduction
-    low_multiplier = 1. - immunity_effects.low
-    high_multiplier = 1. - immunity_effects.high
-
-    # Adjust infection flows based on the susceptibility of the age group
     infection_adjustment = {
         ImmunityStratum.NONE: None,
-        ImmunityStratum.LOW: low_multiplier,
-        ImmunityStratum.HIGH: high_multiplier,
+        ImmunityStratum.LOW: Multiply(1. - immunity_effects.low),
+        ImmunityStratum.HIGH: Multiply(1. - immunity_effects.high),
     }
 
-    # Apply the adjustments to all of the different infection flows implemented
+    # Apply the adjustments to infection of the susceptibles - don't have to worry about strains here
     immunity_strat.set_flow_adjustments(
         FlowName.INFECTION,
-        {strat: Multiply(multiplier) for strat, multiplier in infection_adjustment.items()}
+        infection_adjustment,
     )
 
-    # Considering recovery with one particular modelled strain ...
+    # Considering people recovered from infection with each modelled strain ...
     for infected_strain in strain_strata:
 
-        # The modification applied to the immunity effect because of vaccine escape properties of the strain
-        escape = 0. if infected_strain in ("", "wild_type") else voc_params[infected_strain].immune_escape
-
-        # The multipliers calculated from the effect of immunity and the effect of the strain
-        strain_infection_adjustment = {
-            ImmunityStratum.NONE: 1.,
-            ImmunityStratum.LOW: 1. - immunity_effects.low * (1. - escape),
-            ImmunityStratum.HIGH: 1. - immunity_effects.high * (1. - escape),
-        }
-
-        # infected_strain_cross_protection = voc_params[infected_strain].cross_protection
-        # msg = "Strain cross immunity incorrectly specified"
-        # assert list(infected_strain_cross_protection.keys()) == strain_strata, msg
+        # The immunity effect because of vaccine or non-cross-strain natural immunity escape properties of the strain
+        non_strain_effect = 1. if infected_strain == "" else 1. - voc_params[infected_strain].immune_escape
 
         # ... and its protection against infection with a new index strain.
         for infecting_strain in strain_strata:
-            early_protection = voc_params[infected_strain].cross_protection[infecting_strain].early_reinfection if voc_params else 0.
-            late_protection = voc_params[infected_strain].cross_protection[infecting_strain].late_reinfection if voc_params else 0.
 
-            source_filter = None if infected_strain == "" else {"strain": infected_strain}
-            dest_filter = None if infected_strain == "" else {"strain": infecting_strain}
+            flows = [FlowName.EARLY_REINFECTION]
+            if Compartment.WANED in compartments:
+                flows.append(FlowName.LATE_REINFECTION)
 
-            # Apply the modification to the early recovered compartment
-            adjusters = {
-                strat: Multiply((1. - early_protection) * multiplier) for
-                strat, multiplier in strain_infection_adjustment.items()
-            }
+            for flow in flows:
 
-            immunity_strat.set_flow_adjustments(
-                FlowName.EARLY_REINFECTION,
-                adjusters,
-                source_strata=source_filter,
-                dest_strata=dest_filter,
-            )
+                cross_effect = 1. - getattr(voc_params[infected_strain].cross_protection[infecting_strain], flow) if \
+                    voc_params else 1.
 
-            # Apply the immunity-specific protection to the late recovered or "waned" compartment
-            adjusters = {
-                strat: Multiply((1. - late_protection) * multiplier) for
-                strat, multiplier in strain_infection_adjustment.items()
-            }
-            if "waned" in compartments:
+                source_filter = None if infected_strain == "" else {"strain": infected_strain}
+                dest_filter = None if infected_strain == "" else {"strain": infecting_strain}
+
+                adjusters = {
+                    ImmunityStratum.NONE: Multiply(cross_effect),
+                    ImmunityStratum.LOW: Multiply((1. - immunity_effects.low * non_strain_effect) * cross_effect),
+                    ImmunityStratum.HIGH: Multiply((1. - immunity_effects.high * non_strain_effect) * cross_effect),
+                }
+
                 immunity_strat.set_flow_adjustments(
-                    FlowName.LATE_REINFECTION,
+                    flow,
                     adjusters,
                     source_strata=source_filter,
                     dest_strata=dest_filter,

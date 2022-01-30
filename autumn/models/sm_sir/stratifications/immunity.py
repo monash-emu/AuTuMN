@@ -58,7 +58,7 @@ def get_immunity_strat(
     )
 
     # Considering recovery with one particular modelled strain ...
-    for infected_strain, infected_strain_params in voc_params.items():
+    for infected_strain in strain_strata:
 
         # The modification applied to the immunity effect because of vaccine escape properties of the strain
         escape = 0. if infected_strain in ("", "wild_type") else voc_params[infected_strain].immune_escape
@@ -70,21 +70,21 @@ def get_immunity_strat(
             ImmunityStratum.HIGH: 1. - immunity_effects.high * (1. - escape),
         }
 
-        infected_strain_cross_protection = infected_strain_params.cross_protection
-        msg = "Strain cross immunity incorrectly specified"
-        assert list(infected_strain_cross_protection.keys()) == strain_strata, msg
+        # infected_strain_cross_protection = voc_params[infected_strain].cross_protection
+        # msg = "Strain cross immunity incorrectly specified"
+        # assert list(infected_strain_cross_protection.keys()) == strain_strata, msg
 
         # ... and its protection against infection with a new index strain.
         for infecting_strain in strain_strata:
-            strain_combination_protections = infected_strain_cross_protection[infecting_strain]
+            early_protection = voc_params[infected_strain].cross_protection[infecting_strain].early_reinfection if voc_params else 0.
+            late_protection = voc_params[infected_strain].cross_protection[infecting_strain].late_reinfection if voc_params else 0.
 
-            source_filter = {"strain": infected_strain}
-            dest_filter = {"strain": infecting_strain}
+            source_filter = None if infected_strain == "" else {"strain": infected_strain}
+            dest_filter = None if infected_strain == "" else {"strain": infecting_strain}
 
             # Apply the modification to the early recovered compartment
-            cross_effect = 1. - strain_combination_protections.early_reinfection
             adjusters = {
-                strat: Multiply(cross_effect * multiplier) for
+                strat: Multiply((1. - early_protection) * multiplier) for
                 strat, multiplier in strain_infection_adjustment.items()
             }
 
@@ -96,9 +96,8 @@ def get_immunity_strat(
             )
 
             # Apply the immunity-specific protection to the late recovered or "waned" compartment
-            cross_effect = 1. - strain_combination_protections.late_reinfection
             adjusters = {
-                strat: Multiply(cross_effect * multiplier) for
+                strat: Multiply((1. - late_protection) * multiplier) for
                 strat, multiplier in strain_infection_adjustment.items()
             }
             if "waned" in compartments:

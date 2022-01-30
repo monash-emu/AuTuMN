@@ -61,13 +61,13 @@ def get_immunity_strat(
     for infected_strain, infected_strain_params in voc_params.items():
 
         # The modification applied to the immunity effect because of vaccine escape properties of the strain
-        strain_effect = 1. if infected_strain in ("", "wild_type") else 1. - voc_params[infected_strain].immune_escape
+        escape = 0. if infected_strain in ("", "wild_type") else voc_params[infected_strain].immune_escape
 
         # The multipliers calculated from the effect of immunity and the effect of the strain
         strain_infection_adjustment = {
             ImmunityStratum.NONE: 1.,
-            ImmunityStratum.LOW: 1. - immunity_effects.low * strain_effect,
-            ImmunityStratum.HIGH: 1. - immunity_effects.high * strain_effect,
+            ImmunityStratum.LOW: 1. - immunity_effects.low * (1. - escape),
+            ImmunityStratum.HIGH: 1. - immunity_effects.high * (1. - escape),
         }
 
         infected_strain_cross_protection = infected_strain_params.cross_protection

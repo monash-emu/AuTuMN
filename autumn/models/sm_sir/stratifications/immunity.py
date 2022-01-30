@@ -57,31 +57,33 @@ def get_immunity_strat(
 
     # Considering people recovered from infection with each modelled strain ...
     for infected_strain in strain_strata:
+        source_filter = None if infected_strain == "" else {"strain": infected_strain}
 
         # ... and its protection against infection with a new index strain.
         for infecting_strain in strain_strata:
-
-            flows = [FlowName.EARLY_REINFECTION]
-            if Compartment.WANED in compartments:
-                flows.append(FlowName.LATE_REINFECTION)
+            dest_filter = None if infecting_strain == "" else {"strain": infecting_strain}
 
             # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
             non_strain_effect = 1. if infecting_strain == "" else 1. - voc_params[infecting_strain].immune_escape
 
+            # The infection processes that we are adapting and for which strains may have relevance
+            flows = [FlowName.EARLY_REINFECTION]
+            if Compartment.WANED in compartments:
+                flows.append(FlowName.LATE_REINFECTION)
             for flow in flows:
 
+                # Cross protection from previous infection with the "infected" strain against the "infecting" strain
                 cross_effect = 1. - getattr(voc_params[infected_strain].cross_protection[infecting_strain], flow) if \
                     voc_params else 1.
 
-                source_filter = None if infected_strain == "" else {"strain": infected_strain}
-                dest_filter = None if infected_strain == "" else {"strain": infecting_strain}
-
+                # Combine the two mechanisms of protection
                 adjusters = {
                     ImmunityStratum.NONE: Multiply(cross_effect),
                     ImmunityStratum.LOW: Multiply((1. - immunity_effects.low * non_strain_effect) * cross_effect),
                     ImmunityStratum.HIGH: Multiply((1. - immunity_effects.high * non_strain_effect) * cross_effect),
                 }
 
+                # Apply to the stratification object
                 immunity_strat.set_flow_adjustments(
                     flow,
                     adjusters,

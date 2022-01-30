@@ -1,4 +1,5 @@
 from typing import List, Dict, Optional
+import copy
 from summer import Stratification, Multiply
 
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName, Compartment
@@ -57,15 +58,15 @@ def get_immunity_strat(
     # Considering people recovered from infection with each modelled strain ...
     for infected_strain in strain_strata:
 
-        # The immunity effect because of vaccine or non-cross-strain natural immunity escape properties of the strain
-        non_strain_effect = 1. if infected_strain == "" else 1. - voc_params[infected_strain].immune_escape
-
         # ... and its protection against infection with a new index strain.
         for infecting_strain in strain_strata:
 
             flows = [FlowName.EARLY_REINFECTION]
             if Compartment.WANED in compartments:
                 flows.append(FlowName.LATE_REINFECTION)
+
+            # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
+            non_strain_effect = 1. if infecting_strain == "" else 1. - voc_params[infecting_strain].immune_escape
 
             for flow in flows:
 

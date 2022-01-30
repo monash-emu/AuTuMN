@@ -311,6 +311,8 @@ class VocComponent(BaseModel):
     def check_times(cls, values):
         if "seed_duration" in values:
             assert 0. <= values["seed_duration"], "Seed duration negative"
+        if "contact_rate_multiplier" in values:
+            assert 0. <= values["contact_rate_multiplier"], "Contact rate multiplier negative"
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
         return values

@@ -361,28 +361,3 @@ def get_product_two_functions(function_1, function_2):
         return function_1(time) * function_2(time)
 
     return product_function
-
-
-def modify_function_or_value(function_or_value, modification):
-    """
-    Modify a value that could be interpreted as a model parameter - therefore, either a numeric value that could be
-    interpreted as a constant rate over time, or a function of time that returns a similar numeric output of time (which
-    must be in the format that summer expects its parameters).
-
-    Args:
-        function_or_value: The numeric object to be modified
-        modification: The multiplier to be applied to the value/function
-
-    Returns:
-        The modified numeric object in the same format as submitted
-
-    """
-    if callable(function_or_value):
-        def modified_contact_rate(t, c):
-            return function_or_value(t, c) * modification
-
-        return modified_contact_rate
-    elif isinstance(function_or_value, (float, int)):
-        return function_or_value * modification
-    else:
-        raise ValueError("Expecting something that can be interpreted as a rate over time")

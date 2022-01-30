@@ -1,7 +1,7 @@
 description: >
   SCENARIO 5:
   Vaccination continues at the speed of 500000 and 100000 new fully vaccinated people per month, within the 18+ and 12-17 age group respectively, for the next six months.
-  Mobility remains at -30% until Feb 28th, and returns to -10% from Mar 1st onwards.
+  Mobility returns to -10% from Feb 1st onwards.
   Students grade 7-12 (first 50% of all students) return to school from Feb 8th, university students (next 25% of all students)
   return to school from Feb 21st, and the remaining 50% (students grade 1-2 and kindergarten) return to school from Mar 7th.
   The Omicron variant does not emerge within the city.
@@ -10,20 +10,6 @@ time:
   start: 763 # 01st Feb 2022
 
 mobility:
-  microdistancing:
-    behavior:
-      function_type: empiric
-      parameters:
-        max_effect: 0.6762344861285476
-        times:
-          - 763 # 01st Feb 2022
-        values:
-          - 0.1
-      locations:
-        - other_locations
-        - school
-        - work
-        - home
   mixing:
     school:
       append: false
@@ -41,6 +27,24 @@ mobility:
         - 0.25
         - 0.5
         - 1.
+
+    work:
+      append: true
+      times:
+        - 2022-01-25 # first day when Google mobility data is not available
+        - 2022-02-01
+      values:
+        - - repeat_prev
+        - 0.9
+
+    other_locations:
+      append: true
+      times:
+        - 2022-01-25 # first day when Google mobility data is not available
+        - 2022-02-01
+      values:
+        - - repeat_prev
+        - 0.9
 
 # All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/Hanoi_vaccination_status
 vaccination:

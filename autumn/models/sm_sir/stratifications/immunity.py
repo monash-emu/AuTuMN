@@ -76,7 +76,7 @@ def get_immunity_strat(
                 cross_effect = 1. - getattr(voc_params[infected_strain].cross_protection[infecting_strain], flow) if \
                     voc_params else 1.
 
-                # Combine the two mechanisms of protection
+                # Combine the two mechanisms of protection and format for summer
                 adjusters = {
                     ImmunityStratum.NONE: Multiply(cross_effect),
                     ImmunityStratum.LOW: Multiply((1. - immunity_effects.low * non_strain_effect) * cross_effect),

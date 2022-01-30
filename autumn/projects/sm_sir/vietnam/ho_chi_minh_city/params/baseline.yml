@@ -35,12 +35,12 @@ voc_emergence:
 #    entry_rate: 5.
 #    seed_duration: 10.
 #    contact_rate_multiplier: 2.
-  omicron:
-    start_time: 2000.
-    entry_rate: 16.
-    seed_duration: 10.
-    contact_rate_multiplier: 5.
-    immune_escape: 0.
+#  omicron:
+#    start_time: 2000.
+#    entry_rate: 16.
+#    seed_duration: 10.
+#    contact_rate_multiplier: 5.
+#    immune_escape: 0.
     # ifr_multiplier: 1.
 
 testing_to_detection:

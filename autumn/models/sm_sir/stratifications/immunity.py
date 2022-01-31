@@ -44,7 +44,7 @@ def get_immunity_strat(
     # The multipliers calculated from the effect of immunity only
     low_immune_effect = immunity_params.infection_risk_reduction.low
     high_immune_effect = immunity_params.infection_risk_reduction.high
-    infection_adjustment = {
+    non_strain_adjustment = {
         ImmunityStratum.NONE: None,
         ImmunityStratum.LOW: Multiply(1. - low_immune_effect),
         ImmunityStratum.HIGH: Multiply(1. - high_immune_effect),
@@ -53,7 +53,7 @@ def get_immunity_strat(
     # Apply the adjustments to infection of the susceptibles - don't have to worry about strains here
     immunity_strat.set_flow_adjustments(
         FlowName.INFECTION,
-        infection_adjustment,
+        non_strain_adjustment,
     )
 
     # Considering people recovered from infection with each modelled strain ...
@@ -80,7 +80,7 @@ def get_immunity_strat(
                     voc_params else 1.
 
                 # Combine the two mechanisms of protection and format for summer
-                adjusters = {
+                strain_specific_adjustment = {
                     ImmunityStratum.NONE: Multiply(cross_effect),
                     ImmunityStratum.LOW: Multiply(low_non_cross_multiplier * cross_effect),
                     ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier * cross_effect),
@@ -89,7 +89,7 @@ def get_immunity_strat(
                 # Apply to the stratification object
                 immunity_strat.set_flow_adjustments(
                     flow,
-                    adjusters,
+                    strain_specific_adjustment,
                     source_strata=source_filter,
                     dest_strata=dest_filter,
                 )

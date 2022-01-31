@@ -7,6 +7,7 @@ from autumn.settings import INPUT_DATA_PATH
 
 
 COVID_LKA_CSV = os.path.join(INPUT_DATA_PATH, "covid_lka", "data.csv")
+COVID_LKA_2021_CSV = os.path.join(INPUT_DATA_PATH, "covid_lka", "data_2021.csv")
 
 
 def fetch_covid_lka_data():

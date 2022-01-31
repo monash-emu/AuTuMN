@@ -114,14 +114,16 @@ class SmSirOutputsBuilder(OutputsBuilder):
         )
 
     def request_hospitalisations(
-        self,
-        prop_hospital_among_sympt: List[float],
-        hospital_prop_multiplier: float,
-        hospital_risk_reduction_by_immunity: ImmunityRiskReduction,
-        time_from_onset_to_hospitalisation: TimeDistribution,
-        hospital_stay_duration: TimeDistribution,
-        model_times: np.ndarray,
-        age_groups: List[int]
+            self,
+            prop_hospital_among_sympt: List[float],
+            hospital_prop_multiplier: float,
+            hospital_risk_reduction_by_immunity: ImmunityRiskReduction,
+            time_from_onset_to_hospitalisation: TimeDistribution,
+            hospital_stay_duration: TimeDistribution,
+            model_times: np.ndarray,
+            age_groups: List[int],
+            strain_strata: List[str],
+            voc_params,
     ):
         """
         Request hospitalisation-related outputs.
@@ -138,7 +140,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
 
         # Adjusted hospital proportions
-        adjusted_prop_hosp_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
+        prop_hosp_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
 
         # Prepare a dictionary with hospital risk reduction by level of immunity
         hospital_risk_reduction = {
@@ -154,16 +156,21 @@ class SmSirOutputsBuilder(OutputsBuilder):
         hospital_admissions_sources = []
         for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
-                risk_reduction = 1. - hospital_risk_reduction[immunity_stratum]
-                hospital_risk = adjusted_prop_hosp_among_sympt[i_age] * risk_reduction
-                output_name = f"hospital_admissionsXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
-                hospital_admissions_sources.append(output_name)
-                hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)
-                self.model.request_function_output(
-                    name=output_name,
-                    sources=[f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
-                    func=hospital_admissions_func
-                )
+                for strain in strain_strata:
+                    agegroup_string = f"Xagegroup_{agegroup}"
+                    immunity_string = f"Ximmunity_{immunity_stratum}"
+                    strain_string = f"Xstrain_{strain}" if strain else ""
+                    output_name = "hospital_admissions" + agegroup_string + immunity_string + strain_string
+                    immunity_risk_modifier = 1. - hospital_risk_reduction[immunity_stratum]
+                    strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
+                    hospital_risk = prop_hosp_among_sympt[i_age] * immunity_risk_modifier * strain_risk_modifier
+                    hospital_admissions_sources.append(output_name)
+                    hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)
+                    self.model.request_function_output(
+                        name=output_name,
+                        sources=[f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
+                        func=hospital_admissions_func
+                    )
 
         # Request aggregated hospital admissions
         self.model.request_aggregate_output(
@@ -280,6 +287,7 @@ def precompute_probas_stay_greater_than(distribution_details, model_times):
     cdf_values = distribution.cdf(lags)
     probas_stay_greater_than = 1 - cdf_values
     return probas_stay_greater_than
+
 
 def convolve_probability(source_output: np.ndarray, density_intervals: np.ndarray, scale: float = 1.0, lag: int = 1) -> np.ndarray:
     """

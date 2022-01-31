@@ -40,6 +40,7 @@ voc_emergence:
     seed_duration: 0.
     contact_rate_multiplier: null
     immune_escape: 0.
+    hosp_protection: 0.
     cross_protection:
       wild_type:
         early_reinfection: 1.
@@ -55,6 +56,7 @@ voc_emergence:
     seed_duration: 10.
     contact_rate_multiplier: 2.
     immune_escape: 0.
+    hosp_protection: 0.
     cross_protection:
       wild_type:
         early_reinfection: 0.

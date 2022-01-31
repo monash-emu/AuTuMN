@@ -326,7 +326,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.time_from_onset_to_event.hospitalisation,
         params.hospital_stay.hospital_all,
         model.times,
-        age_groups
+        age_groups,
+        strain_strata,
+        params.voc_emergence,
     )
     outputs_builder.request_icu_outputs(
         params.prop_icu_among_hospitalised,

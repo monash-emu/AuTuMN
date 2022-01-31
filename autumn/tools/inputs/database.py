@@ -10,6 +10,7 @@ from .covid_phl.preprocess import preprocess_covid_phl
 from .covid_lka.preprocess import preprocess_covid_lka
 from .covid_vnm.preprocess import preprocess_covid_vnm
 from .covid_mmr.preprocess import preprocess_covid_mmr
+from .covid_bgd.preprocess import preprocess_covid_bgd
 from .covid_survey.preprocess import preprocess_covid_survey
 from .demography.preprocess import preprocess_demography
 from .mobility.preprocess import preprocess_mobility
@@ -63,6 +64,9 @@ def build_input_database(rebuild: bool = False):
 
         with Timer("Ingesting COVID MMR data."):
             preprocess_covid_mmr(input_db)
+
+        with Timer("Ingesting COVID BGD data."):
+            preprocess_covid_bgd(input_db)
 
         with Timer("Ingesting COVID survey data"):
             preprocess_covid_survey(input_db)

@@ -1,6 +1,7 @@
 from typing import Dict
 
 from summer import CompartmentalModel
+
 from autumn.models.sm_sir.parameters import VocComponent
 
 

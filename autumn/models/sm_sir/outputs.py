@@ -47,7 +47,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
 
         clinical_strata = [""] if not clinical_strata else clinical_strata
-        strain_strata = [""] if not strain_strata else strain_strata
         detected_incidence_sources = []
         incidence_sympt_sources_by_age_and_immunity = {}
         for agegroup in age_groups:

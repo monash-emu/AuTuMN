@@ -177,15 +177,22 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         contact_rate = params.contact_rate
 
+    # Infection flows
     model.add_infection_frequency_flow(
         name=FlowName.INFECTION,
         contact_rate=contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=infection_dest,
     )
+    model.add_infection_frequency_flow(
+        name=FlowName.EARLY_REINFECTION,
+        contact_rate=contact_rate,
+        source=Compartment.RECOVERED,
+        dest=infection_dest,
+    )
     if "waned" in base_compartments:
         model.add_infection_frequency_flow(
-            name=FlowName.INFECTION,
+            name=FlowName.LATE_REINFECTION,
             contact_rate=contact_rate,
             source=Compartment.WANED,
             dest=infection_dest,
@@ -248,6 +255,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Apply clinical stratification - must come after age stratification if asymptomatic props being used
     """
+
     detect_prop = params.detect_prop
     is_undetected = callable(detect_prop) or detect_prop < 1.0
     if sympt_props:
@@ -268,23 +276,32 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply strains stratification
     """
 
-    strain_strata = None
     if params.voc_emergence:
+
         voc_params = params.voc_emergence
 
         # Build and apply stratification
         strain_strat = get_strain_strat(voc_params, base_compartments)
         model.stratify_with(strain_strat)
-        strain_strata = strain_strat.strata
 
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
+
+        strain_strata = strain_strat.strata
+
+    else:
+        strain_strata = [""]
 
     """
     Apply immunity stratification
     """
 
-    immunity_strat = get_immunity_strat(params, base_compartments)
+    immunity_strat = get_immunity_strat(
+        base_compartments,
+        params.immunity_stratification,
+        strain_strata,
+        params.voc_emergence,
+    )
     model.stratify_with(immunity_strat)
 
     """

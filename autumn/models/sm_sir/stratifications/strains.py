@@ -16,7 +16,7 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
 
     Args:
         voc_params: All the VoC parameters (one VocComponent parameters object for each VoC)
-        compartments: All the model compartments
+        compartments: All the model's base compartment types
 
     Returns:
         The strain stratification summer object
@@ -24,24 +24,35 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     """
 
     # Process the requests
-    voc_names = list(voc_params.keys())
-    all_strains = [WILD_TYPE] + voc_names
+    strains = list(voc_params.keys())
     affected_compartments = [comp for comp in compartments if comp != Compartment.SUSCEPTIBLE]
 
-    # Stratify model
-    strain_strat = StrainStratification("strain", all_strains, affected_compartments)
+    # Check only one strain is specified as the starting strain
+    msg = "More than one strain has been specified as the starting strain"
+    assert [voc_params[i_strain].starting_strain for i_strain in strains].count(True) == 1, msg
+    starting_strain = [i_strain for i_strain in strains if voc_params[i_strain].starting_strain][0]
 
-    # Prepare population split and transmission adjustments
-    population_split = {WILD_TYPE: 1.}
-    transmissibility_adjustment = {WILD_TYPE: None}
-    for voc_name in voc_names:
-        population_split[voc_name] = 0.
-        transmissibility_adjustment[voc_name] = Multiply(voc_params[voc_name].contact_rate_multiplier)
+    # Create the stratification object
+    strain_strat = StrainStratification("strain", strains, affected_compartments)
 
-    # Apply population split
+    # Population split
+    msg = "Strain seed proportions do not sum to one"
+    assert sum([voc_params[i_strain].seed_prop for i_strain in strains]) == 1., msg
+    msg = "Currently requiring starting seed to all be assigned to the strain nominated as the starting strain"
+    assert voc_params[starting_strain].seed_prop == 1., msg
+    population_split = {strain: voc_params[strain].seed_prop for strain in strains}
     strain_strat.set_population_split(population_split)
 
-    # Apply transmissibility adjustments
-    strain_strat.set_flow_adjustments(FlowName.INFECTION, transmissibility_adjustment)
+    # Transmissibility adjustment
+    msg = "Starting strain should have a null contact rate multiplier"
+    assert voc_params[starting_strain].contact_rate_multiplier is None, msg
+    transmissibility_adjustments = {strain: Multiply(voc_params[strain].contact_rate_multiplier) for strain in strains}
+
+    # Apply to all the infection processes
+    flows = [FlowName.INFECTION, FlowName.EARLY_REINFECTION]
+    if Compartment.WANED in compartments:
+        flows.append(FlowName.LATE_REINFECTION)
+    for flow in flows:
+        strain_strat.set_flow_adjustments(flow, transmissibility_adjustments)
 
     return strain_strat

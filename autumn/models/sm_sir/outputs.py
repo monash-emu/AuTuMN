@@ -1,9 +1,9 @@
 from scipy import stats
-from typing import List
+from typing import List, Dict, Optional
 import numpy as np
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
-from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction
+from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction, VocComponent
 from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, ClinicalStratum
 from autumn.tools.utils.utils import apply_odds_ratio_to_props
 
@@ -48,35 +48,42 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         clinical_strata = [""] if not clinical_strata else clinical_strata
         detected_incidence_sources = []
-        incidence_sympt_sources_by_age_and_immunity = {}
+        sympt_incidence_sources = {}
         for agegroup in age_groups:
-            incidence_sympt_sources_by_age_and_immunity[agegroup] = {}
+            sympt_incidence_sources[agegroup] = {}
             for immunity_stratum in IMMUNITY_STRATA:
-                incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum] = {}
-                for clinical_stratum in clinical_strata:
-                    for strain in strain_strata:
-                        incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum][strain] = []
+                sympt_incidence_sources[agegroup][immunity_stratum] = {}
+                for strain in strain_strata:
+                    sympt_incidence_sources[agegroup][immunity_stratum][strain] = []
+                    for clinical_stratum in clinical_strata:
 
-                        output_name = f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
-                        dest_strata = {"agegroup": str(agegroup), "immunity": immunity_stratum}
-                        if clinical_stratum != "":
-                            output_name += f"Xclinical_{clinical_stratum}"
-                            dest_strata["clinical"] = clinical_stratum
-                        if strain != "":
-                            output_name += f"Xstrain_{strain}"
-                            dest_strata["strain"] = strain
+                        # Work out the incidence stratification string
+                        stem = f"incidence"
+                        agegroup_string = f"Xagegroup_{agegroup}"
+                        immunity_string = f"Ximmunity_{immunity_stratum}"
+                        clinical_string = f"Xclinical_{clinical_stratum}" if clinical_stratum else ""
+                        strain_string = f"Xstrain_{strain}" if strain else ""
+                        output_name = stem + agegroup_string + immunity_string + clinical_string + strain_string
 
+                        # Work out the destination criteria
+                        dest_filter = {"agegroup": str(agegroup), "immunity": immunity_stratum}
+                        clinical_filter = {"clinical": clinical_stratum} if clinical_stratum else {}
+                        strain_filter = {"strain": strain} if strain else {}
+                        dest_filter.update(clinical_filter)
+                        dest_filter.update(strain_filter)
+
+                        # Get the most highly stratified incidence calculation
                         self.model.request_output_for_flow(
                             name=output_name,
                             flow_name=incidence_flow,
-                            dest_strata=dest_strata
+                            dest_strata=dest_filter
                         )
 
+                        # Update the dictionaries of which outputs are relevant
                         if clinical_stratum in ["", ClinicalStratum.DETECT]:
                             detected_incidence_sources.append(output_name)
-
                         if clinical_stratum in ["", ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]:
-                            incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum][strain].append(output_name)
+                            sympt_incidence_sources[agegroup][immunity_stratum][strain].append(output_name)
 
         # Compute detected incidence to prepare for notifications calculations
         self.model.request_aggregate_output(
@@ -91,11 +98,11 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     stem = f"incidence_sympt"
                     agegroup_string = f"Xagegroup_{agegroup}"
                     immunity_string = f"Ximmunity_{immunity_stratum}"
-                    strain_string = f"Xstrain_{strain}"
+                    strain_string = f"Xstrain_{strain}" if strain else ""
                     sympt_inc_name = stem + agegroup_string + immunity_string + strain_string
                     self.model.request_aggregate_output(
                         name=sympt_inc_name,
-                        sources=incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum][strain]
+                        sources=sympt_incidence_sources[agegroup][immunity_stratum][strain]
                     )
 
     def request_notifications(
@@ -131,7 +138,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             model_times: np.ndarray,
             age_groups: List[int],
             strain_strata: List[str],
-            voc_params,
+            voc_params: Optional[Dict[str, VocComponent]],
     ):
         """
         Request hospitalisation-related outputs.
@@ -144,6 +151,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
             hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
+            strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+            voc_params: The parameters pertaining to the VoCs being implemented in the model
 
         """
 

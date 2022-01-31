@@ -15,7 +15,8 @@ from autumn.tools.utils.utils import COVID_BASE_DATETIME
 from autumn.tools.utils.utils import create_date_index
 
 
-COVID_LKA_DATACSV = os.path.join(INPUT_DATA_PATH, "covid_lka", "data.csv")
+LKA_DATA_2021 = os.path.join(INPUT_DATA_PATH, "covid_lka", "data_2021.csv")
+LKA_DATA_2022 = os.path.join(INPUT_DATA_PATH, "covid_lka", "data.csv")
 COVID_LKA_REGION = {"sri_lanka": "Sri Lanka"}
 COVID_LKA_TARGETS = os.path.join(
     PROJECTS_PATH, "covid_19", "sri_lanka", "sri_lanka", "timeseries.json"
@@ -30,7 +31,8 @@ TARGETS_MAP_LKA = {
 
 
 def preprocess_lka_data():
-    df = pd.read_csv(COVID_LKA_DATACSV)
+
+    df = pd.concat([pd.read_csv(file) for file in [LKA_DATA_2021, LKA_DATA_2022]])
     df.periodname = pd.to_datetime(
         df.periodname, errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
     )

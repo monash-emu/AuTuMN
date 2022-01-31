@@ -125,6 +125,7 @@ def normalise_sequence(input_sequence):
 def apply_moving_average(data, period):
     """
     Smooth the data by applying moving average with a specified period
+    This should be considered deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used
     :param data: a list
     :param period: an integer
     """

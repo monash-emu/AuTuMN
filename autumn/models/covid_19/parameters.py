@@ -196,17 +196,6 @@ class Mobility(BaseModel):
         return val
 
 
-class MixingMatrices(BaseModel):
-    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
-    source_iso3: Optional[str]
-    age_adjust: bool  # Only relevant if 'extrapolated' selected
-
-    @validator("type", allow_reuse=True)
-    def check_type(val):
-        assert val in ("extrapolated", "prem"), f"Mixing matrix request not permitted: {val}"
-        return val
-
-
 class AgeStratification(BaseModel):
     """
     Parameters used in age based stratification.
@@ -294,16 +283,6 @@ class TestingToDetection(BaseModel):
     def check_smoothing_period(val):
         assert 1 < val, f"Smoothing period must be greater than 1: {val}"
         return val
-
-
-class SusceptibilityHeterogeneity(BaseModel):
-    """
-    Specifies heterogeneity in susceptibility.
-    """
-
-    bins: int
-    tail_cut: float
-    coeff_var: float
 
 
 class MetroClusterStratification(BaseModel):
@@ -640,13 +619,6 @@ class ContactTracing(BaseModel):
         return values
 
 
-class AgeSpecificRiskMultiplier(BaseModel):
-    age_categories: List[str]
-    adjustment_start_time: Optional[int]
-    adjustment_end_time: Optional[int]
-    contact_rate_multiplier: float
-
-
 class ParamConfig:
     """
     Config for parameter models
@@ -667,7 +639,6 @@ class Parameters:
     universal_death_rate: float
     infectious_seed: float
     voc_emergence: Optional[Dict[str, VocComponent]]
-    age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
     vaccination: Optional[Vaccination]
     history: Optional[History]
     vaccination_risk: Optional[VaccinationRisk]
@@ -681,7 +652,7 @@ class Parameters:
     population: Population
     sojourn: Sojourn
     mobility: Mobility
-    mixing_matrices: Optional[MixingMatrices]
+    ref_mixing_iso3: str
     infection_fatality: InfectionFatality
     age_stratification: AgeStratification
     clinical_stratification: ClinicalStratification

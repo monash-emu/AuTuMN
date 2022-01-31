@@ -2,6 +2,7 @@ class Region:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     MANILA = "manila"
+    NCR = "national-capital-region"
     CALABARZON = "calabarzon"
     CENTRAL_VISAYAS = "central-visayas"
     UNITED_KINGDOM = "united-kingdom"
@@ -10,7 +11,7 @@ class Region:
     SWEDEN = "sweden"
     FRANCE = "france"
     SPAIN = "spain"
-    NORTH_EAST_METRO="north-east-metro"
+    NORTH_EAST_METRO = "north-east-metro"
     SOUTH_EAST_METRO = "south-east-metro"
     WEST_METRO = "west-metro"
     BARWON_SOUTH_WEST = "barwon-south-west"
@@ -35,10 +36,14 @@ class Region:
     HO_CHI_MINH_CITY = "ho_chi_minh_city"
     HANOI = "hanoi"
     MYANMAR = "myanmar"
+    BANGLADESH = "bangladesh"
+    DHAKA = "dhaka"
+    COXS_BAZAR = "coxs_bazar"
 
     REGIONS = [
         PHILIPPINES,
         MANILA,
+        NCR,
         CALABARZON,
         CENTRAL_VISAYAS,
         DAVAO_CITY,
@@ -73,6 +78,9 @@ class Region:
         HO_CHI_MINH_CITY,
         HANOI,
         MYANMAR,
+        BANGLADESH,
+        DHAKA,
+        COXS_BAZAR,
     ]
 
     MALAYSIA_REGIONS = [

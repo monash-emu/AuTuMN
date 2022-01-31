@@ -6,7 +6,7 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-summerepi==2.2.8
+summerepi==2.2.9
 
 # Data visualization
 matplotlib>=1.4.2
@@ -24,7 +24,7 @@ SQLAlchemy>=1.1.18
 # Utility
 pyyaml==5.3
 pydantic
-streamlit==0.82.0
+streamlit
 pyAesCrypt==0.4.3
 googledrivedownloader >=0.4
 statsmodels>=0.12.2

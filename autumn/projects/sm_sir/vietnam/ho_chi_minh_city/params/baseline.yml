@@ -1,0 +1,114 @@
+---
+description: BASELINE
+
+country:
+  iso3: VNM
+
+ref_mixing_iso3: HKG
+
+sojourns:
+  active:
+    total_time: 6.
+  latent:
+    total_time: 4.
+
+population:
+  region: Ho Chi Minh City
+  year: 2019
+
+time:
+  start: 511 # 25th May 2021
+  end: 1096
+
+activate_random_process: False
+
+infectious_seed: 100.
+contact_rate: 0.15
+
+immunity_stratification:
+  prop_immune: .8
+  prop_high_among_immune: .2  # varied in uncertainty
+
+voc_emergence:
+#  delta:
+#    start_time: 548
+#    entry_rate: 5.
+#    seed_duration: 10.
+#    contact_rate_multiplier: 2.
+  omicron:
+    start_time: 2000.
+    entry_rate: 16.
+    seed_duration: 10.
+    contact_rate_multiplier: 5.
+    # ifr_multiplier: 1.
+
+testing_to_detection:
+  assumed_tests_parameter: 1e-04 # Sri-Lanka model
+  assumed_cdr_parameter: 0.05 # needs calibrating
+  smoothing_period: 14
+
+mobility:
+  region: Ho Chi Minh City
+  # Google mobility data
+  smooth_google_data: true # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  # Google mobility weightings
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.4
+      grocery_and_pharmacy: 0.3
+      parks: 0.2
+      transit_stations: 0.1
+  # Micro distancing
+  microdistancing:
+    behaviour:
+      function_type: empiric
+      parameters:
+        max_effect: .2 # estimated from the Philipines paper
+        times:
+          - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
+          - 532 # 15th Jun 2021, Directive No.15 of the PM in place city-wide for the next 2 weeks
+          - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place
+          - 556 # 09th Jul 2021, Directive No.16 of the PM in place city-wide
+          - 573 # 26th Jul 2021, curfew from 6PM to 6AM
+          - 601 # 23th Aug 2021, total lockdown implemented
+          - 640 # 01st Oct 2021, lockdown started to ease
+          - 641 # 02nd Oct 2021, second day after eased lockdown
+          - 654 # 15th Oct 2021, 2 weeks after eased lockdown
+          - 671 # 01st Nov 2021, 1 month after eased lockdown, restaurants are serving on-site at 50% capacity
+          - 741 # 10th Jan 2022, HCMC to officially resume bars, disco, karaoke, massage services
+        values:
+          - 0.3
+          - 0.2
+          - 0.5
+          - 0.7
+          - 0.8
+          - 0.9
+          - 0.7
+          - 0.5
+          - 0.35
+          - 0.2
+          - 0.1
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
+        - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
+        - 2021-12-13 # Start date of the school re-opening plan
+        - 2021-01-03
+        - 2022-01-17
+      values:
+        - 0.
+        - 0.1
+        - 0.4
+        - 0.7
+        - 1.0
+

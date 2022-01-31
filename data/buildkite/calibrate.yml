@@ -76,8 +76,20 @@ steps:
       value: covid_19:west-metro
     - label: Philippines (sir_example)
       value: sir_example:philippines
-    - label: Philippines (sm_sir)
-      value: sm_sir:philippines
+    - label: Bangladesh (sm_sir)
+      value: sm_sir:bangladesh
+    - label: Coxs_Bazar (sm_sir)
+      value: sm_sir:coxs_bazar
+    - label: Dhaka (sm_sir)
+      value: sm_sir:dhaka
+    - label: Ho_Chi_Minh_City (sm_sir)
+      value: sm_sir:ho_chi_minh_city
+    - label: Malaysia (sm_sir)
+      value: sm_sir:malaysia
+    - label: Myanmar (sm_sir)
+      value: sm_sir:myanmar
+    - label: National Capital Region (sm_sir)
+      value: sm_sir:national-capital-region
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)

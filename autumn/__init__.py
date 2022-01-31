@@ -192,4 +192,20 @@ register_project(Models.COVID_19, Region.MYANMAR, "autumn.projects.covid_19.myan
 # register_project(Models.COVID_19, Region.VICTORIA, "autumn.projects.covid_19.victoria.project")
 
 
-register_project(Models.SM_SIR, Region.PHILIPPINES, "autumn.projects.sm_sir.philippines.project")
+register_project(
+    Models.SM_SIR, Region.NCR, "autumn.projects.sm_sir.philippines.national-capital-region.project"
+)
+register_project(Models.SM_SIR, Region.MALAYSIA, "autumn.projects.sm_sir.malaysia.malaysia.project")
+register_project(Models.SM_SIR, Region.MYANMAR, "autumn.projects.sm_sir.myanmar.myanmar.project")
+register_project(
+    Models.SM_SIR, Region.BANGLADESH, "autumn.projects.sm_sir.bangladesh.bangladesh.project"
+)
+register_project(Models.SM_SIR, Region.DHAKA, "autumn.projects.sm_sir.bangladesh.dhaka.project")
+register_project(
+    Models.SM_SIR, Region.COXS_BAZAR, "autumn.projects.sm_sir.bangladesh.coxs_bazar.project"
+)
+register_project(
+    Models.SM_SIR,
+    Region.HO_CHI_MINH_CITY,
+    "autumn.projects.sm_sir.vietnam.ho_chi_minh_city.project",
+)

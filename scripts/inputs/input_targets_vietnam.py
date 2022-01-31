@@ -15,13 +15,15 @@ from autumn.tools.utils.utils import create_date_index
 
 # Use OWID csv for notification and death numbers.
 COVID_OWID = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")
-VIETNAM_TIMESERIES = os.path.join(
-    PROJECTS_PATH, "covid_19", "vietnam", "vietnam", "timeseries.json"
-)
-HCMC_TIMESERIES = os.path.join(
+COVID_VNM_TS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "vietnam", "timeseries.json")
+COVID_HCMC_TS = os.path.join(
     PROJECTS_PATH, "covid_19", "vietnam", "ho_chi_minh_city", "timeseries.json"
 )
-HANOI_TIMESERIES = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "hanoi", "timeseries.json")
+COVID_HAN_TS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "hanoi", "timeseries.json")
+
+SM_SIR_HCMC_TS = os.path.join(
+    PROJECTS_PATH, "sm_sir", "vietnam", "ho_chi_minh_city", "timeseries.json"
+)
 
 
 HCMC_DATA_CSV = os.path.join(INPUT_DATA_PATH, "covid_vnm", "cases.csv")
@@ -45,7 +47,7 @@ TARGET_MAP_HCMC = {
 TARGET_MAP_HANOI = {
     "notifications": "notifications",
     "icu_occupancy": "icu_occupancy",
-    "infection_deaths": "infection_deaths"
+    "infection_deaths": "infection_deaths",
 }
 
 
@@ -53,6 +55,7 @@ def preprocess_vnm_data():
     df = pd.read_csv(COVID_OWID)
     df = df[df.iso_code == "VNM"]
     df = create_date_index(COVID_BASE_DATETIME, df, "date")
+    df = df[df["new_deaths"] >= 0]
     df = df[df.date <= pd.to_datetime("today").date()]
 
     return df
@@ -60,16 +63,17 @@ def preprocess_vnm_data():
 
 # Update VNM targets per OWID
 df = preprocess_vnm_data()
-update_timeseries(TARGET_MAP_VNM, df, VIETNAM_TIMESERIES)
+update_timeseries(TARGET_MAP_VNM, df, COVID_VNM_TS)
 
 # Update HCMC targets
 df_cases = pd.read_excel(HCMC_DATA_URL, usecols=[1, 2, 3, 4, 5])
 df_cases = create_date_index(COVID_BASE_DATETIME, df_cases, "Unnamed:_1")
 df_cases.to_csv(HCMC_DATA_CSV)
-update_timeseries(TARGET_MAP_HCMC, df_cases, HCMC_TIMESERIES)
+update_timeseries(TARGET_MAP_HCMC, df_cases, COVID_HCMC_TS)
+update_timeseries(TARGET_MAP_HCMC, df_cases, SM_SIR_HCMC_TS)
 
 # Update HANOI targets
 df_cases = pd.read_excel(HANOI_DATA_URL, usecols=[0, 1, 2, 3])
 df_cases = create_date_index(COVID_BASE_DATETIME, df_cases, "date")
 df_cases.to_csv(HANOI_DATA_CSV)
-update_timeseries(TARGET_MAP_HANOI, df_cases, HANOI_TIMESERIES)
+update_timeseries(TARGET_MAP_HANOI, df_cases, COVID_HAN_TS)

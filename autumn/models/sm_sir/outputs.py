@@ -52,15 +52,17 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for agegroup in age_groups:
             incidence_sympt_sources_by_age_and_immunity[agegroup] = {}
             for immunity_stratum in IMMUNITY_STRATA:
-                incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum] = []
+                incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum] = {}
                 for clinical_stratum in clinical_strata:
                     for strain in strain_strata:
+                        incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum][strain] = []
+
                         output_name = f"incidenceXagegroup_{agegroup}Ximmunity_{immunity_stratum}"
                         dest_strata = {"agegroup": str(agegroup), "immunity": immunity_stratum}
-                        if len(clinical_stratum) > 0:
+                        if clinical_stratum != "":
                             output_name += f"Xclinical_{clinical_stratum}"
                             dest_strata["clinical"] = clinical_stratum
-                        if len(strain) > 0:
+                        if strain != "":
                             output_name += f"Xstrain_{strain}"
                             dest_strata["strain"] = strain
 
@@ -74,7 +76,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                             detected_incidence_sources.append(output_name)
 
                         if clinical_stratum in ["", ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]:
-                            incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum].append(output_name)
+                            incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum][strain].append(output_name)
 
         # Compute detected incidence to prepare for notifications calculations
         self.model.request_aggregate_output(
@@ -82,13 +84,19 @@ class SmSirOutputsBuilder(OutputsBuilder):
             sources=detected_incidence_sources
         )
 
-        # Compute symptomatic incidence by age and immunity status to prepare for hospital outputs calculations
+        # Compute symptomatic incidence by age, immunity and strain status to prepare for hospital outputs calculations
         for agegroup in age_groups:
             for immunity_stratum in IMMUNITY_STRATA:
-                self.model.request_aggregate_output(
-                    name=f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}",
-                    sources=incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum]
-                )
+                for strain in strain_strata:
+                    stem = f"incidence_sympt"
+                    agegroup_string = f"Xagegroup_{agegroup}"
+                    immunity_string = f"Ximmunity_{immunity_stratum}"
+                    strain_string = f"Xstrain_{strain}"
+                    sympt_inc_name = stem + agegroup_string + immunity_string + strain_string
+                    self.model.request_aggregate_output(
+                        name=sympt_inc_name,
+                        sources=incidence_sympt_sources_by_age_and_immunity[agegroup][immunity_stratum][strain]
+                    )
 
     def request_notifications(
             self, time_from_onset_to_notification: TimeDistribution, model_times: np.ndarray
@@ -157,18 +165,28 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
                 for strain in strain_strata:
+
+                    # Find the strata we are working with and work out the strings to refer to
                     agegroup_string = f"Xagegroup_{agegroup}"
                     immunity_string = f"Ximmunity_{immunity_stratum}"
                     strain_string = f"Xstrain_{strain}" if strain else ""
-                    output_name = "hospital_admissions" + agegroup_string + immunity_string + strain_string
+                    strata_string = agegroup_string + immunity_string + strain_string
+                    output_name = "hospital_admissions" + strata_string
+                    hospital_admissions_sources.append(output_name)
+                    incidence_name = "incidence_sympt" + strata_string
+
+                    # Calculate the multiplier based on age, immunity and strain
                     immunity_risk_modifier = 1. - hospital_risk_reduction[immunity_stratum]
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
                     hospital_risk = prop_hosp_among_sympt[i_age] * immunity_risk_modifier * strain_risk_modifier
-                    hospital_admissions_sources.append(output_name)
+
+                    # Get the hospitalisation function
                     hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)
+
+                    # Request the output
                     self.model.request_function_output(
                         name=output_name,
-                        sources=[f"incidence_symptXagegroup_{agegroup}Ximmunity_{immunity_stratum}"],
+                        sources=[incidence_name],
                         func=hospital_admissions_func
                     )
 

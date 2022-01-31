@@ -27,10 +27,10 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.01, 0.05]),
     # Pre-existing immunity
     UniformPrior(
-        "immunity_stratification.prop_immune", [0.8, 0.9]
+        "immunity_stratification.prop_immune", [0.8, 0.95]
     ),  # 80% of total NCR pop with at least one dose by 29 Dec
     UniformPrior(
-        "immunity_stratification.prop_high_among_immune", [0.05, 0.20]
+        "immunity_stratification.prop_high_among_immune", [0.05, 0.40]
     ),  # Among people with at least one dose, 5% had received a booster by 29 Dec.
     # Hospital-related
     UniformPrior("hospital_prop_multiplier", [0.2, 1.]),

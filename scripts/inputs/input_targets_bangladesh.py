@@ -59,7 +59,7 @@ def main():
 
     # Cox's bazar
     df = pd.read_excel(COXS_DATA, skipfooter=1, usecols=[1, 2, 3, 4, 5, 6])
-    create_date_index(COVID_BASE_DATETIME, df, "Unnamed: 1")
+    df = create_date_index(COVID_BASE_DATETIME, df, "Unnamed: 1")
     update_timeseries(TARGET_MAP_COXS, df, SM_SIR_COXS_TS)
 
 

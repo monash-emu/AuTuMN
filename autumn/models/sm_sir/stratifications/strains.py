@@ -49,7 +49,10 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     transmissibility_adjustments = {strain: Multiply(voc_params[strain].contact_rate_multiplier) for strain in strains}
 
     # Apply to all the infection processes
-    for flow in [FlowName.INFECTION, FlowName.EARLY_REINFECTION, FlowName.LATE_REINFECTION]:
+    flows = [FlowName.INFECTION, FlowName.EARLY_REINFECTION]
+    if Compartment.WANED in compartments:
+        flows.append(FlowName.LATE_REINFECTION)
+    for flow in flows:
         strain_strat.set_flow_adjustments(flow, transmissibility_adjustments)
 
     return strain_strat

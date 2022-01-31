@@ -284,7 +284,7 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
 
 def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
-    df.rename(columns={datecol.lower(): "date"}, inplace=True)
+    df.rename(columns={datecol.lower().strip().replace(" ", "_"): "date"}, inplace=True)
 
     formats = ["%Y-%m-%d", "%d/%m/%Y"]
 
@@ -323,7 +323,7 @@ def get_prop_two_numerators(numerator_1, numerator_2, denominator):
 
 
 def get_complement_prop(numerator, denominator):
-    return 1. - numerator / denominator
+    return 1.0 - numerator / denominator
 
 
 def return_constant_value(value: float) -> Callable:

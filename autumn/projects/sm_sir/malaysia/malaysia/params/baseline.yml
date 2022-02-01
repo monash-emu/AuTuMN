@@ -29,11 +29,11 @@ infectious_seed: 10000.
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .25
+  prop_high_among_immune: .0
 
   infection_risk_reduction:
-    high: 0.8
-    low: 0.5
+    high: 0.9  # Now irrelevant, because prop_high_among_immune is zero
+    low: 0.6
 
 voc_emergence:
   wild_type:
@@ -50,22 +50,22 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.
       omicron:
-        early_reinfection: 0.2
-        late_reinfection: 0.2
+        early_reinfection: 0.4  # 60% immune escape
+        late_reinfection: 0.4
   omicron:
     starting_strain: false
     seed_prop: 0.
     start_time: 690.
     entry_rate: 100.
     seed_duration: 10.
-    contact_rate_multiplier: 1.5
+    contact_rate_multiplier: 1.375  # Mid-point of 1.25 to 1.5-fold increase
     immune_escape: 0.8
     hosp_protection: 0.47
     relative_latency: 0.6667
     cross_protection:
       wild_type:
-        early_reinfection: 1.
-        late_reinfection: 0.
+        early_reinfection: 0.4
+        late_reinfection: 0.4
       omicron:
         early_reinfection: 1.
         late_reinfection: 0.

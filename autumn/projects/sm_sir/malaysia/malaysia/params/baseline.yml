@@ -55,12 +55,13 @@ voc_emergence:
   omicron:
     starting_strain: false
     seed_prop: 0.
-    start_time: 675.
+    start_time: 690.
     entry_rate: 100.
     seed_duration: 10.
     contact_rate_multiplier: 1.5
     immune_escape: 0.8
     hosp_protection: 0.47
+    relative_latency: 0.5
     cross_protection:
       wild_type:
         early_reinfection: 0.

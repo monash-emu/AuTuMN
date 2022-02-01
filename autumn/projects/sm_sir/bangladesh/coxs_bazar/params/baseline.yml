@@ -75,16 +75,6 @@ immunity_stratification:
   prop_high_among_immune: .2  # varied in uncertainty
 
 voc_emergence: null
-#  delta:
-#    start_time: 548
-#    entry_rate: 5.
-#    seed_duration: 10.
-#    contact_rate_multiplier: 2.
-#  omicron:
-#    start_time: 2000
-#    entry_rate: 5.
-#    seed_duration: 10.
-#    contact_rate_multiplier: 4.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-4

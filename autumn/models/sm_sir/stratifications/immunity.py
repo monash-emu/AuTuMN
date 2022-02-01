@@ -13,9 +13,10 @@ def get_immunity_strat(
         voc_params: Optional[Dict[str, VocComponent]],
 ) -> Stratification:
     """
-    This stratification is intended to capture immunity considerations other than the inter-strain immunity issues,
-    which are previously considered in the strain stratification. This could be thought of as vaccine-induced immunity,
-    but would also capture immunity to previous strains that are not simulated in the current model.
+    This stratification is intended to capture all the immunity consideration.
+    This relates both to "cross" immunity between the strains being simulated (based on the strain that a person was
+    most recently infected with) and immunity induced by processes other than the strains being simulated in the model
+    (including vaccination-induced immunity and natural immunity from strains preceding the current simulations).
 
     Args:
         compartments: Base model compartments
@@ -41,35 +42,36 @@ def get_immunity_strat(
     }
     immunity_strat.set_population_split(immunity_split_props)
 
-    # The multipliers calculated from the effect of immunity only
-    low_immune_effect = immunity_params.infection_risk_reduction.low
-    high_immune_effect = immunity_params.infection_risk_reduction.high
-    non_strain_adjustment = {
-        ImmunityStratum.NONE: None,
-        ImmunityStratum.LOW: Multiply(1. - low_immune_effect),
-        ImmunityStratum.HIGH: Multiply(1. - high_immune_effect),
-    }
+    # Adjust the infection rate for susceptibles - strains just relevant if the strain has non-strain immune escape
+    for infecting_strain in strain_strata:
+        dest_filter = None if infecting_strain == "" else {"strain": infecting_strain}
 
-    # Apply the adjustments to infection of the susceptibles - don't have to worry about strains here
-    immunity_strat.set_flow_adjustments(
-        FlowName.INFECTION,
-        non_strain_adjustment,
-    )
+        # The multipliers calculated from the effect of immunity only
+        low_immune_effect = immunity_params.infection_risk_reduction.low
+        high_immune_effect = immunity_params.infection_risk_reduction.high
 
-    # Considering people recovered from infection with each modelled strain ...
-    for infected_strain in strain_strata:
-        source_filter = None if infected_strain == "" else {"strain": infected_strain}
+        # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
+        non_cross_effect = 1. if infecting_strain == "" else 1. - voc_params[infecting_strain].immune_escape
+        low_non_cross_multiplier = 1. - low_immune_effect * non_cross_effect
+        high_non_cross_multiplier = 1. - high_immune_effect * non_cross_effect
 
-        # ... and its protection against infection with a new index strain.
-        for infecting_strain in strain_strata:
-            dest_filter = None if infecting_strain == "" else {"strain": infecting_strain}
+        non_strain_adjustment = {
+            ImmunityStratum.NONE: None,
+            ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
+            ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
+        }
 
-            # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
-            non_cross_effect = 1. if infecting_strain == "" else 1. - voc_params[infecting_strain].immune_escape
-            low_non_cross_multiplier = 1. - low_immune_effect * non_cross_effect
-            high_non_cross_multiplier = 1. - high_immune_effect * non_cross_effect
+        immunity_strat.set_flow_adjustments(
+            FlowName.INFECTION,
+            non_strain_adjustment,
+            dest_strata=dest_filter,
+        )
 
-            # The infection processes that we are adapting and for which strains may have relevance
+        # Considering people recovered from infection with each modelled strain
+        for infected_strain in strain_strata:
+            source_filter = None if infected_strain == "" else {"strain": infected_strain}
+
+            # The infection processes that we are adapting and for which cross-strain immunity is relevant
             flows = [FlowName.EARLY_REINFECTION]
             if Compartment.WANED in compartments:
                 flows.append(FlowName.LATE_REINFECTION)

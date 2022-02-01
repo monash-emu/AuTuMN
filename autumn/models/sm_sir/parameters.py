@@ -304,20 +304,22 @@ class VocComponent(BaseModel):
     entry_rate: Optional[float]
     seed_duration: Optional[float]
     contact_rate_multiplier: Union[float, None]
+    relative_latency: Optional[float]
     immune_escape: float
     cross_protection: Dict[str, CrossImmunity]
+    hosp_protection: Optional[float]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):
         if "seed_duration" in values:
             assert 0. <= values["seed_duration"], "Seed duration negative"
-        # if "contact_rate_multiplier" in values:
-        #     assert 0. <= values["contact_rate_multiplier"], "Contact rate multiplier negative"
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
         return values
 
     check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
+    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
+    check_relative_latency = validator("relative_latency", allow_reuse=True)(get_check_non_neg("relative_latency"))
 
 
 class TimeDistribution(BaseModel):

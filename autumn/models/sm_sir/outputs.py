@@ -252,6 +252,19 @@ class SmSirOutputsBuilder(OutputsBuilder):
             func=icu_occupancy_func
         )
 
+    def request_recovered_proportion(
+            self
+    ):
+        self.model.request_output_for_compartments(
+            "ever_infected",
+            [Compartment.RECOVERED, Compartment.WANED],
+        )
+        self.model.request_function_output(
+            "prop_ever_infected",
+            lambda infected, total: infected / total,
+            sources=["ever_infected", "total_population"],
+        )
+
     def request_random_process_outputs(self,):
         self.model.request_computed_value_output("transformed_random_process")
 

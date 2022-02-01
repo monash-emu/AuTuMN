@@ -336,6 +336,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.hospital_stay.icu,
         model.times
     )
+    outputs_builder.request_recovered_proportion()
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

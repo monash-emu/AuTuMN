@@ -25,7 +25,7 @@ targets = [
 ]
 
 priors = [
-    UniformPrior("contact_rate", (0.07, 0.15)),
+    UniformPrior("contact_rate", (0.1, 0.22)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.08, 0.18)),
     UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.4, 0.8))
 ]

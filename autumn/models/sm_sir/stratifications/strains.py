@@ -55,4 +55,22 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     for flow in flows:
         strain_strat.set_flow_adjustments(flow, transmissibility_adjustments)
 
+    # Latency progression rate adjustment
+    adjustments = {strain: None for strain in strains}  # Start from a blank adjustments set
+    for strain in strains:
+        if voc_params[strain].relative_latency:
+            adjustments.update({strain: Multiply(1. / voc_params[strain].relative_latency)})  # Update for user request
+
+    # Apply to the one or two flows that relate to progression through latency
+    if Compartment.LATENT_LATE in compartments:
+        strain_strat.set_flow_adjustments(
+            FlowName.WITHIN_LATENT,
+            adjustments=adjustments
+        )
+    if Compartment.LATENT in compartments:
+        strain_strat.set_flow_adjustments(
+            FlowName.PROGRESSION,
+            adjustments=adjustments
+        )
+
     return strain_strat

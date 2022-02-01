@@ -353,8 +353,8 @@ def unpivot_df(df: pd.DataFrame) -> pd.DataFrame:
     df["population"] = df["population"] / 1000  # Divide to match UN pop data
 
     # Create start and end age groups.
-    df["start_age"] = df["variable"].apply(lambda s: int(s.split("-")[0]))
-    df["end_age"] = df["variable"].apply(lambda s: int(s.split("-")[1]))
+    df["start_age"] = df["variable"].apply(lambda s: 60 if s == "60+" else int(s.split("-")[0]))
+    df["end_age"] = df["variable"].apply(lambda s: None if s == "60+" else int(s.split("-")[1]))
     df.drop(columns="variable", inplace=True)
     return df
 
@@ -385,7 +385,7 @@ def get_rohingya_pop(ROHINGYA_POP: str) -> pd.DataFrame:
     df["5-11"] = df.loc[:, ["between 5-11 year Children", "Unnamed: 13"]].sum(axis=1)
     df["12-17"] = df.loc[:, ["between 12-17 year Children", "Unnamed: 15"]].sum(axis=1)
     df["18-59"] = df.loc[:, ["between 18-59 year Adult", "Unnamed: 17"]].sum(axis=1)
-    df["60-100"] = df.loc[:, ["60+ Elderly", "Unnamed: 19"]].sum(axis=1)
+    df["60+"] = df.loc[:, ["60+ Elderly", "Unnamed: 19"]].sum(axis=1)
 
     df = add_pop_cols(df, "BGD", "Bangladesh", "FDMN", "2021")
     df.drop(

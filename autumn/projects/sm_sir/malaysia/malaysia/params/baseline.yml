@@ -54,7 +54,7 @@ voc_emergence:
   omicron:
     starting_strain: false
     seed_prop: 0.
-    start_time: 682.
+    start_time: 690.
     entry_rate: 100.
     seed_duration: 10.
     contact_rate_multiplier: 1.375  # Mid-point of 1.25 to 1.5-fold increase

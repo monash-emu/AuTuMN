@@ -25,7 +25,7 @@ def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: floa
     return voc_seed_func
 
 
-def seed_vocs(model: CompartmentalModel, voc_params: Dict[str, VocComponent], seed_compartment: str):
+def seed_vocs(model: CompartmentalModel, all_voc_params: Dict[str, VocComponent], seed_compartment: str):
     """
     Use importation flows to seed VoC cases.
 
@@ -37,21 +37,23 @@ def seed_vocs(model: CompartmentalModel, voc_params: Dict[str, VocComponent], se
 
     Args:
         model: The summer model object
-        voc_params: The VoC-related parameters
+        all_voc_params: The VoC-related parameters
         seed_compartment: The compartment that VoCs should be seeded to
 
     """
 
-    for voc_name, voc_values in voc_params.items():
-        voc_seed_func = make_voc_seed_func(
-            voc_values.entry_rate,
-            voc_values.start_time,
-            voc_values.seed_duration
-        )
-        model.add_importation_flow(
-            f"seed_voc_{voc_name}",
-            voc_seed_func,
-            dest=seed_compartment,
-            dest_strata={"strain": voc_name},
-            split_imports=True
-        )
+    for voc_name, this_voc_params in all_voc_params.items():
+        voc_seed_params = this_voc_params.new_voc_seed
+        if voc_seed_params:
+            voc_seed_func = make_voc_seed_func(
+                voc_seed_params.entry_rate,
+                voc_seed_params.start_time,
+                voc_seed_params.seed_duration
+            )
+            model.add_importation_flow(
+                f"seed_voc_{voc_name}",
+                voc_seed_func,
+                dest=seed_compartment,
+                dest_strata={"strain": voc_name},
+                split_imports=True
+            )

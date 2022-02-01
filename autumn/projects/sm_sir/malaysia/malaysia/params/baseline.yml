@@ -20,16 +20,20 @@ sojourns:
 
 time:
   start: 430.
-  end: 800.
+  end: 1000.
 
 activate_random_process: False
 
-contact_rate: 0.055
+contact_rate: 0.1
 infectious_seed: 10000.
 
 immunity_stratification:
-  prop_immune: .6
-  prop_high_among_immune: .2
+  prop_immune: .8
+  prop_high_among_immune: .25
+
+  infection_risk_reduction:
+    high: 0.8
+    low: 0.5
 
 voc_emergence:
   wild_type:
@@ -54,9 +58,9 @@ voc_emergence:
     start_time: 730.
     entry_rate: 100.
     seed_duration: 10.
-    contact_rate_multiplier: 2.
-    immune_escape: 0.
-    hosp_protection: 0.
+    contact_rate_multiplier: 1.5
+    immune_escape: 1.
+    hosp_protection: 0.7
     cross_protection:
       wild_type:
         early_reinfection: 0.

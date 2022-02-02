@@ -1,4 +1,3 @@
-from operator import index
 from venv import create
 import pandas as pd
 from pathlib2 import Path
@@ -6,7 +5,7 @@ from pathlib2 import Path
 from autumn.tools.db import Database
 from autumn.tools.utils.utils import create_date_index, COVID_BASE_DATETIME
 
-from .fetch import COXS_VAC_DATA, COXS_DATA
+from .fetch import COXS_VAC_DATA, COXS_DATA, VACC_FILE
 
 
 def preprocess_covid_bgd(input_db: Database):
@@ -15,6 +14,8 @@ def preprocess_covid_bgd(input_db: Database):
     input_db.dump_df("coxs_bazar_vacc", df)
     df = process_coxs_bazar(COXS_DATA)
     input_db.dump_df("covid_coxs_bazar", df)
+    df = process_bgd_dhk_vaccination(VACC_FILE)
+    input_db.dump_df("bgd_vacc", df)
 
 
 def process_coxs_bazar_vaccination(COXS_VAC_DATA: Path) -> pd.DataFrame:
@@ -34,4 +35,29 @@ def process_coxs_bazar(COXS_DATA: Path) -> pd.DataFrame:
     df = pd.read_excel(COXS_DATA, skipfooter=1, usecols=[1, 2, 3, 4, 5, 6])
     df = create_date_index(COVID_BASE_DATETIME, df, "Unnamed: 1")
 
+    return df
+
+
+def process_bgd_dhk_vaccination(VACC_FILE) -> pd.DataFrame:
+
+    df = pd.DataFrame()
+
+    for file in VACC_FILE:
+        file_info = file.split("\\")[-1].split("_")
+        dose = file_info[1]
+        region = file_info[2].replace(".xls", "")
+
+        tmp_df = pd.read_csv(file)
+        cols = list(tmp_df.columns)
+        cols.remove("Category")
+
+        tmp_df["total"] = tmp_df.loc[:, cols].sum(axis=1)
+        tmp_df[["total"] + cols] = tmp_df.loc[:, ["total"] + cols].cumsum()
+
+        tmp_df["dose"] = dose
+        tmp_df["region"] = region
+
+        df = df.append(tmp_df)
+
+    df = create_date_index(COVID_BASE_DATETIME, df, "Category")
     return df

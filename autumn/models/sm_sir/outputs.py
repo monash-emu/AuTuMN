@@ -252,6 +252,26 @@ class SmSirOutputsBuilder(OutputsBuilder):
             func=icu_occupancy_func
         )
 
+    def request_recovered_proportion(self, base_comps: List[str]):
+        """
+        Track the total population ever infected and the proportion of the total population.
+
+        Args:
+             base_comps: The unstratified model compartments
+
+        """
+        recovered_compartments = [comp for comp in [Compartment.RECOVERED, Compartment.WANED] if comp in base_comps]
+
+        self.model.request_output_for_compartments(
+            "ever_infected",
+            recovered_compartments,
+        )
+        self.model.request_function_output(
+            "prop_ever_infected",
+            lambda infected, total: infected / total,
+            sources=["ever_infected", "total_population"],
+        )
+
     def request_random_process_outputs(self,):
         self.model.request_computed_value_output("transformed_random_process")
 

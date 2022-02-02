@@ -128,6 +128,75 @@ class SmSirOutputsBuilder(OutputsBuilder):
             func=notifications_func,
         )
 
+    def request_infection_deaths(
+            self,
+            prop_hospital_among_sympt: List[float],
+            hospital_prop_multiplier: float,
+            death_risk_reduction_by_immunity: ImmunityRiskReduction,
+            time_from_hospitalisation_to_death: TimeDistribution,
+            model_times: np.ndarray,
+            age_groups: List[int],
+            strain_strata: List[str],
+            voc_params: Optional[Dict[str, VocComponent]],
+    ):
+            """
+
+            Request infection deaths related outputs.
+
+            Args:
+                prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
+                hospital_prop_multiplier: Multiplier applied as an odds ratio adjustment
+                death_risk_reduction_by_immunity: Death risk reduction according to immunity level
+                time_from_hospitalisation_to_death: Details of the statistical distribution for the time to death
+                model_times: The model evaluation times
+                age_groups: Modelled age group lower breakpoints
+                strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+                voc_params: The parameters pertaining to the VoCs being implemented in the model
+
+            """
+
+            # Adjusted hospital proportions
+            prop_hosp_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
+
+            # Prepare a dictionary with reduction in risk of death by level of immunity
+            death_risk_reduction = {
+                ImmunityStratum.NONE: 0.,
+                ImmunityStratum.HIGH: death_risk_reduction_by_immunity.high,
+                ImmunityStratum.LOW: death_risk_reduction_by_immunity.low
+            }
+
+            # Pre-compute the probabilities of event occurrence within each time interval between model times
+            interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_death, model_times)
+
+            # Request infection deaths for each age group
+            infection_deaths_sources = []
+            for i_age, agegroup in enumerate(age_groups):
+                for immunity_stratum in IMMUNITY_STRATA:
+                    for strain in strain_strata:
+                        # Find the strata we are working with and work out the strings to refer to
+                        agegroup_string = f"Xagegroup_{agegroup}"
+                        immunity_string = f"Ximmunity_{immunity_stratum}"
+                        strain_string = f"Xstrain_{strain}" if strain else ""
+                        strata_string = agegroup_string + immunity_string + strain_string
+                        output_name = "infection_deaths" + strata_string
+                        infection_deaths_sources.append(output_name)
+                        incidence_name = "incidence" + strata_string
+
+                        # Calculate the multiplier based on age, immunity and strain
+                        immunity_risk_modifier = 1. - death_risk_reduction[immunity_stratum]
+                        strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
+                        death_risk = prop_hosp_among_sympt[i_age] * immunity_risk_modifier * strain_risk_modifier
+
+                        # Get the infection deaths function
+                        infection_deaths_func = make_calc_admissions_func(death_risk, interval_distri_densities)
+
+                        # Request the output
+                        self.model.request_function_output(
+                            name=output_name,
+                            sources=[incidence_name],
+                            func=infection_deaths_func
+                        )
+
     def request_hospitalisations(
             self,
             prop_hospital_among_sympt: List[float],

@@ -11,29 +11,28 @@ population:
 sojourns:
   active:
     total_time: 6.
-#    proportion_early: 0.333
+    proportion_early: 0.333
   latent:
     total_time: 4.
-#    proportion_early: 0.5
+    proportion_early: 0.5
   recovered:
     total_time: 180.
 
 time:
-  start: 430.
+  start: 450.
   end: 1000.
 
 activate_random_process: False
 
-contact_rate: 0.1
+contact_rate: 0.165
 infectious_seed: 10000.
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .25
+  prop_high_among_immune: .0
 
-  infection_risk_reduction:
-    high: 0.8
-    low: 0.5
+  infection_risk_reduction:  # High parameter now irrelevant, because prop_high_among_immune is zero
+    low: 0.6
 
 voc_emergence:
   wild_type:
@@ -48,27 +47,26 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.
       omicron:
-        early_reinfection: 0.2
-        late_reinfection: 0.2
+        early_reinfection: 0.4  # 60% immune escape
+        late_reinfection: 0.4
   omicron:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 690.
+      start_time: 705.
       entry_rate: 100.
       seed_duration: 10.
-    contact_rate_multiplier: 1.5
+    contact_rate_multiplier: 1.375
     immune_escape: 0.8
     hosp_protection: 0.47
     relative_latency: 0.6667
     cross_protection:
       wild_type:
-        early_reinfection: 1.
-        late_reinfection: 0.
+        early_reinfection: 0.4
+        late_reinfection: 0.4
       omicron:
         early_reinfection: 1.
         late_reinfection: 0.
-
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-3

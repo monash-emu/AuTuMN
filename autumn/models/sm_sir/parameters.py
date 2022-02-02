@@ -293,6 +293,15 @@ class CrossImmunity(BaseModel):
     check_late_reinfect = validator("late_reinfection", allow_reuse=True)(get_check_prop("late_reinfection"))
 
 
+class VocSeed(BaseModel):
+    start_time: Optional[float]
+    entry_rate: Optional[float]
+    seed_duration: Optional[float]
+
+    check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
+    check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))
+
+
 class VocComponent(BaseModel):
     """
     Parameters defining the emergence profile of the Variants of Concerns
@@ -300,22 +309,12 @@ class VocComponent(BaseModel):
 
     starting_strain: bool
     seed_prop: float
-    start_time: Optional[float]
-    entry_rate: Optional[float]
-    seed_duration: Optional[float]
+    new_voc_seed: Optional[VocSeed]
     contact_rate_multiplier: Union[float, None]
     relative_latency: Optional[float]
     immune_escape: float
     cross_protection: Dict[str, CrossImmunity]
     hosp_protection: Optional[float]
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_times(cls, values):
-        if "seed_duration" in values:
-            assert 0. <= values["seed_duration"], "Seed duration negative"
-        if "entry_rate" in values:
-            assert 0. <= values["entry_rate"], "Entry rate negative"
-        return values
 
     check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
     check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))

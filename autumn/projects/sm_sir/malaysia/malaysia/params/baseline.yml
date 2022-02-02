@@ -38,9 +38,7 @@ voc_emergence:
   wild_type:
     starting_strain: true
     seed_prop: 1.
-    start_time: 10000.
-    entry_rate: 0.
-    seed_duration: 0.
+    new_voc_seed: null
     contact_rate_multiplier: null
     immune_escape: 0.
     hosp_protection: 0.
@@ -54,10 +52,11 @@ voc_emergence:
   omicron:
     starting_strain: false
     seed_prop: 0.
-    start_time: 705.
-    entry_rate: 100.
-    seed_duration: 10.
-    contact_rate_multiplier: 1.375  # Mid-point of 1.25 to 1.5-fold increase
+    new_voc_seed:
+      start_time: 705.
+      entry_rate: 100.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.375
     immune_escape: 0.8
     hosp_protection: 0.47
     relative_latency: 0.6667

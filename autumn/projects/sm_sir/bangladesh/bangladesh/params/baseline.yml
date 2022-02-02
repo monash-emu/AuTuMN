@@ -10,22 +10,26 @@ population:
 
 time:
   start: 365.
-  end: 751
+  end: 1000.
 
 activate_random_process: False
 
 sojourns:
   active:
     total_time: 6.
+    proportion_early: 0.333
   latent:
     total_time: 4.
+    proportion_early: 0.5
+  recovered:
+    total_time: 180.
 
 infectious_seed: 100.
-contact_rate: 0.15
+contact_rate: 0.08
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .2  # varied in uncertainty
+  prop_high_among_immune: .2
 
 voc_emergence: null
 

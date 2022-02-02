@@ -130,9 +130,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_infection_deaths(
             self,
-            prop_hospital_among_sympt: List[float],
             ifr_prop: List[float],
-            hospital_prop_multiplier: float,
             death_risk_reduction_by_immunity: ImmunityRiskReduction,
             time_from_hospitalisation_to_death: TimeDistribution,
             model_times: np.ndarray,
@@ -145,9 +143,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
             Request infection deaths related outputs.
 
             Args:
-                prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
+
                 ifr_prop: infection fatality rates
-                hospital_prop_multiplier: Multiplier applied as an odds ratio adjustment
                 death_risk_reduction_by_immunity: Death risk reduction according to immunity level
                 time_from_hospitalisation_to_death: Details of the statistical distribution for the time to death
                 model_times: The model evaluation times
@@ -156,9 +153,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 voc_params: The parameters pertaining to the VoCs being implemented in the model
 
             """
-
-            # Adjusted hospital proportions
-            prop_hosp_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
 
             # Prepare a dictionary with reduction in risk of death by level of immunity
             death_risk_reduction = {
@@ -187,10 +181,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         # Calculate the multiplier based on age, immunity and strain
                         immunity_risk_modifier = 1. - death_risk_reduction[immunity_stratum]
                         strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
-                        death_risk = prop_hosp_among_sympt[i_age] * ifr_prop * immunity_risk_modifier * strain_risk_modifier
+                        death_risk = ifr_prop * immunity_risk_modifier * strain_risk_modifier
 
                         # Get the infection deaths function
-                        infection_deaths_func = make_calc_admissions_func(death_risk, interval_distri_densities)
+                        infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
 
                         # Request the output
                         self.model.request_function_output(
@@ -460,6 +454,14 @@ def make_calc_notifications_func(density_intervals):
         return notifications
 
     return notifications_func
+
+
+def make_calc_deaths_func(death_risk, density_intervals):
+    def deaths_func(detected_incidence):
+        deaths = apply_convolution_for_event(detected_incidence, density_intervals, death_risk)
+        return deaths
+
+    return deaths_func
 
 
 def make_calc_admissions_func(admission_risk, density_intervals):

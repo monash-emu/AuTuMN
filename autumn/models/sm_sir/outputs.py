@@ -131,6 +131,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
     def request_infection_deaths(
             self,
             prop_hospital_among_sympt: List[float],
+            ifr_prop: List[float],
             hospital_prop_multiplier: float,
             death_risk_reduction_by_immunity: ImmunityRiskReduction,
             time_from_hospitalisation_to_death: TimeDistribution,
@@ -145,6 +146,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
             Args:
                 prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
+                ifr_prop: infection fatality rates
                 hospital_prop_multiplier: Multiplier applied as an odds ratio adjustment
                 death_risk_reduction_by_immunity: Death risk reduction according to immunity level
                 time_from_hospitalisation_to_death: Details of the statistical distribution for the time to death
@@ -185,7 +187,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         # Calculate the multiplier based on age, immunity and strain
                         immunity_risk_modifier = 1. - death_risk_reduction[immunity_stratum]
                         strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
-                        death_risk = prop_hosp_among_sympt[i_age] * immunity_risk_modifier * strain_risk_modifier
+                        death_risk = prop_hosp_among_sympt[i_age] * ifr_prop * immunity_risk_modifier * strain_risk_modifier
 
                         # Get the infection deaths function
                         infection_deaths_func = make_calc_admissions_func(death_risk, interval_distri_densities)

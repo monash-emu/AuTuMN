@@ -135,45 +135,48 @@ class SmSirOutputsBuilder(OutputsBuilder):
             time_from_onset_to_death: TimeDistribution,
             model_times: np.ndarray,
             age_groups: List[int],
+            clinical_strata: List[str],
             strain_strata: List[str],
             voc_params: Optional[Dict[str, VocComponent]],
     ):
-            """
+        """
+        Request infection death-related outputs.
 
-            Request infection deaths related outputs.
+        Args:
+            ifr_prop: Infection fatality rates
+            death_risk_reduction_by_immunity: Death risk reduction according to immunity level
+            time_from_onset_to_death: Details of the statistical distribution for the time to death
+            model_times: The model evaluation times
+            age_groups: Modelled age group lower breakpoints
+            strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+            clinical_strata: The clinical strata being implemented
+            voc_params: The parameters pertaining to the VoCs being implemented in the model
 
-            Args:
+        """
 
-                ifr_prop: infection fatality rates
-                death_risk_reduction_by_immunity: Death risk reduction according to immunity level
-                time_from_onset_to_death: Details of the statistical distribution for the time to death
-                model_times: The model evaluation times
-                age_groups: Modelled age group lower breakpoints
-                strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
-                voc_params: The parameters pertaining to the VoCs being implemented in the model
+        # Prepare a dictionary with reduction in risk of death by level of immunity
+        death_risk_reduction = {
+            ImmunityStratum.NONE: 0.,
+            ImmunityStratum.HIGH: death_risk_reduction_by_immunity.high,
+            ImmunityStratum.LOW: death_risk_reduction_by_immunity.low
+        }
 
-            """
+        # Pre-compute the probabilities of event occurrence within each time interval between model times
+        interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
 
-            # Prepare a dictionary with reduction in risk of death by level of immunity
-            death_risk_reduction = {
-                ImmunityStratum.NONE: 0.,
-                ImmunityStratum.HIGH: death_risk_reduction_by_immunity.high,
-                ImmunityStratum.LOW: death_risk_reduction_by_immunity.low
-            }
+        # Request infection deaths for each age group
+        infection_deaths_sources = []
+        for i_age, agegroup in enumerate(age_groups):
+            for immunity_stratum in IMMUNITY_STRATA:
+                for strain in strain_strata:
+                    for clinical_stratum in clinical_strata:
 
-            # Pre-compute the probabilities of event occurrence within each time interval between model times
-            interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
-
-            # Request infection deaths for each age group
-            infection_deaths_sources = []
-            for i_age, agegroup in enumerate(age_groups):
-                for immunity_stratum in IMMUNITY_STRATA:
-                    for strain in strain_strata:
                         # Find the strata we are working with and work out the strings to refer to
                         agegroup_string = f"Xagegroup_{agegroup}"
                         immunity_string = f"Ximmunity_{immunity_stratum}"
+                        clinical_string = f"Xclinical_{clinical_stratum}" if clinical_stratum else ""
                         strain_string = f"Xstrain_{strain}" if strain else ""
-                        strata_string = agegroup_string + immunity_string + strain_string
+                        strata_string = agegroup_string + immunity_string + clinical_string + strain_string
                         output_name = "infection_deaths" + strata_string
                         infection_deaths_sources.append(output_name)
                         incidence_name = "incidence" + strata_string
@@ -181,7 +184,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         # Calculate the multiplier based on age, immunity and strain
                         immunity_risk_modifier = 1. - death_risk_reduction[immunity_stratum]
                         strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
-                        death_risk = ifr_prop * immunity_risk_modifier * strain_risk_modifier
+                        death_risk = ifr_prop[i_age] * immunity_risk_modifier * strain_risk_modifier
 
                         # Get the infection deaths function
                         infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)

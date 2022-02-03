@@ -77,6 +77,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     hosp_props = age_strat_params.prop_hospital
     hosp_props = convert_param_agegroups(hosp_props, country.iso3, pop.region, age_groups) if hosp_props else None
 
+    ifr_props = age_strat_params.ifr
+    convert_param_agegroups(ifr_props, country.iso3, pop.region, age_groups)
+
     # Determine the compartments
     base_compartments = get_compartments(params.sojourns)
 
@@ -335,6 +338,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.time_from_onset_to_event.icu_admission,
         params.hospital_stay.icu,
         model.times
+    )
+    outputs_builder.request_infection_deaths(
+        ifr_props,
+        params.immunity_stratification.death_risk_reduction,
+        params.time_from_onset_to_event.death,
+        model.times,
+        age_groups,
+        clinical_strata,
+        strain_strata,
+        params.voc_emergence,
     )
 
     if params.activate_random_process:

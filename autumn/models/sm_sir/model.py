@@ -16,7 +16,7 @@ from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import seed_vocs
+from .strat_processing.strains import seed_vocs, apply_reinfection_flows
 from .preprocess.age_specific_params import convert_param_agegroups
 
 
@@ -280,31 +280,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         strain_strata = [""]
 
-    # Apply the reinfection flows
-    for dest_strain in strain_strata:
-        contact_rate_multiplier = voc_params[dest_strain].contact_rate_multiplier if params.voc_emergence else 1.
-        strain_contact_rate = contact_rate * contact_rate_multiplier
-        dest_filter = {"strain": dest_strain} if dest_strain else None
-        for source_strain in strain_strata:
-            source_filter = {"strain": source_strain} if source_strain else None
-            model.add_infection_frequency_flow(
-                FlowName.EARLY_REINFECTION,
-                strain_contact_rate,
-                Compartment.RECOVERED,
-                infection_dest,
-                source_filter,
-                dest_filter,
-            )
-            if "waned" in base_compartments:
-                model.add_infection_frequency_flow(
-                    FlowName.LATE_REINFECTION,
-                    strain_contact_rate,
-                    Compartment.WANED,
-                    infection_dest,
-                    source_filter,
-                    dest_filter,
-                )
-
+    # Apply the reinfection flows, for which we need to know about the strain stratification
+    apply_reinfection_flows(model, base_compartments, infection_dest, params, strain_strata, contact_rate)
 
     """
     Apply immunity stratification

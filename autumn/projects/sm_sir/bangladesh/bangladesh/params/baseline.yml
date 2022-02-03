@@ -9,7 +9,7 @@ population:
   year: 2021
 
 time:
-  start: 415.
+  start: 470.
   end: 1000.
 
 activate_random_process: False
@@ -27,20 +27,20 @@ sojourns:
     total_time: 100000.
 
 infectious_seed: 10000.
-contact_rate: 0.185
+contact_rate: 0.12
 
 immunity_stratification:
-  prop_immune: .8
+  prop_immune: .3
   prop_high_among_immune: .0
   infection_risk_reduction:
-    low: 0.6
+    low: 0.3
 
 voc_emergence:
   wild_type:
     starting_strain: true
     seed_prop: 1.
     new_voc_seed: null
-    contact_rate_multiplier: null
+    contact_rate_multiplier: 1.
     immune_escape: 0.
     hosp_protection: 0.
     cross_protection:
@@ -48,17 +48,17 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.
       omicron:
-        early_reinfection: 0.2
-        late_reinfection: 0.2
+        early_reinfection: 0.4
+        late_reinfection: 0.4
   omicron:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 675
+      start_time: 690
       entry_rate: 100.
       seed_duration: 10.
-    contact_rate_multiplier: 1.5
-    immune_escape: 0.8
+    contact_rate_multiplier: 1.
+    immune_escape: 0.6
     hosp_protection: 0.47
     relative_latency: 0.6667
     cross_protection:
@@ -71,5 +71,5 @@ voc_emergence:
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-4
-  assumed_cdr_parameter: 0.011
+  assumed_cdr_parameter: 0.006
   smoothing_period: 14

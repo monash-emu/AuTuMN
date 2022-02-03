@@ -315,10 +315,12 @@ class VocComponent(BaseModel):
     immune_escape: float
     cross_protection: Dict[str, CrossImmunity]
     hosp_protection: Optional[float]
+    death_protection: Optional[float]
 
     check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
     check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
     check_relative_latency = validator("relative_latency", allow_reuse=True)(get_check_non_neg("relative_latency"))
+    check_death_protection = validator("death_protection", allow_reuse=True)(get_check_prop("death_protection"))
 
 
 class TimeDistribution(BaseModel):

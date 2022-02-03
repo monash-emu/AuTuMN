@@ -132,7 +132,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             self,
             ifr_prop: List[float],
             death_risk_reduction_by_immunity: ImmunityRiskReduction,
-            time_from_hospitalisation_to_death: TimeDistribution,
+            time_from_onset_to_death: TimeDistribution,
             model_times: np.ndarray,
             age_groups: List[int],
             strain_strata: List[str],
@@ -146,7 +146,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
                 ifr_prop: infection fatality rates
                 death_risk_reduction_by_immunity: Death risk reduction according to immunity level
-                time_from_hospitalisation_to_death: Details of the statistical distribution for the time to death
+                time_from_onset_to_death: Details of the statistical distribution for the time to death
                 model_times: The model evaluation times
                 age_groups: Modelled age group lower breakpoints
                 strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
@@ -162,7 +162,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             }
 
             # Pre-compute the probabilities of event occurrence within each time interval between model times
-            interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_death, model_times)
+            interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
 
             # Request infection deaths for each age group
             infection_deaths_sources = []
@@ -180,7 +180,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
                         # Calculate the multiplier based on age, immunity and strain
                         immunity_risk_modifier = 1. - death_risk_reduction[immunity_stratum]
-                        strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
+                        strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
                         death_risk = ifr_prop * immunity_risk_modifier * strain_risk_modifier
 
                         # Get the infection deaths function

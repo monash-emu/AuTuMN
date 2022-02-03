@@ -281,7 +281,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         strain_strata = [""]
 
     # Apply the reinfection flows, for which we need to know about the strain stratification
-    apply_reinfection_flows(model, base_compartments, infection_dest, params, strain_strata, contact_rate)
+    apply_reinfection_flows(model, base_compartments, infection_dest, params.voc_emergence, strain_strata, contact_rate)
 
     """
     Apply immunity stratification

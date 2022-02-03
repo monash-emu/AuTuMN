@@ -43,18 +43,6 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     population_split = {strain: voc_params[strain].seed_prop for strain in strains}
     strain_strat.set_population_split(population_split)
 
-    # Transmissibility adjustment
-    msg = "Starting strain should have a null contact rate multiplier"
-    assert voc_params[starting_strain].contact_rate_multiplier is None, msg
-    transmissibility_adjustments = {strain: Multiply(voc_params[strain].contact_rate_multiplier) for strain in strains}
-
-    # Apply to all the infection processes
-    flows = [FlowName.INFECTION, FlowName.EARLY_REINFECTION]
-    if Compartment.WANED in compartments:
-        flows.append(FlowName.LATE_REINFECTION)
-    for flow in flows:
-        strain_strat.set_flow_adjustments(flow, transmissibility_adjustments)
-
     # Latency progression rate adjustment
     adjustments = {strain: None for strain in strains}  # Start from a blank adjustments set
     for strain in strains:

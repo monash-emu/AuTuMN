@@ -260,7 +260,9 @@ class SmSirOutputsBuilder(OutputsBuilder):
              base_comps: The unstratified model compartments
 
         """
-        recovered_compartments = [comp for comp in [Compartment.RECOVERED, Compartment.WANED] if comp in base_comps]
+
+        # All the compartments other than the fully susceptible have been infected at least once
+        recovered_compartments = [comp for comp in base_comps if comp != Compartment.SUSCEPTIBLE]
 
         self.model.request_output_for_compartments(
             "ever_infected",

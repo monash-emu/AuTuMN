@@ -18,8 +18,8 @@ notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
 
 
 priors = [
-    UniformPrior("contact_rate", (0.15, 0.22)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.006, 0.015)),
+    UniformPrior("contact_rate", (0.08, 0.18)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.003, 0.012)),
 ]
 
 targets = [

@@ -13,13 +13,17 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
+calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
+notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+
+
 priors = [
-    UniformPrior("contact_rate", (0.1, 0.2)),
+    UniformPrior("contact_rate", (0.15, 0.22)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.006, 0.015)),
 ]
 
 targets = [
-    NormalTarget(data=ts_set["notifications"]),
-    NormalTarget(data=ts_set["infection_deaths"]),
+    NormalTarget(notifications_ts),
 ]
 
 calibration = Calibration(

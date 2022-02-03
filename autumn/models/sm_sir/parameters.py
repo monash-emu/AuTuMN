@@ -311,12 +311,20 @@ class VocComponent(BaseModel):
     starting_strain: bool
     seed_prop: float
     new_voc_seed: Optional[VocSeed]
-    contact_rate_multiplier: Union[float, None]
+    contact_rate_multiplier: float
     relative_latency: Optional[float]
     immune_escape: float
     cross_protection: Dict[str, CrossImmunity]
     hosp_protection: Optional[float]
     death_protection: Optional[float]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_starting_strain_multiplier(cls, values):
+        if values["starting_strain"]:
+            multiplier = values["contact_rate_multiplier"]
+            msg = f"Starting or 'wild type' strain must have a contact rate multiplier of one: {multiplier}"
+            assert multiplier == 1., msg
+        return values
 
     check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
     check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))

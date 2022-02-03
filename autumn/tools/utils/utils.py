@@ -361,3 +361,29 @@ def get_product_two_functions(function_1, function_2):
         return function_1(time) * function_2(time)
 
     return product_function
+
+
+def multiply_function_or_constant(
+        function_or_constant: Union[callable, float],
+        multiplier: float,
+) -> Union[callable, float]:
+    """
+    Multiply a function that returns a single value and takes inputs in the standard format of a summer time-varying
+    process by a multiplier - or do the same if the value is just a simple float.
+
+    Args:
+        function_or_constant: The function or constant to be multiplied
+        multiplier: The value for this thing to be multiplied by
+
+    Returns:
+        The same type of object as the function_or_constant input, but multiplied by the desired number
+
+    """
+
+    if callable(function_or_constant):
+        def revised_function(t, c):
+            return function_or_constant(t, c) * multiplier
+
+        return revised_function
+    else:
+        return function_or_constant * multiplier

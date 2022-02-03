@@ -184,19 +184,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.SUSCEPTIBLE,
         dest=infection_dest,
     )
-    model.add_infection_frequency_flow(
-        name=FlowName.EARLY_REINFECTION,
-        contact_rate=contact_rate,
-        source=Compartment.RECOVERED,
-        dest=infection_dest,
-    )
-    if "waned" in base_compartments:
-        model.add_infection_frequency_flow(
-            name=FlowName.LATE_REINFECTION,
-            contact_rate=contact_rate,
-            source=Compartment.WANED,
-            dest=infection_dest,
-        )
+    # model.add_infection_frequency_flow(
+    #     name=FlowName.EARLY_REINFECTION,
+    #     contact_rate=contact_rate,
+    #     source=Compartment.RECOVERED,
+    #     dest=infection_dest,
+    # )
+    # if "waned" in base_compartments:
+    #     model.add_infection_frequency_flow(
+    #         name=FlowName.LATE_REINFECTION,
+    #         contact_rate=contact_rate,
+    #         source=Compartment.WANED,
+    #         dest=infection_dest,
+    #     )
 
     # Active compartment(s) transitions
     active_sojourn = params.sojourns.active.total_time
@@ -287,7 +287,33 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
 
+        # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata
+
+        # Apply the reinfection flows
+        for dest_strain in strain_strata:
+            contact_rate_multiplier = voc_params[dest_strain].contact_rate_multiplier
+            strain_contact_rate = contact_rate * contact_rate_multiplier
+            dest_filter = {"strain": dest_strain}
+            for source_strain in strain_strata:
+                source_filter = {"strain": source_strain}
+                model.add_infection_frequency_flow(
+                    FlowName.EARLY_REINFECTION,
+                    strain_contact_rate,
+                    Compartment.RECOVERED,
+                    infection_dest,
+                    source_filter,
+                    dest_filter,
+                )
+                if "waned" in base_compartments:
+                    model.add_infection_frequency_flow(
+                        FlowName.LATE_REINFECTION,
+                        strain_contact_rate,
+                        Compartment.WANED,
+                        infection_dest,
+                        source_filter,
+                        dest_filter,
+                    )
 
     else:
         strain_strata = [""]

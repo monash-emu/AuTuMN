@@ -40,7 +40,7 @@ voc_emergence:
     starting_strain: true
     seed_prop: 1.
     new_voc_seed: null
-    contact_rate_multiplier: null
+    contact_rate_multiplier: 1.
     immune_escape: 0.
     hosp_protection: 0.
     cross_protection:

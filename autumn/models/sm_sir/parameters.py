@@ -261,7 +261,7 @@ class ImmunityStratification(BaseModel):
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
     hospital_risk_reduction: ImmunityRiskReduction
-    death_risk_reduction_by_immunity: ImmunityRiskReduction
+    death_risk_reduction: ImmunityRiskReduction
 
     check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
     check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(get_check_prop("prop_high_among_immune"))
@@ -341,6 +341,7 @@ class TimeToEvent(BaseModel):
     hospitalisation: TimeDistribution
     icu_admission: TimeDistribution
     death: TimeDistribution
+
 
 class HospitalStay(BaseModel):
     hospital_all: TimeDistribution

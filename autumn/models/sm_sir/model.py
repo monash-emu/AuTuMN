@@ -16,7 +16,7 @@ from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import get_immunity_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import seed_vocs
+from .strat_processing.strains import seed_vocs, apply_reinfection_flows
 from .preprocess.age_specific_params import convert_param_agegroups
 
 
@@ -184,19 +184,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.SUSCEPTIBLE,
         dest=infection_dest,
     )
-    model.add_infection_frequency_flow(
-        name=FlowName.EARLY_REINFECTION,
-        contact_rate=contact_rate,
-        source=Compartment.RECOVERED,
-        dest=infection_dest,
-    )
-    if "waned" in base_compartments:
-        model.add_infection_frequency_flow(
-            name=FlowName.LATE_REINFECTION,
-            contact_rate=contact_rate,
-            source=Compartment.WANED,
-            dest=infection_dest,
-        )
 
     # Active compartment(s) transitions
     active_sojourn = params.sojourns.active.total_time
@@ -287,10 +274,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Seed the VoCs from the point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
 
+        # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata
 
     else:
         strain_strata = [""]
+
+    # Apply the reinfection flows, for which we need to know about the strain stratification
+    apply_reinfection_flows(model, base_compartments, infection_dest, params.voc_emergence, strain_strata, contact_rate)
 
     """
     Apply immunity stratification
@@ -336,6 +327,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.hospital_stay.icu,
         model.times
     )
+    outputs_builder.request_recovered_proportion(base_compartments)
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

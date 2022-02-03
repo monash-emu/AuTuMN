@@ -184,19 +184,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.SUSCEPTIBLE,
         dest=infection_dest,
     )
-    # model.add_infection_frequency_flow(
-    #     name=FlowName.EARLY_REINFECTION,
-    #     contact_rate=contact_rate,
-    #     source=Compartment.RECOVERED,
-    #     dest=infection_dest,
-    # )
-    # if "waned" in base_compartments:
-    #     model.add_infection_frequency_flow(
-    #         name=FlowName.LATE_REINFECTION,
-    #         contact_rate=contact_rate,
-    #         source=Compartment.WANED,
-    #         dest=infection_dest,
-    #     )
 
     # Active compartment(s) transitions
     active_sojourn = params.sojourns.active.total_time

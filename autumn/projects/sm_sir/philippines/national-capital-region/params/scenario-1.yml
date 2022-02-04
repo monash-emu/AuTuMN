@@ -1,4 +1,4 @@
-description: School reopening
+description: School reopening 16th Feb
 
 time:
   start: 772
@@ -9,8 +9,8 @@ mobility:
       append: false
       times:
         - 2021-01-01
-        - 2022-02-14
-        - 2022-02-16
+        - 2022-02-15
+        - 2022-02-17
       values:
         - 0.
         - 0.

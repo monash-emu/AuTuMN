@@ -261,6 +261,7 @@ class ImmunityStratification(BaseModel):
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
     hospital_risk_reduction: ImmunityRiskReduction
+    death_risk_reduction: ImmunityRiskReduction
 
     check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
     check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(get_check_prop("prop_high_among_immune"))
@@ -315,6 +316,7 @@ class VocComponent(BaseModel):
     immune_escape: float
     cross_protection: Dict[str, CrossImmunity]
     hosp_protection: Optional[float]
+    death_protection: Optional[float]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_starting_strain_multiplier(cls, values):
@@ -327,6 +329,7 @@ class VocComponent(BaseModel):
     check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
     check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
     check_relative_latency = validator("relative_latency", allow_reuse=True)(get_check_non_neg("relative_latency"))
+    check_death_protection = validator("death_protection", allow_reuse=True)(get_check_prop("death_protection"))
 
 
 class TimeDistribution(BaseModel):
@@ -345,6 +348,7 @@ class TimeToEvent(BaseModel):
     notification: TimeDistribution
     hospitalisation: TimeDistribution
     icu_admission: TimeDistribution
+    death: TimeDistribution
 
 
 class HospitalStay(BaseModel):

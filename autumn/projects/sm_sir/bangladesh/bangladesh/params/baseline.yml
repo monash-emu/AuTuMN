@@ -43,6 +43,7 @@ voc_emergence:
     contact_rate_multiplier: 1.
     immune_escape: 0.
     hosp_protection: 0.
+    death_protection: 0.
     cross_protection:
       wild_type:
         early_reinfection: 1.
@@ -60,6 +61,7 @@ voc_emergence:
     contact_rate_multiplier: 0.65
     immune_escape: 0.6
     hosp_protection: 0.47
+    death_protection: 0.
     relative_latency: 0.6667
     cross_protection:
       wild_type:

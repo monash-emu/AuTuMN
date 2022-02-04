@@ -22,6 +22,7 @@ priors = [
     UniformPrior("contact_rate", (0.09, 0.19)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.0005, 0.004)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.25, 1.5)),
+    UniformPrior("voc_emergence.omicron.death_protection", (0.85, 0.95)),
 ]
 
 targets = [

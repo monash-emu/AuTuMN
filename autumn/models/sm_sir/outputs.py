@@ -196,6 +196,12 @@ class SmSirOutputsBuilder(OutputsBuilder):
                             func=infection_deaths_func
                         )
 
+        # Request aggregated infection deaths
+        self.model.request_aggregate_output(
+            name="infection_deaths",
+            sources=infection_deaths_sources
+        )
+
     def request_hospitalisations(
             self,
             prop_hospital_among_sympt: List[float],

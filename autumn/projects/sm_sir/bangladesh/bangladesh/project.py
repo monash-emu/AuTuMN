@@ -20,6 +20,8 @@ notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
 priors = [
     UniformPrior("contact_rate", (0.08, 0.18)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.003, 0.012)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (640., 680.)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.5, 1.))
 ]
 
 targets = [

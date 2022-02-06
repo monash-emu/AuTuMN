@@ -142,6 +142,9 @@ immunity_stratification:
   hospital_risk_reduction:  # based on UKHSA report (13/11/22)
     high: .90
     low: .50
+  death_risk_reduction: # FIXME check with Dave
+    high: .5
+    low: .2
 
 time_from_onset_to_event:  # using time of symptom onset as reference
   notification:
@@ -159,12 +162,12 @@ time_from_onset_to_event:  # using time of symptom onset as reference
     parameters:
       shape: 5.
       mean: 2. # FIXME: need an estimate
-#  death:
-#    distribution: gamma
-#    parameters:
-#      shape: 5.
-#      mean: 7.
-#
+  death:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 14. # FIXME: check with Dave
+
 
 prop_icu_among_hospitalised: .08  # NSW data
 

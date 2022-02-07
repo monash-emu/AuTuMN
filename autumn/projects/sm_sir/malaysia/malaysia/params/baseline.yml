@@ -54,12 +54,12 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 705.
+      start_time: 700.
       entry_rate: 100.
       seed_duration: 10.
-    contact_rate_multiplier: 1.375
-    immune_escape: 0.8
-    hosp_protection: 0.47
+    contact_rate_multiplier: 1.3
+    immune_escape: 0.3
+    hosp_protection: 0.75
     death_protection: 0.
     relative_latency: 0.6667
     cross_protection:

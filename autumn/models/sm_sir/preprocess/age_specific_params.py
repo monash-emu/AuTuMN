@@ -60,10 +60,6 @@ def convert_param_agegroups(
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
     assert all([i in source_agebreaks for i in modelled_age_groups]), msg
 
-    # Check modelled age brackets are specified in the expected way
-    msg = "Modelled age brackets not multiples of 5, as expected"
-    assert all([i_age % 5 == 0 for i_age in modelled_age_groups]), msg
-
     # Find out which of the standard source categories apply to each modelled age group
     relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
 

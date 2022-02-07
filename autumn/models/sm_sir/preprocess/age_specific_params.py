@@ -1,8 +1,8 @@
 from typing import List, Dict, Union
-
 import itertools
 
 from autumn.tools.inputs import get_population_by_agegroup
+from autumn.models.sm_sir.constants import AGE_BRACKET_WIDTHS, TOP_AGE_BRACKET
 
 
 def get_relevant_indices(
@@ -47,7 +47,9 @@ def convert_param_agegroups(
 
     Args:
         source_parameters: A list of values provided by 5-year band, starting from 0-4
-        iso3, region, modelled_age_groups: The parameters needed for obtaining the population
+        iso3: Parameter for get_population_by_agegroup
+        region: Parameter for get_population_by_agegroup
+        modelled_age_groups: Parameter for get_population_by_agegroup
 
     Returns:
         The list of the processed parameters in the format needed by the model
@@ -55,7 +57,7 @@ def convert_param_agegroups(
     """
 
     # Get default age brackets and population structured with these default categories
-    source_agebreaks = [5 * i for i in range(len(source_parameters))]
+    source_agebreaks = list(range(0, TOP_AGE_BRACKET, AGE_BRACKET_WIDTHS))
     total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
     assert all([i in source_agebreaks for i in modelled_age_groups]), msg

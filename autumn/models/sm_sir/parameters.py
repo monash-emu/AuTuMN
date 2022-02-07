@@ -412,7 +412,7 @@ class Parameters:
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
-    detect_prop: float
+    detect_prop: float  # Not optional, so as always to have a back-up value available if testing to detection not used
     testing_to_detection: Optional[TestingToDetection]
     asympt_infectiousness_effect: Optional[float]
     isolate_infectiousness_effect: Optional[float]

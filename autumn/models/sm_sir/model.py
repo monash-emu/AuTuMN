@@ -342,13 +342,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Work out if clinical stratification needs to be applied, either for asymptomatics or for incomplete detection
     detect_prop = params.detect_prop
-    assert type(detect_prop) == float
-    is_undetected = callable(detect_prop) or detect_prop < 1.
+    is_undetected = params.testing_to_detection or detect_prop < 1.
     if sympt_props:
         msg = "Attempted to apply differential symptomatic proportions by age, but model not age stratified"
         model_stratifications = [model._stratifications[i].name for i in range(len(model._stratifications))]
         assert "agegroup" in model_stratifications, msg
 
+    # Get and apply the clinical stratification, or a None value to indicate the clinical stratification isn't applied
     if is_undetected or sympt_props:
         clinical_strat = get_clinical_strat(
             model, compartment_types, params, age_groups, infectious_entry_flow, detect_prop, is_undetected, sympt_props

@@ -38,7 +38,7 @@ def get_agegroup_strat(
 
     """
 
-    age_strat = Stratification("agegroup", params.age_groups, compartments)
+    age_strat = Stratification("agegroup", [str(a) for a in params.age_groups], compartments)
 
     # Heterogeneous mixing by age
     final_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, params.country) if is_dynamic_matrix \

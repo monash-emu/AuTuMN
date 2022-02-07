@@ -16,7 +16,7 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
 
     Args:
         voc_params: All the VoC parameters (one VocComponent parameters object for each VoC)
-        compartments: All the model's base compartment types
+        compartments: All the model's unstratified compartment types
 
     Returns:
         The strain stratification summer object
@@ -43,13 +43,11 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     population_split = {strain: voc_params[strain].seed_prop for strain in strains}
     strain_strat.set_population_split(population_split)
 
-    # Latency progression rate adjustment
+    # Latency progression rate adjustment - applies to zero, one or two flows relating to progression through latency
     adjustments = {strain: None for strain in strains}  # Start from a blank adjustments set
     for strain in strains:
         if voc_params[strain].relative_latency:
             adjustments.update({strain: Multiply(1. / voc_params[strain].relative_latency)})  # Update for user request
-
-    # Apply to the one or two flows that relate to progression through latency
     if Compartment.LATENT_LATE in compartments:
         strain_strat.set_flow_adjustments(
             FlowName.WITHIN_LATENT,

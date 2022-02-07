@@ -67,11 +67,9 @@ def assign_population(
     Assign the starting population to the model according to the user requests and total population of the model.
 
     Args:
-        seed:
-        total_pop:
-        model:
-
-    Returns:
+        seed: The starting infectious seed
+        total_pop: The total population being modelled
+        model: The summer compartmental model object to have its starting population set
 
     """
 
@@ -162,16 +160,14 @@ def add_latent_transitions(
 def add_active_transitions(
         active_sojourn_params: CompartmentSojourn,
         model: CompartmentalModel,
-) -> Tuple[str, float]:
+):
     """
+    Implement the transitions through and out of the active compartment, based on the user requests regarding sojourn
+    times for the active compartment.
 
     Args:
         active_sojourn_params: The user requests relating to the active period
         model: The summer compartmental model object to have the flows applied to it
-
-    Returns:
-        The name of the origin compartment for recovery processes
-        The rate of recovery for those with active disease
 
     """
 
@@ -201,7 +197,13 @@ def add_active_transitions(
         recovery_origin = Compartment.INFECTIOUS
         recovery_rate = 1. / active_sojourn
 
-    return recovery_origin, recovery_rate
+    # Implement the recovery flow, now that we know the source and the rate
+    model.add_transition_flow(
+        name=FlowName.RECOVERY,
+        fractional_rate=recovery_rate,
+        source=recovery_origin,
+        dest=Compartment.RECOVERED,
+    )
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -302,15 +304,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Active transition flows
-    recovery_origin, recovery_rate = add_active_transitions(params.sojourns.active, model)
+    add_active_transitions(params.sojourns.active, model)
 
-    # Recovery and waning
-    model.add_transition_flow(
-        name=FlowName.RECOVERY,
-        fractional_rate=recovery_rate,
-        source=recovery_origin,
-        dest=Compartment.RECOVERED,
-    )
+    # Add waning transition if waning being implemented
     if "waned" in compartment_types:
         model.add_transition_flow(
             name=FlowName.WANING,
@@ -344,8 +340,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply clinical stratification - must come after age stratification if asymptomatic props being used
     """
 
+    # Work out if clinical stratification needs to be applied, either for asymptomatics or for incomplete detection
     detect_prop = params.detect_prop
-    is_undetected = callable(detect_prop) or detect_prop < 1.0
+    assert type(detect_prop) == float
+    is_undetected = callable(detect_prop) or detect_prop < 1.
     if sympt_props:
         msg = "Attempted to apply differential symptomatic proportions by age, but model not age stratified"
         model_stratifications = [model._stratifications[i].name for i in range(len(model._stratifications))]
@@ -365,7 +363,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     if params.voc_emergence:
-
         voc_params = params.voc_emergence
 
         # Build and apply stratification
@@ -379,6 +376,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         strain_strata = strain_strat.strata
 
     else:
+
+        # Need a placeholder for the output loops if strains not implemented
         strain_strata = [""]
 
     # Apply the reinfection flows, for which we need to know about the strain stratification

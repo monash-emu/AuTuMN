@@ -43,6 +43,8 @@ priors = [
     TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=0.075, \
                      stdev=0.1, trunc_range=[0.0, np.inf]),
     #VoC
+    UniformPrior("voc_emergence.alpha_beta.start_time", [380, 430]),
+    UniformPrior("voc_emergence.delta.start_time", [490, 530]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.75, 3.3]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [4.125, 8.5]),
     TruncNormalPrior(

@@ -345,12 +345,12 @@ class VocComponent(BaseModel):
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
         if "ifr_multiplier" in values:
-            assert 1. <= values["ifr_multiplier"], "VoC effect on mortality is less than one"
+            assert 0. <= values["ifr_multiplier"], "VoC effect on mortality negative"
         else:
             values["ifr_multiplier"] = 1.
         if "hosp_multiplier" in values:
             hosp_multiplier = values["hosp_multiplier"]
-            assert 1. <= hosp_multiplier, f"VoC effect on hospitalisation is less than one: {hosp_multiplier}"
+            assert 0. <= hosp_multiplier, f"VoC effect on hospitalisation negative"
         else:
             values["hosp_multiplier"] = 1.
         return values

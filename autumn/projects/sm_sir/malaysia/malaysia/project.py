@@ -17,11 +17,12 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
 icu_occupancy_ts = ts_set["icu_occupancy"].loc[calibration_start_time:]
 hospital_occupancy_ts = ts_set["hospital_occupancy"].loc[calibration_start_time:]
-
+infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(icu_occupancy_ts),
-    NormalTarget(hospital_occupancy_ts)
+    NormalTarget(hospital_occupancy_ts),
+    NormalTarget(infection_deaths_ts)
 ]
 
 priors = [

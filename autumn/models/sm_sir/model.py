@@ -17,7 +17,7 @@ from .stratifications.immunity import get_immunity_strat
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
 from .strat_processing.strains import seed_vocs, apply_reinfection_flows
-from .preprocess.age_specific_params import convert_param_agegroups
+from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
 
 
 # Base date used to calculate mixing matrix times.

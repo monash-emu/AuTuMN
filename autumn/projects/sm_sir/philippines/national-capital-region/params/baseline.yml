@@ -11,7 +11,7 @@ population:
 
 time:
   start: 650
-  end: 800
+  end: 882  # 31 May 2022
 
 activate_random_process: False
 

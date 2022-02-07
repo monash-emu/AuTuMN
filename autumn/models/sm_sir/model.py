@@ -80,12 +80,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     ifr_props = convert_param_agegroups(ifr_request, country.iso3, pop.region, age_groups, is_ifr=True)
 
     # Determine the compartments
-    base_compartments = get_compartments(params.sojourns)
+    compartment_types = get_compartments(params.sojourns)
 
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
-        compartments=base_compartments,
+        compartments=compartment_types,
         infectious_compartments=[Compartment.INFECTIOUS],
         timestep=params.time.step,
         ref_date=BASE_DATE
@@ -106,13 +106,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Create the total population.
     """
 
-    init_pop = {Compartment.INFECTIOUS: params.infectious_seed}
-
     # Get country population by age-group
     total_pops = inputs.get_population_by_agegroup(age_groups, country.iso3, pop.region, pop.year)
 
-    # Assign the remainder starting population to the S compartment
-    init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
+    # Split by seed and remainder susceptible
+    seed = params.infectious_seed
+    susceptible = sum(total_pops) - seed
+    init_pop = {
+        Compartment.INFECTIOUS: seed,
+        Compartment.SUSCEPTIBLE: susceptible,
+    }
+
+    # Assign to the model
     model.set_initial_population(init_pop)
 
     """
@@ -214,7 +219,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=recovery_origin,
         dest=Compartment.RECOVERED,
     )
-    if "waned" in base_compartments:
+    if "waned" in compartment_types:
         model.add_transition_flow(
             name=FlowName.WANING,
             fractional_rate=1. / params.sojourns.recovered.total_time,
@@ -237,7 +242,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params,
         total_pops,
         mixing_matrices,
-        base_compartments,
+        compartment_types,
         params.is_dynamic_mixing_matrix,
         susc_props,
     )
@@ -256,7 +261,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     if is_undetected or sympt_props:
         clinical_strat = get_clinical_strat(
-            model, base_compartments, params, age_groups, infectious_entry_flow, detect_prop, is_undetected, sympt_props
+            model, compartment_types, params, age_groups, infectious_entry_flow, detect_prop, is_undetected, sympt_props
         )
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
@@ -272,7 +277,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         voc_params = params.voc_emergence
 
         # Build and apply stratification
-        strain_strat = get_strain_strat(voc_params, base_compartments)
+        strain_strat = get_strain_strat(voc_params, compartment_types)
         model.stratify_with(strain_strat)
 
         # Seed the VoCs from the point in time
@@ -285,14 +290,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         strain_strata = [""]
 
     # Apply the reinfection flows, for which we need to know about the strain stratification
-    apply_reinfection_flows(model, base_compartments, infection_dest, params.voc_emergence, strain_strata, contact_rate)
+    apply_reinfection_flows(model, compartment_types, infection_dest, params.voc_emergence, strain_strata, contact_rate)
 
     """
     Apply immunity stratification
     """
 
     immunity_strat = get_immunity_strat(
-        base_compartments,
+        compartment_types,
         params.immunity_stratification,
         strain_strata,
         params.voc_emergence,
@@ -303,13 +308,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Set up derived output functions
     """
 
-    outputs_builder = SmSirOutputsBuilder(model, base_compartments)
+    outputs_builder = SmSirOutputsBuilder(model, compartment_types)
 
     # Track CDR function if case detection is implemented
     if is_undetected:
         outputs_builder.request_cdr()
 
-    outputs_builder.request_incidence(base_compartments, age_groups, clinical_strata, strain_strata)
+    outputs_builder.request_incidence(compartment_types, age_groups, clinical_strata, strain_strata)
     outputs_builder.request_notifications(
         params.time_from_onset_to_event.notification,
         model.times
@@ -341,7 +346,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         strain_strata,
         params.voc_emergence,
     )
-    outputs_builder.request_recovered_proportion(base_compartments)
+    outputs_builder.request_recovered_proportion(compartment_types)
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

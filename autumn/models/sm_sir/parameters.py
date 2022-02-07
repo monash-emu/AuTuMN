@@ -247,6 +247,13 @@ class AgeStratification(BaseModel):
     prop_hospital: List[float]
     ifr: List[float]
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_age_param_lengths(cls, values):
+        for param in ("susceptibility", "prop_symptomatic", "prop_hospital"):
+            msg = f"Length of parameter list for parameter {param} is not 16, which is the default number of age groups"
+            assert len(values[param]) == 16, msg
+        return values
+
     check_susceptibility = validator("susceptibility", allow_reuse=True)(get_check_all_non_neg("susceptibility"))
     check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_prop("prop_symptomatic"))
     check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_prop("prop_hospital"))

@@ -1,23 +1,44 @@
-from autumn.tools.inputs import get_population_by_agegroup
 import numpy as np
+from typing import List, Union
+
+from autumn.tools.inputs import get_population_by_agegroup
 
 
-def convert_param_agegroups(source_parameters, iso3, region, age_groups):
+def convert_param_agegroups(
+        source_parameters: List[float],
+        iso3: str,
+        region: Union[None, str],
+        modelled_age_groups: List[int],
+) -> List[float]:
     """
     Converts the source parameters to match the model age groups.
-    :param source_parameters: a list of values provided by 5-year band, starting from 0-4
+
+    Args:
+        source_parameters: A list of values provided by 5-year band, starting from 0-4
+        iso3:
+        region:
+        modelled_age_groups:
+
+    Returns:
+        The list of the processed parameters in the format needed by the model
+
     """
-    source_agebreaks = [str(5*i) for i in range(len(source_parameters))]
+
+    # Get default age brackets and population structured in that way
+    source_agebreaks = [str(5 * i) for i in range(len(source_parameters))]
     total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
 
+    print("________________________")
+    # Calculate the parameter values for the modelled age groups
     param_values = []
-    for i, model_agegroup in enumerate(age_groups):
-        age_indice_low = int(int(model_agegroup) / 5.)
-        if i == len(age_groups) - 1:
-            relevant_source_indices = list(range(age_indice_low, len(source_agebreaks)))
+    for i_age, model_agegroup in enumerate(modelled_age_groups):
+
+        # If the last modelled age group
+        if i_age == len(modelled_age_groups) - 1:
+            relevant_source_indices = list(range(i_age, len(source_agebreaks)))
+
         else:
-            age_indice_up = int(int(age_groups[i + 1]) / 5.) - 1
-            relevant_source_indices = np.arange(age_indice_low, age_indice_up + 1, 1).tolist()
+            relevant_source_indices = [i_age]
 
         model_agegroup_pop = 0
         param_val = 0.

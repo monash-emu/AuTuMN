@@ -67,21 +67,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     country = params.country
     pop = params.population
 
-    # Preprocess age-specific parameters to match model age bands
-    age_strat_params = params.age_stratification
+    # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
     age_groups = params.age_groups
-
-    suscept_props = age_strat_params.susceptibility
-    suscept_props = convert_param_agegroups(suscept_props, country.iso3, pop.region, age_groups)
-
+    age_strat_params = params.age_stratification
+    susc_props = age_strat_params.susceptibility
+    susc_props = convert_param_agegroups(susc_props, country.iso3, pop.region, age_groups) if susc_props else None
     sympt_props = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(sympt_props, country.iso3, pop.region, age_groups) if sympt_props else None
-
     hosp_props = age_strat_params.prop_hospital
     hosp_props = convert_param_agegroups(hosp_props, country.iso3, pop.region, age_groups) if hosp_props else None
-
     ifr_props = age_strat_params.ifr
-    ifr_props = convert_param_agegroups(ifr_props, country.iso3, pop.region, age_groups)
+    ifr_props = convert_param_agegroups(ifr_props, country.iso3, pop.region, age_groups) if ifr_props else None
 
     # Determine the compartments
     base_compartments = get_compartments(params.sojourns)
@@ -243,7 +239,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         mixing_matrices,
         base_compartments,
         params.is_dynamic_mixing_matrix,
-        suscept_props,
+        susc_props,
     )
     model.stratify_with(age_strat)
 

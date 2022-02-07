@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import numpy as np
 
 from summer import Stratification, Multiply
@@ -10,8 +10,12 @@ from autumn.tools.utils.utils import normalise_sequence
 
 
 def get_agegroup_strat(
-        params: Parameters, total_pops: List[int], mixing_matrices: np.array, compartments: List[str],
+        params: Parameters,
+        total_pops: List[int],
+        mixing_matrices: np.array,
+        compartments: List[str],
         is_dynamic_matrix: bool,
+        age_susceptibility_values: Optional[List[float]],
 ) -> Stratification:
     """
     Function to create the age group stratification object.
@@ -27,6 +31,7 @@ def get_agegroup_strat(
         mixing_matrices: The static age-specific mixing matrix
         compartments: All the model compartments
         is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
+        age_susceptibility_values: Adjustments to infection rate based on the susceptibility of modelled age groups
 
     Returns:
         The age stratification summer object
@@ -45,7 +50,8 @@ def get_agegroup_strat(
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group
-    age_suscept = params.age_stratification.susceptibility
-    age_strat.set_flow_adjustments(FlowName.INFECTION, {sus: Multiply(value) for sus, value in age_suscept.items()})
+    age_suscept = age_susceptibility_values
+    age_suscept_adjs = {str(sus): Multiply(value) for sus, value in zip(params.age_groups, age_suscept)}
+    age_strat.set_flow_adjustments(FlowName.INFECTION, age_suscept_adjs)
 
     return age_strat

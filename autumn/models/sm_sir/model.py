@@ -71,6 +71,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     age_strat_params = params.age_stratification
     age_groups = params.age_groups
 
+    suscept_props = age_strat_params.susceptibility
+    suscept_props = convert_param_agegroups(suscept_props, country.iso3, pop.region, age_groups)
+
     sympt_props = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(sympt_props, country.iso3, pop.region, age_groups) if sympt_props else None
 
@@ -106,6 +109,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Create the total population.
     """
+
     init_pop = {Compartment.INFECTIOUS: params.infectious_seed}
 
     # Get country population by age-group
@@ -238,7 +242,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         total_pops,
         mixing_matrices,
         base_compartments,
-        params.is_dynamic_mixing_matrix
+        params.is_dynamic_mixing_matrix,
+        suscept_props,
     )
     model.stratify_with(age_strat)
 

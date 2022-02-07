@@ -232,16 +232,16 @@ class AgeStratification(BaseModel):
     """
 
     # Susceptibility by age
-    susceptibility: Dict[str, float]
+    susceptibility: list
     prop_symptomatic: Optional[List[float]]
     prop_hospital: List[float]
     ifr: List[float]
 
-    @validator("susceptibility", allow_reuse=True)
-    def sympt_is_prop(susceptibility):
-        msg = "Some age-specific susceptibility values are negative"
-        assert all([0. <= i_sympt for i_sympt in susceptibility.values()]), msg
-        return susceptibility
+    # @validator("susceptibility", allow_reuse=True)
+    # def sympt_is_prop(susceptibility):
+    #     msg = "Some age-specific susceptibility values are negative"
+    #     assert all([0. <= i_sympt for i_sympt in susceptibility.values()]), msg
+    #     return susceptibility
 
     check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_positive("prop_symptomatic"))
     check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_positive("prop_hospital"))

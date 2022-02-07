@@ -21,6 +21,7 @@ def get_relevant_indices(
 
     """
 
+    # Collate up the dictionary by modelled age groups
     relevant_source_indices = {}
     for i_age, model_agegroup in enumerate(modelled_age_groups):
         age_index_low = source_agebreaks.index(model_agegroup)
@@ -30,6 +31,7 @@ def get_relevant_indices(
             age_index_up = source_agebreaks.index(modelled_age_groups[i_age + 1])
         relevant_source_indices[model_agegroup] = source_agebreaks[age_index_low: age_index_up]
 
+    # Should be impossible for this check to fail
     msg = "Not all source age groups being mapped to modelled age groups"
     assert list(itertools.chain.from_iterable(relevant_source_indices.values())) == source_agebreaks, msg
 

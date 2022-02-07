@@ -70,14 +70,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
     age_groups = params.age_groups
     age_strat_params = params.age_stratification
-    susc_props = age_strat_params.susceptibility
-    susc_props = convert_param_agegroups(susc_props, country.iso3, pop.region, age_groups) if susc_props else None
-    sympt_props = age_strat_params.prop_symptomatic
-    sympt_props = convert_param_agegroups(sympt_props, country.iso3, pop.region, age_groups) if sympt_props else None
-    hosp_props = age_strat_params.prop_hospital
-    hosp_props = convert_param_agegroups(hosp_props, country.iso3, pop.region, age_groups) if hosp_props else None
-    ifr_props = age_strat_params.ifr
-    ifr_props = convert_param_agegroups(ifr_props, country.iso3, pop.region, age_groups) if ifr_props else None
+    susc_request = age_strat_params.susceptibility
+    susc_props = convert_param_agegroups(susc_request, country.iso3, pop.region, age_groups) if susc_request else None
+    sympt_request = age_strat_params.prop_symptomatic
+    sympt_props = convert_param_agegroups(sympt_request, country.iso3, pop.region, age_groups) if sympt_request else None
+    hosp_request = age_strat_params.prop_hospital
+    hosp_props = convert_param_agegroups(hosp_request, country.iso3, pop.region, age_groups) if hosp_request else None
+    ifr_request = age_strat_params.ifr
+    ifr_props = convert_param_agegroups(ifr_request, country.iso3, pop.region, age_groups) if ifr_request else None
 
     # Determine the compartments
     base_compartments = get_compartments(params.sojourns)

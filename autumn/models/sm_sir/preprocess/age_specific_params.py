@@ -30,7 +30,8 @@ def get_relevant_indices(
             age_index_up = source_agebreaks.index(modelled_age_groups[i_age + 1])
         relevant_source_indices[model_agegroup] = source_agebreaks[age_index_low: age_index_up]
 
-    assert list(itertools.chain.from_iterable(relevant_source_indices.values())) == source_agebreaks
+    msg = "Not all source age groups being mapped to modelled age groups"
+    assert list(itertools.chain.from_iterable(relevant_source_indices.values())) == source_agebreaks, msg
 
     return relevant_source_indices
 
@@ -56,6 +57,8 @@ def convert_param_agegroups(
     # Get default age brackets and population structured with these default categories
     source_agebreaks = [5 * i for i in range(len(source_parameters))]
     total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
+    msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
+    assert all([i in source_agebreaks for i in modelled_age_groups]), msg
 
     # Check modelled age brackets are specified in the expected way
     msg = "Modelled age brackets not multiples of 5, as expected"

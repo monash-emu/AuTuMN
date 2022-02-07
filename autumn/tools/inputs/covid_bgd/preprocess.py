@@ -17,7 +17,7 @@ def preprocess_covid_bgd(input_db: Database):
     input_db.dump_df("bgd_vacc", df)
 
 
-def process_coxs_bazar_vaccination(COXS_VAC_DATA) -> pd.DataFrame:
+def process_coxs_bazar_vaccination(COXS_VAC_DATA: str) -> pd.DataFrame:
     df = pd.read_excel(COXS_VAC_DATA, usecols=[4, 5, 7, 8], skipfooter=1)
     df.rename(
         columns={"# Total Vaccinated": "total_vaccinated", "First Dose": "dose"}, inplace=True
@@ -29,7 +29,7 @@ def process_coxs_bazar_vaccination(COXS_VAC_DATA) -> pd.DataFrame:
     return df
 
 
-def process_coxs_bazar(COXS_DATA) -> pd.DataFrame:
+def process_coxs_bazar(COXS_DATA: str) -> pd.DataFrame:
 
     df = pd.read_excel(COXS_DATA, skipfooter=1, usecols=[1, 2, 3, 4, 5, 6])
     df = create_date_index(COVID_BASE_DATETIME, df, "Unnamed: 1")
@@ -37,7 +37,7 @@ def process_coxs_bazar(COXS_DATA) -> pd.DataFrame:
     return df
 
 
-def process_bgd_dhk_vaccination(VACC_FILE) -> pd.DataFrame:
+def process_bgd_dhk_vaccination(VACC_FILE: str) -> pd.DataFrame:
 
     df = pd.DataFrame()
 

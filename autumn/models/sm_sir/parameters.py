@@ -36,7 +36,7 @@ def get_check_non_neg(name):
     return check_non_neg
 
 
-def get_check_all_positive(name):
+def get_check_all_prop(name):
 
     msg = f"Parameter '{name}' contains values outside [0, 1], but is intended as a list of proportions"
 
@@ -45,6 +45,17 @@ def get_check_all_positive(name):
         return values
 
     return check_all_pos
+
+
+def get_check_all_non_neg(name):
+
+    msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
+
+    def check_all_non_neg(values: float) -> float:
+        assert all([0. <= i_value for i_value in values]), msg
+        return values
+
+    return check_all_non_neg
 
 
 class Time(BaseModel):
@@ -231,21 +242,15 @@ class AgeStratification(BaseModel):
     Parameters used in age based stratification.
     """
 
-    # Susceptibility by age
-    susceptibility: list
+    susceptibility: list  # Susceptibility to infection by age
     prop_symptomatic: Optional[List[float]]
     prop_hospital: List[float]
     ifr: List[float]
 
-    # @validator("susceptibility", allow_reuse=True)
-    # def sympt_is_prop(susceptibility):
-    #     msg = "Some age-specific susceptibility values are negative"
-    #     assert all([0. <= i_sympt for i_sympt in susceptibility.values()]), msg
-    #     return susceptibility
-
-    check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_positive("prop_symptomatic"))
-    check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_positive("prop_hospital"))
-    check_ifr_props = validator("ifr", allow_reuse=True)(get_check_all_positive("ifr"))
+    check_susceptibility = validator("susceptibility", allow_reuse=True)(get_check_all_non_neg("susceptibility"))
+    check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_prop("prop_symptomatic"))
+    check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_prop("prop_hospital"))
+    check_ifr_props = validator("ifr", allow_reuse=True)(get_check_all_prop("ifr"))
 
 
 class ImmunityRiskReduction(BaseModel):

@@ -70,10 +70,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
     age_groups = params.age_groups
     age_strat_params = params.age_stratification
-    susc_request = age_strat_params.susceptibility
-    susc_props = convert_param_agegroups(susc_request, country.iso3, pop.region, age_groups) if susc_request else None
-    sympt_request = age_strat_params.prop_symptomatic
-    sympt_props = convert_param_agegroups(sympt_request, country.iso3, pop.region, age_groups) if sympt_request else None
+    suscept_req = age_strat_params.susceptibility
+    susc_props = convert_param_agegroups(suscept_req, country.iso3, pop.region, age_groups) if suscept_req else None
+    sympt_req = age_strat_params.prop_symptomatic
+    sympt_props = convert_param_agegroups(sympt_req, country.iso3, pop.region, age_groups) if sympt_req else None
     hosp_request = age_strat_params.prop_hospital
     hosp_props = convert_param_agegroups(hosp_request, country.iso3, pop.region, age_groups) if hosp_request else None
     ifr_request = age_strat_params.ifr

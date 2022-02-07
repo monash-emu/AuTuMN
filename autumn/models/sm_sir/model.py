@@ -1,6 +1,6 @@
 from datetime import date
 from math import exp
-from typing import List
+from typing import List, Tuple
 
 from summer import CompartmentalModel
 
@@ -9,7 +9,7 @@ from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns
+from .parameters import Parameters, Sojourns, CompartmentSojourn
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -25,7 +25,9 @@ BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 
-def get_compartments(sojourns: Sojourns) -> List[str]:
+def get_compartments(
+        sojourns: Sojourns
+) -> List[str]:
     """
     Find the model compartments that are applicable to the parameter requests, based on the sojourn times structure.
         - Start with just the base SIR structure
@@ -54,6 +56,79 @@ def get_compartments(sojourns: Sojourns) -> List[str]:
         compartments.append(Compartment.WANED)
 
     return compartments
+
+
+def add_latent_transitions(
+        latent_sojourn_params: CompartmentSojourn,
+        model: CompartmentalModel,
+) -> Tuple[str, str]:
+    """
+    Add the transition flows taking people from infection through to infectiousness, depending on the model structure
+    requested.
+
+    Args:
+        latent_sojourn_params: The user requests relating to the latent period
+        model: The summer compartmental model object to have the flows applied to it
+
+    Returns:
+        The name of the destination compartment for infection processes
+        The name of the flow that transitions people into the infectious state
+
+    """
+
+    # If there is a latent stage in between infection and the onset of infectiousness
+    if latent_sojourn_params:
+
+        # The total time spent in the latent stage
+        latent_sojourn = latent_sojourn_params.total_time
+
+        # The proportion of that time spent in early latency
+        latent_early_prop = latent_sojourn_params.proportion_early
+
+        # If the latent compartment is divided into an early and a late stage
+        if latent_early_prop:
+
+            # The early latent period
+            early_sojourn = latent_sojourn * latent_early_prop
+
+            # Apply the transition between the two latent compartments
+            model.add_transition_flow(
+                name=FlowName.WITHIN_LATENT,
+                fractional_rate=1. / early_sojourn,
+                source=Compartment.LATENT,
+                dest=Compartment.LATENT_LATE,
+            )
+
+            # The parameters for the transition out of latency (through the late latent stage)
+            prop_latent_late = 1. - latent_early_prop
+            progress_rate = 1. / latent_sojourn / prop_latent_late
+            progress_origin = Compartment.LATENT_LATE
+
+        # If the latent compartment is just one compartment
+        else:
+
+            # The parameters for transition out of the single latent compartment
+            progress_origin = Compartment.LATENT
+            progress_rate = 1. / latent_sojourn
+
+        # Apply the transition out of latency flow
+        model.add_transition_flow(
+            name=FlowName.PROGRESSION,
+            fractional_rate=progress_rate,
+            source=progress_origin,
+            dest=Compartment.INFECTIOUS,
+        )
+
+        # Record the infection destination and the name of the flow that takes us into the infectious compartment
+        infection_dest = Compartment.LATENT
+        infectious_entry_flow = FlowName.PROGRESSION
+
+    # If no latent stage parameters are requested, infection takes us straight to the infectious compartment
+    else:
+        infection_dest = Compartment.INFECTIOUS
+        infectious_entry_flow = FlowName.INFECTION
+
+    return infection_dest, infectious_entry_flow
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -124,40 +199,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Add intercompartmental flows.
     """
 
-    # Latent compartment(s) transitions
-    if params.sojourns.latent:
-        latent_sojourn = params.sojourns.latent.total_time
-        latent_early_prop = params.sojourns.latent.proportion_early
-
-        if latent_early_prop:
-            early_sojourn = latent_sojourn * latent_early_prop
-            model.add_transition_flow(
-                name=FlowName.WITHIN_LATENT,
-                fractional_rate=1. / early_sojourn,
-                source=Compartment.LATENT,
-                dest=Compartment.LATENT_LATE,
-            )
-
-            prop_latent_late = 1. - latent_early_prop
-            progress_origin = Compartment.LATENT_LATE
-            progress_rate = 1. / latent_sojourn / prop_latent_late
-
-        else:
-            progress_origin = Compartment.LATENT
-            progress_rate = 1. / latent_sojourn
-
-        model.add_transition_flow(
-            name=FlowName.PROGRESSION,
-            fractional_rate=progress_rate,
-            source=progress_origin,
-            dest=Compartment.INFECTIOUS,
-        )
-
-        infection_dest = Compartment.LATENT
-        infectious_entry_flow = FlowName.PROGRESSION
-    else:
-        infection_dest = Compartment.INFECTIOUS
-        infectious_entry_flow = FlowName.INFECTION
+    infection_dest, infectious_entry_flow = add_latent_transitions(params.sojourns.latent, model)
 
     # Transmission
     if params.activate_random_process:

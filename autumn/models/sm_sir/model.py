@@ -1,6 +1,6 @@
 from datetime import date
 from math import exp
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from summer import CompartmentalModel
 
@@ -56,6 +56,34 @@ def get_compartments(
         compartments.append(Compartment.WANED)
 
     return compartments
+
+
+def assign_population(
+        seed: float,
+        total_pop: int,
+        model: CompartmentalModel
+):
+    """
+    Assign the starting population to the model according to the user requests and total population of the model.
+
+    Args:
+        seed:
+        total_pop:
+        model:
+
+    Returns:
+
+    """
+
+    # Split by seed and remainder susceptible
+    susceptible = total_pop - seed
+    init_pop = {
+        Compartment.INFECTIOUS: seed,
+        Compartment.SUSCEPTIBLE: susceptible,
+    }
+
+    # Assign to the model
+    model.set_initial_population(init_pop)
 
 
 def add_latent_transitions(
@@ -131,6 +159,51 @@ def add_latent_transitions(
     return infection_dest, infectious_entry_flow
 
 
+def add_active_transitions(
+        active_sojourn_params: CompartmentSojourn,
+        model: CompartmentalModel,
+) -> Tuple[str, float]:
+    """
+
+    Args:
+        active_sojourn_params: The user requests relating to the active period
+        model: The summer compartmental model object to have the flows applied to it
+
+    Returns:
+        The name of the origin compartment for recovery processes
+        The rate of recovery for those with active disease
+
+    """
+
+    active_sojourn = active_sojourn_params.total_time
+    active_early_prop = active_sojourn_params.proportion_early
+
+    # If the active compartment is divided into an early and a late stage
+    if active_early_prop:
+
+        # Apply the transition between the two active compartments
+        model.add_transition_flow(
+            name=FlowName.WITHIN_INFECTIOUS,
+            fractional_rate=1. / active_sojourn / active_early_prop,
+            source=Compartment.INFECTIOUS,
+            dest=Compartment.INFECTIOUS_LATE,
+        )
+
+        # The parameters for the transition out of active disease (through the late active stage)
+        prop_active_late = 1. - active_early_prop
+        recovery_rate = 1. / active_sojourn / prop_active_late
+        recovery_origin = Compartment.INFECTIOUS_LATE
+
+    # If the active compartment is just one compartment
+    else:
+
+        # The parameters for transition out of the single active compartment
+        recovery_origin = Compartment.INFECTIOUS
+        recovery_rate = 1. / active_sojourn
+
+    return recovery_origin, recovery_rate
+
+
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
@@ -184,21 +257,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Get country population by age-group
     total_pops = inputs.get_population_by_agegroup(age_groups, country.iso3, pop.region, pop.year)
 
-    # Split by seed and remainder susceptible
-    seed = params.infectious_seed
-    susceptible = sum(total_pops) - seed
-    init_pop = {
-        Compartment.INFECTIOUS: seed,
-        Compartment.SUSCEPTIBLE: susceptible,
-    }
-
-    # Assign to the model
-    model.set_initial_population(init_pop)
+    # Assign the population to compartments
+    assign_population(params.infectious_seed, sum(total_pops), model)
 
     """
     Add intercompartmental flows.
     """
 
+    # Latency
     infection_dest, infectious_entry_flow = add_latent_transitions(params.sojourns.latent, model)
 
     # Transmission
@@ -227,7 +293,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     else:
         contact_rate = params.contact_rate
 
-    # Infection flows
+    # Add the process of infecting the susceptibles for the first time
     model.add_infection_frequency_flow(
         name=FlowName.INFECTION,
         contact_rate=contact_rate,
@@ -235,24 +301,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         dest=infection_dest,
     )
 
-    # Active compartment(s) transitions
-    active_sojourn = params.sojourns.active.total_time
-    active_early_prop = params.sojourns.active.proportion_early
-
-    if active_early_prop:
-        model.add_transition_flow(
-            name=FlowName.WITHIN_INFECTIOUS,
-            fractional_rate=1. / active_sojourn / active_early_prop,
-            source=Compartment.INFECTIOUS,
-            dest=Compartment.INFECTIOUS_LATE,
-        )
-
-        prop_active_late = 1. - active_early_prop
-        recovery_origin = Compartment.INFECTIOUS_LATE
-        recovery_rate = 1. / active_sojourn / prop_active_late
-    else:
-        recovery_origin = Compartment.INFECTIOUS
-        recovery_rate = 1. / active_sojourn
+    # Active transition flows
+    recovery_origin, recovery_rate = add_active_transitions(params.sojourns.active, model)
 
     # Recovery and waning
     model.add_transition_flow(

@@ -58,6 +58,18 @@ def get_check_all_non_neg(name):
     return check_all_non_neg
 
 
+def get_check_all_non_neg_if_present(name):
+
+    msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
+
+    def check_all_non_neg(values: float) -> float:
+        if values:
+            assert all([0. <= i_value for i_value in values]), msg
+        return values
+
+    return check_all_non_neg
+
+
 class Time(BaseModel):
     """
     Parameters to define the model time period and evaluation steps.
@@ -242,19 +254,21 @@ class AgeStratification(BaseModel):
     Parameters used in age based stratification.
     """
 
-    susceptibility: list  # Susceptibility to infection by age
+    susceptibility: Optional[List[float]]  # Susceptibility to infection by age
     prop_symptomatic: Optional[List[float]]
     prop_hospital: List[float]
     ifr: List[float]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_age_param_lengths(cls, values):
-        for param in ("susceptibility", "prop_symptomatic", "prop_hospital"):
-            msg = f"Length of parameter list for parameter {param} is not 16, which is the default number of age groups"
-            assert len(values[param]) == 16, msg
+        for param_name in ("susceptibility", "prop_symptomatic", "prop_hospital"):
+            param = values[param_name]
+            if param:
+                msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"
+                assert len(values[param_name]) == 16, msg
         return values
 
-    check_susceptibility = validator("susceptibility", allow_reuse=True)(get_check_all_non_neg("susceptibility"))
+    check_suscept = validator("susceptibility", allow_reuse=True)(get_check_all_non_neg_if_present("susceptibility"))
     check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_prop("prop_symptomatic"))
     check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_prop("prop_hospital"))
     check_ifr_props = validator("ifr", allow_reuse=True)(get_check_all_prop("ifr"))

@@ -68,14 +68,14 @@ def get_clinical_strat(
 
     # Prepare for including incomplete detection
     if is_undetected:
-        clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
+        clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata  # "Pre-pending"
         cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
         model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
         model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
 
     # Prepare for including asymptomatic cases
     if sympt_props:
-        clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata
+        clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata  # Pre-pending again
 
     # Create the stratification object
     clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)

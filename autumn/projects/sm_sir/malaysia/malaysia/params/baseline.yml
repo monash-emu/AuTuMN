@@ -60,7 +60,7 @@ voc_emergence:
     contact_rate_multiplier: 1.3
     immune_escape: 0.3
     hosp_protection: 0.75
-    death_protection: 0.
+    death_protection: 0.69
     relative_latency: 0.6667
     cross_protection:
       wild_type:

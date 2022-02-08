@@ -148,14 +148,17 @@ immunity_stratification:
   prop_high_among_immune: .1
 
   infection_risk_reduction:  # FIXME check source with Dave (that's using the figure showing VE against symptomatic disease)
-    high: .60
+    none: 0.
     low: 0.
+    high: 0.6
   hospital_risk_reduction:  # based on UKHSA report (13/11/22)
-    high: .90
-    low: .50
+    none: 0.
+    low: 0.5
+    high: 0.9
   death_risk_reduction: # FIXME check with Dave
-    high: .5
-    low: .2
+    none: 0.
+    low: 0.2
+    high: 0.5
 
 time_from_onset_to_event:  # using time of symptom onset as reference
   notification:

@@ -156,9 +156,9 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Prepare a dictionary with reduction in risk of death by level of immunity
         death_risk_reduction = {
-            ImmunityStratum.NONE: 0.,
+            ImmunityStratum.NONE: death_risk_reduction_by_immunity.none,
+            ImmunityStratum.LOW: death_risk_reduction_by_immunity.low,
             ImmunityStratum.HIGH: death_risk_reduction_by_immunity.high,
-            ImmunityStratum.LOW: death_risk_reduction_by_immunity.low
         }
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times

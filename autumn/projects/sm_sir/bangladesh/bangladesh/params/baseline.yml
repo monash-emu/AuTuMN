@@ -46,9 +46,13 @@ contact_rate: 0.12
 
 immunity_stratification:
   prop_immune: .3
-  prop_high_among_immune: .0
+  prop_high_among_immune: 0.
   infection_risk_reduction:
     low: 0.3
+  death_risk_reduction:
+    none: 0.94  # Here I am using this to represent under-reporting
+    low: 0.94
+    high: 0.94
 
 voc_emergence:
   wild_type:
@@ -76,7 +80,7 @@ voc_emergence:
     contact_rate_multiplier: 0.65
     immune_escape: 0.6
     hosp_protection: 0.47
-    death_protection: 0.
+    death_protection: 0.9
     relative_latency: 0.6667
     cross_protection:
       wild_type:

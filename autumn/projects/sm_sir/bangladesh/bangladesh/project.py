@@ -15,6 +15,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
 
 priors = [
     UniformPrior("contact_rate", (0.08, 0.18)),
@@ -24,6 +25,7 @@ priors = [
 
 targets = [
     NormalTarget(notifications_ts),
+    NormalTarget(deaths_ts),
 ]
 
 calibration = Calibration(priors=priors, targets=targets, random_process=None, metropolis_init="current_params")

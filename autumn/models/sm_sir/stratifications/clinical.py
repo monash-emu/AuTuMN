@@ -45,8 +45,15 @@ def get_clinical_strat(
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
     epidemiological effect - and these are the only infectious compartments (unlike the Covid model).
+    We can only get into this function, if either incomplete case detection or asymptomatic people are being included in
+    the model.
+    For the symptomatic fractions - this can only be implemented as age-specific. There is currently no code to allow
+    for a constant symptomatic/asymptomatic fraction (although this could be done relatively easily).
+    If only partial case detection is applied and not an asymptomatic fraction, then the case detection rate should be
+    considered as the proportion of all infections that are detected as cases.
 
     Args:
+        model: The model object we are working with, even though the stratification is applied outside this function
         compartments: Unstratified model compartment types
         params: All model parameters
         age_groups: Modelled age groups
@@ -63,7 +70,7 @@ def get_clinical_strat(
     # Identify the compartment(s) to stratify, one or two depending on whether the infectious compartment is split
     comps_to_stratify = [comp for comp in compartments if "infectious" in comp]
 
-    # Start with the two symptomatic strata
+    # Start with detected - will definitely be adding strata because can't get here if neither sympt nor detect applied
     clinical_strata = [ClinicalStratum.DETECT]
 
     # Prepare for including incomplete detection
@@ -84,7 +91,7 @@ def get_clinical_strat(
     if sympt_props:
         for i_age, age_group in enumerate(age_groups):
             sympt_prop = sympt_props[i_age]
-            asympt_prop = 1.0 - sympt_prop
+            asympt_prop = 1. - sympt_prop
 
             if is_undetected:
 

@@ -43,7 +43,7 @@ TARGET_MAP_DHK = {
 TARGET_MAP_COXS = {
     "notifications": "confirmed_cases",
     "infection_deaths": "death",
-    "icu_admissions": "admitted_cases_at_icu/hdu_in_district",
+    "icu_occupancy": "admitted_cases_at_icu/hdu_in_district",
 }
 
 

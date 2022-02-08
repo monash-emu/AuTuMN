@@ -45,8 +45,15 @@ def get_clinical_strat(
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
     epidemiological effect - and these are the only infectious compartments (unlike the Covid model).
+    We can only get into this function, if either incomplete case detection or asymptomatic people are being included in
+    the model.
+    For the symptomatic fractions - this can only be implemented as age-specific. There is currently no code to allow
+    for a constant symptomatic/asymptomatic fraction (although this could be done relatively easily).
+    If only partial case detection is applied and not an asymptomatic fraction, then the case detection rate should be
+    considered as the proportion of all infections that are detected as cases.
 
     Args:
+        model: The model object we are working with, even though the stratification is applied outside this function
         compartments: Unstratified model compartment types
         params: All model parameters
         age_groups: Modelled age groups
@@ -60,32 +67,46 @@ def get_clinical_strat(
 
     """
 
+    """
+    Preliminaries with enough processing to create the stratification object
+    """
+
     # Identify the compartment(s) to stratify, one or two depending on whether the infectious compartment is split
     comps_to_stratify = [comp for comp in compartments if "infectious" in comp]
 
-    # Start with the two symptomatic strata
+    # Start with detected - will definitely be adding strata because can't get here if neither sympt nor detect applied
     clinical_strata = [ClinicalStratum.DETECT]
 
     # Prepare for including incomplete detection
     if is_undetected:
-        clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata
+        clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata  # "Pre-pending"
         cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
         model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
         model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
 
     # Prepare for including asymptomatic cases
     if sympt_props:
-        clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata
+        clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata  # Pre-pending again
 
     # Create the stratification object
     clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)
 
-    # Implement the splitting for symptomatic/asymptomatic status
+    """
+    Implement the splitting for symptomatic/asymptomatic status
+    There are three possible situations to cover here:
+        1) partial detection only
+        2) asymptomatic/symptomatic split only
+        3) both 1) and 2)
+    Note we don't need to cover the fourth situation of neither process being implemented, because the conditional 
+    outside of this function means you can't get in here if neither are being implemented.
+    """
+
     if sympt_props:
         for i_age, age_group in enumerate(age_groups):
             sympt_prop = sympt_props[i_age]
-            asympt_prop = 1.0 - sympt_prop
+            asympt_prop = 1. - sympt_prop
 
+            # Both implemented - i.e. 3)
             if is_undetected:
 
                 def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
@@ -100,6 +121,7 @@ def get_clinical_strat(
                     ClinicalStratum.DETECT: Multiply(abs_cdr_func),
                 }
 
+            # Only asymptomatic/symptomatic split implemented - i.e. 2)
             else:
                 adjustments = {
                     ClinicalStratum.ASYMPT: Multiply(asympt_prop),
@@ -111,7 +133,7 @@ def get_clinical_strat(
                 dest_strata={"agegroup": str(age_group)}
             )
 
-    # No need for loop over age if symptomatic status not included
+    # Only partial detection implemented - i.e. 1)
     else:
         adjustments = {
             ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_func),
@@ -122,21 +144,21 @@ def get_clinical_strat(
             adjustments,
         )
 
-    # Infectiousness adjustments
-    asympt_effect = params.asympt_infectiousness_effect
-    isolate_effect = params.isolate_infectiousness_effect
+    """
+    Infectiousness adjustments
+    """
 
-    # Start from blank adjustments
+    # Start from a blank adjustment set
     base_infectiousness = {stratum: None for stratum in clinical_strata}
 
     # Account for asymptomatics being less infectious, if they are included in the model
     if sympt_props:
-        base_infectiousness.update({ClinicalStratum.ASYMPT: Overwrite(asympt_effect)})
+        base_infectiousness.update({ClinicalStratum.ASYMPT: Overwrite(params.asympt_infectiousness_effect)})
 
     # Add in the effect of isolation if partial case detection is being simulated, otherwise only asymptomatic effect
     isolate_infectiousness = copy(base_infectiousness)
     if is_undetected:
-        isolate_infectiousness.update({ClinicalStratum.DETECT: Overwrite(isolate_effect)})
+        isolate_infectiousness.update({ClinicalStratum.DETECT: Overwrite(params.isolate_infectiousness_effect)})
 
     # Apply the isolation adjustments (which might be the same as the base) to the last infectious compartment
     clinical_strat.add_infectiousness_adjustments(comps_to_stratify[-1], isolate_infectiousness)

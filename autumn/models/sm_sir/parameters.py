@@ -249,11 +249,13 @@ class AgeStratification(BaseModel):
 
 
 class ImmunityRiskReduction(BaseModel):
-    high: float
+    none: float
     low: float
+    high: float
 
-    check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
+    check_none = validator("none", allow_reuse=True)(get_check_prop("none"))
     check_low = validator("low", allow_reuse=True)(get_check_prop("low"))
+    check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
 
 
 class ImmunityStratification(BaseModel):

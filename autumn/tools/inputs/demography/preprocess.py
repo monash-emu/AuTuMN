@@ -259,8 +259,8 @@ def read_population_df(loc_df: pd.DataFrame):
     pop_bgd = get_bangladesh_pop(BGD_POP)
     pop_df = pop_df.append(pop_bgd)
 
-    pop_rohingya = get_rohingya_pop(ROHINGYA_POP)
-    pop_df = pop_df.append(pop_rohingya)
+    # pop_rohingya = get_rohingya_pop(ROHINGYA_POP)
+    # pop_df = pop_df.append(pop_rohingya)
 
     # Ensure all numbers are actually numbers
     numeric_cols = ["year", "start_age", "end_age", "population"]

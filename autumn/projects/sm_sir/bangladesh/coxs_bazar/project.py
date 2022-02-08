@@ -24,7 +24,7 @@ priors = [UniformPrior("contact_rate", [0.1, 0.2]), UniformPrior("infectious_see
 
 targets = [
     NormalTarget(data=ts_set["notifications"]),
-    NormalTarget(data=ts_set["icu_admissions"]),
+    NormalTarget(data=ts_set["icu_occupancy"]),
     NormalTarget(data=ts_set["infection_deaths"]),
 ]
 

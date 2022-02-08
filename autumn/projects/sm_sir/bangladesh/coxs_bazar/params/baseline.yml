@@ -6,7 +6,7 @@ country:
 ref_mixing_iso3: HKG
 
 population:
-  # region: FDMN # NOTE - USING BGD population for now.
+  region: FDMN # NOTE - USING BGD population for now.
   year: 2021
 
 # age_groups:

@@ -11,17 +11,18 @@ from autumn.settings import Region, Models
 baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
-# Load and configure calibration settings.
+# Load and configure calibration settings
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.1, 0.2]),
-    UniformPrior("infectious_seed", [1, 400])
+    UniformPrior("contact_rate", (0.03, 0.12)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (700., 730.)),
 ]
 
+calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
+notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+
 targets = [
-    NormalTarget(data=ts_set["notifications"]),
-    NormalTarget(data=ts_set["icu_admissions"]),
-    NormalTarget(data=ts_set["infection_deaths"]),
+    NormalTarget(notifications_ts),
 ]
 
 calibration = Calibration(
@@ -32,7 +33,5 @@ plot_spec_filepath = build_rel_path("timeseries.json")
 with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
-# Create and register the project.
-project = Project(
-    Region.COXS_BAZAR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
-)
+# Create and register the project
+project = Project(Region.COXS_BAZAR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)

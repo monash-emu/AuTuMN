@@ -1362,9 +1362,9 @@
       0.975
     ]
   },
-  "icu_admissions": {
-    "output_key": "icu_admissions",
-    "title": "ICU admissions",
+  "icu_occupancy": {
+    "output_key": "icu_occupancy",
+    "title": "ICU occupancy",
     "times": [
       457,
       458,

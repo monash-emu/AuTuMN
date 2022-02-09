@@ -42,11 +42,12 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.025]),
     TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=0.075, \
                      stdev=0.1, trunc_range=[0.0, np.inf]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.85]),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [380, 430]),
     UniformPrior("voc_emergence.delta.start_time", [490, 530]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [2.75, 3.3]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [4.125, 8.5]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.3]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.5]),
     TruncNormalPrior(
         "voc_emergence.delta.ifr_multiplier",
         mean=2., stdev=0.75, trunc_range=(1., 4)),

@@ -642,6 +642,9 @@ def plot_multiple_posteriors(
             elif param_name == "history.waned.ve_death":
                 axis.set_title("waned VE against death", fontsize=title_font_size)
 
+            elif param_name == "contact_tracing.assumed_trace_prop":
+                axis.set_title("traced proportion", fontsize=title_font_size)
+
             else:
                 axis.set_title(
 

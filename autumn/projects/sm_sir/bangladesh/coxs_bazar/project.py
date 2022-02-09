@@ -17,6 +17,7 @@ priors = [
     UniformPrior("contact_rate", (0.03, 0.12)),
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (680.0, 710.0)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.08, 0.18)),
+    UniformPrior("hospital_stay.hospital_all.parameters.mean", (15., 30.)),
 ]
 
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]

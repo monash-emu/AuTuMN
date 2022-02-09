@@ -9,7 +9,7 @@ import os
 import numpy
 import pandas as pd
 from datetime import datetime
-from typing import List, Union
+from typing import List, Union, Callable
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
@@ -125,6 +125,7 @@ def normalise_sequence(input_sequence):
 def apply_moving_average(data, period):
     """
     Smooth the data by applying moving average with a specified period
+    This should be considered deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used
     :param data: a list
     :param period: an integer
     """
@@ -283,7 +284,7 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
 
 def create_date_index(COVID_BASE_DATETIME, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
-    df.rename(columns={datecol.lower(): "date"}, inplace=True)
+    df.rename(columns={datecol.lower().strip().replace(" ", "_"): "date"}, inplace=True)
 
     formats = ["%Y-%m-%d", "%d/%m/%Y"]
 
@@ -315,3 +316,74 @@ def find_closest_value_in_list(list_request: List, value_request: int) -> int:
 
 def check_list_increasing(list_to_check):
     assert all(list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1))
+
+
+def get_prop_two_numerators(numerator_1, numerator_2, denominator):
+    return (numerator_1 + numerator_2) / denominator
+
+
+def get_complement_prop(numerator, denominator):
+    return 1.0 - numerator / denominator
+
+
+def return_constant_value(value: float) -> Callable:
+    """
+    For situations below in which we just need a function that returns a constant value.
+
+    Args:
+        value: The value that the function will return
+
+    Returns:
+        The function that returns the value, ignoring the time input
+
+    """
+
+    def constant_value_func(time):
+        return value
+
+    return constant_value_func
+
+
+def get_product_two_functions(function_1, function_2):
+    """
+    For the situation where we want a function that returns the product of two other functions.
+
+    Args:
+        function_1: First function of time
+        function_2: Second function of time
+
+    Returns:
+        New function of time that returns a scalar, being the product of the two other functions at that point in time
+
+    """
+
+    def product_function(time):
+        return function_1(time) * function_2(time)
+
+    return product_function
+
+
+def multiply_function_or_constant(
+        function_or_constant: Union[callable, float],
+        multiplier: float,
+) -> Union[callable, float]:
+    """
+    Multiply a function that returns a single value and takes inputs in the standard format of a summer time-varying
+    process by a multiplier - or do the same if the value is just a simple float.
+
+    Args:
+        function_or_constant: The function or constant to be multiplied
+        multiplier: The value for this thing to be multiplied by
+
+    Returns:
+        The same type of object as the function_or_constant input, but multiplied by the desired number
+
+    """
+
+    if callable(function_or_constant):
+        def revised_function(t, c):
+            return function_or_constant(t, c) * multiplier
+
+        return revised_function
+    else:
+        return function_or_constant * multiplier

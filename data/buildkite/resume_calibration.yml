@@ -5,7 +5,7 @@ steps:
     key: run-id
     required: true
     text: Existing calibration run-id
-  - default: '7'
+  - default: '8'
     hint: How many MCMC chains do you want to run?
     key: num-chains
     required: true
@@ -15,32 +15,26 @@ steps:
     key: mcmc-runtime
     required: true
     text: Runtime
-  - default: 'no'
-    hint: Should this task use most recent push (HEAD)? If no, the calibration commit
-      will be used
-    key: use-latest-code
+  - default: '500'
+    hint: How many MCMC iterations should be burned?
+    key: burn-in
+    required: true
+    text: Burn-in
+  - default: '100'
+    hint: How many accepted runs per chain should be sampled for uncertainty calcs?
+    key: sample-size
+    required: true
+    text: Sample size
+  - default: 'yes'
+    hint: Should this task trigger a full model run when it is done?
+    key: trigger-downstream
     options:
     - label: 'Yes'
       value: 'yes'
     - label: 'No'
       value: 'no'
     required: true
-    select: Use latest code for model run
-  - default: master
-    hint: Which git branch do you want to use to run the model?
-    key: mcmc-branch
-    required: true
-    text: Model git branch name
-  - default: 'no'
-    hint: Is 1/3 of the price but sometimes randomly fails.
-    key: spot-instance
-    options:
-    - label: 'Yes'
-      value: 'yes'
-    - label: 'No'
-      value: 'no'
-    required: true
-    select: Use spot instances
+    select: Trigger full model run
   if: build.env("SKIP_INPUT") == null
   key: resume_calibration_settings
 - command: ./scripts/buildkite.sh resume

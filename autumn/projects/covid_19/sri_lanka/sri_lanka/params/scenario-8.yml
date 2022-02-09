@@ -1,0 +1,26 @@
+description: emergence of omicron and mobility to pre-COVID levels
+time:
+  start: 701 # 01st Dec 2021
+
+voc_emergence:
+  omicron:
+    start_time: 715 # dec 15th
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-11-30
+        - 2021-12-01
+      values:
+        - - repeat_prev
+        - 1.2
+    work:
+      append: true
+      times:
+        - 2021-11-30
+        - 2021-12-01
+      values:
+        - - repeat_prev
+        - 1.2

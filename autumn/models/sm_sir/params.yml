@@ -5,6 +5,21 @@ description: BASELINE
 country:
   iso3: PHL
 
+age_groups:
+  - 0
+  - 15
+  - 25
+  - 50
+  - 70
+
+ref_mixing_iso3: GBR
+
+testing_to_detection: null
+
+population:
+  region: null
+  year: 2020
+
 time:
   start: 0
   end: 365
@@ -12,7 +27,162 @@ time:
 
 contact_rate: 0.1
 infectious_seed: 1
-infection_duration: 8
+
+detect_prop: 0.5
+
+asympt_infectiousness_effect: 0.5
+isolate_infectiousness_effect: 0.2
+
+sojourns:
+  active:
+    total_time: 8.
+#    proportion_early: 0.5
+#  latent:
+#    total_time: 5.
+#    proportion_early: 0.5
+
+# Age-related parameters
+age_stratification:
+  susceptibility:
+  # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
+  # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
+    "0": 0.36 # 0-14
+    "15": 1. # 15-24
+    "25": 1. # 25-49
+    "50": 1.09 # 50-69 # weighted average of 1. for 50-64 and 1.41 for 65-69
+    "70": 1.41 # 70+
+
+  prop_symptomatic:
+  # Changed (26th August) to "Asymptomatic SARS-Cov-2 infection: A Systematic review and meta-analysis", Sah et al.
+    - 0.533  # 0-4
+    - 0.533  # 5-9
+    - 0.533  # 10-14
+    - 0.533  # 15-19
+    - 0.679  # 20-24
+    - 0.679  # 25-29
+    - 0.679  # 30-34
+    - 0.679  # 35-39
+    - 0.679  # 40-44
+    - 0.679  # 45-49
+    - 0.679  # 50-55
+    - 0.679  # 55-59
+    - 0.803  # 60-64
+    - 0.803  # 65-69
+    - 0.803  # 70-74
+    - 0.803  # 75+
+
+  prop_hospital:
+  # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
+    - 0.0777  # 0-4
+    - 0.0069  # 5-9
+    - 0.0034  # 10-14
+    - 0.0051  # 15-19
+    - 0.0068  # 20-24
+    - 0.0080  # 25-29
+    - 0.0124  # 30-34
+    - 0.0129  # 35-39
+    - 0.0190  # 40-44
+    - 0.0331  # 45-49
+    - 0.0383  # 50-54
+    - 0.0579  # 55-59
+    - 0.0617  # 60-64
+    - 0.1030  # 65-69
+    - 0.1072  # 70-74
+    - 0.0703  # 75+
+
+  ifr:
+    - 0.00003 # 0-4
+    - 0.00001 # 5-9
+    - 0.00001 # 10-14
+    - 0.00003 # 15-19
+    - 0.00006 # 20-24
+    - 0.00013 # 25-29
+    - 0.00024 # 30-34
+    - 0.00040 # 35-39
+    - 0.00075 # 40-44
+    - 0.00121 # 45-49
+    - 0.00207 # 50-54
+    - 0.00323 # 55-59
+    - 0.00456 # 60-64
+    - 0.01075 # 65-69
+    - 0.01674 # 70-74
+    - 0.03203 # 75-79
+    - 0.08292 # 80+
+
+hospital_prop_multiplier: 1.
+
+is_dynamic_mixing_matrix: false
+
+mobility:
+  region: null
+  mixing: {}
+  age_mixing: null
+  npi_effectiveness: {}
+  # Mapping of Google mobility locations to Prem-specific locations
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.25
+      grocery_and_pharmacy: 0.25
+      parks: 0.25
+      transit_stations: 0.25
+  smooth_google_data: false  # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  microdistancing: {}
+
+# parameters related to immunity stratification (three strata: none / high / low)
+immunity_stratification:
+  prop_immune: .8
+  prop_high_among_immune: .1
+
+  infection_risk_reduction:  # FIXME check source with Dave (that's using the figure showing VE against symptomatic disease)
+    high: .60
+    low: 0.
+  hospital_risk_reduction:  # based on UKHSA report (13/11/22)
+    high: .90
+    low: .50
+  death_risk_reduction: # FIXME check with Dave
+    high: .5
+    low: .2
+
+time_from_onset_to_event:  # using time of symptom onset as reference
+  notification:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 3. # FIXME: need an estimate
+  hospitalisation:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 5. # FIXME: need an estimate
+  icu_admission:  # using time of hospitalisation as reference
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 2. # FIXME: need an estimate
+  death:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 14. # FIXME: check with Dave
+
+
+prop_icu_among_hospitalised: .08  # NSW data
+
+hospital_stay:
+  hospital_all:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 3. # South Africa data
+      
+  icu:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 4.7 # NSW data: https://aci.health.nsw.gov.au/__data/assets/pdf_file/0007/698785/20220112-COVID-19-Risk-Monitoring-Dashboard.pdf
 
 activate_random_process: True
 random_process: null

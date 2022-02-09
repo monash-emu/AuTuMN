@@ -1,0 +1,102 @@
+description: >
+  SCENARIO 3:
+  Vaccination continues at the speed of 500000 and 100000 new fully vaccinated people per month, within the 18+ and 12-17 age group respectively, for the next six months.
+  Mobility remains at -25% from Feb 1st onwards.
+  Students grade 7-12 (first 50% of all students) return to school from Feb 8th, university students (next 25% of all students)
+  return to school from Feb 21st, and the remaining 50% (students grade 1-2 and kindergarten) return to school from Mar 7th.
+  The Omicron variant does not emerge within the city.
+
+time:
+  start: 763 # 01st Feb 2022
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-05-09
+        - 2021-12-06
+        - 2021-12-25
+        - 2022-02-08
+        - 2022-02-21
+        - 2022-03-07
+      values:
+        - 0.
+        - 0.15
+        - 0.075
+        - 0.25
+        - 0.5
+        - 1.
+
+    work:
+      append: true
+      times:
+        - 2022-01-25 # first day when Google mobility data is not available
+        - 2022-02-01
+      values:
+        - - repeat_prev
+        - 0.75
+
+    other_locations:
+      append: true
+      times:
+        - 2022-01-25 # first day when Google mobility data is not available
+        - 2022-02-01
+      values:
+        - - repeat_prev
+        - 0.75
+
+# All figures calculated below are PROJECTIONS, which can also be found available at: https://bit.ly/Hanoi_vaccination_status
+vaccination:
+  roll_out_components:
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.303250
+        start_time: 746 # 15th Jan 2022
+        end_time: 777 # 15th Feb 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.435236
+        start_time: 777 # 15th Feb 2022
+        end_time: 805 # 15th Mar 2022
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.770650
+        start_time: 805 # 15th Mar 2022
+        end_time: 836 # 15th Apr 2022
+    - supply_period_coverage:
+        coverage: 0.157257
+        start_time: 746 # 15th Jan 2022
+        end_time: 777 # 15th Feb 2022
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.186602
+        start_time: 777 # 15th Feb 2022
+        end_time: 805 # 15th Mar 2022
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.229410
+        start_time: 805 # 15th Mar 2022
+        end_time: 836 # 15th Apr 2022
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.128053
+        start_time: 746 # 15th Jan 2022
+        end_time: 777 # 15th Feb 2022
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.146859
+        start_time: 777 # 15th Feb 2022
+        end_time: 805 # 15th Mar 2022
+      age_min: 10
+      age_max: 14
+    - supply_period_coverage:
+        coverage: 0.172140
+        start_time: 805 # 15th Mar 2022
+        end_time: 836 # 15th Apr 2022
+      age_min: 10
+      age_max: 14

@@ -1,0 +1,35 @@
+---
+
+country:
+  iso3: MMR
+
+ref_mixing_iso3: CHN
+
+population:
+  year: 2020
+
+time:
+  start: 198
+  end: 1096
+
+sojourns:
+  active:
+    total_time: 6.
+  latent:
+    total_time: 4.
+
+activate_random_process: False
+
+infectious_seed: 100.
+contact_rate: 0.15
+
+immunity_stratification:
+  prop_immune: .8
+  prop_high_among_immune: .2  # varied in uncertainty
+
+voc_emergence: null
+
+testing_to_detection:
+  assumed_tests_parameter: 1.e-4
+  assumed_cdr_parameter: 0.2
+  smoothing_period: 14

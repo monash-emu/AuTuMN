@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS
+from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS, Strain
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -196,17 +196,6 @@ class Mobility(BaseModel):
         return val
 
 
-class MixingMatrices(BaseModel):
-    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
-    source_iso3: Optional[str]
-    age_adjust: bool  # Only relevant if 'extrapolated' selected
-
-    @validator("type", allow_reuse=True)
-    def check_type(val):
-        assert val in ("extrapolated", "prem"), f"Mixing matrix request not permitted: {val}"
-        return val
-
-
 class AgeStratification(BaseModel):
     """
     Parameters used in age based stratification.
@@ -296,16 +285,6 @@ class TestingToDetection(BaseModel):
         return val
 
 
-class SusceptibilityHeterogeneity(BaseModel):
-    """
-    Specifies heterogeneity in susceptibility.
-    """
-
-    bins: int
-    tail_cut: float
-    coeff_var: float
-
-
 class MetroClusterStratification(BaseModel):
     mobility: Mobility
 
@@ -366,12 +345,12 @@ class VocComponent(BaseModel):
         if "entry_rate" in values:
             assert 0. <= values["entry_rate"], "Entry rate negative"
         if "ifr_multiplier" in values:
-            assert 1. <= values["ifr_multiplier"], "VoC effect on mortality is less than one"
+            assert 0. <= values["ifr_multiplier"], "VoC effect on mortality negative"
         else:
             values["ifr_multiplier"] = 1.
         if "hosp_multiplier" in values:
             hosp_multiplier = values["hosp_multiplier"]
-            assert 1. <= hosp_multiplier, f"VoC effect on hospitalisation is less than one: {hosp_multiplier}"
+            assert 0. <= hosp_multiplier, f"VoC effect on hospitalisation negative"
         else:
             values["hosp_multiplier"] = 1.
         return values
@@ -450,7 +429,6 @@ class VaccEffectiveness(BaseModel):
     ve_death: Optional[float]
     doses: Optional[TimeSeries]
     coverage: Optional[TimeSeries]
-    
 
     @validator("ve_sympt_covid", pre=True, allow_reuse=True)
     def check_ve_sympt_covid(val):
@@ -512,6 +490,7 @@ class Vaccination(BaseModel):
 
     # *** This parameter determines whether the model is stratified into three rather than two vaccination strata
     second_dose_delay: Optional[Union[float, TanhScaleup]]
+    boost_delay: Optional[float]
 
     # *** This first parameter (vacc_full_effect_duration) determines whether waning immunity is applied
     vacc_full_effect_duration: Optional[Union[float, None]]
@@ -520,8 +499,10 @@ class Vaccination(BaseModel):
     one_dose: VaccEffectiveness
     fully_vaccinated: Optional[VaccEffectiveness]
     part_waned: Optional[VaccEffectiveness]
-    waned: Optional[VaccEffectiveness]
+    fully_waned: Optional[VaccEffectiveness]
+    boosted: Optional[VaccEffectiveness]
     lag: float
+    program_start_time: Optional[float]
 
     standard_supply: bool
 
@@ -585,6 +566,20 @@ class VaccinationRisk(BaseModel):
         return values
 
 
+class History(BaseModel):
+
+    experienced: Optional[VaccEffectiveness]
+    waned: Optional[VaccEffectiveness]
+
+    natural_immunity_duration: Optional[float]
+
+    @validator("natural_immunity_duration", allow_reuse=True)
+    def check_immunity_duration(val):
+        if type(val) == float:
+            assert val > 0., f"Waning immunity duration request is not positive: {val}"
+        return val
+
+
 class ContactTracing(BaseModel):
     """
     Contact tracing effectiveness that scales with disease burden parameters.
@@ -624,13 +619,6 @@ class ContactTracing(BaseModel):
         return values
 
 
-class AgeSpecificRiskMultiplier(BaseModel):
-    age_categories: List[str]
-    adjustment_start_time: Optional[int]
-    adjustment_end_time: Optional[int]
-    contact_rate_multiplier: float
-
-
 class ParamConfig:
     """
     Config for parameter models
@@ -651,9 +639,8 @@ class Parameters:
     universal_death_rate: float
     infectious_seed: float
     voc_emergence: Optional[Dict[str, VocComponent]]
-    age_specific_risk_multiplier: Optional[AgeSpecificRiskMultiplier]
-    waning_immunity_duration: Optional[float]
     vaccination: Optional[Vaccination]
+    history: Optional[History]
     vaccination_risk: Optional[VaccinationRisk]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float
@@ -665,18 +652,27 @@ class Parameters:
     population: Population
     sojourn: Sojourn
     mobility: Mobility
-    mixing_matrices: Optional[MixingMatrices]
+    ref_mixing_iso3: str
     infection_fatality: InfectionFatality
     age_stratification: AgeStratification
     clinical_stratification: ClinicalStratification
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
     vic_2021_seeding: Optional[Vic2021Seeding]
+    hospital_reporting: float
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]
 
-    @validator("waning_immunity_duration", allow_reuse=True)
-    def check_immunity_duration(val):
-        if type(val) == float:
-            assert val > 0., f"Waning immunity duration request is not positive: {val}"
+    @validator("voc_emergence", allow_reuse=True)
+    def check_voc_names(val):
+        if val:
+            msg = "Requested names for VoCs are not unique"
+            assert len(set(val.keys())) == len(val.keys()), msg
+            msg = f"Strain name {Strain.WILD_TYPE} reserved for the wild-type non-VoC strain"
+            assert Strain.WILD_TYPE not in val.keys(), msg
+        return val
+
+    @validator("hospital_reporting", allow_reuse=True)
+    def check_hospital_reporting(val):
+        assert 0. <= val <= 1., f"Hospital reporting fraction must be in range [0, 1]: {val}"
         return val

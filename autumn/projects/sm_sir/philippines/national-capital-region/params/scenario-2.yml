@@ -1,0 +1,33 @@
+description: Return to pre-COVID-19 mobility on 16th Feb
+
+time:
+  start: 650
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-01-01
+        - 2022-02-15
+        - 2022-02-17
+      values:
+        - 0.
+        - 0.
+        - 1.
+    work:
+      append: true
+      times:
+        - 2022-02-15
+        - 2022-02-17
+      values:
+        - - repeat_prev
+        - 1.
+    other_locations:
+      append: true
+      times:
+        - 2022-02-15
+        - 2022-02-17
+      values:
+        - - repeat_prev
+        - 1.

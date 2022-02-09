@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, get_all_available_scenario_paths
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.tools.calibration.targets import (
@@ -21,9 +21,9 @@ baseline_params = base_params.update(default_path).update(mle_path, calibration_
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(210)
-seroprevalence_estimate = ts_set.get("proportion_seropositive")
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
+notifications_ts = ts_set["notifications"].loc[210:]
+seroprevalence_estimate = ts_set["prop_ever_infected"]
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(seroprevalence_estimate, stdev=0.1),

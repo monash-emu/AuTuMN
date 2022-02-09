@@ -1,16 +1,15 @@
 steps:
 - block: Calibration Settings
   fields:
-  - default: '7'
+  - default: '8'
     hint: How many MCMC chains do you want to run?
     key: num-chains
     required: true
     text: Number of MCMC chains
-  - default: master
-    hint: Which git branch do you want to use to run the model?
-    key: mcmc-branch
+  - hint: Which git commit do you want to use to run the model?
+    key: commit
     required: true
-    text: Model git branch name
+    text: Model git commit SHA
   - default: '0.5'
     hint: How many hours should the model run for?
     key: mcmc-runtime
@@ -36,16 +35,6 @@ steps:
       value: 'no'
     required: true
     select: Trigger full model run
-  - default: 'no'
-    hint: Is 1/3 of the price but sometimes randomly fails.
-    key: spot-instance
-    options:
-    - label: 'Yes'
-      value: 'yes'
-    - label: 'No'
-      value: 'no'
-    required: true
-    select: Use spot instances
   key: calibration-settings
 - command: ./scripts/buildkite.sh trigger philippines
   key: run-triggers

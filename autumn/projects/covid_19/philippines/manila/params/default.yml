@@ -3,8 +3,7 @@ description: BASELINE
 population:
   region: Metro Manila
 
-mixing_matrices:  # spectral radius of extrapolated all-locations contact matrix 2.3 times smaller than that of the Prem matrix
-  source_iso3: HKG
+ref_mixing_iso3: HKG
 
 mobility:
   region: Metro Manila

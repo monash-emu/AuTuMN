@@ -1,18 +1,13 @@
 description: BASELINE
 
 time:
-  start: 485 # 29th Apr 2021
-  end: 912
+  start: 511 # 25th May 2021
+  end: 1096
 
 country:
   iso3: VNM
 
-mixing_matrices:
-  source_iso3: HKG
-
-# mixing_matrices:
-  # type: extrapolated
-  # source_iso3: HKG
+ref_mixing_iso3: HKG
 
 population:
   region: Ho Chi Minh City
@@ -32,8 +27,6 @@ mobility:
       grocery_and_pharmacy: 0.3
       parks: 0.2
       transit_stations: 0.1
-    home:
-      residential: 1.
   # Micro distancing
   microdistancing:
     behaviour:
@@ -41,23 +34,29 @@ mobility:
       parameters:
         max_effect: .2 # estimated from the Philipines paper
         times:
-          - 485 # 29th April 2021, first community case of COVID-19 detected in Ho Chi Minh City
-          - 505 # 19th May 2021, two new cases first detected after 20 days without any new case
           - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
+          - 532 # 15th Jun 2021, Directive No.15 of the PM in place city-wide for the next 2 weeks
           - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place
           - 556 # 09th Jul 2021, Directive No.16 of the PM in place city-wide
           - 573 # 26th Jul 2021, curfew from 6PM to 6AM
           - 601 # 23th Aug 2021, total lockdown implemented
           - 640 # 01st Oct 2021, lockdown started to ease
+          - 641 # 02nd Oct 2021, second day after eased lockdown
+          - 654 # 15th Oct 2021, 2 weeks after eased lockdown
+          - 671 # 01st Nov 2021, 1 month after eased lockdown, restaurants are serving on-site at 50% capacity
+          - 741 # 10th Jan 2022, HCMC to officially resume bars, disco, karaoke, massage services
         values:
-          - 0
+          - 0.3
           - 0.2
-          - 0.4
           - 0.5
           - 0.7
-          - 0.85
-          - 1.
           - 0.8
+          - 0.9
+          - 0.7
+          - 0.5
+          - 0.35
+          - 0.2
+          - 0.1
       locations:
         - other_locations
         - school
@@ -69,11 +68,33 @@ mobility:
       times:
         - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
         - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
+        - 2021-12-13 # Start date of the school re-opening plan
+        - 2021-01-03
+        - 2022-01-17
       values:
         - 0.
         - 0.1
+        - 0.4
+        - 0.7
+        - 1.0
 
-waning_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
+voc_emergence:
+  omicron:
+    start_time: 2000.
+    entry_rate: 16.
+    seed_duration: 10.
+    contact_rate_multiplier: 5.
+    hosp_multiplier: 0.33 # Source: https://www.reuters.com/business/healthcare-pharmaceuticals/omicron-has-13-reduced-risk-hospitalisation-compared-delta-uk-researchers-2022-01-14/
+    ifr_multiplier: 0.1 # Source: https://www.medrxiv.org/content/10.1101/2022.01.11.22269045v1.full.pdf
+
+history:
+  natural_immunity_duration: 180. # assumed that the patient is not vaccinated with any additional vaccine after tested positive and recovered
+
+sojourn:
+  compartment_periods:
+    hospital_late: 8.0
+    icu_early: 10.0 # 7.7 + 2.3
+    icu_late: 18.9 # Source: https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-021-06371-6
 
 testing_to_detection:
   assumed_tests_parameter: 1e-04 # Sri-Lanka model
@@ -105,15 +126,22 @@ vaccination:
     ve_infectiousness: 0.2285
     ve_hospitalisation: 0.7453
     ve_death: 0.7654
-  waned:
+  fully_waned:
     ve_sympt_covid: 0.00
     ve_prop_prevent_infection: 0.00
     ve_infectiousness: 0.00
     ve_hospitalisation: 0.5 # Myanmar
     ve_death: 0.5 # Myanmar
+  boosted:
+    ve_sympt_covid: 0.8
+    ve_prop_prevent_infection: 0.95
+    ve_infectiousness: 0.4
+    ve_hospitalisation: 0.95
+    ve_death: 0.95
   lag: 14
   standard_supply: false
   second_dose_delay:  32.67 # weighted average waiting time between two doses
+  boost_delay: 2000. # Equivalent to no vaccination booster
   vacc_full_effect_duration: 90. # 3 months
   vacc_part_effect_duration: 180. # 6 months
   roll_out_components: # --> stratify by time
@@ -203,5 +231,38 @@ vaccination:
         coverage: 0.070507
         start_time: 624 # 15th Sep 2021
         end_time: 640 # 01st Oct 2021
+      age_min: 15
+      age_max: 19
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.2485
+        start_time: 640 # 01st Oct 2021
+        end_time: 654 # 15th Oct 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.0616
+        start_time: 654 # 15th Oct 2021
+        end_time: 670 # 31st Oct 2021
+    - age_min: 20
+      supply_period_coverage:
+        coverage: 0.0470
+        start_time: 670 # 31st Oct 2021
+        end_time: 685 # 15th Nov 2021
+    - supply_period_coverage:
+        coverage: 0.044739
+        start_time: 640 # 01st Oct 2021
+        end_time: 654 # 15th Oct 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.008727
+        start_time: 654 # 15th Oct 2021
+        end_time: 670 # 31st Oct 2021
+      age_min: 15
+      age_max: 19
+    - supply_period_coverage:
+        coverage: 0.006306
+        start_time: 670 # 31st Oct 2021
+        end_time: 685 # 15th Nov 2021
       age_min: 15
       age_max: 19

@@ -13,7 +13,7 @@ country:
 mixing_matrices:
   source_iso3: CHN
 
-contact_tracing:
+contact_tracing: #Proportion of contacts of identified cases detected at a prevalence of one active case per thousand population.
   assumed_trace_prop: 0.76
   assumed_prev: 1.e-3
   quarantine_infect_multiplier: 0.2

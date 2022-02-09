@@ -624,10 +624,30 @@ def plot_multiple_posteriors(
             # Plot the prior
             axis.plot(x_values, y_values)
 
-            axis.set_title(
-                get_plot_text_dict(param_name, capitalise_first_letter=capitalise_first_letter),
-                fontsize=title_font_size,
-            )
+            if param_name == "voc_emergence.alpha_beta.start_time":
+                axis.set_title("Alpha emergence time", fontsize=title_font_size)
+
+            elif param_name == "voc_emergence.delta.start_time":
+                axis.set_title("Delta emergence time", fontsize=title_font_size)
+
+            elif param_name == "voc_emergence.alpha_beta.contact_rate_multiplier":
+                axis.set_title("Alpha contact rate multiplier", fontsize=title_font_size)
+
+            elif param_name == "voc_emergence.delta.contact_rate_multiplier":
+                axis.set_title("Delta contact rate multiplier", fontsize=title_font_size)
+
+            elif param_name == "voc_emergence.delta.ifr_multiplier":
+                axis.set_title("Delta IFR multiplier", fontsize=title_font_size)
+
+            elif param_name == "history.waned.ve_death":
+                axis.set_title("waned VE against death", fontsize=title_font_size)
+
+            else:
+                axis.set_title(
+
+                    get_plot_text_dict(param_name, capitalise_first_letter=capitalise_first_letter),
+                    fontsize=title_font_size,
+                )
             pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
             pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
 

@@ -209,3 +209,9 @@ register_project(
     Region.HO_CHI_MINH_CITY,
     "autumn.projects.sm_sir.vietnam.ho_chi_minh_city.project",
 )
+
+register_project(
+    Models.SM_SIR,
+    Region.HANOI,
+    "autumn.projects.sm_sir.vietnam.hanoi.project",
+)

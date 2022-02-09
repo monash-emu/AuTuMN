@@ -145,12 +145,12 @@ def plot_timeseries_with_uncertainty(
     add_vertical_lines_to_plot(axis, vlines)
     add_horizontal_lines_to_plot(axis, hlines)
 
-    if output_name == "proportion_seropositive":
+    if output_name == "prop_ever_infected":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
     if show_title:
         title = custom_title if custom_title else get_plot_text_dict(output_name)
         axis.set_title(title, fontsize=title_font_size)
-    if output_name == "proportion_seropositive":
+    if output_name == "prop_ever_infected":
         axis.set_title("recovered percentage", fontsize=title_font_size)
 
     if requested_x_ticks is not None:

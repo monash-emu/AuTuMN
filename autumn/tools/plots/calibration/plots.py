@@ -53,7 +53,7 @@ def get_epi_params(mcmc_params, strings_to_ignore=("dispersion_param", "ifr_mult
 
     return [
         param
-        for param in mcmc_params[0].columns.unique().tolist()
+        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
         if not any(string in param for string in strings_to_ignore)
     ]
 
@@ -520,9 +520,10 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
 def get_posterior(mcmc_params, mcmc_tables, param_name, burn_in=0):
     weighted_vals = []
     for param_df, run_df in zip(mcmc_params, mcmc_tables):
-        table_df = param_df.merge(run_df, left_index=True,  right_index=True)
-        unweighted_vals = table_df[param_name]
-        weights = table_df.weight
+        table_df = param_df.merge(run_df, on=["run", "chain"])
+        param_mask = (table_df["name"] == param_name) & (table_df["run"] > burn_in)
+        unweighted_vals = table_df[param_mask].value
+        weights = table_df[param_mask].weight
         for v, w in zip(unweighted_vals, weights):
             weighted_vals += [v] * w
 

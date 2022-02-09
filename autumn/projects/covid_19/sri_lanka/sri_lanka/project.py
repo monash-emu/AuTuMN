@@ -38,10 +38,10 @@ priors = [
     # Regional parameters
     UniformPrior("contact_rate", [0.04, 0.06]),
     # Detection
-    UniformPrior("infection_fatality.multiplier", [0.17, 0.2]),
+    UniformPrior("infection_fatality.multiplier", [0.17, 1.2]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.025]),
-    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=0.075, \
-                     stdev=0.1, trunc_range=[0.0, np.inf]),
+    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=1.0, \
+                     stdev=0.5, trunc_range=[0.0, np.inf]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.85]),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [380, 430]),

@@ -82,6 +82,8 @@ steps:
       value: sm_sir:coxs_bazar
     - label: Dhaka (sm_sir)
       value: sm_sir:dhaka
+    - label: Hanoi (sm_sir)
+      value: sm_sir:hanoi
     - label: Ho_Chi_Minh_City (sm_sir)
       value: sm_sir:ho_chi_minh_city
     - label: Malaysia (sm_sir)

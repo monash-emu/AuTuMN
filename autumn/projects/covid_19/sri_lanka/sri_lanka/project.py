@@ -51,6 +51,7 @@ priors = [
     TruncNormalPrior(
         "voc_emergence.delta.ifr_multiplier",
         mean=2., stdev=0.75, trunc_range=(1., 4)),
+
     #waning
     TruncNormalPrior(
         "history.waned.ve_death",

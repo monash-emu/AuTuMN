@@ -15,14 +15,21 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("contact_rate", (0.03, 0.12)),
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (700.0, 730.0)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (680.0, 710.0)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.08, 0.18)),
 ]
 
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+hospital_ts = ts_set["hospital_occupancy"].loc[calibration_start_time:]
+icu_ts = ts_set["icu_occupancy"].loc[calibration_start_time:]
+deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
 
 targets = [
     NormalTarget(notifications_ts),
+    NormalTarget(hospital_ts),
+    # NormalTarget(icu_ts),
+    # NormalTarget(deaths_ts),
 ]
 
 calibration = Calibration(

@@ -15,7 +15,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("contact_rate", (0.03, 0.12)),
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (700., 730.)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (700.0, 730.0)),
 ]
 
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
@@ -34,4 +34,6 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 # Create and register the project
-project = Project(Region.COXS_BAZAR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)
+project = Project(
+    Region.COXS_BAZAR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+)

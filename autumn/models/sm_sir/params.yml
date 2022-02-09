@@ -46,11 +46,22 @@ age_stratification:
   susceptibility:
   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
   # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
-    "0": 0.36 # 0-14
-    "15": 1. # 15-24
-    "25": 1. # 25-49
-    "50": 1.09 # 50-69 # weighted average of 1. for 50-64 and 1.41 for 65-69
-    "70": 1.41 # 70+
+    - 0.36
+    - 0.36
+    - 0.36
+    - 1.
+    - 1.
+    - 1.
+    - 1.
+    - 1.
+    - 1.
+    - 1.
+    - 1.
+    - 1.
+    - 1.
+    - 1.
+    - 1.41
+    - 1.41
 
   prop_symptomatic:
   # Changed (26th August) to "Asymptomatic SARS-Cov-2 infection: A Systematic review and meta-analysis", Sah et al.
@@ -137,14 +148,17 @@ immunity_stratification:
   prop_high_among_immune: .1
 
   infection_risk_reduction:  # FIXME check source with Dave (that's using the figure showing VE against symptomatic disease)
-    high: .60
+    none: 0.
     low: 0.
+    high: 0.6
   hospital_risk_reduction:  # based on UKHSA report (13/11/22)
-    high: .90
-    low: .50
+    none: 0.
+    low: 0.5
+    high: 0.9
   death_risk_reduction: # FIXME check with Dave
-    high: .5
-    low: .2
+    none: 0.
+    low: 0.2
+    high: 0.5
 
 time_from_onset_to_event:  # using time of symptom onset as reference
   notification:

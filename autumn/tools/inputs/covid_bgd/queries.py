@@ -16,6 +16,6 @@ def get_coxs_bazar_testing_numbers():
     df = input_db.query("covid_coxs_bazar", columns=["date_index", "test"])
     df.dropna(inplace=True)
     test_dates = df.date_index.to_numpy()
-    avg_vals = df["test"].rolling(7).mean().to_numpy() + TINY_NUMBER
+    avg_vals = df["test"].to_numpy() + TINY_NUMBER
 
     return test_dates, avg_vals

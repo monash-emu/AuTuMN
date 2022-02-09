@@ -6,58 +6,12 @@ country:
 ref_mixing_iso3: HKG
 
 population:
-  # region: FDMN # NOTE - USING BGD population for now.
+  region: FDMN
   year: 2021
 
-# age_groups:
-#   - 0
-#   - 5
-#   - 10
-#   - 15
-#   - 20
-#   - 60
-
-# # Age-related parameters
-# age_stratification:
-#   susceptibility:
-#   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
-#   # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
-#     "0": 0.36 # 0-14
-#     "5": 0.36
-#     "10": 0.36
-#     "15": 1. # 15-24
-#     "20": 1. # 25-49
-#     "60": 1.29 # 60+
-
-#   prop_symptomatic:
-#   # Changed (26th August) to "Asymptomatic SARS-Cov-2 infection: A Systematic review and meta-analysis", Sah et al.
-#     - 0.533  # 0-4
-#     - 0.533  # 5-9
-#     - 0.533  # 10-14
-#     - 0.533  # 15-19
-#     - 0.679  # 20-59
-#     - 0.803  # 60+
-
-#   prop_hospital:
-#   # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
-#     - 0.0777  # 0-4
-#     - 0.0069  # 5-9
-#     - 0.0034  # 10-14
-#     - 0.0051  # 15-19
-#     - 0.0383  # 20-59
-#     - 0.1030  # 60+
-
-#   ifr:
-#     - 0.00003 # 0-4
-#     - 0.00001 # 5-9
-#     - 0.00001 # 10-14
-#     - 0.00003 # 15-19
-#     - 0.00207 # 20-59
-#     - 0.01075 # 60+
-
 time:
-  start: 365.
-  end: 751
+  start: 400.
+  end: 1000.
 
 activate_random_process: False
 
@@ -68,15 +22,49 @@ sojourns:
     total_time: 4.
 
 infectious_seed: 100.
-contact_rate: 0.15
+contact_rate: 0.062
 
 immunity_stratification:
   prop_immune: .8
   prop_high_among_immune: .2  # varied in uncertainty
 
-voc_emergence: null
-
 testing_to_detection:
   assumed_tests_parameter: 1.e-4
-  assumed_cdr_parameter: 0.2
+  assumed_cdr_parameter: 0.006
   smoothing_period: 14
+
+voc_emergence:
+  wild_type:
+    starting_strain: true
+    seed_prop: 1.
+    new_voc_seed: null
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      omicron:
+        early_reinfection: 0.4
+        late_reinfection: 0.4
+  omicron:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 715.
+      entry_rate: 100.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.2
+    immune_escape: 0.6
+    hosp_protection: 0.47
+    death_protection: 0.
+    relative_latency: 0.6667
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.

@@ -1,4 +1,8 @@
 
+AGE_BRACKET_WIDTHS = 5
+TOP_AGE_BRACKET = 80
+
+
 class Compartment:
     SUSCEPTIBLE = "susceptible"
     LATENT = "latent"

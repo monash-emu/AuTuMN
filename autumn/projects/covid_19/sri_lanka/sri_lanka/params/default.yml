@@ -69,7 +69,9 @@ testing_to_detection:
 
 clinical_stratification:
   icu_prop: 0.04
-
+  props:
+    symptomatic:
+      multiplier: 1.0
 
 mobility:
   smooth_google_data: false # whether to apply a 7-day moving average
@@ -156,7 +158,7 @@ voc_emergence:
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
-    ifr_multiplier: 3.75
+    ifr_multiplier: 1.
     hosp_multiplier: 2.08
 
 history:
@@ -171,7 +173,7 @@ history:
     ve_prop_prevent_infection: 0.8
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.5
-    ve_death: 0.5
+    ve_death: 0.975
   natural_immunity_duration: 425.
 
 sojourn:

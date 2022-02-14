@@ -16,7 +16,7 @@ from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_al
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-#scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(7, 9)]
+#scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 2)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 all_scenario_dicts = get_all_scenario_dicts("LKA")
@@ -31,22 +31,29 @@ targets = [
     NormalTarget(notifications_ts),
     NormalTarget(death_ts),
 ]
-
 priors = [
-    # Dispersion parameters based on targets
-    *get_dispersion_priors_for_gaussian_targets(targets),
-    *get_dispersion_priors_for_gaussian_targets(targets),
+    # Global COVID priors
+    *COVID_GLOBAL_PRIORS,
     # Regional parameters
-    UniformPrior("contact_rate", [0.024, 0.027]),
-    UniformPrior("infectious_seed", [275.0, 450.0]),
+    UniformPrior("contact_rate", [0.04, 0.06]),
     # Detection
+    UniformPrior("infection_fatality.multiplier", [0.17, 1.2]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.025]),
-    UniformPrior("infection_fatality.multiplier", [0.09, 0.13]),
+    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=1.0, \
+                     stdev=0.5, trunc_range=[0.0, np.inf]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.85]),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [370, 410]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [3.2, 4.5]),
-    UniformPrior("voc_emergence.delta.start_time", [475, 530]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [8.5, 11.5]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [380, 430]),
+    UniformPrior("voc_emergence.delta.start_time", [490, 530]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.3]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.5]),
+    TruncNormalPrior(
+        "voc_emergence.delta.ifr_multiplier",
+        mean=2., stdev=0.75, trunc_range=(1., 4)),
+    #waning
+    TruncNormalPrior(
+        "history.waned.ve_death",
+        mean=.5, stdev=.25, trunc_range=(0.28, 1)),
 ]
 
 # Load proposal sds from yml file

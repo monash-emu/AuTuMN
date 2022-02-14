@@ -235,7 +235,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Prepare a dictionary with hospital risk reduction by level of immunity
         hospital_risk_reduction = {
-            ImmunityStratum.NONE: 0.,
+            ImmunityStratum.NONE: hospital_risk_reduction_by_immunity.none,
             ImmunityStratum.HIGH: hospital_risk_reduction_by_immunity.high,
             ImmunityStratum.LOW: hospital_risk_reduction_by_immunity.low
         }

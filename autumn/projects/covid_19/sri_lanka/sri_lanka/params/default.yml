@@ -50,6 +50,8 @@ vaccination:
   vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.
 
+
+
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
   assumed_cdr_parameter: 0.017

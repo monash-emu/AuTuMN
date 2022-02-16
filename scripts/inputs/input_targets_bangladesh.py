@@ -6,6 +6,7 @@ NOTE you will need to pip instal lxml to run this script
 import os
 from typing import List
 import pandas as pd
+from sqlalchemy import DATE
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
@@ -28,15 +29,18 @@ BGD_DATA = [os.path.join(DATA_PATH, file) for file in FILES if "BGD" in file]
 DHK_DATA = [os.path.join(DATA_PATH, file) for file in FILES if "DHK" in file]
 COXS_DATA = os.path.join(DATA_PATH, "COVID-19 Data for modelling.xlsx")
 
+DATA_FILE = os.path.join(DATA_PATH, "Bangladesh COVID-19 template.xlsx")
 
 TARGET_MAP_BGD = {
-    "notifications": "confirmed_case",
-    "infection_deaths": "death",
+    "notifications": "bgd_confirmed_cases",
+    "infection_deaths": "bgd_death",
+    "hospital_admissions": "bgd_hospital_admissions",
 }
 
 TARGET_MAP_DHK = {
-    "notifications": "confirmed_case",
-    "infection_deaths": "death",
+    "notifications": "dhk_confirmed_cases",
+    "infection_deaths": "dhk_death",
+    "hospital_admissions": "dhk_hospital_admissions",
 }
 
 
@@ -52,11 +56,11 @@ def main():
 
     save_to_excel(DHK_DATA + BGD_DATA)
 
-    # Bangladesh & Dhaka
-    for target in {"deaths", "cases"}:
+    df = pd.read_excel(DATA_FILE)
+    df = create_date_index(COVID_BASE_DATETIME, df, "Date")
 
-        update_region(SM_SIR_BGD_TS, BGD_DATA, TARGET_MAP_BGD, target)
-        update_region(SM_SIR_DHK_TS, DHK_DATA, TARGET_MAP_DHK, target)
+    update_timeseries(TARGET_MAP_BGD, df, SM_SIR_BGD_TS)
+    update_timeseries(TARGET_MAP_DHK, df, SM_SIR_DHK_TS)
 
     # Cox's bazar
     df = pd.read_excel(COXS_DATA, skipfooter=1, usecols=[1, 2, 3, 4, 5, 6])
@@ -74,39 +78,6 @@ def save_to_excel(file_paths: List) -> None:
         except:
             assert len(pd.read_csv(file)) > 0, f"Download {file} again"
 
-    return None
-
-
-def get_data_file(dtype: str, datafile: List[str]) -> list:
-    return [file for file in datafile if dtype.lower() in file.lower()]
-
-
-def create_dates(df: pd.DataFrame) -> pd.DataFrame:
-
-    # Find the length and end date to create a datetime column
-    periods = len(df)
-    end_date = pd.to_datetime(f'{df.tail(1)["Category"].values[0]}-2022')
-    df["date"] = pd.date_range(end=end_date, periods=periods).tolist()
-
-    # Compare and remove any non matching rows
-    df["compare"] = (
-        df["date"].dt.month_name().astype(str)
-        + "-"
-        + df["date"].dt.day.astype(str).str.rjust(2, "0")
-    )
-    filter_dates = df["Category"] == df["compare"]
-    df = df[filter_dates]
-
-    return df
-
-
-def update_region(timeseries, region_data, target_map, target) -> None:
-
-    df = pd.read_csv(get_data_file(target, region_data)[0])
-    df = create_dates(df)
-
-    df = create_date_index(COVID_BASE_DATETIME, df, "date")
-    update_timeseries(target_map, df, timeseries)
     return None
 
 

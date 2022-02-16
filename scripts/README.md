@@ -31,7 +31,8 @@ Update \autumun\inputs\covid_phl\fetch.py DATA URL = '1GE-uO9kaFBgwreu7zFdXhYvG3
 From the same daily data link right-click file "DOH COVID Data Drop_ YYYYMMDD - 05 DOH Data Collect - Daily Report.csv" and copy the shareable link.
 Update scripts\phl_data_upload.py e.g. PHL_doh_link=1WxoFhzZzglkk1RbOQAWI2gHeKkqwkD9P
 
-For [FASSSTER data use ](https://drive.google.com/drive/folders/1qnUsvq5SXxwdw9ttRtOojccVGHaYj6_k)
+For [FASSSTER data use ](https://drive.google.com/drive/folders/1YIw5KrRs645AHpph1cb-8d_QNdr8F0pf)
+Old link was https://drive.google.com/drive/folders/1qnUsvq5SXxwdw9ttRtOojccVGHaYj6_k
 Locate the latest ConfirmedCases_Final_YYYY-MM-DD.zip file, copy the shareable link and update
 Update scripts\phl_data_upload.py e.g. PHL_fassster_link = "1sfwFryQP6lPutGxS62IIGUugDhRy_1h8"
 

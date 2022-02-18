@@ -84,6 +84,23 @@ def assign_population(
     model.set_initial_population(init_pop)
 
 
+def get_random_process(time_params, process_params, contact_rate):
+    # build the random process, using default values and coefficients
+    rp = set_up_random_process(time_params.start, time_params.end)
+
+    # update random process details based on the model parameters
+    rp.update_config_from_params(process_params)
+
+    # Create function returning exp(W), where W is the random process
+    rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
+
+    # Create the time-variant contact rate that uses our computed random process
+    def contact_rate(t, computed_values):
+        return contact_rate * computed_values["transformed_random_process"]
+
+    return rp_time_variant_func, contact_rate
+
+
 def add_latent_transitions(
         latent_sojourn_params: CompartmentSojourn,
         model: CompartmentalModel,
@@ -271,26 +288,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Transmission
     if params.activate_random_process:
-        # build the random process, using default values and coefficients
-        rp = set_up_random_process(params.time.start, params.time.end)
 
-        # update random process details based on the model parameters
-        rp.update_config_from_params(params.random_process)
-
-        # Create function returning exp(W), where W is the random process
-        rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
-
-        # store random process as a computed value to make it available as an output
+        # Store random process as a computed value to make it available as an output
+        rp_function, contact_rate = get_random_process(
+            params.time,
+            params.random_process,
+            params.contact_rate
+        )
         model.add_computed_value_process(
             "transformed_random_process",
-            RandomProcessProc(
-                rp_time_variant_func
-            )
+            RandomProcessProc(rp_function)
         )
-
-        # Create the time-variant contact rate that uses our computed random process
-        def contact_rate(t, computed_values):
-            return params.contact_rate * computed_values["transformed_random_process"]
 
     else:
         contact_rate = params.contact_rate

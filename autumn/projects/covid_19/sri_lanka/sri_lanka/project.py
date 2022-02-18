@@ -36,25 +36,17 @@ priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,
     # Regional parameters
-    UniformPrior("contact_rate", [0.04, 0.06]),
+    UniformPrior("contact_rate", [0.03, 0.05]),
+    UniformPrior("infectious_seed", [450, 550]),
     # Detection
-    UniformPrior("infection_fatality.multiplier", [0.17, 1.2]),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.025]),
-    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier", mean=1.0, \
-                     stdev=0.5, trunc_range=[0.0, np.inf]),
+    UniformPrior("infection_fatality.multiplier", [0.1, 1.2]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0008, 0.005]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.85]),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [380, 430]),
-    UniformPrior("voc_emergence.delta.start_time", [490, 530]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [380, 450]),
+    UniformPrior("voc_emergence.delta.start_time", [490, 570]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.3]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.5]),
-    TruncNormalPrior(
-        "voc_emergence.delta.ifr_multiplier",
-        mean=2., stdev=0.75, trunc_range=(1., 4)),
-    #waning
-    TruncNormalPrior(
-        "history.waned.ve_death",
-        mean=.5, stdev=.25, trunc_range=(0.28, 1)),
 ]
 
 # Load proposal sds from yml file

@@ -58,7 +58,7 @@ testing_to_detection:
   smoothing_period: 14
 
 clinical_stratification:
-  icu_prop: 0.58
+  icu_prop: 0.08
   props:
     symptomatic:
       multiplier: 1.0
@@ -148,7 +148,7 @@ voc_emergence:
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
-    ifr_multiplier: 1.5
+    ifr_multiplier: 1.
     hosp_multiplier: 2.08
 
 history:
@@ -169,9 +169,9 @@ history:
 sojourn:
   compartment_periods_calculated:
     exposed:
-      total_period: 6.16
+      total_period: 3.16
     active:
-      total_period: 6.53
+      total_period: 3.13
 
 notifications_dispersion_param: 538.601128345239
 infection_deaths_dispersion_param: 26.54605666170518

@@ -82,24 +82,25 @@ age_stratification:
     - 0.803  # 70-74
     - 0.803  # 75+
 
-  prop_hospital:
-  # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
-    - 0.0777  # 0-4
-    - 0.0069  # 5-9
-    - 0.0034  # 10-14
-    - 0.0051  # 15-19
-    - 0.0068  # 20-24
-    - 0.0080  # 25-29
-    - 0.0124  # 30-34
-    - 0.0129  # 35-39
-    - 0.0190  # 40-44
-    - 0.0331  # 45-49
-    - 0.0383  # 50-54
-    - 0.0579  # 55-59
-    - 0.0617  # 60-64
-    - 0.1030  # 65-69
-    - 0.1072  # 70-74
-    - 0.0703  # 75+
+  prop_hospital:  # https://dx.doi.org/10.2139/ssrn.4025932, Nyberg, 2022
+    - 0.0046  # 0-4
+    - 0.0046  # 5-9
+    - 0.0033  # 10-14
+    - 0.0033  # 15-19
+    - 0.0133  # 20-24
+    - 0.0133  # 25-29
+    - 0.0150  # 30-34
+    - 0.0150  # 35-39
+    - 0.0140  # 40-44
+    - 0.0140  # 45-49
+    - 0.0238  # 50-54
+    - 0.0238  # 55-59
+    - 0.0529  # 60-64
+    - 0.0529  # 65-69
+    - 0.1340  # 70-74
+    - 0.1872  # 75+ Weighted average calculated as (0.254 * 2748 + 0.134 * 3453) / (2748 + 3453) - populations from:
+    # https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/datasets/
+    # tablea21principalprojectionukpopulationinagegroups
 
   ifr:
     - 0.00003 # 0-4

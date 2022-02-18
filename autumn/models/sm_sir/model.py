@@ -1,6 +1,6 @@
 from datetime import date
 from math import exp
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from summer import CompartmentalModel
 
@@ -9,7 +9,7 @@ from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn
+from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -82,6 +82,40 @@ def assign_population(
 
     # Assign to the model
     model.set_initial_population(init_pop)
+
+
+def get_random_process(
+        time_params: Time,
+        process_params: RandomProcess,
+        contact_rate_value: float,
+) -> Tuple[callable, callable]:
+    """
+    Work out the process that will contribute to the random process.
+
+    Args:
+        time_params: Start and end time of the model
+        process_params: Parameters relating to the random process
+        contact_rate_value: The risk of transmission per contact
+
+    Returns:
+        The random process function and the contact rate (here a summer-ready format transition function)
+
+    """
+
+    # build the random process, using default values and coefficients
+    rp = set_up_random_process(time_params.start, time_params.end)
+
+    # update random process details based on the model parameters
+    rp.update_config_from_params(process_params)
+
+    # Create function returning exp(W), where W is the random process
+    rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
+
+    # Create the time-variant contact rate that uses our computed random process
+    def contact_rate_func(t, computed_values):
+        return contact_rate_value * computed_values["transformed_random_process"]
+
+    return rp_time_variant_func, contact_rate_func
 
 
 def add_latent_transitions(
@@ -206,6 +240,68 @@ def add_active_transitions(
     )
 
 
+def get_smsir_outputs_builder(
+        model,
+        compartment_types,
+        is_undetected,
+        age_groups,
+        clinical_strata,
+        strain_strata,
+        hosp_props,
+        voc_params,
+        time_to_event_params,
+        hosp_params,
+        hosp_multiplier,
+        immunity_hosp_reduction,
+        icu_risk,
+        ifr_props,
+        immunity_death_reduction,
+        random_process,
+):
+
+    model_times = model.times
+
+    outputs_builder = SmSirOutputsBuilder(model, compartment_types)
+
+    if is_undetected:
+        outputs_builder.request_cdr()
+    outputs_builder.request_incidence(compartment_types, age_groups, clinical_strata, strain_strata)
+    outputs_builder.request_notifications(
+        time_to_event_params.notification,
+        model_times
+    )
+    outputs_builder.request_hospitalisations(
+        hosp_props,
+        hosp_multiplier,
+        immunity_hosp_reduction,
+        time_to_event_params.hospitalisation,
+        hosp_params.hospital_all,
+        model_times,
+        age_groups,
+        strain_strata,
+        voc_params,
+    )
+    outputs_builder.request_icu_outputs(
+        icu_risk,
+        time_to_event_params.icu_admission,
+        hosp_params.icu,
+        model_times,
+    )
+    outputs_builder.request_infection_deaths(
+        ifr_props,
+        immunity_death_reduction,
+        time_to_event_params.death,
+        model_times,
+        age_groups,
+        clinical_strata,
+        strain_strata,
+        voc_params,
+    )
+    outputs_builder.request_recovered_proportion(compartment_types)
+    if random_process:
+        outputs_builder.request_random_process_outputs()
+
+
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
@@ -216,6 +312,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Get country/region details
     country = params.country
     pop = params.population
+
+    # Need a placeholder for the immunity stratification a nd output loops if strains not implemented
+    strain_strata = [""]
 
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
     age_groups = params.age_groups
@@ -238,12 +337,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         compartments=compartment_types,
         infectious_compartments=[Compartment.INFECTIOUS],
         timestep=params.time.step,
-        ref_date=BASE_DATE
+        ref_date=BASE_DATE,
     )
 
-    # Check build_options
-    # This will be automatically populated by calibration.py if we are running a calibration,
-    # but can be manually set if so desired
+    """
+    Check build options.
+    """
+
+    # This will be automatically populated by calibration.py if we are running a calibration, but can be manually set
     if build_options:
         validate = build_options.get("enable_validation")
         if validate is not None:
@@ -271,26 +372,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Transmission
     if params.activate_random_process:
-        # build the random process, using default values and coefficients
-        rp = set_up_random_process(params.time.start, params.time.end)
 
-        # update random process details based on the model parameters
-        rp.update_config_from_params(params.random_process)
-
-        # Create function returning exp(W), where W is the random process
-        rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
-
-        # store random process as a computed value to make it available as an output
+        # Store random process as a computed value to make it available as an output
+        rp_function, contact_rate = get_random_process(
+            params.time,
+            params.random_process,
+            params.contact_rate
+        )
         model.add_computed_value_process(
             "transformed_random_process",
-            RandomProcessProc(
-                rp_time_variant_func
-            )
+            RandomProcessProc(rp_function)
         )
-
-        # Create the time-variant contact rate that uses our computed random process
-        def contact_rate(t, computed_values):
-            return params.contact_rate * computed_values["transformed_random_process"]
 
     else:
         contact_rate = params.contact_rate
@@ -337,7 +429,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     """
-    Apply clinical stratification - must come after age stratification if asymptomatic props being used
+    Apply clinical stratification (must come after age stratification if asymptomatic props being used)
     """
 
     # Work out if clinical stratification needs to be applied, either because of asymptomatics or incomplete detection
@@ -382,12 +474,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata
 
-    else:
+    """
+    Apply the reinfection flows (knowing the strain stratification)
+    """
 
-        # Need a placeholder for the output loops if strains not implemented
-        strain_strata = [""]
-
-    # Apply the reinfection flows, for which we need to know about the strain stratification
     apply_reinfection_flows(model, compartment_types, infection_dest, params.voc_emergence, strain_strata, contact_rate)
 
     """
@@ -403,51 +493,27 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(immunity_strat)
 
     """
-    Set up derived output functions
+    Get the applicable outputs.
     """
 
-    outputs_builder = SmSirOutputsBuilder(model, compartment_types)
-
-    # Track CDR function if case detection is implemented
-    if is_undetected:
-        outputs_builder.request_cdr()
-
-    outputs_builder.request_incidence(compartment_types, age_groups, clinical_strata, strain_strata)
-    outputs_builder.request_notifications(
-        params.time_from_onset_to_event.notification,
-        model.times
-    )
-    outputs_builder.request_hospitalisations(
-        hosp_props,
-        params.hospital_prop_multiplier,
-        params.immunity_stratification.hospital_risk_reduction,
-        params.time_from_onset_to_event.hospitalisation,
-        params.hospital_stay.hospital_all,
-        model.times,
-        age_groups,
-        strain_strata,
-        params.voc_emergence,
-    )
-    outputs_builder.request_icu_outputs(
-        params.prop_icu_among_hospitalised,
-        params.time_from_onset_to_event.icu_admission,
-        params.hospital_stay.icu,
-        model.times
-    )
-    outputs_builder.request_infection_deaths(
-        ifr_props,
-        params.immunity_stratification.death_risk_reduction,
-        params.time_from_onset_to_event.death,
-        model.times,
+    get_smsir_outputs_builder(
+        model,
+        compartment_types,
+        is_undetected,
         age_groups,
         clinical_strata,
         strain_strata,
+        hosp_props,
         params.voc_emergence,
+        params.time_from_onset_to_event,
+        params.hospital_stay,
+        params.hospital_prop_multiplier,
+        params.immunity_stratification.hospital_risk_reduction,
+        params.prop_icu_among_hospitalised,
+        ifr_props,
+        params.immunity_stratification.death_risk_reduction,
+        bool(params.activate_random_process),
     )
-    outputs_builder.request_recovered_proportion(compartment_types)
-
-    if params.activate_random_process:
-        outputs_builder.request_random_process_outputs()
 
     return model
 

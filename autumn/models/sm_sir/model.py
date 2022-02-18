@@ -1,6 +1,6 @@
 from datetime import date
 from math import exp
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from summer import CompartmentalModel
 
@@ -9,7 +9,7 @@ from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn
+from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -84,7 +84,24 @@ def assign_population(
     model.set_initial_population(init_pop)
 
 
-def get_random_process(time_params, process_params, contact_rate):
+def get_random_process(
+        time_params: Time,
+        process_params: RandomProcess,
+        contact_rate: float,
+) -> Tuple[callable, callable]:
+    """
+    Work out the process that will contribute to the random process.
+
+    Args:
+        time_params: Start and end time of the model
+        process_params: Parameters relating to the random process
+        contact_rate: The risk of transmission per contact
+
+    Returns:
+        The random process function and the contact rate (here a summer-ready format transition function)
+
+    """
+
     # build the random process, using default values and coefficients
     rp = set_up_random_process(time_params.start, time_params.end)
 

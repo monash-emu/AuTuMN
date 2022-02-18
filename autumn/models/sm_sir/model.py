@@ -234,6 +234,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     country = params.country
     pop = params.population
 
+    # Need a placeholder for the immunity stratification a nd output loops if strains not implemented
+    strain_strata = [""]
+
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
     age_groups = params.age_groups
     age_strat_params = params.age_stratification
@@ -389,11 +392,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata
-
-    else:
-
-        # Need a placeholder for the output loops if strains not implemented
-        strain_strata = [""]
 
     # Apply the reinfection flows, for which we need to know about the strain stratification
     apply_reinfection_flows(model, compartment_types, infection_dest, params.voc_emergence, strain_strata, contact_rate)

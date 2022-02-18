@@ -5,7 +5,7 @@ infectious_seed: 445
 
 time:
   start: 250
-  end: 710 # 913 July 1st 2022
+  end: 700 # 913 July 1st 2022
 
 country:
   iso3: LKA
@@ -27,13 +27,13 @@ vaccination:
     ve_hospitalisation: 0.7
     ve_death: 0.8
   fully_vaccinated:
-    ve_sympt_covid: 0.5
-    ve_prop_prevent_infection: 0.8
+    ve_sympt_covid: 0.8
+    ve_prop_prevent_infection: 0.85
     ve_infectiousness: 0.3
     ve_hospitalisation: 0.8
     ve_death: 0.85
   part_waned:
-    ve_sympt_covid: 0.25
+    ve_sympt_covid: 0.7
     ve_prop_prevent_infection: 0.8
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.84
@@ -58,7 +58,7 @@ testing_to_detection:
   smoothing_period: 14
 
 clinical_stratification:
-  icu_prop: 0.04
+  icu_prop: 0.58
   props:
     symptomatic:
       multiplier: 1.0
@@ -148,7 +148,7 @@ voc_emergence:
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
-    ifr_multiplier: 1.
+    ifr_multiplier: 1.5
     hosp_multiplier: 2.08
 
 history:
@@ -163,7 +163,7 @@ history:
     ve_prop_prevent_infection: 0.8
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.5
-    ve_death: 0.975
+    ve_death: 0.95
   natural_immunity_duration: 425.
 
 sojourn:

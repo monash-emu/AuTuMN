@@ -46,7 +46,7 @@ def get_lka_vac_coverage(age_group, age_pops=None, params=None):
 
     times = df.date_index.to_numpy()
 
-    if int(age_group) < 10:
+    if int(age_group) < 0:
         coverage_values = (df.cml_coverage * 0).tolist()
     else:
         coverage_values = df.cml_coverage.tolist()

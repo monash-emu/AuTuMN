@@ -19,6 +19,9 @@ def get_immunity_hospitalisation_modifiers():
     """
 
     # The proportion of the study population in the paper being used that has "none", "low" and "high" immunity
+    # Proportions at study mid-point reported 16th December in:
+    # https://ourworldindata.org/grapher/share-people-fully-vaccinated-covid?country=~GBR
+    # where "none" is complement of those fully vaccinated, and "high" is those boosted by the same date
     source_immune_props = {
         "none": 0.312,
         "low": 0.302,
@@ -28,6 +31,10 @@ def get_immunity_hospitalisation_modifiers():
     assert sum(source_immune_props.values()) == 1., msg
 
     # The protection provided by each of the three immunity categories
+    # Approximately the values reported in:
+    # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1054071/
+    # vaccine-surveillance-report-week-6.pdf
+    # 80% protection once boosted, 50% otherwise
     immunity_protection = {
         "none": 0.,
         "low": 0.5,

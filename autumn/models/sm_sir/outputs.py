@@ -8,7 +8,23 @@ from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, 
 from autumn.tools.utils.utils import apply_odds_ratio_to_props
 
 
+def weighted_average(distribution, weights):
+    numerator = sum([distribution[i] * weights[i] for i in distribution.keys()])
+    denominator = sum(weights.values())
+    return round(numerator / denominator, 4)
+
+
 def get_immunity_hospitalisation_modifiers():
+    """
+    Work out how much we are going to adjust the age-specific hospitalisation rates by to account for pre-existing
+    immunity protection against hospitalisation.
+
+    Returns:
+        The multipliers for the hospitalisation proportions for each of the immunity strata
+
+    """
+
+    # The proportion of the study population in the paper being used that has "none", "low" and "high" immunity
     source_immune_props = {
         "none": 0.312,
         "low": 0.302,
@@ -17,25 +33,28 @@ def get_immunity_hospitalisation_modifiers():
     msg = "Proportions by immunity status in source for parameters does not sum to one"
     assert sum(source_immune_props.values()) == 1., msg
 
-    ve_by_immunity = {
+    # The protection provided by each of the three immunity categories
+    immunity_protection = {
         "none": 0.,
         "low": 0.5,
         "high": 0.8,
     }
     msg = "Source VE estimates not proportions"
-    assert all([0. <= val <= 1. for val in ve_by_immunity.values()]), msg
-    source_ve_modifiers = {k: 1. - v for k, v in ve_by_immunity.items()}
+    assert all([0. <= val <= 1. for val in immunity_protection.values()]), msg
+    immunity_effect = {k: 1. - v for k, v in immunity_protection.items()}
 
+    # Work out the adjustments based on the protection provided by immunity
+    effective_weights = [immunity_effect[stratum] * source_immune_props[stratum] for stratum in ["none", "low", "high"]]
+    no_immunity_modifier = 1. / (sum(effective_weights))
     immune_hosp_modifiers = {
-        "none":
-            1. / (
-                    source_ve_modifiers["none"] * source_immune_props["none"] +
-                    source_ve_modifiers["low"] * source_immune_props["low"] +
-                    source_ve_modifiers["high"] * source_immune_props["high"]
-            )
+        "none": no_immunity_modifier,
+        "low": no_immunity_modifier * immunity_effect["low"],
+        "high": no_immunity_modifier * immunity_effect["high"],
     }
-    immune_hosp_modifiers["low"] = immune_hosp_modifiers["none"] * source_ve_modifiers["low"]
-    immune_hosp_modifiers["high"] = immune_hosp_modifiers["none"] * source_ve_modifiers["high"]
+
+    # Unnecessary check that the weighted average we have calculated does come out to one
+    msg = "Values used don't appear to create a weighted average with weights summing to one, something went wrong"
+    assert weighted_average(immune_hosp_modifiers, source_immune_props) == 1., msg
 
     return immune_hosp_modifiers
 

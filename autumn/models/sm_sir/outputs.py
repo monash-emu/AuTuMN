@@ -8,6 +8,38 @@ from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, 
 from autumn.tools.utils.utils import apply_odds_ratio_to_props
 
 
+def get_immunity_hospitalisation_modifiers():
+    source_immune_props = {
+        "none": 0.312,
+        "low": 0.302,
+        "high": 0.386,
+    }
+    msg = "Proportions by immunity status in source for parameters does not sum to one"
+    assert sum(source_immune_props.values()) == 1., msg
+
+    ve_by_immunity = {
+        "none": 0.,
+        "low": 0.5,
+        "high": 0.8,
+    }
+    msg = "Source VE estimates not proportions"
+    assert all([0. <= val <= 1. for val in ve_by_immunity.values()]), msg
+    source_ve_modifiers = {k: 1. - v for k, v in ve_by_immunity.items()}
+
+    immune_hosp_modifiers = {
+        "none":
+            1. / (
+                    source_ve_modifiers["none"] * source_immune_props["none"] +
+                    source_ve_modifiers["low"] * source_immune_props["low"] +
+                    source_ve_modifiers["high"] * source_immune_props["high"]
+            )
+    }
+    immune_hosp_modifiers["low"] = immune_hosp_modifiers["none"] * source_ve_modifiers["low"]
+    immune_hosp_modifiers["high"] = immune_hosp_modifiers["none"] * source_ve_modifiers["high"]
+
+    return immune_hosp_modifiers
+
+
 class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_cdr(self):
@@ -206,7 +238,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
             self,
             prop_hospital_among_sympt: List[float],
             hospital_prop_multiplier: float,
-            hospital_risk_reduction_by_immunity: ImmunityRiskReduction,
             time_from_onset_to_hospitalisation: TimeDistribution,
             hospital_stay_duration: TimeDistribution,
             model_times: np.ndarray,
@@ -220,7 +251,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
         Args:
             prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
             hospital_prop_multiplier: Multiplier applied as an odds ratio adjustment
-            hospital_risk_reduction_by_immunity: Hospital risk reduction according to immunity level
             time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
             hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             model_times: The model evaluation times
@@ -230,35 +260,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
-        source_immune_props = {
-            "none": 0.312,
-            "low": 0.302,
-            "high": 0.386,
-        }
-        msg = "Proportions by immunity status in source for parameters does not sum to one"
-        assert sum(source_immune_props.values()) == 1., msg
+        # Get the adjustments to the hospitalisation rates according to immunity status
+        immune_hosp_modifiers = get_immunity_hospitalisation_modifiers()
 
-        ve_by_immunity = {
-            "none": 0.,
-            "low": 0.5,
-            "high": 0.8,
-        }
-        msg = "Source VE estimates not proportions"
-        assert all([0. <= val <= 1. for val in ve_by_immunity.values()]), msg
-
-        source_ve_modifiers = {k: 1. - v for k, v in ve_by_immunity.items()}
-        immune_hosp_modifiers = {
-            "none":
-                1. / (
-                        source_ve_modifiers["none"] * source_immune_props["none"] +
-                        source_ve_modifiers["low"] * source_immune_props["low"] +
-                        source_ve_modifiers["high"] * source_immune_props["high"]
-                )
-        }
-
-        immune_hosp_modifiers["low"] = immune_hosp_modifiers["none"] * source_ve_modifiers["low"]
-        immune_hosp_modifiers["high"] = immune_hosp_modifiers["none"] * source_ve_modifiers["high"]
-
+        # Collate age- and immunity-structured hospitalisation rates into a single dictionary
         adj_prop_hosp_among_sympt = {}
         for immunity_stratum in ["none", "low", "high"]:
             multiplier = immune_hosp_modifiers[immunity_stratum]

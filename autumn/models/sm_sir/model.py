@@ -271,13 +271,9 @@ def get_smsir_outputs_builder(
         model_times
     )
 
-
-
-
     outputs_builder.request_hospitalisations(
         hosp_props,
         hosp_multiplier,
-        immunity_hosp_reduction,
         time_to_event_params.hospitalisation,
         hosp_params.hospital_all,
         model_times,

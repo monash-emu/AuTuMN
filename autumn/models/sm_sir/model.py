@@ -272,34 +272,7 @@ def get_smsir_outputs_builder(
     )
 
 
-    source_immune_props = {
-        "none": 0.312,
-        "low": 0.302,
-        "high": 0.386,
-    }
-    msg = "Proportions by immunity status in source for parameters does not sum to one"
-    assert sum(source_immune_props.values()) == 1., msg
 
-    ve_by_immunity = {
-        "none": 0.,
-        "low": 0.5,
-        "high": 0.8,
-    }
-    msg = "Source VE estimates not proportions"
-    assert all([0. <= val <= 1. for val in ve_by_immunity.values()]), msg
-
-    source_ve_modifiers = {k: 1. - v for k, v in ve_by_immunity.items()}
-    immune_hosp_modifiers = {
-        "none":
-            1. / (
-                    source_ve_modifiers["none"] * source_immune_props["none"] +
-                    source_ve_modifiers["low"] * source_immune_props["low"] +
-                    source_ve_modifiers["high"] * source_immune_props["high"]
-            )
-    }
-
-    immune_hosp_modifiers["low"] = immune_hosp_modifiers["none"] * source_ve_modifiers["low"]
-    immune_hosp_modifiers["high"] = immune_hosp_modifiers["none"] * source_ve_modifiers["high"]
 
     outputs_builder.request_hospitalisations(
         hosp_props,

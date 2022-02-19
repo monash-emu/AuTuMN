@@ -230,15 +230,40 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
-        # Adjusted hospital proportions
-        prop_hosp_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
-
-        # Prepare a dictionary with hospital risk reduction by level of immunity
-        hospital_risk_reduction = {
-            ImmunityStratum.NONE: hospital_risk_reduction_by_immunity.none,
-            ImmunityStratum.HIGH: hospital_risk_reduction_by_immunity.high,
-            ImmunityStratum.LOW: hospital_risk_reduction_by_immunity.low
+        source_immune_props = {
+            "none": 0.312,
+            "low": 0.302,
+            "high": 0.386,
         }
+        msg = "Proportions by immunity status in source for parameters does not sum to one"
+        assert sum(source_immune_props.values()) == 1., msg
+
+        ve_by_immunity = {
+            "none": 0.,
+            "low": 0.5,
+            "high": 0.8,
+        }
+        msg = "Source VE estimates not proportions"
+        assert all([0. <= val <= 1. for val in ve_by_immunity.values()]), msg
+
+        source_ve_modifiers = {k: 1. - v for k, v in ve_by_immunity.items()}
+        immune_hosp_modifiers = {
+            "none":
+                1. / (
+                        source_ve_modifiers["none"] * source_immune_props["none"] +
+                        source_ve_modifiers["low"] * source_immune_props["low"] +
+                        source_ve_modifiers["high"] * source_immune_props["high"]
+                )
+        }
+
+        immune_hosp_modifiers["low"] = immune_hosp_modifiers["none"] * source_ve_modifiers["low"]
+        immune_hosp_modifiers["high"] = immune_hosp_modifiers["none"] * source_ve_modifiers["high"]
+
+        adj_prop_hosp_among_sympt = {}
+        for immunity_stratum in ["none", "low", "high"]:
+            multiplier = immune_hosp_modifiers[immunity_stratum]
+            adj_prop = [i_prop * multiplier for i_prop in prop_hospital_among_sympt]
+            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, hospital_prop_multiplier)
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
@@ -259,9 +284,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     incidence_name = "incidence_sympt" + strata_string
 
                     # Calculate the multiplier based on age, immunity and strain
-                    immunity_risk_modifier = 1. - hospital_risk_reduction[immunity_stratum]
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
-                    hospital_risk = prop_hosp_among_sympt[i_age] * immunity_risk_modifier * strain_risk_modifier
+                    hospital_risk = adj_prop_hosp_among_sympt[immunity_stratum][i_age] * strain_risk_modifier
 
                     # Get the hospitalisation function
                     hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)

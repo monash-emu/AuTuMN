@@ -5,13 +5,7 @@ import numpy as np
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction, VocComponent
 from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, ClinicalStratum
-from autumn.tools.utils.utils import apply_odds_ratio_to_props
-
-
-def weighted_average(distribution, weights):
-    numerator = sum([distribution[i] * weights[i] for i in distribution.keys()])
-    denominator = sum(weights.values())
-    return round(numerator / denominator, 4)
+from autumn.tools.utils.utils import apply_odds_ratio_to_props, weighted_average
 
 
 def get_immunity_hospitalisation_modifiers():

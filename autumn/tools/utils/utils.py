@@ -9,7 +9,7 @@ import os
 import numpy
 import pandas as pd
 from datetime import datetime
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Dict
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
@@ -387,3 +387,26 @@ def multiply_function_or_constant(
         return revised_function
     else:
         return function_or_constant * multiplier
+
+
+def weighted_average(
+        distribution: Dict[str, float],
+        weights: Dict[str, float]
+) -> float:
+    """
+    Calculate a weighted average from dictionaries with the same keys, representing the values and the weights.
+
+    Args:
+        distribution: The values
+        weights: The weights
+
+    Returns:
+        The weighted average
+
+    """
+
+    msg = "Attempting to calculate weighted average over two dictionaries that do not share keys"
+    assert distribution.keys() == weights.keys(), msg
+    numerator = sum([distribution[i] * weights[i] for i in distribution.keys()])
+    denominator = sum(weights.values())
+    return round(numerator / denominator, 4)

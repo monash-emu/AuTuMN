@@ -40,7 +40,7 @@ priors = [
     UniformPrior("infectious_seed", [450, 550]),
     # Detection
     UniformPrior("infection_fatality.multiplier", [0.1, 1.2]),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0008, 0.005]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.85]),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [410, 450]),

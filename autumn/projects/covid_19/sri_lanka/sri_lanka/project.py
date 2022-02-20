@@ -42,6 +42,11 @@ priors = [
     UniformPrior("infection_fatality.multiplier", [0.1, 1.2]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.005]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.85]),
+    TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier",
+                mean =1.0,
+                stdev=0.5,
+                trunc_range=[0.1, np.inf],
+    ),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [410, 450]),
     UniformPrior("voc_emergence.delta.start_time", [520, 575]),

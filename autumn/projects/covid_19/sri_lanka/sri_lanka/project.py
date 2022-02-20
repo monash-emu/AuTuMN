@@ -43,10 +43,10 @@ priors = [
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0008, 0.005]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.85]),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [380, 450]),
-    UniformPrior("voc_emergence.delta.start_time", [490, 570]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.3]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.5]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [410, 450]),
+    UniformPrior("voc_emergence.delta.start_time", [520, 575]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.0]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 6.5]),
 ]
 
 # Load proposal sds from yml file

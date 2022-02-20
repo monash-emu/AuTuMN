@@ -19,6 +19,6 @@ ACTIVE_PERIOD_PRIOR = TruncNormalPrior(
     "sojourn.compartment_periods_calculated.active.total_period",
     mean=6.5,
     stdev=0.77,
-    trunc_range=[4.0, np.inf],
+    trunc_range=[2.0, np.inf],
 )
 COVID_GLOBAL_PRIORS = [EXPOSED_PERIOD_PRIOR, ACTIVE_PERIOD_PRIOR]

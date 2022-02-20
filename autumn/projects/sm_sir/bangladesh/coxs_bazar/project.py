@@ -15,9 +15,10 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("contact_rate", (0.03, 0.12)),
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (680.0, 710.0)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (690.0, 720.0)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.006, 0.016)),
     UniformPrior("hospital_stay.hospital_all.parameters.mean", (10., 25.)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.2, 1.5)),
 ]
 
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]

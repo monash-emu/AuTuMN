@@ -241,22 +241,21 @@ def add_active_transitions(
 
 
 def get_smsir_outputs_builder(
+        iso3,
+        region,
         model,
         compartment_types,
         is_undetected,
         age_groups,
         clinical_strata,
         strain_strata,
-        hosp_props_params,
-        voc_params,
-        time_to_event_params,
-        hosp_params,
+        hosp_props,
+        hosp_stay,
         icu_risk,
+        time_to_event_params,
         ifr_props_params,
-        immunity_death_reduction,
+        voc_params,
         random_process,
-        iso3,
-        region,
 ):
 
     model_times = model.times
@@ -271,9 +270,9 @@ def get_smsir_outputs_builder(
         model_times
     )
     outputs_builder.request_hospitalisations(
-        hosp_props_params,
+        hosp_props,
         time_to_event_params.hospitalisation,
-        hosp_params.hospital_all,
+        hosp_stay.hospital_all,
         model_times,
         age_groups,
         strain_strata,
@@ -284,7 +283,7 @@ def get_smsir_outputs_builder(
     outputs_builder.request_icu_outputs(
         icu_risk,
         time_to_event_params.icu_admission,
-        hosp_params.icu,
+        hosp_stay.icu,
         model_times,
     )
     outputs_builder.request_infection_deaths(
@@ -494,6 +493,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     get_smsir_outputs_builder(
+        params.country.iso3,
+        params.population.region,
         model,
         compartment_types,
         is_undetected,
@@ -501,15 +502,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         clinical_strata,
         strain_strata,
         params.age_stratification.prop_hospital,
-        params.voc_emergence,
-        params.time_from_onset_to_event,
         params.hospital_stay,
         params.prop_icu_among_hospitalised,
+        params.time_from_onset_to_event,
         params.age_stratification.ifr,
-        params.immunity_stratification.death_risk_reduction,
+        params.voc_emergence,
         bool(params.activate_random_process),
-        params.country.iso3,
-        params.population.region,
     )
 
     return model

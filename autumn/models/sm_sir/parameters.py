@@ -308,7 +308,6 @@ class ImmunityStratification(BaseModel):
     prop_immune: float
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
-    death_risk_reduction: ImmunityRiskReduction
 
     check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
     check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(get_check_prop("prop_high_among_immune"))

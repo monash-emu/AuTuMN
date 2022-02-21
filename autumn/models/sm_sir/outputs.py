@@ -23,34 +23,34 @@ def get_immunity_hospitalisation_modifiers():
     # https://ourworldindata.org/grapher/share-people-fully-vaccinated-covid?country=~GBR
     # where "none" is complement of those fully vaccinated, and "high" is those boosted by the same date
     source_immune_props = {
-        "none": 0.312,
-        "low": 0.302,
-        "high": 0.386,
+        ImmunityStratum.NONE: 0.312,
+        ImmunityStratum.LOW: 0.302,
+        ImmunityStratum.HIGH: 0.386,
     }
     msg = "Proportions by immunity status in source for parameters does not sum to one"
     assert sum(source_immune_props.values()) == 1., msg
 
     # The protection provided by each of the three immunity categories
-    # Approximately the values reported in:
+    # Approximately the values reported in Figure 2 of:
     # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1054071/
     # vaccine-surveillance-report-week-6.pdf
-    # 80% protection once boosted, 50% otherwise
+    # 85% protection once boosted, 50% otherwise
     immunity_protection = {
-        "none": 0.,
-        "low": 0.5,
-        "high": 0.8,
+        ImmunityStratum.NONE: 0.,
+        ImmunityStratum.LOW: 0.5,
+        ImmunityStratum.HIGH: 0.85,
     }
     msg = "Source VE estimates not proportions"
     assert all([0. <= val <= 1. for val in immunity_protection.values()]), msg
     immunity_effect = {k: 1. - v for k, v in immunity_protection.items()}
 
     # Work out the adjustments based on the protection provided by immunity
-    effective_weights = [immunity_effect[stratum] * source_immune_props[stratum] for stratum in ["none", "low", "high"]]
+    effective_weights = [immunity_effect[stratum] * source_immune_props[stratum] for stratum in IMMUNITY_STRATA]
     no_immunity_modifier = 1. / (sum(effective_weights))
     immune_hosp_modifiers = {
-        "none": no_immunity_modifier,
-        "low": no_immunity_modifier * immunity_effect["low"],
-        "high": no_immunity_modifier * immunity_effect["high"],
+        ImmunityStratum.NONE: no_immunity_modifier,
+        ImmunityStratum.LOW: no_immunity_modifier * immunity_effect[ImmunityStratum.LOW],
+        ImmunityStratum.HIGH: no_immunity_modifier * immunity_effect[ImmunityStratum.HIGH],
     }
 
     # Unnecessary check that the weighted average we have calculated does come out to one

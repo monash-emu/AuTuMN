@@ -5,8 +5,10 @@ save files in data/targets/
 import itertools
 import json
 import os
+import requests
 import sys
 from datetime import datetime
+from zipfile import ZipFile
 
 
 import numpy as np
@@ -65,10 +67,21 @@ def main():
 
 # function to fetch data
 def fetch_phl_data():
-    gdd.download_file_from_google_drive(file_id=PHL_doh_link, dest_path=PHL_doh_dest)
-    gdd.download_file_from_google_drive(
-        file_id=PHL_fassster_link, dest_path=PHL_fassster_dest, unzip=True
-    )
+
+    doh = f"https://drive.google.com/uc?id={PHL_doh_link}&confirm=t"
+    faster = f"https://drive.google.com/uc?id={PHL_fassster_link}&confirm=t"
+
+    pd.read_csv(doh).to_csv(PHL_doh_dest)
+
+    req = requests.get(faster)
+    with open(PHL_fassster_dest, "wb") as output_file:
+        output_file.write(req.content)
+
+    with ZipFile(PHL_fassster_dest) as z:
+        filename = [each.filename for each in z.filelist if each.filename.startswith("2022")]
+        if len(filename) is 1:
+            with z.open(filename[0]) as f:
+                pd.read_csv(f).to_csv(os.path.join(phl_inputs_dir, filename[0]))
 
 
 def fassster_data_filepath():

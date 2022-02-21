@@ -60,6 +60,8 @@ def convert_param_agegroups(
 
     """
 
+    # FIXME: This function should actually take dictionaries directly, rather than having to convert them first
+
     # Get default age brackets and population structured with these default categories
     top_age_bracket = 85 if is_80_plus else TOP_AGE_BRACKET
     source_agebreaks = list(range(0, top_age_bracket, AGE_BRACKET_WIDTHS))

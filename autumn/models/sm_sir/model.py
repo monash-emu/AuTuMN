@@ -257,6 +257,7 @@ def get_smsir_outputs_builder(
         voc_params,
         random_process,
 ):
+    # FIXME: This function needs a docstring
 
     model_times = model.times
 
@@ -319,6 +320,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
     age_groups = params.age_groups
     age_strat_params = params.age_stratification
+
+    # FIXME: These age-stratified parameters should be dictionaries
+
     suscept_req = age_strat_params.susceptibility
     susc_props = convert_param_agegroups(suscept_req, country.iso3, pop.region, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic

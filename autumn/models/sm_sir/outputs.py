@@ -45,7 +45,7 @@ def get_immunity_prop_modifiers(
 
     # Unnecessary check that the weighted average we have calculated does come out to one
     msg = "Values used don't appear to create a weighted average with weights summing to one, something went wrong"
-    assert weighted_average(immune_modifiers, source_pop_immunity_dist) == 1., msg
+    assert weighted_average(immune_modifiers, source_pop_immunity_dist, rounding=4) == 1., msg
 
     return immune_modifiers
 
@@ -201,7 +201,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # FIXME: Need to think through if this is going to really be the IFR or more the CFR
 
         ifr_request = ifr_prop_requests.values
-        ifr_prop = convert_param_agegroups(ifr_request, iso3, region, age_groups)
+        ifr_prop = convert_param_agegroups(iso3, region, ifr_request, age_groups)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
         immune_hosp_modifiers = get_immunity_prop_modifiers(
@@ -289,7 +289,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
 
         hosp_request = hosp_prop_requests.values
-        hosp_props = convert_param_agegroups(hosp_request, iso3, region, age_groups)
+        hosp_props = convert_param_agegroups(iso3, region, hosp_request, age_groups)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
         immune_hosp_modifiers = get_immunity_prop_modifiers(

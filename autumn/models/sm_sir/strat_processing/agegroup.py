@@ -2,7 +2,7 @@ from typing import List, Dict, Union
 import itertools
 
 from autumn.tools.inputs import get_population_by_agegroup
-from autumn.models.sm_sir.constants import AGE_BRACKET_WIDTHS, TOP_AGE_BRACKET
+from autumn.tools.utils.utils import weighted_average
 
 
 def get_relevant_indices(
@@ -39,18 +39,18 @@ def get_relevant_indices(
 
 
 def convert_param_agegroups(
-        source_dict: Dict[int, float],
         iso3: str,
         region: Union[None, str],
+        source_dict: Dict[int, float],
         modelled_age_groups: List[int],
 ) -> List[float]:
     """
     Converts the source parameters to match the model age groups.
 
     Args:
-        source_dict: A list of values provided by 5-year band, starting from 0-4
         iso3: Parameter for get_population_by_agegroup
         region: Parameter for get_population_by_agegroup
+        source_dict: A list of parameter values provided according to 5-year band, starting from 0-4
         modelled_age_groups: Parameter for get_population_by_agegroup
 
     Returns:
@@ -64,22 +64,17 @@ def convert_param_agegroups(
     total_pops_5year_dict = {k: v for k, v in zip(source_agebreaks, total_pops_5year_bands)}
 
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
-    assert all([i in source_agebreaks for i in modelled_age_groups]), msg
+    assert all([age_group in source_agebreaks for age_group in modelled_age_groups]), msg
 
-    # Find out which of the standard source categories apply to each modelled age group
+    # Find out which of the standard source categories (values) apply to each modelled age group (keys)
     relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
 
     # For each age bracket
     param_values = []
-    for i_age, model_agegroup in enumerate(modelled_age_groups):
-
-        # Weighted average
-        model_agegroup_pop = 0
-        param_val = 0.
-        for source_indices in relevant_source_indices[model_agegroup]:
-            bin_pop = total_pops_5year_dict[source_indices]
-            model_agegroup_pop += bin_pop
-            param_val += source_dict[source_indices] * bin_pop
-        param_values.append(param_val / model_agegroup_pop)
+    for model_agegroup in modelled_age_groups:
+        relevant_indices = relevant_source_indices[model_agegroup]
+        weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
+        values = {k: source_dict[k] for k in relevant_indices}
+        param_values.append(weighted_average(values, weights))
 
     return param_values

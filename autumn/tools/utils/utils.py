@@ -391,7 +391,8 @@ def multiply_function_or_constant(
 
 def weighted_average(
         distribution: Dict[str, float],
-        weights: Dict[str, float]
+        weights: Dict[str, float],
+        rounding: int=None,
 ) -> float:
     """
     Calculate a weighted average from dictionaries with the same keys, representing the values and the weights.
@@ -399,6 +400,7 @@ def weighted_average(
     Args:
         distribution: The values
         weights: The weights
+        rounding: Whether to round off the result
 
     Returns:
         The weighted average
@@ -409,4 +411,6 @@ def weighted_average(
     assert distribution.keys() == weights.keys(), msg
     numerator = sum([distribution[i] * weights[i] for i in distribution.keys()])
     denominator = sum(weights.values())
-    return round(numerator / denominator, 4)
+    fraction = numerator / denominator
+    result = round(fraction, rounding) if rounding else fraction
+    return result

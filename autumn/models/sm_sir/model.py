@@ -321,12 +321,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     age_groups = params.age_groups
     age_strat_params = params.age_stratification
 
-    # FIXME: These age-stratified parameters should be dictionaries
-
     suscept_req = age_strat_params.susceptibility
-    susc_props = convert_param_agegroups(suscept_req, country.iso3, pop.region, age_groups) if suscept_req else None
+    susc_props = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
-    sympt_props = convert_param_agegroups(sympt_req, country.iso3, pop.region, age_groups) if sympt_req else None
+    sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
 
     # Determine the compartments
     compartment_types = get_compartments(params.sojourns)

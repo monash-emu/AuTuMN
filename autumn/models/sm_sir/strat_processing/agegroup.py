@@ -61,7 +61,7 @@ def convert_param_agegroups(
     # Get default age brackets and the population structured with these default categories
     source_agebreaks = list(source_dict.keys())
     total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
-    total_pops_5year_dict = {k: v for k, v in zip(source_agebreaks, total_pops_5year_bands)}
+    total_pops_5year_dict = {age: pop for age, pop in zip(source_agebreaks, total_pops_5year_bands)}
 
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
     assert all([age_group in source_agebreaks for age_group in modelled_age_groups]), msg

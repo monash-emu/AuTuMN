@@ -261,7 +261,7 @@ class AgeStratification(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_age_param_lengths(cls, values):
-        for param_name in ("susceptibility", "prop_symptomatic", "prop_hospital"):
+        for param_name in ("susceptibility", "prop_symptomatic"):
             param = values[param_name]
             if param:
                 msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"

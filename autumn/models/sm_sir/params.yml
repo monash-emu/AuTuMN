@@ -98,9 +98,8 @@ age_stratification:
     - 0.0529  # 60-64
     - 0.0529  # 65-69
     - 0.1340  # 70-74
-    - 0.1872  # 75+ Weighted average calculated as (0.254 * 2748 + 0.134 * 3453) / (2748 + 3453) - populations from:
-    # https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/datasets/
-    # tablea21principalprojectionukpopulationinagegroups
+    - 0.1340  # 75-79
+    - 0.2540  # 80+
 
   ifr:
     - 0.00003 # 0-4

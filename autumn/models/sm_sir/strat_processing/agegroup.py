@@ -43,7 +43,7 @@ def convert_param_agegroups(
         iso3: str,
         region: Union[None, str],
         modelled_age_groups: List[int],
-        is_ifr: bool=False,
+        is_80_plus: bool=False,
 ) -> List[float]:
     """
     Converts the source parameters to match the model age groups.
@@ -53,7 +53,7 @@ def convert_param_agegroups(
         iso3: Parameter for get_population_by_agegroup
         region: Parameter for get_population_by_agegroup
         modelled_age_groups: Parameter for get_population_by_agegroup
-        is_ifr: Whether we are working with the IFR, which has a different structure
+        is_80_plus: Whether we are working with data for which the top age bracket is 80%
 
     Returns:
         The list of the processed parameters in the format needed by the model
@@ -61,7 +61,7 @@ def convert_param_agegroups(
     """
 
     # Get default age brackets and population structured with these default categories
-    top_age_bracket = 85 if is_ifr else TOP_AGE_BRACKET
+    top_age_bracket = 85 if is_80_plus else TOP_AGE_BRACKET
     source_agebreaks = list(range(0, top_age_bracket, AGE_BRACKET_WIDTHS))
     total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"

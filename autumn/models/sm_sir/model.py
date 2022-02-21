@@ -323,9 +323,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(sympt_req, country.iso3, pop.region, age_groups) if sympt_req else None
     hosp_request = age_strat_params.prop_hospital
-    hosp_props = convert_param_agegroups(hosp_request, country.iso3, pop.region, age_groups)
+    hosp_props = convert_param_agegroups(hosp_request, country.iso3, pop.region, age_groups, is_80_plus=True)
     ifr_request = age_strat_params.ifr
-    ifr_props = convert_param_agegroups(ifr_request, country.iso3, pop.region, age_groups, is_ifr=True)
+    ifr_props = convert_param_agegroups(ifr_request, country.iso3, pop.region, age_groups, is_80_plus=True)
 
     # Determine the compartments
     compartment_types = get_compartments(params.sojourns)

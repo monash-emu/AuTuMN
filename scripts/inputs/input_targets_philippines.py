@@ -88,7 +88,7 @@ def fassster_data_filepath():
     fassster_filename = [
         filename
         for filename in os.listdir(phl_inputs_dir)
-        if filename.startswith("ConfirmedCases_Final_") or filename.startswith("2022")
+        if filename.startswith("ConfirmedCases_Final_") or filename.startswith("PHL_ConfirmedCases")
     ]
     fassster_filename = os.path.join(phl_inputs_dir, fassster_filename[0])
     return fassster_filename

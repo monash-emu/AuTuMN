@@ -9,7 +9,7 @@ from autumn.tools.utils.utils import apply_odds_ratio_to_props, weighted_average
 from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
 
 
-def get_immunity_hospitalisation_modifiers(
+def get_immunity_prop_modifiers(
         source_pop_immunity_dist: Dict[str, float],
         source_pop_protection: Dict[str, float],
 ):
@@ -172,21 +172,21 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_infection_deaths(
             self,
-            ifr_prop: List[float],
-            death_risk_reduction_by_immunity: ImmunityRiskReduction,
+            ifr_props_params,
             time_from_onset_to_death: TimeDistribution,
             model_times: np.ndarray,
             age_groups: List[int],
             clinical_strata: List[str],
             strain_strata: List[str],
             voc_params: Optional[Dict[str, VocComponent]],
+            iso3,
+            region,
     ):
         """
         Request infection death-related outputs.
 
         Args:
             ifr_prop: Infection fatality rates
-            death_risk_reduction_by_immunity: Death risk reduction according to immunity level
             time_from_onset_to_death: Details of the statistical distribution for the time to death
             model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
@@ -196,12 +196,24 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
-        # Prepare a dictionary with reduction in risk of death by level of immunity
-        death_risk_reduction = {
-            ImmunityStratum.NONE: death_risk_reduction_by_immunity.none,
-            ImmunityStratum.LOW: death_risk_reduction_by_immunity.low,
-            ImmunityStratum.HIGH: death_risk_reduction_by_immunity.high,
-        }
+        ifr_request = list(ifr_props_params.values.values())
+        ifr_prop = convert_param_agegroups(ifr_request, iso3, region, age_groups, is_80_plus=True)
+
+        # Get the adjustments to the hospitalisation rates according to immunity status
+        immune_hosp_modifiers = get_immunity_prop_modifiers(
+            ifr_props_params.source_immunity_distribution,
+            ifr_props_params.source_immunity_protection,
+        )
+
+        # Collate age- and immunity-structured IFRs into a single dictionary
+        adj_prop_hosp_among_sympt = {}
+        for immunity_stratum in IMMUNITY_STRATA:
+            multiplier = immune_hosp_modifiers[immunity_stratum]
+            adj_prop = [i_prop * multiplier for i_prop in ifr_prop]
+            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(
+                adj_prop,
+                ifr_props_params.multiplier
+            )
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
@@ -224,7 +236,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         incidence_name = "incidence" + strata_string
 
                         # Calculate the multiplier based on age, immunity and strain
-                        immunity_risk_modifier = 1. - death_risk_reduction[immunity_stratum]
+                        immunity_risk_modifier = 1. - adj_prop_hosp_among_sympt[immunity_stratum][i_age]
                         strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
                         death_risk = ifr_prop[i_age] * immunity_risk_modifier * strain_risk_modifier
 
@@ -274,7 +286,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         hosp_props = convert_param_agegroups(hosp_request, iso3, region, age_groups, is_80_plus=True)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
-        immune_hosp_modifiers = get_immunity_hospitalisation_modifiers(
+        immune_hosp_modifiers = get_immunity_prop_modifiers(
             prop_hospital_among_sympt.source_immunity_distribution,
             prop_hospital_among_sympt.source_immunity_protection,
         )

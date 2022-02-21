@@ -270,7 +270,6 @@ def get_smsir_outputs_builder(
         time_to_event_params.notification,
         model_times
     )
-
     outputs_builder.request_hospitalisations(
         hosp_props_params,
         time_to_event_params.hospitalisation,
@@ -288,18 +287,16 @@ def get_smsir_outputs_builder(
         hosp_params.icu,
         model_times,
     )
-
-    ifr_request = list(ifr_props_params.values.values())
-    ifr_props = convert_param_agegroups(ifr_request, iso3, region, age_groups, is_80_plus=True)
     outputs_builder.request_infection_deaths(
-        ifr_props,
-        immunity_death_reduction,
+        ifr_props_params,
         time_to_event_params.death,
         model_times,
         age_groups,
         clinical_strata,
         strain_strata,
         voc_params,
+        iso3,
+        region,
     )
     outputs_builder.request_recovered_proportion(compartment_types)
     if random_process:

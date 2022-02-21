@@ -172,39 +172,41 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_infection_deaths(
             self,
-            ifr_props_params,
-            time_from_onset_to_death: TimeDistribution,
             model_times: np.ndarray,
             age_groups: List[int],
             clinical_strata: List[str],
             strain_strata: List[str],
+            iso3: str,
+            region: Union[str, None],
+            ifr_prop_requests: AgeSpecificProps,
+            time_from_onset_to_death: TimeDistribution,
             voc_params: Optional[Dict[str, VocComponent]],
-            iso3,
-            region,
     ):
         """
         Request infection death-related outputs.
 
         Args:
-            ifr_prop: Infection fatality rates
-            time_from_onset_to_death: Details of the statistical distribution for the time to death
             model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
-            strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
             clinical_strata: The clinical strata being implemented
+            strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+            iso3: The ISO3 code of the country being simulated
+            region: The sub-region being simulated, if any
+            ifr_prop_requests: All the IFR-related requests, including the proportions themselves
+            time_from_onset_to_death: Details of the statistical distribution for the time to death
             voc_params: The parameters pertaining to the VoCs being implemented in the model
 
         """
 
         # FIXME: Need to think through if this is going to really be the IFR or more the CFR
 
-        ifr_request = list(ifr_props_params.values.values())
+        ifr_request = list(ifr_prop_requests.values.values())
         ifr_prop = convert_param_agegroups(ifr_request, iso3, region, age_groups, is_80_plus=True)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
         immune_hosp_modifiers = get_immunity_prop_modifiers(
-            ifr_props_params.source_immunity_distribution,
-            ifr_props_params.source_immunity_protection,
+            ifr_prop_requests.source_immunity_distribution,
+            ifr_prop_requests.source_immunity_protection,
         )
 
         # Collate age- and immunity-structured IFRs into a single dictionary
@@ -214,7 +216,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             adj_prop = [i_prop * multiplier for i_prop in ifr_prop]
             adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(
                 adj_prop,
-                ifr_props_params.multiplier
+                ifr_prop_requests.multiplier
             )
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
@@ -279,7 +281,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
             iso3: The ISO3 code of the country being simulated
             region: The sub-region being simulated, if any
-            hosp_prop_requests:
+            hosp_prop_requests: The hospitalisation proportion-related requests, including the proportions themselves
             time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
             hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             voc_params: The parameters pertaining to the VoCs being implemented in the model

@@ -287,15 +287,15 @@ def get_smsir_outputs_builder(
         model_times,
     )
     outputs_builder.request_infection_deaths(
-        ifr_props_params,
-        time_to_event_params.death,
         model_times,
         age_groups,
         clinical_strata,
         strain_strata,
-        voc_params,
         iso3,
         region,
+        ifr_props_params,
+        time_to_event_params.death,
+        voc_params,
     )
     outputs_builder.request_recovered_proportion(compartment_types)
     if random_process:

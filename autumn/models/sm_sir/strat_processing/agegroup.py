@@ -39,51 +39,47 @@ def get_relevant_indices(
 
 
 def convert_param_agegroups(
-        source_parameters: Dict[str, float],
+        source_dict: Dict[int, float],
         iso3: str,
         region: Union[None, str],
         modelled_age_groups: List[int],
-        is_80_plus: bool=False,
 ) -> List[float]:
     """
     Converts the source parameters to match the model age groups.
 
     Args:
-        source_parameters: A list of values provided by 5-year band, starting from 0-4
+        source_dict: A list of values provided by 5-year band, starting from 0-4
         iso3: Parameter for get_population_by_agegroup
         region: Parameter for get_population_by_agegroup
         modelled_age_groups: Parameter for get_population_by_agegroup
-        is_80_plus: Whether we are working with data for which the top age bracket is 80%
 
     Returns:
         The list of the processed parameters in the format needed by the model
 
     """
 
-    source_parameters = list(source_parameters.values())
-
-    # FIXME: This function should actually take dictionaries directly, rather than having to convert them first
-
-    # Get default age brackets and population structured with these default categories
-    top_age_bracket = 85 if is_80_plus else TOP_AGE_BRACKET
-    source_agebreaks = list(range(0, top_age_bracket, AGE_BRACKET_WIDTHS))
+    # Get default age brackets and the population structured with these default categories
+    source_agebreaks = list(source_dict.keys())
     total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
+    total_pops_5year_dict = {k: v for k, v in zip(source_agebreaks, total_pops_5year_bands)}
+
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
     assert all([i in source_agebreaks for i in modelled_age_groups]), msg
 
     # Find out which of the standard source categories apply to each modelled age group
     relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
 
-    # Weight the parameter values according to the new structure
+    # For each age bracket
     param_values = []
     for i_age, model_agegroup in enumerate(modelled_age_groups):
+
+        # Weighted average
         model_agegroup_pop = 0
         param_val = 0.
         for source_indices in relevant_source_indices[model_agegroup]:
-            relevant_source_index = source_agebreaks.index(source_indices)
-            bin_pop = total_pops_5year_bands[relevant_source_index]
+            bin_pop = total_pops_5year_dict[source_indices]
             model_agegroup_pop += bin_pop
-            param_val += source_parameters[relevant_source_index] * bin_pop
+            param_val += source_dict[source_indices] * bin_pop
         param_values.append(param_val / model_agegroup_pop)
 
     return param_values

@@ -1,10 +1,10 @@
 from scipy import stats
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 import numpy as np
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
-from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction, VocComponent
-from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, ClinicalStratum
+from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
+from .constants import IMMUNITY_STRATA, FlowName, Compartment, ClinicalStratum
 from autumn.tools.utils.utils import apply_odds_ratio_to_props, weighted_average
 from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
 
@@ -196,6 +196,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
+        # FIXME: Need to think through if this is going to really be the IFR or more the CFR
+
         ifr_request = list(ifr_props_params.values.values())
         ifr_prop = convert_param_agegroups(ifr_request, iso3, region, age_groups, is_80_plus=True)
 
@@ -258,37 +260,39 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_hospitalisations(
             self,
-            prop_hospital_among_sympt,
-            time_from_onset_to_hospitalisation: TimeDistribution,
-            hospital_stay_duration: TimeDistribution,
             model_times: np.ndarray,
             age_groups: List[int],
             strain_strata: List[str],
+            iso3: str,
+            region: Union[str, None],
+            hosp_prop_requests: AgeSpecificProps,
+            time_from_onset_to_hospitalisation: TimeDistribution,
+            hospital_stay_duration: TimeDistribution,
             voc_params: Optional[Dict[str, VocComponent]],
-            iso3,
-            region,
     ):
         """
         Request hospitalisation-related outputs.
 
         Args:
-            prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
-            time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
-            hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
             strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+            iso3: The ISO3 code of the country being simulated
+            region: The sub-region being simulated, if any
+            hosp_prop_requests:
+            time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
+            hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             voc_params: The parameters pertaining to the VoCs being implemented in the model
 
         """
 
-        hosp_request = list(prop_hospital_among_sympt.values.values())
+        hosp_request = list(hosp_prop_requests.values.values())
         hosp_props = convert_param_agegroups(hosp_request, iso3, region, age_groups, is_80_plus=True)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
         immune_hosp_modifiers = get_immunity_prop_modifiers(
-            prop_hospital_among_sympt.source_immunity_distribution,
-            prop_hospital_among_sympt.source_immunity_protection,
+            hosp_prop_requests.source_immunity_distribution,
+            hosp_prop_requests.source_immunity_protection,
         )
 
         # Collate age- and immunity-structured hospitalisation rates into a single dictionary
@@ -298,7 +302,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             adj_prop = [i_prop * multiplier for i_prop in hosp_props]
             adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(
                 adj_prop,
-                prop_hospital_among_sympt.multiplier
+                hosp_prop_requests.multiplier
             )
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times

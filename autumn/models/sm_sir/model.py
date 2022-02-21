@@ -270,15 +270,15 @@ def get_smsir_outputs_builder(
         model_times
     )
     outputs_builder.request_hospitalisations(
-        hosp_props,
-        time_to_event_params.hospitalisation,
-        hosp_stay.hospital_all,
         model_times,
         age_groups,
         strain_strata,
-        voc_params,
         iso3,
         region,
+        hosp_props,
+        time_to_event_params.hospitalisation,
+        hosp_stay.hospital_all,
+        voc_params,
     )
     outputs_builder.request_icu_outputs(
         icu_risk,

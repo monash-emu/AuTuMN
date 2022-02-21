@@ -252,7 +252,7 @@ def get_smsir_outputs_builder(
         time_to_event_params,
         hosp_params,
         icu_risk,
-        ifr_props,
+        ifr_props_params,
         immunity_death_reduction,
         random_process,
         iso3,
@@ -288,6 +288,9 @@ def get_smsir_outputs_builder(
         hosp_params.icu,
         model_times,
     )
+
+    ifr_request = list(ifr_props_params.values.values())
+    ifr_props = convert_param_agegroups(ifr_request, iso3, region, age_groups, is_80_plus=True)
     outputs_builder.request_infection_deaths(
         ifr_props,
         immunity_death_reduction,
@@ -324,8 +327,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     susc_props = convert_param_agegroups(suscept_req, country.iso3, pop.region, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(sympt_req, country.iso3, pop.region, age_groups) if sympt_req else None
-    ifr_request = list(age_strat_params.ifr.values.values())
-    ifr_props = convert_param_agegroups(ifr_request, country.iso3, pop.region, age_groups, is_80_plus=True)
 
     # Determine the compartments
     compartment_types = get_compartments(params.sojourns)
@@ -507,7 +508,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.time_from_onset_to_event,
         params.hospital_stay,
         params.prop_icu_among_hospitalised,
-        ifr_props,
+        params.age_stratification.ifr,
         params.immunity_stratification.death_risk_reduction,
         bool(params.activate_random_process),
         params.country.iso3,

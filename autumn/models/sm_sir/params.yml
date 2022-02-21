@@ -46,41 +46,41 @@ age_stratification:
   susceptibility:
   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
   # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
-    - 0.36
-    - 0.36
-    - 0.36
-    - 1.
-    - 1.
-    - 1.
-    - 1.
-    - 1.
-    - 1.
-    - 1.
-    - 1.
-    - 1.
-    - 1.
-    - 1.
-    - 1.41
-    - 1.41
+    0: 0.36
+    5: 0.36
+    10: 0.36
+    15: 1.
+    20: 1.
+    25: 1.
+    30: 1.
+    35: 1.
+    40: 1.
+    45: 1.
+    50: 1.
+    55: 1.
+    60: 1.
+    65: 1.
+    70: 1.41
+    75: 1.41
 
   prop_symptomatic:
   # Changed (26th August) to "Asymptomatic SARS-Cov-2 infection: A Systematic review and meta-analysis", Sah et al.
-    - 0.533  # 0-4
-    - 0.533  # 5-9
-    - 0.533  # 10-14
-    - 0.533  # 15-19
-    - 0.679  # 20-24
-    - 0.679  # 25-29
-    - 0.679  # 30-34
-    - 0.679  # 35-39
-    - 0.679  # 40-44
-    - 0.679  # 45-49
-    - 0.679  # 50-55
-    - 0.679  # 55-59
-    - 0.803  # 60-64
-    - 0.803  # 65-69
-    - 0.803  # 70-74
-    - 0.803  # 75+
+    0: 0.533
+    5: 0.533
+    10: 0.533
+    15: 0.533
+    20: 0.679
+    25: 0.679
+    30: 0.679
+    35: 0.679
+    40: 0.679
+    45: 0.679
+    50: 0.679
+    55: 0.679
+    60: 0.803
+    65: 0.803
+    70: 0.803
+    75: 0.803
 
   prop_hospital:  # https://dx.doi.org/10.2139/ssrn.4025932, Nyberg, 2022
     values:

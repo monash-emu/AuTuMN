@@ -276,22 +276,19 @@ class AgeStratification(BaseModel):
     Parameters used in age based stratification.
     """
 
-    susceptibility: Optional[List[float]]  # Susceptibility to infection by age
-    prop_symptomatic: Optional[List[float]]
+    susceptibility: Optional[Dict[int, float]]
+    prop_symptomatic: Optional[Dict[int, float]]
     prop_hospital: AgeSpecificProps
     ifr: AgeSpecificProps
 
-    @root_validator(pre=True, allow_reuse=True)
-    def check_age_param_lengths(cls, values):
-        for param_name in ("susceptibility", "prop_symptomatic"):
-            param = values[param_name]
-            if param:
-                msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"
-                assert len(values[param_name]) == 16, msg
-        return values
-
-    check_suscept = validator("susceptibility", allow_reuse=True)(get_check_all_non_neg_if_present("susceptibility"))
-    check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_prop("prop_symptomatic"))
+    # @root_validator(pre=True, allow_reuse=True)
+    # def check_age_param_lengths(cls, values):
+    #     for param_name in ("susceptibility",):
+    #         param = values[param_name]
+    #         if param:
+    #             msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"
+    #             assert len(values[param_name]) == 16, msg
+    #     return values
 
 
 class ImmunityRiskReduction(BaseModel):

@@ -39,7 +39,7 @@ def get_relevant_indices(
 
 
 def convert_param_agegroups(
-        source_parameters: List[float],
+        source_parameters: Dict[str, float],
         iso3: str,
         region: Union[None, str],
         modelled_age_groups: List[int],
@@ -59,6 +59,8 @@ def convert_param_agegroups(
         The list of the processed parameters in the format needed by the model
 
     """
+
+    source_parameters = list(source_parameters.values())
 
     # FIXME: This function should actually take dictionaries directly, rather than having to convert them first
 

@@ -200,7 +200,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # FIXME: Need to think through if this is going to really be the IFR or more the CFR
 
-        ifr_request = list(ifr_prop_requests.values.values())
+        ifr_request = ifr_prop_requests.values
         ifr_prop = convert_param_agegroups(ifr_request, iso3, region, age_groups, is_80_plus=True)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
@@ -288,7 +288,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
-        hosp_request = list(hosp_prop_requests.values.values())
+        hosp_request = hosp_prop_requests.values
         hosp_props = convert_param_agegroups(hosp_request, iso3, region, age_groups, is_80_plus=True)
 
         # Get the adjustments to the hospitalisation rates according to immunity status

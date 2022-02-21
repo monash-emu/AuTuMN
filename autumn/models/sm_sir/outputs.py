@@ -10,11 +10,24 @@ from autumn.tools.utils.utils import apply_odds_ratio_to_props, weighted_average
 
 def get_immunity_hospitalisation_modifiers():
     """
-    Work out how much we are going to adjust the age-specific hospitalisation rates by to account for pre-existing
-    immunity protection against hospitalisation.
+    Work out how much we are going to adjust the age-specific hospitalisation and mortality rates by to account for pre-
+    existing immunity protection against hospitalisation and mortality.
+    The aim is to get the final parameters to come out so that the weighted average effect comes out to that reported by
+    Nyberg et al., while also acknowledging that there is vaccine-related immunity present in the population.
+    To do this, we estimate the proportion of the population in each of the three modelled immunity categories:
+        - The "none" immunity stratum - representing the entirely unvaccinated
+        - The "low" immunity stratum - representing people who have received two doses of an effective vaccine
+            (i.e. the ones used in the UK: ChAdOx, BNT162b2, mRNA1273)
+        - The "high" immunity stratum - representing people who have received their third dose of an mRNA vaccine
+    The calculation proceeds by working out the proportion of the UK population who would have been in each of these
+    three categories at the mid-point of the Nyberg study and using the estimated effect of the vaccine-related immunity
+    around then for each of these three groups.
+    We then work out the hospitalisation and mortality effect for each of these three groups that would be needed to
+    make the weighted average of the hospitalisation proportions come out to the original parameter values (and check
+    that this is indeed the case).
 
     Returns:
-        The multipliers for the hospitalisation proportions for each of the immunity strata
+        The multipliers for the age-specific proportions for each of the immunity strata
 
     """
 
@@ -40,24 +53,20 @@ def get_immunity_hospitalisation_modifiers():
         ImmunityStratum.LOW: 0.5,
         ImmunityStratum.HIGH: 0.85,
     }
-    msg = "Source VE estimates not proportions"
+    msg = "Source protection estimates not proportions"
     assert all([0. <= val <= 1. for val in immunity_protection.values()]), msg
     immunity_effect = {k: 1. - v for k, v in immunity_protection.items()}
 
     # Work out the adjustments based on the protection provided by immunity
     effective_weights = [immunity_effect[stratum] * source_immune_props[stratum] for stratum in IMMUNITY_STRATA]
     no_immunity_modifier = 1. / (sum(effective_weights))
-    immune_hosp_modifiers = {
-        ImmunityStratum.NONE: no_immunity_modifier,
-        ImmunityStratum.LOW: no_immunity_modifier * immunity_effect[ImmunityStratum.LOW],
-        ImmunityStratum.HIGH: no_immunity_modifier * immunity_effect[ImmunityStratum.HIGH],
-    }
+    immune_modifiers = {strat: no_immunity_modifier * immunity_effect[strat] for strat in IMMUNITY_STRATA}
 
     # Unnecessary check that the weighted average we have calculated does come out to one
     msg = "Values used don't appear to create a weighted average with weights summing to one, something went wrong"
-    assert weighted_average(immune_hosp_modifiers, source_immune_props) == 1., msg
+    assert weighted_average(immune_modifiers, source_immune_props) == 1., msg
 
-    return immune_hosp_modifiers
+    return immune_modifiers
 
 
 class SmSirOutputsBuilder(OutputsBuilder):

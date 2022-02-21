@@ -49,10 +49,6 @@ immunity_stratification:
   prop_high_among_immune: 0.
   infection_risk_reduction:
     low: 0.4
-  death_risk_reduction:
-    none: 0.92  # Again, using to represent under-reporting
-    low: 0.92
-    high: 0.92
 
 voc_emergence:
   wild_type:

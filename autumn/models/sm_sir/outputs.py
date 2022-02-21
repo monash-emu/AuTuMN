@@ -35,9 +35,7 @@ def get_immunity_hospitalisation_modifiers(
 
     """
 
-    # msg = "Source protection estimates not proportions"
-    # assert all([0. <= val <= 1. for val in immunity_protection.values()]), msg
-
+    # Take the complement
     immunity_effect = {k: 1. - v for k, v in source_pop_protection.items()}
 
     # Work out the adjustments based on the protection provided by immunity
@@ -249,7 +247,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
     def request_hospitalisations(
             self,
             prop_hospital_among_sympt,
-            hospital_prop_multiplier: float,
             time_from_onset_to_hospitalisation: TimeDistribution,
             hospital_stay_duration: TimeDistribution,
             model_times: np.ndarray,
@@ -264,7 +261,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         Args:
             prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
-            hospital_prop_multiplier: Multiplier applied as an odds ratio adjustment
             time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
             hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             model_times: The model evaluation times
@@ -288,7 +284,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for immunity_stratum in IMMUNITY_STRATA:
             multiplier = immune_hosp_modifiers[immunity_stratum]
             adj_prop = [i_prop * multiplier for i_prop in hosp_props]
-            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, hospital_prop_multiplier)
+            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(
+                adj_prop,
+                prop_hospital_among_sympt.multiplier
+            )
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)

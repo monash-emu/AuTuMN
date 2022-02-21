@@ -249,11 +249,12 @@ class Mobility(BaseModel):
         return val
 
 
-class PropHospital(BaseModel):
+class AgeSpecificProps(BaseModel):
 
     values: Dict[int, float]
     source_immunity_distribution: Dict[str, float]
     source_immunity_protection: Dict[str, float]
+    multiplier: float
 
     @validator("source_immunity_distribution", allow_reuse=True)
     def check_source_dist(val):
@@ -267,6 +268,8 @@ class PropHospital(BaseModel):
         assert all([0. <= val <= 1. for val in protection_params.values()]) == 1., msg
         return protection_params
 
+    check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
+
 
 class AgeStratification(BaseModel):
     """
@@ -275,8 +278,8 @@ class AgeStratification(BaseModel):
 
     susceptibility: Optional[List[float]]  # Susceptibility to infection by age
     prop_symptomatic: Optional[List[float]]
-    prop_hospital: PropHospital
-    ifr: List[float]
+    prop_hospital: AgeSpecificProps
+    ifr: AgeSpecificProps
 
     @root_validator(pre=True, allow_reuse=True)
     def check_age_param_lengths(cls, values):
@@ -289,7 +292,6 @@ class AgeStratification(BaseModel):
 
     check_suscept = validator("susceptibility", allow_reuse=True)(get_check_all_non_neg_if_present("susceptibility"))
     check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_prop("prop_symptomatic"))
-    check_ifr_props = validator("ifr", allow_reuse=True)(get_check_all_prop("ifr"))
 
 
 class ImmunityRiskReduction(BaseModel):
@@ -439,7 +441,6 @@ class Parameters:
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay
     prop_icu_among_hospitalised: float
-    hospital_prop_multiplier: float
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification

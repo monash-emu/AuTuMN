@@ -152,10 +152,6 @@ immunity_stratification:
     none: 0.
     low: 0.
     high: 0.6
-  hospital_risk_reduction:  # based on UKHSA report (13/11/22)
-    none: 0.
-    low: 0.5
-    high: 0.9
   death_risk_reduction: # FIXME check with Dave
     none: 0.
     low: 0.2

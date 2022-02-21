@@ -249,6 +249,25 @@ class Mobility(BaseModel):
         return val
 
 
+class PropHospital(BaseModel):
+
+    values: Dict[int, float]
+    source_immunity_distribution: Dict[str, float]
+    source_immunity_protection: Dict[str, float]
+
+    @validator("source_immunity_distribution", allow_reuse=True)
+    def check_source_dist(val):
+        msg = "Proportions by immunity status in source for parameters does not sum to one"
+        assert sum(val.values()) == 1., msg
+        return val
+
+    @validator("source_immunity_protection", allow_reuse=True)
+    def check_source_dist(protection_params):
+        msg = "Source protection estimates not proportions"
+        assert all([0. <= val <= 1. for val in protection_params.values()]) == 1., msg
+        return protection_params
+
+
 class AgeStratification(BaseModel):
     """
     Parameters used in age based stratification.
@@ -256,7 +275,7 @@ class AgeStratification(BaseModel):
 
     susceptibility: Optional[List[float]]  # Susceptibility to infection by age
     prop_symptomatic: Optional[List[float]]
-    prop_hospital: List[float]
+    prop_hospital: PropHospital
     ifr: List[float]
 
     @root_validator(pre=True, allow_reuse=True)
@@ -270,7 +289,6 @@ class AgeStratification(BaseModel):
 
     check_suscept = validator("susceptibility", allow_reuse=True)(get_check_all_non_neg_if_present("susceptibility"))
     check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_prop("prop_symptomatic"))
-    check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_prop("prop_hospital"))
     check_ifr_props = validator("ifr", allow_reuse=True)(get_check_all_prop("ifr"))
 
 

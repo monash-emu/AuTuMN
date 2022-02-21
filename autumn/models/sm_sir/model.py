@@ -247,7 +247,7 @@ def get_smsir_outputs_builder(
         age_groups,
         clinical_strata,
         strain_strata,
-        hosp_props,
+        hosp_props_params,
         voc_params,
         time_to_event_params,
         hosp_params,
@@ -256,6 +256,8 @@ def get_smsir_outputs_builder(
         ifr_props,
         immunity_death_reduction,
         random_process,
+        iso3,
+        region,
 ):
 
     model_times = model.times
@@ -271,7 +273,7 @@ def get_smsir_outputs_builder(
     )
 
     outputs_builder.request_hospitalisations(
-        hosp_props,
+        hosp_props_params,
         hosp_multiplier,
         time_to_event_params.hospitalisation,
         hosp_params.hospital_all,
@@ -279,6 +281,8 @@ def get_smsir_outputs_builder(
         age_groups,
         strain_strata,
         voc_params,
+        iso3,
+        region,
     )
     outputs_builder.request_icu_outputs(
         icu_risk,
@@ -322,8 +326,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     susc_props = convert_param_agegroups(suscept_req, country.iso3, pop.region, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(sympt_req, country.iso3, pop.region, age_groups) if sympt_req else None
-    hosp_request = age_strat_params.prop_hospital
-    hosp_props = convert_param_agegroups(hosp_request, country.iso3, pop.region, age_groups, is_80_plus=True)
     ifr_request = age_strat_params.ifr
     ifr_props = convert_param_agegroups(ifr_request, country.iso3, pop.region, age_groups, is_80_plus=True)
 
@@ -502,7 +504,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         age_groups,
         clinical_strata,
         strain_strata,
-        hosp_props,
+        params.age_stratification.prop_hospital,
         params.voc_emergence,
         params.time_from_onset_to_event,
         params.hospital_stay,
@@ -511,6 +513,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         ifr_props,
         params.immunity_stratification.death_risk_reduction,
         bool(params.activate_random_process),
+        params.country.iso3,
+        params.population.region,
     )
 
     return model

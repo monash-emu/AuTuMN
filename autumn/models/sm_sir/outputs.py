@@ -6,9 +6,13 @@ from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction, VocComponent
 from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, ClinicalStratum
 from autumn.tools.utils.utils import apply_odds_ratio_to_props, weighted_average
+from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
 
 
-def get_immunity_hospitalisation_modifiers():
+def get_immunity_hospitalisation_modifiers(
+        source_pop_immunity_dist: Dict[str, float],
+        source_pop_protection: Dict[str, float],
+):
     """
     Work out how much we are going to adjust the age-specific hospitalisation and mortality rates by to account for pre-
     existing immunity protection against hospitalisation and mortality.
@@ -31,40 +35,19 @@ def get_immunity_hospitalisation_modifiers():
 
     """
 
-    # The proportion of the study population in the paper being used that has "none", "low" and "high" immunity
-    # Proportions at study mid-point reported 16th December in:
-    # https://ourworldindata.org/grapher/share-people-fully-vaccinated-covid?country=~GBR
-    # where "none" is complement of those fully vaccinated, and "high" is those boosted by the same date
-    source_immune_props = {
-        ImmunityStratum.NONE: 0.312,
-        ImmunityStratum.LOW: 0.302,
-        ImmunityStratum.HIGH: 0.386,
-    }
-    msg = "Proportions by immunity status in source for parameters does not sum to one"
-    assert sum(source_immune_props.values()) == 1., msg
+    # msg = "Source protection estimates not proportions"
+    # assert all([0. <= val <= 1. for val in immunity_protection.values()]), msg
 
-    # The protection provided by each of the three immunity categories
-    # Approximately the values reported in Figure 2 of:
-    # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1054071/
-    # vaccine-surveillance-report-week-6.pdf
-    # 85% protection once boosted, 50% otherwise
-    immunity_protection = {
-        ImmunityStratum.NONE: 0.,
-        ImmunityStratum.LOW: 0.5,
-        ImmunityStratum.HIGH: 0.85,
-    }
-    msg = "Source protection estimates not proportions"
-    assert all([0. <= val <= 1. for val in immunity_protection.values()]), msg
-    immunity_effect = {k: 1. - v for k, v in immunity_protection.items()}
+    immunity_effect = {k: 1. - v for k, v in source_pop_protection.items()}
 
     # Work out the adjustments based on the protection provided by immunity
-    effective_weights = [immunity_effect[stratum] * source_immune_props[stratum] for stratum in IMMUNITY_STRATA]
+    effective_weights = [immunity_effect[stratum] * source_pop_immunity_dist[stratum] for stratum in IMMUNITY_STRATA]
     no_immunity_modifier = 1. / (sum(effective_weights))
     immune_modifiers = {strat: no_immunity_modifier * immunity_effect[strat] for strat in IMMUNITY_STRATA}
 
     # Unnecessary check that the weighted average we have calculated does come out to one
     msg = "Values used don't appear to create a weighted average with weights summing to one, something went wrong"
-    assert weighted_average(immune_modifiers, source_immune_props) == 1., msg
+    assert weighted_average(immune_modifiers, source_pop_immunity_dist) == 1., msg
 
     return immune_modifiers
 
@@ -265,7 +248,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_hospitalisations(
             self,
-            prop_hospital_among_sympt: List[float],
+            prop_hospital_among_sympt,
             hospital_prop_multiplier: float,
             time_from_onset_to_hospitalisation: TimeDistribution,
             hospital_stay_duration: TimeDistribution,
@@ -273,6 +256,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
             age_groups: List[int],
             strain_strata: List[str],
             voc_params: Optional[Dict[str, VocComponent]],
+            iso3,
+            region,
     ):
         """
         Request hospitalisation-related outputs.
@@ -289,14 +274,20 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
+        hosp_request = list(prop_hospital_among_sympt.values.values())
+        hosp_props = convert_param_agegroups(hosp_request, iso3, region, age_groups, is_80_plus=True)
+
         # Get the adjustments to the hospitalisation rates according to immunity status
-        immune_hosp_modifiers = get_immunity_hospitalisation_modifiers()
+        immune_hosp_modifiers = get_immunity_hospitalisation_modifiers(
+            prop_hospital_among_sympt.source_immunity_distribution,
+            prop_hospital_among_sympt.source_immunity_protection,
+        )
 
         # Collate age- and immunity-structured hospitalisation rates into a single dictionary
         adj_prop_hosp_among_sympt = {}
-        for immunity_stratum in ["none", "low", "high"]:
+        for immunity_stratum in IMMUNITY_STRATA:
             multiplier = immune_hosp_modifiers[immunity_stratum]
-            adj_prop = [i_prop * multiplier for i_prop in prop_hospital_among_sympt]
+            adj_prop = [i_prop * multiplier for i_prop in hosp_props]
             adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, hospital_prop_multiplier)
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times

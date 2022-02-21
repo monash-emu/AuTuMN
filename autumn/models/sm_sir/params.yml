@@ -83,23 +83,39 @@ age_stratification:
     - 0.803  # 75+
 
   prop_hospital:  # https://dx.doi.org/10.2139/ssrn.4025932, Nyberg, 2022
-    - 0.0046  # 0-4
-    - 0.0046  # 5-9
-    - 0.0033  # 10-14
-    - 0.0033  # 15-19
-    - 0.0133  # 20-24
-    - 0.0133  # 25-29
-    - 0.0150  # 30-34
-    - 0.0150  # 35-39
-    - 0.0140  # 40-44
-    - 0.0140  # 45-49
-    - 0.0238  # 50-54
-    - 0.0238  # 55-59
-    - 0.0529  # 60-64
-    - 0.0529  # 65-69
-    - 0.1340  # 70-74
-    - 0.1340  # 75-79
-    - 0.2540  # 80+
+    values:
+      0: 0.0046
+      5: 0.0046
+      10: 0.0033
+      15: 0.0033
+      20: 0.0133
+      25: 0.0133
+      30: 0.0150
+      35: 0.0150
+      40: 0.0140
+      45: 0.0140
+      50: 0.0238
+      55: 0.0238
+      60: 0.0529
+      65: 0.0529
+      70: 0.1340
+      75: 0.1340
+      80: 0.2540
+    # Proportions at study mid-point reported 16th December in:
+    # https://ourworldindata.org/grapher/share-people-fully-vaccinated-covid?country=~GBR
+    # where "none" is complement of those fully vaccinated, and "high" is those boosted by the same date
+    source_immunity_distribution:
+      none: 0.312
+      low: 0.302
+      high: 0.386
+    # Approximately the values reported in Figure 2 of:
+    # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1054071/
+    # vaccine-surveillance-report-week-6.pdf
+    # 85% protection once boosted, 50% otherwise
+    source_immunity_protection:
+      none: 0.
+      low: 0.5
+      high: 0.85
 
   ifr:
     - 0.00003 # 0-4

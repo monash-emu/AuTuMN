@@ -17,8 +17,8 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "1jipxdDihXbGf_cO-iHTfAWZ1LasKm2WS"  # sheet 05 daily report
-PHL_fassster_link = "1lFyc7LO42qtiFq8ZQvQdDtjIzHcZbYzu"
+PHL_doh_link = "1B2TlNsz5XfxLvl9-KwGdU8uDDppotK0H"  # sheet 05 daily report
+PHL_fassster_link = "1x3gQBn-9BMDhH-6HD1caLreV-dAJNY9Y"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
@@ -75,7 +75,7 @@ def fassster_data_filepath():
     fassster_filename = [
         filename
         for filename in os.listdir(phl_inputs_dir)
-        if filename.startswith("ConfirmedCases_Final_") or filename.startswith("2022")
+        if filename.startswith("ConfirmedCases_Final_") or filename.startswith("PHL_ConfirmedCases")
     ]
     fassster_filename = os.path.join(phl_inputs_dir, fassster_filename[0])
     return fassster_filename

@@ -190,20 +190,17 @@ class SmSirOutputsBuilder(OutputsBuilder):
         ifr_prop = convert_param_agegroups(iso3, region, ifr_request, age_groups)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
-        immune_hosp_modifiers = get_immunity_prop_modifiers(
-            ifr_prop_requests.source_immunity_distribution,
-            ifr_prop_requests.source_immunity_protection,
-        )
+        source_immunity_dist = ifr_prop_requests.source_immunity_distribution
+        source_immunity_protection = ifr_prop_requests.source_immunity_protection
+        immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
         # Collate age- and immunity-structured IFRs into a single dictionary
         adj_prop_hosp_among_sympt = {}
         for immunity_stratum in IMMUNITY_STRATA:
             multiplier = immune_hosp_modifiers[immunity_stratum]
             adj_prop = [i_prop * multiplier for i_prop in ifr_prop]
-            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(
-                adj_prop,
-                ifr_prop_requests.multiplier
-            )
+            ifr_multiplier = ifr_prop_requests.multiplier
+            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, ifr_multiplier)
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
@@ -211,30 +208,30 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Request infection deaths for each age group
         infection_deaths_sources = []
         for i_age, agegroup in enumerate(age_groups):
+            agegroup_string = f"Xagegroup_{agegroup}"
+
             for immunity_stratum in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_stratum}"
+
                 for strain in strain_strata:
+                    strain_string = f"Xstrain_{strain}" if strain else ""
 
                     # Find the strata we are working with and work out the strings to refer to
-                    agegroup_string = f"Xagegroup_{agegroup}"
-                    immunity_string = f"Ximmunity_{immunity_stratum}"
-                    strain_string = f"Xstrain_{strain}" if strain else ""
-                    strata_string = agegroup_string + immunity_string + strain_string
-                    output_name = "infection_deaths" + strata_string
+                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+                    output_name = f"infection_deaths{strata_string}"
                     infection_deaths_sources.append(output_name)
-                    incidence_name = "incidence_sympt" + strata_string
 
                     # Calculate the multiplier based on age, immunity and strain
-                    immunity_risk_modifier = 1. - adj_prop_hosp_among_sympt[immunity_stratum][i_age]
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
-                    death_risk = ifr_prop[i_age] * immunity_risk_modifier * strain_risk_modifier
+                    death_risk = adj_prop_hosp_among_sympt[immunity_stratum][i_age] * strain_risk_modifier
 
-                    # Get the infection deaths function
+                    # Get the infection deaths function for convolution
                     infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
 
                     # Request the output
                     self.model.request_function_output(
                         name=output_name,
-                        sources=[incidence_name],
+                        sources=[f"incidence_sympt{strata_string}"],
                         func=infection_deaths_func
                     )
 

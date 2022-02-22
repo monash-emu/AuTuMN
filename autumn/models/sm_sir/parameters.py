@@ -249,29 +249,46 @@ class Mobility(BaseModel):
         return val
 
 
+class AgeSpecificProps(BaseModel):
+
+    values: Dict[int, float]
+    source_immunity_distribution: Dict[str, float]
+    source_immunity_protection: Dict[str, float]
+    multiplier: float
+
+    @validator("source_immunity_distribution", allow_reuse=True)
+    def check_source_dist(val):
+        msg = "Proportions by immunity status in source for parameters does not sum to one"
+        assert sum(val.values()) == 1., msg
+        return val
+
+    @validator("source_immunity_protection", allow_reuse=True)
+    def check_source_dist(protection_params):
+        msg = "Source protection estimates not proportions"
+        assert all([0. <= val <= 1. for val in protection_params.values()]) == 1., msg
+        return protection_params
+
+    check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
+
+
 class AgeStratification(BaseModel):
     """
     Parameters used in age based stratification.
     """
 
-    susceptibility: Optional[List[float]]  # Susceptibility to infection by age
-    prop_symptomatic: Optional[List[float]]
-    prop_hospital: List[float]
-    ifr: List[float]
+    susceptibility: Optional[Dict[int, float]]
+    prop_symptomatic: Optional[Dict[int, float]]
+    prop_hospital: AgeSpecificProps
+    cfr: AgeSpecificProps
 
-    @root_validator(pre=True, allow_reuse=True)
-    def check_age_param_lengths(cls, values):
-        for param_name in ("susceptibility", "prop_symptomatic", "prop_hospital"):
-            param = values[param_name]
-            if param:
-                msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"
-                assert len(values[param_name]) == 16, msg
-        return values
-
-    check_suscept = validator("susceptibility", allow_reuse=True)(get_check_all_non_neg_if_present("susceptibility"))
-    check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_prop("prop_symptomatic"))
-    check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_prop("prop_hospital"))
-    check_ifr_props = validator("ifr", allow_reuse=True)(get_check_all_prop("ifr"))
+    # @root_validator(pre=True, allow_reuse=True)
+    # def check_age_param_lengths(cls, values):
+    #     for param_name in ("susceptibility",):
+    #         param = values[param_name]
+    #         if param:
+    #             msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"
+    #             assert len(values[param_name]) == 16, msg
+    #     return values
 
 
 class ImmunityRiskReduction(BaseModel):
@@ -288,8 +305,6 @@ class ImmunityStratification(BaseModel):
     prop_immune: float
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
-    hospital_risk_reduction: ImmunityRiskReduction
-    death_risk_reduction: ImmunityRiskReduction
 
     check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
     check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(get_check_prop("prop_high_among_immune"))
@@ -422,7 +437,6 @@ class Parameters:
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay
     prop_icu_among_hospitalised: float
-    hospital_prop_multiplier: float
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification

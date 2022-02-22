@@ -192,12 +192,12 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Get the adjustments to the hospitalisation rates according to immunity status
         source_immunity_dist = ifr_prop_requests.source_immunity_distribution
         source_immunity_protection = ifr_prop_requests.source_immunity_protection
-        immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
+        immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
         # Collate age- and immunity-structured IFRs into a single dictionary
         adj_prop_hosp_among_sympt = {}
         for immunity_stratum in IMMUNITY_STRATA:
-            multiplier = immune_hosp_modifiers[immunity_stratum]
+            multiplier = immune_death_modifiers[immunity_stratum]
             adj_prop = [i_prop * multiplier for i_prop in ifr_prop]
             ifr_multiplier = ifr_prop_requests.multiplier
             adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, ifr_multiplier)
@@ -273,20 +273,17 @@ class SmSirOutputsBuilder(OutputsBuilder):
         hosp_props = convert_param_agegroups(iso3, region, hosp_request, age_groups)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
-        immune_hosp_modifiers = get_immunity_prop_modifiers(
-            hosp_prop_requests.source_immunity_distribution,
-            hosp_prop_requests.source_immunity_protection,
-        )
+        source_immunity_dist = hosp_prop_requests.source_immunity_distribution
+        source_immunity_protection = hosp_prop_requests.source_immunity_protection
+        immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
         # Collate age- and immunity-structured hospitalisation rates into a single dictionary
         adj_prop_hosp_among_sympt = {}
         for immunity_stratum in IMMUNITY_STRATA:
             multiplier = immune_hosp_modifiers[immunity_stratum]
             adj_prop = [i_prop * multiplier for i_prop in hosp_props]
-            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(
-                adj_prop,
-                hosp_prop_requests.multiplier
-            )
+            hosp_multiplier = hosp_prop_requests.multiplier
+            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, hosp_multiplier)
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
@@ -294,17 +291,18 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Request hospital admissions for each age group
         hospital_admissions_sources = []
         for i_age, agegroup in enumerate(age_groups):
+            agegroup_string = f"Xagegroup_{agegroup}"
+
             for immunity_stratum in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_stratum}"
+
                 for strain in strain_strata:
+                    strain_string = f"Xstrain_{strain}" if strain else ""
 
                     # Find the strata we are working with and work out the strings to refer to
-                    agegroup_string = f"Xagegroup_{agegroup}"
-                    immunity_string = f"Ximmunity_{immunity_stratum}"
-                    strain_string = f"Xstrain_{strain}" if strain else ""
-                    strata_string = agegroup_string + immunity_string + strain_string
-                    output_name = "hospital_admissions" + strata_string
+                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+                    output_name = f"hospital_admissions{strata_string}"
                     hospital_admissions_sources.append(output_name)
-                    incidence_name = "incidence_sympt" + strata_string
 
                     # Calculate the multiplier based on age, immunity and strain
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
@@ -316,7 +314,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     # Request the output
                     self.model.request_function_output(
                         name=output_name,
-                        sources=[incidence_name],
+                        sources=[f"incidence_sympt{strata_string}"],
                         func=hospital_admissions_func
                     )
 

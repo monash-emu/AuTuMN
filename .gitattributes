@@ -3,7 +3,7 @@
 *.CSV filter=lfs diff=lfs merge=lfs -text
 *.zip filter=lfs diff=lfs merge=lfs -text
 data/inputs/inputs.encrypted.db filter=lfs diff=lfs merge=lfs -text
-
 *.ipynb filter=nbstripout
 *.zpln filter=nbstripout
 *.ipynb diff=ipynb
+movement-range*.txt filter=lfs diff=lfs merge=lfs -text

@@ -194,14 +194,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
         source_immunity_protection = cfr_prop_requests.source_immunity_protection
         immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
-        # Collate age- and immunity-structured CFRs into a single dictionary
-        adj_prop_hosp_among_sympt = {}
-        for immunity_stratum in IMMUNITY_STRATA:
-            multiplier = immune_death_modifiers[immunity_stratum]
-            adj_prop = [i_prop * multiplier for i_prop in cfr_prop]
-            cfr_multiplier = cfr_prop_requests.multiplier
-            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, cfr_multiplier)
-
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
 
@@ -213,6 +205,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
+                # Adjust CFR proportions for immunity
+                adj_prop = [i_prop * immune_death_modifiers[immunity_stratum] for i_prop in cfr_prop]
+                adj_prop_hosp_among_sympt = apply_odds_ratio_to_props(adj_prop, cfr_prop_requests.multiplier)
+
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
 
@@ -223,7 +219,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
                     # Calculate the multiplier based on age, immunity and strain
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
-                    death_risk = adj_prop_hosp_among_sympt[immunity_stratum][i_age] * strain_risk_modifier
+                    death_risk = adj_prop_hosp_among_sympt[i_age] * strain_risk_modifier
 
                     # Get the infection deaths function for convolution
                     infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
@@ -277,14 +273,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
         source_immunity_protection = hosp_prop_requests.source_immunity_protection
         immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
-        # Collate age- and immunity-structured hospitalisation rates into a single dictionary
-        adj_prop_hosp_among_sympt = {}
-        for immunity_stratum in IMMUNITY_STRATA:
-            multiplier = immune_hosp_modifiers[immunity_stratum]
-            adj_prop = [i_prop * multiplier for i_prop in hosp_props]
-            hosp_multiplier = hosp_prop_requests.multiplier
-            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, hosp_multiplier)
-
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
 
@@ -293,8 +281,12 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for i_age, agegroup in enumerate(age_groups):
             agegroup_string = f"Xagegroup_{agegroup}"
 
-            for immunity_stratum in IMMUNITY_STRATA:
-                immunity_string = f"Ximmunity_{immunity_stratum}"
+            for immunity_strat in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_strat}"
+
+                # Adjust the hospitalisation proportions for immunity
+                adj_hosp_props = [i_prop * immune_hosp_modifiers[immunity_strat] for i_prop in hosp_props]
+                adj_hosp_props = apply_odds_ratio_to_props(adj_hosp_props, hosp_prop_requests.multiplier)
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -306,7 +298,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
                     # Calculate the multiplier based on age, immunity and strain
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
-                    hospital_risk = adj_prop_hosp_among_sympt[immunity_stratum][i_age] * strain_risk_modifier
+                    hospital_risk = adj_hosp_props[i_age] * strain_risk_modifier
 
                     # Get the hospitalisation function
                     hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)

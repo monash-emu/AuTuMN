@@ -253,7 +253,7 @@ def get_smsir_outputs_builder(
         hosp_stay,
         icu_risk,
         time_to_event_params,
-        ifr_props_params,
+        cfr_props_params,
         voc_params,
         random_process,
 ):
@@ -307,7 +307,7 @@ def get_smsir_outputs_builder(
         strain_strata,
         iso3,
         region,
-        ifr_props_params,
+        cfr_props_params,
         time_to_event_params.death,
         voc_params,
     )
@@ -520,7 +520,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.hospital_stay,
         params.prop_icu_among_hospitalised,
         params.time_from_onset_to_event,
-        params.age_stratification.ifr,
+        params.age_stratification.cfr,
         params.voc_emergence,
         bool(params.activate_random_process),
     )

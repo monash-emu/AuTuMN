@@ -167,7 +167,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             strain_strata: List[str],
             iso3: str,
             region: Union[str, None],
-            ifr_prop_requests: AgeSpecificProps,
+            cfr_prop_requests: AgeSpecificProps,
             time_from_onset_to_death: TimeDistribution,
             voc_params: Optional[Dict[str, VocComponent]],
     ):
@@ -180,27 +180,27 @@ class SmSirOutputsBuilder(OutputsBuilder):
             strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
             iso3: The ISO3 code of the country being simulated
             region: The sub-region being simulated, if any
-            ifr_prop_requests: All the IFR-related requests, including the proportions themselves
+            cfr_prop_requests: All the CFR-related requests, including the proportions themselves
             time_from_onset_to_death: Details of the statistical distribution for the time to death
             voc_params: The parameters pertaining to the VoCs being implemented in the model
 
         """
 
-        ifr_request = ifr_prop_requests.values
-        ifr_prop = convert_param_agegroups(iso3, region, ifr_request, age_groups)
+        cfr_request = cfr_prop_requests.values
+        cfr_prop = convert_param_agegroups(iso3, region, cfr_request, age_groups)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
-        source_immunity_dist = ifr_prop_requests.source_immunity_distribution
-        source_immunity_protection = ifr_prop_requests.source_immunity_protection
+        source_immunity_dist = cfr_prop_requests.source_immunity_distribution
+        source_immunity_protection = cfr_prop_requests.source_immunity_protection
         immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
-        # Collate age- and immunity-structured IFRs into a single dictionary
+        # Collate age- and immunity-structured CFRs into a single dictionary
         adj_prop_hosp_among_sympt = {}
         for immunity_stratum in IMMUNITY_STRATA:
             multiplier = immune_death_modifiers[immunity_stratum]
-            adj_prop = [i_prop * multiplier for i_prop in ifr_prop]
-            ifr_multiplier = ifr_prop_requests.multiplier
-            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, ifr_multiplier)
+            adj_prop = [i_prop * multiplier for i_prop in cfr_prop]
+            cfr_multiplier = cfr_prop_requests.multiplier
+            adj_prop_hosp_among_sympt[immunity_stratum] = apply_odds_ratio_to_props(adj_prop, cfr_multiplier)
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)

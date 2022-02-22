@@ -118,7 +118,7 @@ age_stratification:
       low: 0.5
       high: 0.85
 
-  ifr:
+  cfr:
     values:
       0:  0.00005
       5:  0.00005

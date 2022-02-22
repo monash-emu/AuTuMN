@@ -279,7 +279,7 @@ class AgeStratification(BaseModel):
     susceptibility: Optional[Dict[int, float]]
     prop_symptomatic: Optional[Dict[int, float]]
     prop_hospital: AgeSpecificProps
-    ifr: AgeSpecificProps
+    cfr: AgeSpecificProps
 
     # @root_validator(pre=True, allow_reuse=True)
     # def check_age_param_lengths(cls, values):

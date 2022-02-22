@@ -265,7 +265,21 @@ def get_smsir_outputs_builder(
 
     if is_undetected:
         outputs_builder.request_cdr()
-    outputs_builder.request_incidence(compartment_types, age_groups, clinical_strata, strain_strata)
+
+    # Determine what flow will be used to track disease incidence
+    if Compartment.INFECTIOUS_LATE in compartment_types:
+        incidence_flow = FlowName.WITHIN_INFECTIOUS
+    elif Compartment.LATENT in compartment_types:
+        incidence_flow = FlowName.PROGRESSION
+    else:
+        incidence_flow = FlowName.INFECTION
+    outputs_builder.request_incidence(
+        age_groups,
+        clinical_strata,
+        strain_strata,
+        incidence_flow
+    )
+
     outputs_builder.request_notifications(
         time_to_event_params.notification,
         model_times
@@ -290,7 +304,6 @@ def get_smsir_outputs_builder(
     outputs_builder.request_infection_deaths(
         model_times,
         age_groups,
-        clinical_strata,
         strain_strata,
         iso3,
         region,
@@ -453,7 +466,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
     else:
-        clinical_strata = None
+        clinical_strata = [""]
 
     """
     Apply strains stratification

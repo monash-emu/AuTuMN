@@ -75,6 +75,6 @@ def convert_param_agegroups(
         relevant_indices = relevant_source_indices[model_agegroup]
         weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
         values = {k: source_dict[k] for k in relevant_indices}
-        param_values.append(weighted_average(values, weights))
+        param_values.append(weighted_average(values, weights, rounding=None))
 
     return param_values

@@ -4,8 +4,9 @@ import pandas as pd
 
 from autumn.tools.db import Database
 from autumn.settings import INPUT_DATA_PATH
+from autumn.tools.utils.utils import create_date_index, COVID_BASE_DATETIME
 
-from .fetch import MOBILITY_CSV_PATH, VNM_CSV_PATH
+from .fetch import MOBILITY_CSV_PATH, VNM_CSV_PATH, FB_MOVEMENT_2021, FB_MOVEMENT_2022
 
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"
@@ -18,6 +19,7 @@ DHHS_LGA_TO_CLUSTER = os.path.join(
 DHHS_LGA_TO_HSP = os.path.join(INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv")
 
 MOBILITY_LGA_PATH = DHHS_LGA_TO_HSP  # Swap with DHHS_LGA_TO_CLUSTER to obtain previous mapping
+
 
 COUNTRY_NAME_ISO3_MAP = {
     "Bolivia": "BOL",
@@ -179,6 +181,14 @@ def preprocess_mobility(input_db: Database, country_df):
 
     mob_df = mob_df.sort_values(["iso3", "region", "date"])
     input_db.dump_df("mobility", mob_df)
+
+    # Facebook movement data
+    df = pd.concat(map(pd.read_csv, [FB_MOVEMENT_2021, FB_MOVEMENT_2022], "\t"))
+    iso_filter = {"AUS", "PHL", "MYS", "VNM", "LKA", "IDN", "MYN", "BGD"}
+    df = df[df["country"].isin(iso_filter)]
+    df = df.sort_values(["country", "ds", "polygon_id"]).reset_index(drop=True)
+    df = create_date_index(COVID_BASE_DATETIME, df, "ds")
+    input_db.dump_df("movement", df)
 
 
 def get_iso3(country_name: str, country_df):

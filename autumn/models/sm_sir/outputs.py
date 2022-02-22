@@ -227,32 +227,30 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for i_age, agegroup in enumerate(age_groups):
             for immunity_stratum in IMMUNITY_STRATA:
                 for strain in strain_strata:
-                    for clinical_stratum in clinical_strata:
 
-                        # Find the strata we are working with and work out the strings to refer to
-                        agegroup_string = f"Xagegroup_{agegroup}"
-                        immunity_string = f"Ximmunity_{immunity_stratum}"
-                        clinical_string = f"Xclinical_{clinical_stratum}" if clinical_stratum else ""
-                        strain_string = f"Xstrain_{strain}" if strain else ""
-                        strata_string = agegroup_string + immunity_string + clinical_string + strain_string
-                        output_name = "infection_deaths" + strata_string
-                        infection_deaths_sources.append(output_name)
-                        incidence_name = "incidence" + strata_string
+                    # Find the strata we are working with and work out the strings to refer to
+                    agegroup_string = f"Xagegroup_{agegroup}"
+                    immunity_string = f"Ximmunity_{immunity_stratum}"
+                    strain_string = f"Xstrain_{strain}" if strain else ""
+                    strata_string = agegroup_string + immunity_string + strain_string
+                    output_name = "infection_deaths" + strata_string
+                    infection_deaths_sources.append(output_name)
+                    incidence_name = "incidence_sympt" + strata_string
 
-                        # Calculate the multiplier based on age, immunity and strain
-                        immunity_risk_modifier = 1. - adj_prop_hosp_among_sympt[immunity_stratum][i_age]
-                        strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
-                        death_risk = ifr_prop[i_age] * immunity_risk_modifier * strain_risk_modifier
+                    # Calculate the multiplier based on age, immunity and strain
+                    immunity_risk_modifier = 1. - adj_prop_hosp_among_sympt[immunity_stratum][i_age]
+                    strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
+                    death_risk = ifr_prop[i_age] * immunity_risk_modifier * strain_risk_modifier
 
-                        # Get the infection deaths function
-                        infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
+                    # Get the infection deaths function
+                    infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
 
-                        # Request the output
-                        self.model.request_function_output(
-                            name=output_name,
-                            sources=[incidence_name],
-                            func=infection_deaths_func
-                        )
+                    # Request the output
+                    self.model.request_function_output(
+                        name=output_name,
+                        sources=[incidence_name],
+                        func=infection_deaths_func
+                    )
 
         # Request aggregated infection deaths
         self.model.request_aggregate_output(

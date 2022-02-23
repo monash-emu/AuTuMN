@@ -1,5 +1,5 @@
 import numpy as np
-
+import pandas as pd
 from autumn.tools.inputs.database import get_input_db
 from autumn.tools.inputs.demography.queries import get_population_by_agegroup
 from autumn.models.covid_19.parameters import TimeSeries
@@ -38,9 +38,20 @@ def get_lka_vac_coverage(age_group, age_pops=None, params=None):
     )
     df.dropna(how="any", inplace=True)
 
-    df.loc[df["date_index"] == 452, "cml_vac_dose_1"] = 0  # Have to make the first date zero!
     df.sort_values("date_index", inplace=True)
     df.reset_index(drop=True, inplace=True)
+
+    if df.cml_vac_dose_1[0] > 0:
+        additional_data = {'date_index':450, 'cml_vac_dose_1': 0}
+        df = df.append(additional_data, ignore_index= True)
+
+
+    print(df.head(5))
+    #df.loc[df["date_index"] == 452, "cml_vac_dose_1"] = 0  # Have to make the first date zero!
+    #print(df.loc[0,'date_index'])
+
+    #print(df.head(5))
+    #df.reset_index(drop=True, inplace=True)
 
     df["cml_coverage"] = df.cml_vac_dose_1 / vaccinated_population
 

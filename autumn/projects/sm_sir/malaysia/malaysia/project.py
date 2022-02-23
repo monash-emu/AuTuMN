@@ -28,9 +28,7 @@ targets = [
 priors = [
     UniformPrior("contact_rate", (0.1, 0.16)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.08, 0.18)),
-    UniformPrior("sojourns.latent.total_time", (1., 2.5)),
-    UniformPrior("voc_emergence.omicron.hosp_protection", (0.6, 0.95)),
-    UniformPrior("voc_emergence.omicron.death_protection", (0.5, 0.85))
+    UniformPrior("sojourns.latent.total_time", (1., 3.0)),
 ]
 
 calibration = Calibration(

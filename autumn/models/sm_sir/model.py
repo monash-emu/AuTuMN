@@ -507,13 +507,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Work out between-strain immunity-considerations
     """
 
+    # The multipliers calculated from the effect of immunity only
+    low_immune_effect = immunity_params.infection_risk_reduction.low
+    high_immune_effect = immunity_params.infection_risk_reduction.high
+
     # Adjust the infection rate for susceptibles - strains just relevant if the strain has non-strain immune escape
     for infecting_strain in strain_strata:
         dest_filter = None if infecting_strain == "" else {"strain": infecting_strain}
-
-        # The multipliers calculated from the effect of immunity only
-        low_immune_effect = immunity_params.infection_risk_reduction.low
-        high_immune_effect = immunity_params.infection_risk_reduction.high
 
         # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
         non_cross_effect = 1. if infecting_strain == "" else 1. - voc_params[infecting_strain].immune_escape
@@ -531,6 +531,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             non_strain_adjustment,
             dest_strata=dest_filter,
         )
+
+    for infecting_strain in strain_strata:
+        dest_filter = None if infecting_strain == "" else {"strain": infecting_strain}
+
+        # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
+        non_cross_effect = 1. if infecting_strain == "" else 1. - voc_params[infecting_strain].immune_escape
+        low_non_cross_multiplier = 1. - low_immune_effect * non_cross_effect
+        high_non_cross_multiplier = 1. - high_immune_effect * non_cross_effect
 
         # Considering people recovered from infection with each modelled strain
         for infected_strain in strain_strata:

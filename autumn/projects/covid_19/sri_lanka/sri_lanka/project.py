@@ -37,11 +37,11 @@ priors = [
     *COVID_GLOBAL_PRIORS,
     # Regional parameters
     UniformPrior("contact_rate", [0.03, 0.05]),
-    UniformPrior("infectious_seed", [450, 550]),
+    UniformPrior("infectious_seed", [450, 600]),
     # Detection
-    UniformPrior("infection_fatality.multiplier", [0.25, 0.75]),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.002, 0.0075]),
-    UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.85]),
+    UniformPrior("infection_fatality.multiplier", [0.1, 0.5]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0009, 0.005]),
+    UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.9]),
     TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier",
                 mean =0.5,
                 stdev=0.5,
@@ -49,7 +49,7 @@ priors = [
     ),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [410, 450]),
-    UniformPrior("voc_emergence.delta.start_time", [520, 575]),
+    UniformPrior("voc_emergence.delta.start_time", [515, 550]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.0]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 6.5]),
 ]

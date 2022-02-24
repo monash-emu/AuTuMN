@@ -37,7 +37,7 @@ priors = [
     *COVID_GLOBAL_PRIORS,
     # Regional parameters
     UniformPrior("contact_rate", [0.03, 0.05]),
-    UniformPrior("infectious_seed", [450, 600]),
+    UniformPrior("infectious_seed", [450, 520]),
     # Detection
     UniformPrior("infection_fatality.multiplier", [0.1, 0.5]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0009, 0.005]),
@@ -48,10 +48,10 @@ priors = [
                 trunc_range=[0.1, np.inf],
     ),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [410, 450]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [390, 430]),
     UniformPrior("voc_emergence.delta.start_time", [515, 550]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 3.0]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 6.5]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 8.5]),
 ]
 
 # Load proposal sds from yml file

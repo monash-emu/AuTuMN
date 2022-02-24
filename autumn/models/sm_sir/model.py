@@ -241,6 +241,8 @@ def add_active_transitions(
 
 
 def get_smsir_outputs_builder(
+        iso3,
+        region,
         model,
         compartment_types,
         is_undetected,
@@ -248,16 +250,14 @@ def get_smsir_outputs_builder(
         clinical_strata,
         strain_strata,
         hosp_props,
-        voc_params,
-        time_to_event_params,
-        hosp_params,
-        hosp_multiplier,
-        immunity_hosp_reduction,
+        hosp_stay,
         icu_risk,
-        ifr_props,
-        immunity_death_reduction,
+        time_to_event_params,
+        cfr_props_params,
+        voc_params,
         random_process,
 ):
+    # FIXME: This function needs a docstring
 
     model_times = model.times
 
@@ -265,36 +265,50 @@ def get_smsir_outputs_builder(
 
     if is_undetected:
         outputs_builder.request_cdr()
-    outputs_builder.request_incidence(compartment_types, age_groups, clinical_strata, strain_strata)
+
+    # Determine what flow will be used to track disease incidence
+    if Compartment.INFECTIOUS_LATE in compartment_types:
+        incidence_flow = FlowName.WITHIN_INFECTIOUS
+    elif Compartment.LATENT in compartment_types:
+        incidence_flow = FlowName.PROGRESSION
+    else:
+        incidence_flow = FlowName.INFECTION
+    outputs_builder.request_incidence(
+        age_groups,
+        clinical_strata,
+        strain_strata,
+        incidence_flow
+    )
+
     outputs_builder.request_notifications(
         time_to_event_params.notification,
         model_times
     )
     outputs_builder.request_hospitalisations(
-        hosp_props,
-        hosp_multiplier,
-        immunity_hosp_reduction,
-        time_to_event_params.hospitalisation,
-        hosp_params.hospital_all,
         model_times,
         age_groups,
         strain_strata,
+        iso3,
+        region,
+        hosp_props,
+        time_to_event_params.hospitalisation,
+        hosp_stay.hospital_all,
         voc_params,
     )
     outputs_builder.request_icu_outputs(
         icu_risk,
         time_to_event_params.icu_admission,
-        hosp_params.icu,
+        hosp_stay.icu,
         model_times,
     )
     outputs_builder.request_infection_deaths(
-        ifr_props,
-        immunity_death_reduction,
-        time_to_event_params.death,
         model_times,
         age_groups,
-        clinical_strata,
         strain_strata,
+        iso3,
+        region,
+        cfr_props_params,
+        time_to_event_params.death,
         voc_params,
     )
     outputs_builder.request_recovered_proportion(compartment_types)
@@ -319,14 +333,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
     age_groups = params.age_groups
     age_strat_params = params.age_stratification
+
     suscept_req = age_strat_params.susceptibility
-    susc_props = convert_param_agegroups(suscept_req, country.iso3, pop.region, age_groups) if suscept_req else None
+    susc_props = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
-    sympt_props = convert_param_agegroups(sympt_req, country.iso3, pop.region, age_groups) if sympt_req else None
-    hosp_request = age_strat_params.prop_hospital
-    hosp_props = convert_param_agegroups(hosp_request, country.iso3, pop.region, age_groups)
-    ifr_request = age_strat_params.ifr
-    ifr_props = convert_param_agegroups(ifr_request, country.iso3, pop.region, age_groups, is_ifr=True)
+    sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
 
     # Determine the compartments
     compartment_types = get_compartments(params.sojourns)
@@ -455,7 +466,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
     else:
-        clinical_strata = None
+        clinical_strata = [""]
 
     """
     Apply strains stratification
@@ -497,21 +508,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     get_smsir_outputs_builder(
+        params.country.iso3,
+        params.population.region,
         model,
         compartment_types,
         is_undetected,
         age_groups,
         clinical_strata,
         strain_strata,
-        hosp_props,
-        params.voc_emergence,
-        params.time_from_onset_to_event,
+        params.age_stratification.prop_hospital,
         params.hospital_stay,
-        params.hospital_prop_multiplier,
-        params.immunity_stratification.hospital_risk_reduction,
         params.prop_icu_among_hospitalised,
-        ifr_props,
-        params.immunity_stratification.death_risk_reduction,
+        params.time_from_onset_to_event,
+        params.age_stratification.cfr,
+        params.voc_emergence,
         bool(params.activate_random_process),
     )
 

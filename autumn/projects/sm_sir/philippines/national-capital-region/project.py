@@ -38,7 +38,6 @@ priors = [
         "immunity_stratification.prop_high_among_immune", [0.05, 0.40]
     ),  # Among people with at least one dose, 5% had received a booster by 29 Dec.
     # Hospital-related
-    UniformPrior("hospital_prop_multiplier", [0.2, 1.]),
     UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
     UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
     UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 5.0]),

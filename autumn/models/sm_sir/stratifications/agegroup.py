@@ -16,6 +16,7 @@ def get_agegroup_strat(
         compartments: List[str],
         is_dynamic_matrix: bool,
         age_susceptibility_values: Optional[List[float]],
+        reinfection_flows: List[str]
 ) -> Stratification:
     """
     Function to create the age group stratification object.
@@ -32,6 +33,7 @@ def get_agegroup_strat(
         compartments: All the model compartments
         is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
         age_susceptibility_values: Adjustments to infection rate based on the susceptibility of modelled age groups
+        reinfection_flows: The names of the (unstratified) reinfection flow or flows
 
     Returns:
         The age stratification summer object
@@ -54,5 +56,7 @@ def get_agegroup_strat(
     if age_suscept:
         age_suscept_adjs = {str(sus): Multiply(value) for sus, value in zip(params.age_groups, age_suscept)}
         age_strat.set_flow_adjustments(FlowName.INFECTION, age_suscept_adjs)
+        for flow in reinfection_flows:
+            age_strat.set_flow_adjustments(flow, age_suscept_adjs)
 
     return age_strat

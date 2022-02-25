@@ -436,7 +436,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     # Latency
-    infection_dest, infectious_entry_flow = add_latent_transitions(params.sojourns.latent, model)
+    infection_dest, infectious_entry_flow = add_latent_transitions(
+        params.sojourns.latent,
+        model
+    )
 
     # Transmission
     if params.activate_random_process:
@@ -464,13 +467,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Active transition flows
-    add_active_transitions(params.sojourns.active, model)
+    add_active_transitions(
+        params.sojourns.active,
+        model
+    )
 
     """
     Apply reinfection flows
     """
 
-    reinfection_flows = add_recovered_flows(params.sojourns.recovered, model, contact_rate, infection_dest)
+    reinfection_flows = add_recovered_flows(
+        params.sojourns.recovered,
+        model,
+        contact_rate,
+        infection_dest
+    )
 
     """
     Apply age stratification
@@ -490,6 +501,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         compartment_types,
         params.is_dynamic_mixing_matrix,
         susc_props,
+        reinfection_flows,
     )
     model.stratify_with(age_strat)
 

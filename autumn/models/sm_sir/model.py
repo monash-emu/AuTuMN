@@ -511,29 +511,32 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     immunity_params = params.immunity_stratification
 
     """
-    Work out between-strain immunity-considerations
+    Adjust infection of susceptibles for immunity stratum
     """
-
-    # The multipliers calculated from the effect of immunity only
-    low_immune_effect = immunity_params.infection_risk_reduction.low
-    high_immune_effect = immunity_params.infection_risk_reduction.high
 
     if voc_params:
         adjust_susceptible_infection_with_strains(
-            low_immune_effect,
-            high_immune_effect,
+            immunity_params.infection_risk_reduction.low,
+            immunity_params.infection_risk_reduction.high,
             immunity_strat,
             voc_params,
         )
     else:
         adjust_susceptible_infection_without_strains(
-            low_immune_effect,
-            high_immune_effect,
+            immunity_params.infection_risk_reduction.low,
+            immunity_params.infection_risk_reduction.high,
             immunity_strat,
         )
 
+    """
+    Work out between-strain immunity-considerations
+    """
+
     # FIXME: This isn't done yet - should be approached the same way as for the susceptible infection
 
+    # The multipliers calculated from the effect of immunity only
+    low_immune_effect = immunity_params.infection_risk_reduction.low
+    high_immune_effect = immunity_params.infection_risk_reduction.high
     for infecting_strain in strain_strata:
         dest_filter = None if infecting_strain == "" else {"strain": infecting_strain}
 

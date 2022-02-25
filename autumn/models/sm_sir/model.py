@@ -22,7 +22,11 @@ from .stratifications.immunity import (
 )
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import seed_vocs, apply_reinfection_flows
+from .strat_processing.strains import (
+    seed_vocs,
+    apply_reinfection_flows_without_strains,
+    apply_reinfection_flows_with_strains,
+)
 from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
 
 
@@ -481,8 +485,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply strains stratification
     """
 
+    voc_params = params.voc_emergence
     if params.voc_emergence:
-        voc_params = params.voc_emergence
 
         # Build and apply stratification
         strain_strat = get_strain_strat(voc_params, compartment_types)
@@ -498,23 +502,36 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply the reinfection flows (knowing the strain stratification)
     """
 
-    apply_reinfection_flows(model, compartment_types, infection_dest, params.voc_emergence, strain_strata, contact_rate)
+    if voc_params:
+        apply_reinfection_flows_with_strains(
+            model,
+            compartment_types,
+            infection_dest,
+            params.voc_emergence,
+            strain_strata,
+            contact_rate,
+        )
+    else:
+        apply_reinfection_flows_without_strains(
+            model,
+            compartment_types,
+            infection_dest,
+            contact_rate,
+        )
 
     """
-    Get basic immunity stratification
+    Immunity stratification
     """
 
+    # Get the immunity stratification
     immunity_strat = get_immunity_strat(
         compartment_types,
         params.immunity_stratification,
     )
 
-    voc_params = params.voc_emergence
     immunity_params = params.immunity_stratification
 
-    """
-    Adjust infection of susceptibles for immunity status
-    """
+    # Adjust infection of susceptibles for immunity status
 
     reinfection_flows = [FlowName.EARLY_REINFECTION]
     if Compartment.WANED in compartment_types:
@@ -554,10 +571,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             reinfection_flows,
         )
 
-    """
-    Work out between-strain immunity-considerations
-    """
-
+    # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
     """

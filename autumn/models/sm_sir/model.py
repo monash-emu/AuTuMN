@@ -420,14 +420,31 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Active transition flows
     add_active_transitions(params.sojourns.active, model)
 
-    # Add waning transition if waning being implemented
-    if "waned" in compartment_types:
+    """
+    Apply reinfection flows
+    """
+
+    model.add_infection_frequency_flow(
+        FlowName.EARLY_REINFECTION,
+        contact_rate,
+        Compartment.RECOVERED,
+        infection_dest,
+    )
+    reinfection_flows = [FlowName.EARLY_REINFECTION]
+    if Compartment.WANED in compartment_types:
+        model.add_infection_frequency_flow(
+            FlowName.LATE_REINFECTION,
+            contact_rate,
+            Compartment.WANED,
+            infection_dest,
+        )
         model.add_transition_flow(
             name=FlowName.WANING,
             fractional_rate=1. / params.sojourns.recovered.total_time,
             source=Compartment.RECOVERED,
             dest=Compartment.WANED,
         )
+        reinfection_flows.append(FlowName.LATE_REINFECTION)
 
     """
     Apply age stratification
@@ -476,26 +493,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
-
-    """
-    Apply the reinfection flows
-    """
-
-    model.add_infection_frequency_flow(
-        FlowName.EARLY_REINFECTION,
-        contact_rate,
-        Compartment.RECOVERED,
-        infection_dest,
-    )
-    reinfection_flows = [FlowName.EARLY_REINFECTION]
-    if Compartment.WANED in compartment_types:
-        model.add_infection_frequency_flow(
-            FlowName.LATE_REINFECTION,
-            contact_rate,
-            Compartment.WANED,
-            infection_dest,
-        )
-        reinfection_flows.append(FlowName.LATE_REINFECTION)
 
     """
     Apply strains stratification

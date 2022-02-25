@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict
 from summer import Stratification, Multiply
 
-from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName, Compartment
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 
 
@@ -23,7 +23,7 @@ def adjust_susceptible_infection_without_strains(
     low_non_cross_multiplier = 1. - low_immune_effect
     high_non_cross_multiplier = 1. - high_immune_effect
 
-    non_strain_adjustment = {
+    infection_adjustments = {
         ImmunityStratum.NONE: None,
         ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
         ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
@@ -31,7 +31,7 @@ def adjust_susceptible_infection_without_strains(
 
     immunity_strat.set_flow_adjustments(
         FlowName.INFECTION,
-        non_strain_adjustment,
+        infection_adjustments,
     )
 
 
@@ -58,7 +58,7 @@ def adjust_susceptible_infection_with_strains(
         low_non_cross_multiplier = 1. - low_immune_effect * strain_immunity_modifier
         high_non_cross_multiplier = 1. - high_immune_effect * strain_immunity_modifier
 
-        non_strain_adjustment = {
+        infection_adjustments = {
             ImmunityStratum.NONE: None,
             ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
             ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
@@ -66,9 +66,97 @@ def adjust_susceptible_infection_with_strains(
 
         immunity_strat.set_flow_adjustments(
             FlowName.INFECTION,
-            non_strain_adjustment,
+            infection_adjustments,
             dest_strata={"strain": infecting_strain},
         )
+
+
+def adjust_reinfection_without_strains(
+        low_immune_effect: float,
+        high_immune_effect: float,
+        immunity_strat: Stratification,
+        reinfection_flows: List[str],
+):
+    """
+    Adjust the rate of reinfection for immunity, in cases in which we don't need to worry about cross-strain immunity,
+    because the model has not been stratified by strain.
+
+    Args:
+        low_immune_effect: The protection from low immunity
+        high_immune_effect: The protection from high immunity
+        immunity_strat: The immunity stratification, to be modified
+        reinfection_flows: The names of the transition flows representing reinfection
+
+    """
+
+    low_non_cross_multiplier = 1. - low_immune_effect
+    high_non_cross_multiplier = 1. - high_immune_effect
+
+    # The infection processes that we are adapting and for which cross-strain immunity is relevant
+    for flow in reinfection_flows:
+
+        # Combine the two mechanisms of protection and format for summer
+        reinfection_adjustments = {
+            ImmunityStratum.NONE: None,
+            ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
+            ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
+        }
+
+        # Apply to the stratification object
+        immunity_strat.set_flow_adjustments(
+            flow,
+            reinfection_adjustments,
+        )
+
+
+def adjust_reinfection_with_strains(
+        low_immune_effect: float,
+        high_immune_effect: float,
+        immunity_strat: Stratification,
+        reinfection_flows: List[str],
+        voc_params: Optional[Dict[str, VocComponent]],
+):
+    """
+    Adjust the rate of reinfection for immunity, in cases in which we do need to worry about cross-strain immunity, so
+    we have to consider every possible combination of cross-immunity between strains (including the immunity conferred
+    by infection with a certain strain and reinfection with that same strain).
+
+    Args:
+        low_immune_effect: The protection from low immunity
+        high_immune_effect: The protection from high immunity
+        immunity_strat: The immunity stratification, to be modified
+        reinfection_flows: The names of the transition flows representing reinfection
+        voc_params: The parameters relating to the VoCs being implemented
+
+    """
+
+    for infecting_strain in voc_params:
+
+        # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
+        non_cross_effect = 1. - voc_params[infecting_strain].immune_escape
+        low_non_cross_multiplier = 1. - low_immune_effect * non_cross_effect
+        high_non_cross_multiplier = 1. - high_immune_effect * non_cross_effect
+
+        # Considering people recovered from infection with each modelled strain
+        for infected_strain in voc_params:
+            for flow in reinfection_flows:
+
+                # Cross protection from previous infection with the "infected" strain against the "infecting" strain
+                cross_effect = 1. - getattr(voc_params[infected_strain].cross_protection[infecting_strain], flow)
+
+                # Combine the two mechanisms of protection
+                reinfection_adjustments = {
+                    ImmunityStratum.NONE: Multiply(cross_effect),
+                    ImmunityStratum.LOW: Multiply(low_non_cross_multiplier * cross_effect),
+                    ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier * cross_effect),
+                }
+
+                immunity_strat.set_flow_adjustments(
+                    flow,
+                    reinfection_adjustments,
+                    source_strata={"strain": infected_strain},
+                    dest_strata={"strain": infecting_strain},
+                )
 
 
 def get_immunity_strat(

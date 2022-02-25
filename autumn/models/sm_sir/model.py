@@ -499,7 +499,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     apply_reinfection_flows(model, compartment_types, infection_dest, params.voc_emergence, strain_strata, contact_rate)
 
     """
-    Apply immunity stratification
+    Get basic immunity stratification
     """
 
     immunity_strat = get_immunity_strat(
@@ -511,10 +511,12 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     immunity_params = params.immunity_stratification
 
     """
-    Adjust infection of susceptibles for immunity stratum
+    Adjust infection of susceptibles for immunity status
     """
 
     if voc_params:
+        msg = "Strain stratification not present in model"
+        assert "strain" in [strat.name for strat in model._stratifications], msg
         adjust_susceptible_infection_with_strains(
             immunity_params.infection_risk_reduction.low,
             immunity_params.infection_risk_reduction.high,

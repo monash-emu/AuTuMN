@@ -22,11 +22,7 @@ from .stratifications.immunity import (
 )
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import (
-    seed_vocs,
-    apply_reinfection_flows_without_strains,
-    apply_reinfection_flows_with_strains,
-)
+from .strat_processing.strains import seed_vocs
 from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
 
 
@@ -482,6 +478,26 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         clinical_strata = clinical_strat.strata
 
     """
+    Apply the reinfection flows
+    """
+
+    model.add_infection_frequency_flow(
+        FlowName.EARLY_REINFECTION,
+        contact_rate,
+        Compartment.RECOVERED,
+        infection_dest,
+    )
+    reinfection_flows = [FlowName.EARLY_REINFECTION]
+    if Compartment.WANED in compartment_types:
+        model.add_infection_frequency_flow(
+            FlowName.LATE_REINFECTION,
+            contact_rate,
+            Compartment.WANED,
+            infection_dest,
+        )
+        reinfection_flows.append(FlowName.LATE_REINFECTION)
+
+    """
     Apply strains stratification
     """
 
@@ -489,7 +505,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     if params.voc_emergence:
 
         # Build and apply stratification
-        strain_strat = get_strain_strat(voc_params, compartment_types)
+        strain_strat = get_strain_strat(voc_params, compartment_types, reinfection_flows)
         model.stratify_with(strain_strat)
 
         # Seed the VoCs from the point in time
@@ -497,27 +513,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata
-
-    """
-    Apply the reinfection flows (knowing the strain stratification)
-    """
-
-    if voc_params:
-        apply_reinfection_flows_with_strains(
-            model,
-            compartment_types,
-            infection_dest,
-            params.voc_emergence,
-            strain_strata,
-            contact_rate,
-        )
-    else:
-        apply_reinfection_flows_without_strains(
-            model,
-            compartment_types,
-            infection_dest,
-            contact_rate,
-        )
 
     """
     Immunity stratification
@@ -529,16 +524,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params.immunity_stratification,
     )
 
-    immunity_params = params.immunity_stratification
-
     # Adjust infection of susceptibles for immunity status
-
-    reinfection_flows = [FlowName.EARLY_REINFECTION]
-    if Compartment.WANED in compartment_types:
-        reinfection_flows.append(FlowName.LATE_REINFECTION)
-
-    immunity_low_risk_reduction = immunity_params.infection_risk_reduction.low
-    immunity_high_risk_reduction = immunity_params.infection_risk_reduction.high
+    immunity_low_risk_reduction = params.immunity_stratification.infection_risk_reduction.low
+    immunity_high_risk_reduction = params.immunity_stratification.infection_risk_reduction.high
 
     if voc_params:
         # The code should run fine if VoC parameters have been submitted but the strain stratification hasn't been

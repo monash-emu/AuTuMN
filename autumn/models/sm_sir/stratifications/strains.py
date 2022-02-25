@@ -3,10 +3,14 @@ from typing import Optional, Dict, List
 from summer import StrainStratification, Multiply
 
 from autumn.models.sm_sir.parameters import VocComponent
-from autumn.models.sm_sir.constants import Compartment, WILD_TYPE, FlowName
+from autumn.models.sm_sir.constants import Compartment, FlowName
 
 
-def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments: List[str]):
+def get_strain_strat(
+        voc_params: Optional[Dict[str, VocComponent]],
+        compartments: List[str],
+        reinfection_flows: List[str],
+):
     """
     Stratify the model by strain, with at least two strata, being wild or "ancestral" virus type and the variants of
     concern ("VoC").
@@ -57,6 +61,18 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
         strain_strat.set_flow_adjustments(
             FlowName.PROGRESSION,
             adjustments=adjustments
+        )
+
+    # Adjust for the infectiousness of each strain
+    contact_rate_adjustment = {strain: Multiply(voc_params[strain].contact_rate_multiplier) for strain in voc_params}
+    strain_strat.set_flow_adjustments(
+        FlowName.INFECTION,
+        contact_rate_adjustment,
+    )
+    for flow in reinfection_flows:
+        strain_strat.set_flow_adjustments(
+            flow,
+            contact_rate_adjustment
         )
 
     return strain_strat

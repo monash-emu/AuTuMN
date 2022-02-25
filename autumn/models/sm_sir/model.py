@@ -13,7 +13,11 @@ from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomPr
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName, ImmunityStratum
 from .stratifications.agegroup import get_agegroup_strat
-from .stratifications.immunity import get_immunity_strat
+from .stratifications.immunity import (
+    get_immunity_strat,
+    adjust_susceptible_infection_with_strains,
+    adjust_susceptible_infection_without_strains
+)
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
 from .strat_processing.strains import seed_vocs, apply_reinfection_flows
@@ -82,6 +86,10 @@ def assign_population(
 
     # Assign to the model
     model.set_initial_population(init_pop)
+
+
+def set_up_random_process(start_time, end_time):
+    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)
 
 
 def get_random_process(
@@ -328,6 +336,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     pop = params.population
 
     # Need a placeholder for the immunity stratification a nd output loops if strains not implemented
+    clinical_strata = [""]
     strain_strata = [""]
 
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
@@ -465,8 +474,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
-    else:
-        clinical_strata = [""]
 
     """
     Apply strains stratification
@@ -511,26 +518,21 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     low_immune_effect = immunity_params.infection_risk_reduction.low
     high_immune_effect = immunity_params.infection_risk_reduction.high
 
-    # Adjust the infection rate for susceptibles - strains just relevant if the strain has non-strain immune escape
-    for infecting_strain in strain_strata:
-        dest_filter = None if infecting_strain == "" else {"strain": infecting_strain}
-
-        # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
-        non_cross_effect = 1. if infecting_strain == "" else 1. - voc_params[infecting_strain].immune_escape
-        low_non_cross_multiplier = 1. - low_immune_effect * non_cross_effect
-        high_non_cross_multiplier = 1. - high_immune_effect * non_cross_effect
-
-        non_strain_adjustment = {
-            ImmunityStratum.NONE: None,
-            ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
-            ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
-        }
-
-        immunity_strat.set_flow_adjustments(
-            FlowName.INFECTION,
-            non_strain_adjustment,
-            dest_strata=dest_filter,
+    if voc_params:
+        adjust_susceptible_infection_with_strains(
+            low_immune_effect,
+            high_immune_effect,
+            immunity_strat,
+            voc_params,
         )
+    else:
+        adjust_susceptible_infection_without_strains(
+            low_immune_effect,
+            high_immune_effect,
+            immunity_strat,
+        )
+
+    # FIXME: This isn't done yet - should be approached the same way as for the susceptible infection
 
     for infecting_strain in strain_strata:
         dest_filter = None if infecting_strain == "" else {"strain": infecting_strain}
@@ -594,7 +596,3 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     return model
-
-
-def set_up_random_process(start_time, end_time):
-    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)

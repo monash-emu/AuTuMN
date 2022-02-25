@@ -1,8 +1,74 @@
-from typing import List
-from summer import Stratification
+from typing import Optional, List, Dict
+from summer import Stratification, Multiply
 
-from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum
-from autumn.models.sm_sir.parameters import ImmunityStratification
+from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
+
+
+def adjust_susceptible_infection_without_strains(
+        low_immune_effect: float,
+        high_immune_effect: float,
+        immunity_strat: Stratification,
+):
+    """
+    Apply the modification to the immunity stratification to account for immunity to first infection (from the
+    susceptible compartment), i.e. vaccine-induced immunity.
+
+    Args:
+        low_immune_effect: The protection from low immunity
+        high_immune_effect: The protection from high immunity
+        immunity_strat: The immunity stratification, to be modified
+
+    """
+    low_non_cross_multiplier = 1. - low_immune_effect
+    high_non_cross_multiplier = 1. - high_immune_effect
+
+    non_strain_adjustment = {
+        ImmunityStratum.NONE: None,
+        ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
+        ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
+    }
+
+    immunity_strat.set_flow_adjustments(
+        FlowName.INFECTION,
+        non_strain_adjustment,
+    )
+
+
+def adjust_susceptible_infection_with_strains(
+        low_immune_effect: float,
+        high_immune_effect: float,
+        immunity_strat: Stratification,
+        voc_params: Optional[Dict[str, VocComponent]],
+):
+    """
+    Apply the modification to the immunity stratification to account for immunity to first infection (from the
+    susceptible compartment), accounting for the extent to which each VoC is immune-escape to vaccine-induced immunity.
+
+    Args:
+        low_immune_effect: The protection from low immunity
+        high_immune_effect: The protection from high immunity
+        immunity_strat: The immunity stratification, to be modified
+        voc_params: The parameters relating to the VoCs being implemented
+
+    """
+
+    for infecting_strain in voc_params:
+        strain_immunity_modifier = 1. - voc_params[infecting_strain].immune_escape
+        low_non_cross_multiplier = 1. - low_immune_effect * strain_immunity_modifier
+        high_non_cross_multiplier = 1. - high_immune_effect * strain_immunity_modifier
+
+        non_strain_adjustment = {
+            ImmunityStratum.NONE: None,
+            ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
+            ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
+        }
+
+        immunity_strat.set_flow_adjustments(
+            FlowName.INFECTION,
+            non_strain_adjustment,
+            dest_strata={"strain": infecting_strain},
+        )
 
 
 def get_immunity_strat(

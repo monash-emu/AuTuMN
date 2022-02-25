@@ -372,9 +372,20 @@ def get_smsir_outputs_builder(
         outputs_builder.request_random_process_outputs()
 
 
-def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
+def build_model(
+        params: dict,
+        build_options: dict = None
+) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
+
+    Args:
+        params: The validated user-requested parameters
+        build_options:
+
+    Returns:
+        The "SM-SIR" model, currently being used only for COVID-19
+
     """
 
     params = Parameters(**params)
@@ -409,7 +420,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     """
-    Check build options.
+    Check build options
     """
 
     # This will be automatically populated by calibration.py if we are running a calibration, but can be manually set
@@ -472,10 +483,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model
     )
 
-    """
-    Apply reinfection flows
-    """
-
+    # Reinfection flows
     reinfection_flows = add_recovered_flows(
         params.sojourns.recovered,
         model,

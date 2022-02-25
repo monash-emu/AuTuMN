@@ -1,6 +1,6 @@
 from datetime import date
 from math import exp
-from typing import List, Tuple
+from typing import List, Tuple, Union, Optional
 
 from summer import CompartmentalModel
 
@@ -250,6 +250,52 @@ def add_active_transitions(
     )
 
 
+def add_recovered_flows(
+        recovered_sojourns: Optional[CompartmentSojourn],
+        model: CompartmentalModel,
+        contact_rate: Union[float, callable],
+        infection_dest: str,
+) -> List[str]:
+    """
+    Add the recovered flows to the model according to the user requests. These are now added just as basic flows, to be
+    adapted later.
+
+    Args:
+        recovered_sojourns: User request for what we're doing with the recovered compartment
+        model: The summer model object
+        contact_rate: The transmission parameter (which may be a function of time)
+        infection_dest: The name of the (unstratified) compartment that people arrive in on infection
+
+    Returns:
+        The names of the types of reinfection that have been implemented in the model
+
+    """
+
+    model.add_infection_frequency_flow(
+        FlowName.EARLY_REINFECTION,
+        contact_rate,
+        Compartment.RECOVERED,
+        infection_dest,
+    )
+    reinfection_flows = [FlowName.EARLY_REINFECTION]
+    if recovered_sojourns:
+        model.add_infection_frequency_flow(
+            FlowName.LATE_REINFECTION,
+            contact_rate,
+            Compartment.WANED,
+            infection_dest,
+        )
+        model.add_transition_flow(
+            name=FlowName.WANING,
+            fractional_rate=1. / recovered_sojourns.total_time,
+            source=Compartment.RECOVERED,
+            dest=Compartment.WANED,
+        )
+        reinfection_flows.append(FlowName.LATE_REINFECTION)
+
+    return reinfection_flows
+
+
 def get_smsir_outputs_builder(
         iso3,
         region,
@@ -424,27 +470,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply reinfection flows
     """
 
-    model.add_infection_frequency_flow(
-        FlowName.EARLY_REINFECTION,
-        contact_rate,
-        Compartment.RECOVERED,
-        infection_dest,
-    )
-    reinfection_flows = [FlowName.EARLY_REINFECTION]
-    if Compartment.WANED in compartment_types:
-        model.add_infection_frequency_flow(
-            FlowName.LATE_REINFECTION,
-            contact_rate,
-            Compartment.WANED,
-            infection_dest,
-        )
-        model.add_transition_flow(
-            name=FlowName.WANING,
-            fractional_rate=1. / params.sojourns.recovered.total_time,
-            source=Compartment.RECOVERED,
-            dest=Compartment.WANED,
-        )
-        reinfection_flows.append(FlowName.LATE_REINFECTION)
+    reinfection_flows = add_recovered_flows(params.sojourns.recovered, model, contact_rate, infection_dest)
 
     """
     Apply age stratification

@@ -43,7 +43,9 @@ notifications = pd.concat(
 icu_occupancy = ts_set["icu_occupancy"].loc[640:]  # truncated to 01 Oct 2021
 infection_deaths = ts_set["infection_deaths"].loc[556:]  # truncated to 9th Jul 2021
 
-targets = [NormalTarget(notifications), NormalTarget(icu_occupancy), NormalTarget(infection_deaths)]
+targets = [NormalTarget(notifications),
+           NormalTarget(icu_occupancy),
+           NormalTarget(infection_deaths)]
 
 
 priors = [
@@ -52,16 +54,17 @@ priors = [
     # Starting date
     # UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
     # Regional parameters
-    UniformPrior("infectious_seed", [1, 20]),
-    UniformPrior("contact_rate", [0.2, 0.25]),
+    UniformPrior("infectious_seed", [1, 100]),
+    UniformPrior("contact_rate", [0.1, 0.25]),
     # Health system-related
     # UniformPrior("clinical_stratification.icu_prop", [0.14, 0.18]),
     # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
     # UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.6, 1.0]),
-    UniformPrior("hospital_prop_multiplier", [0.25, 0.4]),
-    UniformPrior("infection_fatality.multiplier", [0.7, 1.0]),
+    # UniformPrior("hospital_prop_multiplier", [0.25, 0.4]),
+    # UniformPrior("infection_fatality.multiplier", [0.7, 1.0]),
     # Detection
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0005, 0.009]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0005, 0.02]),
+    UniformPrior("sojourns.latent.total_time", (1, 4.0)),
     # Microdistancing
     # UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.30, 0.40]),
     # Waning immunity

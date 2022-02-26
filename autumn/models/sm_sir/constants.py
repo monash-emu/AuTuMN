@@ -1,4 +1,8 @@
 
+AGE_BRACKET_WIDTHS = 5
+TOP_AGE_BRACKET = 80
+
+
 class Compartment:
     SUSCEPTIBLE = "susceptible"
     LATENT = "latent"
@@ -45,8 +49,8 @@ CLINICAL_STRATA = [
 
 class ImmunityStratum:
     NONE = "none"
-    HIGH = "high"
     LOW = "low"
+    HIGH = "high"
 
 
-IMMUNITY_STRATA = [ImmunityStratum.NONE, ImmunityStratum.HIGH, ImmunityStratum.LOW]
+IMMUNITY_STRATA = [ImmunityStratum.NONE, ImmunityStratum.LOW, ImmunityStratum.HIGH]

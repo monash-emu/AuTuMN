@@ -55,13 +55,13 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 700.
+      start_time: 690.
       entry_rate: 100.
       seed_duration: 10.
-    contact_rate_multiplier: 1.3
+    contact_rate_multiplier: 1.2
     immune_escape: 0.3
-    hosp_protection: 0.75
-    death_protection: 0.
+    hosp_protection: 0.7
+    death_protection: 0.69
     relative_latency: 0.6667
     cross_protection:
       wild_type:
@@ -85,3 +85,9 @@ hospital_stay:
   icu:
     parameters:
       mean: 10.
+
+age_stratification:
+  cfr:
+    multiplier: 0.5
+  prop_hospital:
+    multiplier: 0.625

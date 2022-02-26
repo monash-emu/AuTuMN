@@ -17,17 +17,18 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
 icu_occupancy_ts = ts_set["icu_occupancy"].loc[calibration_start_time:]
 hospital_occupancy_ts = ts_set["hospital_occupancy"].loc[calibration_start_time:]
-
+infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(icu_occupancy_ts),
-    NormalTarget(hospital_occupancy_ts)
+    NormalTarget(hospital_occupancy_ts),
+    NormalTarget(infection_deaths_ts)
 ]
 
 priors = [
-    UniformPrior("contact_rate", (0.1, 0.22)),
+    UniformPrior("contact_rate", (0.1, 0.16)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.08, 0.18)),
-    UniformPrior("sojourns.latent.total_time", (3., 5.)),
+    UniformPrior("sojourns.latent.total_time", (1., 3.0)),
 ]
 
 calibration = Calibration(

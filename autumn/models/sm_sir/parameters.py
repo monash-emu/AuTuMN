@@ -36,7 +36,7 @@ def get_check_non_neg(name):
     return check_non_neg
 
 
-def get_check_all_positive(name):
+def get_check_all_prop(name):
 
     msg = f"Parameter '{name}' contains values outside [0, 1], but is intended as a list of proportions"
 
@@ -45,6 +45,29 @@ def get_check_all_positive(name):
         return values
 
     return check_all_pos
+
+
+def get_check_all_non_neg(name):
+
+    msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
+
+    def check_all_non_neg(values: float) -> float:
+        assert all([0. <= i_value for i_value in values]), msg
+        return values
+
+    return check_all_non_neg
+
+
+def get_check_all_non_neg_if_present(name):
+
+    msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
+
+    def check_all_non_neg(values: float) -> float:
+        if values:
+            assert all([0. <= i_value for i_value in values]), msg
+        return values
+
+    return check_all_non_neg
 
 
 class Time(BaseModel):
@@ -226,42 +249,62 @@ class Mobility(BaseModel):
         return val
 
 
+class AgeSpecificProps(BaseModel):
+
+    values: Dict[int, float]
+    source_immunity_distribution: Dict[str, float]
+    source_immunity_protection: Dict[str, float]
+    multiplier: float
+
+    @validator("source_immunity_distribution", allow_reuse=True)
+    def check_source_dist(val):
+        msg = "Proportions by immunity status in source for parameters does not sum to one"
+        assert sum(val.values()) == 1., msg
+        return val
+
+    @validator("source_immunity_protection", allow_reuse=True)
+    def check_source_dist(protection_params):
+        msg = "Source protection estimates not proportions"
+        assert all([0. <= val <= 1. for val in protection_params.values()]) == 1., msg
+        return protection_params
+
+    check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
+
+
 class AgeStratification(BaseModel):
     """
     Parameters used in age based stratification.
     """
 
-    # Susceptibility by age
-    susceptibility: Dict[str, float]
-    prop_symptomatic: Optional[List[float]]
-    prop_hospital: List[float]
-    ifr: List[float]
+    susceptibility: Optional[Dict[int, float]]
+    prop_symptomatic: Optional[Dict[int, float]]
+    prop_hospital: AgeSpecificProps
+    cfr: AgeSpecificProps
 
-    @validator("susceptibility", allow_reuse=True)
-    def sympt_is_prop(susceptibility):
-        msg = "Some age-specific susceptibility values are negative"
-        assert all([0. <= i_sympt for i_sympt in susceptibility.values()]), msg
-        return susceptibility
-
-    check_sympt_props = validator("prop_symptomatic", allow_reuse=True)(get_check_all_positive("prop_symptomatic"))
-    check_hosp_props = validator("prop_hospital", allow_reuse=True)(get_check_all_positive("prop_hospital"))
-    check_ifr_props = validator("ifr", allow_reuse=True)(get_check_all_positive("ifr"))
+    # @root_validator(pre=True, allow_reuse=True)
+    # def check_age_param_lengths(cls, values):
+    #     for param_name in ("susceptibility",):
+    #         param = values[param_name]
+    #         if param:
+    #             msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"
+    #             assert len(values[param_name]) == 16, msg
+    #     return values
 
 
 class ImmunityRiskReduction(BaseModel):
-    high: float
+    none: float
     low: float
+    high: float
 
-    check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
+    check_none = validator("none", allow_reuse=True)(get_check_prop("none"))
     check_low = validator("low", allow_reuse=True)(get_check_prop("low"))
+    check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
 
 
 class ImmunityStratification(BaseModel):
     prop_immune: float
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
-    hospital_risk_reduction: ImmunityRiskReduction
-    death_risk_reduction: ImmunityRiskReduction
 
     check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
     check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(get_check_prop("prop_high_among_immune"))
@@ -386,7 +429,7 @@ class Parameters:
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
-    detect_prop: float
+    detect_prop: float  # Not optional, so as always to have a back-up value available if testing to detection not used
     testing_to_detection: Optional[TestingToDetection]
     asympt_infectiousness_effect: Optional[float]
     isolate_infectiousness_effect: Optional[float]
@@ -394,7 +437,6 @@ class Parameters:
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay
     prop_icu_among_hospitalised: float
-    hospital_prop_multiplier: float
 
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification

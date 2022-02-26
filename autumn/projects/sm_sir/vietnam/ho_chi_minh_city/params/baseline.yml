@@ -31,7 +31,7 @@ contact_rate: 0.15
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .0  # varied in uncertainty
+  prop_high_among_immune: .2  # varied in uncertainty
 
   infection_risk_reduction:
     low: 0.6

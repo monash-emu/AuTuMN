@@ -78,8 +78,6 @@ testing_to_detection:
   assumed_cdr_parameter: 0.05 # needs calibrating
   smoothing_period: 14
 
-is_dynamic_mixing_matrix: false
-
 hospital_stay:
   hospital_all:
     parameters:
@@ -87,6 +85,8 @@ hospital_stay:
   icu:
     parameters:
       mean: 10.
+
+is_dynamic_mixing_matrix: true
 
 mobility:
   region: Ho Chi Minh City
@@ -142,12 +142,14 @@ mobility:
       times:
         - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
         - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
-        - 2021-12-13 # Start date of the school re-opening plan
-        - 2021-01-03
-        - 2022-01-17
+        - 2021-12-13 # Students grade 1, 9, 12 started to come back to school
+        - 2021-01-04 # Students grade 7, 8, 10, 11 came back to school
+        - 2022-02-14 # All students grade 1-6 and children at kindergarten came back to school
+        - 2022-02-29 # University students started to study on-site
       values:
         - 0.
-        - 0.1
-        - 0.4
-        - 0.7
+        - 0.05
+        - 0.11
+        - 0.33
+        - 0.67
         - 1.0

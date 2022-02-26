@@ -9,8 +9,12 @@ ref_mixing_iso3: HKG
 sojourns:
   active:
     total_time: 6.
+    proportion_early: 0.333
   latent:
     total_time: 4.
+    proportion_early: 0.5
+  recovered:
+    total_time: 180.
 
 population:
   region: Ho Chi Minh City
@@ -18,7 +22,7 @@ population:
 
 time:
   start: 511 # 25th May 2021
-  end: 1096
+  end: 913 # 30th June 2022
 
 activate_random_process: False
 
@@ -27,32 +31,67 @@ contact_rate: 0.15
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .2  # varied in uncertainty
+  prop_high_among_immune: .0  # varied in uncertainty
+
+  infection_risk_reduction:
+    low: 0.6
+    high: 0.8
 
 voc_emergence:
-#  delta:
-#    start_time: 548
-#    entry_rate: 5.
-#    seed_duration: 10.
-#    contact_rate_multiplier: 2.
-#  omicron:
-#    start_time: 2000.
-#    entry_rate: 16.
-#    seed_duration: 10.
-#    contact_rate_multiplier: 5.
-#    immune_escape: 0.
-    # ifr_multiplier: 1.
+  wild_type:
+    starting_strain: true
+    seed_prop: 1.
+    new_voc_seed: null
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      omicron:
+        early_reinfection: 0.4  # 60% immune escape
+        late_reinfection: 0.4
+  omicron:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 751. # first three community cases of omicron detected in HCMC
+      entry_rate: 10.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.5
+    immune_escape: 0.3
+    hosp_protection: 0.75
+    death_protection: 0.
+    relative_latency: 0.6667
+    cross_protection:
+      wild_type:
+        early_reinfection: 0.4
+        late_reinfection: 0.4
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.
 
 testing_to_detection:
   assumed_tests_parameter: 1e-04 # Sri-Lanka model
   assumed_cdr_parameter: 0.05 # needs calibrating
   smoothing_period: 14
 
+is_dynamic_mixing_matrix: false
+
+hospital_stay:
+  hospital_all:
+    parameters:
+      mean: 8.
+  icu:
+    parameters:
+      mean: 10.
+
 mobility:
   region: Ho Chi Minh City
   # Google mobility data
   smooth_google_data: true # whether to apply a 7-day moving average
-  square_mobility_effect: true
   # Google mobility weightings
   google_mobility_locations:
     work:
@@ -112,4 +151,3 @@ mobility:
         - 0.4
         - 0.7
         - 1.0
-

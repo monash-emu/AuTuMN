@@ -11,18 +11,24 @@ from autumn.tools.project import (
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model, set_up_random_process
+from autumn.models.sm_sir import (
+    base_params,
+    build_model,
+    set_up_random_process
+)
 from autumn.settings import Region, Models
 
 from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
-scenario_dir_path = build_rel_path("params/")
-
-# Load and configure model parameters.
+# Load and configure model parameters
 mle_path = build_rel_path("params/mle-params.yml")
+scenario_dir_path = build_rel_path("params/")
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+
 baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
     mle_path, calibration_format=True
 )
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings.
@@ -42,22 +48,22 @@ targets = [NormalTarget(notifications), NormalTarget(icu_occupancy), NormalTarge
 
 priors = [
     # Global COVID priors
-    *COVID_GLOBAL_PRIORS,
+    # *COVID_GLOBAL_PRIORS,
     # Starting date
     # UniformPrior("time.start", [455, 485], jumping_stdev=3.0),
     # Regional parameters
-    UniformPrior("infectious_seed", [5, 15]),
+    UniformPrior("infectious_seed", [1, 20]),
     UniformPrior("contact_rate", [0.2, 0.25]),
     # Health system-related
-    UniformPrior("clinical_stratification.icu_prop", [0.14, 0.18]),
+    # UniformPrior("clinical_stratification.icu_prop", [0.14, 0.18]),
     # UniformPrior("clinical_stratification.non_sympt_infect_multiplier", [0.15, 1.0]),
     # UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.6, 1.0]),
-    UniformPrior("clinical_stratification.props.hospital.multiplier", [0.25, 0.4]),
+    UniformPrior("hospital_prop_multiplier", [0.25, 0.4]),
     UniformPrior("infection_fatality.multiplier", [0.7, 1.0]),
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.0005, 0.009]),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.30, 0.40]),
+    # UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", [0.30, 0.40]),
     # Waning immunity
     # UniformPrior("waning_immunity_duration", (180, 360), jumping_stdev=30.),
     # Vaccination parameters (independent sampling)

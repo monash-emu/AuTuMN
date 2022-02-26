@@ -85,6 +85,7 @@ hospital_stay:
     parameters:
       mean: 10.
 
+# MOBILITY PARAMETERS
 is_dynamic_mixing_matrix: true
 
 mobility:

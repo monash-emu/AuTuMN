@@ -38,7 +38,8 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 # truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
 notifications = pd.concat(
     [ts_set["notifications"].loc[511:575],
-     ts_set["notifications"].loc[606:700]]
+     ts_set["notifications"].loc[606:700],
+     ts_set["notifications"].loc[763:]]
 )
 
 icu_occupancy = ts_set["icu_occupancy"].loc[640:]  # truncated to 01 Oct 2021

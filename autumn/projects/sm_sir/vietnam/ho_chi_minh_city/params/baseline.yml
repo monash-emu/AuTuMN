@@ -144,7 +144,7 @@ mobility:
         - 2021-12-13 # Students grade 1, 9, 12 started to come back to school
         - 2022-01-04 # Students grade 7, 8, 10, 11 came back to school
         - 2022-02-14 # All students grade 1-6 and children at kindergarten came back to school
-        - 2022-02-29 # University students starts to study on-site
+        - 2022-02-28 # University students starts to study on-site
       values:
         - 0.
         - 0.05

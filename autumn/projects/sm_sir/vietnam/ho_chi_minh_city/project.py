@@ -55,8 +55,8 @@ priors = [
     UniformPrior("infectious_seed", (20, 100)),
     UniformPrior("contact_rate", (0.3, 0.6)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.01)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.001, 0.02)),
+    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.004, 0.01)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.02)),
     # sojourns
     UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification

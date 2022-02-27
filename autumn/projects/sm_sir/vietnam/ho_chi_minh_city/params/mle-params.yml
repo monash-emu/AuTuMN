@@ -6,4 +6,3 @@ sojourns.latent.total_time: 4.0913479001139175
 immunity_stratification.prop_high_among_immune: 0.9968141377128422
 immunity_stratification.prop_immune: 0.5887212657086589
 age_stratification.cfr.multiplier: 0.44448948156302365
-age_stratification.prop_hospital.multiplier: 0.9893096052647719

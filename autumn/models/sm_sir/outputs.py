@@ -1,11 +1,53 @@
 from scipy import stats
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 import numpy as np
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
-from autumn.models.sm_sir.parameters import TimeDistribution, ImmunityRiskReduction, VocComponent
-from .constants import IMMUNITY_STRATA, FlowName, ImmunityStratum, Compartment, ClinicalStratum
-from autumn.tools.utils.utils import apply_odds_ratio_to_props
+from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
+from .constants import IMMUNITY_STRATA, FlowName, Compartment, ClinicalStratum
+from autumn.tools.utils.utils import apply_odds_ratio_to_props, weighted_average
+from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
+
+
+def get_immunity_prop_modifiers(
+        source_pop_immunity_dist: Dict[str, float],
+        source_pop_protection: Dict[str, float],
+):
+    """
+    Work out how much we are going to adjust the age-specific hospitalisation and mortality rates by to account for pre-
+    existing immunity protection against hospitalisation and mortality.
+    The aim is to get the final parameters to come out so that the weighted average effect comes out to that reported by
+    Nyberg et al., while also acknowledging that there is vaccine-related immunity present in the population.
+    To do this, we estimate the proportion of the population in each of the three modelled immunity categories:
+        - The "none" immunity stratum - representing the entirely unvaccinated
+        - The "low" immunity stratum - representing people who have received two doses of an effective vaccine
+            (i.e. the ones used in the UK: ChAdOx, BNT162b2, mRNA1273)
+        - The "high" immunity stratum - representing people who have received their third dose of an mRNA vaccine
+    The calculation proceeds by working out the proportion of the UK population who would have been in each of these
+    three categories at the mid-point of the Nyberg study and using the estimated effect of the vaccine-related immunity
+    around then for each of these three groups.
+    We then work out the hospitalisation and mortality effect for each of these three groups that would be needed to
+    make the weighted average of the hospitalisation proportions come out to the original parameter values (and check
+    that this is indeed the case).
+
+    Returns:
+        The multipliers for the age-specific proportions for each of the immunity strata
+
+    """
+
+    # Take the complement
+    immunity_effect = {k: 1. - v for k, v in source_pop_protection.items()}
+
+    # Work out the adjustments based on the protection provided by immunity
+    effective_weights = [immunity_effect[stratum] * source_pop_immunity_dist[stratum] for stratum in IMMUNITY_STRATA]
+    no_immunity_modifier = 1. / (sum(effective_weights))
+    immune_modifiers = {strat: no_immunity_modifier * immunity_effect[strat] for strat in IMMUNITY_STRATA}
+
+    # Unnecessary check that the weighted average we have calculated does come out to one
+    msg = "Values used don't appear to create a weighted average with weights summing to one, something went wrong"
+    assert weighted_average(immune_modifiers, source_pop_immunity_dist, rounding=4) == 1., msg
+
+    return immune_modifiers
 
 
 class SmSirOutputsBuilder(OutputsBuilder):
@@ -17,7 +59,13 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
         self.model.request_computed_value_output("cdr")
 
-    def request_incidence(self, compartments, age_groups, clinical_strata, strain_strata):
+    def request_incidence(
+            self,
+            age_groups: List[int],
+            clinical_strata: List[str],
+            strain_strata: List[str],
+            incidence_flow: str,
+    ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
         infectious compartment, or transition between the two if there are two.
@@ -25,52 +73,43 @@ class SmSirOutputsBuilder(OutputsBuilder):
         compartment to represent the onset of symptoms, which infectiousness starting before this.
 
         Args:
-            compartments: list of model compartment names (unstratified)
-            age_groups: list of modelled age groups
-            clinical_strata: list of clinical strata
-            strain_strata: list of modelled strains (None if single strain model)
+            age_groups: The modelled age groups
+            clinical_strata: The clinical strata implemented
+            strain_strata: The modelled strains, or None if model is not stratified by strain
+            incidence_flow: The name of the flow representing incident cases
 
         """
 
-        # Determine what flow will be used to track disease incidence
-        if Compartment.INFECTIOUS_LATE in compartments:
-            incidence_flow = FlowName.WITHIN_INFECTIOUS
-        elif Compartment.LATENT in compartments:
-            incidence_flow = FlowName.PROGRESSION
-        else:
-            incidence_flow = FlowName.INFECTION
-
+        # Unstratified
         self.model.request_output_for_flow(name="incidence", flow_name=incidence_flow)
 
-        """
-        Fully stratified incidence outputs
-        """
+        # Stratified
+        detected_incidence_sources = []  # Collect detected incidence unstratified for notifications calculation
 
-        clinical_strata = [""] if not clinical_strata else clinical_strata
-        detected_incidence_sources = []
-        sympt_incidence_sources = {}
         for agegroup in age_groups:
-            sympt_incidence_sources[agegroup] = {}
+            agegroup_string = f"Xagegroup_{agegroup}"
+            agegroup_filter = {"agegroup": str(agegroup)}
+
             for immunity_stratum in IMMUNITY_STRATA:
-                sympt_incidence_sources[agegroup][immunity_stratum] = {}
+                immunity_string = f"Ximmunity_{immunity_stratum}"
+                immunity_filter = {"immunity": immunity_stratum}
+
                 for strain in strain_strata:
-                    sympt_incidence_sources[agegroup][immunity_stratum][strain] = []
+                    strain_string = f"Xstrain_{strain}" if strain else ""
+                    strain_filter = {"strain": strain} if strain else {}
+                    sympt_incidence_sources = []
+
                     for clinical_stratum in clinical_strata:
-
-                        # Work out the incidence stratification string
-                        stem = f"incidence"
-                        agegroup_string = f"Xagegroup_{agegroup}"
-                        immunity_string = f"Ximmunity_{immunity_stratum}"
                         clinical_string = f"Xclinical_{clinical_stratum}" if clinical_stratum else ""
-                        strain_string = f"Xstrain_{strain}" if strain else ""
-                        output_name = stem + agegroup_string + immunity_string + clinical_string + strain_string
 
-                        # Work out the destination criteria
-                        dest_filter = {"agegroup": str(agegroup), "immunity": immunity_stratum}
-                        clinical_filter = {"clinical": clinical_stratum} if clinical_stratum else {}
-                        strain_filter = {"strain": strain} if strain else {}
-                        dest_filter.update(clinical_filter)
+                        # Work out what to filter by, depending on whether these stratifications have been implemented
+                        dest_filter = {"clinical": clinical_stratum} if clinical_stratum else {}
+                        dest_filter.update(agegroup_filter)
+                        dest_filter.update(immunity_filter)
                         dest_filter.update(strain_filter)
+
+                        # Work out the fully stratified incidence string
+                        output_name = f"incidence{agegroup_string}{immunity_string}{clinical_string}{strain_string}"
 
                         # Get the most highly stratified incidence calculation
                         self.model.request_output_for_flow(
@@ -83,27 +122,20 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         if clinical_stratum in ["", ClinicalStratum.DETECT]:
                             detected_incidence_sources.append(output_name)
                         if clinical_stratum in ["", ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]:
-                            sympt_incidence_sources[agegroup][immunity_stratum][strain].append(output_name)
+                            sympt_incidence_sources.append(output_name)
+
+                    # Calculate the incidence of symptomatic disease in preparation for hospitalisation and deaths
+                    sympt_inc_name = f"incidence_sympt{agegroup_string}{immunity_string}{strain_string}"
+                    self.model.request_aggregate_output(
+                        name=sympt_inc_name,
+                        sources=sympt_incidence_sources
+                    )
 
         # Compute detected incidence to prepare for notifications calculations
         self.model.request_aggregate_output(
             name="ever_detected_incidence",
             sources=detected_incidence_sources
         )
-
-        # Compute symptomatic incidence by age, immunity and strain status to prepare for hospital outputs calculations
-        for agegroup in age_groups:
-            for immunity_stratum in IMMUNITY_STRATA:
-                for strain in strain_strata:
-                    stem = f"incidence_sympt"
-                    agegroup_string = f"Xagegroup_{agegroup}"
-                    immunity_string = f"Ximmunity_{immunity_stratum}"
-                    strain_string = f"Xstrain_{strain}" if strain else ""
-                    sympt_inc_name = stem + agegroup_string + immunity_string + strain_string
-                    self.model.request_aggregate_output(
-                        name=sympt_inc_name,
-                        sources=sympt_incidence_sources[agegroup][immunity_stratum][strain]
-                    )
 
     def request_notifications(
             self, time_from_onset_to_notification: TimeDistribution, model_times: np.ndarray
@@ -130,36 +162,37 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_infection_deaths(
             self,
-            ifr_prop: List[float],
-            death_risk_reduction_by_immunity: ImmunityRiskReduction,
-            time_from_onset_to_death: TimeDistribution,
             model_times: np.ndarray,
             age_groups: List[int],
-            clinical_strata: List[str],
             strain_strata: List[str],
+            iso3: str,
+            region: Union[str, None],
+            cfr_prop_requests: AgeSpecificProps,
+            time_from_onset_to_death: TimeDistribution,
             voc_params: Optional[Dict[str, VocComponent]],
     ):
         """
         Request infection death-related outputs.
 
         Args:
-            ifr_prop: Infection fatality rates
-            death_risk_reduction_by_immunity: Death risk reduction according to immunity level
-            time_from_onset_to_death: Details of the statistical distribution for the time to death
             model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
             strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
-            clinical_strata: The clinical strata being implemented
+            iso3: The ISO3 code of the country being simulated
+            region: The sub-region being simulated, if any
+            cfr_prop_requests: All the CFR-related requests, including the proportions themselves
+            time_from_onset_to_death: Details of the statistical distribution for the time to death
             voc_params: The parameters pertaining to the VoCs being implemented in the model
 
         """
 
-        # Prepare a dictionary with reduction in risk of death by level of immunity
-        death_risk_reduction = {
-            ImmunityStratum.NONE: death_risk_reduction_by_immunity.none,
-            ImmunityStratum.LOW: death_risk_reduction_by_immunity.low,
-            ImmunityStratum.HIGH: death_risk_reduction_by_immunity.high,
-        }
+        cfr_request = cfr_prop_requests.values
+        cfr_prop = convert_param_agegroups(iso3, region, cfr_request, age_groups)
+
+        # Get the adjustments to the hospitalisation rates according to immunity status
+        source_immunity_dist = cfr_prop_requests.source_immunity_distribution
+        source_immunity_protection = cfr_prop_requests.source_immunity_protection
+        immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
@@ -167,34 +200,36 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Request infection deaths for each age group
         infection_deaths_sources = []
         for i_age, agegroup in enumerate(age_groups):
+            agegroup_string = f"Xagegroup_{agegroup}"
+
             for immunity_stratum in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_stratum}"
+
+                # Adjust CFR proportions for immunity
+                adj_prop = [i_prop * immune_death_modifiers[immunity_stratum] for i_prop in cfr_prop]
+                adj_prop_hosp_among_sympt = apply_odds_ratio_to_props(adj_prop, cfr_prop_requests.multiplier)
+
                 for strain in strain_strata:
-                    for clinical_stratum in clinical_strata:
+                    strain_string = f"Xstrain_{strain}" if strain else ""
 
-                        # Find the strata we are working with and work out the strings to refer to
-                        agegroup_string = f"Xagegroup_{agegroup}"
-                        immunity_string = f"Ximmunity_{immunity_stratum}"
-                        clinical_string = f"Xclinical_{clinical_stratum}" if clinical_stratum else ""
-                        strain_string = f"Xstrain_{strain}" if strain else ""
-                        strata_string = agegroup_string + immunity_string + clinical_string + strain_string
-                        output_name = "infection_deaths" + strata_string
-                        infection_deaths_sources.append(output_name)
-                        incidence_name = "incidence" + strata_string
+                    # Find the strata we are working with and work out the strings to refer to
+                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+                    output_name = f"infection_deaths{strata_string}"
+                    infection_deaths_sources.append(output_name)
 
-                        # Calculate the multiplier based on age, immunity and strain
-                        immunity_risk_modifier = 1. - death_risk_reduction[immunity_stratum]
-                        strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
-                        death_risk = ifr_prop[i_age] * immunity_risk_modifier * strain_risk_modifier
+                    # Calculate the multiplier based on age, immunity and strain
+                    strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
+                    death_risk = adj_prop_hosp_among_sympt[i_age] * strain_risk_modifier
 
-                        # Get the infection deaths function
-                        infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
+                    # Get the infection deaths function for convolution
+                    infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
 
-                        # Request the output
-                        self.model.request_function_output(
-                            name=output_name,
-                            sources=[incidence_name],
-                            func=infection_deaths_func
-                        )
+                    # Request the output
+                    self.model.request_function_output(
+                        name=output_name,
+                        sources=[f"incidence_sympt{strata_string}"],
+                        func=infection_deaths_func
+                    )
 
         # Request aggregated infection deaths
         self.model.request_aggregate_output(
@@ -204,41 +239,39 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_hospitalisations(
             self,
-            prop_hospital_among_sympt: List[float],
-            hospital_prop_multiplier: float,
-            hospital_risk_reduction_by_immunity: ImmunityRiskReduction,
-            time_from_onset_to_hospitalisation: TimeDistribution,
-            hospital_stay_duration: TimeDistribution,
             model_times: np.ndarray,
             age_groups: List[int],
             strain_strata: List[str],
+            iso3: str,
+            region: Union[str, None],
+            hosp_prop_requests: AgeSpecificProps,
+            time_from_onset_to_hospitalisation: TimeDistribution,
+            hospital_stay_duration: TimeDistribution,
             voc_params: Optional[Dict[str, VocComponent]],
     ):
         """
         Request hospitalisation-related outputs.
 
         Args:
-            prop_hospital_among_sympt: Proportion ever hospitalised among symptomatic cases (float)
-            hospital_prop_multiplier: Multiplier applied as an odds ratio adjustment
-            hospital_risk_reduction_by_immunity: Hospital risk reduction according to immunity level
-            time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
-            hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
             strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+            iso3: The ISO3 code of the country being simulated
+            region: The sub-region being simulated, if any
+            hosp_prop_requests: The hospitalisation proportion-related requests, including the proportions themselves
+            time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
+            hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
             voc_params: The parameters pertaining to the VoCs being implemented in the model
 
         """
 
-        # Adjusted hospital proportions
-        prop_hosp_among_sympt = apply_odds_ratio_to_props(prop_hospital_among_sympt, hospital_prop_multiplier)
+        hosp_request = hosp_prop_requests.values
+        hosp_props = convert_param_agegroups(iso3, region, hosp_request, age_groups)
 
-        # Prepare a dictionary with hospital risk reduction by level of immunity
-        hospital_risk_reduction = {
-            ImmunityStratum.NONE: hospital_risk_reduction_by_immunity.none,
-            ImmunityStratum.HIGH: hospital_risk_reduction_by_immunity.high,
-            ImmunityStratum.LOW: hospital_risk_reduction_by_immunity.low
-        }
+        # Get the adjustments to the hospitalisation rates according to immunity status
+        source_immunity_dist = hosp_prop_requests.source_immunity_distribution
+        source_immunity_protection = hosp_prop_requests.source_immunity_protection
+        immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
@@ -246,22 +279,26 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Request hospital admissions for each age group
         hospital_admissions_sources = []
         for i_age, agegroup in enumerate(age_groups):
-            for immunity_stratum in IMMUNITY_STRATA:
+            agegroup_string = f"Xagegroup_{agegroup}"
+
+            for immunity_strat in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_strat}"
+
+                # Adjust the hospitalisation proportions for immunity
+                adj_hosp_props = [i_prop * immune_hosp_modifiers[immunity_strat] for i_prop in hosp_props]
+                adj_hosp_props = apply_odds_ratio_to_props(adj_hosp_props, hosp_prop_requests.multiplier)
+
                 for strain in strain_strata:
+                    strain_string = f"Xstrain_{strain}" if strain else ""
 
                     # Find the strata we are working with and work out the strings to refer to
-                    agegroup_string = f"Xagegroup_{agegroup}"
-                    immunity_string = f"Ximmunity_{immunity_stratum}"
-                    strain_string = f"Xstrain_{strain}" if strain else ""
-                    strata_string = agegroup_string + immunity_string + strain_string
-                    output_name = "hospital_admissions" + strata_string
+                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+                    output_name = f"hospital_admissions{strata_string}"
                     hospital_admissions_sources.append(output_name)
-                    incidence_name = "incidence_sympt" + strata_string
 
                     # Calculate the multiplier based on age, immunity and strain
-                    immunity_risk_modifier = 1. - hospital_risk_reduction[immunity_stratum]
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
-                    hospital_risk = prop_hosp_among_sympt[i_age] * immunity_risk_modifier * strain_risk_modifier
+                    hospital_risk = adj_hosp_props[i_age] * strain_risk_modifier
 
                     # Get the hospitalisation function
                     hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)
@@ -269,7 +306,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     # Request the output
                     self.model.request_function_output(
                         name=output_name,
-                        sources=[incidence_name],
+                        sources=[f"incidence_sympt{strata_string}"],
                         func=hospital_admissions_func
                     )
 

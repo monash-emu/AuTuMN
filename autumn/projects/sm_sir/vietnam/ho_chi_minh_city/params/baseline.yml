@@ -118,3 +118,9 @@ mobility:
         - 0.33
         - 0.67
         - 1.0
+
+age_stratification:
+  cfr:
+    multiplier: 0.5
+  prop_hospital:
+    multiplier: 0.625

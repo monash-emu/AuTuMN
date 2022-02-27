@@ -53,18 +53,18 @@ targets = [NormalTarget(notifications),
 priors = [
     # infectious seed and contact rate
     UniformPrior("infectious_seed", (50, 200)),
-    UniformPrior("contact_rate", (0.3, 0.5)),
+    UniformPrior("contact_rate", (0.4, 0.6)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0001, 0.005)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.001, 0.01)),
+    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.0015)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.003, 0.006)),
     # sojourns
     UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
     UniformPrior("immunity_stratification.prop_immune", (0.0, 1.0)),
     UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0.0, 1.0)),
-    UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.3, 0.5)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (0.75, 1.25)),
 ]
 
 

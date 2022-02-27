@@ -37,9 +37,11 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 # notifications = ts_set["notifications"].multiple_truncations([[511, 575], [606, 700]])
 # truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
 notifications = pd.concat(
-    [ts_set["notifications"].loc[511:575],
+    [
+     # ts_set["notifications"].loc[511:575],
      ts_set["notifications"].loc[606:700],
-     ts_set["notifications"].loc[763:]]
+     ts_set["notifications"].loc[763:]
+    ]
 )
 
 icu_occupancy = ts_set["icu_occupancy"].loc[640:].rolling(7).mean()  # truncated to 01 Oct 2021

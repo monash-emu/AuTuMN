@@ -74,7 +74,7 @@ voc_emergence:
 
 testing_to_detection:
   assumed_tests_parameter: 0.001 # Malaysia model
-  assumed_cdr_parameter: 0.05 # needs calibrating
+  assumed_cdr_parameter: 0.05 # fixed
   smoothing_period: 14
 
 hospital_stay:
@@ -121,6 +121,6 @@ mobility:
 
 age_stratification:
   cfr:
-    multiplier: 0.5
+    multiplier: 0.75 # fixed
   prop_hospital:
     multiplier: 1.0

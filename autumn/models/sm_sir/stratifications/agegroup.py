@@ -56,7 +56,7 @@ def get_agegroup_strat(
     if age_suscept:
         age_suscept_adjs = {str(sus): Multiply(value) for sus, value in zip(params.age_groups, age_suscept)}
         age_strat.set_flow_adjustments(FlowName.INFECTION, age_suscept_adjs)
-        for flow in reinfection_flows:
-            age_strat.set_flow_adjustments(flow, age_suscept_adjs)
+        # for flow in reinfection_flows:
+        #     age_strat.set_flow_adjustments(flow, age_suscept_adjs)
 
     return age_strat

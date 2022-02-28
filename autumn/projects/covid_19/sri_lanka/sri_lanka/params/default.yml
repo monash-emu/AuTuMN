@@ -148,7 +148,7 @@ voc_emergence:
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
-    ifr_multiplier: 3.95
+    ifr_multiplier: 5.
     hosp_multiplier: 2.58
 
 history:

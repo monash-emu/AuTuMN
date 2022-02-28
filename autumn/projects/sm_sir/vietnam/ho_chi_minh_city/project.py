@@ -38,9 +38,8 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 # truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
 notifications = pd.concat(
     [
-     # ts_set["notifications"].loc[511:575],
-     ts_set["notifications"].loc[606:700],
-     ts_set["notifications"].loc[763:]
+     ts_set["notifications"].loc[606:639],  # form 28/02/2021 to 30/09/2021
+     ts_set["notifications"].loc[702:]  # from 02/12/2021 onwards
     ]
 )
 
@@ -57,22 +56,22 @@ priors = [
     UniformPrior("infectious_seed", (5, 200)),
     UniformPrior("contact_rate", (0.3, 0.6)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.004, 0.01)),
+    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.005, 0.015)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.02)),
     # sojourns
-    UniformPrior("sojourns.latent.total_time", (3, 5.0)),
+    # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.prop_immune", (0.0, 1.0)),
-    UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
+    UniformPrior("immunity_stratification.prop_immune", (0.5, 0.8)),
+    # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # age stratification
     # UniformPrior("age_stratification.cfr.multiplier", (0.35, 0.55)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.20)),
+    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.15)),
     # start time of omicron
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (732.0, 763.0))
     # sojourns
-    UniformPrior("sojourns.active.proportion_early", (0.25, 0.5)),
+    UniformPrior("sojourns.active.proportion_early", (0.2, 0.5)),
     UniformPrior("sojourns.latent.proportion_early", (0.25, 0.75)),
 ]
 

@@ -53,10 +53,10 @@ targets = [NormalTarget(notifications),
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (5, 200)),
-    UniformPrior("contact_rate", (0.3, 0.6)),
+    UniformPrior("infectious_seed", (50, 200)),
+    UniformPrior("contact_rate", (0.4, 0.7)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.005, 0.015)),
+    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.025)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.02)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),

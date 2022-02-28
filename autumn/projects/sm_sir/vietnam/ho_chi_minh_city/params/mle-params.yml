@@ -1,7 +1,7 @@
-contact_rate: 0.5474307691604955
-infectious_seed: 179.7313639984311
-testing_to_detection.assumed_tests_parameter: 0.009955079626348945
-immunity_stratification.prop_immune: 0.7703534386173482
-prop_icu_among_hospitalised: 0.1029825245424579
-sojourns.active.proportion_early: 0.26230579840519747
-sojourns.latent.proportion_early: 0.44494314883557406
+contact_rate: 0.5444615965183702
+infectious_seed: 142.2996765516246
+testing_to_detection.assumed_tests_parameter: 0.01492168984061084
+immunity_stratification.prop_immune: 0.7819394378253619
+prop_icu_among_hospitalised: 0.10842982023061401
+sojourns.active.proportion_early: 0.3217402443840158
+sojourns.latent.proportion_early: 0.3011934930250505

@@ -68,9 +68,12 @@ priors = [
     UniformPrior("age_stratification.cfr.multiplier", (0.35, 0.55)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.20))
+    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.20)),
     # start time of omicron
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (732.0, 763.0))
+    # sojourns
+    UniformPrior("sojourns.active.proportion_early", (0.25, 0.5)),
+    UniformPrior("sojourns.latent.proportion_early", (0.25, 0.75)),
 ]
 
 

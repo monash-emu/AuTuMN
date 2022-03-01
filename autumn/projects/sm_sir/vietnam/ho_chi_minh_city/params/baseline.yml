@@ -9,8 +9,12 @@ ref_mixing_iso3: HKG
 sojourns:
   active:
     total_time: 6.
+    proportion_early: 0.333
   latent:
     total_time: 4.
+    proportion_early: 0.5
+  recovered:
+    total_time: 180.
 
 population:
   region: Ho Chi Minh City
@@ -18,7 +22,7 @@ population:
 
 time:
   start: 511 # 25th May 2021
-  end: 1096
+  end: 913 # 30th June 2022
 
 activate_random_process: False
 
@@ -27,32 +31,67 @@ contact_rate: 0.15
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .2  # varied in uncertainty
+  prop_high_among_immune: 1.0  # fixed after various calibrations
+
+  infection_risk_reduction:
+    low: 0.6
 
 voc_emergence:
-#  delta:
-#    start_time: 548
-#    entry_rate: 5.
-#    seed_duration: 10.
-#    contact_rate_multiplier: 2.
-#  omicron:
-#    start_time: 2000.
-#    entry_rate: 16.
-#    seed_duration: 10.
-#    contact_rate_multiplier: 5.
-#    immune_escape: 0.
-    # ifr_multiplier: 1.
+  wild_type:
+    starting_strain: true
+    seed_prop: 1.
+    new_voc_seed: null
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      omicron:
+        early_reinfection: 0.4  # 60% immune escape
+        late_reinfection: 0.4
+  omicron:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 752. # 21th Jan 2022
+      entry_rate: 10.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.5
+    immune_escape: 0.6
+    hosp_protection: 0.8
+    death_protection: 0.9
+    relative_latency: 0.6667
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.
 
 testing_to_detection:
-  assumed_tests_parameter: 1e-04 # Sri-Lanka model
-  assumed_cdr_parameter: 0.05 # needs calibrating
+  assumed_tests_parameter: 0.001 # Malaysia model
+  assumed_cdr_parameter: 0.05 # fixed
   smoothing_period: 14
+
+hospital_stay:
+  hospital_all:
+    parameters:
+      mean: 8.
+  icu:
+    parameters:
+      mean: 10.
+
+# MOBILITY PARAMETERS
+is_dynamic_mixing_matrix: true
 
 mobility:
   region: Ho Chi Minh City
   # Google mobility data
   smooth_google_data: true # whether to apply a 7-day moving average
-  square_mobility_effect: true
   # Google mobility weightings
   google_mobility_locations:
     work:
@@ -62,54 +101,26 @@ mobility:
       grocery_and_pharmacy: 0.3
       parks: 0.2
       transit_stations: 0.1
-  # Micro distancing
-  microdistancing:
-    behaviour:
-      function_type: empiric
-      parameters:
-        max_effect: .2 # estimated from the Philipines paper
-        times:
-          - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
-          - 532 # 15th Jun 2021, Directive No.15 of the PM in place city-wide for the next 2 weeks
-          - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place
-          - 556 # 09th Jul 2021, Directive No.16 of the PM in place city-wide
-          - 573 # 26th Jul 2021, curfew from 6PM to 6AM
-          - 601 # 23th Aug 2021, total lockdown implemented
-          - 640 # 01st Oct 2021, lockdown started to ease
-          - 641 # 02nd Oct 2021, second day after eased lockdown
-          - 654 # 15th Oct 2021, 2 weeks after eased lockdown
-          - 671 # 01st Nov 2021, 1 month after eased lockdown, restaurants are serving on-site at 50% capacity
-          - 741 # 10th Jan 2022, HCMC to officially resume bars, disco, karaoke, massage services
-        values:
-          - 0.3
-          - 0.2
-          - 0.5
-          - 0.7
-          - 0.8
-          - 0.9
-          - 0.7
-          - 0.5
-          - 0.35
-          - 0.2
-          - 0.1
-      locations:
-        - other_locations
-        - school
-        - work
-        - home
   mixing:
     school:
       append: false
       times:
         - 2021-05-09 # All schools switched to online learning, school year 2020-2021 ended
         - 2021-10-20 # Multiple universities started to allow students to come back to finish the degree. Source: Tuoitre.
-        - 2021-12-13 # Start date of the school re-opening plan
-        - 2021-01-03
-        - 2022-01-17
+        - 2021-12-13 # Students grade 1, 9, 12 started to come back to school
+        - 2022-01-04 # Students grade 7, 8, 10, 11 came back to school
+        - 2022-02-14 # All students grade 1-6 and children at kindergarten came back to school
+        - 2022-02-28 # University students starts to study on-site
       values:
         - 0.
-        - 0.1
-        - 0.4
-        - 0.7
+        - 0.05
+        - 0.11
+        - 0.33
+        - 0.67
         - 1.0
 
+age_stratification:
+  cfr:
+    multiplier: 0.8 # fixed
+  prop_hospital:
+    multiplier: 1.0

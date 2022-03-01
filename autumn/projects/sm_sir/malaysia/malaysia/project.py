@@ -8,7 +8,10 @@ from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 
 # Load and configure model parameters.
-baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
+mle_path = build_rel_path("params/mle-params.yml")
+baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
+    mle_path, calibration_format=True
+)
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 # Load and configure calibration settings
@@ -26,9 +29,10 @@ targets = [
 ]
 
 priors = [
-    UniformPrior("contact_rate", (0.1, 0.16)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.08, 0.18)),
+    UniformPrior("contact_rate", (0.14, 0.19)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.07, 0.18)),
     UniformPrior("sojourns.latent.total_time", (1., 3.0)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.0, 2.0))
 ]
 
 calibration = Calibration(

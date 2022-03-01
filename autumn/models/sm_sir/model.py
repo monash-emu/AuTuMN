@@ -518,9 +518,11 @@ def build_model(
             model,
             compartment_types,
             infection_dest,
+            age_groups,
             params.voc_emergence,
             strain_strata,
             contact_rate,
+            susc_props,
         )
     else:
         apply_reinfection_flows_without_strains(

@@ -69,7 +69,7 @@ def apply_reinfection_flows_with_strains(
         voc_params: Optional[Dict[str, VocComponent]],
         strain_strata: List[str],
         contact_rate: float,
-        susc_props: List[float],
+        susc_adjs: List[float],
 ):
     """
     Apply the reinfection flows, making sure that it is possible to be infected with any strain after infection with any
@@ -83,7 +83,7 @@ def apply_reinfection_flows_with_strains(
         voc_params: The VoC-related parameters
         strain_strata: The strains being implemented or a list of an empty string if no strains in the model
         contact_rate: The model's contact rate
-        susc_props: Adjustments to the rate of infection of susceptibles based on modelled age groups
+        susc_adjs: Adjustments to the rate of infection of susceptibles based on modelled age groups
 
     """
 
@@ -93,7 +93,7 @@ def apply_reinfection_flows_with_strains(
         for source_strain in strain_strata:
             source_filter = {"strain": source_strain}
             for i_age, age_group in enumerate(age_groups):
-                age_adjuster = susc_props[i_age]
+                age_adjuster = susc_adjs[i_age]
                 dest_filter.update({"agegroup": str(age_group)})
                 source_filter.update({"agegroup": str(age_group)})
 

@@ -361,7 +361,7 @@ def build_model(
     age_strat_params = params.age_stratification
 
     suscept_req = age_strat_params.susceptibility
-    susc_props = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
+    susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
 
@@ -461,7 +461,7 @@ def build_model(
         mixing_matrices,
         compartment_types,
         params.is_dynamic_mixing_matrix,
-        susc_props,
+        susc_adjs,
     )
     model.stratify_with(age_strat)
 
@@ -522,7 +522,7 @@ def build_model(
             params.voc_emergence,
             strain_strata,
             contact_rate,
-            susc_props,
+            susc_adjs,
         )
     else:
         apply_reinfection_flows_without_strains(

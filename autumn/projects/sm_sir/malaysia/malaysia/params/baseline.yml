@@ -26,7 +26,6 @@ activate_random_process: False
 
 contact_rate: 0.165
 infectious_seed: 10000.
-hospital_prop_multiplier: 0.3
 
 immunity_stratification:
   prop_immune: .8

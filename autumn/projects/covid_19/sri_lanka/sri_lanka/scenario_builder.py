@@ -29,7 +29,7 @@ def get_vaccine_roll_out(lockdown_scenario):
 
 
 def get_all_scenario_dicts(country: str):
-    num_scenarios = 1
+    num_scenarios = 4
     all_scenario_dicts = []
 
     for i_lockdown_scenario in [*range(0, num_scenarios)]:
@@ -156,6 +156,8 @@ def get_all_scenario_dicts(country: str):
 
         # vaccination parameters
         scenario_dict["vaccination"]["roll_out_components"] = get_vaccine_roll_out(i_lockdown_scenario)
+        if i_lockdown_scenario == 3:
+            scenario_dict["vaccination"]["standard_supply"] = False
 
         # school openings
         if i_lockdown_scenario == 4:

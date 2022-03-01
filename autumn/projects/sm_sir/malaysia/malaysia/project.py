@@ -32,7 +32,7 @@ priors = [
     UniformPrior("contact_rate", (0.14, 0.19)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.07, 0.18)),
     UniformPrior("sojourns.latent.total_time", (1.5, 4.0)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.0, 1.25))
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.2, 1.4))
 ]
 
 calibration = Calibration(

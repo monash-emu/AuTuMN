@@ -529,7 +529,9 @@ def build_model(
             model,
             compartment_types,
             infection_dest,
+            age_groups,
             contact_rate,
+            susc_adjs,
         )
 
     """

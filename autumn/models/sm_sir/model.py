@@ -330,9 +330,20 @@ def get_smsir_outputs_builder(
         outputs_builder.request_random_process_outputs()
 
 
-def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
+def build_model(
+        params: dict,
+        build_options: dict = None
+) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
+
+    Args:
+        params: The validated user-requested parameters
+        build_options:
+
+    Returns:
+        The "SM-SIR" model, currently being used only for COVID-19
+
     """
 
     params = Parameters(**params)

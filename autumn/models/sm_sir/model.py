@@ -13,10 +13,20 @@ from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomPr
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
-from .stratifications.immunity import get_immunity_strat
+from .stratifications.immunity import (
+    get_immunity_strat,
+    adjust_susceptible_infection_without_strains,
+    adjust_susceptible_infection_with_strains,
+    adjust_reinfection_without_strains,
+    adjust_reinfection_with_strains,
+)
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import seed_vocs, apply_reinfection_flows
+from .strat_processing.strains import (
+    seed_vocs,
+    apply_reinfection_flows_without_strains,
+    apply_reinfection_flows_with_strains,
+)
 from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
 
 
@@ -82,6 +92,10 @@ def assign_population(
 
     # Assign to the model
     model.set_initial_population(init_pop)
+
+
+def set_up_random_process(start_time, end_time):
+    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)
 
 
 def get_random_process(
@@ -316,9 +330,20 @@ def get_smsir_outputs_builder(
         outputs_builder.request_random_process_outputs()
 
 
-def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
+def build_model(
+        params: dict,
+        build_options: dict = None
+) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
+
+    Args:
+        params: The validated user-requested parameters
+        build_options:
+
+    Returns:
+        The "SM-SIR" model, currently being used only for COVID-19
+
     """
 
     params = Parameters(**params)
@@ -328,6 +353,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     pop = params.population
 
     # Need a placeholder for the immunity stratification a nd output loops if strains not implemented
+    clinical_strata = [""]
     strain_strata = [""]
 
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
@@ -335,7 +361,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     age_strat_params = params.age_stratification
 
     suscept_req = age_strat_params.susceptibility
-    susc_props = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
+    susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
 
@@ -435,7 +461,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         mixing_matrices,
         compartment_types,
         params.is_dynamic_mixing_matrix,
-        susc_props,
+        susc_adjs,
     )
     model.stratify_with(age_strat)
 
@@ -465,15 +491,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
-    else:
-        clinical_strata = [""]
 
     """
     Apply strains stratification
     """
 
+    voc_params = params.voc_emergence
     if params.voc_emergence:
-        voc_params = params.voc_emergence
 
         # Build and apply stratification
         strain_strat = get_strain_strat(voc_params, compartment_types)
@@ -489,18 +513,80 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply the reinfection flows (knowing the strain stratification)
     """
 
-    apply_reinfection_flows(model, compartment_types, infection_dest, params.voc_emergence, strain_strata, contact_rate)
+    if voc_params:
+        apply_reinfection_flows_with_strains(
+            model,
+            compartment_types,
+            infection_dest,
+            age_groups,
+            params.voc_emergence,
+            strain_strata,
+            contact_rate,
+            susc_adjs,
+        )
+    else:
+        apply_reinfection_flows_without_strains(
+            model,
+            compartment_types,
+            infection_dest,
+            age_groups,
+            contact_rate,
+            susc_adjs,
+        )
 
     """
-    Apply immunity stratification
+    Immunity stratification
     """
 
+    # Get the immunity stratification
     immunity_strat = get_immunity_strat(
         compartment_types,
         params.immunity_stratification,
-        strain_strata,
-        params.voc_emergence,
     )
+
+    immunity_params = params.immunity_stratification
+
+    # Adjust infection of susceptibles for immunity status
+
+    reinfection_flows = [FlowName.EARLY_REINFECTION]
+    if Compartment.WANED in compartment_types:
+        reinfection_flows.append(FlowName.LATE_REINFECTION)
+
+    immunity_low_risk_reduction = immunity_params.infection_risk_reduction.low
+    immunity_high_risk_reduction = immunity_params.infection_risk_reduction.high
+
+    if voc_params:
+        # The code should run fine if VoC parameters have been submitted but the strain stratification hasn't been
+        # implemented yet - but at this stage we assume we don't want it to
+        msg = "Strain stratification not present in model"
+        assert "strain" in [strat.name for strat in model._stratifications], msg
+        adjust_susceptible_infection_with_strains(
+            immunity_low_risk_reduction,
+            immunity_high_risk_reduction,
+            immunity_strat,
+            voc_params,
+        )
+        adjust_reinfection_with_strains(
+            immunity_low_risk_reduction,
+            immunity_high_risk_reduction,
+            immunity_strat,
+            reinfection_flows,
+            voc_params,
+        )
+    else:
+        adjust_susceptible_infection_without_strains(
+            immunity_low_risk_reduction,
+            immunity_high_risk_reduction,
+            immunity_strat,
+        )
+        adjust_reinfection_without_strains(
+            immunity_low_risk_reduction,
+            immunity_high_risk_reduction,
+            immunity_strat,
+            reinfection_flows,
+        )
+
+    # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
     """
@@ -526,7 +612,3 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     return model
-
-
-def set_up_random_process(start_time, end_time):
-    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)

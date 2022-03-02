@@ -36,12 +36,12 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 notifications = pd.concat(
     [
-     ts_set["notifications"].loc[701:].rolling(7).mean()  # truncated to 01st Dec 2021
+     ts_set["notifications"].loc[701:]  # truncated to 01st Dec 2021
     ]
 )
 
-icu_occupancy = ts_set["icu_occupancy"].loc[701:].rolling(7).mean()  # truncated to 01st Dec 2021
-infection_deaths = ts_set["infection_deaths"].loc[725:].rolling(7).mean()  # truncated to 25th Dec 2021
+icu_occupancy = ts_set["icu_occupancy"].loc[701:]  # truncated to 01st Dec 2021
+infection_deaths = ts_set["infection_deaths"].loc[725:]  # truncated to 25th Dec 2021
 
 targets = [NormalTarget(notifications),
            NormalTarget(icu_occupancy),
@@ -50,23 +50,23 @@ targets = [NormalTarget(notifications),
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (5, 200)),
-    UniformPrior("contact_rate", (0.005, 0.5)),
+    UniformPrior("infectious_seed", (50, 150)),
+    UniformPrior("contact_rate", (0.1, 0.5)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.02)),
-    # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.02)),
+    # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.02)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.001, 0.1)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.prop_immune", (0., 1.0)),
-    UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
+    # UniformPrior("immunity_stratification.prop_immune", (0., 1.0)),
+    # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # age stratification
     UniformPrior("age_stratification.cfr.multiplier", (0., 1.0)),
-    UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
+    # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.1, 0.3)),
+    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.3)),
     # start time of omicron
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 763.0)),
+    # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 763.0)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0., 0.5)),
     UniformPrior("sojourns.latent.proportion_early", (0.25, 0.75)),

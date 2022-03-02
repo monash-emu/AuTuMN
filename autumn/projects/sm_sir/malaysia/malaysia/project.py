@@ -18,7 +18,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 notifications_end_time = 762
-notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+notifications_ts = ts_set["notifications"].loc[calibration_start_time:notifications_end_time]
 icu_occupancy_ts = ts_set["icu_occupancy"].loc[calibration_start_time:]
 hospital_occupancy_ts = ts_set["hospital_occupancy"].loc[calibration_start_time:]
 infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]

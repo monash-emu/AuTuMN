@@ -31,7 +31,7 @@ contact_rate: 0.15
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .2  # fixed after various calibrations
+  prop_high_among_immune: .0  # Hanoi only started 3rd dose vaccination from 30th Dec
 
   infection_risk_reduction:
     low: 0.6
@@ -56,7 +56,7 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 732. # 01st Jan 2022
+      start_time: 746. # 15th Jan 2022
       entry_rate: 10.
       seed_duration: 10.
     contact_rate_multiplier: 1.5
@@ -105,11 +105,13 @@ mobility:
     school:
       append: false
       times:
+        - 2021-12-01 # start date of the model
         - 2021-12-06 # Students grade 12 started to come back to school at 50% capacity
         - 2022-02-08 # Students grade 6-12 started to come back to school
         - 2022-02-14 # Students of most major universities started to return to campus
         - 2022-02-21 # Primary school students and kids at kindergarten started to come back to school
       values:
+        - 0.0
         - 0.025
         - 0.333
         - 0.667
@@ -119,4 +121,4 @@ age_stratification:
   cfr:
     multiplier: 0.8 # fixed
   prop_hospital:
-    multiplier: 1.0
+    multiplier: 0.85 # fixed

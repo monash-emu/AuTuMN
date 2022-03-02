@@ -36,11 +36,11 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 notifications = pd.concat(
     [
-     ts_set["notifications"].loc[553:].rolling(7).mean()  # truncated to 06th Jul 2021
+     ts_set["notifications"].loc[701:].rolling(7).mean()  # truncated to 01st Dec 2021
     ]
 )
 
-icu_occupancy = ts_set["icu_occupancy"].loc[619:].rolling(7).mean()  # truncated to 10th Sep 2021
+icu_occupancy = ts_set["icu_occupancy"].loc[701:].rolling(7).mean()  # truncated to 01st Dec 2021
 infection_deaths = ts_set["infection_deaths"].loc[725:].rolling(7).mean()  # truncated to 25th Dec 2021
 
 targets = [NormalTarget(notifications),
@@ -64,9 +64,9 @@ priors = [
     UniformPrior("age_stratification.cfr.multiplier", (0., 1.0)),
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.4)),
+    UniformPrior("prop_icu_among_hospitalised", (0.1, 0.3)),
     # start time of omicron
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (701.0, 763.0)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 763.0)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0., 0.5)),
     UniformPrior("sojourns.latent.proportion_early", (0.25, 0.75)),

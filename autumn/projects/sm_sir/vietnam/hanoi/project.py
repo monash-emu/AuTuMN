@@ -98,7 +98,7 @@ with open(plot_spec_filepath) as f:
 
 # Create and register the project.
 project = Project(
-    Region.HO_CHI_MINH_CITY, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+    Region.HANOI, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
 )
 
 

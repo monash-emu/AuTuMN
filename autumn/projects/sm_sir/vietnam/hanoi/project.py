@@ -50,7 +50,7 @@ targets = [NormalTarget(notifications),
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (50, 1000)),
+    UniformPrior("infectious_seed", (100., 1000.)),
     UniformPrior("contact_rate", (0.2, 0.8)),
     # testing to detection params
     # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.02)),

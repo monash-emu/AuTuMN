@@ -69,7 +69,7 @@ priors = [
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 763.0)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0., 0.5)),
-    UniformPrior("sojourns.latent.proportion_early", (0.25, 0.75)),
+    UniformPrior("sojourns.latent.proportion_early", (0.25, 0.5)),
 ]
 
 

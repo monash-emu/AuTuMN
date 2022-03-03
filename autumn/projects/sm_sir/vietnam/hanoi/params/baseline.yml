@@ -17,11 +17,11 @@ sojourns:
     total_time: 180.
 
 population:
-  region: Ho Chi Minh City
+  region: Hanoi
   year: 2019
 
 time:
-  start: 701 # 01st Dec 2021
+  start: 671 # 01st Nov 2021
   end: 913 # 30th June 2022
 
 activate_random_process: False
@@ -105,7 +105,7 @@ mobility:
     school:
       append: false
       times:
-        - 2021-12-01 # start date of the model
+        - 2021-11-01 # start date of the model
         - 2021-12-06 # Students grade 12 started to come back to school at 50% capacity
         - 2022-02-08 # Students grade 6-12 started to come back to school
         - 2022-02-14 # Students of most major universities started to return to campus

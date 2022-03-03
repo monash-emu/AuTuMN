@@ -36,7 +36,7 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 notifications = pd.concat(
     [
-     ts_set["notifications"].loc[763:]  # truncated to 01st Feb 2022
+     ts_set["notifications"].loc[671:]  # truncated to 01st Feb 2022
     ]
 )
 
@@ -50,8 +50,8 @@ targets = [NormalTarget(notifications),
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (5, 100)),
-    UniformPrior("contact_rate", (0.01, 0.5)),
+    UniformPrior("infectious_seed", (50, 250)),
+    UniformPrior("contact_rate", (0.2, 0.5)),
     # testing to detection params
     # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.02)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.001, 0.1)),
@@ -59,12 +59,12 @@ priors = [
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
     # UniformPrior("immunity_stratification.prop_immune", (0., 1.0)),
-    UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 0.3)),
+    UniformPrior("immunity_stratification.prop_high_among_immune", (0.1, 0.4)),
     # age stratification
     UniformPrior("age_stratification.cfr.multiplier", (0., 1.0)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.3)),
+    UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # start time of omicron
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 763.0)),
     # sojourns

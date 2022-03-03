@@ -1,13 +1,13 @@
-contact_rate: 0.42424930579658315
-infectious_seed: 139.701165616249
-testing_to_detection.assumed_cdr_parameter: 0.0972205970912693
+contact_rate: 0.313067336759836
+infectious_seed: 177.1764593160344
+testing_to_detection.assumed_cdr_parameter: 0.09306307937793531
 # testing_to_detection.assumed_tests_parameter: 0.0005246107789222114
-immunity_stratification.prop_high_among_immune: 0.2
+immunity_stratification.prop_high_among_immune: 0.22163192508791493
 # immunity_stratification.prop_immune: 0.01792988526462841
-age_stratification.cfr.multiplier: 0.19075850878045844
+age_stratification.cfr.multiplier: 0.07410854276553308
 # age_stratification.prop_hospital.multiplier: 0.8355064210322442
-prop_icu_among_hospitalised: 0.05077159119861675
+prop_icu_among_hospitalised: 0.07852168451454554
 # voc_emergence.omicron.new_voc_seed.start_time: 715.0268234024783
-sojourns.active.proportion_early: 0.19144159565947594
-sojourns.latent.proportion_early: 0.27082120072553434
+sojourns.active.proportion_early: 0.35260530702519266
+sojourns.latent.proportion_early: 0.25153941349790954
 

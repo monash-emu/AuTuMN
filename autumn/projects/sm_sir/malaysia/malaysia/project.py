@@ -17,7 +17,8 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 # Load and configure calibration settings
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
-notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+notifications_end_time = 762
+notifications_ts = ts_set["notifications"].loc[calibration_start_time:notifications_end_time]
 icu_occupancy_ts = ts_set["icu_occupancy"].loc[calibration_start_time:]
 hospital_occupancy_ts = ts_set["hospital_occupancy"].loc[calibration_start_time:]
 infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
@@ -30,9 +31,11 @@ targets = [
 
 priors = [
     UniformPrior("contact_rate", (0.14, 0.19)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.07, 0.18)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.05, 0.15)),
     UniformPrior("sojourns.latent.total_time", (1.5, 4.0)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.0, 1.25))
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.2, 1.4)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (580, 680)),
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75))
 ]
 
 calibration = Calibration(

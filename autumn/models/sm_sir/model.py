@@ -525,14 +525,16 @@ def build_model(
             susc_adjs,
         )
     else:
-        apply_reinfection_flows_without_strains(
-            model,
-            compartment_types,
-            infection_dest,
-            age_groups,
-            contact_rate,
-            susc_adjs,
-        )
+        # for a single-strain model, reinfection may only occur from the waned compartment
+        if Compartment.WANED in compartment_types:
+            apply_reinfection_flows_without_strains(
+                model,
+                compartment_types,
+                infection_dest,
+                age_groups,
+                contact_rate,
+                susc_adjs,
+            )
 
     """
     Immunity stratification
@@ -548,7 +550,7 @@ def build_model(
 
     # Adjust infection of susceptibles for immunity status
 
-    reinfection_flows = [FlowName.EARLY_REINFECTION]
+    reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
     if Compartment.WANED in compartment_types:
         reinfection_flows.append(FlowName.LATE_REINFECTION)
 

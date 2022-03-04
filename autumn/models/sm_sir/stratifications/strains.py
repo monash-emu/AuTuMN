@@ -45,9 +45,12 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
 
     # Latency progression rate adjustment - applies to zero, one or two flows relating to progression through latency
     adjustments = {strain: None for strain in strains}  # Start from a blank adjustments set
+    adjustments_active = {strain: None for strain in strains}  # Start from a blank adjustments set
     for strain in strains:
         if voc_params[strain].relative_latency:
             adjustments.update({strain: Multiply(1. / voc_params[strain].relative_latency)})  # Update for user request
+        if voc_params[strain].relative_active_period:
+            adjustments_active.update({strain: Multiply(1. / voc_params[strain].relative_active_period)})  # Update for user request
     if Compartment.LATENT_LATE in compartments:
         strain_strat.set_flow_adjustments(
             FlowName.WITHIN_LATENT,
@@ -57,6 +60,17 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
         strain_strat.set_flow_adjustments(
             FlowName.PROGRESSION,
             adjustments=adjustments
+        )
+
+    if Compartment.INFECTIOUS_LATE in compartments:
+        strain_strat.set_flow_adjustments(
+            FlowName.WITHIN_INFECTIOUS,
+            adjustments=adjustments_active
+        )
+    if Compartment.INFECTIOUS in compartments:
+        strain_strat.set_flow_adjustments(
+            FlowName.RECOVERY,
+            adjustments=adjustments_active
         )
 
     return strain_strat

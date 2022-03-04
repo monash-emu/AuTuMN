@@ -26,6 +26,7 @@ class FlowName:
 
 BASE_COMPARTMENTS = [
     Compartment.SUSCEPTIBLE,
+    Compartment.LATENT,
     Compartment.INFECTIOUS,
     Compartment.RECOVERED,
 ]

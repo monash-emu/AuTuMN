@@ -26,8 +26,8 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.04, 0.08]),
-    UniformPrior("sojourns.active.total_time", [5, 10]),
+    UniformPrior("contact_rate", [0.04, 0.15]),
+    UniformPrior("sojourns.active.total_time", [4, 10]),
     UniformPrior("infectious_seed", [1, 400]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.01, 0.05]),
     # Pre-existing immunity
@@ -38,6 +38,7 @@ priors = [
         "immunity_stratification.prop_high_among_immune", [0.05, 0.40]
     ),  # Among people with at least one dose, 5% had received a booster by 29 Dec.
     # Hospital-related
+    UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, 1.]),
     UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
     UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
     UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 5.0]),
@@ -77,4 +78,4 @@ project = Project(Region.NCR, Models.SM_SIR, build_model, param_set, calibration
 
 
 # from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

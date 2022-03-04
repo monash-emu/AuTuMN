@@ -56,13 +56,13 @@ priors = [
     UniformPrior("infectious_seed", (20, 100)),
     UniformPrior("contact_rate", (0.4, 0.7)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.02, 0.03)),
+    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.02, 0.05)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.02)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
     UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
-    UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
+    # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # age stratification
     UniformPrior("age_stratification.cfr.multiplier", (0.7, 1.0)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),

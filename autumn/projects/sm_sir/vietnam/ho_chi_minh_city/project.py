@@ -38,7 +38,7 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 # truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
 notifications = pd.concat(
     [
-     ts_set["notifications"].loc[606:639],  # form 28/02/2021 to 30/09/2021
+     ts_set["notifications"].loc[606:639],  # form 28/08/2021 to 30/09/2021
      ts_set["notifications"].loc[702:]  # from 02/12/2021 onwards
     ]
 )

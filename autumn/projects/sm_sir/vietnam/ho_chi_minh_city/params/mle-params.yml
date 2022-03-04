@@ -2,6 +2,8 @@ infectious_seed: 32.574992007987795
 contact_rate: 0.6123407676052635
 testing_to_detection.assumed_tests_parameter: 0.026757375921349386
 immunity_stratification.prop_immune: 0.8324723972132992
+immunity_stratification.prop_high_among_immune: 1.0
+age_stratification.cfr.multiplier: 0.8
 prop_icu_among_hospitalised: 0.13700855512380514
 voc_emergence.omicron.new_voc_seed.start_time: 759.9193479566433
 voc_emergence.omicron.relative_latency: 0.6197179182406999

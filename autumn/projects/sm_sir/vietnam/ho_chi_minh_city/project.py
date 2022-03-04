@@ -62,9 +62,9 @@ priors = [
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
     UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
-    # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
+    UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # age stratification
-    # UniformPrior("age_stratification.cfr.multiplier", (0.35, 0.55)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.7, 1.0)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.05, 0.15)),
@@ -73,7 +73,7 @@ priors = [
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0.2, 0.5)),
-    UniformPrior("sojourns.latent.proportion_early", (0.25, 0.5)),
+    UniformPrior("sojourns.latent.proportion_early", (0.15, 0.4)),
 ]
 
 

@@ -59,7 +59,7 @@ priors = [
     UniformPrior("testing_to_detection.assumed_tests_parameter", (0.02, 0.03)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.02)),
     # sojourns
-    # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
+    UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
     UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
@@ -68,8 +68,9 @@ priors = [
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.05, 0.15)),
-    # start time of omicron
-    # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (732.0, 763.0))
+    # emergence of omicron
+    # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (732.0, 763.0)),
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0.2, 0.5)),
     UniformPrior("sojourns.latent.proportion_early", (0.25, 0.5)),

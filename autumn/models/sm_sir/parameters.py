@@ -149,7 +149,7 @@ class Sojourns(BaseModel):
     """
 
     active: CompartmentSojourn
-    latent: Optional[CompartmentSojourn]
+    latent: CompartmentSojourn
     recovered: Optional[CompartmentSojourn]
 
 

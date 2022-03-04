@@ -169,11 +169,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Clinical stratification.
     """
-
+    wild_type_adjuster = 0.1
     stratified_adjusters = {}
     for voc in voc_ifr_effects.keys():
         stratified_adjusters[voc] = {
-            "ifr": params.infection_fatality.multiplier * voc_ifr_effects[voc],
+            "ifr": params.infection_fatality.multiplier * wild_type_adjuster * voc_ifr_effects[voc],
             "hosp": params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc],
             "sympt": params.clinical_stratification.props.symptomatic.multiplier,
         }

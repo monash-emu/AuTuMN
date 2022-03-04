@@ -1,7 +1,8 @@
-contact_rate: 0.5547733931534566
-infectious_seed: 52.78828638237344
-testing_to_detection.assumed_tests_parameter: 0.026707191919888545
-immunity_stratification.prop_immune: 0.8241632295078933
-prop_icu_among_hospitalised: 0.12817992975205378
-sojourns.active.proportion_early: 0.4132700481747481
-sojourns.latent.proportion_early: 0.3478205023604569
+contact_rate: 0.6123407676052635
+infectious_seed: 32.574992007987795
+voc_emergence.omicron.new_voc_seed.start_time: 759.9193479566433
+immunity_stratification.prop_immune: 0.8324723972132992
+prop_icu_among_hospitalised: 0.13700855512380514
+voc_emergence.omicron.relative_latency: 0.6197179182406999
+sojourns.active.proportion_early: 0.3581431235384407
+sojourns.latent.proportion_early: 0.25846806417921087

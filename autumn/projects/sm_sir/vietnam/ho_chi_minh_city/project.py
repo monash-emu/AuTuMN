@@ -53,8 +53,8 @@ targets = [NormalTarget(notifications),
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (20, 100)),
-    UniformPrior("contact_rate", (0.4, 0.7)),
+    UniformPrior("infectious_seed", (20, 50)),
+    UniformPrior("contact_rate", (0.45, 0.75)),
     # testing to detection params
     UniformPrior("testing_to_detection.assumed_tests_parameter", (0.02, 0.05)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.02)),
@@ -73,7 +73,7 @@ priors = [
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0.2, 0.5)),
-    UniformPrior("sojourns.latent.proportion_early", (0.15, 0.4)),
+    UniformPrior("sojourns.latent.proportion_early", (0.1, 0.3)),
 ]
 
 

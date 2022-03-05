@@ -1,5 +1,5 @@
 infectious_seed: 6.206039088954288
-contact_rate: 0.0050460464142682016
+contact_rate: 0.004296119741646565
 testing_to_detection.assumed_tests_parameter: 0.001884256181225185
 immunity_stratification.prop_immune: 0.00916494149993674
 age_stratification.cfr.multiplier: 0.10375549409864715

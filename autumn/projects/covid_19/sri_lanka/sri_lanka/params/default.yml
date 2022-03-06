@@ -148,7 +148,7 @@ voc_emergence:
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 2.2
-    ifr_multiplier: 5.
+    ifr_multiplier: 2.3 # https://www.cmaj.ca/content/193/42/E1619
     hosp_multiplier: 2.58
 
 history:
@@ -175,3 +175,5 @@ sojourn:
 
 notifications_dispersion_param: 538.601128345239
 infection_deaths_dispersion_param: 26.54605666170518
+
+hospital_reporting: 0.5

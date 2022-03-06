@@ -119,6 +119,6 @@ mobility:
 
 age_stratification:
   cfr:
-    multiplier: 0.8 # fixed
+    multiplier: 0.8
   prop_hospital:
     multiplier: 0.85 # fixed

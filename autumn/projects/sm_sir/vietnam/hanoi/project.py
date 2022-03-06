@@ -51,27 +51,27 @@ targets = [NormalTarget(notifications),
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (100., 5000.)),
-    UniformPrior("contact_rate", (0.2, 0.7)),
+    UniformPrior("infectious_seed", (2000., 10000.)),
+    UniformPrior("contact_rate", (0.1, 0.5)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.05)),
+    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0001, 0.005)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
+    UniformPrior("immunity_stratification.prop_immune", (0.75, 1.0)),
     UniformPrior("immunity_stratification.prop_high_among_immune", (0.25, 0.5)),
     # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0., 1.0)),
+    UniformPrior("age_stratification.cfr.multiplier", (0., 0.1)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # start time of omicron
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (739.0, 760.0)),  # 3-week interval
-    UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 746.0)),  # 1 month interval
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.3, 0.7)),
     # sojourns
-    UniformPrior("sojourns.active.proportion_early", (0., 0.5)),
-    UniformPrior("sojourns.latent.proportion_early", (0., 0.4)),
+    UniformPrior("sojourns.active.proportion_early", (0.25, 0.6)),
+    UniformPrior("sojourns.latent.proportion_early", (0., 0.2)),
 ]
 
 

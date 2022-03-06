@@ -29,7 +29,7 @@ priors = [
     UniformPrior("contact_rate", [0.04, 0.15]),
     UniformPrior("sojourns.active.total_time", [4, 10]),
     UniformPrior("infectious_seed", [1, 400]),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.01, 0.05]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.04]),
     # Pre-existing immunity
     UniformPrior(
         "immunity_stratification.prop_immune", [0.8, 0.95]
@@ -47,7 +47,8 @@ priors = [
 
 targets = [
     NormalTarget(data=ts_set["icu_occupancy"].loc[725:]),
-    NormalTarget(data=ts_set["hospital_occupancy"].loc[725:])
+    NormalTarget(data=ts_set["hospital_occupancy"].loc[725:]),
+    NormalTarget(data=ts_set["notifications"].loc[741:755]),  # peak notifications
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:

@@ -31,7 +31,7 @@ contact_rate: 0.15
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .0  # Hanoi only started 3rd dose vaccination from 30th Dec
+  prop_high_among_immune: .2  # Hanoi only started 3rd dose vaccination from 30th Dec
 
   infection_risk_reduction:
     low: 0.6
@@ -83,7 +83,7 @@ hospital_stay:
       mean: 8.
   icu:
     parameters:
-      mean: 10.
+      mean: 14.
 
 # MOBILITY PARAMETERS
 is_dynamic_mixing_matrix: true
@@ -97,10 +97,10 @@ mobility:
     work:
       workplaces: 1.
     other_locations:
-      retail_and_recreation: 0.4
-      grocery_and_pharmacy: 0.3
-      parks: 0.2
-      transit_stations: 0.1
+      retail_and_recreation: 0.25
+      grocery_and_pharmacy: 0.25
+      parks: 0.25
+      transit_stations: 0.25
   mixing:
     school:
       append: false

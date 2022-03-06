@@ -56,7 +56,7 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 752. # 21th Jan 2022
+      start_time: 763. # 01st Feb 2022
       entry_rate: 10.
       seed_duration: 10.
     contact_rate_multiplier: 1.5
@@ -83,7 +83,7 @@ hospital_stay:
       mean: 8.
   icu:
     parameters:
-      mean: 10.
+      mean: 14.
 
 # MOBILITY PARAMETERS
 is_dynamic_mixing_matrix: true
@@ -97,10 +97,10 @@ mobility:
     work:
       workplaces: 1.
     other_locations:
-      retail_and_recreation: 0.4
-      grocery_and_pharmacy: 0.3
-      parks: 0.2
-      transit_stations: 0.1
+      retail_and_recreation: 0.25
+      grocery_and_pharmacy: 0.25
+      parks: 0.25
+      transit_stations: 0.25
   mixing:
     school:
       append: false
@@ -121,6 +121,6 @@ mobility:
 
 age_stratification:
   cfr:
-    multiplier: 0.8 # fixed
+    multiplier: 0.8
   prop_hospital:
     multiplier: 1.0

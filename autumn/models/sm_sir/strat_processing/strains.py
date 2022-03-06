@@ -121,19 +121,17 @@ def apply_reinfection_flows_with_strains(
 
 def apply_reinfection_flows_without_strains(
         model: CompartmentalModel,
-        base_compartments: List[str],
         infection_dest: str,
         age_groups: List[float],
         contact_rate: float,
         susc_props: List[float],
 ):
     """
-    Apply the reinfection flows, making sure that it is possible to be infected with any strain after infection with any
-    strain. We'll work out whether this occurs at a reduced rate because of immunity later.
+    Apply the reinfection flows in the case of a single-strain model. Note that in this case, only the late reinfection
+    flow (i.e. coming out of the waned compartment) is relevant.
 
     Args:
         model: The SM-SIR model being adapted
-        base_compartments: The unstratified model compartments
         infection_dest: Where people end up first after having been infected
         age_groups: The modelled age groups
         contact_rate: The model's contact rate
@@ -150,19 +148,10 @@ def apply_reinfection_flows_without_strains(
         age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
 
         model.add_infection_frequency_flow(
-            FlowName.EARLY_REINFECTION,
+            FlowName.LATE_REINFECTION,
             age_contact_rate,
-            Compartment.RECOVERED,
+            Compartment.WANED,
             infection_dest,
             source_filter,
             dest_filter,
         )
-        if "waned" in base_compartments:
-            model.add_infection_frequency_flow(
-                FlowName.LATE_REINFECTION,
-                age_contact_rate,
-                Compartment.WANED,
-                infection_dest,
-                source_filter,
-                dest_filter,
-            )

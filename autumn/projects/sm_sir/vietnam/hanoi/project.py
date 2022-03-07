@@ -1,0 +1,108 @@
+import pandas as pd
+
+from autumn.tools.project import (
+    Project,
+    ParameterSet,
+    load_timeseries,
+    build_rel_path,
+    get_all_available_scenario_paths,
+    use_tuned_proposal_sds,
+)
+from autumn.tools.calibration import Calibration
+from autumn.tools.calibration.priors import UniformPrior
+from autumn.tools.calibration.targets import NormalTarget
+from autumn.models.sm_sir import (
+    base_params,
+    build_model,
+    set_up_random_process
+)
+from autumn.settings import Region, Models
+
+from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
+
+# Load and configure model parameters
+mle_path = build_rel_path("params/mle-params.yml")
+scenario_dir_path = build_rel_path("params/")
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+
+baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
+    mle_path, calibration_format=True
+)
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
+param_set = ParameterSet(baseline=baseline_params, scenarios=[])
+
+# Load and configure calibration settings.
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
+
+notifications = pd.concat(
+    [
+     ts_set["notifications"].loc[671:745],  # from 01st Nov 2021 to 14th Jan 2022
+     ts_set["notifications"].loc[763:]  # from 01st Feb 2022 onwards
+    ]
+)
+
+icu_occupancy = ts_set["icu_occupancy"].loc[671:]  # truncated to 01st Nov 2021
+infection_deaths = ts_set["infection_deaths"].loc[725:].rolling(7).mean()  # truncated to 25th Dec 2021
+
+targets = [NormalTarget(notifications),
+           NormalTarget(icu_occupancy),
+           NormalTarget(infection_deaths)]
+
+
+priors = [
+    # infectious seed and contact rate
+    UniformPrior("infectious_seed", (5000., 10000.)),
+    UniformPrior("contact_rate", (0.1, 0.5)),
+    # testing to detection params
+    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.003)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.03, 0.15)),
+    # sojourns
+    # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
+    # immunity stratification
+    UniformPrior("immunity_stratification.prop_immune", (0.75, 1.0)),
+    UniformPrior("immunity_stratification.prop_high_among_immune", (0.3, 0.6)),
+    # age stratification
+    UniformPrior("age_stratification.cfr.multiplier", (0., 0.1)),
+    # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
+    # prop icu among hospitalization
+    UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
+    # start time of omicron
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 746.0)),  # 1 month interval
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.25, 0.6)),
+    # sojourns
+    UniformPrior("sojourns.active.proportion_early", (0.25, 0.6)),
+    UniformPrior("sojourns.latent.proportion_early", (0., 0.2)),
+]
+
+
+if baseline_params.to_dict()["activate_random_process"]:
+    time_params = baseline_params.to_dict()["time"]
+    rp = set_up_random_process(time_params["start"], time_params["end"])
+
+    # rp = None  # use this when tuning proposal jumping steps
+else:
+    rp = None
+
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+
+calibration = Calibration(
+    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
+)
+
+# FIXME: Replace with flexible Python plot request API.
+import json
+
+plot_spec_filepath = build_rel_path("timeseries.json")
+with open(plot_spec_filepath) as f:
+    plot_spec = json.load(f)
+
+
+# Create and register the project.
+project = Project(
+    Region.HANOI, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+)
+
+
+# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

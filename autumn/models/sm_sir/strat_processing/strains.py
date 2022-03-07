@@ -61,13 +61,15 @@ def seed_vocs(model: CompartmentalModel, all_voc_params: Dict[str, VocComponent]
             )
 
 
-def apply_reinfection_flows(
+def apply_reinfection_flows_with_strains(
         model: CompartmentalModel,
         base_compartments: List[str],
         infection_dest: str,
+        age_groups: List[float],
         voc_params: Optional[Dict[str, VocComponent]],
         strain_strata: List[str],
         contact_rate: float,
+        susc_adjs: List[float],
 ):
     """
     Apply the reinfection flows, making sure that it is possible to be infected with any strain after infection with any
@@ -77,32 +79,79 @@ def apply_reinfection_flows(
         model: The SM-SIR model being adapted
         base_compartments: The unstratified model compartments
         infection_dest: Where people end up first after having been infected
+        age_groups: The modelled age groups
         voc_params: The VoC-related parameters
         strain_strata: The strains being implemented or a list of an empty string if no strains in the model
         contact_rate: The model's contact rate
+        susc_adjs: Adjustments to the rate of infection of susceptibles based on modelled age groups
 
     """
 
     for dest_strain in strain_strata:
-        contact_multiplier = voc_params[dest_strain].contact_rate_multiplier if voc_params else 1.
-        strain_contact_rate = multiply_function_or_constant(contact_rate, contact_multiplier)
-        dest_filter = {"strain": dest_strain} if dest_strain else None
+        strain_adjuster = voc_params[dest_strain].contact_rate_multiplier
+        dest_filter = {"strain": dest_strain}
         for source_strain in strain_strata:
-            source_filter = {"strain": source_strain} if source_strain else None
-            model.add_infection_frequency_flow(
-                FlowName.EARLY_REINFECTION,
-                strain_contact_rate,
-                Compartment.RECOVERED,
-                infection_dest,
-                source_filter,
-                dest_filter,
-            )
-            if "waned" in base_compartments:
+            source_filter = {"strain": source_strain}
+            for i_age, age_group in enumerate(age_groups):
+                age_adjuster = susc_adjs[i_age]
+                dest_filter.update({"agegroup": str(age_group)})
+                source_filter.update({"agegroup": str(age_group)})
+
+                contact_rate_adjuster = strain_adjuster * age_adjuster
+                strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
+
                 model.add_infection_frequency_flow(
-                    FlowName.LATE_REINFECTION,
-                    strain_contact_rate,
-                    Compartment.WANED,
+                    FlowName.EARLY_REINFECTION,
+                    strain_age_contact_rate,
+                    Compartment.RECOVERED,
                     infection_dest,
                     source_filter,
                     dest_filter,
                 )
+                if "waned" in base_compartments:
+                    model.add_infection_frequency_flow(
+                        FlowName.LATE_REINFECTION,
+                        strain_age_contact_rate,
+                        Compartment.WANED,
+                        infection_dest,
+                        source_filter,
+                        dest_filter,
+                    )
+
+
+def apply_reinfection_flows_without_strains(
+        model: CompartmentalModel,
+        infection_dest: str,
+        age_groups: List[float],
+        contact_rate: float,
+        susc_props: List[float],
+):
+    """
+    Apply the reinfection flows in the case of a single-strain model. Note that in this case, only the late reinfection
+    flow (i.e. coming out of the waned compartment) is relevant.
+
+    Args:
+        model: The SM-SIR model being adapted
+        infection_dest: Where people end up first after having been infected
+        age_groups: The modelled age groups
+        contact_rate: The model's contact rate
+        susc_props: Adjustments to the rate of infection of susceptibles based on modelled age groups
+
+    """
+
+    for i_age, age_group in enumerate(age_groups):
+        age_adjuster = susc_props[i_age]
+        dest_filter = {"agegroup": str(age_group)}
+        source_filter = {"agegroup": str(age_group)}
+
+        contact_rate_adjuster = age_adjuster
+        age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
+
+        model.add_infection_frequency_flow(
+            FlowName.LATE_REINFECTION,
+            age_contact_rate,
+            Compartment.WANED,
+            infection_dest,
+            source_filter,
+            dest_filter,
+        )

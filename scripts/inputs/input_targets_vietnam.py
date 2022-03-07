@@ -25,6 +25,8 @@ SM_SIR_HCMC_TS = os.path.join(
     PROJECTS_PATH, "sm_sir", "vietnam", "ho_chi_minh_city", "timeseries.json"
 )
 
+SM_SIR_HANOI_TS = os.path.join(PROJECTS_PATH, "sm_sir", "vietnam", "hanoi", "timeseries.json")
+
 
 HCMC_DATA_CSV = os.path.join(INPUT_DATA_PATH, "covid_vnm", "cases.csv")
 HANOI_DATA_CSV = os.path.join(INPUT_DATA_PATH, "covid_vnm", "hanoi_data.csv")
@@ -77,3 +79,4 @@ df_cases = pd.read_excel(HANOI_DATA_URL, usecols=[0, 1, 2, 3])
 df_cases = create_date_index(COVID_BASE_DATETIME, df_cases, "date")
 df_cases.to_csv(HANOI_DATA_CSV)
 update_timeseries(TARGET_MAP_HANOI, df_cases, COVID_HAN_TS)
+update_timeseries(TARGET_MAP_HANOI, df_cases, SM_SIR_HANOI_TS)

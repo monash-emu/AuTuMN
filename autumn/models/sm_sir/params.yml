@@ -34,6 +34,8 @@ asympt_infectiousness_effect: 0.5
 isolate_infectiousness_effect: 0.2
 
 sojourns:
+  latent:
+    total_time: 3.
   active:
     total_time: 8.
 #    proportion_early: 0.5
@@ -46,70 +48,107 @@ age_stratification:
   susceptibility:
   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
   # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
-    "0": 0.36 # 0-14
-    "15": 1. # 15-24
-    "25": 1. # 25-49
-    "50": 1.09 # 50-69 # weighted average of 1. for 50-64 and 1.41 for 65-69
-    "70": 1.41 # 70+
+    0: 0.36
+    5: 0.36
+    10: 0.36
+    15: 1.
+    20: 1.
+    25: 1.
+    30: 1.
+    35: 1.
+    40: 1.
+    45: 1.
+    50: 1.
+    55: 1.
+    60: 1.
+    65: 1.
+    70: 1.41
+    75: 1.41
 
   prop_symptomatic:
   # Changed (26th August) to "Asymptomatic SARS-Cov-2 infection: A Systematic review and meta-analysis", Sah et al.
-    - 0.533  # 0-4
-    - 0.533  # 5-9
-    - 0.533  # 10-14
-    - 0.533  # 15-19
-    - 0.679  # 20-24
-    - 0.679  # 25-29
-    - 0.679  # 30-34
-    - 0.679  # 35-39
-    - 0.679  # 40-44
-    - 0.679  # 45-49
-    - 0.679  # 50-55
-    - 0.679  # 55-59
-    - 0.803  # 60-64
-    - 0.803  # 65-69
-    - 0.803  # 70-74
-    - 0.803  # 75+
+    0: 0.533
+    5: 0.533
+    10: 0.533
+    15: 0.533
+    20: 0.679
+    25: 0.679
+    30: 0.679
+    35: 0.679
+    40: 0.679
+    45: 0.679
+    50: 0.679
+    55: 0.679
+    60: 0.803
+    65: 0.803
+    70: 0.803
+    75: 0.803
 
-  prop_hospital:
-  # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
-    - 0.0777  # 0-4
-    - 0.0069  # 5-9
-    - 0.0034  # 10-14
-    - 0.0051  # 15-19
-    - 0.0068  # 20-24
-    - 0.0080  # 25-29
-    - 0.0124  # 30-34
-    - 0.0129  # 35-39
-    - 0.0190  # 40-44
-    - 0.0331  # 45-49
-    - 0.0383  # 50-54
-    - 0.0579  # 55-59
-    - 0.0617  # 60-64
-    - 0.1030  # 65-69
-    - 0.1072  # 70-74
-    - 0.0703  # 75+
+  prop_hospital:  # https://dx.doi.org/10.2139/ssrn.4025932, Nyberg, 2022
+    values:
+      0: 0.0046
+      5: 0.0046
+      10: 0.0033
+      15: 0.0033
+      20: 0.0133
+      25: 0.0133
+      30: 0.0150
+      35: 0.0150
+      40: 0.0140
+      45: 0.0140
+      50: 0.0238
+      55: 0.0238
+      60: 0.0529
+      65: 0.0529
+      70: 0.1340
+      75: 0.1340
+      80: 0.2540
+    multiplier: 1.
+    # Proportions at study mid-point reported 16th December in:
+    # https://ourworldindata.org/grapher/share-people-fully-vaccinated-covid?country=~GBR
+    # where "none" is complement of those fully vaccinated, and "high" is those boosted by the same date
+    source_immunity_distribution:
+      none: 0.312
+      low: 0.302
+      high: 0.386
+    # Approximately the values reported in Figure 2 of:
+    # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1054071/
+    # vaccine-surveillance-report-week-6.pdf
+    # 85% protection once boosted, 50% otherwise
+    source_immunity_protection:
+      none: 0.
+      low: 0.5
+      high: 0.85
 
-  ifr:
-    - 0.00003 # 0-4
-    - 0.00001 # 5-9
-    - 0.00001 # 10-14
-    - 0.00003 # 15-19
-    - 0.00006 # 20-24
-    - 0.00013 # 25-29
-    - 0.00024 # 30-34
-    - 0.00040 # 35-39
-    - 0.00075 # 40-44
-    - 0.00121 # 45-49
-    - 0.00207 # 50-54
-    - 0.00323 # 55-59
-    - 0.00456 # 60-64
-    - 0.01075 # 65-69
-    - 0.01674 # 70-74
-    - 0.03203 # 75-79
-    - 0.08292 # 80+
-
-hospital_prop_multiplier: 1.
+  cfr:
+    values:
+      0:  0.00001
+      5:  0.00001
+      10: 0.00001
+      15: 0.00001
+      20: 0.00004
+      25: 0.00004
+      30: 0.0004
+      35: 0.0004
+      40: 0.0005
+      45: 0.0005
+      50: 0.0026
+      55: 0.0026
+      60: 0.0112
+      65: 0.0112
+      70: 0.0493
+      75: 0.0493
+      80: 0.159
+    multiplier: 1.
+    # Same as values above for hospitalisation
+    source_immunity_distribution:
+      none: 0.312
+      low: 0.302
+      high: 0.386
+    source_immunity_protection:
+      none: 0.
+      low: 0.5
+      high: 0.85
 
 is_dynamic_mixing_matrix: false
 
@@ -137,14 +176,9 @@ immunity_stratification:
   prop_high_among_immune: .1
 
   infection_risk_reduction:  # FIXME check source with Dave (that's using the figure showing VE against symptomatic disease)
-    high: .60
+    none: 0.
     low: 0.
-  hospital_risk_reduction:  # based on UKHSA report (13/11/22)
-    high: .90
-    low: .50
-  death_risk_reduction: # FIXME check with Dave
-    high: .5
-    low: .2
+    high: 0.6
 
 time_from_onset_to_event:  # using time of symptom onset as reference
   notification:

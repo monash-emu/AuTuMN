@@ -12,6 +12,11 @@ MOBILITY_DIRPATH = os.path.join(INPUT_DATA_PATH, "mobility")
 MOBILITY_CSV_PATH = os.path.join(MOBILITY_DIRPATH, "Google_Mobility_Report.csv")
 VNM_CSV_PATH = os.path.join(MOBILITY_DIRPATH, "VNM_mobility.csv")
 
+FB_MOVEMENT_2021 = os.path.join(MOBILITY_DIRPATH, "movement-range-2021.txt")
+FB_MOVEMENT_2022 = [
+    file for file in os.listdir(MOBILITY_DIRPATH) if file.startswith("movement-range-2022")
+]
+
 # Remove some countries due to large CSV filesize.
 COUNTRY_FILTER = {
     "BR",

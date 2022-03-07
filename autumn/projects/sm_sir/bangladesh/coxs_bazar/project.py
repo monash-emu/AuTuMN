@@ -1,61 +1,48 @@
-from autumn.tools.project import (
-    Project,
-    ParameterSet,
-    load_timeseries,
-    build_rel_path,
-    use_tuned_proposal_sds,
-)
+import json
+
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model, set_up_random_process
+from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 
-# Load and configure model parameters.
-mle_path = build_rel_path("params/mle-params.yml")
-baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
-    mle_path, calibration_format=True
-)
+# Load and configure model parameters
+baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
-# Load and configure calibration settings.
+# Load and configure calibration settings
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
-priors = [UniformPrior("contact_rate", [0.1, 0.2]), UniformPrior("infectious_seed", [1, 400])]
-
-targets = [
-    NormalTarget(data=ts_set["notifications"]),
-    NormalTarget(data=ts_set["icu_admissions"]),
-    NormalTarget(data=ts_set["infection_deaths"]),
+priors = [
+    UniformPrior("contact_rate", (0.03, 0.12)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (690.0, 720.0)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.006, 0.016)),
+    UniformPrior("hospital_stay.hospital_all.parameters.mean", (10., 25.)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.2, 1.5)),
 ]
 
-if baseline_params.to_dict()["activate_random_process"]:
-    time_params = baseline_params.to_dict()["time"]
-    rp = set_up_random_process(time_params["start"], time_params["end"])
+calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
+notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+hospital_ts = ts_set["hospital_occupancy"].loc[calibration_start_time:]
+icu_ts = ts_set["icu_occupancy"].loc[calibration_start_time:]
+deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
 
-    # rp = None  # use this when tuning proposal jumping steps
-else:
-    rp = None
-
-# Load proposal sds from yml file
-# use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+targets = [
+    NormalTarget(notifications_ts),
+    NormalTarget(hospital_ts),
+    # NormalTarget(icu_ts),
+    # NormalTarget(deaths_ts),
+]
 
 calibration = Calibration(
-    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
+    priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
 )
-
-# FIXME: Replace with flexible Python plot request API.
-import json
 
 plot_spec_filepath = build_rel_path("timeseries.json")
 with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
-
-# Create and register the project.
+# Create and register the project
 project = Project(
     Region.COXS_BAZAR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
 )
-
-
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)

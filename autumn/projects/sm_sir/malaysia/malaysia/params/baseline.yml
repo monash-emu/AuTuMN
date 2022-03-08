@@ -62,6 +62,7 @@ voc_emergence:
     hosp_protection: 0.75
     death_protection: 0.825
     relative_latency: 0.6667
+    relative_active_period: 1.
     cross_protection:
       wild_type:
         early_reinfection: 0.4

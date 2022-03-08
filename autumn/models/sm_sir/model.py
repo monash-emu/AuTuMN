@@ -513,7 +513,6 @@ def build_model(
         if Compartment.WANED in compartment_types:
             apply_reinfection_flows_without_strains(
                 model,
-                compartment_types,
                 infection_dest,
                 age_groups,
                 contact_rate,

@@ -109,7 +109,7 @@ def apply_reinfection_flows_with_strains(
                     source_filter,
                     dest_filter,
                 )
-                if "waned" in base_compartments:
+                if Compartment.WANED in base_compartments:
                     model.add_infection_frequency_flow(
                         FlowName.LATE_REINFECTION,
                         strain_age_contact_rate,

@@ -365,14 +365,15 @@ def build_model(
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
 
-    # Determine the compartments
+    # Determine the compartments, including which are infectious
     compartment_types = get_compartments(params.sojourns)
+    infectious_compartments = [comp for comp in compartment_types if "infectious" in comp]
 
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
         compartments=compartment_types,
-        infectious_compartments=[Compartment.INFECTIOUS],
+        infectious_compartments=infectious_compartments,
         timestep=params.time.step,
         ref_date=BASE_DATE,
     )

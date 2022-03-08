@@ -42,16 +42,19 @@ priors = [
     UniformPrior("infection_fatality.multiplier", [0.1, 1.0]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.01]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.9]),
+    UniformPrior("hospital_reporting", [0.25, 0.75]),
     TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier",
-                mean =0.5,
-                stdev=0.15,
+                mean =1.0,
+                stdev=0.3,
                 trunc_range=[0.3, np.inf],
     ),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [400, 470]),
     UniformPrior("voc_emergence.delta.start_time", [515, 550]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.5]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 10.5]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [0.5, 5.0]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [0.5, 10.0]),
+    #waning
+    UniformPrior("history.natural_immunity_duration", [365, 475])
 ]
 
 # Load proposal sds from yml file

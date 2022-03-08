@@ -93,7 +93,7 @@ def apply_reinfection_flows_with_strains(
         for source_strain in strain_strata:
             source_filter = {"strain": source_strain}
             for i_age, age_group in enumerate(age_groups):
-                age_adjuster = susc_adjs[i_age]
+                age_adjuster = susc_adjs[i_age] if susc_adjs else 1.
                 dest_filter.update({"agegroup": str(age_group)})
                 source_filter.update({"agegroup": str(age_group)})
 
@@ -140,7 +140,7 @@ def apply_reinfection_flows_without_strains(
     """
 
     for i_age, age_group in enumerate(age_groups):
-        age_adjuster = susc_props[i_age]
+        age_adjuster = susc_props[i_age] if susc_props else 1.
         dest_filter = {"agegroup": str(age_group)}
         source_filter = {"agegroup": str(age_group)}
 

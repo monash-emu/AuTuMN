@@ -76,8 +76,8 @@ priors = [
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 746.0)),  # 1 month interval
     UniformPrior("voc_emergence.omicron.relative_latency", (0.2, 0.5)),
     # sojourns
-    UniformPrior("sojourns.active.proportion_early", (0.25, 0.6)),
-    UniformPrior("sojourns.latent.proportion_early", (0., 0.2)),
+    # UniformPrior("sojourns.active.proportion_early", (0.25, 0.6)),
+    # UniformPrior("sojourns.latent.proportion_early", (0., 0.2)),
 ]
 
 

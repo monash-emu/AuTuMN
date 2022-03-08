@@ -533,7 +533,6 @@ def build_model(
     immunity_params = params.immunity_stratification
 
     # Adjust infection of susceptibles for immunity status
-
     reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
     if Compartment.WANED in compartment_types:
         reinfection_flows.append(FlowName.LATE_REINFECTION)

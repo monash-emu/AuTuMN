@@ -1,33 +1,18 @@
-description: Return to pre-COVID-19 mobility on 16th Feb
+description: New variant completly escapes immunity (both vaccination- and infection-related)
 
 time:
-  start: 650
+  start: 620
 
-mobility:
-  mixing:
-    school:
-      append: false
-      times:
-        - 2021-01-01
-        - 2022-02-15
-        - 2022-02-17
-      values:
-        - 0.
-        - 0.
-        - 1.
-    work:
-      append: true
-      times:
-        - 2022-02-15
-        - 2022-02-17
-      values:
-        - - repeat_prev
-        - 1.
-    other_locations:
-      append: true
-      times:
-        - 2022-02-15
-        - 2022-02-17
-      values:
-        - - repeat_prev
-        - 1.
+voc_emergence:
+  wild_type:
+    cross_protection:
+      new_strain:
+        early_reinfection: 0.
+        late_reinfection: 0.
+
+  new_strain:
+    new_voc_seed:
+      start_time: 822.  # 1 Apr 2022
+
+    contact_rate_multiplier: 1.
+    immune_escape: 1.

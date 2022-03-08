@@ -272,22 +272,14 @@ class AgeSpecificProps(BaseModel):
 
 
 class GeneralCharacteristics(BaseModel):
-
-    susceptibility: Optional[float]
-    prop_symptomatic: Optional[float]
-    prop_hospital: float
-    cfr: float
-
-
-class AgeCharacteristics(BaseModel):
     """
     Parameters used in age based stratification.
     """
 
-    susceptibility: Optional[Dict[int, float]]
-    prop_symptomatic: Optional[Dict[int, float]]
-    prop_hospital: AgeSpecificProps
-    cfr: AgeSpecificProps
+    susceptibility: Optional[Union[Dict[int, float], float]]
+    prop_symptomatic: Optional[Union[Dict[int, float], float]]
+    prop_hospital: Union[AgeSpecificProps, float]
+    cfr: Union[AgeSpecificProps, float]
 
 
 class ImmunityRiskReduction(BaseModel):
@@ -439,7 +431,7 @@ class Parameters:
     hospital_stay: HospitalStay
     prop_icu_among_hospitalised: float
 
-    general_characteristics: Union[AgeCharacteristics, GeneralCharacteristics]
+    general_characteristics: GeneralCharacteristics
     immunity_stratification: ImmunityStratification
     voc_emergence: Optional[Dict[str, VocComponent]]
 

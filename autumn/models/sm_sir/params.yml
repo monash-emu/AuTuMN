@@ -43,12 +43,6 @@ sojourns:
 #    total_time: 5.
 #    proportion_early: 0.5
 
-#general_characteristics:
-#  susceptibility: 1.0
-#  prop_symptomatic: 0.5
-#  prop_hospital: 0.1
-#  cfr: 0.01
-
 # Age-related parameters
 general_characteristics:
   susceptibility:

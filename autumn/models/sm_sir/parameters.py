@@ -439,7 +439,7 @@ class Parameters:
     hospital_stay: HospitalStay
     prop_icu_among_hospitalised: float
 
-    age_stratification: Union[AgeCharacteristics, GeneralCharacteristics]
+    general_characteristics: Union[AgeCharacteristics, GeneralCharacteristics]
     immunity_stratification: ImmunityStratification
     voc_emergence: Optional[Dict[str, VocComponent]]
 

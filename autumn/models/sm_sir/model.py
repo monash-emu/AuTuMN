@@ -341,11 +341,11 @@ def build_model(
 
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
     age_groups = params.age_groups
-    age_strat_params = params.age_stratification
+    general_params = params.general_characteristics
 
-    suscept_req = age_strat_params.susceptibility
+    suscept_req = general_params.susceptibility
     susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
-    sympt_req = age_strat_params.prop_symptomatic
+    sympt_req = general_params.prop_symptomatic
     sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
 
     # Determine the compartments, including which are infectious
@@ -588,11 +588,11 @@ def build_model(
         age_groups,
         clinical_strata,
         strain_strata,
-        params.age_stratification.prop_hospital,
+        params.general_characteristics.prop_hospital,
         params.hospital_stay,
         params.prop_icu_among_hospitalised,
         params.time_from_onset_to_event,
-        params.age_stratification.cfr,
+        params.general_characteristics.cfr,
         params.voc_emergence,
         bool(params.activate_random_process),
     )

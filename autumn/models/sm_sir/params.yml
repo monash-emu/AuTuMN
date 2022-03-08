@@ -43,8 +43,14 @@ sojourns:
 #    total_time: 5.
 #    proportion_early: 0.5
 
+#general_characteristics:
+#  susceptibility: 1.0
+#  prop_symptomatic: 0.5
+#  prop_hospital: 0.1
+#  cfr: 0.01
+
 # Age-related parameters
-age_stratification:
+general_characteristics:
   susceptibility:
   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
   # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)

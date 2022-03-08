@@ -8,3 +8,5 @@ age_stratification.cfr.multiplier: 0.04724114212339165
 prop_icu_among_hospitalised: 0.059971571540828134
 voc_emergence.omicron.new_voc_seed.start_time: 736.255941581749
 voc_emergence.omicron.relative_latency: 0.2327825207613584
+voc_emergence.omicron.contact_rate_multiplier: 1.5
+voc_emergence.omicron.relative_active_period: 1.

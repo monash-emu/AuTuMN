@@ -276,7 +276,7 @@ class GeneralCharacteristics(BaseModel):
     Parameters used in age based stratification.
     """
 
-    susceptibility: Optional[Union[Dict[int, float], float]]
+    susceptibility: Optional[Dict[int, float]]
     prop_symptomatic: Optional[Union[Dict[int, float], float]]
     prop_hospital: Union[AgeSpecificProps, float]
     cfr: Union[AgeSpecificProps, float]
@@ -414,7 +414,7 @@ class Parameters:
     country: Country
     population: Population
     ref_mixing_iso3: str
-    age_groups: List[int]
+    age_groups: Optional[List[int]]
     time: Time
     # Values
     contact_rate: float

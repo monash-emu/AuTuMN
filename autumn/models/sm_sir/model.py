@@ -424,7 +424,7 @@ def build_model(
     if Compartment.WANED in compartment_types:
         model.add_transition_flow(
             name=FlowName.WANING,
-            fractional_rate=1. / params.sojourns.recovered.total_time,
+            fractional_rate=1. / params.sojourns.recovered,
             source=Compartment.RECOVERED,
             dest=Compartment.WANED,
         )

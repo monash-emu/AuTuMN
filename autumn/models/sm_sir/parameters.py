@@ -139,7 +139,7 @@ class CompartmentSojourn(BaseModel):
     total_time: float
     proportion_early: Optional[float]
 
-    check_active_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
+    check_total_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
     check_prop_early = validator("proportion_early", allow_reuse=True)(get_check_prop("proportion_early"))
 
 
@@ -150,7 +150,9 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[CompartmentSojourn]
+    recovered: Optional[float]
+
+    check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
 
 
 class MixingLocation(BaseModel):

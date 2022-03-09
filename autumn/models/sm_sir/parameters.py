@@ -139,7 +139,7 @@ class CompartmentSojourn(BaseModel):
     total_time: float
     proportion_early: Optional[float]
 
-    check_active_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
+    check_total_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
     check_prop_early = validator("proportion_early", allow_reuse=True)(get_check_prop("proportion_early"))
 
 
@@ -150,7 +150,9 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[CompartmentSojourn]
+    recovered: Optional[float]
+
+    check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
 
 
 class MixingLocation(BaseModel):
@@ -276,19 +278,10 @@ class AgeStratification(BaseModel):
     Parameters used in age based stratification.
     """
 
-    susceptibility: Optional[Dict[int, float]]
+    susceptibility: Optional[Dict[int, float]]  # Should be either dict to represent age groups or none
     prop_symptomatic: Optional[Dict[int, float]]
     prop_hospital: AgeSpecificProps
     cfr: AgeSpecificProps
-
-    # @root_validator(pre=True, allow_reuse=True)
-    # def check_age_param_lengths(cls, values):
-    #     for param_name in ("susceptibility",):
-    #         param = values[param_name]
-    #         if param:
-    #             msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"
-    #             assert len(values[param_name]) == 16, msg
-    #     return values
 
 
 class ImmunityRiskReduction(BaseModel):

@@ -11,8 +11,7 @@ sojourns:
     total_time: 6.
   latent:
     total_time: 4.
-  recovered:
-    total_time: 180.
+  recovered: 180.
 
 population:
   region: Hanoi

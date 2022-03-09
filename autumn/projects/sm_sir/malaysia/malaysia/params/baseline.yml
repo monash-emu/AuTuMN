@@ -15,8 +15,7 @@ sojourns:
   latent:
     total_time: 4.
     proportion_early: 0.5
-  recovered:
-    total_time: 180.
+  recovered: 180.
 
 time:
   start: 450.

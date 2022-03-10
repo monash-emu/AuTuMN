@@ -424,7 +424,7 @@ def build_model(
     if Compartment.WANED in compartment_types:
         model.add_transition_flow(
             name=FlowName.WANING,
-            fractional_rate=1. / params.sojourns.recovered.total_time,
+            fractional_rate=1. / params.sojourns.recovered,
             source=Compartment.RECOVERED,
             dest=Compartment.WANED,
         )
@@ -533,7 +533,6 @@ def build_model(
     immunity_params = params.immunity_stratification
 
     # Adjust infection of susceptibles for immunity status
-
     reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
     if Compartment.WANED in compartment_types:
         reinfection_flows.append(FlowName.LATE_REINFECTION)

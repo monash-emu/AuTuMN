@@ -19,7 +19,7 @@ population:
 
 time:
   start: 671 # 01st Nov 2021
-  end: 913 # 30th June 2022
+  end: 944 # 31st July 2022
 
 activate_random_process: False
 

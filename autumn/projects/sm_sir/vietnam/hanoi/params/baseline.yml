@@ -45,11 +45,11 @@ voc_emergence:
     death_protection: 0.
     cross_protection:
       wild_type:
-        early_reinfection: 1.
-        late_reinfection: 0.
+        early_reinfection: 1.  # 0% immune escape
+        late_reinfection: 0.8  # 20% immune escape
       omicron:
         early_reinfection: 0.4  # 60% immune escape
-        late_reinfection: 0.4
+        late_reinfection: 0.1  # 90% immune escape 4.5 times higher immune escape compared to delta late reinfection
   omicron:
     starting_strain: false
     seed_prop: 0.
@@ -57,7 +57,7 @@ voc_emergence:
       start_time: 746. # 15th Jan 2022
       entry_rate: 10.
       seed_duration: 10.
-    contact_rate_multiplier: 1.5
+    contact_rate_multiplier: 1.3
     immune_escape: 0.6
     hosp_protection: 0.8
     death_protection: 0.9
@@ -65,11 +65,11 @@ voc_emergence:
     relative_active_period: 1.
     cross_protection:
       wild_type:
-        early_reinfection: 1.
-        late_reinfection: 0.
+        early_reinfection: 1.  # 0% immune escape
+        late_reinfection: 0.75  # 25% immune escape
       omicron:
-        early_reinfection: 1.
-        late_reinfection: 0.
+        early_reinfection: 1.  # 0% immune escape
+        late_reinfection: 0.25 # 75% immune escape, 3 times higher immune escape compared to delta late reinfection
 
 testing_to_detection:
   assumed_tests_parameter: 0.001 # Malaysia model

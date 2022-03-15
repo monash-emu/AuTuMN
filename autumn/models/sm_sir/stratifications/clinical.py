@@ -108,50 +108,16 @@ def get_clinical_strat(
 
     """
 
-    """
-    Preliminaries with enough processing to create the stratification object
-    """
+    is_sympt_split = bool(sympt_props)
 
     # Identify the compartment(s) to stratify, one or two depending on whether the infectious compartment is split
     comps_to_stratify = [comp for comp in compartments if "infectious" in comp]
 
-    # Start with detected - will definitely be adding strata because can't get here if neither sympt nor detect applied
-    clinical_strata = [ClinicalStratum.DETECT]
-
-    # Prepare for including incomplete detection
-    if is_detect_split:
-        clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT] + clinical_strata  # "Pre-pending"
-        cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
-        model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
-        model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
-
-    # Prepare for including asymptomatic cases
-    is_sympt_split = bool(sympt_props)
-    if is_sympt_split:
-        clinical_strata = [ClinicalStratum.ASYMPT] + clinical_strata  # Pre-pending again
-
-    # Create the stratification object
-    clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)
-
-    # Apply infectiousness adjustments
-    adjust_infectiousness_clinical_strat(
-        clinical_strat,
-        params.asympt_infectiousness_effect,
-        params.isolate_infectiousness_effect,
-        is_sympt_split,
-        is_detect_split,
-        comps_to_stratify,
-    )
-
-    """
-    There are four possible situations to cover here:
-        1) both asympt/symptomatic split and partial detection
-        2) only asympt/symptomatic split
-        3) only partial detection
-        4) neither asympt/symptomatic split nor partial detection
-    """
-
+    # Split by symptomatic status and by detection status
     if is_sympt_split and is_detect_split:
+        clinical_strata = [ClinicalStratum.ASYMPT, ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]
+        clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)
+
         for i_age, age_group in enumerate(age_groups):
             sympt_prop = sympt_props[i_age]
             asympt_prop = 1. - sympt_prop
@@ -162,6 +128,9 @@ def get_clinical_strat(
             def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
                 return computed_values["undetected_prop"] * age_sympt_prop
 
+            cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
+            model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
+            model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
             adjustments = {
                 ClinicalStratum.ASYMPT: Multiply(asympt_prop),
                 ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
@@ -172,9 +141,11 @@ def get_clinical_strat(
                 adjustments,
                 dest_strata={"agegroup": str(age_group)}
             )
-        return clinical_strat
 
+    # Only apply the symptomatic split, which differs by age group
     elif is_sympt_split and not is_detect_split:
+        clinical_strata = [ClinicalStratum.ASYMPT, ClinicalStratum.DETECT]
+        clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)
 
         for i_age, age_group in enumerate(age_groups):
             sympt_prop = sympt_props[i_age]
@@ -188,9 +159,15 @@ def get_clinical_strat(
                 adjustments,
                 dest_strata={"agegroup": str(age_group)}
             )
-        return clinical_strat
 
+    # Only stratify by detection status, which applies equally to all age groups
     elif not is_sympt_split and is_detect_split:
+        clinical_strata = [ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]
+        clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)
+
+        cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
+        model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
+        model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
         adjustments = {
             ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_func),
             ClinicalStratum.DETECT: Multiply(cdr_func),
@@ -199,7 +176,20 @@ def get_clinical_strat(
             infectious_entry_flow,
             adjustments,
         )
+
+    # No stratification to apply
+    elif not is_sympt_split and not is_detect_split:
+        clinical_strat = None
         return clinical_strat
 
-    elif not is_sympt_split and not is_detect_split:
-        return None
+    # Apply infectiousness adjustments
+    adjust_infectiousness_clinical_strat(
+        clinical_strat,
+        params.asympt_infectiousness_effect,
+        params.isolate_infectiousness_effect,
+        is_sympt_split,
+        is_detect_split,
+        comps_to_stratify,
+    )
+
+    return clinical_strat

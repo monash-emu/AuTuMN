@@ -29,7 +29,7 @@ def get_vaccine_roll_out(lockdown_scenario):
 
 
 def get_all_scenario_dicts(country: str):
-    num_scenarios = 4
+    num_scenarios = 1
     all_scenario_dicts = []
 
     for i_lockdown_scenario in [*range(0, num_scenarios)]:
@@ -46,7 +46,7 @@ def get_all_scenario_dicts(country: str):
                 scenario_dict["mobility"]["mixing"][key_loc] = {
                     "append": True,
                     "times": [scenario_start_time[i_lockdown_scenario]] + [scenario_start_time[i_lockdown_scenario]+1],
-                    "values": [["repeat_prev"]] + [2.5]
+                    "values": [["repeat_prev"]] + [1.8]
                 }
 
         if i_lockdown_scenario == 1:  # What if lockdown was initiated from April 21 - June 21

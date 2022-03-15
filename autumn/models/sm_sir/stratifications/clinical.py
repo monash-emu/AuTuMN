@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Tuple
 from copy import copy
 
 from summer import Stratification, Multiply, Overwrite, CompartmentalModel
@@ -9,11 +9,35 @@ from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
 from autumn.models.sm_sir.parameters import Parameters
 
 
+def add_detection_processes_to_model(
+        detect_prop: float,
+        params: Parameters,
+        model: CompartmentalModel,
+) -> Tuple[callable, callable]:
+    """
+    Add the case detection processes to the model object.
+
+    Args:
+        detect_prop: The default fixed case detection rate
+        params: All the submitted parameters
+        model: The model to be modified
+
+    Returns:
+        The functions representing the proportion detected and the proportion not detected
+
+    """
+
+    cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
+    model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
+    model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
+    return cdr_func, non_detect_func
+
+
 def get_clinical_strat(
         model: CompartmentalModel,
         compartments: List[str],
         params: Parameters,
-        age_groups: List[int],
+        age_groups: List[str],
         infectious_entry_flow: str,
         detect_prop: float,
         is_detect_split: bool,
@@ -22,8 +46,6 @@ def get_clinical_strat(
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
     epidemiological effect - and these are the only infectious compartments (unlike the Covid model).
-    We can only get into this function, if either incomplete case detection or asymptomatic people are being included in
-    the model.
     For the symptomatic fractions - this can only be implemented as age-specific. There is currently no code to allow
     for a constant symptomatic/asymptomatic fraction (although this could be done relatively easily).
     If only partial case detection is applied and not an asymptomatic fraction, then the case detection rate should be
@@ -33,7 +55,7 @@ def get_clinical_strat(
         model: The model object we are working with, even though the stratification is applied outside this function
         compartments: Unstratified model compartment types
         params: All model parameters
-        age_groups: Modelled age groups
+        age_groups: Modelled age groups as strings
         infectious_entry_flow: The name of the flow that takes people into the (first) infectious compartment(s)
         detect_prop: Proportion of symptomatic cases detected
         is_detect_split: Whether undetected population is being simulated
@@ -68,9 +90,7 @@ def get_clinical_strat(
             def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
                 return computed_values["undetected_prop"] * age_sympt_prop
 
-            cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
-            model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
-            model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
+            _, _ = add_detection_processes_to_model(detect_prop, params, model)
             adjustments = {
                 ClinicalStratum.ASYMPT: Multiply(asympt_prop),
                 ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
@@ -79,7 +99,7 @@ def get_clinical_strat(
             clinical_strat.set_flow_adjustments(
                 infectious_entry_flow,
                 adjustments,
-                dest_strata={"agegroup": str(age_group)}
+                dest_strata={"agegroup": age_group}
             )
 
         # Work out the infectiousness adjustments
@@ -109,7 +129,7 @@ def get_clinical_strat(
             clinical_strat.set_flow_adjustments(
                 infectious_entry_flow,
                 adjustments,
-                dest_strata={"agegroup": str(age_group)}
+                dest_strata={"agegroup": age_group}
             )
 
         # Work out the infectiousness adjustments
@@ -128,9 +148,7 @@ def get_clinical_strat(
         )
 
         # Work out the splits based on detection
-        cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
-        model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
-        model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
+        non_detect_func, cdr_func = add_detection_processes_to_model(detect_prop, params, model)
         adjustments = {
             ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_func),
             ClinicalStratum.DETECT: Multiply(cdr_func),

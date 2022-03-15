@@ -467,7 +467,7 @@ def build_model(
         model,
         compartment_types,
         params,
-        age_groups,
+        [str(age_group) for age_group in age_groups],
         infectious_entry_flow,
         detect_prop,
         is_undetected,

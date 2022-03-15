@@ -15,7 +15,8 @@ def add_detection_processes_to_model(
         model: CompartmentalModel,
 ) -> Tuple[callable, callable]:
     """
-    Add the case detection processes to the model object.
+    Add the case detection processes to the model object. Just to avoid repeating a few lines of code in the main
+    conditional of get_clinical_strat.
 
     Args:
         detect_prop: The default fixed case detection rate

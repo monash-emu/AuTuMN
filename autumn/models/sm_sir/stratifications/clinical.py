@@ -79,7 +79,6 @@ def get_clinical_strat(
 
         # Work out the splits based on symptomatic status and detection
         for age_group, sympt_prop in sympt_props.items():
-            asympt_prop = 1. - sympt_prop
 
             def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
                 return computed_values["cdr"] * age_sympt_prop
@@ -89,7 +88,7 @@ def get_clinical_strat(
 
             _, _ = add_detection_processes_to_model(detect_prop, params, model)
             adjustments = {
-                ClinicalStratum.ASYMPT: Multiply(asympt_prop),
+                ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
                 ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
                 ClinicalStratum.DETECT: Multiply(abs_cdr_func),
             }
@@ -117,9 +116,8 @@ def get_clinical_strat(
 
         # Work out the splits based on symptomatic status
         for age_group, sympt_prop in sympt_props.items():
-            asympt_prop = 1. - sympt_prop
             adjustments = {
-                ClinicalStratum.ASYMPT: Multiply(asympt_prop),
+                ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
                 ClinicalStratum.DETECT: Multiply(sympt_prop),
             }
             clinical_strat.set_flow_adjustments(

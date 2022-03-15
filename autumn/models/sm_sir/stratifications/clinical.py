@@ -1,4 +1,4 @@
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Dict
 from copy import copy
 
 from summer import Stratification, Multiply, Overwrite, CompartmentalModel
@@ -37,11 +37,10 @@ def get_clinical_strat(
         model: CompartmentalModel,
         compartments: List[str],
         params: Parameters,
-        age_groups: List[str],
         infectious_entry_flow: str,
         detect_prop: float,
         is_detect_split: bool,
-        sympt_props: Union[None, List[float]],
+        sympt_props: Union[None, Dict[str, float]],
 ) -> Union[None, Stratification]:
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
@@ -55,7 +54,6 @@ def get_clinical_strat(
         model: The model object we are working with, even though the stratification is applied outside this function
         compartments: Unstratified model compartment types
         params: All model parameters
-        age_groups: Modelled age groups as strings
         infectious_entry_flow: The name of the flow that takes people into the (first) infectious compartment(s)
         detect_prop: Proportion of symptomatic cases detected
         is_detect_split: Whether undetected population is being simulated
@@ -80,8 +78,7 @@ def get_clinical_strat(
         )
 
         # Work out the splits based on symptomatic status and detection
-        for i_age, age_group in enumerate(age_groups):
-            sympt_prop = sympt_props[i_age]
+        for age_group, sympt_prop in sympt_props.items():
             asympt_prop = 1. - sympt_prop
 
             def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
@@ -119,8 +116,7 @@ def get_clinical_strat(
         )
 
         # Work out the splits based on symptomatic status
-        for i_age, age_group in enumerate(age_groups):
-            sympt_prop = sympt_props[i_age]
+        for age_group, sympt_prop in sympt_props.items():
             asympt_prop = 1. - sympt_prop
             adjustments = {
                 ClinicalStratum.ASYMPT: Multiply(asympt_prop),

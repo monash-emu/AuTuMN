@@ -15,8 +15,7 @@ sojourns:
   latent:
     total_time: 4.
     proportion_early: 0.5
-  recovered:
-    total_time: 180.
+  recovered: 180.
 
 time:
   start: 450.
@@ -54,14 +53,15 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 690.
-      entry_rate: 100.
-      seed_duration: 10.
-    contact_rate_multiplier: 1.2
-    immune_escape: 0.3
+      start_time: 700.
+      entry_rate: 10.
+      seed_duration: 1.
+    contact_rate_multiplier: 1.
+    immune_escape: 0.2
     hosp_protection: 0.7
-    death_protection: 0.69
+    death_protection: 0.8
     relative_latency: 0.6667
+    relative_active_period: 1.
     cross_protection:
       wild_type:
         early_reinfection: 0.4
@@ -90,3 +90,4 @@ age_stratification:
     multiplier: 0.5
   prop_hospital:
     multiplier: 0.625
+

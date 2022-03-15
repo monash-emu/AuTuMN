@@ -139,7 +139,7 @@ class CompartmentSojourn(BaseModel):
     total_time: float
     proportion_early: Optional[float]
 
-    check_active_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
+    check_total_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
     check_prop_early = validator("proportion_early", allow_reuse=True)(get_check_prop("proportion_early"))
 
 
@@ -149,8 +149,10 @@ class Sojourns(BaseModel):
     """
 
     active: CompartmentSojourn
-    latent: Optional[CompartmentSojourn]
-    recovered: Optional[CompartmentSojourn]
+    latent: CompartmentSojourn
+    recovered: Optional[float]
+
+    check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
 
 
 class MixingLocation(BaseModel):
@@ -276,19 +278,10 @@ class AgeStratification(BaseModel):
     Parameters used in age based stratification.
     """
 
-    susceptibility: Optional[Dict[int, float]]
+    susceptibility: Optional[Dict[int, float]]  # Should be either dict to represent age groups or none
     prop_symptomatic: Optional[Dict[int, float]]
     prop_hospital: AgeSpecificProps
     cfr: AgeSpecificProps
-
-    # @root_validator(pre=True, allow_reuse=True)
-    # def check_age_param_lengths(cls, values):
-    #     for param_name in ("susceptibility",):
-    #         param = values[param_name]
-    #         if param:
-    #             msg = f"Length of parameter list for parameter {param_name} not 16, the standard number of age groups"
-    #             assert len(values[param_name]) == 16, msg
-    #     return values
 
 
 class ImmunityRiskReduction(BaseModel):
@@ -356,6 +349,7 @@ class VocComponent(BaseModel):
     new_voc_seed: Optional[VocSeed]
     contact_rate_multiplier: float
     relative_latency: Optional[float]
+    relative_active_period: Optional[float]
     immune_escape: float
     cross_protection: Dict[str, CrossImmunity]
     hosp_protection: Optional[float]
@@ -372,6 +366,7 @@ class VocComponent(BaseModel):
     check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
     check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
     check_relative_latency = validator("relative_latency", allow_reuse=True)(get_check_non_neg("relative_latency"))
+    check_relative_active_period = validator("relative_active_period", allow_reuse=True)(get_check_non_neg("relative_active_period"))
     check_death_protection = validator("death_protection", allow_reuse=True)(get_check_prop("death_protection"))
 
 

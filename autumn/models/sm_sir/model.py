@@ -13,10 +13,20 @@ from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomPr
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
-from .stratifications.immunity import get_immunity_strat
+from .stratifications.immunity import (
+    get_immunity_strat,
+    adjust_susceptible_infection_without_strains,
+    adjust_susceptible_infection_with_strains,
+    adjust_reinfection_without_strains,
+    adjust_reinfection_with_strains,
+)
 from .stratifications.strains import get_strain_strat
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import seed_vocs, apply_reinfection_flows
+from .strat_processing.strains import (
+    seed_vocs,
+    apply_reinfection_flows_without_strains,
+    apply_reinfection_flows_with_strains,
+)
 from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
 
 
@@ -30,8 +40,7 @@ def get_compartments(
 ) -> List[str]:
     """
     Find the model compartments that are applicable to the parameter requests, based on the sojourn times structure.
-        - Start with just the base SIR structure
-        - Add in the latent compartment if there is a latent period request
+        - Start with just the base SEIR structure
         - Add in a second serial latent compartment if there is a proportion of the latent period early
         - Add in a second serial active compartment if there is a proportion of the active period early
 
@@ -46,10 +55,8 @@ def get_compartments(
     # Make a copy, we really don't want to append to something that's meant to be a constant...
     compartments = BASE_COMPARTMENTS.copy()
     
-    if sojourns.latent:
-        compartments.append(Compartment.LATENT)
-        if sojourns.latent.proportion_early:
-            compartments.append(Compartment.LATENT_LATE)
+    if sojourns.latent.proportion_early:
+        compartments.append(Compartment.LATENT_LATE)
     if sojourns.active.proportion_early:
         compartments.append(Compartment.INFECTIOUS_LATE)
     if sojourns.recovered:
@@ -82,6 +89,10 @@ def assign_population(
 
     # Assign to the model
     model.set_initial_population(init_pop)
+
+
+def set_up_random_process(start_time, end_time):
+    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)
 
 
 def get_random_process(
@@ -136,59 +147,45 @@ def add_latent_transitions(
 
     """
 
-    # If there is a latent stage in between infection and the onset of infectiousness
-    if latent_sojourn_params:
+    # The total time spent in the latent stage
+    latent_sojourn = latent_sojourn_params.total_time
 
-        # The total time spent in the latent stage
-        latent_sojourn = latent_sojourn_params.total_time
+    # The proportion of that time spent in early latency
+    latent_early_prop = latent_sojourn_params.proportion_early
 
-        # The proportion of that time spent in early latency
-        latent_early_prop = latent_sojourn_params.proportion_early
+    # If the latent compartment is divided into an early and a late stage
+    if latent_early_prop:
 
-        # If the latent compartment is divided into an early and a late stage
-        if latent_early_prop:
+        # The early latent period
+        early_sojourn = latent_sojourn * latent_early_prop
 
-            # The early latent period
-            early_sojourn = latent_sojourn * latent_early_prop
-
-            # Apply the transition between the two latent compartments
-            model.add_transition_flow(
-                name=FlowName.WITHIN_LATENT,
-                fractional_rate=1. / early_sojourn,
-                source=Compartment.LATENT,
-                dest=Compartment.LATENT_LATE,
-            )
-
-            # The parameters for the transition out of latency (through the late latent stage)
-            prop_latent_late = 1. - latent_early_prop
-            progress_rate = 1. / latent_sojourn / prop_latent_late
-            progress_origin = Compartment.LATENT_LATE
-
-        # If the latent compartment is just one compartment
-        else:
-
-            # The parameters for transition out of the single latent compartment
-            progress_origin = Compartment.LATENT
-            progress_rate = 1. / latent_sojourn
-
-        # Apply the transition out of latency flow
+        # Apply the transition between the two latent compartments
         model.add_transition_flow(
-            name=FlowName.PROGRESSION,
-            fractional_rate=progress_rate,
-            source=progress_origin,
-            dest=Compartment.INFECTIOUS,
+            name=FlowName.WITHIN_LATENT,
+            fractional_rate=1. / early_sojourn,
+            source=Compartment.LATENT,
+            dest=Compartment.LATENT_LATE,
         )
 
-        # Record the infection destination and the name of the flow that takes us into the infectious compartment
-        infection_dest = Compartment.LATENT
-        infectious_entry_flow = FlowName.PROGRESSION
+        # The parameters for the transition out of latency (through the late latent stage)
+        prop_latent_late = 1. - latent_early_prop
+        progress_rate = 1. / latent_sojourn / prop_latent_late
+        progress_origin = Compartment.LATENT_LATE
 
-    # If no latent stage parameters are requested, infection takes us straight to the infectious compartment
+    # If the latent compartment is just one compartment
     else:
-        infection_dest = Compartment.INFECTIOUS
-        infectious_entry_flow = FlowName.INFECTION
 
-    return infection_dest, infectious_entry_flow
+        # The parameters for transition out of the single latent compartment
+        progress_origin = Compartment.LATENT
+        progress_rate = 1. / latent_sojourn
+
+    # Apply the transition out of latency flow
+    model.add_transition_flow(
+        name=FlowName.PROGRESSION,
+        fractional_rate=progress_rate,
+        source=progress_origin,
+        dest=Compartment.INFECTIOUS,
+    )
 
 
 def add_active_transitions(
@@ -316,9 +313,20 @@ def get_smsir_outputs_builder(
         outputs_builder.request_random_process_outputs()
 
 
-def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
+def build_model(
+        params: dict,
+        build_options: dict = None
+) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
+
+    Args:
+        params: The validated user-requested parameters
+        build_options:
+
+    Returns:
+        The "SM-SIR" model, currently being used only for COVID-19
+
     """
 
     params = Parameters(**params)
@@ -328,6 +336,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     pop = params.population
 
     # Need a placeholder for the immunity stratification a nd output loops if strains not implemented
+    clinical_strata = [""]
     strain_strata = [""]
 
     # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
@@ -335,18 +344,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     age_strat_params = params.age_stratification
 
     suscept_req = age_strat_params.susceptibility
-    susc_props = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
+    susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
 
-    # Determine the compartments
+    # Determine the compartments, including which are infectious
     compartment_types = get_compartments(params.sojourns)
+    infectious_compartments = [comp for comp in compartment_types if "infectious" in comp]
 
     # Create the model object
     model = CompartmentalModel(
         times=(params.time.start, params.time.end),
         compartments=compartment_types,
-        infectious_compartments=[Compartment.INFECTIOUS],
+        infectious_compartments=infectious_compartments,
         timestep=params.time.step,
         ref_date=BASE_DATE,
     )
@@ -379,7 +389,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     # Latency
-    infection_dest, infectious_entry_flow = add_latent_transitions(params.sojourns.latent, model)
+    add_latent_transitions(params.sojourns.latent, model)
+    infection_dest, infectious_entry_flow = Compartment.LATENT, FlowName.PROGRESSION
 
     # Transmission
     if params.activate_random_process:
@@ -410,10 +421,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     add_active_transitions(params.sojourns.active, model)
 
     # Add waning transition if waning being implemented
-    if "waned" in compartment_types:
+    if Compartment.WANED in compartment_types:
         model.add_transition_flow(
             name=FlowName.WANING,
-            fractional_rate=1. / params.sojourns.recovered.total_time,
+            fractional_rate=1. / params.sojourns.recovered,
             source=Compartment.RECOVERED,
             dest=Compartment.WANED,
         )
@@ -435,7 +446,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         mixing_matrices,
         compartment_types,
         params.is_dynamic_mixing_matrix,
-        susc_props,
+        susc_adjs,
     )
     model.stratify_with(age_strat)
 
@@ -465,15 +476,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
-    else:
-        clinical_strata = [""]
 
     """
     Apply strains stratification
     """
 
+    voc_params = params.voc_emergence
     if params.voc_emergence:
-        voc_params = params.voc_emergence
 
         # Build and apply stratification
         strain_strat = get_strain_strat(voc_params, compartment_types)
@@ -489,18 +498,80 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Apply the reinfection flows (knowing the strain stratification)
     """
 
-    apply_reinfection_flows(model, compartment_types, infection_dest, params.voc_emergence, strain_strata, contact_rate)
+    if voc_params:
+        apply_reinfection_flows_with_strains(
+            model,
+            compartment_types,
+            infection_dest,
+            age_groups,
+            params.voc_emergence,
+            strain_strata,
+            contact_rate,
+            susc_adjs,
+        )
+    else:
+        # for a single-strain model, reinfection may only occur from the waned compartment
+        if Compartment.WANED in compartment_types:
+            apply_reinfection_flows_without_strains(
+                model,
+                infection_dest,
+                age_groups,
+                contact_rate,
+                susc_adjs,
+            )
 
     """
-    Apply immunity stratification
+    Immunity stratification
     """
 
+    # Get the immunity stratification
     immunity_strat = get_immunity_strat(
         compartment_types,
         params.immunity_stratification,
-        strain_strata,
-        params.voc_emergence,
     )
+
+    immunity_params = params.immunity_stratification
+
+    # Adjust infection of susceptibles for immunity status
+    reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
+    if Compartment.WANED in compartment_types:
+        reinfection_flows.append(FlowName.LATE_REINFECTION)
+
+    immunity_low_risk_reduction = immunity_params.infection_risk_reduction.low
+    immunity_high_risk_reduction = immunity_params.infection_risk_reduction.high
+
+    if voc_params:
+        # The code should run fine if VoC parameters have been submitted but the strain stratification hasn't been
+        # implemented yet - but at this stage we assume we don't want it to
+        msg = "Strain stratification not present in model"
+        assert "strain" in [strat.name for strat in model._stratifications], msg
+        adjust_susceptible_infection_with_strains(
+            immunity_low_risk_reduction,
+            immunity_high_risk_reduction,
+            immunity_strat,
+            voc_params,
+        )
+        adjust_reinfection_with_strains(
+            immunity_low_risk_reduction,
+            immunity_high_risk_reduction,
+            immunity_strat,
+            reinfection_flows,
+            voc_params,
+        )
+    else:
+        adjust_susceptible_infection_without_strains(
+            immunity_low_risk_reduction,
+            immunity_high_risk_reduction,
+            immunity_strat,
+        )
+        adjust_reinfection_without_strains(
+            immunity_low_risk_reduction,
+            immunity_high_risk_reduction,
+            immunity_strat,
+            reinfection_flows,
+        )
+
+    # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
     """
@@ -526,7 +597,3 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     return model
-
-
-def set_up_random_process(start_time, end_time):
-    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)

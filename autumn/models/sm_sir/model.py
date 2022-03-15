@@ -463,17 +463,17 @@ def build_model(
         assert "agegroup" in model_stratifications, msg
 
     # Get and apply the clinical stratification, or a None to indicate no clinical stratification for the outputs
-    if is_undetected or sympt_props:
-        clinical_strat = get_clinical_strat(
-            model,
-            compartment_types,
-            params,
-            age_groups,
-            infectious_entry_flow,
-            detect_prop,
-            is_undetected,
-            sympt_props
-        )
+    clinical_strat = get_clinical_strat(
+        model,
+        compartment_types,
+        params,
+        age_groups,
+        infectious_entry_flow,
+        detect_prop,
+        is_undetected,
+        sympt_props
+    )
+    if clinical_strat:
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
 

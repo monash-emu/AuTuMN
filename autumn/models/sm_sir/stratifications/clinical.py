@@ -82,7 +82,7 @@ def get_clinical_strat(
         detect_prop: float,
         is_detect_split: bool,
         sympt_props: Union[None, List[float]],
-) -> Stratification:
+) -> Union[None, Stratification]:
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
     epidemiological effect - and these are the only infectious compartments (unlike the Covid model).
@@ -104,7 +104,7 @@ def get_clinical_strat(
         sympt_props: Symptomatic proportions, or None if stratification by symptomatic status not required
 
     Returns:
-        Clinical stratification object to be applied in the main model file
+        Clinical stratification object to be applied in the main model file, or None if stratification irrelevant
 
     """
 
@@ -133,59 +133,6 @@ def get_clinical_strat(
     # Create the stratification object
     clinical_strat = Stratification("clinical", clinical_strata, comps_to_stratify)
 
-    """
-    Implement the splitting for symptomatic/asymptomatic status
-    There are three possible situations to cover here:
-        1) partial detection only
-        2) asymptomatic/symptomatic split only
-        3) both 1) and 2)
-    Note we don't need to cover the fourth situation of neither process being implemented, because the conditional 
-    outside of this function means you can't get in here if neither are being implemented.
-    """
-
-    if is_sympt_split:
-        for i_age, age_group in enumerate(age_groups):
-            sympt_prop = sympt_props[i_age]
-            asympt_prop = 1. - sympt_prop
-
-            # Both implemented - i.e. 3)
-            if is_detect_split:
-
-                def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
-                    return computed_values["cdr"] * age_sympt_prop
-
-                def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
-                    return computed_values["undetected_prop"] * age_sympt_prop
-
-                adjustments = {
-                    ClinicalStratum.ASYMPT: Multiply(asympt_prop),
-                    ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
-                    ClinicalStratum.DETECT: Multiply(abs_cdr_func),
-                }
-
-            # Only asymptomatic/symptomatic split implemented - i.e. 2)
-            else:
-                adjustments = {
-                    ClinicalStratum.ASYMPT: Multiply(asympt_prop),
-                    ClinicalStratum.DETECT: Multiply(sympt_prop),
-                }
-            clinical_strat.set_flow_adjustments(
-                infectious_entry_flow,
-                adjustments,
-                dest_strata={"agegroup": str(age_group)}
-            )
-
-    # Only partial detection implemented - i.e. 1)
-    else:
-        adjustments = {
-            ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_func),
-            ClinicalStratum.DETECT: Multiply(cdr_func),
-        }
-        clinical_strat.set_flow_adjustments(
-            infectious_entry_flow,
-            adjustments,
-        )
-
     # Apply infectiousness adjustments
     adjust_infectiousness_clinical_strat(
         clinical_strat,
@@ -196,4 +143,69 @@ def get_clinical_strat(
         comps_to_stratify,
     )
 
-    return clinical_strat
+    """
+    Implement the splitting for symptomatic/asymptomatic status
+    There are four possible situations to cover here:
+        1) partial detection only
+        2) asymptomatic/symptomatic split only
+        3) both 1) and 2)
+        4) neither
+    """
+
+    if is_sympt_split and is_detect_split:
+        for i_age, age_group in enumerate(age_groups):
+            sympt_prop = sympt_props[i_age]
+            asympt_prop = 1. - sympt_prop
+
+            # Both implemented - i.e. 3)
+            def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
+                return computed_values["cdr"] * age_sympt_prop
+
+            def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
+                return computed_values["undetected_prop"] * age_sympt_prop
+
+            adjustments = {
+                ClinicalStratum.ASYMPT: Multiply(asympt_prop),
+                ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
+                ClinicalStratum.DETECT: Multiply(abs_cdr_func),
+            }
+
+            # Only asymptomatic/symptomatic split implemented - i.e. 2)
+            clinical_strat.set_flow_adjustments(
+                infectious_entry_flow,
+                adjustments,
+                dest_strata={"agegroup": str(age_group)}
+            )
+        return clinical_strat
+
+    elif is_sympt_split and not is_detect_split:
+
+        for i_age, age_group in enumerate(age_groups):
+            sympt_prop = sympt_props[i_age]
+            asympt_prop = 1. - sympt_prop
+
+            # Only asymptomatic/symptomatic split implemented - i.e. 2)
+            adjustments = {
+                ClinicalStratum.ASYMPT: Multiply(asympt_prop),
+                ClinicalStratum.DETECT: Multiply(sympt_prop),
+            }
+            clinical_strat.set_flow_adjustments(
+                infectious_entry_flow,
+                adjustments,
+                dest_strata={"agegroup": str(age_group)}
+            )
+        return clinical_strat
+
+    elif not is_sympt_split and is_detect_split:
+        adjustments = {
+            ClinicalStratum.SYMPT_NON_DETECT: Multiply(non_detect_func),
+            ClinicalStratum.DETECT: Multiply(cdr_func),
+        }
+        clinical_strat.set_flow_adjustments(
+            infectious_entry_flow,
+            adjustments,
+        )
+        return clinical_strat
+
+    elif not is_sympt_split and not is_detect_split:
+        return None

@@ -8,6 +8,8 @@ from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
+from autumn.tools.utils.utils import FunctionWrapper
+from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
 from .outputs import SmSirOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess
 from .computed_values.random_process_compute import RandomProcessProc
@@ -237,6 +239,31 @@ def add_active_transitions(
     )
 
 
+def add_detection_processes_to_model(
+        detect_prop: float,
+        params: Parameters,
+        model: CompartmentalModel,
+) -> Tuple[callable, callable]:
+    """
+    Add the case detection processes to the model object. Just to avoid repeating a few lines of code in the main
+    conditional of get_clinical_strat.
+
+    Args:
+        detect_prop: The default fixed case detection rate
+        params: All the submitted parameters
+        model: The model to be modified
+
+    Returns:
+        The functions representing the proportion detected and the proportion not detected
+
+    """
+
+    cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
+    model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
+    model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
+    return cdr_func, non_detect_func
+
+
 def get_smsir_outputs_builder(
         iso3,
         region,
@@ -459,15 +486,21 @@ def build_model(
     detect_prop = params.detect_prop
     is_undetected = params.testing_to_detection or detect_prop < 1.
 
+    if is_undetected:
+        non_detect_func, cdr_func = add_detection_processes_to_model(detect_prop, params, model)
+    else:
+        non_detect_func, cdr_func = None, None
+
     # Get and apply the clinical stratification, or a None to indicate no clinical stratification for the outputs
     clinical_strat = get_clinical_strat(
         model,
         compartment_types,
         params,
         infectious_entry_flow,
-        detect_prop,
         is_undetected,
         sympt_props,
+        non_detect_func,
+        cdr_func,
     )
     if clinical_strat:
         model.stratify_with(clinical_strat)

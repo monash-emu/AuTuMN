@@ -1,7 +1,14 @@
+from typing import Tuple
+
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 
 
-def get_cdr_func(detect_prop: float, params):
+def get_cdr_func(
+        detect_prop: float,
+        testing_params,
+        pop_params,
+        iso3,
+) -> Tuple[callable, callable]:
     """
     The master function that can call various approaches to calculating the proportion of cases detected over time.
     Currently just supporting two approaches:
@@ -17,11 +24,9 @@ def get_cdr_func(detect_prop: float, params):
 
     """
 
-    testing_params = params.testing_to_detection
     if testing_params:
-        pop_params = params.population
         cdr_func = find_cdr_function_from_test_data(
-            testing_params, params.country.iso3, pop_params.region, pop_params.year
+            testing_params, iso3, pop_params.region, pop_params.year
         )
 
     else:

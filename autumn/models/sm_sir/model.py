@@ -239,31 +239,6 @@ def add_active_transitions(
     )
 
 
-def add_detection_processes_to_model(
-        detect_prop: float,
-        params: Parameters,
-        model: CompartmentalModel,
-) -> Tuple[callable, callable]:
-    """
-    Add the case detection processes to the model object. Just to avoid repeating a few lines of code in the main
-    conditional of get_clinical_strat.
-
-    Args:
-        detect_prop: The default fixed case detection rate
-        params: All the submitted parameters
-        model: The model to be modified
-
-    Returns:
-        The functions representing the proportion detected and the proportion not detected
-
-    """
-
-    cdr_func, non_detect_func = get_cdr_func(detect_prop, params)
-    model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
-    model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
-    return cdr_func, non_detect_func
-
-
 def get_smsir_outputs_builder(
         iso3,
         region,
@@ -362,7 +337,7 @@ def build_model(
     country = params.country
     pop = params.population
 
-    # Need a placeholder for the immunity stratification a nd output loops if strains not implemented
+    # Need a placeholder for the immunity stratification and output loops if strains not implemented
     clinical_strata = [""]
     strain_strata = [""]
 
@@ -458,7 +433,7 @@ def build_model(
         )
 
     """
-    Apply age stratification
+    Apply age stratification.
     """
 
     mixing_matrices = build_synthetic_matrices(
@@ -479,28 +454,28 @@ def build_model(
     model.stratify_with(age_strat)
 
     """
-    Apply clinical stratification (must come after age stratification if asymptomatic props being used)
+    Testing-related parameters and processes.
     """
 
     # Work out if clinical stratification needs to be applied, either because of asymptomatics or incomplete detection
     detect_prop = params.detect_prop
-    is_undetected = params.testing_to_detection or detect_prop < 1.
+    testing_params = params.testing_to_detection
 
-    if is_undetected:
-        non_detect_func, cdr_func = add_detection_processes_to_model(detect_prop, params, model)
+    if testing_params or detect_prop < 1.:
+        is_undetected = True
+        cdr_func, non_detect_func = get_cdr_func(detect_prop, testing_params, params.population, params.country.iso3)
+        model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
+        model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
     else:
-        non_detect_func, cdr_func = None, None
+        is_undetected, non_detect_func, cdr_func = False, None, None
+
+    """
+    Apply clinical stratification.
+    """
 
     # Get and apply the clinical stratification, or a None to indicate no clinical stratification for the outputs
     clinical_strat = get_clinical_strat(
-        model,
-        compartment_types,
-        params,
-        infectious_entry_flow,
-        is_undetected,
-        sympt_props,
-        non_detect_func,
-        cdr_func,
+        model, compartment_types, params, infectious_entry_flow, sympt_props, non_detect_func, cdr_func,
     )
     if clinical_strat:
         model.stratify_with(clinical_strat)

@@ -54,7 +54,7 @@ def convert_param_agegroups(
         modelled_age_groups: Parameter for get_population_by_agegroup
 
     Returns:
-        The list of the processed parameters in the format needed by the model
+        The dictionary of the processed parameters in the format needed by the model
 
     """
 

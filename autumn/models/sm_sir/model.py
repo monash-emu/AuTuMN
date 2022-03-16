@@ -346,10 +346,17 @@ def build_model(
     age_strat_params = params.age_stratification
 
     suscept_req = age_strat_params.susceptibility
-    susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
+    if type(suscept_req) == dict:
+        susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups)
+    else:
+        susc_adjs = suscept_req  # In which case it should be None or a float
+
     sympt_req = age_strat_params.prop_symptomatic
-    sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
-    sympt_props = {str(k): v for k, v in sympt_props.items()}
+    if type(sympt_req) == dict:
+        sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups)
+        sympt_props = {str(k): v for k, v in sympt_props.items()}
+    else:
+        sympt_props = sympt_req  # In which case it should be None or a float
 
     # Determine the compartments, including which are infectious
     compartment_types = get_compartments(params.sojourns)
@@ -463,7 +470,7 @@ def build_model(
 
     if testing_params or detect_prop < 1.:
         is_undetected = True
-        cdr_func, non_detect_func = get_cdr_func(detect_prop, testing_params, params.population, params.country.iso3)
+        cdr_func, non_detect_func = get_cdr_func(detect_prop, testing_params, pop, params.country.iso3)
         model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
         model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
     else:
@@ -584,18 +591,18 @@ def build_model(
 
     get_smsir_outputs_builder(
         params.country.iso3,
-        params.population.region,
+        pop.region,
         model,
         compartment_types,
         is_undetected,
         age_groups,
         clinical_strata,
         strain_strata,
-        params.age_stratification.prop_hospital,
+        age_strat_params.prop_hospital,
         params.hospital_stay,
         params.prop_icu_among_hospitalised,
         params.time_from_onset_to_event,
-        params.age_stratification.cfr,
+        age_strat_params.cfr,
         params.voc_emergence,
         bool(params.activate_random_process),
     )

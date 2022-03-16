@@ -77,6 +77,7 @@ def get_clinical_strat(
             [ClinicalStratum.ASYMPT, ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT],
             comps_to_stratify
         )
+        _, _ = add_detection_processes_to_model(detect_prop, params, model)
 
         # Work out the splits based on symptomatic status and detection
         for age_group, sympt_prop in sympt_props.items():
@@ -87,7 +88,6 @@ def get_clinical_strat(
             def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
                 return computed_values["undetected_prop"] * age_sympt_prop
 
-            _, _ = add_detection_processes_to_model(detect_prop, params, model)
             adjustments = {
                 ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
                 ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),

@@ -68,6 +68,21 @@ def get_clinical_strat(
     # Identify the compartment(s) to stratify, one or two depending on whether the infectious compartment is split
     comps_to_stratify = [comp for comp in compartments if "infectious" in comp]
 
+    # Check requests have come through in the correct format
+    if type(sympt_props) == dict:
+
+        msg = "Age stratification not applied, which is the only reason for having a dict of sympt props here"
+        model_stratifications = [strat.name for strat in model._stratifications]
+        assert "agegroup" in model_stratifications, msg
+
+        msg = "Symptomatic proportions do not correspond to the age stratification"
+        agegroup_strat_index = model_stratifications.index("agegroup")
+        assert list(sympt_props.keys()) == model._stratifications[agegroup_strat_index].strata, msg
+
+    else:
+        msg = "Symptomatic split not specified in the correct format"
+        assert type(sympt_props) == float, msg
+
     # Split by symptomatic status and by detection status
     if sympt_props and is_detect_split:
 
@@ -101,8 +116,6 @@ def get_clinical_strat(
                 )
 
         else:
-            msg = "Symptomatic proportions have not come through as either a dictionary or a float"
-            assert type(sympt_props) == float, msg
 
             def abs_cdr_func(time, computed_values, sympt_prop=sympt_props):
                 return computed_values["cdr"] * sympt_prop
@@ -151,9 +164,6 @@ def get_clinical_strat(
 
         # Otherwise if we just have a single value for the symptomatic proportion
         else:
-            msg = "Symptomatic proportions have not come through as either a dictionary or a float"
-            assert type(sympt_props) == float, msg
-
             adjustments = {
                 ClinicalStratum.ASYMPT: Multiply(1. - sympt_props),
                 ClinicalStratum.DETECT: Multiply(sympt_props),

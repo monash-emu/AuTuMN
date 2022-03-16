@@ -69,7 +69,7 @@ def apply_reinfection_flows_with_strains(
         voc_params: Optional[Dict[str, VocComponent]],
         strain_strata: List[str],
         contact_rate: float,
-        susc_adjs: List[float],
+        susc_adjs: Dict[str, float],
 ):
     """
     Apply the reinfection flows, making sure that it is possible to be infected with any strain after infection with any
@@ -125,7 +125,7 @@ def apply_reinfection_flows_without_strains(
         infection_dest: str,
         age_groups: List[float],
         contact_rate: float,
-        susc_props: List[float],
+        susc_props: Dict[str, float],
 ):
     """
     Apply the reinfection flows in the case of a single-strain model. Note that in this case, only the late reinfection

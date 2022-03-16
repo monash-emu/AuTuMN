@@ -458,10 +458,6 @@ def build_model(
     # Work out if clinical stratification needs to be applied, either because of asymptomatics or incomplete detection
     detect_prop = params.detect_prop
     is_undetected = params.testing_to_detection or detect_prop < 1.
-    if sympt_props:
-        msg = "Attempted to apply differential symptomatic proportions by age, but model not age stratified"
-        model_stratifications = [model._stratifications[i].name for i in range(len(model._stratifications))]
-        assert "agegroup" in model_stratifications, msg
 
     # Get and apply the clinical stratification, or a None to indicate no clinical stratification for the outputs
     clinical_strat = get_clinical_strat(

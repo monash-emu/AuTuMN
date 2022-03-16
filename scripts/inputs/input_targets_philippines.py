@@ -19,8 +19,8 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "18l8RQJWbShcSO6VAOLWPDl7iOB0wj3sN"  # sheet 05 daily report
-PHL_fassster_link = "1SdG2bTumiTlXRSNngo5CsgwcCx65YZyz"
+PHL_doh_link = "1vWAedlZiifMQnnGZ9A0R-qSOGN57HNHq"  # sheet 05 daily report
+PHL_fassster_link = "1iyBkvyGHUgt1Bg-cGLbpHVCHImKQdACw"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
@@ -131,12 +131,12 @@ def process_occupancy_data(df: pd.DataFrame, occupancy_type: str) -> None:
 
     if occupancy_type.lower() == "hospital":
         dest = hosp_o_dest
-        col = "beds_ward_o"
+        col = "nonicu_o"
     elif occupancy_type.lower() == "icu":
         dest = icu_o_dest
         col = "icu_o"
 
-    df.loc[:, "reportdate"] = pd.to_datetime(df["reportdate"])
+    df.loc[:, "reportdate"] = pd.to_datetime(df["reportdate"]).dt.tz_localize(None)
     df["times"] = df.reportdate - COVID_BASE_DATETIME
     df["times"] = df["times"] / np.timedelta64(1, "D")
     df_occ = df.groupby(["region", "times"], as_index=False).sum(min_count=1)[
@@ -223,7 +223,7 @@ def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, file_path):
         targets["infection_deaths"]["times"] = list(deaths_tmp["times"])
         targets["infection_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
         targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
-        targets["hospital_occupancy"]["values"] = list(hosp_tmp["beds_ward_o"])
+        targets["hospital_occupancy"]["values"] = list(hosp_tmp["nonicu_o"])
 
     with open(file_path, "w") as f:
         json.dump(targets, f, indent=2)

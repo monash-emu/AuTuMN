@@ -93,9 +93,10 @@ def apply_reinfection_flows_with_strains(
         for source_strain in strain_strata:
             source_filter = {"strain": source_strain}
             for i_age, age_group in enumerate(age_groups):
-                age_adjuster = susc_adjs[i_age]
-                dest_filter.update({"agegroup": str(age_group)})
-                source_filter.update({"agegroup": str(age_group)})
+                age_adjuster = susc_adjs[i_age] if susc_adjs else 1.
+                age_filter = {"agegroup": str(age_group)}
+                dest_filter.update(age_filter)
+                source_filter.update(age_filter)
 
                 contact_rate_adjuster = strain_adjuster * age_adjuster
                 strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
@@ -108,7 +109,7 @@ def apply_reinfection_flows_with_strains(
                     source_filter,
                     dest_filter,
                 )
-                if "waned" in base_compartments:
+                if Compartment.WANED in base_compartments:
                     model.add_infection_frequency_flow(
                         FlowName.LATE_REINFECTION,
                         strain_age_contact_rate,
@@ -140,9 +141,8 @@ def apply_reinfection_flows_without_strains(
     """
 
     for i_age, age_group in enumerate(age_groups):
-        age_adjuster = susc_props[i_age]
-        dest_filter = {"agegroup": str(age_group)}
-        source_filter = {"agegroup": str(age_group)}
+        age_adjuster = susc_props[i_age] if susc_props else 1.
+        age_filter = {"agegroup": str(age_group)}
 
         contact_rate_adjuster = age_adjuster
         age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
@@ -152,6 +152,6 @@ def apply_reinfection_flows_without_strains(
             age_contact_rate,
             Compartment.WANED,
             infection_dest,
-            source_filter,
-            dest_filter,
+            age_filter,
+            age_filter,
         )

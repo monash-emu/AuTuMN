@@ -347,6 +347,7 @@ def build_model(
     susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
+    sympt_props_dict = {str(age): prop for age, prop in zip(age_groups, sympt_props)}
 
     # Determine the compartments, including which are infectious
     compartment_types = get_compartments(params.sojourns)
@@ -424,7 +425,7 @@ def build_model(
     if Compartment.WANED in compartment_types:
         model.add_transition_flow(
             name=FlowName.WANING,
-            fractional_rate=1. / params.sojourns.recovered.total_time,
+            fractional_rate=1. / params.sojourns.recovered,
             source=Compartment.RECOVERED,
             dest=Compartment.WANED,
         )
@@ -463,17 +464,16 @@ def build_model(
         assert "agegroup" in model_stratifications, msg
 
     # Get and apply the clinical stratification, or a None to indicate no clinical stratification for the outputs
-    if is_undetected or sympt_props:
-        clinical_strat = get_clinical_strat(
-            model,
-            compartment_types,
-            params,
-            age_groups,
-            infectious_entry_flow,
-            detect_prop,
-            is_undetected,
-            sympt_props
-        )
+    clinical_strat = get_clinical_strat(
+        model,
+        compartment_types,
+        params,
+        infectious_entry_flow,
+        detect_prop,
+        is_undetected,
+        sympt_props_dict,
+    )
+    if clinical_strat:
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
 
@@ -533,7 +533,6 @@ def build_model(
     immunity_params = params.immunity_stratification
 
     # Adjust infection of susceptibles for immunity status
-
     reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
     if Compartment.WANED in compartment_types:
         reinfection_flows.append(FlowName.LATE_REINFECTION)

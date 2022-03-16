@@ -24,8 +24,7 @@ sojourns:
   latent:
     total_time: 4.
     proportion_early: 0.5
-  recovered:
-    total_time: 100000.
+  recovered: 100000.
 
 infectious_seed: 10000.
 contact_rate: 0.13

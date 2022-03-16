@@ -43,7 +43,7 @@ def convert_param_agegroups(
         region: Union[None, str],
         source_dict: Dict[int, float],
         modelled_age_groups: List[int],
-) -> List[float]:
+) -> Dict[str, float]:
     """
     Converts the source parameters to match the model age groups.
 
@@ -70,11 +70,11 @@ def convert_param_agegroups(
     relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
 
     # For each age bracket
-    param_values = []
+    param_values = {}
     for model_agegroup in modelled_age_groups:
         relevant_indices = relevant_source_indices[model_agegroup]
         weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
         values = {k: source_dict[k] for k in relevant_indices}
-        param_values.append(weighted_average(values, weights, rounding=None))
+        param_values[model_agegroup] = weighted_average(values, weights, rounding=None)
 
     return param_values

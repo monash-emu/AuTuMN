@@ -347,7 +347,7 @@ def build_model(
     susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups) if suscept_req else None
     sympt_req = age_strat_params.prop_symptomatic
     sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups) if sympt_req else None
-    sympt_props_dict = {str(age): prop for age, prop in zip(age_groups, sympt_props)}
+    sympt_props = {str(k): v for k, v in sympt_props.items()}
 
     # Determine the compartments, including which are infectious
     compartment_types = get_compartments(params.sojourns)
@@ -471,7 +471,7 @@ def build_model(
         infectious_entry_flow,
         detect_prop,
         is_undetected,
-        sympt_props_dict,
+        sympt_props,
     )
     if clinical_strat:
         model.stratify_with(clinical_strat)

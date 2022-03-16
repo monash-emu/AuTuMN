@@ -175,6 +175,11 @@ def apply_odds_ratio_to_props(props, adjuster):
     return [apply_odds_ratio_to_proportion(i_prop, adjuster) for i_prop in props]
 
 
+def apply_odds_ratio_to_props_dict(props, adjuster):
+
+    return {k: apply_odds_ratio_to_proportion(v, adjuster) for k, v in props.items()}
+
+
 def subdivide_props(
     base_props: numpy.ndarray, split_props: Union[numpy.ndarray, float]
 ) -> numpy.ndarray:

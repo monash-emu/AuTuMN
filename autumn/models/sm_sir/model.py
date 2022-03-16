@@ -239,82 +239,6 @@ def add_active_transitions(
     )
 
 
-def get_smsir_outputs_builder(
-        iso3,
-        region,
-        model,
-        compartment_types,
-        is_undetected,
-        age_groups,
-        clinical_strata,
-        strain_strata,
-        hosp_props,
-        hosp_stay,
-        icu_risk,
-        time_to_event_params,
-        cfr_props_params,
-        voc_params,
-        random_process,
-):
-    # FIXME: This function needs a docstring
-
-    model_times = model.times
-
-    outputs_builder = SmSirOutputsBuilder(model, compartment_types)
-
-    if is_undetected:
-        outputs_builder.request_cdr()
-
-    # Determine what flow will be used to track disease incidence
-    if Compartment.INFECTIOUS_LATE in compartment_types:
-        incidence_flow = FlowName.WITHIN_INFECTIOUS
-    elif Compartment.LATENT in compartment_types:
-        incidence_flow = FlowName.PROGRESSION
-    else:
-        incidence_flow = FlowName.INFECTION
-    outputs_builder.request_incidence(
-        age_groups,
-        clinical_strata,
-        strain_strata,
-        incidence_flow
-    )
-
-    outputs_builder.request_notifications(
-        time_to_event_params.notification,
-        model_times
-    )
-    outputs_builder.request_hospitalisations(
-        model_times,
-        age_groups,
-        strain_strata,
-        iso3,
-        region,
-        hosp_props,
-        time_to_event_params.hospitalisation,
-        hosp_stay.hospital_all,
-        voc_params,
-    )
-    outputs_builder.request_icu_outputs(
-        icu_risk,
-        time_to_event_params.icu_admission,
-        hosp_stay.icu,
-        model_times,
-    )
-    outputs_builder.request_infection_deaths(
-        model_times,
-        age_groups,
-        strain_strata,
-        iso3,
-        region,
-        cfr_props_params,
-        time_to_event_params.death,
-        voc_params,
-    )
-    outputs_builder.request_recovered_proportion(compartment_types)
-    if random_process:
-        outputs_builder.request_random_process_outputs()
-
-
 def build_model(
         params: dict,
         build_options: dict = None
@@ -346,6 +270,7 @@ def build_model(
     suscept_req = age_strat_params.susceptibility
     sympt_req = age_strat_params.prop_symptomatic
     time_params = params.time
+    time_to_event_params = params.time_from_onset_to_event
 
     # Determine the compartments, including which are infectious
     compartment_types = get_compartments(sojourns)
@@ -594,22 +519,60 @@ def build_model(
     Get the applicable outputs
     """
 
-    get_smsir_outputs_builder(
-        iso3,
-        region,
-        model,
-        compartment_types,
-        is_undetected,
+    model_times = model.times
+
+    outputs_builder = SmSirOutputsBuilder(model, compartment_types)
+
+    if is_undetected:
+        outputs_builder.request_cdr()
+
+    # Determine what flow will be used to track disease incidence
+    if Compartment.INFECTIOUS_LATE in compartment_types:
+        incidence_flow = FlowName.WITHIN_INFECTIOUS
+    elif Compartment.LATENT in compartment_types:
+        incidence_flow = FlowName.PROGRESSION
+    else:
+        incidence_flow = FlowName.INFECTION
+    outputs_builder.request_incidence(
         age_groups,
         clinical_strata,
         strain_strata,
-        age_strat_params.prop_hospital,
-        params.hospital_stay,
-        params.prop_icu_among_hospitalised,
-        params.time_from_onset_to_event,
-        age_strat_params.cfr,
-        params.voc_emergence,
-        bool(params.activate_random_process),
+        incidence_flow
     )
+
+    outputs_builder.request_notifications(
+        time_to_event_params.notification,
+        model_times
+    )
+    outputs_builder.request_hospitalisations(
+        model_times,
+        age_groups,
+        strain_strata,
+        iso3,
+        region,
+        age_strat_params.prop_hospital,
+        time_to_event_params.hospitalisation,
+        params.hospital_stay.hospital_all,
+        voc_params,
+    )
+    outputs_builder.request_icu_outputs(
+        params.prop_icu_among_hospitalised,
+        time_to_event_params.icu_admission,
+        params.hospital_stay.icu,
+        model_times,
+    )
+    outputs_builder.request_infection_deaths(
+        model_times,
+        age_groups,
+        strain_strata,
+        iso3,
+        region,
+        age_strat_params.cfr,
+        time_to_event_params.death,
+        voc_params,
+    )
+    outputs_builder.request_recovered_proportion(compartment_types)
+    if params.activate_random_process:
+        outputs_builder.request_random_process_outputs()
 
     return model

@@ -331,48 +331,37 @@ def build_model(
 
     """
 
+    # Get the parameters and extract some of the more used ones to have simpler names
     params = Parameters(**params)
 
-    # Get country/region details
     country = params.country
     pop = params.population
-
-    # Need a placeholder for the immunity stratification and output loops if strains not implemented
-    clinical_strata = [""]
-    strain_strata = [""]
-
-    # Preprocess age-specific parameters to match model age bands - needed for both population and age stratification
+    iso3 = country.iso3
+    region = pop.region
     age_groups = params.age_groups
     age_strat_params = params.age_stratification
-
+    sojourns = params.sojourns
+    detect_prop = params.detect_prop
+    testing_params = params.testing_to_detection
     suscept_req = age_strat_params.susceptibility
-    if type(suscept_req) == dict:
-        susc_adjs = convert_param_agegroups(country.iso3, pop.region, suscept_req, age_groups)
-    else:
-        susc_adjs = suscept_req  # In which case it should be None or a float
-
     sympt_req = age_strat_params.prop_symptomatic
-    if type(sympt_req) == dict:
-        sympt_props = convert_param_agegroups(country.iso3, pop.region, sympt_req, age_groups)
-        sympt_props = {str(k): v for k, v in sympt_props.items()}
-    else:
-        sympt_props = sympt_req  # In which case it should be None or a float
+    time_params = params.time
 
     # Determine the compartments, including which are infectious
-    compartment_types = get_compartments(params.sojourns)
+    compartment_types = get_compartments(sojourns)
     infectious_compartments = [comp for comp in compartment_types if "infectious" in comp]
 
     # Create the model object
     model = CompartmentalModel(
-        times=(params.time.start, params.time.end),
+        times=(time_params.start, time_params.end),
         compartments=compartment_types,
         infectious_compartments=infectious_compartments,
-        timestep=params.time.step,
+        timestep=time_params.step,
         ref_date=BASE_DATE,
     )
 
     """
-    Check build options.
+    Check build options
     """
 
     # This will be automatically populated by calibration.py if we are running a calibration, but can be manually set
@@ -385,21 +374,21 @@ def build_model(
             model._set_derived_outputs_index_cache(idx_cache)
 
     """
-    Create the total population.
+    Create the total population
     """
 
     # Get country population by age-group
-    total_pops = inputs.get_population_by_agegroup(age_groups, country.iso3, pop.region, pop.year)
+    total_pops = inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year)
 
     # Assign the population to compartments
     assign_population(params.infectious_seed, sum(total_pops), model)
 
     """
-    Add intercompartmental flows.
+    Add intercompartmental flows
     """
 
     # Latency
-    add_latent_transitions(params.sojourns.latent, model)
+    add_latent_transitions(sojourns.latent, model)
     infection_dest, infectious_entry_flow = Compartment.LATENT, FlowName.PROGRESSION
 
     # Transmission
@@ -407,7 +396,7 @@ def build_model(
 
         # Store random process as a computed value to make it available as an output
         rp_function, contact_rate = get_random_process(
-            params.time,
+            time_params,
             params.random_process,
             params.contact_rate
         )
@@ -428,27 +417,39 @@ def build_model(
     )
 
     # Active transition flows
-    add_active_transitions(params.sojourns.active, model)
+    add_active_transitions(sojourns.active, model)
 
     # Add waning transition if waning being implemented
     if Compartment.WANED in compartment_types:
         model.add_transition_flow(
             name=FlowName.WANING,
-            fractional_rate=1. / params.sojourns.recovered,
+            fractional_rate=1. / sojourns.recovered,
             source=Compartment.RECOVERED,
             dest=Compartment.WANED,
         )
 
     """
-    Apply age stratification.
+    Apply age stratification
     """
 
+    # Preprocess age-specific parameters to match model age bands if requested in this way
+    if type(suscept_req) == dict:
+        susc_adjs = convert_param_agegroups(iso3, region, suscept_req, age_groups)
+    else:
+        susc_adjs = suscept_req  # In which case it should be None or a float
+
+    if type(sympt_req) == dict:
+        sympt_props = convert_param_agegroups(iso3, region, sympt_req, age_groups)
+        sympt_props = {str(k): v for k, v in sympt_props.items()}
+    else:
+        sympt_props = sympt_req  # In which case it should be None or a float
+
     mixing_matrices = build_synthetic_matrices(
-        country.iso3,
+        iso3,
         params.ref_mixing_iso3,
         age_groups,
         True,  # Always age-adjust, could change this to being a parameter
-        pop.region
+        region
     )
     age_strat = get_agegroup_strat(
         params,
@@ -461,23 +462,19 @@ def build_model(
     model.stratify_with(age_strat)
 
     """
-    Testing-related parameters and processes.
+    Testing-related parameters and processes
     """
-
-    # Work out if clinical stratification needs to be applied, either because of asymptomatics or incomplete detection
-    detect_prop = params.detect_prop
-    testing_params = params.testing_to_detection
 
     if testing_params or detect_prop < 1.:
         is_undetected = True
-        cdr_func, non_detect_func = get_cdr_func(detect_prop, testing_params, pop, params.country.iso3)
+        cdr_func, non_detect_func = get_cdr_func(detect_prop, testing_params, pop, iso3)
         model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
         model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
     else:
         is_undetected, non_detect_func, cdr_func = False, None, None
 
     """
-    Apply clinical stratification.
+    Apply clinical stratification
     """
 
     # Get and apply the clinical stratification, or a None to indicate no clinical stratification for the outputs
@@ -487,6 +484,10 @@ def build_model(
     if clinical_strat:
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata
+
+    # Need a placeholder for outputs otherwise
+    else:
+        clinical_strata = [""]
 
     """
     Apply strains stratification
@@ -504,6 +505,10 @@ def build_model(
 
         # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata
+
+    # Need a placeholder for outputs and reinfection flows otherwise
+    else:
+        strain_strata = [""]
 
     """
     Apply the reinfection flows (knowing the strain stratification)
@@ -586,12 +591,12 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     """
-    Get the applicable outputs.
+    Get the applicable outputs
     """
 
     get_smsir_outputs_builder(
-        params.country.iso3,
-        pop.region,
+        iso3,
+        region,
         model,
         compartment_types,
         is_undetected,

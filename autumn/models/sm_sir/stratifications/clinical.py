@@ -41,7 +41,7 @@ def get_clinical_strat(
         infectious_entry_flow: str,
         detect_prop: float,
         is_detect_split: bool,
-        sympt_props: Union[None, Dict[str, float]],
+        sympt_props: Union[None, float, Dict[str, float]],
 ) -> Union[None, Stratification]:
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
@@ -79,24 +79,45 @@ def get_clinical_strat(
         )
         _, _ = add_detection_processes_to_model(detect_prop, params, model)
 
-        # Work out the splits based on symptomatic status and detection
-        for age_group, sympt_prop in sympt_props.items():
+        # If the model is age stratified and we have a user request to split according to symptomatic status by age
+        if type(sympt_props) == dict:
+            for age_group, sympt_prop in sympt_props.items():
 
-            def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
-                return computed_values["cdr"] * age_sympt_prop
+                def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
+                    return computed_values["cdr"] * age_sympt_prop
 
-            def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
-                return computed_values["undetected_prop"] * age_sympt_prop
+                def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
+                    return computed_values["undetected_prop"] * age_sympt_prop
+
+                adjustments = {
+                    ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
+                    ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
+                    ClinicalStratum.DETECT: Multiply(abs_cdr_func),
+                }
+                clinical_strat.set_flow_adjustments(
+                    infectious_entry_flow,
+                    adjustments,
+                    dest_strata={"agegroup": age_group}
+                )
+
+        else:
+            msg = "Symptomatic proportions have not come through as either a dictionary or a float"
+            assert type(sympt_props) == float, msg
+
+            def abs_cdr_func(time, computed_values, sympt_prop=sympt_props):
+                return computed_values["cdr"] * sympt_prop
+
+            def abs_non_detect_func(time, computed_values, sympt_prop=sympt_props):
+                return computed_values["undetected_prop"] * sympt_prop
 
             adjustments = {
-                ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
+                ClinicalStratum.ASYMPT: Multiply(1. - sympt_props),
                 ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
                 ClinicalStratum.DETECT: Multiply(abs_cdr_func),
             }
             clinical_strat.set_flow_adjustments(
                 infectious_entry_flow,
                 adjustments,
-                dest_strata={"agegroup": age_group}
             )
 
         # Work out the infectiousness adjustments
@@ -115,16 +136,31 @@ def get_clinical_strat(
             comps_to_stratify
         )
 
-        # Work out the splits based on symptomatic status
-        for age_group, sympt_prop in sympt_props.items():
+        # If the model is age stratified and we have a dictionary for splitting according to symptomatic status by age
+        if type(sympt_props) == dict:
+            for age_group, sympt_prop in sympt_props.items():
+                adjustments = {
+                    ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
+                    ClinicalStratum.DETECT: Multiply(sympt_prop),
+                }
+                clinical_strat.set_flow_adjustments(
+                    infectious_entry_flow,
+                    adjustments,
+                    dest_strata={"agegroup": age_group}
+                )
+
+        # Otherwise if we just have a single value for the symptomatic proportion
+        else:
+            msg = "Symptomatic proportions have not come through as either a dictionary or a float"
+            assert type(sympt_props) == float, msg
+
             adjustments = {
-                ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
-                ClinicalStratum.DETECT: Multiply(sympt_prop),
+                ClinicalStratum.ASYMPT: Multiply(1. - sympt_props),
+                ClinicalStratum.DETECT: Multiply(sympt_props),
             }
             clinical_strat.set_flow_adjustments(
                 infectious_entry_flow,
                 adjustments,
-                dest_strata={"agegroup": age_group}
             )
 
         # Work out the infectiousness adjustments

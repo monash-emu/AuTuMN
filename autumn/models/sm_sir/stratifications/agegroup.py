@@ -38,7 +38,8 @@ def get_agegroup_strat(
 
     """
 
-    age_strat = Stratification("agegroup", [str(a) for a in params.age_groups], compartments)
+    string_agegroups = [str(a) for a in params.age_groups]
+    age_strat = Stratification("agegroup", string_agegroups, compartments)
 
     # Heterogeneous mixing by age
     final_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, params.country) if is_dynamic_matrix \
@@ -46,7 +47,7 @@ def get_agegroup_strat(
     age_strat.set_mixing_matrix(final_matrix)
 
     # Set distribution of starting population
-    age_split_props = {str(agegroup): prop for agegroup, prop in zip(params.age_groups, normalise_sequence(total_pops))}
+    age_split_props = {str(agegroup): prop for agegroup, prop in zip(string_agegroups, normalise_sequence(total_pops))}
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group

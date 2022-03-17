@@ -1,6 +1,6 @@
 from datetime import date
 from math import exp
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 import pandas as pd
 from summer import CompartmentalModel

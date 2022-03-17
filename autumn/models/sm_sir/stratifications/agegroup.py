@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 import numpy as np
+import pandas as pd
 
 from summer import Stratification, Multiply
 
@@ -88,7 +89,7 @@ def convert_param_agegroups(
         values = {k: source_dict[k] for k in relevant_indices}
         param_values[model_agegroup] = weighted_average(values, weights, rounding=None)
 
-    return param_values
+    return pd.Series(param_values)
 
 
 def get_agegroup_strat(
@@ -97,7 +98,7 @@ def get_agegroup_strat(
         mixing_matrices: np.array,
         compartments: List[str],
         is_dynamic_matrix: bool,
-        age_susceptibility_values: Optional[List[float]],
+        age_suscept: Optional[List[float]],
 ) -> Stratification:
     """
     Function to create the age group stratification object.
@@ -113,7 +114,7 @@ def get_agegroup_strat(
         mixing_matrices: The static age-specific mixing matrix
         compartments: All the model compartments
         is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
-        age_susceptibility_values: Adjustments to infection rate based on the susceptibility of modelled age groups
+        age_suscept: Adjustments to infection rate based on the susceptibility of modelled age groups
 
     Returns:
         The age stratification summer object
@@ -133,8 +134,7 @@ def get_agegroup_strat(
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group
-    age_suscept = age_susceptibility_values
-    if age_suscept:
+    if type(age_suscept) == pd.Series:
         age_suscept_adjs = {str(sus): Multiply(value) for sus, value in zip(params.age_groups, age_suscept)}
         age_strat.set_flow_adjustments(FlowName.INFECTION, age_suscept_adjs)
 

@@ -5,7 +5,7 @@ import numpy as np
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
-from autumn.tools.utils.utils import apply_odds_ratio_to_props_dict, weighted_average
+from autumn.tools.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 
 
@@ -199,15 +199,16 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Request infection deaths for each age group
         infection_deaths_sources = []
-        for i_age, agegroup in enumerate(age_groups):
+        for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
                 # Adjust CFR proportions for immunity
-                adj_death_props = {k: v * immune_death_modifiers[immunity_stratum] for k, v in cfr_props.items()}
-                adj_prop_hosp_among_sympt = apply_odds_ratio_to_props_dict(adj_death_props, cfr_prop_requests.multiplier)
+                adj_death_props = cfr_props * immune_death_modifiers[immunity_stratum]
+                or_adjuster_func = get_apply_odds_ratio_to_prop(cfr_prop_requests.multiplier)
+                adj_death_props = adj_death_props.apply(or_adjuster_func)
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -219,7 +220,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
                     # Calculate the multiplier based on age, immunity and strain
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
-                    death_risk = adj_prop_hosp_among_sympt[agegroup] * strain_risk_modifier
+                    death_risk = adj_death_props[agegroup] * strain_risk_modifier
 
                     # Get the infection deaths function for convolution
                     infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
@@ -278,15 +279,16 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Request hospital admissions for each age group
         hospital_admissions_sources = []
-        for i_age, agegroup in enumerate(age_groups):
+        for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
-            for immunity_strat in IMMUNITY_STRATA:
-                immunity_string = f"Ximmunity_{immunity_strat}"
+            for immunity_stratum in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_stratum}"
 
                 # Adjust the hospitalisation proportions for immunity
-                adj_hosp_props = {k: v * immune_hosp_modifiers[immunity_strat] for k, v in hosp_props.items()}
-                adj_hosp_props = apply_odds_ratio_to_props_dict(adj_hosp_props, hosp_prop_requests.multiplier)
+                adj_hosp_props = hosp_props * immune_hosp_modifiers[immunity_stratum]
+                or_adjuster_func = get_apply_odds_ratio_to_prop(hosp_prop_requests.multiplier)
+                adj_hosp_props = adj_hosp_props.apply(or_adjuster_func)
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""

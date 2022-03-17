@@ -167,17 +167,47 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     return modified_proportion
 
 
+def get_apply_odds_ratio_to_prop(odds_ratio):
+    """
+    Use an odds ratio to adjust a proportion.
+
+    Starts from the premise that the odds associated with the original proportion (p1) = p1 / (1 - p1)
+    and similarly, that the odds associated with the adjusted proportion (p2) = p2 / (1 - p2)
+    We want to multiply the odds associated with p1 by a certain odds ratio.
+    That, is we need to solve the following equation for p2:
+        p1 / (1 - p1) * OR = p2 / (1 - p2)
+    By simple algebra, the solution to this is:
+        p2 = p1 * OR / (p1 * (OR - 1) + 1)
+
+    Args:
+        odds_ratio: The odds ratio to adjust by
+    Returns:
+        The adjusted proportion
+
+    """
+
+    assert 0.0 <= odds_ratio
+
+    def or_to_prop_func(proportion):
+
+        # Check input
+        assert 0.0 <= proportion <= 1.0
+
+        # Transform and return
+        modified_proportion = proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
+
+        return modified_proportion
+
+    return or_to_prop_func
+
+
 def apply_odds_ratio_to_props(props, adjuster):
     """
     Very simple, but just because it is used a few times.
     """
 
-    return [apply_odds_ratio_to_proportion(i_prop, adjuster) for i_prop in props]
-
-
-def apply_odds_ratio_to_props_dict(props, adjuster):
-
-    return {k: apply_odds_ratio_to_proportion(v, adjuster) for k, v in props.items()}
+    or_to_prop_func = get_apply_odds_ratio_to_prop(adjuster)
+    return [or_to_prop_func(i_prop) for i_prop in props]
 
 
 def subdivide_props(

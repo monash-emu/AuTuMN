@@ -93,12 +93,11 @@ def apply_reinfection_flows_with_strains(
         for source_strain in strain_strata:
             source_filter = {"strain": source_strain}
             for age_group in age_groups:
-                age_adjuster = susc_adjs[age_group] if susc_adjs else 1.
                 age_filter = {"agegroup": str(age_group)}
                 dest_filter.update(age_filter)
                 source_filter.update(age_filter)
 
-                contact_rate_adjuster = strain_adjuster * age_adjuster
+                contact_rate_adjuster = strain_adjuster * susc_adjs[age_group]
                 strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
 
                 model.add_infection_frequency_flow(

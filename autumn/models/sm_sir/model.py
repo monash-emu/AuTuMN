@@ -277,7 +277,7 @@ def get_cdr_func(
 def apply_reinfection_flows_without_strains(
         model: CompartmentalModel,
         infection_dest: str,
-        age_groups: List[float],
+        age_groups: List[str],
         contact_rate: float,
         suscept_props: pd.Series,
 ):
@@ -334,8 +334,7 @@ def build_model(
     pop = params.population
     iso3 = country.iso3
     region = pop.region
-    age_groups = params.age_groups
-    string_agegroups = [str(age) for age in age_groups]
+    age_groups = [str(age) for age in params.age_groups]
     age_strat_params = params.age_stratification
     sojourns = params.sojourns
     detect_prop = params.detect_prop
@@ -376,7 +375,10 @@ def build_model(
     """
 
     # Get country population by age-group
-    age_pops = pd.Series(inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year), index=string_agegroups)
+    age_pops = pd.Series(
+        inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year),
+        index=age_groups
+    )
 
     # Assign the population to compartments
     assign_population(params.infectious_seed, age_pops.sum(), model)
@@ -432,12 +434,12 @@ def build_model(
 
     # Preprocess age-specific parameters to match model age bands if requested in this way
     if type(suscept_req) == dict:
-        suscept_adjs = convert_param_agegroups(iso3, region, suscept_req, string_agegroups)
+        suscept_adjs = convert_param_agegroups(iso3, region, suscept_req, age_groups)
     else:
         suscept_adjs = suscept_req  # In which case it should be None or a float
 
     if type(sympt_req) == dict:
-        sympt_props = convert_param_agegroups(iso3, region, sympt_req, string_agegroups)
+        sympt_props = convert_param_agegroups(iso3, region, sympt_req, age_groups)
         sympt_props.index = sympt_props.index.map(str)
     else:
         sympt_props = sympt_req  # In which case it should be None or a float
@@ -445,13 +447,13 @@ def build_model(
     mixing_matrices = build_synthetic_matrices(
         iso3,
         params.ref_mixing_iso3,
-        age_groups,
+        [int(age) for age in age_groups],
         True,  # Always age-adjust, could change this to being a parameter
         region
     )
     age_strat = get_agegroup_strat(
         params,
-        string_agegroups,
+        age_groups,
         age_pops,
         mixing_matrices,
         compartment_types,
@@ -520,7 +522,7 @@ def build_model(
             model,
             compartment_types,
             infection_dest,
-            string_agegroups,
+            age_groups,
             params.voc_emergence,
             strain_strata,
             contact_rate,
@@ -532,7 +534,7 @@ def build_model(
             apply_reinfection_flows_without_strains(
                 model,
                 infection_dest,
-                string_agegroups,
+                age_groups,
                 contact_rate,
                 suscept_adjs,
             )
@@ -610,7 +612,7 @@ def build_model(
     else:
         incidence_flow = FlowName.INFECTION
     outputs_builder.request_incidence(
-        string_agegroups,
+        age_groups,
         clinical_strata,
         strain_strata,
         incidence_flow
@@ -622,7 +624,7 @@ def build_model(
     )
     outputs_builder.request_hospitalisations(
         model_times,
-        string_agegroups,
+        age_groups,
         strain_strata,
         iso3,
         region,
@@ -639,7 +641,7 @@ def build_model(
     )
     outputs_builder.request_infection_deaths(
         model_times,
-        string_agegroups,
+        age_groups,
         strain_strata,
         iso3,
         region,

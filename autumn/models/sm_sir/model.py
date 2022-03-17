@@ -12,7 +12,7 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 from autumn.tools.utils.utils import FunctionWrapper, multiply_function_or_constant
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess
+from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess, TestingToDetection, Population
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -237,9 +237,9 @@ def add_active_transitions(
 
 def get_cdr_func(
         detect_prop: float,
-        testing_params,
-        pop_params,
-        iso3,
+        testing_params: TestingToDetection,
+        pop_params: Population,
+        iso3: str,
 ) -> Tuple[callable, callable]:
     """
     The master function that can call various approaches to calculating the proportion of cases detected over time.
@@ -248,8 +248,10 @@ def get_cdr_func(
         Constant case detection fraction
 
     Args:
-        detect_prop: Currently just a single value representing the case detection rate over time
-        params: All model parameters
+        detect_prop: Back-up single value to set a constant case detection rate over time
+        testing_params: Parameters to specify the relationship between CDR and testing, if requested
+        pop_params: Population-related parameters
+        iso3: Country code
 
     Returns:
         The case detection rate function of time
@@ -341,6 +343,7 @@ def build_model(
     sympt_req = age_strat_params.prop_symptomatic
     time_params = params.time
     time_to_event_params = params.time_from_onset_to_event
+    string_agegroups = [str(age) for age in age_groups]
 
     # Determine the compartments, including which are infectious
     compartment_types = get_compartments(sojourns)
@@ -373,10 +376,10 @@ def build_model(
     """
 
     # Get country population by age-group
-    total_pops = inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year)
+    age_pops = pd.Series(inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year), index=string_agegroups)
 
     # Assign the population to compartments
-    assign_population(params.infectious_seed, sum(total_pops), model)
+    assign_population(params.infectious_seed, age_pops.sum(), model)
 
     """
     Add intercompartmental flows
@@ -448,7 +451,8 @@ def build_model(
     )
     age_strat = get_agegroup_strat(
         params,
-        total_pops,
+        string_agegroups,
+        age_pops,
         mixing_matrices,
         compartment_types,
         params.is_dynamic_mixing_matrix,

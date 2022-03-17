@@ -94,7 +94,8 @@ def convert_param_agegroups(
 
 def get_agegroup_strat(
         params: Parameters,
-        total_pops: List[int],
+        string_agegroups: List[str],
+        age_pops: pd.Series,
         mixing_matrices: np.array,
         compartments: List[str],
         is_dynamic_matrix: bool,
@@ -110,7 +111,8 @@ def get_agegroup_strat(
 
     Args:
         params: All model parameters
-        total_pops: The population distribution by age
+        string_agegroups: List of age groups as string
+        age_pops: The population distribution by age
         mixing_matrices: The static age-specific mixing matrix
         compartments: All the model compartments
         is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
@@ -121,7 +123,6 @@ def get_agegroup_strat(
 
     """
 
-    string_agegroups = [str(a) for a in params.age_groups]
     age_strat = Stratification("agegroup", string_agegroups, compartments)
 
     # Heterogeneous mixing by age
@@ -130,12 +131,14 @@ def get_agegroup_strat(
     age_strat.set_mixing_matrix(final_matrix)
 
     # Set distribution of starting population
-    age_split_props = {str(agegroup): prop for agegroup, prop in zip(string_agegroups, normalise_sequence(total_pops))}
-    age_strat.set_population_split(age_split_props)
+    age_split_props = age_pops / age_pops.sum()
+    age_strat.set_population_split(age_split_props.to_dict())
 
     # Adjust infection flows based on the susceptibility of the age group
     if type(age_suscept) == pd.Series:
-        age_suscept_adjs = {str(sus): Multiply(value) for sus, value in zip(params.age_groups, age_suscept)}
-        age_strat.set_flow_adjustments(FlowName.INFECTION, age_suscept_adjs)
+        age_strat.set_flow_adjustments(
+            FlowName.INFECTION,
+            {k: Multiply(v) for k, v in age_suscept.items()}
+        )
 
     return age_strat

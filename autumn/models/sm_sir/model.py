@@ -279,7 +279,7 @@ def apply_reinfection_flows_without_strains(
         infection_dest: str,
         age_groups: List[float],
         contact_rate: float,
-        susc_props: pd.Series,
+        suscept_props: pd.Series,
 ):
     """
     Apply the reinfection flows in the case of a single-strain model. Note that in this case, only the late reinfection
@@ -290,13 +290,13 @@ def apply_reinfection_flows_without_strains(
         infection_dest: Where people end up first after having been infected
         age_groups: The modelled age groups
         contact_rate: The model's contact rate
-        susc_props: Adjustments to the rate of infection of susceptibles based on modelled age groups
+        suscept_props: Adjustments to the rate of infection of susceptibles based on modelled age groups
 
     """
 
     for age_group in age_groups:
-        age_adjuster = susc_props[age_group] if susc_props else 1.
-        age_filter = {"agegroup": str(age_group)}
+        age_adjuster = suscept_props[age_group] if suscept_props else 1.
+        age_filter = {"agegroup": age_group}
 
         contact_rate_adjuster = age_adjuster
         age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
@@ -432,9 +432,9 @@ def build_model(
 
     # Preprocess age-specific parameters to match model age bands if requested in this way
     if type(suscept_req) == dict:
-        susc_adjs = convert_param_agegroups(iso3, region, suscept_req, string_agegroups)
+        suscept_adjs = convert_param_agegroups(iso3, region, suscept_req, string_agegroups)
     else:
-        susc_adjs = suscept_req  # In which case it should be None or a float
+        suscept_adjs = suscept_req  # In which case it should be None or a float
 
     if type(sympt_req) == dict:
         sympt_props = convert_param_agegroups(iso3, region, sympt_req, string_agegroups)
@@ -456,7 +456,7 @@ def build_model(
         mixing_matrices,
         compartment_types,
         params.is_dynamic_mixing_matrix,
-        susc_adjs,
+        suscept_adjs,
     )
     model.stratify_with(age_strat)
 
@@ -513,6 +513,8 @@ def build_model(
     Apply the reinfection flows (knowing the strain stratification)
     """
 
+    print()
+
     if voc_params:
         apply_reinfection_flows_with_strains(
             model,
@@ -522,7 +524,7 @@ def build_model(
             params.voc_emergence,
             strain_strata,
             contact_rate,
-            susc_adjs,
+            suscept_adjs,
         )
     else:
         # for a single-strain model, reinfection may only occur from the waned compartment
@@ -530,9 +532,9 @@ def build_model(
             apply_reinfection_flows_without_strains(
                 model,
                 infection_dest,
-                age_groups,
+                string_agegroups,
                 contact_rate,
-                susc_adjs,
+                suscept_adjs,
             )
 
     """
@@ -608,7 +610,7 @@ def build_model(
     else:
         incidence_flow = FlowName.INFECTION
     outputs_builder.request_incidence(
-        age_groups,
+        string_agegroups,
         clinical_strata,
         strain_strata,
         incidence_flow

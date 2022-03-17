@@ -1,5 +1,6 @@
 from typing import Optional, Dict, List
 
+import pandas as pd
 from summer import StrainStratification, Multiply, CompartmentalModel
 
 from autumn.models.sm_sir.constants import Compartment, FlowName
@@ -69,7 +70,7 @@ def apply_reinfection_flows_with_strains(
         voc_params: Optional[Dict[str, VocComponent]],
         strain_strata: List[str],
         contact_rate: float,
-        susc_adjs: Dict[str, float],
+        susc_adjs: pd.Series,
 ):
     """
     Apply the reinfection flows, making sure that it is possible to be infected with any strain after infection with any
@@ -157,13 +158,13 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     strain_strat.set_population_split(population_split)
 
     # Latency progression rate adjustment - applies to zero, one or two flows relating to progression through latency
-    adjustments = {strain: None for strain in strains}  # Start from a blank adjustments set
-    adjustments_active = {strain: None for strain in strains}  # Start from a blank adjustments set
+    adjustments = {strain: None for strain in strains}  # Start from a blank adjustments sets
+    adjustments_active = {strain: None for strain in strains}
     for strain in strains:
         if voc_params[strain].relative_latency:
-            adjustments.update({strain: Multiply(1. / voc_params[strain].relative_latency)})  # Update for user request
+            adjustments.update({strain: Multiply(1. / voc_params[strain].relative_latency)})  # Update for user requests
         if voc_params[strain].relative_active_period:
-            adjustments_active.update({strain: Multiply(1. / voc_params[strain].relative_active_period)})  # Update for user request
+            adjustments_active.update({strain: Multiply(1. / voc_params[strain].relative_active_period)})
     if Compartment.LATENT_LATE in compartments:
         strain_strat.set_flow_adjustments(
             FlowName.WITHIN_LATENT,

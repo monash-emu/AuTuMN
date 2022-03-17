@@ -434,7 +434,7 @@ def build_model(
 
     if type(sympt_req) == dict:
         sympt_props = convert_param_agegroups(iso3, region, sympt_req, age_groups)
-        sympt_props = {str(k): v for k, v in sympt_props.items()}
+        sympt_props.index = sympt_props.index.map(str)
     else:
         sympt_props = sympt_req  # In which case it should be None or a float
 

@@ -55,7 +55,7 @@ def convert_param_agegroups(
         region: Union[None, str],
         source_dict: Dict[int, float],
         modelled_age_groups: List[int],
-) -> Dict[str, float]:
+) -> pd.Series:
     """
     Converts the source parameters to match the model age groups.
 
@@ -98,7 +98,7 @@ def get_agegroup_strat(
         mixing_matrices: np.array,
         compartments: List[str],
         is_dynamic_matrix: bool,
-        age_suscept: Optional[List[float]],
+        age_suscept: Optional[pd.Series],
 ) -> Stratification:
     """
     Function to create the age group stratification object.

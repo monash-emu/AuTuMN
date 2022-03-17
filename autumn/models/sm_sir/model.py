@@ -1,6 +1,6 @@
 from datetime import date
 from math import exp
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from summer import CompartmentalModel
 
@@ -8,8 +8,8 @@ from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-from autumn.tools.utils.utils import FunctionWrapper
-from autumn.models.sm_sir.strat_processing.clinical import get_cdr_func
+from autumn.tools.utils.utils import FunctionWrapper, multiply_function_or_constant
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess
 from .computed_values.random_process_compute import RandomProcessProc
@@ -22,14 +22,9 @@ from .stratifications.immunity import (
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
 )
-from .stratifications.strains import get_strain_strat
+from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
-from .strat_processing.strains import (
-    seed_vocs,
-    apply_reinfection_flows_without_strains,
-    apply_reinfection_flows_with_strains,
-)
-from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
+from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 
 
 # Base date used to calculate mixing matrix times.
@@ -237,6 +232,80 @@ def add_active_transitions(
         source=recovery_origin,
         dest=Compartment.RECOVERED,
     )
+
+
+def get_cdr_func(
+        detect_prop: float,
+        testing_params,
+        pop_params,
+        iso3,
+) -> Tuple[callable, callable]:
+    """
+    The master function that can call various approaches to calculating the proportion of cases detected over time.
+    Currently just supporting two approaches:
+        Testing-based case detection
+        Constant case detection fraction
+
+    Args:
+        detect_prop: Currently just a single value representing the case detection rate over time
+        params: All model parameters
+
+    Returns:
+        The case detection rate function of time
+
+    """
+
+    if testing_params:
+        cdr_func = find_cdr_function_from_test_data(
+            testing_params, iso3, pop_params.region, pop_params.year
+        )
+
+    else:
+
+        def cdr_func(time, computed_values):
+            return detect_prop
+
+    def non_detect_func(time, computed_values):
+        return 1.0 - computed_values["cdr"]
+
+    return cdr_func, non_detect_func
+
+
+def apply_reinfection_flows_without_strains(
+        model: CompartmentalModel,
+        infection_dest: str,
+        age_groups: List[float],
+        contact_rate: float,
+        susc_props: Dict[str, float],
+):
+    """
+    Apply the reinfection flows in the case of a single-strain model. Note that in this case, only the late reinfection
+    flow (i.e. coming out of the waned compartment) is relevant.
+
+    Args:
+        model: The SM-SIR model being adapted
+        infection_dest: Where people end up first after having been infected
+        age_groups: The modelled age groups
+        contact_rate: The model's contact rate
+        susc_props: Adjustments to the rate of infection of susceptibles based on modelled age groups
+
+    """
+
+    for age_group in age_groups:
+        age_adjuster = susc_props[age_group] if susc_props else 1.
+        age_filter = {"agegroup": str(age_group)}
+
+        contact_rate_adjuster = age_adjuster
+        age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
+
+        model.add_infection_frequency_flow(
+            FlowName.LATE_REINFECTION,
+            age_contact_rate,
+            Compartment.WANED,
+            infection_dest,
+            age_filter,
+            age_filter,
+        )
 
 
 def build_model(

@@ -5,8 +5,8 @@ import numpy as np
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
-from autumn.tools.utils.utils import apply_odds_ratio_to_props, apply_odds_ratio_to_props_dict, weighted_average
-from autumn.models.sm_sir.strat_processing.agegroup import convert_param_agegroups
+from autumn.tools.utils.utils import apply_odds_ratio_to_props_dict, weighted_average
+from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 
 
 def get_immunity_prop_modifiers(

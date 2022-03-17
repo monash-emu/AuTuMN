@@ -130,7 +130,7 @@ def get_random_process(
 def add_latent_transitions(
         latent_sojourn_params: CompartmentSojourn,
         model: CompartmentalModel,
-) -> Tuple[str, str]:
+):
     """
     Add the transition flows taking people from infection through to infectiousness, depending on the model structure
     requested.
@@ -457,7 +457,7 @@ def build_model(
     model.stratify_with(age_strat)
 
     """
-    Testing-related parameters and processes
+    Testing-related processes
     """
 
     if testing_params or detect_prop < 1.:

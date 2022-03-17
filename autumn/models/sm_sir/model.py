@@ -335,6 +335,7 @@ def build_model(
     iso3 = country.iso3
     region = pop.region
     age_groups = params.age_groups
+    string_agegroups = [str(age) for age in age_groups]
     age_strat_params = params.age_stratification
     sojourns = params.sojourns
     detect_prop = params.detect_prop
@@ -343,7 +344,6 @@ def build_model(
     sympt_req = age_strat_params.prop_symptomatic
     time_params = params.time
     time_to_event_params = params.time_from_onset_to_event
-    string_agegroups = [str(age) for age in age_groups]
 
     # Determine the compartments, including which are infectious
     compartment_types = get_compartments(sojourns)

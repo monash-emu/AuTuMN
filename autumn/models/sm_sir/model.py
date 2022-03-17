@@ -518,7 +518,7 @@ def build_model(
             model,
             compartment_types,
             infection_dest,
-            age_groups,
+            string_agegroups,
             params.voc_emergence,
             strain_strata,
             contact_rate,
@@ -620,7 +620,7 @@ def build_model(
     )
     outputs_builder.request_hospitalisations(
         model_times,
-        age_groups,
+        string_agegroups,
         strain_strata,
         iso3,
         region,
@@ -637,7 +637,7 @@ def build_model(
     )
     outputs_builder.request_infection_deaths(
         model_times,
-        age_groups,
+        string_agegroups,
         strain_strata,
         iso3,
         region,

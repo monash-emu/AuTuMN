@@ -163,7 +163,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
     def request_infection_deaths(
             self,
             model_times: np.ndarray,
-            age_groups: List[int],
+            age_groups: List[str],
             strain_strata: List[str],
             iso3: str,
             region: Union[str, None],
@@ -187,7 +187,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
 
         cfr_request = cfr_prop_requests.values
-        cfr_props = convert_param_agegroups(iso3, region, cfr_request, age_groups)
+        cfr_props = convert_param_agegroups(iso3, region, cfr_request, [int(age) for age in age_groups])
 
         # Get the adjustments to the hospitalisation rates according to immunity status
         source_immunity_dist = cfr_prop_requests.source_immunity_distribution
@@ -267,7 +267,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
 
         hosp_request = hosp_prop_requests.values
-        hosp_props = convert_param_agegroups(iso3, region, hosp_request, age_groups)
+        hosp_props = convert_param_agegroups(iso3, region, hosp_request, [int(age) for age in age_groups])
 
         # Get the adjustments to the hospitalisation rates according to immunity status
         source_immunity_dist = hosp_prop_requests.source_immunity_distribution

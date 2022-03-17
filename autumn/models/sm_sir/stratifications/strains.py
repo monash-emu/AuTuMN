@@ -66,7 +66,7 @@ def apply_reinfection_flows_with_strains(
         model: CompartmentalModel,
         base_compartments: List[str],
         infection_dest: str,
-        age_groups: List[float],
+        age_groups: List[str],
         voc_params: Optional[Dict[str, VocComponent]],
         strain_strata: List[str],
         contact_rate: float,
@@ -94,7 +94,7 @@ def apply_reinfection_flows_with_strains(
         for source_strain in strain_strata:
             source_filter = {"strain": source_strain}
             for age_group in age_groups:
-                age_filter = {"agegroup": str(age_group)}
+                age_filter = {"agegroup": age_group}
                 dest_filter.update(age_filter)
                 source_filter.update(age_filter)
 

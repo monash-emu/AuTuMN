@@ -12,7 +12,7 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 from autumn.tools.utils.utils import FunctionWrapper, multiply_function_or_constant
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess
+from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess, TestingToDetection, Population
 from .computed_values.random_process_compute import RandomProcessProc
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -130,7 +130,7 @@ def get_random_process(
 def add_latent_transitions(
         latent_sojourn_params: CompartmentSojourn,
         model: CompartmentalModel,
-) -> Tuple[str, str]:
+):
     """
     Add the transition flows taking people from infection through to infectiousness, depending on the model structure
     requested.
@@ -237,9 +237,9 @@ def add_active_transitions(
 
 def get_cdr_func(
         detect_prop: float,
-        testing_params,
-        pop_params,
-        iso3,
+        testing_params: TestingToDetection,
+        pop_params: Population,
+        iso3: str,
 ) -> Tuple[callable, callable]:
     """
     The master function that can call various approaches to calculating the proportion of cases detected over time.
@@ -248,8 +248,10 @@ def get_cdr_func(
         Constant case detection fraction
 
     Args:
-        detect_prop: Currently just a single value representing the case detection rate over time
-        params: All model parameters
+        detect_prop: Back-up single value to set a constant case detection rate over time
+        testing_params: Parameters to specify the relationship between CDR and testing, if requested
+        pop_params: Population-related parameters
+        iso3: Country code
 
     Returns:
         The case detection rate function of time
@@ -275,9 +277,9 @@ def get_cdr_func(
 def apply_reinfection_flows_without_strains(
         model: CompartmentalModel,
         infection_dest: str,
-        age_groups: List[float],
+        age_groups: List[str],
         contact_rate: float,
-        susc_props: pd.Series,
+        suscept_props: pd.Series,
 ):
     """
     Apply the reinfection flows in the case of a single-strain model. Note that in this case, only the late reinfection
@@ -288,13 +290,13 @@ def apply_reinfection_flows_without_strains(
         infection_dest: Where people end up first after having been infected
         age_groups: The modelled age groups
         contact_rate: The model's contact rate
-        susc_props: Adjustments to the rate of infection of susceptibles based on modelled age groups
+        suscept_props: Adjustments to the rate of infection of susceptibles based on modelled age groups
 
     """
 
     for age_group in age_groups:
-        age_adjuster = susc_props[age_group] if susc_props else 1.
-        age_filter = {"agegroup": str(age_group)}
+        age_adjuster = suscept_props[age_group] if suscept_props else 1.
+        age_filter = {"agegroup": age_group}
 
         contact_rate_adjuster = age_adjuster
         age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
@@ -332,7 +334,7 @@ def build_model(
     pop = params.population
     iso3 = country.iso3
     region = pop.region
-    age_groups = params.age_groups
+    age_groups = [str(age) for age in params.age_groups]
     age_strat_params = params.age_stratification
     sojourns = params.sojourns
     detect_prop = params.detect_prop
@@ -373,10 +375,13 @@ def build_model(
     """
 
     # Get country population by age-group
-    total_pops = inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year)
+    age_pops = pd.Series(
+        inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year),
+        index=age_groups
+    )
 
     # Assign the population to compartments
-    assign_population(params.infectious_seed, sum(total_pops), model)
+    assign_population(params.infectious_seed, age_pops.sum(), model)
 
     """
     Add intercompartmental flows
@@ -429,9 +434,9 @@ def build_model(
 
     # Preprocess age-specific parameters to match model age bands if requested in this way
     if type(suscept_req) == dict:
-        susc_adjs = convert_param_agegroups(iso3, region, suscept_req, age_groups)
+        suscept_adjs = convert_param_agegroups(iso3, region, suscept_req, age_groups)
     else:
-        susc_adjs = suscept_req  # In which case it should be None or a float
+        suscept_adjs = suscept_req  # In which case it should be None or a float
 
     if type(sympt_req) == dict:
         sympt_props = convert_param_agegroups(iso3, region, sympt_req, age_groups)
@@ -442,22 +447,23 @@ def build_model(
     mixing_matrices = build_synthetic_matrices(
         iso3,
         params.ref_mixing_iso3,
-        age_groups,
+        [int(age) for age in age_groups],
         True,  # Always age-adjust, could change this to being a parameter
         region
     )
     age_strat = get_agegroup_strat(
         params,
-        total_pops,
+        age_groups,
+        age_pops,
         mixing_matrices,
         compartment_types,
         params.is_dynamic_mixing_matrix,
-        susc_adjs,
+        suscept_adjs,
     )
     model.stratify_with(age_strat)
 
     """
-    Testing-related parameters and processes
+    Testing-related processes
     """
 
     if testing_params or detect_prop < 1.:
@@ -509,6 +515,8 @@ def build_model(
     Apply the reinfection flows (knowing the strain stratification)
     """
 
+    print()
+
     if voc_params:
         apply_reinfection_flows_with_strains(
             model,
@@ -518,7 +526,7 @@ def build_model(
             params.voc_emergence,
             strain_strata,
             contact_rate,
-            susc_adjs,
+            suscept_adjs,
         )
     else:
         # for a single-strain model, reinfection may only occur from the waned compartment
@@ -528,7 +536,7 @@ def build_model(
                 infection_dest,
                 age_groups,
                 contact_rate,
-                susc_adjs,
+                suscept_adjs,
             )
 
     """

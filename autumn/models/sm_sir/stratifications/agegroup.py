@@ -41,7 +41,7 @@ def get_relevant_indices(
             age_index_up = source_agebreaks[-1]
         else:
             age_index_up = source_agebreaks.index(modelled_age_groups[i_age + 1])
-        relevant_source_indices[model_agegroup] = source_agebreaks[age_index_low: age_index_up]
+        relevant_source_indices[str(model_agegroup)] = source_agebreaks[age_index_low: age_index_up]
 
     # Should be impossible for this check to fail
     msg = "Not all source age groups being mapped to modelled age groups"
@@ -54,7 +54,7 @@ def convert_param_agegroups(
         iso3: str,
         region: Union[None, str],
         source_dict: Dict[int, float],
-        modelled_age_groups: List[int],
+        modelled_age_groups: List[str],
 ) -> pd.Series:
     """
     Converts the source parameters to match the model age groups.
@@ -76,10 +76,10 @@ def convert_param_agegroups(
     total_pops_5year_dict = {age: pop for age, pop in zip(source_agebreaks, total_pops_5year_bands)}
 
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
-    assert all([age_group in source_agebreaks for age_group in modelled_age_groups]), msg
+    assert all([int(age_group) in source_agebreaks for age_group in modelled_age_groups]), msg
 
     # Find out which of the standard source categories (values) apply to each modelled age group (keys)
-    relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
+    relevant_source_indices = get_relevant_indices(source_agebreaks, [int(age) for age in modelled_age_groups])
 
     # For each age bracket
     param_values = {}
@@ -94,7 +94,8 @@ def convert_param_agegroups(
 
 def get_agegroup_strat(
         params: Parameters,
-        total_pops: List[int],
+        string_agegroups: List[str],
+        age_pops: pd.Series,
         mixing_matrices: np.array,
         compartments: List[str],
         is_dynamic_matrix: bool,
@@ -110,7 +111,8 @@ def get_agegroup_strat(
 
     Args:
         params: All model parameters
-        total_pops: The population distribution by age
+        string_agegroups: List of age groups as string
+        age_pops: The population distribution by age
         mixing_matrices: The static age-specific mixing matrix
         compartments: All the model compartments
         is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
@@ -121,7 +123,6 @@ def get_agegroup_strat(
 
     """
 
-    string_agegroups = [str(a) for a in params.age_groups]
     age_strat = Stratification("agegroup", string_agegroups, compartments)
 
     # Heterogeneous mixing by age
@@ -130,12 +131,14 @@ def get_agegroup_strat(
     age_strat.set_mixing_matrix(final_matrix)
 
     # Set distribution of starting population
-    age_split_props = {str(agegroup): prop for agegroup, prop in zip(string_agegroups, normalise_sequence(total_pops))}
-    age_strat.set_population_split(age_split_props)
+    age_split_props = age_pops / age_pops.sum()
+    age_strat.set_population_split(age_split_props.to_dict())
 
     # Adjust infection flows based on the susceptibility of the age group
     if type(age_suscept) == pd.Series:
-        age_suscept_adjs = {str(sus): Multiply(value) for sus, value in zip(params.age_groups, age_suscept)}
-        age_strat.set_flow_adjustments(FlowName.INFECTION, age_suscept_adjs)
+        age_strat.set_flow_adjustments(
+            FlowName.INFECTION,
+            {k: Multiply(v) for k, v in age_suscept.items()}
+        )
 
     return age_strat

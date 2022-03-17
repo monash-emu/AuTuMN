@@ -278,8 +278,8 @@ class AgeStratification(BaseModel):
     Parameters used in age based stratification.
     """
 
-    susceptibility: Optional[Dict[int, float]]  # Should be either dict to represent age groups or none
-    prop_symptomatic: Optional[Dict[int, float]]
+    susceptibility: Optional[Union[Dict[int, float], float]]  # Dictionary to represent age groups, single float or None
+    prop_symptomatic: Optional[Union[Dict[int, float], float]]  # As for susceptibility
     prop_hospital: AgeSpecificProps
     cfr: AgeSpecificProps
 

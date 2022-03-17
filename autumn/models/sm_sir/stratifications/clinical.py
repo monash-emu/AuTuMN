@@ -1,6 +1,7 @@
 from typing import List, Union, Dict
 from copy import copy
 
+import pandas as pd
 from summer import Stratification, Multiply, Overwrite, CompartmentalModel
 
 from autumn.models.sm_sir.constants import ClinicalStratum, Compartment
@@ -12,7 +13,7 @@ def get_clinical_strat(
         compartments: List[str],
         params: Parameters,
         infectious_entry_flow: str,
-        sympt_props: Union[None, float, Dict[str, float]],
+        sympt_props: Union[None, float, pd.Series],
         non_detect_func: Union[None, callable],
         cdr_func: Union[None, callable]
 ) -> Union[None, Stratification]:
@@ -42,7 +43,7 @@ def get_clinical_strat(
     comps_to_stratify = [comp for comp in compartments if "infectious" in comp]
 
     # Check requests have come through in the correct format
-    if type(sympt_props) == dict:
+    if type(sympt_props) == pd.Series:
 
         msg = "Age stratification not applied, which is the only reason for having a dict of sympt props here"
         model_stratifications = [strat.name for strat in model._stratifications]
@@ -57,7 +58,7 @@ def get_clinical_strat(
         assert type(sympt_props) == float, msg
 
     # Split by symptomatic status and by detection status
-    if sympt_props and cdr_func:
+    if sympt_props is not None and cdr_func:
 
         # Create the stratification object, with all three possible strata
         clinical_strat = Stratification(
@@ -67,7 +68,7 @@ def get_clinical_strat(
         )
 
         # If the model is age stratified and we have a user request to split according to symptomatic status by age
-        if type(sympt_props) == dict:
+        if type(sympt_props) == pd.Series:
             for age_group, sympt_prop in sympt_props.items():
 
                 def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
@@ -112,7 +113,7 @@ def get_clinical_strat(
         isolate_infectiousness.update({ClinicalStratum.DETECT: Overwrite(params.isolate_infectiousness_effect)})
 
     # Only apply the symptomatic split, which differs by age group
-    elif sympt_props and not cdr_func:
+    elif sympt_props is not None and not cdr_func:
 
         # Create the stratification object, with just asymptomatic and symptomatic (called detect)
         clinical_strat = Stratification(

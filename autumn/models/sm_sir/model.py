@@ -2,6 +2,7 @@ from datetime import date
 from math import exp
 from typing import List, Tuple, Dict
 
+import pandas as pd
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
@@ -276,7 +277,7 @@ def apply_reinfection_flows_without_strains(
         infection_dest: str,
         age_groups: List[float],
         contact_rate: float,
-        susc_props: Dict[str, float],
+        susc_props: pd.Series,
 ):
     """
     Apply the reinfection flows in the case of a single-strain model. Note that in this case, only the late reinfection

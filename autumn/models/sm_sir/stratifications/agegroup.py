@@ -41,7 +41,7 @@ def get_relevant_indices(
             age_index_up = source_agebreaks[-1]
         else:
             age_index_up = source_agebreaks.index(modelled_age_groups[i_age + 1])
-        relevant_source_indices[model_agegroup] = source_agebreaks[age_index_low: age_index_up]
+        relevant_source_indices[str(model_agegroup)] = source_agebreaks[age_index_low: age_index_up]
 
     # Should be impossible for this check to fail
     msg = "Not all source age groups being mapped to modelled age groups"
@@ -54,7 +54,7 @@ def convert_param_agegroups(
         iso3: str,
         region: Union[None, str],
         source_dict: Dict[int, float],
-        modelled_age_groups: List[int],
+        modelled_age_groups: List[str],
 ) -> pd.Series:
     """
     Converts the source parameters to match the model age groups.
@@ -76,10 +76,10 @@ def convert_param_agegroups(
     total_pops_5year_dict = {age: pop for age, pop in zip(source_agebreaks, total_pops_5year_bands)}
 
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
-    assert all([age_group in source_agebreaks for age_group in modelled_age_groups]), msg
+    assert all([int(age_group) in source_agebreaks for age_group in modelled_age_groups]), msg
 
     # Find out which of the standard source categories (values) apply to each modelled age group (keys)
-    relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
+    relevant_source_indices = get_relevant_indices(source_agebreaks, [int(age) for age in modelled_age_groups])
 
     # For each age bracket
     param_values = {}
@@ -87,7 +87,7 @@ def convert_param_agegroups(
         relevant_indices = relevant_source_indices[model_agegroup]
         weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
         values = {k: source_dict[k] for k in relevant_indices}
-        param_values[str(model_agegroup)] = weighted_average(values, weights, rounding=None)
+        param_values[model_agegroup] = weighted_average(values, weights, rounding=None)
 
     return pd.Series(param_values)
 

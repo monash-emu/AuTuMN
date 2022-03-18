@@ -61,7 +61,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_incidence(
             self,
-            age_groups: List[int],
+            age_groups: List[str],
             clinical_strata: List[str],
             strain_strata: List[str],
             incidence_flow: str,
@@ -88,7 +88,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
-            agegroup_filter = {"agegroup": str(agegroup)}
+            agegroup_filter = {"agegroup": agegroup}
 
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
@@ -163,7 +163,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
     def request_infection_deaths(
             self,
             model_times: np.ndarray,
-            age_groups: List[int],
+            age_groups: List[str],
             strain_strata: List[str],
             iso3: str,
             region: Union[str, None],

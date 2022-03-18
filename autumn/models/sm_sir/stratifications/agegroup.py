@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 import numpy as np
+import pandas as pd
 
 from summer import Stratification, Multiply
 
@@ -9,13 +10,96 @@ from autumn.models.sm_sir.constants import FlowName
 from autumn.tools.utils.utils import normalise_sequence
 
 
+from typing import List, Dict, Union
+import itertools
+
+from autumn.tools.inputs import get_population_by_agegroup
+from autumn.tools.utils.utils import weighted_average
+
+
+def get_relevant_indices(
+        source_agebreaks: List[int],
+        modelled_age_groups: List[int],
+) -> Dict[int, List[int]]:
+    """
+    Find the standard source age brackets relevant to each modelled age bracket.
+
+    Args:
+        source_agebreaks: The standard source age brackets (5-year brackets to 75+)
+        modelled_age_groups: The age brackets being applied in the model
+
+    Returns:
+        The set of source age breaks applying to each modelled age group
+
+    """
+
+    # Collate up the dictionary by modelled age groups
+    relevant_source_indices = {}
+    for i_age, model_agegroup in enumerate(modelled_age_groups):
+        age_index_low = source_agebreaks.index(model_agegroup)
+        if model_agegroup == modelled_age_groups[-1]:
+            age_index_up = source_agebreaks[-1]
+        else:
+            age_index_up = source_agebreaks.index(modelled_age_groups[i_age + 1])
+        relevant_source_indices[str(model_agegroup)] = source_agebreaks[age_index_low: age_index_up]
+
+    # Should be impossible for this check to fail
+    msg = "Not all source age groups being mapped to modelled age groups"
+    assert list(itertools.chain.from_iterable(relevant_source_indices.values())) == source_agebreaks, msg
+
+    return relevant_source_indices
+
+
+def convert_param_agegroups(
+        iso3: str,
+        region: Union[None, str],
+        source_dict: Dict[int, float],
+        modelled_age_groups: List[str],
+) -> pd.Series:
+    """
+    Converts the source parameters to match the model age groups.
+
+    Args:
+        iso3: Parameter for get_population_by_agegroup
+        region: Parameter for get_population_by_agegroup
+        source_dict: A list of parameter values provided according to 5-year band, starting from 0-4
+        modelled_age_groups: Parameter for get_population_by_agegroup
+
+    Returns:
+        The dictionary of the processed parameters in the format needed by the model
+
+    """
+
+    # Get default age brackets and the population structured with these default categories
+    source_agebreaks = list(source_dict.keys())
+    total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
+    total_pops_5year_dict = {age: pop for age, pop in zip(source_agebreaks, total_pops_5year_bands)}
+
+    msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
+    assert all([int(age_group) in source_agebreaks for age_group in modelled_age_groups]), msg
+
+    # Find out which of the standard source categories (values) apply to each modelled age group (keys)
+    relevant_source_indices = get_relevant_indices(source_agebreaks, [int(age) for age in modelled_age_groups])
+
+    # For each age bracket
+    param_values = {}
+    for model_agegroup in modelled_age_groups:
+        relevant_indices = relevant_source_indices[model_agegroup]
+        weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
+        values = {k: source_dict[k] for k in relevant_indices}
+        param_values[model_agegroup] = weighted_average(values, weights, rounding=None)
+
+    return pd.Series(param_values)
+
+
 def get_agegroup_strat(
         params: Parameters,
-        total_pops: List[int],
+        string_agegroups: List[str],
+        age_pops: pd.Series,
         mixing_matrices: np.array,
         compartments: List[str],
         is_dynamic_matrix: bool,
-        age_susceptibility_values: Optional[List[float]],
+        age_suscept: Optional[pd.Series],
 ) -> Stratification:
     """
     Function to create the age group stratification object.
@@ -27,18 +111,19 @@ def get_agegroup_strat(
 
     Args:
         params: All model parameters
-        total_pops: The population distribution by age
+        string_agegroups: List of age groups as string
+        age_pops: The population distribution by age
         mixing_matrices: The static age-specific mixing matrix
         compartments: All the model compartments
         is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
-        age_susceptibility_values: Adjustments to infection rate based on the susceptibility of modelled age groups
+        age_suscept: Adjustments to infection rate based on the susceptibility of modelled age groups
 
     Returns:
         The age stratification summer object
 
     """
 
-    age_strat = Stratification("agegroup", [str(a) for a in params.age_groups], compartments)
+    age_strat = Stratification("agegroup", string_agegroups, compartments)
 
     # Heterogeneous mixing by age
     final_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, params.country) if is_dynamic_matrix \
@@ -46,13 +131,14 @@ def get_agegroup_strat(
     age_strat.set_mixing_matrix(final_matrix)
 
     # Set distribution of starting population
-    age_split_props = {str(agegroup): prop for agegroup, prop in zip(params.age_groups, normalise_sequence(total_pops))}
-    age_strat.set_population_split(age_split_props)
+    age_split_props = age_pops / age_pops.sum()
+    age_strat.set_population_split(age_split_props.to_dict())
 
     # Adjust infection flows based on the susceptibility of the age group
-    age_suscept = age_susceptibility_values
-    if age_suscept:
-        age_suscept_adjs = {str(sus): Multiply(value) for sus, value in zip(params.age_groups, age_suscept)}
-        age_strat.set_flow_adjustments(FlowName.INFECTION, age_suscept_adjs)
+    if type(age_suscept) == pd.Series:
+        age_strat.set_flow_adjustments(
+            FlowName.INFECTION,
+            {k: Multiply(v) for k, v in age_suscept.items()}
+        )
 
     return age_strat

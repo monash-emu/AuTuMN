@@ -1,8 +1,9 @@
 name: Performance benchmark
 on:
-  push:
-    branches:
-      - master
+  schedule:
+    - cron:  '30 17 * * *'
+  workflow_dispatch:
+
 
 jobs:
   benchmark:

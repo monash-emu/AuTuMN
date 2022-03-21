@@ -640,6 +640,7 @@ def build_model(
         strain_strata,
         model_times,
         voc_params,
+        age_groups,
     )
     outputs_builder.request_infection_deaths(
         model_times,

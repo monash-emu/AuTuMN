@@ -59,7 +59,7 @@ targets = [
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (1000., 12000.)),
+    UniformPrior("infectious_seed", (5000., 15000.)),
     UniformPrior("contact_rate", (0.05, 0.5)),
     # detect prop
     UniformPrior("detect_prop", (0, 0.25)),
@@ -78,8 +78,8 @@ priors = [
     UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # Omicron-related parameters
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (722.0, 757.0)),  # 5-week interval
-    UniformPrior("voc_emergence.omicron.relative_latency", (0.15, 0.4)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.2, 1.8)),
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.1, 0.3)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.3, 2.0)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.75, 1.5)),
     # sojourns
     # UniformPrior("sojourns.active.proportion_early", (0.25, 0.6)),

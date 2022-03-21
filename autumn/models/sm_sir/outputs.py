@@ -352,11 +352,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_icu, model_times)
 
-        # Request infection deaths for each age group
         icu_occupancy_sources = []
         for strain in strain_strata:
             strain_string = f"Xstrain_{strain}" if strain else ""
-            output_name = f"icu_occupancy{strain_string}"
+            output_name = f"icu_admissions{strain_string}"
             icu_occupancy_sources.append(output_name)
 
             # Calculate the multiplier based on age, immunity and strain

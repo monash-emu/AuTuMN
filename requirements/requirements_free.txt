@@ -6,32 +6,39 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-summerepi==2.2.9
+summerepi
+
+# Interaction
+jupyterlab
+jupyterlab_templates
+ipympl
 
 # Data visualization
-matplotlib>=1.4.2
-seaborn==0.9.0
-plotly>=4.11.0
+matplotlib
+seaborn
+plotly
+cufflinks
 
 # Numerical computing
-pandas==0.24.2
-xlrd==1.2.0  # Remove this when we have pandas 1.2.0, switch to openpyxl
-pyDOE>=0.3.8
+numpy
+pandas
+openpyxl
+pyDOE
+numba
+scipy
+networkx
 
 # Database access
-SQLAlchemy>=1.1.18
+SQLAlchemy
 
 # Utility
-pyyaml==5.3
+pyyaml
 pydantic
 streamlit
-pyAesCrypt==0.4.3
-googledrivedownloader >=0.4
-statsmodels>=0.12.2
-fpdf2==2.4.2
-gitpython==3.1.18
-pybuildkite==1.2.1
-psutil==5.8.0
+pyAesCrypt
+googledrivedownloader
+statsmodels
+fpdf2
 
 # Testing
 pytest
@@ -43,9 +50,6 @@ moto[s3]  # Mock out AWS S3 storage
 
 # Notebook management
 nbstripout
-
-# Cloud computing jobs
-sentry-sdk
 
 # AWS / buildkite infrastructure
 boto3

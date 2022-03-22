@@ -1,0 +1,17 @@
+description: School opening from 21/03/2022
+
+time:
+  start: 810 #20/03/2022
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2022-03-20
+        - 2022-03-21 # All schools open
+      values:
+        - 0
+        - 1
+
+

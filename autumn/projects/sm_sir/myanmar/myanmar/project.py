@@ -29,39 +29,39 @@ notifications = pd.concat(
 )
 infection_deaths = ts_set["infection_deaths"].loc[199:]
 priors = [
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.exposed.total_period",
-        mean=5.5,
-        stdev=0.7,
-        trunc_range=(1.0, np.inf),
-    ),
-    TruncNormalPrior(
-        "sojourn.compartment_periods_calculated.active.total_period",
-        mean=6.5,
-        stdev=0.77,
-        trunc_range=(4.0, np.inf),
-    ),
-    TruncNormalPrior(
-        "history.natural_immunity_duration", mean=365.0, stdev=120.0, trunc_range=(180.0, np.inf)
-    ),
-    TruncNormalPrior(
-        "vaccination.vacc_part_effect_duration",
-        mean=365.0,
-        stdev=120.0,
-        trunc_range=(180.0, np.inf),
-    ),
-    UniformPrior(
-        "contact_rate", (0.05, 0.08), jumping_stdev=0.01
-    ),  # Tighten up the lower limit to avoid wild runss
-    UniformPrior("infectious_seed", (50.0, 500.0), jumping_stdev=40.0),
+    # TruncNormalPrior(
+    #     "sojourn.compartment_periods_calculated.exposed.total_period",
+    #     mean=5.5,
+    #     stdev=0.7,
+    #     trunc_range=(1.0, np.inf),
+    # ),
+    # TruncNormalPrior(
+    #     "sojourn.compartment_periods_calculated.active.total_period",
+    #     mean=6.5,
+    #     stdev=0.77,
+    #     trunc_range=(4.0, np.inf),
+    # ),
+    # TruncNormalPrior(
+    #     "history.natural_immunity_duration", mean=365.0, stdev=120.0, trunc_range=(180.0, np.inf)
+    # ),
+    # TruncNormalPrior(
+    #     "vaccination.vacc_part_effect_duration",
+    #     mean=365.0,
+    #     stdev=120.0,
+    #     trunc_range=(180.0, np.inf),
+    # ),
+    # UniformPrior(
+    #     "contact_rate", (0.05, 0.08), jumping_stdev=0.01
+    # ),  # Tighten up the lower limit to avoid wild runss
+    # UniformPrior("infectious_seed", (50.0, 500.0), jumping_stdev=40.0),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.012), jumping_stdev=0.002),
-    UniformPrior(
-        "mobility.microdistancing.behaviour.parameters.end_asymptote",
-        (0.1, 0.3),
-        jumping_stdev=0.05,
-    ),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.8, 2.4), jumping_stdev=0.1),
-    UniformPrior("voc_emergence.delta.start_time", (330.0, 390.0), jumping_stdev=30.0),
+    # UniformPrior(
+    #     "mobility.microdistancing.behaviour.parameters.end_asymptote",
+    #     (0.1, 0.3),
+    #     jumping_stdev=0.05,
+    # ),
+    # UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.8, 2.4), jumping_stdev=0.1),
+    # UniformPrior("voc_emergence.delta.start_time", (330.0, 390.0), jumping_stdev=30.0),
 ]
 
 targets = [

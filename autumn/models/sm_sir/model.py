@@ -637,7 +637,10 @@ def build_model(
         params.prop_icu_among_hospitalised,
         time_to_event_params.icu_admission,
         params.hospital_stay.icu,
+        strain_strata,
         model_times,
+        voc_params,
+        age_groups,
     )
     outputs_builder.request_infection_deaths(
         model_times,

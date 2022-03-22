@@ -42,6 +42,7 @@ voc_emergence:
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
+    icu_multiplier: 1.
     cross_protection:
       wild_type:
         early_reinfection: 1.
@@ -62,6 +63,7 @@ voc_emergence:
     death_protection: 0.8
     relative_latency: 0.6667
     relative_active_period: 1.
+    icu_multiplier: 1.
     cross_protection:
       wild_type:
         early_reinfection: 0.4
@@ -91,3 +93,15 @@ age_stratification:
   prop_hospital:
     multiplier: 0.625
 
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-12-01
+        - 2021-12-31
+        - 2021-03-21
+      values:
+        - 0
+        - 0
+        - 0

@@ -44,6 +44,7 @@ voc_emergence:
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
+    icu_multiplier: 1
     cross_protection:
       wild_type:
         early_reinfection: 1.
@@ -62,6 +63,7 @@ voc_emergence:
     immune_escape: 0.6
     hosp_protection: 0.47
     death_protection: 0.9
+    icu_multiplier: 1
     relative_latency: 0.6
     cross_protection:
       wild_type:

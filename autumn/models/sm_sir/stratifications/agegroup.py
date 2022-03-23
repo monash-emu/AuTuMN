@@ -19,7 +19,7 @@ from autumn.tools.utils.utils import weighted_average
 
 def get_relevant_indices(
         standard_breaks: List[int],
-        model_groups: List[int],
+        model_groups: List[str],
 ) -> Dict[str, List[int]]:
     """
     Find the standard source age brackets relevant to each modelled age bracket.
@@ -84,9 +84,9 @@ def convert_param_agegroups(
     param_values = {}
     for model_agegroup in modelled_age_groups:
         relevant_indices = relevant_source_indices[model_agegroup]
-        weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
         values = {k: source_dict[k] for k in relevant_indices}
-        param_values[model_agegroup] = weighted_average(values, weights, rounding=None)
+        weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
+        param_values[model_agegroup] = weighted_average(values, weights)
 
     return pd.Series(param_values)
 

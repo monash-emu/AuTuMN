@@ -7,12 +7,13 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.sm_sir.model import BASE_DATE
 from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
+
+BASE_DATE = date(2019, 12, 31)
 
 
 """
@@ -46,7 +47,7 @@ def get_check_all_prop(name):
 
     msg = f"Parameter '{name}' contains values outside [0, 1], but is intended as a list of proportions"
 
-    def check_all_pos(values: float) -> float:
+    def check_all_pos(values: list) -> float:
         assert all([0. <= i_value <= 1. for i_value in values]), msg
         return values
 
@@ -57,11 +58,22 @@ def get_check_all_non_neg(name):
 
     msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
 
-    def check_all_non_neg(values: float) -> float:
+    def check_all_non_neg(values: list) -> float:
         assert all([0. <= i_value for i_value in values]), msg
         return values
 
     return check_all_non_neg
+
+
+def get_check_all_dict_values_non_neg(name):
+
+    msg = f"Dictionary parameter '{name}' contains negative values, but is intended as a list of proportions"
+
+    def check_non_neg_values(dict_param: dict) -> float:
+        assert all([0. <= i_value for i_value in dict_param.values()]), msg
+        return dict_param
+
+    return check_non_neg_values
 
 
 def get_check_all_non_neg_if_present(name):
@@ -74,6 +86,11 @@ def get_check_all_non_neg_if_present(name):
         return values
 
     return check_all_non_neg
+
+
+"""
+Parameter validation models
+"""
 
 
 class Time(BaseModel):
@@ -131,7 +148,13 @@ class Population(BaseModel):
     """
 
     region: Optional[str]  # None/null means default to parent country
-    year: int
+    year: int  # Year to use to find the population data in the database
+
+    @validator("year", pre=True, allow_reuse=True)
+    def check_year(year):
+        msg = f"Year before 1900 or after 2050: {year}"
+        assert 1900 <= year <= 2050, msg
+        return year
 
 
 class CompartmentSojourn(BaseModel):
@@ -153,18 +176,16 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[float]
+    recovered: Optional[float]  # Doesn't have an early and late
 
     check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
 
 
 class MixingLocation(BaseModel):
-    # Whether to append or overwrite times / values
-    append: bool
-    # Times for dynamic mixing func.
-    times: List[int]
-    # Values for dynamic mixing func.
-    values: List[Any]
+
+    append: bool  # Whether to append or overwrite times / values
+    times: List[int]  # Times for dynamic mixing func
+    values: List[Any]  # Values for dynamic mixing func
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
@@ -178,6 +199,7 @@ class MixingLocation(BaseModel):
 
 
 class EmpiricMicrodistancingParams(BaseModel):
+
     max_effect: float
     times: List[float]
     values: List[float]
@@ -193,6 +215,7 @@ class EmpiricMicrodistancingParams(BaseModel):
 
 
 class TanhMicrodistancingParams(BaseModel):
+
     shape: float
     inflection_time: float
     lower_asymptote: float
@@ -213,15 +236,19 @@ class TanhMicrodistancingParams(BaseModel):
 
 
 class ConstantMicrodistancingParams(BaseModel):
+
     effect: float
 
     check_effect_domain = validator("effect", allow_reuse=True)(get_check_prop("effect"))
 
 
 class MicroDistancingFunc(BaseModel):
+
     function_type: str
     parameters: Union[
-        EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams
+        EmpiricMicrodistancingParams,
+        TanhMicrodistancingParams,
+        ConstantMicrodistancingParams
     ]
     locations: List[str]
 
@@ -232,7 +259,6 @@ class MicroDistancingFunc(BaseModel):
 
 
 class Mobility(BaseModel):
-    """Google mobility params"""
 
     region: Optional[str]  # None/null means default to parent country
     mixing: Dict[str, MixingLocation]
@@ -262,10 +288,11 @@ class AgeSpecificProps(BaseModel):
     multiplier: float
 
     @validator("source_immunity_distribution", allow_reuse=True)
-    def check_source_dist(val):
-        msg = "Proportions by immunity status in source for parameters does not sum to one"
-        assert sum(val.values()) == 1., msg
-        return val
+    def check_source_dist(vals):
+        sum_of_values = sum(vals.values())
+        msg = f"Proportions by immunity status in source for parameters does not sum to one: {sum_of_values}"
+        assert sum_of_values == 1., msg
+        return vals
 
     @validator("source_immunity_protection", allow_reuse=True)
     def check_source_dist(protection_params):
@@ -274,6 +301,12 @@ class AgeSpecificProps(BaseModel):
         return protection_params
 
     check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
+    check_props = validator("source_immunity_distribution", allow_reuse=True)(
+        get_check_all_dict_values_non_neg("source_immunity_distribution")
+    )
+    check_protections = validator("source_immunity_protection", allow_reuse=True)(
+        get_check_all_dict_values_non_neg("source_immunity_protection")
+    )
 
 
 class AgeStratification(BaseModel):
@@ -288,6 +321,7 @@ class AgeStratification(BaseModel):
 
 
 class ImmunityRiskReduction(BaseModel):
+
     none: float
     low: float
     high: float
@@ -295,6 +329,12 @@ class ImmunityRiskReduction(BaseModel):
     check_none = validator("none", allow_reuse=True)(get_check_prop("none"))
     check_low = validator("low", allow_reuse=True)(get_check_prop("low"))
     check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_progression(cls, values):
+        msg = "Immunity stratification effects are not increasing"
+        assert values["none"] <= values["low"] <= values["high"], msg
+        return values
 
 
 class ImmunityStratification(BaseModel):

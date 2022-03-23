@@ -26,10 +26,9 @@ from .stratifications.immunity import (
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
-
+from autumn.models.sm_sir.parameters import BASE_DATE
 
 # Base date used to calculate mixing matrix times
-BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 

@@ -1,4 +1,4 @@
-name: Nightly Acceptance
+name: Python 3.10 CI
 on:
   schedule:
     - cron:  '30 17 * * *'
@@ -14,21 +14,19 @@ jobs:
           lfs: true
       - name: Checkout LFS objects
         run: git lfs checkout
-      - name: Set up Python 3.6
+      - name: Set up Python 3.10
         uses: actions/setup-python@v1
         with:
-          python-version: 3.6
+          python-version: 3.10.2
       - name: Install Pip package manager
         run: python -m pip install --upgrade pip
       - name: Install Python dependencies via Pip
-        run: pip install -r requirements.txt
+        run: pip install -r requirements/requirements310.txt
       - name: Decrypt Autumn secrets
         run: python -m autumn secrets read
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        env:
-          NIGHTLY_TESTING: 1
         run: pytest --workers 2 -W ignore -vv -m "not nightly and not run_models and not calibrate_models and not mixing_optimisation and not benchmark"
   test_runs:
     runs-on: ubuntu-latest
@@ -39,21 +37,19 @@ jobs:
           lfs: true
       - name: Checkout LFS objects
         run: git lfs checkout
-      - name: Set up Python 3.6
+      - name: Set up Python 3.10
         uses: actions/setup-python@v1
         with:
-          python-version: 3.6
+          python-version: 3.10.2
       - name: Install pip
         run: python -m pip install --upgrade pip
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements/requirements310.txt
       - name: Decrypt secrets
         run: python -m autumn secrets read
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        env:
-          NIGHTLY_TESTING: 1
         run: pytest --workers 2 -W ignore -vv -m run_models
   test_calibrations:
     runs-on: ubuntu-latest
@@ -64,21 +60,19 @@ jobs:
           lfs: true
       - name: Checkout LFS objects
         run: git lfs checkout
-      - name: Set up Python 3.6
+      - name: Set up Python 3.10
         uses: actions/setup-python@v1
         with:
-          python-version: 3.6
+          python-version: 3.10.2
       - name: Install pip
         run: python -m pip install --upgrade pip
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements/requirements310.txt
       - name: Decrypt secrets
         run: python -m autumn secrets read
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        env:
-          NIGHTLY_TESTING: 1
         run: pytest --workers 2 -W ignore -vv -m calibrate_models
   test_mixing_optimisation:
     runs-on: ubuntu-latest
@@ -89,19 +83,17 @@ jobs:
           lfs: true
       - name: Checkout LFS objects
         run: git lfs checkout
-      - name: Set up Python 3.6
+      - name: Set up Python 3.10
         uses: actions/setup-python@v1
         with:
-          python-version: 3.6
+          python-version: 3.10.2
       - name: Install pip
         run: python -m pip install --upgrade pip
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements/requirements310.txt
       - name: Decrypt secrets
         run: python -m autumn secrets read
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        env:
-          NIGHTLY_TESTING: 1
         run: pytest --workers 2 -W ignore -vv -m mixing_optimisation

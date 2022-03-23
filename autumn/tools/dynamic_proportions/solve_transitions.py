@@ -22,6 +22,24 @@ from autumn.tools.utils.utils import flatten_list
 # ]
 
 
+def check_requested_proportions(props_df, rel_diff_tol=0.01):
+    """
+    Check that the sum of the requested proportions remains (approximately) constant over time.
+
+    Args:
+        props_df: User-requested stratum proportions over time (pandas data frame indexed using time points)
+        rel_diff_tol: Maximum accepted relative difference between smallest and largest sum.
+    """
+    row_sums = props_df.sum(axis=1)
+    smallest_sum = row_sums.min()
+    largest_sum = row_sums.max()
+    rel_perc_diff = 100. * (largest_sum - smallest_sum) / smallest_sum
+
+    msg = f"Relative difference between smaller and larger proportion sums is {int(rel_perc_diff)}%.\n"
+    msg += f"This is greater than the maximum accepted value of {int(100. * rel_diff_tol)}%."
+    assert rel_perc_diff <= 100. * rel_diff_tol, msg
+
+
 def calculate_transition_rates_from_dynamic_props(props_df, active_flows):
     """
     Calculate the transition rates associated with each inter-stratum flow that will produce the requested population
@@ -35,6 +53,8 @@ def calculate_transition_rates_from_dynamic_props(props_df, active_flows):
         A dictionary of time-variant functions
 
     """
+    # Check that the user requested sensible proportions
+    check_requested_proportions(props_df)
 
     # Determine basic characteristics
     strata = props_df.columns.to_list()

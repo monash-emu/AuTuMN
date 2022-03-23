@@ -185,6 +185,9 @@ def add_latent_transitions(
         dest=Compartment.INFECTIOUS,
     )
 
+    return Compartment.LATENT, FlowName.PROGRESSION
+
+
 
 def add_active_transitions(
         active_sojourn_params: CompartmentSojourn,
@@ -388,8 +391,7 @@ def build_model(
     """
 
     # Latency
-    add_latent_transitions(sojourns.latent, model)
-    infection_dest, infectious_entry_flow = Compartment.LATENT, FlowName.PROGRESSION
+    infection_dest, infectious_entry_flow = add_latent_transitions(sojourns.latent, model)
 
     # Transmission
     if params.activate_random_process:
@@ -514,8 +516,6 @@ def build_model(
     """
     Apply the reinfection flows (knowing the strain stratification)
     """
-
-    print()
 
     if voc_params:
         apply_reinfection_flows_with_strains(

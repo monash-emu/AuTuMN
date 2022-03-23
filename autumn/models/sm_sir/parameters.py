@@ -7,11 +7,17 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, GOOGLE_MOBILITY_LOCATIONS
+from autumn.models.sm_sir.model import BASE_DATE
+from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
+
+
+"""
+Commonly used checking processes
+"""
 
 
 def get_check_prop(name):
@@ -73,8 +79,6 @@ def get_check_all_non_neg_if_present(name):
 class Time(BaseModel):
     """
     Parameters to define the model time period and evaluation steps.
-    For the COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019.
-    The medium term plan is to replace this structure with standard Python date structures.
     """
 
     start: float
@@ -99,9 +103,8 @@ class TimeSeries(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, inputs):
         value_series, time_series = inputs.get("values"), inputs.get("times")
-        assert len(time_series) == \
-               len(value_series), \
-            f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        msg = f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        assert len(time_series) == len(value_series), msg
         return inputs
 
     @validator("times", pre=True, allow_reuse=True)

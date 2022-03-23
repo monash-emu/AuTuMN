@@ -93,9 +93,9 @@ def convert_param_agegroups(
 
 def get_agegroup_strat(
         params: Parameters,
-        string_agegroups: List[str],
+        age_groups: List[str],
         age_pops: pd.Series,
-        mixing_matrices: np.array,
+        matrices: np.array,
         compartments: List[str],
         is_dynamic_matrix: bool,
         age_suscept: Optional[pd.Series],
@@ -110,9 +110,9 @@ def get_agegroup_strat(
 
     Args:
         params: All model parameters
-        string_agegroups: List of age groups as string
+        age_groups: List of age groups as string
         age_pops: The population distribution by age
-        mixing_matrices: The static age-specific mixing matrix
+        matrices: The static age-specific mixing matrix
         compartments: All the model compartments
         is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
         age_suscept: Adjustments to infection rate based on the susceptibility of modelled age groups
@@ -122,11 +122,11 @@ def get_agegroup_strat(
 
     """
 
-    age_strat = Stratification("agegroup", string_agegroups, compartments)
+    age_strat = Stratification("agegroup", age_groups, compartments)
 
     # Heterogeneous mixing by age
-    final_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, params.country) if is_dynamic_matrix \
-        else mixing_matrices["all_locations"]
+    dynamic_args = matrices, params.mobility, params.country
+    final_matrix = build_dynamic_mixing_matrix(*dynamic_args) if is_dynamic_matrix else matrices["all_locations"]
     age_strat.set_mixing_matrix(final_matrix)
 
     # Set distribution of starting population

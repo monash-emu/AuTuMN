@@ -258,10 +258,7 @@ def get_cdr_func(
     """
 
     if testing_params:
-        cdr_func = find_cdr_function_from_test_data(
-            testing_params, iso3, pop_params.region, pop_params.year
-        )
-
+        cdr_func = find_cdr_function_from_test_data(testing_params, iso3, pop_params.region, pop_params.year)
     else:
 
         def cdr_func(time, computed_values):
@@ -435,14 +432,15 @@ def build_model(
     if type(suscept_req) == dict:
         suscept_adjs = convert_param_agegroups(iso3, region, suscept_req, age_groups)
     else:
-        suscept_adjs = suscept_req  # In which case it should be None or a float
+        suscept_adjs = suscept_req  # In which case it should be None or a float, confirmed in parameter validation
 
     if type(sympt_req) == dict:
         sympt_props = convert_param_agegroups(iso3, region, sympt_req, age_groups)
-        sympt_props.index = sympt_props.index.map(str)
+        sympt_props.index = sympt_props.index.map(str)  # Change int indices to string to match model format
     else:
         sympt_props = sympt_req  # In which case it should be None or a float
 
+    # Get the age-specific mixing matrices
     mixing_matrices = build_synthetic_matrices(
         iso3,
         params.ref_mixing_iso3,
@@ -450,6 +448,8 @@ def build_model(
         True,  # Always age-adjust, could change this to being a parameter
         region
     )
+
+    # Get the actual age stratification now
     age_strat = get_agegroup_strat(
         params,
         age_groups,

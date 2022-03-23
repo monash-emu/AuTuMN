@@ -424,6 +424,7 @@ class VocComponent(BaseModel):
 
 
 class TimeDistribution(BaseModel):
+
     distribution: str
     parameters: dict
 
@@ -436,6 +437,7 @@ class TimeDistribution(BaseModel):
 
 
 class TimeToEvent(BaseModel):
+
     notification: TimeDistribution
     hospitalisation: TimeDistribution
     icu_admission: TimeDistribution
@@ -443,11 +445,13 @@ class TimeToEvent(BaseModel):
 
 
 class HospitalStay(BaseModel):
+
     hospital_all: TimeDistribution
     icu: TimeDistribution
 
 
 class RandomProcess(BaseModel):
+
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
     values: Optional[List[float]]

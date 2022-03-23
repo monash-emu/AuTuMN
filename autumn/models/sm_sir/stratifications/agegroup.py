@@ -18,36 +18,35 @@ from autumn.tools.utils.utils import weighted_average
 
 
 def get_relevant_indices(
-        source_agebreaks: List[int],
-        modelled_age_groups: List[int],
-) -> Dict[int, List[int]]:
+        standard_breaks: List[int],
+        model_groups: List[int],
+) -> Dict[str, List[int]]:
     """
     Find the standard source age brackets relevant to each modelled age bracket.
 
     Args:
-        source_agebreaks: The standard source age brackets (5-year brackets to 75+)
-        modelled_age_groups: The age brackets being applied in the model
+        standard_breaks: The standard source age brackets (5-year brackets to 75+)
+        model_groups: The age brackets being applied in the model
 
     Returns:
-        The set of source age breaks applying to each modelled age group
+        Keys are the modelled age groups, values are lists containing the standard agebreaks that apply to each one
 
     """
 
     # Collate up the dictionary by modelled age groups
-    relevant_source_indices = {}
-    for i_age, model_agegroup in enumerate(modelled_age_groups):
-        age_index_low = source_agebreaks.index(model_agegroup)
-        if model_agegroup == modelled_age_groups[-1]:
-            age_index_up = source_agebreaks[-1]
-        else:
-            age_index_up = source_agebreaks.index(modelled_age_groups[i_age + 1])
-        relevant_source_indices[str(model_agegroup)] = source_agebreaks[age_index_low: age_index_up]
+    relevant_indices = {}
+    model_groups = [int(group) for group in model_groups]
+    for i_age, model_agegroup in enumerate(model_groups):
+        age_index_low = standard_breaks.index(model_agegroup)
+        age_index_up = standard_breaks[-1] if model_agegroup == model_groups[-1] else \
+            standard_breaks.index(model_groups[i_age + 1])
+        relevant_indices[str(model_agegroup)] = standard_breaks[age_index_low: age_index_up]
 
     # Should be impossible for this check to fail
     msg = "Not all source age groups being mapped to modelled age groups"
-    assert list(itertools.chain.from_iterable(relevant_source_indices.values())) == source_agebreaks, msg
+    assert list(itertools.chain.from_iterable(relevant_indices.values())) == standard_breaks, msg
 
-    return relevant_source_indices
+    return relevant_indices
 
 
 def convert_param_agegroups(
@@ -79,7 +78,7 @@ def convert_param_agegroups(
     assert all([int(age_group) in source_agebreaks for age_group in modelled_age_groups]), msg
 
     # Find out which of the standard source categories (values) apply to each modelled age group (keys)
-    relevant_source_indices = get_relevant_indices(source_agebreaks, [int(age) for age in modelled_age_groups])
+    relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
 
     # For each age bracket
     param_values = {}

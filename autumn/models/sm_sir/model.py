@@ -477,7 +477,7 @@ def build_model(
     Apply clinical stratification
     """
 
-    # Get and apply the clinical stratification, or a None to indicate no clinical stratification for the outputs
+    # Apply the clinical stratification, or a None to indicate no clinical stratification to get a list for the outputs
     clinical_strat = get_clinical_strat(
         model, compartment_types, params, infectious_entry_flow, sympt_props, non_detect_func, cdr_func,
     )
@@ -496,11 +496,11 @@ def build_model(
     voc_params = params.voc_emergence
     if params.voc_emergence:
 
-        # Build and apply stratification
+        # Build and apply the stratification
         strain_strat = get_strain_strat(voc_params, compartment_types)
         model.stratify_with(strain_strat)
 
-        # Seed the VoCs from the point in time
+        # Seed the VoCs from the requested point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
 
         # Keep track of the strain strata, which are needed for various purposes below
@@ -513,8 +513,6 @@ def build_model(
     """
     Apply the reinfection flows (knowing the strain stratification)
     """
-
-    print()
 
     if voc_params:
         apply_reinfection_flows_with_strains(

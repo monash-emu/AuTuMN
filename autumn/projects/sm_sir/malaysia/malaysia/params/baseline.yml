@@ -59,7 +59,7 @@ voc_emergence:
       seed_duration: 1.
     contact_rate_multiplier: 1.
     immune_escape: 0.2
-    hosp_protection: 0.69
+    hosp_protection: 0.66
     death_protection: 0.8
     relative_latency: 0.6667
     relative_active_period: 1.

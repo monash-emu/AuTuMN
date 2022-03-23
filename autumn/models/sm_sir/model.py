@@ -13,7 +13,7 @@ from autumn.tools.utils.utils import FunctionWrapper, multiply_function_or_const
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess, TestingToDetection, Population
-from .computed_values.random_process_compute import RandomProcessProc
+from summer.compute import ComputedValueProcessor
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import (
@@ -87,6 +87,18 @@ def assign_population(
 
     # Assign to the model
     model.set_initial_population(init_pop)
+
+
+class RandomProcessProc(ComputedValueProcessor):
+    """
+    Calculate the values of the random process
+    """
+
+    def __init__(self, rp_time_variant_func):
+        self.rp_time_variant_func = rp_time_variant_func
+
+    def process(self, compartment_values, computed_values, time):
+        return self.rp_time_variant_func(time)
 
 
 def set_up_random_process(start_time, end_time):

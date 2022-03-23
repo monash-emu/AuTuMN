@@ -37,8 +37,7 @@ voc_emergence:
   wild_type:
     starting_strain: true
     seed_prop: 1.
-    new_voc_seed: null
-    contact_rate_multiplier: 1.
+    contact_rate_multiplier: 1
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
@@ -54,7 +53,7 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 700.
+      start_time: 800.
       entry_rate: 10.
       seed_duration: 1.
     contact_rate_multiplier: 1.
@@ -77,7 +76,7 @@ testing_to_detection:
   assumed_cdr_parameter: 0.12
   smoothing_period: 14
 
-is_dynamic_mixing_matrix: false  # FIXME: turned off to keep previous calibration after fixing dynamic matrix issue.
+is_dynamic_mixing_matrix: true  # FIXME: turned off to keep previous calibration after fixing dynamic matrix issue.
 
 hospital_stay:
   hospital_all:
@@ -100,8 +99,9 @@ mobility:
       times:
         - 2021-12-01
         - 2021-12-31
-        - 2021-03-21
+        - 2022-03-21
       values:
-        - 0
-        - 0
-        - 0
+        - 0.
+        - 0.
+        - 0.
+

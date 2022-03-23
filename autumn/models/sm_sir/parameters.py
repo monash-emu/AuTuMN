@@ -338,6 +338,7 @@ class ImmunityRiskReduction(BaseModel):
 
 
 class ImmunityStratification(BaseModel):
+
     prop_immune: float
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
@@ -366,6 +367,7 @@ class TestingToDetection(BaseModel):
 
 
 class CrossImmunity(BaseModel):
+
     early_reinfection: float
     late_reinfection: float
 
@@ -374,9 +376,10 @@ class CrossImmunity(BaseModel):
 
 
 class VocSeed(BaseModel):
-    start_time: Optional[float]
-    entry_rate: Optional[float]
-    seed_duration: Optional[float]
+
+    start_time: float
+    entry_rate: float
+    seed_duration: float
 
     check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
     check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))

@@ -1,7 +1,7 @@
-contact_rate: 0.139792993203186
-sojourns.latent.total_time: 1.8318524526463307
-testing_to_detection.assumed_cdr_parameter: 0.12563329840819298
-voc_emergence.omicron.contact_rate_multiplier: 0.8
-voc_emergence.omicron.new_voc_seed.start_time: 650.787397588121
-voc_emergence.omicron.relative_latency: 0.6021782799000979
-voc_emergence.omicron.relative_active_period: 1.175
+contact_rate: 0.1582368696564671
+sojourns.latent.total_time: 3.988398557132294
+testing_to_detection.assumed_cdr_parameter: 0.06114187811324088
+voc_emergence.omicron.contact_rate_multiplier: 0.9589297732364611
+voc_emergence.omicron.new_voc_seed.start_time: 649.0400239467457
+voc_emergence.omicron.relative_active_period: 1.0070700563894261
+voc_emergence.omicron.relative_latency: 0.7446712998848428

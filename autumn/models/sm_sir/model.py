@@ -1,8 +1,8 @@
 from datetime import date
 from math import exp
 from typing import List, Tuple
-
 import pandas as pd
+
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
@@ -28,7 +28,7 @@ from .stratifications.clinical import get_clinical_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 
 
-# Base date used to calculate mixing matrix times.
+# Base date used to calculate mixing matrix times
 BASE_DATE = date(2019, 12, 31)
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
@@ -46,7 +46,7 @@ def get_compartments(
         sojourns: User requested sojourn times
 
     Returns:
-        The names of the model compartments to be implemented.
+        The names of the model compartments to be implemented
 
     """
 
@@ -111,10 +111,10 @@ def get_random_process(
 
     """
 
-    # build the random process, using default values and coefficients
+    # Build the random process, using default values and coefficients
     rp = set_up_random_process(time_params.start, time_params.end)
 
-    # update random process details based on the model parameters
+    # Update random process details based on the model parameters
     rp.update_config_from_params(process_params)
 
     # Create function returning exp(W), where W is the random process
@@ -134,6 +134,8 @@ def add_latent_transitions(
     """
     Add the transition flows taking people from infection through to infectiousness, depending on the model structure
     requested.
+    Absence of the latent compartment entirely is not supported currently, because this would require us to calculate
+    incidence from multiple flow names (which is possible, but would just add complexity to the code).
 
     Args:
         latent_sojourn_params: The user requests relating to the latent period
@@ -154,13 +156,10 @@ def add_latent_transitions(
     # If the latent compartment is divided into an early and a late stage
     if latent_early_prop:
 
-        # The early latent period
-        early_sojourn = latent_sojourn * latent_early_prop
-
         # Apply the transition between the two latent compartments
         model.add_transition_flow(
             name=FlowName.WITHIN_LATENT,
-            fractional_rate=1. / early_sojourn,
+            fractional_rate=1. / latent_sojourn / latent_early_prop,
             source=Compartment.LATENT,
             dest=Compartment.LATENT_LATE,
         )
@@ -170,7 +169,7 @@ def add_latent_transitions(
         progress_rate = 1. / latent_sojourn / prop_latent_late
         progress_origin = Compartment.LATENT_LATE
 
-    # If the latent compartment is just one compartment
+    # If the latent stage is just one compartment
     else:
 
         # The parameters for transition out of the single latent compartment

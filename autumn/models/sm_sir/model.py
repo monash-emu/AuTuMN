@@ -169,6 +169,15 @@ def add_latent_transitions(
         prop_latent_late = 1. - latent_early_prop
         progress_rate = 1. / latent_sojourn / prop_latent_late
         progress_origin = Compartment.LATENT_LATE
+
+        # Apply the transition out of latency flow
+        model.add_transition_flow(
+            name=FlowName.PROGRESSION,
+            fractional_rate=progress_rate,
+            source=progress_origin,
+            dest=Compartment.INFECTIOUS,
+        )
+
         infectious_entry_flow = FlowName.PROGRESSION
         infection_dest = Compartment.LATENT
 
@@ -178,20 +187,22 @@ def add_latent_transitions(
         # The parameters for transition out of the single latent compartment
         progress_origin = Compartment.LATENT
         progress_rate = 1. / latent_sojourn
+
+        # Apply the transition out of latency flow
+        model.add_transition_flow(
+            name=FlowName.PROGRESSION,
+            fractional_rate=progress_rate,
+            source=progress_origin,
+            dest=Compartment.INFECTIOUS,
+        )
+
         infectious_entry_flow = FlowName.PROGRESSION
         infection_dest = Compartment.LATENT
 
     # If latent compartment not requested at all
     else:
-        raise ValueError
-
-    # Apply the transition out of latency flow
-    model.add_transition_flow(
-        name=FlowName.PROGRESSION,
-        fractional_rate=progress_rate,
-        source=progress_origin,
-        dest=Compartment.INFECTIOUS,
-    )
+        infectious_entry_flow = FlowName.INFECTION
+        infection_dest = Compartment.INFECTIOUS
 
     return infection_dest, infectious_entry_flow
 

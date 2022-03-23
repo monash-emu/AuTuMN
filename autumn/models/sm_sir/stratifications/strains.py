@@ -157,8 +157,8 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     population_split = {strain: voc_params[strain].seed_prop for strain in strains}
     strain_strat.set_population_split(population_split)
 
-    # Latency progression rate adjustment - applies to zero, one or two flows relating to progression through latency
-    adjustments = {strain: None for strain in strains}  # Start from a blank adjustments sets
+    # Progression rate adjustments - applies to one or two flows for the progression through latency and active disease
+    adjustments = {strain: None for strain in strains}  # Start from blank adjustments sets
     adjustments_active = {strain: None for strain in strains}
     for strain in strains:
         if voc_params[strain].relative_latency:
@@ -175,7 +175,6 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
             FlowName.PROGRESSION,
             adjustments=adjustments
         )
-
     if Compartment.INFECTIOUS_LATE in compartments:
         strain_strat.set_flow_adjustments(
             FlowName.WITHIN_INFECTIOUS,

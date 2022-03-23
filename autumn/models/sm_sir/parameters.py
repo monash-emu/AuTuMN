@@ -402,7 +402,6 @@ class VocComponent(BaseModel):
     death_protection: Optional[float]
     icu_multiplier: Optional[float]
 
-
     @root_validator(pre=True, allow_reuse=True)
     def check_starting_strain_multiplier(cls, values):
         if values["starting_strain"]:
@@ -411,11 +410,11 @@ class VocComponent(BaseModel):
             assert multiplier == 1., msg
         return values
 
-    def check_times(cls, values):
-        if "icu_multiplier" in values:
-            assert 0. <= values["icu_multiplier"], "ICU multiplier negative"
-        else:
-            values["icu_multiplier"] = 1.
+    @validator("icu_multiplier", pre=True, allow_reuse=True)
+    def check_times(multiplier):
+        if multiplier:
+            assert 0. <= multiplier, "ICU multiplier negative"
+        return multiplier
 
     check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
     check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))

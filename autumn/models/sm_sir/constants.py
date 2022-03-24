@@ -1,8 +1,5 @@
 
-AGE_BRACKET_WIDTHS = 5
-TOP_AGE_BRACKET = 80
-
-
+# All available compartments
 class Compartment:
     SUSCEPTIBLE = "susceptible"
     LATENT = "latent"
@@ -13,6 +10,7 @@ class Compartment:
     WANED = "waned"
 
 
+# All available flows
 class FlowName:
     INFECTION = "infection"
     WITHIN_LATENT = "within_latent"
@@ -24,6 +22,7 @@ class FlowName:
     LATE_REINFECTION = "late_reinfection"
 
 
+# Routinely implemented compartments
 BASE_COMPARTMENTS = [
     Compartment.SUSCEPTIBLE,
     Compartment.LATENT,
@@ -35,6 +34,7 @@ BASE_COMPARTMENTS = [
 WILD_TYPE = "wild_type"
 
 
+# Available strata for the clinical stratification
 class ClinicalStratum:
     ASYMPT = "asympt"
     SYMPT_NON_DETECT = "sympt_non_detect"
@@ -48,10 +48,15 @@ CLINICAL_STRATA = [
 ]
 
 
+# Available strata for the immunity stratification
 class ImmunityStratum:
     NONE = "none"
     LOW = "low"
     HIGH = "high"
 
 
-IMMUNITY_STRATA = [ImmunityStratum.NONE, ImmunityStratum.LOW, ImmunityStratum.HIGH]
+IMMUNITY_STRATA = [
+    ImmunityStratum.NONE,
+    ImmunityStratum.LOW,
+    ImmunityStratum.HIGH
+]

@@ -429,7 +429,7 @@ def multiply_function_or_constant(
 def weighted_average(
         distribution: Dict[str, float],
         weights: Dict[str, float],
-        rounding: Optional[int],
+        rounding: Optional[int] = None,
 ) -> float:
     """
     Calculate a weighted average from dictionaries with the same keys, representing the values and the weights.

@@ -37,8 +37,7 @@ voc_emergence:
   wild_type:
     starting_strain: true
     seed_prop: 1.
-    new_voc_seed: null
-    contact_rate_multiplier: 1.
+    contact_rate_multiplier: 1
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
@@ -54,12 +53,12 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 700.
+      start_time: 800.
       entry_rate: 10.
       seed_duration: 1.
     contact_rate_multiplier: 1.
     immune_escape: 0.2
-    hosp_protection: 0.69
+    hosp_protection: 0.66
     death_protection: 0.8
     relative_latency: 0.6667
     relative_active_period: 1.
@@ -77,7 +76,7 @@ testing_to_detection:
   assumed_cdr_parameter: 0.12
   smoothing_period: 14
 
-is_dynamic_mixing_matrix: false  # FIXME: turned off to keep previous calibration after fixing dynamic matrix issue.
+is_dynamic_mixing_matrix: true  # FIXME: turned off to keep previous calibration after fixing dynamic matrix issue.
 
 hospital_stay:
   hospital_all:
@@ -94,14 +93,24 @@ age_stratification:
     multiplier: 0.625
 
 mobility:
+  smooth_google_data: true # whether to apply a 7-day moving average
+  # Google mobility weightings
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.25
+      grocery_and_pharmacy: 0.25
+      parks: 0.25
+      transit_stations: 0.25
   mixing:
     school:
       append: false
       times:
         - 2021-12-01
         - 2021-12-31
-        - 2021-03-21
+        - 2022-03-21
       values:
-        - 0
-        - 0
-        - 0
+        - 0.
+        - 0.
+        - 0.

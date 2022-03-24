@@ -1,53 +1,24 @@
 import scipy
 from scipy.optimize import minimize
 import numpy as np
+import pandas as pd
+from typing import List
 
 from autumn.tools.curve import scale_up_function
 from autumn.tools.utils.utils import flatten_list
 
 
-# props_df = pd.DataFrame(
-#     data={
-#         "A": [1., .2, .2, .2],
-#         "B": [0., .8, .6, .7],
-#         "C": [0., .0, .2, .1]
-#     },
-#     index=[0, 100, 150, 175]
-# )
-#
-# active_flows = [
-#     "A_to_B",
-#     "B_to_C",
-#     "C_to_B"
-# ]
-
-
-def check_requested_proportions(props_df, rel_diff_tol=0.01):
-    """
-    Check that the sum of the requested proportions remains (approximately) constant over time.
-
-    Args:
-        props_df: User-requested stratum proportions over time (pandas data frame indexed using time points)
-        rel_diff_tol: Maximum accepted relative difference between smallest and largest sum.
-    """
-    row_sums = props_df.sum(axis=1)
-    smallest_sum = row_sums.min()
-    largest_sum = row_sums.max()
-    rel_perc_diff = 100. * (largest_sum - smallest_sum) / smallest_sum
-
-    msg = f"Relative difference between smaller and larger proportion sums is {int(rel_perc_diff)}%.\n"
-    msg += f"This is greater than the maximum accepted value of {int(100. * rel_diff_tol)}%."
-    assert rel_perc_diff <= 100. * rel_diff_tol, msg
-
-
-def calculate_transition_rates_from_dynamic_props(props_df, active_flows):
+def calculate_transition_rates_from_dynamic_props(props_df: pd.DataFrame, active_flows: List[str]) -> dict:
     """
     Calculate the transition rates associated with each inter-stratum flow that will produce the requested population
     proportions over time.
 
+    To see a working example showing the format expected for the user requests, please see the following notebook:
+    'notebooks/user/rragonnet/dynamic_stratum_props.ipynb'
+
     Args:
         props_df: User-requested stratum proportions over time (pandas data frame indexed using time points)
-        active flows: list of strings representing the flows driving the inter-stratum transitions
+        active_flows: list of strings representing the flows driving the inter-stratum transitions
 
     Returns:
         A dictionary of time-variant functions
@@ -56,7 +27,7 @@ def calculate_transition_rates_from_dynamic_props(props_df, active_flows):
     # Check that the user requested sensible proportions
     check_requested_proportions(props_df)
 
-    # Determine basic characteristics
+    # Determine some basic characteristics
     strata = props_df.columns.to_list()
     times = props_df.index.to_list()
 
@@ -86,7 +57,10 @@ def calculate_transition_rates_from_dynamic_props(props_df, active_flows):
     return scaleup_param_functions
 
 
-def calculate_rates_for_interval(start_props, end_props, delta_t, strata, active_flows):
+def calculate_rates_for_interval(
+        start_props: pd.core.series.Series, end_props: pd.core.series.Series, delta_t: float, strata: List[str],
+        active_flows: List[str]
+) -> List[float]:
     """
     Calculate the transition rates associated with each inter-stratum flow for a given time interval.
 
@@ -106,7 +80,7 @@ def calculate_rates_for_interval(start_props, end_props, delta_t, strata, active
         end_props: user-requested stratum proportions at the end of the time interval
         delta_t: width of the time interval
         strata: list of strata
-        active flows: list of strings representing the flows driving the inter-stratum transitions
+        active_flows: list of strings representing the flows driving the inter-stratum transitions
 
     Returns:
         The estimated transition rates stored in a list using the same order as active_flows
@@ -153,4 +127,18 @@ def calculate_rates_for_interval(start_props, end_props, delta_t, strata, active
     return solution.x
 
 
-# sc_functions = calculate_transition_rates_from_dynamic_props(props_df, active_flows)
+def check_requested_proportions(props_df: pd.DataFrame, rel_diff_tol: float = 0.01):
+    """
+    Check that the sum of the requested proportions remains (approximately) constant over time.
+
+    Args:
+        props_df: User-requested stratum proportions over time (pandas data frame indexed using time points)
+        rel_diff_tol: Maximum accepted relative difference between smallest and largest sum.
+    """
+    row_sums = props_df.sum(axis=1)
+    smallest_sum, largest_sum = row_sums.min(), row_sums.max()
+    rel_perc_diff = 100. * (largest_sum - smallest_sum) / smallest_sum
+
+    msg = f"Relative difference between smaller and larger proportion sums is {int(rel_perc_diff)}%.\n"
+    msg += f"This is greater than the maximum accepted value of {int(100. * rel_diff_tol)}%."
+    assert rel_perc_diff <= 100. * rel_diff_tol, msg

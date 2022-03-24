@@ -22,7 +22,7 @@ pyDOE>=0.3.8
 SQLAlchemy>=1.1.18
 
 # Utility
-pyyaml==5.3
+pyyaml==5.4
 pydantic
 streamlit
 pyAesCrypt==0.4.3

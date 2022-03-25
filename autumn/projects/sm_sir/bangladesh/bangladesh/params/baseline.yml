@@ -32,7 +32,7 @@ time:
 
 activate_random_process: False
 
-is_dynamic_mixing_matrix: true
+is_dynamic_mixing_matrix: false
 
 sojourns:
   active:

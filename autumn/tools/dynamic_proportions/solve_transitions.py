@@ -135,6 +135,7 @@ def check_requested_proportions(props_df: pd.DataFrame, active_flows: List[str],
      - strata with decreasing proportions must have outflows
     Args:
         props_df: User-requested stratum proportions over time (pandas data frame indexed using time points)
+        active_flows: list of strings representing the flows driving the inter-stratum transitions
         rel_diff_tol: Maximum accepted relative difference between smallest and largest sum.
     """
     # Check that the sum of the requested proportions remains constant over time.

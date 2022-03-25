@@ -12,7 +12,7 @@ def test_dynamic_props_with_single_flow(n_props_to_test=10, error=1e-4):
     Test the dynamic proportion module in the case of a single flow for which we know the exact solution.
     """
     tested_props = np.random.uniform(size=n_props_to_test)
-    active_flows = ["A_to_B"]
+    active_flows = {"progression": ("A", "B")}
 
     for prop_final_in_a in tested_props:
         props_df = pd.DataFrame(
@@ -23,7 +23,7 @@ def test_dynamic_props_with_single_flow(n_props_to_test=10, error=1e-4):
             index=[0, 100]
         )
         sc_functions = calculate_transition_rates_from_dynamic_props(props_df, active_flows)
-        estimated_rate = sc_functions["A_to_B"](50.)
+        estimated_rate = sc_functions["progression"](50.)
         true_rate = - np.log(prop_final_in_a) / 100.
 
         assert abs(estimated_rate - true_rate) <= error
@@ -36,11 +36,11 @@ def test_dynamic_props_using_ode_model(n_props_to_test=2, error=5e-2):
     parameters. The requested proportions are then compared to the model outputs.
     """
     # List of transtion flows
-    active_flows = [
-        "unvaccinated_to_vaccinated",
-        "vaccinated_to_boosted",
-        "boosted_to_vaccinated"
-    ]
+    active_flows = {
+        "vaccination": ("unvaccinated", "vaccinated"),
+        "boosting": ("vaccinated", "boosted"),
+        "waning": ("boosted", "vaccinated")
+    }
 
     tested_p_vacc = np.random.uniform(size=n_props_to_test)
     tested_p_boost = np.random.uniform(size=n_props_to_test)
@@ -68,9 +68,9 @@ def test_dynamic_props_using_ode_model(n_props_to_test=2, error=5e-2):
                     timestep=0.1,
                 )
                 model.set_initial_population(distribution={"unvaccinated": 1})
-                model.add_transition_flow(name="unvaccinated_to_vaccinated", fractional_rate=sc_functions["unvaccinated_to_vaccinated"], source="unvaccinated", dest="vaccinated")
-                model.add_transition_flow(name="vaccinated_to_boosted", fractional_rate=sc_functions["vaccinated_to_boosted"], source="vaccinated", dest="boosted")
-                model.add_transition_flow(name="boosted_to_vaccinated", fractional_rate=sc_functions["boosted_to_vaccinated"], source="boosted", dest="vaccinated")
+                model.add_transition_flow(name="vaccination", fractional_rate=sc_functions["vaccination"], source="unvaccinated", dest="vaccinated")
+                model.add_transition_flow(name="boosting", fractional_rate=sc_functions["boosting"], source="vaccinated", dest="boosted")
+                model.add_transition_flow(name="waning", fractional_rate=sc_functions["waning"], source="boosted", dest="vaccinated")
 
                 # Run the model
                 model.run()

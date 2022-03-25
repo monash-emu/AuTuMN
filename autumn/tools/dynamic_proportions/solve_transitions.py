@@ -144,18 +144,18 @@ def check_requested_proportions(props_df: pd.DataFrame, active_flows: dict, rel_
     # Check that the sum of the requested proportions remains constant over time.
     row_sums = props_df.sum(axis=1)
     smallest_sum, largest_sum = row_sums.min(), row_sums.max()
-    rel_perc_diff = 100. * (largest_sum - smallest_sum) / smallest_sum
+    rel_diff = (largest_sum - smallest_sum) / smallest_sum
 
-    msg = f"Relative difference between smaller and larger proportion sums is {int(rel_perc_diff)}%.\n"
+    msg = f"Relative difference between smallest and largest proportion sums is {int(100. * rel_diff)}%.\n"
     msg += f"This is greater than the maximum accepted value of {int(100. * rel_diff_tol)}%."
-    assert rel_perc_diff <= 100. * rel_diff_tol, msg
+    assert rel_diff <= rel_diff_tol, msg
 
     # Check that strata with increasing proportions have inflows
     ever_increasing_strata = props_df.loc[:, props_df.diff().max() > 0.].columns.to_list()
     test = all([any([dest == stratum for _, dest in active_flows.values()]) for stratum in ever_increasing_strata])
-    assert test, "Found at least one stratum with no inflows for which increasing proportions were requested."
+    assert test, "Increasing proportions requested for at least one stratum that has no inflow."
 
     # Check that strata with decreasing proportions have outflows
     ever_decreasing_strata = props_df.loc[:, props_df.diff().min() < 0.].columns.to_list()
     test = all([any([origin == stratum for origin, _ in active_flows.values()]) for stratum in ever_decreasing_strata])
-    assert test, "Found at least one stratum with no outflows for which decreasing proportions were requested."
+    assert test, "Decreasing proportions requested for at least one stratum that has no outflow."

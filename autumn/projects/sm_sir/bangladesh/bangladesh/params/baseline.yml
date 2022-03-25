@@ -30,7 +30,7 @@ time:
   start: 390.
   end: 900.
 
-activate_random_process: False
+activate_random_process: false
 
 is_dynamic_mixing_matrix: false
 

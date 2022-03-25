@@ -25,7 +25,7 @@ def calculate_transition_rates_from_dynamic_props(props_df: pd.DataFrame, active
 
     """
     # Check that the user requested sensible proportions
-    check_requested_proportions(props_df)
+    check_requested_proportions(props_df, active_flows)
 
     # Determine some basic characteristics
     strata = props_df.columns.to_list()
@@ -127,14 +127,17 @@ def calculate_rates_for_interval(
     return solution.x
 
 
-def check_requested_proportions(props_df: pd.DataFrame, rel_diff_tol: float = 0.01):
+def check_requested_proportions(props_df: pd.DataFrame, active_flows: List[str], rel_diff_tol: float = 0.01):
     """
-    Check that the sum of the requested proportions remains (approximately) constant over time.
-
+    Check that:
+     - the sum of the requested proportions remains (approximately) constant over time.
+     - strata with increasing proportions must have inflows
+     - strata with decreasing proportions must have outflows
     Args:
         props_df: User-requested stratum proportions over time (pandas data frame indexed using time points)
         rel_diff_tol: Maximum accepted relative difference between smallest and largest sum.
     """
+    # Check that the sum of the requested proportions remains constant over time.
     row_sums = props_df.sum(axis=1)
     smallest_sum, largest_sum = row_sums.min(), row_sums.max()
     rel_perc_diff = 100. * (largest_sum - smallest_sum) / smallest_sum
@@ -142,3 +145,13 @@ def check_requested_proportions(props_df: pd.DataFrame, rel_diff_tol: float = 0.
     msg = f"Relative difference between smaller and larger proportion sums is {int(rel_perc_diff)}%.\n"
     msg += f"This is greater than the maximum accepted value of {int(100. * rel_diff_tol)}%."
     assert rel_perc_diff <= 100. * rel_diff_tol, msg
+
+    # Check that strata with increasing proportions have inflows
+    ever_increasing_strata = props_df.loc[:, props_df.diff().max() > 0.].columns.to_list()
+    test = all([any([flow.endswith(f"_to_{stratum}") for flow in active_flows]) for stratum in ever_increasing_strata])
+    assert test, "Found at least one stratum with no inflows for which increasing proportions were requested."
+
+    # Check that strata with decreasing proportions have outflows
+    ever_decreasing_strata = props_df.loc[:, props_df.diff().min() < 0.].columns.to_list()
+    test = all([any([flow.startswith(f"{stratum}_to_") for flow in active_flows]) for stratum in ever_decreasing_strata])
+    assert test, "Found at least one stratum with no outflows for which decreasing proportions were requested."

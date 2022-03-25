@@ -94,7 +94,7 @@ def calculate_rates_for_interval(
 
     # Create the function that we need to find the root of
     def function_to_zero(params):
-        # params is a list ordered in the same order as active_flows
+        # params is a list ordered in the same order as ordered_flow_names
 
         # Create the transition matrix associated with a given set of transition parameters
         m = np.zeros((n_strata, n_strata))

@@ -36,6 +36,7 @@ voc_emergence: # Baseline has currently no VoC since the seed time is very far i
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
+    icu_multiplier: 1
     cross_protection:
       wild_type:
         early_reinfection: 1.
@@ -54,6 +55,7 @@ voc_emergence: # Baseline has currently no VoC since the seed time is very far i
     immune_escape: 1.
     hosp_protection: 0.
     death_protection: 0.
+    icu_multiplier: 1
     cross_protection:
       wild_type:
         early_reinfection: 1.

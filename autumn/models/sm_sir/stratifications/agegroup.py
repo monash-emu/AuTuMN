@@ -18,36 +18,35 @@ from autumn.tools.utils.utils import weighted_average
 
 
 def get_relevant_indices(
-        source_agebreaks: List[int],
-        modelled_age_groups: List[int],
-) -> Dict[int, List[int]]:
+        standard_breaks: List[int],
+        model_groups: List[str],
+) -> Dict[str, List[int]]:
     """
     Find the standard source age brackets relevant to each modelled age bracket.
 
     Args:
-        source_agebreaks: The standard source age brackets (5-year brackets to 75+)
-        modelled_age_groups: The age brackets being applied in the model
+        standard_breaks: The standard source age brackets (5-year brackets to 75+)
+        model_groups: The age brackets being applied in the model
 
     Returns:
-        The set of source age breaks applying to each modelled age group
+        Keys are the modelled age groups, values are lists containing the standard agebreaks that apply to each one
 
     """
 
     # Collate up the dictionary by modelled age groups
-    relevant_source_indices = {}
-    for i_age, model_agegroup in enumerate(modelled_age_groups):
-        age_index_low = source_agebreaks.index(model_agegroup)
-        if model_agegroup == modelled_age_groups[-1]:
-            age_index_up = source_agebreaks[-1]
-        else:
-            age_index_up = source_agebreaks.index(modelled_age_groups[i_age + 1])
-        relevant_source_indices[str(model_agegroup)] = source_agebreaks[age_index_low: age_index_up]
+    relevant_indices = {}
+    model_groups = [int(group) for group in model_groups]
+    for i_age, model_agegroup in enumerate(model_groups):
+        age_index_low = standard_breaks.index(model_agegroup)
+        age_index_up = standard_breaks[-1] if model_agegroup == model_groups[-1] else \
+            standard_breaks.index(model_groups[i_age + 1])
+        relevant_indices[str(model_agegroup)] = standard_breaks[age_index_low: age_index_up]
 
     # Should be impossible for this check to fail
     msg = "Not all source age groups being mapped to modelled age groups"
-    assert list(itertools.chain.from_iterable(relevant_source_indices.values())) == source_agebreaks, msg
+    assert list(itertools.chain.from_iterable(relevant_indices.values())) == standard_breaks, msg
 
-    return relevant_source_indices
+    return relevant_indices
 
 
 def convert_param_agegroups(
@@ -79,24 +78,24 @@ def convert_param_agegroups(
     assert all([int(age_group) in source_agebreaks for age_group in modelled_age_groups]), msg
 
     # Find out which of the standard source categories (values) apply to each modelled age group (keys)
-    relevant_source_indices = get_relevant_indices(source_agebreaks, [int(age) for age in modelled_age_groups])
+    relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
 
     # For each age bracket
     param_values = {}
     for model_agegroup in modelled_age_groups:
         relevant_indices = relevant_source_indices[model_agegroup]
-        weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
         values = {k: source_dict[k] for k in relevant_indices}
-        param_values[model_agegroup] = weighted_average(values, weights, rounding=None)
+        weights = {k: total_pops_5year_dict[k] for k in relevant_indices}
+        param_values[model_agegroup] = weighted_average(values, weights)
 
     return pd.Series(param_values)
 
 
 def get_agegroup_strat(
         params: Parameters,
-        string_agegroups: List[str],
+        age_groups: List[str],
         age_pops: pd.Series,
-        mixing_matrices: np.array,
+        matrices: np.array,
         compartments: List[str],
         is_dynamic_matrix: bool,
         age_suscept: Optional[pd.Series],
@@ -111,9 +110,9 @@ def get_agegroup_strat(
 
     Args:
         params: All model parameters
-        string_agegroups: List of age groups as string
+        age_groups: List of age groups as string
         age_pops: The population distribution by age
-        mixing_matrices: The static age-specific mixing matrix
+        matrices: The static age-specific mixing matrix
         compartments: All the model compartments
         is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
         age_suscept: Adjustments to infection rate based on the susceptibility of modelled age groups
@@ -123,11 +122,11 @@ def get_agegroup_strat(
 
     """
 
-    age_strat = Stratification("agegroup", string_agegroups, compartments)
+    age_strat = Stratification("agegroup", age_groups, compartments)
 
     # Heterogeneous mixing by age
-    final_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, params.country) if is_dynamic_matrix \
-        else mixing_matrices["all_locations"]
+    dynamic_args = matrices, params.mobility, params.country
+    final_matrix = build_dynamic_mixing_matrix(*dynamic_args) if is_dynamic_matrix else matrices["all_locations"]
     age_strat.set_mixing_matrix(final_matrix)
 
     # Set distribution of starting population

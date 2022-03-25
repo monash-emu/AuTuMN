@@ -1,8 +1,8 @@
 from datetime import date
 from math import exp
 from typing import List, Tuple
-
 import pandas as pd
+
 from summer import CompartmentalModel
 
 from autumn.tools import inputs
@@ -12,8 +12,8 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 from autumn.tools.utils.utils import FunctionWrapper, multiply_function_or_constant
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess, TestingToDetection, Population
-from .computed_values.random_process_compute import RandomProcessProc
+from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population
+from summer.compute import ComputedValueProcessor
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import (
@@ -26,10 +26,9 @@ from .stratifications.immunity import (
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
+from autumn.models.sm_sir.parameters import BASE_DATE
 
-
-# Base date used to calculate mixing matrix times.
-BASE_DATE = date(2019, 12, 31)
+# Base date used to calculate mixing matrix times
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 
@@ -46,7 +45,7 @@ def get_compartments(
         sojourns: User requested sojourn times
 
     Returns:
-        The names of the model compartments to be implemented.
+        The names of the model compartments to be implemented
 
     """
 
@@ -89,13 +88,25 @@ def assign_population(
     model.set_initial_population(init_pop)
 
 
+class RandomProcessProc(ComputedValueProcessor):
+    """
+    Calculate the values of the random process
+    """
+
+    def __init__(self, rp_time_variant_func):
+        self.rp_time_variant_func = rp_time_variant_func
+
+    def process(self, compartment_values, computed_values, time):
+        return self.rp_time_variant_func(time)
+
+
 def set_up_random_process(start_time, end_time):
     return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)
 
 
 def get_random_process(
         time_params: Time,
-        process_params: RandomProcess,
+        process_params: RandomProcessParams,
         contact_rate_value: float,
 ) -> Tuple[callable, callable]:
     """
@@ -111,10 +122,10 @@ def get_random_process(
 
     """
 
-    # build the random process, using default values and coefficients
+    # Build the random process, using default values and coefficients
     rp = set_up_random_process(time_params.start, time_params.end)
 
-    # update random process details based on the model parameters
+    # Update random process details based on the model parameters
     rp.update_config_from_params(process_params)
 
     # Create function returning exp(W), where W is the random process
@@ -134,6 +145,8 @@ def add_latent_transitions(
     """
     Add the transition flows taking people from infection through to infectiousness, depending on the model structure
     requested.
+    Absence of the latent compartment entirely is not supported currently, because this would require us to calculate
+    incidence from multiple flow names (which is possible, but would just add complexity to the code).
 
     Args:
         latent_sojourn_params: The user requests relating to the latent period
@@ -154,13 +167,10 @@ def add_latent_transitions(
     # If the latent compartment is divided into an early and a late stage
     if latent_early_prop:
 
-        # The early latent period
-        early_sojourn = latent_sojourn * latent_early_prop
-
         # Apply the transition between the two latent compartments
         model.add_transition_flow(
             name=FlowName.WITHIN_LATENT,
-            fractional_rate=1. / early_sojourn,
+            fractional_rate=1. / latent_sojourn / latent_early_prop,
             source=Compartment.LATENT,
             dest=Compartment.LATENT_LATE,
         )
@@ -170,7 +180,7 @@ def add_latent_transitions(
         progress_rate = 1. / latent_sojourn / prop_latent_late
         progress_origin = Compartment.LATENT_LATE
 
-    # If the latent compartment is just one compartment
+    # If the latent stage is just one compartment
     else:
 
         # The parameters for transition out of the single latent compartment
@@ -259,10 +269,7 @@ def get_cdr_func(
     """
 
     if testing_params:
-        cdr_func = find_cdr_function_from_test_data(
-            testing_params, iso3, pop_params.region, pop_params.year
-        )
-
+        cdr_func = find_cdr_function_from_test_data(testing_params, iso3, pop_params.region, pop_params.year)
     else:
 
         def cdr_func(time, computed_values):
@@ -436,14 +443,15 @@ def build_model(
     if type(suscept_req) == dict:
         suscept_adjs = convert_param_agegroups(iso3, region, suscept_req, age_groups)
     else:
-        suscept_adjs = suscept_req  # In which case it should be None or a float
+        suscept_adjs = suscept_req  # In which case it should be None or a float, confirmed in parameter validation
 
     if type(sympt_req) == dict:
         sympt_props = convert_param_agegroups(iso3, region, sympt_req, age_groups)
-        sympt_props.index = sympt_props.index.map(str)
+        sympt_props.index = sympt_props.index.map(str)  # Change int indices to string to match model format
     else:
         sympt_props = sympt_req  # In which case it should be None or a float
 
+    # Get the age-specific mixing matrices
     mixing_matrices = build_synthetic_matrices(
         iso3,
         params.ref_mixing_iso3,
@@ -451,6 +459,8 @@ def build_model(
         True,  # Always age-adjust, could change this to being a parameter
         region
     )
+
+    # Get the actual age stratification now
     age_strat = get_agegroup_strat(
         params,
         age_groups,
@@ -478,7 +488,7 @@ def build_model(
     Apply clinical stratification
     """
 
-    # Get and apply the clinical stratification, or a None to indicate no clinical stratification for the outputs
+    # Apply the clinical stratification, or a None to indicate no clinical stratification to get a list for the outputs
     clinical_strat = get_clinical_strat(
         model, compartment_types, params, infectious_entry_flow, sympt_props, non_detect_func, cdr_func,
     )
@@ -497,11 +507,11 @@ def build_model(
     voc_params = params.voc_emergence
     if params.voc_emergence:
 
-        # Build and apply stratification
+        # Build and apply the stratification
         strain_strat = get_strain_strat(voc_params, compartment_types)
         model.stratify_with(strain_strat)
 
-        # Seed the VoCs from the point in time
+        # Seed the VoCs from the requested point in time
         seed_vocs(model, voc_params, Compartment.INFECTIOUS)
 
         # Keep track of the strain strata, which are needed for various purposes below
@@ -514,8 +524,6 @@ def build_model(
     """
     Apply the reinfection flows (knowing the strain stratification)
     """
-
-    print()
 
     if voc_params:
         apply_reinfection_flows_with_strains(
@@ -637,7 +645,10 @@ def build_model(
         params.prop_icu_among_hospitalised,
         time_to_event_params.icu_admission,
         params.hospital_stay.icu,
+        strain_strata,
         model_times,
+        voc_params,
+        age_groups,
     )
     outputs_builder.request_infection_deaths(
         model_times,

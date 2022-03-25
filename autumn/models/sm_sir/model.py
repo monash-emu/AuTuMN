@@ -12,7 +12,7 @@ from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_syn
 from autumn.tools.utils.utils import FunctionWrapper, multiply_function_or_constant
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcess, TestingToDetection, Population
+from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population
 from summer.compute import ComputedValueProcessor
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -106,7 +106,7 @@ def set_up_random_process(start_time, end_time):
 
 def get_random_process(
         time_params: Time,
-        process_params: RandomProcess,
+        process_params: RandomProcessParams,
         contact_rate_value: float,
 ) -> Tuple[callable, callable]:
     """

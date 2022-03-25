@@ -450,7 +450,7 @@ class HospitalStay(BaseModel):
     icu: TimeDistribution
 
 
-class RandomProcess(BaseModel):
+class RandomProcessParams(BaseModel):
 
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
@@ -496,7 +496,7 @@ class Parameters:
 
     # Random process
     activate_random_process: bool
-    random_process: Optional[RandomProcess]
+    random_process: Optional[RandomProcessParams]
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

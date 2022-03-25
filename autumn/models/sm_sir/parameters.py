@@ -7,11 +7,18 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import BASE_DATE, GOOGLE_MOBILITY_LOCATIONS
+from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
+
+BASE_DATE = date(2019, 12, 31)
+
+
+"""
+Commonly used checking processes
+"""
 
 
 def get_check_prop(name):
@@ -40,7 +47,7 @@ def get_check_all_prop(name):
 
     msg = f"Parameter '{name}' contains values outside [0, 1], but is intended as a list of proportions"
 
-    def check_all_pos(values: float) -> float:
+    def check_all_pos(values: list) -> float:
         assert all([0. <= i_value <= 1. for i_value in values]), msg
         return values
 
@@ -51,11 +58,22 @@ def get_check_all_non_neg(name):
 
     msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
 
-    def check_all_non_neg(values: float) -> float:
+    def check_all_non_neg(values: list) -> float:
         assert all([0. <= i_value for i_value in values]), msg
         return values
 
     return check_all_non_neg
+
+
+def get_check_all_dict_values_non_neg(name):
+
+    msg = f"Dictionary parameter '{name}' contains negative values, but is intended as a list of proportions"
+
+    def check_non_neg_values(dict_param: dict) -> float:
+        assert all([0. <= i_value for i_value in dict_param.values()]), msg
+        return dict_param
+
+    return check_non_neg_values
 
 
 def get_check_all_non_neg_if_present(name):
@@ -70,11 +88,14 @@ def get_check_all_non_neg_if_present(name):
     return check_all_non_neg
 
 
+"""
+Parameter validation models
+"""
+
+
 class Time(BaseModel):
     """
     Parameters to define the model time period and evaluation steps.
-    For the COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019.
-    The medium term plan is to replace this structure with standard Python date structures.
     """
 
     start: float
@@ -99,9 +120,8 @@ class TimeSeries(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, inputs):
         value_series, time_series = inputs.get("values"), inputs.get("times")
-        assert len(time_series) == \
-               len(value_series), \
-            f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        msg = f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        assert len(time_series) == len(value_series), msg
         return inputs
 
     @validator("times", pre=True, allow_reuse=True)
@@ -128,7 +148,13 @@ class Population(BaseModel):
     """
 
     region: Optional[str]  # None/null means default to parent country
-    year: int
+    year: int  # Year to use to find the population data in the database
+
+    @validator("year", pre=True, allow_reuse=True)
+    def check_year(year):
+        msg = f"Year before 1900 or after 2050: {year}"
+        assert 1900 <= year <= 2050, msg
+        return year
 
 
 class CompartmentSojourn(BaseModel):
@@ -150,18 +176,16 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[float]
+    recovered: Optional[float]  # Doesn't have an early and late
 
     check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
 
 
 class MixingLocation(BaseModel):
-    # Whether to append or overwrite times / values
-    append: bool
-    # Times for dynamic mixing func.
-    times: List[int]
-    # Values for dynamic mixing func.
-    values: List[Any]
+
+    append: bool  # Whether to append or overwrite times / values
+    times: List[int]  # Times for dynamic mixing func
+    values: List[Any]  # Values for dynamic mixing func
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
@@ -175,6 +199,7 @@ class MixingLocation(BaseModel):
 
 
 class EmpiricMicrodistancingParams(BaseModel):
+
     max_effect: float
     times: List[float]
     values: List[float]
@@ -190,6 +215,7 @@ class EmpiricMicrodistancingParams(BaseModel):
 
 
 class TanhMicrodistancingParams(BaseModel):
+
     shape: float
     inflection_time: float
     lower_asymptote: float
@@ -210,15 +236,19 @@ class TanhMicrodistancingParams(BaseModel):
 
 
 class ConstantMicrodistancingParams(BaseModel):
+
     effect: float
 
     check_effect_domain = validator("effect", allow_reuse=True)(get_check_prop("effect"))
 
 
 class MicroDistancingFunc(BaseModel):
+
     function_type: str
     parameters: Union[
-        EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams
+        EmpiricMicrodistancingParams,
+        TanhMicrodistancingParams,
+        ConstantMicrodistancingParams
     ]
     locations: List[str]
 
@@ -229,7 +259,6 @@ class MicroDistancingFunc(BaseModel):
 
 
 class Mobility(BaseModel):
-    """Google mobility params"""
 
     region: Optional[str]  # None/null means default to parent country
     mixing: Dict[str, MixingLocation]
@@ -259,10 +288,11 @@ class AgeSpecificProps(BaseModel):
     multiplier: float
 
     @validator("source_immunity_distribution", allow_reuse=True)
-    def check_source_dist(val):
-        msg = "Proportions by immunity status in source for parameters does not sum to one"
-        assert sum(val.values()) == 1., msg
-        return val
+    def check_source_dist(vals):
+        sum_of_values = sum(vals.values())
+        msg = f"Proportions by immunity status in source for parameters does not sum to one: {sum_of_values}"
+        assert sum_of_values == 1., msg
+        return vals
 
     @validator("source_immunity_protection", allow_reuse=True)
     def check_source_dist(protection_params):
@@ -271,6 +301,12 @@ class AgeSpecificProps(BaseModel):
         return protection_params
 
     check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
+    check_props = validator("source_immunity_distribution", allow_reuse=True)(
+        get_check_all_dict_values_non_neg("source_immunity_distribution")
+    )
+    check_protections = validator("source_immunity_protection", allow_reuse=True)(
+        get_check_all_dict_values_non_neg("source_immunity_protection")
+    )
 
 
 class AgeStratification(BaseModel):
@@ -285,6 +321,7 @@ class AgeStratification(BaseModel):
 
 
 class ImmunityRiskReduction(BaseModel):
+
     none: float
     low: float
     high: float
@@ -293,8 +330,15 @@ class ImmunityRiskReduction(BaseModel):
     check_low = validator("low", allow_reuse=True)(get_check_prop("low"))
     check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
 
+    @root_validator(pre=True, allow_reuse=True)
+    def check_progression(cls, values):
+        msg = "Immunity stratification effects are not increasing"
+        assert values["none"] <= values["low"] <= values["high"], msg
+        return values
+
 
 class ImmunityStratification(BaseModel):
+
     prop_immune: float
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
@@ -323,6 +367,7 @@ class TestingToDetection(BaseModel):
 
 
 class CrossImmunity(BaseModel):
+
     early_reinfection: float
     late_reinfection: float
 
@@ -331,9 +376,10 @@ class CrossImmunity(BaseModel):
 
 
 class VocSeed(BaseModel):
-    start_time: Optional[float]
-    entry_rate: Optional[float]
-    seed_duration: Optional[float]
+
+    start_time: float
+    entry_rate: float
+    seed_duration: float
 
     check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
     check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))
@@ -354,6 +400,7 @@ class VocComponent(BaseModel):
     cross_protection: Dict[str, CrossImmunity]
     hosp_protection: Optional[float]
     death_protection: Optional[float]
+    icu_multiplier: Optional[float]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_starting_strain_multiplier(cls, values):
@@ -363,6 +410,12 @@ class VocComponent(BaseModel):
             assert multiplier == 1., msg
         return values
 
+    @validator("icu_multiplier", pre=True, allow_reuse=True)
+    def check_times(multiplier):
+        if multiplier:
+            assert 0. <= multiplier, "ICU multiplier negative"
+        return multiplier
+
     check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
     check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
     check_relative_latency = validator("relative_latency", allow_reuse=True)(get_check_non_neg("relative_latency"))
@@ -371,6 +424,7 @@ class VocComponent(BaseModel):
 
 
 class TimeDistribution(BaseModel):
+
     distribution: str
     parameters: dict
 
@@ -383,6 +437,7 @@ class TimeDistribution(BaseModel):
 
 
 class TimeToEvent(BaseModel):
+
     notification: TimeDistribution
     hospitalisation: TimeDistribution
     icu_admission: TimeDistribution
@@ -390,11 +445,13 @@ class TimeToEvent(BaseModel):
 
 
 class HospitalStay(BaseModel):
+
     hospital_all: TimeDistribution
     icu: TimeDistribution
 
 
-class RandomProcess(BaseModel):
+class RandomProcessParams(BaseModel):
+
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
     values: Optional[List[float]]
@@ -439,7 +496,7 @@ class Parameters:
 
     # Random process
     activate_random_process: bool
-    random_process: Optional[RandomProcess]
+    random_process: Optional[RandomProcessParams]
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

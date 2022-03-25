@@ -332,7 +332,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
         prop_icu_among_hospitalised: float,
         time_from_hospitalisation_to_icu: TimeDistribution,
         icu_stay_duration: TimeDistribution,
-        model_times: np.ndarray
+        strain_strata: List[str],
+        model_times: np.ndarray,
+        voc_params: Optional[Dict[str, VocComponent]],
+        age_groups: List[int],
     ):
         """
         Request ICU-related outputs.
@@ -341,19 +344,44 @@ class SmSirOutputsBuilder(OutputsBuilder):
             prop_icu_among_hospitalised: Proportion ever requiring ICU stay among hospitalised cases (float)
             time_from_hospitalisation_to_icu: Details of the statistical distribution for the time to ICU admission
             icu_stay_duration: Details of the statistical distribution for ICU stay duration
+            strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
             model_times: The model evaluation times
-
+            voc_params: The parameters pertaining to the VoCs being implemented in the model
+            age_groups: Modelled age group lower breakpoints
         """
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_icu, model_times)
 
-        # Request ICU admissions
-        icu_admissions_func = make_calc_admissions_func(prop_icu_among_hospitalised, interval_distri_densities)
-        self.model.request_function_output(
+        icu_admissions_sources = []
+        for agegroup in age_groups:
+            agegroup_string = f"Xagegroup_{agegroup}"
+
+            for immunity_stratum in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_stratum}"
+
+                for strain in strain_strata:
+                    strain_string = f"Xstrain_{strain}" if strain else ""
+                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+                    output_name = f"icu_admissions{strata_string}"
+                    icu_admissions_sources.append(output_name)
+
+                    # Calculate the multiplier based on age, immunity and strain
+                    strain_risk_modifier = 1. if not strain else voc_params[strain].icu_multiplier
+                    icu_risk = prop_icu_among_hospitalised * strain_risk_modifier
+
+                    # Request ICU admissions
+                    icu_admissions_func = make_calc_admissions_func(icu_risk, interval_distri_densities)
+                    self.model.request_function_output(
+                        name=output_name,
+                        sources=[f"hospital_admissions{strata_string}"],
+                        func=icu_admissions_func
+                    )
+
+        # Request aggregated icu admissions
+        self.model.request_aggregate_output(
             name="icu_admissions",
-            sources=["hospital_admissions"],
-            func=icu_admissions_func
+            sources=icu_admissions_sources
         )
 
         # Request ICU occupancy

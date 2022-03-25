@@ -2,37 +2,37 @@
 
 This readme documents the Philippines target calibration data update process.
 
-1. Update \autumun\inputs\covid_phl\fetch.py Testing numbers - *do this before a rebuild of inputs.secret.db*
+1. Update autumn/tools/inputs/covid_phl/fetch.py Testing numbers - *do this before a rebuild of inputs.secret.db*
 The daily data link is available from this [link](https://drive.google.com/drive/folders/1ZPPcVU4M7T-dtRyUceb0pMAd8ickYf8o).
 On page 5 of the Readme there will be a link to the daily data folder e.g. Link to DOH Data Drop (09/08): https://bit.ly/2F8oypc.
 *alternate link DoH data: https://ncovtracker.doh.gov.ph/ (click on box in top right labeled "Download COVID-19 COH Data Drop")*
 
 Once in the google drive folder right-click file "DOH COVID Data Drop_ YYYYMMDD - 07 Testing Aggregates.csv" and copy the shareable link
 e.g. https://drive.google.com/file/d/1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C/view?usp=sharing
-Update \autumun\inputs\covid_phl\fetch.py DATA URL = '1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C'
+Update autumn/tools/inputs/covid_phl/fetch.py DATA URL = '1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C'
 
 2. Now update inputs.secret.db by executing the following at your python environment shell/conda prompt
     python -m autumn db fetch
     
 
-3. Update scripts\phl_data_upload.py
+3. Update scripts/inputs/input_targets_philippines.py
 
 From the same daily data link right-click file "DOH COVID Data Drop_ YYYYMMDD - 05 DOH Data Collect - Daily Report.csv" and copy the shareable link.
-Update scripts\phl_data_upload.py e.g. PHL_doh_link=1WxoFhzZzglkk1RbOQAWI2gHeKkqwkD9P
+Update scripts/inputs/input_targets_philippines.pye.g. PHL_doh_link=1WxoFhzZzglkk1RbOQAWI2gHeKkqwkD9P
 
 For [FASSSTER data use ](https://drive.google.com/drive/folders/1YIw5KrRs645AHpph1cb-8d_QNdr8F0pf)
 Old link was https://drive.google.com/drive/folders/1qnUsvq5SXxwdw9ttRtOojccVGHaYj6_k
 Locate the latest YYYYMMDD.zip file, copy the shareable link and update
-Update scripts\phl_data_upload.py e.g. PHL_fassster_link = "1sfwFryQP6lPutGxS62IIGUugDhRy_1h8"
+Update scripts/inputs/input_targets_philippines.py e.g. PHL_fassster_link = "1sfwFryQP6lPutGxS62IIGUugDhRy_1h8"
 
-The functions in phl_data_upload.py do the following:
+The functions in input_targets_philippines.py do the following:
 1. Downloads data
 2. Formats and filters data by region (using a duplicated dataset for the national model)
 3. Calculated daily ICU occupancy, confirmed cases, and cumulative deaths
 4. Dumps calibration data (step 3) into json files
 5. Deletes files 
 
-Run scripts\phl_data_upload.py in order to update.
+Run scripts/inputs/input_targets_philippines.py in order to update.
 
 ### Updating Sri Lanka
 

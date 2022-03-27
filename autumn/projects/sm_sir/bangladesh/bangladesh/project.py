@@ -1,5 +1,7 @@
 import json
+from datetime import date
 
+from autumn.models.sm_sir.parameters import BASE_DATE
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
@@ -11,12 +13,17 @@ from autumn.settings import Region, Models
 baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
+
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
-notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
-hospital_admissions_ts = ts_set["hospital_admissions"].loc[calibration_start_time:]
-deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
+
+targets_start = (date(2021, 5, 15) - BASE_DATE).days
+notifications_trunc_point = (date(2021, 12, 1) - BASE_DATE).days
+notifications_ts = ts_set["notifications"].loc[targets_start: notifications_trunc_point]
+
+hospital_admissions_ts = ts_set["hospital_admissions"].loc[targets_start:]
+deaths_ts = ts_set["infection_deaths"].loc[targets_start:]
 
 priors = [
     UniformPrior("contact_rate", (0.07, 0.17)),

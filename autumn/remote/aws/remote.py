@@ -116,7 +116,7 @@ def run_calibration(
         "chains": num_chains,
         "runtime": runtime,
     }
-    runner.run_task_pipeline(runner, pipeline_name, pipeline_args)
+    runner.run_task_pipeline(pipeline_name, pipeline_args)
     logger.info("Calibration completed for %s", run_id)
 
     return run_id

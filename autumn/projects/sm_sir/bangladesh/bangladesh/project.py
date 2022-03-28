@@ -31,8 +31,8 @@ late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 priors = [
     UniformPrior("contact_rate", (0.02, 0.1)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.015)),
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (550., 590.)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1., 1.5)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (500., 550.)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2.2, 3.5)),
     UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.08)),
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.01, 0.08)),
 ]

@@ -73,10 +73,10 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 570.
-      entry_rate: 100.
+      start_time: 530.
+      entry_rate: 200.
       seed_duration: 10.
-    contact_rate_multiplier: 1.3
+    contact_rate_multiplier: 2.76
     immune_escape: 0.6
     hosp_protection: 0.7
     icu_multiplier: 0.5

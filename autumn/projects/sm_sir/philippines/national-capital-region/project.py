@@ -51,9 +51,11 @@ priors = [
     UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
 ]
 
+new_target_set = load_timeseries(build_rel_path("new_targets.json"))
+
 targets = [
-    NormalTarget(data=ts_set["icu_occupancy"].loc[725:]),
-    NormalTarget(data=ts_set["hospital_occupancy"].loc[725:]),
+    NormalTarget(data=new_target_set["icu_occupancy"].loc[725:]),
+    NormalTarget(data=new_target_set["hospital_occupancy"].loc[725:]),
     NormalTarget(data=ts_set["notifications"].loc[741:755]),  # peak notifications
 ]
 

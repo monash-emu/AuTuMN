@@ -8,6 +8,18 @@ from autumn.tools.utils.runs import build_run_id, read_run_id
 
 logger = logging.getLogger(__name__)
 
+def get_runner(instance):
+    """Consider this a bit of a hack - will match the type of runner based on ImageId and 
+    the EC2_AMI table in autumn.settings.aws 
+    """
+
+    if instance["ImageId"] == "36venv":
+        return SSHRunner(instance)
+    elif instance["ImageId"] == "310conda":
+        raise NotImplementedError("Conda is on the way!")
+    else:
+        raise Exception("Bad instance type", instance["ImageId"])
+    
 class SSHRunner:
     def __init__(self, instance):
         self.instance = instance

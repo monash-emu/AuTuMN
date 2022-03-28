@@ -515,8 +515,6 @@ def build_model(
     Apply the reinfection flows (knowing the strain stratification)
     """
 
-    print()
-
     if voc_params:
         apply_reinfection_flows_with_strains(
             model,

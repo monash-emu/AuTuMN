@@ -41,7 +41,7 @@ priors = [
     UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, 1.]),
     UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
     UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
-    UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 5.0]),
+    UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 8.0]),
     UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
 ]
 

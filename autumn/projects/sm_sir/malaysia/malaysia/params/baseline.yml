@@ -18,7 +18,7 @@ sojourns:
   recovered: 180.
 
 time:
-  start: 300.
+  start: 450.
   end: 1000.
 
 activate_random_process: False
@@ -37,7 +37,8 @@ voc_emergence:
   wild_type:
     starting_strain: true
     seed_prop: 1.
-    contact_rate_multiplier: 1
+    new_voc_seed: null
+    contact_rate_multiplier: 1.
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
@@ -53,7 +54,7 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 800.
+      start_time: 700.
       entry_rate: 10.
       seed_duration: 1.
     contact_rate_multiplier: 1.
@@ -88,7 +89,7 @@ hospital_stay:
 
 age_stratification:
   cfr:
-    multiplier: 0.25
+    multiplier: 0.5
   prop_hospital:
     multiplier: 0.625
 
@@ -118,4 +119,3 @@ mobility:
         - 0.5
         - 0.
         - 0.
-

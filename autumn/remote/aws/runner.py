@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 def get_runner(instance):
     """Consider this a bit of a hack - will match the type of runner based on ImageId and 
     the EC2_AMI table in autumn.settings.aws 
+    +++FIXME Not working (yet), just return hardcoded Conda310 runner for now
     """
 
     if instance["ImageId"] == "36venv":
@@ -21,6 +22,7 @@ def get_runner(instance):
         raise Exception("Bad instance type", instance["ImageId"])
     
 class SSHRunner:
+    
     def __init__(self, instance):
         self.instance = instance
         self.conn = get_connection(instance)
@@ -112,7 +114,22 @@ class VEnvRunner(SSHRunner):
     """
 
     def __init__(self, instance):
-        pass
+        super.__init__(instance)
+        self.python_preamble = ""
+        self.python_bin = "./env/bin/python"
+        self.pip_bin = "./env/bin/pip"
+
+class CondaRunner(SSHRunner):
+    """
+    Run on a new style Conda AMI with the specified environment
+    """
+
+    def __init__(self, instance, conda_env="autumn310"):
+        super.__init__(instance)
+        self.conda_env = conda_env
+        self.python_preamble = f'eval "$(/home/ubuntu/miniconda/bin/conda shell.bash hook)"; conda activate {self.conda_env};'
+        self.python_bin = "python"
+        self.pip_bin = "pip"
 
 def get_connection(instance):
     ip = instance["ip"]

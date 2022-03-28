@@ -12,6 +12,7 @@ from invoke.exceptions import UnexpectedExit
 from autumn.settings import EC2InstanceState
 
 from . import aws, remote
+from .runner import SSHRunner
 
 logger = logging.getLogger(__name__)
 
@@ -252,7 +253,8 @@ def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
     return_value = None
     try:
         logger.info("Attempting to run job %s on instance %s", job_id, instance["InstanceId"])
-        return_value = job_func(instance=instance)
+        runner = SSHRunner(instance)
+        return_value = job_func(runner=runner)
         logging.info("Job %s succeeded.", job_id)
     except UnexpectedExit as e:
         # Invoke error - happened when commands running on remote machine.

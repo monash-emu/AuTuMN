@@ -40,6 +40,19 @@ def merge_dicts(src: dict, dest: dict):
     return dest
 
 
+def flatten_list(x):
+    """
+    Transform a list of lists into a single flat list.
+
+    Args:
+        x: a nested list
+    Returns:
+        A flat list
+
+    """
+    return [v for sublist in x for v in sublist]
+
+
 def get_git_hash():
     """
     Return the current commit hash, or an empty string.

@@ -20,6 +20,11 @@ sojourns:
     total_time: 3.
   recovered: 180.
 
+time_from_onset_to_event:  # using time of symptom onset as reference
+  notification:
+    parameters:
+      mean: 1.
+
 infectious_seed: 100.
 contact_rate: 0.15
 

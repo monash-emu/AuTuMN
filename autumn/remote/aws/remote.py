@@ -6,7 +6,7 @@ from fabric import Connection
 
 from autumn.tools.utils.runs import build_run_id, read_run_id
 
-from .runner import SSHRunner
+from .runner import SSHRunner, get_connection
 
 logger = logging.getLogger(__name__)
 
@@ -16,79 +16,79 @@ def cleanup_builds(instance):
         conn.run("sudo rm -rf /var/lib/buildkite-agent/builds/", echo=True)
 
 
-def run_powerbi(instance, run_id: str, urunid: str, commit: str):
+def run_powerbi(runner: SSHRunner, run_id: str, urunid: str, commit: str):
     """Run PowerBI processing on the remote server"""
     run_id = run_id.lower()
     msg = "Running PowerBI processing for run %s on AWS instance %s"
-    logger.info(msg, run_id, instance["InstanceId"])
-    with get_connection(instance) as conn:
-        print_hostname(conn)
-        if commit != "use_original_commit":
-            set_repo_to_commit(conn, commit=commit)
-        else:
-            set_run_id(conn, run_id)
-        install_requirements(conn)
-        read_secrets(conn)
-        pipeline_name = "powerbi"
-        pipeline_args = {"run": run_id, "urunid": urunid}
-        run_task_pipeline(conn, pipeline_name, pipeline_args)
-        logger.info("PowerBI processing completed for %s", run_id)
+    logger.info(msg, run_id, runner.instance["InstanceId"])
+
+    runner.print_hostname()
+    if commit != "use_original_commit":
+        runner.set_repo_to_commit(commit=commit)
+    else:
+        runner.set_run_id(run_id)
+
+    runner.install_requirements()
+    runner.read_secrets()
+    pipeline_name = "powerbi"
+    pipeline_args = {"run": run_id, "urunid": urunid}
+    runner.run_task_pipeline(pipeline_name, pipeline_args)
+    logger.info("PowerBI processing completed for %s", run_id)
 
 
 def run_full_model(
-    instance, run_id: str, burn_in: int, sample: int, commit: str
+    runner: SSHRunner, run_id: str, burn_in: int, sample: int, commit: str
 ):
     """Run full model job on the remote server"""
     run_id = run_id.lower()
     msg = "Running full models for run %s burn-in %s on AWS instance %s"
-    logger.info(msg, run_id, burn_in, instance["InstanceId"])
-    with get_connection(instance) as conn:
-        print_hostname(conn)
-        if commit != "use_original_commit":
-            set_repo_to_commit(conn, commit=commit)
-        else:
-            set_run_id(conn, run_id)
+    logger.info(msg, run_id, burn_in, runner.instance["InstanceId"])
 
-        install_requirements(conn)
-        read_secrets(conn)
-        pipeline_name = "full"
-        pipeline_args = {
-            "run": run_id,
-            "burn": burn_in,
-            "sample": sample,
-        }
-        run_task_pipeline(conn, pipeline_name, pipeline_args)
-        logger.info("Full model runs completed for %s", run_id)
+    runner.print_hostname()
+    if commit != "use_original_commit":
+        runner.set_repo_to_commit(commit=commit)
+    else:
+        runner.set_run_id(run_id)
+
+    runner.install_requirements()
+    runner.read_secrets()
+    pipeline_name = "full"
+    pipeline_args = {
+        "run": run_id,
+        "burn": burn_in,
+        "sample": sample,
+    }
+    runner.run_task_pipeline(pipeline_name, pipeline_args)
+    logger.info("Full model runs completed for %s", run_id)
 
 
 def resume_calibration(
-    instance,
+    runner: SSHRunner,
     baserun: str,
     num_chains: int,
     runtime: int,
 ):
     """Resume calibration job on the remote server"""
     msg = "Resuming calibration with %s chains for %s seconds on AWS instance %s."
-    logger.info(msg, num_chains, runtime, instance["InstanceId"])
+    logger.info(msg, num_chains, runtime, runner.instance["InstanceId"])
     run_id = None
 
     app_name, region_name, _, orig_commit = baserun.split('/')
 
-    with get_connection(instance) as conn:
-        print_hostname(conn)
-        set_run_id(conn, baserun)
-        install_requirements(conn)
-        read_secrets(conn)
-        run_id = get_run_id(conn, app_name, region_name)
-        pipeline_name = "resume_calibration"
-        pipeline_args = {
-            "run": run_id,
-            "baserun": baserun,
-            "chains": num_chains,
-            "runtime": runtime,
-        }
-        run_task_pipeline(conn, pipeline_name, pipeline_args)
-        logger.info("Calibration resume completed for %s", run_id)
+    runner.print_hostname()
+    runner.set_run_id( baserun)
+    runner.install_requirements()
+    runner.read_secrets()
+    run_id = runner.get_run_id(app_name, region_name)
+    pipeline_name = "resume_calibration"
+    pipeline_args = {
+        "run": run_id,
+        "baserun": baserun,
+        "chains": num_chains,
+        "runtime": runtime,
+    }
+    runner.run_task_pipeline(pipeline_name, pipeline_args)
+    logger.info("Calibration resume completed for %s", run_id)
 
     return run_id
 

@@ -14,14 +14,14 @@ def get_runner(instance):
     +++FIXME Not working (yet), just return hardcoded Conda310 runner for now
     """
 
-    if instance["ImageId"] == "36venv":
-        return SSHRunner(instance)
-    elif instance["ImageId"] == "310conda":
-        raise NotImplementedError("Conda is on the way!")
-    else:
-        raise Exception("Bad instance type", instance["ImageId"])
+    return VEnvRunner()
     
 class SSHRunner:
+
+    _python_preamble = None
+    _python_bin = None
+    _pip_bin = None
+    _requirements = None
     
     def __init__(self, instance):
         self.instance = instance
@@ -87,25 +87,32 @@ class SSHRunner:
         """Install Python requirements on remote server"""
         logger.info("Ensuring latest Python requirements are installed.")
         with self.conn.cd(self.code_path):
-            self.conn.run("./env/bin/pip install --quiet -r requirements.txt", echo=True)
+            self.pip(f"install --quiet -r {self._requirements}")
         logger.info("Finished installing requirements.")
 
     def read_secrets(self):
         """Read any encrypted files"""
         logger.info("Decrypting Autumn secrets.")
         with self.conn.cd(self.code_path):
-            self.conn.run("./env/bin/python -m autumn secrets read", echo=True)
+            self.python("-m autumn secrets read")
 
     def run_task_pipeline(self, pipeline_name: str, pipeline_args: dict):
         """Run a task pipeline on the remote machine"""
         logger.info("Running task pipeline %s", pipeline_name)
         pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
-        cmd_str = f"./env/bin/python -m autumn tasks {pipeline_name} {pipeline_args_str}"
+        cmd_str = f"-m autumn tasks {pipeline_name} {pipeline_args_str}"
         with self.conn.cd(self.code_path):
-            self.conn.run(cmd_str, echo=True)
+            self.python(cmd_str)
 
         logger.info("Finished running task pipeline %s", pipeline_name)
 
+    def pip(self, command):
+        full_str = f"{self._python_preamble} {self._pip_bin} {command}"
+        self.conn.run(full_str, echo=True)
+
+    def python(self, command):
+        full_str = f"{self._python_preamble} {self._python_bin} {command}"
+        self.conn.run(full_str, echo=True)
 
 class VEnvRunner(SSHRunner):
     """
@@ -115,9 +122,10 @@ class VEnvRunner(SSHRunner):
 
     def __init__(self, instance):
         super.__init__(instance)
-        self.python_preamble = ""
-        self.python_bin = "./env/bin/python"
-        self.pip_bin = "./env/bin/pip"
+        self._python_preamble = ""
+        self._python_bin = "./env/bin/python"
+        self._pip_bin = "./env/bin/pip"
+        self._requirements = "requirements.txt"
 
 class CondaRunner(SSHRunner):
     """
@@ -127,9 +135,10 @@ class CondaRunner(SSHRunner):
     def __init__(self, instance, conda_env="autumn310"):
         super.__init__(instance)
         self.conda_env = conda_env
-        self.python_preamble = f'eval "$(/home/ubuntu/miniconda/bin/conda shell.bash hook)"; conda activate {self.conda_env};'
-        self.python_bin = "python"
-        self.pip_bin = "pip"
+        self._python_preamble = f'eval "$(/home/ubuntu/miniconda/bin/conda shell.bash hook)"; conda activate {self.conda_env};'
+        self._python_bin = "python"
+        self._pip_bin = "pip"
+        self._requirements = "requirements/requirements310.txt"
 
 def get_connection(instance):
     ip = instance["ip"]

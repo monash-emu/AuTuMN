@@ -121,7 +121,7 @@ class VEnvRunner(SSHRunner):
     """
 
     def __init__(self, instance):
-        super.__init__(instance)
+        super().__init__(instance)
         self._python_preamble = ""
         self._python_bin = "./env/bin/python"
         self._pip_bin = "./env/bin/pip"
@@ -133,7 +133,7 @@ class CondaRunner(SSHRunner):
     """
 
     def __init__(self, instance, conda_env="autumn310"):
-        super.__init__(instance)
+        super().__init__(instance)
         self.conda_env = conda_env
         self._python_preamble = f'eval "$(/home/ubuntu/miniconda/bin/conda shell.bash hook)"; conda activate {self.conda_env};'
         self._python_bin = "python"

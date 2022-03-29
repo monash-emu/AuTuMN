@@ -11,7 +11,7 @@ from invoke.exceptions import UnexpectedExit
 
 from autumn.settings import EC2InstanceState
 
-from . import aws, remote
+from . import aws, remote, runner
 from .runner import get_runner
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ def ssh(name):
     """SSH into an EC2 instance"""
     instance = aws.find_instance(name)
     if instance and aws.is_running(instance):
-        remote.ssh_interactive(instance)
+        runner.ssh_interactive(instance)
     elif instance:
         click.echo(f"Instance {name} not running")
     else:

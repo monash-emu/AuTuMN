@@ -107,7 +107,7 @@ def run_instance(job_id: str, instance_type: str, is_spot: bool):
     kwargs = {
         "MaxCount": 1,
         "MinCount": 1,
-        "ImageId": settings.EC2_AMI["36venv"],
+        "ImageId": settings.EC2_AMI["310conda"],
         "InstanceType": instance_type,
         "SecurityGroupIds": [settings.EC2_SECURITY_GROUP],
         "IamInstanceProfile": {"Name": settings.EC2_IAM_INSTANCE_PROFILE},

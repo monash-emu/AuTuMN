@@ -62,7 +62,7 @@ class SSHRunner:
 
     def set_run_id(self, run_id: str):
         """Set git to use the commit for a given run ID"""
-        logger.info("Setting up repo using a run id %s", run_id)
+        logger.info("Setting up repo using run id %s", run_id)
         self.conn.sudo(f"chown -R ubuntu:ubuntu {self.code_path}", echo=True)
         _, _, _, commit = read_run_id(run_id)
         with self.conn.cd(self.code_path):

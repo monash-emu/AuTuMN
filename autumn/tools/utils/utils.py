@@ -336,7 +336,7 @@ def create_date_index(COVID_BASE_DATETIME, df, datecol):
             continue
 
         else:
-            print("Sucess")
+            print("Success")
 
     df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
 

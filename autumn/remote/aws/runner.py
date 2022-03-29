@@ -14,7 +14,7 @@ def get_runner(instance):
     +++FIXME Not working (yet), just return hardcoded Conda310 runner for now
     """
 
-    return VEnvRunner()
+    return VEnvRunner(instance)
     
 class SSHRunner:
 

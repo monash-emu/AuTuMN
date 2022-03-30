@@ -74,6 +74,15 @@ def load_mcmc_params_tables(calib_dirpath: str):
     return mcmc_tables
 
 
+def load_mcmc_run_tables(calib_dirpath: str):
+    mcmc_tables = []
+    for db_path in find_db_paths(calib_dirpath):
+        db = get_database(db_path)
+        mcmc_tables.append(db.query("mcmc_run"))
+
+    return mcmc_tables
+
+
 def load_mcmc_tables(calib_dirpath: str):
     mcmc_tables = []
     for db_path in find_db_paths(calib_dirpath):

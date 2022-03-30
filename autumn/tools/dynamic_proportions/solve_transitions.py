@@ -124,7 +124,7 @@ def calculate_rates_for_interval(
     bounds = [(0., None)] * n_params
 
     # Numerical solving
-    solution = minimize(function_to_zero, x0=np.zeros(n_params), bounds=bounds, method="TNC")
+    solution = minimize(function_to_zero, x0=np.zeros(n_params), bounds=bounds, method="Nelder-Mead")
 
     return {ordered_flow_names[i]: solution.x[i] for i in range(len(ordered_flow_names))}
 

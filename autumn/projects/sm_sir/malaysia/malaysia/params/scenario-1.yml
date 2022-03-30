@@ -8,14 +8,16 @@ mobility:
     school:
       append: false
       times:
-        - 2021-12-01
-        - 2021-12-31
-        - 2022-03-20
-        - 2022-03-21 # All schools open
+        - 2022-01-20
+        - 2022-02-20
+        - 2022-02-21 # school holidays
+        - 2022-03-21 # school holidays
+        - 2022-03-22 # schools open
       values:
-        - 0
-        - 0
-        - 0
-        - 1
+        - 0.5
+        - 0.5
+        - 0.
+        - 0.
+        - 1.
 
 

@@ -1,5 +1,7 @@
 import json
+from datetime import date
 
+from autumn.models.sm_sir.parameters import BASE_DATE
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
@@ -14,20 +16,33 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
-notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
-hospital_admissions_ts = ts_set["hospital_admissions"].loc[calibration_start_time:]
-deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
+
+# Work out date truncation points
+targets_start = (date(2021, 5, 15) - BASE_DATE).days
+notifications_trunc_point = (date(2021, 12, 1) - BASE_DATE).days
+
+# Get the actual targets
+notifications_ts = ts_set["notifications"].loc[targets_start: notifications_trunc_point]
+hospital_admissions_ts = ts_set["hospital_admissions"].loc[targets_start:]
+late_hosp_admissions = ts_set["hospital_admissions"].loc[notifications_trunc_point:]
+deaths_ts = ts_set["infection_deaths"].loc[targets_start:]
+late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 
 priors = [
-    UniformPrior("contact_rate", (0.07, 0.17)),
+    UniformPrior("contact_rate", (0.02, 0.1)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.015)),
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (520., 570.)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.5, 1.))]
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (500., 550.)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2.2, 3.5)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.08)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (0.01, 0.08)),
+]
 
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(hospital_admissions_ts),
     NormalTarget(deaths_ts),
+    NormalTarget(late_hosp_admissions),
+    NormalTarget(late_deaths),
 ]
 
 calibration = Calibration(priors=priors, targets=targets, random_process=None, metropolis_init="current_params")

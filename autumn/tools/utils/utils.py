@@ -40,6 +40,19 @@ def merge_dicts(src: dict, dest: dict):
     return dest
 
 
+def flatten_list(x):
+    """
+    Transform a list of lists into a single flat list.
+
+    Args:
+        x: a nested list
+    Returns:
+        A flat list
+
+    """
+    return [v for sublist in x for v in sublist]
+
+
 def get_git_hash():
     """
     Return the current commit hash, or an empty string.
@@ -336,7 +349,7 @@ def create_date_index(COVID_BASE_DATETIME, df, datecol):
             continue
 
         else:
-            print("Sucess")
+            print("Success")
 
     df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
 

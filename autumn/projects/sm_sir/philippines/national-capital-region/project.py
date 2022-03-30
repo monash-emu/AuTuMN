@@ -30,24 +30,32 @@ priors = [
     UniformPrior("sojourns.active.total_time", [4, 10]),
     UniformPrior("infectious_seed", [1, 400]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.04]),
-    # Pre-existing immunity
+    # Vaccine-induced immunity
     UniformPrior(
-        "immunity_stratification.prop_immune", [0.8, 0.95]
-    ),  # 80% of total NCR pop with at least one dose by 29 Dec
+        "immunity_stratification.infection_risk_reduction.low", [0., 0.20]
+    ),
     UniformPrior(
-        "immunity_stratification.prop_high_among_immune", [0.05, 0.40]
-    ),  # Among people with at least one dose, 5% had received a booster by 29 Dec.
+        "immunity_stratification.infection_risk_reduction.high", [.50, 0.70]
+    ),
+    UniformPrior(
+        "age_stratification.prop_hospital.source_immunity_protection.low", [0.40, 0.60]
+    ),
+    UniformPrior(
+        "age_stratification.prop_hospital.source_immunity_protection.high", [.80, 0.90]
+    ),
     # Hospital-related
     UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, 1.]),
     UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
     UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
-    UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 5.0]),
+    UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 8.0]),
     UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
 ]
 
+new_target_set = load_timeseries(build_rel_path("new_targets.json"))
+
 targets = [
-    NormalTarget(data=ts_set["icu_occupancy"].loc[725:]),
-    NormalTarget(data=ts_set["hospital_occupancy"].loc[725:]),
+    NormalTarget(data=new_target_set["icu_occupancy"].loc[725:]),
+    NormalTarget(data=new_target_set["hospital_occupancy"].loc[725:]),
     NormalTarget(data=ts_set["notifications"].loc[741:755]),  # peak notifications
 ]
 

@@ -58,6 +58,6 @@ boto3
 timeago
 click
 tabulate
-awscli
+awscli==1.22.84
 fabric
 s3fs

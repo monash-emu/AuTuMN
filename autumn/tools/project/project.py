@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import List, Callable, Optional, Dict, Tuple
 from importlib import import_module, reload as reload_module
 import json
+from pathlib import Path
 
 
 import yaml
@@ -24,7 +25,7 @@ from autumn.tools.db.store import (
 from autumn.tools.db.database import FeatherDatabase
 from autumn.tools.utils.timer import Timer
 from autumn.tools.utils.utils import get_git_branch, get_git_hash
-from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH
+from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH
 from autumn.tools.registry import _PROJECTS
 
 from autumn.tools.utils.tex_tools import write_main_param_table, write_priors_table
@@ -186,6 +187,12 @@ class Project:
 
         # Write calibrated parameter table to tex file
         write_priors_table(params_descriptions, all_priors, output_dir_path)
+
+    def get_path(self) -> Path:
+        """
+        Return a pathlib.Path to the current project directory
+        """
+        return Path(BASE_PATH) / '/'.join(self._get_path().split('.')[:-1])  
 
     def __repr__(self):
         return f"Project<{self.model_name}, {self.region_name}>"

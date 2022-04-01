@@ -72,6 +72,17 @@ def run_command(cmds):
         return ""
 
 
+def flatten_list(x):
+    """
+    Transform a list of lists into a single flat list.
+    Args:
+        x: a nested list
+    Returns:
+        A flat list
+    """
+    return [v for sublist in x for v in sublist]
+
+
 def change_parameter_unit(parameter_dict, multiplier):
     """
     used to adapt the latency parameters from the earlier functions according to whether they are needed as by year

@@ -154,9 +154,6 @@ register_project(
     Models.COVID_19, Region.SELANGOR, "autumn.projects.covid_19.malaysia.selangor.project"
 )
 
-# Nepal
-register_project(Models.COVID_19, Region.NEPAL, "autumn.projects.covid_19.nepal.project")
-
 # Sri Lanka
 register_project(
     Models.COVID_19, Region.SRI_LANKA, "autumn.projects.covid_19.sri_lanka.sri_lanka.project"

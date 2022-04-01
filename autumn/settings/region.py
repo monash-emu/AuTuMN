@@ -28,7 +28,6 @@ class Region:
     JOHOR = "johor"
     PENANG = "penang"
     KUALA_LUMPUR = "kuala-lumpur"
-    NEPAL = "nepal"
     SRI_LANKA = "sri_lanka"
     BALI = "bali"
     VIETNAM = "vietnam"
@@ -69,7 +68,6 @@ class Region:
         JOHOR,
         PENANG,
         KUALA_LUMPUR,
-        NEPAL,
         SRI_LANKA,
         BALI,
         VIETNAM,

@@ -31,7 +31,6 @@ class Region:
     NEPAL = "nepal"
     SRI_LANKA = "sri_lanka"
     BALI = "bali"
-    INDONESIA = "indonesia"
     VIETNAM = "vietnam"
     HO_CHI_MINH_CITY = "ho_chi_minh_city"
     HANOI = "hanoi"
@@ -72,7 +71,6 @@ class Region:
         KUALA_LUMPUR,
         NEPAL,
         SRI_LANKA,
-        INDONESIA,
         BALI,
         VIETNAM,
         HO_CHI_MINH_CITY,

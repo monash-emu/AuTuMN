@@ -118,24 +118,6 @@ register_project(
     "autumn.projects.covid_19.sri_lanka.sri_lanka.project",
 )
 
-# Vietnam
-register_project(
-    Models.COVID_19,
-    Region.VIETNAM,
-    "autumn.projects.covid_19.vietnam.vietnam.project",
-)
-register_project(
-    Models.COVID_19,
-    Region.HO_CHI_MINH_CITY,
-    "autumn.projects.covid_19.vietnam.ho_chi_minh_city.project",
-)
-
-register_project(
-    Models.COVID_19,
-    Region.HANOI,
-    "autumn.projects.covid_19.vietnam.hanoi.project",
-)
-
 register_project(
     Models.SM_SIR,
     Region.NCR,

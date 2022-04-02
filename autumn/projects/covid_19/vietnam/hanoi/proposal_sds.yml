@@ -1,9 +1,0 @@
-sojourn.compartment_periods_calculated.exposed.total_period: 0.1054173581312341
-sojourn.compartment_periods_calculated.active.total_period: 0.08430012963354949
-infectious_seed: 0.026685671015045154
-contact_rate: 5.3370606022992706e-05
-clinical_stratification.icu_prop: 0.020286708868681252
-clinical_stratification.props.hospital.multiplier: 0.12367813221547896
-infection_fatality.multiplier: 0.13969491598153405
-testing_to_detection.assumed_cdr_parameter: 0.0001753524573122633
-mobility.microdistancing.behaviour.parameters.max_effect: 0.0005340571146304485

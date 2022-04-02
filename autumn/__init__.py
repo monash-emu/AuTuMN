@@ -111,40 +111,6 @@ register_project(
     "autumn.projects.covid_19.mixing_optimisation.regions.france.project",
 )
 
-# COVID: Philippines project
-register_project(
-    Models.COVID_19,
-    Region.CALABARZON,
-    "autumn.projects.covid_19.philippines.calabarzon.project",
-)
-register_project(
-    Models.COVID_19,
-    Region.CENTRAL_VISAYAS,
-    "autumn.projects.covid_19.philippines.central_visayas.project",
-)
-register_project(
-    Models.COVID_19,
-    Region.DAVAO_CITY,
-    "autumn.projects.covid_19.philippines.davao_city.project",
-)
-
-register_project(
-    Models.COVID_19,
-    Region.DAVAO_REGION,
-    "autumn.projects.covid_19.philippines.davao_region.project",
-)
-
-register_project(
-    Models.COVID_19,
-    Region.MANILA,
-    "autumn.projects.covid_19.philippines.manila.project",
-)
-register_project(
-    Models.COVID_19,
-    Region.PHILIPPINES,
-    "autumn.projects.covid_19.philippines.philippines.project",
-)
-
 # Sri Lanka
 register_project(
     Models.COVID_19,

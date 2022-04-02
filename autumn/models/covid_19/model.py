@@ -14,7 +14,7 @@ from .constants import (
 )
 from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
-from .strat_processing.vaccination import add_vacc_rollout_requests, add_vic_regional_vacc, apply_standard_vacc_coverage
+from .strat_processing.vaccination import add_vacc_rollout_requests, apply_standard_vacc_coverage
 from .strat_processing import tracing
 from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
@@ -170,12 +170,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
             "sympt": params.clinical_stratification.props.symptomatic.multiplier,
         }
 
-    vic_regions = Region.VICTORIA_SUBREGIONS + [Region.VICTORIA]
-    is_region_vic = pop.region and pop.region.replace("_", "-").lower() in vic_regions
-    override_test_region = "Victoria" if pop.region and is_region_vic else pop.region
-
     get_detected_proportion = find_cdr_function_from_test_data(
-        params.testing_to_detection, country.iso3, override_test_region, pop.year
+        params.testing_to_detection, country.iso3, pop.region, pop.year
     )
     clinical_strat = get_clinical_strat(params, stratified_adjusters)
     model.stratify_with(clinical_strat)
@@ -275,13 +271,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)
         model.stratify_with(vaccination_strat)
 
-        # Victoria vaccination code is not generalisable
-        if is_region_vic:
-            add_vic_regional_vacc(model, vacc_params, params.population.region, params.vaccination.program_start_time)
-            if params.description == "BASELINE":
-                assert params.vaccination.program_start_time == params.time.start
-
-        elif params.vaccination.standard_supply:
+        if params.vaccination.standard_supply:
             apply_standard_vacc_coverage(
                 model, vacc_params.lag, params.country.iso3, total_pops, params.vaccination.one_dose,
                 params.description == "BASELINE"

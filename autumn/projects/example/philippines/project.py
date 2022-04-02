@@ -17,10 +17,7 @@ priors = [
     UniformPrior("recovery_rate", [0.9, 1.2]),
 ]
 targets = [
-    NormalTarget(
-        data=ts_set["prevalence_infectious"],
-        time_weights=list(range(1, len(ts_set["prevalence_infectious"]) + 1)),
-    )
+    NormalTarget(data=ts_set["prevalence_infectious"]),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

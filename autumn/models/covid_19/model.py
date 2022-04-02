@@ -1,6 +1,5 @@
 from summer import CompartmentalModel
 
-from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs

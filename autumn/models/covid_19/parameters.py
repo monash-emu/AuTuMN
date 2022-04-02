@@ -293,37 +293,6 @@ class RegionalClusterStratification(BaseModel):
     mobility: Mobility
 
 
-class Vic2021ClusterSeeds(BaseModel):
-    north_east_metro: float
-    south_east_metro: float
-    west_metro: float
-    barwon_south_west: float
-    gippsland: float
-    hume: float
-    loddon_mallee: float
-    grampians: float
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_seeds(cls, values):
-        for region in Region.VICTORIA_SUBREGIONS:
-            region_name = region.replace("-", "_")
-            assert 0. <= values[region_name], f"Seed value for cluster {region_name} is negative"
-        return values
-
-
-class Vic2021Seeding(BaseModel):
-    seed_time: float
-    clusters: Optional[Vic2021ClusterSeeds]
-    seed: Optional[float]
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_request(cls, values):
-        n_requests = int(bool(values.get("clusters"))) + int(bool(values.get("seed")))
-        msg = f"Vic 2021 seeding must specify the clusters or a seed for the one cluster modelled: {n_requests}"
-        assert n_requests == 1, msg
-        return values
-
-
 class VocComponent(BaseModel):
     """
     Parameters defining the emergence profile of the Variants of Concerns
@@ -378,21 +347,6 @@ class VaccCoveragePeriod(BaseModel):
         return values
 
 
-class VicPiecewiseFunc(BaseModel):
-    """
-    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time.
-    """
-
-    start_time: float
-    end_time: float
-    time_intervals: float
-    age_breaks: List[float]
-
-    @validator("time_intervals", allow_reuse=True)
-    def convert_time_interval_to_int(val):
-        return int(val)
-
-
 class RollOutFunc(BaseModel):
     """
     Provides the parameters needed to construct a phase of vaccination roll-out.
@@ -401,7 +355,6 @@ class RollOutFunc(BaseModel):
     age_min: Optional[float]
     age_max: Optional[float]
     supply_period_coverage: Optional[VaccCoveragePeriod]
-    vic_supply: Optional[VicPiecewiseFunc]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
@@ -658,7 +611,6 @@ class Parameters:
     clinical_stratification: ClinicalStratification
     testing_to_detection: Optional[TestingToDetection]
     contact_tracing: Optional[ContactTracing]
-    vic_2021_seeding: Optional[Vic2021Seeding]
     hospital_reporting: float
     # Non_epidemiological parameters
     target_output_ratio: Optional[float]

@@ -136,13 +136,6 @@ register_project(
     "autumn.projects.covid_19.vietnam.hanoi.project",
 )
 
-
-register_project(
-    Models.COVID_19,
-    Region.MYANMAR,
-    "autumn.projects.covid_19.myanmar.project",
-)
-
 register_project(
     Models.SM_SIR,
     Region.NCR,

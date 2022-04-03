@@ -8,6 +8,7 @@ from summer.utils import ref_times_to_dti
 #from autumn.tools.project.timeseries import TimeSeries
 from .priors import UniformPrior
 
+
 class BaseTarget(ABC):
 
     data: pd.Series

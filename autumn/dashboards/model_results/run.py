@@ -5,9 +5,9 @@ import os
 
 import streamlit as st
 
-from autumn.tools import db
-from autumn.tools.streamlit import selectors
-from autumn.tools.plots.plotter import StreamlitPlotter
+from ... import db
+from ...outputs.streamlit import selectors
+from autumn.outputs.plots import StreamlitPlotter
 
 from .plots import dash
 

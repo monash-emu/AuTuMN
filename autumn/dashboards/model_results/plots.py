@@ -7,10 +7,10 @@ import streamlit as st
 from typing import List
 from summer import CompartmentalModel
 
-from autumn.tools import db, plots
-from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.tools.streamlit import selectors
-from autumn.tools.streamlit.utils import Dashboard
+from autumn import db
+from autumn.outputs.plots import StreamlitPlotter
+from autumn.outputs.streamlit import selectors
+from autumn.outputs.streamlit.utils import Dashboard
 from autumn.tools.project import Project
 
 dash = Dashboard()
@@ -43,7 +43,7 @@ def plot_outputs_multi(
             x_low = min(models[0].times)
             x_up = max(models[0].times)
 
-        plots.model.plots.plot_outputs_multi(
+        autumn.outputs.plots.model.plots.plot_outputs_multi(
             plotter, chosen_models, output_config, is_logscale, x_low, x_up
         )
 
@@ -68,7 +68,7 @@ def plot_outputs_multi(
             x_low = min(models[0].times)
             x_up = max(models[0].times)
 
-        plots.model.plots.plot_outputs_multi(
+        autumn.outputs.plots.model.plots.plot_outputs_multi(
             plotter, chosen_models, output_config, is_logscale, x_low, x_up
         )
 
@@ -82,14 +82,14 @@ def plot_compartment(plotter: StreamlitPlotter, project: Project, models: List[C
             # Plot many compartments for one scenario
             model = chosen_models[0]
             compartments = selectors.multi_compartment(model)
-            plots.model.plots.plot_multi_compartments_single_scenario(
+            autumn.outputs.plots.model.plots.plot_multi_compartments_single_scenario(
                 plotter, model, compartments, is_logscale
             )
         else:
             # Plot one compartment for many scenarios
             compartment = selectors.single_compartment(chosen_models[0])
             if compartment:
-                plots.model.plots.plot_single_compartment_multi_scenario(
+                autumn.outputs.plots.model.plots.plot_single_compartment_multi_scenario(
                     plotter, chosen_models, compartment, is_logscale
                 )
             else:
@@ -106,7 +106,7 @@ def plot_compartment_aggregate(
     if not include_scenarios:
         models = [models[0]]
 
-    plots.model.plots.plot_agg_compartments_multi_scenario(plotter, models, names, is_logscale)
+    autumn.outputs.plots.model.plots.plot_agg_compartments_multi_scenario(plotter, models, names, is_logscale)
     st.write([str(n) for n in names])
 
 
@@ -117,7 +117,7 @@ def plot_stacked_compartments_by_stratum(
     chosen_models = selectors.scenarios(models)
     compartment = selectors.single_compartment(chosen_models[0]).split("X")[0]
     stratify_by = "agegroup"
-    plots.model.plots.plot_stacked_compartments_by_stratum(
+    autumn.outputs.plots.model.plots.plot_stacked_compartments_by_stratum(
         plotter, chosen_models, compartment, stratify_by
     )
     st.write(compartment)
@@ -131,7 +131,7 @@ def plot_stacked_derived_outputs_by_stratum(
     output_config = model_output_selector(chosen_models, project.plots)
     derived_output = output_config["output_key"].split("X")[0]
     stratify_by = "agegroup"
-    plots.model.plots.plot_stacked_compartments_by_stratum(
+    autumn.outputs.plots.model.plots.plot_stacked_compartments_by_stratum(
         plotter, chosen_models, derived_output, stratify_by
     )
     st.write(derived_output)
@@ -171,7 +171,7 @@ def plot_multicountry_rainbow(
                     + objective
                 )
 
-                plots.model.plots.plot_multicountry_rainbow(
+                autumn.outputs.plots.model.plots.plot_multicountry_rainbow(
                     country_scenarios, config, mode, objective
                 )
 
@@ -207,7 +207,7 @@ def plot_multicounty_hospital(
                     )
 
             print("Plotting multicountry hospital for: " + mode + "_" + objective)
-            plots.model.plots.plot_multicountry_hospital(all_scenarios, mode, objective)
+            autumn.outputs.plots.model.plots.plot_multicountry_hospital(all_scenarios, mode, objective)
 
 
 def model_output_selector(models, targets):

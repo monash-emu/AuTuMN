@@ -8,17 +8,18 @@ import streamlit as st
 import yaml
 
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
-from autumn.tools import db, inputs, plots
-from autumn.tools.plots.calibration.plots import (
+from autumn.tools import inputs
+from autumn import db
+from autumn.outputs.plots.calibration.plots import (
     find_shortest_chain_length,
     get_epi_params,
     get_posterior,
     calculate_r_hats,
 )
-from autumn.tools.plots.plotter import StreamlitPlotter
+from autumn.outputs.plots import StreamlitPlotter
 from autumn.tools.project import get_project
-from autumn.tools.streamlit import selectors
-from autumn.tools.streamlit.utils import create_downloadable_csv, round_sig_fig, Dashboard
+from autumn.outputs.streamlit import selectors
+from autumn.outputs.streamlit.utils import create_downloadable_csv, round_sig_fig, Dashboard
 
 
 dash = Dashboard()
@@ -54,7 +55,7 @@ def plot_acceptance_ratio(
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
     burn_in = st.sidebar.slider("Burn in", 0, find_shortest_chain_length(mcmc_tables), 0)
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
-    plots.calibration.plots.plot_acceptance_ratio(
+    autumn.outputs.plots.calibration.plots.plot_acceptance_ratio(
         plotter, mcmc_tables, burn_in, label_font_size=label_font_size, dpi_request=dpi_request
     )
 
@@ -118,7 +119,7 @@ def plot_cdr_curves(
             )
         )
 
-    plots.calibration.plots.plot_cdr_curves(
+    autumn.outputs.plots.calibration.plots.plot_cdr_curves(
         plotter, times, detected_proportion, end_date, label_rotation
     )
 
@@ -156,7 +157,7 @@ def plot_timeseries_with_uncertainty(
     is_targets = st.sidebar.checkbox("Show targets")
     is_overlay_unceratinty = st.sidebar.checkbox("Overlay uncertainty")
     is_legend = st.sidebar.checkbox("Add legend")
-    quantiles = plots.uncertainty.plots.plot_timeseries_with_uncertainty(
+    quantiles = autumn.outputs.plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         chosen_output,
@@ -214,7 +215,7 @@ def plot_multiple_timeseries_with_uncertainty(
     n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
     title_font_size = st.sidebar.slider("Title font size", 1, 30, 12)
     label_font_size = st.sidebar.slider("Label font size", 1, 30, 10)
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+    autumn.outputs.plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         chosen_outputs,
@@ -255,7 +256,7 @@ def plot_calibration_fit(
     outputs = get_uncertainty_data(calib_dir_path, mcmc_tables, chosen_output, burn_in)
 
     # Call main plotting function
-    plots.calibration.plots.plot_calibration_fit(
+    autumn.outputs.plots.calibration.plots.plot_calibration_fit(
         plotter, chosen_output, outputs, targets, is_logscale
     )
 
@@ -292,7 +293,7 @@ def plot_multi_output_fit(
     }
 
     # Call main plotting function
-    plots.calibration.plots.plot_multi_fit(
+    autumn.outputs.plots.calibration.plots.plot_multi_fit(
         plotter,
         available_outputs,
         outputs,
@@ -318,7 +319,7 @@ def plot_mcmc_parameter_trace(
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
-    plots.calibration.plots.plot_mcmc_parameter_trace(plotter, mcmc_params, burn_in, chosen_param)
+    autumn.outputs.plots.calibration.plots.plot_mcmc_parameter_trace(plotter, mcmc_params, burn_in, chosen_param)
 
 
 @dash.register("All param traces")
@@ -340,7 +341,7 @@ def plot_all_param_traces(
     ) = selectors.create_standard_plotting_sidebar()
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
-    plots.calibration.plots.plot_multiple_param_traces(
+    autumn.outputs.plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
         mcmc_tables,
@@ -361,7 +362,7 @@ def plot_ll_or_posterior_vs_parameter(
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
-    plots.calibration.plots.plot_single_param_loglike(
+    autumn.outputs.plots.calibration.plots.plot_single_param_loglike(
         plotter, mcmc_tables, mcmc_params, burn_in, chosen_param, posterior
     )
 
@@ -415,7 +416,7 @@ def plot_ll_or_posterior_vs_all_params(
     ) = selectors.create_standard_plotting_sidebar()
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
-    plots.calibration.plots.plot_all_params_vs_loglike(
+    autumn.outputs.plots.calibration.plots.plot_all_params_vs_loglike(
         plotter,
         mcmc_tables,
         mcmc_params,
@@ -495,7 +496,7 @@ def plot_posterior(
             prior = priors[i]
             break
 
-    plots.calibration.plots.plot_posterior(
+    autumn.outputs.plots.calibration.plots.plot_posterior(
         plotter, mcmc_params, mcmc_tables, burn_in, chosen_param, num_bins, prior
     )
 
@@ -529,7 +530,7 @@ def plot_all_posteriors(
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     sig_figs = st.sidebar.slider("Significant figures", 0, 6, 3)
-    plots.calibration.plots.plot_multiple_posteriors(
+    autumn.outputs.plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
         mcmc_tables,
@@ -557,7 +558,7 @@ def plot_loglikelihood_trace(
     region: str,
 ):
     burn_in = selectors.burn_in(mcmc_tables)
-    plots.calibration.plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
+    autumn.outputs.plots.calibration.plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
 
 
 @dash.register("Compare loglikelihood between chains")
@@ -570,7 +571,7 @@ def compare_loglikelihood_between_chains(
     app_name: str,
     region: str,
 ):
-    plots.calibration.plots.plot_loglikelihood_boxplots(plotter, mcmc_tables)
+    autumn.outputs.plots.calibration.plots.plot_loglikelihood_boxplots(plotter, mcmc_tables)
 
 
 @dash.register("Param versus param")
@@ -592,7 +593,7 @@ def plot_param_matrix(
     bins = st.sidebar.slider("Bins", 4, 50, 20)
     style = st.sidebar.selectbox("Style", ["Shade", "Scatter", "KDE"])
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
-    plots.calibration.plots.plot_param_vs_param(
+    autumn.outputs.plots.calibration.plots.plot_param_vs_param(
         plotter,
         mcmc_params,
         mcmc_tables,
@@ -618,7 +619,7 @@ def plot_parallel_coordinates(
     app_name: str,
     region: str,
 ):
-    plots.calibration.plots.plot_parallel_coordinates(
+    autumn.outputs.plots.calibration.plots.plot_parallel_coordinates(
         plotter,
         mcmc_tables,
         mcmc_params,
@@ -639,7 +640,7 @@ def plot_loglikelihood_surface(
     param_1 = st.sidebar.selectbox("Select parameter 1", options)
     param_2 = st.sidebar.selectbox("Select parameter 2", options)
 
-    plots.calibration.plots.plot_loglikelihood_surface(
+    autumn.outputs.plots.calibration.plots.plot_loglikelihood_surface(
         plotter,
         mcmc_tables,
         mcmc_params,
@@ -675,7 +676,7 @@ def plot_seroprevalence_by_age(
         fetch_targets = False
 
     if fetch_targets:
-        plots.uncertainty.plots.plot_seroprevalence_by_age_against_targets(
+        autumn.outputs.plots.uncertainty.plots.plot_seroprevalence_by_age_against_targets(
             plotter, uncertainty_df, selected_scenario, sero_data[region], n_columns
         )
     else:
@@ -683,7 +684,7 @@ def plot_seroprevalence_by_age(
             _,
             seroprevalence_by_age,
             overall_seroprev,
-        ) = plots.uncertainty.plots.plot_seroprevalence_by_age(
+        ) = autumn.outputs.plots.uncertainty.plots.plot_seroprevalence_by_age(
             plotter, uncertainty_df, selected_scenario, time
         )
         create_seroprev_csv(seroprevalence_by_age)
@@ -751,13 +752,13 @@ def get_uncertainty_df(calib_dir_path, mcmc_tables, targets):
         max_run = mcmc_all_df["run"].max()
         half_max = max_run // 2
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
+        uncertainty_df = autumn.db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
     return uncertainty_df
 
 
 def get_uncertainty_data(calib_dir_path, mcmc_tables, output, burn_in):
     derived_output_tables = db.load.load_derived_output_tables(calib_dir_path, column=output)
-    return plots.calibration.plots.sample_outputs_for_calibration_fit(
+    return autumn.outputs.plots.calibration.plots.sample_outputs_for_calibration_fit(
         output, mcmc_tables, derived_output_tables, burn_in=burn_in
     )
 
@@ -824,6 +825,6 @@ def get_uncertainty_db(mcmc_tables, targets, calib_dir_path):
         max_run = mcmc_all_df["run"].max()
         half_max = max_run // 2
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
+        uncertainty_df = autumn.db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
 
     return uncertainty_df

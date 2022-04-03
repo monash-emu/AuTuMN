@@ -3,7 +3,7 @@ import random
 import streamlit as st
 
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
-from autumn.tools import inputs, plots
+from autumn.tools import inputs
 from autumn.utils.params import load_params
 
 PLOT_FUNCS = {}
@@ -70,7 +70,7 @@ def multi_country_cdr(
                     subregion=testing_region,
                 )
             )
-    plots.calibration.plots.plot_multi_cdr_curves(
+    autumn.outputs.plots.calibration.plots.plot_multi_cdr_curves(
         plotter, times, detected_proportions, start_date, end_date, label_rotation, region_name
     )
 

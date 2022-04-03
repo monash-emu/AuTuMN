@@ -16,13 +16,13 @@ import numpy as np
 from summer.model import CompartmentalModel
 from summer.derived_outputs import DerivedOutputRequest
 
-from autumn.tools.db.store import (
+from autumn.db import (
     save_model_outputs,
     build_outputs_table,
     build_derived_outputs_table,
     Table,
 )
-from autumn.tools.db.database import FeatherDatabase
+from autumn.db import FeatherDatabase
 from autumn.tools.utils.timer import Timer
 from autumn.tools.utils.utils import get_git_branch, get_git_hash
 from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH

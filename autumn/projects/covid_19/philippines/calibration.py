@@ -1,10 +1,8 @@
 import pandas as pd
 
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.runners.calibration.priors import UniformPrior
+from autumn.runners.calibration.targets import NormalTarget
 from autumn.settings.region import Region
-
-from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 
 def get_philippies_calibration_settings(ts_set: pd.DataFrame, region=Region.MANILA):

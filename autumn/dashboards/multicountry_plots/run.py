@@ -4,8 +4,8 @@ Streamlit web UI for plotting model outputs
 
 import streamlit as st
 
-from autumn.tools import db
-from autumn.tools.plots.plotter import StreamlitPlotter
+from ... import db
+from autumn.outputs.plots import StreamlitPlotter
 from autumn.utils.params import load_targets
 from dash import selectors
 

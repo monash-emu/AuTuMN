@@ -3,14 +3,14 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-
-from autumn.tools import db, plots
+from .. import db
+from ..outputs import plots
 from autumn.settings import REMOTE_BASE_DIR
 from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.fs import recreate_dir
 from autumn.tools.utils.s3 import upload_to_run_s3, get_s3_client, list_s3, download_from_run_s3
 from autumn.tools.utils.timer import Timer
-from autumn.tools.calibration import Calibration
+from autumn.runners.calibration import Calibration
 
 from .utils import get_project_from_run_id, set_logging_config
 

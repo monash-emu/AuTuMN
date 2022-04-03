@@ -6,6 +6,7 @@ from typing import List
 
 import pandas as pd
 
+
 def _pdfilt(df, fstr):
     m = re.match('(\S*)\s*(<=|>=|==|>|<)\s*(.*)', fstr)
     column, op, value = m.groups()
@@ -23,6 +24,7 @@ def _pdfilt(df, fstr):
         pass
 
     return df[df[column].__getattribute__(op_table[op])(value)]
+
 
 def pdfilt(df: pd.DataFrame, filters: List[str]) -> pd.DataFrame:
     """Return a filtered DataFrame, filtered by strings of form

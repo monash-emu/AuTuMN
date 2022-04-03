@@ -1,7 +1,7 @@
 import numpy as np
 
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.runners.calibration.priors import UniformPrior, TruncNormalPrior, BetaPrior
+from autumn.runners.calibration.targets import NormalTarget
 
 # Specify the general features of the calibration
 target_start_time = 454

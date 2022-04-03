@@ -4,12 +4,14 @@ Miscellaneous helpers used by ManagedRun and its friends
 
 import pandas as pd
 
+
 def website_addr_for_run(run_id: str) -> str:
     """
     Return the autumn-data.com URL for a given run_id
     """
     app, region, ts, sha = run_id.split('/')
     return f"http://autumn-data.com/app/{app}/region/{region}/run/{ts}-{sha}.html"
+
 
 def collate_columns_to_urun(df: pd.DataFrame, drop=False) -> pd.DataFrame:
     """Converts (in place) a concatenated DataFrame with columns ['run', 'chain'] 

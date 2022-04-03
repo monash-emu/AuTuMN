@@ -4,19 +4,17 @@ import matplotlib as mpl
 import matplotlib.patches as patches
 import numpy as np
 import seaborn as sns
-import yaml
 from matplotlib import pyplot
 
 from autumn.projects.covid_19.mixing_optimisation.constants import (
-    DURATION_PHASES_2_AND_3,
     OPTI_REGIONS,
     PHASE_2_DURATION,
     PHASE_2_START_TIME,
 )
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
 from autumn.projects.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
-from autumn.tools.db import Database
-from autumn.tools.db.load import find_db_paths, load_derived_output_tables
+from autumn.db import Database
+from autumn.db import find_db_paths, load_derived_output_tables
 from autumn.settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(

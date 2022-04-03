@@ -1,9 +1,8 @@
 from pathlib import PurePosixPath
 import re
 
-import s3fs
+from autumn import db
 
-from autumn.tools import db
 
 #from summer.utils import ref_times_to_dti
 

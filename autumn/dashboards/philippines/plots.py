@@ -1,17 +1,12 @@
-import os
 from typing import List
 
 import pandas as pd
-from matplotlib import pyplot
 
-from autumn.settings import Region
 from autumn.dashboards.calibration_results.plots import get_uncertainty_df
-from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.tools import plots
-from autumn.tools.streamlit.utils import Dashboard
-from autumn.tools.project import Project
+from autumn.outputs.plots import StreamlitPlotter
+from autumn.outputs.streamlit.utils import Dashboard
 
-from autumn.tools.streamlit import selectors
+from autumn.outputs.streamlit import selectors
 import streamlit as st
 
 
@@ -43,7 +38,7 @@ def plot_model_fits(
     n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
     title_font_size = st.sidebar.slider("Title font size", 1, 30, 12)
     label_font_size = st.sidebar.slider("Label font size", 1, 30, 10)
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+    autumn.outputs.plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         chosen_outputs,
@@ -92,7 +87,7 @@ def plot_multi_scenario_single_run(
     label_font_size = st.sidebar.slider("Label font size", 1, 30, 10)
 
 
-    plots.calibration.plots.plot_multi_output_single_run(
+    autumn.outputs.plots.calibration.plots.plot_multi_output_single_run(
         plotter, mcmc_tables, calib_dir_path, chosen_outputs, selected_scenarios, run_id, x_low, x_up, is_legend, n_xticks, title_font_size, label_font_size
     )
 

@@ -1,5 +1,5 @@
 import numpy as np
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
+from autumn.runners.calibration.priors import UniformPrior, TruncNormalPrior
 
 # Shared priors for mixing optimization calibration.
 PRIORS = [

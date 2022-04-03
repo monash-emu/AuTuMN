@@ -9,9 +9,9 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
     save_figure,
 )
-from autumn.tools.db.load import load_uncertainty_table
-from autumn.tools.plots.uncertainty.plots import _plot_uncertainty
-from autumn.tools.plots.utils import COLORS, _apply_transparency
+from autumn.db import load_uncertainty_table
+from autumn.outputs.plots.uncertainty import _plot_uncertainty
+from autumn.outputs.plots import COLORS, _apply_transparency
 
 end_tb_targets = {
     "mortality": {

@@ -3,8 +3,8 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-
-from autumn.tools import db, plots
+from .. import db
+from ..outputs import plots
 from autumn.settings import REMOTE_BASE_DIR
 from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.fs import recreate_dir

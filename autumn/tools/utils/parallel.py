@@ -9,9 +9,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import List, Callable, Any
 
 logger = logging.getLogger(__name__)
-
-
 MAX_WORKERS = mp.cpu_count() - 1
+
 
 def gather_exc_plus(filename='crash.log'):
     """

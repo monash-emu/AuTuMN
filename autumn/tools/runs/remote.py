@@ -9,6 +9,7 @@ from typing import List
 from autumn import settings
 from autumn.tools.utils import s3
 
+
 class RemoteRunData:
     def __init__(self, run_id: str, client=None):
         """Remote (S3) wrapper for a given run_id

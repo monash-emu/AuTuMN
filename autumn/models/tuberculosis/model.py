@@ -1,9 +1,8 @@
-import numpy as np
 from summer import CompartmentalModel
 
 from autumn.models.tuberculosis.parameters import Parameters
 from autumn.tools.project import Params, build_rel_path
-from autumn.tools.curve import scale_up_function, tanh_based_scaleup
+from autumn.features.curve import scale_up_function, tanh_based_scaleup
 from autumn.tools import inputs
 from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices

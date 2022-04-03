@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.runners.calibration import Calibration
+from autumn.runners.calibration.priors import UniformPrior, TruncNormalPrior
+from autumn.runners.calibration.targets import NormalTarget
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 

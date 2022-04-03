@@ -9,7 +9,7 @@ from summer.flows import (
     DeathFlow,
 )
 
-from autumn.tools.plots.plotter import StreamlitPlotter
+from autumn.outputs.plots import StreamlitPlotter
 from autumn.tools.project import Project
 
 MARKERS = ".spP*D^vxH"

@@ -2,11 +2,11 @@ import json
 import numpy as np
 
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
-from autumn.tools.calibration import Calibration
+from autumn.runners.calibration import Calibration
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.covid_19.victoria.region_calibration import priors, collate_metro_targets
-from autumn.tools.calibration.priors import TruncNormalPrior
+from autumn.runners.calibration.priors import TruncNormalPrior
 
 # Load and configure model parameters
 vic_base_path = build_rel_path("../vic_submodel_params.yml")

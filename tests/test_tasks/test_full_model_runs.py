@@ -5,8 +5,8 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from moto import mock_s3
 
-from autumn.tools.db import ParquetDatabase, FeatherDatabase
-from autumn.tools.db.store import Table
+from autumn.db import ParquetDatabase, FeatherDatabase
+from autumn.db import Table
 from autumn.tasks import full
 from autumn.tasks.full import full_model_run_task
 from autumn import settings as s3_settings

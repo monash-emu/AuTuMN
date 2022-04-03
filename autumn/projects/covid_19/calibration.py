@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.tools.calibration.priors import TruncNormalPrior
+from autumn.runners.calibration.priors import TruncNormalPrior
 
 
 """

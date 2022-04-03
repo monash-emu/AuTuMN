@@ -9,10 +9,10 @@ from autumn.projects.covid_19.mixing_optimisation.serosurvey_by_age.survey_data 
     get_serosurvey_data,
 )
 from autumn.projects.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
-from autumn.tools import db, plots
-from autumn.tools.curve import tanh_based_scaleup
-from autumn.tools.plots.calibration.plots import get_posterior, get_posterior_best_chain
-from autumn.tools.plots.uncertainty.plots import plot_timeseries_with_uncertainty
+from autumn import db
+from autumn.features.curve import tanh_based_scaleup
+from autumn.outputs.plots.calibration.plots import get_posterior, get_posterior_best_chain
+from autumn.outputs.plots.uncertainty import plot_timeseries_with_uncertainty
 from autumn.utils.params import load_targets
 
 
@@ -534,7 +534,7 @@ def make_all_sero_by_age_fits_figures(calibration_outputs):
 
 def make_sero_by_age_fits_figure(uncertainty_df, region, sero_data_by_age):
 
-    fig = plots.uncertainty.plots.plot_seroprevalence_by_age_against_targets(
+    fig = autumn.outputs.plots.uncertainty.plots.plot_seroprevalence_by_age_against_targets(
         None, uncertainty_df, 0, sero_data_by_age, 3
     )
     plt.savefig(f"figures/seroprevalence_by_age/sero_by_age_{region}.pdf")

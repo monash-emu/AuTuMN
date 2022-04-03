@@ -8,17 +8,15 @@ from autumn.tools.project import (
     get_all_available_scenario_paths,
     use_tuned_proposal_sds,
 )
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.runners.calibration import Calibration
+from autumn.runners.calibration.priors import UniformPrior
+from autumn.runners.calibration.targets import NormalTarget
 from autumn.models.sm_sir import (
     base_params,
     build_model,
     set_up_random_process
 )
 from autumn.settings import Region, Models
-
-from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 
 # Load and configure model parameters
 mle_path = build_rel_path("params/mle-params.yml")

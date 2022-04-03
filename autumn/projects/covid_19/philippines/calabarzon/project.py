@@ -1,9 +1,8 @@
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths, use_tuned_proposal_sds
-from autumn.tools.calibration import Calibration
+from autumn.runners.calibration import Calibration
 
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
-import os
 
 from autumn.projects.covid_19.philippines.calibration import get_philippies_calibration_settings
 

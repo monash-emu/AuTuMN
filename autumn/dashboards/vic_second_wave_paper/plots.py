@@ -10,10 +10,9 @@ import yaml
 
 from autumn.models.covid_19.parameters import Country, Population
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
-from autumn.tools import plots
-from autumn.tools.plots.calibration.plots import get_epi_params, calculate_r_hats
-from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.tools.plots.utils import get_plot_text_dict, REF_DATE, change_xaxis_to_date
+from autumn.outputs.plots.calibration.plots import get_epi_params, calculate_r_hats
+from autumn.outputs.plots import StreamlitPlotter
+from autumn.outputs.plots import get_plot_text_dict, REF_DATE, change_xaxis_to_date
 from autumn.settings import Region
 from autumn.dashboards.calibration_results.plots import (
     create_seroprev_csv,
@@ -28,7 +27,7 @@ from autumn.tools.inputs import get_mobility_data
 from autumn.tools.project import get_project
 from autumn.tools import inputs
 
-from autumn.tools.streamlit.utils import create_downloadable_csv, Dashboard
+from autumn.outputs.streamlit.utils import create_downloadable_csv, Dashboard
 
 dash = Dashboard()
 
@@ -80,7 +79,7 @@ def plot_multiple_timeseries_with_uncertainty(
     }
 
     x_low, x_up = STANDARD_X_LIMITS
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+    autumn.outputs.plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         chosen_outputs,
@@ -114,7 +113,7 @@ def plot_regional_outputs(
     ]
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     x_low, x_up = STANDARD_X_LIMITS
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+    autumn.outputs.plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         chosen_outputs,
@@ -299,7 +298,7 @@ def plot_posteriors(
         dpi_request,
         capitalise_first_letter,
     ) = (VIC_BURN_INS, 16, 3, 8, 8, 300, False)
-    plots.calibration.plots.plot_multiple_posteriors(
+    autumn.outputs.plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
         mcmc_tables,
@@ -380,7 +379,7 @@ def plot_param_matrix(
     burn_in, label_font_size, label_chars, bins, style, dpi_request = (
         VIC_BURN_INS, 8, 2, 16, "Shade", 300
     )
-    plots.calibration.plots.plot_param_vs_param(
+    autumn.outputs.plots.calibration.plots.plot_param_vs_param(
         plotter,
         mcmc_params,
         mcmc_tables,
@@ -509,7 +508,7 @@ def plot_key_param_traces(
     title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = (
         8, 6, 300, False, VIC_BURN_INS,
     )
-    plots.calibration.plots.plot_multiple_param_traces(
+    autumn.outputs.plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
         mcmc_tables,
@@ -542,7 +541,7 @@ def plot_epi_param_traces(
         False,
         0,
     )
-    plots.calibration.plots.plot_multiple_param_traces(
+    autumn.outputs.plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
         mcmc_tables,
@@ -575,7 +574,7 @@ def plot_contact_param_traces(
         False,
         0,
     )
-    plots.calibration.plots.plot_multiple_param_traces(
+    autumn.outputs.plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
         mcmc_tables,
@@ -603,7 +602,7 @@ def plot_seroprev_age_and_cluster(
 
     uncertainty_df = get_uncertainty_db(mcmc_tables, targets, calib_dir_path)
     selected_scenario, time = 0, 275
-    _, seroprevalence_by_age, overall_seroprev = plots.uncertainty.plots.plot_vic_seroprevalences(
+    _, seroprevalence_by_age, overall_seroprev = autumn.outputs.plots.uncertainty.plots.plot_vic_seroprevalences(
         plotter,
         uncertainty_df,
         selected_scenario,
@@ -677,7 +676,7 @@ def plot_cdr_curves(
             )
         )
 
-    plots.calibration.plots.plot_cdr_curves(
+    autumn.outputs.plots.calibration.plots.plot_cdr_curves(
         plotter,
         times,
         detected_proportion,
@@ -713,7 +712,7 @@ def plot_scenarios_multioutput(
         "prevalence", "prop_detected_traced", "prop_contacts_with_detected_index", "prop_contacts_quarantined"
     ]
 
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+    autumn.outputs.plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         scenario_outputs,
@@ -761,7 +760,7 @@ def plot_worse_scenarios_multioutput(
         "max surge ICU capacity": 1665,
     }
 
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+    autumn.outputs.plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         scenario_outputs,
@@ -802,7 +801,7 @@ def plot_good_scenarios_multioutput(
 
     scenario_outputs = ["notifications", "infection_deaths", "hospital_admissions", "icu_occupancy"]
 
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+    autumn.outputs.plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         scenario_outputs,
@@ -841,7 +840,7 @@ def plot_school_scenario_multioutput(
 
     scenario_outputs = ["notifications", "infection_deaths", "hospital_admissions", "icu_occupancy"]
 
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+    autumn.outputs.plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         scenario_outputs,

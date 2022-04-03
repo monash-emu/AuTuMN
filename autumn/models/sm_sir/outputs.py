@@ -2,7 +2,7 @@ from scipy import stats
 from typing import List, Dict, Optional, Union
 import numpy as np
 
-from autumn.tools.utils.outputsbuilder import OutputsBuilder
+from autumn.outputs.derivation.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
 from autumn.tools.utils.utils import weighted_average, get_apply_odds_ratio_to_prop

@@ -7,14 +7,11 @@
 #
 
 import pandas as pd
-import numpy as np
 
-from pathlib import PurePosixPath, Path
+from pathlib import PurePosixPath
 
 from datetime import datetime
 from time import time
-
-import pickle
 
 from autumn.tools.runs.managed import ManagedRun
 
@@ -27,7 +24,7 @@ from summer.utils import ref_times_to_dti
 
 from autumn.models.covid_19.model import BASE_DATE
 
-from autumn.tools.db import uncertainty
+from autumn.db import uncertainty
 
 from autumn.tools.runs.utils import collate_columns_to_urun
 

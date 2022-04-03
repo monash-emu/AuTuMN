@@ -3,12 +3,11 @@ from datetime import datetime
 import streamlit as st
 from matplotlib import pyplot
 
-from autumn.tools import plots
 from autumn.tools.inputs import get_mobility_data
-from autumn.tools.plots.plotter import StreamlitPlotter
+from autumn.outputs.plots import StreamlitPlotter
 from autumn.dashboards.model_internals.flow_graph import plot_flow_graph
 from autumn.tools.project import Project
-from autumn.tools.streamlit.utils import Dashboard
+from autumn.outputs.streamlit.utils import Dashboard
 
 BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)
 
@@ -23,7 +22,7 @@ def plot_flow_params(plotter: StreamlitPlotter, project: Project):
     flows = [f for f in model._flows if f.name == flow_name]
     is_logscale = st.sidebar.checkbox("Log scale")
     flow_funcs = [f.get_weight_value for f in flows]
-    plots.model.plots.plot_time_varying_input(
+    autumn.outputs.plots.model.plots.plot_time_varying_input(
         plotter, f"flow-weights-{flow_name}", flow_funcs, model.times, is_logscale
     )
     t = st.slider("Time", min_value=0, max_value=int(model.times[-1]))
@@ -56,7 +55,7 @@ def plot_model_targets(plotter: StreamlitPlotter, project: Project):
     target = target_name_lookup[title]
     is_logscale = st.sidebar.checkbox("Log scale")
     xaxis_date = project.model_name == "covid_19"
-    plots.model.plots.plot_outputs_single(
+    autumn.outputs.plots.model.plots.plot_outputs_single(
         plotter,
         model,
         target,
@@ -78,7 +77,7 @@ def plot_model_multi_targets(plotter: StreamlitPlotter, project: Project):
 
         is_logscale = st.sidebar.checkbox("Log scale")
 
-        plots.model.plots.plot_multi_targets(plotter, model, target_list, is_logscale)
+        autumn.outputs.plots.model.plots.plot_multi_targets(plotter, model, target_list, is_logscale)
 
 
 dash.register("Flow graph")(plot_flow_graph)
@@ -89,7 +88,7 @@ def plot_multi_age_distribution(plotter: StreamlitPlotter, project: Project):
     iso3 = ISO3_MAP[project.region_name]
     if project.region_name is "philippines":
         sub_region = [None, "Metro Manila", "Calabarzon", "Central Visayas"]
-        plots.model.plots.plot_multi_age_distribution(plotter, sub_region, iso3)
+        autumn.outputs.plots.model.plots.plot_multi_age_distribution(plotter, sub_region, iso3)
     else:
         st.write("This region has no sub  regions")
 
@@ -103,7 +102,7 @@ def plot_age_distribution(plotter: StreamlitPlotter, project: Project):
         sub_region = SUB_REGION_MAP[project.region_name]
     else:
         sub_region = None
-    plots.model.plots.plot_age_distribution(plotter, sub_region, iso3)
+    autumn.outputs.plots.model.plots.plot_age_distribution(plotter, sub_region, iso3)
 
 
 @dash.register("Dynamic mixing matrix")
@@ -122,14 +121,14 @@ def plot_mixing_matrix(plotter: StreamlitPlotter, project: Project):
     iso3 = project.param_set.baseline.to_dict()["country"]["iso3"]
     param_names = sorted(list(("all_locations", "home", "other_locations", "school", "work")))
     param_name = st.sidebar.selectbox("Select parameter", param_names)
-    plots.model.plots.plot_mixing_matrix(plotter, param_name, iso3)
+    autumn.outputs.plots.model.plots.plot_mixing_matrix(plotter, param_name, iso3)
 
 
 @dash.register("All mixing matrices")
 def plot_all_mixing_matrices(plotter: StreamlitPlotter, project: Project):
 
     iso3 = project.param_set.baseline.to_dict()["country"]["iso3"]
-    plots.model.plots.plot_mixing_matrix_2(plotter, iso3)
+    autumn.outputs.plots.model.plots.plot_mixing_matrix_2(plotter, iso3)
 
 
 @dash.register("Time variant functions")
@@ -141,7 +140,7 @@ def plot_dynamic_inputs(plotter: StreamlitPlotter, project: Project):
     tv_key = st.sidebar.selectbox("Select function", tv_options)
     is_logscale = st.sidebar.checkbox("Log scale")
     tv_func = tvs[tv_key]
-    plots.model.plots.plot_time_varying_input(plotter, tv_key, tv_func, model.times, is_logscale)
+    autumn.outputs.plots.model.plots.plot_time_varying_input(plotter, tv_key, tv_func, model.times, is_logscale)
 
 
 @dash.register("Google Mobility Raw")
@@ -157,7 +156,7 @@ def plot_mobility_raw(plotter: StreamlitPlotter, project: Project):
     loc_key = st.sidebar.selectbox("Select location", options)
     values_lookup = {days[i]: values[loc_key][i] for i in range(len(days))}
     loc_func = lambda t: values_lookup[t]
-    plots.model.plots.plot_time_varying_input(plotter, loc_key, loc_func, days, is_logscale=False)
+    autumn.outputs.plots.model.plots.plot_time_varying_input(plotter, loc_key, loc_func, days, is_logscale=False)
 
 
 @dash.register("Google Mobility multi-location")
@@ -169,7 +168,7 @@ def plot_multilocation_mobility(plotter: StreamlitPlotter, project: Project):
         BASE_DATE,
         params["mobility"]["google_mobility_locations"],
     )
-    plots.model.plots.plot_time_varying_multi_input(plotter, values, days, is_logscale=False)
+    autumn.outputs.plots.model.plots.plot_time_varying_multi_input(plotter, values, days, is_logscale=False)
 
 
 ISO3_MAP = {

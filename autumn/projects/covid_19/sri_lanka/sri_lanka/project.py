@@ -10,8 +10,6 @@ from autumn.tools.calibration.targets import (
 )
 from autumn.models.covid_19 import base_params, build_model
 from autumn.settings import Region, Models
-
-from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
 from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_all_scenario_dicts
 
 # Load and configure model parameters.

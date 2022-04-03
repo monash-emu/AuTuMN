@@ -18,8 +18,6 @@ from autumn.models.sm_sir import (
 )
 from autumn.settings import Region, Models
 
-from autumn.projects.covid_19.calibration import COVID_GLOBAL_PRIORS
-
 # Load and configure model parameters
 mle_path = build_rel_path("params/mle-params.yml")
 scenario_dir_path = build_rel_path("params/")

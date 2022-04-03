@@ -1,7 +1,0 @@
-description: no further vaccination
-
-vaccination:
-  one_dose:
-    coverage:
-      times: []
-      values: []

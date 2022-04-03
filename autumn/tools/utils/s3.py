@@ -2,7 +2,6 @@ import glob
 import logging
 import os
 from pathlib import PurePath
-
 import boto3
 from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ProfileNotFound
@@ -124,6 +123,7 @@ def list_s3(client, key_prefix: str, key_suffix: str = None):
     else:
         return [o["Key"] for o in objs]
 
+
 def download_s3(client, src_key, dest_path):
     """Downloads a file from AWS S3"""
     logger.info("Downloading from %s to %s", src_key, dest_path)
@@ -188,6 +188,7 @@ MIME_MAP = {
     "yml": "text/x-yaml"
 }
 
+
 def get_mime_args(src_path):
     extension = src_path.split(".")[-1]
     mime_type = MIME_MAP.get(extension)
@@ -197,6 +198,7 @@ def get_mime_args(src_path):
     else:
         extra_args = S3_UPLOAD_EXTRA_ARGS
     return extra_args
+
 
 def sanitise_path(path):
     """

@@ -2,9 +2,9 @@ from functools import lru_cache
 
 import numpy as np
 
-from autumn.tools.inputs.database import get_input_db
-from autumn.tools.inputs.demography.queries import get_population_by_agegroup
-from autumn.tools.inputs.social_mixing.build_synthetic_matrices import convert_matrices_agegroups
+from autumn.inputs.database import get_input_db
+from autumn.inputs.demography.queries import get_population_by_agegroup
+from autumn.inputs.social_mixing.build_synthetic_matrices import convert_matrices_agegroups
 
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
 MAPPING_ISO_CODE = {

@@ -13,7 +13,7 @@ from pathlib import PurePosixPath
 from datetime import datetime
 from time import time
 
-from autumn.tools.runs.managed import ManagedRun
+from autumn.runs.managed import ManagedRun
 
 import s3fs
 
@@ -26,7 +26,7 @@ from autumn.models.covid_19.model import BASE_DATE
 
 from autumn.db import uncertainty
 
-from autumn.tools.runs.utils import collate_columns_to_urun
+from autumn.runs import collate_columns_to_urun
 
 def as_ordinal_runs(do_df):
     do_df = collate_columns_to_urun(do_df, True)

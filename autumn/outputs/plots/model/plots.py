@@ -11,8 +11,8 @@ import seaborn as sns
 from matplotlib import pyplot
 from summer import Compartment
 
-from autumn.tools.inputs.demography.queries import get_population_by_agegroup
-from autumn.tools.inputs.social_mixing.queries import get_country_mixing_matrix
+from autumn.inputs.demography.queries import get_population_by_agegroup
+from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
 from autumn.outputs.plots.plotter import COLOR_THEME, Plotter
 from autumn.outputs.plots.utils import (
     REF_DATE,

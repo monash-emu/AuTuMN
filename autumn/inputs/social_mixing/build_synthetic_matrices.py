@@ -4,9 +4,8 @@ from copy import copy
 import numpy as np
 
 from autumn.settings.folders import INPUT_DATA_PATH
-from autumn.tools.inputs.social_mixing.constants import LOCATIONS
-from autumn.tools.inputs import get_population_by_agegroup
-from autumn.tools.inputs.demography.queries import _check_age_breakpoints
+from autumn.inputs.social_mixing.constants import LOCATIONS
+from autumn.inputs.demography.queries import get_population_by_agegroup, _check_age_breakpoints
 
 SOURCE_MATRICES_PATH = os.path.join(INPUT_DATA_PATH, "social-mixing", "socialmixr_outputs")
 

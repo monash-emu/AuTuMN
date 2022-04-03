@@ -3,7 +3,7 @@ from datetime import date, datetime
 import numpy as np
 import pandas as pd
 
-from autumn.tools.inputs.database import get_input_db
+from autumn.inputs.database import get_input_db
 from autumn.tools.utils.utils import apply_moving_average, COVID_BASE_DATETIME
 
 COVID_BASE_DATE = date(2019, 12, 31)

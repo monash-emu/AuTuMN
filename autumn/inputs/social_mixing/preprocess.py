@@ -7,7 +7,7 @@ import pandas as pd
 
 from autumn.db import Database
 from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.inputs.social_mixing.constants import LOCATIONS
+from autumn.inputs.social_mixing.constants import LOCATIONS
 
 MIXING_DIRPATH = os.path.join(INPUT_DATA_PATH, "social-mixing")
 SHEET_NUMBERS = [("1", 0), ("2", None)]

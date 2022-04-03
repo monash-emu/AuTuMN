@@ -1,9 +1,9 @@
 from summer import CompartmentalModel
 
 from autumn.settings.region import Region
-from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
+from autumn.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.models.covid_19.constants import Vaccination
-from autumn.tools import inputs
+from autumn.inputs.demography.queries import get_population_by_agegroup
 from autumn.tools.project import Params, build_rel_path
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data, CdrProc
 from autumn.models.covid_19.utils import calc_compartment_periods
@@ -71,7 +71,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     init_pop = {comp: seed * compartment_periods[comp] / total_disease_time for comp in DISEASE_COMPARTMENTS}
 
     # Get country population by age-group
-    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, pop.year)
+    total_pops = get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())

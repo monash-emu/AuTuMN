@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.tools.inputs.database import get_input_db
+from autumn.inputs.database import get_input_db
 from autumn.tools.utils.utils import apply_moving_average
 
 

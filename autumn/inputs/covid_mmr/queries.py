@@ -1,4 +1,4 @@
-from autumn.tools.inputs.database import get_input_db
+from autumn.inputs.database import get_input_db
 
 
 def get_mmr_testing_numbers():

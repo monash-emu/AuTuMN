@@ -6,7 +6,7 @@ from autumn.models.covid_19.parameters import MicroDistancingFunc
 from autumn.models.covid_19.constants import LOCATIONS
 from autumn.features.curve import scale_up_function, tanh_based_scaleup
 from autumn.tools.utils.utils import return_constant_value, get_product_two_functions
-from autumn.tools.inputs.covid_survey.queries import get_percent_mc
+from autumn.inputs.covid_survey.queries import get_percent_mc
 
 
 ADJUSTER_SUFFIX = "_adjuster"

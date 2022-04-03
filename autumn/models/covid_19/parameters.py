@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from autumn.models.covid_19.constants import BASE_DATE, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS, Strain
 from autumn.settings.region import Region
-from autumn.tools.inputs.social_mixing.constants import LOCATIONS
+from autumn.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid

@@ -5,12 +5,12 @@ import numpy as np
 import pytest
 
 from autumn.db import Database
-from autumn.tools.inputs import database as input_database
-from autumn.tools.inputs import (
-    get_country_mixing_matrix, get_crude_birth_rate, get_death_rates_by_agegroup, get_life_expectancy_by_agegroup,
-    get_population_by_agegroup,
+from autumn.inputs import database as input_database
+from autumn.inputs.demography.queries import (
+    get_crude_birth_rate, get_death_rates_by_agegroup, get_life_expectancy_by_agegroup, get_population_by_agegroup,
 )
-from autumn.tools.inputs.demography.queries import downsample_quantity, downsample_rate
+from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
+from autumn.inputs.demography.queries import downsample_quantity, downsample_rate
 from autumn.models.covid_19.mixing_matrix.macrodistancing import get_mobility_data, weight_mobility_data
 
 

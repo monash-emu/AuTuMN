@@ -6,7 +6,7 @@ from pandas.testing import assert_frame_equal
 from moto import mock_s3
 
 from autumn.db import ParquetDatabase, ParquetDatabase
-from autumn.db import Table
+from autumn.db.store import Table
 from autumn.tasks import calibrate
 from autumn.tasks.calibrate import calibrate_task
 from autumn import settings as s3_settings

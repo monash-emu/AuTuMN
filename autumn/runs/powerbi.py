@@ -3,7 +3,7 @@ from pathlib import Path
 from summer.utils import ref_times_to_dti
 
 from autumn.models.covid_19.constants import BASE_DATETIME
-from ... import db
+from autumn import db
 
 from.utils import collate_columns_to_urun
 

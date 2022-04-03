@@ -3,7 +3,7 @@ import yaml
 
 from autumn import db
 
-from autumn.tools.runs.utils import collate_columns_to_urun
+from autumn.runs.utils import collate_columns_to_urun
 
 class ManagedCalibrationRun:
     def __init__(self, manager):

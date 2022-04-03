@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
-from autumn.tools.inputs.covid_au.queries import COVID_BASE_DATETIME
-from autumn.tools.inputs.database import get_input_db
+from autumn.inputs.covid_au.queries import COVID_BASE_DATETIME
+from autumn.inputs.database import get_input_db
 from autumn.tools.utils.utils import apply_moving_average
 
 

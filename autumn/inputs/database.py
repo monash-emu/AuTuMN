@@ -8,7 +8,6 @@ from autumn.tools.utils.timer import Timer
 from .covid_au.preprocess import preprocess_covid_au
 from .covid_phl.preprocess import preprocess_covid_phl
 from .covid_lka.preprocess import preprocess_covid_lka
-from .covid_vnm.preprocess import preprocess_covid_vnm
 from .covid_mmr.preprocess import preprocess_covid_mmr
 from .covid_bgd.preprocess import preprocess_covid_bgd
 from .covid_survey.preprocess import preprocess_covid_survey

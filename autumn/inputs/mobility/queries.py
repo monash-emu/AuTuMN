@@ -1,7 +1,7 @@
 from datetime import datetime
 import pandas as pd
 
-from autumn.tools.inputs.database import get_input_db
+from autumn.inputs.database import get_input_db
 
 
 def get_mobility_data(country_iso_code: str, region: str, base_date: datetime):

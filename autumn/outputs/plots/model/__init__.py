@@ -6,7 +6,7 @@ import pandas as pd
 from autumn import db
 from autumn.outputs.plots.model import plots
 from autumn.outputs.plots.plotter import FilePlotter
-from autumn.db import select_outputs_from_candidates, target_to_series
+from autumn.db.process import select_outputs_from_candidates, target_to_series
 from autumn.outputs.plots.utils import REF_DATE
 
 from . import plots

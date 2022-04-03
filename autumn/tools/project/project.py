@@ -16,7 +16,7 @@ import numpy as np
 from summer.model import CompartmentalModel
 from summer.derived_outputs import DerivedOutputRequest
 
-from autumn.db import (
+from autumn.db.store import (
     save_model_outputs,
     build_outputs_table,
     build_derived_outputs_table,

@@ -494,7 +494,6 @@ def get_vaccination_rate_jit(end_times, vaccination_rates, time):
 def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) -> Callable:
     """
     Turn the vaccination rates and end times into a piecewise roll-out function.
-    Called by the Victoria progressive vaccination coverage function and by the more generalisable standard vacc
     coverage function, which are responsible for calculating the rates based on the coverage values at the requested
     points in time.
 

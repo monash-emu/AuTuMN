@@ -136,22 +136,6 @@ NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the oth
 
 
 """
-Vic model options.
-"""
-
-
-class VicModelTypes:
-    NON_VIC = "non_vic"
-    VIC_REGION_2021 = "vic_region_2021"
-
-
-VIC_MODEL_OPTIONS = [
-    VicModelTypes.NON_VIC,
-    VicModelTypes.VIC_REGION_2021,
-]
-
-
-"""
 Mobility-related.
 """
 

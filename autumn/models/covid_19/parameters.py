@@ -358,10 +358,6 @@ class RollOutFunc(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
-        components = values.get("supply_period_coverage"), values.get("vic_supply")
-        has_supply = [int(bool(i_comp)) for i_comp in components]
-        msg = f"Roll out request must have exactly one type of request: {sum(has_supply)} requests"
-        assert sum(has_supply) == 1, msg
         if "age_min" in values:
             assert 0. <= values["age_min"], f"Minimum age is negative: {values['age_min']}"
         if "age_max" in values:

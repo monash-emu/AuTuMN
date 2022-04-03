@@ -494,7 +494,6 @@ def get_vaccination_rate_jit(end_times, vaccination_rates, time):
 def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) -> Callable:
     """
     Turn the vaccination rates and end times into a piecewise roll-out function.
-    Called by the Victoria progressive vaccination coverage function and by the more generalisable standard vacc
     coverage function, which are responsible for calculating the rates based on the coverage values at the requested
     points in time.
 
@@ -514,53 +513,6 @@ def get_piecewise_rollout(end_times: np.ndarray, vaccination_rates: np.ndarray) 
         return get_vaccination_rate_jit(end_times, vaccination_rates, time)
 
     return get_vaccination_rate
-
-
-def add_vic_regional_vacc(model: CompartmentalModel, vacc_params: VaccParams, cluster: str, model_start_time: float):
-    """
-    Apply vaccination to the Victoria regional cluster models.
-    This function may change and is quite bespoke to the application, so not tidied up yet.
-
-    Args:
-        model: The model to have the vaccination flows added to it
-        vacc_params: All the user requests regarding vaccination
-        cluster: The name of the Victorian cluster we are working with
-
-    """
-
-    # Track all the age groups we have applied vaccination to as we loop over components with different age requests
-    all_eligible_agegroups = []
-    roll_out_params = vacc_params.roll_out_components[0].vic_supply
-    age_breaks = roll_out_params.age_breaks
-    for i_age, age_min in enumerate(age_breaks):
-        age_max = VACC_COVERAGE_END_AGES[-1] if i_age == len(age_breaks) - 1 else age_breaks[i_age + 1]
-        working_agegroups = get_eligible_age_groups(age_min, age_max)
-        all_eligible_agegroups += working_agegroups
-
-        # Get the cluster-specific historical vaccination data
-        close_age_min = find_closest_value_in_list(VACC_COVERAGE_START_AGES, age_min)
-        close_age_max = find_closest_value_in_list(VACC_COVERAGE_END_AGES, age_max)
-        cov_times, cov_values = get_both_vacc_coverage(cluster.upper(), start_age=close_age_min, end_age=close_age_max)
-        cov_times = cov_times + vacc_params.lag
-
-        model_start_vacc_idx = next(i_time for i_time, time in enumerate(cov_times) if time > model_start_time)
-        trunc_cov_times = np.insert(cov_times[model_start_vacc_idx:], 0, model_start_time)
-        trunc_cov_values = np.insert(cov_values[model_start_vacc_idx:], 0, 0.)
-
-        # The first age group should be adjusted for partial coverage of that age group
-        if i_age == 0:
-            trunc_cov_values *= (close_age_max - close_age_min) / (age_max - age_min)
-
-        # Get the vaccination rate function of time
-        rollout_end_times, vaccination_rates = get_piecewise_vacc_rates(trunc_cov_times, trunc_cov_values)
-
-        # Apply the vaccination rate function to the model
-        vacc_rate_func = get_piecewise_rollout(rollout_end_times, vaccination_rates)
-        apply_vacc_flows(model, working_agegroups, vacc_rate_func)
-
-    # Add blank/zero flows to make the output requests simpler
-    ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
-    apply_vacc_flows(model, ineligible_ages, 0.0)
 
 
 def apply_standard_vacc_coverage(

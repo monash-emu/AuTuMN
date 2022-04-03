@@ -12,8 +12,6 @@ from autumn.tasks.utils import get_project_from_run_id
 from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from autumn.tools.utils.timer import Timer
 
-from autumn.tools.runs import ManagedRun
-
 logger = logging.getLogger(__name__)
 
 POWERBI_PLOT_DIR = os.path.join(REMOTE_BASE_DIR, "plots", "uncertainty")

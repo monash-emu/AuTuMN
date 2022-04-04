@@ -6,6 +6,7 @@ lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from Ap
                   "What if lockdown was initiated from July 10 - Oct 01", "No vaccination",
                   "Slower increase in mobility after lockdown ends on 01st October",
                   "Faster increase in mobility after lockdown ends on 01st October"]
+scenario_end_time = [762, 762, 762, 762, 762, 762]
 
 
 def get_vaccine_roll_out(lockdown_scenario):
@@ -35,7 +36,7 @@ def get_all_scenario_dicts(country: str):
     for i_lockdown_scenario in [*range(0, num_scenarios)]:
 
         scenario_dict = {
-            "time": {"start": scenario_start_time[i_lockdown_scenario]},
+            "time": {"start": scenario_start_time[i_lockdown_scenario], "end": scenario_end_time[i_lockdown_scenario]},
             "description": "scenario:"+f"{i_lockdown_scenario+1}" + f" {lockdown_title[i_lockdown_scenario]}",
             "mobility": {"mixing": {}},
             "vaccination": {"roll_out_components": []}

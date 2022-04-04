@@ -37,6 +37,10 @@ priors = [
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.01, 0.08)),
 ]
 
+# Not sure about this
+notif_change = notifications_ts.diff()
+notif_change_smoothed = notif_change.rolling(window=7).mean().dropna()
+
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(hospital_admissions_ts),

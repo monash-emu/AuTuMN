@@ -1,11 +1,9 @@
 import os
 import json
-from typing import List, Union
+import pandas as pd
 
-import numpy as np
 from autumn.tools.utils.secrets import check_hash
 
-import pandas as pd
 
 def load_timeseries(path: str):
     assert path.endswith(".json"), "Timeseries can only load JSON files (.json)"
@@ -25,9 +23,10 @@ def load_timeseries(path: str):
     out_dict = {}
     
     for k, v in data.items():
-        out_dict[k] = pd.Series(data=v['values'],index=v['times'], name=v['output_key'])
+        out_dict[k] = pd.Series(data=v['values'], index=v['times'], name=v['output_key'])
 
     return out_dict
+
 
 MISSING_MESSAGE = """
 

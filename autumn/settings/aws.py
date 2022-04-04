@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class EC2InstanceState:
     pending = "pending"
     running = "running"
@@ -20,6 +21,7 @@ class EC2InstanceState:
     def is_live(state):
         return state in EC2InstanceState.LIVE_STATES
 
+
 class EC2Instance:
     def __init__(self, cores: int, ram: int):
         self.cores = cores
@@ -28,10 +30,12 @@ class EC2Instance:
     def __repr__(self):
         return f"{self.cores} cores, {self.ram} Gb RAM"
 
+
 class EC2InstanceCategory:
     GENERAL = "general"
     MEMORY = "memory"
     COMPUTE = "compute"
+
 
 EC2_INSTANCE_SPECS = {
     EC2InstanceCategory.GENERAL: {

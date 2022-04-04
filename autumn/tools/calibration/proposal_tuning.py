@@ -1,4 +1,3 @@
-# from math import exp, log
 from numpy import mean, exp, log
 
 

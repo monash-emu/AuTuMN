@@ -1,8 +1,0 @@
-description: boosting
-
-time:
-  start: 732
-  end: 1097
-
-vaccination:
-  boost_delay: 180.

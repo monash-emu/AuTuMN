@@ -64,19 +64,7 @@ def preproces_mys_data():
                     df.reset_index(inplace=True)
                 if file in {"cases_malaysia", "deaths_malaysia", "hospital", "icu"}:
                     df = df[df.date_index >= 50]
-                    update_timeseries(TARGETS[region], df, REGION_PATH[region])
                     update_timeseries(TARGETS[region], df, SM_SIR_PATH[region])
-
-            elif file not in {"cases_malaysia", "deaths_malaysia"}:
-                if region not in {"penang", "kuala_lumpur"}:
-                    df = df[df.state.str.lower() == region]
-                if region == "penang":
-                    df = df[df.state.str.lower() == "pulau pinang"]
-                if region == "kuala_lumpur":
-                    df = df[df.state.str.lower() == "w.p. kuala lumpur"]
-                df = df[df.date_index >= 50]
-                update_timeseries(TARGETS[region], df, REGION_PATH[region])
-
 
 fetch_mys_data()
 preproces_mys_data()

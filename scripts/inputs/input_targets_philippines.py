@@ -19,8 +19,8 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 
 # shareable google drive links
-PHL_doh_link = "1ZWhiQoW8qBQIr6H5ZBC6a-F3rayEWumZ"  # sheet 05 daily report
-PHL_fassster_link = "1GwSgL2nsmWGX1Y-L8xiCPsEBrAMTPcrT"
+PHL_doh_link = "1eFxmF6n4TWBqxzuEFGBg65V3j-OwQZPj"  # sheet 05 daily report
+PHL_fassster_link = "1Ucpz2iBMhsIr7nk-t5QD8JpudtNhGs5c"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
@@ -230,13 +230,15 @@ def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, file_path):
 
 
 def update_calibration_phl():
+
+    # Only manila/NCR used by sm_sir model
     phl_regions = [
-        "calabarzon",
-        "central_visayas",
+        #"calabarzon",
+        #"central_visayas",
         "manila",
         # "davao_city",
-        "davao_region",
-        "philippines",
+        #"davao_region",
+        #"philippines",
     ]
     # read in csvs
     icu_occ = pd.read_csv(icu_o_dest)
@@ -249,17 +251,12 @@ def update_calibration_phl():
         deaths_tmp = deaths.loc[deaths["Region"] == region]
         notifications_tmp = notifications.loc[notifications["Region"] == region]
         hosp_tmp = hosp_occ.loc[hosp_occ["region"] == region]
-        COVID_PHL_TS = os.path.join(
-            PROJECTS_PATH, "covid_19", "philippines", region, "timeseries.json"
-        )
-        write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, COVID_PHL_TS)
 
         SM_SIR_NCR_TS = os.path.join(
             PROJECTS_PATH, "sm_sir", "philippines", "national-capital-region", "timeseries.json"
         )
 
-        if region == "manila":
-            write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, SM_SIR_NCR_TS)
+        write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, SM_SIR_NCR_TS)
 
 
 def remove_files(filePath1):

@@ -6,7 +6,7 @@ lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from Ap
                   "What if lockdown was initiated from July 10 - Oct 01", "No vaccination",
                   "Slower increase in mobility after lockdown ends on 01st October",
                   "Faster increase in mobility after lockdown ends on 01st October"]
-scenario_end_time = [762, 762, 762, 762, 762, 762]
+scenario_end_time = [791, 791, 791, 791, 791, 791]
 
 
 def get_vaccine_roll_out(lockdown_scenario):

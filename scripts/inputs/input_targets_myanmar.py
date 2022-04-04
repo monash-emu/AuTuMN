@@ -17,7 +17,7 @@ from autumn.tools.utils.utils import update_timeseries, create_date_index
 COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 
 
-COVID_MMR_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "myanmar", "timeseries.json")
+#COVID_MMR_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "myanmar", "timeseries.json")
 SM_SIR_PATH = os.path.join(PROJECTS_PATH, "sm_sir", "myanmar", "myanmar", "timeseries.json")
 COVID_MMR_DATA = os.path.join(INPUT_DATA_PATH, "covid_mmr", "cases.csv")
 
@@ -38,5 +38,5 @@ mmr_df[str_col] = mmr_df[str_col].apply(pd.to_numeric)
 mmr_df["Date"] = pd.to_datetime(mmr_df["Date"])
 mmr_df = create_date_index(COVID_BASE_DATETIME, mmr_df, "Date")
 
-update_timeseries(TARGETS, mmr_df, COVID_MMR_TARGETS)
+#update_timeseries(TARGETS, mmr_df, COVID_MMR_TARGETS)
 update_timeseries(TARGETS, mmr_df, SM_SIR_PATH)

@@ -16,7 +16,7 @@ from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_al
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-#scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 2)]
+
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 all_scenario_dicts = get_all_scenario_dicts("LKA")
@@ -25,7 +25,7 @@ scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_d
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
-notifications_ts = ts_set.get("notifications").truncate_start_time(350).moving_average(window=7).downsample(step=7)
+notifications_ts = ts_set.get("notifications").truncate_start_time(350)
 death_ts = ts_set.get("infection_deaths").truncate_start_time(350)
 targets = [
     NormalTarget(notifications_ts),
@@ -36,22 +36,25 @@ priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,
     # Regional parameters
-    UniformPrior("contact_rate", [0.03, 0.05]),
+    UniformPrior("contact_rate", [0.02, 0.05]),
     UniformPrior("infectious_seed", [450, 500]),
     # Detection
     UniformPrior("infection_fatality.multiplier", [0.1, 1.0]),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.01]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.02]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.9]),
+    UniformPrior("hospital_reporting", [0.25, 0.75]),
     TruncNormalPrior("clinical_stratification.props.symptomatic.multiplier",
-                mean =0.5,
-                stdev=0.15,
+                mean =1.0,
+                stdev=0.3,
                 trunc_range=[0.3, np.inf],
     ),
     #VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [400, 470]),
     UniformPrior("voc_emergence.delta.start_time", [515, 550]),
-    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [1.0, 4.5]),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [1.0, 10.5]),
+    UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [0.5, 5.0]),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", [0.5, 10.0]),
+    #waning
+    UniformPrior("history.natural_immunity_duration", [365, 475])
 ]
 
 # Load proposal sds from yml file

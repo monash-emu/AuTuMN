@@ -28,7 +28,7 @@ age_groups:
 
 time:
   start: 390.
-  end: 600.
+  end: 900.
 
 activate_random_process: false
 

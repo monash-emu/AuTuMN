@@ -31,15 +31,51 @@ deaths_ts = ts_set["infection_deaths"].loc[targets_start:]
 late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 
 
-def find_increment(input_series):
-
-    is_numpy = type(input_series) == np.ndarray
-    working_series = pd.Series(input_series) if is_numpy else input_series
-    working_series = working_series.diff()
-    return working_series.to_numpy() if is_numpy else working_series
+def get_diff(series):
+    return series.diff().rolling(window=7).mean()
 
 
-ts_set["notif_change"] = find_increment(ts_set["notifications"])
+def wrap_function_for_series(process_to_apply):
+    """
+    Apply a function to a pandas series that can cope with the series coming in either directly as pandas or as a numpy
+    array.
+
+    Args:
+        process_to_apply: A function that can be applied to a pandas series
+
+    Returns:
+        The processed series
+
+    """
+
+    def apply_function_to_series(input_series):
+        """
+        The function that can be applied directly to the series data.
+
+        Args:
+            input_series: Pandas or numpy array, either the input timeseries or the equivalent model derived value
+
+        Returns:
+            Function that can be applied to either pandas or numpy
+
+        """
+
+        # Find the input format
+        is_numpy = type(input_series) == np.ndarray
+        working_series = pd.Series(input_series) if is_numpy else input_series
+
+        # The actual manipulation to the series
+        working_series = process_to_apply(working_series)
+
+        # Return in the appropriate format
+        return working_series.to_numpy() if is_numpy else working_series
+
+    return apply_function_to_series
+
+
+processed_output = "notif_change"
+
+ts_set[processed_output] = wrap_function_for_series(get_diff)(ts_set["notifications"])
 
 
 priors = [
@@ -73,8 +109,8 @@ with open(plot_spec_filepath) as f:
 def custom_build_model(param_set, build_options=None):
     model = build_model(param_set, build_options)
     model.request_function_output(
-        "notif_change",
-        find_increment,
+        processed_output,
+        wrap_function_for_series(get_diff),
         ["notifications"],
     )
     return model

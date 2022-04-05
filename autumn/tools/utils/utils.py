@@ -8,6 +8,7 @@ import subprocess as sp
 import os
 import numpy
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from typing import List, Union, Callable, Dict, Optional
 
@@ -487,3 +488,45 @@ class FunctionWrapper(ComputedValueProcessor):
 
     def process(self, compartment_values, computed_values, time):
         return self.wrapped_function(time, computed_values)
+
+
+def wrap_function_for_series(
+        process_to_apply: callable
+) -> callable:
+    """
+    Apply a function to a pandas series that can cope with the series coming in either directly as pandas or as a numpy
+    array.
+
+    Args:
+        process_to_apply: A function that can be applied to a pandas series
+
+    Returns:
+        The processed series
+
+    """
+
+    def apply_function_to_series(
+            input_series: Union[pd.Series, np.ndarray]
+    ) -> Union[pd.Series, np.ndarray]:
+        """
+        The function that can be applied directly to the series data.
+
+        Args:
+            input_series: Pandas or numpy array, either the input timeseries or the equivalent model derived value
+
+        Returns:
+            Function that can be applied to either pandas or numpy
+
+        """
+
+        # Find the input format
+        is_numpy = isinstance(input_series, np.ndarray)
+        working_series = pd.Series(input_series) if is_numpy else input_series
+
+        # The actual manipulation to the series
+        working_series = process_to_apply(working_series)
+
+        # Return in the appropriate format
+        return working_series.to_numpy() if is_numpy else working_series
+
+    return apply_function_to_series

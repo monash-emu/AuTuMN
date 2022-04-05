@@ -1,5 +1,6 @@
 import json
 from datetime import date
+import pandas as pd
 
 from autumn.models.sm_sir.parameters import BASE_DATE
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
@@ -27,6 +28,8 @@ hospital_admissions_ts = ts_set["hospital_admissions"].loc[targets_start:]
 late_hosp_admissions = ts_set["hospital_admissions"].loc[notifications_trunc_point:]
 deaths_ts = ts_set["infection_deaths"].loc[targets_start:]
 late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
+
+ts_set["notif_change"] = pd.Series(ts_set["notifications"].rolling(window=7, center=True).mean())
 
 priors = [
     UniformPrior("contact_rate", (0.02, 0.1)),
@@ -56,8 +59,18 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 
+# Does nothing yet
+def rate_of_change(input):
+    return input
+
+
 def custom_build_model(param_set, build_options=None):
     model = build_model(param_set, build_options)
+    model.request_function_output(
+        "notif_change",
+        rate_of_change,
+        ["notifications"],
+    )
     return model
 
 

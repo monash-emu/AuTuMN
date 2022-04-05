@@ -55,5 +55,11 @@ plot_spec_filepath = build_rel_path("timeseries.json")
 with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
+
+def custom_build_model(param_set, build_options=None):
+    model = build_model(param_set, build_options)
+    return model
+
+
 # Create and register the project
-project = Project(Region.BANGLADESH, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)
+project = Project(Region.BANGLADESH, Models.SM_SIR, custom_build_model, param_set, calibration, plots=plot_spec)

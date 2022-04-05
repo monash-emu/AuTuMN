@@ -664,13 +664,4 @@ def build_model(
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
 
-    def notif_change_function(notifications):
-        return np.append([0.], np.diff(notifications))
-
-    model.request_function_output(
-        "notif_change",
-        notif_change_function,
-        ["notifications"],
-    )
-
     return model

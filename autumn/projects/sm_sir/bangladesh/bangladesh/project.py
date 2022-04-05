@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from typing import Union
 import numpy as np
 import pandas as pd
 
@@ -35,7 +36,9 @@ def get_diff(series):
     return series.diff().rolling(window=7).mean()
 
 
-def wrap_function_for_series(process_to_apply):
+def wrap_function_for_series(
+        process_to_apply: callable
+) -> callable:
     """
     Apply a function to a pandas series that can cope with the series coming in either directly as pandas or as a numpy
     array.
@@ -48,7 +51,9 @@ def wrap_function_for_series(process_to_apply):
 
     """
 
-    def apply_function_to_series(input_series):
+    def apply_function_to_series(
+            input_series: Union[pd.Series, np.ndarray]
+    ) -> Union[pd.Series, np.ndarray]:
         """
         The function that can be applied directly to the series data.
 
@@ -61,7 +66,7 @@ def wrap_function_for_series(process_to_apply):
         """
 
         # Find the input format
-        is_numpy = type(input_series) == np.ndarray
+        is_numpy = isinstance(input_series, np.ndarray)
         working_series = pd.Series(input_series) if is_numpy else input_series
 
         # The actual manipulation to the series

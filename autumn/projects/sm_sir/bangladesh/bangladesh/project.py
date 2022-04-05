@@ -21,6 +21,7 @@ calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 # Work out date truncation points
 targets_start = (date(2021, 5, 15) - BASE_DATE).days
 notifications_trunc_point = (date(2021, 12, 1) - BASE_DATE).days
+notif_change_start_point = (date(2022, 1, 29) - BASE_DATE).days
 
 # Get the actual targets
 notifications_ts = ts_set["notifications"].loc[targets_start: notifications_trunc_point]
@@ -31,12 +32,12 @@ late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 
 
 def get_diff(series):
-    return series.diff().rolling(window=50).mean()
+    return series.pct_change(periods=7)
 
 
 processed_output = "notif_change"
 
-ts_set[processed_output] = wrap_function_for_series(get_diff)(ts_set["notifications"])
+ts_set[processed_output] = wrap_function_for_series(get_diff)(ts_set["notifications"]).loc[notif_change_start_point:]
 
 
 priors = [
@@ -48,16 +49,13 @@ priors = [
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.01, 0.08)),
 ]
 
-# Not sure about this
-notif_change = notifications_ts.diff()
-notif_change_smoothed = notif_change.rolling(window=7).mean().dropna()
-
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(hospital_admissions_ts),
     NormalTarget(deaths_ts),
     NormalTarget(late_hosp_admissions),
     NormalTarget(late_deaths),
+    NormalTarget(ts_set[processed_output])
 ]
 
 calibration = Calibration(priors=priors, targets=targets, random_process=None, metropolis_init="current_params")

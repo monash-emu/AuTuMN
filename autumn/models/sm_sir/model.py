@@ -1,7 +1,7 @@
-from datetime import date
 from math import exp
 from typing import List, Tuple
 import pandas as pd
+import numpy as np
 
 from summer import CompartmentalModel
 
@@ -663,5 +663,14 @@ def build_model(
     outputs_builder.request_recovered_proportion(compartment_types)
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
+
+    def notif_change_function(notifications):
+        return np.append([0.], np.diff(notifications))
+
+    model.request_function_output(
+        "notif_change",
+        notif_change_function,
+        ["notifications"],
+    )
 
     return model

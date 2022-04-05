@@ -1,5 +1,6 @@
 import json
 from datetime import date
+import numpy as np
 import pandas as pd
 
 from autumn.models.sm_sir.parameters import BASE_DATE
@@ -29,7 +30,16 @@ late_hosp_admissions = ts_set["hospital_admissions"].loc[notifications_trunc_poi
 deaths_ts = ts_set["infection_deaths"].loc[targets_start:]
 late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 
-ts_set["notif_change"] = pd.Series(ts_set["notifications"].rolling(window=7, center=True).mean())
+
+def find_increment(input_series):
+    if type(input_series) == pd.Series:
+        return input_series.diff()
+    else:
+        return np.append([np.nan], np.diff(input_series))
+
+
+ts_set["notif_change"] = find_increment(ts_set["notifications"])
+
 
 priors = [
     UniformPrior("contact_rate", (0.02, 0.1)),
@@ -59,16 +69,11 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 
-# Does nothing yet
-def rate_of_change(input):
-    return input
-
-
 def custom_build_model(param_set, build_options=None):
     model = build_model(param_set, build_options)
     model.request_function_output(
         "notif_change",
-        rate_of_change,
+        find_increment,
         ["notifications"],
     )
     return model

@@ -6,11 +6,26 @@ time:
 mobility:
   mixing:
     other_locations:
-      append: false
+      append: true
       times:
-        - 2022-01-01
+        - 2022-03-31
+        - 2022-04-01 # restrictions release
       values:
+        - - repeat_prev
+        - 1.25
+    work:
+      append: true
+      times:
+        - 2022-03-31
+        - 2022-04-01 # restrictions release
+        - 2022-04-14
+        - 2022-04-15
+      values:
+        - - repeat_prev
         - 1.0
+        - 1.0
+        - 1.25
+
     school:
       append: false
       times:

@@ -1,7 +1,8 @@
 import json
 from datetime import date
+from pandas import Series
 
-from autumn.tools.utils.utils import wrap_function_for_series
+from autumn.tools.utils.utils import wrap_series_transform_for_ndarray
 from autumn.models.sm_sir.parameters import BASE_DATE
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
@@ -30,15 +31,26 @@ late_hosp_admissions = ts_set["hospital_admissions"].loc[notifications_trunc_poi
 deaths_ts = ts_set["infection_deaths"].loc[targets_start:]
 late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 
+# Build transformed target series
+def get_roc(series: Series) -> Series:
+    return series.rolling(7).mean().pct_change(7)
 
-def get_diff(series):
-    return series.pct_change(periods=7)
+# Build targets for rate-of-change (roc) variables
+roc_vars = ["notifications"]
+roc_targets = []
 
+for roc_var in roc_vars:
+    new_ts = get_roc(ts_set[roc_var]).loc[notif_change_start_point:]
+    new_ts.name = roc_var + '_roc'
+    roc_targets.append(NormalTarget(new_ts))
 
-processed_output = "notif_change"
-
-ts_set[processed_output] = wrap_function_for_series(get_diff)(ts_set["notifications"]).loc[notif_change_start_point:]
-
+targets = [
+    NormalTarget(notifications_ts),
+    NormalTarget(hospital_admissions_ts),
+    NormalTarget(deaths_ts),
+    NormalTarget(late_hosp_admissions),
+    NormalTarget(late_deaths)
+] + roc_targets
 
 priors = [
     UniformPrior("contact_rate", (0.02, 0.1)),
@@ -49,14 +61,6 @@ priors = [
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.01, 0.08)),
 ]
 
-targets = [
-    NormalTarget(notifications_ts),
-    NormalTarget(hospital_admissions_ts),
-    NormalTarget(deaths_ts),
-    NormalTarget(late_hosp_admissions),
-    NormalTarget(late_deaths),
-    NormalTarget(ts_set[processed_output])
-]
 
 calibration = Calibration(priors=priors, targets=targets, random_process=None, metropolis_init="current_params")
 
@@ -67,11 +71,12 @@ with open(plot_spec_filepath) as f:
 
 def custom_build_model(param_set, build_options=None):
     model = build_model(param_set, build_options)
-    model.request_function_output(
-        processed_output,
-        wrap_function_for_series(get_diff),
-        ["notifications"],
-    )
+    for v in roc_vars:
+        model.request_function_output(
+            v + '_roc',
+            wrap_series_transform_for_ndarray(get_roc),
+            [v],
+        )
     return model
 
 

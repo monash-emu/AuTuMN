@@ -490,43 +490,32 @@ class FunctionWrapper(ComputedValueProcessor):
         return self.wrapped_function(time, computed_values)
 
 
-def wrap_function_for_series(
+def wrap_series_transform_for_ndarray(
         process_to_apply: callable
 ) -> callable:
     """
-    Apply a function to a pandas series that can cope with the series coming in either directly as pandas or as a numpy
-    array.
+    Return a function that converts an ndarray to a Series, applies a transform, and returns the result as a new ndarray
 
     Args:
         process_to_apply: A function that can be applied to a pandas series
 
     Returns:
-        The processed series
-
+        Function that applies transform to ndarray
     """
 
-    def apply_function_to_series(
-            input_series: Union[pd.Series, np.ndarray]
-    ) -> Union[pd.Series, np.ndarray]:
+    def apply_series_transform_to_ndarray(
+            in_data: np.ndarray
+    ) -> np.ndarray:
         """
-        The function that can be applied directly to the series data.
+        The function that can be applied directly to ndarrays
 
         Args:
-            input_series: Pandas or numpy array, either the input timeseries or the equivalent model derived value
+            in_data: numpy array which will be transformed
 
         Returns:
-            Function that can be applied to either pandas or numpy
-
+        The processed ndarray
         """
-
-        # Find the input format
-        is_numpy = isinstance(input_series, np.ndarray)
-        working_series = pd.Series(input_series) if is_numpy else input_series
-
-        # The actual manipulation to the series
-        working_series = process_to_apply(working_series)
-
-        # Return in the appropriate format
-        return working_series.to_numpy() if is_numpy else working_series
-
-    return apply_function_to_series
+        #Return in the appropriate format
+        return process_to_apply(pd.Series(in_data)).to_numpy()
+    
+    return apply_series_transform_to_ndarray

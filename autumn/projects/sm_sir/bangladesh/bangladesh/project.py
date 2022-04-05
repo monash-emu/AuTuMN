@@ -32,10 +32,11 @@ late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 
 
 def find_increment(input_series):
-    if type(input_series) == pd.Series:
-        return input_series.diff()
-    else:
-        return np.append([np.nan], np.diff(input_series))
+
+    is_numpy = type(input_series) == np.ndarray
+    working_series = pd.Series(input_series) if is_numpy else input_series
+    working_series = working_series.diff()
+    return working_series.to_numpy() if is_numpy else working_series
 
 
 ts_set["notif_change"] = find_increment(ts_set["notifications"])

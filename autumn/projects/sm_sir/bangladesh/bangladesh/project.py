@@ -48,7 +48,6 @@ def get_roc(series: Series) -> Series:
 # Build targets for rate-of-change (roc) variables
 roc_vars = ["notifications"]
 roc_targets = []
-
 for roc_var in roc_vars:
     new_ts = get_roc(ts_set[roc_var]).loc[notif_change_start_point:]
     new_ts.name = roc_var + '_roc'
@@ -71,7 +70,6 @@ priors = [
     UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.08)),
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.01, 0.08)),
 ]
-
 
 calibration = Calibration(priors=priors, targets=targets, random_process=None, metropolis_init="current_params")
 

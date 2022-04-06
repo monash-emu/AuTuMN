@@ -59,11 +59,11 @@ voc_emergence:
       seed_duration: 1.
     contact_rate_multiplier: 100.
     immune_escape: 0.2
-    hosp_protection: 0.8
+    hosp_protection: 0.75
     death_protection: 0.85
     relative_latency: 0.6667
     relative_active_period: 1.
-    icu_multiplier: 0.5
+    icu_multiplier: 0.55
     cross_protection:
       wild_type:
         early_reinfection: 0.4
@@ -89,25 +89,13 @@ hospital_stay:
 
 age_stratification:
   cfr:
-    multiplier: 0.25
+    multiplier: 0.15
   prop_hospital:
-    multiplier: 0.325
+    multiplier: 0.385
 
 
 mobility:
   mixing:
-    other_locations:
-      append: false
-      times:
-        - 2022-01-01
-      values:
-        - 1.0
-    work:
-      append: false
-      times:
-        - 2022-01-01
-      values:
-        - 1.0
     school:
       append: false
       times:

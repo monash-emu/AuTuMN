@@ -35,10 +35,10 @@ targets = [
 ]
 
 priors = [
-    UniformPrior("contact_rate", (0.07, 0.13)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.05, 0.15)),
-    UniformPrior("sojourns.latent.total_time", (1.5, 4.0)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.25, 1.5)),
+    UniformPrior("contact_rate", (0.1, 0.3)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
+    UniformPrior("sojourns.latent.total_time", (10, 20)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.1, 1.3)),
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (520, 675)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.7, 1.3)),

@@ -19,7 +19,7 @@ sojourns:
 
 time:
   start: 450.
-  end: 1000.
+  end: 1200.
 
 activate_random_process: False
 

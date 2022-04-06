@@ -4,7 +4,7 @@ from autumn.tools.db import Database
 
 from .fetch import COVID_PHL_CSV_PATH
 
-COVID_BASE_DATE = pd.datetime(2019, 12, 31)
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 
 # Make lists of testing facilities and associated region
@@ -161,7 +161,7 @@ def create_region_aggregates(df):
     # Tidy up and return
     combined_df = combined_df[combined_df.facility_name != "unmatched"]
     combined_df = combined_df.groupby(["report_date", "facility_name"]).sum().reset_index()
-    combined_df["date_index"] = (combined_df.report_date - COVID_BASE_DATE).dt.days
+    combined_df["date_index"] = (combined_df.report_date - COVID_BASE_DATETIME).dt.days
     combined_df.drop(["pct_positive_cumulative", "pct_negative_cumulative"], 1, inplace=True)
     return combined_df
 

@@ -235,7 +235,7 @@ def load_dhhs_df(acquired: int):
     df = df.groupby(["date", "cluster"]).sum().reset_index()
     df["cluster_name"] = df.cluster
     df["cluster_name"] = df.cluster_name.replace(CLUSTER_MAP).str.lower()
-    df["date_index"] = (df.date - pd.datetime(2019, 12, 31)).dt.days
+    df["date_index"] = (df.date - datetime(2019, 12, 31)).dt.days
 
     # Remove last date due to poor accuracy of data.
     df = df[df.date_index != df.date_index.max()]

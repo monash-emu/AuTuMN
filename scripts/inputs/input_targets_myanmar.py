@@ -7,15 +7,9 @@ import os
 import pandas as pd
 from datetime import datetime
 
-from autumn.settings import PROJECTS_PATH
-
-from autumn.settings import INPUT_DATA_PATH
-
+from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
 from autumn.tools.utils.utils import update_timeseries, create_date_index
-
-# start date to calculate time since Dec 31, 2019
-COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
-
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 #COVID_MMR_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "myanmar", "timeseries.json")
 SM_SIR_PATH = os.path.join(PROJECTS_PATH, "sm_sir", "myanmar", "myanmar", "timeseries.json")

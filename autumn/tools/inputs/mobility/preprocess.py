@@ -4,7 +4,8 @@ import pandas as pd
 
 from autumn.tools.db import Database
 from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import create_date_index, COVID_BASE_DATETIME
+from autumn.tools.utils.utils import create_date_index
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 from .fetch import MOBILITY_CSV_PATH, VNM_CSV_PATH, FB_MOVEMENT_2021, FB_MOVEMENT_2022
 

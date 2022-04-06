@@ -12,10 +12,7 @@ from datetime import datetime
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
-
-
-# start date to calculate time since Dec 31, 2019
-COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 # Use OWID csv for notification and death numbers.
 COVID_NPL_OWID = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")

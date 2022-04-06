@@ -25,7 +25,7 @@ from autumn.tools.project import get_project
 
 from summer.utils import ref_times_to_dti
 
-from autumn.models.covid_19.model import BASE_DATE
+from autumn.models.covid_19.model import COVID_BASE_DATETIME
 
 from autumn.tools.db import uncertainty
 
@@ -141,7 +141,7 @@ def create_csv():
         collected.append(pdfilt(agg_udf, f"type=={input_key}"))
 
     filt_agg = pd.concat(collected, ignore_index=True)
-    filt_agg['time'] = ref_times_to_dti(BASE_DATE, filt_agg['time'])
+    filt_agg['time'] = ref_times_to_dti(COVID_BASE_DATETIME, filt_agg['time'])
 
     filt_agg['region'] = 'VICTORIA'
 

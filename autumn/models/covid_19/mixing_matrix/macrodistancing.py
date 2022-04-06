@@ -2,7 +2,7 @@ from typing import Callable, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from autumn.models.covid_19.constants import BASE_DATETIME, LOCATIONS
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME, LOCATIONS
 from autumn.models.covid_19.parameters import Country, MixingLocation
 from autumn.tools.curve import scale_up_function
 from autumn.tools.inputs.mobility.queries import get_mobility_data
@@ -78,7 +78,7 @@ def get_mobility_funcs(
 
     """
 
-    mob_df, google_mobility_days = get_mobility_data(country.iso3, region, BASE_DATETIME)
+    mob_df, google_mobility_days = get_mobility_data(country.iso3, region, COVID_BASE_DATETIME)
     model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
     # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
@@ -190,7 +190,7 @@ def get_mobility_specific_period(
 
     """
 
-    google_mob_data, google_mobility_days = get_mobility_data(country, region, BASE_DATETIME)
+    google_mob_data, google_mobility_days = get_mobility_data(country, region, COVID_BASE_DATETIME)
     mobility_values = weight_mobility_data(google_mob_data, google_mobility_locations)
 
     start_idx = google_mobility_days.index(split_dates[0])

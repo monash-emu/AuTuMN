@@ -11,6 +11,15 @@ mobility:
         - 2022-01-01
       values:
         - 1.0
+    work:
+      append: true
+      times:
+        - 2022-01-01
+        - 2022-04-01
+      values:
+        - 1.0
+        - 1.25
+
     school:
       append: false
       times:

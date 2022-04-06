@@ -1,9 +1,9 @@
 import json
-from datetime import date
 from pandas import Series
+from datetime import datetime
 
 from autumn.tools.utils.utils import wrap_series_transform_for_ndarray
-from autumn.models.sm_sir.parameters import BASE_DATE
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
@@ -20,9 +20,9 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 
 # Work out date truncation points
-targets_start = (date(2021, 5, 15) - BASE_DATE).days
-notifications_trunc_point = (date(2021, 12, 1) - BASE_DATE).days
-notif_change_start_point = (date(2022, 1, 29) - BASE_DATE).days
+targets_start = (datetime(2021, 5, 15) - COVID_BASE_DATETIME).days
+notifications_trunc_point = (datetime(2021, 12, 1) - COVID_BASE_DATETIME).days
+notif_change_start_point = (datetime(2022, 1, 29) - COVID_BASE_DATETIME).days
 
 # Get the actual targets
 notifications_ts = ts_set["notifications"].loc[targets_start: notifications_trunc_point]

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from summer.utils import ref_times_to_dti
 
-from autumn.models.covid_19.constants import BASE_DATETIME
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools import db
 
 from.utils import collate_columns_to_urun
@@ -36,14 +36,14 @@ class PowerBIDatabase:
         udf = self.db.query('uncertainty')
         upt = udf.pivot_table(index='time',columns=['type','scenario','quantile'])
         upt.columns = upt.columns.droplevel()
-        upt.index = ref_times_to_dti(BASE_DATETIME, upt.index)
+        upt.index = ref_times_to_dti(COVID_BASE_DATETIME, upt.index)
         return upt
     
     def get_derived_outputs(self):
         dodf = self.db.query('derived_outputs')
         dodf = collate_columns_to_urun(dodf,True)
         dodf = dodf.pivot_table(index='times',columns=['scenario'])
-        dodf.index = ref_times_to_dti(BASE_DATETIME, dodf.index)
+        dodf.index = ref_times_to_dti(COVID_BASE_DATETIME, dodf.index)
         return dodf
     
     def _setup(self):
@@ -51,7 +51,7 @@ class PowerBIDatabase:
         
     def _setup_scenarios(self):
         scenario = self.db.query('scenario')
-        tidx = ref_times_to_dti(BASE_DATETIME, scenario['start_time'])
+        tidx = ref_times_to_dti(COVID_BASE_DATETIME, scenario['start_time'])
         scenario = scenario.set_index('scenario')
         scenario['start_time'] = tidx
         self.scenarios = scenario
@@ -59,5 +59,5 @@ class PowerBIDatabase:
     def get_targets(self):
         df = self.db.query('targets').pivot_table(index='times',columns='key')
         df.columns = df.columns.droplevel()
-        df.index = ref_times_to_dti(BASE_DATETIME, df.index)
+        df.index = ref_times_to_dti(COVID_BASE_DATETIME, df.index)
         return df

@@ -4,24 +4,20 @@ import numpy as np
 import numba
 
 from summer import CompartmentalModel, Multiply, Stratification
-from summer.utils import ref_times_to_dti
-from autumn.models.covid_19.constants import BASE_DATE
 
 from autumn.models.covid_19.constants import (
     Vaccination, INFECTION, DISEASE_COMPARTMENTS, CLINICAL_STRATA, Compartment, AGE_CLINICAL_TRANSITIONS,
     INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
 )
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
-from autumn.tools.inputs.covid_au.queries import (
-    get_both_vacc_coverage, VACC_COVERAGE_START_AGES, VACC_COVERAGE_END_AGES,
-)
-from autumn.tools.utils.utils import find_closest_value_in_list, check_list_increasing
 from autumn.models.covid_19.parameters import Parameters, TimeSeries, VaccEffectiveness, TanhScaleup
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
+from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
+from autumn.tools.utils.utils import check_list_increasing
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_adult_vacc_doses
-from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
+
 
 
 def find_vacc_strata(is_dosing_active: bool, waning_vacc_immunity: bool, is_boost_delay: bool) -> Tuple[list, str]:

@@ -15,8 +15,9 @@ import numpy as np
 import pandas as pd
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
+from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
+
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 # shareable google drive links
 PHL_doh_link = "1eFxmF6n4TWBqxzuEFGBg65V3j-OwQZPj"  # sheet 05 daily report
@@ -30,9 +31,6 @@ icu_o_dest = os.path.join(phl_inputs_dir, "PHL_icu_processed.csv")
 hosp_o_dest = os.path.join(phl_inputs_dir, "PHL_hosp_processed.csv")
 deaths_dest = os.path.join(phl_inputs_dir, "PHL_deaths_processed.csv")
 notifications_dest = os.path.join(phl_inputs_dir, "PHL_notifications_processed.csv")
-
-# start date to calculate time since Dec 31, 2019
-COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 
 
 def main():

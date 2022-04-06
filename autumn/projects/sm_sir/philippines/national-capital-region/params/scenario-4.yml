@@ -1,0 +1,7 @@
+description: Short-lived immunity
+
+time:
+  start: 620
+
+sojourns:
+  recovered: 60.

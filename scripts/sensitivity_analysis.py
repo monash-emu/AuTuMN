@@ -8,7 +8,7 @@ import datetime
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import matplotlib.pyplot as plt
 
-from autumn.tools.utils.utils import COVID_BASE_DATETIME
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 from autumn.settings import OUTPUT_DATA_PATH
 from autumn.settings import INPUT_DATA_PATH
 

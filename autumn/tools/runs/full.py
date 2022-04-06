@@ -1,16 +1,7 @@
 from pathlib import PurePosixPath
 import re
 
-import s3fs
-
 from autumn.tools import db
-
-#from summer.utils import ref_times_to_dti
-
-#from autumn.models.covid_19.constants import BASE_DATETIME
-#from autumn.tools import db
-
-#from.utils import collate_columns_to_urun
 
 class ManagedFullRun:
     def __init__(self, manager):

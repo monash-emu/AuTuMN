@@ -8,6 +8,7 @@ import subprocess as sp
 import os
 import numpy
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from typing import List, Union, Callable, Dict, Optional
 
@@ -483,3 +484,34 @@ class FunctionWrapper(ComputedValueProcessor):
 
     def process(self, compartment_values, computed_values, time):
         return self.wrapped_function(time, computed_values)
+
+
+def wrap_series_transform_for_ndarray(
+        process_to_apply: callable
+) -> callable:
+    """
+    Return a function that converts an ndarray to a Series, applies a transform, and returns the result as a new ndarray
+
+    Args:
+        process_to_apply: A function that can be applied to a pandas series
+
+    Returns:
+        Function that applies transform to ndarray
+    """
+
+    def apply_series_transform_to_ndarray(
+            in_data: np.ndarray
+    ) -> np.ndarray:
+        """
+        The function that can be applied directly to ndarrays
+
+        Args:
+            in_data: numpy array which will be transformed
+
+        Returns:
+        The processed ndarray
+        """
+        #Return in the appropriate format
+        return process_to_apply(pd.Series(in_data)).to_numpy()
+    
+    return apply_series_transform_to_ndarray

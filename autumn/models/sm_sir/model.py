@@ -1,7 +1,7 @@
-from datetime import date
 from math import exp
 from typing import List, Tuple
 import pandas as pd
+import numpy as np
 
 from summer import CompartmentalModel
 

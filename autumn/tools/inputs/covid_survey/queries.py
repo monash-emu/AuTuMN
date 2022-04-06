@@ -1,7 +1,7 @@
 from autumn.tools.inputs.database import get_input_db
-from autumn.tools.utils.utils import apply_moving_average, COVID_BASE_DATETIME
+from autumn.tools.utils.utils import apply_moving_average
+from autumn.settings.constants import COVID_BASE_DATETIME
 
-import numpy as np
 import pandas as pd
 
 TODAY = (pd.to_datetime("today").date() - COVID_BASE_DATETIME.date()).days

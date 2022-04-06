@@ -8,7 +8,7 @@ from autumn.models.covid_19.detection import find_cdr_function_from_test_data, C
 from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (
-    COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
+    COMPARTMENTS, COVID_BASE_DATETIME, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, History, INFECTION,
     INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH
 )
 from .outputs.common import CovidOutputsBuilder
@@ -45,7 +45,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         compartments=COMPARTMENTS,
         infectious_compartments=INFECTIOUS_COMPARTMENTS,
         timestep=params.time.step,
-        ref_date=BASE_DATE
+        ref_date=COVID_BASE_DATETIME
     )
 
     # Check build_options

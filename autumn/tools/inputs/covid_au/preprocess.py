@@ -1,7 +1,9 @@
 import pandas as pd
 
 from autumn.tools.db import Database
-from autumn.tools.utils.utils import create_date_index, COVID_BASE_DATETIME
+from autumn.tools.utils.utils import create_date_index
+
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 from .fetch import (
     COVID_AU_CSV_PATH,

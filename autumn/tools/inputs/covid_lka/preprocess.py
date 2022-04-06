@@ -3,11 +3,9 @@ import pandas as pd
 
 from autumn.tools.db import Database
 
+from autumn.settings.constants import COVID_BASE_DATETIME
+
 from .fetch import COVID_LKA_CSV, COVID_LKA_2021_CSV
-
-
-COVID_BASE_DATETIME = pd.datetime(2019, 12, 31)
-
 
 def preprocess_covid_lka(input_db: Database):
 

@@ -8,13 +8,13 @@ from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
 from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
+
+BASE_DATE = COVID_BASE_DATETIME.date()
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
-
-BASE_DATE = date(2019, 12, 31)
-
 
 """
 Commonly used checking processes
@@ -126,7 +126,7 @@ class TimeSeries(BaseModel):
 
     @validator("times", pre=True, allow_reuse=True)
     def parse_dates_to_days(dates):
-        return [(d - BASE_DATE).days if type(d) is date else d for d in dates]
+        return [(d - BASE_DATE).days if isinstance(d, date) else d for d in dates]
 
 
 class Country(BaseModel):
@@ -195,7 +195,7 @@ class MixingLocation(BaseModel):
 
     @validator("times", pre=True, allow_reuse=True)
     def parse_dates_to_days(dates):
-        return [(d - BASE_DATE).days if type(d) is date else d for d in dates]
+        return [(d - BASE_DATE).days if isinstance(d, date) else d for d in dates]
 
 
 class EmpiricMicrodistancingParams(BaseModel):

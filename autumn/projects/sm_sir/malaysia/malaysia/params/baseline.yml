@@ -89,7 +89,7 @@ hospital_stay:
 
 age_stratification:
   cfr:
-    multiplier: 0.5
+    multiplier: 0.25
   prop_hospital:
-    multiplier: 0.625
+    multiplier: 0.325
 

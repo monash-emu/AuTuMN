@@ -66,7 +66,7 @@ voc_emergence:
     icu_multiplier: 0.55
     cross_protection:
       wild_type:
-        early_reinfection: 0.4
+        early_reinfection: 0.75
         late_reinfection: 0.4
       omicron:
         early_reinfection: 1.
@@ -89,7 +89,7 @@ hospital_stay:
 
 age_stratification:
   cfr:
-    multiplier: 0.15
+    multiplier: 0.35
   prop_hospital:
     multiplier: 0.385
 

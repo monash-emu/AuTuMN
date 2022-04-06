@@ -3,7 +3,7 @@ from datetime import timedelta
 import numpy as np
 from numpy.testing import assert_allclose
 
-from autumn.models.covid_19.constants import BASE_DATE
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.models.covid_19.parameters import Country, Mobility
 from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix, macrodistancing
 from autumn.tools.inputs.social_mixing.queries import get_country_mixing_matrix, get_mixing_matrix_specific_agegroups
@@ -246,7 +246,7 @@ def test_build_dynamic__with_microdistancing():
 
 
 def get_date_from_base(days_list):
-    return [BASE_DATE + timedelta(days=days) for days in days_list]
+    return [COVID_BASE_DATETIME + timedelta(days=days) for days in days_list]
 
 
 def _get_country_mixing_matrix(sheet_type, iso3):

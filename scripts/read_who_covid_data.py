@@ -7,6 +7,8 @@ import pandas as pd
 from autumn.projects.covid_19.mixing_optimisation.utils import get_weekly_summed_targets
 from autumn.settings import Region
 
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
 WHO_DATA_FILE = os.path.join(base_dir, "data", "who_covid", "WHO-COVID-19-global-data.csv")
 who_country_mapping = {"united-kingdom": "The United Kingdom"}
@@ -28,7 +30,7 @@ def read_who_data_from_csv(
     data = pd.read_csv(path)
     times = list(data[data.iloc[:, 2] == country_name].iloc[:, 0])
 
-    date_ref = datetime.date(2019, 12, 31)
+    date_ref = COVID_BASE_DATETIME.date()
     for i, time_string in enumerate(times):
         components = time_string.split("-")
         time_date = datetime.date(int(components[0]), int(components[1]), int(components[2]))

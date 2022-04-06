@@ -18,10 +18,6 @@ from autumn.tools import registry
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.tools.utils import secrets
 
-# start date to calculate time since Dec 31, 2019
-COVID_BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
-
-
 def merge_dicts(src: dict, dest: dict):
     """
     Merge src dict into dest dict.
@@ -332,7 +328,7 @@ def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
         secrets.write(file_path, *args)
 
 
-def create_date_index(COVID_BASE_DATETIME, df, datecol):
+def create_date_index(base_datetime, df, datecol):
     df.rename(columns=lambda x: x.lower().strip().replace(" ", "_"), inplace=True)
     df.rename(columns={datecol.lower().strip().replace(" ", "_"): "date"}, inplace=True)
 
@@ -351,7 +347,7 @@ def create_date_index(COVID_BASE_DATETIME, df, datecol):
         else:
             print("Success")
 
-    df["date_index"] = (df.date - COVID_BASE_DATETIME.date()).dt.days
+    df["date_index"] = (df.date - base_datetime.date()).dt.days
 
     return df
 

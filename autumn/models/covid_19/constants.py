@@ -1,9 +1,4 @@
-from datetime import date, datetime
-
-# Base date used to calculate mixing matrix times.
-BASE_DATE = date(2019, 12, 31)
-BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
-
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 class Compartment:
     """

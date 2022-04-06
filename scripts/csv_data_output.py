@@ -1,10 +1,12 @@
-import pandas as pd
+from datetime import datetime
 import os
+
 import sqlite3
+import pandas as pd
 import boto3
 
 s3 = boto3.client("s3")
-COVID_BASE_DATE = pd.datetime(2019, 12, 31)
+COVID_BASE_DATE = datetime(2019, 12, 31)
 DATA_PATH = "M:\Documents\@Projects\Covid_consolidate\output"
 os.chdir(DATA_PATH)
 list_of_files = os.listdir(DATA_PATH)

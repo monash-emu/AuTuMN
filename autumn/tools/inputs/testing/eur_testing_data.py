@@ -3,7 +3,8 @@ import pandas as pd
 from datetime import datetime
 
 from autumn.settings.folders import INPUT_DATA_PATH
-from autumn.tools.inputs.covid_au.queries import COVID_BASE_DATETIME
+
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
 EUR_TESTING_FOLDER = os.path.join(INPUT_DATA_PATH, "testing")

@@ -26,7 +26,7 @@ from .stratifications.immunity import (
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
-from autumn.models.sm_sir.parameters import BASE_DATE
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 # Base date used to calculate mixing matrix times
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
@@ -361,7 +361,7 @@ def build_model(
         compartments=compartment_types,
         infectious_compartments=infectious_compartments,
         timestep=time_params.step,
-        ref_date=BASE_DATE,
+        ref_date=COVID_BASE_DATETIME,
     )
 
     """

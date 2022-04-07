@@ -1,7 +1,9 @@
 import json
 from pandas import Series
 from datetime import datetime
+import pandas as pd
 
+from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
 from autumn.tools.utils.utils import wrap_series_transform_for_ndarray
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
@@ -94,10 +96,30 @@ def custom_build_model(param_set, build_options=None):
             [n_immune_name, "total_population"],
         )
 
+    # Requested proportions over time
+    props_df = pd.DataFrame(
+        data={
+            "none": [1., .2, .2, .2],
+            "low": [0., .8, .6, .7],
+            "high": [0., .0, .2, .1]
+        },
+        index=[390, 420, 700, 900]
+    )
+
+    # List of transition flows
+    active_flows = {
+        "vaccination": ("none", "low"),
+        "boosting": ("low", "high"),
+        "waning": ("high", "low")
+    }
+
+    sc_functions = calculate_transition_rates_from_dynamic_props(props_df, active_flows)
+
     for comp in model._original_compartment_names:
+
         model.add_transition_flow(
             "vaccination",
-            0.,
+            sc_functions["vaccination"],
             comp,
             comp,
             source_strata={"immunity": "none"},
@@ -105,11 +127,19 @@ def custom_build_model(param_set, build_options=None):
         )
         model.add_transition_flow(
             "boosting",
-            0.,
+            sc_functions["boosting"],
             comp,
             comp,
             source_strata={"immunity": "low"},
             dest_strata={"immunity": "high"},
+        )
+        model.add_transition_flow(
+            "waning",
+            sc_functions["waning"],
+            comp,
+            comp,
+            source_strata={"immunity": "high"},
+            dest_strata={"immunity": "low"},
         )
 
     return model

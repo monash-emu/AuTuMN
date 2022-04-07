@@ -33,7 +33,8 @@ hospital_floor_start = (datetime(2022, 1, 1) - COVID_BASE_DATETIME).days
 
 # Get the actual targets
 notifications_ts = ts_set["notifications"].loc[targets_start: notifications_trunc_point]
-hospital_admit_ts = ts_set["hospital_admissions"].loc[targets_start:]
+hospital_admit_early_ts = ts_set["hospital_admissions"].loc[targets_start: hospital_floor_start]
+hospital_admit_late_ts = ts_set["hospital_admissions"].loc[hospital_floor_start:]
 deaths_ts = ts_set["infection_deaths"].loc[targets_start:]
 late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 
@@ -53,7 +54,8 @@ for roc_var in roc_vars:
 
 targets = [
     NormalTarget(notifications_ts),
-    NormalTarget(hospital_admit_ts),
+    NormalTarget(hospital_admit_early_ts),
+    TruncNormalTarget(hospital_admit_late_ts, trunc_range=(200., 1e7)),
     NormalTarget(deaths_ts),
     NormalTarget(late_deaths)
 ] + roc_targets

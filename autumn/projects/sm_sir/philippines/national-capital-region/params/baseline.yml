@@ -112,12 +112,12 @@ age_stratification:
 #      low: 0.488
 #      high: 0.85
 
-sojourns:
-  latent:
-    total_time: 3.
-  recovered: 180.
-
 #sojourns:
 #  latent:
 #    total_time: 3.
-#  recovered: 365.
+#  recovered: 180.
+
+sojourns:
+  latent:
+    total_time: 3.
+  recovered: 365.

@@ -77,7 +77,6 @@ def custom_build_model(param_set, build_options=None):
             wrap_series_transform_for_ndarray(get_roc),
             [v],
         )
-
     return model
 
 

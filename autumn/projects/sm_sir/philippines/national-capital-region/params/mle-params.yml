@@ -1,11 +1,7 @@
 age_stratification.prop_hospital.multiplier: 0.20437102438641036
-age_stratification.prop_hospital.source_immunity_protection.high: 0.8992304769614923
-age_stratification.prop_hospital.source_immunity_protection.low: 0.5852485257123707
 contact_rate: 0.1332842451860803
 hospital_stay.hospital_all.parameters.mean: 4.5
 hospital_stay.icu.parameters.mean: 7.668789271325039
-immunity_stratification.infection_risk_reduction.high: 0.5667368000162458
-immunity_stratification.infection_risk_reduction.low: 0.004442208217315132
 infectious_seed: 382.4382799493609
 prop_icu_among_hospitalised: 0.11813452916021588
 sojourns.active.total_time: 4.148449978703803

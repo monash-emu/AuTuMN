@@ -94,6 +94,24 @@ def custom_build_model(param_set, build_options=None):
             [n_immune_name, "total_population"],
         )
 
+    for comp in model._original_compartment_names:
+        model.add_transition_flow(
+            "vaccination",
+            0.,
+            comp,
+            comp,
+            source_strata={"immunity": "none"},
+            dest_strata={"immunity": "low"},
+        )
+        model.add_transition_flow(
+            "boosting",
+            0.,
+            comp,
+            comp,
+            source_strata={"immunity": "low"},
+            dest_strata={"immunity": "high"},
+        )
+
     return model
 
 

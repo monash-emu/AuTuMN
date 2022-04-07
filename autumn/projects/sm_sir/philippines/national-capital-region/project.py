@@ -26,7 +26,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.04, 0.15]),
+    UniformPrior("contact_rate", [0.15, 0.30]),
     UniformPrior("sojourns.active.total_time", [4, 10]),
     UniformPrior("infectious_seed", [1, 400]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.04]),

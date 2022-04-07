@@ -85,39 +85,39 @@ mobility:
 
 
 # Optimistic VE assumptions
-immunity_stratification:
-  infection_risk_reduction:
-    none: 0.
-    low: 0.438
-    high: 0.6
-
-age_stratification:
-  prop_hospital:
-    source_immunity_protection:
-      none: 0.
-      low: 0.807
-      high: 0.95
-
-# Pessimistic VE assumptions
 #immunity_stratification:
 #  infection_risk_reduction:
 #    none: 0.
-#    low: 0.038
-#    high: 0.3
+#    low: 0.438
+#    high: 0.6
 #
 #age_stratification:
 #  prop_hospital:
 #    source_immunity_protection:
 #      none: 0.
-#      low: 0.488
-#      high: 0.85
+#      low: 0.807
+#      high: 0.95
 
-sojourns:
-  latent:
-    total_time: 3.
-  recovered: 180.
+# Pessimistic VE assumptions
+immunity_stratification:
+  infection_risk_reduction:
+    none: 0.
+    low: 0.038
+    high: 0.3
+
+age_stratification:
+  prop_hospital:
+    source_immunity_protection:
+      none: 0.
+      low: 0.488
+      high: 0.85
 
 #sojourns:
 #  latent:
 #    total_time: 3.
-#  recovered: 365.
+#  recovered: 180.
+
+sojourns:
+  latent:
+    total_time: 3.
+  recovered: 365.

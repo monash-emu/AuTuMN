@@ -9,6 +9,7 @@ from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model
+from autumn.models.sm_sir.constants import IMMUNITY_STRATA
 from autumn.settings import Region, Models
 
 # Load and configure model parameters
@@ -77,6 +78,22 @@ def custom_build_model(param_set, build_options=None):
             wrap_series_transform_for_ndarray(get_roc),
             [v],
         )
+
+    # Add in some code to track what is going on with the immunity strata, so that I can see what is going on
+    for stratum in IMMUNITY_STRATA:
+        n_immune_name = f"n_immune_{stratum}"
+        prop_immune_name = f"prop_immune_{stratum}"
+        model.request_output_for_compartments(
+            n_immune_name,
+            model._original_compartment_names,
+            {"immunity": stratum},
+        )
+        model.request_function_output(
+            prop_immune_name,
+            lambda num, total: num / total,
+            [n_immune_name, "total_population"],
+        )
+
     return model
 
 

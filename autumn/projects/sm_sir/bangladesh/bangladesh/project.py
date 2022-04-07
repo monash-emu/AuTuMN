@@ -112,35 +112,18 @@ def custom_build_model(param_set, build_options=None):
         "boosting": ("low", "high"),
         "waning": ("high", "low")
     }
-
     sc_functions = calculate_transition_rates_from_dynamic_props(props_df, active_flows)
 
     for comp in model._original_compartment_names:
-
-        model.add_transition_flow(
-            "vaccination",
-            sc_functions["vaccination"],
-            comp,
-            comp,
-            source_strata={"immunity": "none"},
-            dest_strata={"immunity": "low"},
-        )
-        model.add_transition_flow(
-            "boosting",
-            sc_functions["boosting"],
-            comp,
-            comp,
-            source_strata={"immunity": "low"},
-            dest_strata={"immunity": "high"},
-        )
-        model.add_transition_flow(
-            "waning",
-            sc_functions["waning"],
-            comp,
-            comp,
-            source_strata={"immunity": "high"},
-            dest_strata={"immunity": "low"},
-        )
+        for transition, strata in active_flows.items():
+            model.add_transition_flow(
+                transition,
+                sc_functions[transition],
+                comp,
+                comp,
+                source_strata={"immunity": strata[0]},
+                dest_strata={"immunity": strata[1]},
+            )
 
     return model
 

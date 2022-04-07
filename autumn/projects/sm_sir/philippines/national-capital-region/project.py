@@ -31,18 +31,18 @@ priors = [
     UniformPrior("infectious_seed", [1, 400]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.04]),
     # Vaccine-induced immunity
-    UniformPrior(
-        "immunity_stratification.infection_risk_reduction.low", [0., 0.20]
-    ),
-    UniformPrior(
-        "immunity_stratification.infection_risk_reduction.high", [.50, 0.70]
-    ),
-    UniformPrior(
-        "age_stratification.prop_hospital.source_immunity_protection.low", [0.40, 0.60]
-    ),
-    UniformPrior(
-        "age_stratification.prop_hospital.source_immunity_protection.high", [.80, 0.90]
-    ),
+    # UniformPrior(
+    #     "immunity_stratification.infection_risk_reduction.low", [0., 0.20]
+    # ),
+    # UniformPrior(
+    #     "immunity_stratification.infection_risk_reduction.high", [.50, 0.70]
+    # ),
+    # UniformPrior(
+    #     "age_stratification.prop_hospital.source_immunity_protection.low", [0.40, 0.60]
+    # ),
+    # UniformPrior(
+    #     "age_stratification.prop_hospital.source_immunity_protection.high", [.80, 0.90]
+    # ),
     # Hospital-related
     UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, 1.]),
     UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),

@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 import numpy as np
+from scipy import stats
+
 from summer.utils import ref_times_to_dti
 
 #from autumn.tools.project.timeseries import TimeSeries
@@ -99,3 +101,12 @@ def get_dispersion_priors_for_gaussian_targets(targets: List[BaseTarget]):
         priors.append(prior)
 
     return priors
+
+def truncnormal_logpdf(target_data: np.ndarray, model_output: np.ndarray, trunc_vals: Tuple[float, float], sd: float):
+    """
+    Return the logpdf of a truncated normal target, with scaling transforms
+    according to:
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncnorm.html
+    """
+    a, b = (trunc_vals[0] - model_output) / sd, (trunc_vals[1] - model_output) / sd
+    return stats.truncnorm.logpdf(x=target_data, a=a, b=b, loc=model_output, scale=sd)

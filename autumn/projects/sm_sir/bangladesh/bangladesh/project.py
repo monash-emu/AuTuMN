@@ -16,8 +16,8 @@ from autumn.settings import Region, Models
 # Load and configure model parameters
 baseline_params = base_params.update(
     build_rel_path("params/baseline.yml")
-# ).update(
-#     build_rel_path("params/mle-params.yml"), calibration_format=True,
+).update(
+    build_rel_path("params/mle-params.yml"), calibration_format=True,
 )
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 

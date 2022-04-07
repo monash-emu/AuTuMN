@@ -56,7 +56,7 @@ for roc_var in roc_vars:
 targets = [
     NormalTarget(notifications_ts),
     NormalTarget(hospital_admit_early_ts),
-    TruncNormalTarget(hospital_late_early_ts, trunc_range=(200., np.inf)),
+    TruncNormalTarget(hospital_late_early_ts, trunc_range=(200., 1e7)),
     NormalTarget(deaths_ts),
     NormalTarget(late_hosp_admissions),
     NormalTarget(late_deaths)

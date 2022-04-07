@@ -15,7 +15,7 @@ sojourns:
   latent:
     total_time: 4.
     proportion_early: 0.5
-  recovered: 10000.
+  recovered: 180.
 
 time:
   start: 450.
@@ -66,8 +66,8 @@ voc_emergence:
     icu_multiplier: 0.55
     cross_protection:
       wild_type:
-        early_reinfection: 0.75
-        late_reinfection: 0.4
+        early_reinfection: 1.
+        late_reinfection: 0.
       omicron:
         early_reinfection: 1.
         late_reinfection: 0.

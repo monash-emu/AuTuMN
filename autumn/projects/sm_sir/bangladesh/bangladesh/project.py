@@ -16,8 +16,8 @@ from autumn.settings import Region, Models
 # Load and configure model parameters
 baseline_params = base_params.update(
     build_rel_path("params/baseline.yml")
-).update(
-    build_rel_path("params/mle-params.yml"), calibration_format=True,
+# ).update(
+#     build_rel_path("params/mle-params.yml"), calibration_format=True,
 )
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
@@ -33,9 +33,7 @@ hospital_floor_start = (datetime(2022, 1, 1) - COVID_BASE_DATETIME).days
 
 # Get the actual targets
 notifications_ts = ts_set["notifications"].loc[targets_start: notifications_trunc_point]
-hospital_admit_early_ts = ts_set["hospital_admissions"].loc[targets_start: hospital_floor_start]
-hospital_late_early_ts = ts_set["hospital_admissions"].loc[hospital_floor_start:]
-late_hosp_admissions = ts_set["hospital_admissions"].loc[notifications_trunc_point:]
+hospital_admit_ts = ts_set["hospital_admissions"].loc[targets_start:]
 deaths_ts = ts_set["infection_deaths"].loc[targets_start:]
 late_deaths = ts_set["infection_deaths"].loc[notifications_trunc_point:]
 
@@ -55,10 +53,8 @@ for roc_var in roc_vars:
 
 targets = [
     NormalTarget(notifications_ts),
-    NormalTarget(hospital_admit_early_ts),
-    TruncNormalTarget(hospital_late_early_ts, trunc_range=(200., 1e7)),
+    NormalTarget(hospital_admit_ts),
     NormalTarget(deaths_ts),
-    NormalTarget(late_hosp_admissions),
     NormalTarget(late_deaths)
 ] + roc_targets
 

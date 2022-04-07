@@ -99,6 +99,9 @@ def run_calibration_chain(
     logging.info("Running calibration chain %s", chain_id)
     os.environ["AUTUMN_CALIBRATE_DIR"] = CALIBRATE_DATA_DIR
 
+    import numpy as np
+    np.seterr(all="raise")  
+
     try:
         project = get_project_from_run_id(run_id)
         project.calibrate(runtime, chain_id, num_chains)

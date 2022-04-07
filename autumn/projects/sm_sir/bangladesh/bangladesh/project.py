@@ -96,14 +96,14 @@ def custom_build_model(param_set, build_options=None):
             [n_immune_name, "total_population"],
         )
 
-    # Requested proportions over time
+    # Requested proportions over time - loosely what was reported for first dosages in Bangladesh
     props_df = pd.DataFrame(
         data={
-            "none": [1., .2, .2, .2],
-            "low": [0., .8, .6, .7],
-            "high": [0., .0, .2, .1]
+            "none": [1., 0.98, 0.975, 0.88, 0.63],
+            "low": [0., 0.02, 0.025, 0.12, 0.37],
+            "high": [0., 0., 0., 0., 0.]
         },
-        index=[390, 420, 700, 900]
+        index=[0, 457, 579, 671, 763]
     )
 
     # List of transition flows

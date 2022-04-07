@@ -1,7 +1,6 @@
 from math import exp
 from typing import List, Tuple
 import pandas as pd
-import numpy as np
 
 from summer import CompartmentalModel
 
@@ -22,6 +21,7 @@ from .stratifications.immunity import (
     adjust_susceptible_infection_with_strains,
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
+    add_dynamic_immunity_to_model,
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
@@ -601,6 +601,28 @@ def build_model(
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
+    is_dynamic_immunity = True
+
+    # Requested proportions over time - loosely what was reported for first dosages in Bangladesh
+    # FIXME: Needs to be moved into parameters
+    props_df = pd.DataFrame(
+        data={
+            "none": [1., 0.98, 0.975, 0.88, 0.63],
+            "low": [0., 0.02, 0.025, 0.12, 0.37],
+            "high": [0., 0., 0., 0., 0.]
+        },
+        index=[0, 457, 579, 671, 763]
+    )
+    # List of transition flows
+    active_flows = {
+        "vaccination": ("none", "low"),
+        "boosting": ("low", "high"),
+        "waning": ("high", "low")
+    }
+
+    if is_dynamic_immunity:
+        add_dynamic_immunity_to_model(compartment_types, props_df, active_flows, model)
+
     """
     Get the applicable outputs
     """
@@ -663,5 +685,8 @@ def build_model(
     outputs_builder.request_recovered_proportion(compartment_types)
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
+
+    if is_dynamic_immunity:
+        outputs_builder.request_immunity_props(immunity_strat.strata)
 
     return model

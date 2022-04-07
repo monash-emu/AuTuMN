@@ -418,6 +418,31 @@ class SmSirOutputsBuilder(OutputsBuilder):
     def request_random_process_outputs(self,):
         self.model.request_computed_value_output("transformed_random_process")
 
+    def request_immunity_props(self, strata):
+        """
+        Track population distribution across immunity stratification, to make sure vaccination stratification is working
+        correctly.
+
+        Args:
+            strata: Immunity strata being implemented in the model
+
+        """
+
+        # Add in some code to track what is going on with the immunity strata, so that I can see what is going on
+        for stratum in strata:
+            n_immune_name = f"n_immune_{stratum}"
+            prop_immune_name = f"prop_immune_{stratum}"
+            self.model.request_output_for_compartments(
+                n_immune_name,
+                self.compartments,
+                {"immunity": stratum},
+            )
+            self.model.request_function_output(
+                prop_immune_name,
+                lambda num, total: num / total,
+                [n_immune_name, "total_population"],
+            )
+
 
 def build_statistical_distribution(distribution_details: TimeDistribution):
     """

@@ -1,13 +1,15 @@
 import json
-from pandas import Series
 from datetime import datetime
+
+import numpy as np
+from pandas import Series
 
 from autumn.tools.utils.utils import wrap_series_transform_for_ndarray
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.tools.calibration.targets import NormalTarget, TruncNormalTarget
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 
@@ -46,7 +48,7 @@ for roc_var in roc_vars:
 
 targets = [
     NormalTarget(notifications_ts),
-    NormalTarget(hospital_admissions_ts),
+    TruncNormalTarget(hospital_admissions_ts, trunc_range=(0.0,np.inf)),
     NormalTarget(deaths_ts),
     NormalTarget(late_hosp_admissions),
     NormalTarget(late_deaths)

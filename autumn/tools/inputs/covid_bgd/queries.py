@@ -23,16 +23,16 @@ def get_coxs_bazar_testing_numbers():
     return test_dates, avg_vals
 
 
-def get_bgd_vac_coverage(region: str = None, vaccine: str = None, dose: int = None):
+def get_bgd_vac_coverage(region: str, vaccine: str, dose: int):
     """Calculates the vaccination coverage for Bangladesh and sub regions
 
     Args:
-        region (str, optional): Can be {"BGD"|"DHK"}. Defaults to None.
-        vaccine (str, optional): Can be {"aztrazeneca"|"pfizer"|"sinopharm"|"moderna"|"sinovac". Defaults to None.
-        dose (int, optional): Can be {1|2}. Defaults to None.
+        region (str, required): Can be {"BGD"|"DHK"}.
+        vaccine (str, required): Can be {"astrazeneca"|"pfizer"|"sinopharm"|"moderna"|"sinovac"|"total"}.
+        dose (int, required): Can be {1|2}.
 
     Returns:
-        (tuple): A tuple of two numpy arrays of dates and coverage
+        (Pandas series): A Pandas series of dates(index) and coverage(values)
     """
 
     # Get the total population
@@ -63,4 +63,4 @@ def get_bgd_vac_coverage(region: str = None, vaccine: str = None, dose: int = No
     if any([coverage_too_large, not_increasing_coverage]):
         AssertionError("Unrealistic coverage")
 
-    return vac_dates, vac_coverage
+    return pd.Series(vac_coverage, index=vac_dates)

@@ -1,0 +1,6 @@
+age_stratification.cfr.multiplier: 0.015300577092579672
+age_stratification.prop_hospital.multiplier: 0.027471594979247768
+contact_rate: 0.054426714714408395
+testing_to_detection.assumed_cdr_parameter: 0.008352309489105647
+voc_emergence.omicron.contact_rate_multiplier: 3.165200111199563
+voc_emergence.omicron.new_voc_seed.start_time: 502.83606305721054

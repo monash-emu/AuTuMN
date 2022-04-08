@@ -115,7 +115,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         self.model.request_output_for_flow(
                             name=output_name,
                             flow_name=incidence_flow,
-                            dest_strata=dest_filter
+                            dest_strata=dest_filter,
+                            save_results=False,
                         )
 
                         # Update the dictionaries of which outputs are relevant
@@ -128,7 +129,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     sympt_inc_name = f"incidence_sympt{agegroup_string}{immunity_string}{strain_string}"
                     self.model.request_aggregate_output(
                         name=sympt_inc_name,
-                        sources=sympt_incidence_sources
+                        sources=sympt_incidence_sources,
+                        save_results=False,
                     )
 
         # Compute detected incidence to prepare for notifications calculations
@@ -229,7 +231,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     self.model.request_function_output(
                         name=output_name,
                         sources=[f"incidence_sympt{strata_string}"],
-                        func=infection_deaths_func
+                        func=infection_deaths_func,
+                        save_results=False,
                     )
 
         # Request aggregated infection deaths
@@ -309,7 +312,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     self.model.request_function_output(
                         name=output_name,
                         sources=[f"incidence_sympt{strata_string}"],
-                        func=hospital_admissions_func
+                        func=hospital_admissions_func,
+                        save_results=False,
                     )
 
         # Request aggregated hospital admissions
@@ -375,13 +379,14 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     self.model.request_function_output(
                         name=output_name,
                         sources=[f"hospital_admissions{strata_string}"],
-                        func=icu_admissions_func
+                        func=icu_admissions_func,
+                        save_results=False,
                     )
 
         # Request aggregated icu admissions
         self.model.request_aggregate_output(
             name="icu_admissions",
-            sources=icu_admissions_sources
+            sources=icu_admissions_sources,
         )
 
         # Request ICU occupancy
@@ -390,7 +395,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         self.model.request_function_output(
             name="icu_occupancy",
             sources=["icu_admissions"],
-            func=icu_occupancy_func
+            func=icu_occupancy_func,
         )
 
     def request_recovered_proportion(self, base_comps: List[str]):

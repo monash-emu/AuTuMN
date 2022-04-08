@@ -23,13 +23,13 @@ def get_coxs_bazar_testing_numbers():
     return test_dates, avg_vals
 
 
-def get_bgd_vac_coverage(region: str = None, vaccine: str = None, dose: int = None):
+def get_bgd_vac_coverage(region: str, vaccine: str, dose: int):
     """Calculates the vaccination coverage for Bangladesh and sub regions
 
     Args:
-        region (str, optional): Can be {"BGD"|"DHK"}. Defaults to None.
-        vaccine (str, optional): Can be {"aztrazeneca"|"pfizer"|"sinopharm"|"moderna"|"sinovac". Defaults to None.
-        dose (int, optional): Can be {1|2}. Defaults to None.
+        region (str, required): Can be {"BGD"|"DHK"}.
+        vaccine (str, required): Can be {"astrazeneca"|"pfizer"|"sinopharm"|"moderna"|"sinovac"|"total"}.
+        dose (int, required): Can be {1|2}.
 
     Returns:
         (tuple): A tuple of two numpy arrays of dates and coverage

@@ -4,7 +4,6 @@ import pandas as pd
 
 from summer import CompartmentalModel
 
-from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
@@ -22,7 +21,7 @@ from .stratifications.immunity import (
     adjust_susceptible_infection_with_strains,
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
-    add_dynamic_immunity_to_model,
+    apply_reported_vacc_coverage,
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
@@ -602,19 +601,11 @@ def build_model(
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
-    is_dynamic_immunity = iso3 == "BGD"
+    # Implement the dynamic immunity process
+    vacc_coverage_available = ["BGD"]
+    is_dynamic_immunity = iso3 in vacc_coverage_available
     if is_dynamic_immunity:
-        thinning = 5
-        bgd_vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
-        bgd_vaccine_df = pd.DataFrame(
-            {
-                "none": 1. - bgd_vaccine_data[1],
-                "low": bgd_vaccine_data[1],
-            },
-            index=bgd_vaccine_data[0]
-        )
-        bgd_vaccine_df["high"] = 0.
-        add_dynamic_immunity_to_model(compartment_types, bgd_vaccine_df[::thinning], model)
+        apply_reported_vacc_coverage(compartment_types, model, thinning=20)
 
     """
     Get the applicable outputs

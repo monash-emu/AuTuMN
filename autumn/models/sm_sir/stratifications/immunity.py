@@ -1,9 +1,10 @@
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict
 import pandas as pd
 
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
 
+from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -203,6 +204,41 @@ def get_immunity_strat(
     immunity_strat.set_population_split(immunity_split_props)
 
     return immunity_strat
+
+
+def apply_reported_vacc_coverage(
+        compartment_types: List[str],
+        model: CompartmentalModel,
+        thinning: int,
+):
+    """
+    Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
+    apply it to the model as a dynamic stratum.
+
+    Args:
+        compartment_types: Unstratified model compartment types being implemented
+        model: The model itself
+        thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
+
+    """
+
+    # Check inputs
+    msg = "Data must be thinned out at least 2-fold, to ensure we don't have identical values passed to curve fitting"
+    assert thinning > 1, msg
+
+    # Get the data into the appropriate format
+    bgd_vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
+    bgd_vaccine_df = pd.DataFrame(
+        {
+            "none": 1. - bgd_vaccine_data[1],
+            "low": bgd_vaccine_data[1],
+        },
+        index=bgd_vaccine_data[0]
+    )
+    bgd_vaccine_df["high"] = 0.
+
+    # Apply to model, as below
+    add_dynamic_immunity_to_model(compartment_types, bgd_vaccine_df[::thinning], model)
 
 
 def add_dynamic_immunity_to_model(

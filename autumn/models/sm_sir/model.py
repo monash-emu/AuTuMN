@@ -613,15 +613,9 @@ def build_model(
         },
         index=[0, 457, 579, 671, 763]
     )
-    # List of transition flows
-    active_flows = {
-        "vaccination": ("none", "low"),
-        "boosting": ("low", "high"),
-        "waning": ("high", "low")
-    }
 
     if is_dynamic_immunity:
-        add_dynamic_immunity_to_model(compartment_types, props_df, active_flows, model)
+        add_dynamic_immunity_to_model(compartment_types, props_df, model)
 
     """
     Get the applicable outputs

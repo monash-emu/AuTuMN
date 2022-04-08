@@ -8,6 +8,12 @@ from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, Flo
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
 
+ACTIVE_FLOWS = {
+    "vaccination": ("none", "low"),
+    "boosting": ("low", "high"),
+    "waning": ("high", "low")
+}
+
 
 def adjust_susceptible_infection_without_strains(
         low_immune_effect: float,
@@ -202,7 +208,6 @@ def get_immunity_strat(
 def add_dynamic_immunity_to_model(
         compartments: List[str],
         strata_distributions: pd.DataFrame,
-        active_flows: Dict[str, Tuple[str]],
         model: CompartmentalModel,
 ):
     """
@@ -210,15 +215,14 @@ def add_dynamic_immunity_to_model(
 
     Args:
         strata_distributions: The target proportions at each time point
-        active_flows: Instructions for the stratum that each flow starts from and goes to
         model: The model to be adapted
         compartments: The types of compartment being implemented in the model, before stratification
 
     """
 
-    sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, active_flows)
+    sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
     for comp in compartments:
-        for transition, strata in active_flows.items():
+        for transition, strata in ACTIVE_FLOWS.items():
             model.add_transition_flow(
                 transition,
                 sc_functions[transition],

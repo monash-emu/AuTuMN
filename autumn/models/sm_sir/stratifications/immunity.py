@@ -230,10 +230,9 @@ def apply_reported_vacc_coverage(
     bgd_vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
     bgd_vaccine_df = pd.DataFrame(
         {
-            "none": 1. - bgd_vaccine_data[1],
-            "low": bgd_vaccine_data[1],
+            "none": 1. - bgd_vaccine_data,
+            "low": bgd_vaccine_data,
         },
-        index=bgd_vaccine_data[0]
     )
     bgd_vaccine_df["high"] = 0.
 

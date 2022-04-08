@@ -129,7 +129,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     sympt_inc_name = f"incidence_sympt{agegroup_string}{immunity_string}{strain_string}"
                     self.model.request_aggregate_output(
                         name=sympt_inc_name,
-                        sources=sympt_incidence_sources
+                        sources=sympt_incidence_sources,
+                        save_results=False,
                     )
 
         # Compute detected incidence to prepare for notifications calculations

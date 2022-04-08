@@ -7,6 +7,7 @@ class OutputsBuilder:
 
     def __init__(self, model, compartments):
         self.model = model
+        self.compartments = compartments
         self.model.request_output_for_compartments(name="total_population", compartments=compartments)
 
     def request_stratified_output_for_flow(self, flow, strata, stratification, name_stem=None, filter_on="destination"):

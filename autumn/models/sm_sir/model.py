@@ -4,6 +4,7 @@ import pandas as pd
 
 from summer import CompartmentalModel
 
+from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
@@ -601,21 +602,19 @@ def build_model(
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
-    is_dynamic_immunity = True
-
-    # Requested proportions over time - loosely what was reported for first dosages in Bangladesh
-    # FIXME: Needs to be moved into parameters
-    props_df = pd.DataFrame(
-        data={
-            "none": [1., 0.98, 0.975, 0.88, 0.63],
-            "low": [0., 0.02, 0.025, 0.12, 0.37],
-            "high": [0., 0., 0., 0., 0.]
-        },
-        index=[0, 457, 579, 671, 763]
-    )
-
+    is_dynamic_immunity = iso3 == "BGD"
     if is_dynamic_immunity:
-        add_dynamic_immunity_to_model(compartment_types, props_df, model)
+        thinning = 5
+        bgd_vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
+        bgd_vaccine_df = pd.DataFrame(
+            {
+                "none": 1. - bgd_vaccine_data[1],
+                "low": bgd_vaccine_data[1],
+            },
+            index=bgd_vaccine_data[0]
+        )
+        bgd_vaccine_df["high"] = 0.
+        add_dynamic_immunity_to_model(compartment_types, bgd_vaccine_df[::thinning], model)
 
     """
     Get the applicable outputs
@@ -680,7 +679,7 @@ def build_model(
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
 
-    if is_dynamic_immunity:
-        outputs_builder.request_immunity_props(immunity_strat.strata)
+    # if is_dynamic_immunity:
+    outputs_builder.request_immunity_props(immunity_strat.strata)
 
     return model

@@ -32,7 +32,7 @@ def get_bgd_vac_coverage(region: str, vaccine: str, dose: int):
         dose (int, required): Can be {1|2}.
 
     Returns:
-        (tuple): A tuple of two numpy arrays of dates and coverage
+        (Pandas series): A Pandas series of dates(index) and coverage(values)
     """
 
     # Get the total population
@@ -63,4 +63,4 @@ def get_bgd_vac_coverage(region: str, vaccine: str, dose: int):
     if any([coverage_too_large, not_increasing_coverage]):
         AssertionError("Unrealistic coverage")
 
-    return vac_dates, vac_coverage
+    return pd.Series(vac_coverage, index=vac_dates)

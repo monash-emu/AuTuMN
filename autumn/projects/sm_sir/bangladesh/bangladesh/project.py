@@ -63,7 +63,7 @@ targets = [
 priors = [
     UniformPrior("contact_rate", (0.02, 0.1)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.015)),
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (550., 650.)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (580., 680.)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2.2, 3.5)),
     UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.08)),
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.01, 0.08)),

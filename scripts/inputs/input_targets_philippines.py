@@ -20,8 +20,8 @@ from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 # shareable google drive links
-PHL_doh_link = "1eFxmF6n4TWBqxzuEFGBg65V3j-OwQZPj"  # sheet 05 daily report
-PHL_fassster_link = "1Ucpz2iBMhsIr7nk-t5QD8JpudtNhGs5c"
+PHL_doh_link = "11_prxOikNtUHnI1zKvtDxy3XRWdQUWzG"  # sheet 05 daily report
+PHL_fassster_link = "1-xvkWh2ELAbpmdUMHoeZJuyHm7k2vM4B"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
@@ -77,7 +77,7 @@ def fetch_phl_data():
 
     with ZipFile(PHL_fassster_dest) as z:
         filename = [each.filename for each in z.filelist if each.filename.startswith("2022")]
-        if len(filename) is 1:
+        if len(filename) == 1:
             with z.open(filename[0]) as f:
                 pd.read_csv(f).to_csv(os.path.join(phl_inputs_dir, filename[0]))
 

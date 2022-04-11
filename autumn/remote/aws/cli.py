@@ -132,7 +132,7 @@ def run_calibrate(job, app, region, chains, runtime, commit, dry):
     Run a MCMC calibration on an AWS server.
     """
     job_id = f"calibrate-{job}"
-    instance_type = aws.get_instance_type(chains, 4, "compute")
+    instance_type = aws.get_instance_type(chains, 4, "memory")
 
     if dry:
         logger.info("Dry run, would have used instance type: %s", instance_type)

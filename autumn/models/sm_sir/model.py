@@ -1,4 +1,3 @@
-from datetime import date
 from math import exp
 from typing import List, Tuple
 import pandas as pd
@@ -22,6 +21,7 @@ from .stratifications.immunity import (
     adjust_susceptible_infection_with_strains,
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
+    apply_reported_vacc_coverage,
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
@@ -601,6 +601,12 @@ def build_model(
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
+    # Implement the dynamic immunity process
+    vacc_coverage_available = ["BGD"]
+    is_dynamic_immunity = iso3 in vacc_coverage_available
+    if is_dynamic_immunity:
+        apply_reported_vacc_coverage(compartment_types, model, thinning=20)
+
     """
     Get the applicable outputs
     """
@@ -663,5 +669,8 @@ def build_model(
     outputs_builder.request_recovered_proportion(compartment_types)
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
+
+    # if is_dynamic_immunity:
+    outputs_builder.request_immunity_props(immunity_strat.strata)
 
     return model

@@ -35,6 +35,7 @@ from .utils import (
     specify_missing_prior_params,
     draw_independent_samples,
 )
+from .targets import truncnormal_logpdf
 
 ModelBuilder = Callable[[dict,dict], CompartmentalModel]
 
@@ -430,17 +431,8 @@ class Calibration:
                             [w * d for (w, d) in zip(time_weights, squared_distance)]
                         )
                     else:  # this is a truncated normal likelihood
-                        for i in range(len(data)):
-                            ll += (
-                                stats.truncnorm.logpdf(
-                                    x=data[i],
-                                    a=target.trunc_range[0],
-                                    b=target.trunc_range[1],
-                                    loc=model_output[i],
-                                    scale=normal_sd,
-                                )
-                                * time_weights[i]
-                            )
+                        logpdf_arr =  truncnormal_logpdf(data, model_output, target.trunc_range, normal_sd)
+                        ll += (logpdf_arr * time_weights).sum()
                 elif target.loglikelihood_distri == "poisson":
                     for i in range(len(data)):
                         ll += (
@@ -466,6 +458,7 @@ class Calibration:
                 else:
                     raise ValueError("Distribution not supported in loglikelihood_distri")
 
+        print(ll)
         return ll
 
     def workout_unspecified_target_sds(self):

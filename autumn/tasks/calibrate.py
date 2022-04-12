@@ -4,37 +4,47 @@ import sys
 from tempfile import TemporaryDirectory
 
 from autumn.tools import db, plots
-from autumn.settings import REMOTE_BASE_DIR
+#from autumn.settings import REMOTE_BASE_DIR
 from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.fs import recreate_dir
-from autumn.tools.utils.s3 import upload_to_run_s3, get_s3_client
+#from autumn.tools.utils.s3 import upload_to_run_s3, get_s3_client
 from autumn.tools.utils.timer import Timer
+from autumn.tools.runs import get_managed_run
 from .utils import get_project_from_run_id, set_logging_config
 
 logger = logging.getLogger(__name__)
 
 
-os.makedirs(REMOTE_BASE_DIR, exist_ok=True)
+#os.makedirs(REMOTE_BASE_DIR, exist_ok=True)
 
-CALIBRATE_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "calibration_outputs")
-CALIBRATE_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
-CALIBRATE_LOG_DIR = os.path.join(REMOTE_BASE_DIR, "logs")
-CALIBRATE_DIRS = [CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, CALIBRATE_LOG_DIR]
-MLE_PARAMS_PATH = os.path.join(CALIBRATE_DATA_DIR, "mle-params.yml")
+#CALIBRATE_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "calibration_outputs")
+#CALIBRATE_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
+#CALIBRATE_LOG_DIR = os.path.join(REMOTE_BASE_DIR, "logs")
+#CALIBRATE_DIRS = [CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, CALIBRATE_LOG_DIR]
+#MLE_PARAMS_PATH = os.path.join(CALIBRATE_DATA_DIR, "mle-params.yml")
 
 
 def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
-    s3_client = get_s3_client()
+    #s3_client = get_s3_client()
+
+    mr = get_managed_run(run_id)
+
+    CALIBRATE_DIRS = {
+        "data": mr.calibration.data_path,
+        "plots": mr.local_path / "plots",
+        "logs": mr.local_path / "logs",
+        "mle_params": mr.calibration.data_path / "mle-params.yml"
+    }
 
     # Set up directories for plots and output data.
     with Timer(f"Creating calibration directories"):
-        for dirpath in CALIBRATE_DIRS:
+        for dirpath in CALIBRATE_DIRS.values():
             recreate_dir(dirpath)
 
     # Run the actual calibrations
     with Timer(f"Running {num_chains} calibration chains"):
         args_list = [
-            (run_id, runtime, chain_id, num_chains, verbose) for chain_id in range(num_chains)
+            (run_id, runtime, chain_id, num_chains, verbose, CALIBRATE_DIRS) for chain_id in range(num_chains)
         ]
         try:
             chain_ids = run_parallel_tasks(run_calibration_chain, args_list, False)
@@ -44,10 +54,12 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
             cal_success = False
     
     with Timer("Uploading logs"):
-        upload_to_run_s3(s3_client, run_id, CALIBRATE_LOG_DIR, quiet=not verbose)
+        mr.remote.upload_run_data(CALIBRATE_DIRS["logs"])
+        #upload_to_run_s3(s3_client, run_id, CALIBRATE_LOG_DIR, quiet=not verbose)
 
     with Timer("Uploading run data"):
-        upload_to_run_s3(s3_client, run_id, CALIBRATE_DATA_DIR, quiet=not verbose)
+        mr.remote.upload_run_data(CALIBRATE_DIRS["data"])
+        #upload_to_run_s3(s3_client, run_id, CALIBRATE_DATA_DIR, quiet=not verbose)
         
     if not cal_success:
         logger.info("Terminating early from failure")
@@ -64,40 +76,44 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
     with Timer(f"Creating post-calibration plots"):
         project = get_project_from_run_id(run_id)
         plots.calibration.plot_post_calibration(
-            project.plots, CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, priors=[]
+            project.plots, CALIBRATE_DIRS["data"], CALIBRATE_DIRS["plots"], priors=[]
         )
 
     # Upload the plots to AWS S3.
     with Timer(f"Uploading plots to AWS S3"):
-        upload_to_run_s3(s3_client, run_id, CALIBRATE_PLOTS_DIR, quiet=not verbose)
+        mr.remote.upload_run_data(CALIBRATE_DIRS["plots"])
+        #upload_to_run_s3(s3_client, run_id, CALIBRATE_PLOTS_DIR, quiet=not verbose)
 
     # Find the MLE parameter set from all the chains.
     with Timer(f"Finding max likelihood estimate params"):
-        database_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
+        database_paths = db.load.find_db_paths(CALIBRATE_DIRS["data"])
         with TemporaryDirectory() as tmp_dir_path:
             collated_db_path = os.path.join(tmp_dir_path, "collated.db")
             db.process.collate_databases(
                 database_paths, collated_db_path, tables=["mcmc_run", "mcmc_params"]
             )
-            db.store.save_mle_params(collated_db_path, MLE_PARAMS_PATH)
+            db.store.save_mle_params(collated_db_path, CALIBRATE_DIRS["mle_params"])
 
     # Upload the MLE parameter set to AWS S3.
     with Timer(f"Uploading max likelihood estimate params to AWS S3"):
-        upload_to_run_s3(s3_client, run_id, MLE_PARAMS_PATH, quiet=not verbose)
+        mr.remote.upload_run_data(CALIBRATE_DIRS["mle_params"])
+        #upload_to_run_s3(s3_client, run_id, MLE_PARAMS_PATH, quiet=not verbose)
 
     with Timer(f"Uploading final logs to AWS S3"):
-        upload_to_run_s3(s3_client, run_id, 'log', quiet=not verbose)
+        mr.remote.upload_run_data(CALIBRATE_DIRS["logs"])
+        #upload_to_run_s3(s3_client, run_id, 'log', quiet=not verbose)
 
 
 def run_calibration_chain(
-    run_id: str, runtime: float, chain_id: int, num_chains: int, verbose: bool
+    run_id: str, runtime: float, chain_id: int, num_chains: int, verbose: bool,
+    paths: dict
 ):
     """
     Run a single calibration chain.
     """
-    set_logging_config(verbose, chain_id, CALIBRATE_LOG_DIR, task='calibration')
+    set_logging_config(verbose, chain_id, paths["logs"], task='calibration')
     logging.info("Running calibration chain %s", chain_id)
-    os.environ["AUTUMN_CALIBRATE_DIR"] = CALIBRATE_DATA_DIR
+    os.environ["AUTUMN_CALIBRATE_DIR"] = paths["data"]
 
     import numpy as np
     np.seterr(all='raise')
@@ -107,7 +123,7 @@ def run_calibration_chain(
         project.calibrate(runtime, chain_id, num_chains)
     except Exception:
         logger.exception("Calibration chain %s failed", chain_id)
-        gather_exc_plus(os.path.join(CALIBRATE_LOG_DIR, f"crash-calibration-{chain_id}.log"))
+        gather_exc_plus(os.path.join(paths["logs"], f"crash-calibration-{chain_id}.log"))
         raise
     logging.info("Finished running calibration chain %s", chain_id)
     return chain_id

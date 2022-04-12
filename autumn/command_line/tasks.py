@@ -14,6 +14,8 @@ from importlib import import_module
 import click
 import json
 
+from autumn.tools.runs.managed import LocalRunStore
+
 
 @click.group()
 def tasks():
@@ -35,7 +37,7 @@ def run_generic(task_spec: str):
 @click.option("--runtime", type=int, required=True)
 @click.option("--verbose", is_flag=True)
 def run_calibrate(run, chains, runtime, verbose):
-    pre_task_setup()
+    pre_task_setup(run)
 
     from autumn.tasks.calibrate import calibrate_task
 
@@ -48,7 +50,7 @@ def run_calibrate(run, chains, runtime, verbose):
 @click.option("--chains", type=int, required=True)
 @click.option("--verbose", is_flag=True)
 def resume_calibration(run, baserun, runtime, chains, verbose):
-    pre_task_setup()
+    pre_task_setup(run)
 
     from autumn.tasks.resume import resume_calibration_task
 
@@ -61,7 +63,7 @@ def resume_calibration(run, baserun, runtime, chains, verbose):
 @click.option("--sample", type=int, required=True)
 @click.option("--verbose", is_flag=True)
 def run_full_models(run, burn, sample, verbose):
-    pre_task_setup()
+    pre_task_setup(run)
 
     from autumn.tasks.full import full_model_run_task
 
@@ -73,17 +75,17 @@ def run_full_models(run, burn, sample, verbose):
 @click.option("--urunid", type=str, default="mle")
 @click.option("--verbose", is_flag=True)
 def run_powerbi(run, urunid, verbose):
-    pre_task_setup()
+    pre_task_setup(run)
 
     from autumn.tasks.powerbi import powerbi_task
 
     powerbi_task(run, urunid, not verbose)
 
 
-def pre_task_setup():
+def pre_task_setup(run_id: str):
     setup_warnings()
     setup_matplotlib()
-    setup_logging()
+    setup_logging(run_id)
 
 
 def setup_matplotlib():
@@ -100,19 +102,17 @@ def setup_warnings():
     warnings.simplefilter(action="ignore", category=UserWarning)
 
 
-def setup_logging():
-
-    from autumn.settings import LOGGING_DIR, REMOTE_BASE_DIR
+def setup_logging(run_id: str):
 
     # Configure logging for the Boto3 library
     logging.getLogger("boto3").setLevel(logging.WARNING)
     logging.getLogger("botocore").setLevel(logging.WARNING)
     logging.getLogger("nose").setLevel(logging.WARNING)
 
-    # Side effects yay!
-    os.makedirs(REMOTE_BASE_DIR, exist_ok=True)
-    os.makedirs(LOGGING_DIR, exist_ok=True)
+    lrs = LocalRunStore()
+
+    mr = lrs.create(run_id)
 
     from autumn.tasks.utils import set_logging_config
 
-    set_logging_config(verbose=True)
+    set_logging_config(verbose=True, log_path = mr.local_path / 'logs')

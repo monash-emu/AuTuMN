@@ -62,6 +62,23 @@ class RemoteRunData:
         
         full_local = local_path.joinpath(filename)
         s3.download_s3(self.client, remote_path, str(full_local))
+
+    def upload_run_data(self, src_path: Path):
+        """Upload file or directory to the run's AWS S3 path
+
+        Args:
+            src_path (Path): Complete resolved path that is a subpath of
+            the ManagedRun local base path
+        """
+
+        rel_path = src_path.relative_to(self.local_path_base)
+
+        if src_path.is_file():
+            s3.upload_file_s3(self.client, src_path, rel_path)
+        elif src_path.is_dir():
+            s3.upload_folder_s3(self.client, src_path, rel_path)
+        else:
+            raise ValueError(f"Path is not a file or folder {src_path}")
         
     def __repr__(self):
         return f"RemoteRunData: {self.run_id}"

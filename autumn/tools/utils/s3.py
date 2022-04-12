@@ -1,7 +1,7 @@
 import glob
 import logging
 import os
-from pathlib import PurePath
+from pathlib import PurePosixPath, Path
 
 import boto3
 from boto3.s3.transfer import TransferConfig
@@ -140,14 +140,16 @@ def upload_s3(client, src_path, dest_key):
         raise ValueError(f"Path is not a file or folder {src_path}")
 
 
-def upload_folder_s3(client, folder_path, dest_folder_key):
+def upload_folder_s3(client, folder_path: Path, dest_folder_key):
     """Upload a folder to S3"""
-    nodes = glob.glob(os.path.join(folder_path, "**", "*"), recursive=True)
-    files = [f for f in nodes if os.path.isfile(f)]
-    rel_files = [os.path.relpath(f, folder_path) for f in files]
+    files = [f for f in folder_path.glob("**/*") if f.is_file()]
+    #rel_files = [os.path.relpath(f, folder_path) for f in files]
+    rel_files = [f.relative_to(folder_path) for f in files]
     for rel_filepath in rel_files:
-        src_path = os.path.join(folder_path, rel_filepath)
-        dest_key = os.path.join(dest_folder_key, rel_filepath)
+        #src_path = os.path.join(folder_path, rel_filepath)
+        src_path = folder_path / rel_filepath
+        #dest_key = os.path.join(dest_folder_key, rel_filepath)
+        dest_key = PurePosixPath(dest_folder_key) / rel_filepath
         upload_file_s3(client, src_path, dest_key)
 
 
@@ -202,5 +204,5 @@ def sanitise_path(path):
     """
     Return a posix path to ensure all s3 paths have forward slashes
     """
-    pp = PurePath(path)
+    pp = PurePosixPath(path)
     return pp.as_posix()

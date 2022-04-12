@@ -458,7 +458,6 @@ class Calibration:
                 else:
                     raise ValueError("Distribution not supported in loglikelihood_distri")
 
-        print(ll)
         return ll
 
     def workout_unspecified_target_sds(self):

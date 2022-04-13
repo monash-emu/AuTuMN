@@ -15,23 +15,16 @@ from autumn.tools.utils.fs import recreate_dir
 from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.timer import Timer
 from autumn.tools.project import post_process_scenario_outputs
-from autumn.tools.runs import ManagedRun
+from autumn.tools.runs import get_managed_run
 
 logger = logging.getLogger(__name__)
 
 N_CANDIDATES = 15
 
-#FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
-#FULL_RUN_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
-#FULL_RUN_LOG_DIR = os.path.join(REMOTE_BASE_DIR, "logs")
-#FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
-#TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
-
-
 def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool, dry_run: bool = False):
     project = get_project_from_run_id(run_id)
 
-    mr = ManagedRun(run_id)
+    mr = get_managed_run(run_id)
 
     # FIXME: Can we get some of these generically from the ManagedRun?
     # FIXME: Align path naming conventions in managedrun - data_path vs local_path etc
@@ -44,27 +37,10 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     # Set up directories for plots and output data.
     with Timer(f"Creating full run directories"):
         # FIXME : Trashes local files, not always what we want...
-        for dirpath in FULL_RUN_DIRS:
-            recreate_dir(dirpath)
-
-    #s3_client = get_s3_client()
-
-    
-
-    # Find the calibration chain databases in AWS S3.
-    #key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
-    #chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".parquet")
-    #chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
-
-    # Download the calibration chain databases.
-    #with Timer(f"Downloading calibration data"):
-    #    for src_key in chain_db_keys:
-    #        download_from_run_s3(s3_client, run_id, src_key, quiet)
-
-    # Run the models for the full time period plus all scenarios.
-    #db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
-    #chain_ids = [int(p.split("/")[-1].split("-")[-1]) for p in db_paths]
-    #num_chains = len(chain_ids)
+        # Dangerous! Trashes inputs too...
+        for dirpath in FULL_RUN_DIRS.values():
+            dirpath.mkdir(parents=True, exist_ok=True)
+        recreate_dir(FULL_RUN_DIRS["data"])
 
     # Select the runs to sample for each chain.  Do this before
     # we enter the parallel loop, so we can filter candidate outputs before
@@ -75,6 +51,9 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     num_chains = len(mcmc_runs["chain"].unique())
 
     total_runs = num_chains * sample_size
+
+    if N_CANDIDATES > total_runs:
+        N_CANDIDATES = total_runs
 
     # Note that sample_size in the task argument is per-chain, whereas here it is all samples
     sampled_runs_df = select_full_run_samples(mcmc_runs, total_runs, burn_in)
@@ -125,7 +104,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
         args_list = [
             (run_id, subset_id, subset_runs[subset_id],
             mcmc_params.loc[subset_runs[subset_id].index],
-            candidates_df, quiet)
+            candidates_df, quiet, FULL_RUN_DIRS)
             for subset_id in range(len(subset_runs))
         ]
         try:
@@ -173,7 +152,8 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
 
 def run_full_model_for_subset(
     run_id: str, subset_id: int, sampled_runs_df: pd.DataFrame, 
-    mcmc_params_df: pd.DataFrame, candidates_df: pd.DataFrame, quiet: bool
+    mcmc_params_df: pd.DataFrame, candidates_df: pd.DataFrame, quiet: bool,
+    paths: dict
     ) -> int:
     """
     Run the full model (all time steps, all scenarios) for a subset of accepted calibration runs.
@@ -192,7 +172,7 @@ def run_full_model_for_subset(
         subset_id (int): The current subset
     """
 
-    set_logging_config(not quiet, subset_id, FULL_RUN_LOG_DIR, task='full')
+    set_logging_config(not quiet, subset_id, paths["logs"], task='full')
     #msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
     #logger.info(msg, chain_id, burn_in, sample_size)
     try:
@@ -200,7 +180,7 @@ def run_full_model_for_subset(
         msg = f"Running the {project.model_name} {project.region_name} model"
         logger.info(msg)
 
-        dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{subset_id}")
+        dest_db_path = os.path.join(paths["data"], f"chain-{subset_id}")
         #src_db = get_database(src_db_path)
         dest_db = get_database(dest_db_path)
 
@@ -282,7 +262,7 @@ def run_full_model_for_subset(
 
     except Exception:
         logger.exception("Full model run for subset %s failed", subset_id)
-        gather_exc_plus(os.path.join(FULL_RUN_LOG_DIR, f"crash-full-{subset_id}.log"))
+        gather_exc_plus(os.path.join(paths["logs"], f"crash-full-{subset_id}.log"))
         raise
 
     logger.info("Finished running full models for subset %s.", subset_id)

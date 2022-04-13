@@ -63,7 +63,7 @@ class RemoteRunData:
         full_local = local_path.joinpath(filename)
         s3.download_s3(self.client, remote_path, str(full_local))
 
-    def upload_run_data(self, src_path: Path):
+    def upload_run_data(self, src_path: Path, relative=False):
         """Upload file or directory to the run's AWS S3 path
 
         Args:

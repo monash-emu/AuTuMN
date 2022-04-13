@@ -10,12 +10,9 @@ from autumn.tools import db, plots
 from autumn.tools.db.database import get_database
 from autumn.tools.db.store import Table
 from autumn.tools.db.process import find_mle_run
-from autumn.settings import REMOTE_BASE_DIR
-from autumn.tasks.calibrate import CALIBRATE_DATA_DIR
 from autumn.tasks.utils import get_project_from_run_id, set_logging_config
 from autumn.tools.utils.fs import recreate_dir
 from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
-from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from autumn.tools.utils.timer import Timer
 from autumn.tools.project import post_process_scenario_outputs
 from autumn.tools.runs import ManagedRun
@@ -24,40 +21,50 @@ logger = logging.getLogger(__name__)
 
 N_CANDIDATES = 15
 
-FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
-FULL_RUN_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
-FULL_RUN_LOG_DIR = os.path.join(REMOTE_BASE_DIR, "logs")
-FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
-TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
+#FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
+#FULL_RUN_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
+#FULL_RUN_LOG_DIR = os.path.join(REMOTE_BASE_DIR, "logs")
+#FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
+#TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
 
 
 def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool, dry_run: bool = False):
     project = get_project_from_run_id(run_id)
 
+    mr = ManagedRun(run_id)
+
+    # FIXME: Can we get some of these generically from the ManagedRun?
+    # FIXME: Align path naming conventions in managedrun - data_path vs local_path etc
+    FULL_RUN_DIRS = {
+        "data": mr.full_run.local_path,
+        "plots": mr.local_path / "plots",
+        "logs": mr.local_path / "logs",
+    }
     # Set up directories for output data.
     # Set up directories for plots and output data.
     with Timer(f"Creating full run directories"):
+        # FIXME : Trashes local files, not always what we want...
         for dirpath in FULL_RUN_DIRS:
             recreate_dir(dirpath)
 
-    s3_client = get_s3_client()
+    #s3_client = get_s3_client()
 
-    mr = ManagedRun(run_id, s3_client=s3_client)
+    
 
     # Find the calibration chain databases in AWS S3.
-    key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".parquet")
-    chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
+    #key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
+    #chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".parquet")
+    #chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
 
     # Download the calibration chain databases.
-    with Timer(f"Downloading calibration data"):
-        for src_key in chain_db_keys:
-            download_from_run_s3(s3_client, run_id, src_key, quiet)
+    #with Timer(f"Downloading calibration data"):
+    #    for src_key in chain_db_keys:
+    #        download_from_run_s3(s3_client, run_id, src_key, quiet)
 
     # Run the models for the full time period plus all scenarios.
-    db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
-    chain_ids = [int(p.split("/")[-1].split("-")[-1]) for p in db_paths]
-    num_chains = len(chain_ids)
+    #db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
+    #chain_ids = [int(p.split("/")[-1].split("-")[-1]) for p in db_paths]
+    #num_chains = len(chain_ids)
 
     # Select the runs to sample for each chain.  Do this before
     # we enter the parallel loop, so we can filter candidate outputs before
@@ -65,6 +72,8 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     mcmc_runs = mr.calibration.get_mcmc_runs()
     mcmc_params = mr.calibration.get_mcmc_params()
     
+    num_chains = len(mcmc_runs["chain"].unique())
+
     total_runs = num_chains * sample_size
 
     # Note that sample_size in the task argument is per-chain, whereas here it is all samples
@@ -132,31 +141,34 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
         return
 
     with Timer("Uploading logs"):
-        upload_to_run_s3(s3_client, run_id, FULL_RUN_LOG_DIR, quiet)
+        #upload_to_run_s3(s3_client, run_id, FULL_RUN_LOG_DIR, quiet)
+        mr.remote.upload_run_data(FULL_RUN_DIRS["logs"])
 
     if not success:
         logger.info("Terminating early from failure")
         sys.exit(-1)
 
     # Upload the full model run outputs of AWS S3.
-    db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
+    #db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Uploading full model run data to AWS S3"):
-        for db_path in db_paths:
-            upload_to_run_s3(s3_client, run_id, db_path, quiet)
+        mr.remote.upload_run_data(FULL_RUN_DIRS["data"])
+        #for db_path in db_paths:
+        #    upload_to_run_s3(s3_client, run_id, db_path, quiet)
 
     # Create candidate plots from full run outputs
 
     try:
         with Timer(f"Creating candidate selection plots"):
             plots.model.plot_post_full_run(
-                project.plots, FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, candidates_df
+                project.plots, FULL_RUN_DIRS["data"], FULL_RUN_DIRS["plots"], candidates_df
             )
     except Exception as e:
         logger.warning("Candidate plots failed, resuming task")
 
     # May we may still have some valid plots - upload them to AWS S3.
     with Timer(f"Uploading plots to AWS S3"):
-        upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
+        mr.remote.upload_run_data(FULL_RUN_DIRS["plots"])
+        #upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
 
 
 def run_full_model_for_subset(

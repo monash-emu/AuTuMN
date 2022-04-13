@@ -155,6 +155,7 @@ def upload_folder_s3(client, folder_path: Path, dest_folder_key):
 
 def upload_file_s3(client, src_path, dest_key, max_retry=5):
     """Upload a file to S3"""
+    src_path = str(src_path)
     dest_key = sanitise_path(dest_key)
     logger.info("Uploading from %s to %s", src_path, dest_key)
 

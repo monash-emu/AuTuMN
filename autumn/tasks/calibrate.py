@@ -29,12 +29,13 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
 
     mr = get_managed_run(run_id)
 
+    # FIXME: Can we get some of these generically from the ManagedRun?
     CALIBRATE_DIRS = {
         "data": mr.calibration.data_path,
         "plots": mr.local_path / "plots",
         "logs": mr.local_path / "logs",
-        "mle_params": mr.calibration.data_path / "mle-params.yml"
     }
+    MLE_PARAMS_PATH = CALIBRATE_DIRS["data"] / "mle-params.yml"
 
     # Set up directories for plots and output data.
     with Timer(f"Creating calibration directories"):
@@ -92,11 +93,11 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
             db.process.collate_databases(
                 database_paths, collated_db_path, tables=["mcmc_run", "mcmc_params"]
             )
-            db.store.save_mle_params(collated_db_path, CALIBRATE_DIRS["mle_params"])
+            db.store.save_mle_params(collated_db_path, MLE_PARAMS_PATH)
 
     # Upload the MLE parameter set to AWS S3.
     with Timer(f"Uploading max likelihood estimate params to AWS S3"):
-        mr.remote.upload_run_data(CALIBRATE_DIRS["mle_params"])
+        mr.remote.upload_run_data(MLE_PARAMS_PATH)
         #upload_to_run_s3(s3_client, run_id, MLE_PARAMS_PATH, quiet=not verbose)
 
     with Timer(f"Uploading final logs to AWS S3"):
@@ -113,7 +114,7 @@ def run_calibration_chain(
     """
     set_logging_config(verbose, chain_id, paths["logs"], task='calibration')
     logging.info("Running calibration chain %s", chain_id)
-    os.environ["AUTUMN_CALIBRATE_DIR"] = paths["data"]
+    os.environ["AUTUMN_CALIBRATE_DIR"] = str(paths["data"])
 
     import numpy as np
     np.seterr(all='raise')

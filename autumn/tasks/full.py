@@ -19,7 +19,7 @@ from autumn.tools.runs import get_managed_run
 
 logger = logging.getLogger(__name__)
 
-N_CANDIDATES = 15
+
 
 def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool, dry_run: bool = False):
     project = get_project_from_run_id(run_id)
@@ -52,6 +52,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
 
     total_runs = num_chains * sample_size
 
+    N_CANDIDATES = 15
     if N_CANDIDATES > total_runs:
         N_CANDIDATES = total_runs
 

@@ -48,7 +48,7 @@ TARGET_MAP_HCMC = {
 
 TARGET_MAP_HANOI = {
     "notifications": "notifications",
-    "icu_occupancy": "icu_occupancy",
+    "hospital_occupancy": "icu_occupancy",
     "infection_deaths": "infection_deaths",
 }
 

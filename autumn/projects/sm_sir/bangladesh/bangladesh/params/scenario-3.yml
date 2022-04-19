@@ -18,4 +18,3 @@ voc_emergence:
     new_voc_seed:
       start_time: 822.  # 1 Apr 2022
     contact_rate_multiplier: 2.
-    immune_escape: 1.

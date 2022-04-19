@@ -1,7 +1,7 @@
-description: New variant more transmissible and completly escapes immunity
+description: New variant more transmissible and completely escapes immunity (combining scenarios 1 and 2)
 
 time:
-  start: 620
+  start: 800
 
 voc_emergence:
   wild_type:
@@ -12,11 +12,10 @@ voc_emergence:
   omicron:
     cross_protection:
       new_strain:
-        early_reinfection: 1.
+        early_reinfection: 0.
         late_reinfection: 0.
   new_strain:
     new_voc_seed:
       start_time: 822.  # 1 Apr 2022
-
     contact_rate_multiplier: 2.
     immune_escape: 1.

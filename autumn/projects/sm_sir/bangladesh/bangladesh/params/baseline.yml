@@ -27,7 +27,7 @@ age_groups:
   - 75
 
 time:
-  start: 350.
+  start: 375.
   end: 900.
 
 activate_random_process: false
@@ -44,7 +44,6 @@ sojourns:
   recovered: 270.
 
 infectious_seed: 1000.
-contact_rate: 0.055
 
 immunity_stratification:
   prop_immune: 0.
@@ -73,10 +72,10 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 530.
+      start_time: 590.  # Calibrated
       entry_rate: 200.
       seed_duration: 10.
-    contact_rate_multiplier: 2.76
+    contact_rate_multiplier: 2.76  # Calibrated
     immune_escape: 0.6
     hosp_protection: 0.7
     icu_multiplier: 0.5

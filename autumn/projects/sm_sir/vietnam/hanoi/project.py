@@ -39,10 +39,10 @@ notifications = pd.concat(
     ]
 )
 
-icu_occupancy = pd.concat(
+hospital_occupancy = pd.concat(
     [
-     ts_set["icu_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
-     ts_set["icu_occupancy"].loc[783:]  # from 21st Feb 2022 onwards
+     ts_set["hospital_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
+     ts_set["hospital_occupancy"].loc[783:]  # from 21st Feb 2022 onwards
     ]
 )
 
@@ -50,7 +50,7 @@ icu_occupancy = pd.concat(
 
 targets = [
     NormalTarget(notifications),
-    NormalTarget(icu_occupancy),
+    NormalTarget(hospital_occupancy),
     # NormalTarget(infection_deaths)
 ]
 

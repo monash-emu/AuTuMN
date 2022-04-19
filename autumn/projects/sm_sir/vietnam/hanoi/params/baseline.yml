@@ -119,6 +119,8 @@ mobility:
         - 0.667
         - 1.0
 
+prop_icu_among_hospitalised: 0.05
+
 age_stratification:
   cfr:
     multiplier: 1.0

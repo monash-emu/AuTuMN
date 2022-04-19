@@ -1,7 +1,7 @@
-description: New variant completly escapes immunity (both vaccination- and infection-related)
+description: VoC completely escapes immunity
 
-time:
-  start: 800
+#time:
+#  start: 800
 
 voc_emergence:
   wild_type:
@@ -17,3 +17,4 @@ voc_emergence:
   new_strain:
     new_voc_seed:
       start_time: 822.  # 1 Apr 2022
+    immune_escape: 1.

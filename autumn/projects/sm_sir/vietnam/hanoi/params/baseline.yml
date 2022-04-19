@@ -49,7 +49,7 @@ voc_emergence:
         late_reinfection: 0.85  # 15% immune escape
       omicron:
         early_reinfection: 0.4  # 60% immune escape
-        late_reinfection: 0.25  # 75% immune escape, 5 times higher immune escape compared to delta late reinfection
+        late_reinfection: 0.34  # 85% of 0.4
   omicron:
     starting_strain: false
     seed_prop: 0.
@@ -67,10 +67,10 @@ voc_emergence:
     cross_protection:
       wild_type:
         early_reinfection: 1.  # 0% immune escape
-        late_reinfection: 0.8  # 20% immune escape
+        late_reinfection: 0.85  # 20% immune escape
       omicron:
         early_reinfection: 1.  # 0% immune escape
-        late_reinfection: 0.4 # 60% immune escape, 3 times higher immune escape compared to delta late reinfection
+        late_reinfection: 0.15 # 85% immune escape
 
 #testing_to_detection:
 #  assumed_tests_parameter: 0.001 # Malaysia model

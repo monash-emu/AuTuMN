@@ -111,12 +111,14 @@ mobility:
         - 2021-12-06 # Students grade 12 started to come back to school at 50% capacity
         - 2022-02-08 # Students grade 6-12 started to come back to school
         - 2022-02-14 # Students of most major universities started to return to campus
-        - 2022-02-21 # Primary school students and kids at kindergarten started to come back to school
+        - 2022-04-06 # Primary school students started to come back to school
+        - 2022-04-13 # Children at kindergartens started to come back to
       values:
         - 0.0
         - 0.025
         - 0.333
         - 0.667
+        - 0.833
         - 1.0
 
 prop_icu_among_hospitalised: 0.05

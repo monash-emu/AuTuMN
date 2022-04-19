@@ -77,7 +77,7 @@ voc_emergence:
 #  assumed_cdr_parameter: 0.05 # fixed
 #  smoothing_period: 14
 
-detect_prop: 0.1
+detect_prop: 0.2
 
 hospital_stay:
   hospital_all:

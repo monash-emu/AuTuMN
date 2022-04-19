@@ -60,7 +60,7 @@ priors = [
     UniformPrior("infectious_seed", (10000., 25000.)),
     UniformPrior("contact_rate", (0.1, 0.25)),
     # detect prop
-    UniformPrior("detect_prop", (0.1, 0.3)),
+    # UniformPrior("detect_prop", (0.1, 0.3)),
     # testing to detection params
     # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.002)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.08)),

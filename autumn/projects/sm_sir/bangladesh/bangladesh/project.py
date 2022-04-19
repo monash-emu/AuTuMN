@@ -1,6 +1,5 @@
 import json
 
-import numpy as np
 from pandas import Series
 from datetime import datetime
 

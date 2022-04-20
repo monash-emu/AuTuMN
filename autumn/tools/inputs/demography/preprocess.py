@@ -274,7 +274,7 @@ def read_population_df(loc_df: pd.DataFrame):
     pop_bgd = get_bangladesh_pop(BGD_POP)
     pop_df = pop_df.append(pop_bgd)
 
-    pop_thimphu = get_bhutan_thimphu_urban_pop(BTN_THM, add_pop_cols)
+    pop_thimphu = get_thimphu_urban_pop(BTN_THM, add_pop_cols)
     pop_df = pop_df.append(pop_thimphu)
 
     # Ensure all numbers are actually numbers
@@ -449,7 +449,7 @@ def get_rohingya_pop(ROHINGYA_POP: str) -> pd.DataFrame:
     return unpivot_df(df)
 
 
-def get_bhutan_thimphu_urban_pop(BTN_THM, add_pop_cols):
+def get_thimphu_urban_pop(BTN_THM, add_pop_cols):
 
     df = pd.read_csv(BTN_THM)
     df = add_pop_cols(df, "BTN", "Bhutan", "Thimphu_Urban", "2017")
@@ -461,7 +461,7 @@ def get_bhutan_thimphu_urban_pop(BTN_THM, add_pop_cols):
         lambda s: 75 if s == "75+" else int(s.split("-")[0])
     )
     df["end_age"] = df["Age Group"].apply(
-        lambda s: None if s == "75+" else int(s.split("-")[1])
+        lambda s: 79 if s == "75+" else int(s.split("-")[1])
     )
 
     return df[

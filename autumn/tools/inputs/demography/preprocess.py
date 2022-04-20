@@ -464,6 +464,15 @@ def get_thimphu_urban_pop(BTN_THM, add_pop_cols):
         lambda s: 79 if s == "75+" else int(s.split("-")[1])
     )
 
-    return df[
-        ["country", "iso3", "region", "year", "population", "start_age", "end_age"]
-    ]
+    df = df[["country", "iso3", "region", "year", "population", "start_age", "end_age"]]
+
+    # To satisfy baseline sm_sir params.yml prop_hospital and cfr.
+    last_row = df[-1:].copy()
+    last_row["start_age"] = 80
+    last_row["end_age"] = 84
+    last_row["population"] = last_row["population"] / 2
+    df.loc[df["end_age"] == 79, "population"] = df["population"] / 2
+
+    df = pd.concat([df, last_row], ignore_index=True)
+
+    return df

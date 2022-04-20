@@ -21,9 +21,7 @@ register_project(
     "autumn.projects.tuberculosis.marshall_islands.project",
 )
 register_project(
-    Models.TB,
-    Region.PHILIPPINES,
-    "autumn.projects.tuberculosis.philippines.project"
+    Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.philippines.project"
 )
 
 # Example projects
@@ -112,4 +110,15 @@ register_project(
     Models.SM_SIR,
     Region.HANOI,
     "autumn.projects.sm_sir.vietnam.hanoi.project",
+)
+register_project(
+    Models.SM_SIR,
+    Region.BHUTAN,
+    "autumn.projects.sm_sir.bhutan.bhutan.project",
+)
+
+register_project(
+    Models.SM_SIR,
+    Region.THIMPHU,
+    "autumn.projects.sm_sir.bhutan.thimphu.project",
 )

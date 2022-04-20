@@ -28,6 +28,8 @@ class Region:
     BANGLADESH = "bangladesh"
     DHAKA = "dhaka"
     COXS_BAZAR = "coxs_bazar"
+    BHUTAN = "bhutan"
+    THIMPHU = "thimphu"
 
     REGIONS = [
         PHILIPPINES,
@@ -59,6 +61,8 @@ class Region:
         BANGLADESH,
         DHAKA,
         COXS_BAZAR,
+        BHUTAN,
+        THIMPHU,
     ]
 
     MALAYSIA_REGIONS = [

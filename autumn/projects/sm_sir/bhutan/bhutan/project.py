@@ -14,10 +14,9 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[scenario_1_params]
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("contact_rate", [0.025, 0.05]),
-    UniformPrior("recovery_rate", [0.9, 1.2]),
 ]
 targets = [
-    NormalTarget(data=ts_set["prevalence_infectious"]),
+    NormalTarget(data=ts_set["notifications"]),
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:
@@ -28,7 +27,9 @@ if baseline_params.to_dict()["activate_random_process"]:
 else:
     rp = None
 
-calibration = Calibration(priors=priors, targets=targets)
+calibration = Calibration(
+    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
+)
 
 # Create and register the project
 project = Project(Region.BHUTAN, Models.SM_SIR, build_model, param_set, calibration)

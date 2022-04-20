@@ -4,6 +4,10 @@ country:
 
 ref_mixing_iso3: CHN
 
+population:
+  region: Thimphu_Urban
+  year: 2017
+
 contact_rate: 0.4
 
 activate_random_process: False

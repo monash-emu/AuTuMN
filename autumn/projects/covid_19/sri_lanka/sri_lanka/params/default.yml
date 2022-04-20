@@ -11,7 +11,7 @@ country:
   iso3: LKA
 
 mixing_matrices:
-  source_iso3: HKG
+  source_iso3: VNM
 
 contact_tracing: #Proportion of contacts of identified cases detected at a prevalence of one active case per thousand population.
   assumed_trace_prop: 0.76

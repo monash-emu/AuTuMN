@@ -1,11 +1,10 @@
-from numpy.lib.shape_base import column_stack
 import pandas as pd
-
-from autumn.tools.db import Database
+from numpy.lib.shape_base import column_stack
 
 from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.tools.db import Database
 
-from .fetch import COVID_LKA_CSV, COVID_LKA_2021_CSV
+from .fetch import COVID_LKA_2021_CSV, COVID_LKA_CSV
 
 
 def preprocess_covid_lka(input_db: Database):

@@ -3,28 +3,28 @@ from typing import List
 from summer.compute import ComputedValueProcessor
 
 from autumn.models.covid_19.constants import (
+    COMPARTMENTS,
+    HISTORY_STRATA,
+    HOSTPIALISED_CLINICAL_STRATA,
+    INCIDENCE,
     INFECT_DEATH,
     INFECTION,
-    Compartment,
-    NOTIFICATIONS,
-    HISTORY_STRATA,
     INFECTION_DEATHS,
-    COMPARTMENTS,
-    Vaccination,
+    NOTIFICATION_CLINICAL_STRATA,
+    NOTIFICATIONS,
     PROGRESS,
     Clinical,
+    Compartment,
     History,
     Tracing,
-    NOTIFICATION_CLINICAL_STRATA,
-    HOSTPIALISED_CLINICAL_STRATA,
+    Vaccination,
 )
 from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
-from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
-from autumn.tools.utils.utils import get_complement_prop
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
+from autumn.tools.utils.utils import get_complement_prop
 
 
 class TimeProcess(ComputedValueProcessor):

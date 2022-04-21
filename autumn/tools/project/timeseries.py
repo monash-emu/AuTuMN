@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 import pandas as pd
 
 from autumn.tools.utils.secrets import check_hash

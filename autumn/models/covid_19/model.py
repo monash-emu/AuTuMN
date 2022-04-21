@@ -1,44 +1,45 @@
 from summer import CompartmentalModel
 
+from autumn.models.covid_19.constants import Vaccination
+from autumn.models.covid_19.detection import CdrProc, find_cdr_function_from_test_data
+from autumn.models.covid_19.utils import calc_compartment_periods
+from autumn.tools import inputs
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import (
     build_synthetic_matrices,
 )
-from autumn.models.covid_19.constants import Vaccination
-from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.models.covid_19.detection import find_cdr_function_from_test_data, CdrProc
-from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (
     COMPARTMENTS,
     COVID_BASE_DATETIME,
     DISEASE_COMPARTMENTS,
-    INFECTIOUS_COMPARTMENTS,
-    Compartment,
-    Tracing,
-    History,
-    INFECTION,
-    INFECTIOUSNESS_ONSET,
     INCIDENCE,
+    INFECT_DEATH,
+    INFECTION,
+    INFECTIOUS_COMPARTMENTS,
+    INFECTIOUSNESS_ONSET,
     PROGRESS,
     RECOVERY,
-    INFECT_DEATH,
+    Compartment,
+    History,
+    Tracing,
 )
 from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
+from .strat_processing import tracing
+from .strat_processing.clinical import AbsPropSymptNonHospSystem, AbsRateIsolatedSystem
+from .strat_processing.strains import make_voc_seed_func
 from .strat_processing.vaccination import (
     add_vacc_rollout_requests,
     apply_standard_vacc_coverage,
+    find_vacc_strata,
+    get_second_dose_delay_rate,
 )
-from .strat_processing import tracing
-from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
-from .strat_processing.strains import make_voc_seed_func
-from .strat_processing.vaccination import get_second_dose_delay_rate, find_vacc_strata
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
-from .stratifications.tracing import get_tracing_strat
-from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
+from .stratifications.strains import get_strain_strat
+from .stratifications.tracing import get_tracing_strat
 from .stratifications.vaccination import get_vaccination_strat
 
 base_params = Params(

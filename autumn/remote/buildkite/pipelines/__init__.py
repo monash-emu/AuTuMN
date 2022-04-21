@@ -1,8 +1,8 @@
 from . import (
     calibrate,
     full,
-    resume,
     powerbi,
+    resume,
     trigger_europe,
     trigger_malaysia,
     trigger_philippines,

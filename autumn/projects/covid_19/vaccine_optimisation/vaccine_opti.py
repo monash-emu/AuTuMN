@@ -1,9 +1,9 @@
 from autumn.projects.covid_19.vaccine_optimisation.constants import (
-    SCENARIO_START_TIME,
+    INFECTION_EFFICACY,
     PHASE_2_DURATION,
     PHASE_3_DURATION,
+    SCENARIO_START_TIME,
     SEVERITY_EFFICACY,
-    INFECTION_EFFICACY,
     TOTAL_DAILY_DOSES,
     VACC_AGE_GROUPS,
 )

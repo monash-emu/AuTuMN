@@ -1,15 +1,14 @@
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
+
 import pandas as pd
+from summer import CompartmentalModel, Multiply, Stratification
 
-from summer import Stratification, Multiply
-from summer import CompartmentalModel
-
-from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
-from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_sir.constants import IMMUNITY_STRATA, FlowName, ImmunityStratum
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 from autumn.tools.dynamic_proportions.solve_transitions import (
     calculate_transition_rates_from_dynamic_props,
 )
+from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
 
 ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),

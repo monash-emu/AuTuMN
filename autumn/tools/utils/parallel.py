@@ -1,12 +1,12 @@
-import sys
-import traceback
-import time
-import os
-import logging
 import functools
+import logging
 import multiprocessing as mp
+import os
+import sys
+import time
+import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import List, Callable, Any
+from typing import Any, Callable, List
 
 logger = logging.getLogger(__name__)
 

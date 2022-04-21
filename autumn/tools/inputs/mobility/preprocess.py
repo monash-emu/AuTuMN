@@ -2,12 +2,12 @@ import os
 
 import pandas as pd
 
-from autumn.tools.db import Database
 from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import create_date_index
 from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.tools.db import Database
+from autumn.tools.utils.utils import create_date_index
 
-from .fetch import MOBILITY_CSV_PATH, VNM_CSV_PATH, FB_MOVEMENT_2021, FB_MOVEMENT_2022
+from .fetch import FB_MOVEMENT_2021, FB_MOVEMENT_2022, MOBILITY_CSV_PATH, VNM_CSV_PATH
 
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"

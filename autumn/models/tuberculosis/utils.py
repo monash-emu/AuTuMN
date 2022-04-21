@@ -1,5 +1,6 @@
-from scipy.integrate import quad
 from copy import copy
+
+from scipy.integrate import quad
 
 
 def create_sloping_step_function(start_x, start_y, end_x, end_y):

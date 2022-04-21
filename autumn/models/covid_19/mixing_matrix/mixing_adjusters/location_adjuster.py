@@ -1,8 +1,10 @@
 from typing import Callable, Dict
+
 import numpy as np
 
-from .base_adjuster import BaseMixingAdjuster
 from autumn.models.covid_19.constants import LOCATIONS
+
+from .base_adjuster import BaseMixingAdjuster
 
 
 class LocationMixingAdjuster(BaseMixingAdjuster):

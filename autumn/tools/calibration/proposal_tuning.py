@@ -1,4 +1,4 @@
-from numpy import mean, exp, log
+from numpy import exp, log, mean
 
 
 def tune_jumping_stdev(eval_points, eval_logposteriors, relative_likelihood_reduction):

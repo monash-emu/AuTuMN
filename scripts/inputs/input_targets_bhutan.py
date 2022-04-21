@@ -3,15 +3,13 @@ Script for loading Bhutan and Thimphu data into calibration targets and default.
 """
 import os
 from typing import List
+
 import pandas as pd
 from sqlalchemy import DATE
 
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
-
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 
 SM_SIR_BTN_TS = os.path.join(
     PROJECTS_PATH, "sm_sir", "bhutan", "bhutan", "timeseries.json"

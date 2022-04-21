@@ -1,11 +1,11 @@
-import numpy as np
-
 from typing import List
+
+import numpy as np
 from summer import CompartmentalModel
 
 from autumn.tools.curve import tanh_based_scaleup
 
-from .constants import COMPARTMENTS, Compartment, INFECTIOUS_COMPS
+from .constants import COMPARTMENTS, INFECTIOUS_COMPS, Compartment
 
 
 def request_outputs(

@@ -1,12 +1,11 @@
-import os
 import json
-
-from fpdf import FPDF
-from autumn.settings import DOCS_PATH
-from autumn.settings import PROJECTS_PATH
+import os
 from datetime import datetime
 
-from autumn.tools.utils.s3 import upload_file_s3, get_s3_client
+from fpdf import FPDF
+
+from autumn.settings import DOCS_PATH, PROJECTS_PATH
+from autumn.tools.utils.s3 import get_s3_client, upload_file_s3
 
 POLICY_PATH = os.path.join(DOCS_PATH, "papers", "covid_19", "policy_brief")
 POLICY_PDF = os.path.join(POLICY_PATH, "policy_brief.pdf")

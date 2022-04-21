@@ -5,19 +5,17 @@ save files in data/targets/
 import itertools
 import json
 import os
-import requests
 import sys
 from datetime import datetime
 from zipfile import ZipFile
 
-
 import numpy as np
 import pandas as pd
+import requests
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
-from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
-
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
 
 # shareable google drive links
 PHL_doh_link = "198QKjNIGFxM210jnOsD0A58uEhQvKHtV"  # sheet 05 daily report

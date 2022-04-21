@@ -1,46 +1,47 @@
 from math import exp
 from typing import List, Tuple
+
 import pandas as pd
-
 from summer import CompartmentalModel
+from summer.compute import ComputedValueProcessor
 
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
+from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools import inputs
-from autumn.tools.project import Params, build_rel_path
-from autumn.tools.random_process import RandomProcess
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import (
     build_synthetic_matrices,
 )
+from autumn.tools.project import Params, build_rel_path
+from autumn.tools.random_process import RandomProcess
 from autumn.tools.utils.utils import FunctionWrapper, multiply_function_or_constant
-from autumn.models.covid_19.detection import find_cdr_function_from_test_data
+
+from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .outputs import SmSirOutputsBuilder
 from .parameters import (
-    Parameters,
-    Sojourns,
     CompartmentSojourn,
-    Time,
-    RandomProcessParams,
-    TestingToDetection,
+    Parameters,
     Population,
+    RandomProcessParams,
+    Sojourns,
+    TestingToDetection,
+    Time,
 )
-from summer.compute import ComputedValueProcessor
-from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
+from .stratifications.clinical import get_clinical_strat
 from .stratifications.immunity import (
-    get_immunity_strat,
-    adjust_susceptible_infection_without_strains,
-    adjust_susceptible_infection_with_strains,
-    adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
+    adjust_reinfection_without_strains,
+    adjust_susceptible_infection_with_strains,
+    adjust_susceptible_infection_without_strains,
     apply_reported_vacc_coverage,
+    get_immunity_strat,
 )
 from .stratifications.strains import (
+    apply_reinfection_flows_with_strains,
     get_strain_strat,
     seed_vocs,
-    apply_reinfection_flows_with_strains,
 )
-from .stratifications.clinical import get_clinical_strat
-from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
-from autumn.settings.constants import COVID_BASE_DATETIME
 
 # Base date used to calculate mixing matrix times
 base_params = Params(

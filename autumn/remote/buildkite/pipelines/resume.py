@@ -8,10 +8,10 @@ from autumn.remote.buildkite.buildkite import (
 
 from .calibrate import (
     burn_in_field,
-    sample_size_field,
-    trigger_field,
     chains_field,
     runtime_field,
+    sample_size_field,
+    trigger_field,
 )
 
 run_id_field = TextInputField(

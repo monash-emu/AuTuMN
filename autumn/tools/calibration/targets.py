@@ -1,10 +1,9 @@
-from typing import List, Tuple
 from abc import ABC, abstractmethod
+from typing import List, Tuple
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy import stats
-
 from summer.utils import ref_times_to_dti
 
 # from autumn.tools.project.timeseries import TimeSeries

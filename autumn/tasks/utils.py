@@ -1,10 +1,10 @@
 import logging
 import logging.config
-import socket
 import os
+import socket
 
-from autumn.tools.utils.runs import read_run_id
 from autumn.tools.project import Project, get_project
+from autumn.tools.utils.runs import read_run_id
 
 
 def get_project_from_run_id(run_id: str) -> Project:

@@ -1,8 +1,8 @@
 import copy
 from importlib import import_module
 
+from autumn.tools.project import Project, get_project
 from autumn.tools.utils.utils import merge_dicts
-from autumn.tools.project import get_project, Project
 
 
 class Opti:

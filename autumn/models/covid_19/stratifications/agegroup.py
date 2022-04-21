@@ -1,9 +1,9 @@
-from typing import List, Dict
-import numpy as np
+from typing import Dict, List
 
+import numpy as np
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
+from autumn.models.covid_19.constants import AGEGROUP_STRATA, COMPARTMENTS, INFECTION
 from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.covid_19.parameters import Parameters
 from autumn.tools.utils.utils import normalise_sequence

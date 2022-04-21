@@ -1,11 +1,11 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
+from summer import CompartmentalModel
 
 from autumn.tools.dynamic_proportions.solve_transitions import (
     calculate_transition_rates_from_dynamic_props,
 )
-from summer import CompartmentalModel
 
 
 @pytest.mark.github_only

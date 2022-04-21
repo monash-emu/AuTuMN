@@ -2,11 +2,10 @@ import os
 import random
 from unittest import mock
 
-from summer import Compartment, Stratification
-
 import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
+from summer import Compartment, Stratification
 
 
 def get_mock_model(times, outputs, derived_outputs=None):

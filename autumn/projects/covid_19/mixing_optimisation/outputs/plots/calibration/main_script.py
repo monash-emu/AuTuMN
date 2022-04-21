@@ -1,5 +1,4 @@
 import matplotlib as mpl
-
 import models.covid_19.mixing_optimisation.outputs.plots.calibration.figure_code as fc
 
 

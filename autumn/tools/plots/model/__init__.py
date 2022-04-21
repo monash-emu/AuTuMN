@@ -4,9 +4,9 @@ import os
 import pandas as pd
 
 from autumn.tools import db
+from autumn.tools.db.process import select_outputs_from_candidates, target_to_series
 from autumn.tools.plots.model import plots
 from autumn.tools.plots.plotter import FilePlotter
-from autumn.tools.db.process import select_outputs_from_candidates, target_to_series
 from autumn.tools.plots.utils import REF_DATE
 
 from . import plots

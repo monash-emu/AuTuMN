@@ -2,19 +2,19 @@ import numpy as np
 from summer import CompartmentalModel
 
 from autumn.models.tuberculosis.parameters import Parameters
-from autumn.tools.project import Params, build_rel_path
-from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 from autumn.tools import inputs
-from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
+from autumn.tools.curve import scale_up_function, tanh_based_scaleup
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import (
     build_synthetic_matrices,
 )
+from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
+from autumn.tools.project import Params, build_rel_path
 
-from .constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
-from .stratifications.age import get_age_strat
-from .stratifications.user_defined import get_user_defined_strat
-from .stratifications.organ import get_organ_strat
+from .constants import COMPARTMENTS, INFECTIOUS_COMPS, Compartment
 from .outputs import request_outputs
+from .stratifications.age import get_age_strat
+from .stratifications.organ import get_organ_strat
+from .stratifications.user_defined import get_user_defined_strat
 
 base_params = Params(
     build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False

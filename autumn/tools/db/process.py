@@ -2,8 +2,8 @@
 Processing data from the output database.
 """
 import logging
-from typing import List
 from datetime import date
+from typing import List
 
 import numpy as np
 import pandas as pd

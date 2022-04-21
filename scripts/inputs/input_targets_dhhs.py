@@ -1,15 +1,13 @@
 import os
-import pandas as pd
-import numpy as np
-
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
-from autumn.settings import PASSWORD_ENVAR
 from getpass import getpass
+
+import numpy as np
+import pandas as pd
+
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+from autumn.settings import INPUT_DATA_PATH, PASSWORD_ENVAR, PROJECTS_PATH
 from autumn.tools.utils import secrets
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 
 COVID_AU_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_au")
 

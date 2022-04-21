@@ -4,14 +4,12 @@ Script for loading NPL data into calibration targets and default.yml
 """
 
 import os
+
 import pandas as pd
 
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
-
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 
 # Use OWID csv for notification and death numbers.
 COVID_OWID = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")

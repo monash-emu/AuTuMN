@@ -3,8 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from autumn.tools.db import Database
 from autumn.settings import INPUT_DATA_PATH
+from autumn.tools.db import Database
 
 OUR_WORLD_IN_DATA_DIRPATH = os.path.join(INPUT_DATA_PATH, "owid")
 OUR_WORLD_IN_DATA_CSV_PATH = os.path.join(

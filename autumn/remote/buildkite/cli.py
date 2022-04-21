@@ -4,19 +4,19 @@ import pprint
 
 import click
 
-from autumn.settings import Region
 from autumn.remote.aws import cli as aws
+from autumn.settings import Region
 from autumn.tools.utils.runs import read_run_id
 
 from .buildkite import trigger_pipeline
 from .pipelines import calibrate as calibrate_pipeline
-from .pipelines import resume as resume_pipeline
 from .pipelines import full as full_pipeline
 from .pipelines import powerbi as powerbi_pipeline
+from .pipelines import resume as resume_pipeline
 from .pipelines import trigger_europe as trigger_europe_pipeline
+from .pipelines import trigger_malaysia as trigger_malaysia_pipeline
 from .pipelines import trigger_philippines as trigger_philippines_pipeline
 from .pipelines import trigger_victoria as trigger_victoria_pipeline
-from .pipelines import trigger_malaysia as trigger_malaysia_pipeline
 
 logger = logging.getLogger(__name__)
 

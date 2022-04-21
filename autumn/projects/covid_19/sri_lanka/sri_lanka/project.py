@@ -1,23 +1,24 @@
 import numpy as np
-from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-from autumn.tools.project import (
-    Project,
-    ParameterSet,
-    load_timeseries,
-    build_rel_path,
-    get_all_available_scenario_paths,
-    use_tuned_proposal_sds,
+
+from autumn.models.covid_19 import base_params, build_model
+from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import (
+    get_all_scenario_dicts,
 )
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, BetaPrior, TruncNormalPrior
+from autumn.tools.calibration.priors import BetaPrior, TruncNormalPrior, UniformPrior
+from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
 from autumn.tools.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
 )
-from autumn.models.covid_19 import base_params, build_model
-from autumn.settings import Region, Models
-from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import (
-    get_all_scenario_dicts,
+from autumn.tools.project import (
+    ParameterSet,
+    Project,
+    build_rel_path,
+    get_all_available_scenario_paths,
+    load_timeseries,
+    use_tuned_proposal_sds,
 )
 
 # Load and configure model parameters.

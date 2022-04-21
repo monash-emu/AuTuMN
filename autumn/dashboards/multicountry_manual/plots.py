@@ -2,9 +2,9 @@ from math import ceil
 
 import matplotlib.pyplot as pyplot
 import streamlit as st
+from dash.dashboards.model_results.plots import model_output_selector
 
 from autumn.tools.plots.model.plots import _plot_outputs_to_axis, _plot_targets_to_axis
-from dash.dashboards.model_results.plots import model_output_selector
 
 PLOT_FUNCS = {}
 

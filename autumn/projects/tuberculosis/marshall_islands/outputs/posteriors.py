@@ -7,7 +7,6 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
 )
 from autumn.tools.plots.utils import PLOT_TEXT_DICT
 
-
 PARAMETER_NAMES_OVERRIDE = {
     "rel. screening rate (Ebeye)": "relative rate of passive TB screening in Ebeye (ref. Majuro)",
     "rel. screening rate (Other Isl.)": "relative rate of passive TB screening in other islands (ref. Majuro)",

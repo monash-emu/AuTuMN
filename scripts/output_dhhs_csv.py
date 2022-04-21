@@ -1,8 +1,9 @@
-import pandas as pd
 import os
 import sqlite3
-import boto3
 from datetime import datetime
+
+import boto3
+import pandas as pd
 
 s3 = boto3.client("s3")
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)

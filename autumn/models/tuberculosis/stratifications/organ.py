@@ -1,4 +1,4 @@
-from summer import Stratification, Multiply, Overwrite
+from summer import Multiply, Overwrite, Stratification
 
 from autumn.models.tuberculosis.constants import INFECTIOUS_COMPS, OrganStratum
 from autumn.models.tuberculosis.parameters import Parameters

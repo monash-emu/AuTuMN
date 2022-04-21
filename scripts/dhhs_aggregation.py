@@ -6,30 +6,22 @@
 #  Configuration is done in the constants below (VIC_CLUSTERS, AGGREGATE_OUTPUT ,COMMIT_SHA RUN_IDS)
 #
 
-import pandas as pd
-import numpy as np
-
-from pathlib import PurePosixPath, Path
-
+import pickle
 from datetime import datetime
+from pathlib import Path, PurePosixPath
 from time import time
 
-import pickle
-
-from autumn.tools.runs.managed import ManagedRun
-
+import numpy as np
+import pandas as pd
 import s3fs
-
-from autumn.tools.utils.pandas import pdfilt
-from autumn.tools.project import get_project
-
 from summer.utils import ref_times_to_dti
 
 from autumn.models.covid_19.model import COVID_BASE_DATETIME
-
 from autumn.tools.db import uncertainty
-
+from autumn.tools.project import get_project
+from autumn.tools.runs.managed import ManagedRun
 from autumn.tools.runs.utils import collate_columns_to_urun
+from autumn.tools.utils.pandas import pdfilt
 
 
 def as_ordinal_runs(do_df):

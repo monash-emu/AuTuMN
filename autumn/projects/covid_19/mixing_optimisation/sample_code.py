@@ -1,17 +1,16 @@
-from autumn.tools.optimisation.opti import Opti
-
 from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
-    APP_NAME,
-    ROOT_MODEL_PARAMS,
     AGE_MODE,
+    APP_NAME,
     DURATIONS,
     LOCATION_MODE,
     MODES,
     OBJECTIVES,
+    ROOT_MODEL_PARAMS,
     make_objective_func,
     make_scenario_func,
 )
+from autumn.tools.optimisation.opti import Opti
 
 PRINT_OUTPUT = True
 

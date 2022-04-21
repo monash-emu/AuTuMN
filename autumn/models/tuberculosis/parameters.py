@@ -6,7 +6,6 @@ from typing import List, Optional
 from pydantic import BaseModel, Extra, validator
 from pydantic.dataclasses import dataclass
 
-
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
 

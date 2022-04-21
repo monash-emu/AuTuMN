@@ -1,8 +1,9 @@
-import streamlit as st
 import os
 
-from .base_plotter import BasePlotter
+import streamlit as st
 from matplotlib import pyplot
+
+from .base_plotter import BasePlotter
 
 
 class StreamlitPlotter(BasePlotter):

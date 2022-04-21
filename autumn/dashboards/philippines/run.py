@@ -5,11 +5,11 @@ import os
 
 import streamlit as st
 
+from autumn.settings import Models, Region
 from autumn.tools import db
 from autumn.tools.plots.plotter import FilePlotter, StreamlitPlotter
-from autumn.tools.streamlit import selectors
 from autumn.tools.project import get_project
-from autumn.settings import Models, Region
+from autumn.tools.streamlit import selectors
 
 from .plots import dash
 

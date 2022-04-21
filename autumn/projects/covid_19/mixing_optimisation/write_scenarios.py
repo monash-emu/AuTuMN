@@ -2,8 +2,8 @@ import os
 
 import pandas as pd
 import yaml
-
 from apps import covid_19
+
 from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
     DURATIONS,

@@ -3,7 +3,6 @@ Wrappers for handling remote run data (S3)
 """
 
 from pathlib import Path
-
 from typing import List
 
 from autumn import settings

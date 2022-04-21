@@ -1,16 +1,16 @@
-from autumn.tools.project import (
-    Project,
-    ParameterSet,
-    load_timeseries,
-    build_rel_path,
-    use_tuned_proposal_sds,
-    get_all_available_scenario_paths,
-)
+from autumn.models.sm_sir import base_params, build_model, set_up_random_process
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model, set_up_random_process
-from autumn.settings import Region, Models
+from autumn.tools.project import (
+    ParameterSet,
+    Project,
+    build_rel_path,
+    get_all_available_scenario_paths,
+    load_timeseries,
+    use_tuned_proposal_sds,
+)
 
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")

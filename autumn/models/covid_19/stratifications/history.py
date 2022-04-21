@@ -2,8 +2,8 @@ from typing import Dict
 
 from summer import Stratification
 
+from autumn.models.covid_19.constants import COMPARTMENTS, HISTORY_STRATA, History
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.constants import COMPARTMENTS, History, HISTORY_STRATA
 from autumn.models.covid_19.stratifications.vaccination import apply_immunity_to_strat
 
 

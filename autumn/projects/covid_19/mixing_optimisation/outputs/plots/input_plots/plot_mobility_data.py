@@ -2,12 +2,12 @@ import os
 
 import matplotlib as mpl
 import seaborn as sns
+from apps import covid_19
 from matplotlib import pyplot
 
-from apps import covid_19
-from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS
-from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.mixing_matrix import get_mobility_funcs
+from autumn.models.covid_19.parameters import Parameters
+from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from autumn.settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(

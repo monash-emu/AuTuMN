@@ -1,7 +1,7 @@
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
 import pandas as pd
-from summer import StrainStratification, Multiply, CompartmentalModel
+from summer import CompartmentalModel, Multiply, StrainStratification
 
 from autumn.models.sm_sir.constants import Compartment, FlowName
 from autumn.models.sm_sir.parameters import VocComponent

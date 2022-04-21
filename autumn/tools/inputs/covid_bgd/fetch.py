@@ -3,7 +3,6 @@ This file imports Google mobility data and saves it to disk as a CSV.
 """
 import os
 
-
 from autumn.settings import INPUT_DATA_PATH
 
 COXS_VAC_DATA = os.path.join(

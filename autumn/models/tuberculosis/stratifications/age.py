@@ -1,27 +1,24 @@
-from summer import AgeStratification, Multiply
 from math import exp, log
 
+from summer import AgeStratification, Multiply
 
-from autumn.tools.curve import make_linear_curve, scale_up_function, tanh_based_scaleup
-from autumn.tools.inputs import get_death_rates_by_agegroup
-from autumn.tools.utils.utils import change_parameter_unit
-from autumn.tools.inputs.social_mixing.queries import (
-    get_mixing_matrix_specific_agegroups,
-)
 from autumn.models.tuberculosis.constants import (
-    Compartment,
     COMPARTMENTS,
     INFECTIOUS_COMPS,
+    Compartment,
 )
 from autumn.models.tuberculosis.parameters import Parameters
+from autumn.models.tuberculosis.utils import (
+    create_sloping_step_function,
+    create_step_function_from_dict,
+    get_parameter_dict_from_function,
+)
+from autumn.tools.curve import make_linear_curve, scale_up_function, tanh_based_scaleup
+from autumn.tools.inputs import get_death_rates_by_agegroup
 from autumn.tools.inputs.social_mixing.queries import (
     get_mixing_matrix_specific_agegroups,
 )
-from autumn.models.tuberculosis.utils import (
-    create_sloping_step_function,
-    get_parameter_dict_from_function,
-    create_step_function_from_dict,
-)
+from autumn.tools.utils.utils import change_parameter_unit
 
 
 def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:

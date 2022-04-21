@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 from autumn.projects.covid_19.mixing_optimisation.constants import (
     DURATION_PHASES_2_AND_3,
     MICRODISTANCING_OPTI_PARAMS,
@@ -8,7 +9,6 @@ from autumn.projects.covid_19.mixing_optimisation.constants import (
     PHASE_2_DURATION,
     PHASE_2_START_TIME,
 )
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 APP_NAME = "covid_19"
 ROOT_MODEL_PARAMS = {"time": {"end": PHASE_2_START_TIME}}

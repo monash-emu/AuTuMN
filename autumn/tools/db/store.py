@@ -11,7 +11,7 @@ import pandas as pd
 import yaml
 from summer.model import CompartmentalModel
 
-from autumn.tools.db.database import get_database, BaseDatabase
+from autumn.tools.db.database import BaseDatabase, get_database
 
 from . import process
 

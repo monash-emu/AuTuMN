@@ -1,6 +1,7 @@
-import yaml
-import pandas as pd
 import os
+
+import pandas as pd
+import yaml
 
 from autumn.projects.covid_19.vaccine_optimisation.vaccine_opti import (
     initialise_opti_object,

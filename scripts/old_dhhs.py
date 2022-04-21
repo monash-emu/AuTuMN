@@ -2,9 +2,9 @@
 """
 Script for loading DHHS data into calibration targets and import inputs.
 """
+import json
 import os
 import sys
-import json
 from datetime import datetime, time
 from getpass import getpass
 
@@ -15,9 +15,7 @@ import pandas as pd
 BASE_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(BASE_DIR)
 
-from autumn import constants
-from autumn import secrets
-
+from autumn import constants, secrets
 
 DHHS_CSV = os.path.join(constants.INPUT_DATA_PATH, "monashmodelextract.secret.csv")
 CHRIS_CSV = os.path.join(constants.INPUT_DATA_PATH, "monitoringreport.secret.csv")

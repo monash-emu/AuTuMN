@@ -1,10 +1,10 @@
+import numpy as np
+import yaml
+
 from autumn.projects.covid_19.vaccine_optimisation.vaccine_opti import (
     get_decision_vars_names,
     initialise_opti_object,
 )
-
-import numpy as np
-import yaml
 
 COUNTRY = "malaysia"  # should use "malaysia" or "philippines"
 

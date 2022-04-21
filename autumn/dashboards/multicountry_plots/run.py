@@ -3,11 +3,11 @@ Streamlit web UI for plotting model outputs
 """
 
 import streamlit as st
+from dash import selectors
 
 from autumn.tools import db
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.utils.params import load_targets
-from dash import selectors
 
 from .plots import PLOT_FUNCS
 

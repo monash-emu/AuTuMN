@@ -1,11 +1,11 @@
 """
 Type definition for model parameters
 """
-from pydantic import BaseModel, Extra, root_validator, validator
-from pydantic.dataclasses import dataclass
-
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Extra, root_validator, validator
+from pydantic.dataclasses import dataclass
 
 from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
 from autumn.settings.constants import COVID_BASE_DATETIME

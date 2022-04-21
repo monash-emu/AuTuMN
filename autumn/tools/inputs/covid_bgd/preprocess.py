@@ -1,11 +1,10 @@
 import pandas as pd
 
-
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.db import Database
 from autumn.tools.utils.utils import create_date_index
-from autumn.settings.constants import COVID_BASE_DATETIME
 
-from .fetch import COXS_VAC_DATA, COXS_DATA, VACC_FILE
+from .fetch import COXS_DATA, COXS_VAC_DATA, VACC_FILE
 
 
 def preprocess_covid_bgd(input_db: Database):

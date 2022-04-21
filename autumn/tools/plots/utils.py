@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Dict
+from typing import Dict, List
 
 import matplotlib.ticker as ticker
 from matplotlib import colors

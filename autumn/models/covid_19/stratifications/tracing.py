@@ -1,8 +1,8 @@
 from typing import Dict
 
-from summer import Overwrite, Stratification, Multiply
+from summer import Multiply, Overwrite, Stratification
 
-from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Tracing, INFECTION
+from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, INFECTION, Tracing
 
 
 def get_tracing_strat(

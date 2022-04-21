@@ -4,12 +4,13 @@ Script for loading Myanmar data into calibration targets and default.yml
 
 import json
 import os
-import pandas as pd
 from datetime import datetime
 
-from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries, create_date_index
+import pandas as pd
+
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 
 # COVID_MMR_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "myanmar", "timeseries.json")
 SM_SIR_PATH = os.path.join(

@@ -1,10 +1,10 @@
-import requests
 import json
-import pandas as pd
 import os
 
-from autumn.settings import INPUT_DATA_PATH
+import pandas as pd
+import requests
 
+from autumn.settings import INPUT_DATA_PATH
 
 COVID_SURVEY_PATH = os.path.join(INPUT_DATA_PATH, "covid_survey")
 TODAY = pd.to_datetime("today").date().strftime("%Y%m%d")

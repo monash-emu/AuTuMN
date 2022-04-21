@@ -1,18 +1,17 @@
 import pandas as pd
 
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.db import Database
 from autumn.tools.utils.utils import create_date_index
 
-from autumn.settings.constants import COVID_BASE_DATETIME
-
 from .fetch import (
     COVID_AU_CSV_PATH,
-    COVID_LGA_CSV_PATH,
-    MOBILITY_LGA_PATH,
-    COVID_VAC_COV_CSV,
     COVID_AU_YOUGOV,
-    COVID_VIDA_VAC_CSV,
+    COVID_LGA_CSV_PATH,
+    COVID_VAC_COV_CSV,
     COVID_VIDA_POP_CSV,
+    COVID_VIDA_VAC_CSV,
+    MOBILITY_LGA_PATH,
 )
 
 

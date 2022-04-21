@@ -1,9 +1,9 @@
-from typing import Optional, Dict
+from typing import Dict, Optional
 
-from summer import StrainStratification, Multiply
+from summer import Multiply, StrainStratification
 
+from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, INFECTION, Strain
 from autumn.models.covid_19.parameters import VocComponent
-from autumn.models.covid_19.constants import DISEASE_COMPARTMENTS, Strain, INFECTION
 
 
 def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]]):

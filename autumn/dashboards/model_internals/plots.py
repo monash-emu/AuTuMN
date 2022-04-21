@@ -3,10 +3,10 @@ from datetime import datetime
 import streamlit as st
 from matplotlib import pyplot
 
+from autumn.dashboards.model_internals.flow_graph import plot_flow_graph
 from autumn.tools import plots
 from autumn.tools.inputs import get_mobility_data
 from autumn.tools.plots.plotter import StreamlitPlotter
-from autumn.dashboards.model_internals.flow_graph import plot_flow_graph
 from autumn.tools.project import Project
 from autumn.tools.streamlit.utils import Dashboard
 

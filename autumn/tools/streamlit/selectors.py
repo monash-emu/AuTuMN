@@ -9,13 +9,13 @@ import pandas as pd
 import streamlit as st
 from summer import CompartmentalModel
 
-from autumn.settings import OUTPUT_DATA_PATH
 from autumn import settings
+from autumn.settings import OUTPUT_DATA_PATH
+from autumn.tools.project import Project, get_project
 from autumn.tools.registry import (
     get_registered_model_names,
     get_registered_project_names,
 )
-from autumn.tools.project import Project, get_project
 
 
 def get_original_compartments(model: CompartmentalModel) -> List[str]:

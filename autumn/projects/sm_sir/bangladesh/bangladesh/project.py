@@ -1,22 +1,22 @@
 import json
-
-from pandas import Series
 from datetime import datetime
 
-from autumn.tools.utils.utils import wrap_series_transform_for_ndarray
+from pandas import Series
+
+from autumn.models.sm_sir import base_params, build_model
+from autumn.settings import Models, Region
 from autumn.settings.constants import COVID_BASE_DATETIME
-from autumn.tools.project import (
-    Project,
-    ParameterSet,
-    load_timeseries,
-    build_rel_path,
-    get_all_available_scenario_paths,
-)
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget, TruncNormalTarget
-from autumn.models.sm_sir import base_params, build_model
-from autumn.settings import Region, Models
+from autumn.tools.project import (
+    ParameterSet,
+    Project,
+    build_rel_path,
+    get_all_available_scenario_paths,
+    load_timeseries,
+)
+from autumn.tools.utils.utils import wrap_series_transform_for_ndarray
 
 # Load and configure model parameters
 baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(

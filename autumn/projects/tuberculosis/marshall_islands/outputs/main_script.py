@@ -1,3 +1,5 @@
+import os
+
 import autumn.projects.tuberculosis.marshall_islands.outputs.calibration as cal
 import autumn.projects.tuberculosis.marshall_islands.outputs.counterfactual as ctf
 import autumn.projects.tuberculosis.marshall_islands.outputs.diabetes as dia
@@ -6,8 +8,6 @@ import autumn.projects.tuberculosis.marshall_islands.outputs.get_output_numbers 
 import autumn.projects.tuberculosis.marshall_islands.outputs.posteriors as pos
 import autumn.projects.tuberculosis.marshall_islands.outputs.priors as pri
 from autumn.projects.tuberculosis.marshall_islands.outputs.utils import get_format
-
-import os
 from autumn.settings import BASE_PATH
 
 DATA_PATH = os.path.join(

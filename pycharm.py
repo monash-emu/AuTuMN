@@ -2,7 +2,7 @@
 Entry point for PyCharm users to run an application
 """
 
-from autumn.settings import Region, Models
+from autumn.settings import Models, Region
 from autumn.tools.project import get_project, run_project_locally
 
 region = Region.BANGLADESH

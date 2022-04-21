@@ -1,12 +1,13 @@
 import os
-import pandas as pd
 from copy import copy
+
 import numpy as np
+import pandas as pd
 
 from autumn.settings.folders import INPUT_DATA_PATH
-from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 from autumn.tools.inputs import get_population_by_agegroup
 from autumn.tools.inputs.demography.queries import _check_age_breakpoints
+from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
 SOURCE_MATRICES_PATH = os.path.join(
     INPUT_DATA_PATH, "social-mixing", "socialmixr_outputs"

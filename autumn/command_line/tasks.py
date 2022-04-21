@@ -6,13 +6,13 @@ You can access this script from your CLI by running:
     python -m tasks --help
 
 """
+import json
+import logging
 import os
 import warnings
-import logging
 from importlib import import_module
 
 import click
-import json
 
 
 @click.group()

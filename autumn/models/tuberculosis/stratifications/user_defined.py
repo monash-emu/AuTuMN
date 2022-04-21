@@ -1,5 +1,5 @@
 import numpy as np
-from summer import Stratification, Multiply
+from summer import Multiply, Stratification
 
 from autumn.models.tuberculosis.constants import COMPARTMENTS
 from autumn.models.tuberculosis.parameters import Parameters

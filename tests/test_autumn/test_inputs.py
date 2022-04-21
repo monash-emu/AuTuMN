@@ -4,6 +4,10 @@ from datetime import datetime
 import numpy as np
 import pytest
 
+from autumn.models.covid_19.mixing_matrix.macrodistancing import (
+    get_mobility_data,
+    weight_mobility_data,
+)
 from autumn.tools.db import Database
 from autumn.tools.inputs import database as input_database
 from autumn.tools.inputs import (
@@ -14,10 +18,6 @@ from autumn.tools.inputs import (
     get_population_by_agegroup,
 )
 from autumn.tools.inputs.demography.queries import downsample_quantity, downsample_rate
-from autumn.models.covid_19.mixing_matrix.macrodistancing import (
-    get_mobility_data,
-    weight_mobility_data,
-)
 
 
 @pytest.mark.github_only

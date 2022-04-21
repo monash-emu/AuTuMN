@@ -1,20 +1,15 @@
-from typing import Optional
+import itertools
+from typing import Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
-
-from summer import Stratification, Multiply
+from summer import Multiply, Stratification
 
 from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
-from autumn.models.sm_sir.parameters import Parameters
 from autumn.models.sm_sir.constants import FlowName
-from autumn.tools.utils.utils import normalise_sequence
-
-
-from typing import List, Dict, Union
-import itertools
-
+from autumn.models.sm_sir.parameters import Parameters
 from autumn.tools.inputs import get_population_by_agegroup
-from autumn.tools.utils.utils import weighted_average
+from autumn.tools.utils.utils import normalise_sequence, weighted_average
 
 
 def get_relevant_indices(

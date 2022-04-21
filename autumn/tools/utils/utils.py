@@ -4,20 +4,20 @@ If several functions here develop a theme, consider reorganising them into a mod
 """
 import itertools
 import json
-import subprocess as sp
 import os
-import numpy
-import pandas as pd
-import numpy as np
+import subprocess as sp
 from datetime import datetime
-from typing import List, Union, Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional, Union
 
+import numpy
+import numpy as np
+import pandas as pd
 from summer.compute import ComputedValueProcessor
 
-from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
-from autumn.tools import registry
 from autumn.settings.folders import PROJECTS_PATH
+from autumn.tools import registry
 from autumn.tools.utils import secrets
+from autumn.tools.utils.s3 import download_from_s3, get_s3_client, list_s3
 
 
 def merge_dicts(src: dict, dest: dict):

@@ -10,20 +10,19 @@ import yaml
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from autumn.tools import db, inputs, plots
 from autumn.tools.plots.calibration.plots import (
+    calculate_r_hats,
     find_shortest_chain_length,
     get_epi_params,
     get_posterior,
-    calculate_r_hats,
 )
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.project import get_project
 from autumn.tools.streamlit import selectors
 from autumn.tools.streamlit.utils import (
+    Dashboard,
     create_downloadable_csv,
     round_sig_fig,
-    Dashboard,
 )
-
 
 dash = Dashboard()
 

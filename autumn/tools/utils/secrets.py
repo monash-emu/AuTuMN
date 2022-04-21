@@ -9,7 +9,7 @@ import os
 
 import pyAesCrypt
 
-from autumn.settings import PROJECTS_PATH, DATA_PATH
+from autumn.settings import DATA_PATH, PROJECTS_PATH
 
 SALT = "ElvHoxZ83kAUgqy9x2KqM"
 BUFFER_SIZE = 64 * 1024

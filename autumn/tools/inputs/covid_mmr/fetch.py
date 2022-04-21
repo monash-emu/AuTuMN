@@ -3,7 +3,9 @@ This file download the latest data for Myanmar
 """
 
 import os
+
 import pandas as pd
+
 from autumn.settings import INPUT_DATA_PATH
 
 COVID_MMR_TESTING_CSV = os.path.join(INPUT_DATA_PATH, "covid_mmr", "cases.csv")

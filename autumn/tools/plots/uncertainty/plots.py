@@ -18,10 +18,10 @@ from autumn.tools.plots.utils import (
     REF_DATE,
     _apply_transparency,
     _plot_targets_to_axis,
+    add_horizontal_lines_to_plot,
+    add_vertical_lines_to_plot,
     change_xaxis_to_date,
     get_plot_text_dict,
-    add_vertical_lines_to_plot,
-    add_horizontal_lines_to_plot,
 )
 
 logger = logging.getLogger(__name__)

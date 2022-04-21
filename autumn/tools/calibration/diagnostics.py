@@ -1,5 +1,6 @@
-import statsmodels.api as sm
 from math import floor, sqrt
+
+import statsmodels.api as sm
 from numpy import mean
 
 

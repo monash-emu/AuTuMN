@@ -4,12 +4,12 @@ from typing import Dict
 from summer import Overwrite, Stratification
 
 from autumn.models.covid_19.constants import (
+    AGE_CLINICAL_TRANSITIONS,
+    CLINICAL_STRATA,
     INFECTIOUS_COMPARTMENTS,
+    PROGRESS,
     Clinical,
     Compartment,
-    CLINICAL_STRATA,
-    PROGRESS,
-    AGE_CLINICAL_TRANSITIONS,
 )
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments

@@ -1,11 +1,9 @@
 import pandas as pd
 
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.db import Database
 
 from .fetch import COVID_PHL_CSV_PATH
-
-from autumn.settings.constants import COVID_BASE_DATETIME
-
 
 # Make lists of testing facilities and associated region
 FACILITY_MAP = {

@@ -3,10 +3,9 @@ from datetime import date, datetime
 import numpy as np
 import pandas as pd
 
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.inputs.database import get_input_db
 from autumn.tools.utils.utils import apply_moving_average
-
-from autumn.settings.constants import COVID_BASE_DATETIME
 
 TINY_NUMBER = 1e-6
 VACC_COVERAGE_START_AGES = (0, 5, 12, 16, 20, 30, 40, 50, 60, 70, 80, 85)

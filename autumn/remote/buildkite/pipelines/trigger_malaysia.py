@@ -1,11 +1,6 @@
 from autumn.remote.buildkite.buildkite import CommandStep, InputStep, Pipeline
 
-from .calibrate import (
-    chains_field,
-    runtime_field,
-    commit_field,
-    trigger_field,
-)
+from .calibrate import chains_field, commit_field, runtime_field, trigger_field
 from .full import burn_in_field, sample_size_field
 
 fields = [

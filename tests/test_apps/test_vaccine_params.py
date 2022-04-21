@@ -1,4 +1,5 @@
 import pytest
+
 from autumn.models.covid_19.strat_processing.vaccination import find_vaccine_action
 
 VACCINE_PARAM_TESTS = [

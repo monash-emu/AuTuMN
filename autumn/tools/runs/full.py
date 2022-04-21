@@ -1,5 +1,5 @@
-from pathlib import PurePosixPath
 import re
+from pathlib import PurePosixPath
 
 from autumn.tools import db
 

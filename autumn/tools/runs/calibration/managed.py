@@ -1,8 +1,8 @@
 import re
+
 import yaml
 
 from autumn.tools import db
-
 from autumn.tools.runs.utils import collate_columns_to_urun
 
 

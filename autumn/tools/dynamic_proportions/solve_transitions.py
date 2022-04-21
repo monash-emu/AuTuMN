@@ -1,8 +1,9 @@
-import scipy
-from scipy.optimize import minimize
+from typing import List
+
 import numpy as np
 import pandas as pd
-from typing import List
+import scipy
+from scipy.optimize import minimize
 
 from autumn.tools.curve import scale_up_function
 from autumn.tools.utils.utils import flatten_list

@@ -1,35 +1,34 @@
-from typing import List, Callable, Tuple, Union, Dict
+from typing import Callable, Dict, List, Tuple, Union
 
-import numpy as np
 import numba
-
+import numpy as np
 from summer import CompartmentalModel, Multiply, Stratification
 
 from autumn.models.covid_19.constants import (
-    Vaccination,
-    INFECTION,
-    DISEASE_COMPARTMENTS,
-    CLINICAL_STRATA,
-    Compartment,
     AGE_CLINICAL_TRANSITIONS,
-    INFECTIOUSNESS_ONSET,
+    CLINICAL_STRATA,
+    DISEASE_COMPARTMENTS,
     INFECT_DEATH,
+    INFECTION,
+    INFECTIOUSNESS_ONSET,
     PROGRESS,
     RECOVERY,
+    Compartment,
+    Vaccination,
 )
 from autumn.models.covid_19.parameters import (
     Parameters,
+    TanhScaleup,
     TimeSeries,
     VaccEffectiveness,
-    TanhScaleup,
 )
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
-from autumn.tools.utils.utils import check_list_increasing
+from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
 from autumn.tools.inputs.covid_mmr.queries import base_mmr_adult_vacc_doses
+from autumn.tools.utils.utils import check_list_increasing
 
 
 def find_vacc_strata(

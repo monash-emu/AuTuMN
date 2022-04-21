@@ -1,22 +1,22 @@
-from typing import Callable, Optional, Tuple, Any, List
-import numpy as np
+from typing import Any, Callable, List, Optional, Tuple
 
+import numpy as np
 from summer.compute import ComputedValueProcessor
 
-from autumn.tools.inputs.testing.eur_testing_data import (
-    get_uk_testing_numbers,
-    get_eu_testing_numbers,
-)
+from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.tools.curve import scale_up_function
+from autumn.tools.inputs import get_population_by_agegroup
 from autumn.tools.inputs.covid_au.queries import get_vic_testing_numbers
-from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
+from autumn.tools.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
 from autumn.tools.inputs.covid_lka.queries import get_lka_testing_numbers
 from autumn.tools.inputs.covid_mmr.queries import get_mmr_testing_numbers
-from autumn.tools.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
+from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 from autumn.tools.inputs.owid.queries import get_international_testing_numbers
-from autumn.tools.inputs import get_population_by_agegroup
+from autumn.tools.inputs.testing.eur_testing_data import (
+    get_eu_testing_numbers,
+    get_uk_testing_numbers,
+)
 from autumn.tools.utils.utils import apply_moving_average
-from autumn.tools.curve import scale_up_function
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
 class CdrProc(ComputedValueProcessor):

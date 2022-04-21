@@ -2,7 +2,6 @@ import os
 
 import pandas as pd
 from requests import get
-
 from settings import INPUT_DATA_PATH
 
 HOSPITAL_DIRPATH = os.path.join(INPUT_DATA_PATH, "hospitalisation_data")

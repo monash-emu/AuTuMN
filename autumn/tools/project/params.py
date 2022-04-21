@@ -1,11 +1,10 @@
-from typing import Optional, Callable, Union, List
-
 import re
-import yaml
 from copy import deepcopy
+from typing import Callable, List, Optional, Union
+
+import yaml
 
 from autumn.tools.utils.utils import merge_dicts
-
 
 Validator = Callable[[dict], None]
 PathOrDict = Union[dict, str]

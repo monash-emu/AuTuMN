@@ -1,6 +1,8 @@
-import pandas as pd
 import os
+
 import numpy as np
+import pandas as pd
+
 from autumn.settings.folders import INPUT_DATA_PATH
 
 """

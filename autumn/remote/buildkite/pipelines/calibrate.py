@@ -6,12 +6,12 @@ from autumn.remote.buildkite.buildkite import (
     SelectInputField,
     TextInputField,
 )
-
-from .full import burn_in_field, sample_size_field
 from autumn.tools.registry import (
     get_registered_model_names,
     get_registered_project_names,
 )
+
+from .full import burn_in_field, sample_size_field
 
 
 def get_region_options():

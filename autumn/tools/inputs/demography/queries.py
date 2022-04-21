@@ -7,8 +7,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from autumn.tools.inputs.database import get_input_db
 from autumn.settings import Region
+from autumn.tools.inputs.database import get_input_db
 
 INF = float("inf")
 MAPPING_ISO_CODE = {

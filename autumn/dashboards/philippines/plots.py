@@ -2,18 +2,16 @@ import os
 from typing import List
 
 import pandas as pd
+import streamlit as st
 from matplotlib import pyplot
 
-from autumn.settings import Region
 from autumn.dashboards.calibration_results.plots import get_uncertainty_df
-from autumn.tools.plots.plotter import StreamlitPlotter
+from autumn.settings import Region
 from autumn.tools import plots
-from autumn.tools.streamlit.utils import Dashboard
+from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.project import Project
-
 from autumn.tools.streamlit import selectors
-import streamlit as st
-
+from autumn.tools.streamlit.utils import Dashboard
 
 STANDARD_X_LIMITS = 153, 275
 dash = Dashboard()

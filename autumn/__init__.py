@@ -13,7 +13,6 @@ os.environ["OMP_NUM_THREADS"] = "1"
 from autumn.settings import Models, Region
 from autumn.tools.registry import register_project
 
-
 # TB projects
 register_project(
     Models.TB,

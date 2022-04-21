@@ -2,16 +2,16 @@
 Streamlit web UI for plotting model outputs
 """
 import os
+from typing import List
 
 import streamlit as st
-from typing import List
 from summer import CompartmentalModel
 
 from autumn.tools import db, plots
 from autumn.tools.plots.plotter import StreamlitPlotter
+from autumn.tools.project import Project
 from autumn.tools.streamlit import selectors
 from autumn.tools.streamlit.utils import Dashboard
-from autumn.tools.project import Project
 
 dash = Dashboard()
 

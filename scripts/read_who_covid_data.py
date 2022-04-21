@@ -4,10 +4,9 @@ import os
 
 import pandas as pd
 
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 from autumn.projects.covid_19.mixing_optimisation.utils import get_weekly_summed_targets
 from autumn.settings import Region
-
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
 WHO_DATA_FILE = os.path.join(

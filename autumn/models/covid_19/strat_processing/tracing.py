@@ -1,14 +1,13 @@
-import numpy as np
 import numba
-
+import numpy as np
 from summer.compute import ComputedValueProcessor, find_sum
 
 from autumn.models.covid_19.constants import (
-    Compartment,
-    INFECTIOUS_COMPARTMENTS,
-    Clinical,
     CLINICAL_STRATA,
+    INFECTIOUS_COMPARTMENTS,
     NOTIFICATION_CLINICAL_STRATA,
+    Clinical,
+    Compartment,
 )
 
 

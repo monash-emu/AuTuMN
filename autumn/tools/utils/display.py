@@ -7,6 +7,7 @@ in IPython
 """
 
 from pprint import PrettyPrinter
+
 from IPython.display import HTML
 
 

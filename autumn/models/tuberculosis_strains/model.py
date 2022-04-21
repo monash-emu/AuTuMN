@@ -15,7 +15,6 @@ from autumn.tools.project import Params, build_rel_path
 
 from .constants import Compartment
 
-
 base_params = Params(build_rel_path("params.yml"))
 
 

@@ -1,8 +1,8 @@
-from typing import List, Union, Dict
 from copy import copy
+from typing import Dict, List, Union
 
 import pandas as pd
-from summer import Stratification, Multiply, Overwrite, CompartmentalModel
+from summer import CompartmentalModel, Multiply, Overwrite, Stratification
 
 from autumn.models.sm_sir.constants import ClinicalStratum, Compartment
 from autumn.models.sm_sir.parameters import Parameters

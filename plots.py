@@ -30,6 +30,12 @@ from autumn.dashboards.calibration_results.run import (
 from autumn.dashboards.model_internals.run import run_dashboard as model_internals
 from autumn.dashboards.model_results.run import run_dashboard as model_results
 
+# from autumn.dashboards.multicountry_uncertainty import (
+#     run_dashboard as run_multicountry_uncertainty,
+# )
+from autumn.dashboards.philippines import run_dashboard as run_philippines
+from autumn.dashboards.vic_second_wave_paper.run import run_dashboard as run_vic_paper
+
 # from autumn.dashboards.multicountry_inputs import (
 #     run_dashboard as run_multicountry_inputs,
 # )
@@ -41,12 +47,7 @@ from autumn.dashboards.model_results.run import run_dashboard as model_results
 #     run_dashboard as run_multicountry_dashboard,
 # )
 
-# from autumn.dashboards.multicountry_uncertainty import (
-#     run_dashboard as run_multicountry_uncertainty,
-# )
-from autumn.dashboards.philippines import run_dashboard as run_philippines
 
-from autumn.dashboards.vic_second_wave_paper.run import run_dashboard as run_vic_paper
 
 DASHBOARDS = {
     "Home": None,

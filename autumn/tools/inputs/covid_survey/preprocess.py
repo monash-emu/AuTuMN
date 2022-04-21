@@ -1,10 +1,10 @@
-import pandas as pd
 import os
 
+import pandas as pd
+
+from autumn.settings import COVID_BASE_DATETIME, INPUT_DATA_PATH
 from autumn.tools.db import Database
 from autumn.tools.utils.utils import create_date_index
-
-from autumn.settings import INPUT_DATA_PATH, COVID_BASE_DATETIME
 
 from .fetch import COVID_SURVEY_PATH
 

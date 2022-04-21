@@ -1,5 +1,4 @@
-from math import ceil
-from math import log, sqrt, pi
+from math import ceil, log, pi, sqrt
 
 from autumn.tools.curve import scale_up_function
 

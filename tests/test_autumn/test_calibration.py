@@ -149,7 +149,7 @@ def _prepare_params(l):
 
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import PoissonTarget
-from autumn.tools.project import Project, ParameterSet, Params
+from autumn.tools.project import ParameterSet, Params, Project
 
 
 def test_calibrate_autumn_mcmc(temp_data_dir):

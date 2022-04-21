@@ -6,8 +6,8 @@ import os
 import pandas as pd
 from sqlalchemy import column
 
-from autumn.tools.db import Database
 from autumn.settings import INPUT_DATA_PATH, region
+from autumn.tools.db import Database
 
 POP_DIRPATH = os.path.join(INPUT_DATA_PATH, "world-population")
 BGD_POP = os.path.join(

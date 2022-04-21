@@ -1,17 +1,17 @@
 import logging
 import os
 
-from autumn.tools.db import Database
 from autumn.settings import INPUT_DATA_PATH
+from autumn.tools.db import Database
 from autumn.tools.utils.timer import Timer
 
 from .covid_au.preprocess import preprocess_covid_au
-from .covid_phl.preprocess import preprocess_covid_phl
-from .covid_lka.preprocess import preprocess_covid_lka
-from .covid_vnm.preprocess import preprocess_covid_vnm
-from .covid_mmr.preprocess import preprocess_covid_mmr
 from .covid_bgd.preprocess import preprocess_covid_bgd
+from .covid_lka.preprocess import preprocess_covid_lka
+from .covid_mmr.preprocess import preprocess_covid_mmr
+from .covid_phl.preprocess import preprocess_covid_phl
 from .covid_survey.preprocess import preprocess_covid_survey
+from .covid_vnm.preprocess import preprocess_covid_vnm
 from .demography.preprocess import preprocess_demography
 from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data

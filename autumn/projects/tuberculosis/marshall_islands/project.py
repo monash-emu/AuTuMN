@@ -1,23 +1,22 @@
-from autumn.tools.project import (
-    Project,
-    ParameterSet,
-    load_timeseries,
-    build_rel_path,
-    use_tuned_proposal_sds,
+from autumn.models.tuberculosis import base_params, build_model
+from autumn.projects.tuberculosis.calibration_utils import (
+    get_natural_history_priors_from_cid,
 )
+from autumn.projects.tuberculosis.marshall_islands.utils import make_sa_scenario_list
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
 )
-from autumn.models.tuberculosis import base_params, build_model
-from autumn.settings import Region, Models
-
-from autumn.projects.tuberculosis.calibration_utils import (
-    get_natural_history_priors_from_cid,
+from autumn.tools.project import (
+    ParameterSet,
+    Project,
+    build_rel_path,
+    load_timeseries,
+    use_tuned_proposal_sds,
 )
-from autumn.projects.tuberculosis.marshall_islands.utils import make_sa_scenario_list
 
 ANALYSIS = "main"
 # ANALYSIS = "sa_importation"

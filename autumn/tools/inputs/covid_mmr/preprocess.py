@@ -1,10 +1,10 @@
 import pandas as pd
 
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.db import Database
-from .fetch import COVID_MMR_TESTING_CSV
 from autumn.tools.utils.utils import create_date_index
 
-from autumn.settings.constants import COVID_BASE_DATETIME
+from .fetch import COVID_MMR_TESTING_CSV
 
 
 def preprocess_covid_mmr(input_db: Database):

@@ -9,9 +9,9 @@ You can access this script from your CLI by running:
 import click
 
 from .database import db
-from .secrets import secrets
 from .projects import project
 from .remote import remote
+from .secrets import secrets
 from .tasks import tasks
 
 

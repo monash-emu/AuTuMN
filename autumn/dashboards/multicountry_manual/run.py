@@ -2,14 +2,15 @@
 Streamlit web UI for plotting model outputs
 """
 
-import streamlit as st
 import os
+from importlib import import_module
+
+import streamlit as st
+from dash import selectors
 
 from autumn.tools import db
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.utils.params import load_targets
-from dash import selectors
-from importlib import import_module
 
 from .plots import PLOT_FUNCS
 

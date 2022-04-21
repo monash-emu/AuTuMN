@@ -3,9 +3,9 @@ import os
 
 import matplotlib as mpl
 import numpy as np
+from apps import covid_19
 from matplotlib import pyplot
 
-from apps import covid_19
 from autumn.projects.covid_19.mixing_optimisation.constants import (
     OPTI_REGIONS,
     PHASE_2_START_TIME,
@@ -20,8 +20,8 @@ from autumn.projects.covid_19.mixing_optimisation.write_scenarios import (
     read_decision_vars,
     read_opti_outputs,
 )
-from autumn.utils.params import merge_dicts
 from autumn.settings import BASE_PATH
+from autumn.utils.params import merge_dicts
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

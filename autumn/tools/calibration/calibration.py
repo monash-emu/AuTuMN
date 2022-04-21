@@ -1,28 +1,31 @@
-import logging, math, os, shutil
+import logging
+import math
+import os
+import pickle
+import shutil
 from datetime import datetime
 from itertools import chain
 from time import time
-from typing import List, Callable
-import pickle
+from typing import Callable, List
 
-import yaml
 import numpy as np
 import pandas as pd
+import yaml
 from scipy import special, stats
 from summer import CompartmentalModel
 
 from autumn import settings
 from autumn.tools import db, plots
-from autumn.tools.utils.utils import get_git_branch, get_git_hash
-from autumn.tools.utils.timer import Timer
 from autumn.tools.calibration.priors import BasePrior
-from autumn.tools.calibration.targets import BaseTarget
 from autumn.tools.calibration.proposal_tuning import tune_jumping_stdev
-from autumn.tools.project.params import read_param_value_from_string
+from autumn.tools.calibration.targets import BaseTarget
 from autumn.tools.project import Project, get_project
-
+from autumn.tools.project.params import read_param_value_from_string
+from autumn.tools.utils.timer import Timer
+from autumn.tools.utils.utils import get_git_branch, get_git_hash
 
 from .constants import ADAPTIVE_METROPOLIS
+from .targets import truncnormal_logpdf
 from .transformations import (
     make_transform_func_with_lower_bound,
     make_transform_func_with_two_bounds,
@@ -30,12 +33,11 @@ from .transformations import (
 )
 from .utils import (
     calculate_prior,
+    draw_independent_samples,
     raise_error_unsupported_prior,
     sample_starting_params_from_lhs,
     specify_missing_prior_params,
-    draw_independent_samples,
 )
-from .targets import truncnormal_logpdf
 
 ModelBuilder = Callable[[dict, dict], CompartmentalModel]
 

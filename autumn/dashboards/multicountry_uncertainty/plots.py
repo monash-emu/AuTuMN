@@ -2,13 +2,13 @@ from math import ceil
 
 import matplotlib.pyplot as pyplot
 import streamlit as st
-
-from autumn import plots
 from dash import selectors
 from dash.dashboards.calibration_results.plots import (
     get_uncertainty_data,
     get_uncertainty_df,
 )
+
+from autumn import plots
 
 PLOT_FUNCS = {}
 

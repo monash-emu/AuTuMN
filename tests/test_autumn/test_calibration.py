@@ -24,7 +24,7 @@ def test_sample_starting_params_from_lhs__with_lognormal_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert_almost_equal(params[0]['ice_cream_sales'],  0.36787944117144233)
+    assert_almost_equal(params[0]["ice_cream_sales"], 0.36787944117144233)
 
 
 def test_sample_starting_params_from_lhs__with_beta_prior_and_one_sample():
@@ -38,7 +38,7 @@ def test_sample_starting_params_from_lhs__with_beta_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert_almost_equal(params[0]['ice_cream_sales'],  0.04680260472064115)
+    assert_almost_equal(params[0]["ice_cream_sales"], 0.04680260472064115)
 
 
 def test_sample_starting_params_from_lhs__with_gamma_prior_and_one_sample():
@@ -52,11 +52,17 @@ def test_sample_starting_params_from_lhs__with_gamma_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert_almost_equal(params[0]['ice_cream_sales'],  4.932833078981056)
+    assert_almost_equal(params[0]["ice_cream_sales"], 4.932833078981056)
 
 
 def test_sample_starting_params_from_lhs__with_uniform_prior_and_one_sample():
-    priors = [{"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]}]
+    priors = [
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        }
+    ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
     assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 3.0}])
@@ -64,16 +70,28 @@ def test_sample_starting_params_from_lhs__with_uniform_prior_and_one_sample():
 
 def test_sample_starting_params_from_lhs__with_uniform_priors_and_one_sample():
     priors = [
-        {"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]},
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        },
         {"param_name": "air_temp", "distribution": "uniform", "distri_params": [1, 10]},
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 3.0, "air_temp": 5.5}])
+    assert _prepare_params(params) == _prepare_params(
+        [{"ice_cream_sales": 3.0, "air_temp": 5.5}]
+    )
 
 
 def test_sample_starting_params_from_lhs__with_uniform_prior_and_two_samples():
-    priors = [{"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]}]
+    priors = [
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        }
+    ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=2)
     assert _prepare_params(params) == _prepare_params(
@@ -83,20 +101,36 @@ def test_sample_starting_params_from_lhs__with_uniform_prior_and_two_samples():
 
 def test_sample_starting_params_from_lhs__with_uniform_priors_and_two_samples():
     priors = [
-        {"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]},
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        },
         {"param_name": "air_temp", "distribution": "uniform", "distri_params": [1, 10]},
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=2)
     assert _prepare_params(params) == _prepare_params(
-        [{"ice_cream_sales": 2.0, "air_temp": 3.25}, {"ice_cream_sales": 4.0, "air_temp": 7.75}],
+        [
+            {"ice_cream_sales": 2.0, "air_temp": 3.25},
+            {"ice_cream_sales": 4.0, "air_temp": 7.75},
+        ],
     ) or _prepare_params(params) == _prepare_params(
-        [{"ice_cream_sales": 4.0, "air_temp": 3.25}, {"ice_cream_sales": 2.0, "air_temp": 7.75}],
+        [
+            {"ice_cream_sales": 4.0, "air_temp": 3.25},
+            {"ice_cream_sales": 2.0, "air_temp": 7.75},
+        ],
     )
 
 
 def test_sample_starting_params_from_lhs__with_uniform_prior_and_four_samples():
-    priors = [{"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]}]
+    priors = [
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        }
+    ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=4)
     assert _prepare_params(params) == _prepare_params(

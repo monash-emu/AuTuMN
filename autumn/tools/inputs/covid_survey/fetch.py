@@ -11,7 +11,7 @@ TODAY = pd.to_datetime("today").date().strftime("%Y%m%d")
 FROM_DATE = "20200101"
 
 countries = ["Australia", "Malaysia", "Myanmar", "Philippines", "Sri Lanka"]
-indicators = ["mask","avoid_contact"]
+indicators = ["mask", "avoid_contact"]
 
 
 def fetch_covid_survey_data():

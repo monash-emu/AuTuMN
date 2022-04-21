@@ -68,7 +68,12 @@ class TruncNormalPrior(BasePrior):
     """
 
     def __init__(
-        self, name: str, mean: float, stdev: float, trunc_range: Tuple[float, float], **kwargs
+        self,
+        name: str,
+        mean: float,
+        stdev: float,
+        trunc_range: Tuple[float, float],
+        **kwargs
     ):
         super().__init__(**kwargs)
         self.mean, self.stdev = mean, stdev

@@ -22,4 +22,6 @@ targets = [
 calibration = Calibration(priors=priors, targets=targets)
 
 # Create and register the project
-project = Project(Region.PHILIPPINES, Models.EXAMPLE, build_model, param_set, calibration)
+project = Project(
+    Region.PHILIPPINES, Models.EXAMPLE, build_model, param_set, calibration
+)

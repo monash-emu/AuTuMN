@@ -65,7 +65,9 @@ def get_testing_numbers_for_region(
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
 
-    assert len(test_dates) == len(test_values), "Length of test dates and test values are not equal"
+    assert len(test_dates) == len(
+        test_values
+    ), "Length of test dates and test values are not equal"
 
     return test_dates, test_values
 
@@ -94,7 +96,9 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float) -> Callable:
     return cdr_function
 
 
-def inflate_test_data(test_multiplier: float, test_dates: list, test_values: list) -> List[float]:
+def inflate_test_data(
+    test_multiplier: float, test_dates: list, test_values: list
+) -> List[float]:
     """
     Apply inflation factor to test numbers if requested.
     Used in the Philippines applications only.
@@ -113,10 +117,14 @@ def inflate_test_data(test_multiplier: float, test_dates: list, test_values: lis
     test_dates, test_values = [list(tup) for tup in tuples]
 
     # Create scale-up function
-    testing_scale_up = scale_up_function(test_multiplier.times, test_multiplier.values, method=4)
+    testing_scale_up = scale_up_function(
+        test_multiplier.times, test_multiplier.values, method=4
+    )
 
     # Scale up added tests
-    return [test_values[val] * testing_scale_up(time) for val, time in enumerate(test_dates)]
+    return [
+        test_values[val] * testing_scale_up(time) for val, time in enumerate(test_dates)
+    ]
 
 
 def find_cdr_function_from_test_data(
@@ -162,7 +170,10 @@ def find_cdr_function_from_test_data(
     # Get the final CDR function
     cdr_function = scale_up_function(
         test_dates,
-        [cdr_from_tests_func(i_test_rate) for i_test_rate in smoothed_inflated_per_capita_tests],
+        [
+            cdr_from_tests_func(i_test_rate)
+            for i_test_rate in smoothed_inflated_per_capita_tests
+        ],
         smoothness=0.2,
         method=4,
         bound_low=0.0,

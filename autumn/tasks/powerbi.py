@@ -9,7 +9,12 @@ from autumn.tools.db.load import load_mcmc_tables
 from autumn.settings import REMOTE_BASE_DIR
 from autumn.tasks.full import FULL_RUN_DATA_DIR
 from autumn.tasks.utils import get_project_from_run_id
-from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
+from autumn.tools.utils.s3 import (
+    download_from_run_s3,
+    list_s3,
+    upload_to_run_s3,
+    get_s3_client,
+)
 from autumn.tools.utils.timer import Timer
 
 logger = logging.getLogger(__name__)
@@ -35,10 +40,14 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
             os.makedirs(dirpath)
 
     # Find the full model run databases in AWS S3.
-    key_prefix = os.path.join(run_id, os.path.relpath(FULL_RUN_DATA_DIR, REMOTE_BASE_DIR))
+    key_prefix = os.path.join(
+        run_id, os.path.relpath(FULL_RUN_DATA_DIR, REMOTE_BASE_DIR)
+    )
     chain_db_keys = []
     for filename_base in ["mcmc_run", "mcmc_params", "derived_outputs"]:
-        chain_db_keys += list_s3(s3_client, key_prefix, key_suffix=f"{filename_base}.feather")
+        chain_db_keys += list_s3(
+            s3_client, key_prefix, key_suffix=f"{filename_base}.feather"
+        )
 
     # Download the full model run databases.
     with Timer(f"Downloading full model run data"):
@@ -61,7 +70,9 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
         for full_db_path in full_db_paths:
             chain_id = int(full_db_path.split("-")[-1])
             chain_candidates = candidates_df[candidates_df["chain"] == chain_id]
-            db.process.prune_chain(full_db_path, get_dest_path(full_db_path), chain_candidates)
+            db.process.prune_chain(
+                full_db_path, get_dest_path(full_db_path), chain_candidates
+            )
 
     # Collate data from each pruned full model run database into a single database.
     pruned_db_paths = db.load.find_db_paths(POWERBI_PRUNED_DIR)
@@ -74,13 +85,17 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
 
     # Remove unnecessary data from the database.
     with Timer(f"Pruning final database"):
-        db.process.prune_final(POWERBI_COLLATED_PATH, POWERBI_COLLATED_PRUNED_PATH, candidates_df)
+        db.process.prune_final(
+            POWERBI_COLLATED_PATH, POWERBI_COLLATED_PRUNED_PATH, candidates_df
+        )
 
     # Unpivot database tables so that they're easier to process in PowerBI.
     run_slug = run_id.replace("/", "-")
     dest_db_path = os.path.join(POWERBI_DATA_DIR, f"powerbi-{run_slug}.db")
     with Timer(f"Applying PowerBI specific post-processing final database"):
-        db.process.powerbi_postprocess(POWERBI_COLLATED_PRUNED_PATH, dest_db_path, run_id)
+        db.process.powerbi_postprocess(
+            POWERBI_COLLATED_PRUNED_PATH, dest_db_path, run_id
+        )
 
     # Upload final database to AWS S3
     with Timer(f"Uploading PowerBI data to AWS S3"):
@@ -88,7 +103,9 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
 
     # Create uncertainty plots
     with Timer(f"Creating uncertainty plots"):
-        plots.uncertainty.plot_uncertainty(project.plots, dest_db_path, POWERBI_PLOT_DIR)
+        plots.uncertainty.plot_uncertainty(
+            project.plots, dest_db_path, POWERBI_PLOT_DIR
+        )
 
     # Upload the plots to AWS S3.
     with Timer(f"Uploading plots to AWS S3"):

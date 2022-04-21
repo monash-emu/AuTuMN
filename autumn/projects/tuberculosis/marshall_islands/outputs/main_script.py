@@ -11,10 +11,22 @@ import os
 from autumn.settings import BASE_PATH
 
 DATA_PATH = os.path.join(
-    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "pbi_databases"
+    BASE_PATH,
+    "autumn",
+    "projects",
+    "tuberculosis",
+    "marshall_islands",
+    "outputs",
+    "pbi_databases",
 )
 OUTPUT_PATH = os.path.join(
-    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "all_outputs"
+    BASE_PATH,
+    "autumn",
+    "projects",
+    "tuberculosis",
+    "marshall_islands",
+    "outputs",
+    "all_outputs",
 )
 
 
@@ -46,10 +58,14 @@ def make_all_rmi_plots(analysis="main"):
     dia.main(data_path, output_path)
 
 
-for analysis in ["main", "rmi_bcg_mortality", "rmi_constant_cdr", "rmi_more_intermixing"]:
+for analysis in [
+    "main",
+    "rmi_bcg_mortality",
+    "rmi_constant_cdr",
+    "rmi_more_intermixing",
+]:
     print(f"Plotting outputs for analysis {analysis}")
     make_all_rmi_plots(analysis)
     for _ in range(5):
         print()
     print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-

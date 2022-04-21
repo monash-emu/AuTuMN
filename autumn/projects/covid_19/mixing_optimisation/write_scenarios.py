@@ -25,7 +25,12 @@ Reading optimisation outputs from csv file
 
 def read_opti_outputs(output_filename):
     file_path = os.path.join(
-        BASE_PATH, "apps", "covid_19", "mixing_optimisation", "optimised_variables", output_filename
+        BASE_PATH,
+        "apps",
+        "covid_19",
+        "mixing_optimisation",
+        "optimised_variables",
+        output_filename,
     )
     df = pd.read_csv(file_path, sep=",")
     return df
@@ -52,13 +57,20 @@ Create dictionaries to define the optimised scenarios
 
 
 def build_optimised_scenario_dictionary(
-    country, sc_idx, decision_vars, scenario_mapping, final_mixing=1.0, for_waning_immunity=False
+    country,
+    sc_idx,
+    decision_vars,
+    scenario_mapping,
+    final_mixing=1.0,
+    for_waning_immunity=False,
 ):
     # read settings associated with scenario sc_idx
     if sc_idx == max(list(scenario_mapping.keys())):  # this is the unmitigated scenario
         duration = DURATIONS[0]  # does not matter but needs to be defined
         mode = MODES[0]
-    elif for_waning_immunity:  # this is an optimised scenario for the waning immunity analyses
+    elif (
+        for_waning_immunity
+    ):  # this is an optimised scenario for the waning immunity analyses
         duration = scenario_mapping[sc_idx]["duration"]
         mode = MODES[0]
     else:  # this is an optimised scenario
@@ -73,7 +85,9 @@ def build_optimised_scenario_dictionary(
         decision_vars, elderly_mixing_reduction, duration, mode, final_mixing
     )
     country_folder_name = country.replace("-", "_")
-    sc_params["parent"] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
+    sc_params[
+        "parent"
+    ] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
     # del sc_params[
     #     "importation"
     # ]  # Importation was used for testing during optimisation. We must remove it.
@@ -88,7 +102,9 @@ def build_all_scenario_dicts_from_outputs(output_filename="dummy_vars_for_test.c
     for country in OPTI_REGIONS:
         all_sc_params[country] = {}
         for sc_idx, settings in SCENARIO_MAPPING.items():
-            if sc_idx == max(list(SCENARIO_MAPPING.keys())):  # this is the unmitigated scenario
+            if sc_idx == max(
+                list(SCENARIO_MAPPING.keys())
+            ):  # this is the unmitigated scenario
                 decision_vars = [1.0] * N_DECISION_VARS[MODES[0]]
             else:  # this is an optimised scenario
                 decision_vars = read_decision_vars(
@@ -116,7 +132,9 @@ def drop_all_yml_scenario_files(all_sc_params):
     for country, country_sc_params in all_sc_params.items():
         for sc_idx, sc_params in country_sc_params.items():
             country_folder_name = country.replace("-", "_")
-            param_file_path = f"../regions/{country_folder_name}/params/scenario-{sc_idx}.yml"
+            param_file_path = (
+                f"../regions/{country_folder_name}/params/scenario-{sc_idx}.yml"
+            )
             with open(param_file_path, "w") as f:
                 yaml.dump(sc_params, f)
 

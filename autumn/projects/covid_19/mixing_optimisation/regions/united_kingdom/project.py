@@ -55,5 +55,10 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 project = Project(
-    Region.UNITED_KINGDOM, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
+    Region.UNITED_KINGDOM,
+    Models.COVID_19,
+    build_model,
+    param_set,
+    calibration,
+    plots=plot_spec,
 )

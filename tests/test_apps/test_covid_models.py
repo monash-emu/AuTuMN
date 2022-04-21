@@ -54,7 +54,8 @@ def test_run_models_full(project_name):
     assert baseline_model.outputs is not None
 
     start_times = [
-        sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
+        sc_params.to_dict()["time"]["start"]
+        for sc_params in project.param_set.scenarios
     ]
     sc_models = project.run_scenario_models(
         baseline_model, project.param_set.scenarios, start_times=start_times

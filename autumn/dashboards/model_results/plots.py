@@ -74,7 +74,9 @@ def plot_outputs_multi(
 
 
 @dash.register("Compartment sizes")
-def plot_compartment(plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]):
+def plot_compartment(
+    plotter: StreamlitPlotter, project: Project, models: List[CompartmentalModel]
+):
     chosen_models = selectors.scenarios(models)
     if chosen_models:
         is_logscale = st.sidebar.checkbox("Log scale")
@@ -106,7 +108,9 @@ def plot_compartment_aggregate(
     if not include_scenarios:
         models = [models[0]]
 
-    plots.model.plots.plot_agg_compartments_multi_scenario(plotter, models, names, is_logscale)
+    plots.model.plots.plot_agg_compartments_multi_scenario(
+        plotter, models, names, is_logscale
+    )
     st.write([str(n) for n in names])
 
 
@@ -160,7 +164,9 @@ def plot_multicountry_rainbow(
 
                     # Get database from model data dir.
                     db_path = os.path.join(run_dirpath, "outputs.db")
-                    country_scenarios[country] = db.load.load_model_scenarios(db_path, params)
+                    country_scenarios[country] = db.load.load_model_scenarios(
+                        db_path, params
+                    )
 
                 print(
                     "Plotting multicountry rainbow for: "
@@ -202,9 +208,9 @@ def plot_multicounty_hospital(
 
                     # Get database from model data dir.
                     db_path = os.path.join(run_dirpath, "outputs.db")
-                    all_scenarios[mode][objective][config][country] = db.load.load_model_scenarios(
-                        db_path, params
-                    )
+                    all_scenarios[mode][objective][config][
+                        country
+                    ] = db.load.load_model_scenarios(db_path, params)
 
             print("Plotting multicountry hospital for: " + mode + "_" + objective)
             plots.model.plots.plot_multicountry_hospital(all_scenarios, mode, objective)
@@ -226,11 +232,21 @@ def model_output_selector(models, targets):
     if any("for_cluster" in o for o in output_names):
         # Handle Victorian multi cluster model
         cluster_options = ["All"] + sorted(
-            list(set([o.split("_for_cluster_")[-1] for o in output_names if "_for_cluster_" in o]))
+            list(
+                set(
+                    [
+                        o.split("_for_cluster_")[-1]
+                        for o in output_names
+                        if "_for_cluster_" in o
+                    ]
+                )
+            )
         )
         cluster = st.sidebar.selectbox("Select cluster", cluster_options)
         if cluster == "All":
-            output_base_names = sorted(list(o for o in output_names if "_for_cluster_" not in o))
+            output_base_names = sorted(
+                list(o for o in output_names if "_for_cluster_" not in o)
+            )
             output_name = st.sidebar.selectbox("Select output type", output_base_names)
         else:
             output_base_names = sorted(
@@ -243,7 +259,9 @@ def model_output_selector(models, targets):
 
     # Construct an output config for the plotting code.
     try:
-        output_config = next(o for o in outputs_to_plot if o["output_key"] == output_name)
+        output_config = next(
+            o for o in outputs_to_plot if o["output_key"] == output_name
+        )
     except StopIteration:
         output_config = {"output_key": output_name, "values": [], "times": []}
 

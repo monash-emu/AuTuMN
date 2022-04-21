@@ -17,7 +17,7 @@ priors = [
     UniformPrior("contact_rate", (0.03, 0.12)),
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (690.0, 720.0)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.006, 0.016)),
-    UniformPrior("hospital_stay.hospital_all.parameters.mean", (10., 25.)),
+    UniformPrior("hospital_stay.hospital_all.parameters.mean", (10.0, 25.0)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.2, 1.5)),
 ]
 
@@ -35,7 +35,10 @@ targets = [
 ]
 
 calibration = Calibration(
-    priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
+    priors=priors,
+    targets=targets,
+    random_process=None,
+    metropolis_init="current_params",
 )
 
 plot_spec_filepath = build_rel_path("timeseries.json")
@@ -44,5 +47,10 @@ with open(plot_spec_filepath) as f:
 
 # Create and register the project
 project = Project(
-    Region.COXS_BAZAR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+    Region.COXS_BAZAR,
+    Models.SM_SIR,
+    build_model,
+    param_set,
+    calibration,
+    plots=plot_spec,
 )

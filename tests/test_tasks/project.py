@@ -8,7 +8,11 @@ from autumn.tools.calibration import Calibration
 
 
 def get_test_project():
-    baseline_params_data = {"time": {"start": 0}, "birth_rate": 0.1, "recovery_rate": 0.1}
+    baseline_params_data = {
+        "time": {"start": 0},
+        "birth_rate": 0.1,
+        "recovery_rate": 0.1,
+    }
     scenario_params_data = {"time": {"start": 2}, "birth_rate": 0.2}
     baseline_params = Params(baseline_params_data)
     scenario_params = baseline_params.update(scenario_params_data)
@@ -24,7 +28,9 @@ def get_test_project():
     priors = [UniformPrior("recovery_rate", [0.05, 0.5])]
     targets = [NormalTarget(ts_set["recovery"])]
     calibration = Calibration(priors=priors, targets=targets, seed=0)
-    project = Project("test_region", "test_model", build_test_model, param_set, calibration)
+    project = Project(
+        "test_region", "test_model", build_test_model, param_set, calibration
+    )
     return project
 
 

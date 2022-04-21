@@ -2,14 +2,21 @@ import yaml
 import pandas as pd
 import os
 
-from autumn.projects.covid_19.vaccine_optimisation.vaccine_opti import initialise_opti_object
+from autumn.projects.covid_19.vaccine_optimisation.vaccine_opti import (
+    initialise_opti_object,
+)
 from autumn.settings import BASE_PATH
 
 
 def load_decision_vars(file_name):
 
     file_path = os.path.join(
-        BASE_PATH, "apps", "covid_19", "vaccine_optimisation", "optimal_plans", file_name
+        BASE_PATH,
+        "apps",
+        "covid_19",
+        "vaccine_optimisation",
+        "optimal_plans",
+        file_name,
     )
     df = pd.read_csv(file_path, sep=",", header=None)
     decision_vars = list(df.iloc[0])[0:17]
@@ -40,7 +47,9 @@ def write_scenario_yml_file(country, decision_vars, sc_start_index=None):
     for i, _vars in enumerate(sc_decision_vars):
         sc_index = sc_start_index + i
         sc_params = opti_object.scenario_func(_vars)
-        sc_params["parent"] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
+        sc_params[
+            "parent"
+        ] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
 
         param_file_path = os.path.join(
             BASE_PATH,

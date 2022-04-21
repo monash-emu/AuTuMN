@@ -14,7 +14,9 @@ from . import plots
 logger = logging.getLogger(__name__)
 
 
-def plot_post_full_run(targets: dict, mcmc_dir: str, plot_dir: str, candidates_df: pd.DataFrame):
+def plot_post_full_run(
+    targets: dict, mcmc_dir: str, plot_dir: str, candidates_df: pd.DataFrame
+):
     logger.info(f"Plotting {mcmc_dir} into {plot_dir}")
     plotter = FilePlotter(plot_dir, targets)
     mcmc_tables = db.load.load_mcmc_tables(mcmc_dir)
@@ -33,7 +35,9 @@ def plot_post_full_run(targets: dict, mcmc_dir: str, plot_dir: str, candidates_d
             output_name, derived_output_tables, candidates_df, REF_DATE
         )
         target_series = target_to_series(target, REF_DATE)
-        plots.plot_candidates_for_output(subplotter, output_name, outputs, target_series)
+        plots.plot_candidates_for_output(
+            subplotter, output_name, outputs, target_series
+        )
 
 
 def _get_sub_plotter(plot_dir: str, subplot_dirname: str):

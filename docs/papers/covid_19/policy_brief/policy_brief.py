@@ -13,8 +13,12 @@ POLICY_PDF = os.path.join(POLICY_PATH, "policy_brief.pdf")
 POLICY_PHL = os.path.join(
     PROJECTS_PATH, "covid_19", "philippines", "philippines", "policy_brief.json"
 )
-POLICY_MYS = os.path.join(PROJECTS_PATH, "covid_19", "malaysia", "malaysia", "policy_brief.json")
-POLICY_LKA = os.path.join(PROJECTS_PATH, "covid_19", "sri_lanka", "sri_lanka", "policy_brief.json")
+POLICY_MYS = os.path.join(
+    PROJECTS_PATH, "covid_19", "malaysia", "malaysia", "policy_brief.json"
+)
+POLICY_LKA = os.path.join(
+    PROJECTS_PATH, "covid_19", "sri_lanka", "sri_lanka", "policy_brief.json"
+)
 
 POLICY_JSON = POLICY_LKA
 
@@ -113,7 +117,9 @@ class PDF(FPDF):
     def extract_attributes(self):
 
         self.region = self.pb["RUN_ID"].split("/")[1]
-        self.date = str(datetime.fromtimestamp(int(self.pb["RUN_ID"].split("/")[2])).date())
+        self.date = str(
+            datetime.fromtimestamp(int(self.pb["RUN_ID"].split("/")[2])).date()
+        )
         self.heading = [*self.pb][1:]
         self.output_pdf = os.path.join(POLICY_PATH, f"policy_brief_{self.region}.pdf")
 

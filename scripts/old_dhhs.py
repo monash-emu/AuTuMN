@@ -230,7 +230,16 @@ def load_dhhs_df(acquired: int):
     df = pd.read_csv(DHHS_CSV)
     df.date = pd.to_datetime(df["date"], infer_datetime_format=True)
     df = df[df.acquired == acquired][
-        ["date", "cluster", "new", "deaths", "incident_ward", "ward", "incident_icu", "icu"]
+        [
+            "date",
+            "cluster",
+            "new",
+            "deaths",
+            "incident_ward",
+            "ward",
+            "incident_icu",
+            "icu",
+        ]
     ]
     df = df.groupby(["date", "cluster"]).sum().reset_index()
     df["cluster_name"] = df.cluster
@@ -261,14 +270,18 @@ def load_chris_df(load: str):
     )
 
     df = df[df.type == load][["cluster_name", "state", "value", "E_F"]]
-    df["E_F"] = pd.to_datetime(df["E_F"], format="%d/%m/%Y %H:%M:%S", infer_datetime_format=True)
+    df["E_F"] = pd.to_datetime(
+        df["E_F"], format="%d/%m/%Y %H:%M:%S", infer_datetime_format=True
+    )
     df["date_index"] = (df["E_F"] - pd.datetime(2019, 12, 31)).dt.days
     df = df.astype({"value": int})
     df = df[["cluster_name", "date_index", "value"]]
 
     # Sort and remove duplicates to obtain max for a given date.
     df.sort_values(
-        by=["cluster_name", "date_index", "value"], ascending=[True, True, False], inplace=True
+        by=["cluster_name", "date_index", "value"],
+        ascending=[True, True, False],
+        inplace=True,
     )
     df.drop_duplicates(["cluster_name", "date_index"], keep="first", inplace=True)
     df["cluster_name"] = df.cluster_name.replace(CHRIS_MAP).str.lower()

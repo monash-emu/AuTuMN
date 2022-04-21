@@ -11,11 +11,7 @@ from autumn.tools.project import (
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import (
-    base_params,
-    build_model,
-    set_up_random_process
-)
+from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
 # Load and configure model parameters
@@ -36,17 +32,21 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 # truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
 notifications = pd.concat(
     [
-     ts_set["notifications"].loc[606:639],  # form 28/08/2021 to 30/09/2021
-     ts_set["notifications"].loc[702:]  # from 02/12/2021 onwards
+        ts_set["notifications"].loc[606:639],  # form 28/08/2021 to 30/09/2021
+        ts_set["notifications"].loc[702:],  # from 02/12/2021 onwards
     ]
 )
 
 icu_occupancy = ts_set["icu_occupancy"].loc[640:]  # truncated to 01 Oct 2021
-infection_deaths = ts_set["infection_deaths"].loc[556:].rolling(7).mean()  # truncated to 9th Jul 2021
+infection_deaths = (
+    ts_set["infection_deaths"].loc[556:].rolling(7).mean()
+)  # truncated to 9th Jul 2021
 
-targets = [NormalTarget(notifications),
-           NormalTarget(icu_occupancy),
-           NormalTarget(infection_deaths)]
+targets = [
+    NormalTarget(notifications),
+    NormalTarget(icu_occupancy),
+    NormalTarget(infection_deaths),
+]
 
 
 priors = [
@@ -67,7 +67,9 @@ priors = [
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.05, 0.15)),
     # emergence of omicron
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 767.0)),  # 3 weeks interval
+    UniformPrior(
+        "voc_emergence.omicron.new_voc_seed.start_time", (746.0, 767.0)
+    ),  # 3 weeks interval
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0.2, 0.5)),
@@ -100,7 +102,12 @@ with open(plot_spec_filepath) as f:
 
 # Create and register the project.
 project = Project(
-    Region.HO_CHI_MINH_CITY, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+    Region.HO_CHI_MINH_CITY,
+    Models.SM_SIR,
+    build_model,
+    param_set,
+    calibration,
+    plots=plot_spec,
 )
 
 

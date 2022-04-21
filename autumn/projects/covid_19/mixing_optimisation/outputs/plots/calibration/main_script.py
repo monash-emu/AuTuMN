@@ -21,7 +21,9 @@ def main():
     )  # Rerun this line to recalculate percentiles
     fc.plot_posterior_detection()
 
-    param_values_best_chain = fc.get_parameter_values(calibration_outputs, best_chain_only=True)
+    param_values_best_chain = fc.get_parameter_values(
+        calibration_outputs, best_chain_only=True
+    )
     fc.plot_parameter_traces(param_values_best_chain, max_n_iter=2500)
 
     """

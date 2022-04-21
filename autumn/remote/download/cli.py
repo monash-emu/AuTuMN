@@ -48,7 +48,9 @@ def _download_run(run_id: str, src_dir_key: str, dest_dir_key: str):
 
     app_name, region_name, timestamp, _ = read_run_id(run_id)
     datestamp = datetime.fromtimestamp(int(timestamp)).strftime("%Y-%m-%d")
-    base_dest_path = os.path.join(OUTPUT_DATA_PATH, dest_dir_key, app_name, region_name, datestamp)
+    base_dest_path = os.path.join(
+        OUTPUT_DATA_PATH, dest_dir_key, app_name, region_name, datestamp
+    )
 
     if os.path.exists(base_dest_path):
         rmtree(base_dest_path)

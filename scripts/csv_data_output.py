@@ -60,7 +60,9 @@ VIC_OUTPUT = [
     "notifications",
 ]
 VIC_REQUEST = [
-    f"{output}_for_cluster_{cluster.lower()}" for output in VIC_OUTPUT for cluster in VIC_CLUSTERS
+    f"{output}_for_cluster_{cluster.lower()}"
+    for output in VIC_OUTPUT
+    for cluster in VIC_CLUSTERS
 ]
 
 vic = {
@@ -83,7 +85,10 @@ npl = {"region": ["nepal"], "columns": STANDARD_COL + npl_incidence_col}
 def upload_csv(country_list):
     for ctry in country_list:
         s3.upload_file(
-            f"{ctry}_data.csv", "autumn-files", f"{ctry}_data.csv", ExtraArgs={"ACL": "public-read"}
+            f"{ctry}_data.csv",
+            "autumn-files",
+            f"{ctry}_data.csv",
+            ExtraArgs={"ACL": "public-read"},
         )
         os.remove(f"{ctry}_data.csv")
 

@@ -13,12 +13,18 @@ from autumn.projects.covid_19.mixing_optimisation.constants import (
     PHASE_2_DURATION,
     PHASE_2_START_TIME,
 )
-from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
+from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
+    DURATIONS,
+    MODES,
+    OBJECTIVES,
+)
 from autumn.projects.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows import (
     apply_scenario_mask,
     get_output_data,
 )
-from autumn.projects.covid_19.mixing_optimisation.utils import get_wi_scenario_mapping_reverse
+from autumn.projects.covid_19.mixing_optimisation.utils import (
+    get_wi_scenario_mapping_reverse,
+)
 from autumn.tools.db import Database
 from autumn.tools.db.load import find_db_paths, load_derived_output_tables
 from autumn.settings import BASE_PATH
@@ -36,10 +42,22 @@ FIGURE_PATH = os.path.join(
 )
 
 DATA_PATH = os.path.join(
-    BASE_PATH, "apps", "covid_19", "mixing_optimisation", "outputs", "pbi_databases", "manual_runs"
+    BASE_PATH,
+    "apps",
+    "covid_19",
+    "mixing_optimisation",
+    "outputs",
+    "pbi_databases",
+    "manual_runs",
 )
 
-IMMUNITY_MODES = ["full_immunity", "short_severe", "short_milder", "long_severe", "long_milder"]
+IMMUNITY_MODES = [
+    "full_immunity",
+    "short_severe",
+    "short_milder",
+    "long_severe",
+    "long_milder",
+]
 
 
 def main():
@@ -79,7 +97,14 @@ def plot_waning_immunity_graph(
                 "24 months immunity",
                 "24 months immunity and\n50% less symptomatic",
             ],
-            "sc_colors": ["black", "black", "mediumaquamarine", "blue", "lightcoral", "crimson"],
+            "sc_colors": [
+                "black",
+                "black",
+                "mediumaquamarine",
+                "blue",
+                "lightcoral",
+                "crimson",
+            ],
             "immunity_modes": [
                 "full_immunity",
                 "full_immunity",
@@ -134,7 +159,9 @@ def plot_waning_immunity_graph(
         if scenario == 0:
             run_sc_idx = 0
         else:
-            run_sc_idx = get_wi_scenario_mapping_reverse(duration, objective, final_mixing)
+            run_sc_idx = get_wi_scenario_mapping_reverse(
+                duration, objective, final_mixing
+            )
 
         sc_mask = derived_output_df["scenario"] == run_sc_idx
         df = derived_output_df[sc_mask]
@@ -163,7 +190,11 @@ def plot_waning_immunity_graph(
 
     phase_2_end_date = {DURATIONS[0]: "1 Apr 21", DURATIONS[1]: "1 Oct 21"}
 
-    xticks = [PHASE_2_START_TIME, PHASE_2_START_TIME + PHASE_2_DURATION[duration], 366 + 365]
+    xticks = [
+        PHASE_2_START_TIME,
+        PHASE_2_START_TIME + PHASE_2_DURATION[duration],
+        366 + 365,
+    ]
     xlabs = ["1 Oct 20", phase_2_end_date[duration], "31 Dec 21"]
 
     axis.set_xlim((PHASE_2_START_TIME, max(times)))
@@ -191,7 +222,9 @@ def plot_multicountry_waning_immunity(
     fig = pyplot.figure(constrained_layout=True, figsize=(24, fig_h))  # (w, h)
 
     widths = [1, 6, 6, 6, 2]
-    spec = fig.add_gridspec(ncols=5, nrows=len(heights), width_ratios=widths, height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=5, nrows=len(heights), width_ratios=widths, height_ratios=heights
+    )
 
     output_names = ["incidence", "infection_deaths", "hospital_occupancy"]
     output_titles = ["Daily disease incidence", "Daily deaths", "Hospital occupancy"]
@@ -255,7 +288,11 @@ def plot_multicountry_waning_immunity(
         config_name = "6-month" if duration == DURATIONS[0] else "12-month"
 
         config_label = (
-            "Optimisation by by age minimising " + obj_name + " with " + config_name + " mitigation"
+            "Optimisation by by age minimising "
+            + obj_name
+            + " with "
+            + config_name
+            + " mitigation"
         )
         ax.text(
             0.0,

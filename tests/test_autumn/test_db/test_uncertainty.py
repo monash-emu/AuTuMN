@@ -29,7 +29,9 @@ def test_calculate_mcmc_uncertainty():
         },
     }
     funcs = [_linear_func, _quadratic_func]
-    do_df, mcmc_df, _ = build_synthetic_calibration(targets, funcs, chains=3, runs=1000, times=100)
+    do_df, mcmc_df, _ = build_synthetic_calibration(
+        targets, funcs, chains=3, runs=1000, times=100
+    )
 
     # Calculate uncertainty from synthetic data.
     unc_df = calculate_mcmc_uncertainty(mcmc_df, do_df, targets)
@@ -44,7 +46,9 @@ def test_calculate_mcmc_uncertainty():
     # Check that calculated quantiles are correct for foo.
     for quantile in quantiles:
         mask = (unc_df["quantile"] == quantile) & (unc_df["type"] == "foo")
-        vals = (unc_df[mask]["value"] - unc_df[mask]["time"].apply(lambda t: t ** 2)).to_numpy()
+        vals = (
+            unc_df[mask]["value"] - unc_df[mask]["time"].apply(lambda t: t**2)
+        ).to_numpy()
         assert ((vals > (quantile - TOLERANCE)) * (vals < (quantile + TOLERANCE))).all()
 
 
@@ -56,4 +60,4 @@ def _linear_func(t):
 
 def _quadratic_func(t):
     # Quadratic func + [0, 1] from uniform distribution
-    return t ** 2 + random.random()
+    return t**2 + random.random()

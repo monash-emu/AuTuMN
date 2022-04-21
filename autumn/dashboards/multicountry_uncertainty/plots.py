@@ -33,7 +33,9 @@ def multi_country_uncertainty(
 
         if i_region == 0:
             available_outputs = [o["output_key"] for o in targets[i_region].values()]
-            chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
+            chosen_output = st.sidebar.selectbox(
+                "Select calibration target", available_outputs
+            )
             x_min = round(min(uncertainty_df[0]["time"]))
             x_max = round(max(uncertainty_df[0]["time"]))
             x_low, x_up = selectors.create_xrange_selector(x_min, x_max)

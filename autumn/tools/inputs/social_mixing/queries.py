@@ -4,7 +4,9 @@ import numpy as np
 
 from autumn.tools.inputs.database import get_input_db
 from autumn.tools.inputs.demography.queries import get_population_by_agegroup
-from autumn.tools.inputs.social_mixing.build_synthetic_matrices import convert_matrices_agegroups
+from autumn.tools.inputs.social_mixing.build_synthetic_matrices import (
+    convert_matrices_agegroups,
+)
 
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
 MAPPING_ISO_CODE = {
@@ -12,7 +14,9 @@ MAPPING_ISO_CODE = {
 }
 
 
-def get_prem_mixing_matrices(country_iso_code: str, model_age_groups=None, model_region_name=None):
+def get_prem_mixing_matrices(
+    country_iso_code: str, model_age_groups=None, model_region_name=None
+):
     """
     :param country_iso_code: modelled country's iso3 code
     :param model_age_groups: Model age bands. Uses Prem age groups if None.
@@ -24,7 +28,7 @@ def get_prem_mixing_matrices(country_iso_code: str, model_age_groups=None, model
         out_matrices[loc] = get_country_mixing_matrix(loc, country_iso_code)
 
     if model_age_groups is not None:
-        prem_age_groups = [int(5.*i) for i in range(16)]
+        prem_age_groups = [int(5.0 * i) for i in range(16)]
         if model_age_groups != prem_age_groups:
             out_matrices = convert_matrices_agegroups(
                 out_matrices,
@@ -32,10 +36,11 @@ def get_prem_mixing_matrices(country_iso_code: str, model_age_groups=None, model
                 model_age_groups,
                 country_iso_code,
                 model_region_name,
-                LOCATIONS
+                LOCATIONS,
             )
 
     return out_matrices
+
 
 # Cache result beecause this gets called 1000s of times during calibration.
 @lru_cache(maxsize=None)
@@ -85,7 +90,9 @@ def get_mixing_matrix_specific_agegroups(
         "days",
         "years",
     ], "The requested time-unit must be either 'days' or 'years'"
-    original_matrix = get_country_mixing_matrix("all_locations", country_iso_code, mix_matrix)
+    original_matrix = get_country_mixing_matrix(
+        "all_locations", country_iso_code, mix_matrix
+    )
     original_age_breaks = [i * 5.0 for i in range(16)]
     original_populations = get_population_by_agegroup(
         original_age_breaks, country_iso_code, year=2015  # 2015 to match Prem estimates
@@ -95,10 +102,14 @@ def get_mixing_matrix_specific_agegroups(
     # get list of original agegroup indices that match each requested age group index
     agegroup_index_mapping = []
     for i, req_age_break in enumerate(requested_age_breaks):
-        mapping_indices = [k for k in range(16) if original_age_breaks[k] >= req_age_break]
+        mapping_indices = [
+            k for k in range(16) if original_age_breaks[k] >= req_age_break
+        ]
         if i < len(requested_age_breaks) - 1:
             mapping_indices = [
-                k for k in mapping_indices if original_age_breaks[k] < requested_age_breaks[i + 1]
+                k
+                for k in mapping_indices
+                if original_age_breaks[k] < requested_age_breaks[i + 1]
             ]
 
         agegroup_index_mapping.append(mapping_indices)
@@ -114,7 +125,9 @@ def get_mixing_matrix_specific_agegroups(
         ]
         for j_contactee in range(n_req_groups):
             total_contacts_new_format = 0.0
-            for h, i_contactor_original in enumerate(agegroup_index_mapping[i_contactor]):
+            for h, i_contactor_original in enumerate(
+                agegroup_index_mapping[i_contactor]
+            ):
                 total_contacts_new_format += rel_contactor_population_props[h] * sum(
                     [
                         original_matrix[i_contactor_original, p]

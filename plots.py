@@ -24,7 +24,9 @@ Docs: https://docs.streamlit.io/
 """
 import streamlit as st
 
-from autumn.dashboards.calibration_results.run import run_dashboard as calibration_results
+from autumn.dashboards.calibration_results.run import (
+    run_dashboard as calibration_results,
+)
 from autumn.dashboards.model_internals.run import run_dashboard as model_internals
 from autumn.dashboards.model_results.run import run_dashboard as model_results
 

@@ -13,14 +13,15 @@ logger = logging.getLogger(__name__)
 
 MAX_WORKERS = mp.cpu_count() - 1
 
-def gather_exc_plus(filename='crash.log'):
+
+def gather_exc_plus(filename="crash.log"):
     """
     Dump tracebacks and locals to a file
     Borrowed from: https://www.oreilly.com/library/view/python-cookbook/0596001673/ch14s05.html
     """
-    
-    out_f = open(filename, 'w')
-    
+
+    out_f = open(filename, "w")
+
     tb = sys.exc_info()[2]
     while 1:
         if not tb.tb_next:
@@ -36,8 +37,10 @@ def gather_exc_plus(filename='crash.log'):
     out_f.write("\n")
     out_f.write("Showing stack for all frames:\n\n")
     for frame in stack:
-        out_f.write(f"Frame {frame.f_code.co_name} in {frame.f_code.co_filename} at line {frame.f_lineno}\n")
-        for key, value in frame.f_locals.items(  ):
+        out_f.write(
+            f"Frame {frame.f_code.co_name} in {frame.f_code.co_filename} at line {frame.f_lineno}\n"
+        )
+        for key, value in frame.f_locals.items():
             out_f.write(f"\t{key} = \n"),
             try:
                 out_f.write(f"{value}\n")
@@ -64,14 +67,18 @@ def run_parallel_tasks(func: Callable, arg_list: List[Any], auto_exit=True):
         logger.info("Parallel task completed: %s", result)
         success_results.append(result)
 
-    logger.info("Successfully ran %s parallel tasks: %s", len(success_results), success_results)
+    logger.info(
+        "Successfully ran %s parallel tasks: %s", len(success_results), success_results
+    )
     if failure_exceptions:
         logger.info("Failed to run %s parallel tasks", len(failure_exceptions))
         for f in failure_exceptions:
             logger.error(f)
         if auto_exit:
             logger.error(
-                "%s / %s parallel tasks failed - exiting.", len(failure_exceptions), len(arg_list)
+                "%s / %s parallel tasks failed - exiting.",
+                len(failure_exceptions),
+                len(arg_list),
             )
             sys.exit(-1)
         else:

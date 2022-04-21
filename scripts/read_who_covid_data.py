@@ -10,7 +10,9 @@ from autumn.settings import Region
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
-WHO_DATA_FILE = os.path.join(base_dir, "data", "who_covid", "WHO-COVID-19-global-data.csv")
+WHO_DATA_FILE = os.path.join(
+    base_dir, "data", "who_covid", "WHO-COVID-19-global-data.csv"
+)
 who_country_mapping = {"united-kingdom": "The United Kingdom"}
 
 
@@ -33,7 +35,9 @@ def read_who_data_from_csv(
     date_ref = COVID_BASE_DATETIME.date()
     for i, time_string in enumerate(times):
         components = time_string.split("-")
-        time_date = datetime.date(int(components[0]), int(components[1]), int(components[2]))
+        time_date = datetime.date(
+            int(components[0]), int(components[1]), int(components[2])
+        )
         delta = time_date - date_ref
         times[i] = delta.days
 
@@ -47,9 +51,13 @@ def read_who_data_from_csv(
 
     times = times[start_index : end_index + 1]
     if variable == "confirmed":
-        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 4])[start_index : end_index + 1]
+        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 4])[
+            start_index : end_index + 1
+        ]
     elif variable == "deaths":
-        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 6])[start_index : end_index + 1]
+        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 6])[
+            start_index : end_index + 1
+        ]
 
     return times, values
 
@@ -60,7 +68,9 @@ def drop_who_data_to_timeseries(
     data = {}
     output_name = {"confirmed": "notifications", "deaths": "infection_deaths"}
     for variable in ["confirmed", "deaths"]:
-        times, values = read_who_data_from_csv(variable, country, data_start_time, data_end_time)
+        times, values = read_who_data_from_csv(
+            variable, country, data_start_time, data_end_time
+        )
         if weekly_average:
             times, values = get_weekly_summed_targets(times, values)
         data[variable] = {"times": times, "values": values}
@@ -86,4 +96,6 @@ def drop_who_data_to_timeseries(
 
 if __name__ == "__main__":
     for country in Region.MIXING_OPTI_REGIONS:
-        drop_who_data_to_timeseries(country, data_end_time=470)  # t_max=275 is 1st October 2020
+        drop_who_data_to_timeseries(
+            country, data_end_time=470
+        )  # t_max=275 is 1st October 2020

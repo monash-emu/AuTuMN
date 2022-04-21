@@ -79,7 +79,9 @@ def plot_multicountry_mobility(mobility_data_functions):
     fig = pyplot.figure(constrained_layout=True, figsize=(18, 20))  # (w, h)
     widths = [1, 6, 6, 6]
     heights = [1, 6, 6, 6, 6, 6, 6]
-    spec = fig.add_gridspec(ncols=4, nrows=7, width_ratios=widths, height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=4, nrows=7, width_ratios=widths, height_ratios=heights
+    )
 
     location_names = {
         "other_locations": "other locations",

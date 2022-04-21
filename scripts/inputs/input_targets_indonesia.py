@@ -20,7 +20,9 @@ COVID_IDN_TARGETS = os.path.join(
 )
 
 COVID_BALI_DATA = os.path.join(INPUT_DATA_PATH, "covid_idn", "Bali Modelling.xlsx")
-COVID_BALI_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "indonesia", "bali", "timeseries.json")
+COVID_BALI_TARGETS = os.path.join(
+    PROJECTS_PATH, "covid_19", "indonesia", "bali", "timeseries.json"
+)
 
 TARGETS_IDN = {
     "notifications": "new_cases",

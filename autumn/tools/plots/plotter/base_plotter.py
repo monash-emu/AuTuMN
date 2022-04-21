@@ -15,7 +15,9 @@ class BasePlotter(ABC):
         pass
 
     @abstractmethod
-    def save_figure(self, fig, filename: str, subdir=None, title_text=None, dpi_request=300):
+    def save_figure(
+        self, fig, filename: str, subdir=None, title_text=None, dpi_request=300
+    ):
         pass
 
     def get_figure(
@@ -40,7 +42,9 @@ class BasePlotter(ABC):
             max_dims: The number of rows or columns of sub-plots, whichever is greater
         """
         pyplot.style.use("ggplot")
-        n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
+        n_rows, n_cols = (
+            requested_grid if requested_grid else find_subplot_grid(n_panels)
+        )
         indices = []
         horizontal_position_one_axis = 0.11 if room_for_legend else 0.15
         if n_panels == 1:
@@ -51,7 +55,9 @@ class BasePlotter(ABC):
             fig.set_figheight(3.5)
             fig.subplots_adjust(bottom=0.15, top=0.85)
         else:
-            fig, axes = pyplot.subplots(n_rows, n_cols, sharex=share_xaxis, sharey=share_yaxis)
+            fig, axes = pyplot.subplots(
+                n_rows, n_cols, sharex=share_xaxis, sharey=share_yaxis
+            )
             for panel in range(n_rows * n_cols):
                 indices.append(new_find_panel_grid_indices(panel, n_rows, n_cols))
         return fig, axes, max([n_rows, n_cols]), n_rows, n_cols, indices
@@ -85,11 +91,15 @@ class BasePlotter(ABC):
         elif len(axis.get_xticks()) > 7:
             for label in axis.xaxis.get_ticklabels()[::2]:
                 label.set_visible(False)
-        axis.tick_params(axis="x", length=3, pad=6, labelsize=get_label_font_size(max_dims))
+        axis.tick_params(
+            axis="x", length=3, pad=6, labelsize=get_label_font_size(max_dims)
+        )
 
         # axis label
         if x_label is not None:
-            axis.set_xlabel(self.get_plot_title(x_label), fontsize=get_label_font_size(max_dims))
+            axis.set_xlabel(
+                self.get_plot_title(x_label), fontsize=get_label_font_size(max_dims)
+            )
 
     def tidy_y_axis(
         self,
@@ -134,7 +144,9 @@ class BasePlotter(ABC):
             axis.set_ylim(bottom=0.0)
 
         # ticks
-        axis.tick_params(axis="y", length=3.0, pad=6, labelsize=get_label_font_size(max_dims))
+        axis.tick_params(
+            axis="y", length=3.0, pad=6, labelsize=get_label_font_size(max_dims)
+        )
 
         # tick labels
         if not left_axis:
@@ -144,14 +156,16 @@ class BasePlotter(ABC):
 
         # axis label
         if y_label and left_axis:
-            axis.set_ylabel(self.get_plot_title(y_label), fontsize=get_label_font_size(max_dims))
+            axis.set_ylabel(
+                self.get_plot_title(y_label), fontsize=get_label_font_size(max_dims)
+            )
 
 
 COLOR_THEME = 100 * [
     (0.0, 0.0, 0.0),
     (57.0 / 255.0, 106.0 / 255.0, 177.0 / 255.0),  # blue
     (218.0 / 255.0, 124.0 / 255.0, 48.0 / 255.0),  # orange
-    (62.0 / 255.0, 150.0 / 255.0, 81.0 / 255.0),   # green
+    (62.0 / 255.0, 150.0 / 255.0, 81.0 / 255.0),  # green
     (204.0 / 255.0, 37.0 / 255.0, 41.0 / 255.0),  # red
     (107.0 / 255.0, 76.0 / 255.0, 154.0 / 255.0),  # purple
     (146.0 / 255.0, 36.0 / 255.0, 40.0 / 255.0),

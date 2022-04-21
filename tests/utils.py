@@ -43,7 +43,9 @@ def in_memory_db_factory():
         """
         Returns an in-memory SQLite database that corresponds to db_path.
         """
-        assert db_path.endswith(".db"), f'Database path "{db_path}" must be a file that ends in .db'
+        assert db_path.endswith(
+            ".db"
+        ), f'Database path "{db_path}" must be a file that ends in .db'
 
         if db_path.endswith("inputs.secret.db"):
             # Return the real "inputs.secret.db" if it's requested
@@ -68,7 +70,9 @@ def in_memory_db_factory():
     return get_in_memory_db_engine
 
 
-def build_synthetic_calibration(targets: dict, funcs: list, chains: int, runs: int, times: int):
+def build_synthetic_calibration(
+    targets: dict, funcs: list, chains: int, runs: int, times: int
+):
     chains = list(range(chains))  # Simulate calibration chains
     runs = list(range(runs))  # Runs per chain
     times = list(range(times))  # Timesteps per run
@@ -81,7 +85,14 @@ def build_synthetic_calibration(targets: dict, funcs: list, chains: int, runs: i
         do_columns.append(o)
         do_data[o] = []
 
-    mcmc_columns = ["chain", "run", "loglikelihood", "ap_loglikelihood", "accept", "weight"]
+    mcmc_columns = [
+        "chain",
+        "run",
+        "loglikelihood",
+        "ap_loglikelihood",
+        "accept",
+        "weight",
+    ]
     mcmc_data = {
         "chain": [],
         "run": [],

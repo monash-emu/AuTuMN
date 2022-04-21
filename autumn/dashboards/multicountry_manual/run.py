@@ -34,7 +34,10 @@ def run_dashboard():
     for i_region in range(n_countries):
 
         # Get regions for comparison
-        region_names[i_region], region_dirpaths[i_region] = selectors.output_region_name(
+        (
+            region_names[i_region],
+            region_dirpaths[i_region],
+        ) = selectors.output_region_name(
             app_dirpath, f"Select region #{str(i_region)}", i_region
         )
         if not region_names[i_region]:

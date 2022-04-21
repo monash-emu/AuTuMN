@@ -79,7 +79,9 @@ def get_organ_strat(params: Parameters) -> Stratification:
     else:
         awareness_multiplier = lambda t, cv: 1.0
 
-    combined_screening_rate_func = lambda t, cv: screening_rate_func(t, cv) * awareness_multiplier(t, cv)
+    combined_screening_rate_func = lambda t, cv: screening_rate_func(
+        t, cv
+    ) * awareness_multiplier(t, cv)
     detection_adjs = {}
     for organ_stratum in ORGAN_STRATA:
         detection_adjs[organ_stratum] = make_detection_func(
@@ -106,6 +108,9 @@ def get_organ_strat(params: Parameters) -> Stratification:
 
 def make_detection_func(organ_stratum, params, screening_rate_func):
     def detection_func(t, cv):
-        return screening_rate_func(t, cv) * params.passive_screening_sensitivity[organ_stratum]
+        return (
+            screening_rate_func(t, cv)
+            * params.passive_screening_sensitivity[organ_stratum]
+        )
 
     return detection_func

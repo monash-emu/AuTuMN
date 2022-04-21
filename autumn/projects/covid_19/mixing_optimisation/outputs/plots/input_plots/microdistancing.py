@@ -33,9 +33,13 @@ def make_microdistancing_plot(params=PARAMS):
 
     micro_emergence_func = tanh_based_scaleup(
         shape=0.05,
-        inflection_time=params["mobility.microdistancing.behaviour.parameters.inflection_time"],
+        inflection_time=params[
+            "mobility.microdistancing.behaviour.parameters.inflection_time"
+        ],
         start_asymptote=0,
-        end_asymptote=params["mobility.microdistancing.behaviour.parameters.end_asymptote"],
+        end_asymptote=params[
+            "mobility.microdistancing.behaviour.parameters.end_asymptote"
+        ],
     )
 
     micro_wane_func = tanh_based_scaleup(

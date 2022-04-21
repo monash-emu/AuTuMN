@@ -64,17 +64,26 @@ def get_eu_countries():
     eu_countries = pd.read_csv(URL)
     eu_countries.country = eu_countries.country.str.lower()
     eu_countries = eu_countries.loc[
-        eu_countries.country.isin(COUNTRIES), ["country", "indicator", "year_week", "value"]
+        eu_countries.country.isin(COUNTRIES),
+        ["country", "indicator", "year_week", "value"],
     ]
     eu_countries.indicator.replace(RENAME_INDICATOR, inplace=True)
 
-    eu_countries_daily = eu_countries.loc[eu_countries.indicator.isin(["hosp_occup", "icu_occup"])]
-    eu_countries = eu_countries.loc[~eu_countries.indicator.isin(["hosp_occup", "icu_occup"])]
-    eu_countries_daily = eu_countries_daily.groupby(["country", "indicator", "year_week"]).mean()
+    eu_countries_daily = eu_countries.loc[
+        eu_countries.indicator.isin(["hosp_occup", "icu_occup"])
+    ]
+    eu_countries = eu_countries.loc[
+        ~eu_countries.indicator.isin(["hosp_occup", "icu_occup"])
+    ]
+    eu_countries_daily = eu_countries_daily.groupby(
+        ["country", "indicator", "year_week"]
+    ).mean()
     eu_countries_daily.reset_index(inplace=True)
 
     eu_countries = eu_countries.append(eu_countries_daily)
-    eu_countries["cntry_ind"] = eu_countries.country.str[:3] + "_" + eu_countries.indicator
+    eu_countries["cntry_ind"] = (
+        eu_countries.country.str[:3] + "_" + eu_countries.indicator
+    )
 
     eu_countries = eu_countries.pivot_table(
         index=["year_week"], columns="cntry_ind", values="value"

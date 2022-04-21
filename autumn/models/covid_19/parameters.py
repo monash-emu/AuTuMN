@@ -7,7 +7,12 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS, Strain
+from autumn.models.covid_19.constants import (
+    COVID_BASE_DATETIME,
+    VACCINATION_STRATA,
+    GOOGLE_MOBILITY_LOCATIONS,
+    Strain,
+)
 from autumn.settings.region import Region
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 
@@ -15,6 +20,7 @@ from autumn.tools.inputs.social_mixing.constants import LOCATIONS
 BaseModel.Config.extra = Extra.forbid
 
 BASE_DATE = COVID_BASE_DATETIME.date()
+
 
 class Time(BaseModel):
     """
@@ -45,9 +51,9 @@ class TimeSeries(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, inputs):
         value_series, time_series = inputs.get("values"), inputs.get("times")
-        assert len(time_series) == \
-               len(value_series), \
-        f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        assert len(time_series) == len(
+            value_series
+        ), f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
         return inputs
 
     @validator("times", pre=True, allow_reuse=True)
@@ -89,7 +95,9 @@ class Sojourn(BaseModel):
         @validator("proportions", allow_reuse=True)
         def check_props(props):
             prop_sum = sum(props.values())
-            assert prop_sum == 1., f"Requested period proportions do not sum to one: {prop_sum}"
+            assert (
+                prop_sum == 1.0
+            ), f"Requested period proportions do not sum to one: {prop_sum}"
             return props
 
     # Mean time in days spent in each compartment
@@ -99,7 +107,9 @@ class Sojourn(BaseModel):
 
     @validator("compartment_periods", allow_reuse=True)
     def check_positive(periods):
-        assert all(val >= 0. for val in periods.values()), f"Sojourn times must be non-negative, times are: {periods}"
+        assert all(
+            val >= 0.0 for val in periods.values()
+        ), f"Sojourn times must be non-negative, times are: {periods}"
         return periods
 
 
@@ -112,7 +122,7 @@ class TanhScaleup(BaseModel):
     @validator("shape", allow_reuse=True)
     def check_shape(val):
         msg = f"Shape parameter negative: {val}, change order of asymptotes if desired gradient is the reversed"
-        assert 0. <= val, msg
+        assert 0.0 <= val, msg
         return val
 
 
@@ -142,13 +152,15 @@ class EmpiricMicrodistancingParams(BaseModel):
 
     @validator("max_effect", allow_reuse=True)
     def effect_domain(effect):
-        assert 0. <= effect <= 1.
+        assert 0.0 <= effect <= 1.0
         return effect
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
         value, time_series = values.get("values"), values.get("times")
-        assert len(time_series) == len(value), f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value)}"
+        assert len(time_series) == len(
+            value
+        ), f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value)}"
         return values
 
 
@@ -157,7 +169,7 @@ class ConstantMicrodistancingParams(BaseModel):
 
     @validator("effect", allow_reuse=True)
     def effect_domain(effect):
-        assert 0. <= effect <= 1., "Microdistancing effect not in domain [0, 1]"
+        assert 0.0 <= effect <= 1.0, "Microdistancing effect not in domain [0, 1]"
         return effect
 
 
@@ -191,9 +203,11 @@ class Mobility(BaseModel):
         for location in val:
             location_total = sum(val[location].values())
             msg = f"Mobility weights don't sum to one: {location_total}"
-            assert abs(location_total - 1.) < 1e-6, msg
+            assert abs(location_total - 1.0) < 1e-6, msg
             msg = "Google mobility key not recognised"
-            assert all([key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]), msg
+            assert all(
+                [key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]
+            ), msg
         return val
 
 
@@ -213,7 +227,7 @@ class StrataProps(BaseModel):
     @validator("props", allow_reuse=True)
     def check_props(val):
         msg = f"Not all of list of proportions is in [0, 1]: {val}"
-        assert all([0. <= prop <= 1. for prop in val]), msg
+        assert all([0.0 <= prop <= 1.0 for prop in val]), msg
         return val
 
 
@@ -235,12 +249,16 @@ class ClinicalStratification(BaseModel):
 
     @validator("icu_prop", allow_reuse=True)
     def check_icu_prop(val):
-        assert 0. <= val <= 1., f"Proportion of hospitalised patients admitted to ICU is not in [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Proportion of hospitalised patients admitted to ICU is not in [0, 1]: {val}"
         return val
 
     @validator("icu_mortality_prop", allow_reuse=True)
     def check_icu_ceiling(val):
-        assert 0. <= val <= 1., f"Ceiling for proportion of ICU patients dying is not in [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Ceiling for proportion of ICU patients dying is not in [0, 1]: {val}"
         return val
 
 
@@ -256,7 +274,7 @@ class InfectionFatality(BaseModel):
 
     @validator("multiplier", allow_reuse=True)
     def check_multiplier(val):
-        assert 0. <= val, f"Multiplier applied to IFRs must be in range [0, 1]: {val}"
+        assert 0.0 <= val, f"Multiplier applied to IFRs must be in range [0, 1]: {val}"
         return val
 
 
@@ -272,12 +290,12 @@ class TestingToDetection(BaseModel):
 
     @validator("assumed_tests_parameter", allow_reuse=True)
     def check_assumed_tests_positive(val):
-        assert 0. <= val, f"Assumed tests is negative: {val}"
+        assert 0.0 <= val, f"Assumed tests is negative: {val}"
         return val
 
     @validator("assumed_cdr_parameter", allow_reuse=True)
     def check_assumed_cdr_is_proportion(val):
-        assert 0. <= val <= 1., f"Assumed CDR parameter is not in range [0, 1]: {val}"
+        assert 0.0 <= val <= 1.0, f"Assumed CDR parameter is not in range [0, 1]: {val}"
         return val
 
     @validator("smoothing_period", allow_reuse=True)
@@ -309,20 +327,22 @@ class VocComponent(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_times(cls, values):
         if "seed_duration" in values:
-            assert 0. <= values["seed_duration"], "Seed duration negative"
+            assert 0.0 <= values["seed_duration"], "Seed duration negative"
         if "contact_rate_multiplier" in values:
-            assert 0. <= values["contact_rate_multiplier"], "Contact rate multiplier negative"
+            assert (
+                0.0 <= values["contact_rate_multiplier"]
+            ), "Contact rate multiplier negative"
         if "entry_rate" in values:
-            assert 0. <= values["entry_rate"], "Entry rate negative"
+            assert 0.0 <= values["entry_rate"], "Entry rate negative"
         if "ifr_multiplier" in values:
-            assert 0. <= values["ifr_multiplier"], "VoC effect on mortality negative"
+            assert 0.0 <= values["ifr_multiplier"], "VoC effect on mortality negative"
         else:
-            values["ifr_multiplier"] = 1.
+            values["ifr_multiplier"] = 1.0
         if "hosp_multiplier" in values:
             hosp_multiplier = values["hosp_multiplier"]
-            assert 0. <= hosp_multiplier, f"VoC effect on hospitalisation negative"
+            assert 0.0 <= hosp_multiplier, f"VoC effect on hospitalisation negative"
         else:
-            values["hosp_multiplier"] = 1.
+            values["hosp_multiplier"] = 1.0
         return values
 
 
@@ -338,12 +358,16 @@ class VaccCoveragePeriod(BaseModel):
     @validator("coverage", allow_reuse=True)
     def check_coverage(val):
         if val:
-            assert 0. <= val <= 1., f"Requested coverage for phase of vaccination program is not in [0, 1]: {val}"
+            assert (
+                0.0 <= val <= 1.0
+            ), f"Requested coverage for phase of vaccination program is not in [0, 1]: {val}"
         return val
 
     @root_validator(allow_reuse=True)
     def check_times(cls, values):
-        msg = f"End time: {values['start_time']} before start time: {values['end_time']}"
+        msg = (
+            f"End time: {values['start_time']} before start time: {values['end_time']}"
+        )
         assert values["start_time"] <= values["end_time"], msg
         return values
 
@@ -360,9 +384,13 @@ class RollOutFunc(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_suppy(cls, values):
         if "age_min" in values:
-            assert 0. <= values["age_min"], f"Minimum age is negative: {values['age_min']}"
+            assert (
+                0.0 <= values["age_min"]
+            ), f"Minimum age is negative: {values['age_min']}"
         if "age_max" in values:
-            assert 0. <= values["age_max"], f"Minimum age is negative: {values['age_max']}"
+            assert (
+                0.0 <= values["age_max"]
+            ), f"Minimum age is negative: {values['age_max']}"
         if "age_min" in values and "age_max" in values:
             msg = f"Maximum age: {values['age_max']} is less than minimum age: {values['age_max']}"
             assert values["age_min"] <= values["age_max"], msg
@@ -382,29 +410,42 @@ class VaccEffectiveness(BaseModel):
 
     @validator("ve_sympt_covid", pre=True, allow_reuse=True)
     def check_ve_sympt_covid(val):
-        assert 0. <= val <= 1., f"Overall efficacy should be in [0, 1]: {val}"
+        assert 0.0 <= val <= 1.0, f"Overall efficacy should be in [0, 1]: {val}"
         return val
 
     @validator("ve_prop_prevent_infection", pre=True, allow_reuse=True)
     def check_ve_prop_prevent_infection(val):
-        assert 0. <= val <= 1., f"Proportion of vaccine effect preventing infection should be in [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Proportion of vaccine effect preventing infection should be in [0, 1]: {val}"
         return val
 
     @validator("ve_infectiousness", pre=True, allow_reuse=True)
     def check_ve_infectiousness(val):
-        assert 0. <= val <= 1., f"Reduction in infectiousness should be in [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Reduction in infectiousness should be in [0, 1]: {val}"
         return val
 
     @root_validator(pre=True, allow_reuse=True)
     def check_single_requests(cls, values):
         n_requests = sum(
-            [int(bool(values[option])) for option in ["ve_infectiousness", "ve_infectiousness_ratio"]]
+            [
+                int(bool(values[option]))
+                for option in ["ve_infectiousness", "ve_infectiousness_ratio"]
+            ]
         )
         msg = f"Both ve_infectiousness and ve_infectiousness_ratio cannot be requested together"
         assert n_requests < 2, msg
 
         n_requests = sum(
-            [int(bool(values[option])) for option in ["ve_prop_prevent_infection", "ve_prop_prevent_infection_ratio"]]
+            [
+                int(bool(values[option]))
+                for option in [
+                    "ve_prop_prevent_infection",
+                    "ve_prop_prevent_infection_ratio",
+                ]
+            ]
         )
         msg = f"Both ve_prop_prevent_infection and ve_prop_prevent_infection_ratio cannot be requested together"
         assert n_requests < 2, msg
@@ -413,13 +454,17 @@ class VaccEffectiveness(BaseModel):
     @validator("ve_hospitalisation", pre=True, allow_reuse=True)
     def check_ve_hospitalisation(val):
         if val:
-            assert 0. <= val <= 1., f"Reduction in hospitalisation risk should be in [0, 1]: {val}"
+            assert (
+                0.0 <= val <= 1.0
+            ), f"Reduction in hospitalisation risk should be in [0, 1]: {val}"
         return val
 
     @validator("ve_death", pre=True, allow_reuse=True)
     def check_ve_death(val):
         if val:
-            assert 0. <= val <= 1., f"Reduction in risk of death should be in [0, 1]: {val}"
+            assert (
+                0.0 <= val <= 1.0
+            ), f"Reduction in risk of death should be in [0, 1]: {val}"
         return val
 
     @root_validator(pre=True, allow_reuse=True)
@@ -465,21 +510,23 @@ class Vaccination(BaseModel):
         second_dose_delay = values["second_dose_delay"]
         msg = f"Days to second dose is less than one"
         if isinstance(second_dose_delay, (float, int)):
-            assert second_dose_delay > 1., msg
+            assert second_dose_delay > 1.0, msg
         elif type(second_dose_delay) == TanhScaleup:
-            assert second_dose_delay["start_asymptote"] > 1., msg
-            assert second_dose_delay["end_asymptote"] > 1., msg
+            assert second_dose_delay["start_asymptote"] > 1.0, msg
+            assert second_dose_delay["end_asymptote"] > 1.0, msg
         return values
 
     @root_validator(pre=True, allow_reuse=True)
     def apply_ratio_adjustment(cls, values):
 
-        strata_to_adjust = VACCINATION_STRATA[1: 2]
+        strata_to_adjust = VACCINATION_STRATA[1:2]
         for stratum in strata_to_adjust:
             for key in values["fully_vaccinated"]:
                 ratio_key = f"{key}_ratio"
                 if ratio_key in values[stratum] and values[stratum][ratio_key]:
-                    values[stratum][key] = values["fully_vaccinated"][key] * values[stratum][ratio_key]
+                    values[stratum][key] = (
+                        values["fully_vaccinated"][key] * values[stratum][ratio_key]
+                    )
                     values[stratum][ratio_key] = None
 
         return values
@@ -487,7 +534,7 @@ class Vaccination(BaseModel):
     @validator("lag", allow_reuse=True)
     def check_lag(val):
         msg = f"Vaccination lag period is negative: {val}"
-        assert val >= 0., msg
+        assert val >= 0.0, msg
         return val
 
 
@@ -503,16 +550,18 @@ class VaccinationRisk(BaseModel):
 
     @root_validator(pre=True, allow_reuse=True)
     def check_vacc_risk_ranges(cls, values):
-        msg = f"Proportion Astra-Zeneca not in range [0, 1]: {values['prop_astrazeneca']}"
-        assert 0. <= values["prop_astrazeneca"] <= 1., msg
+        msg = (
+            f"Proportion Astra-Zeneca not in range [0, 1]: {values['prop_astrazeneca']}"
+        )
+        assert 0.0 <= values["prop_astrazeneca"] <= 1.0, msg
         msg = f"Proportion mRNA not in range [0, 1]: {values['prop_mrna']}"
-        assert 0. <= values["prop_mrna"] <= 1., msg
+        assert 0.0 <= values["prop_mrna"] <= 1.0, msg
         msg = f"At least one TTS rate is negative: {values['tts_rate']}"
-        assert all([0. <= val for val in values["tts_rate"].values()]), msg
+        assert all([0.0 <= val for val in values["tts_rate"].values()]), msg
         msg = f"TTS fatality ratio is negative: {values['tts_fatality_ratio']}"
-        assert all([0. <= val for val in values["tts_fatality_ratio"].values()]), msg
+        assert all([0.0 <= val for val in values["tts_fatality_ratio"].values()]), msg
         msg = f"Myocarditis rate is negative: {values['myocarditis_rate']}"
-        assert all([0. <= val for val in values["myocarditis_rate"].values()]), msg
+        assert all([0.0 <= val for val in values["myocarditis_rate"].values()]), msg
         return values
 
 
@@ -526,7 +575,7 @@ class History(BaseModel):
     @validator("natural_immunity_duration", allow_reuse=True)
     def check_immunity_duration(val):
         if type(val) == float:
-            assert val > 0., f"Waning immunity duration request is not positive: {val}"
+            assert val > 0.0, f"Waning immunity duration request is not positive: {val}"
         return val
 
 
@@ -534,6 +583,7 @@ class ContactTracing(BaseModel):
     """
     Contact tracing effectiveness that scales with disease burden parameters.
     """
+
     floor: float
     assumed_trace_prop: float
     assumed_prev: float
@@ -541,22 +591,30 @@ class ContactTracing(BaseModel):
 
     @validator("floor", allow_reuse=True)
     def check_floor(val):
-        assert 0. <= val <= 1., f"Contact tracing floor must be in range [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Contact tracing floor must be in range [0, 1]: {val}"
         return val
 
     @validator("quarantine_infect_multiplier", allow_reuse=True)
     def check_multiplier(val):
-        assert 0. <= val <= 1., f"Contact tracing infectiousness multiplier must be in range [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Contact tracing infectiousness multiplier must be in range [0, 1]: {val}"
         return val
 
     @validator("assumed_prev", allow_reuse=True)
     def check_prevalence(val):
-        assert 0. <= val <= 1., f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Contact tracing assumed prevalence must be in range [0, 1]: {val}"
         return val
 
     @validator("assumed_trace_prop", allow_reuse=True)
     def check_prevalence(val):
-        assert 0. <= val <= 1., f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Contact tracing assumed tracing proportion must be in range [0, 1]: {val}"
         return val
 
     @root_validator(allow_reuse=True)
@@ -623,5 +681,7 @@ class Parameters:
 
     @validator("hospital_reporting", allow_reuse=True)
     def check_hospital_reporting(val):
-        assert 0. <= val <= 1., f"Hospital reporting fraction must be in range [0, 1]: {val}"
+        assert (
+            0.0 <= val <= 1.0
+        ), f"Hospital reporting fraction must be in range [0, 1]: {val}"
         return val

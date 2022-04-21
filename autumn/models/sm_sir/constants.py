@@ -1,4 +1,3 @@
-
 # All available compartments
 class Compartment:
     SUSCEPTIBLE = "susceptible"
@@ -55,8 +54,4 @@ class ImmunityStratum:
     HIGH = "high"
 
 
-IMMUNITY_STRATA = [
-    ImmunityStratum.NONE,
-    ImmunityStratum.LOW,
-    ImmunityStratum.HIGH
-]
+IMMUNITY_STRATA = [ImmunityStratum.NONE, ImmunityStratum.LOW, ImmunityStratum.HIGH]

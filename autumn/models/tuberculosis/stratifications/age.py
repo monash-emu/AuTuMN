@@ -5,10 +5,18 @@ from math import exp, log
 from autumn.tools.curve import make_linear_curve, scale_up_function, tanh_based_scaleup
 from autumn.tools.inputs import get_death_rates_by_agegroup
 from autumn.tools.utils.utils import change_parameter_unit
-from autumn.tools.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
-from autumn.models.tuberculosis.constants import Compartment, COMPARTMENTS, INFECTIOUS_COMPS
+from autumn.tools.inputs.social_mixing.queries import (
+    get_mixing_matrix_specific_agegroups,
+)
+from autumn.models.tuberculosis.constants import (
+    Compartment,
+    COMPARTMENTS,
+    INFECTIOUS_COMPS,
+)
 from autumn.models.tuberculosis.parameters import Parameters
-from autumn.tools.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
+from autumn.tools.inputs.social_mixing.queries import (
+    get_mixing_matrix_specific_agegroups,
+)
 from autumn.models.tuberculosis.utils import (
     create_sloping_step_function,
     get_parameter_dict_from_function,
@@ -46,7 +54,9 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
             }
 
         step_func = create_step_function_from_dict(latency_params)
-        step_func_as_dict = get_parameter_dict_from_function(step_func, params.age_breakpoints)
+        step_func_as_dict = get_parameter_dict_from_function(
+            step_func, params.age_breakpoints
+        )
         adjs = change_parameter_unit(step_func_as_dict, 365.251)
 
         if params.inflate_reactivation_for_diabetes and is_activation_flow:
@@ -55,7 +65,10 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
                 shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0
             )
             future_diabetes_trend = make_linear_curve(
-                x_0=2020, x_1=2050, y_0=1, y_1=params.extra_params["future_diabetes_multiplier"]
+                x_0=2020,
+                x_1=2050,
+                y_0=1,
+                y_1=params.extra_params["future_diabetes_multiplier"],
             )
 
             def combined_diabetes_scale_up(t):
@@ -69,7 +82,9 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
                     computed_values,
                     prop_diabetes=params.extra_params["prop_diabetes"][age],
                     previous_progression_rate=adjs[str(age)],
-                    rr_progression_diabetes=params.extra_params["rr_progression_diabetes"],
+                    rr_progression_diabetes=params.extra_params[
+                        "rr_progression_diabetes"
+                    ],
                 ):
                     return (
                         1.0
@@ -111,7 +126,9 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
 
     # Set age-specific treatment recovery, relapse and treatment death rates
     time_variant_tsr = scale_up_function(
-        list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values()), method=4
+        list(params.time_variant_tsr.keys()),
+        list(params.time_variant_tsr.values()),
+        method=4,
     )
 
     # Set treatment_recovery
@@ -153,9 +170,15 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
         treatment_death_funcs[age] = get_treatment_death_rate
         treatment_relapse_funcs[age] = get_treatment_relapse_rate
 
-    treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
-    treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}
-    treatment_relapse_adjs = {str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()}
+    treatment_recovery_adjs = {
+        str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()
+    }
+    treatment_death_adjs = {
+        str(k): Multiply(v) for k, v in treatment_death_funcs.items()
+    }
+    treatment_relapse_adjs = {
+        str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()
+    }
     strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
     strat.set_flow_adjustments("treatment_death", treatment_death_adjs)
     strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
@@ -198,7 +221,9 @@ def get_average_age_for_bcg(agegroup, age_breakpoints):
     agegroup_idx = age_breakpoints.index(int(agegroup))
     if agegroup_idx == len(age_breakpoints) - 1:
         # We should normally never be in this situation because the last agegroup is not affected by BCG anyway.
-        print("Warning: the agegroup name is being used to represent the average age of the group")
+        print(
+            "Warning: the agegroup name is being used to represent the average age of the group"
+        )
         return float(agegroup)
     else:
         return 0.5 * (age_breakpoints[agegroup_idx] + age_breakpoints[agegroup_idx + 1])

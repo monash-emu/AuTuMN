@@ -48,8 +48,12 @@ def multi_country_cdr(
         testing_to_detection_values = []
         for i_chain in range(len(mcmc_params)):
             param_mask = mcmc_params[i_chain][0]["name"] == param_name
-            testing_to_detection_values += mcmc_params[i_chain][0]["value"][param_mask].tolist()
-        sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
+            testing_to_detection_values += mcmc_params[i_chain][0]["value"][
+                param_mask
+            ].tolist()
+        sampled_test_to_detect_vals = random.sample(
+            testing_to_detection_values, samples
+        )
 
         # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
         testing_year = 2020 if iso3 == "AUS" else pop_year
@@ -70,7 +74,13 @@ def multi_country_cdr(
                 )
             )
     plots.calibration.plots.plot_multi_cdr_curves(
-        plotter, times, detected_proportions, start_date, end_date, label_rotation, region_name
+        plotter,
+        times,
+        detected_proportions,
+        start_date,
+        end_date,
+        label_rotation,
+        region_name,
     )
 
 

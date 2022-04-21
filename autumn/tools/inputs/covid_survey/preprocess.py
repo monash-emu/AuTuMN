@@ -9,10 +9,12 @@ from autumn.settings import INPUT_DATA_PATH, COVID_BASE_DATETIME
 from .fetch import COVID_SURVEY_PATH
 
 CSV_FILES = [
-    os.path.join(INPUT_DATA_PATH, "covid_survey", file) for file in os.listdir(COVID_SURVEY_PATH)
+    os.path.join(INPUT_DATA_PATH, "covid_survey", file)
+    for file in os.listdir(COVID_SURVEY_PATH)
 ]
 MASKS = [file for file in CSV_FILES if "mask_" in file]
 AVOID_CONTACT = [file for file in CSV_FILES if "avoid_contact" in file]
+
 
 def preproc_csv(files):
     df = pd.concat(map(pd.read_csv, files))
@@ -50,6 +52,7 @@ def get_mask():
     ]
 
     return df
+
 
 def get_avoid_contact():
     df = preproc_csv(AVOID_CONTACT)

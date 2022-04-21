@@ -23,15 +23,23 @@ def build_dynamic_mixing_matrix(
 
     """
 
-    microdistancing_funcs = get_microdistancing_funcs(mobility.microdistancing, mobility.square_mobility_effect, country.iso3)
+    microdistancing_funcs = get_microdistancing_funcs(
+        mobility.microdistancing, mobility.square_mobility_effect, country.iso3
+    )
 
     locs, npi_effects = mobility.google_mobility_locations, mobility.npi_effectiveness
     square, smooth = mobility.square_mobility_effect, mobility.smooth_google_data
-    mobility_funcs = get_mobility_funcs(country, mobility.region, mobility.mixing, locs, square, smooth)
+    mobility_funcs = get_mobility_funcs(
+        country, mobility.region, mobility.mixing, locs, square, smooth
+    )
 
     # Get adjusters
-    location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
-    age_adjuster = AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None
+    location_adjuster = LocationMixingAdjuster(
+        base_matrices, mobility_funcs, microdistancing_funcs
+    )
+    age_adjuster = (
+        AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None
+    )
 
     def mixing_matrix_function(time: float) -> np.ndarray:
         """
@@ -43,6 +51,10 @@ def build_dynamic_mixing_matrix(
 
         # Apply adjustments - *** note that the order of these adjustments can't be reversed ***
         mixing_matrix = location_adjuster.get_adjustment(time, mixing_matrix)
-        return age_adjuster.get_adjustment(time, mixing_matrix) if age_adjuster else mixing_matrix
+        return (
+            age_adjuster.get_adjustment(time, mixing_matrix)
+            if age_adjuster
+            else mixing_matrix
+        )
 
     return mixing_matrix_function

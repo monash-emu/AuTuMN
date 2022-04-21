@@ -4,11 +4,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import mean, quantile
 
-from autumn.projects.covid_19.mixing_optimisation.constants import COUNTRY_TITLES, OPTI_REGIONS
+from autumn.projects.covid_19.mixing_optimisation.constants import (
+    COUNTRY_TITLES,
+    OPTI_REGIONS,
+)
 from autumn.projects.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import (
     get_serosurvey_data,
 )
-from autumn.projects.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
+from autumn.projects.covid_19.mixing_optimisation.utils import (
+    get_prior_distributions_for_opti,
+)
 from autumn.tools import db, plots
 from autumn.tools.curve import tanh_based_scaleup
 from autumn.tools.plots.calibration.plots import get_posterior, get_posterior_best_chain
@@ -84,14 +89,29 @@ param_info = {
         "name": "time in hospital (non-ICU)",
         "range": [17.7, 20.4],
     },
-    "sojourn.compartment_periods.icu_late": {"name": "time in ICU", "range": [9.0, 13.0]},
+    "sojourn.compartment_periods.icu_late": {
+        "name": "time in ICU",
+        "range": [9.0, 13.0],
+    },
     "infection_fatality.multiplier": {"name": "IFR multiplier", "range": [0.8, 1.2]},
     "case_detection.shape": {"name": "detection (shape)", "range": [0.05, 0.1]},
-    "case_detection.inflection_time": {"name": "detection (inflection)", "range": [100.0, 250.0]},
-    "case_detection.end_asymptote": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
-    "case_detection.start_asymptote": {"name": "detection (prop_start)", "range": [0.0, 0.10]},
+    "case_detection.inflection_time": {
+        "name": "detection (inflection)",
+        "range": [100.0, 250.0],
+    },
+    "case_detection.end_asymptote": {
+        "name": "detection (prop_final)",
+        "range": [0.10, 0.90],
+    },
+    "case_detection.start_asymptote": {
+        "name": "detection (prop_start)",
+        "range": [0.0, 0.10],
+    },
     "icu_prop": {"name": "prop ICU among hosp.", "range": [0.15, 0.20]},
-    "compartment_periods.hospital_late": {"name": "hopital duration", "range": [17.7, 20.4]},
+    "compartment_periods.hospital_late": {
+        "name": "hopital duration",
+        "range": [17.7, 20.4],
+    },
     "compartment_periods.icu_late": {"name": "time in ICU", "range": [9.0, 13.0]},
     "clinical_stratification.props.hospital.multiplier": {
         "name": "hosp. prop. multiplier",
@@ -133,7 +153,9 @@ def make_posterior_ranges_figure(param_values):
         n_row += 1
 
     fig, axs = plt.subplots(n_row, n_col, figsize=(11, 12))
-    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4)
+    plt.subplots_adjust(
+        left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4
+    )
 
     # load priors to set x range
     prior_list = get_prior_distributions_for_opti()
@@ -156,8 +178,12 @@ def make_posterior_ranges_figure(param_values):
                     values, q=(0.025, 0.25, 0.5, 0.75, 0.975)
                 )
 
-                axs[i_row, i_col].plot([low_95, up_95], [h, h], linewidth=1, color="black")
-                axs[i_row, i_col].plot([low_50, up_50], [h, h], linewidth=3, color="steelblue")
+                axs[i_row, i_col].plot(
+                    [low_95, up_95], [h, h], linewidth=1, color="black"
+                )
+                axs[i_row, i_col].plot(
+                    [low_50, up_50], [h, h], linewidth=3, color="steelblue"
+                )
                 axs[i_row, i_col].plot(
                     [point_estimate], [h], marker="o", color="crimson", markersize=5
                 )
@@ -185,7 +211,9 @@ def make_posterior_ranges_figure(param_values):
             axs[i_row, i_col].set_xticklabels(param_info[param_name]["xlabels"])
 
         if "multiplier" in param_info[param_name]:
-            axs[i_row, i_col].set_xlabel(param_info[param_name]["multiplier"], labelpad=-7.5)
+            axs[i_row, i_col].set_xlabel(
+                param_info[param_name]["multiplier"], labelpad=-7.5
+            )
 
         # Set y-ticks and yticks-labels
         if i_col == 0:
@@ -219,7 +247,9 @@ def plot_parameter_traces(param_values_by_chain, max_n_iter=2500):
     )  # (w, h)
     widths = [title_w] + [w] * len(OPTI_REGIONS)
     heights = [title_h] + [h] * len(param_names)
-    spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows, width_ratios=widths, height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=n_cols, nrows=n_rows, width_ratios=widths, height_ratios=heights
+    )
 
     # load priors to set y range
     prior_list = get_prior_distributions_for_opti()
@@ -282,7 +312,9 @@ def plot_parameter_traces(param_values_by_chain, max_n_iter=2500):
 # --------------  Make figure with posterior time-variant detection
 def get_all_posterior_detection_percentiles(param_values):
     for country in OPTI_REGIONS:
-        country_perc = get_country_posterior_detection_percentiles(param_values[country])
+        country_perc = get_country_posterior_detection_percentiles(
+            param_values[country]
+        )
         file_path_ = os.path.join(
             "dumped_files", "dumped_detection_percentiles_" + country + ".npy"
         )
@@ -293,7 +325,9 @@ def get_all_posterior_detection_percentiles(param_values):
 def get_country_posterior_detection_percentiles(country_param_values):
 
     calculated_times = list(range(300))[30:]
-    store_matrix = np.zeros((len(calculated_times), len(country_param_values["time.start"])))
+    store_matrix = np.zeros(
+        (len(calculated_times), len(country_param_values["time.start"]))
+    )
 
     for i in range(len(country_param_values["time.start"])):
         if "case_detection.start_asymptote" in country_param_values:
@@ -340,7 +374,9 @@ def plot_posterior_detection():
 
     fig, axs = plt.subplots(n_row, n_col, figsize=(13, 7))
     # plt.rcParams["font.family"] = "Times New Roman"
-    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.15, hspace=0.5)
+    plt.subplots_adjust(
+        left=None, bottom=None, right=None, top=None, wspace=0.15, hspace=0.5
+    )
 
     i_col = -1
     i_row = 0
@@ -380,11 +416,19 @@ def plot_posterior_detection():
 # --------------  Make figure with fits to population-level data
 SEROSURVEYS = {
     "belgium": [
-        {"time_window": [90.0, 96], "value": 0.029, "ci": [0.023, 0.034]},  # 30 mar  5 Apr
+        {
+            "time_window": [90.0, 96],
+            "value": 0.029,
+            "ci": [0.023, 0.034],
+        },  # 30 mar  5 Apr
         {"time_window": [111, 117], "value": 0.06, "ci": [0.051, 0.071]},  # 20 -26 Apr
         {"time_window": [139, 146], "value": 0.069, "ci": [0.059, 0.080]},  # 18 -25 May
         {"time_window": [160, 165], "value": 0.055, "ci": [0.047, 0.065]},  # 8 - 13 jun
-        {"time_window": [181, 185], "value": 0.045, "ci": [0.037, 0.054]},  # 29 Jun -3 Jul
+        {
+            "time_window": [181, 185],
+            "value": 0.045,
+            "ci": [0.037, 0.054],
+        },  # 29 Jun -3 Jul
     ],
     "france": [
         {"time_window": [85.0, 98], "value": 0.0271},
@@ -418,7 +462,9 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
         for country in OPTI_REGIONS:
             targets = get_targets(country)
             target_outputs[country] = ["notifications"]
-            hospital_target = [t for t in list(targets.keys()) if "hospital" in t or "icu" in t][0]
+            hospital_target = [
+                t for t in list(targets.keys()) if "hospital" in t or "icu" in t
+            ][0]
             target_outputs[country].append(hospital_target)
             target_outputs[country].append("infection_deaths")
             target_outputs[country].append("proportion_seropositive")
@@ -449,7 +495,14 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
     i_row = 1
     i_col = 0
 
-    ordered_countries = ["italy", "united-kingdom", "france", "belgium", "spain", "sweden"]
+    ordered_countries = [
+        "italy",
+        "united-kingdom",
+        "france",
+        "belgium",
+        "spain",
+        "sweden",
+    ]
     for country in ordered_countries:
         # write country name
         ax = fig.add_subplot(spec[i_row - 1, i_col : i_col + n_target_outputs])
@@ -467,7 +520,9 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
 
             ax = fig.add_subplot(spec[i_row, i_col])
             country_targets = get_targets(country)
-            targets = {k: v for k, v in country_targets.items() if v["output_key"] == output}
+            targets = {
+                k: v for k, v in country_targets.items() if v["output_key"] == output
+            }
             plot_timeseries_with_uncertainty(
                 None,
                 calibration_outputs[country]["uncertainty_df"],

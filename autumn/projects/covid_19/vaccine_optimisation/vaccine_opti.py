@@ -51,9 +51,12 @@ def get_vacc_roll_out_func(decision_vars, country):
     roll_out_components = []
 
     for i_age_group, age_group in enumerate(VACC_AGE_GROUPS):
-        daily_doses_phase_2 = float(TOTAL_DAILY_DOSES[country] * decision_vars[i_age_group])
+        daily_doses_phase_2 = float(
+            TOTAL_DAILY_DOSES[country] * decision_vars[i_age_group]
+        )
         daily_doses_phase_3 = float(
-            TOTAL_DAILY_DOSES[country] * decision_vars[i_age_group + len(VACC_AGE_GROUPS)]
+            TOTAL_DAILY_DOSES[country]
+            * decision_vars[i_age_group + len(VACC_AGE_GROUPS)]
         )
         component = {
             "age_min": age_group[0],
@@ -64,7 +67,12 @@ def get_vacc_roll_out_func(decision_vars, country):
                     PHASE_2_END,
                     PHASE_2_END + 1,
                 ],
-                "values": [0.0, daily_doses_phase_2, daily_doses_phase_2, daily_doses_phase_3],
+                "values": [
+                    0.0,
+                    daily_doses_phase_2,
+                    daily_doses_phase_2,
+                    daily_doses_phase_3,
+                ],
             },
         }
         if age_group[1] is not None:
@@ -99,7 +107,9 @@ def make_scenario_func(root_params, country):
         # LIFTING RESTRICTIONS
         last_value = {"work": ["repeat_prev"], "other_locations": ["repeat_prev"]}
         if "school" in root_params["mobility"]["mixing"]:
-            last_school_value = root_params["mobility"]["mixing"]["school"]["values"][-1]
+            last_school_value = root_params["mobility"]["mixing"]["school"]["values"][
+                -1
+            ]
         else:
             last_school_value = 1.0
         last_value["school"] = last_school_value

@@ -51,7 +51,9 @@ def download_daily_reports(output_dir: str):
     dates = pd.date_range(start=datetime.today(), end=datetime(2020, 1, 22))
     for date in dates:
         filename = date.strftime("%m-%d-%Y.csv")
-        url = urljoin(GITHUB_BASE_URL, "csse_covid_19_data/csse_covid_19_daily_reports", filename)
+        url = urljoin(
+            GITHUB_BASE_URL, "csse_covid_19_data/csse_covid_19_daily_reports", filename
+        )
         path = os.path.join(output_dir, filename)
         df = pd.read_csv(url)
         df.to_csv(path)

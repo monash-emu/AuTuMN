@@ -10,7 +10,13 @@ from autumn.tools.db.store import Table
 from autumn.tasks import full
 from autumn.tasks.full import full_model_run_task
 from autumn import settings as s3_settings
-from autumn.tools.utils.s3 import get_s3_client, upload_to_run_s3, list_s3, download_from_run_s3, sanitise_path
+from autumn.tools.utils.s3 import (
+    get_s3_client,
+    upload_to_run_s3,
+    list_s3,
+    download_from_run_s3,
+    sanitise_path,
+)
 from autumn.tools.utils.fs import recreate_dir
 
 from tests.test_tasks.project import get_test_project
@@ -23,6 +29,7 @@ MCMC_PARAMS_PATH = "data/calibration_outputs/chain-1/mcmc_params.parquet"
 # Increasingly unfit for purpose; marking as skip but leaving here as a reminder
 # to rewrite tasks in a way that doesn't require convoluted monkeypatching and mockery
 # in order to test
+
 
 @pytest.mark.skip
 @mock_s3
@@ -45,7 +52,14 @@ def test_full_model_run_task(monkeypatch, tmpdir):
     # Create a calibration database as input to the full model run
     test_db_path = os.path.join(test_calibration_data_dir, "chain-0")
     calib_db = ParquetDatabase(test_db_path)
-    mcmc_run_columns = ["accept", "ap_loglikelihood", "chain", "loglikelihood", "run", "weight"]
+    mcmc_run_columns = [
+        "accept",
+        "ap_loglikelihood",
+        "chain",
+        "loglikelihood",
+        "run",
+        "weight",
+    ]
     mcmc_run_rows = [
         # NB: ap_loglikelihood not used so we can ignore.
         [1, 0.0, 0, -110.0, 0, 1],
@@ -83,7 +97,8 @@ def test_full_model_run_task(monkeypatch, tmpdir):
     # Upload calibration database to mock AWS S3, then delete local copy
     s3 = get_s3_client()
     s3.create_bucket(
-        Bucket=BUCKET_NAME, CreateBucketConfiguration={"LocationConstraint": s3_settings.AWS_REGION}
+        Bucket=BUCKET_NAME,
+        CreateBucketConfiguration={"LocationConstraint": s3_settings.AWS_REGION},
     )
     upload_to_run_s3(s3, TEST_RUN_ID, test_db_path, quiet=True)
     recreate_dir(test_calibration_data_dir)
@@ -107,5 +122,9 @@ def test_full_model_run_task(monkeypatch, tmpdir):
 
     full_db_path = os.path.join(test_full_data_dir, "chain-0")
     full_db = FeatherDatabase(full_db_path)
-    assert set(full_db.table_names()) == {"outputs", "mcmc_run", "derived_outputs", "mcmc_params"}
-
+    assert set(full_db.table_names()) == {
+        "outputs",
+        "mcmc_run",
+        "derived_outputs",
+        "mcmc_params",
+    }

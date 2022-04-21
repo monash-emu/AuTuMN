@@ -43,9 +43,11 @@ def run_sample_code():
 
                     # The decision variables must now have a lower bound of 0.1  and upper bound of 1
                     # run the objective function
-                    [h, total_nb_deaths, years_of_life_lost] = opti_object.evaluate_objective(
-                        decision_vars
-                    )
+                    [
+                        h,
+                        total_nb_deaths,
+                        years_of_life_lost,
+                    ] = opti_object.evaluate_objective(decision_vars)
 
                     if PRINT_OUTPUT:
                         print(f"{country} / {mode} / {duration} / {objective}")

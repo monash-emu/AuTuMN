@@ -57,7 +57,9 @@ def calibrate():
     sample_size = calibrate_pipeline.sample_size_field.get_value()
     commit = calibrate_pipeline.commit_field.get_value()
     trigger_downstream = calibrate_pipeline.trigger_field.get_value()
-    params_str = pprint.pformat({f.key: f.get_value() for f in calibrate_pipeline.fields}, indent=2)
+    params_str = pprint.pformat(
+        {f.key: f.get_value() for f in calibrate_pipeline.fields}, indent=2
+    )
 
     # Decode combined app + model name from user input.
     app_name, region_name = model_name.split(":")
@@ -96,6 +98,7 @@ def calibrate():
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
 
+
 @buildkite_cli.command()
 def resume():
     """Run a calibration job in Buildkite"""
@@ -107,7 +110,9 @@ def resume():
     burn_in = resume_pipeline.burn_in_field.get_value()
     sample_size = resume_pipeline.sample_size_field.get_value()
     trigger_downstream = resume_pipeline.trigger_field.get_value()
-    params_str = pprint.pformat({f.key: f.get_value() for f in resume_pipeline.fields}, indent=2)
+    params_str = pprint.pformat(
+        {f.key: f.get_value() for f in resume_pipeline.fields}, indent=2
+    )
 
     # Decode combined app + model name from user input.
     app_name, region_name, baserun_id, base_commit = baserun.split("/")
@@ -141,7 +146,6 @@ def resume():
             },
         )
 
-
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
 
@@ -156,12 +160,16 @@ def full():
     sample_size = full_pipeline.sample_size_field.get_value()
     commit = full_pipeline.commit_field.get_value()
     trigger_downstream = full_pipeline.trigger_field.get_value()
-    params_str = pprint.pformat({f.key: f.get_value() for f in full_pipeline.fields}, indent=2)
+    params_str = pprint.pformat(
+        {f.key: f.get_value() for f in full_pipeline.fields}, indent=2
+    )
     app_name, region_name, _, _ = read_run_id(run_id)
     job_name = f"{app_name}-{region_name}-{build_number}"
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
-    logger.info("Running full model run job %s with params:\n%s\n", job_name, params_str)
+    logger.info(
+        "Running full model run job %s with params:\n%s\n", job_name, params_str
+    )
     aws.run_full_model(
         job=job_name,
         run=run_id,
@@ -198,12 +206,18 @@ def powerbi():
     run_id = powerbi_pipeline.run_id_field.get_value()
     urunid = powerbi_pipeline.urunid_field.get_value()
     commit = powerbi_pipeline.commit_field.get_value()
-    params_str = pprint.pformat({f.key: f.get_value() for f in powerbi_pipeline.fields}, indent=2)
+    params_str = pprint.pformat(
+        {f.key: f.get_value() for f in powerbi_pipeline.fields}, indent=2
+    )
     app_name, region_name, _, _ = read_run_id(run_id)
     job_name = f"{app_name}-{region_name}-{build_number}"
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
-    logger.info("Running PowerBI post processing job %s with params:\n%s\n", job_name, params_str)
+    logger.info(
+        "Running PowerBI post processing job %s with params:\n%s\n",
+        job_name,
+        params_str,
+    )
     # FIXME +++ Nasty hack to get powerbi job running temporarily during refactor
     aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, commit=commit)
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
@@ -275,7 +289,9 @@ def _trigger_models(regions, p):
     cp = calibrate_pipeline
     for region in regions:
         model = f"covid_19:{region}"
-        logger.info("Triggering model calibration %s with params:\n%s\n", model, params_str)
+        logger.info(
+            "Triggering model calibration %s with params:\n%s\n", model, params_str
+        )
         trigger_pipeline(
             label=f"Trigger calibration for {model}",
             target="calibration",

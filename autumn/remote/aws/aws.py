@@ -30,15 +30,19 @@ client = session.client("ec2")
 DESCRIBE_KEYS = ["InstanceId", "InstanceType", "LaunchTime", "State"]
 
 
-def get_instance_type(min_cores: int, min_ram: int, category: str = settings.EC2InstanceCategory.GENERAL):
+def get_instance_type(
+    min_cores: int, min_ram: int, category: str = settings.EC2InstanceCategory.GENERAL
+):
 
     specs = settings.EC2_INSTANCE_SPECS[category]
 
-    matching_specs = {k:v for k,v in specs.items() if v.cores >= min_cores and v.ram >= min_ram}
+    matching_specs = {
+        k: v for k, v in specs.items() if v.cores >= min_cores and v.ram >= min_ram
+    }
 
     assert matching_specs, "Could not find an instance to match specs"
 
-    return min(matching_specs.items(), key = lambda kv : kv[1].cores)[0]
+    return min(matching_specs.items(), key=lambda kv: kv[1].cores)[0]
 
 
 def download_s3(s3_key, dest):
@@ -55,7 +59,9 @@ def run_job(job_id: str, instance_type=None, is_spot=False):
 
 def stop_job(job_id: str):
     logger.info(f"Stopping EC2 instances running job {job_id}... ")
-    instance_ids = [i["InstanceId"] for i in describe_instances() if i["name"] == job_id]
+    instance_ids = [
+        i["InstanceId"] for i in describe_instances() if i["name"] == job_id
+    ]
     client.terminate_instances(InstanceIds=instance_ids)
     logger.info("Stop request sent.")
 
@@ -65,7 +71,9 @@ def cleanup_volumes():
     Delete orphaned volumes so we don't pay for them
     """
     volumes = client.describe_volumes()
-    volume_ids = [v["VolumeId"] for v in volumes["Volumes"] if v["State"] == "available"]
+    volume_ids = [
+        v["VolumeId"] for v in volumes["Volumes"] if v["State"] == "available"
+    ]
     for v_id in volume_ids:
         logger.info(f"Deleting orphaned volume {v_id}")
         client.delete_volume(VolumeId=v_id)
@@ -172,7 +180,9 @@ def print_status(instances):
         ]
         for i in instances
     ]
-    table_str = tabulate(table_data, headers=["Name", "Type", "Status", "IP", "Launched"])
+    table_str = tabulate(
+        table_data, headers=["Name", "Type", "Status", "IP", "Launched"]
+    )
     print(table_str, "\n")
 
 

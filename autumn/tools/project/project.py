@@ -35,7 +35,7 @@ from autumn.tools.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
-ModelBuilder = Callable[[dict,dict], CompartmentalModel]
+ModelBuilder = Callable[[dict, dict], CompartmentalModel]
 
 
 class Project:
@@ -69,8 +69,10 @@ class Project:
             self.calibration.run(self, max_seconds, chain_idx, num_chains)
 
     def run_baseline_model(
-        self, params: Params, derived_outputs_whitelist: Optional[List[str]] = None,
-        build_options: Optional[dict] = None
+        self,
+        params: Params,
+        derived_outputs_whitelist: Optional[List[str]] = None,
+        build_options: Optional[dict] = None,
     ) -> CompartmentalModel:
         """
         Run the project's baseline model with the given parameters.
@@ -91,7 +93,7 @@ class Project:
         scenario_params: List[Params],
         start_time: Optional[float] = None,
         start_times: Optional[List[float]] = None,
-        build_options: Optional[List[dict]] = None
+        build_options: Optional[List[dict]] = None,
     ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
@@ -110,9 +112,10 @@ class Project:
 
         models = []
         assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
-        for start_time, params, build_opt in \
-            zip(start_times, scenario_params, build_options):
-            
+        for start_time, params, build_opt in zip(
+            start_times, scenario_params, build_options
+        ):
+
             params_dict = params.to_dict()
             model = self.build_model(params_dict, build_opt)
 
@@ -137,7 +140,9 @@ class Project:
         """
         model.run(max_step=1)
 
-    def write_params_to_tex(self, main_table_params_list, project_path, output_dir_path=None):
+    def write_params_to_tex(
+        self, main_table_params_list, project_path, output_dir_path=None
+    ):
         """
         Write the main parameter table as a tex file. Also write the table of calibrated parameters in a separate tex file.
         :param main_table_params_list: ordered list of parameters to be included in the main table
@@ -153,7 +158,9 @@ class Project:
             params_descriptions = json.load(f)
 
         # Load parameters' descriptions (project-specific)
-        updated_descriptions_path = os.path.join(project_path, "params_descriptions.json")
+        updated_descriptions_path = os.path.join(
+            project_path, "params_descriptions.json"
+        )
         if os.path.isfile(updated_descriptions_path):
             with open(updated_descriptions_path, mode="r") as f:
                 updated_params_descriptions = json.load(f)
@@ -192,13 +199,14 @@ class Project:
         """
         Return a pathlib.Path to the current project directory
         """
-        return Path(BASE_PATH) / '/'.join(self._get_path().split('.')[:-1])  
+        return Path(BASE_PATH) / "/".join(self._get_path().split(".")[:-1])
 
     def __repr__(self):
         return f"Project<{self.model_name}, {self.region_name}>"
 
     def _get_path(self):
         return _PROJECTS[self.model_name][self.region_name]
+
 
 LOADED_PROJECTS = set()
 
@@ -208,7 +216,9 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
     Returns a registered project
     """
     assert model_name in _PROJECTS, f"Model {model_name} not registered as a project."
-    msg = f"Project {project_name} not registered as a project using model {model_name}."
+    msg = (
+        f"Project {project_name} not registered as a project using model {model_name}."
+    )
     assert project_name in _PROJECTS[model_name], msg
     import_path = _PROJECTS[model_name][project_name]
 
@@ -247,9 +257,13 @@ def get_scenario_start_index(base_times: List[float], start_time: float):
     """
     msg = f"Scenario start time {start_time} is before baseline has started"
     assert base_times[0] <= start_time, msg
-    indices_after_start_index = [idx for idx, time in enumerate(base_times) if time > start_time]
+    indices_after_start_index = [
+        idx for idx, time in enumerate(base_times) if time > start_time
+    ]
     if not indices_after_start_index:
-        raise ValueError(f"Scenario start time {start_time} is set after the baseline time range")
+        raise ValueError(
+            f"Scenario start time {start_time} is set after the baseline time range"
+        )
 
     index_after_start_index = min(indices_after_start_index)
     start_index = max([0, index_after_start_index - 1])
@@ -264,7 +278,9 @@ def run_project_locally(project: Project, run_scenarios=True):
     logger.info(f"Running {project.model_name} {project.region_name}...")
 
     # Ensure project folder exists.
-    project_dir = os.path.join(OUTPUT_DATA_PATH, "run", project.model_name, project.region_name)
+    project_dir = os.path.join(
+        OUTPUT_DATA_PATH, "run", project.model_name, project.region_name
+    )
     timestamp = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
     output_dir = os.path.join(project_dir, timestamp)
     os.makedirs(output_dir, exist_ok=True)
@@ -296,7 +312,8 @@ def run_project_locally(project: Project, run_scenarios=True):
         num_scenarios = len(project.param_set.scenarios)
         with Timer(f"Running {num_scenarios} model scenarios"):
             start_times = [
-                sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
+                sc_params.to_dict()["time"]["start"]
+                for sc_params in project.param_set.scenarios
             ]
             sc_models = project.run_scenario_models(
                 baseline_model, project.param_set.scenarios, start_times=start_times
@@ -306,7 +323,9 @@ def run_project_locally(project: Project, run_scenarios=True):
 
     with Timer("Saving model outputs to the database"):
         outputs_db = FeatherDatabase(output_db_path)
-        all_outputs = post_process_scenario_outputs([baseline_model, *sc_models], project)
+        all_outputs = post_process_scenario_outputs(
+            [baseline_model, *sc_models], project
+        )
         save_model_outputs(outputs_db, **all_outputs)
 
 
@@ -322,11 +341,14 @@ def get_all_available_scenario_paths(scenario_dir_path):
     :param scenario_dir_path: path to the directory
     :return: a list of paths
     """
-    glob_str = os.path.join(scenario_dir_path, 'scenario-*.yml')
+    glob_str = os.path.join(scenario_dir_path, "scenario-*.yml")
     scenario_file_list = glob.glob(glob_str)
 
     # Sort by integer rather than string (so that 'scenario-2' comes before 'scenario-10')
-    file_list_sorted = sorted(scenario_file_list, key = lambda x: int(re.match('.*scenario-([0-9]*)',x).group(1)))
+    file_list_sorted = sorted(
+        scenario_file_list,
+        key=lambda x: int(re.match(".*scenario-([0-9]*)", x).group(1)),
+    )
 
     return file_list_sorted
 
@@ -341,7 +363,10 @@ def use_tuned_proposal_sds(priors, proposal_sds_path):
 
 
 def post_process_scenario_outputs(
-    models: List[CompartmentalModel], project: Project, run_id: int = 0, chain_id: int = None
+    models: List[CompartmentalModel],
+    project: Project,
+    run_id: int = 0,
+    chain_id: int = None,
 ) -> Dict[str, pd.DataFrame]:
     """
     Do any required postprocessing of scenario outputs,
@@ -361,7 +386,9 @@ def post_process_scenario_outputs(
 
     # Build outputs for storage in a database.
     outputs_df = build_outputs_table(models, run_id=run_id, chain_id=chain_id)
-    derived_outputs_df = build_derived_outputs_table(models, run_id=run_id, chain_id=chain_id)
+    derived_outputs_df = build_derived_outputs_table(
+        models, run_id=run_id, chain_id=chain_id
+    )
     return {
         Table.OUTPUTS: outputs_df,
         Table.DERIVED: derived_outputs_df,
@@ -382,7 +409,9 @@ def fix_cumulative_output_times(models: List[CompartmentalModel]):
             and req["save_results"] == True
         ]
     else:
-        cum_out_keys = [k for k in baseline_model.derived_outputs.keys() if k.startswith("cum")]
+        cum_out_keys = [
+            k for k in baseline_model.derived_outputs.keys() if k.startswith("cum")
+        ]
 
     for scenario_model in models[1:]:
         baseline_start_index = get_scenario_start_index(
@@ -390,7 +419,9 @@ def fix_cumulative_output_times(models: List[CompartmentalModel]):
         )
         # Adjust cumulative outputs to start at baseline value rather than 0
         for output_key in cum_out_keys:
-            baseline_offset = baseline_model.derived_outputs[output_key][baseline_start_index]
+            baseline_offset = baseline_model.derived_outputs[output_key][
+                baseline_start_index
+            ]
             scenario_model.derived_outputs[output_key] += baseline_offset
 
 
@@ -428,11 +459,15 @@ def calculate_differential_outputs(
             idx_shift = baseline_output.size - sc_output.size
             output_arr = np.zeros(sc_output.shape)
             calc = OUTPUT_CALCS[request]
-            new_output_name = calc(output_name, output_arr, baseline_output, sc_output, idx_shift)
+            new_output_name = calc(
+                output_name, output_arr, baseline_output, sc_output, idx_shift
+            )
             model.derived_outputs[new_output_name] = output_arr
 
 
-def calc_relative_diff_output(output_name, output_arr, baseline_output, sc_output, idx_shift):
+def calc_relative_diff_output(
+    output_name, output_arr, baseline_output, sc_output, idx_shift
+):
     for idx in range(len(sc_output)):
         sc_val = sc_output[idx]
         baseline_val = baseline_output[idx + idx_shift]
@@ -446,7 +481,9 @@ def calc_relative_diff_output(output_name, output_arr, baseline_output, sc_outpu
     return new_output_name
 
 
-def calc_absolute_diff_output(output_name, output_arr, baseline_output, sc_output, idx_shift):
+def calc_absolute_diff_output(
+    output_name, output_arr, baseline_output, sc_output, idx_shift
+):
     for idx in range(len(sc_output)):
         sc_val = sc_output[idx]
         baseline_val = baseline_output[idx + idx_shift]

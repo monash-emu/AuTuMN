@@ -17,7 +17,9 @@ class Dashboard:
         return wrapper
 
     def select_plot(self, *args, **kwargs):
-        plot_type = st.sidebar.selectbox("Select plot type", list(self.plot_funcs.keys()))
+        plot_type = st.sidebar.selectbox(
+            "Select plot type", list(self.plot_funcs.keys())
+        )
         plot_func = self.plot_funcs[plot_type]
         plot_func(*args, **kwargs)
         return plot_type

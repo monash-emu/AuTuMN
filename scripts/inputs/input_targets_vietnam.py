@@ -15,17 +15,23 @@ from autumn.tools.utils.utils import create_date_index
 
 # Use OWID csv for notification and death numbers.
 COVID_OWID = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")
-COVID_VNM_TS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "vietnam", "timeseries.json")
+COVID_VNM_TS = os.path.join(
+    PROJECTS_PATH, "covid_19", "vietnam", "vietnam", "timeseries.json"
+)
 COVID_HCMC_TS = os.path.join(
     PROJECTS_PATH, "covid_19", "vietnam", "ho_chi_minh_city", "timeseries.json"
 )
-COVID_HAN_TS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "hanoi", "timeseries.json")
+COVID_HAN_TS = os.path.join(
+    PROJECTS_PATH, "covid_19", "vietnam", "hanoi", "timeseries.json"
+)
 
 SM_SIR_HCMC_TS = os.path.join(
     PROJECTS_PATH, "sm_sir", "vietnam", "ho_chi_minh_city", "timeseries.json"
 )
 
-SM_SIR_HANOI_TS = os.path.join(PROJECTS_PATH, "sm_sir", "vietnam", "hanoi", "timeseries.json")
+SM_SIR_HANOI_TS = os.path.join(
+    PROJECTS_PATH, "sm_sir", "vietnam", "hanoi", "timeseries.json"
+)
 
 
 HCMC_DATA_CSV = os.path.join(INPUT_DATA_PATH, "covid_vnm", "cases.csv")

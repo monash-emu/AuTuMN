@@ -2,7 +2,11 @@ import os
 
 import numpy as np
 
-from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
+from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
+    DURATIONS,
+    MODES,
+    OBJECTIVES,
+)
 from autumn.tools import inputs
 
 HOSPITAL_DATA_DIR = os.path.join("hospitalisation_data")
@@ -19,7 +23,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
-            "distri_params": [50., 600.],
+            "distri_params": [50.0, 600.0],
         },
         {
             "param_name": "sojourn.compartment_periods_calculated.exposed.total_period",
@@ -36,7 +40,10 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
-            "distri_params": [0.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
+            "distri_params": [
+                0.5,
+                3.8,
+            ],  # 3.8 to match the highest value found in Levin et al.
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
@@ -86,7 +93,9 @@ def get_prior_distributions_for_opti():
 
 def get_weekly_summed_targets(times, values):
     assert len(times) == len(values), "times and values must have the same length"
-    assert len(times) >= 7, "number of time points must be greater than 7 to compute weekly data"
+    assert (
+        len(times) >= 7
+    ), "number of time points must be greater than 7 to compute weekly data"
 
     t_low = min(times)
     t_max = max(times)

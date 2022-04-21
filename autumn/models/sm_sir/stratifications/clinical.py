@@ -9,13 +9,13 @@ from autumn.models.sm_sir.parameters import Parameters
 
 
 def get_clinical_strat(
-        model: CompartmentalModel,
-        compartments: List[str],
-        params: Parameters,
-        infectious_entry_flow: str,
-        sympt_props: Union[None, float, pd.Series],
-        non_detect_func: Union[None, callable],
-        cdr_func: Union[None, callable]
+    model: CompartmentalModel,
+    compartments: List[str],
+    params: Parameters,
+    infectious_entry_flow: str,
+    sympt_props: Union[None, float, pd.Series],
+    non_detect_func: Union[None, callable],
+    cdr_func: Union[None, callable],
 ) -> Union[None, Stratification]:
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
@@ -51,7 +51,10 @@ def get_clinical_strat(
 
         msg = "Symptomatic proportions do not correspond to the age stratification"
         agegroup_strat_index = model_stratifications.index("agegroup")
-        assert list(sympt_props.keys()) == model._stratifications[agegroup_strat_index].strata, msg
+        assert (
+            list(sympt_props.keys())
+            == model._stratifications[agegroup_strat_index].strata
+        ), msg
 
     else:
         msg = "Symptomatic split not specified in the correct format"
@@ -63,8 +66,12 @@ def get_clinical_strat(
         # Create the stratification object, with all three possible strata
         clinical_strat = Stratification(
             "clinical",
-            [ClinicalStratum.ASYMPT, ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT],
-            comps_to_stratify
+            [
+                ClinicalStratum.ASYMPT,
+                ClinicalStratum.SYMPT_NON_DETECT,
+                ClinicalStratum.DETECT,
+            ],
+            comps_to_stratify,
         )
 
         # If the model is age stratified and we have a user request to split according to symptomatic status by age
@@ -74,18 +81,20 @@ def get_clinical_strat(
                 def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
                     return computed_values["cdr"] * age_sympt_prop
 
-                def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
+                def abs_non_detect_func(
+                    time, computed_values, age_sympt_prop=sympt_prop
+                ):
                     return computed_values["undetected_prop"] * age_sympt_prop
 
                 adjustments = {
-                    ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
+                    ClinicalStratum.ASYMPT: Multiply(1.0 - sympt_prop),
                     ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
                     ClinicalStratum.DETECT: Multiply(abs_cdr_func),
                 }
                 clinical_strat.set_flow_adjustments(
                     infectious_entry_flow,
                     adjustments,
-                    dest_strata={"agegroup": age_group}
+                    dest_strata={"agegroup": age_group},
                 )
 
         else:
@@ -97,7 +106,7 @@ def get_clinical_strat(
                 return computed_values["undetected_prop"] * sympt_prop
 
             adjustments = {
-                ClinicalStratum.ASYMPT: Multiply(1. - sympt_props),
+                ClinicalStratum.ASYMPT: Multiply(1.0 - sympt_props),
                 ClinicalStratum.SYMPT_NON_DETECT: Multiply(abs_non_detect_func),
                 ClinicalStratum.DETECT: Multiply(abs_cdr_func),
             }
@@ -108,9 +117,13 @@ def get_clinical_strat(
 
         # Work out the infectiousness adjustments
         base_infectiousness = {stratum: None for stratum in clinical_strat.strata}
-        base_infectiousness.update({ClinicalStratum.ASYMPT: Overwrite(params.asympt_infectiousness_effect)})
+        base_infectiousness.update(
+            {ClinicalStratum.ASYMPT: Overwrite(params.asympt_infectiousness_effect)}
+        )
         isolate_infectiousness = copy(base_infectiousness)
-        isolate_infectiousness.update({ClinicalStratum.DETECT: Overwrite(params.isolate_infectiousness_effect)})
+        isolate_infectiousness.update(
+            {ClinicalStratum.DETECT: Overwrite(params.isolate_infectiousness_effect)}
+        )
 
     # Only apply the symptomatic split, which differs by age group
     elif sympt_props is not None and not cdr_func:
@@ -119,26 +132,26 @@ def get_clinical_strat(
         clinical_strat = Stratification(
             "clinical",
             [ClinicalStratum.ASYMPT, ClinicalStratum.DETECT],
-            comps_to_stratify
+            comps_to_stratify,
         )
 
         # If the model is age stratified and we have a dictionary for splitting according to symptomatic status by age
         if type(sympt_props) == dict:
             for age_group, sympt_prop in sympt_props.items():
                 adjustments = {
-                    ClinicalStratum.ASYMPT: Multiply(1. - sympt_prop),
+                    ClinicalStratum.ASYMPT: Multiply(1.0 - sympt_prop),
                     ClinicalStratum.DETECT: Multiply(sympt_prop),
                 }
                 clinical_strat.set_flow_adjustments(
                     infectious_entry_flow,
                     adjustments,
-                    dest_strata={"agegroup": age_group}
+                    dest_strata={"agegroup": age_group},
                 )
 
         # Otherwise if we just have a single value for the symptomatic proportion
         else:
             adjustments = {
-                ClinicalStratum.ASYMPT: Multiply(1. - sympt_props),
+                ClinicalStratum.ASYMPT: Multiply(1.0 - sympt_props),
                 ClinicalStratum.DETECT: Multiply(sympt_props),
             }
             clinical_strat.set_flow_adjustments(
@@ -148,7 +161,9 @@ def get_clinical_strat(
 
         # Work out the infectiousness adjustments
         base_infectiousness = {stratum: None for stratum in clinical_strat.strata}
-        base_infectiousness.update({ClinicalStratum.ASYMPT: Overwrite(params.asympt_infectiousness_effect)})
+        base_infectiousness.update(
+            {ClinicalStratum.ASYMPT: Overwrite(params.asympt_infectiousness_effect)}
+        )
         isolate_infectiousness = copy(base_infectiousness)
 
     # Only stratify by detection status, which applies equally to all age groups
@@ -158,7 +173,7 @@ def get_clinical_strat(
         clinical_strat = Stratification(
             "clinical",
             [ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT],
-            comps_to_stratify
+            comps_to_stratify,
         )
 
         # Work out the splits based on detection
@@ -174,17 +189,23 @@ def get_clinical_strat(
         # Work out the infectiousness adjustments
         base_infectiousness = {stratum: None for stratum in clinical_strat.strata}
         isolate_infectiousness = copy(base_infectiousness)
-        isolate_infectiousness.update({ClinicalStratum.DETECT: Overwrite(params.isolate_infectiousness_effect)})
+        isolate_infectiousness.update(
+            {ClinicalStratum.DETECT: Overwrite(params.isolate_infectiousness_effect)}
+        )
 
     # No stratification to apply if neither of the two processes are implemented
     else:
         return None
 
     # Apply the isolation adjustments to the last infectious compartment (which could be infectious or late infectious)
-    clinical_strat.add_infectiousness_adjustments(comps_to_stratify[-1], isolate_infectiousness)
+    clinical_strat.add_infectiousness_adjustments(
+        comps_to_stratify[-1], isolate_infectiousness
+    )
 
     # If two infectious compartments, apply the adjustment without isolation to the early one, called infectious
     if Compartment.INFECTIOUS_LATE in comps_to_stratify:
-        clinical_strat.add_infectiousness_adjustments(Compartment.INFECTIOUS, base_infectiousness)
+        clinical_strat.add_infectiousness_adjustments(
+            Compartment.INFECTIOUS, base_infectiousness
+        )
 
     return clinical_strat

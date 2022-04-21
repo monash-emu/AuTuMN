@@ -67,7 +67,11 @@ def plot_multicountry_min_mixing_sensitivity():
 
     widths = [1, 6, 6]
     spec = fig.add_gridspec(
-        ncols=3, nrows=len(heights), width_ratios=widths, height_ratios=heights, wspace=1.0
+        ncols=3,
+        nrows=len(heights),
+        width_ratios=widths,
+        height_ratios=heights,
+        wspace=1.0,
     )
 
     duration_titles = ["Six-month mitigation", "Twelve-month mitigation"]

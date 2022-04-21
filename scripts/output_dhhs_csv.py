@@ -43,7 +43,9 @@ VIC_OUTPUT = [
     "notifications",
 ]
 VIC_REQUEST = [
-    f"{output}Xcluster_{cluster.lower()}" for output in VIC_OUTPUT for cluster in VIC_CLUSTERS
+    f"{output}Xcluster_{cluster.lower()}"
+    for output in VIC_OUTPUT
+    for cluster in VIC_CLUSTERS
 ]
 
 vic = {
@@ -122,7 +124,9 @@ for ctry in country:
     id_col = ["Region", "scenario", "times"]
     val_col = [each for each in list(df_mle.columns) if each not in id_col]
 
-    df_mle = df_mle.melt(id_vars=id_col, value_vars=val_col, var_name="type", value_name="value")
+    df_mle = df_mle.melt(
+        id_vars=id_col, value_vars=val_col, var_name="type", value_name="value"
+    )
 
     df_mle = fix_col(df_mle)
     df_mle = process_df(df_mle)
@@ -136,7 +140,11 @@ for ctry in country:
 
     date_val = [file for file in list_of_files if "victoria" in file][0].split("-")[3]
     date_val = datetime.fromtimestamp(int(date_val))
-    commit = [file for file in list_of_files if "victoria" in file][0].split("-")[4].split(".")[0]
+    commit = (
+        [file for file in list_of_files if "victoria" in file][0]
+        .split("-")[4]
+        .split(".")[0]
+    )
     date_val = str(date_val).replace(":", "-").replace(" ", "T")
 
     file_name = f"vic-forecast-{commit}-{date_val}.csv"

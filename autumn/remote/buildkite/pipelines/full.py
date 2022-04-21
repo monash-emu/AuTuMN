@@ -49,7 +49,9 @@ fields = [
     trigger_field,
 ]
 input_step = InputStep(
-    key="full-model-run-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields
+    key="full-model-run-settings",
+    run_condition='build.env("SKIP_INPUT") == null',
+    fields=fields,
 )
 full_model_run_step = CommandStep(
     key="run-full",

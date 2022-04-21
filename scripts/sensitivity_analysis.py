@@ -26,7 +26,9 @@ RUN_ID[2] = ts.strftime("%Y-%m-%d")
 FEATHER_PATH = os.path.join(OUTPUT_DATA_PATH, "full", RUN_ID[0], RUN_ID[1], RUN_ID[2])
 FEATHER_PATH = [x[0] for x in os.walk(FEATHER_PATH)][2:]
 
-DERIVED_OUTPUT = [os.path.join(each, "derived_outputs.feather") for each in FEATHER_PATH]
+DERIVED_OUTPUT = [
+    os.path.join(each, "derived_outputs.feather") for each in FEATHER_PATH
+]
 MCMC_PARAM = [os.path.join(each, "mcmc_params.feather") for each in FEATHER_PATH]
 MCMC_RUN = [os.path.join(each, "mcmc_run.feather") for each in FEATHER_PATH]
 
@@ -52,7 +54,9 @@ model_start = do_df[["times"]].min()[0]
 deaths_cutoff_date = (pd.to_datetime("today") - COVID_BASE_DATETIME).days
 notification_cutoff_date = 365
 
-MLE_RUN = mcmc_run_df.sort_values(["accept", "loglikelihood"], ascending=[False, False])[0:1]
+MLE_RUN = mcmc_run_df.sort_values(
+    ["accept", "loglikelihood"], ascending=[False, False]
+)[0:1]
 MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo/export?format=xlsx&id=15FGDQdY7Bt2pDD-TVfgKbRAt33UvWdYcdX87IaUXYYo"
 
 MYS_NOTIFICATIONS = os.path.join(
@@ -135,7 +139,10 @@ def get_do_feature(feature, cutoff_date):
         & (do_df.scenario == 0)
     ]
 
-    feature_map = {"notification": "notificationsXagegroup_", "death": "infection_deathsXagegroup_"}
+    feature_map = {
+        "notification": "notificationsXagegroup_",
+        "death": "infection_deathsXagegroup_",
+    }
 
     cols = [col for col in do_df.columns if feature_map[feature] in col]
     cols = BASE_COL + cols
@@ -166,7 +173,9 @@ def create_sensitivity_df(df):
         suffixes=("_run", "_baseline"),
     )
 
-    perform_cal_col = [(f"{each}_rel", f"{each}_run", f"{each}_baseline") for each in REQ_COL]
+    perform_cal_col = [
+        (f"{each}_rel", f"{each}_run", f"{each}_baseline") for each in REQ_COL
+    ]
 
     for col_pair in perform_cal_col:
         df[f"{col_pair[0]}"] = df[col_pair[1]] - df[col_pair[2]]
@@ -277,7 +286,9 @@ do_df = do_df.merge(
     suffixes=("_run", "_baseline"),
 )
 
-do_df = do_df.merge(mcmc_run_df, how="left", left_on=["chain", "run"], right_on=["chain", "run"])
+do_df = do_df.merge(
+    mcmc_run_df, how="left", left_on=["chain", "run"], right_on=["chain", "run"]
+)
 
 
 # Not ideal, will fix

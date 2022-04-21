@@ -24,7 +24,10 @@ class Params:
     """
 
     def __init__(
-        self, data: PathOrDict, validator: Optional[Validator] = None, validate: bool = True
+        self,
+        data: PathOrDict,
+        validator: Optional[Validator] = None,
+        validate: bool = True,
     ):
         self._params, self._fmts = [], []
         self._validator = validator
@@ -36,7 +39,9 @@ class Params:
         """
         return self._build_dict()
 
-    def update(self, new_params: PathOrDict, calibration_format=False, validate: bool = True):
+    def update(
+        self, new_params: PathOrDict, calibration_format=False, validate: bool = True
+    ):
         """
         Load some more parameters, overwriting existing where conflicts occur.
         Returns a copy of the current params
@@ -107,7 +112,7 @@ class Params:
             raise ValueError(f"Loaded parameter data must be a string or dict, got {t}")
 
     def __reduce__(self):
-        return (self.__class__, (self.to_dict(), ))
+        return (self.__class__, (self.to_dict(),))
 
     def __repr__(self):
         return "Params" + repr(self.to_dict())
@@ -232,7 +237,7 @@ def read_param_value_from_string(params: dict, update_key: str):
         not is_arr_update
     ), "array items not supported by this function"  # FIXME only supports nested dictionaries for for the moment
     param_value = params[current_key]
-        
+
     for nested_key in nested_keys:
         is_arr_key = re.match(ARRAY_REQUEST_REGEX, nested_key)
         if is_arr_key:

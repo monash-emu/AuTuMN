@@ -28,7 +28,9 @@ def main(data_path, output_path):
     figure_path = os.path.join(output_path, "posterior_table")
     make_output_directories(figure_path)
 
-    file_path = os.path.join(data_path, "parameter_posteriors", "posterior_centiles.csv")
+    file_path = os.path.join(
+        data_path, "parameter_posteriors", "posterior_centiles.csv"
+    )
     posterior_df = pd.read_csv(file_path, sep=",")
     posterior_df = posterior_df.rename(
         columns={

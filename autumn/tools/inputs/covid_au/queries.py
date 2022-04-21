@@ -18,8 +18,12 @@ def get_vic_testing_numbers():
     Returns 7-day moving average of number of tests administered in Victoria.
     """
     input_db = get_input_db()
-    df = input_db.query("covid_au", columns=["date", "tests"], conditions={"state_abbrev": "VIC"})
-    date_str_to_int = lambda s: (datetime.strptime(s, "%Y-%m-%d") - COVID_BASE_DATETIME).days
+    df = input_db.query(
+        "covid_au", columns=["date", "tests"], conditions={"state_abbrev": "VIC"}
+    )
+    date_str_to_int = lambda s: (
+        datetime.strptime(s, "%Y-%m-%d") - COVID_BASE_DATETIME
+    ).days
     test_dates = df.date.apply(date_str_to_int).to_numpy()
     test_values = df.tests.to_numpy()
     avg_vals = np.array(apply_moving_average(test_values, 7)) + TINY_NUMBER
@@ -37,7 +41,9 @@ def get_dhhs_testing_numbers(cluster: str = None):
         df = df.groupby("date", as_index=False).sum()
     else:
         df = input_db.query(
-            "covid_dhhs_test", columns=["date", "test"], conditions={"cluster_name": cluster}
+            "covid_dhhs_test",
+            columns=["date", "test"],
+            conditions={"cluster_name": cluster},
         )
 
     test_dates = (pd.to_datetime(df.date) - COVID_BASE_DATETIME).dt.days.to_numpy()
@@ -78,6 +84,7 @@ def get_historical_vac_coverage(
     avg_vals = np.array(apply_moving_average(coverage_values, 7)) + TINY_NUMBER
     return vac_dates, avg_vals
 
+
 def update_cond_map(cluster, cond_map):
     if cluster is None:
         cluster = "Victoria"
@@ -85,7 +92,9 @@ def update_cond_map(cluster, cond_map):
 
 def get_historical_vac_num(input_db, cond_map):
     df = input_db.query(
-        "vic_2021", columns=["date_index", "n", "start_age", "end_age"], conditions=cond_map
+        "vic_2021",
+        columns=["date_index", "n", "start_age", "end_age"],
+        conditions=cond_map,
     )
 
     return df
@@ -93,13 +102,17 @@ def get_historical_vac_num(input_db, cond_map):
 
 def get_modelled_vac_num(input_db, cond_map, dose):
     df = input_db.query(
-        "vida_vac_model", columns=["date_index", dose, "start_age", "end_age"], conditions=cond_map
+        "vida_vac_model",
+        columns=["date_index", dose, "start_age", "end_age"],
+        conditions=cond_map,
     )
 
     return df
 
 
-def get_both_vacc_coverage(cluster: str=None, start_age: int=0, end_age: int=89, dose="dose_1"):
+def get_both_vacc_coverage(
+    cluster: str = None, start_age: int = 0, end_age: int = 89, dose="dose_1"
+):
     """
     Use the following function (get_modelled_vac_coverage) to get the same data out for both vaccines from data provided
     by Vida at the Department.
@@ -107,17 +120,27 @@ def get_both_vacc_coverage(cluster: str=None, start_age: int=0, end_age: int=89,
     """
 
     # Extract the data
-    az_times, az_values = get_modelled_vac_coverage(cluster, start_age, end_age, vaccine="astra_zeneca", dose=dose)
-    pfizer_times, pfizer_values = get_modelled_vac_coverage(cluster, start_age, end_age, vaccine="pfizer", dose=dose)
+    az_times, az_values = get_modelled_vac_coverage(
+        cluster, start_age, end_age, vaccine="astra_zeneca", dose=dose
+    )
+    pfizer_times, pfizer_values = get_modelled_vac_coverage(
+        cluster, start_age, end_age, vaccine="pfizer", dose=dose
+    )
 
-    assert all(az_times == pfizer_times), "Modelled coverage times are different for Pfizer and Astra-Zeneca"
+    assert all(
+        az_times == pfizer_times
+    ), "Modelled coverage times are different for Pfizer and Astra-Zeneca"
     times = az_times
     both_values = az_values + pfizer_values
     return times, both_values
 
 
 def get_modelled_vac_coverage(
-    cluster: str = None, start_age: int = 0, end_age: int = 89, vaccine="pfizer", dose='dose_1'
+    cluster: str = None,
+    start_age: int = 0,
+    end_age: int = 89,
+    vaccine="pfizer",
+    dose="dose_1",
 ):
     """Returns the vaccination coverage per Vida's DHHS model
 
@@ -145,7 +168,7 @@ def get_modelled_vac_coverage(
 
     cond_map = {
         "vaccine_brand_name": vaccine,
-        "start_age>": start_age, 
+        "start_age>": start_age,
         "end_age<": end_age,
     }
 
@@ -174,7 +197,7 @@ def vida_pop(cluster, start_age, end_age, input_db):
     pop = input_db.query(
         "vida_pop",
         columns=["popn"],
-        conditions={            
+        conditions={
             "cluster_id": cluster,
             "start_age>": start_age,
             "end_age<": end_age,
@@ -210,7 +233,7 @@ def update_cond_map(cluster, cond_map):
 
 
 def get_yougov_date():
-    """ Return the entire YouGov table for Victoria"""
+    """Return the entire YouGov table for Victoria"""
     input_db = get_input_db()
     df = input_db.query("yougov_vic")
     return df

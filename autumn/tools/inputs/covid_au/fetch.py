@@ -12,7 +12,9 @@ DATA_URL = "https://raw.githubusercontent.com/M3IT/COVID-19_Data/master/Data/COV
 COVID_AU_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_au")
 COVID_AU_CSV_PATH = os.path.join(COVID_AU_DIRPATH, "COVID_AU_state_daily_change.csv")
 
-YOUGOV_URL = "https://github.com/YouGov-Data/covid-19-tracker/raw/master/data/australia.zip"
+YOUGOV_URL = (
+    "https://github.com/YouGov-Data/covid-19-tracker/raw/master/data/australia.zip"
+)
 COVID_AU_YOUGOV = os.path.join(COVID_AU_DIRPATH, "yougov_australia.csv")
 
 COVID_LGA_CSV_PATH = os.path.join(COVID_AU_DIRPATH, "lga_test.csv")

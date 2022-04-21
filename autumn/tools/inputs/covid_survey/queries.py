@@ -17,7 +17,9 @@ def get_percent_avoid_contact(iso3: str = None, col_name: str = "pct_avoid_conta
 
 def get_survey_results(iso3, col_name, table_name):
     input_db = get_input_db()
-    df = input_db.query(table_name, columns=["date_index", col_name], conditions={"iso_code": iso3})
+    df = input_db.query(
+        table_name, columns=["date_index", col_name], conditions={"iso_code": iso3}
+    )
     dates = df["date_index"].to_numpy()
     values = df[col_name].to_numpy()
 
@@ -30,6 +32,5 @@ def get_survey_results(iso3, col_name, table_name):
         raise AssertionError("Date index out of range")
     if not valid_values:
         raise AssertionError("Percentage values out of logical bounds")
-
 
     return dates, values

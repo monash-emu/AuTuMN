@@ -1,4 +1,3 @@
-
 def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: float):
     """
     Create a simple step function to allow seeding of the VoC strain at a particular point in time.
@@ -17,6 +16,6 @@ def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: floa
     """
 
     def voc_seed_func(time: float, computed_values):
-        return entry_rate if 0. < time - start_time < seed_duration else 0.
+        return entry_rate if 0.0 < time - start_time < seed_duration else 0.0
 
     return voc_seed_func

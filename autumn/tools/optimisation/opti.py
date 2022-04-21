@@ -39,8 +39,12 @@ class Opti:
         Evaluate the objective function(s) for the given decision variables
         :return: a list of objective values
         """
-        assert self.scenario_func is not None, "A non-null scenario function is required."
-        assert self.objective_func is not None, "A non-null objective function is required."
+        assert (
+            self.scenario_func is not None
+        ), "A non-null scenario function is required."
+        assert (
+            self.objective_func is not None
+        ), "A non-null objective function is required."
         sc_dict = self.scenario_func(decision_vars)
         sc_model = self.run_scenario(sc_dict)
         objective = self.objective_func(sc_model, decision_vars)
@@ -53,9 +57,13 @@ class Opti:
         :return: a model object
         """
 
-        sc_params = self.project.param_set.baseline.update(self.root_model_params).update(sc_dict)
+        sc_params = self.project.param_set.baseline.update(
+            self.root_model_params
+        ).update(sc_dict)
         start_time = sc_params.to_dict()["time"]["start"]
         sc_models = self.project.run_scenario_models(
-            baseline_model=self.root_model, scenario_params=[sc_params], start_time=start_time
+            baseline_model=self.root_model,
+            scenario_params=[sc_params],
+            start_time=start_time,
         )
         return sc_models[0]

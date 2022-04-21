@@ -7,6 +7,7 @@ from autumn.settings.constants import COVID_BASE_DATETIME
 
 from .fetch import COVID_LKA_CSV, COVID_LKA_2021_CSV
 
+
 def preprocess_covid_lka(input_db: Database):
 
     df = pd.read_csv(COVID_LKA_CSV)

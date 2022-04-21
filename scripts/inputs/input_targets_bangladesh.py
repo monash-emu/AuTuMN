@@ -15,8 +15,12 @@ from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 from autumn.tools.utils.utils import create_date_index
 
 
-SM_SIR_BGD_TS = os.path.join(PROJECTS_PATH, "sm_sir", "bangladesh", "bangladesh", "timeseries.json")
-SM_SIR_DHK_TS = os.path.join(PROJECTS_PATH, "sm_sir", "bangladesh", "dhaka", "timeseries.json")
+SM_SIR_BGD_TS = os.path.join(
+    PROJECTS_PATH, "sm_sir", "bangladesh", "bangladesh", "timeseries.json"
+)
+SM_SIR_DHK_TS = os.path.join(
+    PROJECTS_PATH, "sm_sir", "bangladesh", "dhaka", "timeseries.json"
+)
 SM_SIR_COXS_TS = os.path.join(
     PROJECTS_PATH, "sm_sir", "bangladesh", "coxs_bazar", "timeseries.json"
 )

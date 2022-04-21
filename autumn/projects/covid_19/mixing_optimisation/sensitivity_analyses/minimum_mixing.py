@@ -51,7 +51,9 @@ def run_sensitivity_minimum_mixing(opti_output_filename="dummy_vars_for_test.csv
         root_model = run_root_model(country)
         for duration in DURATIONS:
             results[country][duration] = {}
-            decision_vars = read_decision_vars(opti_outputs_df, country, mode, duration, objective)
+            decision_vars = read_decision_vars(
+                opti_outputs_df, country, mode, duration, objective
+            )
             if decision_vars is None:
                 continue
             for min_mixing in [0.10, 0.20, 0.30, 0.40, 0.50]:
@@ -60,7 +62,9 @@ def run_sensitivity_minimum_mixing(opti_output_filename="dummy_vars_for_test.csv
                 print(
                     f"evaluate objective for {country} | {duration} | {objective}: min_mixing={min_mixing}"
                 )
-                h, d, yoll = objective_function(modified_vars, root_model, mode, country, duration)
+                h, d, yoll = objective_function(
+                    modified_vars, root_model, mode, country, duration
+                )
                 res_dict = {
                     "h": bool(h),
                     "d": float(d),

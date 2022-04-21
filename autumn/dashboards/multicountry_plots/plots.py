@@ -21,12 +21,16 @@ def multi_country_fit(
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
     outputs = []
 
-    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(region_name), share_xaxis=True)
+    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(
+        len(region_name), share_xaxis=True
+    )
 
     # Get data for plotting
     for i_region in range(len(region_name)):
         outputs.append(
-            get_uncertainty_data(calib_dir_path[i_region], mcmc_tables[i_region], chosen_output, 0)
+            get_uncertainty_data(
+                calib_dir_path[i_region], mcmc_tables[i_region], chosen_output, 0
+            )
         )
 
     for i_region in range(n_rows * n_cols):

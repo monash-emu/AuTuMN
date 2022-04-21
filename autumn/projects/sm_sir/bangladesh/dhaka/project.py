@@ -31,7 +31,10 @@ targets = [
 ]
 
 calibration = Calibration(
-    priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
+    priors=priors,
+    targets=targets,
+    random_process=None,
+    metropolis_init="current_params",
 )
 
 plot_spec_filepath = build_rel_path("timeseries.json")

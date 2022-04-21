@@ -6,7 +6,9 @@ from autumn.models.tuberculosis.parameters import Parameters
 from autumn.tools.curve import scale_up_function
 
 
-def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stratification:
+def get_user_defined_strat(
+    name: str, details: dict, params: Parameters
+) -> Stratification:
     """
     Stratify all model compartments based on a user-defined stratification request.
     """
@@ -24,12 +26,22 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
             for j in range(n_strata):
                 # for someone in stratum i, what proportion of their contacts occur with someone from stratum j?
                 if i == j:
-                    mixing_matrix[i, j] = details['prop_mixing_same_stratum']
+                    mixing_matrix[i, j] = details["prop_mixing_same_stratum"]
                 else:
                     prop_pop_j = details["proportions"][requested_strata[j]]
-                    prop_pop_non_i = sum([details["proportions"][requested_strata[k]] for k in range(n_strata) if k != i])
-                    assert prop_pop_non_i > 0.
-                    mixing_matrix[i, j] = (1 - details['prop_mixing_same_stratum']) * prop_pop_j / prop_pop_non_i
+                    prop_pop_non_i = sum(
+                        [
+                            details["proportions"][requested_strata[k]]
+                            for k in range(n_strata)
+                            if k != i
+                        ]
+                    )
+                    assert prop_pop_non_i > 0.0
+                    mixing_matrix[i, j] = (
+                        (1 - details["prop_mixing_same_stratum"])
+                        * prop_pop_j
+                        / prop_pop_non_i
+                    )
 
         strat.set_mixing_matrix(mixing_matrix)
 
@@ -87,7 +99,9 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
         interventions = intervention_type["interventions"]
         flow_name = intervention_type["flow_name"]
         sensitivity = intervention_type["sensitivity"]
-        prop_detected_effectively_moving = intervention_type["prop_detected_effectively_moving"]
+        prop_detected_effectively_moving = intervention_type[
+            "prop_detected_effectively_moving"
+        ]
         intervention_multiplier = sensitivity * prop_detected_effectively_moving
 
         for age in params.age_breakpoints:
@@ -109,7 +123,9 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
                 intervention_func = scale_up_function(times, vals, method=4)
                 intervention_adjustments[intervention_stratum] = intervention_func
 
-            intervention_adjustments = {k: Multiply(v) for k, v in intervention_adjustments.items()}
+            intervention_adjustments = {
+                k: Multiply(v) for k, v in intervention_adjustments.items()
+            }
             strat.set_flow_adjustments(
                 flow_name, intervention_adjustments, source_strata={"age": str(age)}
             )

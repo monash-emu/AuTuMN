@@ -21,5 +21,7 @@ input_step = InputStep(
     run_condition=None,
     fields=fields,
 )
-trigger_step = CommandStep(key="run-triggers", command="./scripts/buildkite.sh trigger philippines")
+trigger_step = CommandStep(
+    key="run-triggers", command="./scripts/buildkite.sh trigger philippines"
+)
 pipeline = Pipeline(key="trigger-philippines", steps=[input_step, trigger_step])

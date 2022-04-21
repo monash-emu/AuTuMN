@@ -12,7 +12,9 @@ def register_project(model_name: str, project_name: str, import_path: str):
     if project_name not in _PROJECTS[model_name]:
         _PROJECTS[model_name][project_name] = import_path
     else:
-        raise ValueError(f"Project {project_name} using model {model_name} already exists.")
+        raise ValueError(
+            f"Project {project_name} using model {model_name} already exists."
+        )
 
 
 def get_registered_model_names():

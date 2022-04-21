@@ -10,6 +10,7 @@ TB_CALIBS = list(zip(TB_PROJECTS, [Models.TB] * len(TB_PROJECTS)))
 SM_SIR_PROJECTS = list(_PROJECTS[Models.SM_SIR].keys())
 SM_SIR_CALIBS = list(zip(SM_SIR_PROJECTS, [Models.SM_SIR] * len(SM_SIR_PROJECTS)))
 
+
 @pytest.mark.github_only
 @pytest.mark.nightly_only
 @pytest.mark.calibrate_models

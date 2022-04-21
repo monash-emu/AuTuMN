@@ -165,7 +165,10 @@ def read_sweden_data():
             measure = {
                 "age_range": [float(a) for a in row["age"].split("-")],
                 "central": float(row[f"period_{str(i)}"]),
-                "ci": [float(row[f"period_{str(i)}_low"]), float(row[f"period_{str(i)}_up"])],
+                "ci": [
+                    float(row[f"period_{str(i)}_low"]),
+                    float(row[f"period_{str(i)}_up"]),
+                ],
             }
             survey["measures"].append(measure)
         surveys.append(survey)
@@ -175,7 +178,11 @@ def read_sweden_data():
 
 def get_serosurvey_data():
     path = os.path.join(
-        APPS_PATH, "covid_19", "mixing_optimisation", "serosurvey_by_age", "serosurvey_data.json"
+        APPS_PATH,
+        "covid_19",
+        "mixing_optimisation",
+        "serosurvey_by_age",
+        "serosurvey_data.json",
     )
     with open(path) as f:
         serosurveys = json.load(f)

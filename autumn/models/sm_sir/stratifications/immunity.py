@@ -7,19 +7,21 @@ from summer import CompartmentalModel
 from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
-from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
+from autumn.tools.dynamic_proportions.solve_transitions import (
+    calculate_transition_rates_from_dynamic_props,
+)
 
 ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),
     "boosting": ("low", "high"),
-    "waning": ("high", "low")
+    "waning": ("high", "low"),
 }
 
 
 def adjust_susceptible_infection_without_strains(
-        low_immune_effect: float,
-        high_immune_effect: float,
-        immunity_strat: Stratification,
+    low_immune_effect: float,
+    high_immune_effect: float,
+    immunity_strat: Stratification,
 ):
     """
     Apply the modification to the immunity stratification to account for immunity to first infection (from the
@@ -48,10 +50,10 @@ def adjust_susceptible_infection_without_strains(
 
 
 def adjust_susceptible_infection_with_strains(
-        low_immune_effect: float,
-        high_immune_effect: float,
-        immunity_strat: Stratification,
-        voc_params: Optional[Dict[str, VocComponent]],
+    low_immune_effect: float,
+    high_immune_effect: float,
+    immunity_strat: Stratification,
+    voc_params: Optional[Dict[str, VocComponent]],
 ):
     """
     Apply the modification to the immunity stratification to account for immunity to first infection (from the
@@ -84,10 +86,10 @@ def adjust_susceptible_infection_with_strains(
 
 
 def adjust_reinfection_without_strains(
-        low_immune_effect: float,
-        high_immune_effect: float,
-        immunity_strat: Stratification,
-        reinfection_flows: List[str],
+    low_immune_effect: float,
+    high_immune_effect: float,
+    immunity_strat: Stratification,
+    reinfection_flows: List[str],
 ):
     """
     Adjust the rate of reinfection for immunity, in cases in which we don't need to worry about cross-strain immunity,
@@ -122,11 +124,11 @@ def adjust_reinfection_without_strains(
 
 
 def adjust_reinfection_with_strains(
-        low_immune_effect: float,
-        high_immune_effect: float,
-        immunity_strat: Stratification,
-        reinfection_flows: List[str],
-        voc_params: Optional[Dict[str, VocComponent]],
+    low_immune_effect: float,
+    high_immune_effect: float,
+    immunity_strat: Stratification,
+    reinfection_flows: List[str],
+    voc_params: Optional[Dict[str, VocComponent]],
 ):
     """
     Adjust the rate of reinfection for immunity, in cases in which we do need to worry about cross-strain immunity, so
@@ -154,13 +156,19 @@ def adjust_reinfection_with_strains(
             for flow in reinfection_flows:
 
                 # Cross protection from previous infection with the "infected" strain against the "infecting" strain
-                cross_effect = 1.0 - getattr(voc_params[infected_strain].cross_protection[infecting_strain], flow)
+                cross_effect = 1.0 - getattr(
+                    voc_params[infected_strain].cross_protection[infecting_strain], flow
+                )
 
                 # Combine the two mechanisms of protection
                 reinfection_adjustments = {
                     ImmunityStratum.NONE: Multiply(cross_effect),
-                    ImmunityStratum.LOW: Multiply(low_non_cross_multiplier * cross_effect),
-                    ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier * cross_effect),
+                    ImmunityStratum.LOW: Multiply(
+                        low_non_cross_multiplier * cross_effect
+                    ),
+                    ImmunityStratum.HIGH: Multiply(
+                        high_non_cross_multiplier * cross_effect
+                    ),
                 }
 
                 immunity_strat.set_flow_adjustments(
@@ -172,8 +180,8 @@ def adjust_reinfection_with_strains(
 
 
 def get_immunity_strat(
-        compartments: List[str],
-        immunity_params: ImmunityStratification,
+    compartments: List[str],
+    immunity_params: ImmunityStratification,
 ) -> Stratification:
     """
     This stratification is intended to capture all the immunity consideration.
@@ -207,9 +215,9 @@ def get_immunity_strat(
 
 
 def apply_reported_vacc_coverage(
-        compartment_types: List[str],
-        model: CompartmentalModel,
-        thinning: int,
+    compartment_types: List[str],
+    model: CompartmentalModel,
+    thinning: int,
 ):
     """
     Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -230,20 +238,20 @@ def apply_reported_vacc_coverage(
     bgd_vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
     bgd_vaccine_df = pd.DataFrame(
         {
-            "none": 1. - bgd_vaccine_data,
+            "none": 1.0 - bgd_vaccine_data,
             "low": bgd_vaccine_data,
         },
     )
-    bgd_vaccine_df["high"] = 0.
+    bgd_vaccine_df["high"] = 0.0
 
     # Apply to model, as below
     add_dynamic_immunity_to_model(compartment_types, bgd_vaccine_df[::thinning], model)
 
 
 def add_dynamic_immunity_to_model(
-        compartments: List[str],
-        strata_distributions: pd.DataFrame,
-        model: CompartmentalModel,
+    compartments: List[str],
+    strata_distributions: pd.DataFrame,
+    model: CompartmentalModel,
 ):
     """
     Use the dynamic flow processes to control the distribution of the population by vaccination status.
@@ -255,7 +263,9 @@ def add_dynamic_immunity_to_model(
 
     """
 
-    sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
+    sc_functions = calculate_transition_rates_from_dynamic_props(
+        strata_distributions, ACTIVE_FLOWS
+    )
     for comp in compartments:
         for transition, strata in ACTIVE_FLOWS.items():
             model.add_transition_flow(

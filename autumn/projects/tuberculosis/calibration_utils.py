@@ -27,7 +27,10 @@ CID_ESTIMATES = {
         "smear_positive": [0.335, 0.449],
         "smear_negative": [0.017, 0.035],
     },
-    "self_recovery_rate": {"smear_positive": [0.177, 0.288], "smear_negative": [0.073, 0.209]},
+    "self_recovery_rate": {
+        "smear_positive": [0.177, 0.288],
+        "smear_negative": [0.073, 0.209],
+    },
 }
 
 

@@ -8,7 +8,10 @@ from autumn.remote.buildkite.buildkite import (
 )
 
 from .full import burn_in_field, sample_size_field
-from autumn.tools.registry import get_registered_model_names, get_registered_project_names
+from autumn.tools.registry import (
+    get_registered_model_names,
+    get_registered_project_names,
+)
 
 
 def get_region_options():
@@ -70,7 +73,9 @@ fields = [
     trigger_field,
 ]
 input_step = InputStep(
-    key="calibration-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields
+    key="calibration-settings",
+    run_condition='build.env("SKIP_INPUT") == null',
+    fields=fields,
 )
 calibrate_step = CommandStep(
     key="run-calibration",

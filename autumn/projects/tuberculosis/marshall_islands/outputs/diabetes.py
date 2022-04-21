@@ -29,9 +29,13 @@ def plot_diabetes_graph(uncertainty_df, figure_path):
 
     widths = [panel_w]
     heights = [panel_h] * len(outputs)
-    fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
+    fig = pyplot.figure(
+        constrained_layout=True, figsize=(sum(widths), sum(heights))
+    )  # (w, h)
 
-    spec = fig.add_gridspec(ncols=1, nrows=len(outputs), width_ratios=widths, height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=1, nrows=len(outputs), width_ratios=widths, height_ratios=heights
+    )
 
     diabetes_colours = {0: COLORS[6], 9: COLORS[2], 10: COLORS[7]}
     alphas = {0: 1, 9: 0.6, 10: 0.4}
@@ -42,7 +46,9 @@ def plot_diabetes_graph(uncertainty_df, figure_path):
         ax = fig.add_subplot(spec[i, 0])
 
         for k, sc_id in enumerate([0, 9, 10]):
-            sc_colors = _apply_transparency([diabetes_colours[sc_id]], [alphas[sc_id]])[0]
+            sc_colors = _apply_transparency([diabetes_colours[sc_id]], [alphas[sc_id]])[
+                0
+            ]
 
             _plot_uncertainty(
                 ax,

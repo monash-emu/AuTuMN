@@ -3,8 +3,19 @@ from typing import List
 from summer.compute import ComputedValueProcessor
 
 from autumn.models.covid_19.constants import (
-    INFECT_DEATH, INFECTION, Compartment, NOTIFICATIONS, HISTORY_STRATA, INFECTION_DEATHS,
-    COMPARTMENTS, Vaccination, PROGRESS, Clinical, History, Tracing, NOTIFICATION_CLINICAL_STRATA,
+    INFECT_DEATH,
+    INFECTION,
+    Compartment,
+    NOTIFICATIONS,
+    HISTORY_STRATA,
+    INFECTION_DEATHS,
+    COMPARTMENTS,
+    Vaccination,
+    PROGRESS,
+    Clinical,
+    History,
+    Tracing,
+    NOTIFICATION_CLINICAL_STRATA,
     HOSTPIALISED_CLINICAL_STRATA,
 )
 from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
@@ -39,7 +50,9 @@ class CovidOutputsBuilder(OutputsBuilder):
     def __init__(self, model, compartments, is_contact_tracing):
         OutputsBuilder.__init__(self, model, compartments)
         self.is_contact_tracing = is_contact_tracing
-        self.untraced_stratum = {"tracing": Tracing.UNTRACED} if is_contact_tracing else {}
+        self.untraced_stratum = (
+            {"tracing": Tracing.UNTRACED} if is_contact_tracing else {}
+        )
 
     def request_incidence(self):
         """
@@ -73,7 +86,9 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         self.model.request_output_for_flow("infection", INFECTION)
 
-    def request_notifications(self, cumul_inc_start_time: float, hospital_reporting: float):
+    def request_notifications(
+        self, cumul_inc_start_time: float, hospital_reporting: float
+    ):
         """
         Calculate the rate of notifications over time.
 
@@ -98,7 +113,10 @@ class CovidOutputsBuilder(OutputsBuilder):
                 name = f"progress_{Tracing.TRACED}Xagegroup_{agegroup}"
                 notification_pathways.append(name)
                 self.model.request_output_for_flow(
-                    name=name, flow_name=PROGRESS, dest_strata=traced_dest_strata, save_results=False,
+                    name=name,
+                    flow_name=PROGRESS,
+                    dest_strata=traced_dest_strata,
+                    save_results=False,
                 )
 
             # Then track untraced cases that are passively detected - either regardless of tracing status,
@@ -106,12 +124,18 @@ class CovidOutputsBuilder(OutputsBuilder):
             for clinical in NOTIFICATION_CLINICAL_STRATA:
 
                 # Include reporting adjustment if requested
-                reporting = hospital_reporting if clinical in HOSTPIALISED_CLINICAL_STRATA else 1.
+                reporting = (
+                    hospital_reporting
+                    if clinical in HOSTPIALISED_CLINICAL_STRATA
+                    else 1.0
+                )
                 untraced_dest_strata = {"clinical": clinical, "agegroup": agegroup}
                 untraced_dest_strata.update(self.untraced_stratum)
                 notified_hospitalisations = f"_progress_{Tracing.UNTRACED}Xagegroup_{agegroup}Xclinical_{clinical}"
                 self.model.request_output_for_flow(
-                    name=notified_hospitalisations, flow_name=PROGRESS, dest_strata=untraced_dest_strata,
+                    name=notified_hospitalisations,
+                    flow_name=PROGRESS,
+                    dest_strata=untraced_dest_strata,
                     save_results=False,
                 )
 
@@ -119,20 +143,30 @@ class CovidOutputsBuilder(OutputsBuilder):
                 name = notified_hospitalisations[1:]
                 notification_pathways.append(name)
                 self.model.request_function_output(
-                    name=name, func=lambda rate: rate * reporting, sources=(notified_hospitalisations,),
+                    name=name,
+                    func=lambda rate: rate * reporting,
+                    sources=(notified_hospitalisations,),
                     save_results=False,
                 )
 
             final_name = f"{NOTIFICATIONS}Xagegroup_{agegroup}"
-            self.model.request_aggregate_output(name=final_name, sources=notification_pathways)
+            self.model.request_aggregate_output(
+                name=final_name, sources=notification_pathways
+            )
 
-        notifications_by_agegroup = [f"{NOTIFICATIONS}Xagegroup_{i_age}" for i_age in AGEGROUP_STRATA]
-        self.model.request_aggregate_output(name=NOTIFICATIONS, sources=notifications_by_agegroup)
+        notifications_by_agegroup = [
+            f"{NOTIFICATIONS}Xagegroup_{i_age}" for i_age in AGEGROUP_STRATA
+        ]
+        self.model.request_aggregate_output(
+            name=NOTIFICATIONS, sources=notifications_by_agegroup
+        )
 
         # Cumulative unstratified notifications
         if cumul_inc_start_time:
             self.model.request_cumulative_output(
-                name=f"accum_{NOTIFICATIONS}", source=NOTIFICATIONS, start_time=cumul_inc_start_time,
+                name=f"accum_{NOTIFICATIONS}",
+                source=NOTIFICATIONS,
+                start_time=cumul_inc_start_time,
             )
 
     def request_non_hosp_notifications(self):
@@ -158,13 +192,20 @@ class CovidOutputsBuilder(OutputsBuilder):
                 self.model.request_output_for_flow(
                     name=name,
                     flow_name=PROGRESS,
-                    dest_strata={"clinical": Clinical.SYMPT_ISOLATE, "tracing": Tracing.TRACED, "agegroup": agegroup},
+                    dest_strata={
+                        "clinical": Clinical.SYMPT_ISOLATE,
+                        "tracing": Tracing.TRACED,
+                        "agegroup": agegroup,
+                    },
                     save_results=False,
                 )
 
             # Then track untraced cases in Symptomatic ambulatory ever detected
             name = f"progress_non_hosp_Xclinical_{Clinical.SYMPT_ISOLATE}Xagegroup_{agegroup}Xtraced_{Tracing.UNTRACED}"
-            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(self.untraced_stratum)
+            dest_strata = {
+                "clinical": Clinical.SYMPT_ISOLATE,
+                "agegroup": agegroup,
+            }.update(self.untraced_stratum)
             age_notification_pathways.append(name)
             self.model.request_output_for_flow(
                 name=name,
@@ -173,7 +214,9 @@ class CovidOutputsBuilder(OutputsBuilder):
                 save_results=False,
             )
             agg_name = f"non_hospitalised_notificationsXagegroup_{agegroup}"
-            self.model.request_aggregate_output(name=agg_name, sources=age_notification_pathways)
+            self.model.request_aggregate_output(
+                name=agg_name, sources=age_notification_pathways
+            )
 
         # calculating the prevalence of the non hospitalised notifications by age group
         for agegroup in AGEGROUP_STRATA:
@@ -187,11 +230,18 @@ class CovidOutputsBuilder(OutputsBuilder):
                     self.model.request_output_for_compartments(
                         name=name,
                         compartments=[Compartment.LATE_ACTIVE],
-                        strata={"clinical": clinical, "agegroup": agegroup, "tracing": Tracing.TRACED},
+                        strata={
+                            "clinical": clinical,
+                            "agegroup": agegroup,
+                            "tracing": Tracing.TRACED,
+                        },
                     )
 
             # Then track untraced cases (everyone in notified clinical stratum)
-            dest_strata = {"clinical": Clinical.SYMPT_ISOLATE, "agegroup": agegroup}.update(self.untraced_stratum)
+            dest_strata = {
+                "clinical": Clinical.SYMPT_ISOLATE,
+                "agegroup": agegroup,
+            }.update(self.untraced_stratum)
             name = f"progress_prevalence_{Tracing.UNTRACED}Xagegroup_{agegroup}Xclinical_{Clinical.SYMPT_ISOLATE}"
             age_notification_pathways.append(name)
             self.model.request_output_for_compartments(
@@ -201,7 +251,8 @@ class CovidOutputsBuilder(OutputsBuilder):
             )
 
             self.model.request_aggregate_output(
-                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}", sources=age_notification_pathways
+                name=f"prevalence_non_hospitalised_notificationsXagegroup_{agegroup}",
+                sources=age_notification_pathways,
             )
 
     def request_adult_paeds_notifications(self):
@@ -215,10 +266,18 @@ class CovidOutputsBuilder(OutputsBuilder):
         """
 
         # Split by child and adult
-        paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]]
-        adult_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:]]
-        self.model.request_aggregate_output(name="notificationsXpaediatric", sources=paed_notifications)
-        self.model.request_aggregate_output(name="notificationsXadult", sources=adult_notifications)
+        paed_notifications = [
+            f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]
+        ]
+        adult_notifications = [
+            f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:]
+        ]
+        self.model.request_aggregate_output(
+            name="notificationsXpaediatric", sources=paed_notifications
+        )
+        self.model.request_aggregate_output(
+            name="notificationsXadult", sources=adult_notifications
+        )
 
     def request_cdr(self):
         """
@@ -239,12 +298,20 @@ class CovidOutputsBuilder(OutputsBuilder):
         """
 
         # Unstratified
-        self.model.request_output_for_flow(name=INFECTION_DEATHS, flow_name=INFECT_DEATH)
-        self.model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
+        self.model.request_output_for_flow(
+            name=INFECTION_DEATHS, flow_name=INFECT_DEATH
+        )
+        self.model.request_cumulative_output(
+            name="accum_deaths", source="infection_deaths"
+        )
 
         # Stratified by age
         self.request_stratified_output_for_flow(
-            INFECT_DEATH, AGEGROUP_STRATA, "agegroup", name_stem=INFECTION_DEATHS, filter_on="source"
+            INFECT_DEATH,
+            AGEGROUP_STRATA,
+            "agegroup",
+            name_stem=INFECTION_DEATHS,
+            filter_on="source",
         )
         for agegroup in AGEGROUP_STRATA:
             self.model.request_cumulative_output(
@@ -254,8 +321,13 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age and clinical stratum
         self.request_double_stratified_output_for_flow(
-            INFECT_DEATH, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical", name_stem=INFECTION_DEATHS,
-            filter_on="source"
+            INFECT_DEATH,
+            AGEGROUP_STRATA,
+            "agegroup",
+            CLINICAL_STRATA,
+            "clinical",
+            name_stem=INFECTION_DEATHS,
+            filter_on="source",
         )
 
     def request_admissions(self):
@@ -286,14 +358,22 @@ class CovidOutputsBuilder(OutputsBuilder):
         )
 
         # Track all hospitalisations as the sum of hospital non-ICU and ICU
-        self.model.request_aggregate_output("hospital_admissions", sources=["icu_admissions", "non_icu_admissions"])
+        self.model.request_aggregate_output(
+            "hospital_admissions", sources=["icu_admissions", "non_icu_admissions"]
+        )
 
         for agegroup in AGEGROUP_STRATA:
             self.model.request_output_for_flow(
                 name=f"non_icu_admissionsXagegroup_{agegroup}",
                 flow_name=PROGRESS,
-                source_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
-                dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "agegroup": agegroup},
+                source_strata={
+                    "clinical": Clinical.HOSPITAL_NON_ICU,
+                    "agegroup": agegroup,
+                },
+                dest_strata={
+                    "clinical": Clinical.HOSPITAL_NON_ICU,
+                    "agegroup": agegroup,
+                },
                 save_results=False,
             )
             self.model.request_output_for_flow(
@@ -305,7 +385,10 @@ class CovidOutputsBuilder(OutputsBuilder):
             )
             self.model.request_aggregate_output(
                 f"hospital_admissionsXagegroup_{agegroup}",
-                sources=[f"icu_admissionsXagegroup_{agegroup}", f"non_icu_admissionsXagegroup_{agegroup}"]
+                sources=[
+                    f"icu_admissionsXagegroup_{agegroup}",
+                    f"non_icu_admissionsXagegroup_{agegroup}",
+                ],
             )
 
     def request_occupancy(self, sojourn_periods: Sojourn):
@@ -325,8 +408,12 @@ class CovidOutputsBuilder(OutputsBuilder):
         compartment_periods = sojourn_periods
         icu_early_period = compartment_periods["icu_early"]
         hospital_early_period = compartment_periods["hospital_early"]
-        period_icu_patients_in_hospital = max(icu_early_period - hospital_early_period, 0.)
-        proportion_icu_patients_in_hospital = period_icu_patients_in_hospital / icu_early_period
+        period_icu_patients_in_hospital = max(
+            icu_early_period - hospital_early_period, 0.0
+        )
+        proportion_icu_patients_in_hospital = (
+            period_icu_patients_in_hospital / icu_early_period
+        )
 
         # Unstratified calculations
         self.model.request_output_for_compartments(
@@ -385,7 +472,9 @@ class CovidOutputsBuilder(OutputsBuilder):
                 strata={"clinical": Clinical.ICU, "agegroup": agegroup},
                 save_results=False,
             )
-            age_icu_early_in_hospital_name = f"early_active_icu_in_hospitalXagegroup_{agegroup}"
+            age_icu_early_in_hospital_name = (
+                f"early_active_icu_in_hospitalXagegroup_{agegroup}"
+            )
             self.model.request_function_output(
                 name=age_icu_early_in_hospital_name,
                 func=lambda patients: patients * proportion_icu_patients_in_hospital,
@@ -419,7 +508,8 @@ class CovidOutputsBuilder(OutputsBuilder):
         # Proportion of quarantined contacts among all contacts
         self.model.request_function_output(
             name="prop_contacts_quarantined",
-            func=lambda prop_detected_traced, prop_detected_index: prop_detected_traced * prop_detected_index,
+            func=lambda prop_detected_traced, prop_detected_index: prop_detected_traced
+            * prop_detected_index,
             sources=["prop_detected_traced", "prop_contacts_with_detected_index"],
         )
 
@@ -445,7 +535,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_function_output(
                 name=f"prop_{INCIDENCE}_strain_{strain}",
                 func=lambda strain_inc, total_inc: strain_inc / total_inc,
-                sources=[f"{INCIDENCE}Xstrain_{strain}", INCIDENCE]
+                sources=[f"{INCIDENCE}Xstrain_{strain}", INCIDENCE],
             )
 
     def request_vaccination(self, is_dosing_active: bool, vacc_strata: List[str]):
@@ -479,8 +569,8 @@ class CovidOutputsBuilder(OutputsBuilder):
         if is_dosing_active:
             self.model.request_function_output(
                 name="at_least_one_dose_prop",
-                func=lambda unvacc, pop: 1. - unvacc / pop,
-                sources=[f"_{Vaccination.UNVACCINATED}", "total_population"]
+                func=lambda unvacc, pop: 1.0 - unvacc / pop,
+                sources=[f"_{Vaccination.UNVACCINATED}", "total_population"],
             )
 
     def request_vacc_aefis(self, vacc_risk_params: VaccinationRisk):
@@ -495,7 +585,9 @@ class CovidOutputsBuilder(OutputsBuilder):
         risk_multiplier = vacc_risk_params.risk_multiplier
 
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
-        self.request_stratified_output_for_flow("vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source")
+        self.request_stratified_output_for_flow(
+            "vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source"
+        )
 
         for agegroup in AGEGROUP_STRATA:
             agegroup_string = f"agegroup_{agegroup}"
@@ -504,43 +596,63 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_function_output(
                 name=f"tts_casesX{agegroup_string}",
                 sources=[f"vaccinationX{agegroup_string}"],
-                func=lambda vaccinated:
-                vaccinated * vacc_risk_params.tts_rate[agegroup] * vacc_risk_params.prop_astrazeneca * risk_multiplier
+                func=lambda vaccinated: vaccinated
+                * vacc_risk_params.tts_rate[agegroup]
+                * vacc_risk_params.prop_astrazeneca
+                * risk_multiplier,
             )
             self.model.request_function_output(
                 name=f"tts_deathsX{agegroup_string}",
                 sources=[f"tts_casesX{agegroup_string}"],
-                func=lambda tts_cases:
-                tts_cases * vacc_risk_params.tts_fatality_ratio[agegroup]
+                func=lambda tts_cases: tts_cases
+                * vacc_risk_params.tts_fatality_ratio[agegroup],
             )
 
             # Myocarditis for mRNA vaccines
             self.model.request_function_output(
                 name=f"myocarditis_casesX{agegroup_string}",
                 sources=[f"vaccinationX{agegroup_string}"],
-                func=lambda vaccinated:
-                vaccinated * vacc_risk_params.myocarditis_rate[agegroup] * vacc_risk_params.prop_mrna * risk_multiplier
+                func=lambda vaccinated: vaccinated
+                * vacc_risk_params.myocarditis_rate[agegroup]
+                * vacc_risk_params.prop_mrna
+                * risk_multiplier,
             )
 
         # Aggregate using larger age-groups
         aggregated_age_groups = {"15_19": ["15"]}
         for age_min in [20 + i * 10 for i in range(5)]:
             age_max = age_min + 9
-            aggregated_age_groups[f"{age_min}_{age_max}"] = [str(age_min), str(age_min + 5)]
+            aggregated_age_groups[f"{age_min}_{age_max}"] = [
+                str(age_min),
+                str(age_min + 5),
+            ]
         aggregated_age_groups["70_plus"] = ["70", "75"]
 
-        cumul_start_time = None if not vacc_risk_params.cumul_start_time else vacc_risk_params.cumul_start_time
-        for output_type in ["tts_cases", "tts_deaths", "myocarditis_cases", "hospital_admissions"]:
+        cumul_start_time = (
+            None
+            if not vacc_risk_params.cumul_start_time
+            else vacc_risk_params.cumul_start_time
+        )
+        for output_type in [
+            "tts_cases",
+            "tts_deaths",
+            "myocarditis_cases",
+            "hospital_admissions",
+        ]:
             for aggregated_age_group, agegroups in aggregated_age_groups.items():
                 agg_output = f"{output_type}Xagg_age_{aggregated_age_group}"
-                agg_output_sources = [f"{output_type}Xagegroup_{agegroup}" for agegroup in agegroups]
-                self.model.request_aggregate_output(name=agg_output, sources=agg_output_sources)
+                agg_output_sources = [
+                    f"{output_type}Xagegroup_{agegroup}" for agegroup in agegroups
+                ]
+                self.model.request_aggregate_output(
+                    name=agg_output, sources=agg_output_sources
+                )
 
                 # Cumulative output calculation
                 self.model.request_cumulative_output(
                     name=f"cumulative_{agg_output}",
                     source=agg_output,
-                    start_time=cumul_start_time
+                    start_time=cumul_start_time,
                 )
 
     def request_experienced(self):
@@ -554,7 +666,9 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         """
 
-        self.request_stratified_output_for_compartment("prop", COMPARTMENTS, HISTORY_STRATA, "history")
+        self.request_stratified_output_for_compartment(
+            "prop", COMPARTMENTS, HISTORY_STRATA, "history"
+        )
         self.model.request_function_output(
             name="prop_ever_infected",
             func=get_complement_prop,
@@ -563,7 +677,11 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age group
         self.request_stratified_output_for_compartment(
-            "total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
+            "total_population",
+            COMPARTMENTS,
+            AGEGROUP_STRATA,
+            "agegroup",
+            save_results=False,
         )
         for agegroup in AGEGROUP_STRATA:
             for stratum in HISTORY_STRATA:
@@ -576,7 +694,10 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_function_output(
                 name=f"prop_ever_infectedXagegroup_{agegroup}",
                 func=get_complement_prop,
-                sources=[f"prop_{History.NAIVE}Xagegroup{agegroup}", f"total_populationXagegroup_{agegroup}"],
+                sources=[
+                    f"prop_{History.NAIVE}Xagegroup{agegroup}",
+                    f"total_populationXagegroup_{agegroup}",
+                ],
             )
 
     def request_time(self):

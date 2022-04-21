@@ -93,7 +93,8 @@ def make_scenario_func(
                 if elderly_mixing_reduction is not None:
                     if age_group in elderly_mixing_reduction["age_categories"]:
                         final_mixing_value = min(
-                            1 - elderly_mixing_reduction["relative_reduction"], final_mixing_value
+                            1 - elderly_mixing_reduction["relative_reduction"],
+                            final_mixing_value,
                         )
                 scenario_params["mobility"]["age_mixing"][age_group] = {
                     "times": [
@@ -184,7 +185,9 @@ def make_objective_func(duration):
         phase_2_end_idx = list(run_model.times).index(phase_2_end_times[duration])
 
         # Determine number of deaths and years of life lost during Phase 2 and 3.
-        total_nb_deaths = sum(run_model.derived_outputs["infection_deaths"][phase_2_start_idx:])
+        total_nb_deaths = sum(
+            run_model.derived_outputs["infection_deaths"][phase_2_start_idx:]
+        )
         years_of_life_lost = sum(
             run_model.derived_outputs["years_of_life_lost"][phase_2_start_idx:]
         )

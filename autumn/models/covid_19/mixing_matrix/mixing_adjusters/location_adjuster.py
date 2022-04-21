@@ -24,8 +24,10 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
     """
 
     def __init__(
-        self, base_matrices: Dict[str, np.ndarray], mobility_funcs: Dict[str, Callable[[float], float]],
-            microdistancing_funcs: Dict[str, Callable[[float], float]],
+        self,
+        base_matrices: Dict[str, np.ndarray],
+        mobility_funcs: Dict[str, Callable[[float], float]],
+        microdistancing_funcs: Dict[str, Callable[[float], float]],
     ):
         """
         Create the attributes to this object, as described in attributes above.
@@ -44,11 +46,11 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
 
         # Start the adjustment value for each location from a value of one, representing no adjustment
         for loc_key in LOCATIONS:
-            loc_relative_mobility = 1.
+            loc_relative_mobility = 1.0
 
             # Adjust for macrodistancing/mobility
             mobility_func = self.mobility_funcs.get(loc_key)
-            loc_relative_mobility = mobility_func(time) if mobility_func else 1.
+            loc_relative_mobility = mobility_func(time) if mobility_func else 1.0
 
             # Adjust for microdistancing
             microdistancing_func = self.microdistancing_funcs.get(loc_key)
@@ -56,7 +58,7 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
                 loc_relative_mobility *= microdistancing_func(time)
 
             # Apply the adjustment by subtracting the contacts that need to come off
-            mobility_change = (1. - loc_relative_mobility)
+            mobility_change = 1.0 - loc_relative_mobility
             mixing_matrix -= mobility_change * self.base_matrices[loc_key]
 
         return mixing_matrix

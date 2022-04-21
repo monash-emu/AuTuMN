@@ -52,12 +52,14 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
         adjusted_matrix = mixing_matrix.copy()
         for i_row_agegroup, row_agegroup in enumerate(AGEGROUP_STRATA):
             row_adjust_func = self.adjustment_funcs.get(row_agegroup)
-            row_multiplier = row_adjust_func(time) if row_adjust_func else 1.
+            row_multiplier = row_adjust_func(time) if row_adjust_func else 1.0
 
             for j_col_agegroup, col_agegroup in enumerate(AGEGROUP_STRATA):
                 col_adjust_func = self.adjustment_funcs.get(col_agegroup)
-                col_multiplier = col_adjust_func(time) if col_adjust_func else 1.
+                col_multiplier = col_adjust_func(time) if col_adjust_func else 1.0
 
-                adjusted_matrix[i_row_agegroup, j_col_agegroup] *= row_multiplier * col_multiplier
+                adjusted_matrix[i_row_agegroup, j_col_agegroup] *= (
+                    row_multiplier * col_multiplier
+                )
 
         return adjusted_matrix

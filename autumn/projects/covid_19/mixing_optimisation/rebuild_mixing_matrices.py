@@ -9,10 +9,19 @@ from .mixing_opti import build_params_for_phases_2_and_3
 
 # FIXME this is broken
 def get_mixing_matrices(
-    output_dir, country, config=2, mode="by_age", objective="deaths", from_streamlit=False
+    output_dir,
+    country,
+    config=2,
+    mode="by_age",
+    objective="deaths",
+    from_streamlit=False,
 ):
 
-    iso_3 = get_iso3_from_country_name(country.title()) if country != "united-kingdom" else "GBR"
+    iso_3 = (
+        get_iso3_from_country_name(country.title())
+        if country != "united-kingdom"
+        else "GBR"
+    )
     params, decision_vars = get_mle_params_and_vars(
         output_dir, country, config, mode, objective, from_streamlit
     )
@@ -37,13 +46,13 @@ def get_mixing_matrices(
         mixing_age_adjust=sc_1_params["mixing_age_adjust"],
         npi_effectiveness_params={},
         google_mobility_locations={
-            "work": {"workplaces": 1.},
+            "work": {"workplaces": 1.0},
             "other_locations": {
                 "retail_and_recreation": 0.25,
                 "grocery_and_pharmacy": 0.25,
                 "transit_stations": 0.25,
             },
-            "home": {"residential": 1.}
+            "home": {"residential": 1.0},
         },
         is_periodic_intervention=False,
         periodic_int_params={},

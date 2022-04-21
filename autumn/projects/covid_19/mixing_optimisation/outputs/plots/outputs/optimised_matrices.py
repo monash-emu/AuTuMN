@@ -6,7 +6,10 @@ import numpy as np
 from matplotlib import pyplot
 
 from apps import covid_19
-from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
+from autumn.projects.covid_19.mixing_optimisation.constants import (
+    OPTI_REGIONS,
+    PHASE_2_START_TIME,
+)
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
     DURATIONS,
     MODES,
@@ -58,7 +61,9 @@ def main():
                     decision_vars = read_decision_vars(
                         opti_outputs_df, country, mode, duration, objective
                     )
-                    optimised_matrices[country][duration][objective] = get_optimised_mixing_matrix(
+                    optimised_matrices[country][duration][
+                        objective
+                    ] = get_optimised_mixing_matrix(
                         country, decision_vars, mode, duration
                     )
 
@@ -102,11 +107,15 @@ def plot_mixing_matrix_opti(matrix, axis, fig, vmax, include_legend):
     pyplot.gca().xaxis.tick_bottom()
 
     with pyplot.style.context(("seaborn-dark")):
-        im = axis.imshow(matrix.transpose(), cmap="hot", origin="lower", vmin=vmin, vmax=vmax)
+        im = axis.imshow(
+            matrix.transpose(), cmap="hot", origin="lower", vmin=vmin, vmax=vmax
+        )
 
         if include_legend:
             cbar = fig.colorbar(im, ax=axis)
-            cbar.ax.set_ylabel("n contacts per day", rotation=90, va="bottom", fontsize=15)
+            cbar.ax.set_ylabel(
+                "n contacts per day", rotation=90, va="bottom", fontsize=15
+            )
 
             cbar.ax.yaxis.set_label_coords(4.0, 0.5)
 
@@ -122,7 +131,9 @@ def plot_mixing_matrix_opti(matrix, axis, fig, vmax, include_legend):
         axis.set_ylabel("contact age")
 
 
-def plot_multicountry_matrices(original_matrices, optimised_matrices, mode, include_config=True):
+def plot_multicountry_matrices(
+    original_matrices, optimised_matrices, mode, include_config=True
+):
 
     fig_h = 23 if not include_config else 25
     heights = [1, 6, 6, 6, 6, 6, 6] if not include_config else [2, 1, 6, 6, 6, 6, 6, 6]
@@ -132,7 +143,12 @@ def plot_multicountry_matrices(original_matrices, optimised_matrices, mode, incl
 
     widths = [1, 5, 5, 5, 5, 5]
     spec = fig.add_gridspec(
-        ncols=6, nrows=len(heights), width_ratios=widths, height_ratios=heights, hspace=0, wspace=0
+        ncols=6,
+        nrows=len(heights),
+        width_ratios=widths,
+        height_ratios=heights,
+        hspace=0,
+        wspace=0,
     )
 
     output_names = [

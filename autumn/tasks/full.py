@@ -2,23 +2,28 @@ import logging
 import os
 import sys
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import psutil
 
-from autumn.tools import db, plots
-from autumn.tools.db.database import get_database
-from autumn.tools.db.store import Table
-from autumn.tools.db.process import find_mle_run
 from autumn.settings import REMOTE_BASE_DIR
 from autumn.tasks.calibrate import CALIBRATE_DATA_DIR
 from autumn.tasks.utils import get_project_from_run_id, set_logging_config
-from autumn.tools.utils.fs import recreate_dir
-from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
-from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
-from autumn.tools.utils.timer import Timer
+from autumn.tools import db, plots
+from autumn.tools.db.database import get_database
+from autumn.tools.db.process import find_mle_run
+from autumn.tools.db.store import Table
 from autumn.tools.project import post_process_scenario_outputs
 from autumn.tools.runs import ManagedRun
+from autumn.tools.utils.fs import recreate_dir
+from autumn.tools.utils.parallel import gather_exc_plus, run_parallel_tasks
+from autumn.tools.utils.s3 import (
+    download_from_run_s3,
+    get_s3_client,
+    list_s3,
+    upload_to_run_s3,
+)
+from autumn.tools.utils.timer import Timer
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +36,9 @@ FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
 TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
 
 
-def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool, dry_run: bool = False):
+def full_model_run_task(
+    run_id: str, burn_in: int, sample_size: int, quiet: bool, dry_run: bool = False
+):
     project = get_project_from_run_id(run_id)
 
     # Set up directories for output data.
@@ -45,9 +52,13 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     mr = ManagedRun(run_id, s3_client=s3_client)
 
     # Find the calibration chain databases in AWS S3.
-    key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
+    key_prefix = os.path.join(
+        run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR)
+    )
     chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".parquet")
-    chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
+    chain_db_keys = [
+        k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])
+    ]
 
     # Download the calibration chain databases.
     with Timer(f"Downloading calibration data"):
@@ -64,7 +75,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     # the run (and only store data for those outputs)
     mcmc_runs = mr.calibration.get_mcmc_runs()
     mcmc_params = mr.calibration.get_mcmc_params()
-    
+
     total_runs = num_chains * sample_size
 
     # Note that sample_size in the task argument is per-chain, whereas here it is all samples
@@ -95,11 +106,11 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     cur_start_idx = 0
 
     for i in range(n_additional):
-        subset_runs.append(sampled_runs_df.iloc[cur_start_idx:cur_start_idx+arpc])
+        subset_runs.append(sampled_runs_df.iloc[cur_start_idx : cur_start_idx + arpc])
         # This will be correct for the next iteration, hence computing at the end
         cur_start_idx += arpc
     for i in range(n_base):
-        subset_runs.append(sampled_runs_df.iloc[cur_start_idx:cur_start_idx+brpc])
+        subset_runs.append(sampled_runs_df.iloc[cur_start_idx : cur_start_idx + brpc])
         cur_start_idx += brpc
 
     # Check that we ended up with all the runs
@@ -108,15 +119,20 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     # Check we're using our cores correctly..
     if len(subset_runs) < n_cores:
         logger.warning(f"{n_cores} CPU cores, but only {len(subset_runs)} being used")
-    
+
     assert len(subset_runs) <= n_cores, "Invalid CPU oversubscription"
 
     # OK, actually run the thing...
     with Timer(f"Running {total_runs} full models over {len(subset_runs)} subsets"):
         args_list = [
-            (run_id, subset_id, subset_runs[subset_id],
-            mcmc_params.loc[subset_runs[subset_id].index],
-            candidates_df, quiet)
+            (
+                run_id,
+                subset_id,
+                subset_runs[subset_id],
+                mcmc_params.loc[subset_runs[subset_id].index],
+                candidates_df,
+                quiet,
+            )
             for subset_id in range(len(subset_runs))
         ]
         try:
@@ -160,9 +176,13 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
 
 
 def run_full_model_for_subset(
-    run_id: str, subset_id: int, sampled_runs_df: pd.DataFrame, 
-    mcmc_params_df: pd.DataFrame, candidates_df: pd.DataFrame, quiet: bool
-    ) -> int:
+    run_id: str,
+    subset_id: int,
+    sampled_runs_df: pd.DataFrame,
+    mcmc_params_df: pd.DataFrame,
+    candidates_df: pd.DataFrame,
+    quiet: bool,
+) -> int:
     """
     Run the full model (all time steps, all scenarios) for a subset of accepted calibration runs.
     The sampling for these runs occurs in the main process, and all arguments here are specific
@@ -180,16 +200,16 @@ def run_full_model_for_subset(
         subset_id (int): The current subset
     """
 
-    set_logging_config(not quiet, subset_id, FULL_RUN_LOG_DIR, task='full')
-    #msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
-    #logger.info(msg, chain_id, burn_in, sample_size)
+    set_logging_config(not quiet, subset_id, FULL_RUN_LOG_DIR, task="full")
+    # msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
+    # logger.info(msg, chain_id, burn_in, sample_size)
     try:
         project = get_project_from_run_id(run_id)
         msg = f"Running the {project.model_name} {project.region_name} model"
         logger.info(msg)
 
         dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{subset_id}")
-        #src_db = get_database(src_db_path)
+        # src_db = get_database(src_db_path)
         dest_db = get_database(dest_db_path)
 
         # Burn in MCMC parameter history and copy it across so it can be used in visualizations downstream.
@@ -206,7 +226,7 @@ def run_full_model_for_subset(
         sc_build_opts = None
 
         for urun in sampled_runs_df.index:
-            
+
             mcmc_run = sampled_runs_df.loc[urun]
 
             run_id = int(mcmc_run["run"])
@@ -225,23 +245,28 @@ def run_full_model_for_subset(
                     for p in project.param_set.scenarios
                 ]
                 start_times = [
-                    sc_params.to_dict()["time"]["start"] for sc_params in scenario_params
+                    sc_params.to_dict()["time"]["start"]
+                    for sc_params in scenario_params
                 ]
 
-                baseline_model = project.run_baseline_model(baseline_params, build_options=bl_build_opts)
+                baseline_model = project.run_baseline_model(
+                    baseline_params, build_options=bl_build_opts
+                )
                 sc_models = project.run_scenario_models(
-                    baseline_model, scenario_params, 
-                    start_times=start_times, build_options = sc_build_opts
+                    baseline_model,
+                    scenario_params,
+                    start_times=start_times,
+                    build_options=sc_build_opts,
                 )
 
             models = [baseline_model, *sc_models]
 
-            #Get cache info etc for build_options dict
-            #This improves performance for subsequent runs
+            # Get cache info etc for build_options dict
+            # This improves performance for subsequent runs
 
             bl_build_opts = {
                 "enable_validation": False,
-                "derived_outputs_idx_cache": baseline_model._derived_outputs_idx_cache
+                "derived_outputs_idx_cache": baseline_model._derived_outputs_idx_cache,
             }
 
             sc_build_opts = []
@@ -249,7 +274,7 @@ def run_full_model_for_subset(
                 sc_build_opts.append(
                     {
                         "enable_validation": False,
-                        "derived_outputs_idx_cache": scm._derived_outputs_idx_cache
+                        "derived_outputs_idx_cache": scm._derived_outputs_idx_cache,
                     }
                 )
 
@@ -264,7 +289,9 @@ def run_full_model_for_subset(
         with Timer("Saving model outputs to the database"):
             final_outputs = {}
             # We may not have anything in outputs
-            final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
+            final_outputs[Table.DERIVED] = pd.concat(
+                derived_outputs, copy=False, ignore_index=True
+            )
             final_outputs[Table.MCMC] = sampled_runs_df
             db.store.save_model_outputs(dest_db, **final_outputs)
 
@@ -277,17 +304,21 @@ def run_full_model_for_subset(
     return subset_id
 
 
-def select_full_run_samples(mcmc_runs_df: pd.DataFrame, n_samples: int, burn_in: int) -> pd.DataFrame:
-    
-    accept_mask = mcmc_runs_df['accept'] == 1
+def select_full_run_samples(
+    mcmc_runs_df: pd.DataFrame, n_samples: int, burn_in: int
+) -> pd.DataFrame:
+
+    accept_mask = mcmc_runs_df["accept"] == 1
     df_accepted = mcmc_runs_df[accept_mask]
     mle_idx = find_mle_run(df_accepted).index[0]
     df_accepted = df_accepted.drop(index=mle_idx)
-    
-    post_burn = df_accepted[df_accepted['run'] >= burn_in]
-    
-    weights = post_burn['weight'] / post_burn['weight'].sum()
-    
-    run_indices = [mle_idx] + list(np.random.choice(post_burn.index, n_samples-1, False, p = weights))
-    
+
+    post_burn = df_accepted[df_accepted["run"] >= burn_in]
+
+    weights = post_burn["weight"] / post_burn["weight"].sum()
+
+    run_indices = [mle_idx] + list(
+        np.random.choice(post_burn.index, n_samples - 1, False, p=weights)
+    )
+
     return mcmc_runs_df.loc[run_indices]

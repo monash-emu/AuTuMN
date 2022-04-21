@@ -1,11 +1,6 @@
 from autumn.remote.buildkite.buildkite import CommandStep, InputStep, Pipeline
 
-from .calibrate import (
-    commit_field,
-    chains_field,
-    runtime_field,
-    trigger_field,
-)
+from .calibrate import chains_field, commit_field, runtime_field, trigger_field
 from .full import burn_in_field, sample_size_field
 
 fields = [
@@ -21,5 +16,7 @@ input_step = InputStep(
     run_condition=None,
     fields=fields,
 )
-trigger_step = CommandStep(key="run-triggers", command="./scripts/buildkite.sh trigger philippines")
+trigger_step = CommandStep(
+    key="run-triggers", command="./scripts/buildkite.sh trigger philippines"
+)
 pipeline = Pipeline(key="trigger-philippines", steps=[input_step, trigger_step])

@@ -1,4 +1,5 @@
 from summer import CompartmentalModel
+
 from autumn.tools.project import Params, build_rel_path
 
 

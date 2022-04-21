@@ -1,7 +1,7 @@
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
 import pandas as pd
-from summer import StrainStratification, Multiply, CompartmentalModel
+from summer import CompartmentalModel, Multiply, StrainStratification
 
 from autumn.models.sm_sir.constants import Compartment, FlowName
 from autumn.models.sm_sir.parameters import VocComponent
@@ -23,12 +23,16 @@ def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: floa
     """
 
     def voc_seed_func(time: float, computed_values):
-        return entry_rate if 0. < time - start_time < seed_duration else 0.
+        return entry_rate if 0.0 < time - start_time < seed_duration else 0.0
 
     return voc_seed_func
 
 
-def seed_vocs(model: CompartmentalModel, all_voc_params: Dict[str, VocComponent], seed_compartment: str):
+def seed_vocs(
+    model: CompartmentalModel,
+    all_voc_params: Dict[str, VocComponent],
+    seed_compartment: str,
+):
     """
     Use importation flows to seed VoC cases.
 
@@ -51,26 +55,26 @@ def seed_vocs(model: CompartmentalModel, all_voc_params: Dict[str, VocComponent]
             voc_seed_func = make_voc_seed_func(
                 voc_seed_params.entry_rate,
                 voc_seed_params.start_time,
-                voc_seed_params.seed_duration
+                voc_seed_params.seed_duration,
             )
             model.add_importation_flow(
                 f"seed_voc_{voc_name}",
                 voc_seed_func,
                 dest=seed_compartment,
                 dest_strata={"strain": voc_name},
-                split_imports=True
+                split_imports=True,
             )
 
 
 def apply_reinfection_flows_with_strains(
-        model: CompartmentalModel,
-        base_compartments: List[str],
-        infection_dest: str,
-        age_groups: List[str],
-        voc_params: Optional[Dict[str, VocComponent]],
-        strain_strata: List[str],
-        contact_rate: float,
-        suscept_adjs: pd.Series,
+    model: CompartmentalModel,
+    base_compartments: List[str],
+    infection_dest: str,
+    age_groups: List[str],
+    voc_params: Optional[Dict[str, VocComponent]],
+    strain_strata: List[str],
+    contact_rate: float,
+    suscept_adjs: pd.Series,
 ):
     """
     Apply the reinfection flows, making sure that it is possible to be infected with any strain after infection with any
@@ -99,7 +103,9 @@ def apply_reinfection_flows_with_strains(
                 source_filter.update(age_filter)
 
                 contact_rate_adjuster = strain_adjuster * suscept_adjs[age_group]
-                strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
+                strain_age_contact_rate = multiply_function_or_constant(
+                    contact_rate, contact_rate_adjuster
+                )
 
                 model.add_infection_frequency_flow(
                     FlowName.EARLY_REINFECTION,
@@ -120,7 +126,9 @@ def apply_reinfection_flows_with_strains(
                     )
 
 
-def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments: List[str]):
+def get_strain_strat(
+    voc_params: Optional[Dict[str, VocComponent]], compartments: List[str]
+):
     """
     Stratify the model by strain, with at least two strata, being wild or "ancestral" virus type and the variants of
     concern ("VoC").
@@ -139,51 +147,57 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
 
     # Process the requests
     strains = list(voc_params.keys())
-    affected_compartments = [comp for comp in compartments if comp != Compartment.SUSCEPTIBLE]
+    affected_compartments = [
+        comp for comp in compartments if comp != Compartment.SUSCEPTIBLE
+    ]
 
     # Check only one strain is specified as the starting strain
     msg = "More than one strain has been specified as the starting strain"
-    assert [voc_params[i_strain].starting_strain for i_strain in strains].count(True) == 1, msg
-    starting_strain = [i_strain for i_strain in strains if voc_params[i_strain].starting_strain][0]
+    assert [voc_params[i_strain].starting_strain for i_strain in strains].count(
+        True
+    ) == 1, msg
+    starting_strain = [
+        i_strain for i_strain in strains if voc_params[i_strain].starting_strain
+    ][0]
 
     # Create the stratification object
     strain_strat = StrainStratification("strain", strains, affected_compartments)
 
     # Population split
     msg = "Strain seed proportions do not sum to one"
-    assert sum([voc_params[i_strain].seed_prop for i_strain in strains]) == 1., msg
+    assert sum([voc_params[i_strain].seed_prop for i_strain in strains]) == 1.0, msg
     msg = "Currently requiring starting seed to all be assigned to the strain nominated as the starting strain"
-    assert voc_params[starting_strain].seed_prop == 1., msg
+    assert voc_params[starting_strain].seed_prop == 1.0, msg
     population_split = {strain: voc_params[strain].seed_prop for strain in strains}
     strain_strat.set_population_split(population_split)
 
     # Progression rate adjustments - applies to one or two flows for the progression through latency and active disease
-    adjustments = {strain: None for strain in strains}  # Start from blank adjustments sets
+    adjustments = {
+        strain: None for strain in strains
+    }  # Start from blank adjustments sets
     adjustments_active = {strain: None for strain in strains}
     for strain in strains:
         if voc_params[strain].relative_latency:
-            adjustments.update({strain: Multiply(1. / voc_params[strain].relative_latency)})  # Update for user requests
+            adjustments.update(
+                {strain: Multiply(1.0 / voc_params[strain].relative_latency)}
+            )  # Update for user requests
         if voc_params[strain].relative_active_period:
-            adjustments_active.update({strain: Multiply(1. / voc_params[strain].relative_active_period)})
+            adjustments_active.update(
+                {strain: Multiply(1.0 / voc_params[strain].relative_active_period)}
+            )
     if Compartment.LATENT_LATE in compartments:
         strain_strat.set_flow_adjustments(
-            FlowName.WITHIN_LATENT,
-            adjustments=adjustments
+            FlowName.WITHIN_LATENT, adjustments=adjustments
         )
     if Compartment.LATENT in compartments:
-        strain_strat.set_flow_adjustments(
-            FlowName.PROGRESSION,
-            adjustments=adjustments
-        )
+        strain_strat.set_flow_adjustments(FlowName.PROGRESSION, adjustments=adjustments)
     if Compartment.INFECTIOUS_LATE in compartments:
         strain_strat.set_flow_adjustments(
-            FlowName.WITHIN_INFECTIOUS,
-            adjustments=adjustments_active
+            FlowName.WITHIN_INFECTIOUS, adjustments=adjustments_active
         )
     if Compartment.INFECTIOUS in compartments:
         strain_strat.set_flow_adjustments(
-            FlowName.RECOVERY,
-            adjustments=adjustments_active
+            FlowName.RECOVERY, adjustments=adjustments_active
         )
 
     return strain_strat

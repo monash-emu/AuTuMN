@@ -1,11 +1,10 @@
 import pandas as pd
 
-
+from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.db import Database
 from autumn.tools.utils.utils import create_date_index
-from autumn.settings.constants import COVID_BASE_DATETIME
 
-from .fetch import COXS_VAC_DATA, COXS_DATA, VACC_FILE
+from .fetch import COXS_DATA, COXS_VAC_DATA, VACC_FILE
 
 
 def preprocess_covid_bgd(input_db: Database):
@@ -21,7 +20,8 @@ def preprocess_covid_bgd(input_db: Database):
 def process_coxs_bazar_vaccination(COXS_VAC_DATA: str) -> pd.DataFrame:
     df = pd.read_excel(COXS_VAC_DATA, usecols=[4, 5, 7, 8], skipfooter=1)
     df.rename(
-        columns={"# Total Vaccinated": "total_vaccinated", "First Dose": "dose"}, inplace=True
+        columns={"# Total Vaccinated": "total_vaccinated", "First Dose": "dose"},
+        inplace=True,
     )
     df = df.groupby(["Date", "dose"], as_index=False).sum()
     df = create_date_index(COVID_BASE_DATETIME, df, "Date")

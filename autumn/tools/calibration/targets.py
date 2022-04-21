@@ -1,13 +1,12 @@
-from typing import List, Tuple
 from abc import ABC, abstractmethod
+from typing import List, Tuple
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy import stats
-
 from summer.utils import ref_times_to_dti
 
-#from autumn.tools.project.timeseries import TimeSeries
+# from autumn.tools.project.timeseries import TimeSeries
 from .priors import UniformPrior
 
 
@@ -31,7 +30,7 @@ class PoissonTarget(BaseTarget):
     A calibration target sampled from a Poisson distribution
     """
 
-    def __init__(self, data:pd.Series, **kwargs):
+    def __init__(self, data: pd.Series, **kwargs):
         super().__init__(data, **kwargs)
         self.loglikelihood_distri = "poisson"
 
@@ -102,7 +101,13 @@ def get_dispersion_priors_for_gaussian_targets(targets: List[BaseTarget]):
 
     return priors
 
-def truncnormal_logpdf(target_data: np.ndarray, model_output: np.ndarray, trunc_vals: Tuple[float, float], sd: float):
+
+def truncnormal_logpdf(
+    target_data: np.ndarray,
+    model_output: np.ndarray,
+    trunc_vals: Tuple[float, float],
+    sd: float,
+):
     """
     Return the logpdf of a truncated normal target, with scaling transforms
     according to:

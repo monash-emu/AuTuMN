@@ -1,29 +1,37 @@
 import os
-import pandas as pd
-import numpy as np
-
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
-from autumn.settings import PASSWORD_ENVAR
 from getpass import getpass
+
+import numpy as np
+import pandas as pd
+
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+from autumn.settings import INPUT_DATA_PATH, PASSWORD_ENVAR, PROJECTS_PATH
 from autumn.tools.utils import secrets
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 
 COVID_AU_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_au")
 
 CHRIS_CSV = os.path.join(COVID_AU_DIRPATH, "monitoringreport.secret.csv")
-COVID_DHHS_DEATH_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_deaths.secret.csv")
-COVID_DHHS_CASE_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_cases.secret.csv")
-COVID_DHHS_ADMN_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_admissions.secret.csv")
-COVID_DHHS_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "monashmodelextract_vaccination.secret.csv")
+COVID_DHHS_DEATH_CSV = os.path.join(
+    COVID_AU_DIRPATH, "monashmodelextract_deaths.secret.csv"
+)
+COVID_DHHS_CASE_CSV = os.path.join(
+    COVID_AU_DIRPATH, "monashmodelextract_cases.secret.csv"
+)
+COVID_DHHS_ADMN_CSV = os.path.join(
+    COVID_AU_DIRPATH, "monashmodelextract_admissions.secret.csv"
+)
+COVID_DHHS_VAC_CSV = os.path.join(
+    COVID_AU_DIRPATH, "monashmodelextract_vaccination.secret.csv"
+)
 COVID_VIDA_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vida_vac.secret.csv")
 COVID_VIDA_POP_CSV = os.path.join(COVID_AU_DIRPATH, "vida_pop.csv")
 
 COVID_VAC_CSV = os.path.join(COVID_AU_DIRPATH, "vac_cov.csv")
 
-COVID_DHHS_POSTCODE_LGA_CSV = os.path.join(COVID_AU_DIRPATH, "postcode lphu concordance.csv")
+COVID_DHHS_POSTCODE_LGA_CSV = os.path.join(
+    COVID_AU_DIRPATH, "postcode lphu concordance.csv"
+)
 
 COVID_VICTORIA_TARGETS_CSV = os.path.join(
     PROJECTS_PATH, "covid_19", "victoria", "victoria", "targets.secret.json"
@@ -31,7 +39,9 @@ COVID_VICTORIA_TARGETS_CSV = os.path.join(
 
 # Two different mappings
 LGA_TO_CLUSTER = os.path.join(
-    INPUT_DATA_PATH, "mobility", "LGA to Cluster mapping dictionary with proportions.csv"
+    INPUT_DATA_PATH,
+    "mobility",
+    "LGA to Cluster mapping dictionary with proportions.csv",
 )
 
 LGA_TO_HSP = os.path.join(INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv")
@@ -147,7 +157,10 @@ def main():
     chris_hosp = load_chris_df(CHRIS_HOSPITAL)
 
     chris_df = chris_hosp.merge(
-        chris_icu, on=["date_index", "cluster_id"], how="outer", suffixes=("_hosp", "_icu")
+        chris_icu,
+        on=["date_index", "cluster_id"],
+        how="outer",
+        suffixes=("_hosp", "_icu"),
     )
     chris_df = chris_df.groupby(["date_index", "cluster_id"]).sum().reset_index()
 
@@ -172,7 +185,11 @@ def main():
             continue
 
         cluster_secrets_file = os.path.join(
-            PROJECTS_PATH, "covid_19", "victoria", cluster.lower(), "targets.secret.json"
+            PROJECTS_PATH,
+            "covid_19",
+            "victoria",
+            cluster.lower(),
+            "targets.secret.json",
         )
 
         cluster_df = cases.loc[cases.cluster_id == cluster]
@@ -200,8 +217,14 @@ def main():
 
 def merge_with_mapping_df(df, left_col_name):
 
-    df = df.merge(cluster_map_df, left_on=[left_col_name], right_on=["lga_name"], how="left")
-    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [0, "VIC", 1]
+    df = df.merge(
+        cluster_map_df, left_on=[left_col_name], right_on=["lga_name"], how="left"
+    )
+    df.loc[df.cluster_id.isna(), ["cluster_id", "cluster_name", "proportion"]] = [
+        0,
+        "VIC",
+        1,
+    ]
     df.cluster_id.replace(CLUSTER_MAP, inplace=True)
 
     return df
@@ -277,7 +300,9 @@ def load_chris_df(load: str):
     )
 
     df = df[df.type == load][["cluster_id", "state", "value", "E_F"]]
-    df["E_F"] = pd.to_datetime(df["E_F"], format="%d/%m/%Y %H:%M:%S", infer_datetime_format=True)
+    df["E_F"] = pd.to_datetime(
+        df["E_F"], format="%d/%m/%Y %H:%M:%S", infer_datetime_format=True
+    )
     df = create_date_index(COVID_BASE_DATETIME, df, "E_F")
 
     df = df.astype({"value": int})
@@ -285,7 +310,9 @@ def load_chris_df(load: str):
 
     # Sort and remove duplicates to obtain max for a given date.
     df.sort_values(
-        by=["cluster_id", "date_index", "value"], ascending=[True, True, False], inplace=True
+        by=["cluster_id", "date_index", "value"],
+        ascending=[True, True, False],
+        inplace=True,
     )
     df.drop_duplicates(["cluster_id", "date_index"], keep="first", inplace=True)
     df["cluster_id"] = df.cluster_id.replace(CHRIS_MAP)  # .str.lower()
@@ -358,7 +385,9 @@ def process_zip_files():
     for file, value in files_map.items():
         for each in os.listdir(COVID_AU_DIRPATH):
             if file in each:
-                pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(value, index=False)
+                pd.read_csv(os.path.join(COVID_AU_DIRPATH, each)).to_csv(
+                    value, index=False
+                )
                 os.remove(os.path.join(COVID_AU_DIRPATH, each))
 
 
@@ -409,7 +438,9 @@ def fetch_vac_model():
 
 
 def create_vic_total(df):
-    df = df.groupby(["date", "age_group", "vaccine_brand_name", "date_index"], as_index=False).sum()
+    df = df.groupby(
+        ["date", "age_group", "vaccine_brand_name", "date_index"], as_index=False
+    ).sum()
     df["lga"] = "VICTORIA"
 
     return df
@@ -425,15 +456,27 @@ def preprocess_vac_model(df):
     df["dose_1"] = df.dose_1 * df.proportion
     df["dose_2"] = df.dose_2 * df.proportion
     df = df[
-        ["vaccine_brand_name", "cluster_id", "age_group", "date_index", "date", "dose_1", "dose_2"]
+        [
+            "vaccine_brand_name",
+            "cluster_id",
+            "age_group",
+            "date_index",
+            "date",
+            "dose_1",
+            "dose_2",
+        ]
     ]
 
     df = df.groupby(
-        ["vaccine_brand_name", "cluster_id", "age_group", "date_index", "date"], as_index=False
+        ["vaccine_brand_name", "cluster_id", "age_group", "date_index", "date"],
+        as_index=False,
     ).sum()
-    df.sort_values(by=["vaccine_brand_name", "cluster_id", "age_group", "date_index"], inplace=True)
+    df.sort_values(
+        by=["vaccine_brand_name", "cluster_id", "age_group", "date_index"], inplace=True
+    )
     df.vaccine_brand_name.replace(
-        {"COVID-19 Vaccine AstraZeneca": "astra_zeneca", "Pfizer Comirnaty": "pfizer"}, inplace=True
+        {"COVID-19 Vaccine AstraZeneca": "astra_zeneca", "Pfizer Comirnaty": "pfizer"},
+        inplace=True,
     )
     df.age_group.replace({"85+": "85-89"}, inplace=True)
     df["start_age"] = df["age_group"].apply(lambda s: int(s.split("-")[0]))

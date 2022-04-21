@@ -73,10 +73,10 @@ def resume_calibration(
     logger.info(msg, num_chains, runtime, runner.instance["InstanceId"])
     run_id = None
 
-    app_name, region_name, _, orig_commit = baserun.split('/')
+    app_name, region_name, _, orig_commit = baserun.split("/")
 
     runner.print_hostname()
-    runner.set_run_id( baserun)
+    runner.set_run_id(baserun)
     runner.install_requirements()
     runner.read_secrets()
     run_id = runner.get_run_id(app_name, region_name)
@@ -92,6 +92,7 @@ def resume_calibration(
 
     return run_id
 
+
 def run_calibration(
     runner: SSHRunner,
     app_name: str,
@@ -102,9 +103,11 @@ def run_calibration(
 ):
     """Run calibration job on the remote server"""
     msg = "Running calibration %s %s with %s chains for %s seconds on AWS instance %s."
-    logger.info(msg, app_name, region_name, num_chains, runtime, runner.instance["InstanceId"])
+    logger.info(
+        msg, app_name, region_name, num_chains, runtime, runner.instance["InstanceId"]
+    )
     run_id = None
-    
+
     runner.print_hostname()
     runner.set_repo_to_commit(commit=commit)
     runner.install_requirements()
@@ -122,8 +125,5 @@ def run_calibration(
     return run_id
 
 
-
 LOGS_URL = "https://monashemu.grafana.net/explore?orgId=1&left=%5B%22now-1h%22,%22now%22,%22grafanacloud-monashemu-logs%22,%7B%22expr%22:%22%7Bjob%3D%5C%22app%5C%22%7D%20%7C%3D%20%5C%22${HOSTNAME}%5C%22%22%7D%5D"
 METRICS_URL = "https://monashemu.grafana.net/d/SkUUUHyMk/nodes?orgId=1&refresh=30s&var-datasource=grafanacloud-monashemu-prom&var-instance=${HOSTNAME}:12345"
-
-

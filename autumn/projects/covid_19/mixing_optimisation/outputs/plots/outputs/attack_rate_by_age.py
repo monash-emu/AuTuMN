@@ -6,7 +6,11 @@ from autumn.projects.covid_19.mixing_optimisation.constants import (
     PHASE_2_DURATION,
     PHASE_2_START_TIME,
 )
-from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
+from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
+    DURATIONS,
+    MODES,
+    OBJECTIVES,
+)
 from autumn.projects.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows import (
     apply_scenario_mask,
     get_output_data,
@@ -43,8 +47,12 @@ def main():
         plot_multicountry_attack_rates_by_age(all_derived_outputs, mode)
 
 
-def plot_attack_rates_by_age(all_derived_outputs, country, mode, duration, objective, ax):
-    derived_outputs = apply_scenario_mask(all_derived_outputs[country], mode, duration, objective)
+def plot_attack_rates_by_age(
+    all_derived_outputs, country, mode, duration, objective, ax
+):
+    derived_outputs = apply_scenario_mask(
+        all_derived_outputs[country], mode, duration, objective
+    )
 
     times = list(derived_outputs.times)
     phase_2_end_time = PHASE_2_START_TIME + PHASE_2_DURATION[duration]
@@ -58,7 +66,10 @@ def plot_attack_rates_by_age(all_derived_outputs, country, mode, duration, objec
     for age_index in range(16):
         age_group_name = "agegroup_" + str(int(5.0 * age_index))
         perc_reco = (
-            100 * list(derived_outputs[f"proportion_seropositiveX{age_group_name}"])[time_index]
+            100
+            * list(derived_outputs[f"proportion_seropositiveX{age_group_name}"])[
+                time_index
+            ]
         )
         heights.append(perc_reco)
 

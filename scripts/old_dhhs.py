@@ -2,9 +2,9 @@
 """
 Script for loading DHHS data into calibration targets and import inputs.
 """
+import json
 import os
 import sys
-import json
 from datetime import datetime, time
 from getpass import getpass
 
@@ -15,9 +15,7 @@ import pandas as pd
 BASE_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(BASE_DIR)
 
-from autumn import constants
-from autumn import secrets
-
+from autumn import constants, secrets
 
 DHHS_CSV = os.path.join(constants.INPUT_DATA_PATH, "monashmodelextract.secret.csv")
 CHRIS_CSV = os.path.join(constants.INPUT_DATA_PATH, "monitoringreport.secret.csv")
@@ -230,7 +228,16 @@ def load_dhhs_df(acquired: int):
     df = pd.read_csv(DHHS_CSV)
     df.date = pd.to_datetime(df["date"], infer_datetime_format=True)
     df = df[df.acquired == acquired][
-        ["date", "cluster", "new", "deaths", "incident_ward", "ward", "incident_icu", "icu"]
+        [
+            "date",
+            "cluster",
+            "new",
+            "deaths",
+            "incident_ward",
+            "ward",
+            "incident_icu",
+            "icu",
+        ]
     ]
     df = df.groupby(["date", "cluster"]).sum().reset_index()
     df["cluster_name"] = df.cluster
@@ -261,14 +268,18 @@ def load_chris_df(load: str):
     )
 
     df = df[df.type == load][["cluster_name", "state", "value", "E_F"]]
-    df["E_F"] = pd.to_datetime(df["E_F"], format="%d/%m/%Y %H:%M:%S", infer_datetime_format=True)
+    df["E_F"] = pd.to_datetime(
+        df["E_F"], format="%d/%m/%Y %H:%M:%S", infer_datetime_format=True
+    )
     df["date_index"] = (df["E_F"] - pd.datetime(2019, 12, 31)).dt.days
     df = df.astype({"value": int})
     df = df[["cluster_name", "date_index", "value"]]
 
     # Sort and remove duplicates to obtain max for a given date.
     df.sort_values(
-        by=["cluster_name", "date_index", "value"], ascending=[True, True, False], inplace=True
+        by=["cluster_name", "date_index", "value"],
+        ascending=[True, True, False],
+        inplace=True,
     )
     df.drop_duplicates(["cluster_name", "date_index"], keep="first", inplace=True)
     df["cluster_name"] = df.cluster_name.replace(CHRIS_MAP).str.lower()

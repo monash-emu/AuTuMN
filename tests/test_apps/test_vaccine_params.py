@@ -1,4 +1,5 @@
 import pytest
+
 from autumn.models.covid_19.strat_processing.vaccination import find_vaccine_action
 
 VACCINE_PARAM_TESTS = [
@@ -15,9 +16,12 @@ VACCINE_PARAM_TESTS = [
 
 
 @pytest.mark.parametrize(
-    "overall_eff, vacc_prevention, infection_efficacy, severity_efficacy", VACCINE_PARAM_TESTS
+    "overall_eff, vacc_prevention, infection_efficacy, severity_efficacy",
+    VACCINE_PARAM_TESTS,
 )
-def test_vaccine_params(overall_eff, vacc_prevention, infection_efficacy, severity_efficacy):
+def test_vaccine_params(
+    overall_eff, vacc_prevention, infection_efficacy, severity_efficacy
+):
     """
     Checking that converted parameters end up in the correct range, given sensible requests.
 

@@ -57,7 +57,9 @@ class FileDatabase(BaseDatabase, ABC):
         if not os.path.exists(database_path):
             os.makedirs(database_path)
         elif not os.path.isdir(database_path):
-            raise ValueError(f"FileDatabase requires a folder as a target: {database_path}")
+            raise ValueError(
+                f"FileDatabase requires a folder as a target: {database_path}"
+            )
 
         files = os.listdir(database_path)
         if not all(f.endswith(self.extension) for f in files):
@@ -78,7 +80,9 @@ class FileDatabase(BaseDatabase, ABC):
             # Only works with directorys with files inside.
             return False
 
-        is_correct_extension = all(f.endswith(cls.extension) for f in os.listdir(database_path))
+        is_correct_extension = all(
+            f.endswith(cls.extension) for f in os.listdir(database_path)
+        )
         return is_correct_extension
 
     def table_names(self):
@@ -228,12 +232,15 @@ class Database(BaseDatabase):
         self.engine = get_sql_engine(self.database_path)
 
     def dump_df(self, table_name: str, df: pd.DataFrame, append=True):
-        exists_mode = 'append' if append else 'replace'
+        exists_mode = "append" if append else "replace"
         df.to_sql(table_name, con=self.engine, if_exists=exists_mode, index=False)
 
     def query(
-        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {},
-        as_copy=True
+        self,
+        table_name: str,
+        columns: List[str] = [],
+        conditions: Dict[str, Any] = {},
+        as_copy=True,
     ) -> pd.DataFrame:
         """
         method to query table_name
@@ -261,7 +268,7 @@ class Database(BaseDatabase):
 
         if query not in self._cache:
             self._cache[query] = df = pd.read_sql_query(query, con=self.engine)
-        
+
         df = self._cache[query]
 
         # Backwards compatibility fix for old column names with square brackets
@@ -297,7 +304,9 @@ def get_database(database_path: str) -> BaseDatabase:
     raise ValueError(f"Could not find a database that works with path: {database_path}")
 
 
-def convert_database(orig_db: BaseDatabase, new_db_cls, new_db_path: str) -> BaseDatabase:
+def convert_database(
+    orig_db: BaseDatabase, new_db_cls, new_db_path: str
+) -> BaseDatabase:
     """Writes all data as a new_db_cls file, returning the new new_db_cls database"""
     new_db = new_db_cls(new_db_path)
     for table_name in orig_db.table_names():

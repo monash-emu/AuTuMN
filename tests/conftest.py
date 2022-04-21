@@ -21,10 +21,18 @@ get_in_memory_db_engine = in_memory_db_factory()
 
 
 def pytest_configure(config):
-    config.addinivalue_line("markers", "github_only: Mark test to run only in GitHub Actions")
-    config.addinivalue_line("markers", "local_only: Mark test to never run in GitHub Actions")
-    config.addinivalue_line("markers", "nightly_only: Mark test to run only in nightly testing")
-    config.addinivalue_line("markers", "calibrate_models: A test which runs full calibrations")
+    config.addinivalue_line(
+        "markers", "github_only: Mark test to run only in GitHub Actions"
+    )
+    config.addinivalue_line(
+        "markers", "local_only: Mark test to never run in GitHub Actions"
+    )
+    config.addinivalue_line(
+        "markers", "nightly_only: Mark test to run only in nightly testing"
+    )
+    config.addinivalue_line(
+        "markers", "calibrate_models: A test which runs full calibrations"
+    )
     config.addinivalue_line("markers", "run_models: A test which runs the full models")
     config.addinivalue_line(
         "markers", "benchmark: A test which benchmarks the performance of some code"
@@ -87,7 +95,9 @@ def verify(*args, **kwargs):
             if type(obj) is np.ndarray:
 
                 err_msg = f"Approval fixture array mismatch for {key}"
-                assert_allclose(obj, target, atol=1, rtol=0.02, err_msg=err_msg, verbose=True)
+                assert_allclose(
+                    obj, target, atol=1, rtol=0.02, err_msg=err_msg, verbose=True
+                )
             else:
                 assert obj == target, f"Approval fixture mismatch for {key}"
 

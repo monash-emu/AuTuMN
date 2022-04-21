@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.nightly
 @pytest.mark.github_only
 def test_run_stub_test():

@@ -1,12 +1,17 @@
 import json
 
-from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path,\
-    get_all_available_scenario_paths
+from autumn.models.sm_sir import base_params, build_model
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model
-from autumn.settings import Region, Models
+from autumn.tools.project import (
+    ParameterSet,
+    Project,
+    build_rel_path,
+    get_all_available_scenario_paths,
+    load_timeseries,
+)
 
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")
@@ -31,7 +36,7 @@ targets = [
     NormalTarget(notifications_ts),
     NormalTarget(icu_occupancy_ts),
     NormalTarget(hospital_occupancy_ts),
-    NormalTarget(infection_deaths_ts)
+    NormalTarget(infection_deaths_ts),
 ]
 
 priors = [
@@ -45,7 +50,10 @@ priors = [
 ]
 
 calibration = Calibration(
-    priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
+    priors=priors,
+    targets=targets,
+    random_process=None,
+    metropolis_init="current_params",
 )
 
 plot_spec_filepath = build_rel_path("timeseries.json")

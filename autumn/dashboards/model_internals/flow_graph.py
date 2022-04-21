@@ -163,7 +163,9 @@ def plot_flow_graph(plotter: StreamlitPlotter, project: Project):
         for node in graph.nodes:
             labels[node] = get_label(node)
 
-        nx.draw_networkx_labels(graph, pos, labels, font_size=8, verticalalignment="top", alpha=0.8)
+        nx.draw_networkx_labels(
+            graph, pos, labels, font_size=8, verticalalignment="top", alpha=0.8
+        )
 
     # Draw the edges between nodes.
     for edge in graph.edges:

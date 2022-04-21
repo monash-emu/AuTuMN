@@ -2,14 +2,17 @@ import os
 
 import pandas as pd
 
-from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
+from autumn.projects.covid_19.mixing_optimisation.constants import (
+    OPTI_REGIONS,
+    PHASE_2_START_TIME,
+)
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES
 from autumn.projects.covid_19.mixing_optimisation.utils import (
     get_country_population_size,
     get_scenario_mapping_reverse,
 )
-from autumn.tools.db.load import load_uncertainty_table
 from autumn.settings import BASE_PATH
+from autumn.tools.db.load import load_uncertainty_table
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,
@@ -100,7 +103,9 @@ def get_uncertainty_cell_value(
             value = who_deaths["by_january"][country]
 
         if per_capita:
-            country_name = country.title() if country != "united-kingdom" else "United Kingdom"
+            country_name = (
+                country.title() if country != "united-kingdom" else "United Kingdom"
+            )
             pop = get_country_population_size(country_name)
             value *= 1000 / pop * 1.0e6
             value = int(value)
@@ -144,14 +149,22 @@ def get_uncertainty_cell_value(
             "accum_years_of_life_lost": 1.0e4 / population,
             "proportion_seropositive": 100,
         }
-        rounding = {"accum_deaths": 0, "accum_years_of_life_lost": 0, "proportion_seropositive": 0}
+        rounding = {
+            "accum_deaths": 0,
+            "accum_years_of_life_lost": 0,
+            "proportion_seropositive": 0,
+        }
     if not per_capita:
         multiplier = {
             "accum_deaths": 1.0 / 1000.0,
             "accum_years_of_life_lost": 1.0 / 1000.0,
             "proportion_seropositive": 100,
         }
-        rounding = {"accum_deaths": 1, "accum_years_of_life_lost": 0, "proportion_seropositive": 0}
+        rounding = {
+            "accum_deaths": 1,
+            "accum_years_of_life_lost": 0,
+            "proportion_seropositive": 0,
+        }
 
     # read the percentile
     median = round(multiplier[type] * val_50, rounding[type])
@@ -196,7 +209,9 @@ def make_main_outputs_tables(uncertainty_dfs, per_capita=False):
     i_row = -1
     for i, country in enumerate(countries):
         uncertainty_df = uncertainty_dfs[country]
-        country_name = country.title() if country != "united-kingdom" else "United Kingdom"
+        country_name = (
+            country.title() if country != "united-kingdom" else "United Kingdom"
+        )
         population = get_country_population_size(country_name) if per_capita else None
 
         for mode in MODES:
@@ -207,7 +222,13 @@ def make_main_outputs_tables(uncertainty_dfs, per_capita=False):
                     print(output)
                     row_as_list.append(
                         get_uncertainty_cell_value(
-                            country, uncertainty_df, output, mode, duration, per_capita, population
+                            country,
+                            uncertainty_df,
+                            output,
+                            mode,
+                            duration,
+                            per_capita,
+                            population,
                         )
                     )
                 table.loc[i_row] = row_as_list
@@ -222,7 +243,9 @@ def print_who_deaths_per_capita(by="october"):
     deaths_thousands = who_deaths[f"by_{by}"]
 
     for country in ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]:
-        country_name = country.title() if country != "united-kingdom" else "United Kingdom"
+        country_name = (
+            country.title() if country != "united-kingdom" else "United Kingdom"
+        )
         pop = get_country_population_size(country_name)
         print(int(deaths_thousands[country] * 1000 / pop * 1.0e6))
 
@@ -257,7 +280,9 @@ def make_main_outputs_tables_new_messaging(uncertainty_dfs, per_capita=False):
     i_row = -1
     for i, country in enumerate(countries):
         uncertainty_df = uncertainty_dfs[country]
-        country_name = country.title() if country != "united-kingdom" else "United Kingdom"
+        country_name = (
+            country.title() if country != "united-kingdom" else "United Kingdom"
+        )
         population = get_country_population_size(country_name) if per_capita else None
 
         for mode in MODES:
@@ -268,7 +293,13 @@ def make_main_outputs_tables_new_messaging(uncertainty_dfs, per_capita=False):
                     print(output)
                     row_as_list.append(
                         get_uncertainty_cell_value(
-                            country, uncertainty_df, output, mode, duration, per_capita, population
+                            country,
+                            uncertainty_df,
+                            output,
+                            mode,
+                            duration,
+                            per_capita,
+                            population,
                         )
                     )
                 table.loc[i_row] = row_as_list

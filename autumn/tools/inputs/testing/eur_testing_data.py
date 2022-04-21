@@ -1,10 +1,10 @@
 import os
-import pandas as pd
 from datetime import datetime
 
-from autumn.settings.folders import INPUT_DATA_PATH
+import pandas as pd
 
 from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.settings.folders import INPUT_DATA_PATH
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
 EUR_TESTING_FOLDER = os.path.join(INPUT_DATA_PATH, "testing")
@@ -14,7 +14,9 @@ def get_uk_testing_numbers():
     data_path = os.path.join(EUR_TESTING_FOLDER, "UK", "data_2021-May-17.csv")
     data = pd.read_csv(data_path)
     data = data.dropna()
-    date_str_to_int = lambda s: (datetime.strptime(s, "%Y-%m-%d") - COVID_BASE_DATETIME).days
+    date_str_to_int = lambda s: (
+        datetime.strptime(s, "%Y-%m-%d") - COVID_BASE_DATETIME
+    ).days
     test_dates = list(data.date.apply(date_str_to_int).to_numpy())
     test_numbers = list(data.loc[:, "newVirusTests"])
 
@@ -27,7 +29,13 @@ def get_uk_testing_numbers():
 
 def get_eu_testing_numbers(iso3):
 
-    iso3_map = {"BEL": "Belgium", "FRA": "France", "ITA": "Italy", "ESP": "Spain", "SWE": "Sweden"}
+    iso3_map = {
+        "BEL": "Belgium",
+        "FRA": "France",
+        "ITA": "Italy",
+        "ESP": "Spain",
+        "SWE": "Sweden",
+    }
 
     data_path = os.path.join(EUR_TESTING_FOLDER, "EU", "download_18May2021.csv")
     data = pd.read_csv(data_path)
@@ -41,7 +49,9 @@ def get_eu_testing_numbers(iso3):
     year_week = list(national_data.year_week)
     n_tests_per_week = list(national_data.tests_done)
 
-    test_dates, test_numbers = convert_weekly_total_to_daily_numbers(year_week, n_tests_per_week)
+    test_dates, test_numbers = convert_weekly_total_to_daily_numbers(
+        year_week, n_tests_per_week
+    )
 
     return test_dates, test_numbers
 

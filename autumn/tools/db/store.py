@@ -11,7 +11,7 @@ import pandas as pd
 import yaml
 from summer.model import CompartmentalModel
 
-from autumn.tools.db.database import get_database, BaseDatabase
+from autumn.tools.db.database import BaseDatabase, get_database
 
 from . import process
 
@@ -73,7 +73,9 @@ def build_outputs_table(models: List[CompartmentalModel], run_id: int, chain_id=
     return outputs_df
 
 
-def build_derived_outputs_table(models: List[CompartmentalModel], run_id: int, chain_id=None):
+def build_derived_outputs_table(
+    models: List[CompartmentalModel], run_id: int, chain_id=None
+):
     derived_outputs_df = None
     for idx, model in enumerate(models):
         # Save model derived outputs

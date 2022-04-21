@@ -7,7 +7,6 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-
 from summer.model import CompartmentalModel
 
 from ..db.database import BaseDatabase, get_database
@@ -45,7 +44,11 @@ def load_models_from_database(project, database_path: str) -> List[Compartmental
         do_data = do_df[scenario_mask].to_dict()
         model.times = np.array(list(outputs_data["times"].values()))
         model.outputs = np.column_stack(
-            [list(column.values()) for key, column in outputs_data.items() if key not in ID_COLS]
+            [
+                list(column.values())
+                for key, column in outputs_data.items()
+                if key not in ID_COLS
+            ]
         )
         model.derived_outputs = {
             key: np.array(list(value.values()))
@@ -120,7 +123,11 @@ def load_derived_output_tables(calib_dirpath: str, column: str = None):
 def find_db_paths(dirpath: str):
     db_paths = []
     for fname in os.listdir(dirpath):
-        if fname.startswith("outputs") or fname.startswith("chain") or fname.startswith("powerbi"):
+        if (
+            fname.startswith("outputs")
+            or fname.startswith("chain")
+            or fname.startswith("powerbi")
+        ):
             fpath = os.path.join(dirpath, fname)
             db_paths.append(fpath)
 

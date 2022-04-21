@@ -10,16 +10,19 @@ import yaml
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from autumn.tools import db, inputs, plots
 from autumn.tools.plots.calibration.plots import (
+    calculate_r_hats,
     find_shortest_chain_length,
     get_epi_params,
     get_posterior,
-    calculate_r_hats,
 )
 from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.project import get_project
 from autumn.tools.streamlit import selectors
-from autumn.tools.streamlit.utils import create_downloadable_csv, round_sig_fig, Dashboard
-
+from autumn.tools.streamlit.utils import (
+    Dashboard,
+    create_downloadable_csv,
+    round_sig_fig,
+)
 
 dash = Dashboard()
 
@@ -52,10 +55,16 @@ def plot_acceptance_ratio(
     region: str,
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
-    burn_in = st.sidebar.slider("Burn in", 0, find_shortest_chain_length(mcmc_tables), 0)
+    burn_in = st.sidebar.slider(
+        "Burn in", 0, find_shortest_chain_length(mcmc_tables), 0
+    )
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
     plots.calibration.plots.plot_acceptance_ratio(
-        plotter, mcmc_tables, burn_in, label_font_size=label_font_size, dpi_request=dpi_request
+        plotter,
+        mcmc_tables,
+        burn_in,
+        label_font_size=label_font_size,
+        dpi_request=dpi_request,
     )
 
 
@@ -94,7 +103,9 @@ def plot_cdr_curves(
     testing_to_detection_values = []
     for i_chain in range(len(mcmc_params)):
         param_mask = mcmc_params[i_chain]["name"] == param_name
-        testing_to_detection_values += mcmc_params[i_chain]["value"][param_mask].tolist()
+        testing_to_detection_values += mcmc_params[i_chain]["value"][
+            param_mask
+        ].tolist()
 
     # Sample testing values from all the ones available, to avoid plotting too many curves
     if samples > len(testing_to_detection_values):
@@ -103,7 +114,9 @@ def plot_cdr_curves(
     sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
 
     # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
-    testing_pops = inputs.get_population_by_agegroup(agegroup_strata, iso3, None, year=testing_year)
+    testing_pops = inputs.get_population_by_agegroup(
+        agegroup_strata, iso3, None, year=testing_year
+    )
     detected_proportion = []
     for assumed_cdr_parameter in sampled_test_to_detect_vals:
         detected_proportion.append(
@@ -244,7 +257,10 @@ def plot_calibration_fit(
     available_outputs = [o["output_key"] for o in targets.values()]
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider(
-        "Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0
+        "Burn in (select 0 for default behaviour of discarding first half)",
+        0,
+        chain_length,
+        0,
     )
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
     is_logscale = st.sidebar.checkbox("Log scale")
@@ -280,7 +296,10 @@ def plot_multi_output_fit(
     is_logscale = st.sidebar.checkbox("Log scale")
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider(
-        "Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0
+        "Burn in (select 0 for default behaviour of discarding first half)",
+        0,
+        chain_length,
+        0,
     )
 
     # Get data for plotting
@@ -316,7 +335,9 @@ def plot_mcmc_parameter_trace(
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
-    plots.calibration.plots.plot_mcmc_parameter_trace(plotter, mcmc_params, burn_in, chosen_param)
+    plots.calibration.plots.plot_mcmc_parameter_trace(
+        plotter, mcmc_params, burn_in, chosen_param
+    )
 
 
 @dash.register("All param traces")
@@ -362,6 +383,7 @@ def plot_ll_or_posterior_vs_parameter(
     plots.calibration.plots.plot_single_param_loglike(
         plotter, mcmc_tables, mcmc_params, burn_in, chosen_param, posterior
     )
+
 
 @dash.register("Loglikelihood vs param")
 def plot_loglikelihood_vs_parameter(
@@ -422,7 +444,7 @@ def plot_ll_or_posterior_vs_all_params(
         label_font_size,
         capitalise_first_letter,
         dpi_request,
-        posterior
+        posterior,
     )
 
 
@@ -437,11 +459,9 @@ def plot_loglike_vs_all_params(
     region: str,
 ):
     plot_ll_or_posterior_vs_all_params(
-        plotter,
-        mcmc_tables,
-        mcmc_params,
-        posterior=False
+        plotter, mcmc_tables, mcmc_params, posterior=False
     )
+
 
 @dash.register("All posterior vs params")
 def plot_posterior_vs_all_params(
@@ -454,13 +474,8 @@ def plot_posterior_vs_all_params(
     region: str,
 ):
     plot_ll_or_posterior_vs_all_params(
-        plotter,
-        mcmc_tables,
-        mcmc_params,
-        posterior=True
+        plotter, mcmc_tables, mcmc_params, posterior=True
     )
-
-
 
 
 @dash.register("Posterior distributions")
@@ -702,9 +717,10 @@ def display_parameters_r_hats(
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
 
     r_hats = calculate_r_hats(mcmc_params, mcmc_tables, burn_in=burn_in)
-    st.write("Convergence R_hat statistics for each parameter.\nWe want these values to be as close as possible to 1 (ideally < 1.1).")
+    st.write(
+        "Convergence R_hat statistics for each parameter.\nWe want these values to be as close as possible to 1 (ideally < 1.1)."
+    )
     st.write(r_hats)
-
 
 
 def write_mcmc_centiles(
@@ -728,7 +744,9 @@ def write_mcmc_centiles(
     for param_name in parameters:
         param_values = get_posterior(mcmc_params, mcmc_tables, param_name, burn_in)
         centile_values = np.percentile(param_values, centiles)
-        rounded_centile_values = [round_sig_fig(i_value, sig_figs) for i_value in centile_values]
+        rounded_centile_values = [
+            round_sig_fig(i_value, sig_figs) for i_value in centile_values
+        ]
         params_df.loc[param_name] = rounded_centile_values
 
     # Display
@@ -749,12 +767,16 @@ def get_uncertainty_df(calib_dir_path, mcmc_tables, targets):
         max_run = mcmc_all_df["run"].max()
         half_max = max_run // 2
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(
+            mcmc_all_df, do_all_df, targets, True
+        )
     return uncertainty_df
 
 
 def get_uncertainty_data(calib_dir_path, mcmc_tables, output, burn_in):
-    derived_output_tables = db.load.load_derived_output_tables(calib_dir_path, column=output)
+    derived_output_tables = db.load.load_derived_output_tables(
+        calib_dir_path, column=output
+    )
     return plots.calibration.plots.sample_outputs_for_calibration_fit(
         output, mcmc_tables, derived_output_tables, burn_in=burn_in
     )
@@ -769,7 +791,9 @@ def create_seroprev_csv(seroprev_by_age):
     for age_group in seroprev_by_age.keys():
         for centile in seroprev_by_age[age_group]:
             if len(seroprev_by_age[age_group][centile]) == 1:
-                seroprev_by_age[age_group][centile] = seroprev_by_age[age_group][centile][0]
+                seroprev_by_age[age_group][centile] = seroprev_by_age[age_group][
+                    centile
+                ][0]
             elif len(seroprev_by_age[age_group][centile]) == 0:
                 seroprev_by_age[age_group][centile] = "no estimate"
 
@@ -784,7 +808,9 @@ def create_seroprev_csv(seroprev_by_age):
 def get_cdr_constants(default_params):
     iso3 = default_params["country"]["iso3"]
     testing_year = default_params["population"]["year"]
-    assumed_tests_parameter = default_params["testing_to_detection"]["assumed_tests_parameter"]
+    assumed_tests_parameter = default_params["testing_to_detection"][
+        "assumed_tests_parameter"
+    ]
     smoothing_period = default_params["testing_to_detection"]["smoothing_period"]
     agegroup_params = default_params["age_stratification"]
     time_params = default_params["time"]
@@ -822,6 +848,8 @@ def get_uncertainty_db(mcmc_tables, targets, calib_dir_path):
         max_run = mcmc_all_df["run"].max()
         half_max = max_run // 2
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(
+            mcmc_all_df, do_all_df, targets, True
+        )
 
     return uncertainty_df

@@ -8,7 +8,10 @@ You can access this script from your CLI by running:
 """
 import click
 
-from autumn.tools.registry import get_registered_model_names, get_registered_project_names
+from autumn.tools.registry import (
+    get_registered_model_names,
+    get_registered_project_names,
+)
 
 
 @click.group()
@@ -45,7 +48,9 @@ def calibrate_model(model, project, max_seconds, run_id, num_chains):
 @project.command("plotrmi")
 def plotting_project():
     """Plot all model outputs for the Marshall Islands project"""
-    from autumn.projects.tuberculosis.marshall_islands.outputs.main_script import make_all_rmi_plots
+    from autumn.projects.tuberculosis.marshall_islands.outputs.main_script import (
+        make_all_rmi_plots,
+    )
 
     make_all_rmi_plots()
 
@@ -61,13 +66,17 @@ def run_sample():
 @project.command("runsamplevaccopti")
 def run_sample():
     """Run sample code for optimisation"""
-    from autumn.projects.covid_19.vaccine_optimisation.sample_code import run_sample_code
+    from autumn.projects.covid_19.vaccine_optimisation.sample_code import (
+        run_sample_code,
+    )
 
     run_sample_code()
 
 
 @project.command("run_vaccopti_scenario_write")
 def run_vaccopti_scenario_write():
-    from autumn.projects.covid_19.vaccine_optimisation.utils import write_optimised_scenario
+    from autumn.projects.covid_19.vaccine_optimisation.utils import (
+        write_optimised_scenario,
+    )
 
     write_optimised_scenario()

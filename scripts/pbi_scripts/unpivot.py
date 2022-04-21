@@ -1,7 +1,7 @@
 import os
-import pandas as pd
 import sqlite3
 
+import pandas as pd
 
 db_path = "C:\\Users\Mili\Projects\covid_pbi\output_test"
 list_of_files = os.listdir(db_path)

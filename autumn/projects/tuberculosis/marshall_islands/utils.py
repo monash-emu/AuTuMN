@@ -1,14 +1,23 @@
 import yaml
 
-INTERVENTION_RATE = {"time_variant_acf": 1.66, "time_variant_ltbi_screening": .9}
+INTERVENTION_RATE = {"time_variant_acf": 1.66, "time_variant_ltbi_screening": 0.9}
 
-BASELINE_POST_INTERVENTION_RATE = {"time_variant_acf": 0.0, "time_variant_ltbi_screening": 0.0}
+BASELINE_POST_INTERVENTION_RATE = {
+    "time_variant_acf": 0.0,
+    "time_variant_ltbi_screening": 0.0,
+}
 
 # international immigration: 1,434 between April 2006 and March 2011 (5 years)
 N_IMMIGRANTS = 300  # per year
 SA_PARAM_VALUES = {
-    "sa_importation": [0, .1, .20, .30, .40],  # proportion of immigrants infected with LTBI
-    "sa_screening": [0.5, .6, .7, .8, .9],
+    "sa_importation": [
+        0,
+        0.1,
+        0.20,
+        0.30,
+        0.40,
+    ],  # proportion of immigrants infected with LTBI
+    "sa_screening": [0.5, 0.6, 0.7, 0.8, 0.9],
 }
 
 
@@ -30,8 +39,8 @@ def define_all_scenarios(periodic_frequencies=[2, 5, 10]):
         "time_variant_acf": [],
         "time_variant_ltbi_screening": [],
         "awareness_raising": {
-            "relative_screening_rate": 1.,
-            "scale_up_range": [3000, 3001]
+            "relative_screening_rate": 1.0,
+            "scale_up_range": [3000, 3001],
         },
     }
 
@@ -48,7 +57,9 @@ def define_all_scenarios(periodic_frequencies=[2, 5, 10]):
     for frequency in periodic_frequencies:
         sc_idx += 1
         scenario_details[sc_idx] = {"sc_title": f"ACF every {frequency} years"}
-        scenario_details[sc_idx]["params"] = get_periodic_sc_params(frequency, type="ACF")
+        scenario_details[sc_idx]["params"] = get_periodic_sc_params(
+            frequency, type="ACF"
+        )
 
     """
     Periodic ACF + LTBI screening scenarios
@@ -56,7 +67,9 @@ def define_all_scenarios(periodic_frequencies=[2, 5, 10]):
     for frequency in periodic_frequencies:
         sc_idx += 1
         scenario_details[sc_idx] = {"sc_title": f"ACF and LTBI every {frequency} years"}
-        scenario_details[sc_idx]["params"] = get_periodic_sc_params(frequency, type="ACF_LTBI")
+        scenario_details[sc_idx]["params"] = get_periodic_sc_params(
+            frequency, type="ACF_LTBI"
+        )
 
     """
     Sensitivity analysis around future diabetes prevalence
@@ -102,11 +115,21 @@ def get_periodic_sc_params(frequency, type="ACF"):
     params["time_variant_acf"] = [
         {
             "stratum_filter": {"location": "ebeye"},
-            "time_variant_screening_rate": {2017: 0.0, 2017.01: 1.9, 2018: 1.9, 2018.01: 0.0},
+            "time_variant_screening_rate": {
+                2017: 0.0,
+                2017.01: 1.9,
+                2018: 1.9,
+                2018.01: 0.0,
+            },
         },
         {
             "stratum_filter": {"location": "majuro"},
-            "time_variant_screening_rate": {2018: 0.0, 2018.01: INTERVENTION_RATE["time_variant_acf"], 2019: INTERVENTION_RATE["time_variant_acf"], 2019.01: 0.0},
+            "time_variant_screening_rate": {
+                2018: 0.0,
+                2018.01: INTERVENTION_RATE["time_variant_acf"],
+                2019: INTERVENTION_RATE["time_variant_acf"],
+                2019.01: 0.0,
+            },
         },
     ]
     params["time_variant_ltbi_screening"] = [
@@ -203,21 +226,19 @@ def make_sa_scenario_list(sa_type):
     for v in SA_PARAM_VALUES[sa_type]:
         if sa_type == "sa_importation":
             sc_dict = {
-                "time": {'start': 2015},
-                'import_ltbi_cases': {
+                "time": {"start": 2015},
+                "import_ltbi_cases": {
                     "start_time": 2016,
                     "n_cases_per_year": v * N_IMMIGRANTS,
-                }
+                },
             }
         elif sa_type == "sa_screening":
             sc_dict = {
-                "time": {'start': 2015},
-                'ltbi_screening_sensitivity': v,
+                "time": {"start": 2015},
+                "ltbi_screening_sensitivity": v,
             }
 
-        sa_scenarios.append(
-            sc_dict
-        )
+        sa_scenarios.append(sc_dict)
 
     return sa_scenarios
 

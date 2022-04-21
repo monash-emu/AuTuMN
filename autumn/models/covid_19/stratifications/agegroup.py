@@ -1,16 +1,16 @@
-from typing import List, Dict
-import numpy as np
+from typing import Dict, List
 
+import numpy as np
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
+from autumn.models.covid_19.constants import AGEGROUP_STRATA, COMPARTMENTS, INFECTION
 from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.covid_19.parameters import Parameters
 from autumn.tools.utils.utils import normalise_sequence
 
 
 def get_agegroup_strat(
-        params: Parameters, total_pops: List[int], mixing_matrices: Dict[str, np.ndarray]
+    params: Parameters, total_pops: List[int], mixing_matrices: Dict[str, np.ndarray]
 ) -> Stratification:
     """
     Function to create the age group stratification object.
@@ -33,15 +33,22 @@ def get_agegroup_strat(
     age_strat = Stratification("agegroup", AGEGROUP_STRATA, COMPARTMENTS)
 
     # Get dynamic age-specific mixing matrix
-    dynamic_mixing_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, params.country)
+    dynamic_mixing_matrix = build_dynamic_mixing_matrix(
+        mixing_matrices, params.mobility, params.country
+    )
     age_strat.set_mixing_matrix(dynamic_mixing_matrix)
 
     # Set distribution of starting population
-    age_split_props = {agegroup: prop for agegroup, prop in zip(AGEGROUP_STRATA, normalise_sequence(total_pops))}
+    age_split_props = {
+        agegroup: prop
+        for agegroup, prop in zip(AGEGROUP_STRATA, normalise_sequence(total_pops))
+    }
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group
     age_strat_suscept = params.age_stratification.susceptibility
-    age_strat.set_flow_adjustments(INFECTION, {sus: Multiply(value) for sus, value in age_strat_suscept.items()})
+    age_strat.set_flow_adjustments(
+        INFECTION, {sus: Multiply(value) for sus, value in age_strat_suscept.items()}
+    )
 
     return age_strat

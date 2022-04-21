@@ -14,7 +14,9 @@ class FilePlotter(BasePlotter):
         self.translation_dict = {t["output_key"]: t["title"] for t in targets.values()}
         self.out_dir = out_dir
 
-    def save_figure(self, fig, filename: str, subdir=None, title_text=None, dpi_request=300):
+    def save_figure(
+        self, fig, filename: str, subdir=None, title_text=None, dpi_request=300
+    ):
         """
         Args:
             fig: The figure to add the title to

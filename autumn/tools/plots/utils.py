@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Dict
+from typing import Dict, List
 
 import matplotlib.ticker as ticker
 from matplotlib import colors
@@ -85,13 +85,19 @@ REF_DATE = datetime.date(2019, 12, 31)
 
 
 def get_plot_text_dict(
-    param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True, get_short_text=False,
+    param_string,
+    capitalise_first_letter=False,
+    remove_underscore=True,
+    remove_dot=True,
+    get_short_text=False,
 ):
     """
     Get standard text for use in plotting as title, y-label, etc.
     """
 
-    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    text = (
+        PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    )
     if "end_asymptote" in param_string:
         text = text.replace("parameters.end_asymptote", "")
     if capitalise_first_letter:
@@ -130,7 +136,9 @@ def add_vertical_lines_to_plot(axis, lines: Dict):
 
         # Add the text to accompany it
         upper_ylim = axis.get_ylim()[1]
-        axis.text(x=position, y=upper_ylim * 0.97, s=text, rotation=90, ha="right", va="top")
+        axis.text(
+            x=position, y=upper_ylim * 0.97, s=text, rotation=90, ha="right", va="top"
+        )
 
 
 def add_horizontal_lines_to_plot(axis, lines: Dict):
@@ -167,7 +175,9 @@ def _apply_transparency(color_list: List[str], alphas: List[str]):
     return out_colors
 
 
-def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):
+def _plot_targets_to_axis(
+    axis, values: List[float], times: List[int], on_uncertainty_plot=False
+):
     """
     Plot output value calibration targets as points on the axis.
     # TODO: add back ability to plot confidence interval
@@ -189,11 +199,7 @@ def split_mcmc_outputs_by_chain(mcmc_params, mcmc_tables):
     chain_ids = mcmc_params[0]["chain"].unique().tolist()
     mcmc_params_list, mcmc_tables_list = [], []
     for i_chain in chain_ids:
-        mcmc_params_list.append(
-            mcmc_params[0][mcmc_params[0]["chain"] == i_chain]
-        )
-        mcmc_tables_list.append(
-            mcmc_tables[0][mcmc_tables[0]["chain"] == i_chain]
-        )
+        mcmc_params_list.append(mcmc_params[0][mcmc_params[0]["chain"] == i_chain])
+        mcmc_tables_list.append(mcmc_tables[0][mcmc_tables[0]["chain"] == i_chain])
 
     return mcmc_params_list, mcmc_tables_list

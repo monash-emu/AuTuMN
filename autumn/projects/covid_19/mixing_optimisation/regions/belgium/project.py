@@ -1,19 +1,18 @@
 import numpy as np
 
-from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
+from autumn.models.covid_19 import base_params, build_model
+from autumn.projects.covid_19.mixing_optimisation.constants import (
+    CALIBRATION_END,
+    CALIBRATION_START,
+)
+from autumn.projects.covid_19.mixing_optimisation.priors import PRIORS
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.targets import (
     TruncNormalTarget,
     get_dispersion_priors_for_gaussian_targets,
 )
-from autumn.models.covid_19 import base_params, build_model
-from autumn.settings import Region, Models
-
-from autumn.projects.covid_19.mixing_optimisation.priors import PRIORS
-from autumn.projects.covid_19.mixing_optimisation.constants import (
-    CALIBRATION_END,
-    CALIBRATION_START,
-)
+from autumn.tools.project import ParameterSet, Project, build_rel_path, load_timeseries
 
 # Load and configure model parameters.
 baseline_params = base_params.update(
@@ -57,5 +56,10 @@ with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
 project = Project(
-    Region.BELGIUM, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
+    Region.BELGIUM,
+    Models.COVID_19,
+    build_model,
+    param_set,
+    calibration,
+    plots=plot_spec,
 )

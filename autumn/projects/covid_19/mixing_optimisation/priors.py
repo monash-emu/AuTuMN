@@ -1,5 +1,6 @@
 import numpy as np
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
+
+from autumn.tools.calibration.priors import TruncNormalPrior, UniformPrior
 
 # Shared priors for mixing optimization calibration.
 PRIORS = [
@@ -24,8 +25,12 @@ PRIORS = [
     UniformPrior("clinical_stratification.props.symptomatic.multiplier", [0.6, 1.4]),
     UniformPrior("clinical_stratification.props.hospital.multiplier", [0.5, 1.5]),
     # Micro-distancing
-    UniformPrior("mobility.microdistancing.behaviour.parameters.inflection_time", [60, 130]),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.end_asymptote", [0.25, 0.80]),
+    UniformPrior(
+        "mobility.microdistancing.behaviour.parameters.inflection_time", [60, 130]
+    ),
+    UniformPrior(
+        "mobility.microdistancing.behaviour.parameters.end_asymptote", [0.25, 0.80]
+    ),
     # UniformPrior(
     #     "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time", [130, 250]
     # ),

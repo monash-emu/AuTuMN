@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 import pandas as pd
 
 from autumn.tools.utils.secrets import check_hash
@@ -21,9 +22,11 @@ def load_timeseries(path: str):
         data = json.load(f)
 
     out_dict = {}
-    
+
     for k, v in data.items():
-        out_dict[k] = pd.Series(data=v['values'], index=v['times'], name=v['output_key'])
+        out_dict[k] = pd.Series(
+            data=v["values"], index=v["times"], name=v["output_key"]
+        )
 
     return out_dict
 

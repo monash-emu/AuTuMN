@@ -25,7 +25,9 @@ def plot_uncertainty(targets: dict, powerbi_db_path: str, output_dir: str):
         scenario_idxs = uncertainty_df["scenario"].unique().tolist()
         for scenario_idx in scenario_idxs:
             logger.info(
-                "Plotting uncertainty for output %s, scenario %s", output_name, scenario_idx
+                "Plotting uncertainty for output %s, scenario %s",
+                output_name,
+                scenario_idx,
             )
             if scenario_idx == 0:
                 # Just plot the baseline scenario for the full time period.

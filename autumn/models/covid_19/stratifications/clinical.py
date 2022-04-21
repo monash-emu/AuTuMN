@@ -4,14 +4,21 @@ from typing import Dict
 from summer import Overwrite, Stratification
 
 from autumn.models.covid_19.constants import (
-    INFECTIOUS_COMPARTMENTS, Clinical, Compartment, CLINICAL_STRATA, PROGRESS, AGE_CLINICAL_TRANSITIONS
+    AGE_CLINICAL_TRANSITIONS,
+    CLINICAL_STRATA,
+    INFECTIOUS_COMPARTMENTS,
+    PROGRESS,
+    Clinical,
+    Compartment,
 )
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
-def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]]) -> Stratification:
+def get_clinical_strat(
+    params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]]
+) -> Stratification:
     """
     Stratify the infectious compartments of the covid model by "clinical" status, into the following five groups:
 
@@ -35,7 +42,9 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
 
     """
 
-    clinical_strat = Stratification("clinical", CLINICAL_STRATA, INFECTIOUS_COMPARTMENTS)
+    clinical_strat = Stratification(
+        "clinical", CLINICAL_STRATA, INFECTIOUS_COMPARTMENTS
+    )
     clinical_params = params.clinical_stratification
 
     """
@@ -44,9 +53,13 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
 
     # Start from blank adjustments, then apply to both the late incubation and early active compartments
     non_isolated_adjustments = {stratum: None for stratum in CLINICAL_STRATA}
-    non_isolated_adjustments.update({Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)})
+    non_isolated_adjustments.update(
+        {Clinical.NON_SYMPT: Overwrite(clinical_params.non_sympt_infect_multiplier)}
+    )
     for compartment in INFECTIOUS_COMPARTMENTS[:-1]:
-        clinical_strat.add_infectiousness_adjustments(compartment, non_isolated_adjustments)
+        clinical_strat.add_infectiousness_adjustments(
+            compartment, non_isolated_adjustments
+        )
 
     # Pick up where we left for the first two compartments and update for the isolated/hospitalised (last three strata)
     late_active_adjustments = copy.copy(non_isolated_adjustments)
@@ -55,7 +68,9 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
         late_active_adjustments.update({stratum: late_active_adj})
 
     # Apply to the compartment
-    clinical_strat.add_infectiousness_adjustments(Compartment.LATE_ACTIVE, late_active_adjustments)
+    clinical_strat.add_infectiousness_adjustments(
+        Compartment.LATE_ACTIVE, late_active_adjustments
+    )
 
     """
     Adjustments to flows.
@@ -65,17 +80,29 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
 
         # Get all the adjustments in the same way as we will do for the immunity and vaccination stratifications
         adjs = get_all_adjustments(
-            clinical_params, params.country, params.population, params.infection_fatality.props, params.sojourn,
-            stratified_adjusters[voc]["sympt"], stratified_adjusters[voc]["hosp"], stratified_adjusters[voc]["ifr"],
+            clinical_params,
+            params.country,
+            params.population,
+            params.infection_fatality.props,
+            params.sojourn,
+            stratified_adjusters[voc]["sympt"],
+            stratified_adjusters[voc]["hosp"],
+            stratified_adjusters[voc]["ifr"],
         )
 
         # Assign all the adjustments to the summer model
-        voc_stratum = {"strain": voc} if params.voc_emergence else {}  # *** Don't filter by VoC if there are no VoCs
+        voc_stratum = (
+            {"strain": voc} if params.voc_emergence else {}
+        )  # *** Don't filter by VoC if there are no VoCs
         for agegroup in AGEGROUP_STRATA:
             source = {"agegroup": agegroup}
             source.update(voc_stratum)
-            clinical_strat.set_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified
+            clinical_strat.set_flow_adjustments(
+                PROGRESS, adjs[PROGRESS], source_strata=source
+            )  # Not age-stratified
             for transition in AGE_CLINICAL_TRANSITIONS:
-                clinical_strat.set_flow_adjustments(transition, adjs[transition][agegroup], source_strata=source)
+                clinical_strat.set_flow_adjustments(
+                    transition, adjs[transition][agegroup], source_strata=source
+                )
 
     return clinical_strat

@@ -33,10 +33,14 @@ def test_plot_post_calibration(tmp_path):
 
     # A dummy prior to pass postirior checks
     priors = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.01, 0.03]}
+        {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [0.01, 0.03],
+        }
     ]
 
-    funcs = [lambda t: 2 * t + random.random(), lambda t: t ** 3 + random.random()]
+    funcs = [lambda t: 2 * t + random.random(), lambda t: t**3 + random.random()]
     # Build data for plotting
     do_df, mcmc_df, params_df = build_synthetic_calibration(
         targets, funcs, chains=2, runs=20, times=20
@@ -92,9 +96,11 @@ def test_plot_uncertainty(tmp_path):
             "quantiles": [0.25, 0.5, 0.75],
         },
     }
-    funcs = [lambda t: 2 * t + random.random(), lambda t: t ** 3 + random.random()]
+    funcs = [lambda t: 2 * t + random.random(), lambda t: t**3 + random.random()]
     # Build data for plotting
-    do_df, mcmc_df, _ = build_synthetic_calibration(targets, funcs, chains=2, runs=20, times=20)
+    do_df, mcmc_df, _ = build_synthetic_calibration(
+        targets, funcs, chains=2, runs=20, times=20
+    )
     unc_df = calculate_mcmc_uncertainty(mcmc_df, do_df, targets)
     # Create database for plotting
     db = Database(powerbi_db_path)
@@ -105,6 +111,8 @@ def test_plot_uncertainty(tmp_path):
     plot_uncertainty(targets, powerbi_db_path, output_dir)
     # Check plots
     expected_foo_path = os.path.join(tmp_path, "foo", "uncertainty-foo-0.png")
-    expected_incidence_path = os.path.join(tmp_path, "incidence", "uncertainty-incidence-0.png")
+    expected_incidence_path = os.path.join(
+        tmp_path, "incidence", "uncertainty-incidence-0.png"
+    )
     assert os.path.exists(expected_foo_path)
     assert os.path.exists(expected_incidence_path)

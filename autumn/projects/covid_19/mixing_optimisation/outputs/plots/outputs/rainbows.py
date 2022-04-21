@@ -13,11 +13,17 @@ from autumn.projects.covid_19.mixing_optimisation.constants import (
     PHASE_2_DURATION,
     PHASE_2_START_TIME,
 )
-from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
-from autumn.projects.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
+from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
+    DURATIONS,
+    MODES,
+    OBJECTIVES,
+)
+from autumn.projects.covid_19.mixing_optimisation.utils import (
+    get_scenario_mapping_reverse,
+)
+from autumn.settings import BASE_PATH
 from autumn.tools.db import Database
 from autumn.tools.db.load import find_db_paths, load_derived_output_tables
-from autumn.settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,
@@ -107,8 +113,12 @@ def plot_stacked_outputs_by_stratum(
     times = times_base + times_sc
 
     if output_name == "recovered":
-        base_compartments_df = base_output_df.drop(["chain", "run", "scenario", "times"], axis=1)
-        sc_compartments_df = sc_output_df.drop(["chain", "run", "scenario", "times"], axis=1)
+        base_compartments_df = base_output_df.drop(
+            ["chain", "run", "scenario", "times"], axis=1
+        )
+        sc_compartments_df = sc_output_df.drop(
+            ["chain", "run", "scenario", "times"], axis=1
+        )
 
     legend = []
 
@@ -158,7 +168,10 @@ def plot_stacked_outputs_by_stratum(
         values_1 = [0] * len(times_sc)
         for out in relevant_output_names:
             values_0 = [
-                v + d for (v, d) in zip(values_0, list(base_output_df[out])[: base_last_time - 1])
+                v + d
+                for (v, d) in zip(
+                    values_0, list(base_output_df[out])[: base_last_time - 1]
+                )
             ]
             values_1 = [v + d for (v, d) in zip(values_1, list(sc_output_df[out]))]
 
@@ -230,7 +243,9 @@ def plot_multicountry_rainbow(
     fig = pyplot.figure(constrained_layout=True, figsize=(20, fig_h))  # (w, h)
 
     widths = [1, 6, 6, 6, 2]
-    spec = fig.add_gridspec(ncols=5, nrows=len(heights), width_ratios=widths, height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=5, nrows=len(heights), width_ratios=widths, height_ratios=heights
+    )
 
     output_names = ["incidence", "infection_deaths", "recovered"]
     output_titles = ["Daily disease incidence", "Daily deaths", "Percentage recovered"]
@@ -242,12 +257,16 @@ def plot_multicountry_rainbow(
     text_size = 23
 
     for i, country in enumerate(countries):
-        base_derived_output_df = apply_scenario_mask(all_derived_outputs[country], None, None, None)
+        base_derived_output_df = apply_scenario_mask(
+            all_derived_outputs[country], None, None, None
+        )
         sc_derived_output_df = apply_scenario_mask(
             all_derived_outputs[country], mode, duration, objective
         )
         base_output_df = apply_scenario_mask(all_outputs[country], None, None, None)
-        sc_output_df = apply_scenario_mask(all_outputs[country], mode, duration, objective)
+        sc_output_df = apply_scenario_mask(
+            all_outputs[country], mode, duration, objective
+        )
 
         i_grid = i + 2 if include_config else i + 1
         for j, output_name in enumerate(output_names):

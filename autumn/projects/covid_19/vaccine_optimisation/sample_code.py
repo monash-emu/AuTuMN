@@ -1,10 +1,10 @@
+import numpy as np
+import yaml
+
 from autumn.projects.covid_19.vaccine_optimisation.vaccine_opti import (
     get_decision_vars_names,
     initialise_opti_object,
 )
-
-import numpy as np
-import yaml
 
 COUNTRY = "malaysia"  # should use "malaysia" or "philippines"
 
@@ -24,12 +24,16 @@ def run_sample_code():
     # create_scenario_yml_file(COUNTRY, decision_vars, sc_index=6)
 
     # Evaluate objective function
-    [total_deaths, max_hospital, relaxation] = opti_object.evaluate_objective(decision_vars)
+    [total_deaths, max_hospital, relaxation] = opti_object.evaluate_objective(
+        decision_vars
+    )
 
     # Print decision vars and outputs
     print(get_decision_vars_names())
     print(f"Decision variables: {decision_vars}")
-    print(f"N deaths: {total_deaths} / Max hospital: {max_hospital} / Relaxation: {relaxation}")
+    print(
+        f"N deaths: {total_deaths} / Max hospital: {max_hospital} / Relaxation: {relaxation}"
+    )
 
 
 def dump_decision_vars_sample(n_samples):

@@ -9,9 +9,9 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
     save_figure,
 )
+from autumn.settings import BASE_PATH
 from autumn.tools.db.load import load_uncertainty_table
 from autumn.tools.plots.uncertainty.plots import plot_timeseries_with_uncertainty
-from autumn.settings import BASE_PATH
 
 
 def main(data_path, output_path):
@@ -30,13 +30,20 @@ def plot_counterfactual(uncertainty_df, figure_path):
     panel_w = 7
 
     y_max = {
-        "incidence": 900, "mortality": 250, "percentage_latent": 55, "notifications": 600
+        "incidence": 900,
+        "mortality": 250,
+        "percentage_latent": 55,
+        "notifications": 600,
     }
 
     widths = [panel_w] * 3
     heights = [0.5] + [panel_h] * 4
-    fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
-    spec = fig.add_gridspec(ncols=3, nrows=5, width_ratios=widths, height_ratios=heights)
+    fig = pyplot.figure(
+        constrained_layout=True, figsize=(sum(widths), sum(heights))
+    )  # (w, h)
+    spec = fig.add_gridspec(
+        ncols=3, nrows=5, width_ratios=widths, height_ratios=heights
+    )
 
     for j, region in enumerate(regions):
         ax = fig.add_subplot(spec[0, j])
@@ -74,7 +81,7 @@ def plot_counterfactual(uncertainty_df, figure_path):
                 x_axis_to_date=False,
                 start_quantile=0,
                 overlay_uncertainty=True,
-                legend=False
+                legend=False,
             )
 
             if output != "notifications":

@@ -5,6 +5,7 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
 )
 from autumn.tools.db.load import load_uncertainty_table
 
+
 def main(data_path, output_path):
     figure_path = os.path.join(output_path, "output_numbers")
     make_output_directories(figure_path)
@@ -24,7 +25,9 @@ def main(data_path, output_path):
     for region in ["majuro", "ebeye"]:
         for year in [2020, 2050]:
             for scenario in [1, 0]:
-                print_median_and_ci(uncertainty_df, f"incidenceXlocation_{region}", year, scenario)
+                print_median_and_ci(
+                    uncertainty_df, f"incidenceXlocation_{region}", year, scenario
+                )
 
     # diabetes scenarios
     print()

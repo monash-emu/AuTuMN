@@ -33,7 +33,9 @@ def _trigger_pipeline(pipeline_data: dict):
     logger.info("Triggering Buildkite pipeline:\n%s", data_str)
     yaml_str = yaml.dump(pipeline_data)
     cmd = f"buildkite-agent pipeline upload"
-    proc = sp.run(cmd, shell=True, check=True, input=yaml_str, stdout=sp.PIPE, encoding="utf-8")
+    proc = sp.run(
+        cmd, shell=True, check=True, input=yaml_str, stdout=sp.PIPE, encoding="utf-8"
+    )
     stdout = proc.stdout.strip() if proc.stdout else ""
     stderr = proc.stderr.strip() if proc.stderr else ""
     if stdout:
@@ -42,7 +44,9 @@ def _trigger_pipeline(pipeline_data: dict):
         logger.info("stderr for trigger pipeline: %s", stderr)
 
 
-def trigger_pipeline(label: str, target: str, msg: str, env: dict = None, meta: dict = None):
+def trigger_pipeline(
+    label: str, target: str, msg: str, env: dict = None, meta: dict = None
+):
     env = env or {}
     meta = meta or {}
     pipeline_data = {
@@ -78,7 +82,9 @@ class Pipeline:
 
 
 class CommandStep:
-    def __init__(self, key: str, command: str, depends_on=None, allow_dependency_failure=False):
+    def __init__(
+        self, key: str, command: str, depends_on=None, allow_dependency_failure=False
+    ):
         self.key = key
         self.depends_on = depends_on
         self.command = command
@@ -164,7 +170,9 @@ class SelectInputField(BaseInputField):
     def __init__(self, options: list, *args, **kwargs):
         self.options = options
         if not callable(options):
-            assert all([type(o) is dict and "label" in o and "value" in o for o in options])
+            assert all(
+                [type(o) is dict and "label" in o and "value" in o for o in options]
+            )
         super().__init__(*args, **kwargs)
 
     def to_dict(self):
@@ -180,7 +188,10 @@ class BooleanInputField(BaseInputField):
         return {
             **super().to_dict(),
             "select": self.title,
-            "options": [{"label": "Yes", "value": "yes"}, {"label": "No", "value": "no"}],
+            "options": [
+                {"label": "Yes", "value": "yes"},
+                {"label": "No", "value": "no"},
+            ],
         }
 
     def get_option(self, value: bool):

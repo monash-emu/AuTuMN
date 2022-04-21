@@ -47,7 +47,9 @@ def main():
                 all_results[country][mode][duration] = {}
                 for objective in OBJECTIVES:
 
-                    all_results[country][mode][duration][objective] = read_decision_vars(
+                    all_results[country][mode][duration][
+                        objective
+                    ] = read_decision_vars(
                         opti_outputs_df, country, mode, duration, objective
                     )
 
@@ -86,7 +88,16 @@ def plot_optimal_plan(all_results, duration, country, mode, ax):
         for direction in directions:
             path = os.path.join(
                 dir_path,
-                country + "_" + mode + "_" + duration + "_" + objective + "_" + direction + ".yml",
+                country
+                + "_"
+                + mode
+                + "_"
+                + duration
+                + "_"
+                + objective
+                + "_"
+                + direction
+                + ".yml",
             )
             try:
                 with open(path, "r") as yaml_file:
@@ -121,7 +132,11 @@ def plot_optimal_plan(all_results, duration, country, mode, ax):
                     arrow_length *= -1.0
                 _x = x_pos + delta_xpos * bar_width + 0.5 * bar_width
                 ax.plot(
-                    (_x, _x), (value, value + arrow_length), color="black", linewidth=1.5, zorder=3
+                    (_x, _x),
+                    (value, value + arrow_length),
+                    color="black",
+                    linewidth=1.5,
+                    zorder=3,
                 )
 
                 ymax = max([ymax, value + arrow_length])
@@ -144,7 +159,9 @@ def plot_optimal_plan(all_results, duration, country, mode, ax):
         minor_ticks = [1, 2, 3]
 
         ylab = "Relative contact rate"
-        ax.set_xticklabels(("other locations", "schools", "workplaces"), minor=True, fontsize=13)
+        ax.set_xticklabels(
+            ("other locations", "schools", "workplaces"), minor=True, fontsize=13
+        )
 
     # ax.axhline(y=0.1, color='dimgrey', dashes=(1.2, 1.2), zorder=-10)
     # ax.axhline(y=1., color='dimgrey', dashes=(1.2, 1.2), linewidth=1., zorder=-10)
@@ -169,12 +186,16 @@ def plot_multicountry_optimal_plan(all_results, mode):
     pyplot.style.use("default")
 
     fig_width = {"by_age": 20, "by_location": 12}
-    fig = pyplot.figure(constrained_layout=True, figsize=(fig_width[mode], 20))  # (w, h)
+    fig = pyplot.figure(
+        constrained_layout=True, figsize=(fig_width[mode], 20)
+    )  # (w, h)
     pyplot.rcParams["font.family"] = "Times New Roman"
 
     widths = [1, 8, 8]
     heights = [1, 4, 4, 4, 4, 4, 4]
-    spec = fig.add_gridspec(ncols=3, nrows=7, width_ratios=widths, height_ratios=heights, hspace=0)
+    spec = fig.add_gridspec(
+        ncols=3, nrows=7, width_ratios=widths, height_ratios=heights, hspace=0
+    )
     text_size = 23
 
     countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]

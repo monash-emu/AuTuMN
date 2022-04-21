@@ -7,8 +7,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from autumn.tools.inputs.database import get_input_db
 from autumn.settings import Region
+from autumn.tools.inputs.database import get_input_db
 
 INF = float("inf")
 MAPPING_ISO_CODE = {
@@ -38,13 +38,20 @@ def _get_death_rates(country_iso_code: str):
     # Combine population and total death data so we can calulate death rate.
     # Throws away data for population over 100 y.o.
     rate_df = pd.merge(
-        death_df, pop_df, left_on=["start_year", "start_age"], right_on=["year", "start_age"]
+        death_df,
+        pop_df,
+        left_on=["start_year", "start_age"],
+        right_on=["year", "start_age"],
     )
 
-    rate_df["population"] = rate_df["population"].where(rate_df["population"] > 0.0, 1.0)
+    rate_df["population"] = rate_df["population"].where(
+        rate_df["population"] > 0.0, 1.0
+    )
 
     # Calculate death rate.
-    rate_df["death_rate"] = rate_df["death_count"] / (rate_df["population"] * rate_df["period"])
+    rate_df["death_rate"] = rate_df["death_count"] / (
+        rate_df["population"] * rate_df["period"]
+    )
 
     cols = ["mean_year", "start_age", "death_rate"]
     rate_df = rate_df.drop(columns=[c for c in rate_df.columns if c not in cols])
@@ -54,13 +61,19 @@ def _get_death_rates(country_iso_code: str):
 
 def _get_life_expectancy(country_iso_code: str):
     input_db = get_input_db()
-    expectancy_df = input_db.query("life_expectancy", conditions={"iso3": country_iso_code})
+    expectancy_df = input_db.query(
+        "life_expectancy", conditions={"iso3": country_iso_code}
+    )
 
     # Calculate mean year
-    expectancy_df["mean_year"] = (expectancy_df["start_year"] + expectancy_df["end_year"]) / 2
+    expectancy_df["mean_year"] = (
+        expectancy_df["start_year"] + expectancy_df["end_year"]
+    ) / 2
 
     cols = ["mean_year", "start_age", "life_expectancy"]
-    expectancy_df = expectancy_df.drop(columns=[c for c in expectancy_df.columns if c not in cols])
+    expectancy_df = expectancy_df.drop(
+        columns=[c for c in expectancy_df.columns if c not in cols]
+    )
     expectancy_df = expectancy_df.sort_values(["mean_year", "start_age"])
     return expectancy_df
 
@@ -89,7 +102,9 @@ def get_death_rates_by_agegroup(age_breakpoints: List[float], country_iso_code: 
     return death_rates_by_agegroup, years
 
 
-def get_life_expectancy_by_agegroup(age_breakpoints: List[float], country_iso_code: str):
+def get_life_expectancy_by_agegroup(
+    age_breakpoints: List[float], country_iso_code: str
+):
     """
     Find life expectancy from UN data that are specific to the age groups provided.
     Returns a list of life expectancy and a list of years.
@@ -104,7 +119,9 @@ def get_life_expectancy_by_agegroup(age_breakpoints: List[float], country_iso_co
         orig_expectancy = life_expectancy_df[life_expectancy_df["mean_year"] == year][
             "life_expectancy"
         ].tolist()
-        new_expectancy = downsample_rate(orig_expectancy, orig_ages, year_step, age_breakpoints)
+        new_expectancy = downsample_rate(
+            orig_expectancy, orig_ages, year_step, age_breakpoints
+        )
         year_expectancy[year] = new_expectancy
 
     life_expectancy_by_agegroup = {}
@@ -141,7 +158,10 @@ def get_crude_birth_rate(country_iso_code: str):
 
 
 def get_population_by_agegroup(
-    age_breakpoints: List[int], country_iso_code: str, region: str = None, year: int = 2020
+    age_breakpoints: List[int],
+    country_iso_code: str,
+    region: str = None,
+    year: int = 2020,
 ):
     """
     Find population for age bins.
@@ -154,14 +174,16 @@ def get_population_by_agegroup(
     input_db = get_input_db()
 
     # Work out the year that is nearest to the requested year, among available years.
-    available_years = list(input_db.query(
-        "population",
-        conditions={
-            "iso3": country_iso_code,
-            "region": region or None,
-        },
-    )["year"].unique())
-    nearest_year = min(available_years, key=lambda x: abs(x-year))
+    available_years = list(
+        input_db.query(
+            "population",
+            conditions={
+                "iso3": country_iso_code,
+                "region": region or None,
+            },
+        )["year"].unique()
+    )
+    nearest_year = min(available_years, key=lambda x: abs(x - year))
 
     pop_df = input_db.query(
         "population",
@@ -181,7 +203,7 @@ def get_population_by_agegroup(
     # Inflate population from 9 to 12 million to account for workers coming from other regions
     # Information communicated by Hoang Anh via Slack on 19 Aug 2021
     if region == "Ho Chi Minh City":
-        population = [p * 11. / 9. for p in population]
+        population = [p * 11.0 / 9.0 for p in population]
 
     # Inflate population of Hanoi, Vietnam from 8.053 to 10.5 million people as of 2020
     # Source: https://congan.com.vn/tin-chinh/dan-so-ha-noi-du-bao-2020-tang-gan-bang-du-bao-cua-nam-2030_81257.html
@@ -191,22 +213,31 @@ def get_population_by_agegroup(
     return [int(p) for p in population]
 
 
-def convert_ifr_agegroups(raw_ifr_props: list, iso3: str, pop_region: str, pop_year: int) -> list:
+def convert_ifr_agegroups(
+    raw_ifr_props: list, iso3: str, pop_region: str, pop_year: int
+) -> list:
     """
     Converts the IFRs from the age groups they were provided in to the ones needed for the model.
     """
 
     # Work out the proportion of 80+ years old among the 75+ population
-    elderly_populations = get_population_by_agegroup([0, 75, 80], iso3, pop_region, year=pop_year)
+    elderly_populations = get_population_by_agegroup(
+        [0, 75, 80], iso3, pop_region, year=pop_year
+    )
     prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
 
     # Calculate 75+ age bracket as weighted average between 75-79 and 80+
-    ifr_over75 = raw_ifr_props[-1] * prop_over_80 + raw_ifr_props[-2] * (1. - prop_over_80)
+    ifr_over75 = raw_ifr_props[-1] * prop_over_80 + raw_ifr_props[-2] * (
+        1.0 - prop_over_80
+    )
     return [*raw_ifr_props[:-2], ifr_over75]
 
 
 def downsample_rate(
-    orig_rates: List[float], orig_bins: List[float], orig_step: float, new_bins: List[float]
+    orig_rates: List[float],
+    orig_bins: List[float],
+    orig_step: float,
+    new_bins: List[float],
 ):
     """
     Downsample original rates from their current bins to new bins
@@ -229,7 +260,9 @@ def downsample_rate(
     return new_rates
 
 
-def downsample_quantity(orig_vals: List[float], orig_bins: List[float], new_bins: List[float]):
+def downsample_quantity(
+    orig_vals: List[float], orig_bins: List[float], new_bins: List[float]
+):
     """
     Downsample original values from their current bins to new bins
     Assume new bins are smaller than, or equal to, the original bins
@@ -279,7 +312,9 @@ def get_bin_weights(orig_bins: List[float], new_bins: List[float]):
             elif orig_start <= new_start < orig_end:
                 # New bin starts at start, or half way through an old bin
                 # We get a fraction of the end of the bin
-                weights[i_o, i_n] = (min(new_end, orig_end) - new_start) / (orig_end - orig_start)
+                weights[i_o, i_n] = (min(new_end, orig_end) - new_start) / (
+                    orig_end - orig_start
+                )
             elif new_start < orig_start and new_end >= orig_end:
                 # New bin encompasses old bin, add the whole thing
                 weights[i_o, i_n] = 1

@@ -1,13 +1,14 @@
-from pathlib import PurePosixPath
 import re
+from pathlib import PurePosixPath
 
 from autumn.tools import db
+
 
 class ManagedFullRun:
     def __init__(self, manager):
         self._manager = manager
-        self.local_path = self._manager.local_path / 'data/full_model_runs'
-        self.remote_path = PurePosixPath(self._manager.run_id) / 'data/full_model_runs'
+        self.local_path = self._manager.local_path / "data/full_model_runs"
+        self.remote_path = PurePosixPath(self._manager.run_id) / "data/full_model_runs"
         self._collated_db = None
 
     def download_mcmc(self):
@@ -31,12 +32,12 @@ class ManagedFullRun:
                 self._manager.remote.download(f)
 
     def get_derived_outputs(self, auto_download=True):
-        db_path = self.local_path / 'full_run_collated.db'
+        db_path = self.local_path / "full_run_collated.db"
         if self._collated_db is None:
             if not db_path.exists():
                 self._collate(auto_download)
             self._collated_db = db.get_database(str(db_path))
-        return self._collated_db.query('derived_outputs')
+        return self._collated_db.query("derived_outputs")
 
     def _collate(self, auto_download=True):
         try:
@@ -47,7 +48,7 @@ class ManagedFullRun:
                 database_paths = db.load.find_db_paths(str(self.local_path))
             else:
                 raise FileNotFoundError(self.local_path, "Try downloading data")
-        collated_db_path = str(self.local_path / 'full_run_collated.db')
+        collated_db_path = str(self.local_path / "full_run_collated.db")
         db.process.collate_databases(
-                database_paths, collated_db_path, tables=["derived_outputs"]
-            )
+            database_paths, collated_db_path, tables=["derived_outputs"]
+        )

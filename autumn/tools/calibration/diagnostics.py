@@ -1,5 +1,6 @@
-import statsmodels.api as sm
 from math import floor, sqrt
+
+import statsmodels.api as sm
 from numpy import mean
 
 
@@ -16,7 +17,9 @@ def calculate_effective_sample_size(x):
     autocor = sm.tsa.stattools.acf(x, nlags=n)[1:]
 
     # identify m (see Stan's notation)
-    paired_sum = [autocor[2 * i] + autocor[2 * i + 1] for i in range(floor(len(autocor)/2))]
+    paired_sum = [
+        autocor[2 * i] + autocor[2 * i + 1] for i in range(floor(len(autocor) / 2))
+    ]
     first_neg_index = first_neg(paired_sum)
     if first_neg_index is None:
         m = len(paired_sum) - 1
@@ -25,7 +28,7 @@ def calculate_effective_sample_size(x):
     else:
         m = first_neg_index - 1
 
-    tau = 1 + 2 * sum(autocor[1: (2 * m + 1)])
+    tau = 1 + 2 * sum(autocor[1 : (2 * m + 1)])
     ess = n / tau
 
     return ess
@@ -60,23 +63,42 @@ def calculate_r_hat(posterior_chains):
     overall_mean = mean(flat_listed_values)
 
     # Compute between-chain variation (B / n)
-    b_over_n = 1 / (m - 1) * sum([(means_per_chain[j_chain] - overall_mean)**2 for j_chain in range(m)])
+    b_over_n = (
+        1
+        / (m - 1)
+        * sum([(means_per_chain[j_chain] - overall_mean) ** 2 for j_chain in range(m)])
+    )
 
     # Compute within-chain variation for each chain
     variation, chain_length = {}, {}
     for j_chain, x_j in posterior_chains.items():
         n_j = len(x_j)
-        variation[j_chain] = sum([(x_j[i] - means_per_chain[j_chain])**2 for i in range(n_j)])
+        variation[j_chain] = sum(
+            [(x_j[i] - means_per_chain[j_chain]) ** 2 for i in range(n_j)]
+        )
         chain_length[j_chain] = n_j
 
     # Compute the average of within-chain variances (W)
-    w = 1 / m * sum([1 / (chain_length[j_chain] - 1) * variation[j_chain] for j_chain in range(m)])
+    w = (
+        1
+        / m
+        * sum(
+            [
+                1 / (chain_length[j_chain] - 1) * variation[j_chain]
+                for j_chain in range(m)
+            ]
+        )
+    )
 
     # Calculate the marginal posterior variance
-    var_hat = 1 / m * sum([1 / chain_length[j_chain] * variation[j_chain] for j_chain in range(m)]) + b_over_n
+    var_hat = (
+        1
+        / m
+        * sum([1 / chain_length[j_chain] * variation[j_chain] for j_chain in range(m)])
+        + b_over_n
+    )
 
     # Calculate R_hat
     r_hat = sqrt(var_hat / w)
 
     return r_hat
-

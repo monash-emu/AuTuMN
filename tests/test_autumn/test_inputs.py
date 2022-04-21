@@ -4,14 +4,20 @@ from datetime import datetime
 import numpy as np
 import pytest
 
+from autumn.models.covid_19.mixing_matrix.macrodistancing import (
+    get_mobility_data,
+    weight_mobility_data,
+)
 from autumn.tools.db import Database
 from autumn.tools.inputs import database as input_database
 from autumn.tools.inputs import (
-    get_country_mixing_matrix, get_crude_birth_rate, get_death_rates_by_agegroup, get_life_expectancy_by_agegroup,
+    get_country_mixing_matrix,
+    get_crude_birth_rate,
+    get_death_rates_by_agegroup,
+    get_life_expectancy_by_agegroup,
     get_population_by_agegroup,
 )
 from autumn.tools.inputs.demography.queries import downsample_quantity, downsample_rate
-from autumn.models.covid_19.mixing_matrix.macrodistancing import get_mobility_data, weight_mobility_data
 
 
 @pytest.mark.github_only
@@ -25,21 +31,22 @@ def test_build_input_database(tmpdir, monkeypatch):
     input_database.build_input_database(rebuild=True)
     assert os.path.exists(input_db_path)
     db = Database(input_db_path)
-    expected_tables = set(["countries", "population", "birth_rates", "deaths", "life_expectancy"])
+    expected_tables = set(
+        ["countries", "population", "birth_rates", "deaths", "life_expectancy"]
+    )
     assert set(db.table_names()).intersection(expected_tables) == expected_tables
 
 
 def test_get_mobility_data():
     google_mobility_locations = {
-        "work":
-            {"workplaces": 1.},
-        "other_locations":
-            {"retail_and_recreation": 0.25,
-             "grocery_and_pharmacy": 0.25,
-             "parks": 0.25,
-             "transit_stations": 0.25},
-        "home":
-            {"residential": 1.},
+        "work": {"workplaces": 1.0},
+        "other_locations": {
+            "retail_and_recreation": 0.25,
+            "grocery_and_pharmacy": 0.25,
+            "parks": 0.25,
+            "transit_stations": 0.25,
+        },
+        "home": {"residential": 1.0},
     }
     base_date = datetime(2020, 1, 1, 0, 0, 0)
     mob_df, days = get_mobility_data("AUS", "Victoria", base_date)
@@ -88,7 +95,9 @@ def test_get_death_rates_by_agegroup():
 def test_get_life_expectancy_by_agegroup():
     age_breakpoints = [0, 10, 20, 30, 40, 50, 60, 70, 80]
     country_iso_code = "AUS"
-    life_expectancy, years = get_life_expectancy_by_agegroup(age_breakpoints, country_iso_code)
+    life_expectancy, years = get_life_expectancy_by_agegroup(
+        age_breakpoints, country_iso_code
+    )
 
 
 def test_get_crude_birth_rate():
@@ -153,7 +162,17 @@ def test_get_population_by_agegroup__with_region():
     population = get_population_by_agegroup(
         age_breakpoints, country_iso_code, region="Victoria", year=2020
     )
-    assert population == [816027, 768266, 1019387, 999073, 847833, 778843, 650779, 446567, 268029]
+    assert population == [
+        816027,
+        768266,
+        1019387,
+        999073,
+        847833,
+        778843,
+        650779,
+        446567,
+        268029,
+    ]
 
 
 def test_downsample_rate__with_no_change():

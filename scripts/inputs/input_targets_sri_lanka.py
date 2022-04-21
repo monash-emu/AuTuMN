@@ -3,17 +3,14 @@ Script for loading LKA data into calibration targets and default.yml
 
 """
 import json
-
 import os
-import pandas as pd
 from datetime import datetime
 
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
+import pandas as pd
 
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 
 LKA_DATA_2021 = os.path.join(INPUT_DATA_PATH, "covid_lka", "data_2021.csv")
 LKA_DATA_2022 = os.path.join(INPUT_DATA_PATH, "covid_lka", "data.csv")
@@ -60,7 +57,9 @@ def preprocess_lka_data():
 df = preprocess_lka_data()
 
 for region, col_name in COVID_LKA_REGION.items():
-    file_path = os.path.join(PROJECTS_PATH, "covid_19", "sri_lanka", region, "timeseries.json")
+    file_path = os.path.join(
+        PROJECTS_PATH, "covid_19", "sri_lanka", region, "timeseries.json"
+    )
 
     region_select = [each_col for each_col in df.columns if col_name in each_col]
     region_df = df[["date_index"] + region_select]
@@ -70,7 +69,9 @@ for region, col_name in COVID_LKA_REGION.items():
         # Drop the NaN value rows from df before writing data.
         col_select = [each_col for each_col in region_df.columns if val in each_col]
         col_select = (
-            col_select[1] if region == "sri_lanka_wp" and key == "notifications" else col_select[0]
+            col_select[1]
+            if region == "sri_lanka_wp" and key == "notifications"
+            else col_select[0]
         )
         temp_df = region_df[["date_index", col_select]].dropna(0, subset=[col_select])
 

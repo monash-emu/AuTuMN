@@ -1,5 +1,5 @@
-from typing import Tuple
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 
 class BasePrior(ABC):
@@ -68,7 +68,12 @@ class TruncNormalPrior(BasePrior):
     """
 
     def __init__(
-        self, name: str, mean: float, stdev: float, trunc_range: Tuple[float, float], **kwargs
+        self,
+        name: str,
+        mean: float,
+        stdev: float,
+        trunc_range: Tuple[float, float],
+        **kwargs
     ):
         super().__init__(**kwargs)
         self.mean, self.stdev = mean, stdev

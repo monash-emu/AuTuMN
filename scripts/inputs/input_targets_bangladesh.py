@@ -5,18 +5,20 @@ NOTE you will need to pip instal lxml to run this script
 """
 import os
 from typing import List
+
 import pandas as pd
 from sqlalchemy import DATE
 
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
+from autumn.tools.utils.utils import create_date_index, update_timeseries
 
-
-SM_SIR_BGD_TS = os.path.join(PROJECTS_PATH, "sm_sir", "bangladesh", "bangladesh", "timeseries.json")
-SM_SIR_DHK_TS = os.path.join(PROJECTS_PATH, "sm_sir", "bangladesh", "dhaka", "timeseries.json")
+SM_SIR_BGD_TS = os.path.join(
+    PROJECTS_PATH, "sm_sir", "bangladesh", "bangladesh", "timeseries.json"
+)
+SM_SIR_DHK_TS = os.path.join(
+    PROJECTS_PATH, "sm_sir", "bangladesh", "dhaka", "timeseries.json"
+)
 SM_SIR_COXS_TS = os.path.join(
     PROJECTS_PATH, "sm_sir", "bangladesh", "coxs_bazar", "timeseries.json"
 )

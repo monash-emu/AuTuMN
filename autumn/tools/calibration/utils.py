@@ -76,7 +76,9 @@ def draw_independent_samples(independent_priors):
     """
     independent_samples = {}
     for prior_dict in independent_priors:
-        independent_samples[prior_dict["param_name"]] = sample_prior(prior_dict, np.random.uniform())
+        independent_samples[prior_dict["param_name"]] = sample_prior(
+            prior_dict, np.random.uniform()
+        )
 
     return independent_samples
 
@@ -134,7 +136,9 @@ def calculate_prior(prior_dict, x, log=True):
     """
     if prior_dict["distribution"] == "uniform":
         if log:
-            y = math.log(1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0]))
+            y = math.log(
+                1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
+            )
         else:
             y = 1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
     elif prior_dict["distribution"] == "lognormal":
@@ -178,7 +182,9 @@ def calculate_prior(prior_dict, x, log=True):
 
 
 def raise_error_unsupported_prior(distribution):
-    raise ValueError(distribution + "distribution not supported in autumn_mcmc at the moment")
+    raise ValueError(
+        distribution + "distribution not supported in autumn_mcmc at the moment"
+    )
 
 
 def collect_map_estimate(calib_dirpath: str):
@@ -194,7 +200,9 @@ def collect_map_estimate(calib_dirpath: str):
     ]
     for db_path in db_paths:
         db = Database(db_path)
-        mcmc_tables.append(db.query("mcmc_run").sort_values(by="loglikelihood", ascending=False))
+        mcmc_tables.append(
+            db.query("mcmc_run").sort_values(by="loglikelihood", ascending=False)
+        )
 
     print("Maximum loglikelihood for each chain:")
     print([mcmc_tables[i]["loglikelihood"].iloc[0] for i in range(len(mcmc_tables))])
@@ -357,7 +365,9 @@ def ignore_calibration_target_before_date(target, date):
 def ignore_calibration_target_before_index(target, index):
 
     # Truncate the target based on the index requested, including that index itself (which is why one is subtracted)
-    indices = [i_index for i_index in range(len(target["times"])) if i_index > index - 1]
+    indices = [
+        i_index for i_index in range(len(target["times"])) if i_index > index - 1
+    ]
     return truncate_target(target, indices)
 
 

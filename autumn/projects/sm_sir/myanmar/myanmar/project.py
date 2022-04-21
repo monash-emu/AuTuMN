@@ -1,18 +1,18 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
+from autumn.models.sm_sir import base_params, build_model, set_up_random_process
+from autumn.settings import Models, Region
+from autumn.tools.calibration import Calibration
+from autumn.tools.calibration.priors import TruncNormalPrior, UniformPrior
+from autumn.tools.calibration.targets import NormalTarget
 from autumn.tools.project import (
-    Project,
     ParameterSet,
-    load_timeseries,
+    Project,
     build_rel_path,
+    load_timeseries,
     use_tuned_proposal_sds,
 )
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model, set_up_random_process
-from autumn.settings import Region, Models
 
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")
@@ -54,7 +54,11 @@ priors = [
     #     "contact_rate", (0.05, 0.08), jumping_stdev=0.01
     # ),  # Tighten up the lower limit to avoid wild runss
     # UniformPrior("infectious_seed", (50.0, 500.0), jumping_stdev=40.0),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.004, 0.012), jumping_stdev=0.002),
+    UniformPrior(
+        "testing_to_detection.assumed_cdr_parameter",
+        (0.004, 0.012),
+        jumping_stdev=0.002,
+    ),
     # UniformPrior(
     #     "mobility.microdistancing.behaviour.parameters.end_asymptote",
     #     (0.1, 0.3),

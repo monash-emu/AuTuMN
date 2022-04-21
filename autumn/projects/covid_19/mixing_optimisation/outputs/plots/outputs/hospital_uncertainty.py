@@ -11,13 +11,17 @@ from autumn.projects.covid_19.mixing_optimisation.constants import (
     PHASE_2_DURATION,
     PHASE_2_START_TIME,
 )
-from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
+from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
+    DURATIONS,
+    MODES,
+    OBJECTIVES,
+)
 from autumn.projects.covid_19.mixing_optimisation.utils import (
     get_scenario_mapping,
     get_scenario_mapping_reverse,
 )
-from autumn.tools.db.load import load_uncertainty_table
 from autumn.settings import BASE_PATH
+from autumn.tools.db.load import load_uncertainty_table
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,
@@ -86,7 +90,9 @@ def plot_multiscenario_uncertainty(uncertainty_df, mode, axis, output, country):
     for duration in DURATIONS:
         data[duration] = {}
         for objective in OBJECTIVES:
-            sc_idx_to_plot.append(get_scenario_mapping_reverse(mode, duration, objective))
+            sc_idx_to_plot.append(
+                get_scenario_mapping_reverse(mode, duration, objective)
+            )
 
     for sc_idx in sc_idx_to_plot:
         data[sc_idx] = {}
@@ -210,7 +216,9 @@ def plot_multicountry_multiscenario_uncertainty(uncertainty_dfs, output, mode):
 
     widths = [1, 19]
     heights = [2, 6, 6, 6, 6, 6, 6]
-    spec = fig.add_gridspec(ncols=2, nrows=7, width_ratios=widths, height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=2, nrows=7, width_ratios=widths, height_ratios=heights
+    )
 
     countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     country_names = [c.title() for c in countries]

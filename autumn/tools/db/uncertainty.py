@@ -45,7 +45,9 @@ def calculate_mcmc_uncertainty(
     return _calculate_mcmc_uncertainty(df, targets, use_weights)
 
 
-def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict, use_weights: bool = False) -> pd.DataFrame:
+def _calculate_mcmc_uncertainty(
+    df: pd.DataFrame, targets: dict, use_weights: bool = False
+) -> pd.DataFrame:
     """
     Calculate quantiles from a table of weighted values.
     See calc_mcmc_weighted_values for how these weights are calculated.
@@ -70,9 +72,11 @@ def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict, use_weights: bo
                 output_name = target["output_key"]
                 if not output_name in masked_df.columns:
                     continue
-                
+
                 if use_weights:
-                    weighted_values = np.repeat(masked_df[output_name], masked_df["weight"])
+                    weighted_values = np.repeat(
+                        masked_df[output_name], masked_df["weight"]
+                    )
                 else:
                     weighted_values = masked_df[output_name]
 

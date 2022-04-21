@@ -44,9 +44,13 @@ def plot_multi_age_distribution(plotter: Plotter, sub_region: List[str], iso3: s
         for x in {0, 1}:
             for y in {0, 1}:
 
-                age_distribution = get_population_by_agegroup(agegroup_strata, iso3, sub_region[i])
+                age_distribution = get_population_by_agegroup(
+                    agegroup_strata, iso3, sub_region[i]
+                )
                 age_distribution = [each / 10e5 for each in age_distribution]
-                axes[y, x].bar(agegroup_strata, height=age_distribution, width=4, align="edge")
+                axes[y, x].bar(
+                    agegroup_strata, height=age_distribution, width=4, align="edge"
+                )
                 if i == 0:
                     axes[y, x].set_title("Philippines").set_fontsize(30)
                 else:
@@ -58,7 +62,9 @@ def plot_multi_age_distribution(plotter: Plotter, sub_region: List[str], iso3: s
                 axes[y, x].yaxis.set_tick_params(labelsize=20)
                 i += 1
 
-    plotter.save_figure(multi, filename="age-distribution", title_text="Age distribution")
+    plotter.save_figure(
+        multi, filename="age-distribution", title_text="Age distribution"
+    )
 
 
 def plot_age_distribution(plotter: Plotter, sub_region: str, iso3: str):
@@ -81,7 +87,9 @@ def plot_mixing_matrix(plotter: Plotter, location: str, iso3: str):
     legend = []
 
     mixing_matrix = get_country_mixing_matrix(location, iso3)
-    pyplot.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
+    pyplot.imshow(
+        mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0]
+    )
     plotter.save_figure(fig, filename="mixing-matrix", title_text="Mixing matrix")
 
 
@@ -101,7 +109,9 @@ def plot_mixing_matrix_2(plotter: Plotter, iso3: str):
         axis = axes[position[0], position[1]]
         if location != "none":
             mixing_matrix = get_country_mixing_matrix(location, iso3)
-            im = axis.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
+            im = axis.imshow(
+                mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0]
+            )
             axis.set_title(get_plot_text_dict(location), fontsize=12)
             axis.set_xticks([5, 25, 45, 65])
             axis.set_yticks([5, 25, 45, 65])
@@ -138,7 +148,9 @@ def plot_agg_compartments_multi_scenario(
     if is_logscale:
         axis.set_yscale("log")
 
-    plotter.save_figure(fig, filename="aggregate-compartments", title_text="aggregate compartments")
+    plotter.save_figure(
+        fig, filename="aggregate-compartments", title_text="aggregate compartments"
+    )
 
 
 def plot_single_compartment_multi_scenario(
@@ -219,7 +231,7 @@ def plot_outputs_multi(
     values = output_config["values"]
     times = output_config["times"]
 
-    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot = True)
+    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
     if is_logscale:
         axis.set_yscale("log")
 
@@ -265,10 +277,14 @@ def plot_outputs_single(
         axis.set_xlim((X_MIN, X_MAX))
 
     if single_panel:
-        plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
+        plotter.save_figure(
+            fig, filename=output_name, subdir="outputs", title_text=output_name
+        )
 
 
-def plot_multi_targets(plotter: Plotter, model, output_configs: list, is_logscale=False):
+def plot_multi_targets(
+    plotter: Plotter, model, output_configs: list, is_logscale=False
+):
     if len(output_configs) == 0:
         return
 
@@ -277,14 +293,18 @@ def plot_multi_targets(plotter: Plotter, model, output_configs: list, is_logscal
     n_cols = min(max_n_col, n_panels)
     n_rows = ceil(n_panels / max_n_col)
 
-    fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
+    fig = pyplot.figure(
+        constrained_layout=True, figsize=(n_cols * 7, n_rows * 5)
+    )  # (w, h)
     spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
 
     i_col = 0
     i_row = 0
     for output_config in output_configs:
         ax = fig.add_subplot(spec[i_row, i_col])
-        plot_outputs_single(plotter, model, output_config, is_logscale, ax, single_panel=False)
+        plot_outputs_single(
+            plotter, model, output_config, is_logscale, ax, single_panel=False
+        )
         ax.set_title(output_config["title"])
         i_col += 1
         if i_col == max_n_col:
@@ -352,7 +372,9 @@ def plot_time_varying_multi_input(
     axes.plot(df.index, df.values)
     change_xaxis_to_date(axes, REF_DATE)
     pyplot.legend(
-        df.columns, loc="best", labels=[get_plot_text_dict(location) for location in df.columns]
+        df.columns,
+        loc="best",
+        labels=[get_plot_text_dict(location) for location in df.columns],
     )
 
     if X_MIN is not None and X_MAX is not None:
@@ -431,8 +453,12 @@ def plot_stacked_compartments_by_stratum(
             values_0 = [0] * len(models[0].times)
             values_1 = [0] * len(models[1].times)
             for out in relevant_output_names:
-                values_0 = [v + d for (v, d) in zip(values_0, models[0].derived_outputs[out])]
-                values_1 = [v + d for (v, d) in zip(values_1, models[1].derived_outputs[out])]
+                values_0 = [
+                    v + d for (v, d) in zip(values_0, models[0].derived_outputs[out])
+                ]
+                values_1 = [
+                    v + d for (v, d) in zip(values_1, models[1].derived_outputs[out])
+                ]
 
         new_running_total = [
             r + v for (r, v) in zip(running_total, list(values_0) + list(values_1))
@@ -484,7 +510,9 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
     fig = pyplot.figure(constrained_layout=True, figsize=(20, 20))  # (w, h)
     widths = [1, 6, 6, 6, 2]
     heights = [1, 6, 6, 6, 6, 6, 6]
-    spec = fig.add_gridspec(ncols=5, nrows=7, width_ratios=widths, height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=5, nrows=7, width_ratios=widths, height_ratios=heights
+    )
 
     output_names = ["incidence", "infection_deaths", "recovered"]
     output_titles = ["Daily disease incidence", "Daily deaths", "Percentage recovered"]
@@ -557,7 +585,9 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
     fig = pyplot.figure(constrained_layout=True, figsize=(10, 9))  # (w, h)
     widths = [1, 1]
     heights = [1, 1, 1]
-    spec = fig.add_gridspec(ncols=2, nrows=3, width_ratios=widths, height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=2, nrows=3, width_ratios=widths, height_ratios=heights
+    )
 
     countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     country_names = [c.title() for c in countries]
@@ -572,7 +602,9 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
             i_row += 1
 
         ax = fig.add_subplot(spec[i_row, i_col])
-        _plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, country_names[i])
+        _plot_hospital_occupancy(
+            all_scenarios, country, mode, objective, ax, country_names[i]
+        )
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/hospitals/"
     filename = out_dir + "rainbow_" + mode + "_" + objective
@@ -602,7 +634,9 @@ def _plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title)
                 values_1 = models[1].derived_outputs[output]
             else:
                 comp_names = [
-                    c for c in models[0].compartment_names if "clinical_icu" in c.split("X")
+                    c
+                    for c in models[0].compartment_names
+                    if "clinical_icu" in c.split("X")
                 ]
                 comp_idx = [models[0].compartment_names.index(c) for c in comp_names]
                 relevant_outputs_0 = models[0].outputs[:, comp_idx]
@@ -616,7 +650,13 @@ def _plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title)
             times = [t for t in times if t >= x_min]
             values = values[-len(times) :]
 
-            ax.plot(times, values, dashes=dash_style[config], color=colours[output], linewidth=2)
+            ax.plot(
+                times,
+                values,
+                dashes=dash_style[config],
+                color=colours[output],
+                linewidth=2,
+            )
 
     ax.set_title(title)
 
@@ -633,7 +673,9 @@ def _plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title)
         tick.label.set_fontsize(12)
 
 
-def plot_candidates_for_output(subplotter, output_name, outputs, target: pd.Series = None):
+def plot_candidates_for_output(
+    subplotter, output_name, outputs, target: pd.Series = None
+):
     fig = pyplot.figure(figsize=(12, 8))
     ax = fig.gca()
 

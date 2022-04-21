@@ -4,6 +4,7 @@ from autumn.tools.db import Database
 
 from .fetch import COVID_HCMC_TESTING_CSV
 
+
 def preprocess_covid_vnm(input_db: Database):
 
     df = pd.read_csv(COVID_HCMC_TESTING_CSV)

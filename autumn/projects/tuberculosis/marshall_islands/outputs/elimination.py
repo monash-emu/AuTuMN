@@ -38,10 +38,14 @@ def main(data_path, output_path):
 
 def plot_elimination(uncertainty_df, figure_path, is_logscale=False):
 
-    interventions = ["ACF", "ACF_LTBI"]  #, "hh_pt"]
+    interventions = ["ACF", "ACF_LTBI"]  # , "hh_pt"]
     scenario_idxs = {"ACF": [0, 5, 4, 3], "ACF_LTBI": [0, 8, 7, 6], "hh_pt": [0, 9]}
     colors_idx = {"ACF": [0, 8, 7, 1], "ACF_LTBI": [0, 8, 7, 1], "hh_pt": [0, 4]}
-    alphas = {"ACF": [1.0, 0.8, 0.8, 0.7], "ACF_LTBI": [1.0, 0.8, 0.8, 0.7], "hh_pt": [1.0, 0.7]}
+    alphas = {
+        "ACF": [1.0, 0.8, 0.8, 0.7],
+        "ACF_LTBI": [1.0, 0.8, 0.8, 0.7],
+        "hh_pt": [1.0, 0.7],
+    }
 
     if is_logscale:
         outputs = ["incidence", "mortality"]
@@ -52,9 +56,14 @@ def plot_elimination(uncertainty_df, figure_path, is_logscale=False):
 
     widths = [panel_w] * len(interventions)
     heights = [0.5] + [panel_h] * len(outputs)
-    fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
+    fig = pyplot.figure(
+        constrained_layout=True, figsize=(sum(widths), sum(heights))
+    )  # (w, h)
     spec = fig.add_gridspec(
-        ncols=len(interventions), nrows=len(outputs) + 1, width_ratios=widths, height_ratios=heights
+        ncols=len(interventions),
+        nrows=len(outputs) + 1,
+        width_ratios=widths,
+        height_ratios=heights,
     )
 
     for j, intervention in enumerate(interventions):
@@ -96,13 +105,21 @@ def plot_elimination(uncertainty_df, figure_path, is_logscale=False):
 
             if output in ["incidence", "mortality"]:
                 for year, value in end_tb_targets[output].items():
-                    ax.plot(float(year), value, marker="o", color=target_colours[year], zorder=10)
+                    ax.plot(
+                        float(year),
+                        value,
+                        marker="o",
+                        color=target_colours[year],
+                        zorder=10,
+                    )
 
             if is_logscale:
                 ax.set_yscale("log")
-                ax.set_ylim((10 ** -3, 10 ** 3))
+                ax.set_ylim((10**-3, 10**3))
                 if output == "incidence":
-                    ax.hlines(y=1, xmin=2015, xmax=2050, colors="black", linestyle="dashed")
+                    ax.hlines(
+                        y=1, xmin=2015, xmax=2050, colors="black", linestyle="dashed"
+                    )
                     ax.text(2016, 0.6, "pre-elimination threshold", fontsize=12)
             else:
                 ax.set_ylim(ymin=0)

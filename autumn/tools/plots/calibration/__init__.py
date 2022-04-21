@@ -56,8 +56,12 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
         outputs = plots.sample_outputs_for_calibration_fit(
             output_name, mcmc_tables, derived_output_tables, 0
         )
-        plots.plot_calibration_fit(subplotter, output_name, outputs, targets, is_logscale=True)
-        plots.plot_calibration_fit(subplotter, output_name, outputs, targets, is_logscale=False)
+        plots.plot_calibration_fit(
+            subplotter, output_name, outputs, targets, is_logscale=True
+        )
+        plots.plot_calibration_fit(
+            subplotter, output_name, outputs, targets, is_logscale=False
+        )
 
     logger.info("Plotting posterior distributions")
     num_bins = 16
@@ -70,12 +74,16 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     logger.info("Plotting loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-loglikelihood")
     for chosen_param in param_options:
-        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=False)
+        plots.plot_single_param_loglike(
+            subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=False
+        )
 
     logger.info("Plotting posterior loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-posterior-loglikelihood")
     for chosen_param in param_options:
-        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=True)
+        plots.plot_single_param_loglike(
+            subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=True
+        )
 
     logger.info("Plotting parameter traces")
     subplotter = _get_sub_plotter(plot_dir, "params-traces")
@@ -85,7 +93,9 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     logger.info("Plotting autocorrelations")
     subplotter = _get_sub_plotter(plot_dir, "autocorrelations")
     for chosen_param in param_options:
-        plots.plot_autocorrelation(subplotter, mcmc_params, mcmc_tables, 0, chosen_param)
+        plots.plot_autocorrelation(
+            subplotter, mcmc_params, mcmc_tables, 0, chosen_param
+        )
     plots.plot_effective_sample_size(subplotter, mcmc_params, mcmc_tables, 0)
 
     logger.info("Plotting acceptance ratios")
@@ -97,7 +107,9 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN, posterior=True)
 
     for mle_only in [True, False]:
-        plots.plot_parallel_coordinates_flat(plotter, mcmc_params, mcmc_tables, priors, mle_only)
+        plots.plot_parallel_coordinates_flat(
+            plotter, mcmc_params, mcmc_tables, priors, mle_only
+        )
 
     logger.info("MCMC plots complete")
 

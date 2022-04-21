@@ -1,11 +1,11 @@
 import json
 
-from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
+from autumn.models.sm_sir import base_params, build_model
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model
-from autumn.settings import Region, Models
+from autumn.tools.project import ParameterSet, Project, build_rel_path, load_timeseries
 
 # Load and configure model parameters
 baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
@@ -31,7 +31,10 @@ targets = [
 ]
 
 calibration = Calibration(
-    priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
+    priors=priors,
+    targets=targets,
+    random_process=None,
+    metropolis_init="current_params",
 )
 
 plot_spec_filepath = build_rel_path("timeseries.json")

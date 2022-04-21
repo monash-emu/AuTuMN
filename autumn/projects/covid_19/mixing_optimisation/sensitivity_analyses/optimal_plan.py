@@ -11,7 +11,9 @@ from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
     objective_function,
     run_root_model,
 )
-from autumn.projects.covid_19.mixing_optimisation.utils import get_country_population_size
+from autumn.projects.covid_19.mixing_optimisation.utils import (
+    get_country_population_size,
+)
 from autumn.projects.covid_19.mixing_optimisation.write_scenarios import (
     read_decision_vars,
     read_opti_outputs,
@@ -87,9 +89,13 @@ def evaluate_extra_deaths(
     if not h:
         delta_deaths_per_million = 1.0e6
     else:
-        country_name = country.title() if country != "united-kingdom" else "United Kingdom"
+        country_name = (
+            country.title() if country != "united-kingdom" else "United Kingdom"
+        )
         population = get_country_population_size(country_name)
-        delta_deaths_per_million = (this_objective[objective] - best_objective) / population * 1.0e6
+        delta_deaths_per_million = (
+            (this_objective[objective] - best_objective) / population * 1.0e6
+        )
 
     return delta_deaths_per_million
 
@@ -105,7 +111,9 @@ def run_sensitivity_perturbations(
     direction="up",
 ):
     # target_deaths is a number of deaths per million people
-    decision_vars = read_decision_vars(opti_outputs_df, country, mode, duration, objective)
+    decision_vars = read_decision_vars(
+        opti_outputs_df, country, mode, duration, objective
+    )
 
     if decision_vars is None:
         return
@@ -113,7 +121,12 @@ def run_sensitivity_perturbations(
     root_model = run_root_model(country)
 
     h, best_d, best_yoll = objective_function(
-        decision_vars, root_model, mode, country, duration, called_from_sensitivity_analysis=True
+        decision_vars,
+        root_model,
+        mode,
+        country,
+        duration,
+        called_from_sensitivity_analysis=True,
     )
     best_objective = {
         "deaths": best_d,
@@ -130,7 +143,9 @@ def run_sensitivity_perturbations(
             extra_contribution_upper = decision_vars[i]
 
         if extra_contribution_upper < tol:
-            best_solution = extra_contribution_upper if direction == "up" else decision_vars[i]
+            best_solution = (
+                extra_contribution_upper if direction == "up" else decision_vars[i]
+            )
         else:
             # find an upper bound (lower if direction is down):
             delta_deaths_per_million = evaluate_extra_deaths(
@@ -150,7 +165,9 @@ def run_sensitivity_perturbations(
             else:
                 loop_count = 0
                 while (extra_contribution_upper - extra_contribution_lower) > tol:
-                    evaluation_point = (extra_contribution_lower + extra_contribution_upper) / 2.0
+                    evaluation_point = (
+                        extra_contribution_lower + extra_contribution_upper
+                    ) / 2.0
                     delta_deaths_per_million = evaluate_extra_deaths(
                         decision_vars,
                         evaluation_point,
@@ -190,7 +207,16 @@ def run_sensitivity_perturbations(
         "mixing_optimisation",
         "optimised_variables",
         "optimal_plan_sensitivity",
-        country + "_" + mode + "_" + duration + "_" + objective + "_" + direction + ".yml",
+        country
+        + "_"
+        + mode
+        + "_"
+        + duration
+        + "_"
+        + objective
+        + "_"
+        + direction
+        + ".yml",
     )
 
     with open(output_file_path, "w") as f:

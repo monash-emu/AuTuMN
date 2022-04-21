@@ -18,45 +18,43 @@ from autumn.tools.plots.utils import (
     REF_DATE,
     _apply_transparency,
     _plot_targets_to_axis,
+    add_horizontal_lines_to_plot,
+    add_vertical_lines_to_plot,
     change_xaxis_to_date,
     get_plot_text_dict,
-    add_vertical_lines_to_plot,
-    add_horizontal_lines_to_plot,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def plot_timeseries_with_uncertainty(
-
-        plotter: Plotter,
-        uncertainty_df: pd.DataFrame,
-        output_name: str,
-        scenario_idxs: List[int],
-        targets: dict,
-        is_logscale=False,
-        x_low=0.0,
-        x_up=1e6,
-        axis=None,
-        n_xticks=None,
-        ref_date=REF_DATE,
-        add_targets=True,
-        overlay_uncertainty=False,
-        title_font_size=12,
-        label_font_size=10,
-        dpi_request=300,
-        capitalise_first_letter=False,
-        legend=True,
-        requested_x_ticks=None,
-        show_title=True,
-        ylab=None,
-        x_axis_to_date=True,
-        start_quantile=0,
-        sc_colors=None,
-        custom_title=None,
-        vlines={},
-        hlines={},
-
+    plotter: Plotter,
+    uncertainty_df: pd.DataFrame,
+    output_name: str,
+    scenario_idxs: List[int],
+    targets: dict,
+    is_logscale=False,
+    x_low=0.0,
+    x_up=1e6,
+    axis=None,
+    n_xticks=None,
+    ref_date=REF_DATE,
+    add_targets=True,
+    overlay_uncertainty=False,
+    title_font_size=12,
+    label_font_size=10,
+    dpi_request=300,
+    capitalise_first_letter=False,
+    legend=True,
+    requested_x_ticks=None,
+    show_title=True,
+    ylab=None,
+    x_axis_to_date=True,
+    start_quantile=0,
+    sc_colors=None,
+    custom_title=None,
+    vlines={},
+    hlines={},
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -71,7 +69,9 @@ def plot_timeseries_with_uncertainty(
 
     if sc_colors is None:
         n_scenarios_to_plot = min([len(scenario_idxs), len(COLORS)])
-        colors = _apply_transparency(COLORS[:n_scenarios_to_plot], ALPHAS[:n_scenarios_to_plot])
+        colors = _apply_transparency(
+            COLORS[:n_scenarios_to_plot], ALPHAS[:n_scenarios_to_plot]
+        )
     else:
         colors = sc_colors
 
@@ -107,26 +107,24 @@ def plot_timeseries_with_uncertainty(
         # works reliably; this module really requires a refactor, so it's not worth
         # trying to fix the other bits right now...
 
-        #if scenario_idx !=0:
-            scenario_colors = colors[i]
+        # if scenario_idx !=0:
+        scenario_colors = colors[i]
 
-            times, quantiles = _plot_uncertainty(
-                axis,
-                uncertainty_df,
-                output_name,
-                scenario_idx,
-                x_up,
-                x_low,
-                scenario_colors,
-                overlay_uncertainty=overlay_uncertainty,
-                start_quantile=start_quantile,
-                zorder=i + 1,
-            )
+        times, quantiles = _plot_uncertainty(
+            axis,
+            uncertainty_df,
+            output_name,
+            scenario_idx,
+            x_up,
+            x_low,
+            scenario_colors,
+            overlay_uncertainty=overlay_uncertainty,
+            start_quantile=start_quantile,
+            zorder=i + 1,
+        )
 
-            data_to_return[scenario_idx] = pd.DataFrame.from_dict(quantiles)
-            data_to_return[scenario_idx].insert(0, "days from 31/12/2019", times)
-
-
+        data_to_return[scenario_idx] = pd.DataFrame.from_dict(quantiles)
+        data_to_return[scenario_idx].insert(0, "days from 31/12/2019", times)
 
     # Add plot targets
     if add_targets:
@@ -214,36 +212,47 @@ def _plot_uncertainty(
             start_key = q_keys[i]
             end_key = q_keys[-(i + 1)]
             axis.fill_between(
-                times, quantiles[start_key], quantiles[end_key], facecolor=color, zorder=zorder
+                times,
+                quantiles[start_key],
+                quantiles[end_key],
+                facecolor=color,
+                zorder=zorder,
             )
 
     if num_quantiles % 2:
         q_key = q_keys[half_length]
-        axis.plot(times, quantiles[q_key], color=colors[3], zorder=zorder, linestyle=linestyle, linewidth=linewidth)
+        axis.plot(
+            times,
+            quantiles[q_key],
+            color=colors[3],
+            zorder=zorder,
+            linestyle=linestyle,
+            linewidth=linewidth,
+        )
 
     return times, quantiles
 
 
 def plot_multi_output_timeseries_with_uncertainty(
-        plotter: Plotter,
-        uncertainty_df: pd.DataFrame,
-        output_names: str,
-        scenarios: list,
-        all_targets: dict,
-        is_logscale=False,
-        x_low=0.0,
-        x_up=2000.0,
-        n_xticks=None,
-        title_font_size=12,
-        label_font_size=10,
-        file_name="multi_uncertainty",
-        max_y_values=(),
-        custom_titles=None,
-        custom_sup_title=None,
-        multi_panel_vlines=(),
-        multi_panel_hlines=(),
-        overlay_uncertainty=False,
-        is_legend=True,
+    plotter: Plotter,
+    uncertainty_df: pd.DataFrame,
+    output_names: str,
+    scenarios: list,
+    all_targets: dict,
+    is_logscale=False,
+    x_low=0.0,
+    x_up=2000.0,
+    n_xticks=None,
+    title_font_size=12,
+    label_font_size=10,
+    file_name="multi_uncertainty",
+    max_y_values=(),
+    custom_titles=None,
+    custom_sup_title=None,
+    multi_panel_vlines=(),
+    multi_panel_hlines=(),
+    overlay_uncertainty=False,
+    is_legend=True,
 ):
     pyplot.style.use("ggplot")
     if len(output_names) * len(scenarios) == 0:
@@ -263,11 +272,16 @@ def plot_multi_output_timeseries_with_uncertainty(
 
     i_col, i_row, axes = 0, 0, []
     for i_out, output_name in enumerate(output_names):
-        targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
+        targets = {
+            k: v for k, v in all_targets.items() if v["output_key"] == output_name
+        }
 
         axes.append(fig.add_subplot(spec[i_row, i_col]))
 
-        assert len(max_y_values) in (0, len(output_names)), "Wrong number of y-values submitted"
+        assert len(max_y_values) in (
+            0,
+            len(output_names),
+        ), "Wrong number of y-values submitted"
         if max_y_values:
             axes[i_out].set_ylim(top=max_y_values[i_out])
 
@@ -342,12 +356,18 @@ def plot_multicountry_timeseries_with_uncertainty(
     n_cols = min(max_n_col, n_panels)
     n_rows = ceil(n_panels / max_n_col)
 
-    fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
+    fig = pyplot.figure(
+        constrained_layout=True, figsize=(n_cols * 7, n_rows * 5)
+    )  # (w, h)
     spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
 
     i_row, i_col = 0, 0
     for i_region, region in regions.items():
-        targets = {k: v for k, v in all_targets[i_region].items() if v["output_key"] == output_name}
+        targets = {
+            k: v
+            for k, v in all_targets[i_region].items()
+            if v["output_key"] == output_name
+        }
         ax = fig.add_subplot(spec[i_row, i_col])
         plot_timeseries_with_uncertainty(
             plotter,
@@ -375,7 +395,9 @@ def plot_multicountry_timeseries_with_uncertainty(
             i_col = 0
             i_row += 1
 
-    plotter.save_figure(fig, filename="multi_uncertainty", subdir="outputs", title_text="")
+    plotter.save_figure(
+        fig, filename="multi_uncertainty", subdir="outputs", title_text=""
+    )
 
 
 def plot_age_seroprev_to_axis(
@@ -391,7 +413,9 @@ def plot_age_seroprev_to_axis(
     credible_range=95,
 ):
 
-    mask = (uncertainty_df["scenario"] == scenario_id) & (uncertainty_df["time"] == time)
+    mask = (uncertainty_df["scenario"] == scenario_id) & (
+        uncertainty_df["time"] == time
+    )
     df = uncertainty_df[mask]
     quantile_vals = df["quantile"].unique().tolist()
     seroprevalence_by_age = {}
@@ -403,7 +427,11 @@ def plot_age_seroprev_to_axis(
 
     max_value = -10.0
     if len(sero_outputs) == 0:
-        axis.text(0.0, 0.5, "Age-specific seroprevalence outputs are not available for this run")
+        axis.text(
+            0.0,
+            0.5,
+            "Age-specific seroprevalence outputs are not available for this run",
+        )
     else:
         for output in sero_outputs:
             output_mask = df["type"] == output
@@ -428,7 +456,10 @@ def plot_age_seroprev_to_axis(
 
             axis.plot(
                 [x_positions[i], x_positions[i]],
-                [seroprevalence_by_age[age][lower_q_key], seroprevalence_by_age[age][upper_q_key]],
+                [
+                    seroprevalence_by_age[age][lower_q_key],
+                    seroprevalence_by_age[age][upper_q_key],
+                ],
                 "-",
                 color="black",
                 lw=1.0,
@@ -448,7 +479,9 @@ def plot_age_seroprev_to_axis(
                 )
 
         axis.xaxis.set_ticks(x_positions)
-        axis.set_xticklabels([str(i) for i in range(0, 80, 5)], fontsize=10, rotation=90)
+        axis.set_xticklabels(
+            [str(i) for i in range(0, 80, 5)], fontsize=10, rotation=90
+        )
 
         axis.set_xlabel("age (years)", fontsize=13)
         axis.set_ylim(bottom=0.0)
@@ -479,7 +512,9 @@ def plot_seroprevalence_by_age(
         uncertainty_df, scenario_id, time, axis, requested_quantiles, ref_date, name
     )
     if single_panel:
-        plotter.save_figure(fig, filename="sero_by_age", subdir="outputs", title_text="")
+        plotter.save_figure(
+            fig, filename="sero_by_age", subdir="outputs", title_text=""
+        )
 
     overall_seropos_estimates = df[df["type"] == "proportion_seropositive"][
         ["quantile", "value"]
@@ -501,7 +536,9 @@ def plot_vic_seroprevalences(
 
     fig, axes, _, _, _, _ = plotter.get_figure(n_panels=2, share_yaxis="all")
     cluster_axis, age_axis = axes
-    mask = (uncertainty_df["scenario"] == scenario_id) & (uncertainty_df["time"] == time)
+    mask = (uncertainty_df["scenario"] == scenario_id) & (
+        uncertainty_df["time"] == time
+    )
     df = uncertainty_df[mask]
     quantile_vals = df["quantile"].unique().tolist()
     seroprevalence_by_cluster = {}
@@ -514,7 +551,9 @@ def plot_vic_seroprevalences(
     max_value = -10.0
     if len(sero_outputs) == 0:
         cluster_axis.text(
-            0.0, 0.5, "Cluster-specific seroprevalence outputs are not available for this run"
+            0.0,
+            0.5,
+            "Cluster-specific seroprevalence outputs are not available for this run",
         )
     else:
         for output in sero_outputs:
@@ -531,7 +570,8 @@ def plot_vic_seroprevalences(
         half_length = num_quantiles // 2
 
         cluster_names = [
-            get_plot_text_dict(i.split("proportion_seropositiveXcluster_")[1]) for i in sero_outputs
+            get_plot_text_dict(i.split("proportion_seropositiveXcluster_")[1])
+            for i in sero_outputs
         ]
 
         lower_q_key = (100.0 - credible_range) / 100.0 / 2.0
@@ -551,7 +591,9 @@ def plot_vic_seroprevalences(
                 lw=1.0,
             )
             cluster_axis.set_xticklabels(cluster_names, fontsize=10, rotation=90)
-            max_value = max(max_value, seroprevalence_by_cluster[cluster][upper_q_key][0])
+            max_value = max(
+                max_value, seroprevalence_by_cluster[cluster][upper_q_key][0]
+            )
 
             if num_quantiles % 2:
                 q_key = q_keys[half_length]
@@ -583,7 +625,9 @@ def plot_vic_seroprevalences(
         add_ylabel=False,
     )
 
-    plotter.save_figure(fig, filename="sero_by_cluster", subdir="outputs", title_text="")
+    plotter.save_figure(
+        fig, filename="sero_by_cluster", subdir="outputs", title_text=""
+    )
 
     overall_seropos_estimates = df[df["type"] == "proportion_seropositive"][
         ["quantile", "value"]
@@ -599,7 +643,9 @@ def plot_seroprevalence_by_age_against_targets(
     n_rows = ceil(n_surveys / n_columns)
 
     with pyplot.style.context("ggplot"):
-        fig = pyplot.figure(constrained_layout=True, figsize=(n_columns * 7, n_rows * 5))  # (w, h)
+        fig = pyplot.figure(
+            constrained_layout=True, figsize=(n_columns * 7, n_rows * 5)
+        )  # (w, h)
         spec = fig.add_gridspec(ncols=n_columns, nrows=n_rows)
 
         i_row = 0
@@ -610,7 +656,12 @@ def plot_seroprevalence_by_age_against_targets(
             ax = fig.add_subplot(spec[i_row, i_col])
             s_name = "" if not "survey_name" in survey else survey["survey_name"]
             max_value, _, _ = plot_seroprevalence_by_age(
-                plotter, uncertainty_df, selected_scenario, time=midpoint_time, axis=ax, name=s_name
+                plotter,
+                uncertainty_df,
+                selected_scenario,
+                time=midpoint_time,
+                axis=ax,
+                name=s_name,
             )
 
             # add data
@@ -626,7 +677,14 @@ def plot_seroprevalence_by_age_against_targets(
                     lw=1.0,
                 )
                 label = None if i > 0 else "data"
-                ax.plot(mid_age + shift, measure["central"], "o", color="red", ms=4, label=label)
+                ax.plot(
+                    mid_age + shift,
+                    measure["central"],
+                    "o",
+                    color="red",
+                    ms=4,
+                    label=label,
+                )
                 # ax.axvline(x=measure["age_range"][0], linestyle="--", color='grey', lw=.5)
                 max_prev = max(max_prev, measure["ci"][1])
 
@@ -641,7 +699,9 @@ def plot_seroprevalence_by_age_against_targets(
                 i_col = 0
 
         if plotter is not None:
-            plotter.save_figure(fig, filename="multi_sero_by_age", subdir="outputs", title_text="")
+            plotter.save_figure(
+                fig, filename="multi_sero_by_age", subdir="outputs", title_text=""
+            )
         else:
             return fig
 

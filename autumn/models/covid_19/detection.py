@@ -1,22 +1,22 @@
-from typing import Callable, Optional, Tuple, Any, List
-import numpy as np
+from typing import Any, Callable, List, Optional, Tuple
 
+import numpy as np
 from summer.compute import ComputedValueProcessor
 
-from autumn.tools.inputs.testing.eur_testing_data import (
-    get_uk_testing_numbers,
-    get_eu_testing_numbers,
-)
+from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.tools.curve import scale_up_function
+from autumn.tools.inputs import get_population_by_agegroup
 from autumn.tools.inputs.covid_au.queries import get_vic_testing_numbers
-from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
+from autumn.tools.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
 from autumn.tools.inputs.covid_lka.queries import get_lka_testing_numbers
 from autumn.tools.inputs.covid_mmr.queries import get_mmr_testing_numbers
-from autumn.tools.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
+from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 from autumn.tools.inputs.owid.queries import get_international_testing_numbers
-from autumn.tools.inputs import get_population_by_agegroup
+from autumn.tools.inputs.testing.eur_testing_data import (
+    get_eu_testing_numbers,
+    get_uk_testing_numbers,
+)
 from autumn.tools.utils.utils import apply_moving_average
-from autumn.tools.curve import scale_up_function
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
 class CdrProc(ComputedValueProcessor):
@@ -65,7 +65,9 @@ def get_testing_numbers_for_region(
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
 
-    assert len(test_dates) == len(test_values), "Length of test dates and test values are not equal"
+    assert len(test_dates) == len(
+        test_values
+    ), "Length of test dates and test values are not equal"
 
     return test_dates, test_values
 
@@ -94,7 +96,9 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float) -> Callable:
     return cdr_function
 
 
-def inflate_test_data(test_multiplier: float, test_dates: list, test_values: list) -> List[float]:
+def inflate_test_data(
+    test_multiplier: float, test_dates: list, test_values: list
+) -> List[float]:
     """
     Apply inflation factor to test numbers if requested.
     Used in the Philippines applications only.
@@ -113,10 +117,14 @@ def inflate_test_data(test_multiplier: float, test_dates: list, test_values: lis
     test_dates, test_values = [list(tup) for tup in tuples]
 
     # Create scale-up function
-    testing_scale_up = scale_up_function(test_multiplier.times, test_multiplier.values, method=4)
+    testing_scale_up = scale_up_function(
+        test_multiplier.times, test_multiplier.values, method=4
+    )
 
     # Scale up added tests
-    return [test_values[val] * testing_scale_up(time) for val, time in enumerate(test_dates)]
+    return [
+        test_values[val] * testing_scale_up(time) for val, time in enumerate(test_dates)
+    ]
 
 
 def find_cdr_function_from_test_data(
@@ -162,7 +170,10 @@ def find_cdr_function_from_test_data(
     # Get the final CDR function
     cdr_function = scale_up_function(
         test_dates,
-        [cdr_from_tests_func(i_test_rate) for i_test_rate in smoothed_inflated_per_capita_tests],
+        [
+            cdr_from_tests_func(i_test_rate)
+            for i_test_rate in smoothed_inflated_per_capita_tests
+        ],
         smoothness=0.2,
         method=4,
         bound_low=0.0,

@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 # AWS S3 upload settings
 S3_UPLOAD_EXTRA_ARGS = {"ACL": "public-read"}
 S3_UPLOAD_CONFIG = TransferConfig(
-    max_concurrency=2,
-    multipart_threshold= (1024**2) * 100 # 100mb
+    max_concurrency=2, multipart_threshold=(1024**2) * 100  # 100mb
 )
 S3_DOWNLOAD_CONFIG = TransferConfig(
     max_concurrency=2,
@@ -124,10 +123,13 @@ def list_s3(client, key_prefix: str, key_suffix: str = None):
     else:
         return [o["Key"] for o in objs]
 
+
 def download_s3(client, src_key, dest_path):
     """Downloads a file from AWS S3"""
     logger.info("Downloading from %s to %s", src_key, dest_path)
-    client.download_file(settings.S3_BUCKET, src_key, dest_path, Config=S3_DOWNLOAD_CONFIG)
+    client.download_file(
+        settings.S3_BUCKET, src_key, dest_path, Config=S3_DOWNLOAD_CONFIG
+    )
 
 
 def upload_s3(client, src_path, dest_key):
@@ -181,12 +183,14 @@ def upload_file_s3(client, src_path, dest_key, max_retry=5):
                 )
                 raise
 
+
 MIME_MAP = {
     "png": "image/png",
     "log": "text/plain",
     "txt": "text/plain",
-    "yml": "text/x-yaml"
+    "yml": "text/x-yaml",
 }
+
 
 def get_mime_args(src_path):
     extension = src_path.split(".")[-1]
@@ -197,6 +201,7 @@ def get_mime_args(src_path):
     else:
         extra_args = S3_UPLOAD_EXTRA_ARGS
     return extra_args
+
 
 def sanitise_path(path):
     """

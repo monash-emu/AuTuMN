@@ -47,7 +47,9 @@ def feather2sql(src_db_path, dest_db_path):
         src_db_path
     ), "Source DB must be FeatherDatabase compatible"
     src_db = autumn_db.FeatherDatabase(src_db_path)
-    autumn_db.database.convert_database(src_db, autumn_db.database.Database, dest_db_path)
+    autumn_db.database.convert_database(
+        src_db, autumn_db.database.Database, dest_db_path
+    )
 
 
 @db.command("parquet2sql")
@@ -63,4 +65,6 @@ def parquet2sql(src_db_path, dest_db_path):
         src_db_path
     ), "Source DB must be ParquetDatabase compatible"
     src_db = autumn_db.ParquetDatabase(src_db_path)
-    autumn_db.database.convert_database(src_db, autumn_db.database.Database, dest_db_path)
+    autumn_db.database.convert_database(
+        src_db, autumn_db.database.Database, dest_db_path
+    )

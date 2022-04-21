@@ -147,6 +147,7 @@ def run_calibrate(job, app, region, chains, runtime, commit, dry):
         job_func = functools.partial(remote.run_calibration, **kwargs)
         return _run_job(job_id, [instance_type], False, job_func)
 
+
 @run.command("resume_calibration")
 @click.option("--job", type=str, required=True)
 @click.option("--baserun", type=str, required=True)
@@ -154,6 +155,7 @@ def run_calibrate(job, app, region, chains, runtime, commit, dry):
 @click.option("--runtime", type=int, required=True)
 def resume_calibration_cli(job, baserun, chains, runtime):
     resume_calibration(job, baserun, chains, runtime)
+
 
 def resume_calibration(job, baserun, chains, runtime):
     """
@@ -169,6 +171,7 @@ def resume_calibration(job, baserun, chains, runtime):
     }
     job_func = functools.partial(remote.resume_calibration, **kwargs)
     return _run_job(job_id, [instance_type], False, job_func)
+
 
 @run.command("full")
 @click.option("--job", type=str, required=True)
@@ -187,7 +190,7 @@ def run_full_model(job, run, burn_in, sample, commit):
     job_id = f"full-{job}"
     # Use sample//3 as a heuristic for number of cores; will change if we change the sampling API
     # Cap max cores at 64 (no larger machines available, yet)
-    n_cores = min(sample//3, 64)
+    n_cores = min(sample // 3, 64)
 
     instance_type = aws.get_instance_type(n_cores, 32, "compute")
     kwargs = {
@@ -214,9 +217,7 @@ def run_powerbi(job, run, urunid, commit):
     Run the collate a PowerBI database from the full model run outputs.
     """
     job_id = f"powerbi-{job}"
-    instance_types = [
-        "r6i.4xlarge"
-    ]
+    instance_types = ["r6i.4xlarge"]
     kwargs = {"run_id": run, "urunid": urunid, "commit": commit}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_types, False, job_func)
@@ -252,7 +253,9 @@ def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
     instance = aws.find_instance(job_id)
     return_value = None
     try:
-        logger.info("Attempting to run job %s on instance %s", job_id, instance["InstanceId"])
+        logger.info(
+            "Attempting to run job %s on instance %s", job_id, instance["InstanceId"]
+        )
         runner = get_runner(instance)
         return_value = job_func(runner=runner)
         logging.info("Job %s succeeded.", job_id)

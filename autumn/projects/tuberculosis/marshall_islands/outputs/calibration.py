@@ -8,8 +8,6 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
     save_figure,
 )
-from autumn.tools.project import get_project
-
 from autumn.tools.db.load import load_uncertainty_table
 from autumn.tools.plots.uncertainty.plots import (
     _get_target_values,
@@ -17,6 +15,7 @@ from autumn.tools.plots.uncertainty.plots import (
     _plot_uncertainty,
 )
 from autumn.tools.plots.utils import COLORS
+from autumn.tools.project import get_project
 
 
 def main(data_path, output_path):
@@ -38,8 +37,12 @@ def plot_screening_rate(uncertainty_df, figure_path):
 
     widths = [panel_w] * n_col
     heights = [panel_h] * n_row
-    fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
-    spec = fig.add_gridspec(ncols=n_col, nrows=n_row, width_ratios=widths, height_ratios=heights)
+    fig = pyplot.figure(
+        constrained_layout=True, figsize=(sum(widths), sum(heights))
+    )  # (w, h)
+    spec = fig.add_gridspec(
+        ncols=n_col, nrows=n_row, width_ratios=widths, height_ratios=heights
+    )
 
     x_low = 1950
     x_up = 2050
@@ -87,17 +90,24 @@ def plot_model_fits(uncertainty_df, figure_path):
     n_row = 2
 
     outputs = [
-        "prevalence_infectiousXlocation_majuro", "prevalence_infectiousXlocation_ebeye",
-        "percentage_latentXlocation_majuro", "notificationsXlocation_majuro", "notificationsXlocation_ebeye",
-        "population_size"
+        "prevalence_infectiousXlocation_majuro",
+        "prevalence_infectiousXlocation_ebeye",
+        "percentage_latentXlocation_majuro",
+        "notificationsXlocation_majuro",
+        "notificationsXlocation_ebeye",
+        "population_size",
     ]
     panel_h = 5
     panel_w = 7
 
     widths = [panel_w] * n_col
     heights = [panel_h] * n_row
-    fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
-    spec = fig.add_gridspec(ncols=n_col, nrows=n_row, width_ratios=widths, height_ratios=heights)
+    fig = pyplot.figure(
+        constrained_layout=True, figsize=(sum(widths), sum(heights))
+    )  # (w, h)
+    spec = fig.add_gridspec(
+        ncols=n_col, nrows=n_row, width_ratios=widths, height_ratios=heights
+    )
 
     # load targets
     targets = project.plots

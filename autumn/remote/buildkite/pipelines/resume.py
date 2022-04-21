@@ -6,7 +6,13 @@ from autumn.remote.buildkite.buildkite import (
     TextInputField,
 )
 
-from .calibrate import burn_in_field, sample_size_field, trigger_field, chains_field, runtime_field
+from .calibrate import (
+    burn_in_field,
+    chains_field,
+    runtime_field,
+    sample_size_field,
+    trigger_field,
+)
 
 run_id_field = TextInputField(
     key="run-id",
@@ -21,10 +27,12 @@ fields = [
     runtime_field,
     burn_in_field,
     sample_size_field,
-    trigger_field
+    trigger_field,
 ]
 input_step = InputStep(
-    key="resume_calibration_settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields
+    key="resume_calibration_settings",
+    run_condition='build.env("SKIP_INPUT") == null',
+    fields=fields,
 )
 resume_calibration_step = CommandStep(
     key="resume_calibration",

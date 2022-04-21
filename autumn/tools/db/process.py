@@ -2,8 +2,8 @@
 Processing data from the output database.
 """
 import logging
-from typing import List
 from datetime import date
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -68,7 +68,9 @@ def get_identifying_run_ids(table: pd.DataFrame) -> pd.Series:
     return table["chain"].astype(str) + ":" + table["run"].astype(str)
 
 
-def select_pruning_candidates(sampled_runs_df: pd.DataFrame, n_candidates: int, weighted=True) -> pd.DataFrame:
+def select_pruning_candidates(
+    sampled_runs_df: pd.DataFrame, n_candidates: int, weighted=True
+) -> pd.DataFrame:
     """Select a random set of 'good enough' candidates for manual inspection
     The output set will be guaranteed to contain the highest
     MLE run from all the chains, in addition to randomly selected candidates
@@ -88,14 +90,16 @@ def select_pruning_candidates(sampled_runs_df: pd.DataFrame, n_candidates: int, 
 
     # Load all MCMC run data to select from
 
-    #all_accepted = all_mcmc_df[all_mcmc_df["accept"] == 1]
+    # all_accepted = all_mcmc_df[all_mcmc_df["accept"] == 1]
 
     # Find the MLE candidate
     max_ll = sampled_runs_df["loglikelihood"].max()
-    max_ll_candidate = sampled_runs_df[sampled_runs_df["loglikelihood"] == max_ll].iloc[0].name
+    max_ll_candidate = (
+        sampled_runs_df[sampled_runs_df["loglikelihood"] == max_ll].iloc[0].name
+    )
 
     # Ensure candidates have been sampled and that output data is available
-    #accepted_and_sampled = all_accepted[all_accepted["sampled"] == 1]
+    # accepted_and_sampled = all_accepted[all_accepted["sampled"] == 1]
 
     # Sample random candidates
     possible_candidates = list(sampled_runs_df.index)
@@ -105,7 +109,8 @@ def select_pruning_candidates(sampled_runs_df: pd.DataFrame, n_candidates: int, 
     if weighted:
         # +++ FIXME Adding 10.0 to not overweight, should parameterise this
         weights = 1.0 / (
-            10.0 + np.abs(np.array(sampled_runs_df.loc[possible_candidates].loglikelihood))
+            10.0
+            + np.abs(np.array(sampled_runs_df.loc[possible_candidates].loglikelihood))
         )
         weights = weights / weights.sum()
     else:
@@ -115,7 +120,9 @@ def select_pruning_candidates(sampled_runs_df: pd.DataFrame, n_candidates: int, 
     n_candidates = min(n_candidates, len(possible_candidates))
 
     candidates = list(
-        np.random.choice(possible_candidates, n_candidates - 1, replace=False, p=weights)
+        np.random.choice(
+            possible_candidates, n_candidates - 1, replace=False, p=weights
+        )
     )
 
     # Ensure we have the max likelihood candidate
@@ -127,7 +134,9 @@ def select_pruning_candidates(sampled_runs_df: pd.DataFrame, n_candidates: int, 
     return candidates_df
 
 
-def prune_chain(source_db_path: str, target_db_path: str, chain_candidates: pd.DataFrame):
+def prune_chain(
+    source_db_path: str, target_db_path: str, chain_candidates: pd.DataFrame
+):
     """
     Read the model outputs from a database and removes output data that is not MLE.
     This is an operation applied to each chain's database.
@@ -170,7 +179,9 @@ def prune_final(source_db_path: str, target_db_path: str, candidates_df: pd.Data
         table_df = source_db.query(table_name)
         if table_name == "derived_outputs":
             # Drop everything except the candidate runs
-            logger.info("Pruning derived_outputs so that it only contains candidate runs")
+            logger.info(
+                "Pruning derived_outputs so that it only contains candidate runs"
+            )
             candidate_iruns = get_identifying_run_ids(candidates_df)
             table_df["irun_id"] = get_identifying_run_ids(table_df)
             filtered_table_df = table_df[table_df["irun_id"].isin(candidate_iruns)]
@@ -245,7 +256,10 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     logger.info("Adding 'targets' table")
     targets_data = []
     for target in project.calibration.targets:
-         targets_data += [{'key': target.data.name, 'times': idx, 'value': v} for idx,v in target.data.iteritems()]
+        targets_data += [
+            {"key": target.data.name, "times": idx, "value": v}
+            for idx, v in target.data.iteritems()
+        ]
 
     targets_df = pd.DataFrame(targets_data)
     target_db.dump_df("targets", targets_df)
@@ -313,7 +327,8 @@ def select_outputs_from_candidates(
         masked = ctable[run_mask & scenario_mask]
         name = f"{chain}_{run}"
         out_df[name] = pd.Series(
-            index=timelist_to_dti(masked["times"], ref_date), data=masked[output_name].data
+            index=timelist_to_dti(masked["times"], ref_date),
+            data=masked[output_name].data,
         )
     return out_df
 

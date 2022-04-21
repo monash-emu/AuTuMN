@@ -26,7 +26,9 @@ def get_john_hopkins_data(variable: str, country: str, latest=False):
     data = data[data["Country/Region"] == country_name]
 
     # We need to collect the country-level data
-    if data["Province/State"].isnull().any():  # when there is a single row for the whole country
+    if (
+        data["Province/State"].isnull().any()
+    ):  # when there is a single row for the whole country
         data = data[data["Province/State"].isnull()]
 
     data_series = []

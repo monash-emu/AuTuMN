@@ -1,4 +1,5 @@
 from datetime import datetime
+
 import pandas as pd
 
 from autumn.tools.inputs.database import get_input_db

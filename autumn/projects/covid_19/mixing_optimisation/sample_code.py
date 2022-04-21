@@ -1,17 +1,16 @@
-from autumn.tools.optimisation.opti import Opti
-
 from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (
-    APP_NAME,
-    ROOT_MODEL_PARAMS,
     AGE_MODE,
+    APP_NAME,
     DURATIONS,
     LOCATION_MODE,
     MODES,
     OBJECTIVES,
+    ROOT_MODEL_PARAMS,
     make_objective_func,
     make_scenario_func,
 )
+from autumn.tools.optimisation.opti import Opti
 
 PRINT_OUTPUT = True
 
@@ -43,9 +42,11 @@ def run_sample_code():
 
                     # The decision variables must now have a lower bound of 0.1  and upper bound of 1
                     # run the objective function
-                    [h, total_nb_deaths, years_of_life_lost] = opti_object.evaluate_objective(
-                        decision_vars
-                    )
+                    [
+                        h,
+                        total_nb_deaths,
+                        years_of_life_lost,
+                    ] = opti_object.evaluate_objective(decision_vars)
 
                     if PRINT_OUTPUT:
                         print(f"{country} / {mode} / {duration} / {objective}")

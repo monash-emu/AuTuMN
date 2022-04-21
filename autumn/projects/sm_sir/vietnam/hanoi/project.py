@@ -1,22 +1,18 @@
 import pandas as pd
 
-from autumn.tools.project import (
-    Project,
-    ParameterSet,
-    load_timeseries,
-    build_rel_path,
-    get_all_available_scenario_paths,
-    use_tuned_proposal_sds,
-)
+from autumn.models.sm_sir import base_params, build_model, set_up_random_process
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import (
-    base_params,
-    build_model,
-    set_up_random_process
+from autumn.tools.project import (
+    ParameterSet,
+    Project,
+    build_rel_path,
+    get_all_available_scenario_paths,
+    load_timeseries,
+    use_tuned_proposal_sds,
 )
-from autumn.settings import Region, Models
 
 # Load and configure model parameters
 mle_path = build_rel_path("params/mle-params.yml")
@@ -34,15 +30,15 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 notifications = pd.concat(
     [
-     # ts_set["notifications"].loc[671:745],  # from 01st Nov 2021 to 14th Jan 2022
-     ts_set["notifications"].loc[763:]  # from 01st Feb 2022 onwards
+        # ts_set["notifications"].loc[671:745],  # from 01st Nov 2021 to 14th Jan 2022
+        ts_set["notifications"].loc[763:]  # from 01st Feb 2022 onwards
     ]
 )
 
 icu_occupancy = pd.concat(
     [
-     ts_set["icu_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
-     ts_set["icu_occupancy"].loc[783:]  # from 21st Feb 2022 onwards
+        ts_set["icu_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
+        ts_set["icu_occupancy"].loc[783:],  # from 21st Feb 2022 onwards
     ]
 )
 
@@ -57,7 +53,7 @@ targets = [
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (10000., 25000.)),
+    UniformPrior("infectious_seed", (10000.0, 25000.0)),
     UniformPrior("contact_rate", (0.1, 0.25)),
     # detect prop
     UniformPrior("detect_prop", (0.1, 0.3)),
@@ -75,7 +71,9 @@ priors = [
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # Omicron-related parameters
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (722.0, 757.0)),  # 5-week interval
+    UniformPrior(
+        "voc_emergence.omicron.new_voc_seed.start_time", (722.0, 757.0)
+    ),  # 5-week interval
     UniformPrior("voc_emergence.omicron.relative_latency", (0.05, 0.25)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.3, 2.0)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.8, 1.6)),

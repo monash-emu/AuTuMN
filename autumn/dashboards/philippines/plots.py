@@ -2,18 +2,16 @@ import os
 from typing import List
 
 import pandas as pd
+import streamlit as st
 from matplotlib import pyplot
 
-from autumn.settings import Region
 from autumn.dashboards.calibration_results.plots import get_uncertainty_df
-from autumn.tools.plots.plotter import StreamlitPlotter
+from autumn.settings import Region
 from autumn.tools import plots
-from autumn.tools.streamlit.utils import Dashboard
+from autumn.tools.plots.plotter import StreamlitPlotter
 from autumn.tools.project import Project
-
 from autumn.tools.streamlit import selectors
-import streamlit as st
-
+from autumn.tools.streamlit.utils import Dashboard
 
 STANDARD_X_LIMITS = 153, 275
 dash = Dashboard()
@@ -91,11 +89,20 @@ def plot_multi_scenario_single_run(
     title_font_size = st.sidebar.slider("Title font size", 1, 30, 12)
     label_font_size = st.sidebar.slider("Label font size", 1, 30, 10)
 
-
     plots.calibration.plots.plot_multi_output_single_run(
-        plotter, mcmc_tables, calib_dir_path, chosen_outputs, selected_scenarios, run_id, x_low, x_up, is_legend, n_xticks, title_font_size, label_font_size
+        plotter,
+        mcmc_tables,
+        calib_dir_path,
+        chosen_outputs,
+        selected_scenarios,
+        run_id,
+        x_low,
+        x_up,
+        is_legend,
+        n_xticks,
+        title_font_size,
+        label_font_size,
     )
-
 
 
 # @dash.register("Seroprevalence by age")

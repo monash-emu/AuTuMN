@@ -8,11 +8,12 @@ from summer import (
 
 from autumn.tools.curve import scale_up_function
 from autumn.tools.inputs import get_death_rates_by_agegroup, get_population_by_agegroup
-from autumn.tools.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
+from autumn.tools.inputs.social_mixing.queries import (
+    get_mixing_matrix_specific_agegroups,
+)
 from autumn.tools.project import Params, build_rel_path
 
 from .constants import Compartment
-
 
 base_params = Params(build_rel_path("params.yml"))
 
@@ -180,7 +181,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Death flows
     # Universal death rate to be overriden by a multiply in age stratification.
-    uni_death_flow_names = model.add_universal_death_flows("universal_death", death_rate=1)
+    uni_death_flow_names = model.add_universal_death_flows(
+        "universal_death", death_rate=1
+    )
     model.add_death_flow(
         "infectious_death",
         params["infect_death_rate"],
@@ -281,16 +284,23 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.request_output_for_flow("treatment_deaths", flow_name="treatment_death")
     model.request_output_for_flow("progression_early", flow_name="early_activation")
     model.request_output_for_flow("progression_late", flow_name="late_activation")
-    model.request_aggregate_output("progression", ["progression_early", "progression_late"])
+    model.request_aggregate_output(
+        "progression", ["progression_early", "progression_late"]
+    )
     model.request_output_for_compartments("population_size", COMPARTMENTS)
     model.request_aggregate_output(
-        "_incidence", sources=["early_activation", "late_activation"], save_results=False
+        "_incidence",
+        sources=["early_activation", "late_activation"],
+        save_results=False,
     )
     model.request_function_output(
-        "incidence", sources=["_incidence", "population_size"], func=lambda i, p: 1e5 * i / p
+        "incidence",
+        sources=["_incidence", "population_size"],
+        func=lambda i, p: 1e5 * i / p,
     )
     model.request_aggregate_output(
-        "disease_deaths", sources=["infectious_deaths", "detected_deaths", "treatment_deaths"]
+        "disease_deaths",
+        sources=["infectious_deaths", "detected_deaths", "treatment_deaths"],
     )
     cum_start_time = params["cumulative_output_start_time"]
     model.request_cumulative_output(
@@ -299,14 +309,18 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.request_cumulative_output(
         "cumulative_deaths", source="disease_deaths", start_time=cum_start_time
     )
-    model.request_output_for_compartments("_count_infectious", INFECTIOUS_COMPS, save_results=False)
+    model.request_output_for_compartments(
+        "_count_infectious", INFECTIOUS_COMPS, save_results=False
+    )
     model.request_function_output(
         "prevalence_infectious",
         sources=["_count_infectious", "population_size"],
         func=lambda c, p: 1e5 * c / p,
     )
     model.request_output_for_compartments(
-        "_count_latent", [Compartment.EARLY_LATENT, Compartment.LATE_LATENT], save_results=False
+        "_count_latent",
+        [Compartment.EARLY_LATENT, Compartment.LATE_LATENT],
+        save_results=False,
     )
     model.request_function_output(
         "percentage_latent",
@@ -322,7 +336,9 @@ def _build_age_strat(params: dict, uni_death_flow_names: list):
 
     # Set age demographics
     pop = get_population_by_agegroup(
-        age_breakpoints=params["age_breakpoints"], country_iso_code=params["iso3"], year=2000
+        age_breakpoints=params["age_breakpoints"],
+        country_iso_code=params["iso3"],
+        year=2000,
     )
     age_split_props = dict(zip(params["age_breakpoints"], [x / sum(pop) for x in pop]))
     age_strat.set_population_split(age_split_props)
@@ -338,13 +354,16 @@ def _build_age_strat(params: dict, uni_death_flow_names: list):
 
     # Add age-based flow adjustments.
     age_strat.set_flow_adjustments(
-        "stabilisation", _adjust_all_multiply(params["stabilisation_rate_stratified"]["age"])
+        "stabilisation",
+        _adjust_all_multiply(params["stabilisation_rate_stratified"]["age"]),
     )
     age_strat.set_flow_adjustments(
-        "early_activation", _adjust_all_multiply(params["early_activation_rate_stratified"]["age"])
+        "early_activation",
+        _adjust_all_multiply(params["early_activation_rate_stratified"]["age"]),
     )
     age_strat.set_flow_adjustments(
-        "late_activation", _adjust_all_multiply(params["late_activation_rate_stratified"]["age"])
+        "late_activation",
+        _adjust_all_multiply(params["late_activation_rate_stratified"]["age"]),
     )
 
     # Add age-specific all-causes mortality rate.
@@ -367,7 +386,9 @@ def _build_age_strat(params: dict, uni_death_flow_names: list):
 
 
 def _build_vac_strat(params):
-    vac_strat = Stratification("vac", ["unvaccinated", "vaccinated"], [Compartment.SUSCEPTIBLE])
+    vac_strat = Stratification(
+        "vac", ["unvaccinated", "vaccinated"], [Compartment.SUSCEPTIBLE]
+    )
     vac_strat.set_population_split({"unvaccinated": 1.0, "vaccinated": 0.0})
 
     # Apply flow adjustments
@@ -404,7 +425,9 @@ def _build_vac_strat(params):
 
 def _build_organ_strat(params):
     organ_strat = Stratification(
-        "organ", ["smear_positive", "smear_negative", "extra_pulmonary"], INFECTIOUS_COMPS
+        "organ",
+        ["smear_positive", "smear_negative", "extra_pulmonary"],
+        INFECTIOUS_COMPS,
     )
     organ_strat.set_population_split(params["organ"]["props"])
     # Add infectiousness adjustments
@@ -438,11 +461,15 @@ def _build_strain_strat(params):
     strat = StrainStratification("strain", ["ds", "mdr"], INFECTED_COMPS)
     strat.set_population_split({"ds": 0.5, "mdr": 0.5})
     for c in INFECTED_COMPS:
-        strat.add_infectiousness_adjustments(c, {"ds": Multiply(1.0), "mdr": Multiply(0.8)})
+        strat.add_infectiousness_adjustments(
+            c, {"ds": Multiply(1.0), "mdr": Multiply(0.8)}
+        )
 
     strat.set_flow_adjustments(
         "treatment_commencement",
-        _adjust_all_multiply(params["treatment_commencement_rate_stratified"]["strain"]),
+        _adjust_all_multiply(
+            params["treatment_commencement_rate_stratified"]["strain"]
+        ),
     )
     treatment_adjusts = _adjust_all_multiply(
         params["preventive_treatment_rate_stratified"]["strain"]
@@ -454,7 +481,8 @@ def _build_strain_strat(params):
         _adjust_all_multiply(params["treatment_recovery_rate_stratified"]["strain"]),
     )
     strat.set_flow_adjustments(
-        "treatment_death", _adjust_all_multiply(params["treatment_death_rate_stratified"]["strain"])
+        "treatment_death",
+        _adjust_all_multiply(params["treatment_death_rate_stratified"]["strain"]),
     )
     strat.set_flow_adjustments(
         "treatment_default",
@@ -473,7 +501,9 @@ def _build_strain_strat(params):
 
 def _build_class_strat(params):
     strat = Stratification(
-        "classified", ["correctly", "incorrectly"], [Compartment.DETECTED, Compartment.ON_TREATMENT]
+        "classified",
+        ["correctly", "incorrectly"],
+        [Compartment.DETECTED, Compartment.ON_TREATMENT],
     )
     # Apply only to ds flows
     strat.set_flow_adjustments(
@@ -506,12 +536,16 @@ def _build_class_strat(params):
     )
     strat.set_flow_adjustments(
         "spontaneous_recovery",
-        _adjust_all_multiply(params["spontaneous_recovery_rate_stratified"]["classified"]),
+        _adjust_all_multiply(
+            params["spontaneous_recovery_rate_stratified"]["classified"]
+        ),
     )
 
     strat.set_flow_adjustments(
         "failure_retreatment",
-        _adjust_all_multiply(params["failure_retreatment_rate_stratified"]["classified"]),
+        _adjust_all_multiply(
+            params["failure_retreatment_rate_stratified"]["classified"]
+        ),
     )
     return strat
 
@@ -594,7 +628,10 @@ def _get_derived_params(params):
     params["treatment_recovery_rate_stratified"]["strain"]["mdr"] = (
         params["treatment_success_prop"]
         * params["treatment_success_prop_stratified"]["strain"]["mdr"]
-        / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"])
+        / (
+            params["treatment_duration"]
+            * params["treatment_duration_stratified"]["strain"]["mdr"]
+        )
     ) / params["treatment_recovery_rate"]
 
     params["treatment_death_rate"] = (
@@ -604,17 +641,25 @@ def _get_derived_params(params):
     params["treatment_death_rate_stratified"]["strain"]["mdr"] = (
         params["treatment_mortality_prop"]
         * params["treatment_mortality_prop_stratified"]["strain"]["mdr"]
-        / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"])
+        / (
+            params["treatment_duration"]
+            * params["treatment_duration_stratified"]["strain"]["mdr"]
+        )
     ) / params["treatment_death_rate"]
 
     params["treatment_default_rate"] = (
         params["treatment_default_prop"] / params["treatment_duration"]
     )
-    params["treatment_default_rate_stratified"]["strain"]["ds"] = 1 - params["amplification_prob"]
+    params["treatment_default_rate_stratified"]["strain"]["ds"] = (
+        1 - params["amplification_prob"]
+    )
     params["treatment_default_rate_stratified"]["strain"]["mdr"] = (
         params["treatment_default_prop"]
         * params["treatment_default_prop_stratified"]["strain"]["mdr"]
-        / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"])
+        / (
+            params["treatment_duration"]
+            * params["treatment_duration_stratified"]["strain"]["mdr"]
+        )
     ) / params["treatment_default_rate"]
 
     params["treatment_default_rate_stratified"]["classified"]["correctly"] = 1.0
@@ -625,7 +670,9 @@ def _get_derived_params(params):
         * params["treatment_default_rate_stratified"]["strain"]["mdr"]
     )
 
-    params["amplification_rate"] = params["treatment_default_rate"] * params["amplification_prob"]
+    params["amplification_rate"] = (
+        params["treatment_default_rate"] * params["amplification_prob"]
+    )
 
     params["reinfection_rate"] = params["contact_rate"] * params["rr_infection_latent"]
 

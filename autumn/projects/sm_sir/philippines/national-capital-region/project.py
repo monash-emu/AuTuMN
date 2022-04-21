@@ -1,16 +1,16 @@
-from autumn.tools.project import (
-    Project,
-    ParameterSet,
-    load_timeseries,
-    build_rel_path,
-    use_tuned_proposal_sds,
-    get_all_available_scenario_paths,
-)
+from autumn.models.sm_sir import base_params, build_model, set_up_random_process
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model, set_up_random_process
-from autumn.settings import Region, Models
+from autumn.tools.project import (
+    ParameterSet,
+    Project,
+    build_rel_path,
+    get_all_available_scenario_paths,
+    load_timeseries,
+    use_tuned_proposal_sds,
+)
 
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")
@@ -44,8 +44,10 @@ priors = [
     #     "age_stratification.prop_hospital.source_immunity_protection.high", [.80, 0.90]
     # ),
     # Hospital-related
-    UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, 1.]),
-    UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
+    UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, 1.0]),
+    UniformPrior(
+        "time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]
+    ),
     UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
     UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 8.0]),
     UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
@@ -83,7 +85,9 @@ with open(plot_spec_filepath) as f:
 
 
 # Create and register the project.
-project = Project(Region.NCR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)
+project = Project(
+    Region.NCR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+)
 
 
 # from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning

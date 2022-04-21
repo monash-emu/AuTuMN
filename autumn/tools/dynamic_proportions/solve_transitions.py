@@ -1,14 +1,17 @@
-import scipy
-from scipy.optimize import minimize
+from typing import List
+
 import numpy as np
 import pandas as pd
-from typing import List
+import scipy
+from scipy.optimize import minimize
 
 from autumn.tools.curve import scale_up_function
 from autumn.tools.utils.utils import flatten_list
 
 
-def calculate_transition_rates_from_dynamic_props(props_df: pd.DataFrame, active_flows: dict) -> dict:
+def calculate_transition_rates_from_dynamic_props(
+    props_df: pd.DataFrame, active_flows: dict
+) -> dict:
     """
     Calculate the transition rates associated with each inter-stratum flow that will produce the requested population
     proportions over time.
@@ -41,26 +44,33 @@ def calculate_transition_rates_from_dynamic_props(props_df: pd.DataFrame, active
         end_props = props_df.loc[times[i + 1]]
 
         # Main calculations requiring numerical solving
-        rates = calculate_rates_for_interval(start_props, end_props, delta_t, strata, active_flows)
+        rates = calculate_rates_for_interval(
+            start_props, end_props, delta_t, strata, active_flows
+        )
         for f_name in active_flows:
             tv_rates[f_name].append(rates[f_name])
 
     # Create time-variant functions
     # First create the list of time points such that parameter changes occur at each requested time
-    scaleup_times = flatten_list([[t, t+1] for t in times])
+    scaleup_times = flatten_list([[t, t + 1] for t in times])
 
     # Then create the list of values using the rates estimated previously
     scaleup_param_functions = {}
     for flow in active_flows:
-        values = flatten_list([[0.]] + [[v]*2 for v in tv_rates[flow]] + [[0.]])
-        scaleup_param_functions[flow] = scale_up_function(scaleup_times, values, method=4)
+        values = flatten_list([[0.0]] + [[v] * 2 for v in tv_rates[flow]] + [[0.0]])
+        scaleup_param_functions[flow] = scale_up_function(
+            scaleup_times, values, method=4
+        )
 
     return scaleup_param_functions
 
 
 def calculate_rates_for_interval(
-        start_props: pd.core.series.Series, end_props: pd.core.series.Series, delta_t: float, strata: List[str],
-        active_flows: dict
+    start_props: pd.core.series.Series,
+    end_props: pd.core.series.Series,
+    delta_t: float,
+    strata: List[str],
+    active_flows: dict,
 ) -> dict:
     """
     Calculate the transition rates associated with each inter-stratum flow for a given time interval.
@@ -102,7 +112,11 @@ def calculate_rates_for_interval(
             for i_col, stratum_col in enumerate(strata):
                 if i_row == i_col:
                     # Diagonal components capture flows starting from the associated stratum
-                    relevant_flow_names = [f_name for f_name, f_ends in active_flows.items() if f_ends[0] == stratum_row]
+                    relevant_flow_names = [
+                        f_name
+                        for f_name, f_ends in active_flows.items()
+                        if f_ends[0] == stratum_row
+                    ]
                     for f_name in relevant_flow_names:
                         m[i_row, i_col] -= params[ordered_flow_names.index(f_name)]
                 else:
@@ -121,15 +135,21 @@ def calculate_rates_for_interval(
         return scipy.linalg.norm(diff)
 
     # Define bounds to force the parameters to be positive
-    bounds = [(0., None)] * n_params
+    bounds = [(0.0, None)] * n_params
 
     # Numerical solving
-    solution = minimize(function_to_zero, x0=np.zeros(n_params), bounds=bounds, method="TNC")
+    solution = minimize(
+        function_to_zero, x0=np.zeros(n_params), bounds=bounds, method="TNC"
+    )
 
-    return {ordered_flow_names[i]: solution.x[i] for i in range(len(ordered_flow_names))}
+    return {
+        ordered_flow_names[i]: solution.x[i] for i in range(len(ordered_flow_names))
+    }
 
 
-def check_requested_proportions(props_df: pd.DataFrame, active_flows: dict, rel_diff_tol: float = 0.01):
+def check_requested_proportions(
+    props_df: pd.DataFrame, active_flows: dict, rel_diff_tol: float = 0.01
+):
     """
     Check that:
      - the sum of the requested proportions remains (approximately) constant over time.
@@ -151,11 +171,29 @@ def check_requested_proportions(props_df: pd.DataFrame, active_flows: dict, rel_
     assert rel_diff <= rel_diff_tol, msg
 
     # Check that strata with increasing proportions have inflows
-    ever_increasing_strata = props_df.loc[:, props_df.diff().max() > 0.].columns.to_list()
-    test = all([any([dest == stratum for _, dest in active_flows.values()]) for stratum in ever_increasing_strata])
-    assert test, "Increasing proportions requested for at least one stratum that has no inflow."
+    ever_increasing_strata = props_df.loc[
+        :, props_df.diff().max() > 0.0
+    ].columns.to_list()
+    test = all(
+        [
+            any([dest == stratum for _, dest in active_flows.values()])
+            for stratum in ever_increasing_strata
+        ]
+    )
+    assert (
+        test
+    ), "Increasing proportions requested for at least one stratum that has no inflow."
 
     # Check that strata with decreasing proportions have outflows
-    ever_decreasing_strata = props_df.loc[:, props_df.diff().min() < 0.].columns.to_list()
-    test = all([any([origin == stratum for origin, _ in active_flows.values()]) for stratum in ever_decreasing_strata])
-    assert test, "Decreasing proportions requested for at least one stratum that has no outflow."
+    ever_decreasing_strata = props_df.loc[
+        :, props_df.diff().min() < 0.0
+    ].columns.to_list()
+    test = all(
+        [
+            any([origin == stratum for origin, _ in active_flows.values()])
+            for stratum in ever_decreasing_strata
+        ]
+    )
+    assert (
+        test
+    ), "Decreasing proportions requested for at least one stratum that has no outflow."

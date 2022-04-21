@@ -3,10 +3,16 @@ from datetime import timedelta
 import numpy as np
 from numpy.testing import assert_allclose
 
-from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.models.covid_19.mixing_matrix import (
+    build_dynamic_mixing_matrix,
+    macrodistancing,
+)
 from autumn.models.covid_19.parameters import Country, Mobility
-from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix, macrodistancing
-from autumn.tools.inputs.social_mixing.queries import get_country_mixing_matrix, get_mixing_matrix_specific_agegroups
+from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.tools.inputs.social_mixing.queries import (
+    get_country_mixing_matrix,
+    get_mixing_matrix_specific_agegroups,
+)
 
 MM = np.ones([16, 16])
 HOME_MM = MM * 0.1
@@ -15,11 +21,11 @@ SCHOOL_MM = MM * 0.3
 WORK_MM = MM * 0.6
 
 MIXING_MATRICES = {
-    'all_locations': MM,
-    'home': HOME_MM,
-    'other_locations': OTHER_LOCATIONS_MM,
-    'school': SCHOOL_MM,
-    'work': WORK_MM
+    "all_locations": MM,
+    "home": HOME_MM,
+    "other_locations": OTHER_LOCATIONS_MM,
+    "school": SCHOOL_MM,
+    "work": WORK_MM,
 }
 
 UNTESTED_PARAMS = {
@@ -34,7 +40,7 @@ def test_build_dynamic__with_no_changes():
     """
     Ensure dynamic mixing matrix has no change over time, if no changes are supplied.
     """
-    #monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
+    # monkeypatch.setattr(location_adjuster, "get_country_mixing_matrix", _get_country_mixing_matrix)
     mobility_params = {
         "mixing": {},
         "age_mixing": None,
@@ -44,13 +50,16 @@ def test_build_dynamic__with_no_changes():
     }
 
     mm_func = build_dynamic_mixing_matrix(
-        base_matrices=MIXING_MATRICES, country=Country(iso3="AUS"), mobility=Mobility(**mobility_params)
+        base_matrices=MIXING_MATRICES,
+        country=Country(iso3="AUS"),
+        mobility=Mobility(**mobility_params),
     )
     mm = mm_func(0)
     assert_allclose(mm, MM, atol=0.01, verbose=True)
 
     mm = mm_func(111)
     assert_allclose(mm, MM, atol=0.01, verbose=True)
+
 
 #
 # def test_build_dynamic__with_location_mobility_data(monkeypatch):
@@ -269,7 +278,9 @@ def test_age_mixing_matrix_variable_agegroups__smoke_test():
 
 
 def test_age_mixing_matrix_variable_agegroups__conservation():
-    requested_age_breaks = [i * 5.0 for i in range(16)]  # same as original Prem age groups
+    requested_age_breaks = [
+        i * 5.0 for i in range(16)
+    ]  # same as original Prem age groups
     prem_matrix = get_country_mixing_matrix("all_locations", "AUS")
     out_matrix = get_mixing_matrix_specific_agegroups("AUS", requested_age_breaks)
     assert np.array_equal(out_matrix, prem_matrix)

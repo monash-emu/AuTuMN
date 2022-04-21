@@ -1,15 +1,22 @@
-from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
+from autumn.models.tuberculosis import base_params, build_model
+from autumn.projects.tuberculosis.calibration_utils import (
+    get_natural_history_priors_from_cid,
+)
+from autumn.projects.tuberculosis.marshall_islands.utils import make_sa_scenario_list
+from autumn.settings import Models, Region
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
 )
-from autumn.models.tuberculosis import base_params, build_model
-from autumn.settings import Region, Models
-
-from autumn.projects.tuberculosis.calibration_utils import get_natural_history_priors_from_cid
-from autumn.projects.tuberculosis.marshall_islands.utils import make_sa_scenario_list
+from autumn.tools.project import (
+    ParameterSet,
+    Project,
+    build_rel_path,
+    load_timeseries,
+    use_tuned_proposal_sds,
+)
 
 ANALYSIS = "main"
 # ANALYSIS = "sa_importation"
@@ -19,7 +26,9 @@ ANALYSIS = "main"
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
+baseline_params = base_params.update(default_path).update(
+    mle_path, calibration_format=True
+)
 
 if ANALYSIS == "main":
     scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 12)]
@@ -36,8 +45,8 @@ targets = [
     NormalTarget(ts_set["prevalence_infectiousXlocation_majuro"], stdev=80.0),
     NormalTarget(ts_set["prevalence_infectiousXlocation_ebeye"], stdev=120.0),
     NormalTarget(ts_set["percentage_latentXlocation_majuro"], stdev=10.0),
-    NormalTarget(ts_set["notificationsXlocation_majuro"], stdev=40.),
-    NormalTarget(ts_set["notificationsXlocation_ebeye"], stdev=9.),
+    NormalTarget(ts_set["notificationsXlocation_majuro"], stdev=40.0),
+    NormalTarget(ts_set["notificationsXlocation_ebeye"], stdev=9.0),
     NormalTarget(ts_set["population_size"], stdev=2500.0),
 ]
 
@@ -60,7 +69,9 @@ priors = [
         "user_defined_stratifications.location.adjustments.detection.ebeye",
         [1.3, 2.0],
     ),
-    UniformPrior("user_defined_stratifications.location.adjustments.detection.other", [0.5, 1.5]),
+    UniformPrior(
+        "user_defined_stratifications.location.adjustments.detection.other", [0.5, 1.5]
+    ),
     UniformPrior("extra_params.rr_progression_diabetes", [2.0, 5.0]),
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.2, 1.0]),

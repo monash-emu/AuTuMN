@@ -9,10 +9,13 @@ import pandas as pd
 import streamlit as st
 from summer import CompartmentalModel
 
-from autumn.settings import OUTPUT_DATA_PATH
 from autumn import settings
-from autumn.tools.registry import get_registered_model_names, get_registered_project_names
+from autumn.settings import OUTPUT_DATA_PATH
 from autumn.tools.project import Project, get_project
+from autumn.tools.registry import (
+    get_registered_model_names,
+    get_registered_project_names,
+)
 
 
 def get_original_compartments(model: CompartmentalModel) -> List[str]:
@@ -25,12 +28,16 @@ def single_compartment(model: CompartmentalModel) -> str:
     Returns a compartment name.
     """
     compartment_choice = st.selectbox("compartment", model._original_compartment_names)
-    matching_compartments = [c for c in model.compartments if c.has_name(compartment_choice)]
+    matching_compartments = [
+        c for c in model.compartments if c.has_name(compartment_choice)
+    ]
     for strat in model._stratifications:
         if any([strat.name in c.strata.keys() for c in matching_compartments]):
             chosen_strata = st.selectbox(strat.name, strat.strata)
             matching_compartments = [
-                c for c in matching_compartments if c.has_stratum(strat.name, chosen_strata)
+                c
+                for c in matching_compartments
+                if c.has_stratum(strat.name, chosen_strata)
             ]
 
     assert len(matching_compartments) == 1
@@ -124,7 +131,9 @@ def model_name() -> str:
     return model
 
 
-def output_region_name(app_output_path: str, name: str, default_index=0) -> Tuple[str, str]:
+def output_region_name(
+    app_output_path: str, name: str, default_index=0
+) -> Tuple[str, str]:
     """
     Selector for users to choose which parameter set they want to select
     for a given application
@@ -153,7 +162,9 @@ def app_region_name(app_name: str) -> Tuple[str, str]:
     return chosen_region, os.path.join(region_path, chosen_region.replace("-", "_"))
 
 
-def scenarios(models: List[CompartmentalModel], include_all=True) -> List[CompartmentalModel]:
+def scenarios(
+    models: List[CompartmentalModel], include_all=True
+) -> List[CompartmentalModel]:
     """
     Get user to select the scenario that they want.
     User may select "All", which includes all Scenarios.
@@ -223,7 +234,9 @@ def model_run_path(project: Project, multi_country_run_number=None) -> str:
     Returns the directory name selected.
     """
     # Read model runs from filesystem
-    model_run_dir = os.path.join(OUTPUT_DATA_PATH, "run", project.model_name, project.region_name)
+    model_run_dir = os.path.join(
+        OUTPUT_DATA_PATH, "run", project.model_name, project.region_name
+    )
     if not os.path.exists(model_run_dir):
         return
 
@@ -239,7 +252,7 @@ def model_run_path(project: Project, multi_country_run_number=None) -> str:
             model_runs.append(run_datetime)
         except:
             pass
-        
+
     # Create labels for the select box.
     labels = []
     model_run_dir_lookup = {}
@@ -251,7 +264,9 @@ def model_run_path(project: Project, multi_country_run_number=None) -> str:
     if multi_country_run_number is None:
         label = st.sidebar.selectbox("Select app model run", labels)
     else:
-        label = st.sidebar.selectbox(f"Select app model run {multi_country_run_number}", labels)
+        label = st.sidebar.selectbox(
+            f"Select app model run {multi_country_run_number}", labels
+        )
     if not label:
         return None
     else:

@@ -7,22 +7,31 @@ DISTRIBUTION_TRANSLATE = {
 }
 
 
-def write_main_param_table(project, main_table_params_list, params_descriptions, all_calibration_params_names,
-                           all_priors, output_dir_path):
+def write_main_param_table(
+    project,
+    main_table_params_list,
+    params_descriptions,
+    all_calibration_params_names,
+    all_priors,
+    output_dir_path,
+):
     tex_file_path = os.path.join(output_dir_path, "parameters_auto.tex")
     with open(tex_file_path, "w") as tex_file:
         write_param_table_header(tex_file, table_type="main_table")
         # Write one row per parameter
         for param in main_table_params_list:
             if param not in params_descriptions:
-                print(f"Warning: parameter {param} won't be in the main table as there is no description available")
+                print(
+                    f"Warning: parameter {param} won't be in the main table as there is no description available"
+                )
                 continue
 
             param_info = params_descriptions[param]
 
             if param in all_calibration_params_names:
                 display_value = get_prior_display(
-                    all_priors[all_calibration_params_names.index(param)], table_type="main_table"
+                    all_priors[all_calibration_params_names.index(param)],
+                    table_type="main_table",
                 )
             else:
                 display_value = get_fixed_param_display(project, param, param_info)
@@ -46,13 +55,13 @@ def write_priors_table(params_descriptions, all_priors, output_dir_path):
             param = prior_dict["param_name"]
 
             if param not in params_descriptions:
-                print(f"Warning: parameter {param} won't be in the priors table as there is no description available")
+                print(
+                    f"Warning: parameter {param} won't be in the priors table as there is no description available"
+                )
                 continue
 
             param_info = params_descriptions[param]
-            display_value = get_prior_display(
-                prior_dict, table_type="priors_table"
-            )
+            display_value = get_prior_display(prior_dict, table_type="priors_table")
             # write table row
             table_row = f"\\hline {param_info['full_name']} & {display_value} & "
             if "rationale" in param_info:
@@ -71,7 +80,9 @@ def write_param_table_header(tex_file, table_type="main_table"):
     central_column_name = "Value" if table_type == "main_table" else "Distribution"
 
     # Write the table header
-    tex_file.write("\\begin{longtable}[ht]{| >{\\raggedright}p{4cm} | >{\\raggedright}p{3cm} | p{6.8cm} |} \n")
+    tex_file.write(
+        "\\begin{longtable}[ht]{| >{\\raggedright}p{4cm} | >{\\raggedright}p{3cm} | p{6.8cm} |} \n"
+    )
     tex_file.write("\t \hline \n")
     tex_file.write(f"\t Parameter & {central_column_name} & Rationale \\\ \n")
     tex_file.write("\t \endfirsthead \n")
@@ -89,7 +100,7 @@ def get_fixed_param_display(project, param, param_info):
 
     # round up the value
     if "n_digits" in param_info:
-        display_value = round(display_value, param_info['n_digits'])
+        display_value = round(display_value, param_info["n_digits"])
 
     # convert to string
     display_value = str(display_value)
@@ -110,11 +121,15 @@ def get_prior_display(prior_dict, table_type="main_table"):
     """
     display = "Calibration parameter \\newline " if table_type == "main_table" else ""
 
-    distri_type = prior_dict['distribution']
-    distri_name = DISTRIBUTION_TRANSLATE[distri_type] if distri_type in DISTRIBUTION_TRANSLATE else distri_type
+    distri_type = prior_dict["distribution"]
+    distri_name = (
+        DISTRIBUTION_TRANSLATE[distri_type]
+        if distri_type in DISTRIBUTION_TRANSLATE
+        else distri_type
+    )
     display += f"{distri_name} distribution \\newline "
 
-    distri_params = prior_dict['distri_params']
+    distri_params = prior_dict["distri_params"]
     display += f"parameters: [{distri_params[0]}, {distri_params[1]}]"
 
     if "trunc_range" in prior_dict:
@@ -122,4 +137,3 @@ def get_prior_display(prior_dict, table_type="main_table"):
         display += f" \\newline support: [{support[0]}, {support[1]}]"
 
     return display
-

@@ -6,7 +6,10 @@ TODO: Test more mixing matrix functionality
 import pandas as pd
 import pytest
 
-from autumn.models.covid_19.mixing_matrix.macrodistancing import parse_values, update_mixing_data
+from autumn.models.covid_19.mixing_matrix.macrodistancing import (
+    parse_values,
+    update_mixing_data,
+)
 
 
 @pytest.mark.parametrize(
@@ -21,7 +24,10 @@ from autumn.models.covid_19.mixing_matrix.macrodistancing import parse_values, u
         ([0.1, 0.95, ["scale_prev_up_to_1", 1.1], 0.5], [0.1, 0.95, 1, 0.5]),
         ([1, 2, ["scale_prev", 1.1], 3], [1, 2, 2.2, 3]),
         ([1, 2, ["scale_prev", 0.9], 3], [1, 2, 1.8, 3]),
-        ([8, ["scale_prev", 0.5], ["scale_prev", 0.5], ["scale_prev", 0.5]], [8, 4, 2, 1]),
+        (
+            [8, ["scale_prev", 0.5], ["scale_prev", 0.5], ["scale_prev", 0.5]],
+            [8, 4, 2, 1],
+        ),
     ),
 )
 def test_parse_values(vals_in, vals_out):
@@ -37,7 +43,9 @@ def test_update_mixing_data__with_only_mobility_data():
     """
 
     mixing = {}
-    google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]})
+    google_mobility_values = pd.DataFrame(
+        {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
+    )
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
@@ -80,7 +88,9 @@ def test_update_mixing_data__with_user_specified_values():
             "append": False,
         },
     }
-    google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]})
+    google_mobility_values = pd.DataFrame(
+        {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
+    )
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
         mixing,
@@ -88,12 +98,18 @@ def test_update_mixing_data__with_user_specified_values():
         google_mobility_days,
     )
     assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.4, 1.54, 1.6], "times": [0, 1, 2, 3, 4, 5]},
+        "work": {
+            "values": [1.1, 1.2, 1.3, 1.4, 1.54, 1.6],
+            "times": [0, 1, 2, 3, 4, 5],
+        },
         "other_locations": {
             "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
             "times": [0, 1, 2, 3, 4, 5],
         },
-        "school": {"values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66], "times": [0, 1, 2, 3, 4, 5]},
+        "school": {
+            "values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66],
+            "times": [0, 1, 2, 3, 4, 5],
+        },
     }
 
 
@@ -175,5 +191,8 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
         google_mobility_days,
     )
     assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.11, 1.22, 1.33], "times": [0, 1, 2, 3, 4, 5]},
+        "work": {
+            "values": [1.1, 1.2, 1.3, 1.11, 1.22, 1.33],
+            "times": [0, 1, 2, 3, 4, 5],
+        },
     }

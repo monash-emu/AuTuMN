@@ -3,14 +3,12 @@ Script for loading IDN data into calibration targets and default.yml
 
 """
 import json
-
-
 import os
+
 import pandas as pd
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
 
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
 
 # Use OWID csv for notification and death numbers.
 COVID_IDN_OWID = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")
@@ -20,7 +18,9 @@ COVID_IDN_TARGETS = os.path.join(
 )
 
 COVID_BALI_DATA = os.path.join(INPUT_DATA_PATH, "covid_idn", "Bali Modelling.xlsx")
-COVID_BALI_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "indonesia", "bali", "timeseries.json")
+COVID_BALI_TARGETS = os.path.join(
+    PROJECTS_PATH, "covid_19", "indonesia", "bali", "timeseries.json"
+)
 
 TARGETS_IDN = {
     "notifications": "new_cases",

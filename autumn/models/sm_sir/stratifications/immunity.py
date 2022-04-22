@@ -4,7 +4,8 @@ import pandas as pd
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
 
-from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage, get_ncr_vac_coverage
+from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
+from autumn.tools.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -230,8 +231,8 @@ def apply_reported_vacc_coverage(
 
     if iso3 == "BGD":
         vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
-    else:
-        vaccine_data = get_ncr_vac_coverage(region="BGD", vaccine="total", dose=2)
+    elif iso3 == "PHL":
+        vaccine_data = get_phl_vac_coverage(dose="FIRST_DOSE")
 
     vaccine_df = pd.DataFrame(
         {

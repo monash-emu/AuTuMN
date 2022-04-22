@@ -42,6 +42,7 @@ priors = [
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (520, 675)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.4, 1.3)),
+    UniformPrior("sojourns.recovered", (60, 240))
 ]
 
 calibration = Calibration(

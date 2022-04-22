@@ -4,62 +4,12 @@ steps:
   - hint: Which model do you want to run?
     key: model-name
     options:
-    - label: Bali (covid_19)
-      value: covid_19:bali
-    - label: Barwon South West (covid_19)
-      value: covid_19:barwon-south-west
     - label: Belgium (covid_19)
       value: covid_19:belgium
-    - label: Calabarzon (covid_19)
-      value: covid_19:calabarzon
-    - label: Central Visayas (covid_19)
-      value: covid_19:central-visayas
-    - label: Davao City (covid_19)
-      value: covid_19:davao-city
-    - label: Davao Region (covid_19)
-      value: covid_19:davao-region
     - label: France (covid_19)
       value: covid_19:france
-    - label: Gippsland (covid_19)
-      value: covid_19:gippsland
-    - label: Grampians (covid_19)
-      value: covid_19:grampians
-    - label: Hanoi (covid_19)
-      value: covid_19:hanoi
-    - label: Ho_Chi_Minh_City (covid_19)
-      value: covid_19:ho_chi_minh_city
-    - label: Hume (covid_19)
-      value: covid_19:hume
-    - label: Indonesia (covid_19)
-      value: covid_19:indonesia
     - label: Italy (covid_19)
       value: covid_19:italy
-    - label: Johor (covid_19)
-      value: covid_19:johor
-    - label: Kuala Lumpur (covid_19)
-      value: covid_19:kuala-lumpur
-    - label: Loddon Mallee (covid_19)
-      value: covid_19:loddon-mallee
-    - label: Malaysia (covid_19)
-      value: covid_19:malaysia
-    - label: Manila (covid_19)
-      value: covid_19:manila
-    - label: Myanmar (covid_19)
-      value: covid_19:myanmar
-    - label: Nepal (covid_19)
-      value: covid_19:nepal
-    - label: North East Metro (covid_19)
-      value: covid_19:north-east-metro
-    - label: Penang (covid_19)
-      value: covid_19:penang
-    - label: Philippines (covid_19)
-      value: covid_19:philippines
-    - label: Sabah (covid_19)
-      value: covid_19:sabah
-    - label: Selangor (covid_19)
-      value: covid_19:selangor
-    - label: South East Metro (covid_19)
-      value: covid_19:south-east-metro
     - label: Spain (covid_19)
       value: covid_19:spain
     - label: Sri_Lanka (covid_19)
@@ -68,16 +18,12 @@ steps:
       value: covid_19:sweden
     - label: United Kingdom (covid_19)
       value: covid_19:united-kingdom
-    - label: Victoria (covid_19)
-      value: covid_19:victoria
-    - label: Vietnam (covid_19)
-      value: covid_19:vietnam
-    - label: West Metro (covid_19)
-      value: covid_19:west-metro
     - label: Philippines (sir_example)
       value: sir_example:philippines
     - label: Bangladesh (sm_sir)
       value: sm_sir:bangladesh
+    - label: Bhutan (sm_sir)
+      value: sm_sir:bhutan
     - label: Coxs_Bazar (sm_sir)
       value: sm_sir:coxs_bazar
     - label: Dhaka (sm_sir)
@@ -92,6 +38,8 @@ steps:
       value: sm_sir:myanmar
     - label: National Capital Region (sm_sir)
       value: sm_sir:national-capital-region
+    - label: Thimphu (sm_sir)
+      value: sm_sir:thimphu
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)

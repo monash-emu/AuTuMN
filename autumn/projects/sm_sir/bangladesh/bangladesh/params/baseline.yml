@@ -27,8 +27,8 @@ age_groups:
   - 75
 
 time:
-  start: 350.
-  end: 900.
+  start: 375.
+  end: 1200.
 
 activate_random_process: false
 
@@ -44,13 +44,16 @@ sojourns:
   recovered: 270.
 
 infectious_seed: 1000.
-contact_rate: 0.055
 
 immunity_stratification:
   prop_immune: 0.
   prop_high_among_immune: 0.
   infection_risk_reduction:
     low: 0.4
+
+# Cross protection - assumes that earlier strains can't infect persons recovered from newly emerging ones
+# Might not be the case in reality, but is a simplifying assumption, given that we are not looking at long-term dynamics
+# Base case is moderate cross-protection from infection with previous strains against newly emerging ones
 
 voc_emergence:
   wild_type:
@@ -69,14 +72,17 @@ voc_emergence:
       omicron:
         early_reinfection: 0.4
         late_reinfection: 0.
+      new_strain:
+        early_reinfection: 0.4
+        late_reinfection: 0.
   omicron:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 530.
+      start_time: 590.  # Calibrated
       entry_rate: 200.
       seed_duration: 10.
-    contact_rate_multiplier: 2.76
+    contact_rate_multiplier: 2.76  # Calibrated
     immune_escape: 0.6
     hosp_protection: 0.7
     icu_multiplier: 0.5
@@ -86,8 +92,33 @@ voc_emergence:
     cross_protection:
       wild_type:
         early_reinfection: 1.
-        late_reinfection: 0.
+        late_reinfection: 1.
       omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      new_strain:
+        early_reinfection: 0.4
+        late_reinfection: 0.
+  new_strain:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 10000.  # Very far in the future, i.e. turned off in base case
+      entry_rate: 10.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.
+    immune_escape: 0.6
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.
+        late_reinfection: 1.
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 1.
+      new_strain:
         early_reinfection: 1.
         late_reinfection: 0.
 

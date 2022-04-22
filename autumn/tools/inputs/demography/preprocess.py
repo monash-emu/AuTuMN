@@ -274,7 +274,7 @@ def read_population_df(loc_df: pd.DataFrame):
     pop_bgd = get_bangladesh_pop(BGD_POP)
     pop_df = pop_df.append(pop_bgd)
 
-    pop_thimphu = get_bhutan_thimphu_urban_pop(BTN_THM, add_pop_cols)
+    pop_thimphu = get_thimphu_urban_pop(BTN_THM, add_pop_cols)
     pop_df = pop_df.append(pop_thimphu)
 
     # Ensure all numbers are actually numbers
@@ -449,7 +449,11 @@ def get_rohingya_pop(ROHINGYA_POP: str) -> pd.DataFrame:
     return unpivot_df(df)
 
 
+<<<<<<< HEAD
 def get_bhutan_thimphu_urban_pop(BTN_THM, add_pop_cols):
+=======
+def get_thimphu_urban_pop(BTN_THM, add_pop_cols):
+>>>>>>> master
 
     df = pd.read_csv(BTN_THM)
     df = add_pop_cols(df, "BTN", "Bhutan", "Thimphu_Urban", "2017")
@@ -461,9 +465,18 @@ def get_bhutan_thimphu_urban_pop(BTN_THM, add_pop_cols):
         lambda s: 75 if s == "75+" else int(s.split("-")[0])
     )
     df["end_age"] = df["Age Group"].apply(
-        lambda s: None if s == "75+" else int(s.split("-")[1])
+        lambda s: 79 if s == "75+" else int(s.split("-")[1])
     )
 
-    return df[
-        ["country", "iso3", "region", "year", "population", "start_age", "end_age"]
-    ]
+    df = df[["country", "iso3", "region", "year", "population", "start_age", "end_age"]]
+
+    # To satisfy baseline sm_sir params.yml prop_hospital and cfr.
+    last_row = df[-1:].copy()
+    last_row["start_age"] = 80
+    last_row["end_age"] = 84
+    last_row["population"] = last_row["population"] / 2
+    df.loc[df["end_age"] == 79, "population"] = df["population"] / 2
+
+    df = pd.concat([df, last_row], ignore_index=True)
+
+    return df

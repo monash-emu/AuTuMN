@@ -100,7 +100,7 @@ def run_calibration_chain(
     os.environ["AUTUMN_CALIBRATE_DIR"] = CALIBRATE_DATA_DIR
 
     import numpy as np
-    np.seterr(all='raise')
+    np.seterr(divide="raise", over="raise", under="ignore", invalid="raise")
 
     try:
         project = get_project_from_run_id(run_id)

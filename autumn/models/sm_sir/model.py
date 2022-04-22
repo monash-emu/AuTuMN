@@ -602,10 +602,10 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     # Implement the dynamic immunity process
-    vacc_coverage_available = ["BGD"]
+    vacc_coverage_available = ["BGD", "PHL"]
     is_dynamic_immunity = iso3 in vacc_coverage_available
     if is_dynamic_immunity:
-        apply_reported_vacc_coverage(compartment_types, model, thinning=20)
+        apply_reported_vacc_coverage(compartment_types, model, iso3, thinning=20)
 
     """
     Get the applicable outputs

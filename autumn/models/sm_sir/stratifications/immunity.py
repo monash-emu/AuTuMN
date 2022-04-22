@@ -4,7 +4,7 @@ import pandas as pd
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
 
-from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
+from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage, get_ncr_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -209,6 +209,7 @@ def get_immunity_strat(
 def apply_reported_vacc_coverage(
         compartment_types: List[str],
         model: CompartmentalModel,
+        iso3: str,
         thinning: int,
 ):
     """
@@ -218,6 +219,7 @@ def apply_reported_vacc_coverage(
     Args:
         compartment_types: Unstratified model compartment types being implemented
         model: The model itself
+        iso3: The ISO-3 code for the country being implemented
         thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
 
     """
@@ -226,18 +228,21 @@ def apply_reported_vacc_coverage(
     msg = "Data must be thinned out at least 2-fold, to ensure we don't have identical values passed to curve fitting"
     assert thinning > 1, msg
 
-    # Get the data into the appropriate format
-    bgd_vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
-    bgd_vaccine_df = pd.DataFrame(
+    if iso3 == "BGD":
+        vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
+    else:
+        vaccine_data = get_ncr_vac_coverage(region="BGD", vaccine="total", dose=2)
+
+    vaccine_df = pd.DataFrame(
         {
-            "none": 1. - bgd_vaccine_data,
-            "low": bgd_vaccine_data,
+            "none": 1. - vaccine_data,
+            "low": vaccine_data,
         },
     )
-    bgd_vaccine_df["high"] = 0.
+    vaccine_df["high"] = 0.
 
     # Apply to model, as below
-    add_dynamic_immunity_to_model(compartment_types, bgd_vaccine_df[::thinning], model)
+    add_dynamic_immunity_to_model(compartment_types, vaccine_df[::thinning], model)
 
 
 def add_dynamic_immunity_to_model(

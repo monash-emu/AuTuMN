@@ -1,3 +1,4 @@
+import json
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
@@ -31,5 +32,13 @@ calibration = Calibration(
     priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
 )
 
+
+plot_spec_filepath = build_rel_path("timeseries.json")
+with open(plot_spec_filepath) as f:
+    plot_spec = json.load(f)
+
+
 # Create and register the project
-project = Project(Region.THIMPHU, Models.SM_SIR, build_model, param_set, calibration)
+project = Project(
+    Region.THIMPHU, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+)

@@ -2,11 +2,13 @@
 country:
   iso3: BTN
 
-ref_mixing_iso3: CHN
 
 population:
-  region: Thimphu_Urban
-  year: 2017
+  region: Thimphu
+  year: 2022
+
+
+ref_mixing_iso3: CHN
 
 contact_rate: 0.4
 

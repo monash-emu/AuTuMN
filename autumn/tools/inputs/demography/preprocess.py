@@ -16,7 +16,7 @@ BGD_POP = os.path.join(
 ROHINGYA_POP = os.path.join(
     INPUT_DATA_PATH, "covid_bgd", "UNHCR Population Factsheet  Block Level Data.xlsx"
 )
-BTN_THM = os.path.join(INPUT_DATA_PATH, "covid_btn", "Population_Thimphu_(Urban).csv")
+BTN_DATA_PATH = os.path.join(INPUT_DATA_PATH, "covid_btn")
 
 
 def preprocess_demography(input_db: Database):
@@ -274,8 +274,8 @@ def read_population_df(loc_df: pd.DataFrame):
     pop_bgd = get_bangladesh_pop(BGD_POP)
     pop_df = pop_df.append(pop_bgd)
 
-    pop_thimphu = get_thimphu_urban_pop(BTN_THM, add_pop_cols)
-    pop_df = pop_df.append(pop_thimphu)
+    pop_bhutan = get_bhutan_pop(BTN_DATA_PATH, add_pop_cols)
+    pop_df = pop_df.append(pop_bhutan)
 
     # Ensure all numbers are actually numbers
     numeric_cols = ["year", "start_age", "end_age", "population"]
@@ -449,11 +449,27 @@ def get_rohingya_pop(ROHINGYA_POP: str) -> pd.DataFrame:
     return unpivot_df(df)
 
 
-def get_thimphu_urban_pop(BTN_THM, add_pop_cols):
+def get_bhutan_pop(BTN_DATA_PATH, add_pop_cols):
 
-    df = pd.read_csv(BTN_THM)
-    df = add_pop_cols(df, "BTN", "Bhutan", "Thimphu_Urban", "2017")
-    df.rename(columns={"Urban population": "population"}, inplace=True)
+    files = [
+        os.path.join(BTN_DATA_PATH, file)
+        for file in os.listdir(BTN_DATA_PATH)
+        if "Population_total_" in file
+    ]
+
+    df = pd.concat(map(pd.read_csv, files))
+
+    df = df[["Age Group", "Year", "District", "Value"]]
+    df["iso3"] = "BTN"
+    df["country"] = "Bhutan"
+
+    df = df.rename(
+        columns={"Year": "year", "District": "region", "Value": "population"}
+    )
+    df = df.groupby(
+        ["country", "iso3", "region", "year", "Age Group"], as_index=False
+    ).sum()
+
     df["population"] = (
         df["population"] / 1000
     )  # To comform with all other population inputs.
@@ -467,12 +483,15 @@ def get_thimphu_urban_pop(BTN_THM, add_pop_cols):
     df = df[["country", "iso3", "region", "year", "population", "start_age", "end_age"]]
 
     # To satisfy baseline sm_sir params.yml prop_hospital and cfr.
-    last_row = df[-1:].copy()
-    last_row["start_age"] = 80
-    last_row["end_age"] = 84
-    last_row["population"] = last_row["population"] / 2
+
+    last_age_bracket = df[df["start_age"] == 75].copy()
+    last_age_bracket["start_age"] = 80
+    last_age_bracket["end_age"] = 84
+    last_age_bracket["population"] = last_age_bracket["population"] / 2
     df.loc[df["end_age"] == 79, "population"] = df["population"] / 2
 
-    df = pd.concat([df, last_row], ignore_index=True)
+    df.loc[df["region"] == "Bhutan", "region"] = None
+
+    df = pd.concat([df, last_age_bracket], ignore_index=True)
 
     return df

@@ -28,7 +28,7 @@ def get_phl_subregion_testing_numbers(region):
 def get_phl_vac_coverage(
     dose: str, region: str = "NATIONAL CAPITAL REGION (NCR)", vaccine: List[str] = None
 ) -> pd.Series:
-    """_summary_
+    """Calculates the vaccination coverage for any sub region of the Philippines.
 
     Args:
         dose (str): Can be any {FIRST_DOSE | SECOND_DOSE | SINGLE_DOSE | BOOSTER_DOSE | ADDITIONAL_DOSE}

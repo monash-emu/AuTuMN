@@ -46,30 +46,39 @@ def get_phl_vac_coverage(
 
     if vaccine is not None:
         vaccine = [vac.lower() for vac in vaccine]
-        valid = { "aztrazeneca" , "gamaleya+1" , "gamaleya+2" ,"janssen" , "moderna" , "pfizer"
-         , "sinopharm" , "sinovac+coronavac" , "sputnik+light"}
+        valid = {
+            "aztrazeneca",
+            "gamaleya+1",
+            "gamaleya+2",
+            "janssen",
+            "moderna",
+            "pfizer",
+            "sinopharm",
+            "sinovac+coronavac",
+            "sputnik+light",
+        }
 
-        assert all([vac in valid for vac in vaccine]), "Invalid vaccine name"
+        assert all(vac in valid for vac in vaccine), "Invalid vaccine name"
 
     input_db = get_input_db()
 
     cond_map = {
-            "cml_dose": dose,
-        }
-       
+        "cml_dose": dose,
+    }
 
     df = input_db.query(
-        "covid_phl_vac", columns=["date_index","vaccination", f"`{region}`"], conditions=cond_map
+        "covid_phl_vac",
+        columns=["date_index", "vaccination", f"`{region}`"],
+        conditions=cond_map,
     )
 
     if vaccine is not None:
-        df = df[df['vaccination'].isin(vaccine)]
-        
+        df = df[df["vaccination"].isin(vaccine)]
+
     df = df.groupby("date_index", as_index=False).sum()
 
-
     # Calculate the coverage
-    df["coverage"] = df[region]/ population
+    df["coverage"] = df[region] / population
 
     vac_dates = df["date_index"].to_numpy()
     vac_coverage = df["coverage"].to_numpy()

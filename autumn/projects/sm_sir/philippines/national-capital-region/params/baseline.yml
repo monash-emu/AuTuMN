@@ -80,8 +80,8 @@ mobility:
         - 0.
 
 immunity_stratification:
-  prop_immune: .8  # 80% of total NCR population vaccinated (at least one dose) by 29 Dec 2021
-  prop_high_among_immune: .063  # to obtain about 5% of the total population recently boosted.
+  prop_immune: 0.
+  prop_high_among_immune: 0.
 
   # Optimistic VE assumptions
   infection_risk_reduction:

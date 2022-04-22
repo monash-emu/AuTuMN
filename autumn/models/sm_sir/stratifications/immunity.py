@@ -225,10 +225,6 @@ def apply_reported_vacc_coverage(
 
     """
 
-    # Check inputs
-    msg = "Data must be thinned out at least 2-fold, to ensure we don't have identical values passed to curve fitting"
-    assert thinning > 1, msg
-
     if iso3 == "BGD":
         vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
     elif iso3 == "PHL":
@@ -243,7 +239,7 @@ def apply_reported_vacc_coverage(
     vaccine_df["high"] = 0.
 
     # Apply to model, as below
-    add_dynamic_immunity_to_model(compartment_types, vaccine_df[::thinning], model)
+    add_dynamic_immunity_to_model(compartment_types, vaccine_df, model)
 
 
 def add_dynamic_immunity_to_model(

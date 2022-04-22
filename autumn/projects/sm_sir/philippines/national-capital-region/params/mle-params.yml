@@ -1,5 +1,5 @@
 age_stratification.prop_hospital.multiplier: 0.20437102438641036
-contact_rate: 0.2
+contact_rate: 0.1332842451860803
 hospital_stay.hospital_all.parameters.mean: 4.5
 hospital_stay.icu.parameters.mean: 7.668789271325039
 infectious_seed: 382.4382799493609

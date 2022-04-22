@@ -15,7 +15,7 @@ DATA_URL = (
 
 COVID_PHL_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_phl")
 COVID_PHL_CSV_PATH = os.path.join(COVID_PHL_DIRPATH, "COVID_Phl_testing.csv")
-
+COVID_PHL_VAC_PATH  = os.path.join(COVID_PHL_DIRPATH, "phl_vaccination.csv")
 
 def fetch_covid_phl_data():
 

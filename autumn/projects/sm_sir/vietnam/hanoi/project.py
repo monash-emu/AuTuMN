@@ -58,7 +58,7 @@ targets = [
 priors = [
     # infectious seed and contact rate
     UniformPrior("infectious_seed", (100., 100000.)),
-    UniformPrior("contact_rate", (0.01, 0.2)),
+    UniformPrior("contact_rate", (0.1, 0.25)),
     # detect prop
     # UniformPrior("detect_prop", (0.1, 0.3)),
     # testing to detection params
@@ -70,15 +70,15 @@ priors = [
     UniformPrior("immunity_stratification.prop_immune", (0.01, 1.0)),
     UniformPrior("immunity_stratification.prop_high_among_immune", (0.01, 1.0)),
     # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0.4, 0.9)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.4, 0.7)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
     # UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # Omicron-related parameters
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (722.0, 759.0)),  # 7-week interval
-    UniformPrior("voc_emergence.omicron.relative_latency", (0.1, 0.8)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.0, 2.5)),
-    UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 1.0)),
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.5, 2.5)),
+    UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),
     # UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.6)),
     # sojourns
     # UniformPrior("sojourns.active.proportion_early", (0.25, 0.6)),

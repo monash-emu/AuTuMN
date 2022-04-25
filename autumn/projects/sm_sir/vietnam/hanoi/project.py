@@ -46,12 +46,12 @@ icu_occupancy = pd.concat(
     ]
 )
 
-# infection_deaths = ts_set["infection_deaths"].loc[725:].rolling(7).mean()  # truncated to 25th Dec 2021
+infection_deaths = ts_set["infection_deaths"].loc[725:].rolling(7).mean()  # truncated to 25th Dec 2021
 
 targets = [
     NormalTarget(notifications),
     NormalTarget(icu_occupancy),
-    # NormalTarget(infection_deaths)
+    NormalTarget(infection_deaths)
 ]
 
 
@@ -70,7 +70,7 @@ priors = [
     UniformPrior("immunity_stratification.prop_immune", (0.7, 1.0)),
     UniformPrior("immunity_stratification.prop_high_among_immune", (0.5, 0.75)),
     # age stratification
-    # UniformPrior("age_stratification.cfr.multiplier", (0., 0.1)),
+    UniformPrior("age_stratification.cfr.multiplier", (0., 0.1)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),

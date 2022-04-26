@@ -1,9 +1,9 @@
 age_stratification.prop_hospital.multiplier: 0.20437102438641036
-contact_rate: 0.2
+contact_rate: 0.178
 hospital_stay.hospital_all.parameters.mean: 4.5
 hospital_stay.icu.parameters.mean: 7.668789271325039
 infectious_seed: 382.4382799493609
 prop_icu_among_hospitalised: 0.11813452916021588
 sojourns.active.total_time: 4.148449978703803
-testing_to_detection.assumed_cdr_parameter: 0.007261276365477341
+testing_to_detection.assumed_cdr_parameter: 0.011
 time_from_onset_to_event.hospitalisation.parameters.mean: 6.10970208266649

@@ -498,6 +498,8 @@ class Parameters:
     activate_random_process: bool
     random_process: Optional[RandomProcessParams]
 
+    temporary_waning_immunity_flag: bool
+
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):
         assert all([i_group % 5 == 0 for i_group in age_groups]), "Not all age groups are multiples of 5"

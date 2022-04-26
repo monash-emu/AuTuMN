@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict
 import pandas as pd
+import numpy as np
 
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
@@ -215,6 +216,7 @@ def apply_reported_vacc_coverage(
         thinning: int,
         model_start_time: int,
         start_immune_prop: float,
+        waning_flag: bool,
 ):
     """
     Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -243,11 +245,32 @@ def apply_reported_vacc_coverage(
         )
     )
 
+    if waning_flag:
+        n_waning_points = 10
+        waning_period = 90.
+        final_effective_coverage = 0.5
+        start_time_after_vacc = 30.
+        waning_coverage_times = np.linspace(
+            raw_data.index[-1] + start_time_after_vacc,
+            raw_data.index[-1] + start_time_after_vacc + waning_period,
+            n_waning_points
+        )
+        waning_coverage_values = np.linspace(
+            raw_data.iloc[-1],
+            final_effective_coverage,
+            n_waning_points
+        )
+        waning_series = pd.Series({k: v for k, v in zip(waning_coverage_times, waning_coverage_values)})
+        vacc_data_with_waning = pd.concat((vaccine_data, waning_series))
+
+    else:
+        vacc_data_with_waning = vaccine_data
+
     # Be explicit about all the difference immunity categories
     vaccine_df = pd.DataFrame(
         {
-            "none": 1. - vaccine_data,
-            "low": vaccine_data,
+            "none": 1. - vacc_data_with_waning,
+            "low": vacc_data_with_waning,
         },
     )
     vaccine_df["high"] = 0.

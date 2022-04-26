@@ -7,10 +7,8 @@ ref_mixing_iso3: CHN
 population:
   year: 2022
 
-contact_rate: 0.25
+contact_rate: 0.4
 
 activate_random_process: False
 
 voc_emergence: null
-
-

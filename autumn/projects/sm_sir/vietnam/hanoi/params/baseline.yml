@@ -23,8 +23,8 @@ time:
 
 activate_random_process: False
 
-infectious_seed: 100.
-contact_rate: 0.15
+infectious_seed: 1000.
+contact_rate: 0.2
 
 immunity_stratification:
   prop_immune: .8
@@ -125,6 +125,6 @@ prop_icu_among_hospitalised: 0.05
 
 age_stratification:
   cfr:
-    multiplier: 1.0
+    multiplier: 0.05 # temporarily fixed
   prop_hospital:
     multiplier: 0.075 # temporarily fixed for calibration of other params

@@ -13,7 +13,8 @@ from autumn.tools.dynamic_proportions.solve_transitions import calculate_transit
 ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),
     "boosting": ("low", "high"),
-    "waning": ("high", "low")
+    "waning": ("high", "low"),
+    "complete_waning": ("low", "none"),
 }
 
 
@@ -228,7 +229,8 @@ def apply_reported_vacc_coverage(
     if iso3 == "BGD":
         vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
     elif iso3 == "PHL":
-        vaccine_data = get_phl_vac_coverage(dose="FIRST_DOSE")
+        raw_data = get_phl_vac_coverage(dose="FIRST_DOSE")
+        vaccine_data = pd.concat((pd.Series({raw_data.index[0] - 30: 0.}), raw_data))
 
     vaccine_df = pd.DataFrame(
         {

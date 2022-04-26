@@ -225,15 +225,25 @@ def apply_reported_vacc_coverage(
         model: The model itself
         iso3: The ISO-3 code for the country being implemented
         thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
+        model_start_time: Model starting time
+        start_immune_prop: Vaccination coverage at the time that the model starts running
 
     """
 
     if iso3 == "BGD":
-        vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
+        raw_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
     elif iso3 == "PHL":
-        raw_data = get_phl_vac_coverage(dose="FIRST_DOSE")
-        vaccine_data = pd.concat((pd.Series({model_start_time: start_immune_prop}), raw_data))
+        raw_data = get_phl_vac_coverage(dose="SECOND_DOSE")
 
+    # Add on the starting effective coverage value
+    vaccine_data = pd.concat(
+        (
+            pd.Series({model_start_time: start_immune_prop}),
+            raw_data
+        )
+    )
+
+    # Be explicit about all the difference immunity categories
     vaccine_df = pd.DataFrame(
         {
             "none": 1. - vaccine_data,

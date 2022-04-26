@@ -1,14 +1,14 @@
-contact_rate: 0.1524165888041283
-infectious_seed: 85673.396299251
-# detect_prop: 0.19060505331156416
+contact_rate: 0.2
+infectious_seed: 1000.
+#detect_prop: 0.19060505331156416
 #testing_to_detection.assumed_tests_parameter: 0.001138495394924509
 #testing_to_detection.assumed_cdr_parameter: 0.0363758883951254
-immunity_stratification.prop_immune: 0.9990371164132421
-immunity_stratification.prop_high_among_immune: 0.9987436132874482
-age_stratification.cfr.multiplier: 0.5253168469019469
+immunity_stratification.prop_immune: 0.75
+immunity_stratification.prop_high_among_immune: 0.75
+#age_stratification.cfr.multiplier: 0.5253168469019469
 #age_stratification.cfr.multiplier: 0.02964549954178919
-# prop_icu_among_hospitalised: 0.04513366655766931
-voc_emergence.omicron.new_voc_seed.start_time: 757.972003842398
-voc_emergence.omicron.relative_latency: 0.326554874956316
-voc_emergence.omicron.contact_rate_multiplier: 1.5026938335901974
-voc_emergence.omicron.relative_active_period: 0.261135979495161
+#prop_icu_among_hospitalised: 0.04513366655766931
+#voc_emergence.omicron.new_voc_seed.start_time: 757.972003842398
+#voc_emergence.omicron.relative_latency: 0.326554874956316
+voc_emergence.omicron.contact_rate_multiplier: 2.0
+#voc_emergence.omicron.relative_active_period: 0.261135979495161

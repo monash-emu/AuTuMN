@@ -606,7 +606,14 @@ def build_model(
     is_dynamic_immunity = iso3 in vacc_coverage_available
     if is_dynamic_immunity:
         thinning = 20 if iso3 == "BGD" else None
-        apply_reported_vacc_coverage(compartment_types, model, iso3, thinning=thinning)
+        apply_reported_vacc_coverage(
+            compartment_types,
+            model,
+            iso3,
+            thinning=thinning,
+            model_start_time=params.time.start,
+            start_immune_prop=params.immunity_stratification.prop_immune,
+        )
 
     """
     Get the applicable outputs

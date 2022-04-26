@@ -213,6 +213,8 @@ def apply_reported_vacc_coverage(
         model: CompartmentalModel,
         iso3: str,
         thinning: int,
+        model_start_time: int,
+        start_immune_prop: float,
 ):
     """
     Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -230,7 +232,7 @@ def apply_reported_vacc_coverage(
         vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
     elif iso3 == "PHL":
         raw_data = get_phl_vac_coverage(dose="FIRST_DOSE")
-        vaccine_data = pd.concat((pd.Series({raw_data.index[0] - 30: 0.}), raw_data))
+        vaccine_data = pd.concat((pd.Series({model_start_time: start_immune_prop}), raw_data))
 
     vaccine_df = pd.DataFrame(
         {

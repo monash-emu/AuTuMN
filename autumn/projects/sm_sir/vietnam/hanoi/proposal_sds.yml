@@ -1,5 +1,5 @@
-infectious_seed: 125.80110566782855
-contact_rate: 0.0008751131223320024
-immunity_stratification.prop_immune: 0.006671135980416798
-immunity_stratification.prop_high_among_immune: 0.02234837737269535
-voc_emergence.omicron.contact_rate_multiplier: 0.6000000000000001
+infectious_seed: 174.91079740499424
+contact_rate: 0.0015827052873080144
+immunity_stratification.prop_immune: 0.003767573045456829
+immunity_stratification.prop_high_among_immune: 0.07991669126367978
+voc_emergence.omicron.contact_rate_multiplier: 0.7999999999999998

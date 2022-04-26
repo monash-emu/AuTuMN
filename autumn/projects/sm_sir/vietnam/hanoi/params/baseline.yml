@@ -63,7 +63,7 @@ voc_emergence:
     death_protection: 0.9
     icu_multiplier: 0.2
     relative_latency: 0.6667
-    relative_active_period: 1.
+    relative_active_period: 0.3
     cross_protection:
       wild_type:
         early_reinfection: 1.  # 0% immune escape

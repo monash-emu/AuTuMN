@@ -239,7 +239,8 @@ def apply_reported_vacc_coverage(
     vaccine_df["high"] = 0.
 
     # Apply to model, as below
-    add_dynamic_immunity_to_model(compartment_types, vaccine_df, model)
+    thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
+    add_dynamic_immunity_to_model(compartment_types, thinned_df, model)
 
 
 def add_dynamic_immunity_to_model(

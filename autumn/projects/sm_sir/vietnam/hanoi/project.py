@@ -62,7 +62,7 @@ targets = [
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (800., 2000.)),
+    UniformPrior("infectious_seed", (800., 2500.)),
     UniformPrior("contact_rate", (0.18, 0.25)),
     # detect prop
     # UniformPrior("detect_prop", (0.1, 0.3)),
@@ -82,7 +82,7 @@ priors = [
     # Omicron-related parameters
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (722.0, 759.0)),  # 7-week interval
     # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.5, 2.3)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.0, 2.3)),
     # UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),
     # UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.6)),
     # sojourns
@@ -120,5 +120,5 @@ project = Project(
 )
 
 
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

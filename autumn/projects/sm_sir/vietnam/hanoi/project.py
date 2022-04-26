@@ -72,8 +72,8 @@ priors = [
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.prop_immune", (0.7, 1.0)),
-    UniformPrior("immunity_stratification.prop_high_among_immune", (0.7, 1.0)),
+    # UniformPrior("immunity_stratification.prop_immune", (0.7, 1.0)),
+    # UniformPrior("immunity_stratification.prop_high_among_immune", (0.7, 1.0)),
     # age stratification
     # UniformPrior("age_stratification.cfr.multiplier", (0.4, 0.7)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),

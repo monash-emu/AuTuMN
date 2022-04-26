@@ -57,7 +57,7 @@ voc_emergence:
       start_time: 732. # 1st Jan 2022 # temporarily fixed
       entry_rate: 10.
       seed_duration: 10.
-    contact_rate_multiplier: 1.3
+    contact_rate_multiplier: 2.0
     immune_escape: 0.6
     hosp_protection: 0.8
     death_protection: 0.9

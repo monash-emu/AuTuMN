@@ -62,7 +62,7 @@ targets = [
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (800., 2500.)),
+    # UniformPrior("infectious_seed", (800., 4000.)),
     UniformPrior("contact_rate", (0.18, 0.25)),
     # detect prop
     # UniformPrior("detect_prop", (0.1, 0.3)),

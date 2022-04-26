@@ -46,7 +46,12 @@ hospital_occupancy = pd.concat(
     ]
 )
 
-infection_deaths = ts_set["infection_deaths"].loc[725:].rolling(7).mean()  # truncated to 25th Dec 2021
+infection_deaths = pd.concat(
+    [
+     ts_set["infection_deaths"].loc[725:763].rolling(7).mean(),  # from 25th Dec 2021 to 01st Feb 2022
+     ts_set["infection_deaths"].loc[786:].rolling(7).mean()  # from 24th Feb 2022 onwards
+    ]
+)
 
 targets = [
     # NormalTarget(notifications),

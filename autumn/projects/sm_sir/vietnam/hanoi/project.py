@@ -62,8 +62,8 @@ targets = [
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (100., 100000.)),
-    UniformPrior("contact_rate", (0.1, 0.25)),
+    UniformPrior("infectious_seed", (750., 1250.)),
+    UniformPrior("contact_rate", (0.18, 0.22)),
     # detect prop
     # UniformPrior("detect_prop", (0.1, 0.3)),
     # testing to detection params
@@ -72,18 +72,18 @@ priors = [
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.prop_immune", (0.01, 1.0)),
-    UniformPrior("immunity_stratification.prop_high_among_immune", (0.01, 1.0)),
+    UniformPrior("immunity_stratification.prop_immune", (0.65, 0.85)),
+    UniformPrior("immunity_stratification.prop_high_among_immune", (0.65, 0.85)),
     # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0.4, 0.7)),
+    # UniformPrior("age_stratification.cfr.multiplier", (0.4, 0.7)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
     # UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # Omicron-related parameters
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (722.0, 759.0)),  # 7-week interval
-    UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.0, 2.5)),
-    UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),
+    # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (722.0, 759.0)),  # 7-week interval
+    # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.7, 2.3)),
+    # UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),
     # UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.6)),
     # sojourns
     # UniformPrior("sojourns.active.proportion_early", (0.25, 0.6)),
@@ -120,5 +120,5 @@ project = Project(
 )
 
 
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

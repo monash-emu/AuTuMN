@@ -32,24 +32,24 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
-notifications = pd.concat(
-    [
-     ts_set["notifications"].loc[671:745],  # from 01st Nov 2021 to 14th Jan 2022
-     ts_set["notifications"].loc[763:]  # from 01st Feb 2022 onwards
-    ]
-)
+# notifications = pd.concat(
+#     [
+#      ts_set["notifications"].loc[671:745],  # from 01st Nov 2021 to 14th Jan 2022
+#      ts_set["notifications"].loc[763:]  # from 01st Feb 2022 onwards
+#     ]
+# )
 
 hospital_occupancy = pd.concat(
     [
      ts_set["hospital_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
-     ts_set["hospital_occupancy"].loc[783:]  # from 21st Feb 2022 onwards
+     ts_set["hospital_occupancy"].loc[791:]  # from 1st Mar 2022 onwards
     ]
 )
 
 infection_deaths = ts_set["infection_deaths"].loc[725:].rolling(7).mean()  # truncated to 25th Dec 2021
 
 targets = [
-    NormalTarget(notifications),
+    # NormalTarget(notifications),
     NormalTarget(hospital_occupancy),
     NormalTarget(infection_deaths)
 ]

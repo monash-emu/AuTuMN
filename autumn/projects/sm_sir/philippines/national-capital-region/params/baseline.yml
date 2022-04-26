@@ -80,7 +80,7 @@ mobility:
         - 0.
 
 immunity_stratification:
-  prop_immune: 0.5
+  prop_immune: 0.2
   prop_high_among_immune: 0.
 
   # Optimistic VE assumptions

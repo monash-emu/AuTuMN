@@ -1,8 +1,5 @@
 description: VoC completely escapes immunity
 
-#time:
-#  start: 800
-
 voc_emergence:
   wild_type:
     cross_protection:
@@ -16,5 +13,8 @@ voc_emergence:
         late_reinfection: 0.
   new_strain:
     new_voc_seed:
-      start_time: 822.  # 1 Apr 2022
+      start_time: 852 # May 01, 2022
     immune_escape: 1.
+    hosp_protection: 0.75
+    icu_multiplier: 0.55
+    death_protection: 0.85

@@ -1,10 +1,12 @@
 from typing import Optional, List, Dict
 import pandas as pd
+import numpy as np
 
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
 
 from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
+from autumn.tools.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -12,7 +14,8 @@ from autumn.tools.dynamic_proportions.solve_transitions import calculate_transit
 ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),
     "boosting": ("low", "high"),
-    "waning": ("high", "low")
+    "waning": ("high", "low"),
+    "complete_waning": ("low", "none"),
 }
 
 
@@ -209,7 +212,11 @@ def get_immunity_strat(
 def apply_reported_vacc_coverage(
         compartment_types: List[str],
         model: CompartmentalModel,
+        iso3: str,
         thinning: int,
+        model_start_time: int,
+        start_immune_prop: float,
+        waning_flag: bool,
 ):
     """
     Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -218,26 +225,59 @@ def apply_reported_vacc_coverage(
     Args:
         compartment_types: Unstratified model compartment types being implemented
         model: The model itself
+        iso3: The ISO-3 code for the country being implemented
         thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
+        model_start_time: Model starting time
+        start_immune_prop: Vaccination coverage at the time that the model starts running
 
     """
 
-    # Check inputs
-    msg = "Data must be thinned out at least 2-fold, to ensure we don't have identical values passed to curve fitting"
-    assert thinning > 1, msg
+    if iso3 == "BGD":
+        raw_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
+    elif iso3 == "PHL":
+        raw_data = get_phl_vac_coverage(dose="SECOND_DOSE")
 
-    # Get the data into the appropriate format
-    bgd_vaccine_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
-    bgd_vaccine_df = pd.DataFrame(
+    # Add on the starting effective coverage value
+    vaccine_data = pd.concat(
+        (
+            pd.Series({model_start_time: start_immune_prop}),
+            raw_data
+        )
+    )
+
+    if waning_flag:
+        n_waning_points = 10
+        waning_period = 90.
+        final_effective_coverage = 0.5
+        start_time_after_vacc = 30.
+        waning_coverage_times = np.linspace(
+            raw_data.index[-1] + start_time_after_vacc,
+            raw_data.index[-1] + start_time_after_vacc + waning_period,
+            n_waning_points
+        )
+        waning_coverage_values = np.linspace(
+            raw_data.iloc[-1],
+            final_effective_coverage,
+            n_waning_points
+        )
+        waning_series = pd.Series({k: v for k, v in zip(waning_coverage_times, waning_coverage_values)})
+        vacc_data_with_waning = pd.concat((vaccine_data, waning_series))
+
+    else:
+        vacc_data_with_waning = vaccine_data
+
+    # Be explicit about all the difference immunity categories
+    vaccine_df = pd.DataFrame(
         {
-            "none": 1. - bgd_vaccine_data,
-            "low": bgd_vaccine_data,
+            "none": 1. - vacc_data_with_waning,
+            "low": vacc_data_with_waning,
         },
     )
-    bgd_vaccine_df["high"] = 0.
+    vaccine_df["high"] = 0.
 
     # Apply to model, as below
-    add_dynamic_immunity_to_model(compartment_types, bgd_vaccine_df[::thinning], model)
+    thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
+    add_dynamic_immunity_to_model(compartment_types, thinned_df, model)
 
 
 def add_dynamic_immunity_to_model(

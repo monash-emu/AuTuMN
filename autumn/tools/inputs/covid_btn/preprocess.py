@@ -1,4 +1,3 @@
-from venv import create
 import pandas as pd
 
 from autumn.tools.db import Database
@@ -63,4 +62,4 @@ def preprocess_vaccination(df_dict):
         ]
         df_list.append(df)
 
-        return pd.concat(df_list, ignore_index=True)
+    return pd.concat(df_list, ignore_index=True)

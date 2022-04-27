@@ -4,10 +4,6 @@ country:
 
 ref_mixing_iso3: CHN
 
-time:
-  start: 600.
-  end: 700
-
 population:
   year: 2022
 
@@ -28,6 +24,7 @@ sojourns:
   latent:
     total_time: 4.
     proportion_early: 0.5
+
 
 activate_random_process: False
 

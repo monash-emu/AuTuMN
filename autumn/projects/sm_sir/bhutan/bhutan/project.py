@@ -12,13 +12,18 @@ scenario_1_params = baseline_params.update(build_rel_path("params/scenario-1.yml
 param_set = ParameterSet(baseline=baseline_params, scenarios=[scenario_1_params])
 
 # Load and configure calibration settings
+calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
+notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+
+targets = [
+    NormalTarget(notifications_ts),
+]
+
 priors = [
     UniformPrior("contact_rate", [0.025, 0.05]),
 ]
-targets = [
-    NormalTarget(data=ts_set["notifications"]),
-]
+
 
 if baseline_params.to_dict()["activate_random_process"]:
     time_params = baseline_params.to_dict()["time"]

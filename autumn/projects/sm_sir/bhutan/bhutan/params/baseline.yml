@@ -4,10 +4,31 @@ country:
 
 ref_mixing_iso3: CHN
 
+time:
+  start: 600.
+  end: 700
+
 population:
   year: 2022
 
-contact_rate: 0.4
+contact_rate: 0.15
+infectious_seed: 10.
+
+immunity_stratification:
+  prop_immune: .85
+  prop_high_among_immune: .0
+
+  infection_risk_reduction:  # High parameter now irrelevant, because prop_high_among_immune is zero
+    low: 0.6
+
+sojourns:
+  active:
+    total_time: 17.75
+    proportion_early: 0.333
+  latent:
+    total_time: 4.
+    proportion_early: 0.5
+  recovered: 180.
 
 activate_random_process: False
 

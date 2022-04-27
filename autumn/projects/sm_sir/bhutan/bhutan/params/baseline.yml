@@ -4,10 +4,14 @@ country:
 
 ref_mixing_iso3: CHN
 
+time:
+  start: 630.
+  end: 900
+
 population:
   year: 2022
 
-contact_rate: 0.15
+contact_rate: 0.08
 infectious_seed: 10.
 
 immunity_stratification:
@@ -22,7 +26,7 @@ sojourns:
     total_time: 17.75
     proportion_early: 0.333
   latent:
-    total_time: 4.
+    total_time: 13.
     proportion_early: 0.5
 
 
@@ -37,10 +41,7 @@ voc_emergence:
   wild_type:
     starting_strain: true
     seed_prop: 1.
-    new_voc_seed:
-      start_time: 750.
-      entry_rate: 10.
-      seed_duration: 1.
+    new_voc_seed: null
     contact_rate_multiplier: 1.
     immune_escape: 0.
     hosp_protection: 0.
@@ -57,10 +58,10 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 75000.
+      start_time: 710.
       entry_rate: 10.
       seed_duration: 1.
-    contact_rate_multiplier: 2.
+    contact_rate_multiplier: 1.3
     immune_escape: 0.2
     hosp_protection: 0.75
     death_protection: 0.85

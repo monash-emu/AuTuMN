@@ -22,6 +22,8 @@ targets = [
 
 priors = [
     UniformPrior("contact_rate", [0.025, 0.05]),
+    UniformPrior("sojourns.latent.total_time", [5, 20]),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (675, 750)),
 ]
 
 

@@ -84,7 +84,7 @@ priors = [
     # Omicron-related parameters
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (718.0, 746.0)),  # 3-week interval
     # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.0, 2.3)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.3, 2.3)),
     # UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),
     # UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.6)),
     # sojourns

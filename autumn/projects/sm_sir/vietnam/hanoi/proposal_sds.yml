@@ -1,4 +1,4 @@
-age_stratification.cfr.multiplier: 0.0030363653081097314
-age_stratification.prop_hospital.multiplier: 0.006264417428131289
+age_stratification.cfr.multiplier: 0.0030363469819159952
+age_stratification.prop_hospital.multiplier: 0.006264883752370113
 voc_emergence.omicron.new_voc_seed.start_time: 28.0
 voc_emergence.omicron.contact_rate_multiplier: 0.9999999999999998

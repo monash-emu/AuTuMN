@@ -1,5 +1,5 @@
-contact_rate: 0.0005952383587839866
-age_stratification.cfr.multiplier: 0.003661875556849971
-age_stratification.prop_hospital.multiplier: 0.006269708021058303
-voc_emergence.omicron.new_voc_seed.start_time: 21.0
+contact_rate: 0.002378322939050756
+age_stratification.cfr.multiplier: 0.0030386555184221745
+age_stratification.prop_hospital.multiplier: 0.0025607245144770585
+voc_emergence.omicron.new_voc_seed.start_time: 28.0
 voc_emergence.omicron.contact_rate_multiplier: 1.2999999999999998

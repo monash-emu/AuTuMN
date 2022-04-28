@@ -29,6 +29,7 @@ def get_btn_testing_numbers(subregion: Optional[str]):
     df.dropna(inplace=True)
     test_dates = df.date_index.to_numpy()
     values = df["total_tests"].to_numpy() + TINY_NUMBER
+    values = values / 6.5
 
     return test_dates, values
 

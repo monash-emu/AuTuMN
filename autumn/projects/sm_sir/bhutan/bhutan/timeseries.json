@@ -922,6 +922,7 @@
   },
   "prevalence_infectious": {
     "output_key": "prevalence_infectious",
+    "title": "prevalence_infectious",
     "times": [
       25.0,
       30.0

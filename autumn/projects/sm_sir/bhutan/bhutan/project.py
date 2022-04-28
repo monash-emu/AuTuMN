@@ -6,8 +6,11 @@ from autumn.tools.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
-# Load and configure model parameters
-baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
+# Load and configure model parameters.
+mle_path = build_rel_path("params/mle-params.yml")
+baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
+    mle_path, calibration_format=True
+)
 scenario_1_params = baseline_params.update(build_rel_path("params/scenario-1.yml"))
 param_set = ParameterSet(baseline=baseline_params, scenarios=[scenario_1_params])
 
@@ -21,9 +24,10 @@ targets = [
 ]
 
 priors = [
-    UniformPrior("contact_rate", [0.025, 0.05]),
-    UniformPrior("sojourns.latent.total_time", [5, 20]),
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (675, 750)),
+    UniformPrior("contact_rate", [0.025, 0.15]),
+    UniformPrior("sojourns.latent.total_time", [2, 20]),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (625, 750)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.005, 0.05)),
 ]
 
 

@@ -26,7 +26,7 @@ sojourns:
     total_time: 17.75
     proportion_early: 0.333
   latent:
-    total_time: 13.
+    total_time: 14.
     proportion_early: 0.5
 
 
@@ -61,7 +61,7 @@ voc_emergence:
       start_time: 710.
       entry_rate: 10.
       seed_duration: 1.
-    contact_rate_multiplier: 1.3
+    contact_rate_multiplier: 1.5
     immune_escape: 0.2
     hosp_protection: 0.75
     death_protection: 0.85

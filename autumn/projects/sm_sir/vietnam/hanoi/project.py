@@ -39,12 +39,14 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 #     ]
 # )
 
-hospital_occupancy = pd.concat(
-    [
-     ts_set["hospital_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
-     ts_set["hospital_occupancy"].loc[791:]  # from 1st Mar 2022 onwards
-    ]
-)
+# hospital_occupancy = pd.concat(
+#     [
+#      ts_set["hospital_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
+#      ts_set["hospital_occupancy"].loc[791:]  # from 1st Mar 2022 onwards
+#     ]
+# )
+
+hospital_occupancy = ts_set["hospital_occupancy"].loc[671:]
 
 infection_deaths = pd.concat(
     [
@@ -75,12 +77,12 @@ priors = [
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 1.0)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.7, 1.0)),
     # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0.03, 0.08)),
-    UniformPrior("age_stratification.prop_hospital.multiplier", (0.05, 0.1)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.025, 0.07)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (0.04, 0.18)),
     # prop icu among hospitalization
     # UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # Omicron-related parameters
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (725.0, 746.0)),  # 3-week interval
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (718.0, 746.0)),  # 3-week interval
     # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.0, 2.3)),
     # UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),

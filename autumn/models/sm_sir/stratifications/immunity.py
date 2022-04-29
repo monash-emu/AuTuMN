@@ -7,6 +7,7 @@ from summer import CompartmentalModel
 
 from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.tools.inputs.covid_phl.queries import get_phl_vac_coverage
+from autumn.tools.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
 from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -236,6 +237,8 @@ def apply_reported_vacc_coverage(
         raw_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
     elif iso3 == "PHL":
         raw_data = get_phl_vac_coverage(dose="SECOND_DOSE")
+    elif iso3 == "BTN":
+        raw_data = get_btn_vac_coverage(region="Bhutan", dose=2)
 
     # Add on the starting effective coverage value
     vaccine_data = pd.concat(

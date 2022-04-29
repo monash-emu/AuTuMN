@@ -5,7 +5,7 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 630.
+  start: 700.
   end: 1200
 
 population:
@@ -23,7 +23,7 @@ immunity_stratification:
 
 sojourns:
   active:
-    total_time: 17.75
+    total_time: 10.75
     proportion_early: 0.333
   latent:
     total_time: 14.

@@ -6,7 +6,7 @@ ref_mixing_iso3: CHN
 
 time:
   start: 630.
-  end: 900
+  end: 1200
 
 population:
   year: 2022
@@ -26,7 +26,7 @@ sojourns:
     total_time: 17.75
     proportion_early: 0.333
   latent:
-    total_time: 13.
+    total_time: 14.
     proportion_early: 0.5
 
 
@@ -38,7 +38,7 @@ testing_to_detection:
   smoothing_period: 14
 
 voc_emergence:
-  wild_type:
+  wild_type: # actually omicron
     starting_strain: true
     seed_prop: 1.
     new_voc_seed: null
@@ -51,17 +51,17 @@ voc_emergence:
       wild_type:
         early_reinfection: 1.
         late_reinfection: 1.
-      omicron:
+      new_strain:
         early_reinfection: 0.4  # 60% immune escape
         late_reinfection: 0.4
-  omicron:
+  new_strain: # far into the future
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 710.
+      start_time: 100710.
       entry_rate: 10.
       seed_duration: 1.
-    contact_rate_multiplier: 1.3
+    contact_rate_multiplier: 1.5
     immune_escape: 0.2
     hosp_protection: 0.75
     death_protection: 0.85
@@ -72,6 +72,12 @@ voc_emergence:
       wild_type:
         early_reinfection: 1.
         late_reinfection: 0.
-      omicron:
+      new_strain:
         early_reinfection: 1.
         late_reinfection: 0.
+
+age_stratification:
+  cfr:
+    multiplier: 0.5
+  prop_hospital:
+    multiplier: 0.385

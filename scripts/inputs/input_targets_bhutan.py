@@ -25,18 +25,20 @@ DATA_PATH = os.path.join(INPUT_DATA_PATH, "covid_btn")
 DATA_FILE = os.path.join(DATA_PATH, "Confirmed Cases for WHO reporting (68).xlsx")
 
 TARGET_MAP_BTN = {
-    "notifications": "FIXED_DATE_DIAG",
+    "notifications": "Date of diagnosis ",
 }
 
 TARGET_MAP_THM = {
-    "notifications": "FIXED_DATE_DIAG",
+    "notifications": "Date of diagnosis ",
 }
 
 
 def main():
 
-    df = pd.read_excel(DATA_FILE, usecols=["FIXED_DATE_DIAG", "District"])
-    df["date_index"] = df["FIXED_DATE_DIAG"].apply(
+    df = pd.read_excel(
+        DATA_FILE, sheet_name="data sheet", usecols=["Date of diagnosis ", "District"]
+    )
+    df["date_index"] = df["Date of diagnosis "].apply(
         lambda d: (d - COVID_BASE_DATETIME).days
     )
 

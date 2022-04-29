@@ -19,3 +19,30 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime):
     mob_df = mob_df[mob_df["date"] >= base_date]
     days = mob_df["date"].apply(lambda d: (d - base_date).days).tolist()
     return mob_df, days
+
+
+
+def get_movement_data(country_iso_code: str, region: str):
+    """
+    Get daily Facebook mobility data for locations, for a given country.
+    Times are in days since a given base date.
+
+    """
+
+    input_db = get_input_db()
+
+    if region is False:
+        conditions = {"country": country_iso_code}
+    else:
+        conditions = {"country": country_iso_code, "polygon_name": region}
+
+    mov_df = input_db.query("movement", conditions=conditions)
+    mov_df["date"] = pd.to_datetime(mov_df["date"], format="%Y-%m-%d")
+    mov_df = mov_df.sort_values(["date"])
+    #mov_df = mov_df[mov_df["date"] >= base_date]
+
+    if region is False:
+        mov_df = mov_df.groupby('date_index',as_index=False).mean()
+
+    days = mov_df["date_index"].tolist()
+    return mov_df, days

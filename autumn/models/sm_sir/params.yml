@@ -220,3 +220,5 @@ hospital_stay:
 
 activate_random_process: True
 random_process: null
+
+temporary_waning_immunity_flag: false

@@ -922,6 +922,7 @@
   },
   "prevalence_infectious": {
     "output_key": "prevalence_infectious",
+    "title": "prevalence_infectious",
     "times": [
       25.0,
       30.0
@@ -930,5 +931,58 @@
       7.0,
       5.0
     ]
+  },
+  "icu_occupancy": {
+    "output_key": "icu_occupancy",
+    "title": "ICU occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_occupancy": {
+    "output_key": "hospital_occupancy",
+    "title": "hospital_occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_occupancy": {
+    "output_key": "hospital_occupancy",
+    "title": "hospital_occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "infection_deaths": {
+    "output_key": "infection_deaths",
+    "title": "Daily number of deaths",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
 }
+

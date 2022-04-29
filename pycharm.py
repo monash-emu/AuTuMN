@@ -5,7 +5,7 @@ Entry point for PyCharm users to run an application
 from autumn.settings import Region, Models
 from autumn.tools.project import get_project, run_project_locally
 
-region = Region.BANGLADESH
+region = Region.NCR
 model = Models.SM_SIR
 
 project = get_project(model, region)

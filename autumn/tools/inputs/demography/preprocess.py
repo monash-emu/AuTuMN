@@ -481,6 +481,7 @@ def get_bhutan_pop(BTN_DATA_PATH, add_pop_cols):
     )
 
     df = df[["country", "iso3", "region", "year", "population", "start_age", "end_age"]]
+    df.loc[df["region"] == "Bhutan", "region"] = None
 
     # To satisfy baseline sm_sir params.yml prop_hospital and cfr.
 
@@ -489,8 +490,6 @@ def get_bhutan_pop(BTN_DATA_PATH, add_pop_cols):
     last_age_bracket["end_age"] = 84
     last_age_bracket["population"] = last_age_bracket["population"] / 2
     df.loc[df["end_age"] == 79, "population"] = df["population"] / 2
-
-    df.loc[df["region"] == "Bhutan", "region"] = None
 
     df = pd.concat([df, last_age_bracket], ignore_index=True)
 

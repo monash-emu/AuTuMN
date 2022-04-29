@@ -1,10 +1,7 @@
-description: New variant two times as transmissible as Omicron
-
-time:
-  start: 620
+description: New variant twice as transmissible as Omicron
 
 voc_emergence:
-  wild_type:
+  omicron:
     cross_protection:
       new_strain:
         early_reinfection: 1.
@@ -13,6 +10,5 @@ voc_emergence:
   new_strain:
     new_voc_seed:
       start_time: 822.  # 1 Apr 2022
-
     contact_rate_multiplier: 2.
     immune_escape: 0.

@@ -28,7 +28,7 @@ infectious_seed: 10000.
 
 immunity_stratification:
   prop_immune: .8
-  prop_high_among_immune: .9
+  prop_high_among_immune: .0
 
   infection_risk_reduction:  # High parameter now irrelevant, because prop_high_among_immune is zero
     low: 0.6

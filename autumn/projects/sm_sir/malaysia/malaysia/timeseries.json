@@ -6304,5 +6304,18 @@
       0.75,
       0.975
     ]
+  },
+  "cdr": {
+    "output_key": "cdr",
+    "title": "Proportion detected among symptomatic",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
 }

@@ -209,8 +209,8 @@ def preprocess_mobility(input_db: Database, country_df):
         df = pd.read_csv(file, "\t")
         df_list.append(df)
 
-    df = df[df["country"].isin(iso_filter)]
     df = pd.concat(df_list)
+    df = df[df["country"].isin(iso_filter)]
     df = df.sort_values(["country", "ds", "polygon_id"]).reset_index(drop=True)
     df = create_date_index(COVID_BASE_DATETIME, df, "ds")
     input_db.dump_df("movement", df)

@@ -8,6 +8,20 @@ time:
   start: 630.
   end: 1200
 
+mobility:
+  # Mapping of Google mobility locations to Prem-specific locations
+  facebook_movement_locations:
+    work:
+      tiles_visited: 1.
+    other_locations:
+      tiles_visited: 0.25
+    home:
+      single_tile: 0.5
+  smooth_google_data: false  # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  microdistancing: {}
+
+
 population:
   year: 2022
 

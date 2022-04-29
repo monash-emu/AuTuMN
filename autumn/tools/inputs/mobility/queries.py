@@ -39,6 +39,7 @@ def get_movement_data(country_iso_code: str, region: str):
     mov_df = input_db.query("movement", conditions=conditions)
     mov_df["date"] = pd.to_datetime(mov_df["date"], format="%Y-%m-%d")
     mov_df = mov_df.sort_values(["date"])
+    mov_df = mov_df.rename(columns={'all_day_bing_tiles_visited_relative_change':"tiles_visited",'all_day_ratio_single_tile_users': "single_tile"})
     #mov_df = mov_df[mov_df["date"] >= base_date]
 
     if region is False:

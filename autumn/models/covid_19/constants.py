@@ -140,3 +140,5 @@ LOCATIONS = ["home", "other_locations", "school", "work"]
 GOOGLE_MOBILITY_LOCATIONS = [
     "retail_and_recreation", "parks", "workplaces", "transit_stations", "grocery_and_pharmacy", "residential"
 ]
+
+FACEBOOK_MOVEMENT_LOCATIONS = ["tiles_visited","single_tile"]

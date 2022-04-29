@@ -203,9 +203,14 @@ def preprocess_mobility(input_db: Database, country_df):
     input_db.dump_df("mobility", mob_df)
 
     # Facebook movement data
-    df = pd.concat(map(pd.read_csv, [FB_MOVEMENT_2021, FB_MOVEMENT_2022], "\t"))
-    iso_filter = {"AUS", "PHL", "MYS", "VNM", "LKA", "IDN", "MYN", "BGD"}
+    df_list = []
+    iso_filter = {"AUS", "PHL", "MYS", "VNM", "LKA", "IDN", "MYN", "BGD", "BTN"}
+    for file in {FB_MOVEMENT_2021, FB_MOVEMENT_2022}:
+        df = pd.read_csv(file, "\t")
+        df_list.append(df)
+
     df = df[df["country"].isin(iso_filter)]
+    df = pd.concat(df_list)
     df = df.sort_values(["country", "ds", "polygon_id"]).reset_index(drop=True)
     df = create_date_index(COVID_BASE_DATETIME, df, "ds")
     input_db.dump_df("movement", df)

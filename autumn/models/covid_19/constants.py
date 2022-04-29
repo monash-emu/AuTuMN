@@ -1,5 +1,6 @@
 from autumn.settings.constants import COVID_BASE_DATETIME
 
+
 class Compartment:
     """
     A COVID-19 model compartment.
@@ -18,7 +19,11 @@ Compartments
 """
 
 # People who are infectious
-INFECTIOUS_COMPARTMENTS = [Compartment.LATE_EXPOSED, Compartment.EARLY_ACTIVE, Compartment.LATE_ACTIVE]
+INFECTIOUS_COMPARTMENTS = [
+    Compartment.LATE_EXPOSED,
+    Compartment.EARLY_ACTIVE,
+    Compartment.LATE_ACTIVE,
+]
 
 # People who are infected, but may or may not be infectious
 DISEASE_COMPARTMENTS = [Compartment.EARLY_EXPOSED, *INFECTIOUS_COMPARTMENTS]
@@ -138,7 +143,12 @@ Mobility-related.
 LOCATIONS = ["home", "other_locations", "school", "work"]
 
 GOOGLE_MOBILITY_LOCATIONS = [
-    "retail_and_recreation", "parks", "workplaces", "transit_stations", "grocery_and_pharmacy", "residential"
+    "retail_and_recreation",
+    "parks",
+    "workplaces",
+    "transit_stations",
+    "grocery_and_pharmacy",
+    "residential",
+    "tiles_visited",
+    "single_tile",
 ]
-
-FACEBOOK_MOVEMENT_LOCATIONS = ["tiles_visited","single_tile"]

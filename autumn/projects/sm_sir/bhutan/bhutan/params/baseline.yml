@@ -10,13 +10,18 @@ time:
 
 mobility:
   # Mapping of Google mobility locations to Prem-specific locations
-  facebook_movement_locations:
+  google_mobility_locations:
     work:
+      workplaces: 0.
       tiles_visited: 1.
     other_locations:
-      tiles_visited: 0.25
+      retail_and_recreation: 0.
+      grocery_and_pharmacy: 0.
+      parks: 0.
+      transit_stations: 0.
+      tiles_visited: 1.
     home:
-      single_tile: 0.5
+      single_tile: 1.
   smooth_google_data: false  # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}

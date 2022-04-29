@@ -10,7 +10,6 @@ from autumn.settings.constants import COVID_BASE_DATETIME
 from .fetch import (
     MOBILITY_CSV_PATH,
     VNM_CSV_PATH,
-    BTN_CSV_PATH,
     FB_MOVEMENT_2021,
     FB_MOVEMENT_2022,
 )
@@ -154,10 +153,6 @@ def preprocess_mobility(input_db: Database, country_df):
     mob_df.loc[
         (mob_df.sub_region_1 == "Federal Territory of Kuala Lumpur"), "sub_region_1"
     ] = "Kuala Lumpur"
-
-    # Read and append Bhutan mobility
-    btn_mob = pd.read_csv(BTN_CSV_PATH)
-    mob_df = pd.concat([mob_df, btn_mob])
 
     # Read and append mobility predictions for Vietnam
     vnm_mob = pd.read_csv(VNM_CSV_PATH)

@@ -19,7 +19,7 @@ population:
 
 time:
   start: 671 # 01st Nov 2021
-  end: 944 # 31st July 2022
+  end: 973 # 31st July 2022
 
 activate_random_process: False
 
@@ -53,7 +53,7 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 732. # 1st Jan 2022 # temporarily fixed
+      start_time: 732. # 1st Jan 2022
       entry_rate: 10.
       seed_duration: 10.
     contact_rate_multiplier: 2.0

@@ -1,5 +1,5 @@
 description: >
-  New variant twice as transmissible as Omicron (~4 times more transmissible than Delta VoC)
+  New variant twice as transmissible as Omicron (~4 times more transmissible than Delta VoC).
   The severity and immune escape of this variant is exactly the same as that of Omicron.
 
 voc_emergence:
@@ -31,11 +31,11 @@ voc_emergence:
     relative_active_period: 0.3
     cross_protection:
       wild_type:
-        early_reinfection: 1.  # same as cross protection of omicron to delta
-        late_reinfection: 0.8  # same as cross protection of omicron to delta
+        early_reinfection: 1.  # = omicron --> delta
+        late_reinfection: 0.8  # = omicron --> delta
       omicron:
-        early_reinfection: 1.  # same as cross protection of omicron to omicron
-        late_reinfection: 0.15 # same as cross protection of omicron to omicron
+        early_reinfection: 1.  # = omicron --> omicron
+        late_reinfection: 0.15 # = omicron --> omicron
       new_strain:
-        early_reinfection: 1. # same as cross protection of omicron to omicron
-        late_reinfection: 0.15 # same as cross protection of omicron to omicron
+        early_reinfection: 1. # = omicron --> omicron
+        late_reinfection: 0.15 # = omicron --> omicron

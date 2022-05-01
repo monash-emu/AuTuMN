@@ -48,4 +48,4 @@ voc_emergence:
         early_reinfection: 1. # = omicron --> omicron
         late_reinfection: 0.15 # = omicron --> delta
 
-temporary_waning_immunity_flaf: true
+temporary_waning_immunity_flag: true

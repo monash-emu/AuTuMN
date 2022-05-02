@@ -1,4 +1,4 @@
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path, use_tuned_proposal_sds
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import (
@@ -31,14 +31,14 @@ else:
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration targets
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
 targets = [
-    NormalTarget(ts_set.get("prevalence_infectiousXlocation_majuro"), stdev=80.0),
-    NormalTarget(ts_set.get("prevalence_infectiousXlocation_ebeye"), stdev=120.0),
-    NormalTarget(ts_set.get("percentage_latentXlocation_majuro"), stdev=10.0),
-    NormalTarget(ts_set.get("notificationsXlocation_majuro"), stdev=40.),
-    NormalTarget(ts_set.get("notificationsXlocation_ebeye"), stdev=9.),
-    NormalTarget(ts_set.get("population_size"), stdev=2500.0),
+    NormalTarget(ts_set["prevalence_infectiousXlocation_majuro"], stdev=80.0),
+    NormalTarget(ts_set["prevalence_infectiousXlocation_ebeye"], stdev=120.0),
+    NormalTarget(ts_set["percentage_latentXlocation_majuro"], stdev=10.0),
+    NormalTarget(ts_set["notificationsXlocation_majuro"], stdev=40.),
+    NormalTarget(ts_set["notificationsXlocation_ebeye"], stdev=9.),
+    NormalTarget(ts_set["population_size"], stdev=2500.0),
 ]
 
 # Add uncertainty around natural history using our CID estimates
@@ -55,7 +55,7 @@ priors = [
     UniformPrior("progression_multiplier", [0.5, 2.0]),
     UniformPrior("time_variant_tb_screening_rate.inflection_time", [2000.0, 2020.0]),
     UniformPrior("time_variant_tb_screening_rate.shape", [0.07, 0.1]),
-    UniformPrior("time_variant_tb_screening_rate.upper_asymptote", [0.4, 0.55]),
+    UniformPrior("time_variant_tb_screening_rate.end_asymptote", [0.4, 0.55]),
     UniformPrior(
         "user_defined_stratifications.location.adjustments.detection.ebeye",
         [1.3, 2.0],

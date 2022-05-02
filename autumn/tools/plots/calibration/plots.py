@@ -25,6 +25,7 @@ from autumn.tools.plots.utils import (
     get_plot_text_dict,
     split_mcmc_outputs_by_chain,
 )
+from autumn.tools.utils.utils import flatten_list
 from autumn.tools.calibration.diagnostics import calculate_effective_sample_size, calculate_r_hat
 
 logger = logging.getLogger(__name__)
@@ -279,16 +280,16 @@ def calculate_r_hats(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataF
     :return: a dictionary
     """
 
-    # split tables by chain
-    mcmc_params_list, mcmc_tables_list = split_mcmc_outputs_by_chain(mcmc_params, mcmc_tables)
-
-    param_options = mcmc_params[0]["name"].unique().tolist()
-
+    param_options = mcmc_params[0].columns.tolist()
+    chain_idx = mcmc_tables[0].chain.unique()
     r_hats = {}
     for param_name in param_options:
         posterior_chains = {}
-        for i_chain, table_df in enumerate(mcmc_params_list):
-            posterior_chains[i_chain] = list(get_posterior([table_df], [mcmc_tables_list[i_chain]], param_name, burn_in)[param_name])
+        for chain_id in chain_idx:
+            mask =  mcmc_tables[0].chain == chain_id
+            param_vals = mcmc_params[0][mask][param_name].to_list()
+            weights = mcmc_tables[0][mask].weight.to_list()
+            posterior_chains[chain_id] = flatten_list([[param_vals[i]] * w for i, w in enumerate(weights)])
 
         r_hats[param_name] = calculate_r_hat(posterior_chains)
 

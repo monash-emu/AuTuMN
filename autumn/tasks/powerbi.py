@@ -5,6 +5,7 @@ import shutil
 import pandas as pd
 
 from autumn.tools import db, plots
+from autumn.tools.db.load import load_mcmc_tables
 from autumn.settings import REMOTE_BASE_DIR
 from autumn.tasks.full import FULL_RUN_DATA_DIR
 from autumn.tasks.utils import get_project_from_run_id
@@ -35,7 +36,9 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
 
     # Find the full model run databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(FULL_RUN_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".feather")
+    chain_db_keys = []
+    for filename_base in ["mcmc_run", "mcmc_params", "derived_outputs"]:
+        chain_db_keys += list_s3(s3_client, key_prefix, key_suffix=f"{filename_base}.feather")
 
     # Download the full model run databases.
     with Timer(f"Downloading full model run data"):
@@ -44,7 +47,8 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
 
     # No urunid supplied; get a single candidate dataframe (ie the MLE run)
     if urunid == "mle":
-        candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, 1)
+        all_mcmc_df = pd.concat(load_mcmc_tables(FULL_RUN_DATA_DIR), ignore_index=True)
+        candidates_df = db.process.select_pruning_candidates(all_mcmc_df, 1)
     else:
         c, r = (int(x) for x in urunid.split("_"))
         candidates_df = pd.DataFrame(columns=["chain", "run"])

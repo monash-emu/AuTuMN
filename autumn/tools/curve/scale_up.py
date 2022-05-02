@@ -252,7 +252,7 @@ def scale_up_function(
 
     if (len(x) == 1) or (max(y) - min(y) == 0):
 
-        def curve(t):
+        def curve(t, computed_values=None):
             if intervention_end is not None:
                 if t >= t_intervention_start:
                     return curve_intervention(t)

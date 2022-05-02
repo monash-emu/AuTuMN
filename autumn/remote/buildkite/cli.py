@@ -55,9 +55,8 @@ def calibrate():
     runtime = calibrate_pipeline.runtime_field.get_value()
     burn_in = calibrate_pipeline.burn_in_field.get_value()
     sample_size = calibrate_pipeline.sample_size_field.get_value()
-    branch = calibrate_pipeline.branch_field.get_value()
+    commit = calibrate_pipeline.commit_field.get_value()
     trigger_downstream = calibrate_pipeline.trigger_field.get_value()
-    is_spot = calibrate_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in calibrate_pipeline.fields}, indent=2)
 
     # Decode combined app + model name from user input.
@@ -71,8 +70,7 @@ def calibrate():
         region=region_name,
         chains=chains,
         runtime=runtime,
-        branch=branch,
-        is_spot=is_spot,
+        commit=commit,
         dry=False,
     )
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
@@ -90,9 +88,8 @@ def calibrate():
                 fp.run_id_field.key: run_id,
                 fp.burn_in_field.key: burn_in,
                 fp.sample_size_field.key: sample_size,
-                fp.use_latest_code_field.key: fp.use_latest_code_field.default,
+                fp.commit_field.key: fp.commit_field.default,
                 fp.trigger_field.key: fp.trigger_field.get_option(trigger_downstream),
-                fp.spot_field.key: fp.spot_field.get_option(is_spot),
             },
         )
 
@@ -107,9 +104,9 @@ def resume():
     baserun = resume_pipeline.run_id_field.get_value()
     chains = resume_pipeline.chains_field.get_value()
     runtime = resume_pipeline.runtime_field.get_value()
-    branch = resume_pipeline.branch_field.get_value()
-    use_latest = resume_pipeline.use_latest_code_field.get_value()
-    is_spot = resume_pipeline.spot_field.get_value()
+    burn_in = resume_pipeline.burn_in_field.get_value()
+    sample_size = resume_pipeline.sample_size_field.get_value()
+    trigger_downstream = resume_pipeline.trigger_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in resume_pipeline.fields}, indent=2)
 
     # Decode combined app + model name from user input.
@@ -122,9 +119,28 @@ def resume():
         baserun=baserun,
         chains=chains,
         runtime=runtime,
-        branch=branch,
-        is_spot=is_spot,
     )
+
+    logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
+    if not trigger_downstream:
+        logger.info("Not triggering full model run.")
+    else:
+        logger.info("Triggering full model run.")
+        fp = full_pipeline
+        trigger_pipeline(
+            label="Trigger full model run",
+            target="full-model-run",
+            msg=f"Triggered by calibration {app_name} {region_name} (build {build_number})",
+            env={"SKIP_INPUT": "true"},
+            meta={
+                fp.run_id_field.key: run_id,
+                fp.burn_in_field.key: burn_in,
+                fp.sample_size_field.key: sample_size,
+                fp.commit_field.key: fp.commit_field.default,
+                fp.trigger_field.key: fp.trigger_field.get_option(trigger_downstream),
+            },
+        )
+
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
@@ -138,9 +154,8 @@ def full():
     run_id = full_pipeline.run_id_field.get_value()
     burn_in = full_pipeline.burn_in_field.get_value()
     sample_size = full_pipeline.sample_size_field.get_value()
-    use_latest_code = full_pipeline.use_latest_code_field.get_value()
+    commit = full_pipeline.commit_field.get_value()
     trigger_downstream = full_pipeline.trigger_field.get_value()
-    is_spot = full_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in full_pipeline.fields}, indent=2)
     app_name, region_name, _, _ = read_run_id(run_id)
     job_name = f"{app_name}-{region_name}-{build_number}"
@@ -152,15 +167,14 @@ def full():
         run=run_id,
         burn_in=burn_in,
         sample=sample_size,
-        latest_code=use_latest_code,
-        branch="master",
-        is_spot=is_spot,
+        commit=commit,
     )
     if not trigger_downstream:
         logger.info("Not triggering PowerBI processing.")
     else:
         logger.info("Triggering PowerBI processing.")
         pp = powerbi_pipeline
+
         trigger_pipeline(
             label="Trigger PowerBI processing",
             target="powerbi-processing",
@@ -169,7 +183,7 @@ def full():
             meta={
                 pp.run_id_field.key: run_id,
                 pp.urunid_field.key: "mle",
-                pp.spot_field.key: pp.spot_field.get_option(is_spot),
+                pp.commit_field.key: commit,
             },
         )
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
@@ -182,8 +196,8 @@ def powerbi():
     logger.info("Gathering data for PowerBI post processing.")
     build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
     run_id = powerbi_pipeline.run_id_field.get_value()
-    is_spot = powerbi_pipeline.spot_field.get_value()
     urunid = powerbi_pipeline.urunid_field.get_value()
+    commit = powerbi_pipeline.commit_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in powerbi_pipeline.fields}, indent=2)
     app_name, region_name, _, _ = read_run_id(run_id)
     job_name = f"{app_name}-{region_name}-{build_number}"
@@ -191,7 +205,7 @@ def powerbi():
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Running PowerBI post processing job %s with params:\n%s\n", job_name, params_str)
     # FIXME +++ Nasty hack to get powerbi job running temporarily during refactor
-    aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, branch="master", is_spot=is_spot)
+    aws.run_powerbi(job=job_name, run=run_id, urunid=urunid, commit=commit)
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
 
@@ -252,8 +266,7 @@ def _trigger_models(regions, p):
     runtime = p.runtime_field.get_value()
     burn_in = p.burn_in_field.get_value()
     sample_size = p.sample_size_field.get_value()
-    branch = p.branch_field.get_value()
-    is_spot = p.spot_field.get_value()
+    commit = p.commit_field.get_value()
     trigger_downstream = p.trigger_field.get_value()
     params_str = pprint.pformat(
         {f.key: f.get_value() for f in p.fields},
@@ -271,12 +284,11 @@ def _trigger_models(regions, p):
             meta={
                 cp.model_field.key: model,
                 cp.chains_field.key: chains,
-                cp.branch_field.key: branch,
+                cp.commit_field.key: commit,
                 cp.runtime_field.key: runtime / 3600.0,
                 cp.burn_in_field.key: burn_in,
                 cp.sample_size_field.key: sample_size,
                 cp.trigger_field.key: cp.trigger_field.get_option(trigger_downstream),
-                cp.spot_field.key: cp.spot_field.get_option(is_spot),
             },
         )
 

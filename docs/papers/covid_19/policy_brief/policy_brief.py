@@ -1,23 +1,26 @@
 import os
-
-from fpdf import FPDF
 import json
 
-
-from autumn.settings import DOCS_PATH, region
+from fpdf import FPDF
+from autumn.settings import DOCS_PATH
 from autumn.settings import PROJECTS_PATH
-from datetime import date, datetime
-from autumn.tools.project import build_rel_path
+from datetime import datetime
+
+from autumn.tools.utils.s3 import upload_file_s3, get_s3_client
 
 POLICY_PATH = os.path.join(DOCS_PATH, "papers", "covid_19", "policy_brief")
 POLICY_PDF = os.path.join(POLICY_PATH, "policy_brief.pdf")
-POLICY_JSON = os.path.join(
+POLICY_PHL = os.path.join(
     PROJECTS_PATH, "covid_19", "philippines", "philippines", "policy_brief.json"
-)  # TODO - Milinda to arrive at a better method of defining the input file
+)
+POLICY_MYS = os.path.join(PROJECTS_PATH, "covid_19", "malaysia", "malaysia", "policy_brief.json")
+POLICY_LKA = os.path.join(PROJECTS_PATH, "covid_19", "sri_lanka", "sri_lanka", "policy_brief.json")
+
+POLICY_JSON = POLICY_LKA
 
 AUTUMN_LOGO = os.path.join(POLICY_PATH, "images", "AuTuMN_official.png")
 MONASH_LOGO = os.path.join(POLICY_PATH, "images", "Monash_University_logo.png")
-PAGE_BACK = os.path.join(POLICY_PATH, "images", "page_background.png")
+PAGE_BG = os.path.join(POLICY_PATH, "images", "page_background.png")
 WHO_LOGO = os.path.join(POLICY_PATH, "images", "WHO_SEARO.jpg")
 
 flag_path = {
@@ -37,6 +40,7 @@ dark_red = (130, 0, 0)
 orange = (217, 71, 0)
 yellow = (244, 172, 69)
 white = (255, 255, 255)
+black = (0, 0, 0)
 
 
 class PDF(FPDF):
@@ -46,9 +50,9 @@ class PDF(FPDF):
 
         # helvetica bold 15
         self.set_font("helvetica", "B", 12)
-        self.set_margins(0, 0)
+        self.set_margins(0, 0, 0)
 
-        self.image(PAGE_BACK, 0, 0)
+        self.image(PAGE_BG, 0, 0)
 
         # Title
         self.set_fill_color(*dark_blue)
@@ -77,7 +81,7 @@ class PDF(FPDF):
 
         # Logo
         self.image(MONASH_LOGO, 2, 2, h=12)
-        self.image(AUTUMN_LOGO, 165, 3, h=11)
+        self.image(AUTUMN_LOGO, 161, 2, h=11)
 
         # Set margins
         self.set_margins(5, 20, 5)
@@ -99,7 +103,7 @@ class PDF(FPDF):
         self.cell(0, 16, "Page " + str(self.page_no()) + "/{nb}", 0, 0, "C", fill=True)
 
         self.image(flag_path[self.region], 2, 283, h=12)
-        self.image(WHO_LOGO, 165, 283, h=12)
+        self.image(WHO_LOGO, 178, 283, h=12)
 
     def read_policy_brief(self, policy_json):
 
@@ -130,9 +134,6 @@ class PDF(FPDF):
         else:
             self.multi_cell(width, 5, self.pb[heading], align="L", ln=3)
 
-        x, y = self.get_x(), self.get_y()
-        self.set_xy(x, y + 5)
-
     def print_title(self, heading):
 
         # Title
@@ -145,7 +146,7 @@ class PDF(FPDF):
         self.set_xy(x, y + 2)
 
         self.set_font("helvetica", "", 10)
-        self.set_text_color(0, 0, 0)
+        self.set_text_color(*black)
 
     def print_dict(self, width, heading, background=None):
 
@@ -166,9 +167,9 @@ class PDF(FPDF):
 
         if background is not None:
             self.set_fill_color(*background)
-            self.multi_cell(width, 5, text, align="L", fill=True, ln=1)
+            self.multi_cell(width, h=5, txt=text, align="L", fill=True, ln=1)
         else:
-            self.multi_cell(width, 5, text, align="L", ln=1)
+            self.multi_cell(width, h=5, txt=text, align="L", ln=1)
 
         body_end_y = self.get_y()
         body_end_x = self.get_x()
@@ -177,10 +178,12 @@ class PDF(FPDF):
         for img in img_list:
             self.image(self.pb[heading][img], h=50)
 
-        x, y = self.get_x(), self.get_y()
+        img_end_y = self.get_y()
+
+        body_end_y = body_end_y if body_end_y > img_end_y else img_end_y
 
         if len(img_list):
-            self.set_xy(body_end_x, y + 10)
+            self.set_xy(body_end_x, body_end_y)
         else:
             self.set_xy(body_end_x, body_end_y + 5)
 
@@ -203,8 +206,19 @@ class PDF(FPDF):
         self.set_text_color(*white)
         self.multi_cell(width, 5, txt=text, align="L", ln=1, fill=fill)
 
+    def upload_pdf(self):
+
+        dest_key = self.pb["RUN_ID"]
+        dest_key = f"{dest_key}/plots/policy_brief.pdf"
+
+        s3_client = get_s3_client()
+        upload_file_s3(s3_client, self.output_pdf, dest_key)
+
 
 pdf = PDF(orientation="P", unit="mm", format="A4")
+
+# This also works
+# pdf.set_auto_page_break(True,30)
 
 pdf.read_policy_brief(POLICY_JSON)
 pdf.extract_attributes()
@@ -214,8 +228,8 @@ pdf.print_text(140, pdf.heading[0])
 pdf.print_list(60, pdf.heading[1], background=(blue))
 pdf.print_dict(0, pdf.heading[2], background=(yellow))
 pdf.print_dict(140, pdf.heading[3])
-pdf.ln(60)  # add line break to manage automatic page breaks
+pdf.ln(60)  # Not ideal - add line break to manage automatic page breaks
 pdf.print_dict(140, pdf.heading[4])
 pdf.print_text(0, pdf.heading[5])
-
 pdf.output(pdf.output_pdf)
+pdf.upload_pdf()

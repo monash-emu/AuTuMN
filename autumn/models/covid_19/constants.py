@@ -1,13 +1,10 @@
-from datetime import date, datetime
-
-# Base date used to calculate mixing matrix times.
-BASE_DATE = date(2019, 12, 31)
-BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 
 class Compartment:
     """
-    A COVID-19 model compartment
+    A COVID-19 model compartment.
+
     """
 
     SUSCEPTIBLE = "susceptible"
@@ -15,7 +12,6 @@ class Compartment:
     LATE_EXPOSED = "late_exposed"
     EARLY_ACTIVE = "early_active"
     LATE_ACTIVE = "late_active"
-    RECOVERED = "recovered"
 
 
 """
@@ -28,21 +24,19 @@ INFECTIOUS_COMPARTMENTS = [
     Compartment.EARLY_ACTIVE,
     Compartment.LATE_ACTIVE,
 ]
+
 # People who are infected, but may or may not be infectious
 DISEASE_COMPARTMENTS = [Compartment.EARLY_EXPOSED, *INFECTIOUS_COMPARTMENTS]
 
-# People who are eligible to receive vaccination
-VACCINE_ELIGIBLE_COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED]
-
 # All model compartments
-COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPARTMENTS]
+COMPARTMENTS = [Compartment.SUSCEPTIBLE, *DISEASE_COMPARTMENTS]
 
 
 """
-Stratifications
+Stratifications.
 """
 
-# Age groups match the Prem matrices
+# Age groups match the standard mixing matrices
 AGEGROUP_STRATA = [str(breakpoint) for breakpoint in list(range(0, 80, 5))]
 
 
@@ -56,8 +50,11 @@ class Clinical:
 
 class Vaccination:
     UNVACCINATED = "unvaccinated"
-    ONE_DOSE_ONLY = "one_dose_only"
-    VACCINATED = "vaccinated"
+    ONE_DOSE_ONLY = "one_dose"
+    VACCINATED = "fully_vaccinated"
+    PART_WANED = "part_waned"
+    WANED = "fully_waned"
+    BOOSTED = "boosted"
 
 
 class Strain:
@@ -72,6 +69,7 @@ class Tracing:
 class History:
     NAIVE = "naive"
     EXPERIENCED = "experienced"
+    WANED = "waned"
 
 
 CLINICAL_STRATA = [
@@ -88,7 +86,12 @@ NOTIFICATION_CLINICAL_STRATA = [
     Clinical.ICU,
 ]
 
-DEATH_CLINICAL_STRATA = [
+HOSTPIALISED_CLINICAL_STRATA = [
+    Clinical.HOSPITAL_NON_ICU,
+    Clinical.ICU,
+]
+
+FIXED_STRATA = [
     Clinical.NON_SYMPT,
     Clinical.HOSPITAL_NON_ICU,
     Clinical.ICU,
@@ -98,45 +101,54 @@ VACCINATION_STRATA = [
     Vaccination.UNVACCINATED,
     Vaccination.ONE_DOSE_ONLY,
     Vaccination.VACCINATED,
-]
-
-VACCINATED_STRATA = [
-    Vaccination.ONE_DOSE_ONLY,
-    Vaccination.VACCINATED,
+    Vaccination.PART_WANED,
+    Vaccination.WANED,
+    Vaccination.BOOSTED,
 ]
 
 HISTORY_STRATA = [
     History.NAIVE,
     History.EXPERIENCED,
+    History.WANED,
 ]
 
 """
-Transitions
+Transitions.
 """
 
 INFECTION = "infection"
 INFECTIOUSNESS_ONSET = "infect_onset"
 INCIDENCE = "incidence"
-NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the others
 PROGRESS = "progress"
 RECOVERY = "recovery"
 INFECT_DEATH = "infect_death"
 
+AGE_CLINICAL_TRANSITIONS = [INFECTIOUSNESS_ONSET, INFECT_DEATH, RECOVERY]
+
+
 """
-Vic model options
+Outputs.
 """
 
 
-class VicModelTypes:
-    NON_VIC = "non_vic"
-    VIC_SUPER_2020 = "vic_super_2020"
-    VIC_SUPER_2021 = "vic_super_2021"
-    VIC_REGION_2021 = "vic_region_2021"
+INFECTION_DEATHS = "infection_deaths"
+NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the others
 
 
-VIC_MODEL_OPTIONS = [
-    VicModelTypes.NON_VIC,
-    VicModelTypes.VIC_SUPER_2020,
-    VicModelTypes.VIC_SUPER_2021,
-    VicModelTypes.VIC_REGION_2021,
+"""
+Mobility-related.
+"""
+
+
+LOCATIONS = ["home", "other_locations", "school", "work"]
+
+GOOGLE_MOBILITY_LOCATIONS = [
+    "retail_and_recreation",
+    "parks",
+    "workplaces",
+    "transit_stations",
+    "grocery_and_pharmacy",
+    "residential",
+    "tiles_visited",
+    "single_tile",
 ]

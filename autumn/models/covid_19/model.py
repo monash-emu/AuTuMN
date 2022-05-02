@@ -1,58 +1,51 @@
 from summer import CompartmentalModel
-from summer.adjust import Multiply, Overwrite
 
-from autumn.settings.region import Region
-from autumn.tools.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.models.covid_19.constants import Vaccination
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.models.covid_19.preprocess.case_detection import CdrProc
-from .preprocess.seasonality import get_seasonal_forcing
-from .preprocess.testing import find_cdr_function_from_test_data
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data, CdrProc
+from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (
-    COMPARTMENTS, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, BASE_DATE, History, INFECTION,
-    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH, VicModelTypes,
+    COMPARTMENTS, COVID_BASE_DATETIME, DISEASE_COMPARTMENTS, INFECTIOUS_COMPARTMENTS, Compartment, Tracing, History, INFECTION,
+    INFECTIOUSNESS_ONSET, INCIDENCE, PROGRESS, RECOVERY, INFECT_DEATH
 )
-
-from . import preprocess
-from .outputs.common import request_common_outputs
-from .outputs.vaccination import request_vaccination_outputs
-from .outputs.strains import request_strain_outputs
-from .outputs.tracing import request_tracing_outputs
-from .outputs.healthcare import request_healthcare_outputs
-from .outputs.history import request_history_outputs, request_recovered_outputs
+from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
-from .preprocess.vaccination import add_vaccination_flows
-from .preprocess import tracing
+from .strat_processing.vaccination import add_vacc_rollout_requests, apply_standard_vacc_coverage
+from .strat_processing import tracing
+from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
+from .strat_processing.strains import make_voc_seed_func
+from .strat_processing.vaccination import get_second_dose_delay_rate, find_vacc_strata
 from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
-from .stratifications.cluster import apply_post_cluster_strat_hacks, get_cluster_strat
 from .stratifications.tracing import get_tracing_strat
-from .stratifications.strains import get_strain_strat, make_voc_seed_func
+from .stratifications.strains import get_strain_strat
 from .stratifications.history import get_history_strat
 from .stratifications.vaccination import get_vaccination_strat
 
-base_params = Params(
-    build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
-)
+base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
     """
+
     params = Parameters(**params)
 
-    is_region_vic = params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021)
+    # Get country/region details
+    country = params.country
+    pop = params.population
 
+    # Create the model object
     model = CompartmentalModel(
-        times=[params.time.start, params.time.end],
+        times=(params.time.start, params.time.end),
         compartments=COMPARTMENTS,
         infectious_compartments=INFECTIOUS_COMPARTMENTS,
         timestep=params.time.step,
-        ref_date=BASE_DATE
+        ref_date=COVID_BASE_DATETIME
     )
 
     # Check build_options
@@ -66,54 +59,31 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         if idx_cache:
             model._set_derived_outputs_index_cache(idx_cache)
 
-    # Time periods calculated from periods (ie "sojourn times")
-    compartment_periods = preprocess.compartments.calc_compartment_periods(params.sojourn)
-
-    # Get country population by age-group
-    country = params.country
-    pop = params.population
-    total_pops = inputs.get_population_by_agegroup(
-        AGEGROUP_STRATA, country.iso3, pop.region, year=pop.year
-    )
+    """
+    Create the total population.
+    """
 
     # Distribute infectious seed across infectious split sub-compartments
+    compartment_periods = calc_compartment_periods(params.sojourn)
     total_disease_time = sum([compartment_periods[comp] for comp in DISEASE_COMPARTMENTS])
-    init_pop = {
-        comp: params.infectious_seed * compartment_periods[comp] / total_disease_time
-        for comp in DISEASE_COMPARTMENTS
-    }
+    seed = params.infectious_seed
+    init_pop = {comp: seed * compartment_periods[comp] / total_disease_time for comp in DISEASE_COMPARTMENTS}
+
+    # Get country population by age-group
+    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
     model.set_initial_population(init_pop)
 
     """
-    Get input data
+    Add intercompartmental flows.
     """
-
-    if params.mixing_matrices.type == "prem":
-        mixing_matrices = get_prem_mixing_matrices(country.iso3, None, pop.region)
-    elif params.mixing_matrices.type == "extrapolated":
-        mixing_matrices = build_synthetic_matrices(
-            country.iso3, params.mixing_matrices.source_iso3, AGEGROUP_STRATA, params.mixing_matrices.age_adjust,
-            pop.region
-        )
-
-    """
-    Add intercompartmental flows
-    """
-
-    # Use a time-varying, sinusoidal seasonal forcing function or constant value for the contact rate
-    if params.seasonal_force:
-        contact_rate = get_seasonal_forcing(365., 173., params.seasonal_force, params.contact_rate)
-    else:
-        # Use a static contact rate
-        contact_rate = params.contact_rate
 
     # Infection
     model.add_infection_frequency_flow(
         name=INFECTION,
-        contact_rate=contact_rate,
+        contact_rate=params.contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.EARLY_EXPOSED,
     )
@@ -146,7 +116,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         name=RECOVERY,
         fractional_rate=recovery_rate,
         source=Compartment.LATE_ACTIVE,
-        dest=Compartment.RECOVERED,
+        dest=Compartment.SUSCEPTIBLE,
     )
     # Infection death
     model.add_death_flow(
@@ -155,30 +125,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         source=Compartment.LATE_ACTIVE,
     )
 
-    # Stratify the model by age group
+    """
+    Age group stratification.
+    """
+
+    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, AGEGROUP_STRATA, True, pop.region)
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices)
     model.stratify_with(age_strat)
 
-    # Stratify the model by clinical status
-    if pop.region and pop.region.replace("_", "-").lower() in Region.VICTORIA_SUBREGIONS:
-        override_test_region = "Victoria"
-    else:
-        override_test_region = None
+    """
+    Variants of concern stratification.
+    """
 
-    get_detected_proportion = find_cdr_function_from_test_data(
-        params.testing_to_detection, country.iso3, override_test_region, pop.year
-    )
-    clinical_strat, adjustment_systems = get_clinical_strat(params)
-    model.stratify_with(clinical_strat)
-
-    # Add the adjuster systems used by the clinical stratification
-    for k, v in adjustment_systems.items():
-        model.add_adjustment_system(k, v)
-
-    # Register the CDR function as a computed value
-    model.add_computed_value_process("cdr", CdrProc(get_detected_proportion))
-
-    # Apply the VoC stratification and adjust contact rate for single/dual Variants of Concern
+    voc_ifr_effects = {"wild": 1.}
+    voc_hosp_effects = {"wild": 1.}
     if params.voc_emergence:
         voc_params = params.voc_emergence
 
@@ -187,70 +147,52 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(strain_strat)
 
         # Use importation flows to seed VoC cases
-        for voc_name, characteristics in voc_params.items():
-            voc_seed_func = make_voc_seed_func(
-                characteristics.entry_rate, characteristics.start_time, characteristics.seed_duration
-            )
+        for voc_name, voc_values in voc_params.items():
+            voc_seed_func = make_voc_seed_func(voc_values.entry_rate, voc_values.start_time, voc_values.seed_duration)
             model.add_importation_flow(
-                f"seed_voc_{voc_name}",
-                voc_seed_func,
-                dest=Compartment.EARLY_EXPOSED,
-                dest_strata={"strain": voc_name},
+                f"seed_voc_{voc_name}", voc_seed_func, dest=Compartment.EARLY_EXPOSED, dest_strata={"strain": voc_name}, split_imports=True
             )
 
-    # Infection history stratification
-    if params.stratify_by_infection_history:
-        history_strat = get_history_strat(params)
-        model.stratify_with(history_strat)
+        # Get the adjustments to the IFR for each strain (if not requested, will have defaulted to a value of one)
+        voc_ifr_effects.update({s: params.voc_emergence[s].ifr_multiplier for s in strain_strat.strata[1:]})
+        voc_hosp_effects.update({s: params.voc_emergence[s].hosp_multiplier for s in strain_strat.strata[1:]})
 
-        # Waning immunity (if requested)
-        # Note that this approach would mean that the recovered in the naive class have actually previously had Covid
-        if params.waning_immunity_duration:
-            model.add_transition_flow(
-                name="waning_immunity",
-                fractional_rate=1. / params.waning_immunity_duration,
-                source=Compartment.RECOVERED,
-                dest=Compartment.SUSCEPTIBLE,
-                source_strata={"history": History.NAIVE},
-                dest_strata={"history": History.EXPERIENCED},
-            )
+    """
+    Clinical stratification.
+    """
 
-    # Stratify model by Victorian sub-region (used for Victorian cluster model)
-    if params.vic_status in (VicModelTypes.VIC_SUPER_2020, VicModelTypes.VIC_SUPER_2021):
-        cluster_strat = get_cluster_strat(params)
-        model.stratify_with(cluster_strat)
-        mixing_matrix_function = apply_post_cluster_strat_hacks(params, model, mixing_matrices)
+    stratified_adjusters = {}
+    for voc in voc_ifr_effects.keys():
+        stratified_adjusters[voc] = {
+            "ifr": params.infection_fatality.multiplier * voc_ifr_effects[voc],
+            "hosp": params.clinical_stratification.props.hospital.multiplier * voc_hosp_effects[voc],
+            "sympt": params.clinical_stratification.props.symptomatic.multiplier,
+        }
 
-    if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-        seed_start_time = params.vic_2021_seeding.seed_time
+    get_detected_proportion = find_cdr_function_from_test_data(
+        params.testing_to_detection, country.iso3, pop.region, pop.year
+    )
+    clinical_strat = get_clinical_strat(params, stratified_adjusters)
+    model.stratify_with(clinical_strat)
 
-        for stratum in cluster_strat.strata:
-            seed = params.vic_2021_seeding.clusters.__getattribute__(stratum)
+    """
+    Case detection.
+    """
 
-            # Function must be bound in loop with optional argument
-            def model_seed_func(time, computed_values, seed=seed):
-                return seed if seed_start_time < time < seed_start_time + 5. else 0.
+    model.add_computed_value_process("cdr", CdrProc(get_detected_proportion))
 
-            model.add_importation_flow(
-                "seed",
-                model_seed_func,
-                dest=Compartment.EARLY_EXPOSED,
-                dest_strata={"cluster": stratum.replace("-", "_")},
-            )
+    compartment_periods = calc_compartment_periods(params.sojourn)
+    within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
+    model.add_adjustment_system("isolated", AbsRateIsolatedSystem(within_early_exposed))
+    model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
 
-    elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-        seed_start_time = params.vic_2021_seeding.seed_time
-        seed = params.vic_2021_seeding.seed
+    """
+    Contact tracing stratification.
+    """
 
-        def model_seed_func(time, computed_values, seed=seed):
-            return seed if seed_start_time < time < seed_start_time + 5. else 0.
-
-        model.add_importation_flow("seed", model_seed_func, dest=Compartment.EARLY_EXPOSED)
-
-    # Contact tracing stratification
     if params.contact_tracing:
 
-        # Stratify the model structure
+        # Stratify
         tracing_strat = get_tracing_strat(
             params.contact_tracing.quarantine_infect_multiplier,
             params.clinical_stratification.late_infect_multiplier
@@ -291,12 +233,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
 
         # Add the transition process to the model
-        early_exposed_untraced_comps = \
-            [comp for comp in model.compartments if
-             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})]
-        early_exposed_traced_comps = \
-            [comp for comp in model.compartments if
-             comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})]
+        early_exposed_untraced_comps = [
+            comp for comp in model.compartments if
+            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.UNTRACED})
+        ]
+        early_exposed_traced_comps = [
+            comp for comp in model.compartments if
+            comp.is_match(Compartment.EARLY_EXPOSED, {"tracing": Tracing.TRACED})
+        ]
         for untraced, traced in zip(early_exposed_untraced_comps, early_exposed_traced_comps):
             model.add_transition_flow(
                 "tracing",
@@ -307,106 +251,126 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
                 dest_strata=traced.strata,
                 expected_flow_count=1,
             )
-            # +++ FIXME: convert this to transition flow with new computed_values aware flow param
 
-    # Stratify by vaccination status
-    if params.vaccination:
-        vaccination_strat = get_vaccination_strat(params)
+    """
+    Vaccination status stratification.
+    """
 
-        # Was going to delete this, but it is necessary - doesn't make sense to have VoC in an otherwise empty stratum
-        if params.voc_emergence:
-            for voc_name, characteristics in voc_params.items():
-                vaccination_strat.add_flow_adjustments(
-                    f"seed_voc_{voc_name}",
-                    {
-                        Vaccination.VACCINATED: Multiply(1. / 2.),
-                        Vaccination.ONE_DOSE_ONLY: Overwrite(0.),
-                        Vaccination.UNVACCINATED: Multiply(1. / 2.),
-                    }
-                )
+    vacc_params = params.vaccination
+    if vacc_params:
+
+        # Determine the vaccination stratification structure
+        dose_delay_params = vacc_params.second_dose_delay
+        is_dosing_active = bool(dose_delay_params)  # Presence of parameter determines stratification by dosing
+        waning_vacc_immunity = vacc_params.vacc_full_effect_duration  # Similarly this one for waning immunity
+        is_boosting = bool(params.vaccination.boost_delay)
+        vacc_strata, wane_origin_stratum = find_vacc_strata(is_dosing_active, bool(waning_vacc_immunity), is_boosting)
+
+        # Get the vaccination stratification object
+        vaccination_strat = get_vaccination_strat(params, vacc_strata, stratified_adjusters)
         model.stratify_with(vaccination_strat)
 
-        # Implement the process of people getting vaccinated
-        vacc_params = params.vaccination
-
-        # Vic 2021 code is not generalisable
-        if params.vic_status == VicModelTypes.VIC_SUPER_2021:
-            for component in vacc_params.roll_out_components:
-                for cluster in cluster_strat.strata:
-                    add_vaccination_flows(
-                        model,
-                        component,
-                        age_strat.strata,
-                        params.vaccination.one_dose,
-                        vic_cluster=cluster,
-                        cluster_stratum={"cluster": cluster},
-                    )
-        elif params.vic_status == VicModelTypes.VIC_REGION_2021:
-            for i_comp, component in enumerate(vacc_params.roll_out_components):
-                add_vaccination_flows(
-                    model,
-                    component,
-                    age_strat.strata,
-                    params.vaccination.one_dose,
-                    vic_cluster=params.population.region,
-                    i_component=i_comp,
-                    vaccination_lag=vacc_params.lag,
-                )
-
+        if params.vaccination.standard_supply:
+            apply_standard_vacc_coverage(
+                model, vacc_params.lag, params.country.iso3, total_pops, params.vaccination.one_dose,
+                params.description == "BASELINE"
+            )
         else:
-            for roll_out_component in vacc_params.roll_out_components:
-                coverage_override = vacc_params.coverage_override if vacc_params.coverage_override else None
-                add_vaccination_flows(
-                    model,
-                    roll_out_component,
-                    age_strat.strata,
-                    params.vaccination.one_dose,
-                    coverage_override
-                )
+            add_vacc_rollout_requests(model, vacc_params)
 
         # Add transition from single dose to fully vaccinated
-        if params.vaccination.one_dose:
-            for compartment in COMPARTMENTS:
+        if is_dosing_active:
+            second_dose_transition = get_second_dose_delay_rate(dose_delay_params)
+            model.add_transition_flow(
+                name="second_dose",
+                fractional_rate=second_dose_transition,
+                source=Compartment.SUSCEPTIBLE,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
+                dest_strata={"vaccination": Vaccination.VACCINATED},
+            )
+
+        # Add the waning immunity progressions through the strata
+        if waning_vacc_immunity:
+            model.add_transition_flow(
+                name="part_wane",
+                fractional_rate=1. / waning_vacc_immunity,
+                source=Compartment.SUSCEPTIBLE,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"vaccination": wane_origin_stratum},
+                dest_strata={"vaccination": Vaccination.PART_WANED},
+            )
+            model.add_transition_flow(
+                name="full_wane",
+                fractional_rate=1. / vacc_params.vacc_part_effect_duration,
+                source=Compartment.SUSCEPTIBLE,
+                dest=Compartment.SUSCEPTIBLE,
+                source_strata={"vaccination": Vaccination.PART_WANED},
+                dest_strata={"vaccination": Vaccination.WANED},
+            )
+
+        # Apply the process of boosting to those who have previously received their full course of vaccination only
+        if params.vaccination.boost_delay:
+            for boost_eligible_stratum in (Vaccination.VACCINATED, Vaccination.WANED):
                 model.add_transition_flow(
-                    name="second_dose",
-                    fractional_rate=1. / params.vaccination.second_dose_delay,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata={"vaccination": Vaccination.ONE_DOSE_ONLY},
-                    dest_strata={"vaccination": Vaccination.VACCINATED},
+                    name=f"boost_{boost_eligible_stratum}",
+                    fractional_rate=1. / params.vaccination.boost_delay,
+                    source=Compartment.SUSCEPTIBLE,
+                    dest=Compartment.SUSCEPTIBLE,
+                    source_strata={"vaccination": boost_eligible_stratum},
+                    dest_strata={"vaccination": Vaccination.BOOSTED},
                 )
 
-    # Dive into summer internals to over-write mixing matrix
-    if is_region_vic:
-        model._mixing_matrices = [mixing_matrix_function]
+    """
+    Infection history stratification.
+    """
 
-    # Find the total population, used by multiple output types
-    model.request_output_for_compartments(name="_total_population", compartments=COMPARTMENTS, save_results=False)
+    history_strat = get_history_strat(params, stratified_adjusters)
+    model.stratify_with(history_strat)
 
-    # Most standard outputs
-    request_common_outputs(model, params, is_region_vic)
-    request_healthcare_outputs(model, params.sojourn.compartment_periods, is_region_vic)
+    # Manipulate all the recovery flows by digging into the summer object to make them go to the experienced stratum
+    for flow in [f for f in model._flows if f.name == RECOVERY]:
+        updated_strata = flow.dest.strata.copy()
+        updated_strata["history"] = History.EXPERIENCED
+        # Find the destination compartment matching the original (but with updated history)
+        new_dest_comp = model.get_matching_compartments(flow.dest.name, updated_strata)
+        assert len(new_dest_comp) == 1, f"Multiple compartments match query for {flow.dest}"
+        flow.dest = new_dest_comp[0]
+
+    # Apply waning immunity if present
+    if params.history.natural_immunity_duration:
+        model.add_transition_flow(
+            name="waning_immunity",
+            fractional_rate=1. / params.history.natural_immunity_duration,
+            source=Compartment.SUSCEPTIBLE,
+            dest=Compartment.SUSCEPTIBLE,
+            source_strata={"history": History.EXPERIENCED},
+            dest_strata={"history": History.WANED},
+        )
 
     """
     Set up derived output functions
     """
 
-    # Vaccination
-    if params.vaccination:
-        request_vaccination_outputs(model, params)
+    outputs_builder = CovidOutputsBuilder(model, COMPARTMENTS, bool(params.contact_tracing))
 
-    # Strain-related outputs
-    if params.voc_emergence:
-        request_strain_outputs(model, list(params.voc_emergence.keys()))
-
-    # Proportion of the population previously infected/exposed
-    if params.stratify_by_infection_history:
-        request_history_outputs(model)
-    else:
-        request_recovered_outputs(model, is_region_vic)
-
-    # Contact tracing-related outputs
+    outputs_builder.request_incidence()
+    outputs_builder.request_infection()
+    outputs_builder.request_notifications(params.cumul_incidence_start_time, params.hospital_reporting)
+    outputs_builder.request_non_hosp_notifications()
+    outputs_builder.request_adult_paeds_notifications()
+    outputs_builder.request_cdr()
+    outputs_builder.request_deaths()
+    outputs_builder.request_admissions()
+    outputs_builder.request_occupancy(params.sojourn.compartment_periods)
+    outputs_builder.request_experienced()
     if params.contact_tracing:
-        request_tracing_outputs(model)
+        outputs_builder.request_tracing()
+    if params.voc_emergence:
+        outputs_builder.request_strains(list(params.voc_emergence.keys()))
+    if vacc_params:
+        outputs_builder.request_vaccination(is_dosing_active, vacc_strata)
+        if len(vacc_params.roll_out_components) > 0 and params.vaccination_risk.calculate:
+            outputs_builder.request_vacc_aefis(params.vaccination_risk)
 
     return model

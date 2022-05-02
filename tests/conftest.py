@@ -15,6 +15,7 @@ from .utils import in_memory_db_factory
 
 APPROVAL_DIR = os.path.join(settings.DATA_PATH, "approvals")
 IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
+IS_NIGHTLY = os.environ.get("NIGHTLY_TESTING", False)
 
 get_in_memory_db_engine = in_memory_db_factory()
 
@@ -22,6 +23,7 @@ get_in_memory_db_engine = in_memory_db_factory()
 def pytest_configure(config):
     config.addinivalue_line("markers", "github_only: Mark test to run only in GitHub Actions")
     config.addinivalue_line("markers", "local_only: Mark test to never run in GitHub Actions")
+    config.addinivalue_line("markers", "nightly_only: Mark test to run only in nightly testing")
     config.addinivalue_line("markers", "calibrate_models: A test which runs full calibrations")
     config.addinivalue_line("markers", "run_models: A test which runs the full models")
     config.addinivalue_line(
@@ -40,6 +42,10 @@ def pytest_runtest_setup(item):
     for marker in item.iter_markers(name="local_only"):
         if IS_GITHUB_CI:
             pytest.skip("Local test: never run on GitHub.")
+
+    for marker in item.iter_markers(name="nightly_only"):
+        if not IS_NIGHTLY:
+            pytest.skip("Long running non-essential test: run in nightly testing only.")
 
 
 @pytest.fixture(autouse=True)

@@ -1,0 +1,42 @@
+description: School opening and borders opening
+
+time:
+  start: 450 #20/03/2022
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2022-04-06
+        - 2022-04-07 # restrictions release
+      values:
+        - - repeat_prev
+        - 1.5
+    work:
+      append: true
+      times:
+        - 2022-03-31
+        - 2022-04-01 # restrictions release
+        - 2022-04-06
+        - 2022-04-07
+      values:
+        - - repeat_prev
+        - 1.0
+        - 1.0
+        - 1.5
+
+    school:
+      append: false
+      times:
+        - 2022-01-20
+        - 2022-02-20
+        - 2022-02-21 # school holidays
+        - 2022-03-21 # school holidays
+        - 2022-03-22 # schools open
+      values:
+        - 0.5
+        - 0.5
+        - 0.
+        - 0.
+        - 1.

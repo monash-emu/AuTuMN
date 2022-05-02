@@ -1,10 +1,12 @@
-import pandas as pd
+from datetime import datetime
 import os
+
 import sqlite3
+import pandas as pd
 import boto3
 
 s3 = boto3.client("s3")
-COVID_BASE_DATE = pd.datetime(2019, 12, 31)
+COVID_BASE_DATE = datetime(2019, 12, 31)
 DATA_PATH = "M:\Documents\@Projects\Covid_consolidate\output"
 os.chdir(DATA_PATH)
 list_of_files = os.listdir(DATA_PATH)
@@ -29,7 +31,7 @@ phl = {
         "manila",
         "philippines",
     ],
-    "columns": STANDARD_COL + ["accum_incidence", "accum_notifications"],
+    "columns": STANDARD_COL,
 }
 mys = {
     "region": ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"],
@@ -86,10 +88,6 @@ def upload_csv(country_list):
         os.remove(f"{ctry}_data.csv")
 
 
-
-
-
-
 def get_files(country):
     return {
         region: os.path.join(DATA_PATH, each)
@@ -102,10 +100,14 @@ def get_files(country):
 phl["region"] = get_files(phl)
 mys["region"] = get_files(mys)
 lka["region"] = get_files(lka)
-#npl["region"] = get_files(npl)
-#vic["region"] = get_files(vic)
+# npl["region"] = get_files(npl)
+# vic["region"] = get_files(vic)
 
-country = {"lka": lka, "phl": phl, "mys": mys, }#"npl": npl, "vic": vic}
+country = {
+    "lka": lka,
+    "phl": phl,
+    "mys": mys,
+}  # "npl": npl, "vic": vic}
 
 for ctry in country:
 

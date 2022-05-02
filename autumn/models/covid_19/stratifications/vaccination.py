@@ -1,102 +1,47 @@
+from typing import Dict
+
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import (
-    COMPARTMENTS, DISEASE_COMPARTMENTS, Vaccination, VACCINATION_STRATA, VACCINATED_STRATA, INFECTION
-)
+from autumn.models.covid_19.constants import COMPARTMENTS, Vaccination
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.preprocess.vaccination import \
-    add_clinical_adjustments_to_strat, add_vaccine_infection_and_severity
+from autumn.models.covid_19.strat_processing.vaccination import apply_immunity_to_strat
 
 
-def get_vaccination_strat(params: Parameters) -> Stratification:
+def get_vaccination_strat(
+        params: Parameters, all_strata: list, stratified_adjusters: Dict[str, Dict[str, float]]
+) -> Stratification:
     """
-    Create the vaccination stratification as two strata applied to the whole model.
+    Get the vaccination stratification and adjustments to apply to the model, calling the required functions in the
+    vaccination strat_processing folder to organise the parameter processing and inter-compartmental flows representing
+    vaccination.
+
+    Args:
+        params: All the model parameters
+        all_strata: All the vaccination strata being implemented in the model (including unvaccinated)
+        stratified_adjusters: VoC and severity stratification adjusters
+
+    Returns:
+        The processing summer vaccination stratification object
+
     """
 
-    # Create the stratification object
-    vacc_strat = Stratification("vaccination", VACCINATION_STRATA, COMPARTMENTS)
+    # Create the stratum
+    stratification = Stratification("vaccination", all_strata, COMPARTMENTS)
 
-    # Everyone starts out unvaccinated
-    vacc_strat.set_population_split(
-        {
-            Vaccination.UNVACCINATED: 1.,
-            Vaccination.ONE_DOSE_ONLY: 0.,
-            Vaccination.VACCINATED: 0.
-        }
-    )
+    # Initial conditions, everyone unvaccinated
+    pop_split = {stratum: 0. for stratum in all_strata}
+    pop_split[Vaccination.UNVACCINATED] = 1.
+    stratification.set_population_split(pop_split)
 
-    # Preliminary processing
-    is_one_dose_active = bool(params.vaccination.one_dose)
-    strata_to_adjust = VACCINATED_STRATA if is_one_dose_active else [Vaccination.VACCINATED]
-    infection_efficacy, severity_efficacy, symptomatic_adjuster, hospital_adjuster, ifr_adjuster = \
-        {}, {}, {}, {}, {}
+    # Immunity adjustments equivalent to history approach
+    apply_immunity_to_strat(stratification, params, stratified_adjusters, Vaccination.UNVACCINATED)
 
-    vaccination_effects = {
-        Vaccination.VACCINATED: {
-            "prevent_infection": params.vaccination.fully_vaccinated.vacc_prop_prevent_infection,
-            "overall_efficacy": params.vaccination.fully_vaccinated.overall_efficacy,
-        }
-    }
-    if is_one_dose_active:
-        vaccination_effects.update({
-            Vaccination.ONE_DOSE_ONLY: {
-                "prevent_infection": params.vaccination.one_dose.vacc_prop_prevent_infection,
-                "overall_efficacy": params.vaccination.one_dose.overall_efficacy,
-            },
-        })
+    # Assign all the VoC infectious seed to the unvaccinated, because otherwise we might be assigning VoC entries to a
+    # stratum that supposed to be empty (i.e. because vaccination hasn't started yet)
+    if params.voc_emergence:
+        for voc_name, voc_values in params.voc_emergence.items():
+            seed_split = {stratum: Multiply(0.) for stratum in all_strata}
+            seed_split[Vaccination.UNVACCINATED] = Multiply(1.)
+            stratification.set_flow_adjustments(f"seed_voc_{voc_name}", seed_split)
 
-    # Get vaccination effects from requests by dose number and mode of action
-    for stratum in strata_to_adjust:
-        infection_efficacy[stratum], severity_efficacy[stratum] = add_vaccine_infection_and_severity(
-            vaccination_effects[stratum]["prevent_infection"],
-            vaccination_effects[stratum]["overall_efficacy"],
-        )
-
-        severity_adjustment = 1. - severity_efficacy[stratum]
-        symptomatic_adjuster[stratum], hospital_adjuster[stratum], ifr_adjuster[stratum] = \
-            severity_adjustment, severity_adjustment, severity_adjustment
-
-        # Apply the calibration adjustment parameters
-        symptomatic_adjuster[stratum] *= params.clinical_stratification.props.symptomatic.multiplier
-        ifr_adjuster[stratum] *= params.infection_fatality.multiplier
-
-    # Add the clinical adjustments parameters as overwrites in the same way as for vaccination
-    vacc_strat = add_clinical_adjustments_to_strat(
-        vacc_strat,
-        Vaccination.UNVACCINATED,
-        Vaccination.VACCINATED,
-        params,
-        symptomatic_adjuster[Vaccination.VACCINATED],
-        hospital_adjuster[Vaccination.VACCINATED],
-        ifr_adjuster[Vaccination.VACCINATED],
-        params.infection_fatality.top_bracket_overwrite,
-        second_modified_stratum=Vaccination.ONE_DOSE_ONLY,
-        second_sympt_adjuster=symptomatic_adjuster[Vaccination.ONE_DOSE_ONLY] if is_one_dose_active else 1.,
-        second_hospital_adjuster=symptomatic_adjuster[Vaccination.ONE_DOSE_ONLY] if is_one_dose_active else 1.,
-        second_ifr_adjuster=symptomatic_adjuster[Vaccination.ONE_DOSE_ONLY] if is_one_dose_active else 1.,
-        second_top_bracket_overwrite=params.infection_fatality.top_bracket_overwrite,
-    )
-
-    # Apply vaccination protection against being infected
-    one_dose_infection_adj = \
-        Multiply(1. - infection_efficacy[Vaccination.VACCINATED]) if is_one_dose_active else None
-    infection_adjustments = {
-        Vaccination.UNVACCINATED: None,
-        Vaccination.ONE_DOSE_ONLY: one_dose_infection_adj,
-        Vaccination.VACCINATED: Multiply(1. - infection_efficacy[Vaccination.VACCINATED]),
-    }
-
-    vacc_strat.add_flow_adjustments(INFECTION, infection_adjustments)
-
-    # Adjust the infectiousness of vaccinated people
-    one_dose_infectious_adj = \
-        Multiply(1. - params.vaccination.one_dose.vacc_reduce_infectiousness) if is_one_dose_active else None
-    infectiousness_adjustments = {
-        Vaccination.UNVACCINATED: None,
-        Vaccination.ONE_DOSE_ONLY: one_dose_infectious_adj,
-        Vaccination.VACCINATED: Multiply(1. - params.vaccination.fully_vaccinated.vacc_reduce_infectiousness),
-    }
-    for compartment in DISEASE_COMPARTMENTS:
-        vacc_strat.add_infectiousness_adjustments(compartment, infectiousness_adjustments)
-
-    return vacc_strat
+    return stratification

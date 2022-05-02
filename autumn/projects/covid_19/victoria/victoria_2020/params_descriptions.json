@@ -1,8 +1,0 @@
-{
-  "sojourn.compartment_periods_calculated.exposed.total_period": {
-    "full_name": "Incubation period",
-    "unit": "days",
-    "n_digits": 1,
-    "rationale": "Estimates of the incubation period have included 5.1 days, 5.2 days and 4.8 days \\cite{RN7, RN12, RN8, RN10}. A systematic review \\cite{RN13} found that data are best fitted by a log-normal distribution (mean 5.8 days, CI 5.0 to 6.7, median 5.1 days). Our systematic review \\cite{RN17} found that estimates of the mean incubation period have varied from 3.6 to 7.4 days."
-  }
-}

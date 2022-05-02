@@ -27,6 +27,7 @@ def test_run_models_partial(project_name):
 
 @pytest.mark.run_models
 @pytest.mark.github_only
+@pytest.mark.nightly_only
 @pytest.mark.parametrize("project_name", COVID_PROJECTS)
 def test_build_scenario_models(project_name):
     """
@@ -40,6 +41,7 @@ def test_build_scenario_models(project_name):
 
 @pytest.mark.run_models
 @pytest.mark.github_only
+@pytest.mark.nightly_only
 @pytest.mark.parametrize("project_name", COVID_PROJECTS)
 def test_run_models_full(project_name):
     """

@@ -337,13 +337,13 @@ def _build_age_strat(params: dict, uni_death_flow_names: list):
     # age_strat.set_mixing_matrix(mixing_matrix)
 
     # Add age-based flow adjustments.
-    age_strat.add_flow_adjustments(
+    age_strat.set_flow_adjustments(
         "stabilisation", _adjust_all_multiply(params["stabilisation_rate_stratified"]["age"])
     )
-    age_strat.add_flow_adjustments(
+    age_strat.set_flow_adjustments(
         "early_activation", _adjust_all_multiply(params["early_activation_rate_stratified"]["age"])
     )
-    age_strat.add_flow_adjustments(
+    age_strat.set_flow_adjustments(
         "late_activation", _adjust_all_multiply(params["late_activation_rate_stratified"]["age"])
     )
 
@@ -359,7 +359,7 @@ def _build_age_strat(params: dict, uni_death_flow_names: list):
         for age in params["age_breakpoints"]
     }
     for uni_death_flow_name in uni_death_flow_names:
-        age_strat.add_flow_adjustments(
+        age_strat.set_flow_adjustments(
             uni_death_flow_name, _adjust_all_multiply(death_rates_by_age)
         )
 
@@ -371,18 +371,18 @@ def _build_vac_strat(params):
     vac_strat.set_population_split({"unvaccinated": 1.0, "vaccinated": 0.0})
 
     # Apply flow adjustments
-    vac_strat.add_flow_adjustments(
+    vac_strat.set_flow_adjustments(
         "infection",
         {
             "unvaccinated": Multiply(1.0),
             "vaccinated": Multiply(params["bcg"]["rr_infection_vaccinated"]),
         },
     )
-    vac_strat.add_flow_adjustments(
+    vac_strat.set_flow_adjustments(
         "treatment_early",
         {"unvaccinated": Multiply(0.0), "vaccinated": Multiply(1.0)},
     )
-    vac_strat.add_flow_adjustments(
+    vac_strat.set_flow_adjustments(
         "treatment_late", {"unvaccinated": Multiply(0.0), "vaccinated": Multiply(1.0)}
     )
 
@@ -392,7 +392,7 @@ def _build_vac_strat(params):
     def time_varying_unvaccinated_coverage(t):
         return 1 - params["bcg"]["coverage"] if t > params["bcg"]["start_time"] else 1.0
 
-    vac_strat.add_flow_adjustments(
+    vac_strat.set_flow_adjustments(
         "birth",
         {
             "unvaccinated": Multiply(time_varying_unvaccinated_coverage),
@@ -413,21 +413,21 @@ def _build_organ_strat(params):
             comp, _adjust_all_multiply(params["organ"]["foi"])
         )
 
-    organ_strat.add_flow_adjustments(
+    organ_strat.set_flow_adjustments(
         "early_activation", _adjust_all_multiply(params["organ"]["props"])
     )
-    organ_strat.add_flow_adjustments(
+    organ_strat.set_flow_adjustments(
         "late_activation", _adjust_all_multiply(params["organ"]["props"])
     )
-    organ_strat.add_flow_adjustments(
+    organ_strat.set_flow_adjustments(
         "detection",
         _adjust_all_multiply(params["detection_rate_stratified"]["organ"]),
     )
-    organ_strat.add_flow_adjustments(
+    organ_strat.set_flow_adjustments(
         "self_recovery_infectious",
         _adjust_all_multiply(params["self_recovery_rate_stratified"]["organ"]),
     )
-    organ_strat.add_flow_adjustments(
+    organ_strat.set_flow_adjustments(
         "self_recovery_detected",
         _adjust_all_multiply(params["self_recovery_rate_stratified"]["organ"]),
     )
@@ -440,31 +440,31 @@ def _build_strain_strat(params):
     for c in INFECTED_COMPS:
         strat.add_infectiousness_adjustments(c, {"ds": Multiply(1.0), "mdr": Multiply(0.8)})
 
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "treatment_commencement",
         _adjust_all_multiply(params["treatment_commencement_rate_stratified"]["strain"]),
     )
     treatment_adjusts = _adjust_all_multiply(
         params["preventive_treatment_rate_stratified"]["strain"]
     )
-    strat.add_flow_adjustments("treatment_early", treatment_adjusts)
-    strat.add_flow_adjustments("treatment_late", treatment_adjusts)
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments("treatment_early", treatment_adjusts)
+    strat.set_flow_adjustments("treatment_late", treatment_adjusts)
+    strat.set_flow_adjustments(
         "treatment_recovery",
         _adjust_all_multiply(params["treatment_recovery_rate_stratified"]["strain"]),
     )
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "treatment_death", _adjust_all_multiply(params["treatment_death_rate_stratified"]["strain"])
     )
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "treatment_default",
         _adjust_all_multiply(params["treatment_default_rate_stratified"]["strain"]),
     )
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "spontaneous_recovery",
         _adjust_all_multiply(params["spontaneous_recovery_rate_stratified"]["strain"]),
     )
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "failure_retreatment",
         _adjust_all_multiply(params["failure_retreatment_rate_stratified"]["strain"]),
     )
@@ -476,14 +476,14 @@ def _build_class_strat(params):
         "classified", ["correctly", "incorrectly"], [Compartment.DETECTED, Compartment.ON_TREATMENT]
     )
     # Apply only to ds flows
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "detection",
         {"correctly": Multiply(1.0), "incorrectly": Multiply(0.0)},
         source_strata={"strain": "ds"},
     )
 
     # Apply only to mdr flows
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "detection",
         {
             "correctly": Multiply(params["frontline_xpert_prop"]),
@@ -493,23 +493,23 @@ def _build_class_strat(params):
     )
 
     # Apply only to mdr flows that have extra_pulmonary organ.
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "detection",
         {"correctly": Multiply(0), "incorrectly": Multiply(1)},
         source_strata={"strain": "mdr", "organ": "extra_pulmonary"},
     )
 
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "treatment_default",
         _adjust_all_multiply(params["treatment_default_rate_stratified"]["classified"]),
         source_strata={"strain": "mdr"},
     )
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "spontaneous_recovery",
         _adjust_all_multiply(params["spontaneous_recovery_rate_stratified"]["classified"]),
     )
 
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "failure_retreatment",
         _adjust_all_multiply(params["failure_retreatment_rate_stratified"]["classified"]),
     )
@@ -518,23 +518,23 @@ def _build_class_strat(params):
 
 def _build_retention_strat(params):
     strat = Stratification("retained", ["yes", "no"], [Compartment.DETECTED])
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "detection",
         {
             "yes": Multiply(params["retention_prop"]),
             "no": Multiply(1 - params["retention_prop"]),
         },
     )
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "missed_to_active",
         {"yes": Multiply(0), "no": Multiply(1)},
     )
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "treatment_commencement",
         {"yes": Multiply(1), "no": Multiply(0)},
     )
 
-    strat.add_flow_adjustments(
+    strat.set_flow_adjustments(
         "failure_retreatment",
         {"yes": Multiply(1), "no": Multiply(0)},
     )

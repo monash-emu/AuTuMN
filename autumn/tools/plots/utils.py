@@ -16,7 +16,7 @@ PLOT_TEXT_DICT = {
     "progression_multiplier": "progression multiplier",
     "time_variant_tb_screening_rate.shape": "screening profile (max gradient)",
     "time_variant_tb_screening_rate.inflection_time": "screening profile (inflection time), year",
-    "time_variant_tb_screening_rate.upper_asymptote": "screening profile (final rate), per year",
+    "time_variant_tb_screening_rate.end_asymptote": "screening profile (final rate), per year",
     "user_defined_stratifications.location.adjustments.detection.ebeye": "rel. screening rate (Ebeye)",
     "user_defined_stratifications.location.adjustments.detection.other": "rel. screening rate (Other Isl.)",
     "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
@@ -43,35 +43,20 @@ PLOT_TEXT_DICT = {
     "sojourn.compartment_periods.icu_early": "pre-ICU period",
     "other_locations": "other locations",
     "manila": "national capital region",
-    "victorian_clusters.intercluster_mixing": "inter-service mixing",
     "clinical_stratification.props.symptomatic.multiplier": "sympt prop adjuster",
     "clinical_stratification.non_sympt_infect_multiplier": "asympt infect multiplier",
     "infection_fatality.multiplier": "IFR adjuster",
-    "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect": "physical distancing",
-    "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect": "face coverings",
     "cdr": "Proportion detected among symptomatic",
     "prevalence": "Prevalence of active disease",
     "prop_detected_traced": "Proportion traced among detected cases",
     "prop_contacts_with_detected_index": "Proportion of contacts whose index is detected",
     "prop_contacts_quarantined": "Proportion quarantined among all contacts",
-    "infection_fatality.top_bracket_overwrite": "75 and above IFR",
-    "victorian_clusters.contact_rate_multiplier_north_metro": "north and west metro",
-    "victorian_clusters.contact_rate_multiplier_south_metro": "south and south east metro",
     "prop_incidence_strain_delta": "Proportion of Delta variant in new cases",
     "contact_tracing.assumed_trace_prop": "traced prop high prevalence",
-    "victorian_clusters.metro.mobility.microdistancing.home_reduction.parameters.effect": "home contacts reduction",
     "unvaccinated_prop": "proportion unvaccinated (all ages)",
     "one_dose_only_prop": "proportion received only one dose (all ages)",
     "vaccinated_prop": "proportion fully vaccinated (all ages)",
     "at_least_one_dose_prop": "proportion received at least one dose (all ages)",
-}
-
-SHORT_TEXT_DICT = {
-    "victorian_clusters.contact_rate_multiplier_north_metro": "nw metro",
-    "victorian_clusters.contact_rate_multiplier_south_metro": "s se metro",
-    "victorian_clusters.contact_rate_multiplier_barwon_south_west": "barwon sw",
-    "victorian_clusters.contact_rate_multiplier_regional": "regional",
-    "contact_rate": "contact rate",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)
@@ -106,16 +91,9 @@ def get_plot_text_dict(
     Get standard text for use in plotting as title, y-label, etc.
     """
 
-    if get_short_text:
-        text = SHORT_TEXT_DICT[param_string] if param_string in SHORT_TEXT_DICT else param_string
-    else:
-        text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
-    if "victorian_clusters.contact_rate_multiplier_" in param_string:
-        text = text.replace("victorian_clusters.contact_rate_multiplier_", "")
-    if "victorian_clusters." in param_string:
-        text = text.replace("victorian_clusters.metro.mobility.microdistancing", "")
-    if "upper_asymptote" in param_string:
-        text = text.replace("parameters.upper_asymptote", "")
+    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    if "end_asymptote" in param_string:
+        text = text.replace("parameters.end_asymptote", "")
     if capitalise_first_letter:
         text = text[0].upper() + text[1:]
     if remove_underscore:

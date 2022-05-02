@@ -4,9 +4,10 @@ import numpy as np
 import pandas as pd
 
 from autumn.tools.inputs.database import get_input_db
-from autumn.tools.utils.utils import apply_moving_average, COVID_BASE_DATETIME
+from autumn.tools.utils.utils import apply_moving_average
 
-COVID_BASE_DATE = date(2019, 12, 31)
+from autumn.settings.constants import COVID_BASE_DATETIME
+
 TINY_NUMBER = 1e-6
 VACC_COVERAGE_START_AGES = (0, 5, 12, 16, 20, 30, 40, 50, 60, 70, 80, 85)
 VACC_COVERAGE_END_AGES = (4, 11, 15, 19, 29, 39, 49, 59, 69, 79, 84, 89)
@@ -39,7 +40,7 @@ def get_dhhs_testing_numbers(cluster: str = None):
             "covid_dhhs_test", columns=["date", "test"], conditions={"cluster_name": cluster}
         )
 
-    test_dates = (pd.to_datetime(df.date) - pd.datetime(2019, 12, 31)).dt.days.to_numpy()
+    test_dates = (pd.to_datetime(df.date) - COVID_BASE_DATETIME).dt.days.to_numpy()
     test_values = df.test.to_numpy()
     avg_vals = np.array(apply_moving_average(test_values, 7)) + TINY_NUMBER
     return test_dates, avg_vals
@@ -77,6 +78,9 @@ def get_historical_vac_coverage(
     avg_vals = np.array(apply_moving_average(coverage_values, 7)) + TINY_NUMBER
     return vac_dates, avg_vals
 
+def update_cond_map(cluster, cond_map):
+    if cluster is None:
+        cluster = "Victoria"
 
 
 def get_historical_vac_num(input_db, cond_map):
@@ -95,7 +99,7 @@ def get_modelled_vac_num(input_db, cond_map, dose):
     return df
 
 
-def get_both_vac_coverage(cluster: str=None, start_age: int=0, end_age: int=89, dose="dose_1"):
+def get_both_vacc_coverage(cluster: str=None, start_age: int=0, end_age: int=89, dose="dose_1"):
     """
     Use the following function (get_modelled_vac_coverage) to get the same data out for both vaccines from data provided
     by Vida at the Department.

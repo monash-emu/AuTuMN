@@ -4,98 +4,57 @@ steps:
   - hint: Which model do you want to run?
     key: model-name
     options:
-    - label: Bali (covid_19)
-      value: covid_19:bali
-    - label: Barwon South West (covid_19)
-      value: covid_19:barwon-south-west
     - label: Belgium (covid_19)
       value: covid_19:belgium
-    - label: Calabarzon (covid_19)
-      value: covid_19:calabarzon
-    - label: Central Visayas (covid_19)
-      value: covid_19:central-visayas
-    - label: Davao City (covid_19)
-      value: covid_19:davao-city
-    - label: Davao Region (covid_19)
-      value: covid_19:davao-region
     - label: France (covid_19)
       value: covid_19:france
-    - label: Gippsland (covid_19)
-      value: covid_19:gippsland
-    - label: Grampians (covid_19)
-      value: covid_19:grampians
-    - label: Ho_Chi_Minh_City (covid_19)
-      value: covid_19:ho_chi_minh_city
-    - label: Hume (covid_19)
-      value: covid_19:hume
-    - label: Indonesia (covid_19)
-      value: covid_19:indonesia
     - label: Italy (covid_19)
       value: covid_19:italy
-    - label: Johor (covid_19)
-      value: covid_19:johor
-    - label: Kuala Lumpur (covid_19)
-      value: covid_19:kuala-lumpur
-    - label: Loddon Mallee (covid_19)
-      value: covid_19:loddon-mallee
-    - label: Malaysia (covid_19)
-      value: covid_19:malaysia
-    - label: Manila (covid_19)
-      value: covid_19:manila
-    - label: Nepal (covid_19)
-      value: covid_19:nepal
-    - label: North Metro (covid_19)
-      value: covid_19:north-metro
-    - label: Penang (covid_19)
-      value: covid_19:penang
-    - label: Philippines (covid_19)
-      value: covid_19:philippines
-    - label: Sabah (covid_19)
-      value: covid_19:sabah
-    - label: Selangor (covid_19)
-      value: covid_19:selangor
-    - label: South East Metro (covid_19)
-      value: covid_19:south-east-metro
-    - label: South Metro (covid_19)
-      value: covid_19:south-metro
     - label: Spain (covid_19)
       value: covid_19:spain
     - label: Sri_Lanka (covid_19)
       value: covid_19:sri_lanka
-    - label: Sri_Lanka_Wp (covid_19)
-      value: covid_19:sri_lanka_wp
     - label: Sweden (covid_19)
       value: covid_19:sweden
     - label: United Kingdom (covid_19)
       value: covid_19:united-kingdom
-    - label: Victoria_2020 (covid_19)
-      value: covid_19:victoria_2020
-    - label: Victoria_2021 (covid_19)
-      value: covid_19:victoria_2021
-    - label: Vietnam (covid_19)
-      value: covid_19:vietnam
-    - label: West Metro (covid_19)
-      value: covid_19:west-metro
     - label: Philippines (sir_example)
       value: sir_example:philippines
-    - label: Victoria_2020 (sir_example)
-      value: sir_example:victoria_2020
+    - label: Bangladesh (sm_sir)
+      value: sm_sir:bangladesh
+    - label: Bhutan (sm_sir)
+      value: sm_sir:bhutan
+    - label: Coxs_Bazar (sm_sir)
+      value: sm_sir:coxs_bazar
+    - label: Dhaka (sm_sir)
+      value: sm_sir:dhaka
+    - label: Hanoi (sm_sir)
+      value: sm_sir:hanoi
+    - label: Ho_Chi_Minh_City (sm_sir)
+      value: sm_sir:ho_chi_minh_city
+    - label: Malaysia (sm_sir)
+      value: sm_sir:malaysia
+    - label: Myanmar (sm_sir)
+      value: sm_sir:myanmar
+    - label: National Capital Region (sm_sir)
+      value: sm_sir:national-capital-region
+    - label: Thimphu (sm_sir)
+      value: sm_sir:thimphu
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)
       value: tuberculosis:philippines
     required: true
     select: Model Region
-  - default: '7'
+  - default: '8'
     hint: How many MCMC chains do you want to run?
     key: num-chains
     required: true
     text: Number of MCMC chains
-  - default: master
-    hint: Which git branch do you want to use to run the model?
-    key: mcmc-branch
+  - hint: Which git commit do you want to use to run the model?
+    key: commit
     required: true
-    text: Model git branch name
+    text: Model git commit SHA
   - default: '0.5'
     hint: How many hours should the model run for?
     key: mcmc-runtime
@@ -121,16 +80,6 @@ steps:
       value: 'no'
     required: true
     select: Trigger full model run
-  - default: 'no'
-    hint: Is 1/3 of the price but sometimes randomly fails.
-    key: spot-instance
-    options:
-    - label: 'Yes'
-      value: 'yes'
-    - label: 'No'
-      value: 'no'
-    required: true
-    select: Use spot instances
   if: build.env("SKIP_INPUT") == null
   key: calibration-settings
 - command: ./scripts/buildkite.sh calibrate

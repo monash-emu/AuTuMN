@@ -34,7 +34,7 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     death_adjs = {str(k): Multiply(v) for k, v in universal_death_funcs.items()}
     for comp in COMPARTMENTS:
         flow_name = f"universal_death_for_{comp}"
-        strat.add_flow_adjustments(flow_name, death_adjs)
+        strat.set_flow_adjustments(flow_name, death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
     for flow_name, latency_params in params.age_specific_latency.items():
@@ -52,7 +52,7 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
         if params.inflate_reactivation_for_diabetes and is_activation_flow:
             # Inflate reactivation rate to account for diabetes.
             diabetes_scale_up = tanh_based_scaleup(
-                shape=0.05, inflection_time=1980, lower_asymptote=0.0, upper_asymptote=1.0
+                shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0
             )
             future_diabetes_trend = make_linear_curve(
                 x_0=2020, x_1=2050, y_0=1, y_1=params.extra_params["future_diabetes_multiplier"]
@@ -81,7 +81,7 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
                 adjs[age] = get_latency_with_diabetes
 
         adjs = {str(k): Multiply(v) for k, v in adjs.items()}
-        strat.add_flow_adjustments(flow_name, adjs)
+        strat.set_flow_adjustments(flow_name, adjs)
 
     # Set age-specific infectiousness
     for comp in INFECTIOUS_COMPS:
@@ -156,9 +156,9 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
     treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}
     treatment_relapse_adjs = {str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()}
-    strat.add_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
-    strat.add_flow_adjustments("treatment_death", treatment_death_adjs)
-    strat.add_flow_adjustments("relapse", treatment_relapse_adjs)
+    strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
+    strat.set_flow_adjustments("treatment_death", treatment_death_adjs)
+    strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
 
     # Add BCG effect without stratifying for BCG
     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
@@ -189,7 +189,7 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
         flow_affected_by_bcg = "infection"
     elif params.bcg_effect == "mortality":
         flow_affected_by_bcg = "infect_death"
-    strat.add_flow_adjustments(flow_affected_by_bcg, bcg_adjs)
+    strat.set_flow_adjustments(flow_affected_by_bcg, bcg_adjs)
 
     return strat
 

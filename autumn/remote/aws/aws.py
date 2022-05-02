@@ -30,26 +30,15 @@ client = session.client("ec2")
 DESCRIBE_KEYS = ["InstanceId", "InstanceType", "LaunchTime", "State"]
 
 
-def get_instance_type(min_cores: int, min_ram: int):
-    cores_set = set()
-    ram_set = set()
-    for instance_type, specs in settings.EC2_INSTANCE_SPECS.items():
-        if specs["cores"] > min_cores:
-            cores_set.add(instance_type)
-        if specs["ram"] > min_ram:
-            ram_set.add(instance_type)
+def get_instance_type(min_cores: int, min_ram: int, category: str = settings.EC2InstanceCategory.GENERAL):
 
-    specs_set = cores_set.intersection(ram_set)
-    min_price = 10000
-    chosen_instance = None
-    for instance_type in specs_set:
-        price = settings.EC2_INSTANCE_SPECS[instance_type]["price"]
-        if price < min_price:
-            chosen_instance = instance_type
-            min_price = price
+    specs = settings.EC2_INSTANCE_SPECS[category]
 
-    assert chosen_instance, "Could not find an instance to match specs"
-    return chosen_instance
+    matching_specs = {k:v for k,v in specs.items() if v.cores >= min_cores and v.ram >= min_ram}
+
+    assert matching_specs, "Could not find an instance to match specs"
+
+    return min(matching_specs.items(), key = lambda kv : kv[1].cores)[0]
 
 
 def download_s3(s3_key, dest):
@@ -59,7 +48,7 @@ def download_s3(s3_key, dest):
 
 def run_job(job_id: str, instance_type=None, is_spot=False):
     if not instance_type:
-        instance_type = settings.EC2InstanceType.m5_8xlarge
+        instance_type = "m6i.4xlarge"
 
     run_instance(job_id, instance_type, is_spot)
 
@@ -118,7 +107,7 @@ def run_instance(job_id: str, instance_type: str, is_spot: bool):
     kwargs = {
         "MaxCount": 1,
         "MinCount": 1,
-        "ImageId": settings.EC2_AMI,
+        "ImageId": settings.EC2_AMI["310conda"],
         "InstanceType": instance_type,
         "SecurityGroupIds": [settings.EC2_SECURITY_GROUP],
         "IamInstanceProfile": {"Name": settings.EC2_IAM_INSTANCE_PROFILE},

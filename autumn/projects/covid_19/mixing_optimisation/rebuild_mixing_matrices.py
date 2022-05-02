@@ -1,5 +1,5 @@
 from autumn.projects.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME
-from autumn.models.covid_19.preprocess.mixing_matrix.mixing_matrix import (
+from autumn.models.covid_19.mixing_matrix import (
     build_dynamic_mixing_matrix,
 )
 from autumn.tools.inputs.demography.queries import get_iso3_from_country_name
@@ -37,12 +37,13 @@ def get_mixing_matrices(
         mixing_age_adjust=sc_1_params["mixing_age_adjust"],
         npi_effectiveness_params={},
         google_mobility_locations={
-            "work": ["workplaces"],
-            "other_locations": [
-                "retail_and_recreation",
-                "grocery_and_pharmacy",
-                "transit_stations",
-            ],
+            "work": {"workplaces": 1.},
+            "other_locations": {
+                "retail_and_recreation": 0.25,
+                "grocery_and_pharmacy": 0.25,
+                "transit_stations": 0.25,
+            },
+            "home": {"residential": 1.}
         },
         is_periodic_intervention=False,
         periodic_int_params={},

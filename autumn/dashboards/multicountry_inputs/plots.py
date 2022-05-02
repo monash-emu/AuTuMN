@@ -2,7 +2,7 @@ import random
 
 import streamlit as st
 
-from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from autumn.tools import inputs, plots
 from autumn.utils.params import load_params
 
@@ -52,10 +52,9 @@ def multi_country_cdr(
         sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
 
         # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
-        testing_region = "Victoria" if iso3 == "AUS" else pop_region
         testing_year = 2020 if iso3 == "AUS" else pop_year
         testing_pops = inputs.get_population_by_agegroup(
-            agegroup_strata, iso3, testing_region, year=testing_year
+            agegroup_strata, iso3, pop_region, year=testing_year
         )
 
         detected_proportions.append([])

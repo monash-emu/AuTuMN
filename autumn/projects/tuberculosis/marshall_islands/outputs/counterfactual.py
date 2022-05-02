@@ -29,6 +29,10 @@ def plot_counterfactual(uncertainty_df, figure_path):
     panel_h = 5
     panel_w = 7
 
+    y_max = {
+        "incidence": 900, "mortality": 250, "percentage_latent": 55, "notifications": 600
+    }
+
     widths = [panel_w] * 3
     heights = [0.5] + [panel_h] * 4
     fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
@@ -72,5 +76,8 @@ def plot_counterfactual(uncertainty_df, figure_path):
                 overlay_uncertainty=True,
                 legend=False
             )
+
+            if output != "notifications":
+                ax.set_ylim((0, y_max[output]))
 
     save_figure("counterfactual", figure_path)

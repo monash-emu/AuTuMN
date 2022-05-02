@@ -3,20 +3,13 @@
 description: BASELINE
 
 voc_emergence: null # Emergence of Variants of Concern
-stratify_by_infection_history: false # Note that the current code may not allocate imported cases to the right stratum
-waning_immunity_duration: null
-rel_prop_symptomatic_experienced: null
 infect_death: 0. # Compulsory parameter that is completely overwritten in stratification, rather than being modified
 universal_death_rate: 0. # Compulsory parameter for all models, even though there are no population-wide deaths
 infectious_seed: 10 # Initial condition for infectious
 contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 seasonal_force: null
-vic_status: "non_vic"
 
-#
-mixing_matrices:
-  type: "prem"
-  age_adjust: true  # Note that this is not relevant unless "empiric" selected for type
+ref_mixing_iso3: GBR
 
 # Integration times
 time:
@@ -106,22 +99,22 @@ clinical_stratification:
       # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
       multiplier: 1. # Multiplier to the below age-stratified parameters
       props:
-        - 0.0777 # 0-4
-        - 0.0069 # 5-9
-        - 0.0034 # 10-14
-        - 0.0051 # 15-19
-        - 0.0068 # 20-24
-        - 0.0080 # 25-29
-        - 0.0124 # 30-34
-        - 0.0129 # 35-39
-        - 0.0190 # 40-44
-        - 0.0331 # 45-49
-        - 0.0383 # 50-54
-        - 0.0579 # 55-59
-        - 0.0617 # 60-64
-        - 0.1030 # 65-69
-        - 0.1072 # 70-74
-        - 0.0703 # 75+
+        - 0.0777  # 0-4
+        - 0.0069  # 5-9
+        - 0.0034  # 10-14
+        - 0.0051  # 15-19
+        - 0.0068  # 20-24
+        - 0.0080  # 25-29
+        - 0.0124  # 30-34
+        - 0.0129  # 35-39
+        - 0.0190  # 40-44
+        - 0.0331  # 45-49
+        - 0.0383  # 50-54
+        - 0.0579  # 55-59
+        - 0.0617  # 60-64
+        - 0.1030  # 65-69
+        - 0.1072  # 70-74
+        - 0.0703  # 75+
 
   # Infectiousness adjustments, including the effect of isolation following detection
   non_sympt_infect_multiplier: 0.5
@@ -132,7 +125,6 @@ clinical_stratification:
 
 infection_fatality:
   multiplier: 1.
-  top_bracket_overwrite: null
   # Infection fatality proportions - last column of Table S3 (Mendeley citation key ODriscoll2020)
   props:
     - 0.00003 # 0-4
@@ -154,7 +146,6 @@ infection_fatality:
     - 0.08292 # 80+
 
 # Parameters relating to adjusting the mixing matrix to reflect interventions
-age_specific_risk_multiplier: null
 mobility:
   region: null
   mixing: {}
@@ -163,60 +154,113 @@ mobility:
   # Mapping of Google mobility locations to Prem-specific locations
   google_mobility_locations:
     work:
-      - workplaces
+      workplaces: 1.
     other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - parks
-      - transit_stations
-    home:
-      - residential
-  smooth_google_data: false # whether to apply a 7-day moving average
+      retail_and_recreation: 0.25
+      grocery_and_pharmacy: 0.25
+      parks: 0.25
+      transit_stations: 0.25
+  smooth_google_data: false  # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
 
 testing_to_detection: null
 
-victorian_clusters: null
-
 # Vaccination-related
 vaccination:
   fully_vaccinated:
-    overall_efficacy: 0.
-    vacc_prop_prevent_infection: 0.
-    vacc_reduce_infectiousness: 0.
-    vacc_reduce_infectiousness_ratio: null
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: null
+    ve_death: null
   one_dose:
-    overall_efficacy: 0.
-    vacc_prop_prevent_infection: 0.
-    vacc_reduce_infectiousness: 0.
-    vacc_reduce_infectiousness_ratio: null
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: null
+    ve_death: null
+  part_waned:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: 0.
+    ve_death: 0.
+  fully_waned:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: 0.
+    ve_death: 0.
+  boosted:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: 0.
+    ve_death: 0.
+
   # Time from receiving first dose to second, based on the days from Vic achieving the same coverage with one and two
-  second_dose_delay: 43.
+  second_dose_delay: null
+  boost_delay: null
+  vacc_full_effect_duration: null
+  vacc_part_effect_duration: null
   lag: 0.
   roll_out_components: []
+  standard_supply: false
+  program_start_time: null
+
+# Vaccination-related
+history:
+  experienced:
+    ve_sympt_covid: 1.
+    ve_prop_prevent_infection: 1.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: null
+    ve_death: null
+  waned:
+    ve_sympt_covid: 0.
+    ve_prop_prevent_infection: 0.
+    ve_prop_prevent_infection_ratio: null
+    ve_infectiousness: 0.
+    ve_infectiousness_ratio: null
+    ve_hospitalisation: null
+    ve_death: null
+  natural_immunity_duration: null
 
 vaccination_risk:
   calculate: false
+  risk_multiplier: 1.
   prop_astrazeneca: 1.
   prop_mrna: 0.
   tts_rate: # Source: https://www.health.gov.au/news/atagi-update-following-weekly-covid-19-meeting-25-august-2021
-    0: 2.5e-5
-    5: 2.5e-5
-    10: 2.5e-5
-    15: 2.5e-5
-    20: 2.5e-5
-    25: 2.5e-5
-    30: 2.5e-5
-    35: 2.5e-5
-    40: 2.5e-5
-    45: 2.5e-5
-    50: 2.7e-5
-    55: 2.7e-5
-    60: 1.6e-5
-    65: 1.6e-5
+    0: 1.9e-5
+    5: 1.9e-5
+    10: 1.9e-5
+    15: 1.9e-5
+    20: 1.9e-5
+    25: 1.9e-5
+    30: 1.9e-5
+    35: 1.9e-5
+    40: 1.9e-5
+    45: 1.9e-5
+    50: 3.0e-5
+    55: 3.0e-5
+    60: 1.5e-5
+    65: 1.5e-5
     70: 2.1e-5
-    75: 1.8e-5
+    75: 1.7e-5
 
   tts_fatality_ratio: # Source: https://www.gov.uk/government/publications/coronavirus-covid-19-vaccine-adverse-reactions/coronavirus-vaccine-summary-of-yellow-card-reporting
     0: .25  # No data available for this group. We assume the same fatality ratio as for 18-29 years old.
@@ -237,22 +281,22 @@ vaccination_risk:
     75: .18
 
   myocarditis_rate:
-    0: 3.57e-5  # assumed same as 12-17 category
-    5: 3.57e-5 # assumed same as 12-17 category
-    10: 3.57e-5  # from 12-17 category
-    15: 3.2e-5  # average of 12-17 and 18-24 categories
-    20: 2.7e-5  # from 18-24 category
-    25: 0.90e-5
-    30: 0.43e-5
-    35: 0.43e-5
-    40: 0.29e-5
-    45: 0.29e-5
-    50: 0.10e-5
-    55: 0.10e-5
-    60: 0.10e-5
-    65: 0.05e-5
-    70: 0.05e-5
-    75: 0.05e-5
+    0: 42.6e-6  # assumed same as 12-15 category
+    5: 42.6e-6 # assumed same as 12-15 category
+    10: 42.6e-6  # from 12-15 category
+    15: 54.3e-6  # average of 16-17 and 18-24 categories
+    20: 37.1e-6  # from 18-24 category
+    25: 11.1e-6
+    30: 6.8e-6
+    35: 6.8e-6
+    40: 4.4e-6
+    45: 4.4e-6
+    50: 0.5e-6
+    55: 0.5e-6
+    60: 0.5e-6
+    65: 0.4e-6
+    70: 0.4e-6
+    75: 0.4e-6
 
 # Contact tracing-related
 contact_tracing: null
@@ -265,9 +309,6 @@ n_steps_fixed_proposal: 50
 # Time from which cumulative cases should start (incidence and notification), if null, the output is not calculated
 cumul_incidence_start_time: null
 
-# Vic 2021 seeding
-vic_2021_seeding: null
-
 # Fake parameters used in calibration for negative binomial (need to be listed for validation to pass)
 # Not used by model.
 notifications_dispersion_param: 1.
@@ -278,5 +319,7 @@ new_hospital_admissions_dispersion_param: 1.
 new_icu_admissions_dispersion_param: 1.
 infection_deaths_dispersion_param: 1.
 accum_deaths_dispersion_param: 1.
+
+hospital_reporting: 1.
 
 target_output_ratio: null

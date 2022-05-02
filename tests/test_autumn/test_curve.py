@@ -31,15 +31,15 @@ def test_scale_up_function(verify, method, func_name, func):
 def test_tanh_function():
     for grad in (0.1, 0.5, 1.0):
         for inflect_time in (0.0, 100.0, 500.0):
-            for lower_asymptote in (0.0, 1.0):
-                for upper_asymptote in (1.0, 100.0):
+            for start_asymptote in (0.0, 1.0):
+                for end_asymptote in (1.0, 100.0):
 
                     # Get the function
                     tanh_function = tanh_based_scaleup(
                         shape=grad,
                         inflection_time=inflect_time,
-                        lower_asymptote=lower_asymptote,
-                        upper_asymptote=upper_asymptote,
+                        start_asymptote=start_asymptote,
+                        end_asymptote=end_asymptote,
                     )
 
                     # Get the results
@@ -47,6 +47,6 @@ def test_tanh_function():
                     inflection_result = tanh_function(inflect_time)
 
                     # Make sure it makes sense
-                    assert all([result >= lower_asymptote for result in results])
-                    assert all([result <= upper_asymptote for result in results])
-                    assert inflection_result == lower_asymptote / 2.0 + upper_asymptote / 2
+                    assert all([result >= start_asymptote for result in results])
+                    assert all([result <= end_asymptote for result in results])
+                    assert inflection_result == start_asymptote / 2.0 + end_asymptote / 2

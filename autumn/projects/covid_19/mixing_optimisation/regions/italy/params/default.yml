@@ -3,6 +3,8 @@ description: BASELINE
 country:
   iso3: ITA
 
+ref_mixing_iso3: ITA
+
 mobility:
   mixing:
     school:

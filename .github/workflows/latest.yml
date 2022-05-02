@@ -1,0 +1,111 @@
+name: Bleeding Edge
+on:
+  schedule:
+    - cron:  '30 17 * * *'
+  workflow_dispatch:
+
+jobs:
+  test_basic:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Pip package manager
+        run: python -m pip install --upgrade pip
+      - name: Install Python dependencies via Pip
+        run: pip install -r requirements/requirements_free.txt
+      - name: Decrypt Autumn secrets
+        run: python -m autumn secrets read
+        env:
+          AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
+      - name: Test with pytest
+        run: pytest --workers 2 -W ignore -vv -m "not nightly and not run_models and not calibrate_models and not mixing_optimisation and not benchmark"
+  test_runs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pip
+        run: python -m pip install --upgrade pip
+      - name: Install Python dependencies
+        run: pip install -r requirements/requirements_free.txt
+      - name: Decrypt secrets
+        run: python -m autumn secrets read
+        env:
+          AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
+      - name: Test with pytest
+        run: pytest --workers 2 -W ignore -vv -m run_models
+  test_calibrations:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pip
+        run: python -m pip install --upgrade pip
+      - name: Install Python dependencies
+        run: pip install -r requirements/requirements_free.txt
+      - name: Decrypt secrets
+        run: python -m autumn secrets read
+        env:
+          AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
+      - name: Test with pytest
+        run: pytest --workers 2 -W ignore -vv -m calibrate_models
+  test_mixing_optimisation:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pip
+        run: python -m pip install --upgrade pip
+      - name: Install Python dependencies
+        run: pip install -r requirements/requirements_free.txt
+      - name: Decrypt secrets
+        run: python -m autumn secrets read
+        env:
+          AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
+      - name: Test with pytest
+        run: pytest --workers 2 -W ignore -vv -m mixing_optimisation

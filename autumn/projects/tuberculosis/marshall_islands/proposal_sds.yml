@@ -3,7 +3,7 @@ contact_rate: 0.0008011452052585077
 progression_multiplier: 0.00510440372208687
 time_variant_tb_screening_rate.inflection_time: 0.07664315007696132
 time_variant_tb_screening_rate.shape: 0.01955476042387945
-time_variant_tb_screening_rate.upper_asymptote: 0.018286366611613758
+time_variant_tb_screening_rate.end_asymptote: 0.018286366611613758
 user_defined_stratifications.location.adjustments.detection.ebeye: 0.14003591183355502
 user_defined_stratifications.location.adjustments.detection.other: 1.0
 extra_params.rr_progression_diabetes: 0.059873840015105984

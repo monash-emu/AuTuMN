@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 class EC2InstanceState:
     pending = "pending"
     running = "running"
@@ -19,44 +22,65 @@ class EC2InstanceState:
         return state in EC2InstanceState.LIVE_STATES
 
 
-class EC2InstanceType:
-    r5_2xlarge = "r5.2xlarge"
-    m5_2xlarge = "m5.2xlarge"
-    r5_4xlarge = "r5.4xlarge"
-    r5_8xlarge = "r5.8xlarge"
-    r5d_8xlarge = "r5d.8xlarge"
-    r5a_8xlarge = "r5a.8xlarge"
-    r5a_16xlarge = "r5a.16xlarge"
-    m5_4xlarge = "m5.4xlarge"
-    m5_8xlarge = "m5.8xlarge"
-    c5_9xlarge = "c5.9xlarge"
-    c5_12xlarge = "c5.12xlarge"
-    m5_12xlarge = "m5.12xlarge"
-    m5_16xlarge = "m5.16xlarge"
+class EC2Instance:
+    def __init__(self, cores: int, ram: int):
+        self.cores = cores
+        self.ram = ram
+
+    def __repr__(self):
+        return f"{self.cores} cores, {self.ram} Gb RAM"
 
 
-# RAM in GB, price in approx cents per hour.
+class EC2InstanceCategory:
+    GENERAL = "general"
+    MEMORY = "memory"
+    COMPUTE = "compute"
+
+
 EC2_INSTANCE_SPECS = {
-    EC2InstanceType.r5_2xlarge: {"cores": 8, "ram": 64, "price": 15},
-    EC2InstanceType.m5_2xlarge: {"cores": 8, "ram": 32, "price": 15},
-    EC2InstanceType.r5_4xlarge: {"cores": 16, "ram": 128, "price": 30},
-    EC2InstanceType.r5_8xlarge: {"cores": 32, "ram": 256, "price": 60},
-    EC2InstanceType.r5d_8xlarge: {"cores": 32, "ram": 256, "price": 61},
-    EC2InstanceType.r5a_8xlarge: {"cores": 32, "ram": 256, "price": 61},
-    EC2InstanceType.r5a_16xlarge: {"cores": 32, "ram": 256, "price": 61},
-    EC2InstanceType.m5_4xlarge: {"cores": 16, "ram": 64, "price": 30},
-    EC2InstanceType.m5_8xlarge: {"cores": 32, "ram": 128, "price": 60},
-    EC2InstanceType.c5_9xlarge: {"cores": 36, "ram": 72, "price": 61},
-    EC2InstanceType.c5_12xlarge: {"cores": 48, "ram": 96, "price": 80},
-    EC2InstanceType.m5_12xlarge: {"cores": 48, "ram": 192, "price": 90},
-    EC2InstanceType.m5_16xlarge: {"cores": 64, "ram": 256, "price": 120},
+    EC2InstanceCategory.GENERAL: {
+        "m6i.large": EC2Instance(1, 4),
+        "m6i.xlarge": EC2Instance(2, 8),
+        "m6i.2xlarge": EC2Instance(4, 16),
+        "m6i.4xlarge": EC2Instance(8, 32),
+        "m6i.8xlarge": EC2Instance(16, 64),
+        "m6i.12xlarge": EC2Instance(24, 96),
+        "m6i.16xlarge": EC2Instance(32, 128),
+        "m6i.24xlarge": EC2Instance(48, 192),
+        "m6i.32xlarge": EC2Instance(64, 256),
+    },
+    EC2InstanceCategory.MEMORY: {
+        "r6i.large": EC2Instance(1, 16),
+        "r6i.xlarge": EC2Instance(2, 32),
+        "r6i.2xlarge": EC2Instance(4, 64),
+        "r6i.4xlarge": EC2Instance(8, 128),
+        "r6i.8xlarge": EC2Instance(16, 256),
+        "r6i.12xlarge": EC2Instance(24, 384),
+        "r6i.16xlarge": EC2Instance(32, 512),
+        "r6i.24xlarge": EC2Instance(48, 768),
+        "r6i.32xlarge": EC2Instance(64, 1024),
+    },
+    EC2InstanceCategory.COMPUTE: {
+        "c6i.large": EC2Instance(1, 4),
+        "c6i.xlarge": EC2Instance(2, 8),
+        "c6i.2xlarge": EC2Instance(4, 16),
+        "c6i.4xlarge": EC2Instance(8, 32),
+        "c6i.8xlarge": EC2Instance(16, 64),
+        "c6i.12xlarge": EC2Instance(24, 96),
+        "c6i.16xlarge": EC2Instance(32, 128),
+        "c6i.24xlarge": EC2Instance(48, 192),
+        "c6i.32xlarge": EC2Instance(64, 256),
+    }
 }
 
 
 AWS_PROFILE = "autumn"
 AWS_REGION = "ap-southeast-2"
 EC2_SPOT_MAX_PRICE = "1.2"
-EC2_AMI = "ami-0d27c531f813ff1cf"
+EC2_AMI = {
+    "36venv": "ami-0d27c531f813ff1cf",
+    "310conda": "ami-0dbd9adffb9f07a62"
+}
 EC2_SECURITY_GROUP = "sg-0b2fe230ac8853538"
 EC2_IAM_INSTANCE_PROFILE = "worker-profile"
 S3_BUCKET = "autumn-data"

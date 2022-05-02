@@ -68,7 +68,7 @@ def get_identifying_run_ids(table: pd.DataFrame) -> pd.Series:
     return table["chain"].astype(str) + ":" + table["run"].astype(str)
 
 
-def select_pruning_candidates(src_db_path: str, n_candidates: int, weighted=True) -> pd.DataFrame:
+def select_pruning_candidates(sampled_runs_df: pd.DataFrame, n_candidates: int, weighted=True) -> pd.DataFrame:
     """Select a random set of 'good enough' candidates for manual inspection
     The output set will be guaranteed to contain the highest
     MLE run from all the chains, in addition to randomly selected candidates
@@ -88,26 +88,24 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int, weighted=True
 
     # Load all MCMC run data to select from
 
-    all_mcmc_df = pd.concat(load_mcmc_tables(src_db_path), ignore_index=True)
-
-    all_accepted = all_mcmc_df[all_mcmc_df["accept"] == 1]
+    #all_accepted = all_mcmc_df[all_mcmc_df["accept"] == 1]
 
     # Find the MLE candidate
-    max_ll = all_accepted["loglikelihood"].max()
-    max_ll_candidate = all_accepted[all_accepted["loglikelihood"] == max_ll].iloc[0].name
+    max_ll = sampled_runs_df["loglikelihood"].max()
+    max_ll_candidate = sampled_runs_df[sampled_runs_df["loglikelihood"] == max_ll].iloc[0].name
 
     # Ensure candidates have been sampled and that output data is available
-    accepted_and_sampled = all_accepted[all_accepted["sampled"] == 1]
+    #accepted_and_sampled = all_accepted[all_accepted["sampled"] == 1]
 
     # Sample random candidates
-    possible_candidates = list(accepted_and_sampled.index)
+    possible_candidates = list(sampled_runs_df.index)
     if max_ll_candidate in possible_candidates:
         possible_candidates.remove(max_ll_candidate)
 
     if weighted:
         # +++ FIXME Adding 10.0 to not overweight, should parameterise this
         weights = 1.0 / (
-            10.0 + np.abs(np.array(accepted_and_sampled.loc[possible_candidates].loglikelihood))
+            10.0 + np.abs(np.array(sampled_runs_df.loc[possible_candidates].loglikelihood))
         )
         weights = weights / weights.sum()
     else:
@@ -124,7 +122,7 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int, weighted=True
 
     candidates.append(max_ll_candidate)
 
-    candidates_df = all_accepted.loc[candidates]
+    candidates_df = sampled_runs_df.loc[candidates]
 
     return candidates_df
 
@@ -166,11 +164,6 @@ def prune_final(source_db_path: str, target_db_path: str, candidates_df: pd.Data
     source_db = get_database(source_db_path)
     target_db = get_database(target_db_path)
 
-    # Find the maximum accepted loglikelihood for all runs
-    mcmc_run_df = source_db.query("mcmc_run")
-    mle_run_df = find_mle_run(mcmc_run_df)
-    mle_run_id = mle_run_df.run.iloc[0]
-    mle_chain_id = mle_run_df.chain.iloc[0]
     # Copy tables over, pruning some.
     tables_to_copy = source_db.table_names()
     for table_name in tables_to_copy:
@@ -252,21 +245,11 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     logger.info("Adding 'targets' table")
     targets_data = []
     for target in project.calibration.targets:
-        for t, v in zip(target["years"], target["values"]):
-            t_datum = {
-                "key": target["output_key"],
-                "times": t,
-                "value": v,
-            }
-            targets_data.append(t_datum)
+         targets_data += [{'key': target.data.name, 'times': idx, 'value': v} for idx,v in target.data.iteritems()]
 
     targets_df = pd.DataFrame(targets_data)
     target_db.dump_df("targets", targets_df)
 
-    logger.info("Converting outputs to PowerBI format")
-    outputs_df = source_db.query("outputs")
-    pbi_outputs_df = unpivot_outputs(outputs_df)
-    target_db.dump_df("powerbi_outputs", pbi_outputs_df)
     logger.info("Finished creating PowerBI output database at %s", target_db_path)
 
 

@@ -1,0 +1,10 @@
+contact_rate: 0.00015039318219777636
+sojourns.active.total_time: 0.06908524519949921
+infectious_seed: 5.236936994231598
+testing_to_detection.assumed_cdr_parameter: 7.314465803459104e-05
+immunity_stratification.prop_immune: 0.04369791802415979
+immunity_stratification.prop_high_among_immune: 0.002419511180527606
+time_from_onset_to_event.hospitalisation.parameters.mean: 0.18892382204220803
+prop_icu_among_hospitalised: 0.008803612572288011
+hospital_stay.hospital_all.parameters.mean: 0.3725549440842657
+hospital_stay.icu.parameters.mean: 0.49239219091387865

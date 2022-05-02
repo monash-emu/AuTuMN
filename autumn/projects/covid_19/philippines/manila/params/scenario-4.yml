@@ -1,7 +1,0 @@
-description: No vaccine counterfactual
-
-time:
-  start: 426  # 1 Mar 2021
-
-vaccination:
-  roll_out_components: []

@@ -61,9 +61,9 @@ def make_transform_func_with_two_bounds(lower_bound, upper_bound, func_type):
 
         def func(y):
             # prevent overflow when the parameter gets close to its bounds (i.e. transformed param's norm gets too big)
-            if y < -10:
+            if y < -100.0:
                 x = lower_bound
-            elif y > 10:
+            elif y > 100.0:
                 x = upper_bound
             else:
                 x = lower_bound + (upper_bound - lower_bound) * inverse_logit(y)
@@ -72,7 +72,12 @@ def make_transform_func_with_two_bounds(lower_bound, upper_bound, func_type):
     elif func_type == "inverse_derivative":
 
         def func(y):
-            inv_logit = inverse_logit(y)
-            return (upper_bound - lower_bound) * inv_logit * (1 - inv_logit)
+            if y < -100.0:
+                return 0.0
+            elif y > 100.0:
+                return 0.0
+            else:
+                inv_logit = inverse_logit(y)
+                return (upper_bound - lower_bound) * inv_logit * (1 - inv_logit)
 
     return func

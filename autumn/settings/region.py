@@ -1,9 +1,8 @@
 class Region:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
-    VICTORIA_2020 = "victoria_2020"
-    VICTORIA_2021 = "victoria_2021"
     MANILA = "manila"
+    NCR = "national-capital-region"
     CALABARZON = "calabarzon"
     CENTRAL_VISAYAS = "central-visayas"
     UNITED_KINGDOM = "united-kingdom"
@@ -12,15 +11,6 @@ class Region:
     SWEDEN = "sweden"
     FRANCE = "france"
     SPAIN = "spain"
-    NORTH_METRO = "north-metro"
-    SOUTH_EAST_METRO = "south-east-metro"
-    SOUTH_METRO = "south-metro"
-    WEST_METRO = "west-metro"
-    BARWON_SOUTH_WEST = "barwon-south-west"
-    GIPPSLAND = "gippsland"
-    HUME = "hume"
-    LODDON_MALLEE = "loddon-mallee"
-    GRAMPIANS = "grampians"
     MARSHALL_ISLANDS = "marshall-islands"
     SABAH = "sabah"
     SELANGOR = "selangor"
@@ -29,17 +19,22 @@ class Region:
     JOHOR = "johor"
     PENANG = "penang"
     KUALA_LUMPUR = "kuala-lumpur"
-    NEPAL = "nepal"
     SRI_LANKA = "sri_lanka"
-    SRI_LANKA_WP = "sri_lanka_wp"
     BALI = "bali"
-    INDONESIA = "indonesia"
     VIETNAM = "vietnam"
     HO_CHI_MINH_CITY = "ho_chi_minh_city"
+    HANOI = "hanoi"
+    MYANMAR = "myanmar"
+    BANGLADESH = "bangladesh"
+    DHAKA = "dhaka"
+    COXS_BAZAR = "coxs_bazar"
+    BHUTAN = "bhutan"
+    THIMPHU = "thimphu"
 
     REGIONS = [
         PHILIPPINES,
         MANILA,
+        NCR,
         CALABARZON,
         CENTRAL_VISAYAS,
         DAVAO_CITY,
@@ -50,17 +45,6 @@ class Region:
         SWEDEN,
         FRANCE,
         SPAIN,
-        VICTORIA_2020,
-        VICTORIA_2021,
-        NORTH_METRO,
-        SOUTH_EAST_METRO,
-        SOUTH_METRO,
-        WEST_METRO,
-        BARWON_SOUTH_WEST,
-        GIPPSLAND,
-        HUME,
-        LODDON_MALLEE,
-        GRAMPIANS,
         MARSHALL_ISLANDS,
         MALAYSIA,
         SABAH,
@@ -68,13 +52,17 @@ class Region:
         JOHOR,
         PENANG,
         KUALA_LUMPUR,
-        NEPAL,
         SRI_LANKA,
-        SRI_LANKA_WP,
-        INDONESIA,
         BALI,
         VIETNAM,
         HO_CHI_MINH_CITY,
+        HANOI,
+        MYANMAR,
+        BANGLADESH,
+        DHAKA,
+        COXS_BAZAR,
+        BHUTAN,
+        THIMPHU,
     ]
 
     MALAYSIA_REGIONS = [
@@ -97,28 +85,11 @@ class Region:
     PHILIPPINES_REGIONS = [
         # PHILIPPINES,
         MANILA,
-        CALABARZON,
+        # CALABARZON,
         # DAVAO_REGION,
         # CENTRAL_VISAYAS,
         # DAVAO_CITY,
     ]
-
-    VICTORIA_RURAL = [
-        BARWON_SOUTH_WEST,
-        GIPPSLAND,
-        HUME,
-        LODDON_MALLEE,
-        GRAMPIANS,
-    ]
-
-    VICTORIA_METRO = [
-        NORTH_METRO,
-        SOUTH_EAST_METRO,
-        SOUTH_METRO,
-        WEST_METRO,
-    ]
-
-    VICTORIA_SUBREGIONS = VICTORIA_RURAL + VICTORIA_METRO
 
     @staticmethod
     def to_filename(name: str):

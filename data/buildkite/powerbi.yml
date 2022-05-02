@@ -10,16 +10,11 @@ steps:
     key: urunid
     required: true
     text: Candidate run id
-  - default: 'no'
-    hint: Is 1/3 of the price but sometimes randomly fails.
-    key: spot-instance
-    options:
-    - label: 'Yes'
-      value: 'yes'
-    - label: 'No'
-      value: 'no'
+  - default: use_original_commit
+    hint: Specify git commit, or leave as default to use calibration commit
+    key: commit
     required: true
-    select: Use spot instances
+    text: Specify commit SHA
   if: build.env("SKIP_INPUT") == null
   key: powerbi-processing-settings
 - command: ./scripts/buildkite.sh powerbi

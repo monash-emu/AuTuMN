@@ -1,0 +1,13 @@
+description: New variant completly escapes immunity (both vaccination- and infection-related)
+
+voc_emergence:
+  omicron:
+    cross_protection:
+      new_strain:
+        early_reinfection: 0.
+        late_reinfection: 0.
+
+  new_strain:
+    new_voc_seed:
+      start_time: 822.  # 1 Apr 2022
+    immune_escape: 1.

@@ -19,15 +19,15 @@ urunid_field = TextInputField(
     default="mle",
     type=str,
 )
-spot_field = BooleanInputField(
-    key="spot-instance",
-    title="Use spot instances",
-    hint="Is 1/3 of the price but sometimes randomly fails.",
-    default="no",
-    type=bool,
+commit_field = TextInputField(
+    key="commit",
+    title="Specify commit SHA",
+    hint="Specify git commit, or leave as default to use calibration commit",
+    type=str,
+    default="use_original_commit",
 )
 
-fields = [run_id_field, urunid_field, spot_field]
+fields = [run_id_field, urunid_field, commit_field]
 input_step = InputStep(
     key="powerbi-processing-settings",
     run_condition='build.env("SKIP_INPUT") == null',

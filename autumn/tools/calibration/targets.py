@@ -2,54 +2,28 @@ from typing import List, Tuple
 from abc import ABC, abstractmethod
 
 import pandas as pd
+import numpy as np
+from scipy import stats
+
 from summer.utils import ref_times_to_dti
 
-from autumn.tools.project.timeseries import TimeSeries
+#from autumn.tools.project.timeseries import TimeSeries
 from .priors import UniformPrior
-
-
-def convert_targets_to_dict(raw_targets):
-    """
-    Take the raw targets data structure, which is a list that you have to dig the targets out of
-    and convert it into a dictionary with the names of the targets being the keys.
-
-    """
-    targets_dict = {}
-    for i_target in range(len(raw_targets)):
-        output_key = raw_targets[i_target]["output_key"]
-        targets_dict[output_key] = {
-            "times": raw_targets[i_target]["years"],
-            "values": raw_targets[i_target]["values"]
-        }
-    return targets_dict
-
-
-def get_target_series(raw_targets, ref_date, output):
-    """
-    Extends the previous function to return the times and values of a particular requested output as a pandas series.
-    """
-
-    processed_targets = convert_targets_to_dict(raw_targets)
-    times_series = ref_times_to_dti(ref_date, processed_targets[output]["times"])
-    values_series = pd.Series(data=processed_targets[output]["values"], index=times_series)
-    return times_series, values_series
 
 
 class BaseTarget(ABC):
 
-    timeseries: TimeSeries
+    data: pd.Series
 
-    def __init__(self, time_weights: List[float] = None):
-        self.time_weights = time_weights
-
-    @abstractmethod
-    def to_dict(self) -> dict:
-        """Returns the target as a dict... for now"""
-        target = {}
-        if self.time_weights:
-            target["time_weights"] = self.time_weights
-
-        return target
+    def __init__(self, data: pd.Series, time_weights: np.ndarray = None):
+        # Make things easier for calibration by sanitizing the data here
+        self.data = data.dropna()
+        if time_weights is not None:
+            self.time_weights = np.array(time_weights)
+        else:
+            self.time_weights = None
+        self.stdev = None
+        self.cis = None
 
 
 class PoissonTarget(BaseTarget):
@@ -57,19 +31,9 @@ class PoissonTarget(BaseTarget):
     A calibration target sampled from a Poisson distribution
     """
 
-    def __init__(self, timeseries: TimeSeries, **kwargs):
-        super().__init__(**kwargs)
-        self.timeseries = timeseries
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        return {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "poisson",
-        }
+    def __init__(self, data:pd.Series, **kwargs):
+        super().__init__(data, **kwargs)
+        self.loglikelihood_distri = "poisson"
 
 
 class NegativeBinomialTarget(BaseTarget):
@@ -77,24 +41,10 @@ class NegativeBinomialTarget(BaseTarget):
     A calibration target sampled from a truncated normal distribution
     """
 
-    def __init__(self, timeseries: TimeSeries, dispersion_param: float = None, **kwargs):
-        super().__init__(**kwargs)
-        self.timeseries = timeseries
+    def __init__(self, data: pd.Series, dispersion_param: float = None, **kwargs):
+        super().__init__(data, **kwargs)
         self.dispersion_param = dispersion_param
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "negative_binomial",
-        }
-        if self.dispersion_param:
-            target['dispersion_param'] = self.dispersion_param
-
-        return target
+        self.loglikelihood_distri = "negative_binomial"
 
 
 class TruncNormalTarget(BaseTarget):
@@ -104,30 +54,15 @@ class TruncNormalTarget(BaseTarget):
 
     def __init__(
         self,
-        timeseries: TimeSeries,
+        data: pd.Series,
         trunc_range: Tuple[float, float],
         stdev: float = None,
         **kwargs,
     ):
-        super().__init__(**kwargs)
-        self.timeseries = timeseries
+        super().__init__(data, **kwargs)
         self.trunc_range = trunc_range
         self.stdev = stdev
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "trunc_range": self.trunc_range,
-            "loglikelihood_distri": "trunc_normal",
-        }
-        if self.stdev:
-            target["sd"] = self.stdev
-
-        return target
+        self.loglikelihood_distri = "trunc_normal"
 
 
 class NormalTarget(BaseTarget):
@@ -135,24 +70,10 @@ class NormalTarget(BaseTarget):
     A calibration target sampled from a normal distribution
     """
 
-    def __init__(self, timeseries: TimeSeries, stdev: float = None, **kwargs):
-        super().__init__(**kwargs)
-        self.timeseries = timeseries
+    def __init__(self, data: pd.Series, stdev: float = None, **kwargs):
+        super().__init__(data, **kwargs)
         self.stdev = stdev
-
-    def to_dict(self) -> dict:
-        base_dict = super().to_dict()
-        target = {
-            **base_dict,
-            "output_key": self.timeseries.name,
-            "years": self.timeseries.times,
-            "values": self.timeseries.values,
-            "loglikelihood_distri": "normal",
-        }
-        if self.stdev:
-            target["sd"] = self.stdev
-
-        return target
+        self.loglikelihood_distri = "normal"
 
 
 def get_dispersion_priors_for_gaussian_targets(targets: List[BaseTarget]):
@@ -170,13 +91,22 @@ def get_dispersion_priors_for_gaussian_targets(targets: List[BaseTarget]):
         if target.stdev is not None:
             continue
 
-        max_val = max(target.timeseries.values)
+        max_val = max(target.data)
         # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
         sd_ = 0.25 * max_val / 4.0
         lower_sd = sd_ / 2.0
         upper_sd = 2.0 * sd_
-        name = f"{target.timeseries.name}_dispersion_param"
+        name = f"{target.data.name}_dispersion_param"
         prior = UniformPrior(name, [lower_sd, upper_sd])
         priors.append(prior)
 
     return priors
+
+def truncnormal_logpdf(target_data: np.ndarray, model_output: np.ndarray, trunc_vals: Tuple[float, float], sd: float):
+    """
+    Return the logpdf of a truncated normal target, with scaling transforms
+    according to:
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncnorm.html
+    """
+    a, b = (trunc_vals[0] - model_output) / sd, (trunc_vals[1] - model_output) / sd
+    return stats.truncnorm.logpdf(x=target_data, a=a, b=b, loc=model_output, scale=sd)

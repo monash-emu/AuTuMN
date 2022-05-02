@@ -3,18 +3,22 @@ import os
 import sys
 
 import pandas as pd
+import numpy as np
+import psutil
 
 from autumn.tools import db, plots
 from autumn.tools.db.database import get_database
 from autumn.tools.db.store import Table
-from autumn.settings import REMOTE_BASE_DIR, Region
+from autumn.tools.db.process import find_mle_run
+from autumn.settings import REMOTE_BASE_DIR
 from autumn.tasks.calibrate import CALIBRATE_DATA_DIR
 from autumn.tasks.utils import get_project_from_run_id, set_logging_config
 from autumn.tools.utils.fs import recreate_dir
-from autumn.tools.utils.parallel import run_parallel_tasks, report_errors, gather_exc_plus
+from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from autumn.tools.utils.timer import Timer
 from autumn.tools.project import post_process_scenario_outputs
+from autumn.tools.runs import ManagedRun
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +31,7 @@ FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
 TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
 
 
-def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool):
+def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool, dry_run: bool = False):
     project = get_project_from_run_id(run_id)
 
     # Set up directories for output data.
@@ -37,6 +41,8 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
             recreate_dir(dirpath)
 
     s3_client = get_s3_client()
+
+    mr = ManagedRun(run_id, s3_client=s3_client)
 
     # Find the calibration chain databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
@@ -52,18 +58,85 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
     chain_ids = [int(p.split("/")[-1].split("-")[-1]) for p in db_paths]
     num_chains = len(chain_ids)
-    with Timer(f"Running full models for {num_chains} chains: {chain_ids}"):
+
+    # Select the runs to sample for each chain.  Do this before
+    # we enter the parallel loop, so we can filter candidate outputs before
+    # the run (and only store data for those outputs)
+    mcmc_runs = mr.calibration.get_mcmc_runs()
+    mcmc_params = mr.calibration.get_mcmc_params()
+    
+    total_runs = num_chains * sample_size
+
+    # Note that sample_size in the task argument is per-chain, whereas here it is all samples
+    sampled_runs_df = select_full_run_samples(mcmc_runs, total_runs, burn_in)
+    candidates_df = db.process.select_pruning_candidates(sampled_runs_df, N_CANDIDATES)
+
+    # Allocate the runs to available number of cores as evenly as possible
+    # Get the number of _physical_ cores (hyperthreading will only muddy the waters...)
+    n_cores = psutil.cpu_count(logical=False)
+
+    # Really shouldn't happen, but will come up in testing...
+    if total_runs < n_cores:
+        base_runs_per_core = 1
+        n_base = total_runs
+        n_additional = 0
+    else:
+        # The usual case, of having more runs than we have cores
+        base_runs_per_core = total_runs // n_cores
+        # Number of cores that need to run 1 extra run
+        n_additional = total_runs % n_cores
+        n_base = n_cores - n_additional
+
+    subset_runs = []
+
+    brpc = base_runs_per_core
+    arpc = base_runs_per_core + 1
+
+    cur_start_idx = 0
+
+    for i in range(n_additional):
+        subset_runs.append(sampled_runs_df.iloc[cur_start_idx:cur_start_idx+arpc])
+        # This will be correct for the next iteration, hence computing at the end
+        cur_start_idx += arpc
+    for i in range(n_base):
+        subset_runs.append(sampled_runs_df.iloc[cur_start_idx:cur_start_idx+brpc])
+        cur_start_idx += brpc
+
+    # Check that we ended up with all the runs
+    assert cur_start_idx == total_runs, "Invalid run index calculation"
+
+    # Check we're using our cores correctly..
+    if len(subset_runs) < n_cores:
+        logger.warning(f"{n_cores} CPU cores, but only {len(subset_runs)} being used")
+    
+    assert len(subset_runs) <= n_cores, "Invalid CPU oversubscription"
+
+    # OK, actually run the thing...
+    with Timer(f"Running {total_runs} full models over {len(subset_runs)} subsets"):
         args_list = [
-            (run_id, db_path, chain_id, burn_in, sample_size, quiet)
-            for chain_id, db_path in zip(chain_ids, db_paths)
+            (run_id, subset_id, subset_runs[subset_id],
+            mcmc_params.loc[subset_runs[subset_id].index],
+            candidates_df, quiet)
+            for subset_id in range(len(subset_runs))
         ]
         try:
-            chain_ids = run_parallel_tasks(run_full_model_for_chain, args_list, False)
+            subset_ids = run_parallel_tasks(run_full_model_for_subset, args_list, False)
+            success = True
         except Exception as e:
             # Run failed but we still want to capture the logs
-            upload_to_run_s3(s3_client, run_id, FULL_RUN_LOG_DIR, quiet)
-            # +++ FIXME Do we always want sys.exit here? (Presumably need it to stop remote tasks hanging)
-            sys.exit(-1)
+            success = False
+
+    # Dry run allows for benchmarking and testing, but won't upload any data
+    if dry_run:
+        logger.info("Dry run, exiting now without data uploads")
+        return
+
+    with Timer("Uploading logs"):
+        upload_to_run_s3(s3_client, run_id, FULL_RUN_LOG_DIR, quiet)
+
+    if not success:
+        logger.info("Terminating early from failure")
+        sys.exit(-1)
 
     # Upload the full model run outputs of AWS S3.
     db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
@@ -75,128 +148,73 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
 
     try:
         with Timer(f"Creating candidate selection plots"):
-            candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, N_CANDIDATES)
             plots.model.plot_post_full_run(
                 project.plots, FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, candidates_df
             )
-
-        # Upload the plots to AWS S3.
-        with Timer(f"Uploading plots to AWS S3"):
-            upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
-
     except Exception as e:
         logger.warning("Candidate plots failed, resuming task")
 
+    # May we may still have some valid plots - upload them to AWS S3.
+    with Timer(f"Uploading plots to AWS S3"):
+        upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
 
 
-@report_errors
-def run_full_model_for_chain(
-    run_id: str, src_db_path: str, chain_id: int, burn_in: int, sample_size: int, quiet: bool
-):
+def run_full_model_for_subset(
+    run_id: str, subset_id: int, sampled_runs_df: pd.DataFrame, 
+    mcmc_params_df: pd.DataFrame, candidates_df: pd.DataFrame, quiet: bool
+    ) -> int:
     """
     Run the full model (all time steps, all scenarios) for a subset of accepted calibration runs.
-    It works like this:
-        - We start off with a calibration chain of length C
-        - We apply "burn in" by throwing away the first B iterations of the chain, leaving us with C - B iterations
-        - We then sample runs from the chain using a "sample size" parameter S by calculating N = floor(C - B / S)
-          once we know N, we then start from the end of the chain, working backwards, and select every Nth run
-              if a run is accepted then we select it
-              if a run is not accepted, we select the first accepted run that precedes it
+    The sampling for these runs occurs in the main process, and all arguments here are specific
+    to the current chain
 
-    Once we've sampled all the runs we need, then we re-run them in full, including all their scenarios.
+    Args:
+        run_id (str): Model run id
+        subset_id (int): The current subset
+        sampled_runs_df (pd.DataFrame): mcmc_runs (samples for this chain only)
+        mcmc_params_df (pd.DataFrame): mcmc_params (samples for this chain only)
+        candidates_df (pd.DataFrame): Candidates for all chains
+        quiet (bool): Inverse of logging verbosity
+
+    Returns:
+        subset_id (int): The current subset
     """
-    set_logging_config(not quiet, chain_id, FULL_RUN_LOG_DIR, task='full')
-    msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
-    logger.info(msg, chain_id, burn_in, sample_size)
+
+    set_logging_config(not quiet, subset_id, FULL_RUN_LOG_DIR, task='full')
+    #msg = "Running full models for chain %s with burn-in of %s and sample size of %s."
+    #logger.info(msg, chain_id, burn_in, sample_size)
     try:
         project = get_project_from_run_id(run_id)
         msg = f"Running the {project.model_name} {project.region_name} model"
         logger.info(msg)
 
-        dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{chain_id}")
-        src_db = get_database(src_db_path)
+        dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{subset_id}")
+        #src_db = get_database(src_db_path)
         dest_db = get_database(dest_db_path)
 
         # Burn in MCMC parameter history and copy it across so it can be used in visualizations downstream.
         # Don't apply sampling to it - we want to see the whole parameter space that was explored.
-        mcmc_params_df = src_db.query(Table.PARAMS)
-        burn_mask = mcmc_params_df["run"] >= burn_in
-        dest_db.dump_df(Table.PARAMS, mcmc_params_df[burn_mask])
-
-        # Add some extra columns to MCMC run history to track sampling.
-        mcmc_run_df = src_db.query(Table.MCMC)
-        num_runs = len(mcmc_run_df)
-        msg = f"Tried to burn {burn_in} runs with sample size {sample_size}, but there are only {num_runs}"
-        assert num_runs > (burn_in + sample_size), msg
-
-        # Sampled column tells us whether a run will be sampled.
-        sampled = []
-        sample_step = max(1, (num_runs - burn_in) // sample_size)
-        logger.info("Using a sample step of %s", sample_step)
-        for idx, mcmc_run in mcmc_run_df.iterrows():
-            should_sample = 1 if (num_runs - idx - 1) % sample_step == 0 else 0
-            sampled.append(should_sample)
-
-        mcmc_run_df["sampled"] = sampled
-
-        # Parent column tells us which accepted run precedes this run
-        parents = []
-        i_row = 0  # FIXME: This is a temporary patch.
-        for _, mcmc_run in mcmc_run_df.iterrows():
-            if mcmc_run["accept"] or i_row == 0:
-                parent = int(mcmc_run["run"])
-
-            parents.append(parent)
-            i_row += 1
-
-        mcmc_run_df["parent"] = parents
-
-        # Burn in MCMC run history.
-        burn_mask = mcmc_run_df["run"] >= burn_in
-        burned_runs_str = ", ".join([str(i) for i in mcmc_run_df[~burn_mask].run])
-        mcmc_run_df = mcmc_run_df[burn_mask].copy()
-        num_remaining = len(mcmc_run_df)
-        logger.info(
-            "Burned %s of %s MCMC runs leaving %s remaining.", burn_in, num_runs, num_remaining
-        )
-
-        logger.info("Burned MCMC runs %s", burned_runs_str)
-
-        # Figure out which model runs to actually re-run.
-        sampled_run_ids = mcmc_run_df[mcmc_run_df["sampled"] == 1].parent.unique().tolist()
-
-        # Also include the MLE
-        mle_df = db.process.find_mle_run(mcmc_run_df)
-        mle_run_id = mle_df["run"].iloc[0]
-
-        logger.info("Including MLE run %s", mle_run_id)
-
-        # Update sampled column to reflect inclusion of MLE run
-        mle_run_loc = mcmc_run_df.index[mcmc_run_df["run"] == mle_run_id][0]
-        mcmc_run_df.loc[mle_run_loc, "sampled"] = 1
-
-        sampled_run_ids.append(mle_run_id)
-        sampled_run_ids = sorted(list(set(sampled_run_ids)))
-        logger.info(
-            "Running full model for %s sampled runs %s", len(sampled_run_ids), sampled_run_ids
-        )
+        # OK, so this is pre-filtered for sampling - but maybe we shouldn't be storing this here anyway?
+        # ie just get it from the calibration run rather than having weird duplicates everywhere...
+        dest_db.dump_df(Table.PARAMS, mcmc_params_df)
 
         outputs = []
         derived_outputs = []
-        for sampled_run_id in sampled_run_ids:
-            try:
-                mcmc_run = mcmc_run_df.loc[mcmc_run_df["run"] == sampled_run_id].iloc[0]
-            except IndexError:
-                # This happens when we try to sample a parent run that has been burned, we log this and ignore it.
-                logger.warn("Skipping (probably) burned parent run id %s", sampled_run_id)
-                continue
 
-            run_id = mcmc_run["run"]
-            chain_id = mcmc_run["chain"]
+        # Set up build options variables; empty for first run, these will be filled in later
+        bl_build_opts = None
+        sc_build_opts = None
+
+        for urun in sampled_runs_df.index:
+            
+            mcmc_run = sampled_runs_df.loc[urun]
+
+            run_id = int(mcmc_run["run"])
+            chain_id = int(mcmc_run["chain"])
             assert mcmc_run["accept"]
             logger.info("Running full model for MCMC run %s", run_id)
 
-            param_updates = db.load.load_mcmc_params(dest_db, run_id)
+            param_updates = mcmc_params_df.loc[urun].to_dict()
 
             with Timer("Running all model scenarios"):
                 baseline_params = project.param_set.baseline.update(
@@ -210,12 +228,30 @@ def run_full_model_for_chain(
                     sc_params.to_dict()["time"]["start"] for sc_params in scenario_params
                 ]
 
-                baseline_model = project.run_baseline_model(baseline_params)
+                baseline_model = project.run_baseline_model(baseline_params, build_options=bl_build_opts)
                 sc_models = project.run_scenario_models(
-                    baseline_model, scenario_params, start_times=start_times
+                    baseline_model, scenario_params, 
+                    start_times=start_times, build_options = sc_build_opts
                 )
 
             models = [baseline_model, *sc_models]
+
+            #Get cache info etc for build_options dict
+            #This improves performance for subsequent runs
+
+            bl_build_opts = {
+                "enable_validation": False,
+                "derived_outputs_idx_cache": baseline_model._derived_outputs_idx_cache
+            }
+
+            sc_build_opts = []
+            for scm in sc_models:
+                sc_build_opts.append(
+                    {
+                        "enable_validation": False,
+                        "derived_outputs_idx_cache": scm._derived_outputs_idx_cache
+                    }
+                )
 
             run_id = int(run_id)
             chain_id = int(chain_id)
@@ -223,20 +259,35 @@ def run_full_model_for_chain(
                 processed_outputs = post_process_scenario_outputs(
                     models, project, run_id=run_id, chain_id=chain_id
                 )
-                outputs.append(processed_outputs[Table.OUTPUTS])
                 derived_outputs.append(processed_outputs[Table.DERIVED])
 
         with Timer("Saving model outputs to the database"):
             final_outputs = {}
-            final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
+            # We may not have anything in outputs
             final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
-            final_outputs[Table.MCMC] = mcmc_run_df
+            final_outputs[Table.MCMC] = sampled_runs_df
             db.store.save_model_outputs(dest_db, **final_outputs)
 
     except Exception:
-        logger.exception("Full model run for chain %s failed", chain_id)
-        gather_exc_plus(os.path.join(FULL_RUN_LOG_DIR, f"crash-full-{chain_id}.log"))
+        logger.exception("Full model run for subset %s failed", subset_id)
+        gather_exc_plus(os.path.join(FULL_RUN_LOG_DIR, f"crash-full-{subset_id}.log"))
         raise
 
-    logger.info("Finished running full models for chain %s.", chain_id)
-    return chain_id
+    logger.info("Finished running full models for subset %s.", subset_id)
+    return subset_id
+
+
+def select_full_run_samples(mcmc_runs_df: pd.DataFrame, n_samples: int, burn_in: int) -> pd.DataFrame:
+    
+    accept_mask = mcmc_runs_df['accept'] == 1
+    df_accepted = mcmc_runs_df[accept_mask]
+    mle_idx = find_mle_run(df_accepted).index[0]
+    df_accepted = df_accepted.drop(index=mle_idx)
+    
+    post_burn = df_accepted[df_accepted['run'] >= burn_in]
+    
+    weights = post_burn['weight'] / post_burn['weight'].sum()
+    
+    run_indices = [mle_idx] + list(np.random.choice(post_burn.index, n_samples-1, False, p = weights))
+    
+    return mcmc_runs_df.loc[run_indices]

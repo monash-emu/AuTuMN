@@ -35,6 +35,7 @@ from .utils import (
     specify_missing_prior_params,
     draw_independent_samples,
 )
+from .targets import truncnormal_logpdf
 
 ModelBuilder = Callable[[dict,dict], CompartmentalModel]
 
@@ -91,13 +92,20 @@ class Calibration:
         seed: int = None,
         initial_jumping_stdev_ratio: float = 0.25,
         jumping_stdev_adjustment: float = 0.5,
+        random_process=None
     ):
         """
         Defines a new calibration.
         """
         self.all_priors = [p.to_dict() for p in priors]
-        self.targets = [t.to_dict() for t in targets]
-        self.targets = remove_early_points_to_prevent_crash(self.targets, self.all_priors)
+
+        self.includes_random_process = False
+        if random_process is not None:
+            self.random_process = random_process
+            self.set_up_random_process()
+
+        #self.targets = [t.to_dict() for t in targets]
+        self.targets = remove_early_points_to_prevent_crash(targets, self.all_priors)
 
         self.haario_scaling_factor = haario_scaling_factor
         self.adaptive_proposal = adaptive_proposal
@@ -152,6 +160,41 @@ class Calibration:
 
         #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
 
+    def set_up_random_process(self):
+        self.includes_random_process = True
+
+        # add priors for coefficients, using 80% weight for the first order, splitting remaining 20% between remaining orders
+        order = self.random_process.order
+        if order == 1:
+            coeff_means = [1.]
+        else:
+            coeff_means = [.8] + [.2 / (order - 1)] * (order - 1)
+        for i, coeff_mean in enumerate(coeff_means):
+            self.all_priors.append({
+                "param_name":  f"random_process.coefficients({i})",
+                "distribution": "trunc_normal",
+                "distri_params": [coeff_mean, 0.05],
+                "trunc_range": [0., 1.],
+            })
+
+        # add prior for noise sd
+        self.all_priors.append({
+            "param_name": "random_process.noise_sd",
+            "distribution": "uniform",
+            "distri_params": [0.49, 0.51],
+        })
+
+        # add priors for rp values
+        n_values = len(self.random_process.values)
+        self.all_priors += [
+            {
+                "param_name": f"random_process.values({i_val})",
+                "distribution": "uniform",
+                "distri_params": [-2., 2.],
+                "skip_evaluation": True
+            } for i_val in range(1, n_values)  # the very first value will be fixed to 0.
+        ]
+
     def split_priors_by_type(self):
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
         independent_sample_idxs = [
@@ -193,8 +236,8 @@ class Calibration:
 
         self.project = project
         self.model_parameters = project.param_set.baseline
-        self.end_time = 2 + max([max(t["years"]) for t in self.targets])
-        target_names = [t["output_key"] for t in self.targets]
+        self.end_time = 2 + max([max(t.data.index) for t in self.targets])
+        target_names = [t.data.name for t in self.targets]
         self.derived_outputs_whitelist = list(set(target_names))
         self.run_mode = CalibrationMode.AUTUMN_MCMC
         self.workout_unspecified_target_sds()  # for likelihood definition
@@ -231,7 +274,7 @@ class Calibration:
 
         # Figure out which derived outputs we have to calculate.
         derived_outputs_to_plot = derived_outputs_to_plot or []
-        target_names = [t["output_key"] for t in self.targets]
+        target_names = [t.data.name for t in self.targets]
         self.derived_outputs_whitelist = list(set(target_names + derived_outputs_to_plot))
 
         # Validate target output start time.
@@ -239,7 +282,7 @@ class Calibration:
 
         # Set a custom end time for all model runs - there is no point running
         # the models after the last calibration targets.
-        self.end_time = 2 + max([max(t["years"]) for t in self.targets])
+        self.end_time = 2 + max([max(t.data.index) for t in self.targets])
 
         # work out missing distribution params for priors
         specify_missing_prior_params(self.iterative_sampling_priors)
@@ -299,13 +342,13 @@ class Calibration:
                 max_prior_start = max(p["distri_params"])
 
         for t in self.targets:
-            t_name = t["output_key"]
-            min_year = min(t["years"])
-            msg = f"Target {t_name} has time {min_year} before model start {model_start}."
-            assert min_year >= model_start, msg
+            t_name = t.data.name
+            min_t = min(t.data.index)
+            msg = f"Target {t_name} has time {min_t} before model start {model_start}."
+            assert min_t >= model_start, msg
             if max_prior_start:
-                msg = f"Target {t_name} has time {min_year} before prior start {max_prior_start}."
-                assert min_year >= max_prior_start, msg
+                msg = f"Target {t_name} has time {min_t} before prior start {max_prior_start}."
+                assert min_t >= max_prior_start, msg
 
     def save_metadata(self, chain_idx, project, model_parameters_data):
         metadata = {
@@ -331,8 +374,13 @@ class Calibration:
         param_updates = {"time.end": self.end_time}
         for param_name, value in proposed_params.items():
             param_updates[param_name] = value
-
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
+
+        # Update the random_process attribute with the current rp config for later likelihood evaluation
+        if self.includes_random_process:
+            self.random_process.coefficients = [proposed_params[f"random_process.coefficients({i})"] for i in range(self.random_process.order)]
+            self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
+            self.random_process.values = [0.] + [proposed_params[f"random_process.values({k})"] for k in range(1, len(self.random_process.values))]
 
         if self._is_first_run:
             self.build_options = dict(enable_validation = True)
@@ -357,58 +405,47 @@ class Calibration:
 
         ll = 0  # loglikelihood if using bayesian approach.
         for target in self.targets:
-            key = target["output_key"]
-            data = np.array(target["values"])
-            time_weigths = target["time_weights"]
+            key = target.data.name
+            data = target.data.to_numpy()
+            time_weights = target.time_weights
             indices = []
-            for year in target["years"]:
-                time_idxs = np.where(model.times == year)[0]
+            for t in target.data.index:
+                time_idxs = np.where(model.times == t)[0]
                 time_idx = time_idxs[0]
                 indices.append(time_idx)
 
             model_output = model.derived_outputs[key][indices]
             if self.run_mode == CalibrationMode.AUTUMN_MCMC:
-                if "loglikelihood_distri" not in target:  # default distribution
-                    target["loglikelihood_distri"] = "normal"
-                if target["loglikelihood_distri"] in ["normal", "trunc_normal"]:
+                if target.loglikelihood_distri in ["normal", "trunc_normal"]:
                     # Retrieve the value of the standard deviation
                     if key + "_dispersion_param" in all_params_dict:
                         normal_sd = all_params_dict[key + "_dispersion_param"]
                     elif "target_output_ratio" in all_params_dict:
-                        normal_sd = all_params_dict["target_output_ratio"] * max(target["values"])
+                        normal_sd = all_params_dict["target_output_ratio"] * max(target.data)
                     else:
-                        normal_sd = target["sd"]
+                        normal_sd = target.stdev
 
-                    if target["loglikelihood_distri"] == "normal":
+                    if target.loglikelihood_distri == "normal":
                         squared_distance = (data - model_output) ** 2
                         ll += -(0.5 / normal_sd ** 2) * np.sum(
-                            [w * d for (w, d) in zip(time_weigths, squared_distance)]
+                            [w * d for (w, d) in zip(time_weights, squared_distance)]
                         )
                     else:  # this is a truncated normal likelihood
-                        for i in range(len(data)):
-                            ll += (
-                                stats.truncnorm.logpdf(
-                                    x=data[i],
-                                    a=target["trunc_range"][0],
-                                    b=target["trunc_range"][1],
-                                    loc=model_output[i],
-                                    scale=normal_sd,
-                                )
-                                * time_weigths[i]
-                            )
-                elif target["loglikelihood_distri"] == "poisson":
+                        logpdf_arr =  truncnormal_logpdf(data, model_output, target.trunc_range, normal_sd)
+                        ll += (logpdf_arr * time_weights).sum()
+                elif target.loglikelihood_distri == "poisson":
                     for i in range(len(data)):
                         ll += (
                             round(data[i]) * math.log(abs(model_output[i]))
                             - model_output[i]
                             - math.log(math.factorial(round(data[i])))
-                        ) * time_weigths[i]
-                elif target["loglikelihood_distri"] == "negative_binomial":
+                        ) * time_weights[i]
+                elif target.loglikelihood_distri == "negative_binomial":
                     if key + "_dispersion_param" in all_params_dict:
                         # the dispersion parameter varies during the MCMC. We need to retrieve its value
                         n = all_params_dict[key + "_dispersion_param"]
-                    elif "dispersion_param" in target:
-                        n = target["dispersion_param"]
+                    elif target.dispersion_param is not None:
+                        n = target.dispersion_param
                     else:
                         raise ValueError(f"A dispersion_param is required for target {key}")
 
@@ -417,7 +454,7 @@ class Calibration:
                         mu = model_output[i]
                         # work out parameter p to match the distribution mean with the model output
                         p = mu / (mu + n)
-                        ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weigths[i]
+                        ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weights[i]
                 else:
                     raise ValueError("Distribution not supported in loglikelihood_distri")
 
@@ -430,15 +467,17 @@ class Calibration:
         :return:
         """
         for i, target in enumerate(self.targets):
-            if "sd" not in target.keys():
+            if target.stdev is None:
                 if (
-                    "cis" in target.keys()
+                    # Do we ever use this?  Doesn't show up anywhere in the codebase..
+                    target.cis is not None
                 ):  # match normal likelihood 95% width with data 95% CI with
-                    self.targets[i]["sd"] = (
+                # +++ This will crash, but we should rewrite it when it does (Romain to explain), since this is very opaque right now...
+                    target.stdev = (
                         target["cis"][0][1] - target["cis"][0][0]
                     ) / 4.0
                 else:
-                    self.targets[i]["sd"] = 0.25 / 4.0 * max(target["values"])
+                    target.stdev = 0.25 / 4.0 * max(target.data)
 
     def workout_unspecified_time_weights(self):
         """
@@ -447,14 +486,12 @@ class Calibration:
         If a list of weights was specified, it will be rescaled so the weights sum to 1.
         """
         for i, target in enumerate(self.targets):
-            if "time_weights" not in target.keys():
-                target["time_weights"] = [1.0 / len(target["years"])] * len(target["years"])
+            if target.time_weights is None:
+                target.time_weights = np.ones(len(target.data)) / len(target.data)
             else:
-                assert isinstance(target["time_weights"], list) and len(
-                    target["time_weights"]
-                ) == len(target["years"])
-                s = sum(target["time_weights"])
-                target["time_weights"] = [w / s for w in target["time_weights"]]
+                assert len(target.time_weights) == len(target.data)
+                s = sum(target.time_weights)
+                target.time_weights = target.time_weights / s
 
     def workout_unspecified_jumping_stdevs(self):
         for i, prior_dict in enumerate(self.iterative_sampling_priors):
@@ -579,12 +616,15 @@ class Calibration:
             all_params_dict = {**iterative_samples_dict, **independent_samples}
 
             if is_within_prior_support:
-
                 # Evaluate log-likelihood.
                 proposed_loglike = self.loglikelihood(all_params_dict)
 
                 # Evaluate log-prior.
                 proposed_logprior = self.logprior(all_params_dict)
+
+                # Evaluate the log-likelihood of the random process if applicable
+                if self.includes_random_process:
+                    proposed_logprior += self.random_process.evaluate_rp_loglikelihood()
 
                 # posterior distribution
                 proposed_log_posterior = proposed_loglike + proposed_logprior
@@ -834,6 +874,9 @@ class Calibration:
         logp = 0.0
         for param_name, value in all_params_dict.items():
             prior_dict = [d for d in self.all_priors if d["param_name"] == param_name][0]
+            if "skip_evaluation" in prior_dict:
+                if prior_dict["skip_evaluation"]:
+                    continue
             logp += calculate_prior(prior_dict, value, log=True)
 
         return logp
@@ -1082,10 +1125,10 @@ def remove_early_points_to_prevent_crash(target_outputs, priors):
         latest_start_time = priors[idx]["distri_params"][1]
         for target in target_outputs:
             first_idx_to_keep = next(
-                x[0] for x in enumerate(target["years"]) if x[1] > latest_start_time
+                t_idx for t_idx, t_val in enumerate(target.data.index) if t_val > latest_start_time
             )
-            target["years"] = target["years"][first_idx_to_keep:]
-            target["values"] = target["values"][first_idx_to_keep:]
+            target.data = target.data.iloc[first_idx_to_keep:]
+            #target["values"] = target["values"][first_idx_to_keep:]
 
     return target_outputs
 

@@ -9,9 +9,10 @@ import click
 from botocore.exceptions import ClientError
 from invoke.exceptions import UnexpectedExit
 
-from autumn.settings import EC2_INSTANCE_SPECS, EC2InstanceState, EC2InstanceType
+from autumn.settings import EC2InstanceState
 
-from . import aws, remote
+from . import aws, remote, runner
+from .runner import get_runner
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def status():
 
 @aws_cli.command()
 @click.argument("job_id")
-@click.argument("instance_type", type=click.Choice(EC2_INSTANCE_SPECS.keys()))
+@click.argument("instance_type")
 def start(job_id, instance_type):
     """
     Start a job but don't stop it
@@ -100,7 +101,7 @@ def ssh(name):
     """SSH into an EC2 instance"""
     instance = aws.find_instance(name)
     if instance and aws.is_running(instance):
-        remote.ssh_interactive(instance)
+        runner.ssh_interactive(instance)
     elif instance:
         click.echo(f"Instance {name} not running")
     else:
@@ -120,19 +121,18 @@ def run():
 @click.option("--region", type=str, required=True)
 @click.option("--chains", type=int, required=True)
 @click.option("--runtime", type=int, required=True)
-@click.option("--branch", type=str, default="master")
-@click.option("--spot", is_flag=True)
+@click.option("--commit", type=str, required=True)
 @click.option("--dry", is_flag=True)
-def run_calibrate_cli(job, app, region, chains, runtime, branch, spot, dry):
-    run_calibrate(job, app, region, chains, runtime, branch, spot, dry)
+def run_calibrate_cli(job, app, region, chains, runtime, commit, dry):
+    run_calibrate(job, app, region, chains, runtime, commit, dry)
 
 
-def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
+def run_calibrate(job, app, region, chains, runtime, commit, dry):
     """
     Run a MCMC calibration on an AWS server.
     """
     job_id = f"calibrate-{job}"
-    instance_type = aws.get_instance_type(2 * chains, 8)
+    instance_type = aws.get_instance_type(chains, 4, "memory")
 
     if dry:
         logger.info("Dry run, would have used instance type: %s", instance_type)
@@ -142,91 +142,84 @@ def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
             "app_name": app,
             "region_name": region,
             "runtime": runtime,
-            "branch": branch,
+            "commit": commit,
         }
         job_func = functools.partial(remote.run_calibration, **kwargs)
-        return _run_job(job_id, [instance_type], is_spot, job_func)
+        return _run_job(job_id, [instance_type], False, job_func)
 
 @run.command("resume_calibration")
 @click.option("--job", type=str, required=True)
 @click.option("--baserun", type=str, required=True)
 @click.option("--chains", type=int, required=True)
 @click.option("--runtime", type=int, required=True)
-@click.option("--branch", type=str, default="master")
-@click.option("--latest-code", is_flag=True)
-@click.option("--spot", is_flag=True)
-def resume_calibration_cli(job, baserun, chains, runtime, branch, spot):
-    resume_calibration(job, baserun, chains, runtime, branch, spot)
+def resume_calibration_cli(job, baserun, chains, runtime):
+    resume_calibration(job, baserun, chains, runtime)
 
-def resume_calibration(job, baserun, chains, runtime, branch, is_spot):
+def resume_calibration(job, baserun, chains, runtime):
     """
     Run a MCMC calibration on an AWS server.
     """
     job_id = f"resume-{job}"
-    instance_type = aws.get_instance_type(2 * chains, 8)
+    instance_type = aws.get_instance_type(chains, 4, "compute")
 
     kwargs = {
         "num_chains": chains,
         "baserun": baserun,
         "runtime": runtime,
-        "branch": branch,
     }
     job_func = functools.partial(remote.resume_calibration, **kwargs)
-    return _run_job(job_id, [instance_type], is_spot, job_func)
+    return _run_job(job_id, [instance_type], False, job_func)
 
 @run.command("full")
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
 @click.option("--burn-in", type=int, required=True)
 @click.option("--sample", type=int, required=True)
-@click.option("--latest-code", is_flag=True)
-@click.option("--branch", type=str, default="master")
-@click.option("--spot", is_flag=True)
-def run_full_model_cli(job, run, burn_in, sample, latest_code, branch, spot):
-    run_full_model(job, run, burn_in, sample, latest_code, branch, spot)
+@click.option("--commit", type=str, default="use_original_commit")
+def run_full_model_cli(job, run, burn_in, sample, commit):
+    run_full_model(job, run, burn_in, sample, commit)
 
 
-def run_full_model(job, run, burn_in, sample, latest_code, branch, is_spot):
+def run_full_model(job, run, burn_in, sample, commit):
     """
     Run the full models based off an MCMC calibration on an AWS server.
     """
     job_id = f"full-{job}"
-    instance_type = EC2InstanceType.r5_2xlarge
+    # Use sample//3 as a heuristic for number of cores; will change if we change the sampling API
+    # Cap max cores at 64 (no larger machines available, yet)
+    n_cores = min(sample//3, 64)
+
+    instance_type = aws.get_instance_type(n_cores, 32, "compute")
     kwargs = {
         "run_id": run,
         "burn_in": burn_in,
         "sample": sample,
-        "use_latest_code": latest_code,
-        "branch": branch,
+        "commit": commit,
     }
     job_func = functools.partial(remote.run_full_model, **kwargs)
-    _run_job(job_id, [instance_type], is_spot, job_func)
+    _run_job(job_id, [instance_type], False, job_func)
 
 
 @run.command("powerbi")
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
 @click.option("--urunid", type=str, default="mle")
-@click.option("--branch", type=str, default="master")
-@click.option("--spot", is_flag=True)
-def run_powerbi_cli(job, run, urunid, branch, spot):
-    run_powerbi(job, run, urunid, branch, spot)
+@click.option("--commit", type=str, default="use_original_commit")
+def run_powerbi_cli(job, run, urunid, commit):
+    run_powerbi(job, run, urunid, commit)
 
 
-def run_powerbi(job, run, urunid, branch, is_spot):
+def run_powerbi(job, run, urunid, commit):
     """
     Run the collate a PowerBI database from the full model run outputs.
     """
     job_id = f"powerbi-{job}"
     instance_types = [
-        EC2InstanceType.r5_8xlarge,
-        EC2InstanceType.r5d_8xlarge,
-        EC2InstanceType.r5a_8xlarge,
-        EC2InstanceType.r5a_16xlarge,
+        "r6i.4xlarge"
     ]
-    kwargs = {"run_id": run, "urunid": urunid, "branch": branch}
+    kwargs = {"run_id": run, "urunid": urunid, "commit": commit}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
-    _run_job(job_id, instance_types, is_spot, job_func)
+    _run_job(job_id, instance_types, False, job_func)
 
 
 def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
@@ -260,7 +253,8 @@ def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
     return_value = None
     try:
         logger.info("Attempting to run job %s on instance %s", job_id, instance["InstanceId"])
-        return_value = job_func(instance=instance)
+        runner = get_runner(instance)
+        return_value = job_func(runner=runner)
         logging.info("Job %s succeeded.", job_id)
     except UnexpectedExit as e:
         # Invoke error - happened when commands running on remote machine.

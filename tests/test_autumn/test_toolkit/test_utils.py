@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.tools.utils.utils import apply_odds_ratio_to_proportion
+from autumn.tools.utils.utils import get_apply_odds_ratio_to_prop
 
 
 def test_apply_odds_ratio_to_prop(n_props_to_test=100, n_ratios_to_test=100, error=1e-6):
@@ -16,7 +16,8 @@ def test_apply_odds_ratio_to_prop(n_props_to_test=100, n_ratios_to_test=100, err
         for i_ratio in odds_ratios:
 
             # Use the function
-            result = apply_odds_ratio_to_proportion(i_prop, i_ratio)
+            or_to_prop_func = get_apply_odds_ratio_to_prop(i_ratio)
+            result = or_to_prop_func(i_prop)
 
             # Make sure the result is still a proportion
             assert 0.0 <= result <= 1.0

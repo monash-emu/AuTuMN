@@ -408,8 +408,8 @@
       0.975
     ]
   },
-  "proportion_seropositive": {
-    "output_key": "proportion_seropositive",
+  "prop_ever_infected": {
+    "output_key": "prop_ever_infected",
     "title": "Proportion seropositive",
     "times": [
       125

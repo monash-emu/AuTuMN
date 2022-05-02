@@ -88,8 +88,8 @@ param_info = {
     "infection_fatality.multiplier": {"name": "IFR multiplier", "range": [0.8, 1.2]},
     "case_detection.shape": {"name": "detection (shape)", "range": [0.05, 0.1]},
     "case_detection.inflection_time": {"name": "detection (inflection)", "range": [100.0, 250.0]},
-    "case_detection.upper_asymptote": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
-    "case_detection.lower_asymptote": {"name": "detection (prop_start)", "range": [0.0, 0.10]},
+    "case_detection.end_asymptote": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
+    "case_detection.start_asymptote": {"name": "detection (prop_start)", "range": [0.0, 0.10]},
     "icu_prop": {"name": "prop ICU among hosp.", "range": [0.15, 0.20]},
     "compartment_periods.hospital_late": {"name": "hopital duration", "range": [17.7, 20.4]},
     "compartment_periods.icu_late": {"name": "time in ICU", "range": [9.0, 13.0]},
@@ -105,7 +105,7 @@ param_info = {
         "name": "microdist. (inflection)",
         "range": [80, 130],
     },
-    "mobility.microdistancing.behaviour.parameters.upper_asymptote": {
+    "mobility.microdistancing.behaviour.parameters.end_asymptote": {
         "name": "microdist. (final)",
         "range": [0.25, 0.6],
     },
@@ -113,7 +113,7 @@ param_info = {
         "name": "microdist. wane (inflection)",
         "range": [150, 250],
     },
-    "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote": {
+    "mobility.microdistancing.behaviour_adjuster.parameters.start_asymptote": {
         "name": "microdist. wane (final)",
         "range": [0.5, 1],
     },
@@ -296,15 +296,15 @@ def get_country_posterior_detection_percentiles(country_param_values):
     store_matrix = np.zeros((len(calculated_times), len(country_param_values["time.start"])))
 
     for i in range(len(country_param_values["time.start"])):
-        if "case_detection.lower_asymptote" in country_param_values:
-            lower_asymptote = country_param_values["case_detection.lower_asymptote"][i]
+        if "case_detection.start_asymptote" in country_param_values:
+            start_asymptote = country_param_values["case_detection.start_asymptote"][i]
         else:
-            lower_asymptote = 0.0
+            start_asymptote = 0.0
         my_func = tanh_based_scaleup(
             country_param_values["case_detection.shape"][i],
             country_param_values["case_detection.inflection_time"][i],
-            lower_asymptote,
-            country_param_values["case_detection.upper_asymptote"][i],
+            start_asymptote,
+            country_param_values["case_detection.end_asymptote"][i],
         )
         detect_vals = [my_func(float(t)) for t in calculated_times]
         store_matrix[:, i] = detect_vals

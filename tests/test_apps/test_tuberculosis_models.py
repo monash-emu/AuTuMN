@@ -31,6 +31,7 @@ def test_tb_run_models_partial(project_name):
 
 
 @pytest.mark.run_models
+@pytest.mark.nightly_only
 @pytest.mark.github_only
 @pytest.mark.parametrize("project_name", TB_PROJECTS)
 def test_tb_build_scenario_models(project_name):
@@ -45,6 +46,7 @@ def test_tb_build_scenario_models(project_name):
 
 @pytest.mark.run_models
 @pytest.mark.github_only
+@pytest.mark.nightly_only
 @pytest.mark.parametrize("project_name", TB_PROJECTS)
 def test_tb_run_models_full(project_name):
     """

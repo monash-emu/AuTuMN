@@ -1,7 +1,0 @@
-clinical_stratification.non_sympt_infect_multiplier: 0.5143931534721625
-contact_rate: 0.02913826320212745
-notifications_dispersion_param: 1067.3444224379696
-sojourn.compartment_periods_calculated.active.total_period: 6.227972599100604
-sojourn.compartment_periods_calculated.exposed.total_period: 3.94132115197897
-testing_to_detection.assumed_cdr_parameter: 0.03010797194844596
-voc_emergence.delta.contact_rate_multiplier: 2.023263033139176

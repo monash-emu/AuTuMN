@@ -7,7 +7,7 @@ import pandas as pd
 import streamlit as st
 import yaml
 
-from autumn.models.covid_19.preprocess.testing import find_cdr_function_from_test_data
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from autumn.tools import db, inputs, plots
 from autumn.tools.plots.calibration.plots import (
     find_shortest_chain_length,
@@ -104,8 +104,6 @@ def plot_cdr_curves(
 
     # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
     testing_pops = inputs.get_population_by_agegroup(agegroup_strata, iso3, None, year=testing_year)
-    if iso3 == "AUS":
-        st.write("WARNING - testing populations are not correct for Victoria")
     detected_proportion = []
     for assumed_cdr_parameter in sampled_test_to_detect_vals:
         detected_proportion.append(

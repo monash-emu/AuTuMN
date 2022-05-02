@@ -3,6 +3,8 @@ description: BASELINE
 country:
   iso3: GBR
 
+ref_mixing_iso3: GBR
+
 mobility:
   mixing:
     school:

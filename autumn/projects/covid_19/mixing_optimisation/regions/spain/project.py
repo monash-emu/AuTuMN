@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.tools.project import Project, ParameterSet, TimeSeriesSet, build_rel_path
+from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.targets import (
     TruncNormalTarget,
@@ -22,24 +22,24 @@ baseline_params = base_params.update(
 param_set = ParameterSet(baseline=baseline_params)
 
 # Load and configure calibration settings.
-ts_set = TimeSeriesSet.from_file(build_rel_path("timeseries.json"))
+ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 calib_times = (CALIBRATION_START, CALIBRATION_END)
 targets = [
     TruncNormalTarget(
-        timeseries=ts_set.get("notifications").truncate_times(*calib_times),
+        data=ts_set["notifications"].loc[CALIBRATION_START:CALIBRATION_END],
         trunc_range=[0, np.inf],
     ),
     TruncNormalTarget(
-        timeseries=ts_set.get("infection_deaths").truncate_times(*calib_times),
+        data=ts_set["infection_deaths"].loc[CALIBRATION_START:CALIBRATION_END],
         trunc_range=[0, np.inf],
     ),
     TruncNormalTarget(
-        timeseries=ts_set.get("hospital_admissions").truncate_times(*calib_times),
+        data=ts_set["hospital_admissions"].loc[CALIBRATION_START:CALIBRATION_END],
         trunc_range=[0, np.inf],
     ),
     TruncNormalTarget(
-        timeseries=ts_set.get("proportion_seropositive").truncate_times(*calib_times),
+        data=ts_set["prop_ever_infected"].loc[CALIBRATION_START:CALIBRATION_END],
         trunc_range=[0, 1],
         stdev=0.04,
     ),

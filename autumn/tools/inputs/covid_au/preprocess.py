@@ -1,7 +1,9 @@
 import pandas as pd
 
 from autumn.tools.db import Database
-from autumn.tools.utils.utils import create_date_index, COVID_BASE_DATETIME
+from autumn.tools.utils.utils import create_date_index
+
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 from .fetch import (
     COVID_AU_CSV_PATH,
@@ -21,7 +23,7 @@ def preprocess_covid_au(input_db: Database):
     df = reshape_to_clusters(df)
     input_db.dump_df("covid_dhhs_test", df)
     df = pd.read_csv(COVID_VAC_COV_CSV)
-    input_db.dump_df("vic_2021", df)
+    input_db.dump_df("vic_2021", df) # True vaccination numbers
     df = pd.read_csv(COVID_AU_YOUGOV)
     df = process_yougov(df)
     input_db.dump_df("yougov_vic", df)

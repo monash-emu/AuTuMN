@@ -97,12 +97,13 @@ class FileDatabase(BaseDatabase, ABC):
         It is much more memory efficient to use append_df if possible (eg. ParquetDatabase).
         """
         fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
-        write_df = df
         if os.path.exists(fpath) and append:
             # Read in existing dataframe and then append to the end of it.
             # This could be slow so ideally don't do this.
             orig_df = self.read_file(fpath)
             write_df = orig_df.append(df)
+        else:
+            write_df = df.copy()
         try:
             write_df.reset_index(drop=True, inplace=True)
         except ValueError:
@@ -231,10 +232,13 @@ class Database(BaseDatabase):
         df.to_sql(table_name, con=self.engine, if_exists=exists_mode, index=False)
 
     def query(
-        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}
+        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {},
+        as_copy=True
     ) -> pd.DataFrame:
         """
         method to query table_name
+
+        as_copy can be False if needed for performance, but only if you promise not to modify the returned data...
         """
         column_str = ",".join(columns) if columns else "*"
         query = f"SELECT {column_str} FROM {table_name}"
@@ -274,6 +278,9 @@ class Database(BaseDatabase):
 
         if renames:
             df.rename(columns=renames, inplace=True)
+
+        if as_copy:
+            df = df.copy()
 
         return df
 

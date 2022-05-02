@@ -11,29 +11,19 @@ vaccination: null
 
 haario_scaling_factor: 3. # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
 
-stratify_by_infection_history: true
-waning_immunity_duration: 526  # to get 50% immune after 1 year (Faria et al, Science 2021)
+history:
+  natural_immunity_duration: 526  # to get 50% immune after 1 year (Faria et al, Science 2021)
 
 mobility:
-  google_mobility_locations:
-    work:
-      - workplaces
-    other_locations:
-      # Parks not included
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - transit_stations
-    # This is now needed because there is an entry in the master parameters file and dictionaries overwite recursively
-    home: []
   smooth_google_data: true
-  microdistancing: # increasing function, starting from 0 (no microdistancing) ending at upper_asymptote
+  microdistancing: # increasing function, starting from 0 (no microdistancing) ending at end_asymptote
     behaviour:
       function_type: tanh
       parameters:
         shape: .05
         inflection_time: 90.
-        lower_asymptote: 0.
-        upper_asymptote: .4
+        start_asymptote: 0.
+        end_asymptote: .4
       locations:
         - other_locations
         - school
@@ -43,8 +33,8 @@ mobility:
 #      parameters:
 #        shape: -0.05
 #        inflection_time: 200.
-#        lower_asymptote: 0.6
-#        upper_asymptote: 1.
+#        start_asymptote: 0.6
+#        end_asymptote: 1.
 #      locations:
 #        - other_locations
 #        - school

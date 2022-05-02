@@ -1,0 +1,61 @@
+# Summer compartmental modelling
+# https://github.com/monash-emu/summer
+# will also include
+# - numba
+# - numpy
+# - networkx
+# - scipy
+# https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
+summerepi==2.7.0
+
+# Interaction
+jupyterlab
+jupyterlab_templates
+ipympl
+
+# Data visualization
+matplotlib
+seaborn
+plotly
+cufflinks
+
+# Numerical computing
+numpy
+pandas
+openpyxl
+pyDOE
+numba
+scipy
+networkx
+
+# Database access
+SQLAlchemy
+
+# Utility
+pyyaml
+pydantic
+streamlit
+pyAesCrypt
+googledrivedownloader
+statsmodels
+fpdf2
+
+# Testing
+pytest
+pytest-parallel
+pytest-benchmark
+black
+isort
+moto[s3]  # Mock out AWS S3 storage
+
+# Notebook management
+nbstripout
+
+# AWS / buildkite infrastructure
+boto3
+timeago
+click
+tabulate
+awscli
+fabric
+s3fs

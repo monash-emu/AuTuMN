@@ -3,6 +3,8 @@ description: BASELINE
 country:
   iso3: SWE
 
+ref_mixing_iso3: FIN
+
 mobility:
   mixing:
     school:

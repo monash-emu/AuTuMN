@@ -16,8 +16,11 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime):
     mov_df = get_movement_data(input_db, country_iso_code, region)
     mob_df = get_google_mobility(country_iso_code, region, base_date, input_db)
 
-    mob_df = pd.merge(mov_df, mob_df, on="date", how="outer")
+    merge_how = "right" if len(mob_df) > 0 else "left"
+    mob_df = pd.merge(mov_df, mob_df, on="date", how=merge_how)
     mob_df["iso3"] = country_iso_code
+    mob_df = mob_df.sort_values(["date"])
+    mob_df = mob_df[mob_df["date"] >= base_date]
 
     days = mob_df["date"].apply(lambda d: (d - base_date).days).tolist()
     return mob_df, days

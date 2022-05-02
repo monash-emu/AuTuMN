@@ -45,8 +45,8 @@ def in_memory_db_factory():
         """
         assert db_path.endswith(".db"), f'Database path "{db_path}" must be a file that ends in .db'
 
-        if db_path.endswith("inputs.secret.db"):
-            # Return the real "inputs.secret.db" if it's requested
+        if db_path.endswith("inputs.db"):
+            # Return the real "inputs.db" if it's requested
             rel_db_path = os.path.relpath(db_path)
             engine = create_engine(f"sqlite:///{rel_db_path}", echo=False)
             return engine

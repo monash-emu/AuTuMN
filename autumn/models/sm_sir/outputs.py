@@ -1,6 +1,8 @@
-from scipy import stats
 from typing import List, Dict, Optional, Union
+
+from scipy import stats
 import numpy as np
+from numba import jit
 
 from autumn.tools.utils.outputsbuilder import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
@@ -508,7 +510,7 @@ def precompute_probas_stay_greater_than(distribution_details, model_times):
     probas_stay_greater_than = 1 - cdf_values
     return probas_stay_greater_than
 
-
+@jit
 def convolve_probability(source_output: np.ndarray, density_intervals: np.ndarray, scale: float = 1.0, lag: int = 1) -> np.ndarray:
     """
     Calculate a convolved output.

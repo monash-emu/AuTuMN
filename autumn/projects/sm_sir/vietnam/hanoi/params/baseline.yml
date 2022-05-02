@@ -19,17 +19,16 @@ population:
 
 time:
   start: 671 # 01st Nov 2021
-  end: 944 # 31st July 2022
+  end: 1036 # 01st Nov 2022
 
 activate_random_process: False
 
-infectious_seed: 100.
-contact_rate: 0.15
+infectious_seed: 2000. # fixed due to the arbitrary nature of this parameter
+contact_rate: 0.2
 
 immunity_stratification:
-  prop_immune: .8
-  prop_high_among_immune: .2  # Hanoi only started 3rd dose vaccination from 30th Dec
-
+  prop_immune: .75
+  prop_high_among_immune: .75
   infection_risk_reduction:
     low: 0.6
 
@@ -49,35 +48,35 @@ voc_emergence:
         late_reinfection: 0.85  # 15% immune escape
       omicron:
         early_reinfection: 0.4  # 60% immune escape
-        late_reinfection: 0.25  # 75% immune escape, 5 times higher immune escape compared to delta late reinfection
+        late_reinfection: 0.34  # 85% of 0.4
   omicron:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 746. # 15th Jan 2022
+      start_time: 732. # 1st Jan 2022
       entry_rate: 10.
       seed_duration: 10.
-    contact_rate_multiplier: 1.3
+    contact_rate_multiplier: 2.0
     immune_escape: 0.6
     hosp_protection: 0.8
     death_protection: 0.9
-    icu_multiplier: 1
-    relative_latency: 0.6667
-    relative_active_period: 1.
+    icu_multiplier: 0.2
+    relative_latency: 0.5
+    relative_active_period: 0.3
     cross_protection:
       wild_type:
         early_reinfection: 1.  # 0% immune escape
         late_reinfection: 0.8  # 20% immune escape
       omicron:
         early_reinfection: 1.  # 0% immune escape
-        late_reinfection: 0.4 # 60% immune escape, 3 times higher immune escape compared to delta late reinfection
+        late_reinfection: 0.15 # 85% immune escape
 
 #testing_to_detection:
 #  assumed_tests_parameter: 0.001 # Malaysia model
 #  assumed_cdr_parameter: 0.05 # fixed
 #  smoothing_period: 14
 
-detect_prop: 0.1
+detect_prop: 0.2
 
 hospital_stay:
   hospital_all:
@@ -111,16 +110,20 @@ mobility:
         - 2021-12-06 # Students grade 12 started to come back to school at 50% capacity
         - 2022-02-08 # Students grade 6-12 started to come back to school
         - 2022-02-14 # Students of most major universities started to return to campus
-        - 2022-02-21 # Primary school students and kids at kindergarten started to come back to school
+        - 2022-04-06 # Primary school students started to come back to school
+        - 2022-04-13 # Children at kindergartens started to come back to
       values:
         - 0.0
         - 0.025
         - 0.333
         - 0.667
+        - 0.833
         - 1.0
+
+prop_icu_among_hospitalised: 0.05
 
 age_stratification:
   cfr:
-    multiplier: 1.0
+    multiplier: 0.05 # temporarily fixed
   prop_hospital:
-    multiplier: 0.85 # fixed
+    multiplier: 0.075 # temporarily fixed for calibration of other params

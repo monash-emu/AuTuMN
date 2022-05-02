@@ -1038,7 +1038,14 @@
       842,
       843,
       844,
-      845
+      845,
+      846,
+      847,
+      848,
+      849,
+      850,
+      851,
+      852
     ],
     "values": [
       0.0,
@@ -1403,6 +1410,13 @@
       0.0,
       0.0,
       0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
       0.0
     ],
     "quantiles": [
@@ -1416,6 +1430,19 @@
   "icu_occupancy": {
     "output_key": "icu_occupancy",
     "title": "ICU occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_occupancy": {
+    "output_key": "hospital_occupancy",
+    "title": "Hospital occupancy",
     "times": [
       619,
       620,
@@ -1643,7 +1670,14 @@
       842,
       843,
       844,
-      845
+      845,
+      846,
+      847,
+      848,
+      849,
+      850,
+      851,
+      852
     ],
     "values": [
       61.0,
@@ -1872,21 +1906,15 @@
       34.0,
       28.0,
       27.0,
-      28.0
+      28.0,
+      29.0,
+      29.0,
+      28.0,
+      25.0,
+      21.0,
+      20.0,
+      22.0
     ],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "hospital_occupancy": {
-    "output_key": "hospital_occupancy",
-    "title": "Hospital occupancy",
-    "times": [],
-    "values": [],
     "quantiles": [
       0.025,
       0.25,

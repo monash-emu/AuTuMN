@@ -164,7 +164,7 @@ You will need to ensure that the latest date in all user-specified mixing data p
 To rebuild the database with new data, run:
 
 ```bash
-python -m autumn secrets read 
+python -m autumn secrets read
 python -m autumn db build
 python -m autumn secrets write data/inputs/inputs.secret.db
 ```

@@ -7,7 +7,12 @@ from autumn.settings import INPUT_DATA_PATH
 from autumn.tools.utils.utils import create_date_index
 from autumn.settings.constants import COVID_BASE_DATETIME
 
-from .fetch import MOBILITY_CSV_PATH, VNM_CSV_PATH, FB_MOVEMENT_2021, FB_MOVEMENT_2022
+from .fetch import (
+    MOBILITY_CSV_PATH,
+    VNM_CSV_PATH,
+    FB_MOVEMENT_2021,
+    FB_MOVEMENT_2022,
+)
 
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"
@@ -19,7 +24,9 @@ DHHS_LGA_TO_CLUSTER = os.path.join(
 
 DHHS_LGA_TO_HSP = os.path.join(INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv")
 
-MOBILITY_LGA_PATH = DHHS_LGA_TO_HSP  # Swap with DHHS_LGA_TO_CLUSTER to obtain previous mapping
+MOBILITY_LGA_PATH = (
+    DHHS_LGA_TO_HSP  # Swap with DHHS_LGA_TO_CLUSTER to obtain previous mapping
+)
 
 
 COUNTRY_NAME_ISO3_MAP = {
@@ -137,18 +144,25 @@ def preprocess_mobility(input_db: Database, country_df):
     mob_df = mob_df[major_region_mask | davao_mask].copy()
 
     # These two regions are the same
-    mob_df.loc[(mob_df.sub_region_1 == "National Capital Region"), "sub_region_1"] = "Metro Manila"
-    mob_df.loc[(mob_df.metro_area == "Davao City Metropolitan Area"), "sub_region_1"] = "Davao City"
+    mob_df.loc[
+        (mob_df.sub_region_1 == "National Capital Region"), "sub_region_1"
+    ] = "Metro Manila"
+    mob_df.loc[
+        (mob_df.metro_area == "Davao City Metropolitan Area"), "sub_region_1"
+    ] = "Davao City"
     mob_df.loc[
         (mob_df.sub_region_1 == "Federal Territory of Kuala Lumpur"), "sub_region_1"
     ] = "Kuala Lumpur"
 
     # Read and append mobility predictions for Vietnam
     vnm_mob = pd.read_csv(VNM_CSV_PATH)
-    mob_df = mob_df.merge(vnm_mob, on=["date", "country_region", "sub_region_1"], how="left")
+    mob_df = mob_df.merge(
+        vnm_mob, on=["date", "country_region", "sub_region_1"], how="left"
+    )
     col_str = "workplaces_percent_change_from_baseline"
     mob_df.loc[
-        (mob_df["country_region"] == "Vietnam") & (mob_df[f"{col_str}_x"].isna()), f"{col_str}_x"
+        (mob_df["country_region"] == "Vietnam") & (mob_df[f"{col_str}_x"].isna()),
+        f"{col_str}_x",
     ] = mob_df[f"{col_str}_y"]
     mob_df = mob_df.drop(columns=f"{col_str}_y")
     mob_df.rename(columns={f"{col_str}_x": col_str}, inplace=True)
@@ -184,8 +198,13 @@ def preprocess_mobility(input_db: Database, country_df):
     input_db.dump_df("mobility", mob_df)
 
     # Facebook movement data
-    df = pd.concat(map(pd.read_csv, [FB_MOVEMENT_2021, FB_MOVEMENT_2022], "\t"))
-    iso_filter = {"AUS", "PHL", "MYS", "VNM", "LKA", "IDN", "MYN", "BGD"}
+    df_list = []
+    iso_filter = {"AUS", "PHL", "MYS", "VNM", "LKA", "IDN", "MYN", "BGD", "BTN"}
+    for file in {FB_MOVEMENT_2021, FB_MOVEMENT_2022}:
+        df = pd.read_csv(file, "\t")
+        df_list.append(df)
+
+    df = pd.concat(df_list)
     df = df[df["country"].isin(iso_filter)]
     df = df.sort_values(["country", "ds", "polygon_id"]).reset_index(drop=True)
     df = create_date_index(COVID_BASE_DATETIME, df, "ds")
@@ -219,9 +238,15 @@ def reshape_to_clusters(gm_df):
 
     # Calculate LGA and health cluster populations proportions.
     lga_df["lga_pop_prop"] = lga_df.proportion * lga_df.population
-    hc_pop = lga_df.groupby(["cluster_name"]).sum().reset_index()[["cluster_name", "lga_pop_prop"]]
+    hc_pop = (
+        lga_df.groupby(["cluster_name"])
+        .sum()
+        .reset_index()[["cluster_name", "lga_pop_prop"]]
+    )
     hc_pop.rename(columns={"lga_pop_prop": "hc_pop"}, inplace=True)
-    lga_df = pd.merge(lga_df, hc_pop, how="left", left_on="cluster_name", right_on="cluster_name")
+    lga_df = pd.merge(
+        lga_df, hc_pop, how="left", left_on="cluster_name", right_on="cluster_name"
+    )
 
     gm_lga = set(gm_df["sub_region_1"])
     dhhs_lga = set(lga_df["lga_name"])
@@ -232,7 +257,9 @@ def reshape_to_clusters(gm_df):
         dhhs_lga.difference(gm_lga) == {"Unincorporated Vic"},
     ]
     if all(safe_merge):
-        lga_df = pd.merge(lga_df, gm_df, how="left", left_on="lga_name", right_on="sub_region_1")
+        lga_df = pd.merge(
+            lga_df, gm_df, how="left", left_on="lga_name", right_on="sub_region_1"
+        )
     else:
         raise AssertionError("LGA naming changed by Google update VIC_LGA_MAP")
 
@@ -260,7 +287,10 @@ def reshape_to_clusters(gm_df):
         "South & East Metro", "SOUTH_EAST_METRO"
     )
     cluster_df["cluster_name"] = (
-        cluster_df["cluster_name"].str.replace("&", "").str.replace(" ", "_").str.upper()
+        cluster_df["cluster_name"]
+        .str.replace("&", "")
+        .str.replace(" ", "_")
+        .str.upper()
     )
 
     cluster_df.rename(columns={"cluster_name": "sub_region_1"}, inplace=True)

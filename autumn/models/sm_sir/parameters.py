@@ -26,7 +26,7 @@ def get_check_prop(name):
     msg = f"Parameter '{name}' not in domain [0, 1], but is intended as a proportion"
 
     def check_prop(value: float) -> float:
-        assert 0. <= value <= 1., msg
+        assert 0.0 <= value <= 1.0, msg
         return value
 
     return check_prop
@@ -37,7 +37,7 @@ def get_check_non_neg(name):
     msg = f"Parameter '{name}' is negative, but is intended to be non-negative"
 
     def check_non_neg(value: float) -> float:
-        assert 0. <= value, msg
+        assert 0.0 <= value, msg
         return value
 
     return check_non_neg
@@ -48,7 +48,7 @@ def get_check_all_prop(name):
     msg = f"Parameter '{name}' contains values outside [0, 1], but is intended as a list of proportions"
 
     def check_all_pos(values: list) -> float:
-        assert all([0. <= i_value <= 1. for i_value in values]), msg
+        assert all([0.0 <= i_value <= 1.0 for i_value in values]), msg
         return values
 
     return check_all_pos
@@ -59,7 +59,7 @@ def get_check_all_non_neg(name):
     msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
 
     def check_all_non_neg(values: list) -> float:
-        assert all([0. <= i_value for i_value in values]), msg
+        assert all([0.0 <= i_value for i_value in values]), msg
         return values
 
     return check_all_non_neg
@@ -70,7 +70,7 @@ def get_check_all_dict_values_non_neg(name):
     msg = f"Dictionary parameter '{name}' contains negative values, but is intended as a list of proportions"
 
     def check_non_neg_values(dict_param: dict) -> float:
-        assert all([0. <= i_value for i_value in dict_param.values()]), msg
+        assert all([0.0 <= i_value for i_value in dict_param.values()]), msg
         return dict_param
 
     return check_non_neg_values
@@ -82,7 +82,7 @@ def get_check_all_non_neg_if_present(name):
 
     def check_all_non_neg(values: float) -> float:
         if values:
-            assert all([0. <= i_value for i_value in values]), msg
+            assert all([0.0 <= i_value for i_value in values]), msg
         return values
 
     return check_all_non_neg
@@ -165,8 +165,12 @@ class CompartmentSojourn(BaseModel):
     total_time: float
     proportion_early: Optional[float]
 
-    check_total_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
-    check_prop_early = validator("proportion_early", allow_reuse=True)(get_check_prop("proportion_early"))
+    check_total_positive = validator("total_time", allow_reuse=True)(
+        get_check_non_neg("total_time")
+    )
+    check_prop_early = validator("proportion_early", allow_reuse=True)(
+        get_check_prop("proportion_early")
+    )
 
 
 class Sojourns(BaseModel):
@@ -178,7 +182,9 @@ class Sojourns(BaseModel):
     latent: CompartmentSojourn
     recovered: Optional[float]  # Doesn't have an early and late
 
-    check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
+    check_recovered_positive = validator("recovered", allow_reuse=True)(
+        get_check_non_neg("recovered")
+    )
 
 
 class MixingLocation(BaseModel):
@@ -204,7 +210,9 @@ class EmpiricMicrodistancingParams(BaseModel):
     times: List[float]
     values: List[float]
 
-    check_max_effect = validator("max_effect", allow_reuse=True)(get_check_prop("max_effect"))
+    check_max_effect = validator("max_effect", allow_reuse=True)(
+        get_check_prop("max_effect")
+    )
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
@@ -221,17 +229,25 @@ class TanhMicrodistancingParams(BaseModel):
     lower_asymptote: float
     upper_asymptote: float
 
-    check_lower_asymptote = validator("lower_asymptote", allow_reuse=True)(get_check_prop("lower_asymptote"))
-    check_upper_asymptote = validator("upper_asymptote", allow_reuse=True)(get_check_prop("upper_asymptote"))
+    check_lower_asymptote = validator("lower_asymptote", allow_reuse=True)(
+        get_check_prop("lower_asymptote")
+    )
+    check_upper_asymptote = validator("upper_asymptote", allow_reuse=True)(
+        get_check_prop("upper_asymptote")
+    )
 
     @validator("shape", allow_reuse=True)
     def shape_is_positive(shape):
-        assert shape >= 0., "Shape parameter for tanh-microdistancing function must be non-negative"
+        assert (
+            shape >= 0.0
+        ), "Shape parameter for tanh-microdistancing function must be non-negative"
 
     @root_validator(pre=True, allow_reuse=True)
     def check_asymptotes(cls, values):
         lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
-        assert lower <= upper, f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
+        assert (
+            lower <= upper
+        ), f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
         return values
 
 
@@ -239,7 +255,9 @@ class ConstantMicrodistancingParams(BaseModel):
 
     effect: float
 
-    check_effect_domain = validator("effect", allow_reuse=True)(get_check_prop("effect"))
+    check_effect_domain = validator("effect", allow_reuse=True)(
+        get_check_prop("effect")
+    )
 
 
 class MicroDistancingFunc(BaseModel):
@@ -248,7 +266,7 @@ class MicroDistancingFunc(BaseModel):
     parameters: Union[
         EmpiricMicrodistancingParams,
         TanhMicrodistancingParams,
-        ConstantMicrodistancingParams
+        ConstantMicrodistancingParams,
     ]
     locations: List[str]
 
@@ -274,9 +292,11 @@ class Mobility(BaseModel):
         for location in val:
             location_total = sum(val[location].values())
             msg = f"Mobility weights don't sum to one: {location_total}"
-            assert abs(location_total - 1.) < 1e-6, msg
+            assert abs(location_total - 1.0) < 1e-6, msg
             msg = "Google mobility key not recognised"
-            assert all([key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]), msg
+            assert all(
+                [key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]
+            ), msg
         return val
 
 
@@ -291,13 +311,15 @@ class AgeSpecificProps(BaseModel):
     def check_source_dist(vals):
         sum_of_values = sum(vals.values())
         msg = f"Proportions by immunity status in source for parameters does not sum to one: {sum_of_values}"
-        assert sum_of_values == 1., msg
+        assert sum_of_values == 1.0, msg
         return vals
 
     @validator("source_immunity_protection", allow_reuse=True)
     def check_source_dist(protection_params):
         msg = "Source protection estimates not proportions"
-        assert all([0. <= val <= 1. for val in protection_params.values()]) == 1., msg
+        assert (
+            all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0
+        ), msg
         return protection_params
 
     check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
@@ -314,7 +336,9 @@ class AgeStratification(BaseModel):
     Parameters used in age based stratification.
     """
 
-    susceptibility: Optional[Union[Dict[int, float], float]]  # Dictionary to represent age groups, single float or None
+    susceptibility: Optional[
+        Union[Dict[int, float], float]
+    ]  # Dictionary to represent age groups, single float or None
     prop_symptomatic: Optional[Union[Dict[int, float], float]]  # As for susceptibility
     prop_hospital: AgeSpecificProps
     cfr: AgeSpecificProps
@@ -343,8 +367,12 @@ class ImmunityStratification(BaseModel):
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
 
-    check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
-    check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(get_check_prop("prop_high_among_immune"))
+    check_prop_immune = validator("prop_immune", allow_reuse=True)(
+        get_check_prop("prop_immune")
+    )
+    check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(
+        get_check_prop("prop_high_among_immune")
+    )
 
 
 class TestingToDetection(BaseModel):
@@ -357,8 +385,12 @@ class TestingToDetection(BaseModel):
     smoothing_period: int
     test_multiplier: Optional[TimeSeries]
 
-    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(get_check_non_neg("assumed_tests_parameter"))
-    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(get_check_prop("assumed_cdr_parameter"))
+    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(
+        get_check_non_neg("assumed_tests_parameter")
+    )
+    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(
+        get_check_prop("assumed_cdr_parameter")
+    )
 
     @validator("smoothing_period", allow_reuse=True)
     def check_smoothing_period(val):
@@ -371,8 +403,12 @@ class CrossImmunity(BaseModel):
     early_reinfection: float
     late_reinfection: float
 
-    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(get_check_prop("early_reinfection"))
-    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(get_check_prop("late_reinfection"))
+    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(
+        get_check_prop("early_reinfection")
+    )
+    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(
+        get_check_prop("late_reinfection")
+    )
 
 
 class VocSeed(BaseModel):
@@ -381,8 +417,12 @@ class VocSeed(BaseModel):
     entry_rate: float
     seed_duration: float
 
-    check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
-    check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))
+    check_seed_time = validator("seed_duration", allow_reuse=True)(
+        get_check_non_neg("seed_duration")
+    )
+    check_entry_rate = validator("entry_rate", allow_reuse=True)(
+        get_check_non_neg("entry_rate")
+    )
 
 
 class VocComponent(BaseModel):
@@ -407,20 +447,30 @@ class VocComponent(BaseModel):
         if values["starting_strain"]:
             multiplier = values["contact_rate_multiplier"]
             msg = f"Starting or 'wild type' strain must have a contact rate multiplier of one: {multiplier}"
-            assert multiplier == 1., msg
+            assert multiplier == 1.0, msg
         return values
 
     @validator("icu_multiplier", pre=True, allow_reuse=True)
     def check_times(multiplier):
         if multiplier:
-            assert 0. <= multiplier, "ICU multiplier negative"
+            assert 0.0 <= multiplier, "ICU multiplier negative"
         return multiplier
 
-    check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
-    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
-    check_relative_latency = validator("relative_latency", allow_reuse=True)(get_check_non_neg("relative_latency"))
-    check_relative_active_period = validator("relative_active_period", allow_reuse=True)(get_check_non_neg("relative_active_period"))
-    check_death_protection = validator("death_protection", allow_reuse=True)(get_check_prop("death_protection"))
+    check_immune_escape = validator("immune_escape", allow_reuse=True)(
+        get_check_prop("immune_escape")
+    )
+    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(
+        get_check_prop("hosp_protection")
+    )
+    check_relative_latency = validator("relative_latency", allow_reuse=True)(
+        get_check_non_neg("relative_latency")
+    )
+    check_relative_active_period = validator(
+        "relative_active_period", allow_reuse=True
+    )(get_check_non_neg("relative_active_period"))
+    check_death_protection = validator("death_protection", allow_reuse=True)(
+        get_check_prop("death_protection")
+    )
 
 
 class TimeDistribution(BaseModel):
@@ -498,8 +548,14 @@ class Parameters:
     activate_random_process: bool
     random_process: Optional[RandomProcessParams]
 
+    temporary_waning_immunity_flag: bool
+
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):
-        assert all([i_group % 5 == 0 for i_group in age_groups]), "Not all age groups are multiples of 5"
-        assert all([0 <= i_group <= 75 for i_group in age_groups]), "Age breakpoints must be from zero to 75"
+        assert all(
+            [i_group % 5 == 0 for i_group in age_groups]
+        ), "Not all age groups are multiples of 5"
+        assert all(
+            [0 <= i_group <= 75 for i_group in age_groups]
+        ), "Age breakpoints must be from zero to 75"
         return age_groups

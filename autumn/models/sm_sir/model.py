@@ -602,10 +602,21 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     # Implement the dynamic immunity process
-    vacc_coverage_available = ["BGD"]
-    is_dynamic_immunity = iso3 in vacc_coverage_available
+    vacc_coverage_available = ["BGD", "PHL", "BTN"]
+    vacc_region_available = ["Metro Manila", None]
+    is_dynamic_immunity = iso3 in vacc_coverage_available and region in vacc_region_available
+
     if is_dynamic_immunity:
-        apply_reported_vacc_coverage(compartment_types, model, thinning=20)
+        thinning = 20 if iso3 == "BGD" else None
+        apply_reported_vacc_coverage(
+            compartment_types,
+            model,
+            iso3,
+            thinning=thinning,
+            model_start_time=params.time.start,
+            start_immune_prop=params.immunity_stratification.prop_immune,
+            waning_flag=params.temporary_waning_immunity_flag,
+        )
 
     """
     Get the applicable outputs

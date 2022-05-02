@@ -147,7 +147,7 @@ isort . --profile black
 
 ## Input data
 
-Input data is stored in text format in the `data/inputs/` folder. All input data required to run the app should be stored in this folder, along with a README explaining its meaning and provenance. Input data is preprocessed into an SQLite database, using the `autumn.tools.inputs` module. The resulting database is stored at `data/inputs/inputs.secret.db` and is tracked using Git LFS. If you want to add new input data or modify existing data, then:
+Input data is stored in text format in the `data/inputs/` folder. All input data required to run the app should be stored in this folder, along with a README explaining its meaning and provenance. Input data is preprocessed into an SQLite database, using the `autumn.tools.inputs` module. The resulting database is stored at `data/inputs/inputs.db` and is tracked using Git LFS. If you want to add new input data or modify existing data, then:
 
 - add or update the source CSV/XLS files
 - adjust the preprocess functions in `autumn.tools.inputs` as required
@@ -164,9 +164,7 @@ You will need to ensure that the latest date in all user-specified mixing data p
 To rebuild the database with new data, run:
 
 ```bash
-python -m autumn secrets read
 python -m autumn db build
-python -m autumn secrets write data/inputs/inputs.secret.db
 ```
 
 Once you are satisfied that all your models work again (run the tests), commit your changes and push up:

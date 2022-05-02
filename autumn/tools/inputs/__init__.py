@@ -34,9 +34,6 @@ def fetch_input_data():
     with Timer("Fetching John Hopkins data."):
         fetch_john_hopkins_data()
 
-    with Timer("Fetching COVID AU data."):
-        fetch_covid_au_data()
-
     with Timer("Fetching COVID PHL data."):
         fetch_covid_phl_data()
 

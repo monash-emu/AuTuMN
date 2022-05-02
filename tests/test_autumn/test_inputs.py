@@ -19,7 +19,7 @@ def test_build_input_database(tmpdir, monkeypatch):
     """
     Ensure we can build the input database with nothing crashing
     """
-    input_db_path = os.path.join(tmpdir, "inputs.secret.db")
+    input_db_path = os.path.join(tmpdir, "inputs.db")
     monkeypatch.setattr(input_database, "INPUT_DB_PATH", input_db_path)
     assert not os.path.exists(input_db_path)
     input_database.build_input_database(rebuild=True)

@@ -136,8 +136,6 @@ def preprocess_mobility(input_db: Database, country_df):
     """
     mob_df = pd.read_csv(MOBILITY_CSV_PATH)
 
-    dhhs_cluster_mobility = reshape_to_clusters(mob_df)
-
     # Drop all sub-region 2 data, too detailed.
     major_region_mask = mob_df["sub_region_2"].isnull() & mob_df["metro_area"].isnull()
     davao_mask = mob_df.metro_area == "Davao City Metropolitan Area"
@@ -166,8 +164,6 @@ def preprocess_mobility(input_db: Database, country_df):
     ] = mob_df[f"{col_str}_y"]
     mob_df = mob_df.drop(columns=f"{col_str}_y")
     mob_df.rename(columns={f"{col_str}_x": col_str}, inplace=True)
-
-    mob_df = mob_df.append(dhhs_cluster_mobility)
 
     # Drop all rows that have NA values in 1 or more mobility columns.
     mob_cols = [c for c in mob_df.columns if c.endswith(MOBILITY_SUFFIX)]
@@ -217,82 +213,3 @@ def get_iso3(country_name: str, country_df):
     except IndexError:
         return COUNTRY_NAME_ISO3_MAP[country_name]
 
-
-def reshape_to_clusters(gm_df):
-    """
-    Takes the google mobility data frame and creates new DHHS health cluster mobility values.
-
-    Input: Pandas data frame google mobility
-    Output: Pandas data frame of DHHS health clusters and VIC
-    """
-
-    # Before dropping sub_region_2 capture Victorian LGAs.
-    gm_df = gm_df[(gm_df.sub_region_1 == "Victoria")]
-    gm_df["sub_region_1"] = gm_df["sub_region_2"]
-    gm_df.loc[(gm_df.sub_region_1.isnull()), "sub_region_1"] = "Victoria"
-
-    # Read in LGA proportion and removed undesired LGAs.
-    lga_df = pd.read_csv(MOBILITY_LGA_PATH)
-    lga_df.replace({"lga_name": VIC_LGA_MAP}, inplace=True)
-    lga_df = lga_df[lga_df.lga_name.notnull()]
-
-    # Calculate LGA and health cluster populations proportions.
-    lga_df["lga_pop_prop"] = lga_df.proportion * lga_df.population
-    hc_pop = (
-        lga_df.groupby(["cluster_name"])
-        .sum()
-        .reset_index()[["cluster_name", "lga_pop_prop"]]
-    )
-    hc_pop.rename(columns={"lga_pop_prop": "hc_pop"}, inplace=True)
-    lga_df = pd.merge(
-        lga_df, hc_pop, how="left", left_on="cluster_name", right_on="cluster_name"
-    )
-
-    gm_lga = set(gm_df["sub_region_1"])
-    dhhs_lga = set(lga_df["lga_name"])
-
-    # Two-way check. Only allow for 'Victoria' and 'Unincorporated Vic'.
-    safe_merge = [
-        gm_lga.difference(dhhs_lga) == {"Victoria"},
-        dhhs_lga.difference(gm_lga) == {"Unincorporated Vic"},
-    ]
-    if all(safe_merge):
-        lga_df = pd.merge(
-            lga_df, gm_df, how="left", left_on="lga_name", right_on="sub_region_1"
-        )
-    else:
-        raise AssertionError("LGA naming changed by Google update VIC_LGA_MAP")
-
-    list_of_columns = [
-        "retail_and_recreation_percent_change_from_baseline",
-        "grocery_and_pharmacy_percent_change_from_baseline",
-        "parks_percent_change_from_baseline",
-        "transit_stations_percent_change_from_baseline",
-        "workplaces_percent_change_from_baseline",
-        "residential_percent_change_from_baseline",
-    ]
-
-    # Weight mobility values and reconstruct data frame.
-    multiplied_columns = lga_df[list_of_columns].multiply(
-        lga_df.lga_pop_prop / lga_df.hc_pop, axis="index"
-    )
-    cluster_df = lga_df[["cluster_name", "date"]]
-
-    cluster_df = pd.concat([cluster_df, multiplied_columns], axis=1, sort=False)
-    cluster_df = cluster_df.groupby(["cluster_name", "date"]).sum()
-    cluster_df.reset_index(inplace=True)
-    cluster_df["country_region"] = "Australia"
-
-    cluster_df["cluster_name"] = cluster_df["cluster_name"].str.replace(
-        "South & East Metro", "SOUTH_EAST_METRO"
-    )
-    cluster_df["cluster_name"] = (
-        cluster_df["cluster_name"]
-        .str.replace("&", "")
-        .str.replace(" ", "_")
-        .str.upper()
-    )
-
-    cluster_df.rename(columns={"cluster_name": "sub_region_1"}, inplace=True)
-
-    return cluster_df

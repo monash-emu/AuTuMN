@@ -26,6 +26,7 @@ mobility:
   square_mobility_effect: true
   microdistancing: {}
 
+is_dynamic_mixing_matrix: true 
 
 population:
   year: 2022

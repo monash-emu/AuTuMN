@@ -33,6 +33,8 @@ population:
 contact_rate: 0.08
 infectious_seed: 10.
 
+is_dynamic_mixing_matrix: true 
+
 immunity_stratification:
   prop_immune: .85
   prop_high_among_immune: .0

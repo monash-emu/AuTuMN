@@ -39,7 +39,7 @@ def get_movement_data(input_db, country_iso_code: str, region: str):
 
     """
 
-    if region is False:
+    if region is None:
         conditions = {"country": country_iso_code}
     else:
         conditions = {"country": country_iso_code, "polygon_name": region}
@@ -54,8 +54,9 @@ def get_movement_data(input_db, country_iso_code: str, region: str):
         }
     )
     # mov_df = mov_df[mov_df["date"] >= base_date]
+    mov_df["tiles_visited"] = mov_df["tiles_visited"] + 1
 
-    if region is False:
+    if region is None:
         mov_df = mov_df.groupby(["date", "date_index"], as_index=False).mean()
 
     return mov_df

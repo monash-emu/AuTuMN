@@ -7,8 +7,6 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from pyparsing import Opt
-
 from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.inputs.social_mixing.constants import LOCATIONS

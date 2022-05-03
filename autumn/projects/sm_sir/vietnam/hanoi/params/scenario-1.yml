@@ -10,5 +10,3 @@ voc_emergence:
   new_strain:
     new_voc_seed:
       start_time: 883 # 1st June 2022
-
-temporary_waning_immunity_flag: false

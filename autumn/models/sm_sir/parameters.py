@@ -1,11 +1,14 @@
 """
 Type definition for model parameters
 """
+from lib2to3.pgen2.token import OP
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
+
+from pyparsing import Opt
 
 from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
 from autumn.settings.constants import COVID_BASE_DATETIME
@@ -548,6 +551,8 @@ class Parameters:
     activate_random_process: bool
     random_process: Optional[RandomProcessParams]
 
+    # Vaccination/immunity-related
+    additional_immunity: Optional[TimeSeries]
     temporary_waning_immunity_flag: bool
 
     @validator("age_groups", allow_reuse=True)

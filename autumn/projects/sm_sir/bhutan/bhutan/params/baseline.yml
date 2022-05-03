@@ -46,7 +46,7 @@ sojourns:
     total_time: 4.75
     proportion_early: 0.333
   latent:
-    total_time: 14.
+    total_time: 3.
     proportion_early: 0.5
 
 

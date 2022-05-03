@@ -252,6 +252,8 @@ def apply_reported_vacc_coverage(
     if additional_immunity_points:
         additional_vacc_series = pd.Series({k: v for k, v in zip(additional_immunity_points.times, additional_immunity_points.values)})
         vacc_data_with_waning = pd.concat((vaccine_data, additional_vacc_series))
+    else:
+        vacc_data_with_waning = vaccine_data
 
     # Be explicit about all the difference immunity categories
     vaccine_df = pd.DataFrame(

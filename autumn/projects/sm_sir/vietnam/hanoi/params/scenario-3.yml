@@ -1,7 +1,45 @@
 description: >
-  There is no new variant to appear. The vaccine induced-immunity is waned.
+  New variant twice as transmissible as Omicron (~4 times more transmissible than Delta VoC).
+  This variant completely escapes both vaccination- and infection-related immunity.
+  Severity (hospitalized and fatality risk) is reduced by half compared with the Omicron variant.
+  Since this variant is fully immune-escape, the detection prop is also reduced by half.
+  Vaccine-induced immunity is waned.
 
 time:
   start: 883 # 1st June 2022
+
+detect_prop: 0.1
+
+voc_emergence:
+  wild_type:
+    cross_protection:
+      new_strain:
+        early_reinfection: 0. # fully immune-escape
+        late_reinfection: 0. # fully immune-escape
+
+  omicron:
+    cross_protection:
+      new_strain:
+        early_reinfection: 0. # fully immune-escape
+        late_reinfection: 0. # fully immune-escape
+
+  new_strain:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 883 # 1st June 2022
+      entry_rate: 10.
+      seed_duration: 10.
+    immune_escape: 1.0
+    cross_protection:
+      wild_type:
+        early_reinfection: 1. # = omicron --> delta
+        late_reinfection: 0.8 # = omicron --> delta
+      omicron:
+        early_reinfection: 1. # = omicron --> delta
+        late_reinfection: 0.8 # = omicron --> delta
+      new_strain:
+        early_reinfection: 1. # = omicron --> omicron
+        late_reinfection: 0.15 # = omicron --> delta
 
 temporary_waning_immunity_flag: true

@@ -302,7 +302,7 @@ def apply_reinfection_flows_without_strains(
     """
 
     for age_group in age_groups:
-        age_adjuster = suscept_props[age_group] if suscept_props else 1.
+        age_adjuster = suscept_props[age_group]
         age_filter = {"agegroup": age_group}
 
         contact_rate_adjuster = age_adjuster

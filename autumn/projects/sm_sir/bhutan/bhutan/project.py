@@ -3,7 +3,7 @@ from autumn.tools.project import Project, ParameterSet, load_timeseries, build_r
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
 from autumn.tools.calibration.targets import NormalTarget
-from autumn.models.sm_sir import base_params, build_model, set_up_random_process
+from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 
 # Load and configure model parameters.
@@ -29,21 +29,12 @@ targets = [
 priors = [
     UniformPrior("contact_rate", (0.2, 0.4)),
     UniformPrior("sojourns.latent.total_time", (1., 4.)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.001, 0.005)),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.0005, 0.005)),
     UniformPrior("infectious_seed", (50., 250.))
 ]
 
-
-if baseline_params.to_dict()["activate_random_process"]:
-    time_params = baseline_params.to_dict()["time"]
-    rp = set_up_random_process(time_params["start"], time_params["end"])
-
-    # rp = None  # use this when tuning proposal jumping steps
-else:
-    rp = None
-
 calibration = Calibration(
-    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
+    priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
 )
 
 

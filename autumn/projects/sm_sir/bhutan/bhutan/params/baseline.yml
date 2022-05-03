@@ -31,7 +31,6 @@ is_dynamic_mixing_matrix: true
 population:
   year: 2022
 
-contact_rate: 0.08
 infectious_seed: 10.
 
 immunity_stratification:
@@ -43,10 +42,10 @@ immunity_stratification:
 
 sojourns:
   active:
-    total_time: 3.
+    total_time: 4.
     proportion_early: 0.333
   latent:
-    total_time: 2.
+    total_time: 2.5
     proportion_early: 0.5
   recovered: 180.
 

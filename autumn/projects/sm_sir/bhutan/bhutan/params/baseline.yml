@@ -9,7 +9,7 @@ time:
   end: 900
 
 mobility:
-  # Mapping of Google mobility locations to Prem-specific locations
+  #  Mapping of Google mobility locations to Prem-specific locations
   google_mobility_locations:
     work:
       workplaces: 0.
@@ -22,7 +22,7 @@ mobility:
       tiles_visited: 1.
     home:
       single_tile: 1.
-  smooth_google_data: false  # whether to apply a 7-day moving average
+  smooth_google_data: false  # Whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
 
@@ -43,10 +43,10 @@ immunity_stratification:
 
 sojourns:
   active:
-    total_time: 4.
+    total_time: 3.
     proportion_early: 0.333
   latent:
-    total_time: 2.5
+    total_time: 2.
     proportion_early: 0.5
   recovered: 180.
 

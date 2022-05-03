@@ -5,11 +5,11 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 765.
-  end: 900
+  start: 750.
+  end: 900.
 
 mobility:
-  # Mapping of Google mobility locations to Prem-specific locations
+  #  Mapping of Google mobility locations to locations as specified in matrices
   google_mobility_locations:
     work:
       workplaces: 0.
@@ -20,9 +20,9 @@ mobility:
       parks: 0.
       transit_stations: 0.
       tiles_visited: 1.
-    home:
-      single_tile: 1.
-  smooth_google_data: false  # whether to apply a 7-day moving average
+    # home:
+    #   single_tile: 1.
+  smooth_google_data: false  # Whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
 
@@ -31,24 +31,23 @@ is_dynamic_mixing_matrix: true
 population:
   year: 2022
 
-contact_rate: 0.08
-infectious_seed: 10.
+infectious_seed: 100.
 
 immunity_stratification:
-  prop_immune: .85
-  prop_high_among_immune: .0
+  prop_immune: 0.85
+  prop_high_among_immune: 0.0
 
   infection_risk_reduction:  # High parameter now irrelevant, because prop_high_among_immune is zero
-    low: 0.6
+    low: 0.4
 
 sojourns:
   active:
-    total_time: 4.75
+    total_time: 4.
     proportion_early: 0.333
   latent:
-    total_time: 14.
+    total_time: 2.5
     proportion_early: 0.5
-
+  recovered: 180.
 
 activate_random_process: False
 
@@ -57,47 +56,47 @@ testing_to_detection:
   assumed_cdr_parameter: 0.012
   smoothing_period: 14
 
-voc_emergence:
-  wild_type: # actually omicron
-    starting_strain: true
-    seed_prop: 1.
-    new_voc_seed: null
-    contact_rate_multiplier: 1.
-    immune_escape: 0.
-    hosp_protection: 0.
-    death_protection: 0.
-    icu_multiplier: 1.
-    cross_protection:
-      wild_type:
-        early_reinfection: 1.
-        late_reinfection: 1.
-      new_strain:
-        early_reinfection: 0.4  # 60% immune escape
-        late_reinfection: 0.4
-  new_strain: # far into the future
-    starting_strain: false
-    seed_prop: 0.
-    new_voc_seed:
-      start_time: 100710.
-      entry_rate: 10.
-      seed_duration: 1.
-    contact_rate_multiplier: 1.5
-    immune_escape: 0.2
-    hosp_protection: 0.75
-    death_protection: 0.85
-    relative_latency: 0.6667
-    relative_active_period: 1.
-    icu_multiplier: 0.55
-    cross_protection:
-      wild_type:
-        early_reinfection: 1.
-        late_reinfection: 0.
-      new_strain:
-        early_reinfection: 1.
-        late_reinfection: 0.
+voc_emergence: null
+  # wild_type:  # Actually Omicron
+  #   starting_strain: true
+  #   seed_prop: 1.
+  #   new_voc_seed: null
+  #   contact_rate_multiplier: 1.
+  #   immune_escape: 0.
+  #   hosp_protection: 0.
+  #   death_protection: 0.
+  #   icu_multiplier: 1.
+  #   cross_protection:
+  #     wild_type:
+  #       early_reinfection: 1.
+  #       late_reinfection: 0.
+  #     new_strain:
+  #       early_reinfection: 0.4  # 60% immune escape
+  #       late_reinfection: 0.
+  # new_strain:  # Far into the future
+  #   starting_strain: false
+  #   seed_prop: 0.
+  #   new_voc_seed:
+  #     start_time: 100710.
+  #     entry_rate: 10.
+  #     seed_duration: 1.
+  #   contact_rate_multiplier: 1.5
+  #   immune_escape: 0.2
+  #   hosp_protection: 0.75
+  #   death_protection: 0.85
+  #   relative_latency: 0.6667
+  #   relative_active_period: 1.
+  #   icu_multiplier: 0.55
+  #   cross_protection:
+  #     wild_type:
+  #       early_reinfection: 1.
+  #       late_reinfection: 0.
+  #     new_strain:
+  #       early_reinfection: 1.
+  #       late_reinfection: 0.
 
 age_stratification:
   cfr:
-    multiplier: 0.5
+    multiplier: 0.2
   prop_hospital:
-    multiplier: 0.385
+    multiplier: 0.2

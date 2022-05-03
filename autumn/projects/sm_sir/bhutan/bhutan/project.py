@@ -27,7 +27,7 @@ targets = [
 ]
 
 priors = [
-    UniformPrior("contact_rate", [0.1, 0.45]),
+    UniformPrior("contact_rate", [0.3, 0.65]),
     UniformPrior("sojourns.latent.total_time", [1, 5]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.003, 0.01)),
 ]

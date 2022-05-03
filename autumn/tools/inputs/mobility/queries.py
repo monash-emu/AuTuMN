@@ -58,6 +58,7 @@ def get_movement_data(input_db, country_iso_code: str, region: str):
     )
     # mov_df = mov_df[mov_df["date"] >= base_date]
     mov_df["tiles_visited"] += 1
+    mov_df["single_tile"] += 1
 
     if region is None:
         mov_df = mov_df.groupby(["date", "date_index"], as_index=False).mean()

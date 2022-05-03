@@ -5,8 +5,8 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 700.
-  end: 1200
+  start: 765.
+  end: 900
 
 mobility:
   # Mapping of Google mobility locations to Prem-specific locations
@@ -26,7 +26,7 @@ mobility:
   square_mobility_effect: true
   microdistancing: {}
 
-is_dynamic_mixing_matrix: true 
+is_dynamic_mixing_matrix: true
 
 population:
   year: 2022
@@ -43,7 +43,7 @@ immunity_stratification:
 
 sojourns:
   active:
-    total_time: 10.75
+    total_time: 4.75
     proportion_early: 0.333
   latent:
     total_time: 14.

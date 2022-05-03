@@ -58,7 +58,7 @@ testing_to_detection:
   smoothing_period: 14
 
 voc_emergence:
-  wild_type:  # Actually omicron
+  wild_type:  # Actually Omicron
     starting_strain: true
     seed_prop: 1.
     new_voc_seed: null

@@ -1,4 +1,7 @@
 description: >
   There is no new variant to appear. The vaccine induced-immunity is waned.
 
+time:
+  start: 883 # 1st June 2022
+
 temporary_waning_immunity_flag: true

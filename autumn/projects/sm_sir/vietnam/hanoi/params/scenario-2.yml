@@ -12,6 +12,6 @@ voc_emergence:
 
 additional_immunity:
   times:
-    -884
+    - 884
   values:
     - 0.5

@@ -5,8 +5,8 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 765.
-  end: 900
+  start: 675.
+  end: 850
 
 mobility:
   # Mapping of Google mobility locations to Prem-specific locations

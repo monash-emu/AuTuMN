@@ -29,13 +29,9 @@ voc_emergence:
       start_time: 883 # 1st June 2022
       entry_rate: 10.
       seed_duration: 10.
-    contact_rate_multiplier: 4.0 # ~2 times more transmissible than Omicron
     immune_escape: 1.0
     hosp_protection: 0.9 # 10% risk, half of that of omicron
     death_protection: 0.95 # 5% risk, half of that of omicron
-    icu_multiplier: 0.2
-    relative_latency: 0.5
-    relative_active_period: 0.3
     cross_protection:
       wild_type:
         early_reinfection: 1. # = omicron --> delta

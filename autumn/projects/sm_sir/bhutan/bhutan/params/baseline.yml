@@ -35,11 +35,11 @@ contact_rate: 0.08
 infectious_seed: 10.
 
 immunity_stratification:
-  prop_immune: .85
-  prop_high_among_immune: .0
+  prop_immune: 0.85
+  prop_high_among_immune: 0.0
 
   infection_risk_reduction:  # High parameter now irrelevant, because prop_high_among_immune is zero
-    low: 0.6
+    low: 0.4
 
 sojourns:
   active:
@@ -48,7 +48,7 @@ sojourns:
   latent:
     total_time: 3.
     proportion_early: 0.5
-
+  recovered: 180.
 
 activate_random_process: False
 
@@ -58,7 +58,7 @@ testing_to_detection:
   smoothing_period: 14
 
 voc_emergence:
-  wild_type: # actually omicron
+  wild_type:  # Actually omicron
     starting_strain: true
     seed_prop: 1.
     new_voc_seed: null
@@ -70,11 +70,11 @@ voc_emergence:
     cross_protection:
       wild_type:
         early_reinfection: 1.
-        late_reinfection: 1.
+        late_reinfection: 0.
       new_strain:
         early_reinfection: 0.4  # 60% immune escape
-        late_reinfection: 0.4
-  new_strain: # far into the future
+        late_reinfection: 0.
+  new_strain:  # Far into the future
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
@@ -98,6 +98,6 @@ voc_emergence:
 
 age_stratification:
   cfr:
-    multiplier: 0.5
+    multiplier: 0.2
   prop_hospital:
-    multiplier: 0.385
+    multiplier: 0.2

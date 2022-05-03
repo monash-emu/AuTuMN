@@ -5,7 +5,7 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 715.
+  start: 730.
   end: 900
 
 mobility:
@@ -20,8 +20,8 @@ mobility:
       parks: 0.
       transit_stations: 0.
       tiles_visited: 1.
-    home:
-      single_tile: 1.
+    # home:
+    #   single_tile: 1.
   smooth_google_data: false  # Whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}

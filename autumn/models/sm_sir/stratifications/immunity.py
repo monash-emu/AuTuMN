@@ -9,7 +9,7 @@ from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.tools.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.tools.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
-from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent
+from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
 from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
 
 ACTIVE_FLOWS = {
@@ -217,7 +217,7 @@ def apply_reported_vacc_coverage(
         thinning: int,
         model_start_time: int,
         start_immune_prop: float,
-        waning_flag: bool,
+        additional_immunity_points: TimeSeries,
 ):
     """
     Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -248,26 +248,10 @@ def apply_reported_vacc_coverage(
         )
     )
 
-    if waning_flag:
-        n_waning_points = 10
-        waning_period = 90.
-        final_effective_coverage = 0.5
-        start_time_after_vacc = 30.
-        waning_coverage_times = np.linspace(
-            raw_data.index[-1] + start_time_after_vacc,
-            raw_data.index[-1] + start_time_after_vacc + waning_period,
-            n_waning_points
-        )
-        waning_coverage_values = np.linspace(
-            raw_data.iloc[-1],
-            final_effective_coverage,
-            n_waning_points
-        )
-        waning_series = pd.Series({k: v for k, v in zip(waning_coverage_times, waning_coverage_values)})
-        vacc_data_with_waning = pd.concat((vaccine_data, waning_series))
-
-    else:
-        vacc_data_with_waning = vaccine_data
+    # Add user-requested additional immunity points
+    if additional_immunity_points:
+        additional_vacc_series = pd.Series({k: v for k, v in zip(additional_immunity_points.times, additional_immunity_points.values)})
+        vacc_data_with_waning = pd.concat((vaccine_data, additional_vacc_series))
 
     # Be explicit about all the difference immunity categories
     vaccine_df = pd.DataFrame(

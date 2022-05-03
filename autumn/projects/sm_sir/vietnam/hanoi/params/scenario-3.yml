@@ -1,4 +1,9 @@
 description: >
   There is no new variant to appear. The vaccine induced-immunity is waned.
 
-temporary_waning_immunity_flag: true
+
+additional_immunity:
+  times:
+    - 884
+  values:
+    - 0.5

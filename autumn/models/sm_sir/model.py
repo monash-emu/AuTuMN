@@ -615,7 +615,7 @@ def build_model(
             thinning=thinning,
             model_start_time=params.time.start,
             start_immune_prop=params.immunity_stratification.prop_immune,
-            waning_flag=params.temporary_waning_immunity_flag,
+            additional_immunity_points=params.additional_immunity,
         )
 
     """

@@ -43,10 +43,10 @@ immunity_stratification:
 
 sojourns:
   active:
-    total_time: 4.75
+    total_time: 4.
     proportion_early: 0.333
   latent:
-    total_time: 3.
+    total_time: 2.5
     proportion_early: 0.5
   recovered: 180.
 

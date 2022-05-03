@@ -553,7 +553,6 @@ class Parameters:
 
     # Vaccination/immunity-related
     additional_immunity: Optional[TimeSeries]
-    temporary_waning_immunity_flag: bool
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

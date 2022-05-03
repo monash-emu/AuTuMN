@@ -48,7 +48,7 @@ sojourns:
   latent:
     total_time: 3.
     proportion_early: 0.5
-
+  recovered: 180.
 
 activate_random_process: False
 

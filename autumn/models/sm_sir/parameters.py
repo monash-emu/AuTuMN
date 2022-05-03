@@ -548,7 +548,8 @@ class Parameters:
     activate_random_process: bool
     random_process: Optional[RandomProcessParams]
 
-    temporary_waning_immunity_flag: bool
+    # Vaccination/immunity-related
+    additional_immunity: Optional[TimeSeries]
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

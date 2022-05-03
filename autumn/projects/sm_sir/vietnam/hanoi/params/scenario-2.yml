@@ -4,11 +4,6 @@ description: >
   Severity (hospitalized and fatality risk) is reduced by half compared with the Omicron variant.
   Since this variant is fully immune-escape, the detection prop is also reduced by half.
 
-time:
-  start: 883 # 1st June 2022
-
-detect_prop: 0.1
-
 voc_emergence:
   wild_type:
     cross_protection:

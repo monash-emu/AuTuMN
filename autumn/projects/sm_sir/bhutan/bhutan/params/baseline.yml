@@ -5,8 +5,8 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 730.
-  end: 900
+  start: 750.
+  end: 900.
 
 mobility:
   #  Mapping of Google mobility locations to locations as specified in matrices
@@ -31,7 +31,7 @@ is_dynamic_mixing_matrix: true
 population:
   year: 2022
 
-infectious_seed: 10.
+infectious_seed: 100.
 
 immunity_stratification:
   prop_immune: 0.85

@@ -5,7 +5,7 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 765.
+  start: 715.
   end: 900
 
 mobility:
@@ -46,9 +46,9 @@ sojourns:
     total_time: 4.75
     proportion_early: 0.333
   latent:
-    total_time: 14.
+    total_time: 3.
     proportion_early: 0.5
-
+  recovered: 180.
 
 activate_random_process: False
 

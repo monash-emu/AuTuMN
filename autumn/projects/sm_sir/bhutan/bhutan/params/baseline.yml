@@ -9,7 +9,7 @@ time:
   end: 900
 
 mobility:
-  #  Mapping of Google mobility locations to Prem-specific locations
+  #  Mapping of Google mobility locations to locations as specified in matrices
   google_mobility_locations:
     work:
       workplaces: 0.

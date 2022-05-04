@@ -549,7 +549,9 @@ class Parameters:
     random_process: Optional[RandomProcessParams]
 
     # Vaccination/immunity-related
+    booster_effect_duration: float
     additional_immunity: Optional[TimeSeries]
+
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

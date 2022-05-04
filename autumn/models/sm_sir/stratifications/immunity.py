@@ -269,6 +269,95 @@ def apply_reported_vacc_coverage(
     add_dynamic_immunity_to_model(compartment_types, thinned_df, model)
 
 
+def get_recently_vaccinated_prop(coverage_df: pd.DataFrame, recent_timeframe: float) -> pd.DataFrame:
+    """
+    Calculate the proportion of the population vaccinated in a given recent timeframe over time.
+
+    Args:
+        coverage_df: raw coverage data over time
+        recent_timeframe: duration in days used to define the recent timeframe
+
+    """
+    # Calculate incremental vaccine coverage
+    vaccine_increment_df = coverage_df.diff()
+    vaccine_increment_df.iloc[0] = coverage_df.iloc[0]
+
+    # Calculate cumulative proportion recently vaccinated
+    recent_prop_df = coverage_df.copy()
+    for index in coverage_df.index:
+        recent_prop_df.loc[index] = vaccine_increment_df.loc[(vaccine_increment_df.index > index - recent_timeframe) & (vaccine_increment_df.index <= index)].sum()
+
+    return recent_prop_df
+
+
+def apply_reported_vacc_coverage_with_booster(
+        compartment_types: List[str],
+        model: CompartmentalModel,
+        iso3: str,
+        thinning: int,
+        model_start_time: int,
+        start_immune_prop: float,
+        start_prop_high_among_immune: float,
+        booster_effect_duration: float
+):
+    """
+    Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
+    apply it to the model as a dynamic stratum.
+
+    Args:
+        compartment_types: Unstratified model compartment types being implemented
+        model: The model itself
+        iso3: The ISO-3 code for the country being implemented
+        thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
+        model_start_time: Model starting time
+        start_immune_prop: Vaccination coverage at the time that the model starts running
+        start_prop_high_among_immune: Starting proportion of highly immune individuals among vaccinated
+        booster_effect_duration: Duration of maximal vaccine protection after booster dose (in days)
+    """
+
+    if iso3 == "BGD":
+        raw_data_double = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
+        raw_data_booster = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=3)
+    elif iso3 == "PHL":
+        raw_data_double = get_phl_vac_coverage(dose="SECOND_DOSE")
+        raw_data_booster = get_phl_vac_coverage(dose="BOOSTER_DOSE")
+    elif iso3 == "BTN":
+        raw_data_double = get_btn_vac_coverage(region="Bhutan", dose=2)
+        raw_data_booster = get_btn_vac_coverage(region="Bhutan", dose=3)
+
+    # Add on the starting effective coverage value
+    # Proportion with at least two doses
+    double_vacc_data = pd.concat(
+        (
+            pd.Series({model_start_time: start_immune_prop}),
+            raw_data_double
+        )
+    )
+    # Proportion with booster dose
+    booster_data = pd.concat(
+        (
+            pd.Series({model_start_time: start_immune_prop * start_prop_high_among_immune}),
+            raw_data_booster
+        )
+    )
+
+    # Apply waning booster-induced immunity
+    waned_booster_data = get_recently_vaccinated_prop(booster_data, booster_effect_duration)
+
+    # Be explicit about all the difference immunity categories
+    vaccine_df = pd.DataFrame(
+        {
+            "none": 1. - double_vacc_data,
+            "low": double_vacc_data - waned_booster_data,
+            "high": waned_booster_data
+        },
+    )
+
+    # Apply to model, as below
+    thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
+    add_dynamic_immunity_to_model(compartment_types, thinned_df, model)
+
+
 def add_dynamic_immunity_to_model(
         compartments: List[str],
         strata_distributions: pd.DataFrame,

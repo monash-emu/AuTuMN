@@ -1,5 +1,7 @@
 description: More booster doses and new variant more transmissible and completely escapes immunity
 
+future_monthly_booster_rate: 1000000
+
 voc_emergence:
   omicron:
     cross_protection:

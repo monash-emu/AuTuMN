@@ -620,6 +620,8 @@ def build_model(
                 start_immune_prop=params.immunity_stratification.prop_immune,
                 start_prop_high_among_immune=params.immunity_stratification.prop_high_among_immune,
                 booster_effect_duration=params.booster_effect_duration,
+                future_monthly_booster_rate=params.future_monthly_booster_rate,
+                model_end_time=params.time.end
             )
         else:
             apply_reported_vacc_coverage(

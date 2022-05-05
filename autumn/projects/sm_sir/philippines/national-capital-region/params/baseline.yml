@@ -84,3 +84,5 @@ sojourns:
   latent:
     total_time: 3.
   recovered: 180.
+
+future_monthly_booster_rate: 200000.

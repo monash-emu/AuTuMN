@@ -298,7 +298,9 @@ def apply_reported_vacc_coverage_with_booster(
         model_start_time: int,
         start_immune_prop: float,
         start_prop_high_among_immune: float,
-        booster_effect_duration: float
+        booster_effect_duration: float,
+        future_monthly_booster_rate: float,
+        model_end_time: float,
 ):
     """
     Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -313,6 +315,8 @@ def apply_reported_vacc_coverage_with_booster(
         start_immune_prop: Vaccination coverage at the time that the model starts running
         start_prop_high_among_immune: Starting proportion of highly immune individuals among vaccinated
         booster_effect_duration: Duration of maximal vaccine protection after booster dose (in days)
+        future_monthly_booster_rate: Monthly booster rate used to collate additional booster data in the future
+        model_end_time: Model end time
     """
 
     if iso3 == "BGD":
@@ -340,6 +344,22 @@ def apply_reported_vacc_coverage_with_booster(
             raw_data_booster
         )
     )
+
+    # Extend booster dataframe using the assumed future booster rate
+    if future_monthly_booster_rate:
+        extra_coverage = future_monthly_booster_rate / model.initial_population.sum()
+        latest_time = max(booster_data.index)
+        latest_booster_coverage = booster_data.loc[latest_time]
+        latest_double_coverage = double_vacc_data.loc[latest_time]
+
+        new_time, new_booster_coverage = latest_time, latest_booster_coverage
+        while new_time < model_end_time and new_booster_coverage < latest_double_coverage:
+            new_time += 30
+            new_booster_coverage += extra_coverage
+            booster_data.loc[new_time] = min(new_booster_coverage, 1.)
+
+            # also extend double_vacc_data to keep the same format as booster_data
+            double_vacc_data.loc[new_time] = latest_double_coverage
 
     # Apply waning booster-induced immunity
     waned_booster_data = get_recently_vaccinated_prop(booster_data, booster_effect_duration)

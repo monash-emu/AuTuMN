@@ -27,10 +27,13 @@ infectious_seed: 2000. # fixed due to the arbitrary nature of this parameter
 contact_rate: 0.2
 
 immunity_stratification:
-  prop_immune: .75
-  prop_high_among_immune: .75
-  infection_risk_reduction:
-    low: 0.6
+  prop_immune: .9 # nearly all population of Hanoi has been vaccinated with a complete two-dose scheme
+  prop_high_among_immune: .3
+
+  infection_risk_reduction: # Source: https://www.nejm.org/doi/full/10.1056/NEJMc2201821
+    none: 0.
+    low: 0.45
+    high: 0.6
 
 voc_emergence:
   wild_type:

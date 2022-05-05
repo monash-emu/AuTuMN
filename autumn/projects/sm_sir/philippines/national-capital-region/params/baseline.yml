@@ -74,40 +74,13 @@ mobility:
       times:
         - 2021-01-01  # any past date
       values:
-        - 0.
+        - 0.5
 
 immunity_stratification:
   prop_immune: 0.2
   prop_high_among_immune: 0.
 
-  # Optimistic VE assumptions
-  infection_risk_reduction:
-    none: 0.
-    low: 0.438
-    high: 0.6
-
-age_stratification:
-  prop_hospital:
-    source_immunity_protection:
-      none: 0.
-      low: 0.807
-      high: 0.95
-
-# Alternative, pessimistic VE assumptions
-#immunity_stratification:
-#  infection_risk_reduction:
-#    none: 0.
-#    low: 0.038
-#    high: 0.3
-#
-#age_stratification:
-#  prop_hospital:
-#    source_immunity_protection:
-#      none: 0.
-#      low: 0.488
-#      high: 0.85
-
 sojourns:
   latent:
     total_time: 3.
-  recovered: 90.  # 365 days was the previous pessimistic estimate
+  recovered: 180.

@@ -1,14 +1,14 @@
-description: New variant more transmissible and completely escapes immunity
+description: More booster doses and new variant twice as transmissible as Omicron
 
 voc_emergence:
   omicron:
     cross_protection:
       new_strain:
-        early_reinfection: 0.
+        early_reinfection: 1.
         late_reinfection: 0.
 
   new_strain:
     new_voc_seed:
       start_time: 852.  # 1 May 2022
     contact_rate_multiplier: 2.
-    immune_escape: 1.
+    immune_escape: 0.

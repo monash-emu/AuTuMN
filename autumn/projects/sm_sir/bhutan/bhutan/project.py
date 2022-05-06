@@ -30,7 +30,7 @@ priors = [
     UniformPrior("contact_rate", (0.15, 0.4)),
     UniformPrior("sojourns.latent.total_time", (1., 4.)),
     UniformPrior("infectious_seed", (50., 250.)),
-    UniformPrior("detect_prop", (0.1, 0.7))
+    UniformPrior("detect_prop", (0.01, 0.2))
 ]
 
 calibration = Calibration(

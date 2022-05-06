@@ -61,7 +61,10 @@ vaccination:
         end_time: 732 # 1 Jan 2022
 
 
-testing_to_detection: null
+testing_to_detection:
+  assumed_tests_parameter: 1.e-04
+  assumed_cdr_parameter: 0.06
+  smoothing_period: 14
 
 detect_prop: 0.08
 

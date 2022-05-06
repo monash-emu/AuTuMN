@@ -324,7 +324,7 @@ def apply_reported_vacc_coverage_with_booster(
         raw_data_booster = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=3)
     elif iso3 == "PHL":
         raw_data_double = get_phl_vac_coverage(dose="SECOND_DOSE")
-        raw_data_booster = get_phl_vac_coverage(dose="BOOSTER_DOSE")
+        raw_data_booster = get_phl_vac_coverage(dose="BOOSTER_DOSE") + get_phl_vac_coverage(dose="ADDITIONAL_DOSE")
     elif iso3 == "BTN":
         raw_data_double = get_btn_vac_coverage(region="Bhutan", dose=2)
         raw_data_booster = get_btn_vac_coverage(region="Bhutan", dose=3)

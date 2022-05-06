@@ -52,7 +52,7 @@ sojourns:
 activate_random_process: False
 
 testing_to_detection: null
-detect_prop: 0.5
+detect_prop: 0.6
 
 voc_emergence:
   omicron:

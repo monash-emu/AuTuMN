@@ -6,7 +6,7 @@ ref_mixing_iso3: CHN
 
 time:
   start: 750.
-  end: 900.
+  end: 912.
 
 mobility:
   #  Mapping of Google mobility locations to locations as specified in matrices
@@ -56,44 +56,44 @@ testing_to_detection:
   assumed_cdr_parameter: 0.012
   smoothing_period: 14
 
-voc_emergence: null
-  # wild_type:  # Actually Omicron
-  #   starting_strain: true
-  #   seed_prop: 1.
-  #   new_voc_seed: null
-  #   contact_rate_multiplier: 1.
-  #   immune_escape: 0.
-  #   hosp_protection: 0.
-  #   death_protection: 0.
-  #   icu_multiplier: 1.
-  #   cross_protection:
-  #     wild_type:
-  #       early_reinfection: 1.
-  #       late_reinfection: 0.
-  #     new_strain:
-  #       early_reinfection: 0.4  # 60% immune escape
-  #       late_reinfection: 0.
-  # new_strain:  # Far into the future
-  #   starting_strain: false
-  #   seed_prop: 0.
-  #   new_voc_seed:
-  #     start_time: 100710.
-  #     entry_rate: 10.
-  #     seed_duration: 1.
-  #   contact_rate_multiplier: 1.5
-  #   immune_escape: 0.2
-  #   hosp_protection: 0.75
-  #   death_protection: 0.85
-  #   relative_latency: 0.6667
-  #   relative_active_period: 1.
-  #   icu_multiplier: 0.55
-  #   cross_protection:
-  #     wild_type:
-  #       early_reinfection: 1.
-  #       late_reinfection: 0.
-  #     new_strain:
-  #       early_reinfection: 1.
-  #       late_reinfection: 0.
+voc_emergence:
+  omicron:
+    starting_strain: true
+    seed_prop: 1.
+    new_voc_seed: null
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      new_strain:
+        early_reinfection: 0.4  # 60% immune escape
+        late_reinfection: 0.
+  new_strain:  # For use in the scenarios, starting from the same characteristics as the starting strain
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 10000.  # Far into the future
+      entry_rate: 10.
+      seed_duration: 1.
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    relative_latency: 1.
+    relative_active_period: 1.
+    icu_multiplier: 1.
+    cross_protection:
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      new_strain:
+        early_reinfection: 1.
+        late_reinfection: 0.
 
 age_stratification:
   cfr:

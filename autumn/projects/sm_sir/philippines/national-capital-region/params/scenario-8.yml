@@ -10,7 +10,7 @@ mobility:
       values:
         - - repeat_prev
         - - scale_prev
-          - 1.56
+          - 1.25  # equivalent to 56% increase as mobility is squared
     other_locations:
       append: true
       times:
@@ -19,4 +19,4 @@ mobility:
       values:
         - - repeat_prev
         - - scale_prev
-          - 1.56
+          - 1.25  # equivalent to 56% increase as mobility is squared

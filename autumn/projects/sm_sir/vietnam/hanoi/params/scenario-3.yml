@@ -3,8 +3,8 @@ description: >
   The severity and immune escape of this variant is exactly the same as that of Omicron.
   The vaccine-induced immunity is waned.
 
-time:
-  start: 883 # 1st June 2022
+#time:
+#  start: 883 # 1st June 2022
 
 voc_emergence:
   new_strain:
@@ -15,4 +15,4 @@ additional_immunity:
   times:
     - 884
   values:
-    - 0.5
+    - 0.6

@@ -20,8 +20,8 @@ from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 # shareable google drive links
-PHL_doh_link = "1c26OTvPTwEOyYIZ7ZitTinYVNXQ52Q9c"  # sheet 05 daily report
-PHL_fassster_link = "1xGet362WWmBMPOJoAv1-xJPFUECh4XmD"
+PHL_doh_link = "1PlbuLW5PgF2bJ1kOUIgi7vxX9n1u6pTm"  # sheet 05 daily report
+PHL_fassster_link = "1j1ProksjgQD_uD2b_O4d4KpZgzs_YPSh"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")

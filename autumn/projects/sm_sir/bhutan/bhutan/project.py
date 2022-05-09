@@ -11,11 +11,11 @@ mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
     mle_path, calibration_format=True
 )
-# scenario_dir_path = build_rel_path("params/")
-# scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+scenario_dir_path = build_rel_path("params/")
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 
-# scenario_params = [baseline_params.update(p) for p in scenario_paths]
-param_set = ParameterSet(baseline=baseline_params)
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
+param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
@@ -27,10 +27,10 @@ targets = [
 ]
 
 priors = [
-    UniformPrior("contact_rate", (0.2, 0.4)),
+    UniformPrior("contact_rate", (0.15, 0.4)),
     UniformPrior("sojourns.latent.total_time", (1., 4.)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.0005, 0.005)),
-    UniformPrior("infectious_seed", (50., 250.))
+    UniformPrior("infectious_seed", (50., 250.)),
+    UniformPrior("detect_prop", (0.01, 0.2))
 ]
 
 calibration = Calibration(

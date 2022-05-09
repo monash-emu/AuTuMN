@@ -1,0 +1,8 @@
+\subsection{Contact matrices construction}
+\label{matrix_construction}
+For each location $L$ (home, school, work, other locations) the age-specific contact matrix $\mathbf{C^L} = (c_{i,j}^L) \in \mathbb{R}_{+}^{16 \times 16}$ is defined such that $c_{i,j}^L$ is the average number of contacts that a typical individual aged $i$ has with individuals aged $j$. As there is no contact survey available for Australia that is complete across all age groups, the matrices $\mathbf{C^L}$ were obtained by extrapolating contact matrices from the United Kingdom, being a country included in the POLYMOD study in 2005 \cite{RN141}. The original matrices from the United Kingdom are denoted $\mathbf{Q^L} = (q_{i,j}^L) \in \mathbb{R}_{+}^{16 \times 16}$, where $q_{i,j}^L$ is defined using the same convention as for $c_{i,j}^L$. The matrices $\mathbf{Q^L}$ were extracted using the R package ``socialmixr'' (v 0.1.8) and then adjusted to account for age distribution differences between Victoria and the United Kingdom.
+
+Let $\pi_j$ denote the proportion of people aged $j$ in Victoria, and $\rho_j$ the proportion of people aged $j$ in the United Kingdom. The contact matrices $\mathbf{C^L}$ were obtained from:
+$$
+c_{i,j}^L = q_{i,j}^L \times \frac{\pi_j}{\rho_j} . 
+$$

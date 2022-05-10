@@ -9,12 +9,12 @@ from .mixing_opti import build_params_for_phases_2_and_3
 
 # FIXME this is broken
 def get_mixing_matrices(
-    output_dir, country, config=2, mode="by_age", objective="deaths", from_streamlit=False
+    output_dir, country, config=2, mode="by_age", objective="deaths",
 ):
 
     iso_3 = get_iso3_from_country_name(country.title()) if country != "united-kingdom" else "GBR"
     params, decision_vars = get_mle_params_and_vars(
-        output_dir, country, config, mode, objective, from_streamlit
+        output_dir, country, config, mode, objective, False
     )
 
     if mode == "by_location":

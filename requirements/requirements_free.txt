@@ -30,11 +30,11 @@ networkx
 
 # Database access
 SQLAlchemy
+pyarrow
 
 # Utility
 pyyaml
 pydantic
-streamlit
 pyAesCrypt
 googledrivedownloader
 statsmodels

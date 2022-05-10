@@ -10,7 +10,6 @@ from pprint import PrettyPrinter
 from IPython.display import HTML
 
 
-
 def pretty_print(obj, indent=2):
     """Custom pretty printer
     Extend classes by adding a '__pretty__' method
@@ -20,16 +19,18 @@ def pretty_print(obj, indent=2):
         indent (int, optional): Indentation level. Defaults to 2.
     """
     printer = PrettyPrinter(indent=indent)
-    if hasattr(obj, '__pretty__'):
+    if hasattr(obj, "__pretty__"):
         print(obj.__pretty__(printer))
     else:
         printer.pprint(obj)
+
 
 def get_link(url: str) -> HTML:
     """
     Return a clickable link (in Jupyter) for any valid URL string
     """
     return HTML(f"<a href={url}>{url}</a>")
+
 
 def _register_display_hooks():
     try:
@@ -46,13 +47,13 @@ def _register_display_hooks():
             pp.breakable()
             # Prevent iterating forever...
             if i > 128:
-                pp.text('...')
+                pp.text("...")
                 pp.breakable()
-                pp.text('Too many items to display')
+                pp.text("Too many items to display")
                 return
-        
-    plain_formatter = ip.display_formatter.formatters['text/plain']
-    plain_formatter.for_type_by_name('builtins', 'generator', generator_formatter)
+
+    plain_formatter = ip.display_formatter.formatters["text/plain"]
+    plain_formatter.for_type_by_name("builtins", "generator", generator_formatter)
 
 
 # Disable this if there are problems... should be relatively non-intrusive

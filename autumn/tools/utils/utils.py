@@ -19,7 +19,6 @@ from autumn.tools import registry
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.tools.utils import secrets
 
-
 def merge_dicts(src: dict, dest: dict):
     """
     Merge src dict into dest dict.
@@ -97,8 +96,7 @@ def change_parameter_unit(parameter_dict, multiplier):
         dictionary with values multiplied by the multiplier argument
     """
     return {
-        param_key: param_value * multiplier
-        for param_key, param_value in parameter_dict.items()
+        param_key: param_value * multiplier for param_key, param_value in parameter_dict.items()
     }
 
 
@@ -124,9 +122,7 @@ def repeat_list_elements_average_last_two(raw_props, prop_over_80):
     prop_over_80 is the proportion of 80+ individuals among the 75+ population.
     """
     repeated_props = repeat_list_elements(2, raw_props[:-1])
-    repeated_props[-1] = (1.0 - prop_over_80) * raw_props[
-        -2
-    ] + prop_over_80 * raw_props[-1]
+    repeated_props[-1] = (1.0 - prop_over_80) * raw_props[-2] + prop_over_80 * raw_props[-1]
     return repeated_props
 
 
@@ -176,9 +172,7 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     assert 0.0 <= proportion <= 1.0
 
     # Transform and return
-    modified_proportion = (
-        proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
-    )
+    modified_proportion = proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
     return modified_proportion
 
@@ -210,9 +204,7 @@ def get_apply_odds_ratio_to_prop(odds_ratio):
         assert 0.0 <= proportion <= 1.0
 
         # Transform and return
-        modified_proportion = (
-            proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
-        )
+        modified_proportion = proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
         return modified_proportion
 
@@ -269,9 +261,7 @@ def update_mle_from_remote_calibration(model, region, run_id=None):
     # Define the destination folder
     project_registry_name = registry._PROJECTS[model][region]
     region_subfolder_names = (
-        project_registry_name.split(f"autumn.projects.{model}.")[1]
-        .split(".project")[0]
-        .split(".")
+        project_registry_name.split(f"autumn.projects.{model}.")[1].split(".project")[0].split(".")
     )
     destination_dir_path = os.path.join(PROJECTS_PATH, model)
     for region_subfolder_name in region_subfolder_names:
@@ -372,13 +362,7 @@ def find_closest_value_in_list(list_request: List, value_request: int) -> int:
 
 
 def check_list_increasing(list_to_check):
-    assert all(
-        list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1)
-    )
-
-
-def get_prop_two_numerators(numerator_1, numerator_2, denominator):
-    return (numerator_1 + numerator_2) / denominator
+    assert all(list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1))
 
 
 def get_complement_prop(numerator, denominator):
@@ -423,8 +407,8 @@ def get_product_two_functions(function_1, function_2):
 
 
 def multiply_function_or_constant(
-    function_or_constant: Union[callable, float],
-    multiplier: float,
+        function_or_constant: Union[callable, float],
+        multiplier: float,
 ) -> Union[callable, float]:
     """
     Multiply a function that returns a single value and takes inputs in the standard format of a summer time-varying
@@ -440,7 +424,6 @@ def multiply_function_or_constant(
     """
 
     if callable(function_or_constant):
-
         def revised_function(t, c):
             return function_or_constant(t, c) * multiplier
 
@@ -450,9 +433,9 @@ def multiply_function_or_constant(
 
 
 def weighted_average(
-    distribution: Dict[str, float],
-    weights: Dict[str, float],
-    rounding: Optional[int] = None,
+        distribution: Dict[str, float],
+        weights: Dict[str, float],
+        rounding: Optional[int] = None,
 ) -> float:
     """
     Calculate a weighted average from dictionaries with the same keys, representing the values and the weights.
@@ -499,7 +482,9 @@ class FunctionWrapper(ComputedValueProcessor):
         return self.wrapped_function(time, computed_values)
 
 
-def wrap_series_transform_for_ndarray(process_to_apply: callable) -> callable:
+def wrap_series_transform_for_ndarray(
+        process_to_apply: callable
+) -> callable:
     """
     Return a function that converts an ndarray to a Series, applies a transform, and returns the result as a new ndarray
 
@@ -510,7 +495,9 @@ def wrap_series_transform_for_ndarray(process_to_apply: callable) -> callable:
         Function that applies transform to ndarray
     """
 
-    def apply_series_transform_to_ndarray(in_data: np.ndarray) -> np.ndarray:
+    def apply_series_transform_to_ndarray(
+            in_data: np.ndarray
+    ) -> np.ndarray:
         """
         The function that can be applied directly to ndarrays
 
@@ -520,7 +507,7 @@ def wrap_series_transform_for_ndarray(process_to_apply: callable) -> callable:
         Returns:
         The processed ndarray
         """
-        # Return in the appropriate format
+        #Return in the appropriate format
         return process_to_apply(pd.Series(in_data)).to_numpy()
-
+    
     return apply_series_transform_to_ndarray

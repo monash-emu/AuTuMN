@@ -1,8 +1,6 @@
+
+
 class OutputsBuilder:
-    """
-    This class is not specific to Covid, so should be moved out of this file - but not sure whether to move it to
-    somewhere in autumn or in summer.
-    """
 
     def __init__(self, model, compartments):
         self.model = model

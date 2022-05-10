@@ -369,7 +369,7 @@ class Calibration:
         """
         Run the model with a set of params.
         """
-        logger.info(f"Running iteration {self.run_num}...")
+        # logger.info(f"Running iteration {self.run_num}...")
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for param_name, value in proposed_params.items():

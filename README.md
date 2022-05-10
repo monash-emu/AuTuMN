@@ -3,9 +3,9 @@
 ![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)
 
 This is a disease modelling project, written in Python.
-It is currently being applied to tuberculosis and COVID-19. This project is used and maintained by the Monash Univeristy Epidemiological Modelling Unit.
+It is currently being applied to COVID-19 and tuberculosis. This project is used and maintained by the Monash Univeristy Epidemiological Modelling Unit.
 
-AuTuMN uses the SUMMER disease modelling framework, with code [here](https://github.com/monash-emu/summer) which is [documented here](http://summerepi.com/) with examples and an API reference.
+AuTuMN uses the "summer" disease modelling framework, with code [here](https://github.com/monash-emu/summer) which is [documented here](http://summerepi.com/) with examples and an API reference.
 
 See [this guide](./docs/setup.md) for information on how to set up this project.
 
@@ -43,6 +43,9 @@ python -m autumn --help
 |   └─ outputs                  Module run outputs (not in source control)
 |
 ├── docs                    Documentation
+|   ├─ schemas                  SQL schemas                   
+|   └─ tex_description          Descriptions of the modelling-related files, in TeX
+|       
 ├── scripts                 Utility scripts
 ├── tests                   Automated tests
 ├── .gitignore              Files for Git to ignore

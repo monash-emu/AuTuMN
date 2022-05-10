@@ -34,7 +34,6 @@ SQLAlchemy
 # Utility
 pyyaml
 pydantic
-streamlit
 pyAesCrypt
 googledrivedownloader
 statsmodels

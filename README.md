@@ -30,7 +30,6 @@ python -m autumn --help
 |
 ├── autumn                  Main project Python codebase
 |   ├─ command_line             Command line interface
-|   ├─ dashboards               Streamlit dashboards
 |   ├─ models                   Generic disease models
 |   ├─ notebooks                Example and user specific Jupyter notebooks
 |   ├─ projects                 Region specifc projects that use disease models
@@ -47,7 +46,6 @@ python -m autumn --help
 ├── scripts                 Utility scripts
 ├── tests                   Automated tests
 ├── .gitignore              Files for Git to ignore
-├── plots.py                Streamlit entrypoint
 ├── pyproject.toml          Configuration for tools (eg. Black, pytest)
 └── requirements.txt        Python library dependencies
 ```
@@ -60,7 +58,7 @@ You can run all the scenarios for specific application using the `run` command. 
 python -m autumn project run covid_19 malaysia
 ```
 
-Model run outputs are written to `data/outputs/run` and can be viewed in Streamlit (see below).
+Model run outputs are written to `data/outputs/run`.
 
 Run time depends on the complexity of the model, the simulated time window and the number of scenarios simulated.
 For example, the run time of a COVID-19 model with simulation of a single scenario over a period of 12 months is around 4 seconds on a normal desktop computer.
@@ -82,15 +80,7 @@ python -m apps calibrate covid malaysia 30 0
 
 The RUN_ID argument can always be "0" for local use, it doesn't really matter.
 
-Model calibration outputs are written to `data/outputs/calibrate` and can be viewed in Streamlit (see below).
-
-## Running Streamlit
-
-We use [Streamlit](https://www.streamlit.io/) to visualise the output of local model runs. You can run streamlit from the command line to view your model's outputs as follows:
-
-```bash
-streamlit run plots.py
-```
+Model calibration outputs are written to `data/outputs/calibrate`.
 
 ## Running the automated tests
 

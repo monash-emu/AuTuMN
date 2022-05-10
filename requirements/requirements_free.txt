@@ -30,6 +30,7 @@ networkx
 
 # Database access
 SQLAlchemy
+pyarrow
 
 # Utility
 pyyaml

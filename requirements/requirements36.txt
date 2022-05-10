@@ -20,6 +20,7 @@ pyDOE>=0.3.8
 
 # Database access
 SQLAlchemy>=1.1.18
+pyarrow
 
 # Utility
 pyyaml==5.3

@@ -4,7 +4,7 @@ from scipy import stats
 import numpy as np
 from numba import jit
 
-from autumn.tools.utils.outputsbuilder import OutputsBuilder
+from autumn.tools.utils.summer import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
 from autumn.tools.utils.utils import weighted_average, get_apply_odds_ratio_to_prop

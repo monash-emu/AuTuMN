@@ -12,8 +12,6 @@ import numpy as np
 from datetime import datetime
 from typing import List, Union, Callable, Dict, Optional
 
-from summer.compute import ComputedValueProcessor
-
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
 from autumn.settings.folders import PROJECTS_PATH
@@ -457,29 +455,6 @@ def weighted_average(
     fraction = numerator / denominator
     result = round(fraction, rounding) if rounding else fraction
     return result
-
-
-class FunctionWrapper(ComputedValueProcessor):
-    """
-    Very basic processor that wraps a time/computed values function
-    of the type used in flow and adjusters
-
-    FIXME:
-    This is such a basic use case, it probably belongs in summer
-
-    """
-
-    def __init__(self, function_to_wrap: callable):
-        """
-        Initialise with just the param function
-        Args:
-            function_to_wrap: The function
-        """
-
-        self.wrapped_function = function_to_wrap
-
-    def process(self, compartment_values, computed_values, time):
-        return self.wrapped_function(time, computed_values)
 
 
 def wrap_series_transform_for_ndarray(

@@ -603,7 +603,7 @@ def build_model(
 
     # Implement the dynamic immunity process
     vacc_coverage_available = ["BGD", "PHL", "BTN", "MYS"]
-    vacc_region_available = ["Metro Manila", None, None]
+    vacc_region_available = ["Metro Manila", None]
     is_dynamic_immunity = iso3 in vacc_coverage_available and region in vacc_region_available
 
     if is_dynamic_immunity:

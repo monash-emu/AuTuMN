@@ -1,0 +1,7 @@
+description: Waning vaccine-induced immunity
+
+additional_immunity:
+  times:
+    - 884
+  values:
+    - 0.5

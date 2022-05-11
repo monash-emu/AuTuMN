@@ -244,12 +244,15 @@ def apply_reported_vacc_coverage(
         raw_data = get_mys_vac_coverage(dose="full")
 
     # Add on the starting effective coverage value
-    vaccine_data = pd.concat(
-        (
-            pd.Series({model_start_time: start_immune_prop}),
-            raw_data
+    if iso3=="PHL":
+        vaccine_data = pd.concat(
+            (
+                pd.Series({model_start_time: start_immune_prop}),
+                raw_data
+            )
         )
-    )
+    else:
+        vaccine_data = pd.Series({model_start_time: start_immune_prop})
 
     # Add user-requested additional immunity points
     if additional_immunity_points:

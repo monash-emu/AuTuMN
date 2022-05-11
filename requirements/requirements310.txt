@@ -32,11 +32,11 @@ networkx
 
 # Database access
 SQLAlchemy
+pyarrow
 
 # Utility
 pyyaml
 pydantic
-streamlit==1.8.0rc1 # 1.7 incompatible with Python >=3.8
 pyAesCrypt
 googledrivedownloader
 statsmodels

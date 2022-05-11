@@ -23,7 +23,7 @@ Run script/input_targets_dhhs.py
 [CHRIS website](https://chris.health.gov.au/) download 'COVID-19' report and rename as monitoringreport.secert.csv
 
 Then run /scripts/input_targets_dhhs.py. This will update victoria_2021 project targets and vac_cov.csv (current fodler)
-Finally, after ensuring all other project application requirement are met do a inputs.secret.db build to ingest the vac_cov.csv.
+Finally, after ensuring all other project application requirement are met do a inputs.db build to ingest the vac_cov.csv.
 
 'postcode lphu concordance.csv' - provided by Timothy Cameron (Health) <timothy.cameron@health.vic.gov.au> on 9th Sep 2021 by email.
 

@@ -96,8 +96,6 @@ python -m autumn secrets read
 python -m autumn db build
 # Run a model
 python -m apps run covid malaysia --no-scenarios
-# View results in Streamlit
-streamlit run plots.py
 ```
 
 # Step 5: Install PyCharm (Optional)

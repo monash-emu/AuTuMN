@@ -7,6 +7,7 @@ from autumn.tools.utils.timer import Timer
 
 from .covid_au.preprocess import preprocess_covid_au
 from .covid_phl.preprocess import preprocess_covid_phl
+from .covid_mys.preprocess import preprocess_covid_mys
 from .covid_lka.preprocess import preprocess_covid_lka
 from .covid_vnm.preprocess import preprocess_covid_vnm
 from .covid_mmr.preprocess import preprocess_covid_mmr
@@ -56,6 +57,9 @@ def build_input_database(rebuild: bool = False):
 
         with Timer("Ingesting COVID PHL data."):
             preprocess_covid_phl(input_db)
+
+        with Timer("Ingesting COVID MYS data."):
+            preprocess_covid_mys(input_db)
 
         with Timer("Ingesting COVID LKA data."):
             preprocess_covid_lka(input_db)

@@ -9,6 +9,7 @@ from scipy import special, stats
 from scipy.optimize import minimize
 
 from autumn.tools.db import Database
+from autumn.tools import db
 
 
 def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
@@ -366,3 +367,21 @@ def truncate_target(target, indices):
         "times": [target["times"][i_time] for i_time in indices],
         "values": [target["values"][i_time] for i_time in indices],
     }
+
+
+def get_uncertainty_df(calib_dir_path, mcmc_tables, targets):
+
+    try:  # if PBI processing has been performed already
+        uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
+    except:  # calculates percentiles
+        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
+        mcmc_all_df = db.load.append_tables(mcmc_tables)
+        do_all_df = db.load.append_tables(derived_output_tables)
+
+        # Determine max chain length, throw away first half of that
+        max_run = mcmc_all_df["run"].max()
+        half_max = max_run // 2
+        mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets, True)
+    return uncertainty_df
+

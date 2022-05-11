@@ -20,11 +20,11 @@ pyDOE>=0.3.8
 
 # Database access
 SQLAlchemy>=1.1.18
+pyarrow
 
 # Utility
 pyyaml==5.3
 pydantic
-streamlit
 pyAesCrypt==0.4.3
 googledrivedownloader >=0.4
 statsmodels>=0.12.2

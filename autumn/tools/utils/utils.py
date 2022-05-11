@@ -2,14 +2,12 @@
 Miscellaneous utility functions.
 If several functions here develop a theme, consider reorganising them into a module.
 """
-import itertools
 import json
 import subprocess as sp
 import os
 import numpy
 import pandas as pd
 import numpy as np
-from datetime import datetime
 from typing import List, Union, Callable, Dict, Optional
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
@@ -48,7 +46,7 @@ def flatten_list(x: List[list]) -> list:
     Transform a list of lists into a single flat list.
 
     Args:
-        x: a nested list
+        x: A nested list
     Returns:
         A flat list
 
@@ -85,6 +83,7 @@ def get_git_modified() -> bool:
 def run_command(cmds: str) -> str:
     """
     Run a process and retun the stdout.
+
     """
     try:
         result = sp.run(cmds, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
@@ -93,65 +92,32 @@ def run_command(cmds: str) -> str:
         return ""
 
 
-def change_parameter_unit(parameter_dict, multiplier):
+def change_parameter_unit(parameter_dict: dict, multiplier: float) -> dict:
     """
-    used to adapt the latency parameters from the earlier functions according to whether they are needed as by year
-        rather than by day
-    :param parameter_dict: dict
-        dictionary whose values need to be adjusted
-    :param multiplier: float
-        multiplier
-    :return: dict
-        dictionary with values multiplied by the multiplier argument
+    Currently only used to adapt the latency parameters from the earlier functions according to whether they are needed as by year rather than by day.
+    Could be more generally applicable.
+
+    Args:
+        parameter_dict: The dictionary whose values need to be adjusted
+        multiplier: The value to multiply the dictionary's values by
+    Returns:
+        The dictionary with values multiplied by the multiplier argument
+
     """
-    return {
-        param_key: param_value * multiplier
-        for param_key, param_value in parameter_dict.items()
-    }
+    return {param_key: param_value * multiplier for param_key, param_value in parameter_dict.items()}
 
 
-def get_integration_times(start_year: int, end_year: int, time_step: int):
+def apply_moving_average(data: list, period: int) -> List[float]:
     """
-    Get a list of timesteps from start_year to end_year, spaced by time_step.
-    """
-    n_iter = int(round((end_year - start_year) / time_step)) + 1
-    return numpy.linspace(start_year, end_year, n_iter)
+    Smooth the data by applying moving average with a specified period.
+    *** This is now deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used ***
 
+    Args:
+        data: The data to be averaged over
+        period: The number of values to apply the average over
+    Returns:
+        The input data smoothed over the requested period
 
-def repeat_list_elements(repetitions, list_to_repeat):
-    return list(
-        itertools.chain.from_iterable(
-            itertools.repeat(i_element, repetitions) for i_element in list_to_repeat
-        )
-    )
-
-
-def repeat_list_elements_average_last_two(raw_props, prop_over_80):
-    """
-    Repeat 5-year age-specific proportions, but with 75+s taking the weighted average of the last two groups.
-    prop_over_80 is the proportion of 80+ individuals among the 75+ population.
-    """
-    repeated_props = repeat_list_elements(2, raw_props[:-1])
-    repeated_props[-1] = (1.0 - prop_over_80) * raw_props[
-        -2
-    ] + prop_over_80 * raw_props[-1]
-    return repeated_props
-
-
-def normalise_sequence(input_sequence):
-    """
-    Normalise a list or tuple to produce a tuple with values representing the proportion of each to the total of the
-    input sequence.
-    """
-    return (i_value / sum(input_sequence) for i_value in input_sequence)
-
-
-def apply_moving_average(data, period):
-    """
-    Smooth the data by applying moving average with a specified period
-    This should be considered deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used
-    :param data: a list
-    :param period: an integer
     """
     smooth_data = []
     for i, d in enumerate(data):
@@ -160,7 +126,7 @@ def apply_moving_average(data, period):
     return smooth_data
 
 
-def apply_odds_ratio_to_proportion(proportion, odds_ratio):
+def apply_odds_ratio_to_proportion(proportion: float, odds_ratio: float) -> float:
     """
     Use an odds ratio to adjust a proportion.
 
@@ -169,14 +135,15 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     We want to multiply the odds associated with p1 by a certain odds ratio.
     That, is we need to solve the following equation for p2:
         p1 / (1 - p1) * OR = p2 / (1 - p2)
-    By simple algebra, the solution to this is:
+    Solving the above for p2:
         p2 = p1 * OR / (p1 * (OR - 1) + 1)
 
     Args:
         proportion: The original proportion (p1 in the description above)
-        odds_ratio: The odds ratio to adjust by
+        odds_ratio: The odds ratio to adjust by (OR above)
     Returns:
-        The adjusted proportion
+        The adjusted proportion (p2 above)
+
     """
 
     # Check inputs
@@ -184,45 +151,22 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     assert 0.0 <= proportion <= 1.0
 
     # Transform and return
-    modified_proportion = (
-        proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
-    )
-
-    return modified_proportion
+    return proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
 
-def get_apply_odds_ratio_to_prop(odds_ratio):
+def get_apply_odds_ratio_to_prop(odds_ratio: float) -> Callable:
     """
-    Use an odds ratio to adjust a proportion.
-
-    Starts from the premise that the odds associated with the original proportion (p1) = p1 / (1 - p1)
-    and similarly, that the odds associated with the adjusted proportion (p2) = p2 / (1 - p2)
-    We want to multiply the odds associated with p1 by a certain odds ratio.
-    That, is we need to solve the following equation for p2:
-        p1 / (1 - p1) * OR = p2 / (1 - p2)
-    By simple algebra, the solution to this is:
-        p2 = p1 * OR / (p1 * (OR - 1) + 1)
+    Create a function that can use an odds ratio to adjust a proportion.
 
     Args:
         odds_ratio: The odds ratio to adjust by
     Returns:
-        The adjusted proportion
+        The function to make this adjustment
 
     """
 
-    assert 0.0 <= odds_ratio
-
     def or_to_prop_func(proportion):
-
-        # Check input
-        assert 0.0 <= proportion <= 1.0
-
-        # Transform and return
-        modified_proportion = (
-            proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
-        )
-
-        return modified_proportion
+        return apply_odds_ratio_to_proportion(proportion, odds_ratio)
 
     return or_to_prop_func
 

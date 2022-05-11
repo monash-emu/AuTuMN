@@ -12,25 +12,6 @@ from autumn.tools.db import Database
 from autumn.tools import db
 
 
-def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
-    for t in target_outputs:
-        if t["loglikelihood_distri"] in ["normal", "trunc_normal"] and "sd" not in t:
-            max_val = max(t["values"])
-            # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-            sd_ = 0.25 * max_val / 4.0
-            lower_sd = sd_ / 2.0
-            upper_sd = 2.0 * sd_
-
-            par_priors.append(
-                {
-                    "param_name": t["output_key"] + "_dispersion_param",
-                    "distribution": "uniform",
-                    "distri_params": [lower_sd, upper_sd],
-                },
-            )
-    return par_priors
-
-
 def sample_prior(prior_dict, quantile):
     """
     Sample a particular prior, specified with prior_dict using the quantile specified with prop.

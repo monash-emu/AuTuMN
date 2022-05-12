@@ -35,6 +35,7 @@ def get_mys_vac_coverage(
 
     df = df.groupby("date_index", as_index=False).sum()
     df["cml_number"] = df["number"].cumsum()
+    df = df[df['date_index'] % 2 == 0]
     # Calculate the coverage
     df["coverage"] = round(df["cml_number"] / population,3)
 

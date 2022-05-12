@@ -252,7 +252,7 @@ def apply_reported_vacc_coverage(
             )
         )
     else:
-        vaccine_data = pd.Series({model_start_time: start_immune_prop})
+        vaccine_data = raw_data
 
     # Add user-requested additional immunity points
     if additional_immunity_points:

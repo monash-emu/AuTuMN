@@ -1,14 +1,13 @@
 description: >
   The new variant is twice as transmissible as Omicron (~4 times more transmissible than Delta VoC).
   This variant completely escapes both vaccination- and infection-related immunity.
-  Severity (hospitalized and fatality risk) is the same as that of the Omicron variant.
   Since this variant is fully immune-escape, the detection prop is also reduced by half.
   Waning vaccine-induced immunity remained turned off, since it is totally escaped by the new VoC.
 
-time:
-  start: 883 # 1st June 2022
-
-detect_prop: 0.1
+#time:
+#  start: 883 # 1st June 2022
+#
+#detect_prop: 0.1
 
 voc_emergence:
   wild_type:

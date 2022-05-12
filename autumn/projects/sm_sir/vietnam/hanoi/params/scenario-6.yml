@@ -1,0 +1,41 @@
+description: >
+  The new variant is twice as transmissible as Omicron (~4 times more transmissible than Delta VoC).
+  This variant is more immune-escape than Omicron, but not totally towards vaccination- and infection-related.
+  Severity (towards hospitalization and fatality) is less than the Omicron variant.
+  Waning vaccine-induced immunity makes the overall immunity level returning to 10% for the whole population.
+
+voc_emergence:
+  wild_type:
+    cross_protection:
+      new_strain:
+        early_reinfection: 0.2
+        late_reinfection: 0.17
+
+  omicron:
+    cross_protection:
+      new_strain:
+        early_reinfection: 0.5
+        late_reinfection: 0.35
+
+  new_strain:
+    new_voc_seed:
+      start_time: 883.
+    immune_escape: 0.8
+    hosp_protection: 0.9
+    death_protection: 0.95
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.0
+        late_reinfection: 0.8
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.7
+      new_strain:
+        early_reinfection: 1.
+        late_reinfection: 0.35
+
+additional_immunity:
+  times:
+    - 884
+  values:
+    - 0.1

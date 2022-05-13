@@ -2,6 +2,8 @@
 Utilities for pretty printing purposes.  May expand to a generic 'display' module at some point (Jupyter notebook extensions etc)
 """
 
+# FIXME: Move this to display.py (in this directory) and kill this file
+
 from pprint import PrettyPrinter
 
 

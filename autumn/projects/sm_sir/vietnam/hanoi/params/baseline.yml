@@ -28,7 +28,7 @@ contact_rate: 0.2
 
 immunity_stratification:
   prop_immune: .9 # nearly all population of Hanoi has been vaccinated with a complete two-dose scheme
-  prop_high_among_immune: .3
+  prop_high_among_immune: .05
 
   infection_risk_reduction: # Source: https://www.nejm.org/doi/full/10.1056/NEJMc2201821
     none: 0.

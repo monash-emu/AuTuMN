@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from autumn.tools.inputs.database import get_input_db
-from autumn.tools.utils.utils import apply_moving_average, check_list_increasing
+from autumn.tools.utils.utils import check_list_increasing
 from autumn.tools.inputs.demography.queries import get_population_by_agegroup
 
 def get_mys_vac_coverage(

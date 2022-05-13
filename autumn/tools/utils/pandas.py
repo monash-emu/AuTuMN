@@ -6,16 +6,11 @@ from typing import List
 
 import pandas as pd
 
+
 def _pdfilt(df, fstr):
-    m = re.match('(\S*)\s*(<=|>=|==|>|<)\s*(.*)', fstr)
+    m = re.match("(\S*)\s*(<=|>=|==|>|<)\s*(.*)", fstr)
     column, op, value = m.groups()
-    op_table = {
-        '<': 'lt',
-        '<=': 'ge',
-        '>': 'gt',
-        '>=': 'ge',
-        '==': 'eq'
-    }
+    op_table = {"<": "lt", "<=": "ge", ">": "gt", ">=": "ge", "==": "eq"}
     try:
         # Assume most things are floating point values; fall back to string otherwise
         value = float(value)
@@ -23,6 +18,7 @@ def _pdfilt(df, fstr):
         pass
 
     return df[df[column].__getattribute__(op_table[op])(value)]
+
 
 def pdfilt(df: pd.DataFrame, filters: List[str]) -> pd.DataFrame:
     """Return a filtered DataFrame, filtered by strings of form
@@ -40,7 +36,7 @@ def pdfilt(df: pd.DataFrame, filters: List[str]) -> pd.DataFrame:
     """
     if isinstance(filters, str):
         filters = [filters]
-    
+
     for f in filters:
         df = _pdfilt(df, f)
     return df

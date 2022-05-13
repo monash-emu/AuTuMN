@@ -9,6 +9,7 @@ import numpy
 import pandas as pd
 import numpy as np
 from typing import List, Union, Callable, Dict, Optional
+from responses import Call
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
@@ -16,7 +17,10 @@ from autumn.settings.folders import PROJECTS_PATH
 from autumn.tools.utils import secrets
 
 
-def merge_dicts(src: dict, dest: dict) -> dict:
+def merge_dicts(
+    src: dict, 
+    dest: dict
+) -> dict:
     """
     Merge src dict into dest dict.
 
@@ -25,7 +29,7 @@ def merge_dicts(src: dict, dest: dict) -> dict:
         dest: Destination dictionary
     Returns:
         The merged dictionary
-    
+        
     """
     for key, value in src.items():
         if isinstance(value, dict):
@@ -41,7 +45,9 @@ def merge_dicts(src: dict, dest: dict) -> dict:
     return dest
 
 
-def flatten_list(x: List[list]) -> list:
+def flatten_list(
+    x: List[list]
+) -> list:
     """
     Transform a list of lists into a single flat list.
 
@@ -53,6 +59,8 @@ def flatten_list(x: List[list]) -> list:
     """
     return [v for sublist in x for v in sublist]
 
+
+# FIXME: Move the following three files to git.py in this directory
 
 def get_git_hash() -> str:
     """
@@ -80,7 +88,9 @@ def get_git_modified() -> bool:
     return any([s.startswith(" M") for s in status])
 
 
-def run_command(cmds: str) -> str:
+def run_command(
+    cmds: str
+) -> str:
     """
     Run a process and retun the stdout.
 
@@ -92,7 +102,10 @@ def run_command(cmds: str) -> str:
         return ""
 
 
-def change_parameter_unit(parameter_dict: dict, multiplier: float) -> dict:
+def change_parameter_unit(
+    parameter_dict: dict, 
+    multiplier: float
+) -> dict:
     """
     Currently only used to adapt the latency parameters from the earlier functions according to whether they are needed as by year rather than by day.
     Could be more generally applicable.
@@ -104,10 +117,16 @@ def change_parameter_unit(parameter_dict: dict, multiplier: float) -> dict:
         The dictionary with values multiplied by the multiplier argument
 
     """
-    return {param_key: param_value * multiplier for param_key, param_value in parameter_dict.items()}
+    return {
+        param_key: param_value * multiplier
+        for param_key, param_value in parameter_dict.items()
+    }
 
 
-def apply_moving_average(data: list, period: int) -> List[float]:
+def apply_moving_average(
+    data: list, 
+    period: int
+) -> List[float]:
     """
     Smooth the data by applying moving average with a specified period.
     *** This is now deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used ***
@@ -171,11 +190,11 @@ def get_apply_odds_ratio_to_prop(odds_ratio: float) -> Callable:
     return or_to_prop_func
 
 
-def apply_odds_ratio_to_props(props, adjuster):
+def apply_odds_ratio_to_props(props: List[float], adjuster: float) -> List[float]:
     """
     Very simple, but just because it is used a few times.
-    """
 
+    """
     or_to_prop_func = get_apply_odds_ratio_to_prop(adjuster)
     return [or_to_prop_func(i_prop) for i_prop in props]
 
@@ -186,28 +205,23 @@ def subdivide_props(
     """
     Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
     proportions provided (split_props).
-    """
+    Frequently used in the (old) covid_19 model to split people between different clinical pathways.
 
+    """
     split_arr = base_props * split_props
     complement_arr = base_props * (1.0 - split_props)
     return split_arr, complement_arr
 
 
-def list_element_wise_division(a, b):
-    """
-    Performs element-wise division between two lists and returns zeros where denominator is zero.
-    """
-
-    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b != 0.0)
-
-
-def update_mle_from_remote_calibration(model, region, run_id=None):
+def update_mle_from_remote_calibration(model: str, region: str, run_id=None):
     """
     Download MLE parameters from s3 and update the relevant project automatically.
-    :param model: model name (e.g. 'covid_19')
-    :param region: region name
-    :param run_id: Optional run identifier such as 'covid_19/calabarzon/1626941419/5495a75'. If None, the latest run is
-    considered.
+
+    Args:
+        model: Model name (e.g. 'covid_19')
+        region: Region name
+        run_id: Optional run identifier such as 'covid_19/calabarzon/1626941419/5495a75'. If None, the latest run is used.
+
     """
 
     s3_client = get_s3_client()
@@ -268,7 +282,8 @@ def find_latest_run_id(model, region, s3_client):
 
 def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
     """
-    Simple function to update timeseries.json
+    Simple function to update timeseries.json files.
+
     """
     with open(file_path, mode="r") as f:
         targets = json.load(f)
@@ -315,21 +330,32 @@ def create_date_index(base_datetime, df, datecol):
     return df
 
 
-def find_closest_value_in_list(list_request: List, value_request: int) -> int:
+def check_list_increasing(list_to_check: Union[list, tuple]):
     """
-    Find the closest value within one list to the value of interest.
+    Check that a list does not decrease across any two consecutive elements.
+
+    Args:
+        list_to_check: The iterable that should be non-decreasing
+
     """
-
-    return min(list_request, key=lambda list_value: abs(list_value - value_request))
-
-
-def check_list_increasing(list_to_check):
     assert all(
         list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1)
     )
 
 
-def get_complement_prop(numerator, denominator):
+def get_complement_prop(numerator: float, denominator: float):
+    """
+    Get the complement of a fraction.
+
+    Args:
+        numerator: Numerator for calculation
+        denominator: Denominator for calculation
+
+    """
+
+    assert numerator <= denominator
+    assert 0.0 <= numerator
+    assert 0.0 <= denominator
     return 1.0 - numerator / denominator
 
 
@@ -341,7 +367,7 @@ def return_constant_value(value: float) -> Callable:
         value: The value that the function will return
 
     Returns:
-        The function that returns the value, ignoring the time input
+        The function that returns the value, ignoring the time input which is needed for standard summer syntax
 
     """
 
@@ -351,7 +377,7 @@ def return_constant_value(value: float) -> Callable:
     return constant_value_func
 
 
-def get_product_two_functions(function_1, function_2):
+def get_product_two_functions(function_1: Callable, function_2: Callable) -> Callable:
     """
     For the situation where we want a function that returns the product of two other functions.
 

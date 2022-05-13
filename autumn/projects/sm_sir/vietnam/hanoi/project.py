@@ -77,12 +77,12 @@ priors = [
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 1.0)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.7, 1.0)),
     # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0.025, 0.07)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.02, 0.07)),
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.04, 0.18)),
     # prop icu among hospitalization
     # UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # Omicron-related parameters
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (718.0, 746.0)),  # 3-week interval
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 746.0)),  # 3-week interval
     # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.3, 2.3)),
     # UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),

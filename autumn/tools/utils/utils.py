@@ -10,18 +10,25 @@ import pandas as pd
 import numpy as np
 from typing import List, Union, Callable, Dict, Optional
 
+<<<<<<< HEAD
 from responses import Call
 
+=======
+>>>>>>> master
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.tools.utils import secrets
 
 
+<<<<<<< HEAD
 def merge_dicts(
     src: dict, 
     dest: dict
 ) -> dict:
+=======
+def merge_dicts(src: dict, dest: dict) -> dict:
+>>>>>>> master
     """
     Merge src dict into dest dict.
 
@@ -30,7 +37,11 @@ def merge_dicts(
         dest: Destination dictionary
     Returns:
         The merged dictionary
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> master
     """
     for key, value in src.items():
         if isinstance(value, dict):
@@ -46,9 +57,13 @@ def merge_dicts(
     return dest
 
 
+<<<<<<< HEAD
 def flatten_list(
     x: List[list]
 ) -> list:
+=======
+def flatten_list(x: List[list]) -> list:
+>>>>>>> master
     """
     Transform a list of lists into a single flat list.
 
@@ -87,9 +102,13 @@ def get_git_modified() -> bool:
     return any([s.startswith(" M") for s in status])
 
 
+<<<<<<< HEAD
 def run_command(
     cmds: str
 ) -> str:
+=======
+def run_command(cmds: str) -> str:
+>>>>>>> master
     """
     Run a process and retun the stdout.
 
@@ -101,10 +120,14 @@ def run_command(
         return ""
 
 
+<<<<<<< HEAD
 def change_parameter_unit(
     parameter_dict: dict, 
     multiplier: float
 ) -> dict:
+=======
+def change_parameter_unit(parameter_dict: dict, multiplier: float) -> dict:
+>>>>>>> master
     """
     Currently only used to adapt the latency parameters from the earlier functions according to whether they are needed as by year rather than by day.
     Could be more generally applicable.
@@ -116,6 +139,7 @@ def change_parameter_unit(
         The dictionary with values multiplied by the multiplier argument
 
     """
+<<<<<<< HEAD
     return {
         param_key: param_value * multiplier
         for param_key, param_value in parameter_dict.items()
@@ -126,6 +150,12 @@ def apply_moving_average(
     data: list, 
     period: int
 ) -> List[float]:
+=======
+    return {param_key: param_value * multiplier for param_key, param_value in parameter_dict.items()}
+
+
+def apply_moving_average(data: list, period: int) -> List[float]:
+>>>>>>> master
     """
     Smooth the data by applying moving average with a specified period.
     *** This is now deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used ***
@@ -170,8 +200,13 @@ def apply_odds_ratio_to_proportion(proportion: float, odds_ratio: float) -> floa
 
     # Transform and return
     return proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
+<<<<<<< HEAD
 
 
+=======
+
+
+>>>>>>> master
 def get_apply_odds_ratio_to_prop(odds_ratio: float) -> Callable:
     """
     Create a function that can use an odds ratio to adjust a proportion.
@@ -341,6 +376,7 @@ def check_list_increasing(list_to_check: Union[list, tuple]):
         list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1)
     )
 
+<<<<<<< HEAD
 
 def get_complement_prop(numerator: float, denominator: float):
     """
@@ -349,6 +385,12 @@ def get_complement_prop(numerator: float, denominator: float):
     Args:
         numerator: Numerator for calculation
         denominator: Denominator for calculation
+=======
+def check_list_increasing(list_to_check):
+    assert all(
+        list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1)
+    )
+>>>>>>> master
 
     """
 

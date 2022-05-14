@@ -15,4 +15,4 @@ additional_immunity:
   times:
     - 884
   values:
-    - 0.36 # 60% population with booster dose vaccinated * 60% immunity after 3 months
+    - 0.54 # 90% fully vaccinated * 60% immunity after 3 months

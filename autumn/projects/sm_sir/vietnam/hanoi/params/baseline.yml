@@ -160,3 +160,9 @@ age_stratification:
     multiplier: 0.05 # temporarily fixed
   prop_hospital:
     multiplier: 0.075 # temporarily fixed for calibration of other params
+
+additional_immunity:
+  times:
+    - 884
+  values:
+    - 0.54 # 90% fully vaccinated * 60% immunity after 3 months

@@ -33,9 +33,3 @@ voc_emergence:
       new_strain:
         early_reinfection: 1.
         late_reinfection: 0.35
-
-additional_immunity:
-  times:
-    - 884
-  values:
-    - 0.54 # 90% fully vaccinated * 60% immunity after 3 months

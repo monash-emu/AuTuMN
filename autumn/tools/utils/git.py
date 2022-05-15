@@ -1,7 +1,8 @@
+import imp
 import git
 
 from autumn.settings.folders import BASE_PATH
-
+from autumn.tools.utils.utils import run_command
 
 def get_latest_commit(branch: str) -> str:
     """Return the SHA of the most recent commit for the given branch

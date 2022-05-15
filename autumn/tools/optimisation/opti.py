@@ -1,7 +1,6 @@
 import copy
 from importlib import import_module
 
-from autumn.tools.utils.utils import merge_dicts
 from autumn.tools.project import get_project, Project
 
 

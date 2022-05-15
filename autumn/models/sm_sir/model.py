@@ -8,7 +8,8 @@ from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
 from autumn.tools.random_process import RandomProcess
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-from autumn.tools.utils.utils import FunctionWrapper, multiply_function_or_constant
+from autumn.tools.utils.utils import multiply_function_or_constant
+from autumn.tools.utils.summer import FunctionWrapper
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population
@@ -602,8 +603,8 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     # Implement the dynamic immunity process
-    vacc_coverage_available = ["BGD", "PHL", "BTN"]
-    vacc_region_available = ["Metro Manila", None]
+    vacc_coverage_available = ["BGD", "PHL", "BTN", "VNM"]
+    vacc_region_available = ["Metro Manila", "Hanoi", None]
     is_dynamic_immunity = iso3 in vacc_coverage_available and region in vacc_region_available
 
     if is_dynamic_immunity:

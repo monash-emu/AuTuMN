@@ -13,7 +13,7 @@ from summer import CompartmentalModel
 
 from autumn import settings
 from autumn.tools import db, plots
-from autumn.tools.utils.git import get_git_branch, get_git_hash
+from autumn.tools.utils.github import get_git_branch, get_git_hash
 from autumn.tools.utils.timer import Timer
 from autumn.tools.calibration.priors import BasePrior
 from autumn.tools.calibration.targets import BaseTarget

@@ -24,7 +24,7 @@ from autumn.tools.db.store import (
 )
 from autumn.tools.db.database import FeatherDatabase
 from autumn.tools.utils.timer import Timer
-from autumn.tools.utils.git import get_git_branch, get_git_hash
+from autumn.tools.utils.github import get_git_branch, get_git_hash
 from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH
 from autumn.tools.registry import _PROJECTS
 

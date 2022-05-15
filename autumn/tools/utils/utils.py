@@ -325,6 +325,7 @@ def get_complement_prop(numerator: float, denominator: float):
 
     """
 
+    # Assertions aren't applicable if arrays are passed in
     # assert numerator <= denominator
     # assert 0.0 <= numerator
     # assert 0.0 <= denominator

@@ -1,4 +1,3 @@
-import imp
 import git
 
 from autumn.settings.folders import BASE_PATH

@@ -325,9 +325,9 @@ def get_complement_prop(numerator: float, denominator: float):
 
     """
 
-    assert numerator <= denominator
-    assert 0.0 <= numerator
-    assert 0.0 <= denominator
+    # assert numerator <= denominator
+    # assert 0.0 <= numerator
+    # assert 0.0 <= denominator
     return 1.0 - numerator / denominator
 
 

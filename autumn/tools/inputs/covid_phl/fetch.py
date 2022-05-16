@@ -10,7 +10,7 @@ from autumn.settings import INPUT_DATA_PATH
 
 # From DoH google drive folder, shareable link changes with every update
 DATA_URL = (
-    "1GtPWIFVhXhH05uusXG3z6TTcg39vtQxl"  # shareable link for sheet 07 testing data
+    "1prXm4wPPUzUsMHcXWtlVZhzTHmlHzIdL"  # shareable link for sheet 07 testing data
 )
 
 COVID_PHL_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_phl")

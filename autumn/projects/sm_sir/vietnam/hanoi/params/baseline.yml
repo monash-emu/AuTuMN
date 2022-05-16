@@ -163,7 +163,7 @@ age_stratification:
 
 additional_immunity:
   times:
-    - 922 # 1/4, three months after the start of the third dose vaccination campaign
+    - 822 # 1/4, three months after the start of the third dose vaccination campaign
     - 884
   values:
     - 0.9

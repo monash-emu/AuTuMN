@@ -11,6 +11,12 @@ from IPython.display import HTML
 
 
 def pretty_print(obj, indent=2):
+    """Custom pretty printer
+    Extend classes by adding a '__pretty__' method
+    Args:
+        obj ([Any]): The object to pretty print
+        indent (int, optional): Indentation level. Defaults to 2.
+    """
     printer = PrettyPrinter(indent=indent)
     if hasattr(obj, "__pretty__"):
         print(obj.__pretty__(printer))

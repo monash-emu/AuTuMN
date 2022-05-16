@@ -1,6 +1,8 @@
+import imp
 import git
 
 from autumn.settings.folders import BASE_PATH
+from autumn.tools.utils.git import run_command
 
 
 def get_latest_commit(branch: str) -> str:
@@ -17,3 +19,29 @@ def get_latest_commit(branch: str) -> str:
     repo = git.repo.Repo(BASE_PATH)
     remote_refs = repo.remote().refs
     return remote_refs[branch].commit.hexsha
+
+
+def get_git_hash() -> str:
+    """
+    Return the current commit hash, or an empty string.
+
+    """
+    return run_command("git rev-parse HEAD").strip()
+
+
+def get_git_branch() -> str:
+    """
+    Return the current git branch, or an empty string.
+
+    """
+    return run_command("git rev-parse --abbrev-ref HEAD").strip()
+
+
+def get_git_modified() -> bool:
+    """
+    Return True if there are (tracked and uncommited) modifications.
+
+    """
+
+    status = run_command("git status --porcelain").split("\n")
+    return any([s.startswith(" M") for s in status])

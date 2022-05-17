@@ -4,12 +4,11 @@ save files in data/targets/
 """
 import itertools
 import json
-import os
 import requests
-import sys
+
+from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile
-
 
 import numpy as np
 import pandas as pd
@@ -21,16 +20,16 @@ from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 # shareable google drive links
 PHL_doh_link = "1toS1f-o2JXeGHEDoguxBbYyzSj6c8d4q"  # sheet 05 daily report
-PHL_fassster_link = "1qvlHKplZPAkoQfdA3yOzHrN6VE_0f5la"
+PHL_fassster_link = "1uzRAqfD9jFs_j3HG5myACX3VQxc2B_MI"
 
 # destination folders filepaths
-phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
-PHL_doh_dest = os.path.join(phl_inputs_dir, "PHL_icu.csv")
-PHL_fassster_dest = os.path.join(phl_inputs_dir, "PHL_ConfirmedCases.zip")
-icu_o_dest = os.path.join(phl_inputs_dir, "PHL_icu_processed.csv")
-hosp_o_dest = os.path.join(phl_inputs_dir, "PHL_hosp_processed.csv")
-deaths_dest = os.path.join(phl_inputs_dir, "PHL_deaths_processed.csv")
-notifications_dest = os.path.join(phl_inputs_dir, "PHL_notifications_processed.csv")
+phl_inputs_dir = Path(INPUT_DATA_PATH, "covid_phl")
+PHL_doh_dest = phl_inputs_dir / "PHL_icu.csv"
+PHL_fassster_dest = phl_inputs_dir / "PHL_ConfirmedCases.zip"
+icu_o_dest = phl_inputs_dir / "PHL_icu_processed.csv"
+hosp_o_dest = phl_inputs_dir / "PHL_hosp_processed.csv"
+deaths_dest = phl_inputs_dir / "PHL_deaths_processed.csv"
+notifications_dest = phl_inputs_dir / "PHL_notifications_processed.csv"
 
 
 def main():
@@ -83,16 +82,17 @@ def fetch_phl_data():
         ]
         if len(filename) == 1:
             with z.open(filename[0]) as f:
-                pd.read_csv(f).to_csv(os.path.join(phl_inputs_dir, filename[0]))
+                pd.read_csv(f).to_csv(phl_inputs_dir / filename[0])
 
 
 def fassster_data_filepath():
     fassster_filename = [
         filename
-        for filename in os.listdir(phl_inputs_dir)
-        if filename.startswith("ConfirmedCases_Final_") or filename.startswith("2022")
+        for filename in phl_inputs_dir.glob("*")
+        if filename.stem.startswith("ConfirmedCases_Final_")
+        or filename.stem.startswith("2022")
     ]
-    fassster_filename = os.path.join(phl_inputs_dir, fassster_filename[0])
+    fassster_filename = fassster_filename[0]
     return fassster_filename
 
 
@@ -263,7 +263,7 @@ def update_calibration_phl():
         notifications_tmp = notifications.loc[notifications["Region"] == region]
         hosp_tmp = hosp_occ.loc[hosp_occ["region"] == region]
 
-        SM_SIR_NCR_TS = os.path.join(
+        SM_SIR_NCR_TS = Path(
             PROJECTS_PATH,
             "sm_sir",
             "philippines",
@@ -275,12 +275,18 @@ def update_calibration_phl():
 
 
 def remove_files(filePath1):
-    os.remove(filePath1)
-    os.remove(PHL_fassster_dest)
-    os.remove(PHL_doh_dest)
-    os.remove(icu_o_dest)
-    os.remove(deaths_dest)
-    os.remove(notifications_dest)
+
+    files = {
+        filePath1,
+        PHL_fassster_dest,
+        PHL_doh_dest,
+        icu_o_dest,
+        deaths_dest,
+        notifications_dest,
+    }
+
+    for file in files:
+        file.unlink()
 
 
 def copy_davao_city_to_region(filePath) -> pd.DataFrame:

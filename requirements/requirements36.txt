@@ -1,3 +1,8 @@
+#
+# Python 3.6 is now deprecated, but this file is maintained
+# for older jobs that may still require it
+#
+
 # Summer compartmental modelling
 # https://github.com/monash-emu/summer
 # will also include

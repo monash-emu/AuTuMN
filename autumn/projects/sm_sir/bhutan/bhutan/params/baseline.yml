@@ -54,6 +54,14 @@ activate_random_process: False
 testing_to_detection: null
 detect_prop: 0.6
 
+microdistancing_derived:
+  tanh_function:
+    shape: 1
+    inflection_time: 0.5
+    lower_asymptote: 0
+    upper_asymptote: 0.75
+
+
 voc_emergence:
   omicron:
     starting_strain: true

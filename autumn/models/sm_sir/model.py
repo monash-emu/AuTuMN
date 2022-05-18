@@ -1,6 +1,7 @@
 from math import exp
 from typing import List, Tuple
 import pandas as pd
+from typing import Optional, Dict, List
 
 from summer import CompartmentalModel
 
@@ -29,6 +30,7 @@ from .stratifications.clinical import get_clinical_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.curve.tanh import tanh_based_scaleup
+from autumn.models.sm_sir.parameters import TanhMicrodistancingParams
 # Base date used to calculate mixing matrix times
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
@@ -282,7 +284,7 @@ def get_cdr_func(
     return cdr_func, non_detect_func
 
 
-def get_microdist_func_component(func_params: MicroDistancingFunc, iso3: str):
+def get_microdist_func_component(func_params: Optional[Dict[str, TanhMicrodistancingParams]]):
     """
     Get a single function of time using the standard parameter request structure for any microdistancing function, or
     adjustment to a microdistancing function.
@@ -293,11 +295,15 @@ def get_microdist_func_component(func_params: MicroDistancingFunc, iso3: str):
         iso3: ISO3 code of the modelled country
 
     Returns:
-        Function of time returning a scalar
+        Function of notifications returning a scalar
 
     """
+    shape = func_params['tanh_function'].shape
+    inflection_time = func_params['tanh_function'].inflection_time
+    lower_asymptote = func_params['tanh_function'].lower_asymptote
+    upper_asymptote = func_params['tanh_function'].upper_asymptote
 
-    return tanh_based_scaleup(**func_params.parameters.dict())
+    return tanh_based_scaleup(shape, inflection_time, lower_asymptote,upper_asymptote)
 
 
 def apply_reinfection_flows_without_strains(
@@ -524,6 +530,7 @@ def build_model(
     """
 
     voc_params = params.voc_emergence
+
     if params.voc_emergence:
 
         # Build and apply the stratification
@@ -636,6 +643,10 @@ def build_model(
             start_immune_prop=params.immunity_stratification.prop_immune,
             additional_immunity_points=params.additional_immunity,
         )
+
+    if params.microdistancing_derived:
+        level_of_microdistancing = get_microdist_func_component(params.microdistancing_derived)
+
 
     """
     Get the applicable outputs

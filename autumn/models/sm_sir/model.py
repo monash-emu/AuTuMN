@@ -12,7 +12,7 @@ from autumn.tools.utils.utils import multiply_function_or_constant
 from autumn.tools.utils.summer import FunctionWrapper
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population
+from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population, MicroDistancingFunc
 from summer.compute import ComputedValueProcessor
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -28,7 +28,7 @@ from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfect
 from .stratifications.clinical import get_clinical_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 from autumn.settings.constants import COVID_BASE_DATETIME
-
+from autumn.tools.curve.tanh import tanh_based_scaleup
 # Base date used to calculate mixing matrix times
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
@@ -280,6 +280,24 @@ def get_cdr_func(
         return 1.0 - computed_values["cdr"]
 
     return cdr_func, non_detect_func
+
+
+def get_microdist_func_component(func_params: MicroDistancingFunc, iso3: str):
+    """
+    Get a single function of time using the standard parameter request structure for any microdistancing function, or
+    adjustment to a microdistancing function.
+    In future, this could use more general code for requesting functions of time.
+
+    Args:
+        func_params: The parameters used to define the microdistancing function
+        iso3: ISO3 code of the modelled country
+
+    Returns:
+        Function of time returning a scalar
+
+    """
+
+    return tanh_based_scaleup(**func_params.parameters.dict())
 
 
 def apply_reinfection_flows_without_strains(

@@ -6,7 +6,7 @@
 #immunity_stratification.prop_immune: 0.8208732834845156
 #immunity_stratification.prop_high_among_immune: 0.9935822111146373
 age_stratification.cfr.multiplier: 0.025573334181036373
-age_stratification.prop_hospital.multiplier: 0.03913168980091975
+age_stratification.prop_hospital.multiplier: 0.03913168980091976
 #prop_icu_among_hospitalised: 0.04513366655766931
 voc_emergence.omicron.new_voc_seed.start_time: 738.5518513079679
 #voc_emergence.omicron.relative_latency: 0.326554874956316

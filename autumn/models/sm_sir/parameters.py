@@ -560,3 +560,10 @@ class Parameters:
             [0 <= i_group <= 75 for i_group in age_groups]
         ), "Age breakpoints must be from zero to 75"
         return age_groups
+
+    @validator("voc_emergence", allow_reuse=True)
+    def ensure_one_starting_strain(voc_emergence):
+        if voc_emergence:
+            msg = "Exactly one voc must be designated as the starting strain"
+            assert [voc_params.starting_strain for voc, voc_params in voc_emergence.items()].count(True) == 1, msg
+        return voc_emergence

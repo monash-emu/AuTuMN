@@ -141,11 +141,6 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     strains = list(voc_params.keys())
     affected_compartments = [comp for comp in compartments if comp != Compartment.SUSCEPTIBLE]
 
-    # Check only one strain is specified as the starting strain
-    msg = "More than one strain has been specified as the starting strain"
-    assert [voc_params[i_strain].starting_strain for i_strain in strains].count(True) == 1, msg
-    starting_strain = [i_strain for i_strain in strains if voc_params[i_strain].starting_strain][0]
-
     # Create the stratification object
     strain_strat = StrainStratification("strain", strains, affected_compartments)
 

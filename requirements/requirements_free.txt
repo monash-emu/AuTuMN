@@ -1,3 +1,8 @@
+#
+#  "Floating" requirements file with no version pinning
+#  Used for automated testing on latest package versions
+#
+
 # Summer compartmental modelling
 # https://github.com/monash-emu/summer
 # will also include
@@ -30,15 +35,16 @@ networkx
 
 # Database access
 SQLAlchemy
+pyarrow
 
 # Utility
 pyyaml
 pydantic
-streamlit
 pyAesCrypt
 googledrivedownloader
 statsmodels
 fpdf2
+gitpython
 
 # Testing
 pytest

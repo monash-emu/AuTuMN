@@ -7,6 +7,7 @@ from autumn.tools.utils.timer import Timer
 
 from .covid_au.preprocess import preprocess_covid_au
 from .covid_phl.preprocess import preprocess_covid_phl
+from .covid_mys.preprocess import preprocess_covid_mys
 from .covid_lka.preprocess import preprocess_covid_lka
 from .covid_vnm.preprocess import preprocess_covid_vnm
 from .covid_mmr.preprocess import preprocess_covid_mmr
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 _input_db = None
 
-INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "inputs.secret.db")
+INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "inputs.db")
 
 
 def get_input_db():
@@ -54,11 +55,11 @@ def build_input_database(rebuild: bool = False):
         with Timer("Deleting all existing data."):
             input_db.delete_everything()
 
-        with Timer("Ingesting COVID AU data."):
-            preprocess_covid_au(input_db)
-
         with Timer("Ingesting COVID PHL data."):
             preprocess_covid_phl(input_db)
+
+        with Timer("Ingesting COVID MYS data."):
+            preprocess_covid_mys(input_db)
 
         with Timer("Ingesting COVID LKA data."):
             preprocess_covid_lka(input_db)

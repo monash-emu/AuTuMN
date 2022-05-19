@@ -1,3 +1,16 @@
-description: Waning vaccine-induced immunity
+description: mobility returns to normal
 
-temporary_waning_immunity_flag: true
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2022-05-04
+      values:
+        - 1.
+    work:
+      append: true
+      times:
+        - 2022-05-04
+      values:
+        - 1.

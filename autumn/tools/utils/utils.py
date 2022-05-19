@@ -2,26 +2,34 @@
 Miscellaneous utility functions.
 If several functions here develop a theme, consider reorganising them into a module.
 """
-import itertools
 import json
 import subprocess as sp
 import os
 import numpy
 import pandas as pd
 import numpy as np
-from datetime import datetime
 from typing import List, Union, Callable, Dict, Optional
-
-from summer.compute import ComputedValueProcessor
+from responses import Call
 
 from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.tools import registry
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.tools.utils import secrets
 
-def merge_dicts(src: dict, dest: dict):
+
+def merge_dicts(
+    src: dict, 
+    dest: dict
+) -> dict:
     """
     Merge src dict into dest dict.
+
+    Args:
+        src: Source dictionary
+        dest: Destination dictionary
+    Returns:
+        The merged dictionary
+        
     """
     for key, value in src.items():
         if isinstance(value, dict):
@@ -37,12 +45,14 @@ def merge_dicts(src: dict, dest: dict):
     return dest
 
 
-def flatten_list(x):
+def flatten_list(
+    x: List[list]
+) -> list:
     """
     Transform a list of lists into a single flat list.
 
     Args:
-        x: a nested list
+        x: A nested list
     Returns:
         A flat list
 
@@ -50,32 +60,12 @@ def flatten_list(x):
     return [v for sublist in x for v in sublist]
 
 
-def get_git_hash():
-    """
-    Return the current commit hash, or an empty string.
-    """
-    return run_command("git rev-parse HEAD").strip()
-
-
-def get_git_branch():
-    """
-    Return the current git branch, or an empty string
-    """
-    return run_command("git rev-parse --abbrev-ref HEAD").strip()
-
-
-def get_git_modified() -> bool:
-    """
-    Return True if there are (tracked and uncommited) modifications
-    """
-
-    status = run_command("git status --porcelain").split("\n")
-    return any([s.startswith(" M") for s in status])
-
-
-def run_command(cmds):
+def run_command(
+    cmds: str
+) -> str:
     """
     Run a process and retun the stdout.
+
     """
     try:
         result = sp.run(cmds, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
@@ -84,62 +74,41 @@ def run_command(cmds):
         return ""
 
 
-def change_parameter_unit(parameter_dict, multiplier):
+def change_parameter_unit(
+    parameter_dict: dict, 
+    multiplier: float
+) -> dict:
     """
-    used to adapt the latency parameters from the earlier functions according to whether they are needed as by year
-        rather than by day
-    :param parameter_dict: dict
-        dictionary whose values need to be adjusted
-    :param multiplier: float
-        multiplier
-    :return: dict
-        dictionary with values multiplied by the multiplier argument
+    Currently only used to adapt the latency parameters from the earlier functions according to whether they are needed as by year rather than by day.
+    Could be more generally applicable.
+
+    Args:
+        parameter_dict: The dictionary whose values need to be adjusted
+        multiplier: The value to multiply the dictionary's values by
+    Returns:
+        The dictionary with values multiplied by the multiplier argument
+
     """
     return {
-        param_key: param_value * multiplier for param_key, param_value in parameter_dict.items()
+        param_key: param_value * multiplier
+        for param_key, param_value in parameter_dict.items()
     }
 
 
-def get_integration_times(start_year: int, end_year: int, time_step: int):
+def apply_moving_average(
+    data: list, 
+    period: int
+) -> List[float]:
     """
-    Get a list of timesteps from start_year to end_year, spaced by time_step.
-    """
-    n_iter = int(round((end_year - start_year) / time_step)) + 1
-    return numpy.linspace(start_year, end_year, n_iter)
+    Smooth the data by applying moving average with a specified period.
+    *** This is now deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used ***
 
+    Args:
+        data: The data to be averaged over
+        period: The number of values to apply the average over
+    Returns:
+        The input data smoothed over the requested period
 
-def repeat_list_elements(repetitions, list_to_repeat):
-    return list(
-        itertools.chain.from_iterable(
-            itertools.repeat(i_element, repetitions) for i_element in list_to_repeat
-        )
-    )
-
-
-def repeat_list_elements_average_last_two(raw_props, prop_over_80):
-    """
-    Repeat 5-year age-specific proportions, but with 75+s taking the weighted average of the last two groups.
-    prop_over_80 is the proportion of 80+ individuals among the 75+ population.
-    """
-    repeated_props = repeat_list_elements(2, raw_props[:-1])
-    repeated_props[-1] = (1.0 - prop_over_80) * raw_props[-2] + prop_over_80 * raw_props[-1]
-    return repeated_props
-
-
-def normalise_sequence(input_sequence):
-    """
-    Normalise a list or tuple to produce a tuple with values representing the proportion of each to the total of the
-    input sequence.
-    """
-    return (i_value / sum(input_sequence) for i_value in input_sequence)
-
-
-def apply_moving_average(data, period):
-    """
-    Smooth the data by applying moving average with a specified period
-    This should be considered deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used
-    :param data: a list
-    :param period: an integer
     """
     smooth_data = []
     for i, d in enumerate(data):
@@ -148,7 +117,7 @@ def apply_moving_average(data, period):
     return smooth_data
 
 
-def apply_odds_ratio_to_proportion(proportion, odds_ratio):
+def apply_odds_ratio_to_proportion(proportion: float, odds_ratio: float) -> float:
     """
     Use an odds ratio to adjust a proportion.
 
@@ -157,14 +126,15 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     We want to multiply the odds associated with p1 by a certain odds ratio.
     That, is we need to solve the following equation for p2:
         p1 / (1 - p1) * OR = p2 / (1 - p2)
-    By simple algebra, the solution to this is:
+    Solving the above for p2:
         p2 = p1 * OR / (p1 * (OR - 1) + 1)
 
     Args:
         proportion: The original proportion (p1 in the description above)
-        odds_ratio: The odds ratio to adjust by
+        odds_ratio: The odds ratio to adjust by (OR above)
     Returns:
-        The adjusted proportion
+        The adjusted proportion (p2 above)
+
     """
 
     # Check inputs
@@ -172,50 +142,31 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     assert 0.0 <= proportion <= 1.0
 
     # Transform and return
-    modified_proportion = proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
-
-    return modified_proportion
+    return proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
 
-def get_apply_odds_ratio_to_prop(odds_ratio):
+def get_apply_odds_ratio_to_prop(odds_ratio: float) -> Callable:
     """
-    Use an odds ratio to adjust a proportion.
-
-    Starts from the premise that the odds associated with the original proportion (p1) = p1 / (1 - p1)
-    and similarly, that the odds associated with the adjusted proportion (p2) = p2 / (1 - p2)
-    We want to multiply the odds associated with p1 by a certain odds ratio.
-    That, is we need to solve the following equation for p2:
-        p1 / (1 - p1) * OR = p2 / (1 - p2)
-    By simple algebra, the solution to this is:
-        p2 = p1 * OR / (p1 * (OR - 1) + 1)
+    Create a function that can use an odds ratio to adjust a proportion.
 
     Args:
         odds_ratio: The odds ratio to adjust by
     Returns:
-        The adjusted proportion
+        The function to make this adjustment
 
     """
 
-    assert 0.0 <= odds_ratio
-
     def or_to_prop_func(proportion):
-
-        # Check input
-        assert 0.0 <= proportion <= 1.0
-
-        # Transform and return
-        modified_proportion = proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
-
-        return modified_proportion
+        return apply_odds_ratio_to_proportion(proportion, odds_ratio)
 
     return or_to_prop_func
 
 
-def apply_odds_ratio_to_props(props, adjuster):
+def apply_odds_ratio_to_props(props: List[float], adjuster: float) -> List[float]:
     """
     Very simple, but just because it is used a few times.
-    """
 
+    """
     or_to_prop_func = get_apply_odds_ratio_to_prop(adjuster)
     return [or_to_prop_func(i_prop) for i_prop in props]
 
@@ -226,28 +177,23 @@ def subdivide_props(
     """
     Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
     proportions provided (split_props).
-    """
+    Frequently used in the (old) covid_19 model to split people between different clinical pathways.
 
+    """
     split_arr = base_props * split_props
     complement_arr = base_props * (1.0 - split_props)
     return split_arr, complement_arr
 
 
-def list_element_wise_division(a, b):
-    """
-    Performs element-wise division between two lists and returns zeros where denominator is zero.
-    """
-
-    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b != 0.0)
-
-
-def update_mle_from_remote_calibration(model, region, run_id=None):
+def update_mle_from_remote_calibration(model: str, region: str, run_id=None):
     """
     Download MLE parameters from s3 and update the relevant project automatically.
-    :param model: model name (e.g. 'covid_19')
-    :param region: region name
-    :param run_id: Optional run identifier such as 'covid_19/calabarzon/1626941419/5495a75'. If None, the latest run is
-    considered.
+
+    Args:
+        model: Model name (e.g. 'covid_19')
+        region: Region name
+        run_id: Optional run identifier such as 'covid_19/calabarzon/1626941419/5495a75'. If None, the latest run is used.
+
     """
 
     s3_client = get_s3_client()
@@ -261,7 +207,9 @@ def update_mle_from_remote_calibration(model, region, run_id=None):
     # Define the destination folder
     project_registry_name = registry._PROJECTS[model][region]
     region_subfolder_names = (
-        project_registry_name.split(f"autumn.projects.{model}.")[1].split(".project")[0].split(".")
+        project_registry_name.split(f"autumn.projects.{model}.")[1]
+        .split(".project")[0]
+        .split(".")
     )
     destination_dir_path = os.path.join(PROJECTS_PATH, model)
     for region_subfolder_name in region_subfolder_names:
@@ -306,7 +254,8 @@ def find_latest_run_id(model, region, s3_client):
 
 def update_timeseries(TARGETS_MAPPING, df, file_path, *args):
     """
-    Simple function to update timeseries.json
+    Simple function to update timeseries.json files.
+
     """
     with open(file_path, mode="r") as f:
         targets = json.load(f)
@@ -353,23 +302,32 @@ def create_date_index(base_datetime, df, datecol):
     return df
 
 
-def find_closest_value_in_list(list_request: List, value_request: int) -> int:
+def check_list_increasing(list_to_check: Union[list, tuple]):
     """
-    Find the closest value within one list to the value of interest.
+    Check that a list does not decrease across any two consecutive elements.
+
+    Args:
+        list_to_check: The iterable that should be non-decreasing
+
+    """
+    assert all(
+        list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1)
+    )
+
+
+def get_complement_prop(numerator: float, denominator: float):
+    """
+    Get the complement of a fraction.
+
+    Args:
+        numerator: Numerator for calculation
+        denominator: Denominator for calculation
+
     """
 
-    return min(list_request, key=lambda list_value: abs(list_value - value_request))
-
-
-def check_list_increasing(list_to_check):
-    assert all(list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1))
-
-
-def get_prop_two_numerators(numerator_1, numerator_2, denominator):
-    return (numerator_1 + numerator_2) / denominator
-
-
-def get_complement_prop(numerator, denominator):
+    # assert numerator <= denominator
+    # assert 0.0 <= numerator
+    # assert 0.0 <= denominator
     return 1.0 - numerator / denominator
 
 
@@ -381,7 +339,7 @@ def return_constant_value(value: float) -> Callable:
         value: The value that the function will return
 
     Returns:
-        The function that returns the value, ignoring the time input
+        The function that returns the value, ignoring the time input which is needed for standard summer syntax
 
     """
 
@@ -391,7 +349,7 @@ def return_constant_value(value: float) -> Callable:
     return constant_value_func
 
 
-def get_product_two_functions(function_1, function_2):
+def get_product_two_functions(function_1: Callable, function_2: Callable) -> Callable:
     """
     For the situation where we want a function that returns the product of two other functions.
 
@@ -411,8 +369,8 @@ def get_product_two_functions(function_1, function_2):
 
 
 def multiply_function_or_constant(
-        function_or_constant: Union[callable, float],
-        multiplier: float,
+    function_or_constant: Union[callable, float],
+    multiplier: float,
 ) -> Union[callable, float]:
     """
     Multiply a function that returns a single value and takes inputs in the standard format of a summer time-varying
@@ -428,6 +386,7 @@ def multiply_function_or_constant(
     """
 
     if callable(function_or_constant):
+
         def revised_function(t, c):
             return function_or_constant(t, c) * multiplier
 
@@ -437,9 +396,9 @@ def multiply_function_or_constant(
 
 
 def weighted_average(
-        distribution: Dict[str, float],
-        weights: Dict[str, float],
-        rounding: Optional[int] = None,
+    distribution: Dict[str, float],
+    weights: Dict[str, float],
+    rounding: Optional[int] = None,
 ) -> float:
     """
     Calculate a weighted average from dictionaries with the same keys, representing the values and the weights.
@@ -463,32 +422,7 @@ def weighted_average(
     return result
 
 
-class FunctionWrapper(ComputedValueProcessor):
-    """
-    Very basic processor that wraps a time/computed values function
-    of the type used in flow and adjusters
-
-    FIXME:
-    This is such a basic use case, it probably belongs in summer
-
-    """
-
-    def __init__(self, function_to_wrap: callable):
-        """
-        Initialise with just the param function
-        Args:
-            function_to_wrap: The function
-        """
-
-        self.wrapped_function = function_to_wrap
-
-    def process(self, compartment_values, computed_values, time):
-        return self.wrapped_function(time, computed_values)
-
-
-def wrap_series_transform_for_ndarray(
-        process_to_apply: callable
-) -> callable:
+def wrap_series_transform_for_ndarray(process_to_apply: callable) -> callable:
     """
     Return a function that converts an ndarray to a Series, applies a transform, and returns the result as a new ndarray
 
@@ -499,9 +433,7 @@ def wrap_series_transform_for_ndarray(
         Function that applies transform to ndarray
     """
 
-    def apply_series_transform_to_ndarray(
-            in_data: np.ndarray
-    ) -> np.ndarray:
+    def apply_series_transform_to_ndarray(in_data: np.ndarray) -> np.ndarray:
         """
         The function that can be applied directly to ndarrays
 
@@ -511,7 +443,7 @@ def wrap_series_transform_for_ndarray(
         Returns:
         The processed ndarray
         """
-        #Return in the appropriate format
+        # Return in the appropriate format
         return process_to_apply(pd.Series(in_data)).to_numpy()
-    
+
     return apply_series_transform_to_ndarray

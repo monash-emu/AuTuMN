@@ -32,8 +32,6 @@ def plot_multi_age_distribution(plotter: Plotter, sub_region: List[str], iso3: s
     fig, axis, _, _, _, _ = plotter.get_figure()
     legend = []
 
-    import streamlit as st
-
     # Set age groups
     agegroup_strata = [int(s) for s in range(0, 100, 5)]
     if iso3 is "PHL":
@@ -204,8 +202,6 @@ def plot_outputs_multi(
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
     output_name = output_config["output_key"]
-
-    import streamlit as st
 
     legend = []
 

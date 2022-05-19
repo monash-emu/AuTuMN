@@ -6,7 +6,6 @@ from summer import Multiply, Stratification
 from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
 from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.covid_19.parameters import Parameters
-from autumn.tools.utils.utils import normalise_sequence
 
 
 def get_agegroup_strat(
@@ -37,7 +36,8 @@ def get_agegroup_strat(
     age_strat.set_mixing_matrix(dynamic_mixing_matrix)
 
     # Set distribution of starting population
-    age_split_props = {agegroup: prop for agegroup, prop in zip(AGEGROUP_STRATA, normalise_sequence(total_pops))}
+    pop_proportions = (i_value / sum(total_pops) for i_value in total_pops)
+    age_split_props = {agegroup: prop for agegroup, prop in zip(AGEGROUP_STRATA, pop_proportions)}
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group

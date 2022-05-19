@@ -9,7 +9,7 @@ notebooks/            # This folder
         hmirren/      # Notebooks belonging to Helen Mirren  
 ```
 
-This heirarchy may be expanded from time to time.  Do not commit notebooks outside of this structure.  
+This heirarchy may be expanded from time to time. Do not commit notebooks outside of this structure.  
 
 Note that in order for notebooks to run correctly from arbitrary folders, you will need to have AuTuMN installed as a Python module.  
 

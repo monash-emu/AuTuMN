@@ -442,13 +442,13 @@ class VocComponent(BaseModel):
     death_protection: Optional[float]
     icu_multiplier: Optional[float]
 
-    @root_validator(pre=True, allow_reuse=True)
-    def check_starting_strain_multiplier(cls, values):
-        if values["starting_strain"]:
-            multiplier = values["contact_rate_multiplier"]
-            msg = f"Starting or 'wild type' strain must have a contact rate multiplier of one: {multiplier}"
-            assert multiplier == 1.0, msg
-        return values
+    # @root_validator(pre=True, allow_reuse=True)
+    # def check_starting_strain_multiplier(cls, values):
+    #     if values["starting_strain"]:
+    #         multiplier = values["contact_rate_multiplier"]
+    #         msg = f"Starting or 'wild type' strain must have a contact rate multiplier of one: {multiplier}"
+    #         assert multiplier == 1.0, msg
+    #     return values
 
     @validator("icu_multiplier", pre=True, allow_reuse=True)
     def check_times(multiplier):
@@ -548,7 +548,8 @@ class Parameters:
     activate_random_process: bool
     random_process: Optional[RandomProcessParams]
 
-    temporary_waning_immunity_flag: bool
+    # Vaccination/immunity-related
+    additional_immunity: Optional[TimeSeries]
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

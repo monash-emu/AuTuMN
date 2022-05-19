@@ -20,8 +20,8 @@ from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 # shareable google drive links
-PHL_doh_link = "1x8A7slLDVBO4V4FznqkqJqCJ0nsfJCXQ"  # sheet 05 daily report
-PHL_fassster_link = "1Vh1cSaxhdGFgxpvjQrqoN4y4thyBO_Gy"
+PHL_doh_link = "1toS1f-o2JXeGHEDoguxBbYyzSj6c8d4q"  # sheet 05 daily report
+PHL_fassster_link = "1qvlHKplZPAkoQfdA3yOzHrN6VE_0f5la"
 
 # destination folders filepaths
 phl_inputs_dir = os.path.join(INPUT_DATA_PATH, "covid_phl")
@@ -53,7 +53,9 @@ def main():
     process_occupancy_data(working_df, "hospital")
 
     # Now fassster data
-    working_df = pd.read_csv(fassster_filename)  # copy_davao_city_to_region(fassster_filename)
+    working_df = pd.read_csv(
+        fassster_filename
+    )  # copy_davao_city_to_region(fassster_filename)
     working_df = rename_regions(working_df, "Region", "NCR", "4A", "07", "11")
     working_df = duplicate_data(working_df, "Region")
     working_df = filter_df_by_regions(working_df, "Region")
@@ -76,7 +78,9 @@ def fetch_phl_data():
         output_file.write(req.content)
 
     with ZipFile(PHL_fassster_dest) as z:
-        filename = [each.filename for each in z.filelist if each.filename.startswith("2022")]
+        filename = [
+            each.filename for each in z.filelist if each.filename.startswith("2022")
+        ]
         if len(filename) == 1:
             with z.open(filename[0]) as f:
                 pd.read_csv(f).to_csv(os.path.join(phl_inputs_dir, filename[0]))
@@ -92,7 +96,9 @@ def fassster_data_filepath():
     return fassster_filename
 
 
-def rename_regions(df: pd.DataFrame, regionSpelling, ncrName, calName, cenVisName, davName):
+def rename_regions(
+    df: pd.DataFrame, regionSpelling, ncrName, calName, cenVisName, davName
+):
     # df = pd.read_csv(filePath)
     df[regionSpelling] = df[regionSpelling].replace(
         {
@@ -147,7 +153,9 @@ def process_occupancy_data(df: pd.DataFrame, occupancy_type: str) -> None:
 
 def process_accumulated_death_data(df: pd.DataFrame):
     fassster_data_deaths = df[df["Date_Died"].notna()]
-    fassster_data_deaths.loc[:, "Date_Died"] = pd.to_datetime(fassster_data_deaths["Date_Died"])
+    fassster_data_deaths.loc[:, "Date_Died"] = pd.to_datetime(
+        fassster_data_deaths["Date_Died"]
+    )
     fassster_data_deaths.loc[:, "times"] = (
         fassster_data_deaths.loc[:, "Date_Died"] - COVID_BASE_DATETIME
     )
@@ -156,16 +164,18 @@ def process_accumulated_death_data(df: pd.DataFrame):
     )  # warning
     accum_deaths = fassster_data_deaths.groupby(["Region", "times"]).size()
     accum_deaths = accum_deaths.to_frame(name="daily_deaths").reset_index()
-    accum_deaths["accum_deaths"] = accum_deaths.groupby("Region")["daily_deaths"].transform(
-        pd.Series.cumsum
-    )
+    accum_deaths["accum_deaths"] = accum_deaths.groupby("Region")[
+        "daily_deaths"
+    ].transform(pd.Series.cumsum)
     cumulative_deaths = accum_deaths[["Region", "times", "accum_deaths"]]
     cumulative_deaths.to_csv(deaths_dest)
 
 
 def process_notifications_data(df: pd.DataFrame):
     fassster_data_agg = df.groupby(["Region", "Report_Date"]).size()
-    fassster_data_agg = fassster_data_agg.to_frame(name="daily_notifications").reset_index()
+    fassster_data_agg = fassster_data_agg.to_frame(
+        name="daily_notifications"
+    ).reset_index()
     fassster_data_agg["Report_Date"] = pd.to_datetime(fassster_data_agg["Report_Date"])
     # make sure all dates within range are included
     fassster_data_agg["times"] = fassster_data_agg.Report_Date - COVID_BASE_DATETIME
@@ -188,7 +198,8 @@ def process_notifications_data(df: pd.DataFrame):
         fassster_data_agg, all_regions_x_times, on=["Region", "times"], how="outer"
     )
     fassster_agg_complete.loc[
-        fassster_agg_complete["daily_notifications"].isna() == True, "daily_notifications"
+        fassster_agg_complete["daily_notifications"].isna() == True,
+        "daily_notifications",
     ] = 0
     # calculate a 7-day rolling window value
     fassster_agg_complete = fassster_agg_complete.sort_values(
@@ -215,7 +226,9 @@ def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, file_path):
         targets = json.load(f)
 
         targets["notifications"]["times"] = list(notifications_tmp["times"])
-        targets["notifications"]["values"] = list(notifications_tmp["mean_daily_notifications"])
+        targets["notifications"]["values"] = list(
+            notifications_tmp["mean_daily_notifications"]
+        )
         targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
         targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
         targets["infection_deaths"]["times"] = list(deaths_tmp["times"])
@@ -231,12 +244,12 @@ def update_calibration_phl():
 
     # Only manila/NCR used by sm_sir model
     phl_regions = [
-        #"calabarzon",
-        #"central_visayas",
+        # "calabarzon",
+        # "central_visayas",
         "manila",
         # "davao_city",
-        #"davao_region",
-        #"philippines",
+        # "davao_region",
+        # "philippines",
     ]
     # read in csvs
     icu_occ = pd.read_csv(icu_o_dest)
@@ -251,7 +264,11 @@ def update_calibration_phl():
         hosp_tmp = hosp_occ.loc[hosp_occ["region"] == region]
 
         SM_SIR_NCR_TS = os.path.join(
-            PROJECTS_PATH, "sm_sir", "philippines", "national-capital-region", "timeseries.json"
+            PROJECTS_PATH,
+            "sm_sir",
+            "philippines",
+            "national-capital-region",
+            "timeseries.json",
         )
 
         write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, SM_SIR_NCR_TS)

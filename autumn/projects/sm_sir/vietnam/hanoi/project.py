@@ -27,58 +27,66 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
     mle_path, calibration_format=True
 )
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
-param_set = ParameterSet(baseline=baseline_params, scenarios=[])
+param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
-notifications = pd.concat(
+# notifications = pd.concat(
+#     [
+#      ts_set["notifications"].loc[671:745],  # from 01st Nov 2021 to 14th Jan 2022
+#      ts_set["notifications"].loc[763:]  # from 01st Feb 2022 onwards
+#     ]
+# )
+
+hospital_occupancy = pd.concat(
     [
-     # ts_set["notifications"].loc[671:745],  # from 01st Nov 2021 to 14th Jan 2022
-     ts_set["notifications"].loc[763:]  # from 01st Feb 2022 onwards
+     ts_set["hospital_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
+     ts_set["hospital_occupancy"].loc[791:]  # from 1st Mar 2022 onwards
     ]
 )
 
-icu_occupancy = pd.concat(
+# hospital_occupancy = ts_set["hospital_occupancy"].loc[671:]
+
+infection_deaths = pd.concat(
     [
-     ts_set["icu_occupancy"].loc[671:760],  # from 01st Nov 2021 to 29th Jan 2022
-     ts_set["icu_occupancy"].loc[783:]  # from 21st Feb 2022 onwards
+     ts_set["infection_deaths"].loc[725:763].rolling(7).mean(),  # from 25th Dec 2021 to 01st Feb 2022
+     ts_set["infection_deaths"].loc[786:].rolling(7).mean()  # from 24th Feb 2022 onwards
     ]
 )
-
-infection_deaths = ts_set["infection_deaths"].loc[725:].rolling(7).mean()  # truncated to 25th Dec 2021
 
 targets = [
-    NormalTarget(notifications),
-    NormalTarget(icu_occupancy),
+    # NormalTarget(notifications),
+    NormalTarget(hospital_occupancy),
     NormalTarget(infection_deaths)
 ]
 
 
 priors = [
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (7500., 22500.)),
-    UniformPrior("contact_rate", (0.1, 0.25)),
+    # UniformPrior("infectious_seed", (800., 4000.)),
+    # UniformPrior("contact_rate", (0.18, 0.25)),
     # detect prop
-    UniformPrior("detect_prop", (0.1, 0.3)),
+    # UniformPrior("detect_prop", (0.1, 0.3)),
     # testing to detection params
     # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.0005, 0.002)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.08)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.prop_immune", (0.7, 1.0)),
-    UniformPrior("immunity_stratification.prop_high_among_immune", (0.6, 0.9)),
+    # UniformPrior("immunity_stratification.prop_immune", (0.7, 1.0)),
+    # UniformPrior("immunity_stratification.prop_high_among_immune", (0.7, 1.0)),
     # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0., 0.1)),
-    # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.015, 0.055)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (0.02, 0.1)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
+    # UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # Omicron-related parameters
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (722.0, 757.0)),  # 5-week interval
-    UniformPrior("voc_emergence.omicron.relative_latency", (0.05, 0.25)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.3, 2.0)),
-    UniformPrior("voc_emergence.omicron.relative_active_period", (0.8, 1.6)),
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 746.0)),  # 3-week interval
+    # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.5, 2.5)),
+    # UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),
+    # UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.6)),
     # sojourns
     # UniformPrior("sojourns.active.proportion_early", (0.25, 0.6)),
     # UniformPrior("sojourns.latent.proportion_early", (0., 0.2)),

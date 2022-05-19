@@ -1,5 +1,5 @@
 """
-Entry point for PyCharm users to run an application
+Entry point for IDE users to run an application.
 """
 
 from autumn.settings import Region, Models

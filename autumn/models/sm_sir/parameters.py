@@ -572,8 +572,20 @@ class Parameters:
         return age_groups
 
     @validator("voc_emergence", allow_reuse=True)
-    def ensure_one_starting_strain(voc_emergence):
+    def check_starting_strain(voc_emergence):
         if voc_emergence:
+
+            msg = "Seed proportions do not sum to one"
+            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1., msg
+
+            starting_strains = [voc for voc, params in voc_emergence.items() if params.starting_strain]
+
             msg = "Exactly one voc must be designated as the starting strain"
-            assert [voc_params.starting_strain for voc, voc_params in voc_emergence.items()].count(True) == 1, msg
+            assert len(starting_strains) == 1, msg
+
+            starting_strain = starting_strains[0]
+
+            msg = "Currently requiring all the initial seed to be assigned to the starting strain"
+            assert voc_emergence[starting_strain].seed_prop == 1., msg
+
         return voc_emergence

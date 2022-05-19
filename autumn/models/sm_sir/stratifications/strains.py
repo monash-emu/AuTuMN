@@ -150,12 +150,7 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     # Create the stratification object
     strain_strat = StrainStratification("strain", strains, affected_compartments)
 
-    # # Population split
-    # msg = "Strain seed proportions do not sum to one"
-    # assert sum([voc_params[i_strain].seed_prop for i_strain in strains]) == 1., msg
-    # msg = "Currently requiring starting seed to all be assigned to the strain nominated as the starting strain"
-    # assert voc_params[starting_strain].seed_prop == 1., msg
-
+    # Assign the starting population
     population_split = {strain: voc_params[strain].seed_prop for strain in strains}
     strain_strat.set_population_split(population_split)
 

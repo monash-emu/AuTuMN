@@ -9,7 +9,7 @@ from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeS
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
 from autumn.tools.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
-
+from autumn.tools.inputs.covid_hospital_risk.hospital_props import read_hospital_props
 
 def get_immunity_prop_modifiers(
         source_pop_immunity_dist: Dict[str, float],
@@ -271,7 +271,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
-        hosp_request = hosp_prop_requests.values
+        hosp_request = read_hospital_props(hosp_prop_requests.reference_strain)
         hosp_props = convert_param_agegroups(iso3, region, hosp_request, age_groups)
 
         # Get the adjustments to the hospitalisation rates according to immunity status

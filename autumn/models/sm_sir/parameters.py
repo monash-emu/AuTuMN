@@ -570,3 +570,22 @@ class Parameters:
             [0 <= i_group <= 75 for i_group in age_groups]
         ), "Age breakpoints must be from zero to 75"
         return age_groups
+
+    @validator("voc_emergence", allow_reuse=True)
+    def check_starting_strain(voc_emergence):
+        if voc_emergence:
+
+            msg = "Seed proportions do not sum to one"
+            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1., msg
+
+            starting_strains = [voc for voc, params in voc_emergence.items() if params.starting_strain]
+
+            msg = "Exactly one voc must be designated as the starting strain"
+            assert len(starting_strains) == 1, msg
+
+            starting_strain = starting_strains[0]
+
+            msg = "Currently requiring all the initial seed to be assigned to the starting strain"
+            assert voc_emergence[starting_strain].seed_prop == 1., msg
+
+        return voc_emergence

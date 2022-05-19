@@ -1,6 +1,5 @@
 from typing import Optional, List, Dict
 import pandas as pd
-import numpy as np
 
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
@@ -37,6 +36,7 @@ def adjust_susceptible_infection_without_strains(
 
     """
 
+    # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
     low_non_cross_multiplier = 1.0 - low_immune_effect
     high_non_cross_multiplier = 1.0 - high_immune_effect
 
@@ -71,9 +71,13 @@ def adjust_susceptible_infection_with_strains(
     """
 
     for infecting_strain in voc_params:
-        strain_immunity_modifier = 1.0 - voc_params[infecting_strain].immune_escape
-        low_non_cross_multiplier = 1.0 - low_immune_effect * strain_immunity_modifier
-        high_non_cross_multiplier = 1.0 - high_immune_effect * strain_immunity_modifier
+        
+        # The vaccination-specific immunity that will be retained after allowing for the strain's immune escape against vaccination-induced immunity
+        non_cross_effect = 1.0 - voc_params[infecting_strain].immune_escape
+
+        # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
+        low_non_cross_multiplier = 1.0 - low_immune_effect * non_cross_effect
+        high_non_cross_multiplier = 1.0 - high_immune_effect * non_cross_effect
 
         infection_adjustments = {
             ImmunityStratum.NONE: None,
@@ -106,10 +110,11 @@ def adjust_reinfection_without_strains(
 
     """
 
+    # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
     low_non_cross_multiplier = 1.0 - low_immune_effect
     high_non_cross_multiplier = 1.0 - high_immune_effect
 
-    # The infection processes that we are adapting and for which cross-strain immunity is relevant
+    # For both the early and late reinfection transitions
     for flow in reinfection_flows:
 
         # Combine the two mechanisms of protection and format for summer
@@ -149,13 +154,17 @@ def adjust_reinfection_with_strains(
 
     for infecting_strain in voc_params:
 
-        # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
+        # The vaccination-specific immunity that will be retained after allowing for the strain's immune escape against vaccination-induced immunity
         non_cross_effect = 1.0 - voc_params[infecting_strain].immune_escape
+
+        # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
         low_non_cross_multiplier = 1.0 - low_immune_effect * non_cross_effect
         high_non_cross_multiplier = 1.0 - high_immune_effect * non_cross_effect
 
         # Considering people recovered from infection with each modelled strain
         for infected_strain in voc_params:
+
+            # For both the early and late reinfection transitions
             for flow in reinfection_flows:
 
                 # Cross protection from previous infection with the "infected" strain against the "infecting" strain
@@ -187,7 +196,7 @@ def get_immunity_strat(
     (including vaccination-induced immunity and natural immunity from strains preceding the current simulations).
 
     Args:
-        compartments: Base model compartments
+        compartments: Unstratified model compartment types being implemented
         immunity_params: All the immunity-related model parameters
 
     Returns:
@@ -212,7 +221,7 @@ def get_immunity_strat(
 
 
 def apply_reported_vacc_coverage(
-        compartment_types: List[str],
+        compartments: List[str],
         model: CompartmentalModel,
         iso3: str,
         thinning: int,
@@ -225,7 +234,7 @@ def apply_reported_vacc_coverage(
     apply it to the model as a dynamic stratum.
 
     Args:
-        compartment_types: Unstratified model compartment types being implemented
+        compartments: Unstratified model compartment types being implemented
         model: The model itself
         iso3: The ISO-3 code for the country being implemented
         thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
@@ -272,7 +281,7 @@ def apply_reported_vacc_coverage(
 
     # Apply to model, as below
     thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
-    add_dynamic_immunity_to_model(compartment_types, thinned_df, model)
+    add_dynamic_immunity_to_model(compartments, thinned_df, model)
 
 
 def add_dynamic_immunity_to_model(
@@ -284,9 +293,9 @@ def add_dynamic_immunity_to_model(
     Use the dynamic flow processes to control the distribution of the population by vaccination status.
 
     Args:
+        compartments: The types of compartment being implemented in the model, before stratification
         strata_distributions: The target proportions at each time point
         model: The model to be adapted
-        compartments: The types of compartment being implemented in the model, before stratification
 
     """
 

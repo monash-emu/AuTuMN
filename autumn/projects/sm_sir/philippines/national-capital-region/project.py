@@ -1,3 +1,4 @@
+from autumn.tools.calibration import hierarchical_priors
 from autumn.tools.project import (
     Project,
     ParameterSet,
@@ -8,6 +9,7 @@ from autumn.tools.project import (
 )
 from autumn.tools.calibration import Calibration
 from autumn.tools.calibration.priors import UniformPrior
+from autumn.tools.calibration.hierarchical_priors import HierarchicalPrior
 from autumn.tools.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
@@ -51,6 +53,10 @@ priors = [
     UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
 ]
 
+hierarchical_priors = [
+    HierarchicalPrior("sojourns.latent.total_time", "normal", ['contact_rate', .1])
+]
+
 new_target_set = load_timeseries(build_rel_path("new_targets.json"))
 
 targets = [
@@ -71,7 +77,7 @@ else:
 use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(
-    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
+    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params", hierarchical_priors=hierarchical_priors
 )
 
 # FIXME: Replace with flexible Python plot request API.

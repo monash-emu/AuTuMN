@@ -92,7 +92,8 @@ class Calibration:
         seed: int = None,
         initial_jumping_stdev_ratio: float = 0.25,
         jumping_stdev_adjustment: float = 0.5,
-        random_process=None
+        random_process=None,
+        hierarchical_priors: list = []
     ):
         """
         Defines a new calibration.

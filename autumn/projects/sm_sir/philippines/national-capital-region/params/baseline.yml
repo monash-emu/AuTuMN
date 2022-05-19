@@ -88,6 +88,7 @@ immunity_stratification:
 
 age_stratification:
   prop_hospital:
+    reference_strain: omicron
     source_immunity_protection:
       none: 0.
       low: 0.807

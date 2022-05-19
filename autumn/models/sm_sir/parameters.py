@@ -302,7 +302,8 @@ class Mobility(BaseModel):
 
 class AgeSpecificProps(BaseModel):
 
-    values: Dict[int, float]
+    values: Optional[Dict[int, float]]
+    reference_strain: Optional[str]
     source_immunity_distribution: Dict[str, float]
     source_immunity_protection: Dict[str, float]
     multiplier: float
@@ -321,6 +322,15 @@ class AgeSpecificProps(BaseModel):
             all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0
         ), msg
         return protection_params
+
+    @validator("reference_strain", allow_reuse=True)
+    def check_source_dist(reference_strain):
+        reference_strains = ["delta", "omicron"]
+        msg = f"Reference strain should be one of {', '.join(reference_strains)}"
+        assert (
+            reference_strain in reference_strains
+        ), msg
+        return reference_strain
 
     check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
     check_props = validator("source_immunity_distribution", allow_reuse=True)(

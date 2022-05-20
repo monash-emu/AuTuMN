@@ -55,12 +55,11 @@ testing_to_detection: null
 detect_prop: 0.6
 
 microdistancing_derived:
-  tanh_function:
-    shape: 1
-    inflection_time: 0.5
-    lower_asymptote: 0
-    upper_asymptote: 0.75
-
+  step_function:
+    magnitude: 0.5
+    time_in_effect: 760 #type int
+    start: 750 #model end time, type int
+    end: 912 #model start, time type int
 
 voc_emergence:
   omicron:

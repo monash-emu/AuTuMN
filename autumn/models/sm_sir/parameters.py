@@ -222,6 +222,13 @@ class EmpiricMicrodistancingParams(BaseModel):
         return values
 
 
+class StepFunctionMicrodistancingParams(BaseModel):
+    magnitude: float
+    time_in_effect: int
+    start: int
+    end: int
+
+
 class TanhMicrodistancingParams(BaseModel):
 
     shape: float
@@ -543,7 +550,7 @@ class Parameters:
     age_stratification: AgeStratification
     immunity_stratification: ImmunityStratification
     voc_emergence: Optional[Dict[str, VocComponent]]
-    microdistancing_derived: Optional[Dict[str, TanhMicrodistancingParams]]
+    microdistancing_derived: Optional[Dict[str, StepFunctionMicrodistancingParams]]
 
     # Random process
     activate_random_process: bool

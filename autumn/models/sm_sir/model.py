@@ -13,7 +13,7 @@ from autumn.tools.utils.utils import multiply_function_or_constant
 from autumn.tools.utils.summer import FunctionWrapper
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population, MicroDistancingFunc
+from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population
 from summer.compute import ComputedValueProcessor
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
@@ -29,8 +29,8 @@ from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfect
 from .stratifications.clinical import get_clinical_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 from autumn.settings.constants import COVID_BASE_DATETIME
-from autumn.tools.curve.tanh import tanh_based_scaleup_for_notifications
-from autumn.models.sm_sir.parameters import TanhMicrodistancingParams
+from autumn.models.sm_sir.parameters import StepFunctionMicrodistancingParams
+from autumn.tools.curve.tanh import step_based_scaleup_for_notifications
 # Base date used to calculate mixing matrix times
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
@@ -284,14 +284,13 @@ def get_cdr_func(
     return cdr_func, non_detect_func
 
 
-def get_microdist_func_component(notifications, func_params: Optional[Dict[str, TanhMicrodistancingParams]]):
+def get_microdist_func_component(func_params: Optional[Dict[str, StepFunctionMicrodistancingParams]]):
     """
     Get a single function of time using the standard parameter request structure for any microdistancing function, or
     adjustment to a microdistancing function.
     In future, this could use more general code for requesting functions of time.
 
     Args:
-        notifications: Number of notified COVID-19 cases
         func_params: The parameters used to define the microdistancing function
         iso3: ISO3 code of the modelled country
 
@@ -299,12 +298,12 @@ def get_microdist_func_component(notifications, func_params: Optional[Dict[str, 
         Function of notifications returning a scalar
 
     """
-    shape = func_params['tanh_function'].shape
-    inflection_time = func_params['tanh_function'].inflection_time
-    lower_asymptote = func_params['tanh_function'].lower_asymptote
-    upper_asymptote = func_params['tanh_function'].upper_asymptote
+    magnitude = func_params['step_function'].magnitude
+    time_in_effect = func_params['step_function'].time_in_effect
+    start = func_params['step_function'].start
+    end = func_params['step_function'].end
 
-    return tanh_based_scaleup_for_notifications(notifications, shape, inflection_time, lower_asymptote,upper_asymptote)
+    return step_based_scaleup_for_notifications(magnitude, time_in_effect, start, end)
 
 
 def apply_reinfection_flows_without_strains(
@@ -646,7 +645,7 @@ def build_model(
         )
 
     if params.microdistancing_derived:
-        level_of_microdistancing = get_microdist_func_component(notifications, params.microdistancing_derived)
+        level_of_microdistancing = get_microdist_func_component(params.microdistancing_derived)
         notifications = notifications * level_of_microdistancing  # adjust notifications by
         # the level of microdistancing effects
 

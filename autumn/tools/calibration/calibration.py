@@ -98,13 +98,15 @@ class Calibration:
         """
         Defines a new calibration.
         """
-        self.all_priors = [p.to_dict() for p in priors]
+        check_hierarchical_priors(hierarchical_priors, priors)
+        self.hierarchical_priors = hierarchical_priors
+        self.all_priors = [p.to_dict() for p in priors] + [h_p.to_dict() for h_p in hierarchical_priors]
 
         self.includes_random_process = False
         if random_process is not None:
             self.random_process = random_process
             self.set_up_random_process()
-
+        
         #self.targets = [t.to_dict() for t in targets]
         self.targets = remove_early_points_to_prevent_crash(targets, self.all_priors)
 
@@ -160,6 +162,8 @@ class Calibration:
         np.random.set_state(_extra['rng'])
 
         #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
+
+    
 
     def set_up_random_process(self):
         self.includes_random_process = True
@@ -273,6 +277,8 @@ class Calibration:
         self.chain_idx = chain_idx
         model_parameters_data = self.model_parameters.to_dict()
 
+        # 
+
         # Figure out which derived outputs we have to calculate.
         derived_outputs_to_plot = derived_outputs_to_plot or []
         target_names = [t.data.name for t in self.targets]
@@ -291,6 +297,9 @@ class Calibration:
 
         # rebuild self.all_priors, following changes to the two sets of priors
         self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
+
+        # initialise hierarchical priors' parameters
+        self.update_hierarchical_prior_params(self.model_parameters)
 
         # Select starting params
         # Random seed is reset in here; make sure any other seeding happens after this
@@ -334,6 +343,25 @@ class Calibration:
             n_chains=num_chains,
             available_time=max_seconds,
         )
+
+    def update_hierarchical_prior_params(self, current_params=None):
+        for h_p in self.hierarchical_priors:
+            # work out hyper-parameter values
+            distri_params = h_p.hyper_parameters
+            for i, p in enumerate(distri_params):
+                if isinstance(p, str):
+                    distri_params[i] = current_params[p]
+            
+            # update prior lists
+            for prior in self.all_priors:
+                if prior["param_name"] == h_p.name:
+                    prior["distri_params"] = distri_params
+                    break    
+
+            for prior in self.iterative_sampling_priors:
+                if prior["param_name"] == h_p.name:
+                    prior["distri_params"] = distri_params
+                    break   
 
     def validate_target_start_time(self, model_parameters_data):
         model_start = model_parameters_data["time"]["start"]
@@ -604,6 +632,8 @@ class Calibration:
                 self.last_accepted_iterative_params_trans, self.haario_scaling_factor
             )
             proposed_iterative_params = self.get_original_params(proposed_iterative_params_trans)
+
+            self.update_hierarchical_prior_params(proposed_iterative_params)
 
             is_within_prior_support = self.test_in_prior_support(
                 proposed_iterative_params
@@ -1034,6 +1064,14 @@ class CalibrationOutputs:
             mcmc_runs_df = pd.DataFrame.from_dict(self.mcmc_runs)
             self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df, append=False)
 
+
+def check_hierarchical_priors(hierarchical_priors, priors):
+    prior_names = [p.name for p in priors]
+    for h_p in hierarchical_priors:
+        variable_hyper_parameters = h_p.list_variable_hyper_parameters()
+        for p_name in variable_hyper_parameters:
+            msg = f"{p_name} is defined as a hyper-parameter but is not associated with a prior"
+            assert p_name in prior_names, msg
 
 def get_parameter_bounds_from_priors(prior_dict):
     """

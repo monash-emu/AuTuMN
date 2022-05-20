@@ -1,4 +1,3 @@
-from autumn.tools.calibration import hierarchical_priors
 from autumn.tools.project import (
     Project,
     ParameterSet,
@@ -8,8 +7,7 @@ from autumn.tools.project import (
     get_all_available_scenario_paths,
 )
 from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.hierarchical_priors import HierarchicalPrior
+from autumn.tools.calibration.priors import UniformPrior, HierarchicalPrior
 from autumn.tools.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
@@ -54,7 +52,7 @@ priors = [
 ]
 
 hierarchical_priors = [
-    HierarchicalPrior("sojourns.latent.total_time", "normal", ['contact_rate', .1])
+    HierarchicalPrior("sojourns.latent.total_time", "gamma", ['contact_rate', .1])
 ]
 
 new_target_set = load_timeseries(build_rel_path("new_targets.json"))

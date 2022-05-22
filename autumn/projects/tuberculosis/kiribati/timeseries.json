@@ -1,0 +1,209 @@
+{
+  "prevalence_infectious": {
+    "title": "TB prevalence (/100,000)",
+    "output_key": "prevalence_infectious",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "prevalence_infectiousXlocation_majuro": {
+    "title": "TB prevalence in Majuro (/100,000)",
+    "output_key": "prevalence_infectiousXlocation_majuro",
+    "times": [2018.0],
+    "values": [1366.0],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "prevalence_infectiousXlocation_ebeye": {
+    "title": "TB prevalence in Ebeye (/100,000)",
+    "output_key": "prevalence_infectiousXlocation_ebeye",
+    "times": [2017.0],
+    "values": [755.0],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "percentage_latent": {
+    "title": "LTBI prevalence (%)",
+    "output_key": "percentage_latent",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "percentage_latentXlocation_majuro": {
+    "title": "LTBI prevalence in Majuro (%)",
+    "output_key": "percentage_latentXlocation_majuro",
+    "times": [2018.0],
+    "values": [38],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "percentage_latentXlocation_ebeye": {
+    "title": "LTBI prevalence in Ebeye (%)",
+    "output_key": "percentage_latentXlocation_ebeye",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "percentage_latentXlocation_other": {
+    "title": "LTBI prevalence in Other Islands (%)",
+    "output_key": "percentage_latentXlocation_other",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "notifications": {
+    "title": "Notifications",
+    "output_key": "notifications",
+    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [146, 153, 153, 136, 178, 203, 410, 225, 150],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "notificationsXlocation_majuro": {
+    "title": "Notifications in Majuro",
+    "output_key": "notificationsXlocation_majuro",
+    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [91, 116, 115, 90, 119, 116, 376, 135, 96],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "notificationsXlocation_ebeye": {
+    "title": "Notifications in Ebeye",
+    "output_key": "notificationsXlocation_ebeye",
+    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [44, 27, 30, 29, 53, 80, 30, 45, 39],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "notificationsXlocation_other": {
+    "title": "Notifications in Other Islands",
+    "output_key": "notificationsXlocation_other",
+    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [11, 10, 8, 17, 6, 7, 4, 45, 15],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "population_size": {
+    "title": "Population size",
+    "output_key": "population_size",
+    "times": [2011.0],
+    "values": [53158.0],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "incidence": {
+    "title": "TB incidence (/100,000/y)",
+    "output_key": "incidence",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "incidenceXlocation_majuro": {
+    "title": "TB incidence in Majuro (/100,000/y)",
+    "output_key": "incidenceXlocation_majuro",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "incidenceXlocation_ebeye": {
+    "title": "TB incidence in Ebeye (/100,000/y)",
+    "output_key": "incidenceXlocation_ebeye",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "incidenceXlocation_other": {
+    "title": "TB incidence in Other Islands (/100,000/y)",
+    "output_key": "incidenceXlocation_other",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+
+  "mortality": {
+    "title": "TB mortality (/100,000/y)",
+    "output_key": "mortality",
+    "times": [2018.0],
+    "values": [51.0] ,
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "mortalityXlocation_majuro": {
+    "title": "TB mortality in Majuro (/100,000/y)",
+    "output_key": "mortalityXlocation_majuro",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "mortalityXlocation_ebeye": {
+    "title": "TB mortality in Ebeye (/100,000/y)",
+    "output_key": "mortalityXlocation_ebeye",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "mortalityXlocation_other": {
+    "title": "TB mortality in Other Islands (/100,000/y)",
+    "output_key": "mortalityXlocation_other",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "cumulative_diseased": {
+    "title": "Cumulative TB incidence",
+    "output_key": "cumulative_diseased",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "differentiate": "relative"
+  },
+  "cumulative_deaths": {
+    "title": "Cumulative TB deaths",
+    "output_key": "cumulative_deaths",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+    "differentiate": "relative"
+  },
+  "screening_rate": {
+    "title": "TB screening rate",
+    "output_key": "screening_rate",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "cumulative_pt": {
+    "title": "Cumulative PT provided",
+    "output_key": "cumulative_pt",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "cumulative_pt_sae": {
+    "title": "Cumulative PT SAEs",
+    "output_key": "cumulative_pt_sae",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+
+  "abs_diff_cumulative_deaths": {
+    "title": "Cumulative deaths (abs diff)",
+    "output_key": "abs_diff_cumulative_deaths",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "abs_diff_cumulative_diseased": {
+    "title": "Cumulative incidence (abs diff)",
+    "output_key": "abs_diff_cumulative_diseased",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "abs_diff_cumulative_pt": {
+    "title": "Cumulative PT (abs diff)",
+    "output_key": "abs_diff_cumulative_pt",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "abs_diff_cumulative_pt_sae": {
+    "title": "Cumulative SAEs (abs diff)",
+    "output_key": "abs_diff_cumulative_pt_sae",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  }
+}

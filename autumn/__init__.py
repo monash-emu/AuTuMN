@@ -20,6 +20,12 @@ register_project(
     Region.MARSHALL_ISLANDS,
     "autumn.projects.tuberculosis.marshall_islands.project",
 )
+
+register_project(
+    Models.TB,
+    Region.KIRIBATI,
+    "autumn.projects.tuberculosis.kiribati.project",
+)
 register_project(
     Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.philippines.project"
 )

@@ -35,7 +35,7 @@ INTERVENTION_TITLES = {
 
 def make_output_directories(output_path):
     base_figure_path = os.path.join(
-        BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures"
+        BASE_PATH, "apps", "tuberculosis", "regions", "kiribati", "outputs", "figures"
     )
     for dir_path in [base_figure_path, output_path]:
         if not os.path.exists(dir_path):

@@ -1,9 +1,7 @@
 """
 Script for loading Bhutan and Thimphu data into calibration targets and default.yml
 """
-import os
-from typing import List
-from venv import create
+
 import pandas as pd
 from sqlalchemy import DATE
 from pathlib import Path

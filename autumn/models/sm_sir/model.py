@@ -23,6 +23,7 @@ from .stratifications.immunity import (
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
     apply_reported_vacc_coverage,
+    apply_reported_vacc_coverage_with_booster,
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
@@ -609,15 +610,30 @@ def build_model(
 
     if is_dynamic_immunity:
         thinning = 20 if iso3 == "BGD" else None
-        apply_reported_vacc_coverage(
-            compartment_types,
-            model,
-            iso3,
-            thinning=thinning,
-            model_start_time=params.time.start,
-            start_immune_prop=params.immunity_stratification.prop_immune,
-            additional_immunity_points=params.additional_immunity,
-        )
+
+        if iso3 == "PHL":
+            apply_reported_vacc_coverage_with_booster(
+                compartment_types,
+                model,
+                iso3,
+                thinning=thinning,
+                model_start_time=params.time.start,
+                start_immune_prop=params.immunity_stratification.prop_immune,
+                start_prop_high_among_immune=params.immunity_stratification.prop_high_among_immune,
+                booster_effect_duration=params.booster_effect_duration,
+                future_monthly_booster_rate=params.future_monthly_booster_rate,
+                model_end_time=params.time.end
+            )
+        else:
+            apply_reported_vacc_coverage(
+                compartment_types,
+                model,
+                iso3,
+                thinning=thinning,
+                model_start_time=params.time.start,
+                start_immune_prop=params.immunity_stratification.prop_immune,
+                additional_immunity_points=params.additional_immunity,
+            )
 
     """
     Get the applicable outputs
@@ -684,5 +700,12 @@ def build_model(
 
     # if is_dynamic_immunity:
     outputs_builder.request_immunity_props(immunity_strat.strata)
+
+    # cumulative output requests
+    cumulative_start_time = params.cumulative_start_time if params.cumulative_start_time else None
+    outputs_builder.request_cumulative_outputs(
+        params.requested_cumulative_outputs,
+        cumulative_start_time
+    )
 
     return model

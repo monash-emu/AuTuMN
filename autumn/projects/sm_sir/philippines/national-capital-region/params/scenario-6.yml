@@ -1,4 +1,6 @@
-description: New variant more transmissible and completely escapes immunity
+description: More booster doses and new variant completely escapes immunity
+
+future_monthly_booster_rate: 500000
 
 voc_emergence:
   omicron:
@@ -10,5 +12,4 @@ voc_emergence:
   new_strain:
     new_voc_seed:
       start_time: 852.  # 1 May 2022
-    contact_rate_multiplier: 2.
     immune_escape: 1.

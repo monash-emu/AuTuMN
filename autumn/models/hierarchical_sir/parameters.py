@@ -47,7 +47,9 @@ class Parameters:
     time: Time
     description: str
     # Values
-    beta: float
+    hyper_beta: float
+    beta: dict
+    
     gamma: float
     infectious_seed: float    
     total_pop: float

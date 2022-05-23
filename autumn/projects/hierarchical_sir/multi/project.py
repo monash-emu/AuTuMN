@@ -14,11 +14,12 @@ param_set = ParameterSet(baseline=baseline_params)
 # Load and configure calibration settings
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("beta", [0.025, 0.05]),
+    # UniformPrior("beta", [0.025, 0.05]),
     UniformPrior("gamma", [0.9, 1.2]),
 ]
 targets = [
-    NormalTarget(data=ts_set["incidence"]),
+    NormalTarget(data=ts_set["incidence_AUS"]),
+    NormalTarget(data=ts_set["incidence_ITA"]),
 ]
 calibration = Calibration(priors=priors, targets=targets)
 

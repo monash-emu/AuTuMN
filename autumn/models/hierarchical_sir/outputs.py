@@ -12,7 +12,8 @@ from .constants import Compartment, FlowName
 class HierarchicalSirOutputsBuilder(OutputsBuilder):
 
     def request_incidence(
-            self
+            self,
+            locations
     ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
@@ -30,3 +31,8 @@ class HierarchicalSirOutputsBuilder(OutputsBuilder):
 
         # Unstratified
         self.model.request_output_for_flow(name="incidence", flow_name=FlowName.INFECTION)
+
+        # Stratified
+        for location in locations:
+            dest_filter = {"geography": location}
+            self.model.request_output_for_flow(name=f"incidence_{location}", flow_name=FlowName.INFECTION, dest_strata=dest_filter)

@@ -6,12 +6,16 @@ time:
   end: 365
   step: 1
 
-beta: 0.1
+hyper_beta: 0.1
+beta:
+  AUS: .1
+  ITA: .2
+
 gamma: .1
 
-infectious_seed: 1
+infectious_seed: 100
 
-total_pop: 1000000
+total_pop: 85240000  # 25.69 M  + 59.55
 location_split:
-  zone_1: .7
-  zone_2: .3
+  AUS: .3 # 25.69 / 85240000
+  ITA: .7

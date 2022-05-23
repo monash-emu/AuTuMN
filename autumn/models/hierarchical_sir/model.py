@@ -1,8 +1,9 @@
+from ast import Mult
 from typing import List, Tuple
 from matplotlib.pyplot import summer
 import pandas as pd
 
-from summer import CompartmentalModel, Stratification
+from summer import CompartmentalModel, Stratification, Multiply
 
 from autumn.tools.project import Params, build_rel_path
 
@@ -70,7 +71,7 @@ def build_model(
     # Add the process of infecting the susceptibles for the first time
     model.add_infection_frequency_flow(
         name=FlowName.INFECTION,
-        contact_rate=params.beta,
+        contact_rate=1.,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.INFECTIOUS,
     )
@@ -79,6 +80,12 @@ def build_model(
     locations = list(params.location_split.keys())
     geo_stratification = Stratification("geography", locations, BASE_COMPARTMENTS)
     geo_stratification.set_population_split(params.location_split)
+    contact_rate_adjustments = {loc: Multiply(val) for loc, val in params.beta.items()}
+    geo_stratification.set_flow_adjustments(
+        flow_name=FlowName.INFECTION,
+        adjustments=contact_rate_adjustments
+    )
+
     model.stratify_with(geo_stratification)
 
     # Add recovery flow
@@ -91,7 +98,6 @@ def build_model(
 
     # Outputs
     outputs_builder = HierarchicalSirOutputsBuilder(model, BASE_COMPARTMENTS)
-    outputs_builder.request_incidence(
-    )
+    outputs_builder.request_incidence(locations)
 
     return model

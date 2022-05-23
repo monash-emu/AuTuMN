@@ -45,6 +45,7 @@ class ParamConfig:
 class Parameters:
     # Metadata    
     time: Time
+    description: str
     # Values
     beta: float
     gamma: float

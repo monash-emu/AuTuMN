@@ -41,7 +41,7 @@ def build_model(
     model = CompartmentalModel(
         times=(time_params.start, time_params.end),
         compartments=BASE_COMPARTMENTS,
-        infectious_compartments=Compartment.INFECTIOUS,
+        infectious_compartments=[Compartment.INFECTIOUS],
         timestep=time_params.step,
         ref_date=COVID_BASE_DATETIME,
     )

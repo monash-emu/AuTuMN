@@ -73,8 +73,12 @@ mobility:
       append: false
       times:
         - 2021-01-01  # any past date
+        - 2022-08-15  # more schools reopen mid-August
+        - 2022-08-17
       values:
-        - 0.5
+        - 0.25
+        - 0.25
+        - 0.90
 
 immunity_stratification:
   prop_immune: 0.2

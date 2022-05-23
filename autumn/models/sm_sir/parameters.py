@@ -332,7 +332,6 @@ class AgeSpecificProps(BaseModel):
         ), msg
         return reference_strain
 
-    check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
     check_props = validator("source_immunity_distribution", allow_reuse=True)(
         get_check_all_dict_values_non_neg("source_immunity_distribution")
     )

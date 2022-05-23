@@ -1,0 +1,16 @@
+---
+
+time:
+  start: 0
+  end: 365
+  step: 1
+
+beta: 0.1
+gamma: .1
+
+infectious_seed: 1
+
+total_pop: 1000000
+location_split:
+  zone_1: .7
+  zone_2: .3

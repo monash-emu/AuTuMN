@@ -1,7 +1,8 @@
 from typing import List, Tuple
+from matplotlib.pyplot import summer
 import pandas as pd
 
-from summer import CompartmentalModel
+from summer import CompartmentalModel, Stratification
 
 from autumn.tools.project import Params, build_rel_path
 
@@ -73,6 +74,12 @@ def build_model(
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.INFECTIOUS,
     )
+
+    # Stratify by location
+    locations = list(params.location_split.keys())
+    geo_stratification = Stratification("geography", locations, BASE_COMPARTMENTS)
+    geo_stratification.set_population_split(params.location_split)
+    model.stratify_with(geo_stratification)
 
     # Add recovery flow
     model.add_transition_flow(

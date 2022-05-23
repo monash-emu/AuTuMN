@@ -302,7 +302,8 @@ class Mobility(BaseModel):
 
 class AgeSpecificProps(BaseModel):
 
-    values: Dict[int, float]
+    values: Optional[Dict[int, float]]
+    reference_strain: Optional[str]
     source_immunity_distribution: Dict[str, float]
     source_immunity_protection: Dict[str, float]
     multiplier: float
@@ -321,6 +322,15 @@ class AgeSpecificProps(BaseModel):
             all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0
         ), msg
         return protection_params
+
+    @validator("reference_strain", allow_reuse=True)
+    def check_source_dist(reference_strain):
+        reference_strains = ["delta", "omicron"]
+        msg = f"Reference strain should be one of {', '.join(reference_strains)}"
+        assert (
+            reference_strain in reference_strains
+        ), msg
+        return reference_strain
 
     check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
     check_props = validator("source_immunity_distribution", allow_reuse=True)(
@@ -560,3 +570,22 @@ class Parameters:
             [0 <= i_group <= 75 for i_group in age_groups]
         ), "Age breakpoints must be from zero to 75"
         return age_groups
+
+    @validator("voc_emergence", allow_reuse=True)
+    def check_starting_strain(voc_emergence):
+        if voc_emergence:
+
+            msg = "Seed proportions do not sum to one"
+            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1., msg
+
+            starting_strains = [voc for voc, params in voc_emergence.items() if params.starting_strain]
+
+            msg = "Exactly one voc must be designated as the starting strain"
+            assert len(starting_strains) == 1, msg
+
+            starting_strain = starting_strains[0]
+
+            msg = "Currently requiring all the initial seed to be assigned to the starting strain"
+            assert voc_emergence[starting_strain].seed_prop == 1., msg
+
+        return voc_emergence

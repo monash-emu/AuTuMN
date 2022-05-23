@@ -10,7 +10,8 @@ from autumn.tools.utils.utils import multiply_function_or_constant
 
 def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: float):
     """
-    Create a simple step function to allow seeding of the VoC strain at a particular point in time.
+    Create a simple step function to allow seeding of the VoC strain for the period from the requested time point.
+    The function starts from zero, steps up to entry_rate from the start_time and then steps back down again to zero after seed_duration has elapsed.
 
     Args:
         entry_rate: The entry rate
@@ -73,8 +74,8 @@ def apply_reinfection_flows_with_strains(
         suscept_adjs: pd.Series,
 ):
     """
-    Apply the reinfection flows, making sure that it is possible to be infected with any strain after infection with any
-    strain. We'll work out whether this occurs at a reduced rate because of immunity later.
+    Apply the reinfection flows, making sure that it is possible to be infected with any strain after infection with any strain.
+    We'll work out whether this occurs at a reduced rate because of immunity later, in the various functions of the immunity.py file.
 
     Args:
         model: The SM-SIR model being adapted
@@ -88,36 +89,41 @@ def apply_reinfection_flows_with_strains(
 
     """
 
+    # Loop over all infecting strains
     for dest_strain in strain_strata:
-        strain_adjuster = voc_params[dest_strain].contact_rate_multiplier
         dest_filter = {"strain": dest_strain}
-        for source_strain in strain_strata:
-            source_filter = {"strain": source_strain}
-            for age_group in age_groups:
-                age_filter = {"agegroup": age_group}
-                dest_filter.update(age_filter)
-                source_filter.update(age_filter)
 
-                contact_rate_adjuster = strain_adjuster * suscept_adjs[age_group]
-                strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
+        # Adjust for infectiousness of infecting strain
+        strain_adjuster = voc_params[dest_strain].contact_rate_multiplier
 
+        # Loop over all age groups
+        for age_group in age_groups:
+            age_filter = {"agegroup": age_group}
+            dest_filter.update(age_filter)
+            source_filter = age_filter
+
+            # Get an adjuster that considers both the relative infectiousness of the strain and the relative susceptibility of the age group
+            contact_rate_adjuster = strain_adjuster * suscept_adjs[age_group]
+            strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
+
+            # Apply to model
+            model.add_infection_frequency_flow(
+                FlowName.EARLY_REINFECTION,
+                strain_age_contact_rate,
+                Compartment.RECOVERED,
+                infection_dest,
+                source_filter,
+                dest_filter,
+            )
+            if Compartment.WANED in base_compartments:
                 model.add_infection_frequency_flow(
-                    FlowName.EARLY_REINFECTION,
+                    FlowName.LATE_REINFECTION,
                     strain_age_contact_rate,
-                    Compartment.RECOVERED,
+                    Compartment.WANED,
                     infection_dest,
                     source_filter,
                     dest_filter,
                 )
-                if Compartment.WANED in base_compartments:
-                    model.add_infection_frequency_flow(
-                        FlowName.LATE_REINFECTION,
-                        strain_age_contact_rate,
-                        Compartment.WANED,
-                        infection_dest,
-                        source_filter,
-                        dest_filter,
-                    )
 
 
 def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments: List[str]):
@@ -141,40 +147,39 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     strains = list(voc_params.keys())
     affected_compartments = [comp for comp in compartments if comp != Compartment.SUSCEPTIBLE]
 
-    # Check only one strain is specified as the starting strain
-    msg = "More than one strain has been specified as the starting strain"
-    assert [voc_params[i_strain].starting_strain for i_strain in strains].count(True) == 1, msg
-    starting_strain = [i_strain for i_strain in strains if voc_params[i_strain].starting_strain][0]
-
     # Create the stratification object
     strain_strat = StrainStratification("strain", strains, affected_compartments)
 
-    # Population split
-    msg = "Strain seed proportions do not sum to one"
-    assert sum([voc_params[i_strain].seed_prop for i_strain in strains]) == 1., msg
-    msg = "Currently requiring starting seed to all be assigned to the strain nominated as the starting strain"
-    assert voc_params[starting_strain].seed_prop == 1., msg
+    # Assign the starting population
     population_split = {strain: voc_params[strain].seed_prop for strain in strains}
     strain_strat.set_population_split(population_split)
 
-    # Progression rate adjustments - applies to one or two flows for the progression through latency and active disease
-    adjustments = {strain: None for strain in strains}  # Start from blank adjustments sets
+    # Start from blank adjustments sets
+    adjustments_latent = {strain: None for strain in strains}  
     adjustments_active = {strain: None for strain in strains}
     for strain in strains:
         if voc_params[strain].relative_latency:
-            adjustments.update({strain: Multiply(1. / voc_params[strain].relative_latency)})  # Update for user requests
+            adjustments_latent.update(
+                {strain: Multiply(1. / voc_params[strain].relative_latency)}
+            )
         if voc_params[strain].relative_active_period:
-            adjustments_active.update({strain: Multiply(1. / voc_params[strain].relative_active_period)})
+            adjustments_active.update(
+                {strain: Multiply(1. / voc_params[strain].relative_active_period)}
+            )
+    
+    # Adjust the latent compartment transitions
     if Compartment.LATENT_LATE in compartments:
         strain_strat.set_flow_adjustments(
             FlowName.WITHIN_LATENT,
-            adjustments=adjustments
+            adjustments=adjustments_latent
         )
     if Compartment.LATENT in compartments:
         strain_strat.set_flow_adjustments(
             FlowName.PROGRESSION,
-            adjustments=adjustments
+            adjustments=adjustments_latent
         )
+    
+    # Adjust the active compartment transitions
     if Compartment.INFECTIOUS_LATE in compartments:
         strain_strat.set_flow_adjustments(
             FlowName.WITHIN_INFECTIOUS,

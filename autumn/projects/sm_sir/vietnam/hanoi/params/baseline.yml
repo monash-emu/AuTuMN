@@ -19,7 +19,7 @@ population:
 
 time:
   start: 671 # 01st Nov 2021
-  end: 1036 # 01st Nov 2022
+  end: 1097 # 01st Jan 2023
 
 activate_random_process: False
 
@@ -163,6 +163,8 @@ age_stratification:
 
 additional_immunity:
   times:
+    - 822 # 1/4, three months after the start of the third dose vaccination campaign
     - 884
   values:
+    - 0.9
     - 0.54 # 90% fully vaccinated * 60% immunity after 3 months

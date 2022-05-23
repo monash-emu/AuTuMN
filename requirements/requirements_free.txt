@@ -1,3 +1,8 @@
+#
+#  "Floating" requirements file with no version pinning
+#  Used for automated testing on latest package versions
+#
+
 # Summer compartmental modelling
 # https://github.com/monash-emu/summer
 # will also include
@@ -39,6 +44,7 @@ pyAesCrypt
 googledrivedownloader
 statsmodels
 fpdf2
+gitpython
 
 # Testing
 pytest

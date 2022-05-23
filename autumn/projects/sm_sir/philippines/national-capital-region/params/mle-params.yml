@@ -1,9 +1,13 @@
-age_stratification.prop_hospital.multiplier: .8
-contact_rate: 0.178
-hospital_stay.hospital_all.parameters.mean: 4.5
-hospital_stay.icu.parameters.mean: 7.668789271325039
-infectious_seed: 382.4382799493609
-prop_icu_among_hospitalised: 0.11813452916021588
-sojourns.active.total_time: 4.148449978703803
-testing_to_detection.assumed_cdr_parameter: 0.011
-time_from_onset_to_event.hospitalisation.parameters.mean: 6.10970208266649
+age_stratification.prop_hospital.multiplier: .8 # 0.211879011092213
+age_stratification.prop_hospital.source_immunity_protection.high: 0.8509675164845026
+age_stratification.prop_hospital.source_immunity_protection.low: 0.512702308514057
+contact_rate: 0.13481248854469324
+hospital_stay.hospital_all.parameters.mean: 3.9578135991079715
+hospital_stay.icu.parameters.mean: 4.855095558217042
+immunity_stratification.infection_risk_reduction.high: 0.4855729181766785
+immunity_stratification.infection_risk_reduction.low: 0.21783385618215223
+infectious_seed: 362.2605896656094
+prop_icu_among_hospitalised: 0.18143689118310774
+sojourns.active.total_time: 4.618924339211988
+testing_to_detection.assumed_cdr_parameter: 0.006609955735148679
+time_from_onset_to_event.hospitalisation.parameters.mean: 6.948796095339019

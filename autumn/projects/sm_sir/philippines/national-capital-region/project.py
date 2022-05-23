@@ -44,7 +44,7 @@ priors = [
         "age_stratification.prop_hospital.source_immunity_protection.high", [.85, 0.95]
     ),
     # Hospital-related
-    UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, 1.]),
+    UniformPrior("age_stratification.prop_hospital.multiplier", [0.5, 1.5]),
     UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
     UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
     UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 8.0]),

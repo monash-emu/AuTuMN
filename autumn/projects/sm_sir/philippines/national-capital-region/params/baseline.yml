@@ -85,4 +85,8 @@ sojourns:
     total_time: 3.
   recovered: 180.
 
+age_stratification:
+  prop_hospital:
+    reference_strain: omicron
+
 future_monthly_booster_rate: 200000.

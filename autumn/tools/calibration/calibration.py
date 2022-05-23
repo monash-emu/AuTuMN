@@ -1085,6 +1085,9 @@ def get_parameter_bounds_from_priors(prior_dict):
     elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
         lower_bound = 0.0
         upper_bound = float("inf")
+    elif prior_dict["distribution"] == "normal":
+        lower_bound = - float("inf")
+        upper_bound = float("inf")
     elif prior_dict["distribution"] == "trunc_normal":
         lower_bound = prior_dict["trunc_range"][0]
         upper_bound = prior_dict["trunc_range"][1]
@@ -1115,6 +1118,15 @@ def get_parameter_finite_range_from_prior(prior_dict):
         )
         prior_high = stats.truncnorm.ppf(
             0.975, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+        )
+    elif prior_dict["distribution"] == "normal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        prior_low = stats.norm.ppf(
+            0.025, loc=mu, scale=sd
+        )
+        prior_high = stats.norm.ppf(
+            0.975, loc=mu, scale=sd
         )
     elif prior_dict["distribution"] == "beta":
         prior_low = stats.beta.ppf(

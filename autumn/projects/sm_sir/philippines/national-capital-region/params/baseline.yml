@@ -11,7 +11,7 @@ population:
 
 time:
   start: 640  # 650
-  end: 1096  # 31 Dec 2022
+  end: 1277  # 30 June 2023
 
 activate_random_process: False
 
@@ -94,3 +94,4 @@ age_stratification:
     reference_strain: omicron
 
 future_monthly_booster_rate: 200000.
+booster_effect_duration: 180.

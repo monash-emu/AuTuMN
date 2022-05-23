@@ -1,35 +1,43 @@
 description: >
   The new variant is twice as transmissible as Omicron (~4 times more transmissible than Delta VoC).
-  This variant is more immune-escape than Omicron, but not totally towards vaccination- and infection-related.
-  Severity (towards hospitalization and fatality) is less than the Omicron variant.
-  Waning vaccine-induced immunity makes the overall immunity level returning to 10% for the whole population.
+  This variant completely escapes both vaccination- and infection-related immunity.
+  Waning vaccine-induced immunity remained turned off, since it is totally escaped by the new VoC.
+
+#time:
+#  start: 883 # 1st June 2022
+#
+#detect_prop: 0.1
 
 voc_emergence:
   wild_type:
     cross_protection:
       new_strain:
-        early_reinfection: 0.2
-        late_reinfection: 0.17
+        early_reinfection: 0. # fully immune-escape
+        late_reinfection: 0. # fully immune-escape
 
   omicron:
     cross_protection:
       new_strain:
-        early_reinfection: 0.5
-        late_reinfection: 0.35
+        early_reinfection: 0. # fully immune-escape
+        late_reinfection: 0. # fully immune-escape
 
   new_strain:
+    starting_strain: false
+    seed_prop: 0.
     new_voc_seed:
-      start_time: 883.
-    immune_escape: 0.8
-    hosp_protection: 0.9
-    death_protection: 0.95
+      start_time: 883 # 1st June 2022
+      entry_rate: 10.
+      seed_duration: 10.
+    immune_escape: 1.0
+    hosp_protection: 0.
+    death_protection: 0.
     cross_protection:
       wild_type:
-        early_reinfection: 1.0
-        late_reinfection: 0.8
+        early_reinfection: 1. # = omicron --> delta
+        late_reinfection: 0.8 # = omicron --> delta
       omicron:
-        early_reinfection: 1.
-        late_reinfection: 0.7
+        early_reinfection: 1. # = omicron --> delta
+        late_reinfection: 0.8 # = omicron --> delta
       new_strain:
-        early_reinfection: 1.
-        late_reinfection: 0.35
+        early_reinfection: 1. # = omicron --> omicron
+        late_reinfection: 0.15 # = omicron --> delta

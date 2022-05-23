@@ -26,23 +26,23 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.15, 0.30]),
+    UniformPrior("contact_rate", [0.07, 0.20]),
     UniformPrior("sojourns.active.total_time", [4, 10]),
     UniformPrior("infectious_seed", [1, 400]),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.04]),
+    UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.015]),
     # Vaccine-induced immunity
-    # UniformPrior(
-    #     "immunity_stratification.infection_risk_reduction.low", [0., 0.20]
-    # ),
-    # UniformPrior(
-    #     "immunity_stratification.infection_risk_reduction.high", [.50, 0.70]
-    # ),
-    # UniformPrior(
-    #     "age_stratification.prop_hospital.source_immunity_protection.low", [0.40, 0.60]
-    # ),
-    # UniformPrior(
-    #     "age_stratification.prop_hospital.source_immunity_protection.high", [.80, 0.90]
-    # ),
+    UniformPrior(
+        "immunity_stratification.infection_risk_reduction.low", [0.038, 0.438]
+    ),
+    UniformPrior(
+        "immunity_stratification.infection_risk_reduction.high", [0.438, 0.6]
+    ),
+    UniformPrior(
+        "age_stratification.prop_hospital.source_immunity_protection.low", [0.488, 0.807]
+    ),
+    UniformPrior(
+        "age_stratification.prop_hospital.source_immunity_protection.high", [.85, 0.95]
+    ),
     # Hospital-related
     UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, 1.]),
     UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),

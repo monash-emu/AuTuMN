@@ -1,0 +1,22 @@
+description: Decline in MHS compliance
+
+mobility:
+  mixing:
+    work:
+      append: true
+      times:
+        - 2022-05-11
+        - 2022-05-13
+      values:
+        - - repeat_prev
+        - - scale_prev
+          - 1.25  # equivalent to 56% increase as mobility is squared
+    other_locations:
+      append: true
+      times:
+        - 2022-05-11
+        - 2022-05-13
+      values:
+        - - repeat_prev
+        - - scale_prev
+          - 1.25  # equivalent to 56% increase as mobility is squared

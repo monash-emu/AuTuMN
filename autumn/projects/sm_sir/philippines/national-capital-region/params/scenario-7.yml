@@ -1,4 +1,6 @@
-description: New variant more transmissible and completely escapes immunity
+description: More booster doses and new variant more transmissible and completely escapes immunity
+
+future_monthly_booster_rate: 500000
 
 voc_emergence:
   omicron:

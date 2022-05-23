@@ -701,4 +701,11 @@ def build_model(
     # if is_dynamic_immunity:
     outputs_builder.request_immunity_props(immunity_strat.strata)
 
+    # cumulative output requests
+    cumulative_start_time = params.cumulative_start_time if params.cumulative_start_time else None
+    outputs_builder.request_cumulative_outputs(
+        params.requested_cumulative_outputs,
+        cumulative_start_time
+    )
+
     return model

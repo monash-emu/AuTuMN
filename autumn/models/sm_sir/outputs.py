@@ -451,6 +451,19 @@ class SmSirOutputsBuilder(OutputsBuilder):
             )
 
 
+    def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
+        """
+        Compute cumulative outputs for requested outputs.
+
+        Args:
+            requested_cumulative_outputs: List of requested derived outputs to accumulate
+            cumulative_start_time: reference time for cumulative output calculation
+        """
+
+        for output in requested_cumulative_outputs:
+            self.model.request_cumulative_output(name=f"cumulative_{output}", source=output, start_time=cumulative_start_time)
+
+
 def build_statistical_distribution(distribution_details: TimeDistribution):
     """
     Generate a scipy statistical distribution object that can then be used multiple times to evaluate the cdf

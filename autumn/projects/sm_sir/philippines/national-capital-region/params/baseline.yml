@@ -95,3 +95,6 @@ age_stratification:
 
 future_monthly_booster_rate: 200000.
 booster_effect_duration: 180.
+
+requested_cumulative_outputs: ['notifications']
+cumulative_start_time: null

@@ -563,6 +563,10 @@ class Parameters:
     additional_immunity: Optional[TimeSeries]
     future_monthly_booster_rate: Optional[float]
 
+    # Output-related
+    requested_cumulative_outputs: List[str]
+    cumulative_start_time: Optional[float]
+
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):
         assert all(

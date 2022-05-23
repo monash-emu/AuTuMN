@@ -7,23 +7,23 @@ import json
 import requests
 
 from pathlib import Path
-from datetime import datetime
 from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-from google_drive_downloader import GoogleDriveDownloader as gdd
 
 from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
-
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+
+PROJECTS_PATH = Path(PROJECTS_PATH)
+INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
 PHL_doh_link = "1_Q2R5F0WUtJ9Bs7EBor12VH_XRXAU8Wb"  # sheet 05 daily report
 PHL_fassster_link = "1ZaOclvGO9cs3PfGn9BN-32p9jx0R9fFT"
 
 # destination folders filepaths
-phl_inputs_dir = Path(INPUT_DATA_PATH, "covid_phl")
+phl_inputs_dir = INPUT_DATA_PATH / "covid_phl"
 PHL_doh_dest = phl_inputs_dir / "PHL_icu.csv"
 PHL_fassster_dest = phl_inputs_dir / "PHL_ConfirmedCases.zip"
 icu_o_dest = phl_inputs_dir / "PHL_icu_processed.csv"

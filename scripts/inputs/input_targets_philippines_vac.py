@@ -1,14 +1,19 @@
 import os
 import pandas as pd
+
+from pathlib import Path
 from autumn.settings.folders import INPUT_DATA_PATH
 from autumn.settings.constants import COVID_BASE_DATETIME
 
 URL = "1kAlNlxhkYv5MF4810gYCTudqiVO5D9xpVNqhzATaFK8"
 
 COVID_BASE_DATETIME = COVID_BASE_DATETIME.date()
-VAC_PATH = os.path.join(INPUT_DATA_PATH, "covid_phl")
-file_names = [files for files in os.listdir(VAC_PATH) if "NVOC Month END_" in files]
-xlsx_file_path = [os.path.join(VAC_PATH, file) for file in file_names]
+INPUT_DATA_PATH =Path(INPUT_DATA_PATH)
+VAC_PATH = INPUT_DATA_PATH/ "covid_phl"
+
+
+file_names = [file for file in list(VAC_PATH.glob('*')) if "NVOC Month END_" in file.stem]
+xlsx_file_path = file_names
 
 file_dates = [
     pd.to_datetime(pd.ExcelFile(file).sheet_names[0], format="%m%d%Y").date()
@@ -71,4 +76,4 @@ def get_phl_vac(VAC_FILE, process_df):
 
 
 phl_vac_df = get_phl_vac(VAC_FILE, process_df)
-phl_vac_df.to_csv(os.path.join(VAC_PATH, "phl_vaccination.csv"), index=False)
+phl_vac_df.to_csv(VAC_PATH / "phl_vaccination.csv", index=False)

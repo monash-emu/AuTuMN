@@ -9,9 +9,9 @@
 Our COVID-19 model is a series of compartments representing transitions between states relevant to infection with SARS-CoV-2 and onward transmission of this virus.
 Unlike previous iterations of this model (including our past publications on the epidemics in the Philippines \cite{caldwell-2021-a}, Malaysia \cite{jayasundara-2021} and Victoria, Australia), our current model considers only states relevant to transmission.
 Hospitalisation, admission to ICU and death are no longer represented as explicit model states, but are now calculated from model outputs through a convolution process.
-The rationale for this approach is that the explicitly modelled states are reserved to represent considerations relevant to epidemic transmission dynamics only.
-The other outcomes can be calculated from the quantities that are tracked during the process of numerically solving the dynamic system (``derived outputs'').
-It should be noted that this is done after each model realisation, such that these quantities can still be compared to empirically observed outcomes and so used for calibration.
+The rationale for this approach is that the explicitly modelled states are reserved for the representation of processes relevant to epidemic transmission dynamics only.
+Any other relevant outcomes are then calculated from the quantities that are tracked during the process of numerically solving the dynamic system (``derived outputs''), including through convolutions.
+It should be noted that the process of calculating derived outputs is done after each model iteration, such that these quantities can still be compared to empirically observed outcomes and so used for calibration.
 
 \subsection{Compartments}
 Model compartments represent sequential progressions through the processes of infection with, progression through and recovery from the phases of SARS-CoV-2.

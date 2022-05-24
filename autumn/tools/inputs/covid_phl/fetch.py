@@ -7,15 +7,17 @@ import os
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
 from autumn.settings import INPUT_DATA_PATH
+from pathlib import Path
+INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # From DoH google drive folder, shareable link changes with every update
 DATA_URL = (
     "1lV3qtuCq6IgcF34SnkY-ppNbuqSRmihC"  # shareable link for sheet 07 testing data
 )
 
-COVID_PHL_DIRPATH = os.path.join(INPUT_DATA_PATH, "covid_phl")
-COVID_PHL_CSV_PATH = os.path.join(COVID_PHL_DIRPATH, "COVID_Phl_testing.csv")
-COVID_PHL_VAC_PATH = os.path.join(COVID_PHL_DIRPATH, "phl_vaccination.csv")
+COVID_PHL_DIRPATH = INPUT_DATA_PATH /"covid_phl"
+COVID_PHL_CSV_PATH = COVID_PHL_DIRPATH/ "COVID_Phl_testing.csv"
+COVID_PHL_VAC_PATH = COVID_PHL_DIRPATH/ "phl_vaccination.csv"
 
 
 def fetch_covid_phl_data():

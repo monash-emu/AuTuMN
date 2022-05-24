@@ -1,17 +1,19 @@
 import requests
 import json
 import pandas as pd
-import os
 
 from autumn.settings import INPUT_DATA_PATH
+from pathlib import Path
+
+INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 
-COVID_SURVEY_PATH = os.path.join(INPUT_DATA_PATH, "covid_survey")
+COVID_SURVEY_PATH = INPUT_DATA_PATH / "covid_survey"
 TODAY = pd.to_datetime("today").date().strftime("%Y%m%d")
 FROM_DATE = "20200101"
 
 countries = ["Australia", "Malaysia", "Myanmar", "Philippines", "Sri Lanka"]
-indicators = ["mask","avoid_contact"]
+indicators = ["mask", "avoid_contact"]
 
 
 def fetch_covid_survey_data():
@@ -36,5 +38,5 @@ def fetch_covid_survey_data():
             # convert to pandas dataframe
             df = pd.DataFrame.from_dict(jsonData["data"])
             file_name = f"{indicator}_{country}.csv"
-            file_full_path = os.path.join(COVID_SURVEY_PATH, file_name)
+            file_full_path = COVID_SURVEY_PATH / file_name
             df.to_csv(file_full_path, index=False)

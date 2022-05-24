@@ -7,7 +7,7 @@
 \subsection{General features}
 
 Our COVID-19 model is a series of compartments representing transitions between states relevant to infection with SARS-CoV-2 and onward transmission of this virus.
-Unlike previous iterations of this model (including our past publications on the epidemics in the Philippines, Malaysia and Victoria, Australia), our current model considers only states relevant to transmission.
+Unlike previous iterations of this model (including our past publications on the epidemics in the Philippines \cite{caldwell-2021-a}, Malaysia \cite{jayasundara-2021} and Victoria, Australia), our current model considers only states relevant to transmission.
 Hospitalisation, admission to ICU and death are no longer represented as explicit model states, but are now calculated from model outputs through a convolution process.
 The rationale for this approach is that the explicitly modelled states are reserved to represent considerations relevant to epidemic transmission dynamics only.
 The other outcomes can be calculated from the quantities that are tracked during the process of numerically solving the dynamic system (``derived outputs'').

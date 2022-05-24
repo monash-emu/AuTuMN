@@ -1,3 +1,4 @@
+from typing import List
 import pandas as pd
 
 
@@ -21,7 +22,8 @@ def preprocess_covid_bgd(input_db: Database):
 def process_coxs_bazar_vaccination(COXS_VAC_DATA: str) -> pd.DataFrame:
     df = pd.read_excel(COXS_VAC_DATA, usecols=[4, 5, 7, 8], skipfooter=1)
     df.rename(
-        columns={"# Total Vaccinated": "total_vaccinated", "First Dose": "dose"}, inplace=True
+        columns={"# Total Vaccinated": "total_vaccinated", "First Dose": "dose"},
+        inplace=True,
     )
     df = df.groupby(["Date", "dose"], as_index=False).sum()
     df = create_date_index(COVID_BASE_DATETIME, df, "Date")
@@ -38,14 +40,14 @@ def process_coxs_bazar(COXS_DATA: str) -> pd.DataFrame:
     return df
 
 
-def process_bgd_dhk_vaccination(VACC_FILE: str) -> pd.DataFrame:
+def process_bgd_dhk_vaccination(VACC_FILE: List) -> pd.DataFrame:
 
     df = pd.DataFrame()
 
     for file in VACC_FILE:
-        file_info = file.split("\\")[-1].split("_")
+        file_info = file.stem.split("\\")[-1].split("_")
         dose = file_info[1]
-        region = file_info[2].replace(".xls", "")
+        region = file_info[2]
 
         tmp_df = pd.read_csv(file)
         cols = list(tmp_df.columns)

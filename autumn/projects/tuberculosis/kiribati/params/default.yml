@@ -11,7 +11,7 @@ time:
   start: 1800.
   end: 2050.
   step: 0.1
-  critical_ranges: [[2017., 2019.]]
+  critical_ranges: [[2022., 2025.]]
 
 start_population_size: 2000.
 
@@ -24,21 +24,19 @@ stratify_by: ["age", "organ", "location"]
 age_breakpoints: [0, 5, 15, 35, 50]
 user_defined_stratifications: # this specifies user-defined  stratifications
   location:
-    strata: ["majuro", "ebeye", "other"]
+    strata: ["south_tarawa", "other"]
     proportions:
-      majuro: .523
-      ebeye: .2
-      other: .277
+      south_tarawa: .53
+      other: .47
     prop_mixing_same_stratum: .95
     adjustments:
       infection:
+        south_tarawa: 1.
+        other:  1.
+      detection:
         majuro: 1.
         ebeye: 1.
         other: 1.
-      detection:
-        majuro: 1.
-        ebeye: 1.495354866232787
-        other: 1.2325688858220845
 
 # BCG coverage
 bcg_effect: "infection"  # infection or mortality
@@ -128,19 +126,19 @@ outputs_stratification:
   incidence: ["location"]
   mortality: ["location"]
 
-cumulative_output_start_time: 2018.
+cumulative_output_start_time: 2020.
 
 inflate_reactivation_for_diabetes: True
 
 # Implement past interventions
 time_variant_acf:
-  - stratum_filter: { "location": "ebeye" }
+  - stratum_filter: { "location": "south_tarawa" }
     time_variant_screening_rate:
       2017: 0.
       2017.01: 1.9
       2018.: 1.9
       2018.01: 0.
-    exclude_age: [0, 5]
+    exclude_age: [0, 3]
   - stratum_filter: { "location": "majuro" }
     time_variant_screening_rate:
       2018: 0.

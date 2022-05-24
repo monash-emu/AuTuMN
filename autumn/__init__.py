@@ -122,3 +122,9 @@ register_project(
     Region.THIMPHU,
     "autumn.projects.sm_sir.bhutan.thimphu.project",
 )
+
+register_project(
+    Models.TB,
+    Region.KIRIBATI,
+   "autumn.projects.tuberculosis.kiribati.project",
+)

@@ -30,6 +30,7 @@ class Region:
     COXS_BAZAR = "coxs_bazar"
     BHUTAN = "bhutan"
     THIMPHU = "thimphu"
+    KIRIBATI = "kiribati"
 
     REGIONS = [
         PHILIPPINES,

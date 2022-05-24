@@ -29,5 +29,12 @@ targets = [
 ]
 calibration = Calibration(priors=priors, targets=targets, hierarchical_priors=hierarchical_priors)
 
+
+import json
+
+plot_spec_filepath = build_rel_path("timeseries.json")
+with open(plot_spec_filepath) as f:
+    plot_spec = json.load(f)
+
 # Create and register the project
-project = Project(Region.MULTI, Models.HIERARCHICAL_SIR, build_model, param_set, calibration)
+project = Project(Region.MULTI, Models.HIERARCHICAL_SIR, build_model, param_set, calibration, plots=plot_spec)

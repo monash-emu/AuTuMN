@@ -77,7 +77,7 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.5 # 60% immune escape of Omicron from Delta
       new_strain:
-        early_reinfection: 0.66 # = omicron --> omicron
+        early_reinfection: 1. # = omicron --> omicron
         late_reinfection: 0.5 # 60% immune escape of Omicron from Delta
   new_strain:
     starting_strain: false

@@ -75,6 +75,8 @@ data/outputs
 *.out
 *.bbl
 *.toc
+*.fls
+*.fdb_latexmk
 apps/*/tex/*.pdf
 *.synctex*
 docs/papers/master_files/*.pdf

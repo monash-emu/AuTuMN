@@ -77,14 +77,9 @@ data/outputs
 *.toc
 *.fls
 *.fdb_latexmk
-apps/*/tex/*.pdf
+*.lof
 *.synctex*
-docs/papers/master_files/*.pdf
-!docs/papers/*/projects/*/methods_figures/*.png
-
-
-# Policy brief
-!docs/papers/covid_19/policy_brief/images/*.png
+docs/master_files/*.pdf
 
 # Random stuff
 *marshall-islands*.pickle

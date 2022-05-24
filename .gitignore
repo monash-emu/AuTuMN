@@ -79,7 +79,7 @@ data/outputs
 *.fdb_latexmk
 *.lof
 *.synctex*
-docs/master_files/*.pdf
+docs/master_files/**/*.pdf
 
 # Random stuff
 *marshall-islands*.pickle

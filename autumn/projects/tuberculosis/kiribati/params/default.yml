@@ -8,13 +8,13 @@ age_mixing:
   age_adjust: true
 
 time:
-  start: 1955.
+  start: 1800.
   end: 2050.
   step: 0.1
   critical_ranges: [[2022., 2025.]]
 
 start_population_size: 36573.
-crude_birth_rate: 27
+crude_birth_rate: 1.
 
 #import_ltbi_cases:
 #  start_time: 2000

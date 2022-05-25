@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pytest
 
-from autumn.model_extensions.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
+from autumn.model_features.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
 from summer import CompartmentalModel
 
 

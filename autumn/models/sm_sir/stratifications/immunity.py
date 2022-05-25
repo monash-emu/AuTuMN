@@ -10,7 +10,7 @@ from autumn.tools.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.tools.inputs.covid_mys.queries import get_mys_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
-from autumn.model_extensions.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
+from autumn.model_features.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
 
 ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),

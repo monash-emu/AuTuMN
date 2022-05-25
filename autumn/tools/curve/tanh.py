@@ -18,11 +18,16 @@ def tanh_based_scaleup(shape, inflection_time, start_asymptote, end_asymptote=1.
     return tanh_scaleup
 
 
-def step_based_scaleup_for_notifications(magnitude, time_in_effect, start, end):
-    low_microdistancing = [0] * len(list(range(start, time_in_effect+1)))  # from start to time in effect low microdistncing
-    high_microdistancing = [magnitude] * len(list(range(time_in_effect, end+1)))  # from time in effect to end high microdistncing
-    microdistancing_effect = low_microdistancing + high_microdistancing
-    return microdistancing_effect
+def step_based_scaleup_for_notifications(magnitude_low, magnitude_high,  time_in_effect, contact_rate, t):
+    if t < time_in_effect:
+        microdistancing_effect = magnitude_low
+    else:
+        microdistancing_effect = magnitude_high
+
+    contact_rate = contact_rate * (microdistancing_effect ** 2)  # adjust transmission rate
+    # to have microdistancing effect on notifications
+
+    return contact_rate
 
 
 

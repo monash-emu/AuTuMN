@@ -223,10 +223,9 @@ class EmpiricMicrodistancingParams(BaseModel):
 
 
 class StepFunctionMicrodistancingParams(BaseModel):
-    magnitude: float
-    time_in_effect: int
-    start: int
-    end: int
+    magnitude_low: float
+    magnitude_high: float
+    time_to_effect: float
 
 
 class TanhMicrodistancingParams(BaseModel):

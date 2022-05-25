@@ -284,7 +284,7 @@ def get_cdr_func(
     return cdr_func, non_detect_func
 
 
-def get_microdist_func_component(func_params: Optional[Dict[str, StepFunctionMicrodistancingParams]]):
+def get_microdist_func_component(func_params: Optional[Dict[str, StepFunctionMicrodistancingParams]], contact_rate, time):
     """
     Get a single function of time using the standard parameter request structure for any microdistancing function, or
     adjustment to a microdistancing function.
@@ -292,18 +292,19 @@ def get_microdist_func_component(func_params: Optional[Dict[str, StepFunctionMic
 
     Args:
         func_params: The parameters used to define the microdistancing function
-        iso3: ISO3 code of the modelled country
+        contact_rate: contact_rate parameter value
+        time: model run time
 
     Returns:
         Function of notifications returning a scalar
 
     """
-    magnitude = func_params['step_function'].magnitude
-    time_in_effect = func_params['step_function'].time_in_effect
-    start = func_params['step_function'].start
-    end = func_params['step_function'].end
+    magnitude_low = func_params['step_function'].magnitude_low
+    magnitude_high= func_params['step_function'].magnitude_high
+    time_in_effect = func_params['step_function'].time_to_effect
 
-    return step_based_scaleup_for_notifications(magnitude, time_in_effect, start, end)
+
+    return step_based_scaleup_for_notifications(magnitude_low, magnitude_high, time_in_effect, contact_rate, time)
 
 
 def apply_reinfection_flows_without_strains(
@@ -439,6 +440,8 @@ def build_model(
 
     else:
         contact_rate = params.contact_rate
+
+
 
     # Add the process of infecting the susceptibles for the first time
     model.add_infection_frequency_flow(
@@ -645,9 +648,8 @@ def build_model(
         )
 
     if params.microdistancing_derived:
-        level_of_microdistancing = get_microdist_func_component(params.microdistancing_derived)
-        notifications = notifications * level_of_microdistancing  # adjust notifications by
-        # the level of microdistancing effects
+        get_microdist_func_component(params.microdistancing_derived, params.contact_rate, time_params)
+
 
     """
     Get the applicable outputs
@@ -659,6 +661,7 @@ def build_model(
 
     if is_undetected:
         outputs_builder.request_cdr()
+
 
     # Determine what flow will be used to track disease incidence
     if Compartment.INFECTIOUS_LATE in compartment_types:

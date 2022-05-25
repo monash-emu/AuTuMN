@@ -56,10 +56,9 @@ detect_prop: 0.6
 
 microdistancing_derived:
   step_function:
-    magnitude: 0.5
-    time_in_effect: 760 #type int
-    start: 750 #model end time, type int
-    end: 912 #model start, time type int
+    magnitude_low: 0. # microdistancing effect when t < time_to_effect
+    magnitude_high: 0.5 # microdistancing effect when t > time_to_effect
+    time_to_effect: 760 #type in which microdistancing steps up
 
 voc_emergence:
   omicron:

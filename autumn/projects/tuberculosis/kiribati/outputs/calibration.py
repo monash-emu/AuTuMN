@@ -87,8 +87,8 @@ def plot_model_fits(uncertainty_df, figure_path):
     n_row = 2
 
     outputs = [
-        "prevalence_infectiousXlocation_majuro", "prevalence_infectiousXlocation_ebeye",
-        "percentage_latentXlocation_majuro", "notificationsXlocation_majuro", "notificationsXlocation_ebeye",
+        "prevalence_infectiousXlocation_starawa", "prevalence_infectiousXlocation_other",
+        "percentage_latentXlocation_starawa", "notificationsXlocation_other",
         "population_size"
     ]
     panel_h = 5

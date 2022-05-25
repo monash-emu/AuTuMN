@@ -34,8 +34,8 @@ user_defined_stratifications: # this specifies user-defined  stratifications
         starawa: 1.
         other: 1.
       detection:
-        starawa: 1.
-        other: 1.2325688858220845
+        starawa: 1.5
+        other: 1.
 
 # BCG coverage
 bcg_effect: "infection"  # infection or mortality

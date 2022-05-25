@@ -1,20 +1,20 @@
-import autumn.projects.tuberculosis.marshall_islands.outputs.calibration as cal
-import autumn.projects.tuberculosis.marshall_islands.outputs.counterfactual as ctf
-import autumn.projects.tuberculosis.marshall_islands.outputs.diabetes as dia
-import autumn.projects.tuberculosis.marshall_islands.outputs.elimination as elm
-import autumn.projects.tuberculosis.marshall_islands.outputs.get_output_numbers as gon
-import autumn.projects.tuberculosis.marshall_islands.outputs.posteriors as pos
-import autumn.projects.tuberculosis.marshall_islands.outputs.priors as pri
-from autumn.projects.tuberculosis.marshall_islands.outputs.utils import get_format
+import autumn.projects.tuberculosis.kiribati.outputs.calibration as cal
+import autumn.projects.tuberculosis.kiribati.outputs.counterfactual as ctf
+import autumn.projects.tuberculosis.kiribati.outputs.diabetes as dia
+import autumn.projects.tuberculosis.kiribati.outputs.elimination as elm
+import autumn.projects.tuberculosis.kiribati.outputs.get_output_numbers as gon
+import autumn.projects.tuberculosis.kiribati.outputs.posteriors as pos
+import autumn.projects.tuberculosis.kiribati.outputs.priors as pri
+from autumn.projects.tuberculosis.kiribati.outputs.utils import get_format
 
 import os
 from autumn.settings import BASE_PATH
 
 DATA_PATH = os.path.join(
-    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "pbi_databases"
+    BASE_PATH, "autumn", "projects", "tuberculosis", "kiribati", "outputs", "pbi_databases"
 )
 OUTPUT_PATH = os.path.join(
-    BASE_PATH, "autumn", "projects", "tuberculosis", "marshall_islands", "outputs", "all_outputs"
+    BASE_PATH, "autumn", "projects", "tuberculosis", "kiribati", "outputs", "all_outputs"
 )
 
 

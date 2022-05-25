@@ -2,12 +2,12 @@ import os
 
 import pandas as pd
 
-from autumn.projects.tuberculosis.marshall_islands.project import priors
+from autumn.projects.tuberculosis.kiribati.project import priors
 
-from autumn.projects.tuberculosis.marshall_islands.outputs.posteriors import (
+from autumn.projects.tuberculosis.kiribati.outputs.posteriors import (
     format_parameter,
 )
-from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
+from autumn.projects.tuberculosis.kiribati.outputs.utils import (
     make_output_directories,
 )
 

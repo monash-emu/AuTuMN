@@ -2,7 +2,7 @@ import os
 
 from matplotlib import pyplot
 
-from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
+from autumn.projects.tuberculosis.kiribati.outputs.utils import (
     OUTPUT_TITLES,
     REGION_TITLES,
     get_format,

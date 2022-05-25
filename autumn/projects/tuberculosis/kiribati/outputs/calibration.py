@@ -2,7 +2,7 @@ import os
 
 from matplotlib import pyplot
 
-from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
+from autumn.projects.tuberculosis.kiribati.outputs.utils import (
     OUTPUT_TITLES,
     get_format,
     make_output_directories,
@@ -81,7 +81,7 @@ def plot_screening_rate(uncertainty_df, figure_path):
 
 
 def plot_model_fits(uncertainty_df, figure_path):
-    project = get_project("tuberculosis", "marshall-islands")
+    project = get_project("tuberculosis", "kiribati")
 
     n_col = 3
     n_row = 2

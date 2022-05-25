@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
+from autumn.projects.tuberculosis.kiribati.outputs.utils import (
     make_output_directories,
 )
 from autumn.tools.plots.utils import PLOT_TEXT_DICT

@@ -1,4 +1,4 @@
-from autumn.tools.calibration.priors import UniformPrior
+from autumn.runners.calibration.priors import UniformPrior
 
 # Not currently used anywhere.
 LOGNORMAL_PARAMS = {

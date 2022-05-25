@@ -1,10 +1,10 @@
 from summer.model import CompartmentalModel
 
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.runners.calibration.priors import UniformPrior
+from autumn.runners.calibration.targets import NormalTarget
 
 from autumn.tools.project import Project, ParameterSet, load_timeseries, Params
-from autumn.tools.calibration import Calibration
+from autumn.runners.calibration import Calibration
 
 
 def get_test_project():

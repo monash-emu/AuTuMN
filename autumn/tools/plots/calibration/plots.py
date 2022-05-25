@@ -16,7 +16,7 @@ from matplotlib import pyplot
 from scipy import stats
 
 from autumn.tools import db
-from autumn.tools.calibration.utils import calculate_prior, raise_error_unsupported_prior
+from autumn.runners.calibration.utils import calculate_prior, raise_error_unsupported_prior
 from autumn.tools.plots.plotter import COLOR_THEME, Plotter
 from autumn.tools.plots.utils import (
     REF_DATE,
@@ -26,7 +26,7 @@ from autumn.tools.plots.utils import (
     split_mcmc_outputs_by_chain,
 )
 from autumn.tools.utils.utils import flatten_list
-from autumn.tools.calibration.diagnostics import calculate_effective_sample_size, calculate_r_hat
+from autumn.runners.calibration.diagnostics import calculate_effective_sample_size, calculate_r_hat
 
 logger = logging.getLogger(__name__)
 

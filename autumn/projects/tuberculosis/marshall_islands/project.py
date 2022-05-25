@@ -1,7 +1,7 @@
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import (
+from autumn.runners.calibration import Calibration
+from autumn.runners.calibration.priors import UniformPrior
+from autumn.runners.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
 )

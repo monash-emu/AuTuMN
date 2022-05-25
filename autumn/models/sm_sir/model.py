@@ -6,14 +6,13 @@ from summer import CompartmentalModel
 
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.tools.random_process import RandomProcess
+from autumn.tools.random_process import RandomProcessProc
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.tools.utils.utils import multiply_function_or_constant
 from autumn.tools.utils.summer import FunctionWrapper
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population
-from summer.compute import ComputedValueProcessor
+from .parameters import Parameters, Sojourns, CompartmentSojourn, TestingToDetection, Population
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import (
@@ -88,56 +87,6 @@ def assign_population(
 
     # Assign to the model
     model.set_initial_population(init_pop)
-
-
-class RandomProcessProc(ComputedValueProcessor):
-    """
-    Calculate the values of the random process
-    """
-
-    def __init__(self, rp_time_variant_func):
-        self.rp_time_variant_func = rp_time_variant_func
-
-    def process(self, compartment_values, computed_values, time):
-        return self.rp_time_variant_func(time)
-
-
-def set_up_random_process(start_time, end_time):
-    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)
-
-
-def get_random_process(
-        time_params: Time,
-        process_params: RandomProcessParams,
-        contact_rate_value: float,
-) -> Tuple[callable, callable]:
-    """
-    Work out the process that will contribute to the random process.
-
-    Args:
-        time_params: Start and end time of the model
-        process_params: Parameters relating to the random process
-        contact_rate_value: The risk of transmission per contact
-
-    Returns:
-        The random process function and the contact rate (here a summer-ready format transition function)
-
-    """
-
-    # Build the random process, using default values and coefficients
-    rp = set_up_random_process(time_params.start, time_params.end)
-
-    # Update random process details based on the model parameters
-    rp.update_config_from_params(process_params)
-
-    # Create function returning exp(W), where W is the random process
-    rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
-
-    # Create the time-variant contact rate that uses our computed random process
-    def contact_rate_func(t, computed_values):
-        return contact_rate_value * computed_values["transformed_random_process"]
-
-    return rp_time_variant_func, contact_rate_func
 
 
 def add_latent_transitions(

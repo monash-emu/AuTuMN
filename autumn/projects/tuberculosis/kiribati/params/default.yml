@@ -1,5 +1,5 @@
 ---
-iso3: "MHL"
+iso3: "KIR"
 
 age_mixing:
   # type: "prem"
@@ -8,12 +8,12 @@ age_mixing:
   age_adjust: true
 
 time:
-  start: 1800.
+  start: 1947.
   end: 2050.
   step: 0.1
   critical_ranges: [[2022., 2025.]]
 
-start_population_size: 2000.
+start_population_size: 1671.
 
 #import_ltbi_cases:
 #  start_time: 2000
@@ -24,19 +24,18 @@ stratify_by: ["age", "organ", "location"]
 age_breakpoints: [0, 5, 15, 35, 50]
 user_defined_stratifications: # this specifies user-defined  stratifications
   location:
-    strata: ["south_tarawa", "other"]
+    strata: ["starawa", "other"]
     proportions:
-      south_tarawa: .53
-      other: .47
+      starawa: .523
+      other: .277
     prop_mixing_same_stratum: .95
     adjustments:
       infection:
-        south_tarawa: 1.
-        other:  1.
-      detection:
-        majuro: 1.
-        ebeye: 1.
+        starawa: 1.
         other: 1.
+      detection:
+        starawa: 1.
+        other: 1.2325688858220845
 
 # BCG coverage
 bcg_effect: "infection"  # infection or mortality
@@ -87,7 +86,7 @@ time_variant_tsr: # should always be > 0 # https://www.stoptb.org/static_pages/K
 
 time_variant_tb_screening_rate:
   shape: .1 # The shape parameter to the tanh-based curve
-  inflection_time: 1990. # Point at which curve inflects
+  inflection_time: 1995. # Point at which curve inflects
   start_asymptote: 0. # Starting value - lower asymptote
   end_asymptote: 0.4057634920539735
 
@@ -99,7 +98,7 @@ extra_params:
     35: 0.4
     50: 0.7
   rr_progression_diabetes: 5.643402828077587
-  future_diabetes_multiplier: 1.
+  future_diabetes_multiplier: 1.2
 
 
 # calibrated parameters
@@ -126,20 +125,20 @@ outputs_stratification:
   incidence: ["location"]
   mortality: ["location"]
 
-cumulative_output_start_time: 2020.
+cumulative_output_start_time: 2022.
 
 inflate_reactivation_for_diabetes: True
 
 # Implement past interventions
 time_variant_acf:
-  - stratum_filter: { "location": "south_tarawa" }
+  - stratum_filter: { "location": "starawa" }
     time_variant_screening_rate:
       2017: 0.
       2017.01: 1.9
       2018.: 1.9
       2018.01: 0.
     exclude_age: [0, 3]
-  - stratum_filter: { "location": "majuro" }
+  - stratum_filter: { "location": "other" }
     time_variant_screening_rate:
       2018: 0.
       2018.01: 1.66  # from 81% first screen
@@ -147,22 +146,19 @@ time_variant_acf:
       2019.01: 0.
 
 time_variant_ltbi_screening:
-  - stratum_filter: { "location": "majuro" }
+  - stratum_filter: { "location": "starawa" }
     time_variant_screening_rate:
       2018: 0.
       2018.01: .9  # from 81% first screen / of whom 86.5% fully screened times 92% of TST+ recommended for PT times 92% of recommanded actually started
       2019: .9
       2019.01: 0.
-#  - stratum_filter: { "location": "ebeye" }
-#    time_variant_screening_rate:
-#      2018: 0.
-#  - stratum_filter: { "location": "other" }
-#    time_variant_screening_rate:
-#      2018: 0.
+  - stratum_filter: { "location": "other" }
+    time_variant_screening_rate:
+      2018: 0.
 
 awareness_raising:
   relative_screening_rate: 1.25
-  scale_up_range: [2018, 2019]
+  scale_up_range: [2020, 2022]
 
 #hh_contacts_pt:
 #  start_time: 2020

@@ -6,18 +6,18 @@
     "values": [],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
-  "prevalence_infectiousXlocation_majuro": {
-    "title": "TB prevalence in Majuro (/100,000)",
-    "output_key": "prevalence_infectiousXlocation_majuro",
-    "times": [2018.0],
-    "values": [1366.0],
+  "prevalence_infectiousXlocation_starawa": {
+    "title": "TB prevalence in South Tarawa (/100,000)",
+    "output_key": "prevalence_infectiousXlocation_starawa",
+    "times": [2000.0],
+    "values": [350.0],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
-  "prevalence_infectiousXlocation_ebeye": {
-    "title": "TB prevalence in Ebeye (/100,000)",
-    "output_key": "prevalence_infectiousXlocation_ebeye",
-    "times": [2017.0],
-    "values": [755.0],
+  "prevalence_infectiousXlocation_other": {
+    "title": "TB prevalence in Other Islands (/100,000)",
+    "output_key": "prevalence_infectiousXlocation_other",
+    "times": [2000.0],
+    "values": [20.0],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "percentage_latent": {
@@ -27,18 +27,11 @@
     "values": [],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
-  "percentage_latentXlocation_majuro": {
-    "title": "LTBI prevalence in Majuro (%)",
-    "output_key": "percentage_latentXlocation_majuro",
-    "times": [2018.0],
-    "values": [38],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "percentage_latentXlocation_ebeye": {
-    "title": "LTBI prevalence in Ebeye (%)",
-    "output_key": "percentage_latentXlocation_ebeye",
-    "times": [],
-    "values": [],
+  "percentage_latentXlocation_starawa": {
+    "title": "LTBI prevalence in South Tarawa (%)",
+    "output_key": "percentage_latentXlocation_starawa",
+    "times": [2015.0],
+    "values": [250],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "percentage_latentXlocation_other": {
@@ -51,36 +44,29 @@
   "notifications": {
     "title": "Notifications",
     "output_key": "notifications",
-    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
-    "values": [146, 153, 153, 136, 178, 203, 410, 225, 150],
+    "times": [2000.0, 2001.0, 2002.0, 2003.0, 2004.0, 2005.0, 2006.0, 2007.0, 2008.0, 2009.0, 2010.0, 2011.0, 2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [252, 189, 196, 284, 310, 332, 378, 334, 335, 278, 286, 343, 346, 472, 473, 559, 575, 422, 349, 436, 425],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
-  "notificationsXlocation_majuro": {
-    "title": "Notifications in Majuro",
-    "output_key": "notificationsXlocation_majuro",
-    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
-    "values": [91, 116, 115, 90, 119, 116, 376, 135, 96],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "notificationsXlocation_ebeye": {
-    "title": "Notifications in Ebeye",
-    "output_key": "notificationsXlocation_ebeye",
-    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
-    "values": [44, 27, 30, 29, 53, 80, 30, 45, 39],
+  "notificationsXlocation_starawa": {
+    "title": "Notifications in South Tarawa",
+    "output_key": "notificationsXlocation_starawa",
+    "times": [2000.0, 2001.0, 2002.0, 2003.0, 2004.0, 2005.0, 2006.0, 2007.0, 2008.0, 2009.0, 2010.0, 2011.0, 2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [150, 120, 140, 220, 230, 220, 278, 234, 235, 178, 186, 243, 246, 372, 373, 359, 475, 322, 249, 236, 225],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "notificationsXlocation_other": {
     "title": "Notifications in Other Islands",
     "output_key": "notificationsXlocation_other",
-    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
-    "values": [11, 10, 8, 17, 6, 7, 4, 45, 15],
+    "times": [2000.0, 2001.0, 2002.0, 2003.0, 2004.0, 2005.0, 2006.0, 2007.0, 2008.0, 2009.0, 2010.0, 2011.0, 2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [102, 79, 56, 64, 100, 132, 100, 100, 100, 100, 100, 100, 100, 100, 100, 200, 100, 100, 100, 200, 200],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "population_size": {
     "title": "Population size",
     "output_key": "population_size",
-    "times": [2011.0],
-    "values": [53158.0],
+    "times": [2020.0],
+    "values": [119940.0],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "incidence": {
@@ -90,16 +76,9 @@
     "values": [],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
-  "incidenceXlocation_majuro": {
-    "title": "TB incidence in Majuro (/100,000/y)",
-    "output_key": "incidenceXlocation_majuro",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "incidenceXlocation_ebeye": {
-    "title": "TB incidence in Ebeye (/100,000/y)",
-    "output_key": "incidenceXlocation_ebeye",
+  "incidenceXlocation_starawa": {
+    "title": "TB incidence in South Tarawa (/100,000/y)",
+    "output_key": "incidenceXlocation_starawa",
     "times": [],
     "values": [],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
@@ -119,16 +98,9 @@
     "values": [51.0] ,
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
-  "mortalityXlocation_majuro": {
-    "title": "TB mortality in Majuro (/100,000/y)",
-    "output_key": "mortalityXlocation_majuro",
-    "times": [],
-    "values": [],
-    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
-  },
-  "mortalityXlocation_ebeye": {
-    "title": "TB mortality in Ebeye (/100,000/y)",
-    "output_key": "mortalityXlocation_ebeye",
+  "mortalityXlocation_starawa": {
+    "title": "TB mortality in South Tarawa (/100,000/y)",
+    "output_key": "mortalityXlocation_starawa",
     "times": [],
     "values": [],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]

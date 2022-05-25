@@ -1,8 +1,0 @@
-hh_contacts_pt:
-  prop_hh_contacts_screened: 1.0
-  prop_hh_transmission: 0.3
-  prop_pt_completion: 1.0
-  prop_smearpos_among_prev_tb: 1.0
-  start_time: 2020
-time:
-  start: 2016

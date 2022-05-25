@@ -22,7 +22,7 @@ def define_all_scenarios(periodic_frequencies=[2, 5, 10]):
     scenario_details[sc_idx] = {"sc_title": "Status quo"}
 
     """
-    Scenario 1: removing Majuro and Ebeye interventions
+    Scenario 1: removing Tarawa and Other interventions
     """
     sc_idx += 1
     scenario_details[sc_idx] = {"sc_title": "No interventions"}
@@ -101,17 +101,17 @@ def get_periodic_sc_params(frequency, type="ACF"):
     # include existing interventions
     params["time_variant_acf"] = [
         {
-            "stratum_filter": {"location": "ebeye"},
+            "stratum_filter": {"location": "starawa"},
             "time_variant_screening_rate": {2017: 0.0, 2017.01: 1.9, 2018: 1.9, 2018.01: 0.0},
         },
         {
-            "stratum_filter": {"location": "majuro"},
+            "stratum_filter": {"location": "other"},
             "time_variant_screening_rate": {2018: 0.0, 2018.01: INTERVENTION_RATE["time_variant_acf"], 2019: INTERVENTION_RATE["time_variant_acf"], 2019.01: 0.0},
         },
     ]
     params["time_variant_ltbi_screening"] = [
         {
-            "stratum_filter": {"location": "majuro"},
+            "stratum_filter": {"location": "other"},
             "time_variant_screening_rate": {
                 2018: 0.0,
                 2018.01: INTERVENTION_RATE["time_variant_ltbi_screening"],
@@ -142,7 +142,7 @@ def get_periodic_sc_params(frequency, type="ACF"):
     )
 
     for intervention in interventions_to_add:
-        for location in ["majuro", "ebeye", "other"]:
+        for location in ["starawa", "other"]:
             is_location_implemented = False
             for local_intervention in params[intervention]:
                 if local_intervention["stratum_filter"]["location"] == location:

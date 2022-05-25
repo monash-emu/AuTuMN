@@ -24,7 +24,7 @@ def main(data_path, output_path):
 
 def plot_counterfactual(uncertainty_df, figure_path):
 
-    regions = ["majuro", "ebeye", "all"]
+    regions = ["starawa", "other", "all"]
     outputs = ["incidence", "mortality", "percentage_latent", "notifications"]
     panel_h = 5
     panel_w = 7

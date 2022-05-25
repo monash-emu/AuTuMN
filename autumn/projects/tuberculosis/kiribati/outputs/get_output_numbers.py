@@ -21,7 +21,7 @@ def main(data_path, output_path):
             print_median_and_ci(uncertainty_df, output, 2020, scenario)
 
     # regional level
-    for region in ["majuro", "ebeye"]:
+    for region in ["starawa", "other"]:
         for year in [2020, 2050]:
             for scenario in [1, 0]:
                 print_median_and_ci(uncertainty_df, f"incidenceXlocation_{region}", year, scenario)

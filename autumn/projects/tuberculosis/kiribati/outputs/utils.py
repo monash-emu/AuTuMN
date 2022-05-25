@@ -9,10 +9,10 @@ OUTPUT_TITLES = {
     "notifications": "Number of TB notifications",
     "mortality": "TB mortality (/100,000/y)",
     "percentage_latent": "LTBI prevalence (%)",
-    "prevalence_infectiousXlocation_majuro": "TB prevalence in Majuro (/100,000/y)",
-    "prevalence_infectiousXlocation_ebeye": "TB prevalence in Ebeye (/100,000/y)",
-    "percentage_latentXlocation_majuro": "LTBI prevalence in Majuro (%)",
-    "notificationsXlocation_majuro": "Number of TB notifications in Majuro",
+    "prevalence_infectiousXlocation_starawa": "TB prevalence in South Tarawa (/100,000/y)",
+    "prevalence_infectiousXlocation_starawa": "TB prevalence in South Tarawa (/100,000/y)",
+    "percentage_latentXlocation_starawa": "LTBI prevalence in South Tarawa (%)",
+    "notificationsXlocation_starawa": "Number of TB notifications in South Tarawa",
     "notificationsXlocation_ebeye": "Number of TB notifications in Ebeye",
     "population_size": "Population size",
     "screening_rate": "Rate of passive TB screening (/year)",
@@ -21,8 +21,8 @@ OUTPUT_TITLES = {
 }
 
 REGION_TITLES = {
-    "majuro": "Majuro atoll",
-    "ebeye": "Ebeye atoll",
+    "starawa": "South Tarawa",
+    "other": "Other Islands",
     "all": "National level",
 }
 

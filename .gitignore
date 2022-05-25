@@ -75,14 +75,13 @@ data/outputs
 *.out
 *.bbl
 *.toc
-apps/*/tex/*.pdf
+*.fls
+*.fdb_latexmk
+*.lof
 *.synctex*
-docs/papers/master_files/*.pdf
-!docs/papers/*/projects/*/methods_figures/*.png
-
-
-# Policy brief
-!docs/papers/covid_19/policy_brief/images/*.png
+*.bcf
+docs/master_files/**/*.pdf
+docs/master_files/**/*.run.xml
 
 # Random stuff
 *marshall-islands*.pickle

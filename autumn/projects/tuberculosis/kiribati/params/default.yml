@@ -14,6 +14,7 @@ time:
   critical_ranges: [[2022., 2025.]]
 
 start_population_size: 36573.
+crude_birth_rate: 27
 
 #import_ltbi_cases:
 #  start_time: 2000

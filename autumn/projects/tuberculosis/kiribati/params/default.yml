@@ -31,7 +31,7 @@ user_defined_stratifications: # this specifies user-defined  stratifications
     prop_mixing_same_stratum: .95
     adjustments:
       infection:
-        starawa: 1.
+        starawa: 1.5
         other: 1.
       detection:
         starawa: 1.5

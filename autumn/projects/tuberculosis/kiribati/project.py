@@ -19,7 +19,7 @@ ANALYSIS = "main"
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
+baseline_params = base_params.update(default_path)
 
 if ANALYSIS == "main":
     scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(1, 2)]

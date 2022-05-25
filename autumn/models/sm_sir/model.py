@@ -453,6 +453,12 @@ def build_model(
         )
 
         contact_rate = adjust_contact_rate(params.contact_rate, computed_values)
+        model.add_infection_frequency_flow(
+            name=FlowName.INFECTION,
+            contact_rate=contact_rate,
+            source=Compartment.SUSCEPTIBLE,
+            dest=infection_dest,
+        )
 
     else:
         # Add the process of infecting the susceptibles for the first time

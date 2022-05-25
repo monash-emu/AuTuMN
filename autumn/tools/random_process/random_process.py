@@ -2,8 +2,10 @@ from math import ceil
 from math import log, sqrt, pi
 from typing import Tuple
 
+from summer.compute import ComputedValueProcessor
+
 from autumn.tools.curve import scale_up_function
-from .parameters import Time, RandomProcessParams
+from autumn.models.sm_sir.parameters import Time, RandomProcessParams
 
 
 class RandomProcess:

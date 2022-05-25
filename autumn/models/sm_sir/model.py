@@ -284,6 +284,12 @@ def get_cdr_func(
     return cdr_func, non_detect_func
 
 
+def adjust_contact_rate(contact_rate_value, computed_value):
+    new_contact_rate = contact_rate_value * (computed_value["microdistancing_effect"] ** 2)  # adjust transmission rate
+    # to have microdistancing effect on notifications
+    return new_contact_rate
+
+
 def get_microdist_func_component(func_params: Optional[Dict[str, StepFunctionMicrodistancingParams]], contact_rate, time):
     """
     Get a single function of time using the standard parameter request structure for any microdistancing function, or
@@ -302,8 +308,6 @@ def get_microdist_func_component(func_params: Optional[Dict[str, StepFunctionMic
     magnitude_low = func_params['step_function'].magnitude_low
     magnitude_high= func_params['step_function'].magnitude_high
     time_in_effect = func_params['step_function'].time_to_effect
-
-
     return step_based_scaleup_for_notifications(magnitude_low, magnitude_high, time_in_effect, contact_rate, time)
 
 
@@ -441,15 +445,23 @@ def build_model(
     else:
         contact_rate = params.contact_rate
 
+    if params.microdistancing_derived:
 
+        computed_values = model.add_computed_value_process(
+            "microdistancing_effect",
+            get_microdist_func_component(params.microdistancing_derived, params.contact_rate, time_params)
+        )
 
-    # Add the process of infecting the susceptibles for the first time
-    model.add_infection_frequency_flow(
-        name=FlowName.INFECTION,
-        contact_rate=contact_rate,
-        source=Compartment.SUSCEPTIBLE,
-        dest=infection_dest,
-    )
+        contact_rate = adjust_contact_rate(params.contact_rate, computed_values)
+
+    else:
+        # Add the process of infecting the susceptibles for the first time
+        model.add_infection_frequency_flow(
+            name=FlowName.INFECTION,
+            contact_rate=contact_rate,
+            source=Compartment.SUSCEPTIBLE,
+            dest=infection_dest,
+        )
 
     # Active transition flows
     add_active_transitions(sojourns.active, model)
@@ -646,10 +658,6 @@ def build_model(
             start_immune_prop=params.immunity_stratification.prop_immune,
             additional_immunity_points=params.additional_immunity,
         )
-
-    if params.microdistancing_derived:
-        get_microdist_func_component(params.microdistancing_derived, params.contact_rate, time_params)
-
 
     """
     Get the applicable outputs

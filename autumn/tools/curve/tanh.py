@@ -24,10 +24,7 @@ def step_based_scaleup_for_notifications(magnitude_low, magnitude_high,  time_in
     else:
         microdistancing_effect = magnitude_high
 
-    contact_rate = contact_rate * (microdistancing_effect ** 2)  # adjust transmission rate
-    # to have microdistancing effect on notifications
-
-    return contact_rate
+    return microdistancing_effect
 
 
 

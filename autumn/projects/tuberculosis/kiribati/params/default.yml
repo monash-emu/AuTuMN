@@ -26,8 +26,8 @@ user_defined_stratifications: # this specifies user-defined  stratifications
   location:
     strata: ["starawa", "other"]
     proportions:
-      starawa: .523
-      other: .277
+      starawa: .6
+      other: .4
     prop_mixing_same_stratum: .95
     adjustments:
       infection:

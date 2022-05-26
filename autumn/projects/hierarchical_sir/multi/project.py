@@ -16,7 +16,7 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
     UniformPrior("hyper_beta_mean", [0., 1.]),
     UniformPrior("hyper_beta_sd", [0., 1.]),
-    UniformPrior("gamma", [0.9, 1.2]),
+    UniformPrior("gamma", [0.05, 0.2]),
 ]
 
 hierarchical_priors = [

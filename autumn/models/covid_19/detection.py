@@ -16,7 +16,7 @@ from autumn.tools.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
 from autumn.tools.inputs.owid.queries import get_international_testing_numbers
 from autumn.tools.inputs import get_population_by_agegroup
 from autumn.tools.utils.utils import apply_moving_average
-from autumn.tools.curve import scale_up_function
+from autumn.model_features.curve import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 

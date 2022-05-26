@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import List
 
-from autumn.tools.curve import scale_up_function
+from autumn.model_features.curve import scale_up_function
 from autumn.tools.utils.utils import flatten_list
 
 

@@ -2,7 +2,7 @@ from summer import AgeStratification, Multiply
 from math import exp, log
 
 
-from autumn.tools.curve import make_linear_curve, scale_up_function, tanh_based_scaleup
+from autumn.model_features.curve import make_linear_curve, scale_up_function, tanh_based_scaleup
 from autumn.tools.inputs import get_death_rates_by_agegroup
 from autumn.tools.utils.utils import change_parameter_unit
 from autumn.tools.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups

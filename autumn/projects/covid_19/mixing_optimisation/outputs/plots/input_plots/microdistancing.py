@@ -3,7 +3,7 @@ import os
 from matplotlib import pyplot
 from matplotlib.pyplot import figure
 
-from autumn.tools.curve.tanh import tanh_based_scaleup
+from autumn.model_features.curveres.curve.tanh import tanh_based_scaleup
 from autumn.settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(

@@ -4,7 +4,7 @@ from typing import Tuple
 
 from summer.compute import ComputedValueProcessor
 
-from autumn.tools.curve import scale_up_function
+from autumn.model_features.curve.scale_up import scale_up_function
 from autumn.models.sm_sir.parameters import Time, RandomProcessParams
 
 

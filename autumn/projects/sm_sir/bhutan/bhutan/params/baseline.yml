@@ -6,7 +6,7 @@ ref_mixing_iso3: CHN
 
 time:
   start: 750.
-  end: 912.
+  end: 870.
 
 mobility:
   #  Mapping of Google mobility locations to locations as specified in matrices

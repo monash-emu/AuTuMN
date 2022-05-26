@@ -77,6 +77,7 @@ testing_to_detection:
   assumed_tests_parameter: 0.001 # Malaysia model
   assumed_cdr_parameter: 0.05 # fixed
   smoothing_period: 14
+  floor_value: 0.
 
 hospital_stay:
   hospital_all:

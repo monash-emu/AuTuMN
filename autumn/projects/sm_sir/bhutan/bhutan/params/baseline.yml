@@ -29,9 +29,9 @@ mobility:
       function_type: tanh
       parameters:
         shape: 0.1
-        inflection_time: 500.
-        start_asymptote: 0.
-        end_asymptote: 0.00001
+        inflection_time: 805.
+        start_asymptote: 0.2
+        end_asymptote: 0.
       locations:
         - work
         - other_locations

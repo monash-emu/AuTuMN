@@ -238,19 +238,10 @@ class TanhMicrodistancingParams(BaseModel):
 
     @validator("shape", allow_reuse=True)
     def shape_is_positive(shape):
-        print(shape)
         assert (
             shape >= 0.0
         ), "Shape parameter for tanh-microdistancing function must be non-negative"
         return shape
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_asymptotes(cls, values):
-        start, end = values.get("start_asymptote"), values.get("end_asymptote")
-        assert (
-            start <= end
-        ), f"Asymptotes specified upside-down, start: {start}, upper: {end}"
-        return values
 
 
 class ConstantMicrodistancingParams(BaseModel):

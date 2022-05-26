@@ -226,28 +226,30 @@ class TanhMicrodistancingParams(BaseModel):
 
     shape: float
     inflection_time: float
-    lower_asymptote: float
-    upper_asymptote: float
+    start_asymptote: float
+    end_asymptote: float
 
-    check_lower_asymptote = validator("lower_asymptote", allow_reuse=True)(
-        get_check_prop("lower_asymptote")
+    check_lower_asymptote = validator("start_asymptote", allow_reuse=True)(
+        get_check_prop("start_asymptote")
     )
-    check_upper_asymptote = validator("upper_asymptote", allow_reuse=True)(
-        get_check_prop("upper_asymptote")
+    check_upper_asymptote = validator("end_asymptote", allow_reuse=True)(
+        get_check_prop("end_asymptote")
     )
 
     @validator("shape", allow_reuse=True)
     def shape_is_positive(shape):
+        print(shape)
         assert (
             shape >= 0.0
         ), "Shape parameter for tanh-microdistancing function must be non-negative"
+        return shape
 
     @root_validator(pre=True, allow_reuse=True)
     def check_asymptotes(cls, values):
-        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
+        start, end = values.get("start_asymptote"), values.get("end_asymptote")
         assert (
-            lower <= upper
-        ), f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
+            start <= end
+        ), f"Asymptotes specified upside-down, start: {start}, upper: {end}"
         return values
 
 

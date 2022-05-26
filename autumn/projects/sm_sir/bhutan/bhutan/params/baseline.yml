@@ -24,7 +24,17 @@ mobility:
     #   single_tile: 1.
   smooth_google_data: false  # Whether to apply a 7-day moving average
   square_mobility_effect: true
-  microdistancing: {}
+  microdistancing:
+    behaviour:
+      function_type: tanh
+      parameters:
+        shape: 0.1
+        inflection_time: 500.
+        start_asymptote: 0.
+        end_asymptote: 0.00001
+      locations:
+        - work
+        - other_locations
 
 is_dynamic_mixing_matrix: true
 

@@ -6,8 +6,8 @@ import pandas as pd
 from numpy.testing import assert_allclose, assert_almost_equal
 
 from autumn.tools import db
-from autumn.tools.calibration import Calibration, CalibrationMode
-from autumn.tools.calibration.utils import (
+from autumn.calibration import Calibration, CalibrationMode
+from autumn.calibration.utils import (
     sample_starting_params_from_lhs,
     specify_missing_prior_params,
 )
@@ -113,8 +113,8 @@ def _prepare_params(l):
     return set([tuple(sorted(ps.items())) for ps in l])
 
 
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import PoissonTarget
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import PoissonTarget
 from autumn.tools.project import Project, ParameterSet, Params
 
 

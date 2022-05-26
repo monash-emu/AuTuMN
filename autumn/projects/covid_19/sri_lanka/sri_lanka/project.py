@@ -1,10 +1,10 @@
 import numpy as np
-from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths, \
     use_tuned_proposal_sds
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, BetaPrior,TruncNormalPrior
-from autumn.tools.calibration.targets import (
+from autumn.calibration import Calibration
+from autumn.calibration.priors import UniformPrior, BetaPrior,TruncNormalPrior
+from autumn.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
 )

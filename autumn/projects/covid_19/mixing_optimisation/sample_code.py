@@ -1,4 +1,4 @@
-from autumn.tools.optimisation.opti import Opti
+from autumn.optimisation.opti import Opti
 
 from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import (

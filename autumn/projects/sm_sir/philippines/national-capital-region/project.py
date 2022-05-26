@@ -6,9 +6,9 @@ from autumn.tools.project import (
     use_tuned_proposal_sds,
     get_all_available_scenario_paths,
 )
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.calibration import Calibration
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
@@ -86,5 +86,5 @@ with open(plot_spec_filepath) as f:
 project = Project(Region.NCR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)
 
 
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# from autumn.calibration._tuning import perform_all_params_proposal_tuning
 # perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

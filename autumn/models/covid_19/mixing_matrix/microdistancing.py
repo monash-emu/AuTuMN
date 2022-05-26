@@ -33,7 +33,7 @@ def get_microdistancing_funcs(
     # Supports any number of microdistancing functions contributing to contact rates, with any user-defined names
     final_adjustments = {}
     power = 2 if square_mobility_effect else 1
-
+    print(params)
     # For each mobility location ...
     for loc in LOCATIONS:
         microdist_component_funcs = []

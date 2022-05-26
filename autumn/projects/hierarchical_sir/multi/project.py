@@ -14,20 +14,21 @@ param_set = ParameterSet(baseline=baseline_params)
 # Load and configure calibration settings
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("hyper_beta", [0., 1.]),
+    UniformPrior("hyper_beta_mean", [0., 1.]),
+    UniformPrior("hyper_beta_sd", [0., 1.]),
     UniformPrior("gamma", [0.9, 1.2]),
 ]
 
 hierarchical_priors = [
-    HierarchicalPrior("beta.AUS", "normal", ['hyper_beta', .01]),
-    HierarchicalPrior("beta.ITA", "normal", ['hyper_beta', .01]),
+    HierarchicalPrior("beta.AUS", "normal", ['hyper_beta_mean', "hyper_beta_sd"]),
+    HierarchicalPrior("beta.ITA", "normal", ['hyper_beta_mean', "hyper_beta_sd"]),
 ]
 
 targets = [
-    NormalTarget(data=ts_set["incidence_AUS"].loc[61:153]),
-    NormalTarget(data=ts_set["incidence_ITA"].loc[61:153]),
+    NormalTarget(data=ts_set["incidence_AUS"]),
+    NormalTarget(data=ts_set["incidence_ITA"]),
 ]
-calibration = Calibration(priors=priors, targets=targets, hierarchical_priors=hierarchical_priors)
+calibration = Calibration(priors=priors, targets=targets, hierarchical_priors=hierarchical_priors, metropolis_init='lhs')
 
 
 import json

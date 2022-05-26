@@ -6,7 +6,9 @@ time:
   end: 365
   step: 1
 
-hyper_beta: 0.1
+hyper_beta_mean: 0.1
+hyper_beta_sd: 0.1
+
 beta:
   AUS: .1
   ITA: .2

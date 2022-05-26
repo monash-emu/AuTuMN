@@ -47,7 +47,8 @@ class Parameters:
     time: Time
     description: str
     # Values
-    hyper_beta: float
+    hyper_beta_mean: float
+    hyper_beta_sd: float
     beta: dict
     
     gamma: float

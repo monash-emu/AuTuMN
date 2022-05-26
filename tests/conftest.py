@@ -8,7 +8,7 @@ import pytest
 from numpy.testing import assert_allclose
 
 from autumn import settings
-from autumn.runners.calibration import calibration
+from autumn.runnersbration
 from autumn.tools.db import database
 
 from .utils import in_memory_db_factory

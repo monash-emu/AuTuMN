@@ -6,7 +6,7 @@ from autumn.tools.project import (
     use_tuned_proposal_sds,
     get_all_available_scenario_paths,
 )
-from autumn.runners.calibration import Calibration
+from autumn.runners import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.import NormalTarget
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process

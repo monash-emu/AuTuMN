@@ -1,5 +1,5 @@
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
-from autumn.runners.calibration import Calibration
+from autumn.runnersbration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import (
     NormalTarget,

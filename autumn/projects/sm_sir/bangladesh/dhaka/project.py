@@ -1,7 +1,7 @@
 import json
 
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
-from autumn.runners.calibration import Calibration
+from autumn.runners import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model

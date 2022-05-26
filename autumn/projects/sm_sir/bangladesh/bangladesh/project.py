@@ -8,7 +8,7 @@ from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.tools.project import (
     Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths
 )
-from autumn.runners.calibration import Calibration
+from autumn.runners import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget, TruncNormalTarget
 from autumn.models.sm_sir import base_params, build_model

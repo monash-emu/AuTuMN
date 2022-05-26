@@ -4,7 +4,7 @@ from autumn.calibration.priors import UniformPrior
 from autumn.calibration.import NormalTarget
 
 from autumn.tools.project import Project, ParameterSet, load_timeseries, Params
-from autumn.runners.calibration import Calibration
+from autumn.runners import Calibration
 
 
 def get_test_project():

@@ -1,5 +1,5 @@
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
-from autumn.runners.calibration import Calibration
+from autumn.runnersbration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
 from autumn.models.tuberculosis_strains import base_params, build_model

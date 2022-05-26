@@ -16,3 +16,17 @@ def tanh_based_scaleup(shape, inflection_time, start_asymptote, end_asymptote=1.
         return (tanh(shape * (t - inflection_time)) / 2.0 + 0.5) * rng + start_asymptote
 
     return tanh_scaleup
+
+
+def step_based_scaleup_for_notifications(magnitude_low, magnitude_high,  time_in_effect, contact_rate, t):
+    if t < time_in_effect:
+        microdistancing_effect = magnitude_low
+    else:
+        microdistancing_effect = magnitude_high
+
+    return microdistancing_effect
+
+
+
+
+

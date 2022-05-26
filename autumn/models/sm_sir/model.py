@@ -1,5 +1,6 @@
 from typing import List, Tuple
 import pandas as pd
+from typing import Optional, Dict, List
 
 from summer import CompartmentalModel
 
@@ -27,7 +28,8 @@ from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfect
 from .stratifications.clinical import get_clinical_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 from autumn.settings.constants import COVID_BASE_DATETIME
-
+from autumn.models.sm_sir.parameters import StepFunctionMicrodistancingParams
+from autumn.tools.curve.tanh import step_based_scaleup_for_notifications
 # Base date used to calculate mixing matrix times
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
@@ -231,6 +233,33 @@ def get_cdr_func(
     return cdr_func, non_detect_func
 
 
+def adjust_contact_rate(contact_rate_value, computed_value):
+    new_contact_rate = contact_rate_value * (computed_value["microdistancing_effect"] ** 2)  # adjust transmission rate
+    # to have microdistancing effect on notifications
+    return new_contact_rate
+
+
+def get_microdist_func_component(func_params: Optional[Dict[str, StepFunctionMicrodistancingParams]], contact_rate, time):
+    """
+    Get a single function of time using the standard parameter request structure for any microdistancing function, or
+    adjustment to a microdistancing function.
+    In future, this could use more general code for requesting functions of time.
+
+    Args:
+        func_params: The parameters used to define the microdistancing function
+        contact_rate: contact_rate parameter value
+        time: model run time
+
+    Returns:
+        Function of notifications returning a scalar
+
+    """
+    magnitude_low = func_params['step_function'].magnitude_low
+    magnitude_high= func_params['step_function'].magnitude_high
+    time_in_effect = func_params['step_function'].time_to_effect
+    return step_based_scaleup_for_notifications(magnitude_low, magnitude_high, time_in_effect, contact_rate, time)
+
+
 def apply_reinfection_flows_without_strains(
         model: CompartmentalModel,
         infection_dest: str,
@@ -365,13 +394,29 @@ def build_model(
     else:
         contact_rate = params.contact_rate
 
-    # Add the process of infecting the susceptibles for the first time
-    model.add_infection_frequency_flow(
-        name=FlowName.INFECTION,
-        contact_rate=contact_rate,
-        source=Compartment.SUSCEPTIBLE,
-        dest=infection_dest,
-    )
+    if params.microdistancing_derived:
+
+        computed_values = model.add_computed_value_process(
+            "microdistancing_effect",
+            get_microdist_func_component(params.microdistancing_derived, params.contact_rate, time_params)
+        )
+
+        contact_rate = adjust_contact_rate(params.contact_rate, computed_values)
+        model.add_infection_frequency_flow(
+            name=FlowName.INFECTION,
+            contact_rate=contact_rate,
+            source=Compartment.SUSCEPTIBLE,
+            dest=infection_dest,
+        )
+
+    else:
+        # Add the process of infecting the susceptibles for the first time
+        model.add_infection_frequency_flow(
+            name=FlowName.INFECTION,
+            contact_rate=contact_rate,
+            source=Compartment.SUSCEPTIBLE,
+            dest=infection_dest,
+        )
 
     # Active transition flows
     add_active_transitions(sojourns.active, model)
@@ -455,6 +500,7 @@ def build_model(
     """
 
     voc_params = params.voc_emergence
+
     if params.voc_emergence:
 
         # Build and apply the stratification
@@ -593,6 +639,7 @@ def build_model(
 
     if is_undetected:
         outputs_builder.request_cdr()
+
 
     # Determine what flow will be used to track disease incidence
     if Compartment.INFECTIOUS_LATE in compartment_types:

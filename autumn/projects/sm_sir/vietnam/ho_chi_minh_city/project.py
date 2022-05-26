@@ -8,7 +8,7 @@ from autumn.tools.project import (
     get_all_available_scenario_paths,
     use_tuned_proposal_sds,
 )
-from autumn.calibration
+from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import (

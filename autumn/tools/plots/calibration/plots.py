@@ -182,6 +182,10 @@ def workout_plot_x_range(prior_dict):
         shape = prior_dict["distri_params"][0]
         scale = prior_dict["distri_params"][1]
         x_range = stats.gamma.ppf([0.005, 0.995], shape, 0.0, scale)
+    elif prior_dict["distribution"] == "normal":        
+        mean = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        x_range = stats.norm.ppf([0.005, 0.995], mean, sd)
     elif prior_dict["distribution"] == "trunc_normal":
         lower = prior_dict["trunc_range"][0]
         upper = prior_dict["trunc_range"][1]

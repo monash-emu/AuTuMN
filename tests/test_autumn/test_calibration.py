@@ -6,7 +6,7 @@ import pandas as pd
 from numpy.testing import assert_allclose, assert_almost_equal
 
 from autumn.tools import db
-from autumn.runners import Calibration, CalibrationMode
+from autumn.calibration import Calibration, CalibrationMode
 from autumn.calibration.utils import (
     sample_starting_params_from_lhs,
     specify_missing_prior_params,

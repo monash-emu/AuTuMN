@@ -1,7 +1,7 @@
 from summer.model import CompartmentalModel
 
-from autumn.runners.calibration.priors import UniformPrior
-from autumn.runners.calibration.targets import NormalTarget
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.import NormalTarget
 
 from autumn.tools.project import Project, ParameterSet, load_timeseries, Params
 from autumn.runners.calibration import Calibration

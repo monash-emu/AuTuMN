@@ -1,8 +1,8 @@
 import numpy as np
 
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
-from autumn.runners.calibration import Calibration
-from autumn.runners.calibration.targets import (
+from autumn.calibration import Calibration
+from autumn.calibration.targets import (
     TruncNormalTarget,
     get_dispersion_priors_for_gaussian_targets,
 )

@@ -9,8 +9,8 @@ from autumn.tools.project import (
     use_tuned_proposal_sds,
 )
 from autumn.runners.calibration import Calibration
-from autumn.runners.calibration.priors import UniformPrior, TruncNormalPrior
-from autumn.runners.calibration.targets import NormalTarget
+from autumn.calibration.priors import UniformPrior, TruncNormalPrior
+from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
@@ -98,5 +98,5 @@ project = Project(
 )
 
 
-# from autumn.runners.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
 # perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)

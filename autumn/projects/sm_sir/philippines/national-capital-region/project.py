@@ -7,8 +7,8 @@ from autumn.tools.project import (
     get_all_available_scenario_paths,
 )
 from autumn.runners.calibration import Calibration
-from autumn.runners.calibration.priors import UniformPrior
-from autumn.runners.calibration.targets import NormalTarget
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.import NormalTarget
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
@@ -86,5 +86,5 @@ with open(plot_spec_filepath) as f:
 project = Project(Region.NCR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)
 
 
-# from autumn.runners.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# from autumn.calibration._tuning import perform_all_params_proposal_tuning
 # perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

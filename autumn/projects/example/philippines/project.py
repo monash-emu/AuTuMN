@@ -1,7 +1,7 @@
 from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
-from autumn.runners.calibration import Calibration
-from autumn.runners.calibration.priors import UniformPrior
-from autumn.runners.calibration.targets import NormalTarget
+from autumn.calibration import Calibration
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import NormalTarget
 from autumn.models.example import base_params, build_model
 from autumn.settings import Region, Models
 

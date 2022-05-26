@@ -7,7 +7,7 @@ from numpy.testing import assert_allclose, assert_almost_equal
 
 from autumn.tools import db
 from autumn.runners.calibration import Calibration, CalibrationMode
-from autumn.runners.calibration.utils import (
+from autumn.calibration.utils import (
     sample_starting_params_from_lhs,
     specify_missing_prior_params,
 )
@@ -113,8 +113,8 @@ def _prepare_params(l):
     return set([tuple(sorted(ps.items())) for ps in l])
 
 
-from autumn.runners.calibration.priors import UniformPrior
-from autumn.runners.calibration.targets import PoissonTarget
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import PoissonTarget
 from autumn.tools.project import Project, ParameterSet, Params
 
 

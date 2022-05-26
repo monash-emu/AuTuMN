@@ -15,9 +15,9 @@ from autumn import settings
 from autumn.tools import db, plots
 from autumn.tools.utils.git import get_git_branch, get_git_hash
 from autumn.tools.utils.timer import Timer
-from autumn.runners.calibration.priors import BasePrior
-from autumn.runners.calibration.targets import BaseTarget
-from autumn.runners.calibration.proposal_tuning import tune_jumping_stdev
+from autumn.calibration.priors import BasePrior
+from autumn.calibration.targets import BaseTarget
+from autumn.calibration.proposal_tuning import tune_jumping_stdev
 from autumn.tools.project.params import read_param_value_from_string
 from autumn.tools.project import Project, get_project
 

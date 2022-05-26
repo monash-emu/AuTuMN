@@ -5,7 +5,7 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 750.
+  start: 730.
   end: 870.
 
 mobility:
@@ -61,7 +61,10 @@ sojourns:
 
 activate_random_process: False
 
-testing_to_detection: null
+testing_to_detection:
+  assumed_tests_parameter: 1.e-4
+  assumed_cdr_parameter: 0.004
+  smoothing_period: 14
 detect_prop: 0.6
 
 voc_emergence:

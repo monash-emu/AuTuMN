@@ -82,12 +82,14 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.)
     To work out the function, only one parameter is needed, so this can be estimated from one known point on the curve,
     being a value of the CDR that is associated with a certain testing rate
 
-    :param assumed_cdr: float
-    Value of CDR associated with the testing coverage
-    :param assumed_tests: int
-    Number of tests needed to result in this CDR
-    :return: callable
-    Function to provide CDR for a certain number of tests
+    Args:
+        assumed_tests: Value of CDR associated with the testing coverage
+        assumed_cdr: Number of tests needed to result in this CDR
+        floor_cdr: Floor value for the case detection rate
+
+    Returns:
+        Callable: Function to provide CDR for a certain number of tests
+
     """
 
     # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - exp(-b * t)
@@ -95,7 +97,7 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.)
 
     # Construct the function based on this parameter
     def cdr_function(tests_per_capita):
-        return 1.0 - np.exp(exponent_multiplier * tests_per_capita)
+        return 1.0 - np.exp(exponent_multiplier * tests_per_capita) * (1.0 - floor)
 
     return cdr_function
 
@@ -169,6 +171,7 @@ def find_cdr_function_from_test_data(
     cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
         test_detect_params.assumed_tests_parameter,
         test_detect_params.assumed_cdr_parameter,
+        test_detect_params.floor_value,
     )
 
     # Get the final CDR function

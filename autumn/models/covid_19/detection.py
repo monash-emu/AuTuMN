@@ -76,7 +76,7 @@ def get_testing_numbers_for_region(
     return test_dates, test_values
 
 
-def create_cdr_function(assumed_tests: int, assumed_cdr: float) -> Callable:
+def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.) -> Callable:
     """
     Factory function for finding CDRs from number of tests done in setting modelled
     To work out the function, only one parameter is needed, so this can be estimated from one known point on the curve,

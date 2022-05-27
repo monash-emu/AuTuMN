@@ -28,10 +28,10 @@ targets = [
 
 priors = [
     UniformPrior("contact_rate", (0.15, 0.4)),
-    UniformPrior("sojourns.latent.total_time", (1., 6.)),
-    UniformPrior("infectious_seed", (50., 450.)),
+    UniformPrior("sojourns.latent.total_time", (1., 10.)),
+    UniformPrior("infectious_seed", (50., 750.)),
     UniformPrior("detect_prop", (0.01, 0.8)),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", (0.01, 0.5))
+    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", (0.01, 0.8))
 ]
 
 calibration = Calibration(

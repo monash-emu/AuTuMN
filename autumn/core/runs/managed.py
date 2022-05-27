@@ -6,7 +6,7 @@ from .powerbi import ManagedPowerBI
 from .full import ManagedFullRun
 from .calibration.managed import ManagedCalibrationRun
 
-from autumn.coreimport db
+from autumn.core import db
 from autumn.core.utils.display import get_link
 
 class ManagedRun:

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List
 
 from autumn import settings
-from autumn.coreutils import s3
+from autumn.core.utils import s3
 
 class RemoteRunData:
     def __init__(self, run_id: str, client=None):

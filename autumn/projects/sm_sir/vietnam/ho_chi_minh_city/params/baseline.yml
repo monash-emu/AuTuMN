@@ -32,7 +32,7 @@ immunity_stratification:
 
   infection_risk_reduction: # Source: https://www.nejm.org/doi/full/10.1056/NEJMc2201821
     none: 0.
-    low: 0.6
+    low: 0.5
 
 voc_emergence:
   wild_type:

@@ -5,7 +5,7 @@ from summer import CompartmentalModel
 
 from autumn.tools import inputs
 from autumn.tools.project import Params, build_rel_path
-from autumn.tools.random_process.random_process import RandomProcessProc
+from autumn.model_features.random_process.random_process import RandomProcessProc
 from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.tools.utils.utils import multiply_function_or_constant
 from autumn.model_features.computed_values import FunctionWrapper

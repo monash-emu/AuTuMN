@@ -8,7 +8,7 @@ age_mixing:
   age_adjust: true
 
 time:
-  start: 1800.
+  start: 1955.
   end: 2050.
   step: 0.1
   critical_ranges: [[2022., 2025.]]
@@ -102,7 +102,7 @@ extra_params:
 
 
 # calibrated parameters
-contact_rate: 1.5
+contact_rate: 0.005
 progression_multiplier: 0.7117191601170418
 
 # REQUESTED OUTPUTS

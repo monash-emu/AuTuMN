@@ -1,6 +1,6 @@
 import os
 
-from autumn.corerams import read_param_value_from_string
+from autumn.core.project.params import read_param_value_from_string
 
 DISTRIBUTION_TRANSLATE = {
     "trunc_normal": "truncated normal",

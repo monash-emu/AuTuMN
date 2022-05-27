@@ -1,6 +1,7 @@
 """
 Type definition for model parameters
 """
+from math import floor
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
@@ -285,6 +286,13 @@ class TestingToDetection(BaseModel):
     def check_smoothing_period(val):
         assert 1 < val, f"Smoothing period must be greater than 1: {val}"
         return val
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_floor_request(cls, values):
+        floor_value, assumed_cdr = values["floor_value"], values["assumed_cdr_parameter"]
+        msg = f"Requested value for the CDR floor does not fall between zero and the assumed CDR parameter of {assumed_cdr}, value is: {floor_value}"
+        assert 0. <= floor_value <= assumed_cdr, msg
+        return values        
 
 
 class MetroClusterStratification(BaseModel):

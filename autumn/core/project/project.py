@@ -28,10 +28,10 @@ from autumn.core.utils.git import get_git_branch, get_git_hash
 from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH
 from autumn.core.registry import _PROJECTS
 
-from autumn.coreutils.tex_tools import write_main_param_table, write_priors_table
+from autumn.core.utils.tex_tools import write_main_param_table, write_priors_table
 
 from .params import ParameterSet, Params
-from autumn.coreproject.params import read_yaml_file
+from autumn.core.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 

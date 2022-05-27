@@ -1,7 +1,7 @@
 from pathlib import PurePosixPath
 import re
 
-from autumn.core
+from autumn.core import db
 
 class ManagedFullRun:
     def __init__(self, manager):

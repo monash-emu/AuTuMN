@@ -3,7 +3,7 @@ from pathlib import Path
 from summer.utils import ref_times_to_dti
 
 from autumn.settings.constants import COVID_BASE_DATETIME
-from autumn.coreimport db
+from autumn.core import db
 
 from.utils import collate_columns_to_urun
 

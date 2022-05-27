@@ -1,9 +1,9 @@
 import re
 import yaml
 
-from autumn.coreport db
+from autumn.core import db
 
-from autumn.corens.utils import collate_columns_to_urun
+from autumn.core.runs.utils import collate_columns_to_urun
 
 class ManagedCalibrationRun:
     def __init__(self, manager):

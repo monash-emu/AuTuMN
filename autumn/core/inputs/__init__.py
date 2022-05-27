@@ -18,8 +18,8 @@ from autumn.core.inputs.john_hopkins.fetch import fetch_john_hopkins_data
 from autumn.core.inputs.john_hopkins.queries import get_john_hopkins_data
 from autumn.core.inputs.mobility.fetch import fetch_mobility_data
 from autumn.core.inputs.mobility.queries import get_mobility_data
-from autumn.coreinputs.social_mixing.queries import get_country_mixing_matrix
-from autumn.corets.owid.fetch import fetch_owid_data
+from autumn.core.inputs.social_mixing.queries import get_country_mixing_matrix
+from autumn.core.inputs.owid.fetch import fetch_owid_data
 
 from autumn.coremer import Timer
 

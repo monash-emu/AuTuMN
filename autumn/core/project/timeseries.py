@@ -2,7 +2,7 @@ import os
 import json
 import pandas as pd
 
-from autumn.coretils.secrets import check_hash
+from autumn.core.utils.secrets import check_hash
 
 
 def load_timeseries(path: str):

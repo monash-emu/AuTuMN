@@ -11,7 +11,7 @@ import numpy as np
 from typing import List, Union, Callable, Dict, Optional
 from responses import Call
 
-from autumn.coretils.s3 import download_from_s3, list_s3, get_s3_client
+from autumn.core.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.core import registry
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.core.utils import secrets

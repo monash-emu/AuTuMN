@@ -30,8 +30,8 @@ priors = [
     UniformPrior("contact_rate", (0.15, 0.4)),
     UniformPrior("sojourns.latent.total_time", (1., 4.)),
     UniformPrior("sojourns.active.total_time", (1., 5.)),
-    UniformPrior("infectious_seed", (50., 250.)),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", (0.1, 0.75)),
+    UniformPrior("infectious_seed", (50., 300.)),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", (0.075, 0.75)),
     UniformPrior("mobility.microdistancing.behaviour.parameters.inflection_time", (780, 825))
 
 ]

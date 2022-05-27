@@ -21,7 +21,7 @@ from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.inputs.social_mixing.queries import get_country_mixing_matrix
 from autumn.core.inputs.owid.fetch import fetch_owid_data
 
-from autumn.coremer import Timer
+from autumn.core.utils.timer import Timer
 
 
 def fetch_input_data():

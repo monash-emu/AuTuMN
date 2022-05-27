@@ -19,7 +19,7 @@ def download_input_data():
     """
     Fetch input data from external sources for input database.
     """
-    from autumn.tools.inputs import fetch_input_data
+    from autumn.core.inputs import fetch_input_data
 
     fetch_input_data()
 
@@ -29,7 +29,7 @@ def build_input_db():
     """
     Build a new input database from input data files.
     """
-    from autumn.tools.inputs import build_input_database
+    from autumn.core.inputs import build_input_database
 
     build_input_database(rebuild=True)
 
@@ -41,7 +41,7 @@ def feather2sql(src_db_path, dest_db_path):
     """
     Convert a Feather DB to a SQLite DB
     """
-    from autumn.tools import db as autumn_db
+    from autumn.core import db as autumn_db
 
     assert autumn_db.FeatherDatabase.is_compatible(
         src_db_path
@@ -57,7 +57,7 @@ def parquet2sql(src_db_path, dest_db_path):
     """
     Convert a Feather DB to a SQLite DB
     """
-    from autumn.tools import db as autumn_db
+    from autumn.core import db as autumn_db
 
     assert autumn_db.ParquetDatabase.is_compatible(
         src_db_path

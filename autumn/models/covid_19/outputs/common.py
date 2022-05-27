@@ -12,7 +12,7 @@ from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
-from autumn.tools.utils.utils import get_complement_prop
+from autumn.core.utils.utils import get_complement_prop
 from autumn.model_features.outputs import OutputsBuilder
 
 

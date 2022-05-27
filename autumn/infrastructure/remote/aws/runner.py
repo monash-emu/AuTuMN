@@ -4,7 +4,7 @@ import subprocess
 
 from fabric import Connection
 
-from autumn.tools.utils.runs import build_run_id, read_run_id
+from autumn.core.utils.runs import build_run_id, read_run_id
 
 logger = logging.getLogger(__name__)
 

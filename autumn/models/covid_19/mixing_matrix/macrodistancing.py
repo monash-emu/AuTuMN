@@ -5,8 +5,8 @@ import pandas as pd
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME, LOCATIONS
 from autumn.models.covid_19.parameters import Country, MixingLocation
 from autumn.model_features.curve import scale_up_function
-from autumn.tools.inputs.mobility.queries import get_mobility_data
-from autumn.tools.utils.utils import apply_moving_average
+from autumn.core.inputs.mobility.queries import get_mobility_data
+from autumn.core.utils.utils import apply_moving_average
 
 
 def weight_mobility_data(

@@ -8,7 +8,7 @@ from autumn.infrastructure.remote.buildkite.buildkite import (
 )
 
 from .full import burn_in_field, sample_size_field
-from autumn.tools.registry import get_registered_model_names, get_registered_project_names
+from autumn.core.registry import get_registered_model_names, get_registered_project_names
 
 
 def get_region_options():

@@ -1,7 +1,7 @@
 import pytest
 
 from autumn.settings import Models
-from autumn.tools.project.project import _PROJECTS, get_project
+from autumn.coreproject.project import _PROJECTS, get_project
 
 COVID_PROJECTS = list(_PROJECTS[Models.COVID_19].keys())
 COVID_CALIBS = list(zip(COVID_PROJECTS, [Models.COVID_19] * len(COVID_PROJECTS)))

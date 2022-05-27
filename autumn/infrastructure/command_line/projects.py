@@ -8,7 +8,7 @@ You can access this script from your CLI by running:
 """
 import click
 
-from autumn.tools.registry import get_registered_model_names, get_registered_project_names
+from autumn.core.registry import get_registered_model_names, get_registered_project_names
 
 
 @click.group()
@@ -22,7 +22,7 @@ def project():
 @click.option("--no-scenarios", is_flag=True)
 def run_model(model, project, no_scenarios):
     """Run a model for some project"""
-    from autumn.tools.project import get_project, run_project_locally
+    from autumn.core.project import get_project, run_project_locally
 
     project = get_project(model, project)
     run_project_locally(project, run_scenarios=not no_scenarios)
@@ -36,7 +36,7 @@ def run_model(model, project, no_scenarios):
 @click.option("--num-chains", type=int, default=1)
 def calibrate_model(model, project, max_seconds, run_id, num_chains):
     """Calibrate a model for some project"""
-    from autumn.tools.project import get_project
+    from autumn.core.project import get_project
 
     project = get_project(model, project)
     project.calibrate(max_seconds, run_id, num_chains)

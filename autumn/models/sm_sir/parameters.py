@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
 from autumn.settings.constants import COVID_BASE_DATETIME
-from autumn.tools.inputs.social_mixing.constants import LOCATIONS
+from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 BASE_DATE = COVID_BASE_DATETIME.date()
 

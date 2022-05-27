@@ -8,8 +8,8 @@ from pyDOE import lhs
 from scipy import special, stats
 from scipy.optimize import minimize
 
-from autumn.tools.db import Database
-from autumn.tools import db
+from autumn.core.db import Database
+from autumn.core import db
 
 
 def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):

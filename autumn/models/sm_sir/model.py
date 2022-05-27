@@ -3,11 +3,11 @@ import pandas as pd
 
 from summer import CompartmentalModel
 
-from autumn.tools import inputs
-from autumn.tools.project import Params, build_rel_path
+from autumn.core import inputs
+from autumn.core.project import Params, build_rel_path
 from autumn.model_features.random_process.random_process import RandomProcessProc
-from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-from autumn.tools.utils.utils import multiply_function_or_constant
+from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
+from autumn.core.utils.utils import multiply_function_or_constant
 from autumn.model_features.computed_values import FunctionWrapper
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder

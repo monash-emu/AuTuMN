@@ -16,7 +16,7 @@ def read_secrets():
     """
     Decrypt all secrets into secret files.
     """
-    from autumn.tools.utils import secrets as secrets_module
+    from autumn.core.utils import secrets as secrets_module
 
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
@@ -31,7 +31,7 @@ def write_secret(file_path: str):
     """
     Encrypt a secret
     """
-    from autumn.tools.utils import secrets as secrets_module
+    from autumn.core.utils import secrets as secrets_module
 
     password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:

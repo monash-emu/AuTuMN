@@ -5,7 +5,7 @@ import pandas as pd
 from typing import List
 
 from autumn.model_features.curve import scale_up_function
-from autumn.tools.utils.utils import flatten_list
+from autumn.core.utils.utils import flatten_list
 
 
 def calculate_transition_rates_from_dynamic_props(props_df: pd.DataFrame, active_flows: dict) -> dict:

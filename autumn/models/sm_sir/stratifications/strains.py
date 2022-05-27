@@ -5,7 +5,7 @@ from summer import StrainStratification, Multiply, CompartmentalModel
 
 from autumn.models.sm_sir.constants import Compartment, FlowName
 from autumn.models.sm_sir.parameters import VocComponent
-from autumn.tools.utils.utils import multiply_function_or_constant
+from autumn.core.utils.utils import multiply_function_or_constant
 
 
 def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: float):

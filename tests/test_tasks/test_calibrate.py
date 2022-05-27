@@ -5,13 +5,13 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from moto import mock_s3
 
-from autumn.tools.db import ParquetDatabase, ParquetDatabase
-from autumn.tools.db.store import Table
+from autumn.core.db import ParquetDatabase, ParquetDatabase
+from autumn.core.db.store import Table
 from autumn.infrastructure.tasks import calibrate
 from autumn.infrastructure.tasks.calibrate import calibrate_task
 from autumn import settings as s3_settings
-from autumn.tools.utils.s3 import get_s3_client, upload_to_run_s3, list_s3, download_from_run_s3
-from autumn.tools.utils.fs import recreate_dir
+from autumn.core.utils.s3 import get_s3_client, upload_to_run_s3, list_s3, download_from_run_s3
+from autumn.core.utils.fs import recreate_dir
 
 from tests.test_tasks.project import get_test_project
 

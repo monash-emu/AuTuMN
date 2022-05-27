@@ -8,9 +8,9 @@ from shutil import rmtree
 import click
 
 from autumn.settings import OUTPUT_DATA_PATH
-from autumn.tools.utils.runs import read_run_id
-from autumn.tools.utils.s3 import download_from_s3, list_s3, get_s3_client
-from autumn.tools.utils.timer import Timer
+from autumn.core.utils.runs import read_run_id
+from autumn.core.utils.s3 import download_from_s3, list_s3, get_s3_client
+from autumn.core.utils.timer import Timer
 
 
 @click.group()

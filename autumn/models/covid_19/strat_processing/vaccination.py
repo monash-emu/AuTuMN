@@ -13,10 +13,10 @@ from autumn.models.covid_19.parameters import Parameters, TimeSeries, VaccEffect
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
-from autumn.tools.utils.utils import check_list_increasing
+from autumn.core.utils.utils import check_list_increasing
 from autumn.model_features.curve import tanh_based_scaleup
-from autumn.tools.inputs.covid_lka.queries import get_lka_vac_coverage
-from autumn.tools.inputs.covid_mmr.queries import base_mmr_adult_vacc_doses
+from autumn.core.inputs.covid_lka.queries import get_lka_vac_coverage
+from autumn.core.inputs.covid_mmr.queries import base_mmr_adult_vacc_doses
 
 
 

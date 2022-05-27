@@ -14,7 +14,7 @@ from autumn.projects.covid_19.mixing_optimisation.utils import (
     get_scenario_mapping,
     get_scenario_mapping_reverse,
 )
-from autumn.tools import db
+from autumn.coreimport db
 from autumn.settings import BASE_PATH
 
 

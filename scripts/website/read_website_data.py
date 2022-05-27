@@ -14,7 +14,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__fil
 sys.path.append(BASE_DIR)
 
 
-# from autumn.tools.utils.runs import read_run_id
+# from autumn.coreutils.runs import read_run_id
 def read_run_id(run_id: str):
     """Read data from run id"""
     parts = run_id.split("/")

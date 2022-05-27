@@ -12,8 +12,8 @@ from autumn.models.sm_sir.constants import FlowName
 from typing import List, Dict, Union
 import itertools
 
-from autumn.tools.inputs import get_population_by_agegroup
-from autumn.tools.utils.utils import weighted_average
+from autumn.core.inputs import get_population_by_agegroup
+from autumn.core.utils.utils import weighted_average
 
 
 def get_relevant_indices(

@@ -9,10 +9,10 @@ from autumn.projects.covid_19.mixing_optimisation.serosurvey_by_age.survey_data 
     get_serosurvey_data,
 )
 from autumn.projects.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
-from autumn.tools import db, plots
+from autumn.coreimport db, plots
 from autumn.model_features.curve.tanh import tanh_based_scaleup
-from autumn.tools.plots.calibration.plots import get_posterior, get_posterior_best_chain
-from autumn.tools.plots.uncertainty.plots import plot_timeseries_with_uncertainty
+from autumn.coreplots.calibration.plots import get_posterior, get_posterior_best_chain
+from autumn.coreplots.uncertainty.plots import plot_timeseries_with_uncertainty
 from autumn.utils.params import load_targets
 
 

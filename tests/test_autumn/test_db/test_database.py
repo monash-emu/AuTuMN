@@ -1,4 +1,4 @@
-from autumn.tools.inputs.database import get_input_db
+from autumn.coreinputs.database import get_input_db
 
 db = get_input_db()
 

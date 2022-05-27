@@ -4,13 +4,13 @@ import shutil
 
 import pandas as pd
 
-from autumn.tools import db, plots
-from autumn.tools.db.load import load_mcmc_tables
+from autumn.core import db, plots
+from autumn.core.db.load import load_mcmc_tables
 from autumn.settings import REMOTE_BASE_DIR
 from autumn.infrastructure.tasks.full import FULL_RUN_DATA_DIR
 from autumn.infrastructure.tasks.utils import get_project_from_run_id
-from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
-from autumn.tools.utils.timer import Timer
+from autumn.core.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
+from autumn.core.utils.timer import Timer
 
 logger = logging.getLogger(__name__)
 

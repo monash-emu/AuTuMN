@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose, assert_almost_equal
 
-from autumn.tools import db
+from autumn.core import db
 from autumn.calibration import Calibration, CalibrationMode
 from autumn.calibration.utils import (
     sample_starting_params_from_lhs,
@@ -115,7 +115,7 @@ def _prepare_params(l):
 
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import PoissonTarget
-from autumn.tools.project import Project, ParameterSet, Params
+from autumn.core.project import Project, ParameterSet, Params
 
 
 def test_calibrate_autumn_mcmc(temp_data_dir):

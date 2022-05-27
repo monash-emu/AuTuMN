@@ -6,7 +6,7 @@ import click
 
 from autumn.settings import Region
 from autumn.infrastructure.remote.aws import cli as aws
-from autumn.tools.utils.runs import read_run_id
+from autumn.core.utils.runs import read_run_id
 
 from .buildkite import trigger_pipeline
 from .pipelines import calibrate as calibrate_pipeline

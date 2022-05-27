@@ -31,7 +31,7 @@ priors = [
     UniformPrior("sojourns.latent.total_time", (1., 4.)),
     UniformPrior("infectious_seed", (50., 250.)),
     UniformPrior("detect_prop", (0.01, 0.2)),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", (0.075, 0.5))
+    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", (0.01, 0.5))
 ]
 
 calibration = Calibration(

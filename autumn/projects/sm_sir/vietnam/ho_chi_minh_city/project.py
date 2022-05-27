@@ -40,11 +40,12 @@ notifications = pd.concat(
      ts_set["notifications"].loc[702:]  # from 02/12/2021 onwards
     ]
 )
-
+hospital_occupancy = ts_set["hospital_occupancy"].loc[640:]  # truncated to 01 Oct 2021
 icu_occupancy = ts_set["icu_occupancy"].loc[640:]  # truncated to 01 Oct 2021
 infection_deaths = ts_set["infection_deaths"].loc[556:].rolling(7).mean()  # truncated to 9th Jul 2021
 
 targets = [NormalTarget(notifications),
+           NormalTarget(hospital_occupancy),
            NormalTarget(icu_occupancy),
            NormalTarget(infection_deaths)]
 

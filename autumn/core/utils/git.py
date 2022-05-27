@@ -1,7 +1,7 @@
 import git
 
 from autumn.settings.folders import BASE_PATH
-from autumn.coreport run_command
+from autumn.infrastructure.command_line import run_command
 
 
 def get_latest_commit(branch: str) -> str:

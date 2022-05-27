@@ -4,6 +4,7 @@ from itertools import chain
 from time import time
 from typing import List, Callable
 import pickle
+from copy import copy
 
 import yaml
 import numpy as np
@@ -18,9 +19,8 @@ from autumn.tools.utils.timer import Timer
 from autumn.tools.calibration.priors import BasePrior
 from autumn.tools.calibration.targets import BaseTarget
 from autumn.tools.calibration.proposal_tuning import tune_jumping_stdev
-from autumn.tools.project.params import read_param_value_from_string
+from autumn.tools.project.params import read_param_value_from_string, Params
 from autumn.tools.project import Project, get_project
-
 
 from .constants import ADAPTIVE_METROPOLIS
 from .transformations import (
@@ -347,10 +347,14 @@ class Calibration:
     def update_hierarchical_prior_params(self, current_params=None):
         for h_p in self.hierarchical_priors:
             # work out hyper-parameter values
-            distri_params = h_p.hyper_parameters
+            distri_params = copy(h_p.hyper_parameters)
             for i, p in enumerate(distri_params):
                 if isinstance(p, str):
-                    distri_params[i] = current_params[p]
+                    if isinstance(current_params, Params):
+                        distri_params[i] = current_params[p]
+                    else:
+                        param_index = [par['param_name'] for par in self.all_priors].index(p)
+                        distri_params[i] = current_params[param_index]
             
             # update prior lists
             for prior in self.all_priors:

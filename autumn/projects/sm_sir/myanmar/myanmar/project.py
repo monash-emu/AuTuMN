@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from autumn.coreproject import (
+from autumn.core.project import (
     Project,
     ParameterSet,
     load_timeseries,

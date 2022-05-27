@@ -1,7 +1,7 @@
 import copy
 from importlib import import_module
 
-from autumn.coreproject import get_project, Project
+from autumn.core.project import get_project, Project
 
 
 class Opti:

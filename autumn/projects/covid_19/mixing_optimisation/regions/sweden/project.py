@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.coreproject import Project, ParameterSet, load_timeseries, build_rel_path
+from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.calibration import Calibration
 from autumn.calibration.targets import (
     TruncNormalTarget,

@@ -3,7 +3,7 @@ import json
 from pandas import Series
 from datetime import datetime
 
-from autumn.coreutils.utils import wrap_series_transform_for_ndarray
+from autumn.core.utils.utils import wrap_series_transform_for_ndarray
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.core.project import (
     Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths

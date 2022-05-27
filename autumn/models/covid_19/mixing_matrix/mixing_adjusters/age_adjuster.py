@@ -3,7 +3,7 @@ import numpy as np
 
 from autumn.models.covid_19.parameters import TimeSeries
 from autumn.models.covid_19.constants import AGEGROUP_STRATA
-from autumn.tools.curve import scale_up_function
+from autumn.model_features.curve import scale_up_function
 
 from .base_adjuster import BaseMixingAdjuster
 

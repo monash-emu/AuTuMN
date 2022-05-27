@@ -2,7 +2,7 @@ import pytest
 from summer import CompartmentalModel
 
 from autumn.settings import Models
-from autumn.tools.project.project import _PROJECTS, get_project
+from autumn.core.project.project import _PROJECTS, get_project
 
 COVID_PROJECTS = list(_PROJECTS[Models.COVID_19].keys())
 

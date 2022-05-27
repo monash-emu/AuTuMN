@@ -9,8 +9,8 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
     save_figure,
 )
-from autumn.tools.db.load import load_uncertainty_table
-from autumn.tools.plots.uncertainty.plots import plot_timeseries_with_uncertainty
+from autumn.core.db.load import load_uncertainty_table
+from autumn.core.plots.uncertainty.plots import plot_timeseries_with_uncertainty
 from autumn.settings import BASE_PATH
 
 

@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
-from autumn.tools import inputs
+from autumn.core import inputs
 
 HOSPITAL_DATA_DIR = os.path.join("hospitalisation_data")
 country_mapping = {"united-kingdom": "The United Kingdom"}

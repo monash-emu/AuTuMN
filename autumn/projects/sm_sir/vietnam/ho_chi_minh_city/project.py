@@ -1,6 +1,6 @@
 import pandas as pd
 
-from autumn.tools.project import (
+from autumn.core.project import (
     Project,
     ParameterSet,
     load_timeseries,

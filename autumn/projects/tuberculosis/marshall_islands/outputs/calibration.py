@@ -8,15 +8,15 @@ from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
     save_figure,
 )
-from autumn.tools.project import get_project
+from autumn.core.project import get_project
 
-from autumn.tools.db.load import load_uncertainty_table
-from autumn.tools.plots.uncertainty.plots import (
+from autumn.core.db.load import load_uncertainty_table
+from autumn.core.plots.uncertainty.plots import (
     _get_target_values,
     _plot_targets_to_axis,
     _plot_uncertainty,
 )
-from autumn.tools.plots.utils import COLORS
+from autumn.core.plots.utils import COLORS
 
 
 def main(data_path, output_path):

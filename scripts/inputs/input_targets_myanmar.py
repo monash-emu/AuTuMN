@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import datetime
 
 from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries, create_date_index
+from autumn.core.utils.utils import update_timeseries, create_date_index
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
 
 #COVID_MMR_TARGETS = os.path.join(PROJECTS_PATH, "covid_19", "myanmar", "timeseries.json")

@@ -11,8 +11,8 @@ from autumn.tools.db.database import get_database
 from autumn.tools.db.store import Table
 from autumn.tools.db.process import find_mle_run
 from autumn.settings import REMOTE_BASE_DIR
-from autumn.tasks.calibrate import CALIBRATE_DATA_DIR
-from autumn.tasks.utils import get_project_from_run_id, set_logging_config
+from autumn.infrastructure.tasks.calibrate import CALIBRATE_DATA_DIR
+from autumn.infrastructure.tasks.utils import get_project_from_run_id, set_logging_config
 from autumn.tools.utils.fs import recreate_dir
 from autumn.tools.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.tools.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client

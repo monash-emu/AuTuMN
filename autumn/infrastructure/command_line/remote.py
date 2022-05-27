@@ -13,9 +13,9 @@ logging.getLogger("nose").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.INFO)
 
 
-from autumn.remote.aws.cli import aws_cli
-from autumn.remote.buildkite.cli import buildkite_cli
-from autumn.remote.download.cli import download_cli
+from autumn.infrastructure.remote.aws.cli import aws_cli
+from autumn.infrastructure.remote.buildkite.cli import buildkite_cli
+from autumn.infrastructure.remote.download.cli import download_cli
 
 
 @click.group()

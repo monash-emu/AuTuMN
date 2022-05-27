@@ -1,4 +1,4 @@
-from autumn.remote.buildkite.buildkite import CommandStep, InputStep, Pipeline
+from autumn.infrastructure.remote.buildkite.buildkite import CommandStep, InputStep, Pipeline
 
 from .calibrate import (
     commit_field,

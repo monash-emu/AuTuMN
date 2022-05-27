@@ -7,8 +7,8 @@ from moto import mock_s3
 
 from autumn.tools.db import ParquetDatabase, FeatherDatabase
 from autumn.tools.db.store import Table
-from autumn.tasks import full
-from autumn.tasks.full import full_model_run_task
+from autumn.infrastructure.tasks import full
+from autumn.infrastructure.tasks.full import full_model_run_task
 from autumn import settings as s3_settings
 from autumn.tools.utils.s3 import get_s3_client, upload_to_run_s3, list_s3, download_from_run_s3, sanitise_path
 from autumn.tools.utils.fs import recreate_dir

@@ -1,4 +1,4 @@
-from autumn.remote.buildkite.buildkite import (
+from autumn.infrastructure.remote.buildkite.buildkite import (
     BooleanInputField,
     CommandStep,
     InputStep,

@@ -5,7 +5,7 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 730.
+  start: 727.
   end: 870.
 
 mobility:
@@ -29,8 +29,8 @@ mobility:
       function_type: tanh
       parameters:
         shape: 0.1
-        inflection_time: 818. #28th March
-        start_asymptote: 0.2
+        inflection_time: 800.
+        start_asymptote: 0.4
         end_asymptote: 0.
       locations:
         - work
@@ -52,7 +52,7 @@ immunity_stratification:
 
 sojourns:
   active:
-    total_time: 4.
+    total_time: 3.
     proportion_early: 0.333
   latent:
     total_time: 2.5
@@ -63,9 +63,9 @@ activate_random_process: False
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-4
-  assumed_cdr_parameter: 0.152
+  assumed_cdr_parameter: 0.0615
   smoothing_period: 14
-  floor_value: 0.15
+  floor_value: 0.06
 detect_prop: 0.6
 
 voc_emergence:

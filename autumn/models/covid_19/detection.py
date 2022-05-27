@@ -93,7 +93,7 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.)
     """
 
     # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - exp(-b * t)
-    exponent_multiplier = np.log(1.0 - assumed_cdr) / assumed_tests
+    exponent_multiplier = np.log(1.0 - assumed_cdr / (1.0 - floor)) / assumed_tests
 
     # Construct the function based on this parameter
     def cdr_function(tests_per_capita):

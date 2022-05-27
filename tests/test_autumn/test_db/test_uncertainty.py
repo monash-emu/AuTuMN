@@ -1,7 +1,7 @@
 import random
 
 
-from autumn.coredb.uncertainty import calculate_mcmc_uncertainty
+from autumn.core.db.uncertainty import calculate_mcmc_uncertainty
 from tests.utils import build_synthetic_calibration
 
 

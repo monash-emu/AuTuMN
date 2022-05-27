@@ -1,7 +1,7 @@
 import logging
 import os
 
-from autumn.coredb import Database
+from autumn.core.db import Database
 from autumn.settings import INPUT_DATA_PATH
 from autumn.core.utils.timer import Timer
 

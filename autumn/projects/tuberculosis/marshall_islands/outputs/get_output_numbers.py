@@ -3,7 +3,7 @@ import os
 from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
 )
-from autumn.coredb.load import load_uncertainty_table
+from autumn.core.db.load import load_uncertainty_table
 
 def main(data_path, output_path):
     figure_path = os.path.join(output_path, "output_numbers")

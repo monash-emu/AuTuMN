@@ -16,20 +16,20 @@ from time import time
 
 import pickle
 
-from autumn.tools.runs.managed import ManagedRun
+from autumn.core.runs.managed import ManagedRun
 
 import s3fs
 
-from autumn.tools.utils.pandas import pdfilt
-from autumn.tools.project import get_project
+from autumn.core.utils.pandas import pdfilt
+from autumn.core.project import get_project
 
 from summer.utils import ref_times_to_dti
 
 from autumn.models.covid_19.model import COVID_BASE_DATETIME
 
-from autumn.tools.db import uncertainty
+from autumn.core.db import uncertainty
 
-from autumn.tools.runs.utils import collate_columns_to_urun
+from autumn.coreruns.utils import collate_columns_to_urun
 
 def as_ordinal_runs(do_df):
     do_df = collate_columns_to_urun(do_df, True)

@@ -19,8 +19,8 @@ from autumn.projects.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows
     get_output_data,
 )
 from autumn.projects.covid_19.mixing_optimisation.utils import get_wi_scenario_mapping_reverse
-from autumn.tools.db import Database
-from autumn.tools.db.load import find_db_paths, load_derived_output_tables
+from autumn.core.db import Database
+from autumn.core.db.load import find_db_paths, load_derived_output_tables
 from autumn.settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(

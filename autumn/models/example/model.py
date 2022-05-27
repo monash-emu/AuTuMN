@@ -1,5 +1,5 @@
 from summer import CompartmentalModel
-from autumn.tools.project import Params, build_rel_path
+from autumn.core.project import Params, build_rel_path
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:

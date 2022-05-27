@@ -8,10 +8,10 @@ from pathlib import Path
 
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
+from autumn.core.utils.utils import update_timeseries
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
-from autumn.tools.curve.scale_up import scale_up_function
+from autumn.core.utils.utils import create_date_index
+from autumn.model_features.curve.scale_up import scale_up_function
 
 PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)

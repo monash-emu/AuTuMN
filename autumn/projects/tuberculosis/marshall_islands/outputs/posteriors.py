@@ -5,7 +5,7 @@ import pandas as pd
 from autumn.projects.tuberculosis.marshall_islands.outputs.utils import (
     make_output_directories,
 )
-from autumn.tools.plots.utils import PLOT_TEXT_DICT
+from autumn.coreplots.utils import PLOT_TEXT_DICT
 
 
 PARAMETER_NAMES_OVERRIDE = {

@@ -2,7 +2,7 @@ from summer import Stratification, Multiply, Overwrite
 
 from autumn.models.tuberculosis.constants import INFECTIOUS_COMPS, OrganStratum
 from autumn.models.tuberculosis.parameters import Parameters
-from autumn.model_features.curve.scale_up import make_linear_curve, tanh_based_scaleup
+from autumn.model_features.curve import make_linear_curve, tanh_based_scaleup
 
 ORGAN_STRATA = [
     OrganStratum.SMEAR_POSITIVE,

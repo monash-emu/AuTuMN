@@ -17,7 +17,7 @@ age_mixing: null
 import_ltbi_cases: null
 
 # set up a parameter for the birth rate (its time-variant value will be automatically defined)
-crude_birth_rate: 2.7
+crude_birth_rate: 4.
 
 # requested outputs
 calculated_outputs: ["prevalence_infectious"]
@@ -43,7 +43,7 @@ user_defined_stratifications: {} # this specifies user-defined  stratifications
 
 # demographics
 start_population_size: 5000000
-universal_death_rate: .014
+universal_death_rate: .063
 
 # basic infection and disease parameters
 contact_rate: 1.4

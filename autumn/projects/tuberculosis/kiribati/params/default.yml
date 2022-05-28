@@ -98,7 +98,7 @@ extra_params:
     35: 0.4
     50: 0.7
   rr_progression_diabetes: 5.643402828077587
-  future_diabetes_multiplier: 1.2
+  future_diabetes_multiplier: 1.
 
 
 # calibrated parameters

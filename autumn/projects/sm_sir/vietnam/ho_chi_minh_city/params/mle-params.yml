@@ -6,3 +6,5 @@ age_stratification.cfr.multiplier: 0.5125380450417979
 age_stratification.prop_hospital.multiplier: 0.9943762829335911
 prop_icu_among_hospitalised: 0.05021137250174372
 voc_emergence.omicron.new_voc_seed.start_time: 780.2965432141771
+sojourns.active.proportion_early: 0.333
+sojourns.latent.proportion_early: 0.5

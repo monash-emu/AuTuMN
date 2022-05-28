@@ -9,8 +9,10 @@ ref_mixing_iso3: HKG
 sojourns:
   active:
     total_time: 6.
+    proportion_early: 0.333
   latent:
     total_time: 4.
+    proportion_early: 0.5
   recovered: 180.
 
 population:

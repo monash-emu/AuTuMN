@@ -50,8 +50,8 @@ for param_name in ["infect_death_rate", "self_recovery_rate"]:
 
 priors = [
     # *get_dispersion_priors_for_gaussian_targets(targets),
-    UniformPrior("start_population_size", [200, 3800]),
-    UniformPrior("contact_rate", [0.002, 0.01]),
+    UniformPrior("start_population_size", [30000, 40000]),
+    UniformPrior("contact_rate", [0.002, 0.05]),
     UniformPrior("progression_multiplier", [0.5, 2.0]),
     UniformPrior("time_variant_tb_screening_rate.inflection_time", [2000.0, 2020.0]),
     UniformPrior("time_variant_tb_screening_rate.shape", [0.07, 0.1]),

@@ -135,10 +135,10 @@ haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduc
 metropolis_initialisation: "lhs"
 
 # FIXME: the parameters below should disappear
-prevalence_infectiousXlocation_majuro_dispersion_param: 1.
-prevalence_infectiousXlocation_ebeye_dispersion_param: 1.
-percentage_latentXlocation_majuro_dispersion_param: 1.
-notificationsXlocation_majuro_dispersion_param: 1.
-notificationsXlocation_ebeye_dispersion_param: 1.
-notificationsXlocation_other_dispersion_param: 1.
-population_size_dispersion_param: 1.
+#prevalence_infectiousXlocation_majuro_dispersion_param: 1.
+#prevalence_infectiousXlocation_ebeye_dispersion_param: 1.
+#percentage_latentXlocation_majuro_dispersion_param: 1.
+#notificationsXlocation_majuro_dispersion_param: 1.
+#notificationsXlocation_ebeye_dispersion_param: 1.
+#notificationsXlocation_other_dispersion_param: 1.
+#population_size_dispersion_param: 1.

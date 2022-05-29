@@ -4,7 +4,8 @@ from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synt
 from autumn.models.covid_19.constants import Vaccination
 from autumn.core import inputs
 from autumn.core.project import Params, build_rel_path
-from autumn.models.sm_sir.detection import find_cdr_function_from_test_data, CdrProc
+from autumn.models.sm_sir.detection import find_cdr_function_from_test_data
+from autumn.models.covid_19.detection import CdrProc
 from autumn.models.covid_19.utils import calc_compartment_periods
 
 from .constants import (

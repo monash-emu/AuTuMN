@@ -1,11 +1,62 @@
-from typing import Tuple, Callable, Any
+from typing import Tuple, Callable, Any, Optional
 
-from autumn.models.covid_19.detection import get_testing_numbers_for_region, inflate_test_data, create_cdr_function
+from autumn.models.covid_19.detection import inflate_test_data, create_cdr_function
 from .parameters import TestingToDetection, Population
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.core.utils.utils import apply_moving_average
 from autumn.model_features.curve import scale_up_function
+from autumn.core.inputs.testing.eur_testing_data import (
+    get_uk_testing_numbers,
+    get_eu_testing_numbers,
+)
+from autumn.core.inputs.covid_au.queries import get_vic_testing_numbers
+from autumn.core.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
+from autumn.core.inputs.covid_lka.queries import get_lka_testing_numbers
+from autumn.core.inputs.covid_mmr.queries import get_mmr_testing_numbers
+from autumn.core.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
+from autumn.core.inputs.owid.queries import get_international_testing_numbers
+from autumn.core.inputs.covid_btn.queries import get_btn_testing_numbers
+
+
+def get_testing_numbers_for_region(
+    country_iso3: str, subregion: Optional[str]
+) -> Tuple[list, list]:
+    """
+    Use the appropriate function to retrieve the testing numbers applicable to the region being modelled.
+    Functions are taken from the autumn input tools module, as above.
+    """
+
+    subregion = subregion or False
+
+    if country_iso3 == "AUS":
+        test_dates, test_values = get_vic_testing_numbers()
+    elif country_iso3 == "PHL":
+        phl_region = subregion.lower() if subregion else "philippines"
+        test_dates, test_values = get_phl_subregion_testing_numbers(phl_region)
+    elif subregion == "Sabah":
+        test_dates, test_values = get_international_testing_numbers(country_iso3)
+    elif country_iso3 == "GBR":
+        test_dates, test_values = get_uk_testing_numbers()
+    elif country_iso3 in {"BEL", "ITA", "SWE", "FRA", "ESP"}:
+        test_dates, test_values = get_eu_testing_numbers(country_iso3)
+    elif country_iso3 == "LKA":
+        test_dates, test_values = get_lka_testing_numbers()
+    elif country_iso3 == "MMR":
+        test_dates, test_values = get_mmr_testing_numbers()
+    elif country_iso3 == "BGD" and subregion == "FDMN":
+        test_dates, test_values = get_coxs_bazar_testing_numbers()
+    elif country_iso3 == "BTN":
+        test_dates, test_values = get_btn_testing_numbers(subregion)
+
+    else:
+        test_dates, test_values = get_international_testing_numbers(country_iso3)
+
+    assert len(test_dates) == len(
+        test_values
+    ), "Length of test dates and test values are not equal"
+
+    return test_dates, test_values
 
 
 def find_cdr_function_from_test_data(

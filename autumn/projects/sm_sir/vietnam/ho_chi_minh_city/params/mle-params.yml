@@ -1,7 +1,10 @@
-contact_rate: 0.1525479317749325
+age_stratification.cfr.multiplier: 0.55
 infectious_seed: 1295.1147949397844
+contact_rate: 0.1525479317749325
 sojourns.active.proportion_early: 0.020807853466471425
 sojourns.latent.proportion_early: 0.39543307913225456
+voc_emergence.omicron.death_protection: 0.9
+voc_emergence.omicron.hosp_protection: 0.8
 voc_emergence.omicron.relative_active_period: 0.36297894137901476
 voc_emergence.omicron.relative_latency: 0.08013454749275868
 voc_emergence.wild_type.relative_active_period: 0.9929891889704635

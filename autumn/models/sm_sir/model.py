@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 import pandas as pd
 
 from summer import CompartmentalModel
@@ -9,10 +9,9 @@ from autumn.model_features.random_process.random_process import RandomProcessPro
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.core.utils.utils import multiply_function_or_constant
 from autumn.model_features.computed_values import FunctionWrapper
-from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .detection import get_cdr_func
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, TestingToDetection, Population
+from .parameters import Parameters, Sojourns, CompartmentSojourn
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import (

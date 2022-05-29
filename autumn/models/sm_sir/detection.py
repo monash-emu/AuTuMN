@@ -1,3 +1,8 @@
+from typing import Tuple
+
+from autumn.models.covid_19.detection import find_cdr_function_from_test_data
+from .parameters import TestingToDetection, Population
+
 
 def get_cdr_func(
         detect_prop: float,

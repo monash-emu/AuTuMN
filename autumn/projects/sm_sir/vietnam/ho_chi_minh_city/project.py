@@ -63,8 +63,8 @@ priors = [
     UniformPrior("sojourns.active.proportion_early", (0.01, 1.0)),
     UniformPrior("sojourns.latent.proportion_early", (0.01, 1.0)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.02)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
+    # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.02)),
+    # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification

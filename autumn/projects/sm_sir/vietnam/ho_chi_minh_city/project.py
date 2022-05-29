@@ -53,6 +53,9 @@ targets = [
 
 
 priors = [
+    # age stratification
+    UniformPrior("age_stratification.cfr.multiplier", (0.4, 1.0)),
+    # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # infectious seed and contact rate
     UniformPrior("infectious_seed", (1000, 10000)),
     UniformPrior("contact_rate", (0.1, 0.3)),
@@ -67,13 +70,12 @@ priors = [
     # immunity stratification
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
-    # age stratification
-    # UniformPrior("age_stratification.cfr.multiplier", (0.5, 1.0)),
-    # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # prop icu among hospitalization
     # UniformPrior("prop_icu_among_hospitalised", (0.03, 0.1)),
     # emergence of omicron
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 781.0)),  # 5 weeks interval
+    UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
+    UniformPrior("voc_emergence.omicron.hosp_protection", (0.7, 1.0)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 1.0)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 1.0)),
     # emergence of delta

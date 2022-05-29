@@ -269,7 +269,6 @@ class TestingToDetection(BaseModel):
     assumed_tests_parameter: float
     assumed_cdr_parameter: float
     smoothing_period: int
-    test_multiplier: Optional[TimeSeries]
     floor_value: float
 
     @validator("assumed_tests_parameter", allow_reuse=True)

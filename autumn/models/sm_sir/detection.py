@@ -19,37 +19,6 @@ from autumn.core.inputs.owid.queries import get_international_testing_numbers
 from autumn.core.inputs.covid_btn.queries import get_btn_testing_numbers
 
 
-def inflate_test_data(
-    test_multiplier: float, test_dates: list, test_values: list
-) -> List[float]:
-    """
-    Apply inflation factor to test numbers if requested.
-    Used in the Philippines applications only.
-    """
-
-    # Add future test datapoints to original series so we can scale-up
-    latest_per_capita_tests = test_values[-1]
-    for time, value in zip(test_multiplier.times, test_multiplier.values):
-        if time not in test_dates:
-            test_dates = np.append(test_dates, [time])
-            test_values.append(latest_per_capita_tests)
-
-    # Reorder the data
-    sorted_pairs = sorted(zip(test_dates, test_values))
-    tuples = zip(*sorted_pairs)
-    test_dates, test_values = [list(tup) for tup in tuples]
-
-    # Create scale-up function
-    testing_scale_up = scale_up_function(
-        test_multiplier.times, test_multiplier.values, method=4
-    )
-
-    # Scale up added tests
-    return [
-        test_values[val] * testing_scale_up(time) for val, time in enumerate(test_dates)
-    ]
-
-
 def get_testing_numbers_for_region(
     country_iso3: str, subregion: Optional[str]
 ) -> Tuple[list, list]:
@@ -140,15 +109,9 @@ def find_cdr_function_from_test_data(
     else:
         smoothed_per_capita_tests = per_capita_tests
 
-    # Scale testing with a time-variant request parameter
-    if test_detect_params.test_multiplier:
-        smoothed_inflated_per_capita_tests = inflate_test_data(
-            test_detect_params.test_multiplier, test_dates, smoothed_per_capita_tests
-        )
-    else:
-        smoothed_inflated_per_capita_tests = smoothed_per_capita_tests
-
-    assert all((val >= 0.0 for val in smoothed_inflated_per_capita_tests))
+    # Check data
+    msg = "Negative test values present"
+    assert all((val >= 0.0 for val in smoothed_per_capita_tests)), msg
 
     # Calculate CDRs and the resulting CDR function
     cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
@@ -162,7 +125,7 @@ def find_cdr_function_from_test_data(
         test_dates,
         [
             cdr_from_tests_func(i_test_rate)
-            for i_test_rate in smoothed_inflated_per_capita_tests
+            for i_test_rate in smoothed_per_capita_tests
         ],
         smoothness=0.2,
         method=4,

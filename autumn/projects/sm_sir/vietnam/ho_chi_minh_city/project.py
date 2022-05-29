@@ -67,9 +67,13 @@ priors = [
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # prop icu among hospitalization
     # UniformPrior("prop_icu_among_hospitalised", (0.03, 0.1)),
+    # emergence of delta
+    UniformPrior("voc_emergence.wild_type.relative_active_period", (0.01, 1.0)),
+    UniformPrior("voc_emergence.wild_type.relative_latency", (0.01, 1.0)),
     # emergence of omicron
-    # UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 781.0)),  # 5 weeks interval
+    UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 1.0)),
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 1.0)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0.01, 1.0)),
     UniformPrior("sojourns.latent.proportion_early", (0.01, 1.0)),

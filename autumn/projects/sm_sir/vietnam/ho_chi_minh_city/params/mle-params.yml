@@ -2,8 +2,6 @@ contact_rate: 0.1525479317749325
 infectious_seed: 1295.1147949397844
 sojourns.active.proportion_early: 0.020807853466471425
 sojourns.latent.proportion_early: 0.39543307913225456
-testing_to_detection.assumed_cdr_parameter: 0.03515418301013407
-testing_to_detection.assumed_tests_parameter: 0.014198900567877877
 voc_emergence.omicron.relative_active_period: 0.36297894137901476
 voc_emergence.omicron.relative_latency: 0.08013454749275868
 voc_emergence.wild_type.relative_active_period: 0.9929891889704635

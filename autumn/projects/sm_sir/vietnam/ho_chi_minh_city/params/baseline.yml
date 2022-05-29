@@ -162,7 +162,7 @@ age_stratification:
   cfr:
     multiplier: 0.8
   prop_hospital:
-    multiplier: 1.0
+    multiplier: 1.0 # fixed after various calibrations
 
 additional_immunity:
   times:

@@ -96,7 +96,7 @@ def add_latent_transitions(
     Add the transition flows taking people from infection through to infectiousness, depending on the model structure
     requested.
     Absence of the latent compartment entirely is not supported currently, because this would require us to calculate
-    incidence from multiple flow names (which is possible, but would just add complexity to the code).
+    incidence from multiple flow names (which is possible, but would add complexity to the code).
 
     Args:
         latent_sojourn_params: The user requests relating to the latent period
@@ -203,9 +203,9 @@ def get_cdr_func(
 ) -> Tuple[callable, callable]:
     """
     The master function that can call various approaches to calculating the proportion of cases detected over time.
-    Currently just supporting two approaches:
-        Testing-based case detection
-        Constant case detection fraction
+    Currently just supporting two approaches, but would be the entry point if more approaches were added:
+        - Testing-based case detection
+        - Constant case detection fraction
 
     Args:
         detect_prop: Back-up single value to set a constant case detection rate over time

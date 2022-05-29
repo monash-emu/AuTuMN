@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple, List
+from typing import Callable, List
 import numpy as np
 
 from summer.compute import ComputedValueProcessor

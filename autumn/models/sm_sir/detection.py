@@ -59,7 +59,7 @@ def get_testing_numbers_for_region(
     return test_dates, test_values
 
 
-def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.) -> Callable:
+def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor_value: float=0.) -> Callable:
     """
     Factory function for finding CDRs from number of tests done in setting modelled
     To work out the function, only one parameter is needed, so this can be estimated from one known point on the curve,
@@ -75,12 +75,12 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.)
 
     """
 
-    # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - exp(-b * t)
-    exponent_multiplier = np.log((1.0 - assumed_cdr) / (1.0 - floor)) / assumed_tests
+    # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - (1 - f) * exp(-b * t)
+    exponent_multiplier = np.log((1.0 - assumed_cdr) / (1.0 - floor_value)) / assumed_tests
 
     # Construct the function based on this parameter
     def cdr_function(tests_per_capita):
-        return 1.0 - np.exp(exponent_multiplier * tests_per_capita) * (1.0 - floor)
+        return 1.0 - np.exp(exponent_multiplier * tests_per_capita) * (1.0 - floor_value)
 
     return cdr_function
 

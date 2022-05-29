@@ -7,5 +7,5 @@ voc_emergence.omicron.death_protection: 0.9
 voc_emergence.omicron.hosp_protection: 0.8
 voc_emergence.omicron.relative_active_period: 0.36297894137901476
 voc_emergence.omicron.relative_latency: 0.08013454749275868
-voc_emergence.wild_type.relative_active_period: 0.9929891889704635
-voc_emergence.wild_type.relative_latency: 0.9325475458798339
+voc_emergence.wild_type.relative_active_period: 0.9
+voc_emergence.wild_type.relative_latency: 0.9

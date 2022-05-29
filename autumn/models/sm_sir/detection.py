@@ -1,7 +1,67 @@
-from typing import Tuple
+from typing import Tuple, Callable, Any
 
-from autumn.models.covid_19.detection import find_cdr_function_from_test_data
+from autumn.models.covid_19.detection import get_testing_numbers_for_region, inflate_test_data, create_cdr_function
 from .parameters import TestingToDetection, Population
+from autumn.core.inputs import get_population_by_agegroup
+from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.core.utils.utils import apply_moving_average
+from autumn.model_features.curve import scale_up_function
+
+
+def find_cdr_function_from_test_data(
+    test_detect_params, iso3: str, region: str, year: int
+) -> Callable:
+    """
+    Sort out case detection rate from testing numbers, sequentially calling the functions above as required.
+    """
+
+    # Get the testing population denominator
+    testing_pops = get_population_by_agegroup(AGEGROUP_STRATA, iso3, region, year=year)
+
+    # Get the numbers of tests performed
+    test_dates, test_values = get_testing_numbers_for_region(iso3, region)
+
+    # Convert test numbers to per capita testing rates
+    per_capita_tests = [i_tests / sum(testing_pops) for i_tests in test_values]
+
+    # Smooth the testing data if requested
+    if test_detect_params.smoothing_period:
+        smoothed_per_capita_tests = apply_moving_average(
+            per_capita_tests, test_detect_params.smoothing_period
+        )
+    else:
+        smoothed_per_capita_tests = per_capita_tests
+
+    # Scale testing with a time-variant request parameter
+    if test_detect_params.test_multiplier:
+        smoothed_inflated_per_capita_tests = inflate_test_data(
+            test_detect_params.test_multiplier, test_dates, smoothed_per_capita_tests
+        )
+    else:
+        smoothed_inflated_per_capita_tests = smoothed_per_capita_tests
+
+    assert all((val >= 0.0 for val in smoothed_inflated_per_capita_tests))
+
+    # Calculate CDRs and the resulting CDR function
+    cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
+        test_detect_params.assumed_tests_parameter,
+        test_detect_params.assumed_cdr_parameter,
+        test_detect_params.floor_value,
+    )
+
+    # Get the final CDR function
+    cdr_function = scale_up_function(
+        test_dates,
+        [
+            cdr_from_tests_func(i_test_rate)
+            for i_test_rate in smoothed_inflated_per_capita_tests
+        ],
+        smoothness=0.2,
+        method=4,
+        bound_low=0.0,
+    )
+
+    return cdr_function
 
 
 def get_cdr_func(

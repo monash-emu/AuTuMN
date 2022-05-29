@@ -90,6 +90,32 @@ def get_testing_numbers_for_region(
     return test_dates, test_values
 
 
+def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.) -> Callable:
+    """
+    Factory function for finding CDRs from number of tests done in setting modelled
+    To work out the function, only one parameter is needed, so this can be estimated from one known point on the curve,
+    being a value of the CDR that is associated with a certain testing rate
+
+    Args:
+        assumed_tests: Value of CDR associated with the testing coverage
+        assumed_cdr: Number of tests needed to result in this CDR
+        floor_cdr: Floor value for the case detection rate
+
+    Returns:
+        Callable: Function to provide CDR for a certain number of tests
+
+    """
+
+    # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - exp(-b * t)
+    exponent_multiplier = np.log((1.0 - assumed_cdr) / (1.0 - floor)) / assumed_tests
+
+    # Construct the function based on this parameter
+    def cdr_function(tests_per_capita):
+        return 1.0 - np.exp(exponent_multiplier * tests_per_capita) * (1.0 - floor)
+
+    return cdr_function
+
+
 def find_cdr_function_from_test_data(
     test_detect_params, iso3: str, region: str, year: int
 ) -> Callable:
@@ -180,29 +206,3 @@ def get_cdr_func(
         return 1.0 - computed_values["cdr"]
 
     return cdr_func, non_detect_func
-
-
-def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.) -> Callable:
-    """
-    Factory function for finding CDRs from number of tests done in setting modelled
-    To work out the function, only one parameter is needed, so this can be estimated from one known point on the curve,
-    being a value of the CDR that is associated with a certain testing rate
-
-    Args:
-        assumed_tests: Value of CDR associated with the testing coverage
-        assumed_cdr: Number of tests needed to result in this CDR
-        floor_cdr: Floor value for the case detection rate
-
-    Returns:
-        Callable: Function to provide CDR for a certain number of tests
-
-    """
-
-    # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - exp(-b * t)
-    exponent_multiplier = np.log((1.0 - assumed_cdr) / (1.0 - floor)) / assumed_tests
-
-    # Construct the function based on this parameter
-    def cdr_function(tests_per_capita):
-        return 1.0 - np.exp(exponent_multiplier * tests_per_capita) * (1.0 - floor)
-
-    return cdr_function

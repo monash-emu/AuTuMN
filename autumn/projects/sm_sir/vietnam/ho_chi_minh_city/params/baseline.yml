@@ -160,7 +160,7 @@ prop_icu_among_hospitalised: 0.05
 
 age_stratification:
   cfr:
-    multiplier: 0.8
+    multiplier: 0.55
   prop_hospital:
     multiplier: 1.0 # fixed after various calibrations
 

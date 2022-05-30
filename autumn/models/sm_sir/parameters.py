@@ -1,6 +1,7 @@
 """
 Type definition for model parameters
 """
+from numpy import int_
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
@@ -568,7 +569,9 @@ class Parameters:
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):
         msg = "Not all requested age groups in the available age groups of 5-year increments from zero to 75"
-        assert all([i_group in COVID_BASE_AGEGROUPS for i_group in age_groups]), msg
+        int_age_groups = [int(i_group) for i_group in COVID_BASE_AGEGROUPS]
+        assert all([i_group in int_age_groups for i_group in age_groups]), msg
+        return age_groups
 
     @validator("voc_emergence", allow_reuse=True)
     def check_starting_strain(voc_emergence):

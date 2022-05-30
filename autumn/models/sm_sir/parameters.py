@@ -7,8 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
-from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 BASE_DATE = COVID_BASE_DATETIME.date()
@@ -385,7 +384,6 @@ class TestingToDetection(BaseModel):
     assumed_tests_parameter: float
     assumed_cdr_parameter: float
     smoothing_period: int
-    test_multiplier: Optional[TimeSeries]
     floor_value: float
 
     check_tests = validator("assumed_tests_parameter", allow_reuse=True)(

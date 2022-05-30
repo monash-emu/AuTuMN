@@ -8,7 +8,7 @@ from autumn.models.covid_19.constants import (
 )
 from autumn.models.covid_19.parameters import Parameters
 from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.settings import COVID_BASE_AGEGROUPS
 
 
 def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[str, float]]) -> Stratification:
@@ -71,7 +71,7 @@ def get_clinical_strat(params: Parameters, stratified_adjusters: Dict[str, Dict[
 
         # Assign all the adjustments to the summer model
         voc_stratum = {"strain": voc} if params.voc_emergence else {}  # *** Don't filter by VoC if there are no VoCs
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
             source = {"agegroup": agegroup}
             source.update(voc_stratum)
             clinical_strat.set_flow_adjustments(PROGRESS, adjs[PROGRESS], source_strata=source)  # Not age-stratified

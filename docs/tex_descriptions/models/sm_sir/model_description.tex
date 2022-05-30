@@ -25,20 +25,20 @@ The following compartments are implemented:
     \item Latent
     \begin{itemize}
         \item Persons recently infected with SARS-CoV-2, but not yet infectious
-        \item This compartment is divided into two sequential phases
+        \item This phase is divided into two sequential compartments
     \end{itemize}
     \item Infectious
     \begin{itemize}
         \item Persons with active COVID-19 who are potentially infectious to others
-        \item This compartment is divided into two sequential phases
+        \item This phase is divided into two sequential compartments
         \item The second of these two sequential compartments includes any persons who are identified through the health system and asked to isolate
         \item The infectiousness of the second compartment will be reduced to capture the effect of case isolation
     \end{itemize}
     \item Recovered
     \begin{itemize}
         \item Persons recovered from COVID-19 during the model simulation period
-        \item This compartment is divided into two sequential phases
-        \item Reinfection from these compartments is permitted and will occur at a different rate for the two sequential phases
+        \item This phase is divided into two sequential compartments
+        \item Reinfection from these compartments is permitted and occurs at a different rate for the two sequential phases (if the reinfection rate is greater than zero)
         \item This compartment retains the stratification by strain (or variant of concern (``VoC'')), with the strain of the last infection episode used for classification
     \end{itemize}
 \end{itemize}

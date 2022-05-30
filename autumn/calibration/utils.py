@@ -51,6 +51,12 @@ def sample_prior(prior_dict, quantile):
         sample = stats.truncnorm.ppf(
             quantile, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
         )
+    elif prior_dict["distribution"] == "normal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        sample = stats.norm.ppf(
+            quantile, loc=mu, scale=sd
+        )
     elif prior_dict["distribution"] == "beta":
         sample = stats.beta.ppf(
             quantile,
@@ -118,6 +124,8 @@ def find_decent_starting_point(prior_dict):
         shape = prior_dict["distri_params"][0]
         scale = prior_dict["distri_params"][1]
         x = shape * scale
+    elif prior_dict["distribution"] == "normal":
+        x = prior_dict["distri_params"][0]
     else:
         raise_error_unsupported_prior(prior_dict["distribution"])
 
@@ -158,6 +166,17 @@ def calculate_prior(prior_dict, x, log=True):
         else:
             y = stats.truncnorm.pdf(
                 x, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+            )
+    elif prior_dict["distribution"] == "normal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        if log:
+            y = stats.norm.logpdf(
+                x, loc=mu, scale=sd
+            )
+        else:
+            y = stats.norm.pdf(
+                x, loc=mu, scale=sd
             )
     elif prior_dict["distribution"] == "beta":
         a = prior_dict["distri_params"][0]

@@ -1,4 +1,5 @@
-from typing import Tuple
+from dis import dis
+from typing import Tuple, List, Union
 from abc import ABC, abstractmethod
 
 
@@ -84,3 +85,29 @@ class TruncNormalPrior(BasePrior):
             "distri_params": [self.mean, self.stdev],
             "trunc_range": self.trunc_range,
         }
+
+
+class HierarchicalPrior(BasePrior):
+    """
+        A uniformily distributed prior.
+    """
+
+    def __init__(self, name: str, distribution: str, hyper_parameters: List[Union[str, float]], trunc_range=None):
+        super().__init__()
+        self.name = name
+        self.distribution = distribution
+        self.hyper_parameters = hyper_parameters
+        self.trunc_range = trunc_range
+
+    def to_dict(self) -> dict:
+        base_dict = super().to_dict()
+        return {
+            **base_dict,
+            "distribution": self.distribution,
+            "param_name": self.name,
+            "distri_params": None,
+            "trunc_range": self.trunc_range
+        }
+
+    def list_variable_hyper_parameters(self):
+        return [p for p in self.hyper_parameters if isinstance(p, str)]

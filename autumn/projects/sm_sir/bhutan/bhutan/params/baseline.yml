@@ -25,16 +25,18 @@ mobility:
   smooth_google_data: false  # Whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing:
-    behaviour:
-      function_type: tanh
-      parameters:
-        shape: 0.1
-        inflection_time: 800.
-        start_asymptote: 0.4
-        end_asymptote: 0.
-      locations:
-        - work
-        - other_locations
+    function_type: empiric
+    parameters:
+      max_effect: 0.6
+      times:
+        - 897
+        - 898
+      values:
+        - - repeat_prev
+        - 0.3
+    locations:
+      - work
+      - other_locations
 
 is_dynamic_mixing_matrix: true
 

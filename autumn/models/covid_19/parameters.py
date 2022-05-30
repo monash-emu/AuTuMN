@@ -8,8 +8,8 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS, Strain
-from autumn.settings.region import Region
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME, VACCINATION_STRATA, Strain
+from autumn.settings.constants import GOOGLE_MOBILITY_LOCATIONS
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
@@ -269,7 +269,6 @@ class TestingToDetection(BaseModel):
     assumed_tests_parameter: float
     assumed_cdr_parameter: float
     smoothing_period: int
-    test_multiplier: Optional[TimeSeries]
     floor_value: float
 
     @validator("assumed_tests_parameter", allow_reuse=True)

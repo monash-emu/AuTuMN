@@ -2,7 +2,7 @@ from typing import Dict
 import numpy as np
 
 from autumn.models.covid_19.parameters import TimeSeries
-from autumn.models.covid_19.constants import AGEGROUP_STRATA
+from autumn.settings.constants import COVID_BASE_AGEGROUPS
 from autumn.model_features.curve import scale_up_function
 
 from .base_adjuster import BaseMixingAdjuster
@@ -50,11 +50,11 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
 
         # Iterate over matrix rows and columns
         adjusted_matrix = mixing_matrix.copy()
-        for i_row_agegroup, row_agegroup in enumerate(AGEGROUP_STRATA):
+        for i_row_agegroup, row_agegroup in enumerate(COVID_BASE_AGEGROUPS):
             row_adjust_func = self.adjustment_funcs.get(row_agegroup)
             row_multiplier = row_adjust_func(time) if row_adjust_func else 1.
 
-            for j_col_agegroup, col_agegroup in enumerate(AGEGROUP_STRATA):
+            for j_col_agegroup, col_agegroup in enumerate(COVID_BASE_AGEGROUPS):
                 col_adjust_func = self.adjustment_funcs.get(col_agegroup)
                 col_multiplier = col_adjust_func(time) if col_adjust_func else 1.
 

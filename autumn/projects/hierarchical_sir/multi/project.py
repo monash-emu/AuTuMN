@@ -5,6 +5,7 @@ from autumn.tools.calibration.priors import UniformPrior, HierarchicalPrior
 from autumn.tools.calibration.targets import NormalTarget
 from autumn.models.hierarchical_sir import base_params, build_model
 from autumn.settings import Region, Models
+import numpy as np
 
 # Load and configure model parameters
 
@@ -20,8 +21,8 @@ priors = [
 ]
 
 hierarchical_priors = [
-    HierarchicalPrior("beta.AUS", "normal", ['hyper_beta_mean', "hyper_beta_sd"]),
-    HierarchicalPrior("beta.ITA", "normal", ['hyper_beta_mean', "hyper_beta_sd"]),
+    HierarchicalPrior("beta.AUS", "trunc_normal", ['hyper_beta_mean', "hyper_beta_sd"], trunc_range=[0., np.inf]),
+    HierarchicalPrior("beta.ITA", "trunc_normal", ['hyper_beta_mean', "hyper_beta_sd"], trunc_range=[0., np.inf]),
 ]
 
 targets = [

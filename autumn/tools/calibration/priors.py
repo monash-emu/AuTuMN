@@ -92,11 +92,12 @@ class HierarchicalPrior(BasePrior):
         A uniformily distributed prior.
     """
 
-    def __init__(self, name: str, distribution: str, hyper_parameters: List[Union[str, float]]):
+    def __init__(self, name: str, distribution: str, hyper_parameters: List[Union[str, float]], trunc_range=None):
         super().__init__()
         self.name = name
         self.distribution = distribution
         self.hyper_parameters = hyper_parameters
+        self.trunc_range = trunc_range
 
     def to_dict(self) -> dict:
         base_dict = super().to_dict()
@@ -105,6 +106,7 @@ class HierarchicalPrior(BasePrior):
             "distribution": self.distribution,
             "param_name": self.name,
             "distri_params": None,
+            "trunc_range": self.trunc_range
         }
 
     def list_variable_hyper_parameters(self):

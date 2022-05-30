@@ -5,9 +5,9 @@ import pandas as pd
 
 from summer import CompartmentalModel, Stratification, Multiply
 
-from autumn.tools.project import Params, build_rel_path
+from autumn.core.project import Params, build_rel_path
 
-from autumn.tools.utils.summer import FunctionWrapper
+from autumn.model_features.computed_values import FunctionWrapper
 
 from .outputs import HierarchicalSirOutputsBuilder
 from .parameters import Parameters, Time

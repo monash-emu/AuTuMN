@@ -4,7 +4,7 @@ from scipy import stats
 import numpy as np
 from numba import jit
 
-from autumn.tools.utils.summer import OutputsBuilder
+from autumn.model_features.outputs import OutputsBuilder
 from .constants import Compartment, FlowName
 
 

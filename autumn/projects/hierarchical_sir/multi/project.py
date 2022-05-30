@@ -1,8 +1,8 @@
 from email.mime import base
-from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior, HierarchicalPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path
+from autumn.calibration import Calibration
+from autumn.calibration.priors import UniformPrior, HierarchicalPrior
+from autumn.calibration.targets import NormalTarget
 from autumn.models.hierarchical_sir import base_params, build_model
 from autumn.settings import Region, Models
 import numpy as np

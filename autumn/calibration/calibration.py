@@ -20,7 +20,7 @@ from autumn.calibration.priors import BasePrior
 from autumn.calibration.targets import BaseTarget
 from autumn.calibration.proposal_tuning import tune_jumping_stdev
 from autumn.core.project.params import read_param_value_from_string
-from autumn.core.project import Project, get_project
+from autumn.core.project import Project, get_project, Params
 
 from .constants import ADAPTIVE_METROPOLIS
 from .transformations import (

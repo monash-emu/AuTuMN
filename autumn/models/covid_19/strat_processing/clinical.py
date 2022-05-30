@@ -10,8 +10,8 @@ from autumn.models.covid_19.constants import (
 from autumn.models.covid_19.utils import calc_compartment_periods
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 from autumn.models.covid_19.parameters import Country, Population, Sojourn, ClinicalStratification
-from autumn.tools.inputs.demography.queries import convert_ifr_agegroups
-from autumn.tools.utils.utils import apply_odds_ratio_to_props, subdivide_props
+from autumn.core.inputs.demography.queries import convert_ifr_agegroups
+from autumn.core.utils.utils import apply_odds_ratio_to_props, subdivide_props
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 
 

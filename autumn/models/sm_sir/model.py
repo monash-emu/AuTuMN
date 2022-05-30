@@ -1,19 +1,17 @@
-from math import exp
 from typing import List, Tuple
 import pandas as pd
 
 from summer import CompartmentalModel
 
-from autumn.tools import inputs
-from autumn.tools.project import Params, build_rel_path
-from autumn.tools.random_process import RandomProcess
-from autumn.tools.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-from autumn.tools.utils.utils import multiply_function_or_constant
-from autumn.tools.utils.summer import FunctionWrapper
+from autumn.core import inputs
+from autumn.core.project import Params, build_rel_path
+from autumn.model_features.random_process.random_process import RandomProcessProc
+from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
+from autumn.core.utils.utils import multiply_function_or_constant
+from autumn.model_features.computed_values import FunctionWrapper
 from autumn.models.covid_19.detection import find_cdr_function_from_test_data
 from .outputs import SmSirOutputsBuilder
-from .parameters import Parameters, Sojourns, CompartmentSojourn, Time, RandomProcessParams, TestingToDetection, Population
-from summer.compute import ComputedValueProcessor
+from .parameters import Parameters, Sojourns, CompartmentSojourn, TestingToDetection, Population
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import (
@@ -23,6 +21,7 @@ from .stratifications.immunity import (
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
     apply_reported_vacc_coverage,
+    apply_reported_vacc_coverage_with_booster,
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
@@ -87,56 +86,6 @@ def assign_population(
 
     # Assign to the model
     model.set_initial_population(init_pop)
-
-
-class RandomProcessProc(ComputedValueProcessor):
-    """
-    Calculate the values of the random process
-    """
-
-    def __init__(self, rp_time_variant_func):
-        self.rp_time_variant_func = rp_time_variant_func
-
-    def process(self, compartment_values, computed_values, time):
-        return self.rp_time_variant_func(time)
-
-
-def set_up_random_process(start_time, end_time):
-    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)
-
-
-def get_random_process(
-        time_params: Time,
-        process_params: RandomProcessParams,
-        contact_rate_value: float,
-) -> Tuple[callable, callable]:
-    """
-    Work out the process that will contribute to the random process.
-
-    Args:
-        time_params: Start and end time of the model
-        process_params: Parameters relating to the random process
-        contact_rate_value: The risk of transmission per contact
-
-    Returns:
-        The random process function and the contact rate (here a summer-ready format transition function)
-
-    """
-
-    # Build the random process, using default values and coefficients
-    rp = set_up_random_process(time_params.start, time_params.end)
-
-    # Update random process details based on the model parameters
-    rp.update_config_from_params(process_params)
-
-    # Create function returning exp(W), where W is the random process
-    rp_time_variant_func = rp.create_random_process_function(transform_func=lambda w: exp(w))
-
-    # Create the time-variant contact rate that uses our computed random process
-    def contact_rate_func(t, computed_values):
-        return contact_rate_value * computed_values["transformed_random_process"]
-
-    return rp_time_variant_func, contact_rate_func
 
 
 def add_latent_transitions(
@@ -609,15 +558,30 @@ def build_model(
 
     if is_dynamic_immunity:
         thinning = 20 if iso3 == "BGD" else None
-        apply_reported_vacc_coverage(
-            compartment_types,
-            model,
-            iso3,
-            thinning=thinning,
-            model_start_time=params.time.start,
-            start_immune_prop=params.immunity_stratification.prop_immune,
-            additional_immunity_points=params.additional_immunity,
-        )
+
+        if iso3 == "PHL":
+            apply_reported_vacc_coverage_with_booster(
+                compartment_types,
+                model,
+                iso3,
+                thinning=thinning,
+                model_start_time=params.time.start,
+                start_immune_prop=params.immunity_stratification.prop_immune,
+                start_prop_high_among_immune=params.immunity_stratification.prop_high_among_immune,
+                booster_effect_duration=params.booster_effect_duration,
+                future_monthly_booster_rate=params.future_monthly_booster_rate,
+                model_end_time=params.time.end
+            )
+        else:
+            apply_reported_vacc_coverage(
+                compartment_types,
+                model,
+                iso3,
+                thinning=thinning,
+                model_start_time=params.time.start,
+                start_immune_prop=params.immunity_stratification.prop_immune,
+                additional_immunity_points=params.additional_immunity,
+            )
 
     """
     Get the applicable outputs
@@ -684,5 +648,12 @@ def build_model(
 
     # if is_dynamic_immunity:
     outputs_builder.request_immunity_props(immunity_strat.strata)
+
+    # cumulative output requests
+    cumulative_start_time = params.cumulative_start_time if params.cumulative_start_time else None
+    outputs_builder.request_cumulative_outputs(
+        params.requested_cumulative_outputs,
+        cumulative_start_time
+    )
 
     return model

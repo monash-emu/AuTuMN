@@ -1,6 +1,6 @@
 """
 Run the command line interface
 """
-from autumn.command_line import cli
+from autumn.infrastructure.command_line import cli
 
 cli()

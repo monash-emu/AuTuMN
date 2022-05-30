@@ -3,10 +3,10 @@
 import os
 import random
 
-from autumn.tools.db import Database
-from autumn.tools.db.uncertainty import calculate_mcmc_uncertainty
-from autumn.tools.plots.calibration import plot_post_calibration
-from autumn.tools.plots.uncertainty import plot_uncertainty
+from autumn.core.db import Database
+from autumn.core.db.uncertainty import calculate_mcmc_uncertainty
+from autumn.core.plots.calibration import plot_post_calibration
+from autumn.core.plots.uncertainty import plot_uncertainty
 from tests.utils import build_synthetic_calibration
 
 

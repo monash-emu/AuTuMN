@@ -11,7 +11,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 os.environ["OMP_NUM_THREADS"] = "1"
 
 from autumn.settings import Models, Region
-from autumn.tools.registry import register_project
+from autumn.core.registry import register_project
 
 
 # TB projects

@@ -3,7 +3,7 @@ import numpy as np
 from typing import List
 from summer import CompartmentalModel
 
-from autumn.tools.curve import tanh_based_scaleup
+from autumn.model_features.curve import tanh_based_scaleup
 
 from .constants import COMPARTMENTS, Compartment, INFECTIOUS_COMPS
 

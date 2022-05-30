@@ -1,6 +1,6 @@
 import pandas as pd
 
-from autumn.tools.project import (
+from autumn.core.project import (
     Project,
     ParameterSet,
     load_timeseries,
@@ -8,9 +8,9 @@ from autumn.tools.project import (
     get_all_available_scenario_paths,
     use_tuned_proposal_sds,
 )
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.calibration import Calibration
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import (
     base_params,
     build_model,
@@ -27,7 +27,7 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
     mle_path, calibration_format=True
 )
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
-param_set = ParameterSet(baseline=baseline_params, scenarios=[])
+param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
@@ -104,5 +104,5 @@ project = Project(
 )
 
 
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
 # perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

@@ -15,8 +15,8 @@ from autumn.projects.covid_19.mixing_optimisation.constants import (
 )
 from autumn.projects.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
 from autumn.projects.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
-from autumn.tools.db import Database
-from autumn.tools.db.load import find_db_paths, load_derived_output_tables
+from autumn.coret Database
+from autumn.core.load import find_db_paths, load_derived_output_tables
 from autumn.settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(

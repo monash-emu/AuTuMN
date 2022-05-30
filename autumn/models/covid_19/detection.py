@@ -2,21 +2,21 @@ from typing import Callable, Optional, Tuple, Any, List
 import numpy as np
 
 from summer.compute import ComputedValueProcessor
-from autumn.tools.inputs.covid_btn.queries import get_btn_testing_numbers
+from autumn.core.inputs.covid_btn.queries import get_btn_testing_numbers
 
-from autumn.tools.inputs.testing.eur_testing_data import (
+from autumn.core.inputs.testing.eur_testing_data import (
     get_uk_testing_numbers,
     get_eu_testing_numbers,
 )
-from autumn.tools.inputs.covid_au.queries import get_vic_testing_numbers
-from autumn.tools.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
-from autumn.tools.inputs.covid_lka.queries import get_lka_testing_numbers
-from autumn.tools.inputs.covid_mmr.queries import get_mmr_testing_numbers
-from autumn.tools.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
-from autumn.tools.inputs.owid.queries import get_international_testing_numbers
-from autumn.tools.inputs import get_population_by_agegroup
-from autumn.tools.utils.utils import apply_moving_average
-from autumn.tools.curve import scale_up_function
+from autumn.core.inputs.covid_au.queries import get_vic_testing_numbers
+from autumn.core.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
+from autumn.core.inputs.covid_lka.queries import get_lka_testing_numbers
+from autumn.core.inputs.covid_mmr.queries import get_mmr_testing_numbers
+from autumn.core.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
+from autumn.core.inputs.owid.queries import get_international_testing_numbers
+from autumn.core.inputs import get_population_by_agegroup
+from autumn.core.utils.utils import apply_moving_average
+from autumn.model_features.curve import scale_up_function
 from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
 
 
@@ -76,26 +76,28 @@ def get_testing_numbers_for_region(
     return test_dates, test_values
 
 
-def create_cdr_function(assumed_tests: int, assumed_cdr: float) -> Callable:
+def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor: float=0.) -> Callable:
     """
     Factory function for finding CDRs from number of tests done in setting modelled
     To work out the function, only one parameter is needed, so this can be estimated from one known point on the curve,
     being a value of the CDR that is associated with a certain testing rate
 
-    :param assumed_cdr: float
-    Value of CDR associated with the testing coverage
-    :param assumed_tests: int
-    Number of tests needed to result in this CDR
-    :return: callable
-    Function to provide CDR for a certain number of tests
+    Args:
+        assumed_tests: Value of CDR associated with the testing coverage
+        assumed_cdr: Number of tests needed to result in this CDR
+        floor_cdr: Floor value for the case detection rate
+
+    Returns:
+        Callable: Function to provide CDR for a certain number of tests
+
     """
 
     # Find the single unknown parameter to the function - i.e. for minus b, where CDR = 1 - exp(-b * t)
-    exponent_multiplier = np.log(1.0 - assumed_cdr) / assumed_tests
+    exponent_multiplier = np.log((1.0 - assumed_cdr) / (1.0 - floor)) / assumed_tests
 
     # Construct the function based on this parameter
     def cdr_function(tests_per_capita):
-        return 1.0 - np.exp(exponent_multiplier * tests_per_capita)
+        return 1.0 - np.exp(exponent_multiplier * tests_per_capita) * (1.0 - floor)
 
     return cdr_function
 
@@ -169,6 +171,7 @@ def find_cdr_function_from_test_data(
     cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
         test_detect_params.assumed_tests_parameter,
         test_detect_params.assumed_cdr_parameter,
+        test_detect_params.floor_value,
     )
 
     # Get the final CDR function

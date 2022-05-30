@@ -85,24 +85,7 @@ age_stratification:
     75: 0.803
 
   prop_hospital:  # https://dx.doi.org/10.2139/ssrn.4025932, Nyberg, 2022
-    values:
-      0: 0.0046
-      5: 0.0046
-      10: 0.0033
-      15: 0.0033
-      20: 0.0133
-      25: 0.0133
-      30: 0.0150
-      35: 0.0150
-      40: 0.0140
-      45: 0.0140
-      50: 0.0238
-      55: 0.0238
-      60: 0.0529
-      65: 0.0529
-      70: 0.1340
-      75: 0.1340
-      80: 0.2540
+    reference_strain: delta
     multiplier: 1.
     # Proportions at study mid-point reported 16th December in:
     # https://ourworldindata.org/grapher/share-people-fully-vaccinated-covid?country=~GBR
@@ -222,3 +205,8 @@ activate_random_process: True
 random_process: null
 
 additional_immunity: null
+booster_effect_duration: 90
+future_monthly_booster_rate: null
+
+requested_cumulative_outputs: []
+cumulative_start_time: null

@@ -1,23 +1,23 @@
-#description: hypertransmissible VoC and changes to microdistancing
-#
-#voc_emergence:
-#  new_strain:
-#    new_voc_seed:
-#      start_time: 897.  # 15 June 2022
-#    contact_rate_multiplier: 2.
-#
-#mobility:
-#  microdistancing:
-#    behaviour:
-#      function_type: empiric
-#      parameters:
-#        max_effect: 0.6
-#        times:
-#          - 897
-#          - 898
-#        values:
-#          - - repeat_prev
-#          - 0.3
-#      locations:
-#        - work
-#        - other_locations
+description: hypertransmissible VoC and changes to microdistancing
+
+voc_emergence:
+ new_strain:
+   new_voc_seed:
+     start_time: 897.  # 15 June 2022
+   contact_rate_multiplier: 2.
+
+mobility:
+ microdistancing:
+   behaviour:
+     function_type: empiric
+     parameters:
+       max_effect: 0.6
+       times:
+         - 897
+         - 898
+       values:
+         - 0.3
+         - 0.
+     locations:
+       - work
+       - other_locations

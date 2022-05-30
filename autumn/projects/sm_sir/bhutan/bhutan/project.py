@@ -14,7 +14,7 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
 scenario_dir_path = build_rel_path("params/")
 scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 
-# scenario_params = [baseline_params.update(p) for p in scenario_paths]
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params)
 
 # Load and configure calibration settings

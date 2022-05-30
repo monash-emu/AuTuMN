@@ -30,8 +30,8 @@ mobility:
       parameters:
         max_effect: 0.6
         times:
-          - 897.
-          - 898.
+          - 794.
+          - 795.
         values:
           - 0.3
           - 0.
@@ -96,7 +96,7 @@ voc_emergence:
       entry_rate: 10.
       seed_duration: 1.
     contact_rate_multiplier: 1.
-    immune_escape: 0.
+    immune_escape: 0.6
     hosp_protection: 0.
     death_protection: 0.
     relative_latency: 1.

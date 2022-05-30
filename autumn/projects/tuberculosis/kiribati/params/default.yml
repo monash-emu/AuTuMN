@@ -102,7 +102,7 @@ extra_params:
 
 
 # calibrated parameters
-contact_rate: 1.5
+contact_rate: 0.005
 progression_multiplier: 0.7117191601170418
 
 # REQUESTED OUTPUTS

@@ -28,7 +28,7 @@ mobility:
     behaviour:
       function_type: empiric
       parameters:
-        max_effect: 0.6
+        max_effect: 1.
         times:
           - 794.
           - 795.

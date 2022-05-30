@@ -9,15 +9,10 @@ voc_emergence:
 mobility:
   microdistancing:
     behaviour:
-      function_type: empiric
       parameters:
-        max_effect: 0.6
         times:
           - 897.
           - 898.
         values:
           - 0.
           - 0.3
-      locations:
-        - work
-        - other_locations

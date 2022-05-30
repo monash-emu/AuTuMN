@@ -8,7 +8,7 @@ from autumn.models.covid_19.constants import (
     HOSTPIALISED_CLINICAL_STRATA,
 )
 from autumn.models.covid_19.parameters import Sojourn, VaccinationRisk
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.settings import COVID_BASE_AGEGROUPS
 from autumn.models.covid_19.stratifications.clinical import CLINICAL_STRATA
 from autumn.models.covid_19.constants import INCIDENCE
 from autumn.models.covid_19.stratifications.strains import Strain
@@ -54,11 +54,11 @@ class CovidOutputsBuilder(OutputsBuilder):
         self.model.request_output_for_flow(name=INCIDENCE, flow_name=INCIDENCE)
 
         # Stratified by age group
-        self.request_stratified_output_for_flow(INCIDENCE, AGEGROUP_STRATA, "agegroup")
+        self.request_stratified_output_for_flow(INCIDENCE, COVID_BASE_AGEGROUPS, "agegroup")
 
         # Stratified by age group and by clinical stratum
         self.request_double_stratified_output_for_flow(
-            INCIDENCE, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical"
+            INCIDENCE, COVID_BASE_AGEGROUPS, "agegroup", CLINICAL_STRATA, "clinical"
         )
 
     def request_infection(self):
@@ -88,7 +88,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         """
 
         # Age-specific notifications
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
             notification_pathways = []
 
             # First track all traced cases (regardless of clinical stratum, on the assumption that all traced patients
@@ -126,7 +126,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             final_name = f"{NOTIFICATIONS}Xagegroup_{agegroup}"
             self.model.request_aggregate_output(name=final_name, sources=notification_pathways)
 
-        notifications_by_agegroup = [f"{NOTIFICATIONS}Xagegroup_{i_age}" for i_age in AGEGROUP_STRATA]
+        notifications_by_agegroup = [f"{NOTIFICATIONS}Xagegroup_{i_age}" for i_age in COVID_BASE_AGEGROUPS]
         self.model.request_aggregate_output(name=NOTIFICATIONS, sources=notifications_by_agegroup)
 
         # Cumulative unstratified notifications
@@ -148,7 +148,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         """
 
         # Age-specific non-hospitalised notifications
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
             age_notification_pathways = []
 
             # First track all traced cases (in Symptomatic ambulatory ever detected)
@@ -176,7 +176,7 @@ class CovidOutputsBuilder(OutputsBuilder):
             self.model.request_aggregate_output(name=agg_name, sources=age_notification_pathways)
 
         # calculating the prevalence of the non hospitalised notifications by age group
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
             age_notification_pathways = []
 
             # First track traced cases in all clinical strata except hospitalisations
@@ -215,8 +215,8 @@ class CovidOutputsBuilder(OutputsBuilder):
         """
 
         # Split by child and adult
-        paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[:3]]
-        adult_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in AGEGROUP_STRATA[3:]]
+        paed_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in COVID_BASE_AGEGROUPS[:3]]
+        adult_notifications = [f"notificationsXagegroup_{agegroup}" for agegroup in COVID_BASE_AGEGROUPS[3:]]
         self.model.request_aggregate_output(name="notificationsXpaediatric", sources=paed_notifications)
         self.model.request_aggregate_output(name="notificationsXadult", sources=adult_notifications)
 
@@ -244,9 +244,9 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age
         self.request_stratified_output_for_flow(
-            INFECT_DEATH, AGEGROUP_STRATA, "agegroup", name_stem=INFECTION_DEATHS, filter_on="source"
+            INFECT_DEATH, COVID_BASE_AGEGROUPS, "agegroup", name_stem=INFECTION_DEATHS, filter_on="source"
         )
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
             self.model.request_cumulative_output(
                 name=f"accum_deathsXagegroup_{agegroup}",
                 source=f"infection_deathsXagegroup_{agegroup}",
@@ -254,7 +254,7 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age and clinical stratum
         self.request_double_stratified_output_for_flow(
-            INFECT_DEATH, AGEGROUP_STRATA, "agegroup", CLINICAL_STRATA, "clinical", name_stem=INFECTION_DEATHS,
+            INFECT_DEATH, COVID_BASE_AGEGROUPS, "agegroup", CLINICAL_STRATA, "clinical", name_stem=INFECTION_DEATHS,
             filter_on="source"
         )
 
@@ -288,7 +288,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         # Track all hospitalisations as the sum of hospital non-ICU and ICU
         self.model.request_aggregate_output("hospital_admissions", sources=["icu_admissions", "non_icu_admissions"])
 
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
             self.model.request_output_for_flow(
                 name=f"non_icu_admissionsXagegroup_{agegroup}",
                 flow_name=PROGRESS,
@@ -362,7 +362,7 @@ class CovidOutputsBuilder(OutputsBuilder):
         )
 
         # Stratified by age group
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
 
             age_icu_name = f"icu_occupancyXagegroup_{agegroup}"
             self.model.request_output_for_compartments(
@@ -495,9 +495,9 @@ class CovidOutputsBuilder(OutputsBuilder):
         risk_multiplier = vacc_risk_params.risk_multiplier
 
         # Track the rate of adverse events and hospitalisations by age, if adverse events calculations are requested
-        self.request_stratified_output_for_flow("vaccination", AGEGROUP_STRATA, "agegroup", filter_on="source")
+        self.request_stratified_output_for_flow("vaccination", COVID_BASE_AGEGROUPS, "agegroup", filter_on="source")
 
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
             agegroup_string = f"agegroup_{agegroup}"
 
             # TTS for AstraZeneca vaccines
@@ -563,9 +563,9 @@ class CovidOutputsBuilder(OutputsBuilder):
 
         # Stratified by age group
         self.request_stratified_output_for_compartment(
-            "total_population", COMPARTMENTS, AGEGROUP_STRATA, "agegroup", save_results=False
+            "total_population", COMPARTMENTS, COVID_BASE_AGEGROUPS, "agegroup", save_results=False
         )
-        for agegroup in AGEGROUP_STRATA:
+        for agegroup in COVID_BASE_AGEGROUPS:
             for stratum in HISTORY_STRATA:
                 name = f"prop_{stratum}Xagegroup{agegroup}"
                 self.model.request_output_for_compartments(

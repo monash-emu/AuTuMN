@@ -3,7 +3,7 @@ import numpy as np
 
 from .parameters import TestingToDetection, Population
 from autumn.core.inputs import get_population_by_agegroup
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.settings import COVID_BASE_AGEGROUPS
 from autumn.core.utils.utils import apply_moving_average
 from autumn.model_features.curve import scale_up_function
 from autumn.core.inputs.testing.eur_testing_data import (
@@ -93,7 +93,7 @@ def find_cdr_function_from_test_data(
     """
 
     # Get the testing population denominator
-    testing_pops = get_population_by_agegroup(AGEGROUP_STRATA, iso3, region, year=year)
+    testing_pops = get_population_by_agegroup(COVID_BASE_AGEGROUPS, iso3, region, year=year)
 
     # Get the numbers of tests performed
     test_dates, test_values = get_testing_numbers_for_region(iso3, region)

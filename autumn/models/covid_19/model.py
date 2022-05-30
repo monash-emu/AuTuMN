@@ -1,3 +1,4 @@
+import imp
 from summer import CompartmentalModel
 
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
@@ -19,7 +20,8 @@ from .strat_processing import tracing
 from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
 from .strat_processing.vaccination import get_second_dose_delay_rate, find_vacc_strata
-from .stratifications.agegroup import AGEGROUP_STRATA, get_agegroup_strat
+from autumn.settings import COVID_BASE_AGEGROUPS
+from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.clinical import get_clinical_strat
 from .stratifications.tracing import get_tracing_strat
 from .stratifications.strains import get_strain_strat
@@ -71,7 +73,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     init_pop = {comp: seed * compartment_periods[comp] / total_disease_time for comp in DISEASE_COMPARTMENTS}
 
     # Get country population by age-group
-    total_pops = inputs.get_population_by_agegroup(AGEGROUP_STRATA, country.iso3, pop.region, pop.year)
+    total_pops = inputs.get_population_by_agegroup(COVID_BASE_AGEGROUPS, country.iso3, pop.region, pop.year)
 
     # Assign the remainder starting population to the S compartment
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
@@ -130,7 +132,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Age group stratification.
     """
 
-    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, AGEGROUP_STRATA, True, pop.region)
+    mixing_matrices = build_synthetic_matrices(country.iso3, params.ref_mixing_iso3, COVID_BASE_AGEGROUPS, True, pop.region)
     age_strat = get_agegroup_strat(params, total_pops, mixing_matrices)
     model.stratify_with(age_strat)
 

@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS
+from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 BASE_DATE = COVID_BASE_DATETIME.date()
@@ -567,13 +567,8 @@ class Parameters:
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):
-        assert all(
-            [i_group % 5 == 0 for i_group in age_groups]
-        ), "Not all age groups are multiples of 5"
-        assert all(
-            [0 <= i_group <= 75 for i_group in age_groups]
-        ), "Age breakpoints must be from zero to 75"
-        return age_groups
+        msg = "Not all requested age groups in the available age groups of 5-year increments from zero to 75"
+        assert all([i_group in COVID_BASE_AGEGROUPS for i_group in age_groups]), msg
 
     @validator("voc_emergence", allow_reuse=True)
     def check_starting_strain(voc_emergence):

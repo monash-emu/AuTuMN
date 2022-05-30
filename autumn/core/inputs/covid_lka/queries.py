@@ -2,7 +2,7 @@ import numpy as np
 
 from autumn.core.inputs.database import get_input_db
 from autumn.core.inputs.demography.queries import get_population_by_agegroup
-from autumn.models.covid_19.parameters import TimeSeries
+from autumn.models.sm_sir.parameters import TimeSeries
 
 def get_lka_testing_numbers():
     """

@@ -14,8 +14,8 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
 scenario_dir_path = build_rel_path("params/")
 scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 
-scenario_params = [baseline_params.update(p) for p in scenario_paths]
-param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
+# scenario_params = [baseline_params.update(p) for p in scenario_paths]
+param_set = ParameterSet(baseline=baseline_params)
 
 # Load and configure calibration settings
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
@@ -31,9 +31,6 @@ priors = [
     UniformPrior("sojourns.latent.total_time", (2., 4.)),
     UniformPrior("sojourns.active.total_time", (1., 5.)),
     UniformPrior("infectious_seed", (50., 300.)),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", (0.075, 0.75)),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.inflection_time", (780, 825))
-
 ]
 
 calibration = Calibration(

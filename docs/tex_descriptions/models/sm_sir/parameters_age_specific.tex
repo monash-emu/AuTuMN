@@ -2,13 +2,12 @@
 
 Age-structured parameters are presented in Table \ref{tab:age_params}.
 
-\begin{table}[h]
-    \begin{tabular}[h]{| p{2cm} | p{2.5cm} | p{3cm} | p{3cm} | p{2.5cm}|}
+\begin{table}
+    \begin{threeparttable}
+    \begin{tabular}{| p{2cm} | p{2.5cm} | p{3cm} | p{3cm} | p{2.5cm}|}
     \hline
-        Age group (years) & 
-        Clinical fraction\textsuperscript{a} & 
-        Relative susceptibility to infection & 
-        Infection fatality rate & 
+        Age group (years) & Clinical fraction\tnote{a} & 
+        Relative susceptibility to infection & Infection fatality rate & 
         Proportion of symptomatic patients hospitalised \\
         \hline
         0 to 4 & 0.533 & 0.36 & $3\times10^{-5}$ & 0.029 \\
@@ -41,22 +40,24 @@ Age-structured parameters are presented in Table \ref{tab:age_params}.
         \hline
         70 to 74 & 0.803 & 1.41 & $1.674\times10^{-2}$ & 0.389 \\
         \hline
-        75 and above & 0.803 & 1.41 & $5.748\times10^{-2}$ \textsuperscript{b} & 0.471 \\
+        75 and above & 0.803 & 1.41 & $5.748\times10^{-2}$\tnote{b} & 0.471 \\
         \hline
         Justification and source & 
         Table 1 of systematic review and meta-analysis with appropriate accounting for testing during the pre-symptomatic period. & 
-        Conversion of odds ratios presented in Table S15 of Zhang et al. 2020 to relative risks using data presented in Table S14 of the same study. \textsuperscript{c} &
+        Conversion of odds ratios presented in Table S15 of Zhang et al. 2020 to relative risks using data presented in Table S14 of the same study.\tnote{c} &
         Estimated from pooled analysis of data from 45 countries from Table S3 of O'Driscoll et al \cite{odriscoll-2021}. 
         Values consistent with previous estimates using serosurveys performed in Spain \cite{RN21}. &
         Table 1.1 from NNDSS report on COVID-19 cases in Australia to May 2021 \\ 
         \hline
 	\end{tabular}
-	\caption[Age-stratified parameters not varied during calibration, or varied through a common multiplier.]
-    {Age-stratified parameters not varied during calibration, or varied through a common multiplier. 
-    \textsuperscript{a}Proportion of incident cases developing symptoms.
-    \textsuperscript{b}Weighted average of IFR estimates for 70 to 79 and 80 and above age groups. 
-    \textsuperscript{c}Note the relative magnitude of these values are similar to those estimated by the analysis we use to estimate the age-specific clinical fraction.}
+	\caption{Age-stratified parameters not varied during calibration, or varied through a common multiplier.}
 	\label{tab:age_params}
+    \begin{tablenotes}
+        \item[a] Proportion of incident cases developing symptoms.
+        \item[b] Weighted average of IFR estimates for 70 to 79 and 80 and above age groups.
+        \item[c] Note the relative magnitude of these values are similar to those estimated by the analysis we use to estimate the age-specific clinical fraction.
+    \end{tablenotes}
+    \end{threeparttable}
 \end{table}
 
 \clearpage

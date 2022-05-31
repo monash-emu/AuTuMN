@@ -3,6 +3,7 @@ contact_rate: 0.1534380438758914
 sojourns.active.proportion_early: 0.01140406201338927
 sojourns.latent.proportion_early: 0.11240238346786285
 voc_emergence.omicron.hosp_protection: 0.9931405566017666
+voc_emergence.omicron.icu_multiplier: 0.2
 voc_emergence.omicron.relative_active_period: 0.959732930144602
 voc_emergence.omicron.relative_latency: 0.18055284230790908
 voc_emergence.wild_type.relative_active_period: 0.9957665854992744

@@ -1,3 +1,4 @@
-contact_rate: 0.2
-infectious_seed: 242.74099989273813
-sojourns.latent.total_time: 1.881279162078474
+contact_rate: 0.3620579641400694
+infectious_seed: 248.9546167925225
+sojourns.active.total_time: 2.628262282237063
+sojourns.latent.total_time: 2.3947561205433545

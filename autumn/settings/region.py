@@ -30,6 +30,7 @@ class Region:
     COXS_BAZAR = "coxs_bazar"
     BHUTAN = "bhutan"
     THIMPHU = "thimphu"
+    MULTI = "multi"
 
     REGIONS = [
         PHILIPPINES,
@@ -63,6 +64,7 @@ class Region:
         COXS_BAZAR,
         BHUTAN,
         THIMPHU,
+        MULTI,
     ]
 
     MALAYSIA_REGIONS = [

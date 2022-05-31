@@ -1,7 +1,3 @@
-description: Waning vaccine-induced immunity
+description: More booster doses and no new variant
 
-additional_immunity:
-  times:
-    - 884
-  values:
-    - 0.5
+future_monthly_booster_rate: 500000

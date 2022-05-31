@@ -3,7 +3,7 @@ from summer import Stratification, Multiply
 
 from autumn.models.tuberculosis.constants import COMPARTMENTS
 from autumn.models.tuberculosis.parameters import Parameters
-from autumn.tools.curve import scale_up_function
+from autumn.model_features.curve.scale_up import scale_up_function
 
 
 def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stratification:

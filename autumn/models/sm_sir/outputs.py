@@ -4,12 +4,12 @@ from scipy import stats
 import numpy as np
 from numba import jit
 
-from autumn.tools.utils.summer import OutputsBuilder
+from autumn.model_features.outputs import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
-from autumn.tools.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
+from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
-from autumn.tools.inputs.covid_hospital_risk.hospital_props import read_hospital_props
+from autumn.core.inputs.covid_hospital_risk.hospital_props import read_hospital_props
 
 def get_immunity_prop_modifiers(
         source_pop_immunity_dist: Dict[str, float],
@@ -449,6 +449,19 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 lambda num, total: num / total,
                 [n_immune_name, "total_population"],
             )
+
+
+    def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
+        """
+        Compute cumulative outputs for requested outputs.
+
+        Args:
+            requested_cumulative_outputs: List of requested derived outputs to accumulate
+            cumulative_start_time: reference time for cumulative output calculation
+        """
+
+        for output in requested_cumulative_outputs:
+            self.model.request_cumulative_output(name=f"cumulative_{output}", source=output, start_time=cumulative_start_time)
 
 
 def build_statistical_distribution(distribution_details: TimeDistribution):

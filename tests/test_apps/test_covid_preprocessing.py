@@ -1,6 +1,6 @@
 import numpy as np
 
-from autumn.models.covid_19.detection import create_cdr_function
+from autumn.models.sm_sir.detection import create_cdr_function
 
 
 def test_cdr_intercept():

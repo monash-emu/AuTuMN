@@ -8,7 +8,7 @@ from autumn.projects.covid_19.mixing_optimisation.utils import (
     get_country_population_size,
     get_scenario_mapping_reverse,
 )
-from autumn.tools.db.load import load_uncertainty_table
+from autumn.coreb.load import load_uncertainty_table
 from autumn.settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(

@@ -1,8 +1,8 @@
 import json
-from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths
+from autumn.calibration import Calibration
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 
@@ -30,7 +30,8 @@ priors = [
     UniformPrior("contact_rate", (0.15, 0.4)),
     UniformPrior("sojourns.latent.total_time", (1., 4.)),
     UniformPrior("infectious_seed", (50., 250.)),
-    UniformPrior("detect_prop", (0.01, 0.2))
+    UniformPrior("detect_prop", (0.01, 0.2)),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.start_asymptote", (0.075, 0.5))
 ]
 
 calibration = Calibration(

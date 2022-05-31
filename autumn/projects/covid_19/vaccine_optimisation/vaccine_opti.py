@@ -7,7 +7,7 @@ from autumn.projects.covid_19.vaccine_optimisation.constants import (
     TOTAL_DAILY_DOSES,
     VACC_AGE_GROUPS,
 )
-from autumn.tools.optimisation.opti import Opti
+from autumn.optimisation.opti import Opti
 
 APP_NAME = "covid_19"
 PHASE_2_END = SCENARIO_START_TIME + PHASE_2_DURATION

@@ -32,7 +32,7 @@ priors = [
     UniformPrior("sojourns.active.total_time", (1., 5.)),
     UniformPrior("infectious_seed", (50., 300.)),
     UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", (0., 0.6)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.03, 0.09)),
+    # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.03, 0.09)),
 ]
 
 calibration = Calibration(

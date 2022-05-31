@@ -15,8 +15,8 @@ mobility:
     behaviour:
       parameters:
         times:
-          - 897.
-          - 898.
+          - 794.
+          - 795.
         values:
-          - 0.
           - 1.
+          - 0.

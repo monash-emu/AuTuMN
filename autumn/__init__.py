@@ -122,3 +122,11 @@ register_project(
     Region.THIMPHU,
     "autumn.projects.sm_sir.bhutan.thimphu.project",
 )
+
+
+# Hierarchical SIR project
+register_project(
+    Models.HIERARCHICAL_SIR,
+    Region.MULTI,
+    "autumn.projects.hierarchical_sir.multi.project",
+)

@@ -11,7 +11,7 @@ from autumn.models.covid_19.constants import (
 )
 from autumn.models.covid_19.parameters import Parameters, TimeSeries, VaccEffectiveness, TanhScaleup
 from autumn.models.covid_19.parameters import Vaccination as VaccParams
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.settings import COVID_BASE_AGEGROUPS
 from autumn.models.covid_19.strat_processing.clinical import get_all_adjustments
 from autumn.core.utils.utils import check_list_increasing
 from autumn.model_features.curve import tanh_based_scaleup
@@ -64,7 +64,7 @@ def get_blank_adjustments_for_strat(transitions: list) -> Dict[str, dict]:
     """
 
     flow_adjs = {}
-    for agegroup in AGEGROUP_STRATA:
+    for agegroup in COVID_BASE_AGEGROUPS:
         flow_adjs[agegroup] = {}
         for clinical_stratum in CLINICAL_STRATA:
             flow_adjs[agegroup][clinical_stratum] = {}
@@ -86,7 +86,7 @@ def update_adjustments_for_strat(strat: str, flow_adjustments: dict, adjustments
     """
 
     # Loop over the stratifications that affect these flow rates, other than VoC stratification
-    for agegroup in AGEGROUP_STRATA:
+    for agegroup in COVID_BASE_AGEGROUPS:
         for clinical_stratum in CLINICAL_STRATA:
 
             # *** Note that PROGRESS is not indexed by age group
@@ -121,7 +121,7 @@ def add_clinical_adjustments_to_strat(
     """
 
     # Loop over other stratifications that may affect these parameters, i.e. age group, VoC status and clinical status
-    for agegroup in AGEGROUP_STRATA:
+    for agegroup in COVID_BASE_AGEGROUPS:
         for voc in vocs:
             for clinical_stratum in CLINICAL_STRATA:
 
@@ -395,7 +395,7 @@ def get_eligible_age_groups(age_min: float, age_max: float) -> List:
     """
 
     eligible_age_groups = []
-    for agegroup in AGEGROUP_STRATA:
+    for agegroup in COVID_BASE_AGEGROUPS:
 
         # Either not requested, or requested and meets that age cut-off for min or max
         above_age_min = not age_min or bool(age_min) and float(agegroup) >= age_min
@@ -530,7 +530,7 @@ def apply_standard_vacc_coverage(
     """
 
     # Rates are likely to differ by age group, but not by other factors
-    for agegroup in AGEGROUP_STRATA:
+    for agegroup in COVID_BASE_AGEGROUPS:
 
         # Note this function must return something for every age group to stop outputs calculation crashing
         coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params)
@@ -590,7 +590,7 @@ def add_vacc_rollout_requests(model: CompartmentalModel, vacc_params: VaccParams
         apply_vacc_flows(model, working_agegroups, vaccination_roll_out_function)
 
     # Add blank flows to make things simpler when we come to tracking the outputs
-    ineligible_ages = set(AGEGROUP_STRATA) - set(all_eligible_agegroups)
+    ineligible_ages = set(COVID_BASE_AGEGROUPS) - set(all_eligible_agegroups)
     apply_vacc_flows(model, ineligible_ages, 0.0)
 
 

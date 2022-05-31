@@ -3,7 +3,8 @@ import numpy as np
 
 from summer import Multiply, Stratification
 
-from autumn.models.covid_19.constants import COMPARTMENTS, AGEGROUP_STRATA, INFECTION
+from autumn.models.covid_19.constants import COMPARTMENTS, INFECTION
+from autumn.settings import COVID_BASE_AGEGROUPS
 from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.covid_19.parameters import Parameters
 
@@ -29,7 +30,7 @@ def get_agegroup_strat(
 
     """
 
-    age_strat = Stratification("agegroup", AGEGROUP_STRATA, COMPARTMENTS)
+    age_strat = Stratification("agegroup", COVID_BASE_AGEGROUPS, COMPARTMENTS)
 
     # Get dynamic age-specific mixing matrix
     dynamic_mixing_matrix = build_dynamic_mixing_matrix(mixing_matrices, params.mobility, params.country)
@@ -37,7 +38,7 @@ def get_agegroup_strat(
 
     # Set distribution of starting population
     pop_proportions = (i_value / sum(total_pops) for i_value in total_pops)
-    age_split_props = {agegroup: prop for agegroup, prop in zip(AGEGROUP_STRATA, pop_proportions)}
+    age_split_props = {agegroup: prop for agegroup, prop in zip(COVID_BASE_AGEGROUPS, pop_proportions)}
     age_strat.set_population_split(age_split_props)
 
     # Adjust infection flows based on the susceptibility of the age group

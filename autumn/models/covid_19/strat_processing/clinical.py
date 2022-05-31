@@ -8,7 +8,7 @@ from autumn.models.covid_19.constants import (
     Clinical, Compartment, FIXED_STRATA, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
 )
 from autumn.models.covid_19.utils import calc_compartment_periods
-from autumn.models.covid_19.stratifications.agegroup import AGEGROUP_STRATA
+from autumn.settings import COVID_BASE_AGEGROUPS
 from autumn.models.covid_19.parameters import Country, Population, Sojourn, ClinicalStratification
 from autumn.core.inputs.demography.queries import convert_ifr_agegroups
 from autumn.core.utils.utils import apply_odds_ratio_to_props, subdivide_props
@@ -36,7 +36,7 @@ def get_rate_adjustments(rates: Dict[str, np.ndarray]) -> Dict[str, dict]:
     """
 
     rate_adjustments = {}
-    for i_age, age_group in enumerate(AGEGROUP_STRATA):
+    for i_age, age_group in enumerate(COVID_BASE_AGEGROUPS):
         rate_adjustments[age_group] = {}
         for stratum in CLINICAL_STRATA:
             adjustment = rates[stratum][i_age] if stratum in rates else None
@@ -182,7 +182,7 @@ def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]
     """
 
     adj_values, adjustments = {}, {}
-    for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
+    for age_idx, agegroup in enumerate(COVID_BASE_AGEGROUPS):
         adj_values[agegroup], adjustments[agegroup] = {}, {}
 
         # Get time-varying symptomatic isolated non-community rate
@@ -222,7 +222,7 @@ def get_fixed_abs_strata_props(
     """
 
     # Absolute proportion of early exposed who become symptomatic, rather than asymptomatic
-    sympt, non_sympt = subdivide_props(np.array((1.,) * len(AGEGROUP_STRATA)), np.array(sympt_props))
+    sympt, non_sympt = subdivide_props(np.array((1.,) * len(COVID_BASE_AGEGROUPS)), np.array(sympt_props))
 
     # Absolute proportion of all infections who become hospitalised (sympt_non_hospital not needed here)
     sympt_hospital, _ = subdivide_props(sympt, np.array(hosp_props))
@@ -258,8 +258,8 @@ def get_absolute_death_proportions(abs_props: dict, infection_fatality_props: li
 
     """
 
-    abs_death_props = {stratum: np.zeros(len(AGEGROUP_STRATA)) for stratum in FIXED_STRATA}
-    for age_idx in range(len(AGEGROUP_STRATA)):
+    abs_death_props = {stratum: np.zeros(len(COVID_BASE_AGEGROUPS)) for stratum in FIXED_STRATA}
+    for age_idx in range(len(COVID_BASE_AGEGROUPS)):
         target_ifr_prop = infection_fatality_props[age_idx]
 
         # Maximum deaths that can be assigned to each of the death strata based on the absolute proportions entering...

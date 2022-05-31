@@ -14,6 +14,7 @@ import itertools
 
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.core.utils.utils import weighted_average
+from autumn.settings.constants import COVID_BASE_AGEGROUPS
 
 
 def get_relevant_indices(

@@ -5,7 +5,7 @@ from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
 from autumn.core.utils.utils import update_timeseries
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.coreutils.utils import create_date_index
+from autumn.core.utils.utils import create_date_index
 
 
 GITHUB_MOH = (

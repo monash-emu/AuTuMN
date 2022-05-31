@@ -11,7 +11,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 os.environ["OMP_NUM_THREADS"] = "1"
 
 from autumn.settings import Models, Region
-from autumn.tools.registry import register_project
+from autumn.core.registry import register_project
 
 
 # TB projects
@@ -121,4 +121,12 @@ register_project(
     Models.SM_SIR,
     Region.THIMPHU,
     "autumn.projects.sm_sir.bhutan.thimphu.project",
+)
+
+
+# Hierarchical SIR project
+register_project(
+    Models.HIERARCHICAL_SIR,
+    Region.MULTI,
+    "autumn.projects.hierarchical_sir.multi.project",
 )

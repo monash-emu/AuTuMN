@@ -4,10 +4,10 @@ import pandas as pd
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
 
-from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
-from autumn.tools.inputs.covid_phl.queries import get_phl_vac_coverage
-from autumn.tools.inputs.covid_btn.queries import get_btn_vac_coverage
-from autumn.tools.inputs.covid_mys.queries import get_mys_vac_coverage
+from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
+from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
+from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
+from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props

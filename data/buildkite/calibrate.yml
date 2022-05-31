@@ -18,6 +18,8 @@ steps:
       value: covid_19:sweden
     - label: United Kingdom (covid_19)
       value: covid_19:united-kingdom
+    - label: Multi (hierarchical_sir)
+      value: hierarchical_sir:multi
     - label: Philippines (sir_example)
       value: sir_example:philippines
     - label: Bangladesh (sm_sir)

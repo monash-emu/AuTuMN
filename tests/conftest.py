@@ -9,7 +9,7 @@ from numpy.testing import assert_allclose
 
 from autumn import settings
 from autumn.calibration import Calibration
-from autumn.tools.db import database
+from autumn.core.db import database
 
 from .utils import in_memory_db_factory
 

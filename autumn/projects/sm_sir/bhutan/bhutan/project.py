@@ -1,5 +1,5 @@
 import json
-from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths
+from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget

@@ -4,6 +4,7 @@ from itertools import chain
 from time import time
 from typing import List, Callable
 import pickle
+from copy import copy
 
 import yaml
 import numpy as np
@@ -12,15 +13,14 @@ from scipy import special, stats
 from summer import CompartmentalModel
 
 from autumn import settings
-from autumn.tools import db, plots
-from autumn.tools.utils.git import get_git_branch, get_git_hash
-from autumn.tools.utils.timer import Timer
+from autumn.core import db, plots
+from autumn.core.utils.git import get_git_branch, get_git_hash
+from autumn.core.utils.timer import Timer
 from autumn.calibration.priors import BasePrior
 from autumn.calibration.targets import BaseTarget
 from autumn.calibration.proposal_tuning import tune_jumping_stdev
-from autumn.tools.project.params import read_param_value_from_string
-from autumn.tools.project import Project, get_project
-
+from autumn.core.project.params import read_param_value_from_string
+from autumn.core.project import Project, get_project, Params
 
 from .constants import ADAPTIVE_METROPOLIS
 from .transformations import (
@@ -92,18 +92,21 @@ class Calibration:
         seed: int = None,
         initial_jumping_stdev_ratio: float = 0.25,
         jumping_stdev_adjustment: float = 0.5,
-        random_process=None
+        random_process=None,
+        hierarchical_priors: list = []
     ):
         """
         Defines a new calibration.
         """
-        self.all_priors = [p.to_dict() for p in priors]
+        check_hierarchical_priors(hierarchical_priors, priors)
+        self.hierarchical_priors = hierarchical_priors
+        self.all_priors = [p.to_dict() for p in priors] + [h_p.to_dict() for h_p in hierarchical_priors]
 
         self.includes_random_process = False
         if random_process is not None:
             self.random_process = random_process
             self.set_up_random_process()
-
+        
         #self.targets = [t.to_dict() for t in targets]
         self.targets = remove_early_points_to_prevent_crash(targets, self.all_priors)
 
@@ -159,6 +162,8 @@ class Calibration:
         np.random.set_state(_extra['rng'])
 
         #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
+
+    
 
     def set_up_random_process(self):
         self.includes_random_process = True
@@ -272,6 +277,8 @@ class Calibration:
         self.chain_idx = chain_idx
         model_parameters_data = self.model_parameters.to_dict()
 
+        # 
+
         # Figure out which derived outputs we have to calculate.
         derived_outputs_to_plot = derived_outputs_to_plot or []
         target_names = [t.data.name for t in self.targets]
@@ -290,6 +297,9 @@ class Calibration:
 
         # rebuild self.all_priors, following changes to the two sets of priors
         self.all_priors = self.iterative_sampling_priors + self.independent_sampling_priors
+
+        # initialise hierarchical priors' parameters
+        self.update_hierarchical_prior_params(self.model_parameters)
 
         # Select starting params
         # Random seed is reset in here; make sure any other seeding happens after this
@@ -333,6 +343,29 @@ class Calibration:
             n_chains=num_chains,
             available_time=max_seconds,
         )
+
+    def update_hierarchical_prior_params(self, current_params=None):
+        for h_p in self.hierarchical_priors:
+            # work out hyper-parameter values
+            distri_params = copy(h_p.hyper_parameters)
+            for i, p in enumerate(distri_params):
+                if isinstance(p, str):
+                    if isinstance(current_params, Params):
+                        distri_params[i] = current_params[p]
+                    else:
+                        param_index = [par['param_name'] for par in self.all_priors].index(p)
+                        distri_params[i] = current_params[param_index]
+            
+            # update prior lists
+            for prior in self.all_priors:
+                if prior["param_name"] == h_p.name:
+                    prior["distri_params"] = distri_params
+                    break    
+
+            for prior in self.iterative_sampling_priors:
+                if prior["param_name"] == h_p.name:
+                    prior["distri_params"] = distri_params
+                    break   
 
     def validate_target_start_time(self, model_parameters_data):
         model_start = model_parameters_data["time"]["start"]
@@ -603,6 +636,8 @@ class Calibration:
                 self.last_accepted_iterative_params_trans, self.haario_scaling_factor
             )
             proposed_iterative_params = self.get_original_params(proposed_iterative_params_trans)
+
+            self.update_hierarchical_prior_params(proposed_iterative_params)
 
             is_within_prior_support = self.test_in_prior_support(
                 proposed_iterative_params
@@ -1034,6 +1069,14 @@ class CalibrationOutputs:
             self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df, append=False)
 
 
+def check_hierarchical_priors(hierarchical_priors, priors):
+    prior_names = [p.name for p in priors]
+    for h_p in hierarchical_priors:
+        variable_hyper_parameters = h_p.list_variable_hyper_parameters()
+        for p_name in variable_hyper_parameters:
+            msg = f"{p_name} is defined as a hyper-parameter but is not associated with a prior"
+            assert p_name in prior_names, msg
+
 def get_parameter_bounds_from_priors(prior_dict):
     """
     Determine lower and upper bounds of a parameter by analysing its assigned prior distribution
@@ -1045,6 +1088,9 @@ def get_parameter_bounds_from_priors(prior_dict):
         upper_bound = prior_dict["distri_params"][1]
     elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
         lower_bound = 0.0
+        upper_bound = float("inf")
+    elif prior_dict["distribution"] == "normal":
+        lower_bound = - float("inf")
         upper_bound = float("inf")
     elif prior_dict["distribution"] == "trunc_normal":
         lower_bound = prior_dict["trunc_range"][0]
@@ -1076,6 +1122,15 @@ def get_parameter_finite_range_from_prior(prior_dict):
         )
         prior_high = stats.truncnorm.ppf(
             0.975, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+        )
+    elif prior_dict["distribution"] == "normal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        prior_low = stats.norm.ppf(
+            0.025, loc=mu, scale=sd
+        )
+        prior_high = stats.norm.ppf(
+            0.975, loc=mu, scale=sd
         )
     elif prior_dict["distribution"] == "beta":
         prior_low = stats.beta.ppf(

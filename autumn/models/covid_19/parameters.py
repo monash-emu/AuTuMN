@@ -1,15 +1,16 @@
 """
 Type definition for model parameters
 """
+from math import floor
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME, VACCINATION_STRATA, GOOGLE_MOBILITY_LOCATIONS, Strain
-from autumn.settings.region import Region
-from autumn.tools.inputs.social_mixing.constants import LOCATIONS
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME, VACCINATION_STRATA, Strain
+from autumn.settings.constants import GOOGLE_MOBILITY_LOCATIONS
+from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
@@ -268,7 +269,6 @@ class TestingToDetection(BaseModel):
     assumed_tests_parameter: float
     assumed_cdr_parameter: float
     smoothing_period: int
-    test_multiplier: Optional[TimeSeries]
     floor_value: float
 
     @validator("assumed_tests_parameter", allow_reuse=True)
@@ -285,6 +285,13 @@ class TestingToDetection(BaseModel):
     def check_smoothing_period(val):
         assert 1 < val, f"Smoothing period must be greater than 1: {val}"
         return val
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_floor_request(cls, values):
+        floor_value, assumed_cdr = values["floor_value"], values["assumed_cdr_parameter"]
+        msg = f"Requested value for the CDR floor does not fall between zero and the assumed CDR parameter of {assumed_cdr}, value is: {floor_value}"
+        assert 0. <= floor_value <= assumed_cdr, msg
+        return values        
 
 
 class MetroClusterStratification(BaseModel):

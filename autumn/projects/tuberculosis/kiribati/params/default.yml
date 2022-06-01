@@ -11,7 +11,7 @@ time:
   start: 1955.
   end: 2050.
   step: 0.1
-  critical_ranges: [[2022., 2025.]]
+  critical_ranges: [[2016., 2020.]]
 
 start_population_size: 36573.
 
@@ -74,7 +74,7 @@ time_variant_bcg_perc:
   2020: 93.
 
 time_variant_tsr: # should always be > 0 # https://www.stoptb.org/static_pages/KIR_Dashboard.html
-  1995: .25
+  1995.: .25
   2012.: 0.9
   2013.: 0.84
   2014.: 0.87

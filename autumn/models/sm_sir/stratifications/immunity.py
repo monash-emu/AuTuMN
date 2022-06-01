@@ -230,7 +230,7 @@ def apply_reported_vacc_coverage(
         additional_immunity_points: TimeSeries,
 ):
     """
-    Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
+    Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
     apply it to the model as a dynamic stratum.
 
     Args:
@@ -270,7 +270,7 @@ def apply_reported_vacc_coverage(
     else:
         vacc_data_with_waning = vaccine_data
 
-    # Be explicit about all the difference immunity categories
+    # Be explicit about each of the three immunity categories
     vaccine_df = pd.DataFrame(
         {
             "none": 1. - vacc_data_with_waning,

@@ -3,3 +3,15 @@
 History of vaccination is captured by stratifying all model compartments by vaccination status.
 Two vaccination strata are included to represent those who have received at least two doses of a COVID-19 vaccine,
 and those who have not.
+The following are not considered in this approach to simulating vaccination:
+\begin{itemize}
+    \item Any effect of receiving a single dose of vaccine
+    \item Waning of vaccine-induced immunity
+    \item Any additional effect from receiving additional vaccine doses following the second dose
+\end{itemize}
+The effect of vaccination on transmission is to partially reduce the rate of infection for all persons at-risk of infection in the vaccinated stratum.
+This includes both fully susceptible (never previously infected) persons,
+as well as recovered persons who are at risk of reinfection.
+Emerging variants of concern (VoCs) may escape this immunity, as described further below.
+% To illustrate this further, the next steps would be to display the population distribution by stratum,
+% and/or to explain the implementation of the dynamic proportions code

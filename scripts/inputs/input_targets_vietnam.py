@@ -3,33 +3,36 @@ Script for loading NPL data into calibration targets and default.yml
 
 """
 
-import os
 import pandas as pd
 
+from pathlib import Path
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
+from autumn.core.utils.utils import update_timeseries
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
+from autumn.core.utils.utils import create_date_index
 
+
+PROJECTS_PATH = Path(PROJECTS_PATH)
+INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # Use OWID csv for notification and death numbers.
-COVID_OWID = os.path.join(INPUT_DATA_PATH, "owid", "owid-covid-data.csv")
-COVID_VNM_TS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "vietnam", "timeseries.json")
-COVID_HCMC_TS = os.path.join(
-    PROJECTS_PATH, "covid_19", "vietnam", "ho_chi_minh_city", "timeseries.json"
-)
-COVID_HAN_TS = os.path.join(PROJECTS_PATH, "covid_19", "vietnam", "hanoi", "timeseries.json")
-
-SM_SIR_HCMC_TS = os.path.join(
-    PROJECTS_PATH, "sm_sir", "vietnam", "ho_chi_minh_city", "timeseries.json"
+COVID_OWID = INPUT_DATA_PATH / "owid" / "owid-covid-data.csv"
+COVID_VNM_TS = PROJECTS_PATH / "covid_19" / "vietnam" / "vietnam" / "timeseries.json"
+COVID_HCMC_TS = (
+    PROJECTS_PATH / "covid_19" / "vietnam" / "ho_chi_minh_city" / "timeseries.json"
 )
 
-SM_SIR_HANOI_TS = os.path.join(PROJECTS_PATH, "sm_sir", "vietnam", "hanoi", "timeseries.json")
+COVID_HAN_TS = PROJECTS_PATH / "covid_19" / "vietnam" / "hanoi" / "timeseries.json"
+
+SM_SIR_HCMC_TS = (
+    PROJECTS_PATH / "sm_sir" / "vietnam" / "ho_chi_minh_city" / "timeseries.json"
+)
+SM_SIR_HANOI_TS = PROJECTS_PATH / "sm_sir" / "vietnam" / "hanoi" / "timeseries.json"
 
 
-HCMC_DATA_CSV = os.path.join(INPUT_DATA_PATH, "covid_vnm", "cases.csv")
-HANOI_DATA_CSV = os.path.join(INPUT_DATA_PATH, "covid_vnm", "hanoi_data.csv")
+HCMC_DATA_CSV = INPUT_DATA_PATH / "covid_vnm" / "cases.csv"
+HANOI_DATA_CSV = INPUT_DATA_PATH / "covid_vnm" / "hanoi_data.csv"
 HCMC_DATA_URL = "https://docs.google.com/spreadsheets/d/11Z4HyBomVjI9VCbQrGFfti9CwAe_PZM6tbSzv7IA9LI/export?format=xlsx&id=11Z4HyBomVjI9VCbQrGFfti9CwAe_PZM6tbSzv7IA9LI"
 HANOI_DATA_URL = "https://docs.google.com/spreadsheets/d/10QEfHx9AeV6V4AoFaxHnNiRpAyavUYboKwwwqcKIsTo/export?format=xlsx&id=10QEfHx9AeV6V4AoFaxHnNiRpAyavUYboKwwwqcKIsTo"
 

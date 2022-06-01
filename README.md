@@ -140,10 +140,10 @@ isort . --profile black
 
 ## Input data
 
-Input data is stored in text format in the `data/inputs/` folder. All input data required to run the app should be stored in this folder, along with a README explaining its meaning and provenance. Input data is preprocessed into an SQLite database, using the `autumn.tools.inputs` module. The resulting database is stored at `data/inputs/inputs.db` and is tracked using Git LFS. If you want to add new input data or modify existing data, then:
+Input data is stored in text format in the `data/inputs/` folder. All input data required to run the app should be stored in this folder, along with a README explaining its meaning and provenance. Input data is preprocessed into an SQLite database, using the `autumn.core.inputs` module. The resulting database is stored at `data/inputs/inputs.db` and is tracked using Git LFS. If you want to add new input data or modify existing data, then:
 
 - add or update the source CSV/XLS files
-- adjust the preprocess functions in `autumn.tools.inputs` as required
+- adjust the preprocess functions in `autumn.core.inputs` as required
 - rebuild the database, commit the new file to source control
 
 To fetch the latest data, run:

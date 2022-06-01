@@ -1,17 +1,16 @@
 from typing import Optional, List, Dict
 import pandas as pd
-import numpy as np
 
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
 
-from autumn.tools.inputs.covid_bgd.queries import get_bgd_vac_coverage
-from autumn.tools.inputs.covid_phl.queries import get_phl_vac_coverage
-from autumn.tools.inputs.covid_btn.queries import get_btn_vac_coverage
-from autumn.tools.inputs.covid_mys.queries import get_mys_vac_coverage
+from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
+from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
+from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
+from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
-from autumn.tools.dynamic_proportions.solve_transitions import calculate_transition_rates_from_dynamic_props
+from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
 
 ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),
@@ -37,6 +36,7 @@ def adjust_susceptible_infection_without_strains(
 
     """
 
+    # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
     low_non_cross_multiplier = 1.0 - low_immune_effect
     high_non_cross_multiplier = 1.0 - high_immune_effect
 
@@ -71,9 +71,13 @@ def adjust_susceptible_infection_with_strains(
     """
 
     for infecting_strain in voc_params:
-        strain_immunity_modifier = 1.0 - voc_params[infecting_strain].immune_escape
-        low_non_cross_multiplier = 1.0 - low_immune_effect * strain_immunity_modifier
-        high_non_cross_multiplier = 1.0 - high_immune_effect * strain_immunity_modifier
+        
+        # The vaccination-specific immunity that will be retained after allowing for the strain's immune escape against vaccination-induced immunity
+        non_cross_effect = 1.0 - voc_params[infecting_strain].immune_escape
+
+        # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
+        low_non_cross_multiplier = 1.0 - low_immune_effect * non_cross_effect
+        high_non_cross_multiplier = 1.0 - high_immune_effect * non_cross_effect
 
         infection_adjustments = {
             ImmunityStratum.NONE: None,
@@ -106,10 +110,11 @@ def adjust_reinfection_without_strains(
 
     """
 
+    # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
     low_non_cross_multiplier = 1.0 - low_immune_effect
     high_non_cross_multiplier = 1.0 - high_immune_effect
 
-    # The infection processes that we are adapting and for which cross-strain immunity is relevant
+    # For both the early and late reinfection transitions
     for flow in reinfection_flows:
 
         # Combine the two mechanisms of protection and format for summer
@@ -149,13 +154,17 @@ def adjust_reinfection_with_strains(
 
     for infecting_strain in voc_params:
 
-        # The immunity effect for vaccine or non-cross-strain natural immunity escape properties of the strain
+        # The vaccination-specific immunity that will be retained after allowing for the strain's immune escape against vaccination-induced immunity
         non_cross_effect = 1.0 - voc_params[infecting_strain].immune_escape
+
+        # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
         low_non_cross_multiplier = 1.0 - low_immune_effect * non_cross_effect
         high_non_cross_multiplier = 1.0 - high_immune_effect * non_cross_effect
 
         # Considering people recovered from infection with each modelled strain
         for infected_strain in voc_params:
+
+            # For both the early and late reinfection transitions
             for flow in reinfection_flows:
 
                 # Cross protection from previous infection with the "infected" strain against the "infecting" strain
@@ -187,7 +196,7 @@ def get_immunity_strat(
     (including vaccination-induced immunity and natural immunity from strains preceding the current simulations).
 
     Args:
-        compartments: Base model compartments
+        compartments: Unstratified model compartment types being implemented
         immunity_params: All the immunity-related model parameters
 
     Returns:
@@ -212,7 +221,7 @@ def get_immunity_strat(
 
 
 def apply_reported_vacc_coverage(
-        compartment_types: List[str],
+        compartments: List[str],
         model: CompartmentalModel,
         iso3: str,
         thinning: int,
@@ -225,7 +234,7 @@ def apply_reported_vacc_coverage(
     apply it to the model as a dynamic stratum.
 
     Args:
-        compartment_types: Unstratified model compartment types being implemented
+        compartments: Unstratified model compartment types being implemented
         model: The model itself
         iso3: The ISO-3 code for the country being implemented
         thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
@@ -272,6 +281,115 @@ def apply_reported_vacc_coverage(
 
     # Apply to model, as below
     thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
+    add_dynamic_immunity_to_model(compartments, thinned_df, model)
+
+
+def get_recently_vaccinated_prop(coverage_df: pd.DataFrame, recent_timeframe: float) -> pd.DataFrame:
+    """
+    Calculate the proportion of the population vaccinated in a given recent timeframe over time.
+
+    Args:
+        coverage_df: raw coverage data over time
+        recent_timeframe: duration in days used to define the recent timeframe
+
+    """
+    # Calculate incremental vaccine coverage
+    vaccine_increment_df = coverage_df.diff()
+    vaccine_increment_df.iloc[0] = coverage_df.iloc[0]
+
+    # Calculate cumulative proportion recently vaccinated
+    recent_prop_df = coverage_df.copy()
+    for index in coverage_df.index:
+        recent_prop_df.loc[index] = vaccine_increment_df.loc[(vaccine_increment_df.index > index - recent_timeframe) & (vaccine_increment_df.index <= index)].sum()
+
+    return recent_prop_df
+
+
+def apply_reported_vacc_coverage_with_booster(
+        compartment_types: List[str],
+        model: CompartmentalModel,
+        iso3: str,
+        thinning: int,
+        model_start_time: int,
+        start_immune_prop: float,
+        start_prop_high_among_immune: float,
+        booster_effect_duration: float,
+        future_monthly_booster_rate: float,
+        model_end_time: float,
+):
+    """
+    Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
+    apply it to the model as a dynamic stratum.
+
+    Args:
+        compartment_types: Unstratified model compartment types being implemented
+        model: The model itself
+        iso3: The ISO-3 code for the country being implemented
+        thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
+        model_start_time: Model starting time
+        start_immune_prop: Vaccination coverage at the time that the model starts running
+        start_prop_high_among_immune: Starting proportion of highly immune individuals among vaccinated
+        booster_effect_duration: Duration of maximal vaccine protection after booster dose (in days)
+        future_monthly_booster_rate: Monthly booster rate used to collate additional booster data in the future
+        model_end_time: Model end time
+    """
+
+    if iso3 == "BGD":
+        raw_data_double = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
+        raw_data_booster = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=3)
+    elif iso3 == "PHL":
+        raw_data_double = get_phl_vac_coverage(dose="SECOND_DOSE")
+        raw_data_booster = get_phl_vac_coverage(dose="BOOSTER_DOSE") + get_phl_vac_coverage(dose="ADDITIONAL_DOSE")
+    elif iso3 == "BTN":
+        raw_data_double = get_btn_vac_coverage(region="Bhutan", dose=2)
+        raw_data_booster = get_btn_vac_coverage(region="Bhutan", dose=3)
+
+    # Add on the starting effective coverage value
+    # Proportion with at least two doses
+    double_vacc_data = pd.concat(
+        (
+            pd.Series({model_start_time: start_immune_prop}),
+            raw_data_double
+        )
+    )
+    # Proportion with booster dose
+    booster_data = pd.concat(
+        (
+            pd.Series({model_start_time: start_immune_prop * start_prop_high_among_immune}),
+            raw_data_booster
+        )
+    )
+
+    # Extend booster dataframe using the assumed future booster rate
+    if future_monthly_booster_rate:
+        extra_coverage = future_monthly_booster_rate / model.initial_population.sum()
+        latest_time = max(booster_data.index)
+        latest_booster_coverage = booster_data.loc[latest_time]
+        latest_double_coverage = double_vacc_data.loc[latest_time]
+
+        new_time, new_booster_coverage = latest_time, latest_booster_coverage
+        while new_time < model_end_time and new_booster_coverage < latest_double_coverage:
+            new_time += 30
+            new_booster_coverage += extra_coverage
+            booster_data.loc[new_time] = min(new_booster_coverage, 1.)
+
+            # also extend double_vacc_data to keep the same format as booster_data
+            double_vacc_data.loc[new_time] = latest_double_coverage
+
+    # Apply waning booster-induced immunity
+    waned_booster_data = get_recently_vaccinated_prop(booster_data, booster_effect_duration)
+
+    # Be explicit about all the difference immunity categories
+    vaccine_df = pd.DataFrame(
+        {
+            "none": 1. - double_vacc_data,
+            "low": double_vacc_data - waned_booster_data,
+            "high": waned_booster_data
+        },
+    )
+
+    # Apply to model, as below
+    thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
     add_dynamic_immunity_to_model(compartment_types, thinned_df, model)
 
 
@@ -284,9 +402,9 @@ def add_dynamic_immunity_to_model(
     Use the dynamic flow processes to control the distribution of the population by vaccination status.
 
     Args:
+        compartments: The types of compartment being implemented in the model, before stratification
         strata_distributions: The target proportions at each time point
         model: The model to be adapted
-        compartments: The types of compartment being implemented in the model, before stratification
 
     """
 

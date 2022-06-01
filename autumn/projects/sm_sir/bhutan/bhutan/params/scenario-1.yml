@@ -3,5 +3,16 @@ description: hypertransmissible VoC
 voc_emergence:
   new_strain:
     new_voc_seed:
-      start_time: 852.  # 1 May 2022
+      start_time: 897.  # 15 June 2022
     contact_rate_multiplier: 2.
+
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 794.
+          - 795.
+        values:
+          - 1.
+          - 0.

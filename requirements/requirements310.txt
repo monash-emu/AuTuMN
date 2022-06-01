@@ -1,4 +1,7 @@
-# 
+#
+#  Used for Python versions >= 3.8
+#  This is actively tested for 3.8, 3.9 and 3.10
+#  
 
 # Summer compartmental modelling
 # https://github.com/monash-emu/summer
@@ -41,6 +44,7 @@ pyAesCrypt
 googledrivedownloader
 statsmodels
 fpdf2
+gitpython
 
 # Testing
 pytest

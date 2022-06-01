@@ -165,17 +165,3 @@ age_stratification:
     multiplier: 0.55
   prop_hospital:
     multiplier: 1.0 # fixed after various calibrations
-
-additional_immunity:
-  times:
-    - 619 # 10th Sep 2021
-    - 632 # 23th Sep 2021
-    - 654 # 15th Oct 2021
-    - 732 # 1st Jan 2022
-    - 763 # 1st Feb 2022
-  values:
-    - 0.1
-    - 0.2
-    - 0.55
-    - 0.7
-    - 0.75

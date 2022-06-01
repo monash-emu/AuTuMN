@@ -1,13 +1,23 @@
-description: hypertransmissible and complete immune escape VoC
+description: hypertransmissible immune-escape VoC
 
 voc_emergence:
   omicron:
     cross_protection:
       new_strain:
         early_reinfection: 0.
-        late_reinfection: 0.
   new_strain:
-    immune_escape: 1.
     new_voc_seed:
-      start_time: 852.  # 1 May 2022
+      start_time: 897.  # 15 June 2022
+    immune_escape: 1.
     contact_rate_multiplier: 2.
+
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 794.
+          - 795.
+        values:
+          - 1.
+          - 0.

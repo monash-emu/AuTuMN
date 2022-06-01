@@ -1,6 +1,14 @@
 \documentclass{article}
+\author{
+    Epidemiological Modelling Unit,
+    \\ School of Public Health and Preventive Medicine,
+    \\ Monash University
+}
 \usepackage{graphicx}
 \usepackage{biblatex}
+\usepackage{threeparttable}
+\usepackage{tabularx}
+\usepackage[left=2.5cm,right=2.5cm]{geometry}
 \bibliography{../../references/emu_library}
 
 \title{Modelling methods, Bhutan application}
@@ -11,8 +19,12 @@
 
 \input{../../tex_descriptions/models/sm_sir/model_description.tex}
 \input{../../tex_descriptions/models/sm_sir/model_structure.tex}
+\section{Model stratification}
+\input{../../tex_descriptions/models/sm_sir/stratifications/agegroup.tex}
 \input{../../tex_descriptions/models/sm_sir/initialisation.tex}
 \input{../../tex_descriptions/models/sm_sir/detection.tex}
+\section{Parameters}
+\input{../../tex_descriptions/models/sm_sir/parameters_age_specific.tex}
 
 \newpage
 \printbibliography

@@ -4,7 +4,7 @@ import pandas as pd
 
 from summer import Stratification, Multiply
 
-from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
+from autumn.models.sm_sir.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.sm_sir.parameters import Parameters
 from autumn.models.sm_sir.constants import FlowName
 

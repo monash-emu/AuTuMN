@@ -1,7 +1,5 @@
 from autumn.projects.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME
-from autumn.models.covid_19.mixing_matrix import (
-    build_dynamic_mixing_matrix,
-)
+from autumn.models.sm_sir.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 
 from .mixing_opti import build_params_for_phases_2_and_3

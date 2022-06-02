@@ -1,7 +1,7 @@
 \section{Case detection and isolation} \label{cdr}
 
 \subsection{Determining the proportion of cases detected}
-We calculate a time-varying case detection rate, being the proportion of all symptomatic cases (the second and third clinical strata) that are detected (the third clinical stratum only).
+We calculate a time-varying case detection rate, being the proportion of all symptomatic cases (the second and third clinical strata, described in Section \ref{clin}) that are detected (the third clinical stratum only).
 This proportion is informed by the number of tests performed using the following formula:
 
 \[CDR(time)=1-(1-floor)\times e^{-shape \times tests(time)}\]

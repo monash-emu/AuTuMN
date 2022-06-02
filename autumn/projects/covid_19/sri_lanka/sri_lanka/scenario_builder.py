@@ -1,4 +1,4 @@
-from autumn.models.covid_19.mixing_matrix.macrodistancing import get_mobility_specific_period
+from autumn.models.sm_sir.mixing_matrix.macrodistancing import get_mobility_specific_period
 
 scenario_start_time = [505, 476, 556, 481, 640, 640]  # 505 - 20 May, 476 - 21st April,
 # 556 - 9th July 2021, 481 - 25 April, 650 - Oct 01

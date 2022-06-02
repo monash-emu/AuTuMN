@@ -1,7 +1,7 @@
 from typing import Callable, Dict
 import numpy as np
 
-from autumn.models.covid_19.parameters import Country, Mobility
+from autumn.models.sm_sir.parameters import Country, Mobility
 from .microdistancing import get_microdistancing_funcs
 from .mixing_adjusters import AgeMixingAdjuster, LocationMixingAdjuster
 from .macrodistancing import get_mobility_funcs

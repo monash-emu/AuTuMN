@@ -60,3 +60,5 @@ IMMUNITY_STRATA = [
     ImmunityStratum.LOW,
     ImmunityStratum.HIGH
 ]
+
+LOCATIONS = ["home", "other_locations", "school", "work"]

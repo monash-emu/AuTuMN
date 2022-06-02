@@ -1,2 +1,3 @@
 # Modeling the dynamic of Tuberculosis in Kiribati
-The project aims to modeling the dynmic of Tuberculosis in Kiribati. The concept based on the compartmental model with parameters from [Ragonnet el al.] (https://academic.oup.com/ije/advance-article/doi/10.1093/ije/dyac045/6552193)
+The project aims to modeling the dynmic of Tuberculosis in Kiribati. The concept based on the compartmental model with parameters from [Ragonnet el al.](https://academic.oup.com/ije/advance-article/doi/10.1093/ije/dyac045/6552193).
+

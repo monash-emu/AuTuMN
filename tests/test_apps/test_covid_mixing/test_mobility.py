@@ -6,7 +6,7 @@ TODO: Test more mixing matrix functionality
 import pandas as pd
 import pytest
 
-from autumn.models.covid_19.mixing_matrix.macrodistancing import parse_values, update_mixing_data
+from autumn.models.sm_sir.mixing_matrix.macrodistancing import parse_values, update_mixing_data
 
 
 @pytest.mark.parametrize(

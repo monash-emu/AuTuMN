@@ -2,3 +2,10 @@
 The model is stratified by ``strain'' or Variant of Concern (VoC)
 to represent explicitly multiple competing strains, each with a separate force of infection calculation.
 This adopts the summer approach to strain stratification through the StrainStratification object.
+
+\subsection{Seeding of new VoC}
+Seeding of each new strain into the model is achieved through the addtion of an importation flow
+that introduces a small number of new infectious persons with the new VoC into the model.
+To achieve this, a new entry flow is added to the model with destination being the early infectious compartment.
+The rate of this flow is a step function that steps from zero to the requested daily rate of seeding for the requested number of days,
+before stepping back down to zero for the remainder of the period simulated.

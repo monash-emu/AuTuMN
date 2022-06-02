@@ -62,8 +62,8 @@ def get_clinical_strat(
 
         # Create the stratification object, with all three possible strata
         clinical_strat = Stratification(
-            "clinical",
-            CLINICAL_STRATA,
+            "clinical", 
+            CLINICAL_STRATA, 
             comps_to_stratify
         )
 

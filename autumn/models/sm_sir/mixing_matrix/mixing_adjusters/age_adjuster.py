@@ -1,7 +1,7 @@
 from typing import Dict
 import numpy as np
 
-from autumn.models.covid_19.parameters import TimeSeries
+from autumn.models.sm_sir.parameters import TimeSeries
 from autumn.settings.constants import COVID_BASE_AGEGROUPS
 from autumn.model_features.curve import scale_up_function
 

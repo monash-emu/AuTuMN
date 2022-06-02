@@ -1,9 +1,9 @@
-infectious_seed: 264.0738350607263
-contact_rate: 0.002590447951923855
-voc_emergence.omicron.contact_rate_multiplier: 1.5
-voc_emergence.omicron.hosp_protection: 0.09105641931375041
-voc_emergence.omicron.icu_multiplier: 0.5
+infectious_seed: 472.6202494174515
+contact_rate: 0.004450163334316165
+voc_emergence.omicron.contact_rate_multiplier: 3.0
+voc_emergence.omicron.hosp_protection: 0.10157677733225057
+voc_emergence.omicron.icu_multiplier: 0.4
 voc_emergence.omicron.relative_active_period: 0.7
-voc_emergence.omicron.relative_latency: 0.49
-voc_emergence.wild_type.relative_active_period: 0.08675472141220464
-voc_emergence.wild_type.relative_latency: 0.08522607626979467
+voc_emergence.omicron.relative_latency: 0.39
+voc_emergence.wild_type.relative_active_period: 0.11753268436270448
+voc_emergence.wild_type.relative_latency: 0.13321963063029196

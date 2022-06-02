@@ -75,6 +75,7 @@ priors = [
     # emergence of omicron
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 781.0)),  # 5 weeks interval
     # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.5, 3)),
     UniformPrior("voc_emergence.omicron.hosp_protection", (0.8, 1.0)),
     UniformPrior("voc_emergence.omicron.icu_multiplier", (0, 0.5)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.8, 1.5)),

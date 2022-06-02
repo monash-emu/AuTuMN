@@ -2,6 +2,7 @@ infectious_seed: 506.4492896827702
 contact_rate: 0.11172581331355258
 sojourns.active.proportion_early: 0.9259863679185572
 sojourns.latent.proportion_early: 0.6867147704330392
+voc_emergence.omicron.contact_rate_multiplier: 2.5
 voc_emergence.omicron.hosp_protection: 0.9358638691445963
 voc_emergence.omicron.icu_multiplier: 0.32337540953804894
 voc_emergence.omicron.relative_active_period: 1.3332286410599163

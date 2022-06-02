@@ -1,2 +1,9 @@
-infectious_seed: 145.30229127629457
-contact_rate: 0.0018114657034969117
+infectious_seed: 264.0738350607263
+contact_rate: 0.002590447951923855
+voc_emergence.omicron.contact_rate_multiplier: 1.5
+voc_emergence.omicron.hosp_protection: 0.09105641931375041
+voc_emergence.omicron.icu_multiplier: 0.5
+voc_emergence.omicron.relative_active_period: 0.7
+voc_emergence.omicron.relative_latency: 0.49
+voc_emergence.wild_type.relative_active_period: 0.08675472141220464
+voc_emergence.wild_type.relative_latency: 0.08522607626979467

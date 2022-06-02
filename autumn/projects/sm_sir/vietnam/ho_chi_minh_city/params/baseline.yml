@@ -63,7 +63,7 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 763. # temporarily fixed to 1st Jan 2022
+      start_time: 763. # temporarily fixed to 1st Feb 2022
       entry_rate: 10.
       seed_duration: 10.
     contact_rate_multiplier: 2.5

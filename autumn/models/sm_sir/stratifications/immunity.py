@@ -309,6 +309,7 @@ def apply_reported_vacc_coverage_with_booster(
         compartment_types: List[str],
         model: CompartmentalModel,
         iso3: str,
+        region: str,
         thinning: int,
         model_start_time: int,
         start_immune_prop: float,
@@ -325,6 +326,7 @@ def apply_reported_vacc_coverage_with_booster(
         compartment_types: Unstratified model compartment types being implemented
         model: The model itself
         iso3: The ISO-3 code for the country being implemented
+        region: The region of the country that is implemented
         thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
         model_start_time: Model starting time
         start_immune_prop: Vaccination coverage at the time that the model starts running
@@ -343,6 +345,15 @@ def apply_reported_vacc_coverage_with_booster(
     elif iso3 == "BTN":
         raw_data_double = get_btn_vac_coverage(region="Bhutan", dose=2)
         raw_data_booster = get_btn_vac_coverage(region="Bhutan", dose=3)
+    elif iso3 == "VNM":
+        if region == "Ho Chi Minh City":
+            raw_data_double = pd.Series({619: 0.1, 632: 0.2, 654: 0.55, 710: 0.66,
+                                         732: 0.7, 746: 0.0725, 763: 0.7288, 791: 0.7338})
+            raw_data_booster = pd.Series({619: 0.001, 632: 0.001, 654: 0.001, 710: 0.001,
+                                          732: 0.142, 746: 0.383, 763: 0.456, 791: 0.474})
+        elif region == "Hanoi":
+            raw_data_double = pd.Series({822: 0.9, 884: 0.54})
+            raw_data_booster = pd.Series({822: 0.045, 884: 0.045})
 
     # Add on the starting effective coverage value
     # Proportion with at least two doses

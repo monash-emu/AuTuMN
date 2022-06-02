@@ -9,8 +9,10 @@ ref_mixing_iso3: HKG
 sojourns:
   active:
     total_time: 6.
+    proportion_early: 0.333
   latent:
     total_time: 4.
+    proportion_early: 0.5
   recovered: 180.
 
 population:
@@ -45,6 +47,8 @@ voc_emergence:
     hosp_protection: 0.
     death_protection: 0.
     icu_multiplier: 1
+    relative_latency: 1.0
+    relative_active_period: 1.0
     cross_protection:
       wild_type:
         early_reinfection: 1.  # 0% immune escape
@@ -59,10 +63,10 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 732. # 1st Jan 2022
+      start_time: 763. # temporarily fixed to 1st Feb 2022
       entry_rate: 10.
       seed_duration: 10.
-    contact_rate_multiplier: 2.0
+    contact_rate_multiplier: 2.5
     immune_escape: 0.6
     hosp_protection: 0.8
     death_protection: 0.9
@@ -104,13 +108,13 @@ voc_emergence:
         early_reinfection: 1. # = omicron --> omicron
         late_reinfection: 0.5 # Same immunity escape level with Omicron
 
-testing_to_detection:
-  assumed_tests_parameter: 0.001 # Malaysia model
-  assumed_cdr_parameter: 0.05 # fixed
-  smoothing_period: 14
-  floor_value: 0.
+#testing_to_detection:
+#  assumed_tests_parameter: 0.001 # Malaysia model
+#  assumed_cdr_parameter: 0.05 # fixed
+#  smoothing_period: 14
+#  floor_value: 0.
 
-#detect_prop: 0.2
+detect_prop: 0.2
 
 hospital_stay:
   hospital_all:
@@ -156,22 +160,10 @@ mobility:
 
 prop_icu_among_hospitalised: 0.05
 
+booster_effect_duration: 120. # 4 months
+
 age_stratification:
   cfr:
-    multiplier: 0.8
+    multiplier: 0.55
   prop_hospital:
-    multiplier: 1.0
-
-additional_immunity:
-  times:
-    - 619 # 10th Sep 2021
-    - 632 # 23th Sep 2021
-    - 654 # 15th Oct 2021
-    - 732 # 1st Jan 2022
-    - 763 # 1st Feb 2022
-  values:
-    - 0.1
-    - 0.2
-    - 0.55
-    - 0.7
-    - 0.75
+    multiplier: 1.0 # fixed after various calibrations

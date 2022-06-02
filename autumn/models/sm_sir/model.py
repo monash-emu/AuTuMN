@@ -518,17 +518,18 @@ def build_model(
 
     # Implement the dynamic immunity process
     vacc_coverage_available = ["BGD", "PHL", "BTN", "VNM"]
-    vacc_region_available = ["Metro Manila", "Hanoi", None]
+    vacc_region_available = ["Metro Manila", "Hanoi", "Ho Chi Minh City", None]
     is_dynamic_immunity = iso3 in vacc_coverage_available and region in vacc_region_available
 
     if is_dynamic_immunity:
         thinning = 20 if iso3 == "BGD" else None
 
-        if iso3 == "PHL":
+        if iso3 == "PHL" or iso3 == "VNM":
             apply_reported_vacc_coverage_with_booster(
                 compartment_types,
                 model,
                 iso3,
+                region,
                 thinning=thinning,
                 model_start_time=params.time.start,
                 start_immune_prop=params.immunity_stratification.prop_immune,

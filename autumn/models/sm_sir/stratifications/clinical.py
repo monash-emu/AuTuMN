@@ -4,7 +4,7 @@ import pandas as pd
 
 from summer import Stratification, Multiply, Overwrite, CompartmentalModel
 
-from autumn.models.sm_sir.constants import ClinicalStratum, Compartment
+from autumn.models.sm_sir.constants import ClinicalStratum, CLINICAL_STRATA, Compartment
 from autumn.models.sm_sir.parameters import Parameters
 
 
@@ -63,7 +63,7 @@ def get_clinical_strat(
         # Create the stratification object, with all three possible strata
         clinical_strat = Stratification(
             "clinical",
-            [ClinicalStratum.ASYMPT, ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT],
+            CLINICAL_STRATA,
             comps_to_stratify
         )
 

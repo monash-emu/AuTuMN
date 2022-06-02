@@ -9,6 +9,7 @@ from autumn.model_features.random_process import RandomProcessProc
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.core.utils.utils import multiply_function_or_constant
 from autumn.model_features.computed_values import FunctionWrapper
+from autumn.model_features.random_process import get_random_process
 from .detection import get_cdr_func
 from .outputs import SmSirOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn

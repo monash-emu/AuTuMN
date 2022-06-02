@@ -57,7 +57,7 @@ priors = [
     # UniformPrior("age_stratification.cfr.multiplier", (0.4, 1.0)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (200, 1500)),
+    UniformPrior("infectious_seed", (200, 3000)),
     UniformPrior("contact_rate", (0.05, 0.15)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0.5, 1.0)),

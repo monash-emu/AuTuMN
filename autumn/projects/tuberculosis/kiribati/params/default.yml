@@ -125,7 +125,7 @@ outputs_stratification:
   incidence: ["location"]
   mortality: ["location"]
 
-cumulative_output_start_time: 2000.
+cumulative_output_start_time: 2016.
 
 inflate_reactivation_for_diabetes: True
 

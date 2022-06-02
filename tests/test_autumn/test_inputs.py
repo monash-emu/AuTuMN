@@ -11,7 +11,7 @@ from autumn.core.inputs import (
     get_population_by_agegroup,
 )
 from autumn.core.inputs.demography.queries import downsample_quantity, downsample_rate
-from autumn.models.covid_19.mixing_matrix.macrodistancing import get_mobility_data, weight_mobility_data
+from autumn.models.sm_sir.mixing_matrix.macrodistancing import get_mobility_data, weight_mobility_data
 
 
 @pytest.mark.github_only

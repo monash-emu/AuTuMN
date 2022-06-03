@@ -141,20 +141,9 @@ time_variant_acf:
   - stratum_filter: { "location": "other" }
     time_variant_screening_rate:
       2018: 0.
-      2018.01: 1.4  # from 81% first screen
-      2019: 1.4
+      2018.01: 1.1  # from 81% first screen
+      2019: 1.1
       2019.01: 0.
-
-time_variant_ltbi_screening:
-  - stratum_filter: { "location": "starawa" }
-    time_variant_screening_rate:
-      2018: 0.
-      2018.01: .9  # from 81% first screen / of whom 86.5% fully screened times 92% of TST+ recommended for PT times 92% of recommanded actually started
-      2019: .9
-      2019.01: 0.
-  - stratum_filter: { "location": "other" }
-    time_variant_screening_rate:
-      2018: 0.
 
 awareness_raising:
   relative_screening_rate: 1.25

@@ -83,6 +83,8 @@ priors = [
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0.5, 1.0)),
     UniformPrior("sojourns.latent.proportion_early", (0.5, 1.0)),
+    UniformPrior("sojourns.active.total_time", (4, 8)),
+    UniformPrior("sojourns.latent.total_time", (2, 6)),
 ]
 
 

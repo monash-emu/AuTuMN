@@ -5,6 +5,7 @@ voc_emergence.omicron.icu_multiplier: 0.4
 voc_emergence.omicron.relative_active_period: 1.0
 voc_emergence.omicron.relative_latency: 0.199
 voc_emergence.wild_type.icu_multiplier: 0.1038018746988193
+voc_emergence.wild_type.relative_active_period: 0.17897084805114072
 voc_emergence.wild_type.relative_latency: 0.05142049934824322
 sojourns.active.total_time: 1.0968141023060745
 sojourns.latent.total_time: 0.39617058623195334

@@ -3,7 +3,6 @@ infectious_seed: 1447.6389411122898
 sojourns.active.proportion_early: 0.9121238523227209
 sojourns.latent.proportion_early: 0.7473195108845829
 voc_emergence.omicron.contact_rate_multiplier: 4.670748510987282
-voc_emergence.omicron.hosp_protection: 0.8764397044804153
 voc_emergence.omicron.icu_multiplier: 0.1983289031101358
 voc_emergence.omicron.relative_active_period: 1.4867428041314454
 voc_emergence.omicron.relative_latency: 0.17250470228580275

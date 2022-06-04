@@ -8,5 +8,6 @@ voc_emergence.omicron.contact_rate_multiplier: 3.7819405499927328
 voc_emergence.omicron.icu_multiplier: 0.025818148077064746
 voc_emergence.omicron.relative_active_period: 1.443311109254231
 voc_emergence.omicron.relative_latency: 0.011815742240084628
+voc_emergence.wild_type.icu_multiplier: 1.0
 voc_emergence.wild_type.relative_active_period: 1.7419647647926033
 voc_emergence.wild_type.relative_latency: 0.8256277005386036

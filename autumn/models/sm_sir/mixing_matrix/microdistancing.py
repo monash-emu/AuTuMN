@@ -2,8 +2,8 @@ from typing import Callable, Dict
 
 import numpy as np
 
-from autumn.models.covid_19.parameters import MicroDistancingFunc
-from autumn.models.covid_19.constants import LOCATIONS
+from autumn.models.sm_sir.parameters import MicroDistancingFunc
+from autumn.models.sm_sir.constants import LOCATIONS
 from autumn.model_features.curve import scale_up_function, tanh_based_scaleup
 from autumn.core.utils.utils import return_constant_value, get_product_two_functions
 from autumn.core.inputs.covid_survey.queries import get_percent_mc

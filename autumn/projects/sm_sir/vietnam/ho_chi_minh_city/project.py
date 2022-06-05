@@ -34,44 +34,58 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 
 # notifications = ts_set["notifications"].multiple_truncations([[511, 575], [606, 700]])
 # truncated from 18th Jul to 28th Jul, then from 28th Aug onwards
-notifications = pd.concat(
-    [
-     ts_set["notifications"].loc[606:639],  # form 28/08/2021 to 30/09/2021
-     ts_set["notifications"].loc[702:]  # from 02/12/2021 onwards
-    ]
-)
+# notifications = pd.concat(
+#     [
+#      ts_set["notifications"].loc[606:639],  # form 28/08/2021 to 30/09/2021
+#      ts_set["notifications"].loc[702:]  # from 02/12/2021 onwards
+#     ]
+# )
+hospital_occupancy = ts_set["hospital_occupancy"].loc[632:]  # truncated to 23 Sep 2021
+icu_occupancy = ts_set["icu_occupancy"].loc[619:]  # truncated to 09 Sep 2021
+# infection_deaths = ts_set["infection_deaths"].loc[556:].rolling(7).mean()  # truncated to 9th Jul 2021
 
-icu_occupancy = ts_set["icu_occupancy"].loc[640:]  # truncated to 01 Oct 2021
-infection_deaths = ts_set["infection_deaths"].loc[556:].rolling(7).mean()  # truncated to 9th Jul 2021
-
-targets = [NormalTarget(notifications),
-           NormalTarget(icu_occupancy),
-           NormalTarget(infection_deaths)]
+targets = [
+    # NormalTarget(notifications),
+    NormalTarget(hospital_occupancy),
+    NormalTarget(icu_occupancy),
+    # NormalTarget(infection_deaths)
+]
 
 
 priors = [
+    # age stratification
+    # UniformPrior("age_stratification.cfr.multiplier", (0.4, 1.0)),
+    # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (20, 50)),
-    UniformPrior("contact_rate", (0.45, 0.8)),
+    UniformPrior("infectious_seed", (200, 4000)),
+    UniformPrior("contact_rate", (0.05, 0.16)),
     # testing to detection params
-    UniformPrior("testing_to_detection.assumed_tests_parameter", (0.02, 0.05)),
-    # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.02)),
+    # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.02)),
+    # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
+    # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
-    # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0.7, 1.0)),
-    # UniformPrior("age_stratification.prop_hospital.multiplier", (0.0, 1.0)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.15)),
+    # UniformPrior("prop_icu_among_hospitalised", (0.03, 0.1)),
     # emergence of omicron
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 767.0)),  # 3 weeks interval
-    UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
+    # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 781.0)),  # 5 weeks interval
+    # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2, 5)),
+    # UniformPrior("voc_emergence.omicron.hosp_protection", (0.8, 1.0)),
+    UniformPrior("voc_emergence.omicron.icu_multiplier", (0, 0.4)),
+    UniformPrior("voc_emergence.omicron.relative_active_period", (1.0, 2.0)),
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.001, 0.2)),
+    # emergence of delta
+    UniformPrior("voc_emergence.wild_type.icu_multiplier", (0.5, 1.5)),
+    UniformPrior("voc_emergence.wild_type.relative_active_period", (1.0, 3.0)),
+    UniformPrior("voc_emergence.wild_type.relative_latency", (0.8, 2.0)),
     # sojourns
-    UniformPrior("sojourns.active.proportion_early", (0.2, 0.5)),
-    UniformPrior("sojourns.latent.proportion_early", (0.1, 0.3)),
+    UniformPrior("sojourns.active.proportion_early", (0.5, 1.0)),
+    UniformPrior("sojourns.active.total_time", (4, 10)),
+    UniformPrior("sojourns.latent.proportion_early", (0.5, 1.0)),
+    UniformPrior("sojourns.latent.total_time", (2, 8)),
 ]
 
 
@@ -105,4 +119,4 @@ project = Project(
 
 
 # from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=5, relative_likelihood_reduction=0.2)

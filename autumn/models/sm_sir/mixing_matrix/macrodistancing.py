@@ -2,8 +2,9 @@ from typing import Callable, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME, LOCATIONS
-from autumn.models.covid_19.parameters import Country, MixingLocation
+from autumn.models.sm_sir.constants import LOCATIONS
+from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.models.sm_sir.parameters import Country, MixingLocation
 from autumn.model_features.curve import scale_up_function
 from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.utils.utils import apply_moving_average

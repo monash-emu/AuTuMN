@@ -119,7 +119,11 @@ class FileDatabase(BaseDatabase, ABC):
         fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
         
         if conditions:
-            df = self.read_file(fpath)
+            if columns:
+                tmp_columns = columns + list(conditions)
+                df = self.read_file(fpath, tmp_columns)
+            else:
+                df = self.read_file(fpath)
             for k, v in conditions.items():
                 if v is None:
                     df = df[df[k].isnull()]

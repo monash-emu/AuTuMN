@@ -68,7 +68,7 @@ def get_phl_vac_coverage(
 
     df = input_db.query(
         "covid_phl_vac",
-        columns=["date_index", "vaccination", f"`{region}`"],
+        columns=["date_index", "vaccination", f"{region}"],
         conditions=cond_map,
     )
 

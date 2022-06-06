@@ -117,12 +117,21 @@ class FileDatabase(BaseDatabase, ABC):
     ) -> pd.DataFrame:
         """Returns a dataframe"""
         fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
-        df = self.read_file(fpath, columns)
-        for k, v in conditions.items():
-            df = df[df[k] == v]
-
+        
         if conditions:
+            df = self.read_file(fpath)
+            for k, v in conditions.items():
+                if v is None:
+                    df = df[df[k].isnull()]
+                else:
+                    df = df[df[k] == v]
+    
+            if columns:
+                df = df[columns]
+            
             df = df.copy()
+        else:
+            df = self.read_file(fpath, columns)
 
         return df
 
@@ -240,6 +249,14 @@ class Database(BaseDatabase):
 
         as_copy can be False if needed for performance, but only if you promise not to modify the returned data...
         """
+        def sanitize(name):
+            if " " in name:
+                return f"`{name}`"
+            else:
+                return name
+
+        columns = [sanitize(c) for c in columns]
+
         column_str = ",".join(columns) if columns else "*"
         query = f"SELECT {column_str} FROM {table_name}"
         if len(conditions) > 0:

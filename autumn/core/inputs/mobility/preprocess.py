@@ -1,22 +1,21 @@
 import os
 
 import pandas as pd
-
 from autumn.core.db import Database
-from autumn.settings import INPUT_DATA_PATH
 from autumn.core.utils.utils import create_date_index
+from autumn.settings import INPUT_DATA_PATH
 from autumn.settings.constants import COVID_BASE_DATETIME
 
 from .fetch import (
-    MOBILITY_CSV_PATH,
-    VNM_CSV_PATH,
     FB_MOVEMENT_2021,
     FB_MOVEMENT_2022,
+    MOBILITY_CSV_PATH,
+    MOBILITY_DIRPATH,
+    VNM_CSV_PATH,
 )
 
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"
-MOBILITY_DIRPATH = os.path.join(INPUT_DATA_PATH, "mobility")
 
 DHHS_LGA_TO_CLUSTER = os.path.join(
     MOBILITY_DIRPATH, "LGA to Cluster mapping dictionary with proportions.csv"
@@ -197,7 +196,7 @@ def preprocess_mobility(input_db: Database, country_df):
     df_list = []
     iso_filter = {"AUS", "PHL", "MYS", "VNM", "LKA", "IDN", "MYN", "BGD", "BTN"}
     for file in {FB_MOVEMENT_2021, FB_MOVEMENT_2022}:
-        df = pd.read_csv(file, "\t")
+        df = pd.read_csv(file)
         df_list.append(df)
 
     df = pd.concat(df_list)
@@ -212,4 +211,3 @@ def get_iso3(country_name: str, country_df):
         return country_df[country_df["country"] == country_name]["iso3"].iloc[0]
     except IndexError:
         return COUNTRY_NAME_ISO3_MAP[country_name]
-

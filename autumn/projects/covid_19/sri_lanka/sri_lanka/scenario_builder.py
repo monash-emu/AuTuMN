@@ -93,8 +93,11 @@ def get_all_scenario_dicts(country: str):
                                                             'other_locations': {'retail_and_recreation': 0.333,
                                                                                 'grocery_and_pharmacy': 0.333,
                                                                                 'transit_stations': 0.334},
-                                                            'home': {'residential': 1.}}, [599, 641])
-            times1 = [*range(568, 610)]  # July 21 - Aug 31
+                                                            'home': {'residential': 1.}}, [599, 630])
+            times1 = [*range(568, 599)]  # July 21 - Aug 31
+
+            times3 = [*range(599, 641)]
+            values3 = {'work': [0.5] * len(times3), 'other_locations': [0.5] * len(times3)}
 
             # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown) frm Sep 01 st onwards
             times2, values2 = get_mobility_specific_period(country, None,
@@ -103,14 +106,14 @@ def get_all_scenario_dicts(country: str):
                                                                                 'grocery_and_pharmacy': 0.333,
                                                                                 'transit_stations': 0.334},
                                                             'home': {'residential': 1.}}, [641, 670])
-            times2 = [*range(610, 639)]  # from Sep 01st onwards
+            #times2 = [*range(610, 639)]  # from Sep 01st onwards
 
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {
                     "append": True,
-                    "times": [scenario_start_time[i_lockdown_scenario]] + times1 +
+                    "times": [scenario_start_time[i_lockdown_scenario]] + times1 + times3 +
                              times2 + [times2[-1] + 1],
-                    "values": [["repeat_prev"]] + values1[key_loc] + values2[key_loc] +
+                    "values": [["repeat_prev"]] + values1[key_loc] + values3[key_loc] + values2[key_loc] +
                               [["repeat_prev"]]
                 }
         if i_lockdown_scenario == 4:  # "Slower increase in mobility after lockdown ends on 01st October"

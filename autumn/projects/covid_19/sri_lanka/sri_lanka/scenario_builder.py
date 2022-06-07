@@ -2,8 +2,8 @@ from autumn.models.covid_19.mixing_matrix.macrodistancing import get_mobility_sp
 
 scenario_start_time = [505, 484, 556, 481, 640, 640]  # 505 - 20 May, 476 - 29th April,
 # 567 - 21st July 2021, 481 - 25 April, 650 - Oct 01
-lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from April 21 - June 21",
-                  "What if lockdown was initiated from July 10 - Oct 01", "No vaccination",
+lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from April 29 - May 29",
+                  "What if lockdown was initiated from July 21 - Aug 31", "No vaccination",
                   "Slower increase in mobility after lockdown ends on 01st October",
                   "Faster increase in mobility after lockdown ends on 01st October"]
 scenario_end_time = [791, 791, 791, 791, 791, 791]
@@ -47,7 +47,7 @@ def get_all_scenario_dicts(country: str):
                 scenario_dict["mobility"]["mixing"][key_loc] = {
                     "append": True,
                     "times": [scenario_start_time[i_lockdown_scenario]] + [scenario_start_time[i_lockdown_scenario]+1],
-                    "values": [["repeat_prev"]] + [1.3]
+                    "values": [["repeat_prev"]] + [1.5]
                 }
 
         if i_lockdown_scenario == 1:  # What if lockdown was initiated from April 29 - May 29
@@ -64,7 +64,7 @@ def get_all_scenario_dicts(country: str):
 
             # from May 30 - 21 June, the average mobility after lockdown
             times2 = [*range(515, 539)]
-            values2 = {'work': [0.5] * len(times2), 'other_locations': [0.5] * len(times2)}
+            values2 = {'work': [0.6] * len(times2), 'other_locations': [0.72] * len(times2)}
 
             # From June 22nd onwards actual mobility levels
             # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown)

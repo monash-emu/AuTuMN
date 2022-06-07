@@ -1,7 +1,14 @@
 \section{Strain stratification} \label{strain}
-The model is stratified by ``strain'' or Variant of Concern (VoC)
-to represent explicitly multiple competing strains, each with a separate force of infection calculation.
-This adopts the summer approach to strain stratification through the StrainStratification object.
+The model is stratified by ``strain'' or Variant of Concern (VoC),
+adopting the summer approach to strain stratification through the \code{StrainStratification} object.
+This general approach is described in full in the summer model documentation for to represent explicitly multiple competing strains,
+each with a separate force of infection calculation (see \code{ModelRunner} object code where force of infection calculations are made and
+\code{Stratification} object code where strain stratification can be requested).
+This framework allows for independent calculations of the force of infection for each of the modelled strains,
+with the compartmental infectiousness multipliers applied identically for all of the competing strains.
+Additional strain features (such as differential infectiousness and duration of latency and active disease)
+can then be implemented with the standard features of stratification,
+such as adjustments to flow rates.
 
 \subsection{Seeding of new VoC}
 Seeding of each new strain into the model is achieved through the addition of an importation flow

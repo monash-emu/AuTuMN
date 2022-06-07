@@ -1,17 +1,13 @@
-from typing import Optional
+from typing import Optional, List, Dict, Union
 import numpy as np
 import pandas as pd
+import itertools
 
 from summer import Stratification, Multiply
 
 from autumn.models.sm_sir.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.sm_sir.parameters import Parameters
 from autumn.models.sm_sir.constants import FlowName
-
-
-from typing import List, Dict, Union
-import itertools
-
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.core.utils.utils import weighted_average
 

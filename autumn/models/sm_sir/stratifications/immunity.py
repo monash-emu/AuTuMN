@@ -27,7 +27,8 @@ def adjust_susceptible_infection_without_strains(
 ):
     """
     Apply the modification to the immunity stratification to account for immunity to first infection (from the
-    susceptible compartment), i.e. vaccine-induced immunity.
+    susceptible compartment), i.e. vaccine-induced immunity (or for some models this stratification could be taken
+    to represent past infection prior to the beginning of the simulation period).
 
     Args:
         low_immune_effect: The protection from low immunity

@@ -8,12 +8,12 @@ age_mixing:
   age_adjust: true
 
 time:
-  start: 1955.
+  start: 1900.
   end: 2050.
   step: 0.1
   critical_ranges: [[2016., 2020.]]
 
-start_population_size: 36573.
+start_population_size: 400.
 
 #import_ltbi_cases:
 #  start_time: 2000

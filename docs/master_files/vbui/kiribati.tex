@@ -1,0 +1,39 @@
+\documentclass{article}
+\author{
+    Epidemiological Modelling Unit,
+    \\ School of Public Health and Preventive Medicine,
+    \\ Monash University
+}
+\usepackage{graphicx}
+\usepackage{biblatex}
+\usepackage{threeparttable}
+\usepackage{tabularx}
+\usepackage{alphabeta}
+\usepackage{amsmath}
+\usepackage{caption} \captionsetup[table]{singlelinecheck=false}
+\usepackage[left=2.5cm,right=2.5cm]{geometry}
+\bibliography{../../references/emu_library}
+
+\title{Modelling methods, Kiribati application}
+
+\begin{document}
+
+\maketitle
+
+\input{../../tex_descriptions/models/tuberculosis/model_description.tex}
+\input{../../tex_descriptions/models/tuberculosis/model_structure.tex}
+\section{Model stratification}
+\input{../../tex_descriptions/models/tuberculosis/stratifications/agegroup.tex}
+\input{../../tex_descriptions/models/tuberculosis/births.tex}
+\input{../../tex_descriptions/models/tuberculosis/transmission.tex}
+\input{../../tex_descriptions/models/tuberculosis/initialisation.tex}
+\section{Progression Parameters}
+\input{../../tex_descriptions/models/tuberculosis/progression.tex}
+\section{Modelled Intervention}
+\input{../../tex_descriptions/models/tuberculosis/interventions.tex}
+\section{Parameters}
+\input{../../tex_descriptions/models/tuberculosis/parameters.tex}
+\newpage
+\printbibliography
+
+\end{document}

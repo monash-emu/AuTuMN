@@ -1,0 +1,20 @@
+\subsection{Population-based screening and treatment of LTBI}
+Mass LTBI screening and treatment is implemented as part of the intervention conducted in South Tarawa in 
+2022. This is modelled by making latently infected individuals (from E and L) transition to the 
+recovered compartment (R). The rate associated with these flows is obtained by multiplying the LTBI 
+screening rate with the sensitivity of the LTBI test employed and the individual-level efficacy of 
+preventive treatment. The LTBI screening rate is implemented as a time-variant parameter that is 
+stratified by location
+\subsection{Active case finding}
+Active case finding (ACF) is implemented to simulate the interventions linked to the detection of 
+individuals with active TB implemented in South Tarawa. This is modelled by 
+implementing an additional transition flow from compartment I to compartment T. The rate associated 
+with this flow is obtained by multiplying the location-specific ACF screening rate with the sensitivity 
+of the detection algorithm used for the ACF intervention. The ACF screening rate is implemented as a 
+time-variant parameter.
+\subsection{Calculation of the screening rates}
+To simulate the interventions, we apply a positive rate of ACF and/or LTBI screening over the 
+intervention periods. The screening rates are determined such that the modelled total proportion of the 
+population screened corresponds to the true population proportion screened. The screening rate is set 
+equal to \(-log(1 - coverage)\) for the year during which the intervention is implemented, where 
+\(coverage\) is the total proportion of the population screened by the intervention. 

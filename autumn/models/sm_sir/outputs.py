@@ -11,6 +11,7 @@ from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_pr
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 from autumn.core.inputs.covid_hospital_risk.hospital_props import read_hospital_props
 
+
 def get_immunity_prop_modifiers(
         source_pop_immunity_dist: Dict[str, float],
         source_pop_protection: Dict[str, float],
@@ -450,7 +451,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 [n_immune_name, "total_population"],
             )
 
-
     def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
         """
         Compute cumulative outputs for requested outputs.
@@ -600,6 +600,7 @@ def make_calc_notifications_func(density_intervals):
 
 
 def make_calc_deaths_func(death_risk, density_intervals):
+    
     def deaths_func(detected_incidence):
         deaths = apply_convolution_for_event(detected_incidence, density_intervals, death_risk)
         return deaths

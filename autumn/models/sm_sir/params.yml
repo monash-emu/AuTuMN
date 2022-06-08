@@ -185,7 +185,6 @@ time_from_onset_to_event:  # using time of symptom onset as reference
       shape: 5.
       mean: 14. # FIXME: check with Dave
 
-
 prop_icu_among_hospitalised: .08  # NSW data
 
 hospital_stay:

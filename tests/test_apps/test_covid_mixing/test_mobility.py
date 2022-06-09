@@ -44,10 +44,8 @@ def test_update_mixing_data__with_only_mobility_data():
         google_mobility_values,
         google_mobility_days,
     )
-    assert list(actual_mixing["work"].values) == [1.1, 1.2, 1.3, 1.4]
-    assert list(actual_mixing["work"].index) == [0, 1, 2, 3]
-    assert list(actual_mixing["other_locations"].values) == [1.5, 1.6, 1.7, 1.8]
-    assert list(actual_mixing["other_locations"].index) == [0, 1, 2, 3]
+    assert actual_mixing["work"].equals(pd.Series([1.1, 1.2, 1.3, 1.4], index=[0, 1, 2, 3]))
+    assert actual_mixing["other_locations"].equals(pd.Series([1.5, 1.6, 1.7, 1.8], index=[0, 1, 2, 3]))
     
 
 def test_update_mixing_data__with_user_specified_values():
@@ -81,12 +79,9 @@ def test_update_mixing_data__with_user_specified_values():
         google_mobility_values,
         google_mobility_days,
     )
-    assert list(actual_mixing["work"].values) == [1.1, 1.2, 1.3, 1.4, 1.54, 1.6]
-    assert list(actual_mixing["work"].index) == [0, 1, 2, 3, 4, 5]
-    assert list(actual_mixing["other_locations"].values) == [1.55, 1.66, 1.77, 1.88, 1.99, 1.111]
-    assert list(actual_mixing["other_locations"].index) == [0, 1, 2, 3, 4, 5]
-    assert list(actual_mixing["school"].values) == [1.11, 1.22, 1.33, 1.44, 1.55, 1.66]
-    assert list(actual_mixing["school"].index) == [0, 1, 2, 3, 4, 5]
+    assert actual_mixing["work"].equals(pd.Series([1.1, 1.2, 1.3, 1.4, 1.54, 1.6], index=[0, 1, 2, 3, 4, 5]))
+    assert actual_mixing["other_locations"].equals(pd.Series([1.55, 1.66, 1.77, 1.88, 1.99, 1.111], index=[0, 1, 2, 3, 4, 5]))
+    assert actual_mixing["school"].equals(pd.Series([1.11, 1.22, 1.33, 1.44, 1.55, 1.66], index=[0, 1, 2, 3, 4, 5]))
     
 
 def test_update_mixing_data__with_user_specified_values__out_of_date():
@@ -109,10 +104,8 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
         google_mobility_days,
     )
 
-    assert list(actual_mixing["work"].values) == [1.1, 1.2, 1.3, 1.4]
-    assert list(actual_mixing["work"].index) == [0, 1, 2, 3]
-    assert list(actual_mixing["school"].values) == [1.11, 1.22, 1.33]
-    assert list(actual_mixing["school"].index) == [0, 1, 2]
+    assert actual_mixing["work"].equals(pd.Series([1.1, 1.2, 1.3, 1.4], index=[0, 1, 2, 3]))
+    assert actual_mixing["school"].equals(pd.Series([1.11, 1.22, 1.33], index=[0, 1, 2]))
 
 
 def test_update_mixing_data__with_user_specified_values__missing_data_append():
@@ -162,5 +155,4 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
         google_mobility_values,
         google_mobility_days,
     )
-    assert list(actual_mixing["work"].values) == [1.1, 1.2, 1.3, 1.11, 1.22, 1.33]
-    assert list(actual_mixing["work"].index) == [0, 1, 2, 3, 4, 5]
+    assert actual_mixing["work"].equals(pd.Series([1.1, 1.2, 1.3, 1.11, 1.22, 1.33], index=[0, 1, 2, 3, 4, 5]))

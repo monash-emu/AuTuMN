@@ -1,6 +1,6 @@
-infectious_seed: 60.282023559345134
-contact_rate: 0.00045254665696689567
-mobility.microdistancing.behavior.parameters.max_effect: 0.06490138672713835
-voc_emergence.wild_type.icu_multiplier: 0.03898012900697512
-sojourns.active.total_time: 0.05429100277783183
-sojourns.latent.total_time: 0.13120528357346606
+infectious_seed: 626.184765783831
+contact_rate: 0.0012209597922403226
+mobility.microdistancing.behavior.parameters.max_effect: 0.04803330046601284
+voc_emergence.wild_type.icu_multiplier: 0.1114025981587976
+sojourns.active.total_time: 0.6062097819828356
+sojourns.latent.total_time: 0.22674369699958374

@@ -152,3 +152,7 @@ age_stratification:
       75: 0.0357
       80: 0.1110
     multiplier: 0.2
+
+
+requested_cumulative_outputs: ['notifications']
+cumulative_start_time: 883  # 1 June 2022

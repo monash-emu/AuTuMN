@@ -157,8 +157,11 @@ mobility:
           - 641 # 02nd Oct 2021, second day after eased lockdown
           - 654 # 15th Oct 2021, 2 weeks after eased lockdown
           - 671 # 01st Nov 2021, 1 month after eased lockdown, restaurants are serving on-site at 50% capacity
+          - 703 # 03rd Dec 2021, restaurants are allowed to open even after 10:00 PM and at maximum capacity
+          - 713 # 13th Dec 2021, students started coming back to school
+          - 805 # 15th Mar 2022, all foreign travel restrictions are eased
         values:
-          - 0
+          - 0.0
           - 0.2
           - 0.4
           - 0.5
@@ -166,9 +169,12 @@ mobility:
           - 0.8
           - 0.9
           - 0.7
-          - 0.5
-          - 0.35
+          - 0.4
+          - 0.3
           - 0.2
+          - 0.1
+          - 0.05
+          - 0.0
       locations:
         - work
         - other_locations

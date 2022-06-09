@@ -2,8 +2,9 @@ from typing import Callable, Dict
 import numpy as np
 
 from autumn.models.sm_sir.parameters import Country, Mobility
-from .microdistancing import get_microdistancing_funcs, get_mobility_funcs
 from .mixing_adjusters import AgeMixingAdjuster, LocationMixingAdjuster
+from .microdistancing import get_microdistancing_funcs
+from .macrodistancing import get_mobility_funcs
 
 
 def build_dynamic_mixing_matrix(

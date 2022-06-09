@@ -91,6 +91,7 @@ def get_mobility_funcs(
 
     """
 
+    power = 2 if square_mobility_effect else 1
     mob_df, google_mobility_days = get_mobility_data(
         country.iso3, region, COVID_BASE_DATETIME
     )
@@ -111,9 +112,8 @@ def get_mobility_funcs(
 
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
-    exponent = 2 if square_mobility_effect else 1
     for location, timeseries in mobility_requests.items():
-        loc_vals = [v**exponent for v in timeseries["values"]]
+        loc_vals = [v ** power for v in timeseries["values"]]
         mobility_funcs[location] = scale_up_function(
             timeseries["times"], loc_vals, method=4
         )

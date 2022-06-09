@@ -92,31 +92,22 @@ def get_mobility_funcs(
     """
 
     power = 2 if square_mobility_effect else 1
-    mob_df, google_mobility_days = get_mobility_data(
-        country.iso3, region, COVID_BASE_DATETIME
-    )
+    mob_df, google_mobility_days = get_mobility_data(country.iso3, region, COVID_BASE_DATETIME)
     model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
     # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
     if smooth_google_data:
         for loc in model_loc_mobility_values.columns:
-            model_loc_mobility_values[loc] = apply_moving_average(
-                model_loc_mobility_values[loc], 7
-            )
+            model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
     # Build mixing data timeseries (change to dict, rather than parameters object)
     mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
-    mobility_requests = update_mixing_data(
-        mobility_requests, model_loc_mobility_values, google_mobility_days
-    )
+    mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
 
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
     for location, timeseries in mobility_requests.items():
-        loc_vals = [v ** power for v in timeseries["values"]]
-        mobility_funcs[location] = scale_up_function(
-            timeseries["times"], loc_vals, method=4
-        )
+        mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
 
     return mobility_funcs
 
@@ -200,10 +191,7 @@ def update_mixing_data(
             loc_mixing["values"] = parse_values(loc_mixing["values"])
 
     # Reformat data so that we only have times and values as the keys within each location key, without append
-    mob_values = {
-        k: {"values": v["values"], "times": v["times"]} for k, v in mob_values.items()
-    }
-    return mob_values
+    return {k: pd.Series(v["values"], index=v["times"]) for k, v in mob_values.items()}
 
 
 def get_mobility_specific_period(

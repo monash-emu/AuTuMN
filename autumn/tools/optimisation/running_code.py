@@ -22,5 +22,5 @@ params_dict = {
     param: (interval[0] + interval[1]) / 2. for param, interval in var_bounds.items()
 }
 y = calculate_objective_to_minimize(calib, params_dict)
-# I obtained y = 12.463345415696706 on my laptop for the COVID_19 / SRI_LANKA model
+# I obtained y = 57.84099291155614 on my laptop for the COVID_19 / SRI_LANKA model
 # I obtained y = 229.01292047573264 on my laptop for the SM_SIR / NCR model

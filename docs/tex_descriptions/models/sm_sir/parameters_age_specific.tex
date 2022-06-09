@@ -1,61 +1,48 @@
 \subsection{Age-specific parameters}
-% *** Note, I don't think this is correct - the IFR is now changed to CFR,
-% while I haven't got to documenting how hospitalisation rates are calculated yet
 Age-structured parameters are presented in Table \ref{tab:age_params}.
 
 \begin{table}
     \begin{threeparttable}
     \begin{tabularx}{\textwidth}{| X | X | X | X | X |}
         \hline
-        Age group (years) & Clinical fraction\tnote{a} & 
+        Age group (years) & Clinical fraction \tnote{a} & 
         Relative susceptibility to infection & Case fatality rate & 
         Proportion of symptomatic patients hospitalised \\
         \hline
-        0 to 4   & 0.533 & 0.36 & $5\times10^{-5}$   & 0.011 \\
+        0 to 9   & 0.533 & 0.36 & $5\times10^{-5}$   & 0.011 \\
         \hline
-        5 to 9   & 0.533 & 0.36 & $5\times10^{-5}$   & 0.011 \\
+        10 to 19 & 0.533 & 0.36 & $1\times10^{-5}$   & 0.0038 \\
         \hline
-        10 to 14 & 0.533 & 0.36 & $1\times10^{-5}$   & 0.0038 \\
+        20 to 29 & 0.679 & 1    & $2\times10^{-5}$   & 0.006 \\
         \hline
-        15 to 19 & 0.533 & 1    & $1\times10^{-5}$   & 0.0038 \\
+        30 to 39 & 0.679 & 1    & $5\times10^{-5}$   & 0.0066 \\
         \hline
-        20 to 24 & 0.679 & 1    & $2\times10^{-5}$   & 0.006 \\
+        40 to 49 & 0.679 & 1    & $1\times10^{-4}$   & 0.0059 \\
         \hline
-        25 to 29 & 0.679 & 1    & $2\times10^{-5}$   & 0.006 \\
+        50 to 59 & 0.679 & 1    & $5\times10^{-4}$   & 0.0077 \\
         \hline
-        30 to 34 & 0.679 & 1    & $5\times10^{-5}$   & 0.0066 \\
+        60 to 69 & 0.803 & 1    & $2\times10^{-3}$   & 0.0139 \\
         \hline
-        35 to 39 & 0.679 & 1    & $5\times10^{-5}$   & 0.0066 \\
+        70 to 79 & 0.803 & 1.41 & $8.3\times10^{-3}$ \tnote{b} & 0.0357 \tnote{b} \\
         \hline
-        40 to 44 & 0.679 & 1    & $1\times10^{-4}$   & 0.0059 \\
-        \hline
-        45 to 49 & 0.679 & 1    & $1\times10^{-4}$   & 0.0059 \\
-        \hline
-        50 to 54 & 0.679 & 1    & $5\times10^{-4}$   & 0.0077 \\
-        \hline
-        55 to 59 & 0.679 & 1    & $5\times10^{-4}$   & 0.0077 \\
-        \hline
-        60 to 64 & 0.803 & 1    & $2\times10^{-3}$   & 0.0139 \\
-        \hline
-        65 to 69 & 0.803 & 1.41 & $2\times10^{-3}$   & 0.0139 \\
-        \hline
-        70 to 74 & 0.803 & 1.41 & $8.3\times10^{-3}$ & 0.0357 \\
-        \hline
-        75 and above & 0.803 & 1.41 & pending \tnote{b} & pending \\
+        80 and above & 0.803 & 1.41 & $5.12\times10^{-2}$ \tnote{b} & 0.111 \tnote{b} \\
         \hline
         Justification and source & 
         Table 1 of systematic review and meta-analysis with appropriate accounting for testing during the pre-symptomatic period\cite{sah-2021}. & 
-        Conversion of odds ratios presented in Table S15 of Zhang et al. 2020 to relative risks using data presented in Table S14 of the same study\cite{zhang-2020-a}\tnote{c}. &
+        Conversion of odds ratios presented in Table S15 of Zhang et al. 2020 to relative risks using data presented in Table S14 of the same study \cite{zhang-2020-a}. &
         Table S2 from Supplemental Materials to Nyberg et al. for ``Hospital admission up to 14 days after positive test''. &  % FIXME: Reference corrupted
         Table S2 from Supplemental Materials to Nyberg et al. for ``Death within 28 days after positive test''. \\  % FIXME: Reference corrupted
         \hline
 	\end{tabularx}
-	\caption{Age-stratified parameters not varied during calibration, or varied through a common multiplier.}
+	\caption{Values used to estimate age-specific parameters.
+    Note that these base parameter values are then adjusted for immunity considerations.}
 	\label{tab:age_params}
     \begin{tablenotes}
-        \item[a] Proportion of incident cases developing symptoms.
-        \item[b] Weighted average of IFR estimates for 70 to 79 and 80 and above age groups.
-        \item[c] Note the relative magnitude of these values are similar to those estimated by the analysis we use to estimate the age-specific clinical fraction.
+        \item[a] Proportion of incident episodes developing symptoms.
+        \item[b] Modelled age groups are five year brackets to 75 and above.
+        These values are used to calculated weighted value for the modelled 75 and above age bracket.
+        The value for the 75 and above age group is calculated as the weighted average of the parameters for the 75 to 79 and the 80 and above age groups.
+        The weights applied to each of these two groups is the size of the population in the country of application in each of these brackets.
     \end{tablenotes}
     \end{threeparttable}
 \end{table}

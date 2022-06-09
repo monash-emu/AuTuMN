@@ -64,7 +64,7 @@ priors = [
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # infectious seed and contact rate
     UniformPrior("infectious_seed", (200, 4000)),
-    UniformPrior("contact_rate", (0.05, 0.16)),
+    UniformPrior("contact_rate", (0.05, 0.2)),
     # testing to detection params
     # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.02)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),

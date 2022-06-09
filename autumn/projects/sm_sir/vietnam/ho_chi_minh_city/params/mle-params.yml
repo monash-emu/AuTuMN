@@ -1,10 +1,10 @@
-contact_rate: 0.09417934524732487
+contact_rate: 0.15
 infectious_seed: 1584.9577704531139
 mobility.microdistancing.behavior.parameters.max_effect: 0.2
 sojourns.active.proportion_early: 0.8873736439076394
-sojourns.active.total_time: 11.29613289852378
+sojourns.active.total_time: 6.
 sojourns.latent.proportion_early: 0.7416460018695699
-sojourns.latent.total_time: 7.10121595888477
+sojourns.latent.total_time: 4.
 #voc_emergence.omicron.contact_rate_multiplier: 4.132616432066387
 #voc_emergence.omicron.icu_multiplier: 0.3427132834179045
 #voc_emergence.omicron.relative_active_period: 1.8407208504001256

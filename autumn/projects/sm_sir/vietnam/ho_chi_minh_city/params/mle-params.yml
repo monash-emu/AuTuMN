@@ -1,5 +1,6 @@
 contact_rate: 0.09417934524732487
 infectious_seed: 1584.9577704531139
+mobility.microdistancing.behavior.parameters.max_effect: 0.2
 sojourns.active.proportion_early: 0.8873736439076394
 sojourns.active.total_time: 11.29613289852378
 sojourns.latent.proportion_early: 0.7416460018695699

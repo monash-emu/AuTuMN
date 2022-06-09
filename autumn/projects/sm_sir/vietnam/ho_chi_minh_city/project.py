@@ -73,6 +73,8 @@ priors = [
     # immunity stratification
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
+    # Microdistancing
+    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.1, 0.5)),
     # prop icu among hospitalization
     # UniformPrior("prop_icu_among_hospitalised", (0.03, 0.1)),
     # emergence of omicron

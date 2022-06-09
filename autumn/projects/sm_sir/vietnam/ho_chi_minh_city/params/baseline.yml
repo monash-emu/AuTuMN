@@ -132,6 +132,7 @@ mobility:
   # Google mobility data
   smooth_google_data: true # whether to apply a 7-day moving average
   # Google mobility weightings
+  square_mobility_effect: true
   google_mobility_locations:
     work:
       workplaces: 1.

@@ -92,7 +92,24 @@ sojourns:
 
 age_stratification:
   prop_hospital:
-    reference_strain: omicron
+    values:  # Replace with Omicron values
+      0: 0.0110
+      5: 0.0110
+      10: 0.0038
+      15: 0.0038
+      20: 0.0060
+      25: 0.0060
+      30: 0.0066
+      35: 0.0066
+      40: 0.0059
+      45: 0.0059
+      50: 0.0077
+      55: 0.0077
+      60: 0.0139
+      65: 0.0139
+      70: 0.0357
+      75: 0.0357
+      80: 0.1110
 
 future_monthly_booster_rate: 200000.
 booster_effect_duration: 180.

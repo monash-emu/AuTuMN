@@ -4,7 +4,7 @@ contact_rate: 0.0215
 infectious_seed: 200
 
 time:
-  start: 200
+  start: 250
   end: 913 # July 1st 2022
 
 country:
@@ -160,7 +160,7 @@ voc_emergence:
     ifr_multiplier: 3.5
     hosp_multiplier: 2.08
   omicron:
-    start_time: 2000 # July 01
+    start_time: 700 # July 01
     entry_rate: 400.
     seed_duration: 10.
     contact_rate_multiplier: 15

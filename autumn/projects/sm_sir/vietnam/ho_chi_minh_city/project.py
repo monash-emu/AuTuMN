@@ -85,8 +85,8 @@ priors = [
     # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.3)),
     # emergence of delta
     UniformPrior("voc_emergence.wild_type.icu_multiplier", (0.5, 1.5)),
-    UniformPrior("voc_emergence.wild_type.relative_active_period", (1.0, 3.5)),
-    UniformPrior("voc_emergence.wild_type.relative_latency", (0.5, 1.2)),
+    # UniformPrior("voc_emergence.wild_type.relative_active_period", (1.0, 3.5)),
+    # UniformPrior("voc_emergence.wild_type.relative_latency", (0.5, 1.2)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0.5, 1.0)),
     UniformPrior("sojourns.active.total_time", (5, 12)),

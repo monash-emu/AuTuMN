@@ -43,11 +43,11 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 hospital_occupancy = pd.concat(
     [
         ts_set["hospital_occupancy"].loc[592:615],  # from 14/08/2021 to 06/06/2021
-        ts_set["hospital_occupancy"].loc[632:],  # truncated to 23 Sep 2021
+        ts_set["hospital_occupancy"].loc[632:732],  # truncated from 23 Sep 2021 to 01st Jan 2022
     ]
 )
 
-icu_occupancy = ts_set["icu_occupancy"].loc[618:]  # truncated to 09 Sep 2021
+icu_occupancy = ts_set["icu_occupancy"].loc[618:732]  # truncated from 09 Sep 2021 to 01st Jan 2022
 # infection_deaths = ts_set["infection_deaths"].loc[556:].rolling(7).mean()  # truncated to 9th Jul 2021
 
 targets = [

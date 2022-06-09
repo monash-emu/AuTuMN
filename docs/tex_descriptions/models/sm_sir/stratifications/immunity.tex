@@ -46,3 +46,37 @@ afforded by past infection with strain \(_{k}\)
 against infecting strain \(_{l}\)
 in vaccination stratum \(_{i}\).
 
+\subsection{Adjusting age-specific severity parameters for immunity}
+We use inputs for the age-specific case fatality rate and the age-specific hospitalisation rate from Nyberg et al., 
+which provides estimates of these quantities in a population that already had substantial vaccine-induced immunity.
+We therefore adjust these quantities for pre-existing immunity, to account for protection against death and hospitalisation.
+We apply the following method to ensure that after adjusting the parameters for a specific age bracket for immunity,
+the average parameter value would be equal to that reported by Nyberg et al. if weights were applied according to the
+distribution of immunity in the population that was described in this study.
+To do this, we estimate the proportion of the population in each of the three modelled immunity categories
+in the United Kingdom around the mid-point of the study,
+and the protection afforded by each of the immunity classes (see Table \ref{tab:immunity_weighting}).
+
+\begin{table}
+    \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{| X | X | X |}
+        \hline
+        Immunity category & Proportion of population \tnote{a} & Estimated protection \tnote{b} \\
+        \hline
+        No immunity, unvaccinated & 0.312 & 0 \\
+        \hline
+        Low immunity, vaccinated with two doses & 0.302 & 0.5 \\
+        \hline
+        High immunity, vaccinated with three doses & 0.386 & 0.85 \\
+        \hline
+	\end{tabularx}
+	\caption{Values used to re-weight the severity estimates provided in Nyberg et al. to separate immunity classes.}
+	\label{tab:immunity_weighting}
+    \begin{tablenotes}
+        \item[a] Estimated population distribution as at 16th December 2021 (study mid-point),
+        taken from Our World In Data.
+        \item[b] Estimated protection against hospitalisation or death following Omicron infection.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+

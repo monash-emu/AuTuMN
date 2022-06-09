@@ -1,5 +1,5 @@
 \section{Vaccination history stratification}
-% Referring to the immunity stratification as the vaccination stratification here, for the current application
+% Referring to the immunity stratification as the vaccination stratification here, for the Bhutan application
 History of vaccination is captured by stratifying all model compartments by vaccination status.
 Two vaccination strata are included to represent those who have received at least two doses of a COVID-19 vaccine,
 and those who have not.
@@ -15,3 +15,34 @@ as well as recovered persons who are at risk of reinfection.
 Emerging variants of concern (VoCs) may escape this immunity, as described further below.
 % To illustrate this further, the next steps would be to display the population distribution by stratum,
 % and/or to explain the implementation of the dynamic proportions code
+
+\section{Immunity-strain interaction}
+The strains/VoCs implemented in the model may escape both vaccine-induced and natural immunity, as follows.
+
+\subsection{Application to first infection}
+The first infection episode with SARS-CoV-2 is represented through the transition from the susceptible
+to the first latent compartment.
+The susceptible compartment is not stratified by strain,
+because these persons have no infection history.
+Therefore, for infection of persons never previously infected,
+only the vaccination-induced immunity status is relevant.
+The rate of infection for a particular vaccination status and infecting strain is adjusted by the factor:
+\[1 - p_{i} \times s_{j}\]
+Where \(p_{i}\) represents the protection afforded by vaccination stratum \(_{i}\),
+and \(s_{j}\) represents the degree of immune escape against vaccine-induced immunity for strain \(_{j}\).
+Note that this assumes that the extent of immune escape for a given strain is the same
+for all vaccination strata. 
+
+\subsection{Application to re-infection}
+Persons who have recovered from previous infection episodes remain in a compartment that is stratified
+according to the last infecting strain.
+The recovered compartment is replicated into early and late stages,
+which can afford different levels of protection against re-infection.
+The extent of protection must be explicitly specified for each strain-stage combination.
+The rate of reinfection is adjusted by the factor:
+\[(1 - p_{i} \times s_{j})\times (1 - n_{i,k,l})\]
+Where the additional term \(n_{k,l,m}\) represents the cross protection
+afforded by past infection with strain \(_{k}\)
+against infecting strain \(_{l}\)
+in vaccination stratum \(_{i}\).
+

@@ -27,7 +27,8 @@ def adjust_susceptible_infection_without_strains(
 ):
     """
     Apply the modification to the immunity stratification to account for immunity to first infection (from the
-    susceptible compartment), i.e. vaccine-induced immunity.
+    susceptible compartment), i.e. vaccine-induced immunity (or for some models this stratification could be taken
+    to represent past infection prior to the beginning of the simulation period).
 
     Args:
         low_immune_effect: The protection from low immunity
@@ -61,6 +62,8 @@ def adjust_susceptible_infection_with_strains(
     """
     Apply the modification to the immunity stratification to account for immunity to first infection (from the
     susceptible compartment), accounting for the extent to which each VoC is immune-escape to vaccine-induced immunity.
+    This same function can be applied to the model wherever VoCs are included, regardless of strain structure,
+    because the strain stratification (representing history of last infecting strain) does not apply here.
 
     Args:
         low_immune_effect: The protection from low immunity
@@ -101,6 +104,8 @@ def adjust_reinfection_without_strains(
     """
     Adjust the rate of reinfection for immunity, in cases in which we don't need to worry about cross-strain immunity,
     because the model has not been stratified by strain.
+    Works very similarly to adjust_susceptible_infection_without_strains,
+    except that we loop over two flow types for early and late reinfection.
 
     Args:
         low_immune_effect: The protection from low immunity

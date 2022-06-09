@@ -4,7 +4,7 @@ voc_emergence:
   omicron:
     cross_protection:
       new_strain:
-        early_reinfection: 0.
+        early_reinfection: 0.85
   new_strain:
     new_voc_seed:
       start_time: 897.  # 15 June 2022

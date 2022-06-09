@@ -140,6 +140,20 @@ mobility:
       grocery_and_pharmacy: 0.25
       parks: 0.25
       transit_stations: 0.25
+  microdistancing:
+    behavior:
+      function_type: empiric
+      parameters:
+        max_effect: 0.3
+        times:
+          - 794
+          - 795
+        values:
+          - 1.
+          - 0.
+      locations:
+        - work
+        - other_locations
   mixing:
     school:
       append: false

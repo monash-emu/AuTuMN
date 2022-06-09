@@ -78,11 +78,11 @@ priors = [
     # emergence of omicron
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 781.0)),  # 5 weeks interval
     # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2, 6)),
+    # UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2, 6)),
     # UniformPrior("voc_emergence.omicron.hosp_protection", (0.8, 1.0)),
-    UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.75)),
-    UniformPrior("voc_emergence.omicron.relative_active_period", (1.0, 2.5)),
-    UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.3)),
+    # UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.75)),
+    # UniformPrior("voc_emergence.omicron.relative_active_period", (1.0, 2.5)),
+    # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.3)),
     # emergence of delta
     UniformPrior("voc_emergence.wild_type.icu_multiplier", (0.5, 1.5)),
     UniformPrior("voc_emergence.wild_type.relative_active_period", (1.0, 3.5)),

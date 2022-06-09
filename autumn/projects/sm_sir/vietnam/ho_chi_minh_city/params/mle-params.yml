@@ -4,10 +4,10 @@ sojourns.active.proportion_early: 0.8873736439076394
 sojourns.active.total_time: 11.29613289852378
 sojourns.latent.proportion_early: 0.7416460018695699
 sojourns.latent.total_time: 7.10121595888477
-voc_emergence.omicron.contact_rate_multiplier: 4.132616432066387
-voc_emergence.omicron.icu_multiplier: 0.3427132834179045
-voc_emergence.omicron.relative_active_period: 1.8407208504001256
-voc_emergence.omicron.relative_latency: 0.08375051547709242
+#voc_emergence.omicron.contact_rate_multiplier: 4.132616432066387
+#voc_emergence.omicron.icu_multiplier: 0.3427132834179045
+#voc_emergence.omicron.relative_active_period: 1.8407208504001256
+#voc_emergence.omicron.relative_latency: 0.08375051547709242
 voc_emergence.wild_type.icu_multiplier: 0.9098936948321463
 voc_emergence.wild_type.relative_active_period: 3.451279203086722
 voc_emergence.wild_type.relative_latency: 0.7322048078496081

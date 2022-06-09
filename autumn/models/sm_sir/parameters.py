@@ -277,7 +277,6 @@ class Mobility(BaseModel):
     microdistancing: Dict[str, MicroDistancingFunc]
     smooth_google_data: bool
     square_mobility_effect: bool
-    npi_effectiveness: Dict[str, float]
     google_mobility_locations: Dict[str, Dict[str, float]]
 
     @validator("google_mobility_locations", allow_reuse=True)

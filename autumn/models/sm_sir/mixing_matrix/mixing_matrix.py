@@ -25,8 +25,7 @@ def build_dynamic_mixing_matrix(
 
     microdistancing_funcs = get_microdistancing_funcs(mobility.microdistancing, mobility.square_mobility_effect, country.iso3)
 
-    locs, npi_effects = mobility.google_mobility_locations, mobility.npi_effectiveness
-    square, smooth = mobility.square_mobility_effect, mobility.smooth_google_data
+    square, smooth, locs = mobility.square_mobility_effect, mobility.smooth_google_data, mobility.google_mobility_locations
     mobility_funcs = get_mobility_funcs(country, mobility.region, mobility.mixing, locs, square, smooth)
 
     # Get adjusters

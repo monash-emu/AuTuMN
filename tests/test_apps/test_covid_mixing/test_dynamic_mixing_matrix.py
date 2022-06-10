@@ -23,7 +23,6 @@ MIXING_MATRICES = {
 }
 
 UNTESTED_PARAMS = {
-    "npi_effectiveness": {},
     "google_mobility_locations": {},
     "smooth_google_data": False,
     "region": None,

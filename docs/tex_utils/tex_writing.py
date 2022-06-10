@@ -1,12 +1,11 @@
 from pathlib import Path
-import os
 
 
 def get_params_folder(
     model: str,
     country: str,
     region: str,
-):
+) -> Path:
     """
     Find the directory to where we want to keep the files for the parameters,
     including add any paths that weren't already present.
@@ -29,5 +28,5 @@ def get_params_folder(
     
     app_dir = country_dir / region
     app_dir.mkdir(exist_ok=True)
-    
-    return app_dir
+
+    return app_dir / "auto_params.tex"

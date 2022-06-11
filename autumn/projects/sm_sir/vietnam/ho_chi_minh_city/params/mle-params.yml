@@ -4,9 +4,9 @@ immunity_stratification.infection_risk_reduction.low: 0.25
 immunity_stratification.infection_risk_reduction.high: 0.4
 infectious_seed: 2351.16567787964
 mobility.microdistancing.behavior.parameters.max_effect: 0.2
-sojourns.active.proportion_early: 0.9736592034686145
+sojourns.active.proportion_early: 0.33
 sojourns.active.total_time: 6.
-sojourns.latent.proportion_early: 0.16670624419277474
+sojourns.latent.proportion_early: 0.5
 sojourns.latent.total_time: 4.
 #voc_emergence.omicron.contact_rate_multiplier: 4.132616432066387
 #voc_emergence.omicron.icu_multiplier: 0.3427132834179045

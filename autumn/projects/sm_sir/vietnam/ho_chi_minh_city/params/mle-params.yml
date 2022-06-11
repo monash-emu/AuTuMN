@@ -1,7 +1,7 @@
 age_stratification.prop_hospital.multiplier: 1.5
 contact_rate: 0.115
 immunity_stratification.infection_risk_reduction.low: 0.25
-immunity_stratification.infection_risk_reduction.high: 0.4
+immunity_stratification.infection_risk_reduction.high: 0.45
 infectious_seed: 2351.16567787964
 mobility.microdistancing.behavior.parameters.max_effect: 0.2
 prop_icu_among_hospitalised: 0.15

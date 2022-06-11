@@ -71,6 +71,8 @@ priors = [
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # immunity stratification
+    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.2, 0.45)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.3, 0.6)),
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing

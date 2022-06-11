@@ -63,24 +63,24 @@ priors = [
     # UniformPrior("age_stratification.cfr.multiplier", (0.4, 1.0)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (200, 4000)),
-    UniformPrior("contact_rate", (0.06, 0.2)),
+    UniformPrior("infectious_seed", (100, 1000)),
+    UniformPrior("contact_rate", (0.1, 0.25)),
     # testing to detection params
     # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.02)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # hospitalization multiplier
-    UniformPrior("age_stratification.prop_hospital.multiplier", (1.0, 2.0)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (1.0, 3.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.2, 0.4)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.1, 0.4)),
     UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.7)),
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.2, 1.0)),
+    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.05, 0.5)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.05, 0.2)),
+    UniformPrior("prop_icu_among_hospitalised", (0.02, 0.1)),
     # emergence of omicron
     # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 781.0)),  # 5 weeks interval
     # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
@@ -95,9 +95,9 @@ priors = [
     # UniformPrior("voc_emergence.wild_type.relative_latency", (0.5, 1.2)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0., 1.0)),
-    UniformPrior("sojourns.active.total_time", (5, 10)),
+    UniformPrior("sojourns.active.total_time", (4, 9)),
     UniformPrior("sojourns.latent.proportion_early", (0., 1.0)),
-    UniformPrior("sojourns.latent.total_time", (2, 8)),
+    UniformPrior("sojourns.latent.total_time", (1, 6)),
 ]
 
 

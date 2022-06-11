@@ -64,7 +64,7 @@ priors = [
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # infectious seed and contact rate
     UniformPrior("infectious_seed", (200, 4000)),
-    UniformPrior("contact_rate", (0.1, 0.3)),
+    UniformPrior("contact_rate", (0.06, 0.2)),
     # testing to detection params
     # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.02)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
@@ -73,8 +73,8 @@ priors = [
     # hospitalization multiplier
     UniformPrior("age_stratification.prop_hospital.multiplier", (1.0, 2.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.2, 0.45)),
-    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.3, 0.6)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.2, 0.5)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.3, 0.7)),
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing

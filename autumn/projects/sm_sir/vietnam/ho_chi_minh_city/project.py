@@ -70,6 +70,8 @@ priors = [
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
+    # hospitalization multiplier
+    UniformPrior("age_stratification.prop_hospital.multiplier", (1.0, 2.0)),
     # immunity stratification
     UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.2, 0.45)),
     UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.3, 0.6)),

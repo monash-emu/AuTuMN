@@ -42,7 +42,6 @@ def get_mobility_data():
             params.mobility.region,
             params.mobility.mixing,
             params.mobility.google_mobility_locations,
-            params.mobility.npi_effectiveness,
             False,  # turn-off squaring to visualise the raw effect
             params.mobility.smooth_google_data,
         )

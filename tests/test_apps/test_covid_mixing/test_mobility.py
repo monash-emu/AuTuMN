@@ -44,17 +44,9 @@ def test_update_mixing_data__with_only_mobility_data():
         google_mobility_values,
         google_mobility_days,
     )
-    assert actual_mixing == {
-        "work": {
-            "values": [1.1, 1.2, 1.3, 1.4],
-            "times": [0, 1, 2, 3],
-        },
-        "other_locations": {
-            "values": [1.5, 1.6, 1.7, 1.8],
-            "times": [0, 1, 2, 3],
-        },
-    }
-
+    assert actual_mixing["work"].equals(pd.Series([1.1, 1.2, 1.3, 1.4], index=[0, 1, 2, 3]))
+    assert actual_mixing["other_locations"].equals(pd.Series([1.5, 1.6, 1.7, 1.8], index=[0, 1, 2, 3]))
+    
 
 def test_update_mixing_data__with_user_specified_values():
     """
@@ -87,15 +79,10 @@ def test_update_mixing_data__with_user_specified_values():
         google_mobility_values,
         google_mobility_days,
     )
-    assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.4, 1.54, 1.6], "times": [0, 1, 2, 3, 4, 5]},
-        "other_locations": {
-            "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
-            "times": [0, 1, 2, 3, 4, 5],
-        },
-        "school": {"values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66], "times": [0, 1, 2, 3, 4, 5]},
-    }
-
+    assert actual_mixing["work"].equals(pd.Series([1.1, 1.2, 1.3, 1.4, 1.54, 1.6], index=[0, 1, 2, 3, 4, 5]))
+    assert actual_mixing["other_locations"].equals(pd.Series([1.55, 1.66, 1.77, 1.88, 1.99, 1.111], index=[0, 1, 2, 3, 4, 5]))
+    assert actual_mixing["school"].equals(pd.Series([1.11, 1.22, 1.33, 1.44, 1.55, 1.66], index=[0, 1, 2, 3, 4, 5]))
+    
 
 def test_update_mixing_data__with_user_specified_values__out_of_date():
     """
@@ -109,7 +96,6 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
             "append": False,
         },
     }
-    npi_effectiveness_params = {}
     google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4]})
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = update_mixing_data(
@@ -117,10 +103,9 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
         google_mobility_values,
         google_mobility_days,
     )
-    assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.4], "times": [0, 1, 2, 3]},
-        "school": {"values": [1.11, 1.22, 1.33], "times": [0, 1, 2]},
-    }
+
+    assert actual_mixing["work"].equals(pd.Series([1.1, 1.2, 1.3, 1.4], index=[0, 1, 2, 3]))
+    assert actual_mixing["school"].equals(pd.Series([1.11, 1.22, 1.33], index=[0, 1, 2]))
 
 
 def test_update_mixing_data__with_user_specified_values__missing_data_append():
@@ -137,12 +122,8 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
             "append": True,  # No school data to append to
         },
     }
-    npi_effectiveness_params = {}
     google_mobility_values = pd.DataFrame({"work": [1.1, 1.2, 1.3, 1.4]})
     google_mobility_days = [0, 1, 2, 3]
-    is_periodic_intervention = False
-    periodic_int_params = None
-    periodic_end_time = None
     with pytest.raises(AssertionError):
         update_mixing_data(
             mixing,
@@ -174,6 +155,4 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
         google_mobility_values,
         google_mobility_days,
     )
-    assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.11, 1.22, 1.33], "times": [0, 1, 2, 3, 4, 5]},
-    }
+    assert actual_mixing["work"].equals(pd.Series([1.1, 1.2, 1.3, 1.11, 1.22, 1.33], index=[0, 1, 2, 3, 4, 5]))

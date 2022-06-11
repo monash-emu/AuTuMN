@@ -73,8 +73,8 @@ priors = [
     # hospitalization multiplier
     UniformPrior("age_stratification.prop_hospital.multiplier", (1.0, 2.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.2, 0.5)),
-    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.3, 0.7)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.2, 0.4)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.7)),
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing

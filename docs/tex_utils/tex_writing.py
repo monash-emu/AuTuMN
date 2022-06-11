@@ -1,4 +1,7 @@
+from typing import List, Dict
 from pathlib import Path
+
+from autumn.core.project.project import Project
 
 
 def get_params_folder(
@@ -30,3 +33,31 @@ def get_params_folder(
     app_dir.mkdir(exist_ok=True)
 
     return app_dir / "auto_params.tex"
+
+
+def write_param_table_rows(
+    file_name: Path,
+    project: Project,
+    params_to_write: List[str],
+    rationales: Dict[str, str]
+):
+    """
+    Write parameter values to a TeX file in a format that can be incorporated
+    into a standard TeX table.
+    
+    Args:
+        params_to_write: The names of the parameters to be written
+        
+    """
+    
+    with open(file_name, "w") as tex_file:
+        for i_param, param in enumerate(params_to_write):        
+            param_name = param.replace("_", " ")
+            value = project.param_set.baseline[param]
+            rationale = rationales[param] if param in rationales else "pending"
+
+            # Note that for some TeX-related reason, we can't put the \\ on the last line
+            line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
+
+            table_line = f"\n{param_name} & {value} & {rationale}{line_end}"
+            tex_file.write(table_line)

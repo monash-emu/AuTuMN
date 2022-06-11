@@ -95,9 +95,9 @@ priors = [
     # UniformPrior("voc_emergence.wild_type.relative_latency", (0.5, 1.2)),
     # sojourns
     UniformPrior("sojourns.active.proportion_early", (0., 1.0)),
-    UniformPrior("sojourns.active.total_time", (5, 20)),
+    UniformPrior("sojourns.active.total_time", (5, 10)),
     UniformPrior("sojourns.latent.proportion_early", (0., 1.0)),
-    UniformPrior("sojourns.latent.total_time", (2, 12)),
+    UniformPrior("sojourns.latent.total_time", (2, 8)),
 ]
 
 

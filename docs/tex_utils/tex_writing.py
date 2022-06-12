@@ -1,7 +1,32 @@
 from typing import List, Dict
 from pathlib import Path
+from functools import reduce
+import operator
 
 from autumn.core.project.project import Project
+
+
+def get_param_from_nest_string(
+    parameters: dict, 
+    param_request: str,
+):
+    """
+    Get the value of a parameter from a parameters dictionary, using a single string
+    defining the parameter name, with "." characters to separate the tiers of the
+    keys in the nested parameter dictionary.
+    
+    Args:
+        parameters: The full parameter set to look int
+        param_request: The single request submitted by the user
+    Return:
+        The value of the parameter being requested
+    
+    """
+    
+    result = reduce(operator.getitem, param_request.split("."), parameters.to_dict())
+    msg = "Haven't indexed into single parameter"
+    assert not isinstance(result, dict), msg
+    return result
 
 
 def get_params_folder(

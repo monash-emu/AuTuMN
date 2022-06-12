@@ -12,8 +12,8 @@ sojourns.latent.total_time: 2.3177775165501853
 voc_emergence.omicron.contact_rate_multiplier: 4.150332887559882
 voc_emergence.omicron.icu_multiplier: 0.494967965346537
 voc_emergence.omicron.new_voc_seed.start_time: 762.1090557578059
-voc_emergence.omicron.relative_active_period: 0.18378952449334768
-voc_emergence.omicron.relative_latency: 0.834798731662099
+voc_emergence.omicron.relative_active_period: 1.
+voc_emergence.omicron.relative_latency: 0.667
 #voc_emergence.wild_type.icu_multiplier: 0.7519364122142305
 #voc_emergence.wild_type.relative_active_period: 3.451279203086722
 #voc_emergence.wild_type.relative_latency: 0.7322048078496081

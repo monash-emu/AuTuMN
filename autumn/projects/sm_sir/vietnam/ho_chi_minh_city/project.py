@@ -78,11 +78,11 @@ priors = [
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.05, 0.5)),
+    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.03, 0.2)),
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.02, 0.1)),
     # emergence of omicron
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (746.0, 777.0)),  # 5 weeks interval
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (732.0, 777.0)),  # 5 weeks interval
     # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1, 5)),
     # UniformPrior("voc_emergence.omicron.hosp_protection", (0.8, 1.0)),

@@ -98,7 +98,7 @@ def get_param_explanation(param: str) -> str:
         The parameter explanation in an appropriate format to go into a table
     """
 
-    explanation = PARAMETER_EXPLANATIONS[param] if param in PARAMETER_EXPLANATIONS else "No explanation available"
+    explanation = PARAMETER_EXPLANATIONS[param] if param in PARAMETER_EXPLANATIONS else "assumed"
     return explanation.capitalize()
 
 

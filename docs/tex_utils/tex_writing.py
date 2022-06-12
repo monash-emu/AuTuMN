@@ -60,11 +60,21 @@ def get_params_folder(
     return app_dir / "auto_params.tex"
 
 
+def get_param_name(param):
+
+    name = param.replace("_", "")
+    return
+
+
+def get_param_explanation(param):
+
+    return "pending"
+
+
 def write_param_table_rows(
     file_name: Path,
     project: Project,
     params_to_write: List[str],
-    rationales: Dict[str, str]
 ):
     """
     Write parameter values to a TeX file in a format that can be incorporated
@@ -75,14 +85,15 @@ def write_param_table_rows(
         
     """
     
+    base_params = project.param_set.baseline
+
     with open(file_name, "w") as tex_file:
         for i_param, param in enumerate(params_to_write):        
-            param_name = param.replace("_", " ")
-            value = project.param_set.baseline[param]
-            rationale = rationales[param] if param in rationales else "pending"
+            param_name = get_param_name(param)
+            explanation = get_param_explanation(param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line
             line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
 
-            table_line = f"\n{param_name} & {value} & {rationale}{line_end}"
+            table_line = f"\n{param_name} & {base_params[param]} & {explanation}{line_end}"
             tex_file.write(table_line)

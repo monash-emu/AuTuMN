@@ -112,7 +112,27 @@ PARAMETER_NAMES = {
         "index testing rate (\(tests(t)\))",
     "testing_to_detection.assumed_cdr_parameter":
         "CDR reached at index testing rate (\(CDR(t)\))",
+    "testing_to_detection.floor_value":
+        "CDR floor (\(floor\))",
+    "testing_to_detection.smoothing_period":
+        "interval for moving average of daily tests",
+
 }
 
 PARAMETER_EXPLANATIONS = {
+}
+
+PARAMETER_UNITS = {
+    "booster_effect_duration":
+        "days",
+    "hospital_stay.hospital_all.parameters.mean":
+        "days",
+    "hospital_stay.icu.parameters.mean":
+        "days",
+    "infectious_seed":
+        "persons",
+    "testing_to_detection.assumed_tests_parameter":
+        "tests per day",
+    "testing_to_detection.smoothing_period":
+        "days",
 }

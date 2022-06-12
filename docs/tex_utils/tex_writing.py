@@ -2,7 +2,7 @@ from typing import List, Union
 from pathlib import Path
 from functools import reduce
 import operator
-from autumn.models.sm_sir.constants import PARAMETER_NAMES, PARAMETER_EXPLANATIONS
+from autumn.models.sm_sir.constants import PARAMETER_NAMES, PARAMETER_EXPLANATIONS, PARAMETER_UNITS
 
 from autumn.core.project.project import Project
 
@@ -84,7 +84,7 @@ def get_param_name(param: str) -> str:
     """
 
     name = PARAMETER_NAMES[param] if param in PARAMETER_NAMES else param.replace("_", " ")
-    return name.capitalize()
+    return name[:1].upper() + name[1:]
 
 
 def get_param_explanation(param: str) -> str:
@@ -99,7 +99,7 @@ def get_param_explanation(param: str) -> str:
     """
 
     explanation = PARAMETER_EXPLANATIONS[param] if param in PARAMETER_EXPLANATIONS else "assumed"
-    return explanation.capitalize()
+    return explanation[:1].upper() + explanation[1:]
 
 
 def format_value_for_tex(value: Union[float, int, str]) -> str:
@@ -136,10 +136,12 @@ def write_param_table_rows(
         for i_param, param in enumerate(params_to_write):        
             param_name = get_param_name(param)
             value = format_value_for_tex(get_param_from_nest_string(base_params, param))
+            unit = "" if param not in PARAMETER_UNITS else PARAMETER_UNITS[param]
             explanation = get_param_explanation(param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line
+            print(explanation)
             line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
 
-            table_line = f"\n{param_name} & {value} & {explanation}{line_end}"
+            table_line = f"\n{param_name} & {value} {unit} & {explanation}{line_end}"
             tex_file.write(table_line)

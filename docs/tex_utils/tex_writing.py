@@ -83,7 +83,7 @@ def get_param_name(param: str) -> str:
         The parameter name in an appropriate format to go into a table
     """
 
-    name = PARAMETER_NAMES[param] if param in PARAMETER_NAMES else param.replace("_", "")
+    name = PARAMETER_NAMES[param] if param in PARAMETER_NAMES else param.replace("_", " ")
     return name.capitalize()
 
 
@@ -100,6 +100,20 @@ def get_param_explanation(param: str) -> str:
 
     explanation = PARAMETER_EXPLANATIONS[param] if param in PARAMETER_EXPLANATIONS else "No explanation available"
     return explanation.capitalize()
+
+
+def format_value_for_tex(value: Union[float, int, str]) -> str:
+    """
+    Get the parameter value itself in the format needed for writing to a TeX table.
+    Only adjusts float values, leaves both integers and strings unaffected.
+
+    Args:
+        value: The parameter's value
+
+    Returns:
+        The string version of the parameter value ready to write 
+    """
+    return float('%.3g' % value) if isinstance(value, float) else value
 
 
 def write_param_table_rows(
@@ -121,7 +135,7 @@ def write_param_table_rows(
     with open(file_name, "w") as tex_file:
         for i_param, param in enumerate(params_to_write):        
             param_name = get_param_name(param)
-            value = get_param_from_nest_string(base_params, param)
+            value = format_value_for_tex(get_param_from_nest_string(base_params, param))
             explanation = get_param_explanation(param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line

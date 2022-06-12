@@ -67,6 +67,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             clinical_strata: List[str],
             strain_strata: List[str],
             incidence_flow: str,
+            request_incidence_by_age: bool
     ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
@@ -79,6 +80,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             clinical_strata: The clinical strata implemented
             strain_strata: The modelled strains, or None if model is not stratified by strain
             incidence_flow: The name of the flow representing incident cases
+            request_incidence_by_age: Whether to save outputs for incidence by age
 
         """
 
@@ -91,6 +93,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
             agegroup_filter = {"agegroup": agegroup}
+
+            age_incidence_sources = []
 
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
@@ -112,6 +116,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
                         # Work out the fully stratified incidence string
                         output_name = f"incidence{agegroup_string}{immunity_string}{clinical_string}{strain_string}"
+                        age_incidence_sources.append(output_name)
 
                         # Get the most highly stratified incidence calculation
                         self.model.request_output_for_flow(
@@ -133,7 +138,14 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         name=sympt_inc_name,
                         sources=sympt_incidence_sources,
                         save_results=False,
-                    )
+                    )       
+                          
+            if request_incidence_by_age:
+                self.model.request_aggregate_output(
+                    name=f"incidence{agegroup_string}",
+                    sources=sympt_incidence_sources,
+                    save_results=True,
+                )   
 
         # Compute detected incidence to prepare for notifications calculations
         self.model.request_aggregate_output(

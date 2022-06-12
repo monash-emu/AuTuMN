@@ -571,7 +571,8 @@ def build_model(
         age_groups,
         clinical_strata,
         strain_strata,
-        incidence_flow
+        incidence_flow,
+        params.request_incidence_by_age
     )
 
     outputs_builder.request_notifications(

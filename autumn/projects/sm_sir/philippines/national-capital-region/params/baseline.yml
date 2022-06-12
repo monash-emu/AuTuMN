@@ -135,3 +135,4 @@ booster_effect_duration: 180.
 
 requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
 cumulative_start_time: 883  # 1 June 2022
+request_incidence_by_age: True

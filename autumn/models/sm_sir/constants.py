@@ -62,3 +62,13 @@ IMMUNITY_STRATA = [
 ]
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
+
+PARAMETER_NAMES = {
+    "booster_effect_duration": "duration of booster-induced immunity",
+    "testing_to_detection.assumed_tests_parameter": "potatoes"
+}
+
+PARAMETER_EXPLANATIONS = {
+    "booster_effect_duration": "no explanation",
+    "testing_to_detection.assumed_tests_parameter": "nothing here either"
+}

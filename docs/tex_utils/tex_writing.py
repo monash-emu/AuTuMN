@@ -2,18 +2,13 @@ from typing import List, Union
 from pathlib import Path
 from functools import reduce
 import operator
+from autumn.models.sm_sir.constants import PARAMETER_NAMES, PARAMETER_EXPLANATIONS
 
 from autumn.core.project.project import Project
 
-PARAMETER_NAMES = {
-    "booster_effect_duration": "duration of booster-induced immunity",
-    "testing_to_detection.assumed_tests_parameter": "potatoes"
-}
-
-PARAMETER_EXPLANATIONS = {
-    "booster_effect_duration": "no explanation",
-    "testing_to_detection.assumed_tests_parameter": "nothing here either"
-}
+"""
+Should possibly go to ./autumn/core/project/params.py
+"""
 
 
 def get_param_from_nest_string(
@@ -24,7 +19,7 @@ def get_param_from_nest_string(
     Get the value of a parameter from a parameters dictionary, using a single string
     defining the parameter name, with "." characters to separate the tiers of the
     keys in the nested parameter dictionary.
-    *** Not sure if this should possibly go to ./autumn/core/project/params.py ***
+    
     
     Args:
         parameters: The full parameter set to look int
@@ -38,6 +33,12 @@ def get_param_from_nest_string(
     msg = "Haven't indexed into single parameter"
     assert not isinstance(param_value, dict), msg
     return param_value
+
+
+"""
+The following functions should possibly replace ./autumn/core/utils/tex_tools/py
+But will need to adjust the folder structure from that location
+"""
 
 
 def get_params_folder(

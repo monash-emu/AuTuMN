@@ -24,6 +24,7 @@ def get_param_from_nest_string(
     Get the value of a parameter from a parameters dictionary, using a single string
     defining the parameter name, with "." characters to separate the tiers of the
     keys in the nested parameter dictionary.
+    *** Not sure if this should possibly go to ./autumn/core/project/params.py ***
     
     Args:
         parameters: The full parameter set to look int
@@ -33,10 +34,10 @@ def get_param_from_nest_string(
     
     """
     
-    result = reduce(operator.getitem, param_request.split("."), parameters.to_dict())
+    param_value = reduce(operator.getitem, param_request.split("."), parameters.to_dict())
     msg = "Haven't indexed into single parameter"
-    assert not isinstance(result, dict), msg
-    return result
+    assert not isinstance(param_value, dict), msg
+    return param_value
 
 
 def get_params_folder(
@@ -70,14 +71,34 @@ def get_params_folder(
     return app_dir / "auto_params.tex"
 
 
-def get_param_name(param):
+def get_param_name(param: str) -> str:
+    """
+    Simple function to essentially return the appropriate value of the PARAMETER_NAMES dictionary.
 
-    return PARAMETER_NAMES[param] if param in PARAMETER_NAMES else param.replace("_", "")
+    Args:
+        param: Name of the parameter of interest, with hierachical keys joined with "."
+
+    Returns:
+        The parameter name in an appropriate format to go into a table
+    """
+
+    name = PARAMETER_NAMES[param] if param in PARAMETER_NAMES else param.replace("_", "")
+    return name.capitalize()
 
 
-def get_param_explanation(param):
+def get_param_explanation(param: str) -> str:
+    """
+    Simple function to essentially return the appropriate value of the PARAMETER_EXPLANATIONS dictionary.
 
-    return PARAMETER_EXPLANATIONS[param] if param in PARAMETER_EXPLANATIONS else "No explanation available"
+    Args:
+        param: Name of the parameter of interest, with hierachical keys joined with "."
+
+    Returns:
+        The parameter explanation in an appropriate format to go into a table
+    """
+
+    explanation = PARAMETER_EXPLANATIONS[param] if param in PARAMETER_EXPLANATIONS else "No explanation available"
+    return explanation.capitalize()
 
 
 def write_param_table_rows(

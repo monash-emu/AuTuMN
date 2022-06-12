@@ -1,15 +1,25 @@
-from typing import List, Dict
+from typing import List, Union
 from pathlib import Path
 from functools import reduce
 import operator
 
 from autumn.core.project.project import Project
 
+PARAMETER_NAMES = {
+    "booster_effect_duration": "duration of booster-induced immunity",
+    "testing_to_detection.assumed_tests_parameter": "potatoes"
+}
+
+PARAMETER_EXPLANATIONS = {
+    "booster_effect_duration": "no explanation",
+    "testing_to_detection.assumed_tests_parameter": "nothing here either"
+}
+
 
 def get_param_from_nest_string(
     parameters: dict, 
     param_request: str,
-):
+) -> Union[int, float, str]:
     """
     Get the value of a parameter from a parameters dictionary, using a single string
     defining the parameter name, with "." characters to separate the tiers of the
@@ -62,13 +72,12 @@ def get_params_folder(
 
 def get_param_name(param):
 
-    name = param.replace("_", "")
-    return
+    return PARAMETER_NAMES[param] if param in PARAMETER_NAMES else param.replace("_", "")
 
 
 def get_param_explanation(param):
 
-    return "pending"
+    return PARAMETER_EXPLANATIONS[param] if param in PARAMETER_EXPLANATIONS else "No explanation available"
 
 
 def write_param_table_rows(
@@ -81,7 +90,7 @@ def write_param_table_rows(
     into a standard TeX table.
     
     Args:
-        params_to_write: The names of the parameters to be written
+        params_to_write: The names of the requested parameters to be written
         
     """
     
@@ -90,10 +99,11 @@ def write_param_table_rows(
     with open(file_name, "w") as tex_file:
         for i_param, param in enumerate(params_to_write):        
             param_name = get_param_name(param)
+            value = get_param_from_nest_string(base_params, param)
             explanation = get_param_explanation(param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line
             line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
 
-            table_line = f"\n{param_name} & {base_params[param]} & {explanation}{line_end}"
+            table_line = f"\n{param_name} & {value} & {explanation}{line_end}"
             tex_file.write(table_line)

@@ -14,6 +14,3 @@ voc_emergence.omicron.icu_multiplier: 0.4552775695195588
 voc_emergence.omicron.new_voc_seed.start_time: 745.2375404645577
 voc_emergence.omicron.relative_active_period: 0.7335745771803635
 voc_emergence.omicron.relative_latency: 0.6982134438739409
-#voc_emergence.wild_type.icu_multiplier: 0.7519364122142305
-#voc_emergence.wild_type.relative_active_period: 3.451279203086722
-#voc_emergence.wild_type.relative_latency: 0.7322048078496081

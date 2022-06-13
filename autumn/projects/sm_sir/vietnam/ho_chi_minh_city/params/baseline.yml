@@ -92,11 +92,11 @@ voc_emergence:
       seed_duration: 10.
     contact_rate_multiplier: 4.0 # ~2 times more transmissible than Omicron
     immune_escape: 0.6
-    hosp_protection: 0.8
-    death_protection: 0.9
-    icu_multiplier: 0.2
-    relative_latency: 0.5
-    relative_active_period: 0.3
+    hosp_protection: 0.9
+    death_protection: 0.95
+    icu_multiplier: 0.5
+    relative_latency: 0.7
+    relative_active_period: 0.7
     cross_protection:
       wild_type:
         early_reinfection: 1.  # = omicron --> delta

@@ -5,7 +5,6 @@ import operator
 
 from numpy import isin
 from autumn.models.sm_sir.constants import PARAMETER_NAMES, PARAMETER_EXPLANATIONS, PARAMETER_UNITS
-
 from autumn.core.project.project import Project
 
 """
@@ -105,7 +104,7 @@ def get_param_explanation(param: str) -> str:
     return explanation[:1].upper() + explanation[1:]
 
 
-def format_value_for_tex(project, param_name, value: Union[float, int, str]) -> str:
+def format_value_for_tex(value: Union[float, int, str]) -> str:
     """
     Get the parameter value itself in the format needed for writing to a TeX table.
     Only adjusts float values, leaves both integers and strings unaffected.
@@ -116,26 +115,33 @@ def format_value_for_tex(project, param_name, value: Union[float, int, str]) -> 
     Returns:
         The string version of the parameter value ready to write 
     """
-    prior_names = [prior["param_name"] for prior in project.calibration.all_priors]
-    if param_name in prior_names:
-        return "calibrated"
-    elif isinstance(value, float):
+    if isinstance(value, float):
         return float('%.3g' % value)
+    elif isinstance(value, str):
+        return value[:1].upper() + value[1:]
     else:
         return value
+
+
+def format_prior_values(distribution, parameters):
+    return ""
 
 
 def write_param_table_rows(
     file_name: Path,
     project: Project,
     params_to_write: List[str],
+    ignore_priors: bool=True,
 ):
     """
     Write parameter values to a TeX file in a format that can be incorporated
     into a standard TeX table.
     
     Args:
+        file_name: Path to the file to be written
+        project: The AuTuMN project object being interrogated
         params_to_write: The names of the requested parameters to be written
+        ignore_priors: Whether to ignore parameters that are project priors
         
     """
     
@@ -144,12 +150,43 @@ def write_param_table_rows(
     with open(file_name, "w") as tex_file:
         for i_param, param in enumerate(params_to_write):        
             param_name = get_param_name(param)
-            value = format_value_for_tex(project, param, get_param_from_nest_string(base_params, param))
-            unit = "" if param not in PARAMETER_UNITS or value == "calibrated" else PARAMETER_UNITS[param]
+            unit = PARAMETER_UNITS[param] if param in PARAMETER_UNITS else ""
+
+            # Ignore if the parameter is a calibration prior
+            if param in (prior["param_name"] for prior in project.calibration.all_priors) and ignore_priors:
+                value = "Calibrated"
+                unit = ""
+            else:
+                value = format_value_for_tex(get_param_from_nest_string(base_params, param))
             explanation = get_param_explanation(param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line
             line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
 
             table_line = f"\n{param_name} & {value} {unit} & {explanation}{line_end}"
+            tex_file.write(table_line)
+
+
+def write_prior_table_rows(
+    file_name: Path,
+    project: Project,
+):
+    """
+    Write prior values to a TeX file in a format that can be incorporated
+    into a standard TeX table.
+    
+    Args:
+        params_to_write: The names of the requested parameters to be written
+        
+    """
+
+    with open(file_name, "w") as tex_file:
+        for i_prior, prior in enumerate(project.calibration.all_priors):
+            param_name = get_param_name(prior["param_name"])
+            distribution_type = format_value_for_tex(prior["distribution"])
+            prior_parameters = format_prior_values(prior["distribution"], prior["distri_params"])
+            
+            # Note that for some TeX-related reason, we can't put the \\ on the last line
+            line_end = "" if i_prior == len(project.calibration.all_priors) - 1 else " \\\\ \n\hline"
+            table_line = f"\n{param_name} & {distribution_type} & {prior_parameters}{line_end}"
             tex_file.write(table_line)

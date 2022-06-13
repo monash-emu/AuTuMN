@@ -116,7 +116,30 @@ PARAMETER_NAMES = {
         "CDR floor (\(floor\))",
     "testing_to_detection.smoothing_period":
         "interval for moving average of daily tests",
-
+    "time_from_onset_to_event.death.distribution":
+        "disease onset to death distribution",
+    "time_from_onset_to_event.death.parameters.mean":
+        "mean disease onset to death",
+    "time_from_onset_to_event.death.parameters.shape":
+        "onset to death shape parameter",
+    "time_from_onset_to_event.hospitalisation.distribution":
+        "disease onset to hospital admission distribution",
+    "time_from_onset_to_event.hospitalisation.parameters.mean":
+        "mean disease onset to hospital admission",
+    "time_from_onset_to_event.hospitalisation.parameters.shape":
+        "onset to hospitalisation shape parameter",
+    "time_from_onset_to_event.icu_admission.distribution":
+        "disease onset to ICU admission distribution",
+    "time_from_onset_to_event.icu_admission.parameters.mean":
+        "mean disease onset to ICU admission",
+    "time_from_onset_to_event.icu_admission.parameters.shape":
+        "onset to ICU shape parameter",
+    "time_from_onset_to_event.notification.distribution":
+        "disease onset to notification distribution",
+    "time_from_onset_to_event.notification.parameters.mean":
+        "mean disease onset to notification",
+    "time_from_onset_to_event.notification.parameters.shape":
+        "onset to notification parameter",
 }
 
 PARAMETER_EXPLANATIONS = {
@@ -134,5 +157,11 @@ PARAMETER_UNITS = {
     "testing_to_detection.assumed_tests_parameter":
         "tests per day",
     "testing_to_detection.smoothing_period":
+        "days",
+    "time_from_onset_to_event.death.parameters.mean":
+        "days",
+    "time_from_onset_to_event.hospitalisation.parameters.mean":
+        "days",
+    "time_from_onset_to_event.icu_admission.parameters.mean":
         "days",
 }

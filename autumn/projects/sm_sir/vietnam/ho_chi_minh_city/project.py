@@ -63,30 +63,30 @@ priors = [
     # UniformPrior("age_stratification.cfr.multiplier", (0.4, 1.0)),
     # UniformPrior("age_stratification.prop_hospital.multiplier", (0.5, 1.0)),
     # infectious seed and contact rate
-    UniformPrior("infectious_seed", (100, 1000)),
-    UniformPrior("contact_rate", (0.1, 0.25)),
+    UniformPrior("infectious_seed", (100, 500)),
+    UniformPrior("contact_rate", (0.1, 0.2)),
     # testing to detection params
     # UniformPrior("testing_to_detection.assumed_tests_parameter", (0.001, 0.02)),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # hospitalization multiplier
-    UniformPrior("age_stratification.prop_hospital.multiplier", (1.0, 3.0)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (2.0, 3.0)),
     # immunity stratification
     UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.1, 0.4)),
     UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.7)),
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.03, 0.2)),
+    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.01, 0.1)),
     # prop icu among hospitalization
-    UniformPrior("prop_icu_among_hospitalised", (0.02, 0.1)),
+    UniformPrior("prop_icu_among_hospitalised", (0.02, 0.08)),
     # emergence of omicron
-    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (732.0, 777.0)),  # 5 weeks interval
+    UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (732.0, 770.0)),  # 5 weeks interval
     # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1, 5)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1, 3)),
     # UniformPrior("voc_emergence.omicron.hosp_protection", (0.8, 1.0)),
-    UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.75)),
+    UniformPrior("voc_emergence.omicron.icu_multiplier", (0.2, 0.7)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.5, 1.0)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.5, 1.0)),
     # emergence of delta

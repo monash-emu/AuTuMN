@@ -140,6 +140,12 @@ PARAMETER_NAMES = {
         "mean disease onset to notification",
     "time_from_onset_to_event.notification.parameters.shape":
         "onset to notification parameter",
+    "sojourns.latent.total_time":
+        "infection latent period",
+    "sojourns.active.total_time":
+        "period with active disease",
+    "mobility.microdistancing.behaviour.parameters.max_effect":
+        "maximum effect of microdistancing",
 }
 
 PARAMETER_EXPLANATIONS = {
@@ -163,5 +169,9 @@ PARAMETER_UNITS = {
     "time_from_onset_to_event.hospitalisation.parameters.mean":
         "days",
     "time_from_onset_to_event.icu_admission.parameters.mean":
+        "days",
+    "sojourns.latent.total_time":
+        "days",
+    "sojourns.active.total_time":
         "days",
 }

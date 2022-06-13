@@ -45,6 +45,7 @@ def get_params_folder(
     model: str,
     country: str,
     region: str,
+    file_name: str,
 ) -> Path:
     """
     Find the directory to where we want to keep the files for the parameters,
@@ -69,7 +70,7 @@ def get_params_folder(
     app_dir = country_dir / region
     app_dir.mkdir(exist_ok=True)
 
-    return app_dir / "auto_params.tex"
+    return app_dir / f"{file_name}.tex"
 
 
 def get_param_name(param: str) -> str:
@@ -140,7 +141,6 @@ def write_param_table_rows(
             explanation = get_param_explanation(param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line
-            print(explanation)
             line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
 
             table_line = f"\n{param_name} & {value} {unit} & {explanation}{line_end}"

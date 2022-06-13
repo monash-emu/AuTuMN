@@ -143,7 +143,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             if request_incidence_by_age:
                 self.model.request_aggregate_output(
                     name=f"incidence{agegroup_string}",
-                    sources=sympt_incidence_sources,
+                    sources=age_incidence_sources,
                     save_results=True,
                 )   
 

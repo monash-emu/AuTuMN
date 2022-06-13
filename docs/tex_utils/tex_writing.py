@@ -2,6 +2,8 @@ from typing import List, Union
 from pathlib import Path
 from functools import reduce
 import operator
+
+from numpy import isin
 from autumn.models.sm_sir.constants import PARAMETER_NAMES, PARAMETER_EXPLANATIONS, PARAMETER_UNITS
 
 from autumn.core.project.project import Project
@@ -103,7 +105,7 @@ def get_param_explanation(param: str) -> str:
     return explanation[:1].upper() + explanation[1:]
 
 
-def format_value_for_tex(value: Union[float, int, str]) -> str:
+def format_value_for_tex(project, param_name, value: Union[float, int, str]) -> str:
     """
     Get the parameter value itself in the format needed for writing to a TeX table.
     Only adjusts float values, leaves both integers and strings unaffected.
@@ -114,7 +116,13 @@ def format_value_for_tex(value: Union[float, int, str]) -> str:
     Returns:
         The string version of the parameter value ready to write 
     """
-    return float('%.3g' % value) if isinstance(value, float) else value
+    prior_names = [prior["param_name"] for prior in project.calibration.all_priors]
+    if param_name in prior_names:
+        return "calibrated"
+    elif isinstance(value, float):
+        return float('%.3g' % value)
+    else:
+        return value
 
 
 def write_param_table_rows(
@@ -136,8 +144,8 @@ def write_param_table_rows(
     with open(file_name, "w") as tex_file:
         for i_param, param in enumerate(params_to_write):        
             param_name = get_param_name(param)
-            value = format_value_for_tex(get_param_from_nest_string(base_params, param))
-            unit = "" if param not in PARAMETER_UNITS else PARAMETER_UNITS[param]
+            value = format_value_for_tex(project, param, get_param_from_nest_string(base_params, param))
+            unit = "" if param not in PARAMETER_UNITS or value == "calibrated" else PARAMETER_UNITS[param]
             explanation = get_param_explanation(param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line

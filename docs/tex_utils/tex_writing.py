@@ -123,8 +123,22 @@ def format_value_for_tex(value: Union[float, int, str]) -> str:
         return value
 
 
-def format_prior_values(distribution, parameters):
-    return ""
+def format_prior_values(
+    distribution: str, 
+    parameters: List[float]
+) -> str:
+    """
+    Get the TeX-ready string to represent the values of the prior distribution.
+
+    Args:
+        distribution: Name of the distribution, which will determine the parameter format
+        parameters: The values of the distribution parameters
+
+    Returns:
+        String in TeX format        
+    """
+    if distribution == "uniform":
+        return f"Range: [{parameters[0]}, {parameters[1]}]"
 
 
 def write_param_table_rows(

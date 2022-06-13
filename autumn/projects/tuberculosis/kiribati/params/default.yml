@@ -8,7 +8,7 @@ age_mixing:
   age_adjust: true
 
 time:
-  start: 1900.
+  start: 1890.
   end: 2050.
   step: 0.1
   critical_ranges: [[2016., 2020.]]
@@ -86,7 +86,7 @@ time_variant_tsr: # should always be > 0 # https://www.stoptb.org/static_pages/K
 
 time_variant_tb_screening_rate:
   shape: .1 # The shape parameter to the tanh-based curve
-  inflection_time: 1995. # Point at which curve inflects
+  inflection_time: 1990. # Point at which curve inflects
   start_asymptote: 0. # Starting value - lower asymptote
   end_asymptote: 0.4057634920539735
 
@@ -102,7 +102,7 @@ extra_params:
 
 
 # calibrated parameters
-contact_rate: 0.003
+contact_rate: 0.01
 progression_multiplier: 0.7117191601170418
 
 # REQUESTED OUTPUTS

@@ -5,10 +5,11 @@ from summer import CompartmentalModel
 
 from autumn.core import inputs
 from autumn.core.project import Params, build_rel_path
-from autumn.model_features.random_process.random_process import RandomProcessProc
+from autumn.model_features.random_process import RandomProcessProc
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from autumn.core.utils.utils import multiply_function_or_constant
 from autumn.model_features.computed_values import FunctionWrapper
+from autumn.model_features.random_process import get_random_process
 from .detection import get_cdr_func
 from .outputs import SmSirOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn
@@ -517,17 +518,18 @@ def build_model(
 
     # Implement the dynamic immunity process
     vacc_coverage_available = ["BGD", "PHL", "BTN", "VNM"]
-    vacc_region_available = ["Metro Manila", "Hanoi", None]
+    vacc_region_available = ["Metro Manila", "Hanoi", "Ho Chi Minh City", None]
     is_dynamic_immunity = iso3 in vacc_coverage_available and region in vacc_region_available
 
     if is_dynamic_immunity:
         thinning = 20 if iso3 == "BGD" else None
 
-        if iso3 == "PHL":
+        if iso3 == "PHL" or iso3 == "VNM":
             apply_reported_vacc_coverage_with_booster(
                 compartment_types,
                 model,
                 iso3,
+                region,
                 thinning=thinning,
                 model_start_time=params.time.start,
                 start_immune_prop=params.immunity_stratification.prop_immune,
@@ -569,7 +571,8 @@ def build_model(
         age_groups,
         clinical_strata,
         strain_strata,
-        incidence_flow
+        incidence_flow,
+        params.request_incidence_by_age
     )
 
     outputs_builder.request_notifications(

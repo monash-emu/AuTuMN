@@ -1,6 +1,16 @@
 \documentclass{article}
+\author{
+    Epidemiological Modelling Unit,
+    \\ School of Public Health and Preventive Medicine,
+    \\ Monash University
+}
 \usepackage{graphicx}
 \usepackage{biblatex}
+\usepackage{threeparttable}
+\usepackage{tabularx}
+\usepackage[left=2.5cm,right=2.5cm]{geometry}
+\input{../../tex_utils/inline_code.tex}  % Manual creation of an inline code command
+
 \bibliography{../../references/emu_library}
 
 \title{Modelling methods, Bhutan application}
@@ -8,13 +18,53 @@
 \begin{document}
 
 \maketitle
-
+\tableofcontents
+\newpage
 \input{../../tex_descriptions/models/sm_sir/model_description.tex}
 \input{../../tex_descriptions/models/sm_sir/model_structure.tex}
+\input{../../tex_descriptions/models/sm_sir/stratifications/agegroup.tex}
 \input{../../tex_descriptions/models/sm_sir/initialisation.tex}
+\input{../../tex_descriptions/models/sm_sir/stratifications/clinical.tex}
 \input{../../tex_descriptions/models/sm_sir/detection.tex}
+\input{../../tex_descriptions/models/sm_sir/stratifications/strains.tex}
+\input{../../tex_descriptions/models/sm_sir/stratifications/immunity.tex}
+\input{../../tex_descriptions/models/sm_sir/mixing_matrix/mixing_matrix.tex}
 
-\newpage
+\begin{table}
+    \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{| X | X |}
+        \hline
+        Matrix contact setting & Data used to scale contacts \\
+        \hline
+        Home & Not scaled \\
+        \hline
+        Other locations & Facebook ``tiles visited'' metric \tnote{a} \\
+        \hline
+        Work & Facebook ``tiles visited'' metric \tnote{a} \\
+        \hline
+        School & Historical timeline of school closures/re-openings in Bhutan \\
+        \hline
+	\end{tabularx}
+	\caption{Scaling of mobility values by matrix setting.}
+	\label{tab:location_scaling}
+    \begin{tablenotes}
+        \item[a] Google mobility data not available for Bhutan.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+\subsection{Estimation of microdistancing effect}
+In addition to the mobility considerations, we also consider that other
+behavioural changes independent of whether certain settings were visited
+may be relevant in Bhutan.
+This further scales the rates of contact at the work and other locations settings,
+with the effect squared as for the mobility considerations.
+
+\input{../../tex_descriptions/models/sm_sir/outputs.tex}
+\section{Parameters}
+\input{../../tex_descriptions/models/sm_sir/parameters_age_specific.tex}
+
+\newpage    
 \printbibliography
 
 \end{document}

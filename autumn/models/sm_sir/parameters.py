@@ -1,13 +1,14 @@
 """
 Type definition for model parameters
 """
+from numpy import int_
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS
+from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 BASE_DATE = COVID_BASE_DATETIME.date()
@@ -276,7 +277,6 @@ class Mobility(BaseModel):
     microdistancing: Dict[str, MicroDistancingFunc]
     smooth_google_data: bool
     square_mobility_effect: bool
-    npi_effectiveness: Dict[str, float]
     google_mobility_locations: Dict[str, Dict[str, float]]
 
     @validator("google_mobility_locations", allow_reuse=True)
@@ -294,8 +294,7 @@ class Mobility(BaseModel):
 
 class AgeSpecificProps(BaseModel):
 
-    values: Optional[Dict[int, float]]
-    reference_strain: Optional[str]
+    values: Dict[int, float]
     source_immunity_distribution: Dict[str, float]
     source_immunity_protection: Dict[str, float]
     multiplier: float
@@ -314,15 +313,6 @@ class AgeSpecificProps(BaseModel):
             all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0
         ), msg
         return protection_params
-
-    @validator("reference_strain", allow_reuse=True)
-    def check_source_dist(reference_strain):
-        reference_strains = ["delta", "omicron"]
-        msg = f"Reference strain should be one of {', '.join(reference_strains)}"
-        assert (
-            reference_strain in reference_strains
-        ), msg
-        return reference_strain
 
     check_props = validator("source_immunity_distribution", allow_reuse=True)(
         get_check_all_dict_values_non_neg("source_immunity_distribution")
@@ -564,15 +554,13 @@ class Parameters:
     # Output-related
     requested_cumulative_outputs: List[str]
     cumulative_start_time: Optional[float]
+    request_incidence_by_age: bool
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):
-        assert all(
-            [i_group % 5 == 0 for i_group in age_groups]
-        ), "Not all age groups are multiples of 5"
-        assert all(
-            [0 <= i_group <= 75 for i_group in age_groups]
-        ), "Age breakpoints must be from zero to 75"
+        msg = "Not all requested age groups in the available age groups of 5-year increments from zero to 75"
+        int_age_groups = [int(i_group) for i_group in COVID_BASE_AGEGROUPS]
+        assert all([i_group in int_age_groups for i_group in age_groups]), msg
         return age_groups
 
     @validator("voc_emergence", allow_reuse=True)

@@ -5,7 +5,7 @@ from summer import Multiply, Stratification
 
 from autumn.models.covid_19.constants import COMPARTMENTS, INFECTION
 from autumn.settings import COVID_BASE_AGEGROUPS
-from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
+from autumn.models.sm_sir.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.covid_19.parameters import Parameters
 
 

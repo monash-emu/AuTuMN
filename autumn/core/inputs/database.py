@@ -2,6 +2,7 @@ import logging
 import os
 
 from autumn.core.db import Database
+from autumn.core.db.database import ParquetDatabase, get_database
 from autumn.settings import INPUT_DATA_PATH
 from autumn.core.utils.timer import Timer
 
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 _input_db = None
 
-INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "inputs.db")
+INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "db")
 
 
 def get_input_db():
@@ -47,10 +48,10 @@ def build_input_database(rebuild: bool = False):
     Returns a Database, representing the input database.
     """
     if os.path.exists(INPUT_DB_PATH) and not rebuild:
-        input_db = Database(INPUT_DB_PATH)
+        input_db = get_database(INPUT_DB_PATH)
     else:
         logger.info("Building a new database.")
-        input_db = Database(INPUT_DB_PATH)
+        input_db = ParquetDatabase(INPUT_DB_PATH)
 
         with Timer("Deleting all existing data."):
             input_db.delete_everything()

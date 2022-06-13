@@ -2,7 +2,7 @@ from typing import Callable, Dict
 import numpy as np
 
 from .base_adjuster import BaseMixingAdjuster
-from autumn.models.covid_19.constants import LOCATIONS
+from autumn.models.sm_sir.constants import LOCATIONS
 
 
 class LocationMixingAdjuster(BaseMixingAdjuster):
@@ -44,19 +44,17 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
 
         # Start the adjustment value for each location from a value of one, representing no adjustment
         for loc_key in LOCATIONS:
-            loc_relative_mobility = 1.
 
             # Adjust for macrodistancing/mobility
             mobility_func = self.mobility_funcs.get(loc_key)
-            loc_relative_mobility = mobility_func(time) if mobility_func else 1.
+            macro_effect = mobility_func(time) if mobility_func else 1.
 
             # Adjust for microdistancing
             microdistancing_func = self.microdistancing_funcs.get(loc_key)
-            if microdistancing_func:
-                loc_relative_mobility *= microdistancing_func(time)
+            micro_effect = microdistancing_func(time) if microdistancing_func else 1.
 
             # Apply the adjustment by subtracting the contacts that need to come off
-            mobility_change = (1. - loc_relative_mobility)
-            mixing_matrix -= mobility_change * self.base_matrices[loc_key]
+            mobility_reduction = 1. - macro_effect * micro_effect
+            mixing_matrix -= mobility_reduction * self.base_matrices[loc_key]
 
         return mixing_matrix

@@ -161,11 +161,3 @@ age_stratification:
     multiplier: 0.05 # temporarily fixed
   prop_hospital:
     multiplier: 0.075 # temporarily fixed for calibration of other params
-
-additional_immunity:
-  times:
-    - 822 # 1/4, three months after the start of the third dose vaccination campaign
-    - 884
-  values:
-    - 0.9
-    - 0.54 # 90% fully vaccinated * 60% immunity after 3 months

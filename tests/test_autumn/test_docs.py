@@ -29,7 +29,7 @@ example_parameters = [
 @pytest.mark.parametrize("selected_parameters", [example_parameters])
 def test_auto_params(model, region, selected_parameters):
     project = get_project(model, region)
-    fixed_params_filename = get_params_folder(model, "bhutan", region, "auto_fixed_params")
+    fixed_params_filename = get_params_folder(model, "bhutan", region, "auto_fixed_params", base_folder="doc_tests")
     write_param_table_rows(fixed_params_filename, project, selected_parameters)
 
 
@@ -39,5 +39,5 @@ def test_auto_priors(model, region):
     model = Models.SM_SIR
     region = Region.BHUTAN
     project = get_project(model, region)
-    prior_param_filename = get_params_folder(model, "bhutan", region, "auto_priors")
+    prior_param_filename = get_params_folder(model, "bhutan", region, "auto_priors", base_folder="doc_tests")
     write_prior_table_rows(prior_param_filename, project)

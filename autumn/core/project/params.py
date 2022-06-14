@@ -261,7 +261,4 @@ def get_param_from_nest_string(
     Return:
         The value of the parameter being requested
     """
-    param_value = reduce(operator.getitem, param_request.split("."), parameters.to_dict())
-    msg = "Haven't indexed into single parameter"
-    assert not isinstance(param_value, dict), msg
-    return param_value
+    return reduce(operator.getitem, param_request.split("."), parameters.to_dict())

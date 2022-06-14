@@ -12,6 +12,7 @@ def get_params_folder(
     country: str,
     region: str,
     file_name: str,
+    base_folder: str="docs",
 ) -> Path:
     """
     Find the directory to where we want to keep the files for the parameters,
@@ -24,8 +25,8 @@ def get_params_folder(
     
     """
     
-    projects_dir = Path(BASE_PATH) / "docs" / "tex" / "tex_descriptions" / "projects"
-    app_dir = projects_dir / model / country / region    
+    projects_dir = Path(BASE_PATH) / base_folder / "tex" / "tex_descriptions" / "projects"
+    app_dir = projects_dir / model / country / region
     app_dir.mkdir(parents=True, exist_ok=True)
     return app_dir / f"{file_name}.tex"
 
@@ -155,6 +156,8 @@ def write_param_table_rows(
                 unit = ""
             else:
                 value = format_value_for_tex(get_param_from_nest_string(base_params, param))
+                msg = "Haven't indexed into single parameter"
+                assert not isinstance(value, dict), msg
             explanation = get_param_explanation(model_constants.PARAMETER_EVIDENCE, param)
 
             line_end = get_line_end(i_param == len(params_to_write) - 1)

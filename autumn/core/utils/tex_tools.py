@@ -3,7 +3,7 @@ from pathlib import Path
 from importlib import import_module
 
 from autumn.core.project.project import Project
-from autumn.core.project.params import get_param_from_nest_string
+from autumn.core.project.params import get_with_nested_key
 from autumn.settings.folders import BASE_PATH
 
 
@@ -138,7 +138,7 @@ def write_param_table_rows(
         params_to_write: The names of the requested parameters to be written
         ignore_priors: Whether to ignore parameters that are project priors
     """
-    base_params = project.param_set.baseline
+    base_params = project.param_set.baseline.to_dict()
 
     # Get the dictionaries to pull the text from
     model_constants = import_module(f"autumn.models.{project.model_name}.param_format")
@@ -155,7 +155,7 @@ def write_param_table_rows(
                 value = "Calibrated"
                 unit = ""
             else:
-                value = format_value_for_tex(get_param_from_nest_string(base_params, param))
+                value = format_value_for_tex(get_with_nested_key(base_params, param))
                 msg = "Haven't indexed into single parameter"
                 assert not isinstance(value, dict), msg
             explanation = get_param_explanation(model_constants.PARAMETER_EVIDENCE, param)

@@ -1,5 +1,8 @@
 import pytest
 
+from tempfile import TemporaryDirectory
+from pathlib import Path
+
 from autumn.core.utils.tex_tools import (
     get_params_folder, 
     write_param_table_rows, 
@@ -29,15 +32,15 @@ example_parameters = [
 @pytest.mark.parametrize("selected_parameters", [example_parameters])
 def test_auto_params(model, region, selected_parameters):
     project = get_project(model, region)
-    fixed_params_filename = get_params_folder(model, "bhutan", region, "auto_fixed_params", base_folder="doc_tests")
-    write_param_table_rows(fixed_params_filename, project, selected_parameters)
+    with TemporaryDirectory() as tmpdir:
+        filename = Path(tmpdir) / "test_params.tex"
+        write_param_table_rows(filename , project, selected_parameters)
 
 
 @pytest.mark.parametrize("model", [Models.SM_SIR])
 @pytest.mark.parametrize("region", [Region.BHUTAN, Region.NCR])
 def test_auto_priors(model, region):
-    model = Models.SM_SIR
-    region = Region.BHUTAN
     project = get_project(model, region)
-    prior_param_filename = get_params_folder(model, "bhutan", region, "auto_priors", base_folder="doc_tests")
-    write_prior_table_rows(prior_param_filename, project)
+    with TemporaryDirectory() as tmpdir:
+        filename = Path(tmpdir) / "test_priors.tex"
+        write_prior_table_rows(filename, project)

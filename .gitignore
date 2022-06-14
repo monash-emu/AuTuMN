@@ -91,7 +91,6 @@ data/outputs
 *.bcf
 docs/master_files/**/*.pdf
 docs/master_files/**/*.run.xml
-doc_tests/
 
 # Random stuff
 

@@ -55,7 +55,7 @@ def get_params_folder(
     
     """
     
-    projects_dir = Path(BASE_PATH) / "docs" / "tex_descriptions" / "projects"
+    projects_dir = Path(BASE_PATH) / "docs" / "tex" / "tex_descriptions" / "projects"
     app_dir = projects_dir / model / country / region    
     app_dir.mkdir(parents=True, exist_ok=True)
     return app_dir / f"{file_name}.tex"

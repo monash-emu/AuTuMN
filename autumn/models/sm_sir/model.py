@@ -467,12 +467,13 @@ def build_model(
     """
 
     # Get the immunity stratification
+    immunity_params = params.immunity_stratification
     immunity_strat = get_immunity_strat(
         compartment_types,
-        params.immunity_stratification,
+        immunity_params,
     )
 
-    immunity_params = params.immunity_stratification
+    
 
     # Adjust infection of susceptibles for immunity status
     reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
@@ -532,8 +533,8 @@ def build_model(
                 region,
                 thinning=thinning,
                 model_start_time=params.time.start,
-                start_immune_prop=params.immunity_stratification.prop_immune,
-                start_prop_high_among_immune=params.immunity_stratification.prop_high_among_immune,
+                start_immune_prop=immunity_params.prop_immune,
+                start_prop_high_among_immune=immunity_params.prop_high_among_immune,
                 booster_effect_duration=params.booster_effect_duration,
                 future_monthly_booster_rate=params.future_monthly_booster_rate,
                 model_end_time=params.time.end
@@ -545,7 +546,7 @@ def build_model(
                 iso3,
                 thinning=thinning,
                 model_start_time=params.time.start,
-                start_immune_prop=params.immunity_stratification.prop_immune,
+                start_immune_prop=immunity_params.prop_immune,
                 additional_immunity_points=params.additional_immunity,
             )
 

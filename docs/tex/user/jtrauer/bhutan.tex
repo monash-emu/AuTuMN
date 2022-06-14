@@ -30,11 +30,11 @@
 \input{../../tex_descriptions/models/sm_sir/stratifications/immunity.tex}
 \input{../../tex_descriptions/models/sm_sir/mixing_matrix/mixing_matrix.tex}
 
-\begin{table}
+\begin{table}[h]
     \begin{threeparttable}
     \begin{tabularx}{\textwidth}{| X | X |}
         \hline
-        Matrix contact setting & Data used to scale contacts \\
+        \textbf{Matrix contact setting} & \textbf{Data used to scale contacts} \\
         \hline
         Home & Not scaled \\
         \hline
@@ -45,7 +45,7 @@
         School & Historical timeline of school closures/re-openings in Bhutan \\
         \hline
 	\end{tabularx}
-	\caption{Scaling of mobility values by matrix setting.}
+	\caption{\textbf{Scaling of mobility values by matrix setting.}}
 	\label{tab:location_scaling}
     \begin{tablenotes}
         \item[a] Google mobility data not available for Bhutan.
@@ -63,6 +63,42 @@ with the effect squared as for the mobility considerations.
 \input{../../tex_descriptions/models/sm_sir/outputs.tex}
 \section{Parameters}
 \input{../../tex_descriptions/models/sm_sir/parameters_age_specific.tex}
+
+\begin{table}[h]
+    \begin{tabularx}{\textwidth}{| X | p{2.5cm} | X |}
+    \hline
+    \textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+    \hline
+    \input{../../tex_descriptions/projects/sm_sir/bhutan/bhutan/auto_fixed_params.tex} \\
+    \hline
+    \end{tabularx}
+	\caption{\textbf{Epidemiological fixed parameter values.}}
+    \label{tab:fixed_params}
+\end{table}
+
+\begin{table}[h]
+    \begin{tabularx}{\textwidth}{| X | p{2.5cm} | X |}
+    \hline
+    \textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+    \hline
+    \input{../../tex_descriptions/projects/sm_sir/bhutan/bhutan/auto_output_params.tex} \\
+    \hline
+    \end{tabularx}
+	\caption{\textbf{Output-related fixed parameter values.}}
+    \label{tab:output_params}
+\end{table}
+
+\begin{table}[h]
+    \begin{tabularx}{\textwidth}{| X | p{2.5cm} | X |}
+    \hline
+    \textbf{Parameter} & \textbf{Distribution type} & \textbf{Distribution parameters} \\
+    \hline
+    \input{../../tex_descriptions/projects/sm_sir/bhutan/bhutan/auto_priors.tex} \\
+    \hline
+    \end{tabularx}
+	\caption{\textbf{Output-related fixed parameter values.}}
+    \label{tab:priors}
+\end{table}
 
 \newpage    
 \printbibliography

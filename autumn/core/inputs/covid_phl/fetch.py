@@ -12,7 +12,7 @@ INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # From DoH google drive folder, shareable link changes with every update
 DATA_URL = (
-    "1LzIiEFcrqVUe0bAyO_0GFj-bNWjTqjwT"  # shareable link for sheet 07 testing data
+    "1TU90vZDxFPW9lvQDoUvimtwomsngB0XK"  # shareable link for sheet 07 testing data
 )
 
 COVID_PHL_DIRPATH = INPUT_DATA_PATH / "covid_phl"

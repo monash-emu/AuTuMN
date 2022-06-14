@@ -1,9 +1,9 @@
-from typing import List, Union
+from typing import List, Union, Dict
 from pathlib import Path
 from functools import reduce
 import operator
 
-from autumn.models.sm_sir.constants import PARAMETER_DEFINITION, PARAMETER_EVIDENCE, PARAMETER_UNITS
+from autumn.models.sm_sir.constants import PARAMETER_DEFINITION, PARAMETER_EVIDENCE
 from autumn.core.project.project import Project
 from autumn.settings.folders import BASE_PATH
 
@@ -69,7 +69,10 @@ def get_params_folder(
     return app_dir / f"{file_name}.tex"
 
 
-def get_param_name(param: str) -> str:
+def get_param_name(
+    parameter_definition: Dict[str, str],
+    param: str
+) -> str:
     """
     Simple function to essentially return the appropriate value of the PARAMETER_NAMES dictionary.
 
@@ -80,11 +83,14 @@ def get_param_name(param: str) -> str:
         The parameter name in an appropriate format to go into a table
     """
 
-    name = PARAMETER_DEFINITION[param] if param in PARAMETER_DEFINITION else param.replace("_", " ")
+    name = parameter_definition[param] if param in parameter_definition else param.replace("_", " ")
     return name[:1].upper() + name[1:]
 
 
-def get_param_explanation(param: str) -> str:
+def get_param_explanation(
+    parameter_evidence: Dict[str, str], 
+    param: str
+) -> str:
     """
     Simple function to essentially return the appropriate value of the PARAMETER_EXPLANATIONS dictionary.
 
@@ -95,7 +101,7 @@ def get_param_explanation(param: str) -> str:
         The parameter explanation in an appropriate format to go into a table
     """
 
-    explanation = PARAMETER_EVIDENCE[param] if param in PARAMETER_EVIDENCE else "assumed"
+    explanation = parameter_evidence[param] if param in parameter_evidence else "assumed"
     return explanation[:1].upper() + explanation[1:]
 
 
@@ -124,6 +130,7 @@ def format_prior_values(
 ) -> str:
     """
     Get the TeX-ready string to represent the values of the prior distribution.
+    This function needs to be extended considerably, only one example in here for now.
 
     Args:
         distribution: Name of the distribution, which will determine the parameter format
@@ -156,9 +163,14 @@ def write_param_table_rows(
     
     base_params = project.param_set.baseline
 
+    if project.model_name == "sm_sir":
+        from autumn.models.sm_sir.constants import PARAMETER_DEFINITION, PARAMETER_EVIDENCE, PARAMETER_UNITS
+    else:
+        raise ValueError("No evidence available for models other than sm_sir at this stage")
+
     with open(file_name, "w") as tex_file:
         for i_param, param in enumerate(params_to_write):     
-            param_name = get_param_name(param)
+            param_name = get_param_name(PARAMETER_DEFINITION, param)
             unit = PARAMETER_UNITS[param] if param in PARAMETER_UNITS else ""
 
             # Ignore if the parameter is a calibration prior
@@ -167,7 +179,7 @@ def write_param_table_rows(
                 unit = ""
             else:
                 value = format_value_for_tex(get_param_from_nest_string(base_params, param))
-            explanation = get_param_explanation(param)
+            explanation = get_param_explanation(PARAMETER_EVIDENCE, param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line
             line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
@@ -189,9 +201,14 @@ def write_prior_table_rows(
         
     """
 
+    if project.model_name == "sm_sir":
+        from autumn.models.sm_sir.constants import PARAMETER_DEFINITION
+    else:
+        raise ValueError("No evidence available for models other than sm_sir at this stage")
+
     with open(file_name, "w") as tex_file:
         for i_prior, prior in enumerate(project.calibration.all_priors):
-            param_name = get_param_name(prior["param_name"])
+            param_name = get_param_name(PARAMETER_DEFINITION, prior["param_name"])
             distribution_type = format_value_for_tex(prior["distribution"])
             prior_parameters = format_prior_values(prior["distribution"], prior["distri_params"])
             

@@ -3,15 +3,12 @@ Script for loading NPL data into calibration targets and default.yml
 
 """
 
-import pandas as pd
-
 from pathlib import Path
-from autumn.settings import PROJECTS_PATH
-from autumn.settings import INPUT_DATA_PATH
-from autumn.core.utils.utils import update_timeseries
-from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.core.utils.utils import create_date_index
 
+import pandas as pd
+from autumn.core.utils.utils import create_date_index, update_timeseries
+from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
 
 PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)

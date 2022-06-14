@@ -3,7 +3,7 @@ import pandas as pd
 import sqlite3
 
 
-db_path = "C:\\Users\Mili\Projects\covid_pbi\output_test"
+db_path = "C:\\Users\Mili\Projects\covid_pbi\output"
 list_of_files = os.listdir(db_path)
 
 db_files = [os.path.join(db_path, each) for each in list_of_files if ".db" in each]
@@ -30,7 +30,7 @@ for each in db_files:
     conn = sqlite3.connect(each)
     df = get_table(conn, "derived_outputs")
 
-    if len({"stratification", "value"}.intersection(df.columns)) is 0:
+    if len({"stratification", "value"}.intersection(df.columns)) == 0:
         df = df.melt(id_vars=ID_COLS, var_name="stratification", value_name="value")
 
         df["agegroup"] = df["stratification"].str.extract(r"(?:agegroup_)(\d{1,2})")

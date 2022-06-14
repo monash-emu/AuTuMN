@@ -2,6 +2,7 @@ from typing import List, Union, Dict
 from pathlib import Path
 from functools import reduce
 import operator
+from importlib import import_module
 
 from autumn.core.project.project import Project
 from autumn.settings.folders import BASE_PATH
@@ -153,16 +154,12 @@ def write_param_table_rows(
     """
     
     base_params = project.param_set.baseline
-
-    if project.model_name == "sm_sir":
-        from autumn.models.sm_sir.constants import PARAMETER_DEFINITION, PARAMETER_EVIDENCE, PARAMETER_UNITS
-    else:
-        raise ValueError("No evidence available for models other than sm_sir at this stage")
+    model_constants = import_module(f"autumn.models.{project.model_name}.constants")
 
     with open(file_name, "w") as tex_file:
         for i_param, param in enumerate(params_to_write):     
-            param_name = get_param_name(PARAMETER_DEFINITION, param)
-            unit = PARAMETER_UNITS[param] if param in PARAMETER_UNITS else ""
+            param_name = get_param_name(model_constants.PARAMETER_DEFINITION, param)
+            unit = model_constants.PARAMETER_UNITS[param] if param in model_constants.PARAMETER_UNITS else ""
 
             # Ignore if the parameter is a calibration prior
             if param in (prior["param_name"] for prior in project.calibration.all_priors) and ignore_priors:
@@ -170,7 +167,7 @@ def write_param_table_rows(
                 unit = ""
             else:
                 value = format_value_for_tex(get_param_from_nest_string(base_params, param))
-            explanation = get_param_explanation(PARAMETER_EVIDENCE, param)
+            explanation = get_param_explanation(model_constants.PARAMETER_EVIDENCE, param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line
             line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
@@ -192,14 +189,11 @@ def write_prior_table_rows(
         
     """
 
-    if project.model_name == "sm_sir":
-        from autumn.models.sm_sir.constants import PARAMETER_DEFINITION
-    else:
-        raise ValueError("No evidence available for models other than sm_sir at this stage")
+    model_constants = import_module(f"autumn.models.{project.model_name}.constants")
 
     with open(file_name, "w") as tex_file:
         for i_prior, prior in enumerate(project.calibration.all_priors):
-            param_name = get_param_name(PARAMETER_DEFINITION, prior["param_name"])
+            param_name = get_param_name(model_constants.PARAMETER_DEFINITION, prior["param_name"])
             distribution_type = format_value_for_tex(prior["distribution"])
             prior_parameters = format_prior_values(prior["distribution"], prior["distri_params"])
             

@@ -29,20 +29,6 @@ example_parameters = [
 @pytest.mark.parametrize("selected_parameters", [example_parameters])
 def test_auto_params(model, region, selected_parameters):
     project = get_project(model, region)
-    # selected_parameters = [
-    #     "contact_rate",
-    #     "ref_mixing_iso3",
-    #     "infectious_seed",
-    #     "asympt_infectiousness_effect",
-    #     "isolate_infectiousness_effect",
-    #     "testing_to_detection.assumed_tests_parameter",
-    #     "testing_to_detection.assumed_cdr_parameter",
-    #     "testing_to_detection.floor_value",
-    #     "testing_to_detection.smoothing_period",    
-    #     "booster_effect_duration",
-    #     "immunity_stratification.infection_risk_reduction.high",
-    #     "immunity_stratification.infection_risk_reduction.low", 
-    # ]
     fixed_params_filename = get_params_folder(model, "bhutan", region, "auto_fixed_params")
     write_param_table_rows(fixed_params_filename, project, selected_parameters)
 

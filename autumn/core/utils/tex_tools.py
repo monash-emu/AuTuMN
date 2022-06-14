@@ -135,6 +135,21 @@ def format_prior_values(
         return f"Range: [{parameters[0]}, {parameters[1]}]"
 
 
+def get_line_end(
+    is_last_line: bool,
+) -> str:
+    """
+    Note that for some TeX-related reason, we can't put the \\ on the last line.
+
+    Args:
+        is_last_line: Whether this is the last line of the 
+
+    Returns:
+        The characters needed for the end of the line of the table
+    """
+    return "" if is_last_line else " \\\\ \n\hline"
+
+
 def write_param_table_rows(
     file_name: Path,
     project: Project,
@@ -170,7 +185,7 @@ def write_param_table_rows(
             explanation = get_param_explanation(model_constants.PARAMETER_EVIDENCE, param)
 
             # Note that for some TeX-related reason, we can't put the \\ on the last line
-            line_end = "" if i_param == len(params_to_write) - 1 else " \\\\ \n\hline"
+            line_end = get_line_end(i_param == len(params_to_write) - 1)
 
             table_line = f"\n{param_name} & {value} {unit} & {explanation}{line_end}"
             tex_file.write(table_line)
@@ -196,8 +211,6 @@ def write_prior_table_rows(
             param_name = get_param_name(model_constants.PARAMETER_DEFINITION, prior["param_name"])
             distribution_type = format_value_for_tex(prior["distribution"])
             prior_parameters = format_prior_values(prior["distribution"], prior["distri_params"])
-            
-            # Note that for some TeX-related reason, we can't put the \\ on the last line
-            line_end = "" if i_prior == len(project.calibration.all_priors) - 1 else " \\\\ \n\hline"
+            line_end = get_line_end(i_prior == len(project.calibration.all_priors) - 1)
             table_line = f"\n{param_name} & {distribution_type} & {prior_parameters}{line_end}"
             tex_file.write(table_line)

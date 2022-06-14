@@ -94,9 +94,9 @@ voc_emergence:
     immune_escape: 0.6
     hosp_protection: 0.8
     death_protection: 0.9
-    icu_multiplier: 0.5
-    relative_latency: 0.7
-    relative_active_period: 0.7
+    icu_multiplier: 0.4
+    relative_latency: 0.6
+    relative_active_period: 0.5
     cross_protection:
       wild_type:
         early_reinfection: 1.  # = omicron --> delta

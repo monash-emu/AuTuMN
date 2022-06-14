@@ -3,7 +3,6 @@ from pathlib import Path
 from functools import reduce
 import operator
 
-from autumn.models.sm_sir.constants import PARAMETER_DEFINITION, PARAMETER_EVIDENCE
 from autumn.core.project.project import Project
 from autumn.settings.folders import BASE_PATH
 
@@ -56,16 +55,8 @@ def get_params_folder(
     """
     
     projects_dir = Path(BASE_PATH) / "docs" / "tex_descriptions" / "projects"
-    
-    model_dir = projects_dir / model
-    model_dir.mkdir(exist_ok=True)
-    
-    country_dir = model_dir / country
-    country_dir.mkdir(exist_ok=True)
-    
-    app_dir = country_dir / region
-    app_dir.mkdir(exist_ok=True)
-
+    app_dir = projects_dir / model / country / region    
+    app_dir.mkdir(parents=True, exist_ok=True)
     return app_dir / f"{file_name}.tex"
 
 

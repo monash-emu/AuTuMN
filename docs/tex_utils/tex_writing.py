@@ -3,9 +3,9 @@ from pathlib import Path
 from functools import reduce
 import operator
 
-from numpy import isin
-from autumn.models.sm_sir.constants import PARAMETER_NAMES, PARAMETER_EXPLANATIONS, PARAMETER_UNITS
+from autumn.models.sm_sir.constants import PARAMETER_DEFINITION, PARAMETER_EVIDENCE, PARAMETER_UNITS
 from autumn.core.project.project import Project
+from autumn.settings.folders import BASE_PATH
 
 """
 Should possibly go to ./autumn/core/project/params.py
@@ -59,8 +59,7 @@ def get_params_folder(
     
     """
     
-    base_dir = Path().absolute().parent.parent.parent  # Will need to change this
-    projects_dir = base_dir / "docs" / "tex_descriptions" / "projects"
+    projects_dir = Path(BASE_PATH) / "docs" / "tex_descriptions" / "projects"
     
     model_dir = projects_dir / model
     model_dir.mkdir(exist_ok=True)
@@ -85,7 +84,7 @@ def get_param_name(param: str) -> str:
         The parameter name in an appropriate format to go into a table
     """
 
-    name = PARAMETER_NAMES[param] if param in PARAMETER_NAMES else param.replace("_", " ")
+    name = PARAMETER_DEFINITION[param] if param in PARAMETER_DEFINITION else param.replace("_", " ")
     return name[:1].upper() + name[1:]
 
 
@@ -100,7 +99,7 @@ def get_param_explanation(param: str) -> str:
         The parameter explanation in an appropriate format to go into a table
     """
 
-    explanation = PARAMETER_EXPLANATIONS[param] if param in PARAMETER_EXPLANATIONS else "assumed"
+    explanation = PARAMETER_EVIDENCE[param] if param in PARAMETER_EVIDENCE else "assumed"
     return explanation[:1].upper() + explanation[1:]
 
 
@@ -162,7 +161,7 @@ def write_param_table_rows(
     base_params = project.param_set.baseline
 
     with open(file_name, "w") as tex_file:
-        for i_param, param in enumerate(params_to_write):        
+        for i_param, param in enumerate(params_to_write):     
             param_name = get_param_name(param)
             unit = PARAMETER_UNITS[param] if param in PARAMETER_UNITS else ""
 

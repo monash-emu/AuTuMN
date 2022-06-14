@@ -63,7 +63,7 @@ IMMUNITY_STRATA = [
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
 
-PARAMETER_NAMES = {
+PARAMETER_DEFINITION = {
     "age_stratification.cfr.source_immunity_distribution.high": 
         "proportion of population received booster in evidence source setting",
     "age_stratification.cfr.source_immunity_distribution.low":
@@ -148,7 +148,7 @@ PARAMETER_NAMES = {
         "maximum effect of microdistancing",
 }
 
-PARAMETER_EXPLANATIONS = {
+PARAMETER_EVIDENCE = {
 }
 
 PARAMETER_UNITS = {

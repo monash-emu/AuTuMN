@@ -23,19 +23,11 @@ def get_param_from_nest_string(
         param_request: The single request submitted by the user
     Return:
         The value of the parameter being requested
-    
     """
-    
     param_value = reduce(operator.getitem, param_request.split("."), parameters.to_dict())
     msg = "Haven't indexed into single parameter"
     assert not isinstance(param_value, dict), msg
     return param_value
-
-
-"""
-The following functions should possibly replace ./autumn/core/utils/tex_tools/py
-But will need to adjust the folder structure from that location
-"""
 
 
 def get_params_folder(
@@ -139,6 +131,8 @@ def get_line_end(
     is_last_line: bool,
 ) -> str:
     """
+    Get the characters needed for the end of a row of a TeX table being created by one
+    of the functions below.
     Note that for some TeX-related reason, we can't put the \\ on the last line.
 
     Args:
@@ -165,14 +159,16 @@ def write_param_table_rows(
         project: The AuTuMN project object being interrogated
         params_to_write: The names of the requested parameters to be written
         ignore_priors: Whether to ignore parameters that are project priors
-        
     """
-    
     base_params = project.param_set.baseline
-    model_constants = import_module(f"autumn.models.{project.model_name}.constants")
+
+    # Get the dictionaries to pull the text from
+    model_constants = import_module(f"autumn.models.{project.model_name}.param_format")
 
     with open(file_name, "w") as tex_file:
-        for i_param, param in enumerate(params_to_write):     
+        for i_param, param in enumerate(params_to_write):
+
+            # Get the ingredients
             param_name = get_param_name(model_constants.PARAMETER_DEFINITION, param)
             unit = model_constants.PARAMETER_UNITS[param] if param in model_constants.PARAMETER_UNITS else ""
 
@@ -184,10 +180,12 @@ def write_param_table_rows(
                 value = format_value_for_tex(get_param_from_nest_string(base_params, param))
             explanation = get_param_explanation(model_constants.PARAMETER_EVIDENCE, param)
 
-            # Note that for some TeX-related reason, we can't put the \\ on the last line
             line_end = get_line_end(i_param == len(params_to_write) - 1)
 
+            # Format for TeX
             table_line = f"\n{param_name} & {value} {unit} & {explanation}{line_end}"
+
+            # Write
             tex_file.write(table_line)
 
 
@@ -201,16 +199,22 @@ def write_prior_table_rows(
     
     Args:
         params_to_write: The names of the requested parameters to be written
-        
     """
 
-    model_constants = import_module(f"autumn.models.{project.model_name}.constants")
+    # Get the dictionaries to pull the text from
+    model_constants = import_module(f"autumn.models.{project.model_name}.param_format")
 
     with open(file_name, "w") as tex_file:
         for i_prior, prior in enumerate(project.calibration.all_priors):
+
+            # Get the ingredients
             param_name = get_param_name(model_constants.PARAMETER_DEFINITION, prior["param_name"])
             distribution_type = format_value_for_tex(prior["distribution"])
             prior_parameters = format_prior_values(prior["distribution"], prior["distri_params"])
             line_end = get_line_end(i_prior == len(project.calibration.all_priors) - 1)
+
+            # Format for TeX
             table_line = f"\n{param_name} & {distribution_type} & {prior_parameters}{line_end}"
+
+            # Write
             tex_file.write(table_line)

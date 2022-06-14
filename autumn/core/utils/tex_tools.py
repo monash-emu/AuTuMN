@@ -1,33 +1,10 @@
 from typing import List, Union, Dict
 from pathlib import Path
-from functools import reduce
-import operator
 from importlib import import_module
 
 from autumn.core.project.project import Project
+from autumn.core.project.params import get_param_from_nest_string
 from autumn.settings.folders import BASE_PATH
-
-
-def get_param_from_nest_string(
-    parameters: dict, 
-    param_request: str,
-) -> Union[int, float, str]:
-    """
-    Get the value of a parameter from a parameters dictionary, using a single string
-    defining the parameter name, with "." characters to separate the tiers of the
-    keys in the nested parameter dictionary.
-    
-    
-    Args:
-        parameters: The full parameter set to look int
-        param_request: The single request submitted by the user
-    Return:
-        The value of the parameter being requested
-    """
-    param_value = reduce(operator.getitem, param_request.split("."), parameters.to_dict())
-    msg = "Haven't indexed into single parameter"
-    assert not isinstance(param_value, dict), msg
-    return param_value
 
 
 def get_params_folder(

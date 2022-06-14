@@ -1,5 +1,6 @@
 from typing import Optional, Callable, Union, List
-
+import operator
+from functools import reduce
 import re
 import yaml
 from copy import deepcopy
@@ -242,4 +243,25 @@ def read_param_value_from_string(params: dict, update_key: str):
         else:
             param_value = param_value[nested_key]
 
+    return param_value
+
+
+def get_param_from_nest_string(
+    parameters: dict, 
+    param_request: str,
+) -> Union[int, float, str]:
+    """
+    Get the value of a parameter from a parameters dictionary, using a single string
+    defining the parameter name, with "." characters to separate the tiers of the
+    keys in the nested parameter dictionary.
+    
+    Args:
+        parameters: The full parameter set to look int
+        param_request: The single request submitted by the user
+    Return:
+        The value of the parameter being requested
+    """
+    param_value = reduce(operator.getitem, param_request.split("."), parameters.to_dict())
+    msg = "Haven't indexed into single parameter"
+    assert not isinstance(param_value, dict), msg
     return param_value

@@ -68,8 +68,8 @@ voc_emergence:
       seed_duration: 10.
     contact_rate_multiplier: 2.5
     immune_escape: 0.6
-    hosp_protection: 0.8
-    death_protection: 0.9
+    hosp_protection: 0.9
+    death_protection: 0.95
     icu_multiplier: 0.2
     relative_latency: 0.667
     relative_active_period: 1.
@@ -92,8 +92,8 @@ voc_emergence:
       seed_duration: 10.
     contact_rate_multiplier: 5.0 # ~2 times more transmissible than Omicron
     immune_escape: 0.6
-    hosp_protection: 0.8
-    death_protection: 0.9
+    hosp_protection: 0.9
+    death_protection: 0.95
     icu_multiplier: 0.5
     relative_latency: 0.6
     relative_active_period: 0.5

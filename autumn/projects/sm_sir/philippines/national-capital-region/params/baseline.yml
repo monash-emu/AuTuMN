@@ -132,6 +132,8 @@ age_stratification:
 
 future_monthly_booster_rate: 200000.
 booster_effect_duration: 180.
+future_booster_age_allocation:
+  70: 1.
 
 requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
 cumulative_start_time: 883  # 1 June 2022

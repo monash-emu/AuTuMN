@@ -214,6 +214,7 @@ random_process: null
 additional_immunity: null
 booster_effect_duration: 90
 future_monthly_booster_rate: null
+future_booster_age_allocation: null
 
 requested_cumulative_outputs: []
 cumulative_start_time: null

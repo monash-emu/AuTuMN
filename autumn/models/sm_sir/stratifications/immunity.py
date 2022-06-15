@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict
 import pandas as pd
+from copy import deepcopy
 
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
@@ -321,6 +322,8 @@ def apply_reported_vacc_coverage_with_booster(
         start_prop_high_among_immune: float,
         booster_effect_duration: float,
         future_monthly_booster_rate: float,
+        future_booster_age_allocation,
+        age_pops: pd.Series,
         model_end_time: float,
 ):
     """
@@ -338,6 +341,8 @@ def apply_reported_vacc_coverage_with_booster(
         start_prop_high_among_immune: Starting proportion of highly immune individuals among vaccinated
         booster_effect_duration: Duration of maximal vaccine protection after booster dose (in days)
         future_monthly_booster_rate: Monthly booster rate used to collate additional booster data in the future
+        future_booster_age_allocation: Dictionary containing proportion of future booster doses by age group
+        age_pops: population by age
         model_end_time: Model end time
     """
 
@@ -361,58 +366,75 @@ def apply_reported_vacc_coverage_with_booster(
             raw_data_booster = pd.Series({822: 0.045, 884: 0.045})
 
     # Add on the starting effective coverage value
-    # Proportion with at least two doses
-    double_vacc_data = pd.concat(
-        (
-            pd.Series({model_start_time: start_immune_prop}),
-            raw_data_double
-        )
-    )
-    # Proportion with booster dose
-    booster_data = pd.concat(
-        (
-            pd.Series({model_start_time: start_immune_prop * start_prop_high_among_immune}),
-            raw_data_booster
-        )
-    )
-
+    vacc_data = {
+        "all_ages": {
+            'double': pd.concat(
+                (
+                    pd.Series({model_start_time: start_immune_prop}),
+                    raw_data_double
+                )
+            ),
+            'booster': pd.concat(
+                (
+                    pd.Series({model_start_time: start_immune_prop * start_prop_high_among_immune}),
+                    raw_data_booster
+                )
+            )
+        }        
+    }
+   
     # Extend booster dataframe using the assumed future booster rate
-    if future_monthly_booster_rate:
-        extra_coverage = future_monthly_booster_rate / model.initial_population.sum()
-        latest_time = max(booster_data.index)
-        latest_booster_coverage = booster_data.loc[latest_time]
-        latest_double_coverage = double_vacc_data.loc[latest_time]
+    if future_monthly_booster_rate is None:
+        future_monthly_booster_rate = 0.
+
+    latest_time = max(vacc_data["all_ages"]["booster"].index)
+    latest_booster_coverage = vacc_data["all_ages"]["booster"].loc[latest_time]
+    latest_double_coverage = vacc_data["all_ages"]["double"].loc[latest_time]        
+
+    is_booster_age_specific = future_booster_age_allocation is not None
+    if is_booster_age_specific:
+        extra_coverage_by_age = {str(agegroup): p * future_monthly_booster_rate / age_pops.loc[str(agegroup)] for agegroup, p in future_booster_age_allocation.items()}             
+    else:
+        total_pop = age_pops.sum()
+        extra_coverage_by_age = {"all_ages": future_monthly_booster_rate / total_pop}             
+    
+    for agegroup in age_pops:
+        vacc_data[agegroup] = deepcopy(vacc_data["all_ages"])
+        extra_coverage = 0 if agegroup not in extra_coverage_by_age else extra_coverage_by_age[agegroup]
 
         new_time, new_booster_coverage = latest_time, latest_booster_coverage
         while new_time < model_end_time and new_booster_coverage < latest_double_coverage:
             new_time += 30
             new_booster_coverage += extra_coverage
-            booster_data.loc[new_time] = min(new_booster_coverage, 1.)
+
+            vacc_data[agegroup]["booster"].loc[new_time] = min(new_booster_coverage, 1.)
 
             # also extend double_vacc_data to keep the same format as booster_data
-            double_vacc_data.loc[new_time] = latest_double_coverage
+            vacc_data[agegroup]["double"].loc[new_time] = latest_double_coverage
 
-    # Apply waning booster-induced immunity
-    waned_booster_data = get_recently_vaccinated_prop(booster_data, booster_effect_duration)
+    for agegroup in age_pops:
+        # Apply waning booster-induced immunity
+        waned_booster_data = get_recently_vaccinated_prop(vacc_data[agegroup]["booster"], booster_effect_duration)
 
-    # Be explicit about all the difference immunity categories
-    vaccine_df = pd.DataFrame(
-        {
-            "none": 1. - double_vacc_data,
-            "low": double_vacc_data - waned_booster_data,
-            "high": waned_booster_data
-        },
-    )
+        # Be explicit about all the difference immunity categories
+        vaccine_df = pd.DataFrame(
+            {
+                "none": 1. - vacc_data[agegroup]["double"],
+                "low": vacc_data[agegroup]["double"] - waned_booster_data,
+                "high": waned_booster_data
+            },
+        )
 
-    # Apply to model, as below
-    thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
-    add_dynamic_immunity_to_model(compartment_types, thinned_df, model)
+        # Apply to model, as below
+        thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
+        add_dynamic_immunity_to_model(compartment_types, thinned_df, model, agegroup)
 
 
 def add_dynamic_immunity_to_model(
         compartments: List[str],
         strata_distributions: pd.DataFrame,
         model: CompartmentalModel,
+        agegroup: str,
 ):
     """
     Use the dynamic flow processes to control the distribution of the population by vaccination status.
@@ -421,10 +443,12 @@ def add_dynamic_immunity_to_model(
         compartments: The types of compartment being implemented in the model, before stratification
         strata_distributions: The target proportions at each time point
         model: The model to be adapted
+        agegroup: Relevant agegroup for vaccination flow. 
 
     """
 
     sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
+    age_filter = {} if agegroup == "all_ages" else {"agegroup": agegroup}
     for comp in compartments:
         for transition, strata in ACTIVE_FLOWS.items():
             model.add_transition_flow(
@@ -432,6 +456,6 @@ def add_dynamic_immunity_to_model(
                 sc_functions[transition],
                 comp,
                 comp,
-                source_strata={"immunity": strata[0]},
-                dest_strata={"immunity": strata[1]},
+                source_strata={"immunity": strata[0], **age_filter},
+                dest_strata={"immunity": strata[1], **age_filter},
             )

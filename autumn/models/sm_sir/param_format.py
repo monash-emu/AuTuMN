@@ -84,6 +84,8 @@ PARAMETER_DEFINITION = {
 }
 
 PARAMETER_EVIDENCE = {
+    "hospital_stay.icu.parameters.mean":
+    "Mean ICU stay in a single during an Omicron wave ranged from 3.93 to 4.36 days across all age groups\ref{tobin-2022}"
 }
 
 PARAMETER_UNITS = {

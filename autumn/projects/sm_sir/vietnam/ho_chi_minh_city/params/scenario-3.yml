@@ -30,8 +30,8 @@ voc_emergence:
       entry_rate: 10.
       seed_duration: 10.
     immune_escape: 1.0
-    hosp_protection: 0.8
-    death_protection: 0.9
+    hosp_protection: 0.9
+    death_protection: 0.95
     cross_protection:
       wild_type:
         early_reinfection: 1. # = omicron --> delta

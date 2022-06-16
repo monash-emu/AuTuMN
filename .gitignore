@@ -78,19 +78,7 @@ data/sir_example_*
 data/outputs
 
 # TeX stuff (all the automatically generated files, except .log which is included above)
-*.aux
-*.gz
-*.blg
-*.out
-*.bbl
-*.toc
-*.fls
-*.fdb_latexmk
-*.lof
-*.synctex*
-*.bcf
-docs/tex/user/**/*.pdf
-docs/tex/user/**/*.run.xml
+docs/tex/user/
 
 # Random stuff
 

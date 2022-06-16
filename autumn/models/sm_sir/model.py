@@ -529,6 +529,7 @@ def build_model(
             apply_reported_vacc_coverage_with_booster(
                 compartment_types,
                 model,
+                age_groups,
                 iso3,
                 region,
                 thinning=thinning,

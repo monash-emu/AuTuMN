@@ -1,7 +1,7 @@
 description: >
   The new variant is twice as transmissible as Omicron (~5 times more transmissible than Delta VoC).
   This variant completely escapes both vaccination- and infection-related immunity.
-  The severity of this new VoC towards hospitalization and death is the same as that of Omicron.
+  Infection of previous VoCs has no protection towards hospitalization or death upon infection of this VoC.
   Waning vaccine-induced immunity remained turned off, since it is totally escaped by the new VoC.
 
 #time:
@@ -30,8 +30,8 @@ voc_emergence:
       entry_rate: 10.
       seed_duration: 10.
     immune_escape: 1.0
-    hosp_protection: 0.9
-    death_protection: 0.95
+    hosp_protection: 0.
+    death_protection: 0.
     cross_protection:
       wild_type:
         early_reinfection: 1. # = omicron --> delta

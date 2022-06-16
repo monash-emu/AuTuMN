@@ -90,7 +90,7 @@ voc_emergence:
       start_time: 10000. # very far in the future
       entry_rate: 10.
       seed_duration: 10.
-    contact_rate_multiplier: 5.0 # ~2 times more transmissible than Omicron
+    contact_rate_multiplier: 4.0 # ~2 times more transmissible than Omicron
     immune_escape: 0.6
     hosp_protection: 0.9
     death_protection: 0.95

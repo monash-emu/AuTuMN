@@ -84,10 +84,6 @@ PARAMETER_DEFINITION = {
 }
 
 PARAMETER_EVIDENCE = {
-       "hospital_stay.hospital_all.parameters.mean":
-    "Mean Hospital stay (ward to discharge) when Omicron dominant variant ranged from 2.05 to 6.02 days across all age groups\\ref{tobin-2022}",
-    "hospital_stay.icu.parameters.mean":
-    "Mean ICU stay when Omicron was dominant variant ranged from 3.93 to 4.36 days across all age groups\\ref{tobin-2022}",
 }
 
 PARAMETER_UNITS = {

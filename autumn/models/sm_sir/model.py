@@ -529,6 +529,7 @@ def build_model(
             apply_reported_vacc_coverage_with_booster(
                 compartment_types,
                 model,
+                age_groups,
                 iso3,
                 region,
                 thinning=thinning,
@@ -537,6 +538,8 @@ def build_model(
                 start_prop_high_among_immune=immunity_params.prop_high_among_immune,
                 booster_effect_duration=params.booster_effect_duration,
                 future_monthly_booster_rate=params.future_monthly_booster_rate,
+                future_booster_age_allocation=params.future_booster_age_allocation,
+                age_pops=age_pops,
                 model_end_time=params.time.end
             )
         else:

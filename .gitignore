@@ -31,6 +31,7 @@ benchmark.json
 
 # Data
 *.db
+*.parquet
 
 # Runtime artifacts
 logs/
@@ -88,8 +89,8 @@ data/outputs
 *.lof
 *.synctex*
 *.bcf
-docs/master_files/**/*.pdf
-docs/master_files/**/*.run.xml
+docs/tex/user/**/*.pdf
+docs/tex/user/**/*.run.xml
 
 # Random stuff
 

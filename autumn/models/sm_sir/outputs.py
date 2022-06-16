@@ -9,7 +9,7 @@ from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeS
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
 from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
-from autumn.core.inputs.covid_hospital_risk.hospital_props import read_hospital_props
+
 
 def get_immunity_prop_modifiers(
         source_pop_immunity_dist: Dict[str, float],
@@ -67,6 +67,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             clinical_strata: List[str],
             strain_strata: List[str],
             incidence_flow: str,
+            request_incidence_by_age: bool
     ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
@@ -79,6 +80,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             clinical_strata: The clinical strata implemented
             strain_strata: The modelled strains, or None if model is not stratified by strain
             incidence_flow: The name of the flow representing incident cases
+            request_incidence_by_age: Whether to save outputs for incidence by age
 
         """
 
@@ -91,6 +93,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
             agegroup_filter = {"agegroup": agegroup}
+
+            age_incidence_sources = []
 
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
@@ -112,6 +116,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
                         # Work out the fully stratified incidence string
                         output_name = f"incidence{agegroup_string}{immunity_string}{clinical_string}{strain_string}"
+                        age_incidence_sources.append(output_name)
 
                         # Get the most highly stratified incidence calculation
                         self.model.request_output_for_flow(
@@ -133,7 +138,14 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         name=sympt_inc_name,
                         sources=sympt_incidence_sources,
                         save_results=False,
-                    )
+                    )       
+                          
+            if request_incidence_by_age:
+                self.model.request_aggregate_output(
+                    name=f"incidence{agegroup_string}",
+                    sources=age_incidence_sources,
+                    save_results=True,
+                )   
 
         # Compute detected incidence to prepare for notifications calculations
         self.model.request_aggregate_output(
@@ -271,7 +283,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
-        hosp_request = read_hospital_props(hosp_prop_requests.reference_strain)
+        hosp_request = hosp_prop_requests.values
         hosp_props = convert_param_agegroups(iso3, region, hosp_request, age_groups)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
@@ -450,7 +462,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 [n_immune_name, "total_population"],
             )
 
-
     def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
         """
         Compute cumulative outputs for requested outputs.
@@ -600,6 +611,7 @@ def make_calc_notifications_func(density_intervals):
 
 
 def make_calc_deaths_func(death_risk, density_intervals):
+    
     def deaths_func(detected_incidence):
         deaths = apply_convolution_for_event(detected_incidence, density_intervals, death_risk)
         return deaths

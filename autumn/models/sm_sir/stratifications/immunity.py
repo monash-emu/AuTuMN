@@ -287,7 +287,7 @@ def apply_reported_vacc_coverage(
 
     # Apply to model, as below
     thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
-    add_dynamic_immunity_to_model(compartments, thinned_df, model)
+    add_dynamic_immunity_to_model(compartments, thinned_df, model, "all_ages")
 
 
 def get_recently_vaccinated_prop(coverage_df: pd.DataFrame, recent_timeframe: float) -> pd.DataFrame:

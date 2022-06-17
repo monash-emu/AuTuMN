@@ -424,18 +424,14 @@ class VocComponent(BaseModel):
             assert 0.0 <= multiplier, "ICU multiplier negative"
         return multiplier
 
-    check_immune_escape = validator("immune_escape", allow_reuse=True)(
-        get_check_prop("immune_escape")
-    )
-    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(
-        get_check_prop("hosp_protection")
-    )
+    check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
+    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
     check_relative_latency = validator("relative_latency", allow_reuse=True)(
         get_check_non_neg("relative_latency")
     )
-    check_relative_active_period = validator(
-        "relative_active_period", allow_reuse=True
-    )(get_check_non_neg("relative_active_period"))
+    check_relative_active_period = validator("relative_active_period", allow_reuse=True)(
+        get_check_non_neg("relative_active_period")
+    )
     check_death_protection = validator("death_protection", allow_reuse=True)(
         get_check_prop("death_protection")
     )
@@ -477,7 +473,7 @@ class RandomProcessParams(BaseModel):
 
 class ParamConfig:
     """
-    Config for parameter models
+    Config for parameter models.
     """
 
     anystr_strip_whitespace = True  # Strip whitespace

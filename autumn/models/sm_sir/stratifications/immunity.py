@@ -354,18 +354,45 @@ def apply_reported_vacc_coverage_with_booster(
 
     is_booster_age_specific = future_booster_age_allocation is not None
     if is_booster_age_specific:
-        extra_coverage_by_age = {str(agegroup): p * future_monthly_booster_rate / age_pops.loc[str(agegroup)] for agegroup, p in future_booster_age_allocation.items()}             
-        for agegroup in age_groups: 
-            # Create dataframe with dynamic distributions including future booster rates and waning
-            extra_coverage = extra_coverage_by_age[agegroup] if agegroup in extra_coverage_by_age else 0.
-            dynamic_strata_distributions =  get_immune_strata_distributions(historical_vacc_data, extra_coverage, model_end_time, booster_effect_duration, thinning)
+        if isinstance(future_booster_age_allocation, dict):
+            extra_coverage_by_age = {str(agegroup): p * future_monthly_booster_rate / age_pops.loc[str(agegroup)] for agegroup, p in future_booster_age_allocation.items()}             
+            for agegroup in age_groups: 
+                # Create dataframe with dynamic distributions including future booster rates and waning
+                extra_coverage = extra_coverage_by_age[agegroup] if agegroup in extra_coverage_by_age else 0.
+                dynamic_strata_distributions =  get_immune_strata_distributions_from_fixed_increment(historical_vacc_data, extra_coverage, model_end_time, booster_effect_duration, thinning)
 
-            # Add transition flows to the models
-            add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, agegroup)   
+                # Add transition flows to the models
+                add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, agegroup)
+        else:  # future_booster_age_allocation is a list of ordered prioritised age groups.
+            # First deal with flows relevant to the prioritised age groups
+            allocated_doses = {}
+            for priority_agegroup in future_booster_age_allocation:
+                dynamic_strata_distributions, agegroup_allocated_doses = get_immune_strata_distributions_using_priority(
+                    historical_vacc_data, 
+                    future_monthly_booster_rate, 
+                    model_end_time, 
+                    booster_effect_duration, 
+                    thinning, 
+                    age_pops.loc[str(priority_agegroup)],
+                    allocated_doses
+                )
+
+                allocated_doses = agegroup_allocated_doses if not allocated_doses else {t: allocated_doses[t] + agegroup_allocated_doses[t] for t in allocated_doses}
+
+                # Add transition flows to the models
+                add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, str(priority_agegroup))
+
+            # Deal with the flows relevant to the populations not eligible for future booster,
+            non_eligible_agegroups = [agegroup for agegroup in age_groups if int(agegroup) not in future_booster_age_allocation]
+            for non_eligible_agegroup in non_eligible_agegroups:
+                dynamic_strata_distributions =  get_immune_strata_distributions_from_fixed_increment(historical_vacc_data, 0., model_end_time, booster_effect_duration, thinning)
+                # Add transition flows to the models
+                add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, non_eligible_agegroup)
+
     else:
         # Create dataframe with dynamic distributions including future booster rates and waning
         extra_coverage = future_monthly_booster_rate / age_pops.sum()
-        dynamic_strata_distributions =  get_immune_strata_distributions(historical_vacc_data, extra_coverage, model_end_time, booster_effect_duration, thinning)
+        dynamic_strata_distributions =  get_immune_strata_distributions_from_fixed_increment(historical_vacc_data, extra_coverage, model_end_time, booster_effect_duration, thinning)
 
         # Add transition flows to the models
         add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, "all_ages")    
@@ -422,7 +449,7 @@ def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, 
     return historical_vacc_data
 
 
-def get_immune_strata_distributions(
+def get_immune_strata_distributions_from_fixed_increment(
     historical_vacc_data: pd.DataFrame, 
     extra_coverage: float, 
     model_end_time:int, 
@@ -431,6 +458,7 @@ def get_immune_strata_distributions(
     ) -> pd.DataFrame:
     """
     Create a dataframe with the immunity strata distributions over time, accounting for future booster rates and waning booster immunity.
+    This applies to the case where a fixed monthly coverage increment is specified for each age group.
 
     Args:
         historical_vacc_data: Vaccine coverage over time until latest available time
@@ -450,10 +478,9 @@ def get_immune_strata_distributions(
     vacc_data = deepcopy(historical_vacc_data)
 
     new_time, new_booster_coverage = latest_historical_time, latest_booster_coverage
-    while new_time < model_end_time and new_booster_coverage < latest_double_coverage:
+    while new_time < model_end_time: 
         new_time += 30
-        new_booster_coverage += extra_coverage
-
+        new_booster_coverage = min(new_booster_coverage + extra_coverage, latest_double_coverage)            
         vacc_data["booster"].loc[new_time] = min(new_booster_coverage, 1.)
         # also extend double_vacc_data to keep the same format as booster_data
         vacc_data["double"].loc[new_time] = latest_double_coverage
@@ -473,6 +500,74 @@ def get_immune_strata_distributions(
     thinned_strata_distributions_df = strata_distributions_df[::thinning] if thinning else strata_distributions_df
 
     return thinned_strata_distributions_df
+
+
+def get_immune_strata_distributions_using_priority(
+    historical_vacc_data: pd.DataFrame, 
+    future_monthly_booster_rate: float, 
+    model_end_time: int, 
+    booster_effect_duration: float, 
+    thinning: int, 
+    agegroup_population: float,
+    allocated_doses: pd.DataFrame
+    ) -> pd.DataFrame:
+    """
+    Create a dataframe with the immunity strata distributions over time, accounting for future booster rates and waning booster immunity.
+    This applies to the case where doses allocation is specified by order of priority for the different age-groups.
+
+    Args:
+        historical_vacc_data: Vaccine coverage over time until latest available time
+        future_monthly_booster_rate: Number of doses available per month
+        model_end_time: Model enf time
+        booster_effect_duration: Average duration of immunity provided by a booster dose
+        thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
+        agegroup_population: Population size of the relevant agegroup
+        allocated_doses: Number of doses already allocated to higher-priority groups over time
+
+    Returns:
+        Dataframe with the immunity strata distributions over time
+        Dictionary with the newly allocated booster doses over time
+    """
+
+    latest_historical_time = max(historical_vacc_data["booster"].index)
+    latest_booster_coverage = historical_vacc_data["booster"].loc[latest_historical_time]
+    latest_double_coverage = historical_vacc_data["double"].loc[latest_historical_time]  
+
+    # Create new dataframe    
+    vacc_data = deepcopy(historical_vacc_data)
+
+    new_time, new_booster_coverage = latest_historical_time, latest_booster_coverage
+    agegroup_allocated_doses = {}
+    while new_time < model_end_time:
+        new_time += 30
+
+        # work out the new booster coverage accounting for already used doses
+        non_boosted_pop = (latest_double_coverage - new_booster_coverage) * agegroup_population
+        used_doses = allocated_doses[new_time] if new_time in allocated_doses else 0.
+        administered_doses = min(future_monthly_booster_rate - used_doses, non_boosted_pop)
+        new_booster_coverage = new_booster_coverage + administered_doses / agegroup_population            
+
+        vacc_data["booster"].loc[new_time] = min(new_booster_coverage, 1.)
+        # also extend double_vacc_data to keep the same format as booster_data
+        vacc_data["double"].loc[new_time] = latest_double_coverage
+        agegroup_allocated_doses[new_time] = administered_doses
+
+    waned_booster_data = get_recently_vaccinated_prop(vacc_data["booster"], booster_effect_duration)
+
+    # Create a single dataframe with the strata distributions over time
+    strata_distributions_df = pd.DataFrame(
+        {
+            "none": 1. - vacc_data["double"],
+            "low": vacc_data["double"] - waned_booster_data,
+            "high": waned_booster_data
+        },
+    )
+
+    # Apply thinning
+    thinned_strata_distributions_df = strata_distributions_df[::thinning] if thinning else strata_distributions_df
+
+    return thinned_strata_distributions_df, agegroup_allocated_doses
+
 
 
 def add_dynamic_immunity_to_model(

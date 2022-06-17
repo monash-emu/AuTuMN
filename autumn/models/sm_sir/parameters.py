@@ -550,7 +550,12 @@ class Parameters:
     booster_effect_duration: float
     additional_immunity: Optional[TimeSeries]
     future_monthly_booster_rate: Optional[float]
-    future_booster_age_allocation: Optional[Dict[int, float]]
+    future_booster_age_allocation: Optional[
+        Union[
+            Dict[int, float], # to specify allocation proportions by age group (e.g. {70: .8, 50: .2})
+            List[int] # to specify a prioritisation order (e.g. [70, 50, 25, 15])
+            ]
+        ]
 
     # Output-related
     requested_cumulative_outputs: List[str]

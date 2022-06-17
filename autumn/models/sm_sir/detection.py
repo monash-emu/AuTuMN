@@ -1,5 +1,6 @@
 from typing import Tuple, Callable, Any, Optional
 import numpy as np
+import pandas as pd
 
 from .parameters import TestingToDetection, Population
 from autumn.core.inputs import get_population_by_agegroup
@@ -56,11 +57,10 @@ def get_testing_numbers_for_region(
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
 
-    assert len(test_dates) == len(
-        test_values
-    ), "Length of test dates and test values are not equal"
+    msg = "Length of test dates and test values are not equal"
+    assert len(test_dates) == len(test_values), msg
 
-    return test_dates, test_values
+    return pd.Series(test_values, index=test_dates)
 
 
 def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor_value: float=0.) -> Callable:
@@ -90,7 +90,11 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor_value: flo
 
 
 def find_cdr_function_from_test_data(
-    test_detect_params, iso3: str, region: str, year: int
+    test_detect_params, 
+    iso3: str, 
+    region: str, 
+    year: int,
+    smoothing_period=1,
 ) -> Callable:
     """
     Sort out case detection rate from testing numbers, sequentially calling the functions above as required.
@@ -100,22 +104,15 @@ def find_cdr_function_from_test_data(
     testing_pops = get_population_by_agegroup(COVID_BASE_AGEGROUPS, iso3, region, year=year)
 
     # Get the numbers of tests performed
-    test_dates, test_values = get_testing_numbers_for_region(iso3, region)
+    test_df = get_testing_numbers_for_region(iso3, region)
+    smoothed_test_df = test_df.rolling(window=smoothing_period).mean().dropna()
 
-    # Convert test numbers to per capita testing rates
-    per_capita_tests = [i_tests / sum(testing_pops) for i_tests in test_values]
-
-    # Smooth the testing data if requested
-    if test_detect_params.smoothing_period:
-        smoothed_per_capita_tests = apply_moving_average(
-            per_capita_tests, test_detect_params.smoothing_period
-        )
-    else:
-        smoothed_per_capita_tests = per_capita_tests
+    # Convert to per capita testing rates
+    per_capita_tests_df = smoothed_test_df / sum(testing_pops)
 
     # Check data
     msg = "Negative test values present"
-    assert all((val >= 0.0 for val in smoothed_per_capita_tests)), msg
+    assert (per_capita_tests_df > 0).all()
 
     # Calculate CDRs and the resulting CDR function
     cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
@@ -126,11 +123,8 @@ def find_cdr_function_from_test_data(
 
     # Get the final CDR function
     cdr_function = scale_up_function(
-        test_dates,
-        [
-            cdr_from_tests_func(i_test_rate)
-            for i_test_rate in smoothed_per_capita_tests
-        ],
+        per_capita_tests_df.index,
+        [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests_df],
         smoothness=0.2,
         method=4,
         bound_low=0.0,
@@ -163,7 +157,13 @@ def get_cdr_func(
     """
 
     if testing_params:
-        cdr_func = find_cdr_function_from_test_data(testing_params, iso3, pop_params.region, pop_params.year)
+        cdr_func = find_cdr_function_from_test_data(
+            testing_params, 
+            iso3, 
+            pop_params.region, 
+            pop_params.year,
+            testing_params.smoothing_period,
+        )
     else:
 
         def cdr_func(time, computed_values):

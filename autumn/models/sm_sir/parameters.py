@@ -363,7 +363,7 @@ class TestingToDetection(BaseModel):
 
     @validator("smoothing_period", allow_reuse=True)
     def check_smoothing_period(val):
-        assert 1 < val, f"Smoothing period must be greater than 1: {val}"
+        assert 1 <= val, f"Smoothing period must be greater than or equal to one: {val}"
         return val
 
     @root_validator(pre=True, allow_reuse=True)

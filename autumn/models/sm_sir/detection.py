@@ -57,10 +57,13 @@ def get_testing_numbers_for_region(
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
 
+    # Check data and return
     msg = "Length of test dates and test values are not equal"
     assert len(test_dates) == len(test_values), msg
-
-    return pd.Series(test_values, index=test_dates)
+    test_df = pd.Series(test_values, index=test_dates)
+    msg = "Negative test values present"
+    assert (test_df > 0).all()
+    return test_df
 
 
 def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor_value: float=0.) -> Callable:
@@ -100,19 +103,13 @@ def find_cdr_function_from_test_data(
     Sort out case detection rate from testing numbers, sequentially calling the functions above as required.
     """
 
-    # Get the testing population denominator
-    testing_pops = get_population_by_agegroup(COVID_BASE_AGEGROUPS, iso3, region, year=year)
-
     # Get the numbers of tests performed
     test_df = get_testing_numbers_for_region(iso3, region)
     smoothed_test_df = test_df.rolling(window=smoothing_period).mean().dropna()
 
     # Convert to per capita testing rates
-    per_capita_tests_df = smoothed_test_df / sum(testing_pops)
-
-    # Check data
-    msg = "Negative test values present"
-    assert (per_capita_tests_df > 0).all()
+    total_pop = sum(get_population_by_agegroup(COVID_BASE_AGEGROUPS, iso3, region, year=year))
+    per_capita_tests_df = smoothed_test_df / total_pop
 
     # Calculate CDRs and the resulting CDR function
     cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
@@ -124,7 +121,7 @@ def find_cdr_function_from_test_data(
     # Get the final CDR function
     cdr_function = scale_up_function(
         per_capita_tests_df.index,
-        [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests_df],
+        per_capita_tests_df.apply(cdr_from_tests_func),
         smoothness=0.2,
         method=4,
         bound_low=0.0,

@@ -1,4 +1,4 @@
-from typing import Tuple, Callable, Any, Optional, List
+from typing import Tuple, Callable, Any, Optional
 import numpy as np
 
 from .parameters import TestingToDetection, Population
@@ -6,10 +6,7 @@ from autumn.core.inputs import get_population_by_agegroup
 from autumn.settings import COVID_BASE_AGEGROUPS
 from autumn.core.utils.utils import apply_moving_average
 from autumn.model_features.curve import scale_up_function
-from autumn.core.inputs.testing.eur_testing_data import (
-    get_uk_testing_numbers,
-    get_eu_testing_numbers,
-)
+from autumn.core.inputs.testing.eur_testing_data import get_uk_testing_numbers, get_eu_testing_numbers
 from autumn.core.inputs.covid_au.queries import get_vic_testing_numbers
 from autumn.core.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 from autumn.core.inputs.covid_lka.queries import get_lka_testing_numbers
@@ -20,11 +17,18 @@ from autumn.core.inputs.covid_btn.queries import get_btn_testing_numbers
 
 
 def get_testing_numbers_for_region(
-    country_iso3: str, subregion: Optional[str]
+    country_iso3: str, 
+    subregion: Optional[str]
 ) -> Tuple[list, list]:
     """
     Use the appropriate function to retrieve the testing numbers applicable to the region being modelled.
     Functions are taken from the autumn input tools module, as above.
+
+    Args:
+        country_iso3: ISO3 code for the country being simulated
+        subregion: Name of the country's subregion being considered or None if it is a national level
+    Return:
+        The testing data for the country
     """
 
     subregion = subregion or False

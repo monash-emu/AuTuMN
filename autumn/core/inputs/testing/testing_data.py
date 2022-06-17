@@ -1,3 +1,4 @@
+from re import sub
 from typing import Tuple, Optional
 import pandas as pd
 import os
@@ -9,7 +10,7 @@ from autumn.core.inputs.covid_phl.queries import get_phl_subregion_testing_numbe
 from autumn.core.inputs.covid_lka.queries import get_lka_testing_numbers
 from autumn.core.inputs.covid_mmr.queries import get_mmr_testing_numbers
 from autumn.core.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
-from autumn.core.inputs.owid.queries import get_international_testing_numbers
+from autumn.core.inputs.owid.queries import get_international_owid_numbers
 from autumn.core.inputs.covid_btn.queries import get_btn_testing_numbers
 from autumn.settings.folders import INPUT_DATA_PATH
 from autumn.settings.constants import COVID_BASE_DATETIME
@@ -93,14 +94,12 @@ def get_testing_numbers_for_region(
 
     subregion = subregion or False
 
-    if country_iso3 == "AUS":
-        test_dates, test_values = get_vic_testing_numbers()
-    elif country_iso3 == "PHL":
+    if country_iso3 == "PHL":
         phl_region = subregion.lower() if subregion else "philippines"
         test_dates, test_values = get_phl_subregion_testing_numbers(phl_region)
     elif country_iso3 == "GBR":
         test_dates, test_values = get_uk_testing_numbers()
-    elif country_iso3 in {"BEL", "ITA", "SWE", "FRA", "ESP"}:
+    elif country_iso3 in ("BEL", "ITA", "SWE", "FRA", "ESP"):
         test_dates, test_values = get_eu_testing_numbers(country_iso3)
     elif country_iso3 == "LKA":
         test_dates, test_values = get_lka_testing_numbers()
@@ -109,11 +108,16 @@ def get_testing_numbers_for_region(
     elif country_iso3 == "BGD" and subregion == "FDMN":
         test_dates, test_values = get_coxs_bazar_testing_numbers()
     elif country_iso3 == "BTN":
-        test_dates, test_values = get_btn_testing_numbers(subregion)
-
+        test_df = get_btn_testing_numbers(subregion)
+        msg = "Negative test values present"
+        assert (test_df >= 0).all()
+        return test_df
     else:
-        test_dates, test_values = get_international_testing_numbers(country_iso3)
-
+        test_df = get_international_owid_numbers(country_iso3)
+        msg = "Negative test values present"
+        assert (test_df >= 0).all()
+        return test_df
+        
     # Check data and return
     msg = "Length of test dates and test values are not equal"
     assert len(test_dates) == len(test_values), msg

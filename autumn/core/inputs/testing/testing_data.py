@@ -4,8 +4,6 @@ import os
 from datetime import datetime
 
 from autumn.settings import COVID_BASE_AGEGROUPS
-from autumn.core.utils.utils import apply_moving_average
-from autumn.model_features.curve import scale_up_function
 from autumn.core.inputs.covid_au.queries import get_vic_testing_numbers
 from autumn.core.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 from autumn.core.inputs.covid_lka.queries import get_lka_testing_numbers
@@ -100,8 +98,6 @@ def get_testing_numbers_for_region(
     elif country_iso3 == "PHL":
         phl_region = subregion.lower() if subregion else "philippines"
         test_dates, test_values = get_phl_subregion_testing_numbers(phl_region)
-    elif subregion == "Sabah":
-        test_dates, test_values = get_international_testing_numbers(country_iso3)
     elif country_iso3 == "GBR":
         test_dates, test_values = get_uk_testing_numbers()
     elif country_iso3 in {"BEL", "ITA", "SWE", "FRA", "ESP"}:

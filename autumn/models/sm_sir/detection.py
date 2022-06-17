@@ -1,7 +1,7 @@
 from typing import Tuple, Callable, Optional
 import numpy as np
 
-from autumn.core.inputs.testing.eur_testing_data import get_testing_numbers_for_region
+from autumn.core.inputs.testing.testing_data import get_testing_numbers_for_region
 from .parameters import TestingToDetection, Population
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.settings import COVID_BASE_AGEGROUPS

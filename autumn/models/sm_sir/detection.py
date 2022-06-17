@@ -1,4 +1,4 @@
-from typing import Tuple, Callable, Any, Optional
+from typing import Tuple, Callable, Optional
 import numpy as np
 import pandas as pd
 
@@ -62,7 +62,7 @@ def get_testing_numbers_for_region(
     assert len(test_dates) == len(test_values), msg
     test_df = pd.Series(test_values, index=test_dates)
     msg = "Negative test values present"
-    assert (test_df > 0).all()
+    assert (test_df >= 0).all()
     return test_df
 
 
@@ -93,7 +93,7 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor_value: flo
 
 
 def find_cdr_function_from_test_data(
-    test_detect_params, 
+    cdr_params: TestingToDetection,
     iso3: str, 
     region: str, 
     year: int,
@@ -112,11 +112,8 @@ def find_cdr_function_from_test_data(
     per_capita_tests_df = smoothed_test_df / total_pop
 
     # Calculate CDRs and the resulting CDR function
-    cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
-        test_detect_params.assumed_tests_parameter,
-        test_detect_params.assumed_cdr_parameter,
-        test_detect_params.floor_value,
-    )
+    cdr_test_params = cdr_params.assumed_tests_parameter, cdr_params.assumed_cdr_parameter, cdr_params.floor_value
+    cdr_from_tests_func = create_cdr_function(*cdr_test_params)
 
     # Get the final CDR function
     cdr_function = scale_up_function(

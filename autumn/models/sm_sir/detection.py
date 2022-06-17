@@ -95,12 +95,21 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor_value: flo
 def find_cdr_function_from_test_data(
     cdr_params: TestingToDetection,
     iso3: str, 
-    region: str, 
+    region: Optional[str], 
     year: int,
     smoothing_period=1,
 ) -> Callable:
     """
     Sort out case detection rate from testing numbers, sequentially calling the functions above as required.
+    
+    Args:
+        cdr_params: The user-requests re the testing process
+        iso3: The country
+        region: The subregion of the country being simulated, if any
+        year: The year from which the population data should come
+        smooth_period: The period in days over which testing data should be smoothed
+    Return:
+        The function that takes time as its input and returns the CDR
     """
 
     # Get the numbers of tests performed

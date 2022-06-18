@@ -452,7 +452,7 @@ def build_model(
             suscept_adjs,
         )
     else:
-        # for a single-strain model, reinfection may only occur from the waned compartment
+        # For a single-strain model, reinfection may only occur from the waned compartment
         if Compartment.WANED in compartment_types:
             apply_reinfection_flows_without_strains(
                 model,
@@ -472,8 +472,6 @@ def build_model(
         compartment_types,
         immunity_params,
     )
-
-    
 
     # Adjust infection of susceptibles for immunity status
     reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []

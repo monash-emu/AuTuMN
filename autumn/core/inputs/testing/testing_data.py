@@ -114,4 +114,6 @@ def get_testing_numbers_for_region(
     # Check data and return
     msg = "Negative test values present"
     assert (test_df >= 0).all(), msg
+    msg = "No testing data found"
+    assert len(test_df) > 0, msg
     return test_df

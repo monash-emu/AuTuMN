@@ -30,7 +30,7 @@ def get_uk_testing_numbers():
     test_dates = test_dates[::-1]
     test_numbers = test_numbers[::-1]
 
-    return test_dates, test_numbers
+    return pd.Series(test_numbers, index=test_dates)
 
 
 def get_eu_testing_numbers(iso3):
@@ -97,7 +97,10 @@ def get_testing_numbers_for_region(
         phl_region = subregion.lower() if subregion else "philippines"
         test_dates, test_values = get_phl_subregion_testing_numbers(phl_region)
     elif country_iso3 == "GBR":
-        test_dates, test_values = get_uk_testing_numbers()
+        test_df = get_uk_testing_numbers()
+        msg = "Negative test values present"
+        assert (test_df >= 0).all()
+        return test_df        
     elif country_iso3 in ("BEL", "ITA", "SWE", "FRA", "ESP"):
         test_df = get_eu_testing_numbers(country_iso3)
         msg = "Negative test values present"

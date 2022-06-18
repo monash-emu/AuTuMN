@@ -29,7 +29,7 @@ def get_btn_testing_numbers(
     df = input_db.query(
         "covid_btn_test", columns=["date_index", "total_tests"], conditions=cond_map
     )
-    test_series = pd.Series(df["total_tests"], index=df["date_index"]).dropna()
+    test_series = pd.Series(list(df["total_tests"]), index=df["date_index"]).dropna()
     test_series += TINY_NUMBER
     return test_series / data_frequency
 

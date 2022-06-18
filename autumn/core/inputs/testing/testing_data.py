@@ -106,7 +106,10 @@ def get_testing_numbers_for_region(
     elif country_iso3 == "MMR":
         test_dates, test_values = get_mmr_testing_numbers()
     elif country_iso3 == "BGD" and subregion == "FDMN":
-        test_dates, test_values = get_coxs_bazar_testing_numbers()
+        test_df = get_coxs_bazar_testing_numbers()
+        msg = "Negative test values present"
+        assert (test_df >= 0).all()
+        return test_df
     elif country_iso3 == "BTN":
         test_df = get_btn_testing_numbers(subregion)
         msg = "Negative test values present"

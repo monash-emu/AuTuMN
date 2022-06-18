@@ -96,49 +96,22 @@ def get_testing_numbers_for_region(
     if country_iso3 == "PHL":
         phl_region = subregion.lower() if subregion else "philippines"
         test_df = get_phl_subregion_testing_numbers(phl_region)
-        msg = "Negative test values present"
-        assert (test_df >= 0).all()
-        return test_df  
     elif country_iso3 == "GBR":
         test_df = get_uk_testing_numbers()
-        msg = "Negative test values present"
-        assert (test_df >= 0).all()
-        return test_df        
     elif country_iso3 in ("BEL", "ITA", "SWE", "FRA", "ESP"):
         test_df = get_eu_testing_numbers(country_iso3)
-        msg = "Negative test values present"
-        assert (test_df >= 0).all()
-        return test_df
     elif country_iso3 == "LKA":
         test_df = get_lka_testing_numbers()
-        msg = "Negative test values present"
-        assert (test_df >= 0).all()
-        return test_df
     elif country_iso3 == "MMR":
         test_df = get_mmr_testing_numbers()
-        msg = "Negative test values present"
-        assert (test_df >= 0).all()
-        return test_df
     elif country_iso3 == "BGD" and subregion == "FDMN":
         test_df = get_coxs_bazar_testing_numbers()
-        msg = "Negative test values present"
-        assert (test_df >= 0).all()
-        return test_df
     elif country_iso3 == "BTN":
         test_df = get_btn_testing_numbers(subregion)
-        msg = "Negative test values present"
-        assert (test_df >= 0).all()
-        return test_df
     else:
         test_df = get_international_owid_numbers(country_iso3)
-        msg = "Negative test values present"
-        assert (test_df >= 0).all()
-        return test_df
         
     # Check data and return
-    msg = "Length of test dates and test values are not equal"
-    assert len(test_dates) == len(test_values), msg
-    test_df = pd.Series(test_values, index=test_dates)
     msg = "Negative test values present"
-    assert (test_df >= 0).all()
+    assert (test_df >= 0).all(), msg
     return test_df

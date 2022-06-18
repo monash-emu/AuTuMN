@@ -1,4 +1,4 @@
-import numpy as np  
+import pandas as pd
 
 from autumn.core.inputs.database import get_input_db
 from autumn.core.inputs.demography.queries import get_population_by_agegroup
@@ -15,10 +15,8 @@ def get_lka_testing_numbers():
         columns=["date_index", "Sri_Lanka_PCR_tests_done"],
     )
     df.dropna(how="any", inplace=True)
-    test_dates = df.date_index.to_numpy()
-    test_values = df.Sri_Lanka_PCR_tests_done.to_numpy()
 
-    return test_dates, test_values
+    return pd.Series(df.Sri_Lanka_PCR_tests_done.to_numpy(), index=df.date_index)
 
 def get_lka_vac_coverage(age_group, age_pops=None, params=None):
     """ Provides vaccination coverage for a given age.

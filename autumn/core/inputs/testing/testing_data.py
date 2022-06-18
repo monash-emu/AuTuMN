@@ -102,7 +102,10 @@ def get_testing_numbers_for_region(
     elif country_iso3 in ("BEL", "ITA", "SWE", "FRA", "ESP"):
         test_dates, test_values = get_eu_testing_numbers(country_iso3)
     elif country_iso3 == "LKA":
-        test_dates, test_values = get_lka_testing_numbers()
+        test_df = get_lka_testing_numbers()
+        msg = "Negative test values present"
+        assert (test_df >= 0).all()
+        return test_df
     elif country_iso3 == "MMR":
         test_df = get_mmr_testing_numbers()
         msg = "Negative test values present"

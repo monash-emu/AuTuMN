@@ -95,7 +95,10 @@ def get_testing_numbers_for_region(
 
     if country_iso3 == "PHL":
         phl_region = subregion.lower() if subregion else "philippines"
-        test_dates, test_values = get_phl_subregion_testing_numbers(phl_region)
+        test_df = get_phl_subregion_testing_numbers(phl_region)
+        msg = "Negative test values present"
+        assert (test_df >= 0).all()
+        return test_df  
     elif country_iso3 == "GBR":
         test_df = get_uk_testing_numbers()
         msg = "Negative test values present"

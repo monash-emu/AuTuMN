@@ -1,4 +1,3 @@
-from re import sub
 from typing import Tuple, Optional
 import pandas as pd
 import os
@@ -52,7 +51,7 @@ def get_eu_testing_numbers(iso3):
 
     test_dates, test_numbers = convert_weekly_total_to_daily_numbers(year_week, n_tests_per_week)
 
-    return test_dates, test_numbers
+    return pd.Series(test_numbers, index=test_dates)
 
 
 def convert_weekly_total_to_daily_numbers(year_week, n_tests_per_week):
@@ -100,7 +99,10 @@ def get_testing_numbers_for_region(
     elif country_iso3 == "GBR":
         test_dates, test_values = get_uk_testing_numbers()
     elif country_iso3 in ("BEL", "ITA", "SWE", "FRA", "ESP"):
-        test_dates, test_values = get_eu_testing_numbers(country_iso3)
+        test_df = get_eu_testing_numbers(country_iso3)
+        msg = "Negative test values present"
+        assert (test_df >= 0).all()
+        return test_df
     elif country_iso3 == "LKA":
         test_df = get_lka_testing_numbers()
         msg = "Negative test values present"

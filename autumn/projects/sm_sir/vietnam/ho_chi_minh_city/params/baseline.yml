@@ -75,8 +75,8 @@ voc_emergence:
     relative_active_period: 1.
     cross_protection:
       wild_type:
-        early_reinfection: 1.  # 0% immune escape
-        late_reinfection: 0.8  # 20% immune escape - this is really only about 5% immune escape - 5% lower than for wild_type
+        early_reinfection: 1.  # I have just been turning off reinfection with previous strains, because usually we just see complete replacement
+        late_reinfection: 1.
       omicron:
         early_reinfection: 1.  # This should probably the same as wild_type to wild_type, so that the immunity to reinfection with the same strain is the same
         late_reinfection: 0.85

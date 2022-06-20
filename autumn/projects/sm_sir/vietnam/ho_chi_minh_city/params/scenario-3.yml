@@ -7,14 +7,14 @@ voc_emergence:
   wild_type:
     cross_protection:
       new_strain:
-        early_reinfection: 0.2
-        late_reinfection: 0.17
+        early_reinfection: 0.2 # = baseline / 2
+        late_reinfection: 0. # = baseline / 2
 
   omicron:
     cross_protection:
       new_strain:
-        early_reinfection: 0.5
-        late_reinfection: 0.35
+        early_reinfection: 0.2 # = baseline / 2
+        late_reinfection: 0. # = baseline / 2
 
   new_strain:
     new_voc_seed:

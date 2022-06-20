@@ -452,7 +452,7 @@ def build_model(
             suscept_adjs,
         )
     else:
-        # for a single-strain model, reinfection may only occur from the waned compartment
+        # For a single-strain model, reinfection may only occur from the waned compartment
         if Compartment.WANED in compartment_types:
             apply_reinfection_flows_without_strains(
                 model,
@@ -472,8 +472,6 @@ def build_model(
         compartment_types,
         immunity_params,
     )
-
-    
 
     # Adjust infection of susceptibles for immunity status
     reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
@@ -618,7 +616,7 @@ def build_model(
         outputs_builder.request_random_process_outputs()
 
     # if is_dynamic_immunity:
-    outputs_builder.request_immunity_props(immunity_strat.strata)
+    outputs_builder.request_immunity_props(immunity_strat.strata, age_pops, params.request_immune_prop_by_age)
 
     # cumulative output requests
     cumulative_start_time = params.cumulative_start_time if params.cumulative_start_time else None

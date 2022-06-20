@@ -569,7 +569,6 @@ def get_immune_strata_distributions_using_priority(
     return thinned_strata_distributions_df, agegroup_allocated_doses
 
 
-
 def add_dynamic_immunity_to_model(
         compartments: List[str],
         strata_distributions: pd.DataFrame,

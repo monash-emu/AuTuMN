@@ -10,7 +10,7 @@ model = Models.SM_SIR
 
 project = get_project(model, region)
 
-# Run a model manually.
+# Run a model manually
 run_project_locally(project, run_scenarios=False)
 
 # Run a calibration

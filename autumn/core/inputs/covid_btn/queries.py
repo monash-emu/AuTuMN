@@ -11,12 +11,15 @@ from autumn.core.utils.utils import check_list_increasing
 TINY_NUMBER = 1e-6
 
 
-def get_btn_testing_numbers(subregion: Optional[str]):
+def get_btn_testing_numbers(
+    subregion: Optional[str], 
+    data_frequency: float=6.5
+):
     """
     Returns number of tests administered in Bhutan or Thimphu.
     """
 
-    subregion = "Bhutan" if subregion is False else subregion
+    subregion = "Bhutan" if not subregion else subregion
 
     cond_map = {
         "region": subregion,
@@ -26,12 +29,9 @@ def get_btn_testing_numbers(subregion: Optional[str]):
     df = input_db.query(
         "covid_btn_test", columns=["date_index", "total_tests"], conditions=cond_map
     )
-    df.dropna(inplace=True)
-    test_dates = df.date_index.to_numpy()
-    values = df["total_tests"].to_numpy() + TINY_NUMBER
-    values = values / 6.5
-
-    return test_dates, values
+    test_series = pd.Series(list(df["total_tests"]), index=df["date_index"]).dropna()
+    test_series += TINY_NUMBER
+    return test_series / data_frequency
 
 
 def get_btn_vac_coverage(

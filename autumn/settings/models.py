@@ -5,5 +5,6 @@ class Models:
     EXAMPLE = "sir_example"
     SM_SIR = "sm_sir"
     HIERARCHICAL_SIR = "hierarchical_sir"
+    TBD = "tb_dynamics"
 
     MODELS = [COVID_19, TB, TBS, EXAMPLE, SM_SIR, HIERARCHICAL_SIR]

@@ -1,5 +1,6 @@
 ---
-iso3: "KIR"
+country:
+  iso3: "KIR"
 
 age_mixing:
   # type: "prem"
@@ -40,17 +41,6 @@ user_defined_stratifications: # this specifies user-defined  stratifications
 # BCG coverage
 bcg_effect: "infection"  # infection or mortality
 time_variant_bcg_perc:
-  #1930: 0.
-  #1990: 49.
-  #1991: 71.
-  #1992: 72.
-  #1993: 88.
-  #1994: 96.
-  #1995: 71.
-  #1996: 98.
-  #1997: 94.
-  #1998: 81.
-  #1999: 81.
   2000: 80.
   2001: 85.
   2002: 88.

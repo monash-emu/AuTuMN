@@ -11,9 +11,7 @@ from autumn.core.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 
 from .constants import Compartment, BASE_COMPARTMENTS, INFECTIOUS_COMPS
-from .stratifications.age import get_age_strat
-from .stratifications.user_defined import get_user_defined_strat
-from .stratifications.organ import get_organ_strat
+
 from .outputs import request_outputs
 
 base_params = Params(

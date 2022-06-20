@@ -22,13 +22,3 @@ voc_emergence:
     immune_escape: 0.8
     hosp_protection: 0.95
     death_protection: 0.975
-    cross_protection:
-      wild_type:
-        early_reinfection: 1.0
-        late_reinfection: 0.8
-      omicron:
-        early_reinfection: 1.
-        late_reinfection: 0.7
-      new_strain:
-        early_reinfection: 1.
-        late_reinfection: 0.35

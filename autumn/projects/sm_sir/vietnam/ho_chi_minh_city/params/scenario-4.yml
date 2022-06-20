@@ -32,13 +32,3 @@ voc_emergence:
     immune_escape: 1.0
     hosp_protection: 0.9
     death_protection: 0.95
-    cross_protection:
-      wild_type:
-        early_reinfection: 1. # = omicron --> delta
-        late_reinfection: 0.8 # = omicron --> delta
-      omicron:
-        early_reinfection: 1. # = omicron --> delta
-        late_reinfection: 0.8 # = omicron --> delta
-      new_strain:
-        early_reinfection: 1. # = omicron --> omicron
-        late_reinfection: 0.15 # = omicron --> delta

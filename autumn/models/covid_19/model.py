@@ -164,8 +164,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
         # Get the adjustments to the IFR for each strain (if not requested, will have defaulted to a value of one)
         voc_ifr_effects.update({s: params.voc_emergence[s].ifr_multiplier for s in strain_strat.strata[1:]})
-        voc_ifr_effects['delta'] = voc_ifr_effects['delta']*12.9
-        voc_ifr_effects['alpha_beta'] = voc_ifr_effects['alpha_beta'] * 3.3
         voc_hosp_effects.update({s: params.voc_emergence[s].hosp_multiplier for s in strain_strat.strata[1:]})
 
     """

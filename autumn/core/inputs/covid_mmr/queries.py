@@ -16,7 +16,7 @@ def get_mmr_testing_numbers():
 
     df.dropna(how="any", inplace=True)
 
-    return pd.Series(df.tests.to_numpy(), index=df.date_index)
+    return pd.Series(df["tests"].to_numpy(), index=df.date_index)
 
 
 def base_mmr_adult_vacc_doses():

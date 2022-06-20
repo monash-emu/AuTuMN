@@ -59,9 +59,7 @@ def weight_mobility_data(
     for model_loc, google_locs in location_map.items():
         for g_loc in google_locs:
             if not all(google_mob_df[g_loc].isna()):
-                model_mob_df[model_loc] += (
-                    google_mob_df[g_loc] * location_map[model_loc][g_loc]
-                )
+                model_mob_df[model_loc] += google_mob_df[g_loc] * location_map[model_loc][g_loc]
 
     return model_mob_df
 
@@ -155,12 +153,8 @@ def update_mixing_data(
 
                 # All requested dates are after the Google Mobility data starts, so we can just join the two lists
                 if google_mobility_days[-1] < first_append_day:
-                    mob_values[loc_key]["times"] = (
-                        google_mobility_days + loc_mixing["times"]
-                    )
-                    mob_values[loc_key]["values"] = (
-                        mobility_values + loc_mixing["values"]
-                    )
+                    mob_values[loc_key]["times"] = google_mobility_days + loc_mixing["times"]
+                    mob_values[loc_key]["values"] = mobility_values + loc_mixing["values"]
 
                 # Requested days start during the Google mobility data, so we truncate the Google mobility data
                 else:
@@ -169,12 +163,8 @@ def update_mixing_data(
                         if day >= first_append_day:
                             merge_idx = idx
                             break
-                    mob_values[loc_key]["times"] = (
-                        google_mobility_days[:merge_idx] + loc_mixing["times"]
-                    )
-                    mob_values[loc_key]["values"] = (
-                        mobility_values[:merge_idx] + loc_mixing["values"]
-                    )
+                    mob_values[loc_key]["times"] = google_mobility_days[:merge_idx] + loc_mixing["times"]
+                    mob_values[loc_key]["values"] = mobility_values[:merge_idx] + loc_mixing["values"]
 
             # If no data have been loaded, no need to append, just use the user-specified requests directly
             else:

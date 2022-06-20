@@ -1,3 +1,5 @@
+import pandas as pd
+
 from autumn.core.inputs.database import get_input_db
 
 
@@ -14,10 +16,7 @@ def get_mmr_testing_numbers():
 
     df.dropna(how="any", inplace=True)
 
-    test_dates = df.date_index.to_numpy()
-    test_values = df.tests.to_numpy()
-
-    return test_dates, test_values
+    return pd.Series(df.tests.to_numpy(), index=df.date_index)
 
 
 def base_mmr_adult_vacc_doses():

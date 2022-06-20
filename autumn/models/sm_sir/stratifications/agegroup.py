@@ -128,7 +128,7 @@ def get_agegroup_strat(
     age_strat.set_population_split(age_split_props.to_dict())
 
     # Adjust infection flows based on the susceptibility of the age group
-    if type(age_suscept) == pd.Series:
+    if isinstance(age_suscept, pd.Series):
         age_strat.set_flow_adjustments(
             FlowName.INFECTION,
             {k: Multiply(v) for k, v in age_suscept.items()}

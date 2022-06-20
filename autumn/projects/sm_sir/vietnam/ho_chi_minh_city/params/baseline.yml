@@ -57,8 +57,8 @@ voc_emergence:
         early_reinfection: 0.4  # 60% immune escape - I would say this is correct in the way I think about it
         late_reinfection: 0.34  # 85% of 0.4 - again, correct to have the same relative amount of immunity
       new_strain:
-        early_reinfection: 1.  # Turn off the new strain completely in the base case
-        late_reinfection: 1.  # (although this is also achieved through delaying its emergence, so it's arbitrary)
+        early_reinfection: 0.4  # Turn off the new strain completely in the base case
+        late_reinfection: 0.  # (although this is also achieved through delaying its emergence, so it's arbitrary)
   omicron:
     starting_strain: false
     seed_prop: 0.
@@ -79,10 +79,10 @@ voc_emergence:
         late_reinfection: 1.
       omicron:
         early_reinfection: 1.  # This should probably the same as wild_type to wild_type, so that the immunity to reinfection with the same strain is the same
-        late_reinfection: 0.85
+        late_reinfection: 0.
       new_strain:
-        early_reinfection: 1. # Turn off new strain in base case
-        late_reinfection: 1.
+        early_reinfection: 0.4 # Turn off new strain in base case
+        late_reinfection: 0.
   new_strain:
     starting_strain: false
     seed_prop: 0.
@@ -103,10 +103,10 @@ voc_emergence:
         late_reinfection: 1.
       omicron:
         early_reinfection: 1.
-        late_reinfection: 1.
+        late_reinfection: 0.
       new_strain:
         early_reinfection: 1. # This should probably the same as wild_type to wild_type, so that the immunity to reinfection with the same strain is the same
-        late_reinfection: 0.85
+        late_reinfection: 0.
 
 #testing_to_detection:
 #  assumed_tests_parameter: 0.001 # Malaysia model

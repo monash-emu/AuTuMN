@@ -52,7 +52,7 @@ voc_emergence:
     cross_protection:
       wild_type:
         early_reinfection: 1.  # 0% immune escape
-        late_reinfection: 0.85  # 15% immune escape - this makes the model almost SEIR, because protection is almost complete
+        late_reinfection: 0.4  # 15% immune escape - this makes the model almost SEIR, because protection is almost complete
       omicron:
         early_reinfection: 0.4  # 60% immune escape - I would say this is correct in the way I think about it
         late_reinfection: 0.34  # 85% of 0.4 - again, correct to have the same relative amount of immunity

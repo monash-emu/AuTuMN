@@ -1,7 +1,6 @@
 """
 Type definition for model parameters
 """
-from numpy import int_
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
@@ -111,7 +110,7 @@ class Time(BaseModel):
 
 class TimeSeries(BaseModel):
     """
-    A set of values with associated time points
+    A set of values with associated time points.
     """
 
     times: List[float]
@@ -159,18 +158,14 @@ class Population(BaseModel):
 
 class CompartmentSojourn(BaseModel):
     """
-    Compartment sojourn times, meaning the mean period of time spent in a compartment.
+    Compartment sojourn times, i.e. the mean period of time spent in a compartment.
     """
 
     total_time: float
     proportion_early: Optional[float]
 
-    check_total_positive = validator("total_time", allow_reuse=True)(
-        get_check_non_neg("total_time")
-    )
-    check_prop_early = validator("proportion_early", allow_reuse=True)(
-        get_check_prop("proportion_early")
-    )
+    check_total_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
+    check_prop_early = validator("proportion_early", allow_reuse=True)(get_check_prop("proportion_early"))
 
 
 class Sojourns(BaseModel):
@@ -180,11 +175,9 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[float]  # Doesn't have an early and late
+    recovered: Optional[float]  # If there is a sojourn time for recovered, then there will be two compartments
 
-    check_recovered_positive = validator("recovered", allow_reuse=True)(
-        get_check_non_neg("recovered")
-    )
+    check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
 
 
 class MixingLocation(BaseModel):
@@ -210,15 +203,13 @@ class EmpiricMicrodistancingParams(BaseModel):
     times: List[float]
     values: List[float]
 
-    check_max_effect = validator("max_effect", allow_reuse=True)(
-        get_check_prop("max_effect")
-    )
+    check_max_effect = validator("max_effect", allow_reuse=True)(get_check_prop("max_effect"))
 
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
-        value, time_series = values.get("values"), values.get("times")
-        msg = f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value)}"
-        assert len(time_series) == len(value), msg
+        value_series, time_series = values.get("values"), values.get("times")
+        msg = f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        assert len(time_series) == len(value_series), msg
         return values
 
 
@@ -229,18 +220,13 @@ class TanhMicrodistancingParams(BaseModel):
     start_asymptote: float
     end_asymptote: float
 
-    check_lower_asymptote = validator("start_asymptote", allow_reuse=True)(
-        get_check_prop("start_asymptote")
-    )
-    check_upper_asymptote = validator("end_asymptote", allow_reuse=True)(
-        get_check_prop("end_asymptote")
-    )
+    check_lower_asymptote = validator("start_asymptote", allow_reuse=True)(get_check_prop("start_asymptote"))
+    check_upper_asymptote = validator("end_asymptote", allow_reuse=True)(get_check_prop("end_asymptote"))
 
     @validator("shape", allow_reuse=True)
     def shape_is_positive(shape):
-        assert (
-            shape >= 0.0
-        ), "Shape parameter for tanh-microdistancing function must be non-negative"
+        msg = "Shape parameter for tanh-microdistancing function must be non-negative"
+        assert shape >= 0.0, msg
         return shape
 
 
@@ -248,9 +234,7 @@ class ConstantMicrodistancingParams(BaseModel):
 
     effect: float
 
-    check_effect_domain = validator("effect", allow_reuse=True)(
-        get_check_prop("effect")
-    )
+    check_effect_domain = validator("effect", allow_reuse=True)(get_check_prop("effect"))
 
 
 class MicroDistancingFunc(BaseModel):
@@ -329,7 +313,7 @@ class AgeStratification(BaseModel):
 
     susceptibility: Optional[
         Union[Dict[int, float], float]
-    ]  # Dictionary to represent age groups, single float or None
+    ]  # Dictionary that represents each age group, single float or None
     prop_symptomatic: Optional[Union[Dict[int, float], float]]  # As for susceptibility
     prop_hospital: AgeSpecificProps
     cfr: AgeSpecificProps
@@ -358,9 +342,7 @@ class ImmunityStratification(BaseModel):
     prop_high_among_immune: float
     infection_risk_reduction: ImmunityRiskReduction
 
-    check_prop_immune = validator("prop_immune", allow_reuse=True)(
-        get_check_prop("prop_immune")
-    )
+    check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
     check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(
         get_check_prop("prop_high_among_immune")
     )
@@ -376,12 +358,8 @@ class TestingToDetection(BaseModel):
     smoothing_period: int
     floor_value: float
 
-    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(
-        get_check_non_neg("assumed_tests_parameter")
-    )
-    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(
-        get_check_prop("assumed_cdr_parameter")
-    )
+    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(get_check_non_neg("assumed_tests_parameter"))
+    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(get_check_prop("assumed_cdr_parameter"))
 
     @validator("smoothing_period", allow_reuse=True)
     def check_smoothing_period(val):
@@ -401,12 +379,8 @@ class CrossImmunity(BaseModel):
     early_reinfection: float
     late_reinfection: float
 
-    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(
-        get_check_prop("early_reinfection")
-    )
-    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(
-        get_check_prop("late_reinfection")
-    )
+    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(get_check_prop("early_reinfection"))
+    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(get_check_prop("late_reinfection"))
 
 
 class VocSeed(BaseModel):
@@ -415,12 +389,8 @@ class VocSeed(BaseModel):
     entry_rate: float
     seed_duration: float
 
-    check_seed_time = validator("seed_duration", allow_reuse=True)(
-        get_check_non_neg("seed_duration")
-    )
-    check_entry_rate = validator("entry_rate", allow_reuse=True)(
-        get_check_non_neg("entry_rate")
-    )
+    check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
+    check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))
 
 
 class VocComponent(BaseModel):
@@ -454,18 +424,14 @@ class VocComponent(BaseModel):
             assert 0.0 <= multiplier, "ICU multiplier negative"
         return multiplier
 
-    check_immune_escape = validator("immune_escape", allow_reuse=True)(
-        get_check_prop("immune_escape")
-    )
-    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(
-        get_check_prop("hosp_protection")
-    )
+    check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
+    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
     check_relative_latency = validator("relative_latency", allow_reuse=True)(
         get_check_non_neg("relative_latency")
     )
-    check_relative_active_period = validator(
-        "relative_active_period", allow_reuse=True
-    )(get_check_non_neg("relative_active_period"))
+    check_relative_active_period = validator("relative_active_period", allow_reuse=True)(
+        get_check_non_neg("relative_active_period")
+    )
     check_death_protection = validator("death_protection", allow_reuse=True)(
         get_check_prop("death_protection")
     )
@@ -507,7 +473,7 @@ class RandomProcessParams(BaseModel):
 
 class ParamConfig:
     """
-    Config for parameter models
+    Config for parameter models.
     """
 
     anystr_strip_whitespace = True  # Strip whitespace
@@ -550,7 +516,12 @@ class Parameters:
     booster_effect_duration: float
     additional_immunity: Optional[TimeSeries]
     future_monthly_booster_rate: Optional[float]
-    future_booster_age_allocation: Optional[Dict[int, float]]
+    future_booster_age_allocation: Optional[
+        Union[
+            Dict[int, float], # to specify allocation proportions by age group (e.g. {70: .8, 50: .2})
+            List[int] # to specify a prioritisation order (e.g. [70, 50, 25, 15])
+            ]
+        ]
 
     # Output-related
     requested_cumulative_outputs: List[str]

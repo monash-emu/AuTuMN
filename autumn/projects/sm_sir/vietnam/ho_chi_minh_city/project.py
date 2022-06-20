@@ -71,7 +71,7 @@ priors = [
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # hospitalization multiplier
-    UniformPrior("age_stratification.prop_hospital.multiplier", (2.0, 3.0)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (1.0, 3.0)),
     # immunity stratification
     UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.1, 0.4)),
     UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.7)),
@@ -86,7 +86,7 @@ priors = [
     # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1, 3)),
     # UniformPrior("voc_emergence.omicron.hosp_protection", (0.8, 1.0)),
-    UniformPrior("voc_emergence.omicron.icu_multiplier", (0.3, 0.6)),
+    UniformPrior("voc_emergence.omicron.icu_multiplier", (0.2, 0.6)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.5, 1.0)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.5, 1.0)),
     # emergence of delta

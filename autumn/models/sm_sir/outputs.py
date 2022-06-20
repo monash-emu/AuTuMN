@@ -42,7 +42,7 @@ def get_immunity_prop_modifiers(
 
     # Work out the adjustments based on the protection provided by immunity
     effective_weights = [immunity_effect[stratum] * source_pop_immunity_dist[stratum] for stratum in IMMUNITY_STRATA]
-    no_immunity_modifier = 1. / (sum(effective_weights))
+    no_immunity_modifier = 1. / sum(effective_weights)
     immune_modifiers = {strat: no_immunity_modifier * immunity_effect[strat] for strat in IMMUNITY_STRATA}
 
     # Unnecessary check that the weighted average we have calculated does come out to one

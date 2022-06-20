@@ -527,6 +527,7 @@ class Parameters:
     requested_cumulative_outputs: List[str]
     cumulative_start_time: Optional[float]
     request_incidence_by_age: bool
+    request_immune_prop_by_age: bool
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

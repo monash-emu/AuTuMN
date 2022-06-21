@@ -106,7 +106,7 @@ new_target_set = load_timeseries(build_rel_path("new_targets.json"))
 targets = [
     NormalTarget(data=new_target_set["icu_occupancy"].loc[725:]),
     NormalTarget(data=new_target_set["hospital_occupancy"].loc[725:]),
-    NormalTarget(data=ts_set["notifications"].loc[741:755]),  # peak notifications
+    NormalTarget(data=ts_set["notifications"].loc[730:770]),  # peak notifications
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:

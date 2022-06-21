@@ -42,7 +42,7 @@ vaccination:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_infectiousness: 0.
-    ve_hospitalisation: 0.5
+    ve_hospitalisation: 0.
     ve_death: 0.65
   standard_supply: true # to get the timeseries of vaccine coverage
   lag: 14

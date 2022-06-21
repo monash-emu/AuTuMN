@@ -1,0 +1,21 @@
+\section{Case detection and isolation} \label{cdr}
+
+\subsection{Determining the proportion of cases detected}
+We calculate a time-varying case detection rate, being the proportion of all symptomatic cases (the second and third clinical strata) that are detected (the third clinical stratum only).
+This proportion is informed by the number of tests performed using the following formula:
+
+\[CDR(time)=1-(1-floor)\times e^{-shape \times tests(time)}\]
+
+$time$ is the calendar date and $tests(time)$ is the number of tests per capita done on that date. To determine the value of the shape parameter, we solve this equation based on the assumption that a certain daily testing rate $tests(t)$ is associated with a certain $CDR(t)$.
+$floor$ is the minimum case detection rate possible, which would theoretically occur when zero tests are conducted.
+Solving for $shape$ yields:
+
+\[shape = \frac{-log(\frac{1 - CDR(t)}{1 - floor})}{tests(t)}\]
+
+That is, if it is assumed that a certain daily per capita testing rate is associated with a certain proportion of symptomatic cases detected, we can determine $shape$.
+As this relationship is not well understood and unlikely to be consistent across all settings, we vary the $CDR$ that is associated with a certain per capita testing rate during calibration.
+This approach allows us to both vary the $CDR(\cdot)$ relationship through calibration,
+while also varying the specific $CDR(time)$ to reflect historical changes in testing capacity with time.
+
+\subsection{Isolation of detected cases}
+As described in the clinical stratification section above, as infected persons progress from the early to the late stage of active COVID-19, infectiousness is reduced for those detected to reflect case isolation.

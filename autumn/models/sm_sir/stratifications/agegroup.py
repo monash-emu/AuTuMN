@@ -12,8 +12,8 @@ from autumn.models.sm_sir.constants import FlowName
 from typing import List, Dict, Union
 import itertools
 
-from autumn.tools.inputs import get_population_by_agegroup
-from autumn.tools.utils.utils import weighted_average
+from autumn.core.inputs import get_population_by_agegroup
+from autumn.core.utils.utils import weighted_average
 
 
 def get_relevant_indices(
@@ -37,8 +37,7 @@ def get_relevant_indices(
     model_groups = [int(group) for group in model_groups]
     for i_age, model_agegroup in enumerate(model_groups):
         age_index_low = standard_breaks.index(model_agegroup)
-        age_index_up = standard_breaks[-1] if model_agegroup == model_groups[-1] else \
-            standard_breaks.index(model_groups[i_age + 1])
+        age_index_up = standard_breaks[-1] if model_agegroup == model_groups[-1] else standard_breaks.index(model_groups[i_age + 1])
         relevant_indices[str(model_agegroup)] = standard_breaks[age_index_low: age_index_up]
 
     # Should be impossible for this check to fail

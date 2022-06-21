@@ -64,6 +64,7 @@ class Region:
         COXS_BAZAR,
         BHUTAN,
         THIMPHU,
+        KIRIBATI,
     ]
 
     MALAYSIA_REGIONS = [

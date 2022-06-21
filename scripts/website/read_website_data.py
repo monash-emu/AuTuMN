@@ -14,7 +14,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__fil
 sys.path.append(BASE_DIR)
 
 
-# from autumn.tools.utils.runs import read_run_id
+# from autumn.coreutils.runs import read_run_id
 def read_run_id(run_id: str):
     """Read data from run id"""
     parts = run_id.split("/")
@@ -75,7 +75,7 @@ print("Fetching object list from AWS S3")
 objs = fetch_all_objects()
 keys = [o["Key"] for o in objs]
 print("Found", len(keys), "objects.")
-APPS = ["covid_19", "tuberculosis", "sm_sir"]
+APPS = ["covid_19", "tuberculosis", "sm_sir", "hierarchical_sir"]
 apps = {}
 reports = {
     "dhhs": {"title": "DHHS", "description": "Weekly report for DHHS", "files": []},

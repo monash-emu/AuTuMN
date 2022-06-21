@@ -11,7 +11,7 @@ time:
   start: 1955.
   end: 2050.
   step: 0.1
-  critical_ranges: [[2022., 2025.]]
+  critical_ranges: [[2016., 2020.], [2022., 2025.]]
 
 start_population_size: 36573.
 
@@ -74,7 +74,11 @@ time_variant_bcg_perc:
   2020: 93.
 
 time_variant_tsr: # should always be > 0 # https://www.stoptb.org/static_pages/KIR_Dashboard.html
+<<<<<<< HEAD
   1995: .25
+=======
+  1995.: .25
+>>>>>>> 70cf7bb5927436da8b8bdee1f07f7a40a8ca511e
   2012.: 0.9
   2013.: 0.84
   2014.: 0.87
@@ -86,7 +90,7 @@ time_variant_tsr: # should always be > 0 # https://www.stoptb.org/static_pages/K
 
 time_variant_tb_screening_rate:
   shape: .1 # The shape parameter to the tanh-based curve
-  inflection_time: 1995. # Point at which curve inflects
+  inflection_time: 1990. # Point at which curve inflects
   start_asymptote: 0. # Starting value - lower asymptote
   end_asymptote: 0.4057634920539735
 
@@ -102,7 +106,11 @@ extra_params:
 
 
 # calibrated parameters
+<<<<<<< HEAD
 contact_rate: 0.003
+=======
+contact_rate: 0.01
+>>>>>>> 70cf7bb5927436da8b8bdee1f07f7a40a8ca511e
 progression_multiplier: 0.7117191601170418
 
 # REQUESTED OUTPUTS
@@ -125,7 +133,7 @@ outputs_stratification:
   incidence: ["location"]
   mortality: ["location"]
 
-cumulative_output_start_time: 2022.
+cumulative_output_start_time: 2016.
 
 inflate_reactivation_for_diabetes: True
 
@@ -133,32 +141,21 @@ inflate_reactivation_for_diabetes: True
 time_variant_acf:
   - stratum_filter: { "location": "starawa" }
     time_variant_screening_rate:
-      2017: 0.
-      2017.01: 1.9
-      2018.: 1.9
+      2016: 0.
+      2016.01: 1.5
+      2018.: 1.5
       2018.01: 0.
     exclude_age: [0, 3]
   - stratum_filter: { "location": "other" }
     time_variant_screening_rate:
       2018: 0.
-      2018.01: 1.66  # from 81% first screen
-      2019: 1.66
+      2018.01: 1.1  # from 81% first screen
+      2019: 1.1
       2019.01: 0.
-
-time_variant_ltbi_screening:
-  - stratum_filter: { "location": "starawa" }
-    time_variant_screening_rate:
-      2018: 0.
-      2018.01: .9  # from 81% first screen / of whom 86.5% fully screened times 92% of TST+ recommended for PT times 92% of recommanded actually started
-      2019: .9
-      2019.01: 0.
-  - stratum_filter: { "location": "other" }
-    time_variant_screening_rate:
-      2018: 0.
 
 awareness_raising:
   relative_screening_rate: 1.25
-  scale_up_range: [2020, 2022]
+  scale_up_range: [2016, 2022]
 
 #hh_contacts_pt:
 #  start_time: 2020

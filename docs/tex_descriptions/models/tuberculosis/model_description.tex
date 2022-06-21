@@ -1,0 +1,37 @@
+% This file describes the general structure of some of our sm_sir models.
+% Note that it is possible to construct models in many different ways using the sm_sir code.
+% Therefore, this description should be used with caution, because it only describes one possible model configuration.
+
+\section{Model Structure}
+
+\subsection{General features}
+
+We use a deterministic compartmental model including six types of compartments that represent different states of infection and disease. 
+The model uses the same conceptual approach and similar assumptions to previously published models. 
+Here we describe the model structure before applying any stratification.
+\subsection{Compartments}
+Model compartments represent sequential progressions through the processes of infection with, progression through and recovery from the phases of Tuberculosis.
+Reinfection is permitted in our model code structure, which is represented as transition from the recovered compartments back to the first infected compartment.
+The following compartments are implemented:
+\begin{itemize}
+    \item Susceptible
+    \begin{itemize}
+        \item A susceptible compartment (S) is used to represent individuals who have never been infected with Mycobacterium tuberculosis (M.tb)
+    \end{itemize}
+    \item Latent
+    \begin{itemize}
+        \item Latent TB infection (LTBI) is modelled using two successive compartments: early latent (E) and late latent (L) to capture the declining risk of disease progression over time from infection
+    \end{itemize}
+    \item Infectious
+    \begin{itemize}
+        \item The active disease compartment (I) represents individuals who have progressed to the active stage of TB disease
+    \end{itemize}
+    \item Treatment
+    \begin{itemize}
+        \item All diseased individuals who are detected are assumed to be started on treatment. Treatment may result in cure (progression to R), relapse (return to I) or death
+    \end{itemize}
+    \item Recovered or Removed
+    \begin{itemize}
+        \item Persons recovered or removed/died from Tuberculosis during the model simulation period.
+    \end{itemize}
+\end{itemize}

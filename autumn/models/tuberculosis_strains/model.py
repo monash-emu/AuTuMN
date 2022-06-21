@@ -6,10 +6,10 @@ from summer import (
     Stratification,
 )
 
-from autumn.tools.curve import scale_up_function
-from autumn.tools.inputs import get_death_rates_by_agegroup, get_population_by_agegroup
-from autumn.tools.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
-from autumn.tools.project import Params, build_rel_path
+from autumn.model_features.curve.scale_up import scale_up_function
+from autumn.core.inputs import get_death_rates_by_agegroup, get_population_by_agegroup
+from autumn.core.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
+from autumn.core.project import Params, build_rel_path
 
 from .constants import Compartment
 

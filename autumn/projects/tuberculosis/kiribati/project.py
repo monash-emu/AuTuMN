@@ -1,7 +1,7 @@
-from autumn.tools.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import (
+from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
+from autumn.calibration import Calibration
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
 )
@@ -50,7 +50,13 @@ for param_name in ["infect_death_rate", "self_recovery_rate"]:
 
 priors = [
     # *get_dispersion_priors_for_gaussian_targets(targets),
+<<<<<<< HEAD
     UniformPrior("contact_rate", [0.002, 0.5]),
+=======
+    UniformPrior("start_population_size", [200, 800]),
+    UniformPrior("crude_birth_rate", [1, 7]),
+    UniformPrior("contact_rate", [0.002, 0.05]),
+>>>>>>> 70cf7bb5927436da8b8bdee1f07f7a40a8ca511e
     UniformPrior("progression_multiplier", [0.5, 2.0]),
     UniformPrior("time_variant_tb_screening_rate.inflection_time", [2000.0, 2020.0]),
     UniformPrior("time_variant_tb_screening_rate.shape", [0.07, 0.1]),

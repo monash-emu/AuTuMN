@@ -40,6 +40,8 @@ steps:
       value: sm_sir:national-capital-region
     - label: Thimphu (sm_sir)
       value: sm_sir:thimphu
+    - label: Kiribati (tuberculosis)
+      value: tuberculosis:kiribati
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)

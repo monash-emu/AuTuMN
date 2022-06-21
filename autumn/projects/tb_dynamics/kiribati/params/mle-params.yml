@@ -1,0 +1,16 @@
+awareness_raising.relative_screening_rate: 1.497381391371027
+contact_rate: 0.014403989434108647
+crude_birth_rate: 6.886807191139985
+extra_params.rr_progression_diabetes: 4.971835973721484
+infect_death_rate_dict.smear_negative: 0.01936084956027179
+infect_death_rate_dict.smear_positive: 0.34204965551135547
+progression_multiplier: 0.5135411893928453
+pt_efficacy: 0.7500903100333958
+rr_infection_latent: 0.4997875360850858
+rr_infection_recovered: 0.9001187278778937
+self_recovery_rate_dict.smear_negative: 0.20358306745774962
+self_recovery_rate_dict.smear_positive: 0.20944361693489505
+start_population_size: 799.7767421110636
+time_variant_tb_screening_rate.end_asymptote: 0.5487845926097907
+time_variant_tb_screening_rate.inflection_time: 2000.0097278025296
+time_variant_tb_screening_rate.shape: 0.09873119721604162

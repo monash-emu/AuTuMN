@@ -1,15 +1,15 @@
 """
 Type definition for model parameters
 """
+from numpy import int_
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.models.covid_19.constants import GOOGLE_MOBILITY_LOCATIONS
-from autumn.settings.constants import COVID_BASE_DATETIME
-from autumn.tools.inputs.social_mixing.constants import LOCATIONS
+from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
+from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 BASE_DATE = COVID_BASE_DATETIME.date()
 
@@ -226,14 +226,14 @@ class TanhMicrodistancingParams(BaseModel):
 
     shape: float
     inflection_time: float
-    lower_asymptote: float
-    upper_asymptote: float
+    start_asymptote: float
+    end_asymptote: float
 
-    check_lower_asymptote = validator("lower_asymptote", allow_reuse=True)(
-        get_check_prop("lower_asymptote")
+    check_lower_asymptote = validator("start_asymptote", allow_reuse=True)(
+        get_check_prop("start_asymptote")
     )
-    check_upper_asymptote = validator("upper_asymptote", allow_reuse=True)(
-        get_check_prop("upper_asymptote")
+    check_upper_asymptote = validator("end_asymptote", allow_reuse=True)(
+        get_check_prop("end_asymptote")
     )
 
     @validator("shape", allow_reuse=True)
@@ -241,14 +241,7 @@ class TanhMicrodistancingParams(BaseModel):
         assert (
             shape >= 0.0
         ), "Shape parameter for tanh-microdistancing function must be non-negative"
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_asymptotes(cls, values):
-        lower, upper = values.get("lower_asymptote"), values.get("upper_asymptote")
-        assert (
-            lower <= upper
-        ), f"Asymptotes specified upside-down, lower: {'lower'}, upper: {'upper'}"
-        return values
+        return shape
 
 
 class ConstantMicrodistancingParams(BaseModel):
@@ -302,7 +295,8 @@ class Mobility(BaseModel):
 
 class AgeSpecificProps(BaseModel):
 
-    values: Dict[int, float]
+    values: Optional[Dict[int, float]]
+    reference_strain: Optional[str]
     source_immunity_distribution: Dict[str, float]
     source_immunity_protection: Dict[str, float]
     multiplier: float
@@ -322,7 +316,15 @@ class AgeSpecificProps(BaseModel):
         ), msg
         return protection_params
 
-    check_none = validator("multiplier", allow_reuse=True)(get_check_prop("multiplier"))
+    @validator("reference_strain", allow_reuse=True)
+    def check_source_dist(reference_strain):
+        reference_strains = ["delta", "omicron"]
+        msg = f"Reference strain should be one of {', '.join(reference_strains)}"
+        assert (
+            reference_strain in reference_strains
+        ), msg
+        return reference_strain
+
     check_props = validator("source_immunity_distribution", allow_reuse=True)(
         get_check_all_dict_values_non_neg("source_immunity_distribution")
     )
@@ -383,7 +385,7 @@ class TestingToDetection(BaseModel):
     assumed_tests_parameter: float
     assumed_cdr_parameter: float
     smoothing_period: int
-    test_multiplier: Optional[TimeSeries]
+    floor_value: float
 
     check_tests = validator("assumed_tests_parameter", allow_reuse=True)(
         get_check_non_neg("assumed_tests_parameter")
@@ -396,6 +398,13 @@ class TestingToDetection(BaseModel):
     def check_smoothing_period(val):
         assert 1 < val, f"Smoothing period must be greater than 1: {val}"
         return val
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_floor_request(cls, values):
+        floor_value, assumed_cdr = values["floor_value"], values["assumed_cdr_parameter"]
+        msg = f"Requested value for the CDR floor does not fall between zero and the assumed CDR parameter of {assumed_cdr}, value is: {floor_value}"
+        assert 0. <= floor_value <= assumed_cdr, msg
+        return values      
 
 
 class CrossImmunity(BaseModel):
@@ -549,14 +558,36 @@ class Parameters:
     random_process: Optional[RandomProcessParams]
 
     # Vaccination/immunity-related
+    booster_effect_duration: float
     additional_immunity: Optional[TimeSeries]
+    future_monthly_booster_rate: Optional[float]
+
+    # Output-related
+    requested_cumulative_outputs: List[str]
+    cumulative_start_time: Optional[float]
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):
-        assert all(
-            [i_group % 5 == 0 for i_group in age_groups]
-        ), "Not all age groups are multiples of 5"
-        assert all(
-            [0 <= i_group <= 75 for i_group in age_groups]
-        ), "Age breakpoints must be from zero to 75"
+        msg = "Not all requested age groups in the available age groups of 5-year increments from zero to 75"
+        int_age_groups = [int(i_group) for i_group in COVID_BASE_AGEGROUPS]
+        assert all([i_group in int_age_groups for i_group in age_groups]), msg
         return age_groups
+
+    @validator("voc_emergence", allow_reuse=True)
+    def check_starting_strain(voc_emergence):
+        if voc_emergence:
+
+            msg = "Seed proportions do not sum to one"
+            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1., msg
+
+            starting_strains = [voc for voc, params in voc_emergence.items() if params.starting_strain]
+
+            msg = "Exactly one voc must be designated as the starting strain"
+            assert len(starting_strains) == 1, msg
+
+            starting_strain = starting_strains[0]
+
+            msg = "Currently requiring all the initial seed to be assigned to the starting strain"
+            assert voc_emergence[starting_strain].seed_prop == 1., msg
+
+        return voc_emergence

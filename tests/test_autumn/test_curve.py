@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from autumn.tools.curve import scale_up_function, tanh_based_scaleup
+from autumn.model_features.curve import scale_up_function, tanh_based_scaleup
 
 INPUT_TIMES = list(range(100))
 TEST_TIMES = np.linspace(0, 100, 66)

@@ -3,33 +3,40 @@ Script for loading Bangladesh, Dhaka and Cox's Bazar data into calibration targe
 NOTE you will need to pip instal lxml to run this script
 
 """
-import os
 from typing import List
 import pandas as pd
-from sqlalchemy import DATE
 
+from pathlib import Path
 from autumn.settings import PROJECTS_PATH
 from autumn.settings import INPUT_DATA_PATH
-from autumn.tools.utils.utils import update_timeseries
+from autumn.core.utils.utils import update_timeseries
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
-from autumn.tools.utils.utils import create_date_index
+from autumn.core.utils.utils import create_date_index
 
 
-SM_SIR_BGD_TS = os.path.join(PROJECTS_PATH, "sm_sir", "bangladesh", "bangladesh", "timeseries.json")
-SM_SIR_DHK_TS = os.path.join(PROJECTS_PATH, "sm_sir", "bangladesh", "dhaka", "timeseries.json")
-SM_SIR_COXS_TS = os.path.join(
-    PROJECTS_PATH, "sm_sir", "bangladesh", "coxs_bazar", "timeseries.json"
+PROJECTS_PATH = Path(PROJECTS_PATH)
+INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
+
+
+SM_SIR_BGD_TS = (
+    PROJECTS_PATH / "sm_sir" / "bangladesh" / "bangladesh" / "timeseries.json"
+)
+SM_SIR_DHK_TS = PROJECTS_PATH / "sm_sir" / "bangladesh" / "dhaka" / "timeseries.json"
+SM_SIR_COXS_TS = (
+    PROJECTS_PATH / "sm_sir" / "bangladesh" / "coxs_bazar" / "timeseries.json"
 )
 
-DATA_PATH = os.path.join(INPUT_DATA_PATH, "covid_bgd")
 
-FILES = os.listdir(DATA_PATH)
+DATA_PATH = INPUT_DATA_PATH / "covid_bgd"
 
-BGD_DATA = [os.path.join(DATA_PATH, file) for file in FILES if "BGD" in file]
-DHK_DATA = [os.path.join(DATA_PATH, file) for file in FILES if "DHK" in file]
-COXS_DATA = os.path.join(DATA_PATH, "COVID-19 Data for modelling.xlsx")
+FILES = list(DATA_PATH.glob("*"))
 
-DATA_FILE = os.path.join(DATA_PATH, "Bangladesh COVID-19 template.xlsx")
+
+BGD_DATA = [file for file in FILES if "BGD" in file.stem]
+DHK_DATA = [file for file in FILES if "DHK" in file.stem]
+COXS_DATA = DATA_PATH / "COVID-19 Data for modelling.xlsx"
+
+DATA_FILE = DATA_PATH / "Bangladesh COVID-19 template.xlsx"
 
 TARGET_MAP_BGD = {
     "notifications": "bgd_confirmed_cases",

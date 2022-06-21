@@ -36,10 +36,6 @@ COMPARTMENTS = [Compartment.SUSCEPTIBLE, *DISEASE_COMPARTMENTS]
 Stratifications.
 """
 
-# Age groups match the standard mixing matrices
-AGEGROUP_STRATA = [str(breakpoint) for breakpoint in list(range(0, 80, 5))]
-
-
 class Clinical:
     NON_SYMPT = "non_sympt"
     SYMPT_NON_HOSPITAL = "sympt_non_hospital"
@@ -125,30 +121,15 @@ INFECT_DEATH = "infect_death"
 
 AGE_CLINICAL_TRANSITIONS = [INFECTIOUSNESS_ONSET, INFECT_DEATH, RECOVERY]
 
-
 """
 Outputs.
 """
 
-
 INFECTION_DEATHS = "infection_deaths"
 NOTIFICATIONS = "notifications"  # Not a transition in the same sense as the others
-
 
 """
 Mobility-related.
 """
 
-
 LOCATIONS = ["home", "other_locations", "school", "work"]
-
-GOOGLE_MOBILITY_LOCATIONS = [
-    "retail_and_recreation",
-    "parks",
-    "workplaces",
-    "transit_stations",
-    "grocery_and_pharmacy",
-    "residential",
-    "tiles_visited",
-    "single_tile",
-]

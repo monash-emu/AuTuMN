@@ -1,0 +1,32 @@
+\subsection{Progression from latent to active TB}
+We use the estimates reported in Ragonnet et al. to inform the modelled dynamics of activation from 
+latent to active TB. These parameters vary by age, and a multiplier is used to 
+incorporate uncertainty around the progression rates
+\subsection{Effect of diabetes}
+The model is not stratified by diabetes status. Instead, we model the effect of diabetes type 2 by 
+increasing the rates of progression from latent to active TB using age-specific multipliers. For each 
+age group, the value of the diabetes-effect multiplier depends on the age-specific proportion of 
+diabetic individuals and the relative rate of TB reactivation for diabetic individuals compared to non-diabetic individuals.
+\subsection{Natural history flows}
+We use the estimates reported in Ragonnet et al. to model the rate of TB mortality in the absence of 
+treatment and the rate of self-recovery. We use different rates of untreated TB mortality and self-recovery for smear-positive TB compared to smear-negative TB. The TB mortality and self-recovery 
+rates associated with extrapulmonary TB are assumed to be the same as those of smear-negative TB.
+\subsection{Passive case detection of active TB}
+The detection rate is defined as the rate of progression from the active disease to the treatment 
+compartment, as all detected individuals are assumed to be started on treatment at diagnosis in our 
+model. This rate is calculated by multiplying the screening rate with the diagnostic test sensitivity. 
+The screening rate can be interpreted as the reciprocal of the average time that diseased individuals 
+take to seek care. The diagnostic sensitivity varies according to the organ status to reflect the relative 
+differences in the difficulty to diagnose smear-negative TB and extrapulmonary TB, as compared to 
+smear-positive TB.
+We use a time-variant function to model the screening rate in order to capture detection improvements 
+over time.
+\subsection{Treatment outcomes}
+Treated individuals can experience three different treatment outcomes: treatment success, relapse or 
+death. The rate of treatment-induced recovery \phi{} is set to the reciprocal of the duration of a 
+completed treatment course. We then use the observed treatment success proportion (often referred to 
+as “treatment success rate”) as model input. In our model, it is calculated from \(TSR = \frac{\phi}{\phi + \rho + \mu_{\tau} + \mu^{'}}\){}, 
+where \rho{} is the relapse rate, \({\mu_{\tau}{}}\) is the excess mortality rate of individuals on TB treatment, and \mu is the 
+non-TB-related mortality rate. Finally, we calculate the respective values of {\rho}{} and \({\mu_{\tau}{}}\) using the 
+observed proportion of deaths among all negative treatment outcomes, denoted \pi{}. We have \({\pi = \frac{\mu_{\tau} +\mu}{\rho + \mu_{\tau} + \mu}}\){} that we inject into the \({TSR}\) equation.
+

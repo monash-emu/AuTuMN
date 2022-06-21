@@ -1,6 +1,6 @@
 import pandas as pd
 
-from autumn.tools.project import (
+from autumn.core.project import (
     Project,
     ParameterSet,
     load_timeseries,
@@ -8,9 +8,9 @@ from autumn.tools.project import (
     get_all_available_scenario_paths,
     use_tuned_proposal_sds,
 )
-from autumn.tools.calibration import Calibration
-from autumn.tools.calibration.priors import UniformPrior
-from autumn.tools.calibration.targets import NormalTarget
+from autumn.calibration import Calibration
+from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import (
     base_params,
     build_model,
@@ -77,14 +77,14 @@ priors = [
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 1.0)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.7, 1.0)),
     # age stratification
-    UniformPrior("age_stratification.cfr.multiplier", (0.02, 0.07)),
-    UniformPrior("age_stratification.prop_hospital.multiplier", (0.04, 0.18)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.015, 0.055)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (0.02, 0.1)),
     # prop icu among hospitalization
     # UniformPrior("prop_icu_among_hospitalised", (0.01, 0.2)),
     # Omicron-related parameters
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (715.0, 746.0)),  # 3-week interval
     # UniformPrior("voc_emergence.omicron.relative_latency", (0.01, 0.5)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.3, 2.3)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.5, 2.5)),
     # UniformPrior("voc_emergence.omicron.relative_active_period", (0.01, 0.5)),
     # UniformPrior("voc_emergence.omicron.icu_multiplier", (0.1, 0.6)),
     # sojourns
@@ -122,5 +122,5 @@ project = Project(
 )
 
 
-# from autumn.tools.calibration.proposal_tuning import perform_all_params_proposal_tuning
+# from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
 # perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

@@ -1,0 +1,27 @@
+description: hypertransmissible immune-escape VoC, reinstate microdistancing
+
+voc_emergence:
+  omicron:
+    cross_protection:
+      new_strain:
+        early_reinfection: 0.
+  new_strain:
+    new_voc_seed:
+      start_time: 897.  # 15 June 2022
+    immune_escape: 1.
+    contact_rate_multiplier: 2.
+
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 794.
+          - 795.
+          - 897.
+          - 898.
+        values:
+          - 1.
+          - 0.
+          - 0.
+          - 1.

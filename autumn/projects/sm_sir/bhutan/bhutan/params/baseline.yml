@@ -5,8 +5,8 @@ country:
 ref_mixing_iso3: CHN
 
 time:
-  start: 750.
-  end: 912.
+  start: 727.
+  end: 1002.
 
 mobility:
   #  Mapping of Google mobility locations to locations as specified in matrices
@@ -24,7 +24,20 @@ mobility:
     #   single_tile: 1.
   smooth_google_data: false  # Whether to apply a 7-day moving average
   square_mobility_effect: true
-  microdistancing: {}
+  microdistancing:
+    behaviour:
+      function_type: empiric
+      parameters:
+        max_effect: 0.3
+        times:
+          - 794.
+          - 795.
+        values:
+          - 1.
+          - 0.
+      locations:
+        - work
+        - other_locations
 
 is_dynamic_mixing_matrix: true
 
@@ -42,7 +55,7 @@ immunity_stratification:
 
 sojourns:
   active:
-    total_time: 4.
+    total_time: 3.
     proportion_early: 0.333
   latent:
     total_time: 2.5
@@ -51,7 +64,11 @@ sojourns:
 
 activate_random_process: False
 
-testing_to_detection: null
+testing_to_detection:
+  assumed_tests_parameter: 1.e-4
+  assumed_cdr_parameter: 0.0615
+  smoothing_period: 14
+  floor_value: 0.06
 detect_prop: 0.6
 
 voc_emergence:
@@ -79,7 +96,7 @@ voc_emergence:
       entry_rate: 10.
       seed_duration: 1.
     contact_rate_multiplier: 1.
-    immune_escape: 0.
+    immune_escape: 0.6
     hosp_protection: 0.
     death_protection: 0.
     relative_latency: 1.

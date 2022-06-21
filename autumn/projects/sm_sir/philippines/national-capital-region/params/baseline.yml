@@ -11,7 +11,7 @@ population:
 
 time:
   start: 640  # 650
-  end: 1096  # 31 Dec 2022
+  end: 1277  # 30 June 2023
 
 activate_random_process: False
 
@@ -61,6 +61,7 @@ testing_to_detection:
   assumed_tests_parameter: 1.e-4
   assumed_cdr_parameter: 0.02
   smoothing_period: 7
+  floor_value: 0.
 
 # Mobility parameters
 is_dynamic_mixing_matrix: true
@@ -73,41 +74,28 @@ mobility:
       append: false
       times:
         - 2021-01-01  # any past date
+        - 2022-08-15  # more schools reopen mid-August
+        - 2022-08-17
       values:
-        - 0.
+        - 0.10
+        - 0.10
+        - 0.90
 
 immunity_stratification:
   prop_immune: 0.2
   prop_high_among_immune: 0.
 
-  # Optimistic VE assumptions
-  infection_risk_reduction:
-    none: 0.
-    low: 0.438
-    high: 0.6
-
-age_stratification:
-  prop_hospital:
-    source_immunity_protection:
-      none: 0.
-      low: 0.807
-      high: 0.95
-
-# Alternative, pessimistic VE assumptions
-#immunity_stratification:
-#  infection_risk_reduction:
-#    none: 0.
-#    low: 0.038
-#    high: 0.3
-#
-#age_stratification:
-#  prop_hospital:
-#    source_immunity_protection:
-#      none: 0.
-#      low: 0.488
-#      high: 0.85
-
 sojourns:
   latent:
     total_time: 3.
-  recovered: 90.  # 365 days was the previous pessimistic estimate
+  recovered: 180.
+
+age_stratification:
+  prop_hospital:
+    reference_strain: omicron
+
+future_monthly_booster_rate: 200000.
+booster_effect_duration: 180.
+
+requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
+cumulative_start_time: 883  # 1 June 2022

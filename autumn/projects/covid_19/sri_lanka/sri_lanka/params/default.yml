@@ -24,7 +24,7 @@ vaccination:
     ve_sympt_covid: 0.3
     ve_prop_prevent_infection: 0.8
     ve_infectiousness_ratio: 0.5
-    ve_hospitalisation: 0.7
+    ve_hospitalisation: 0.6
     ve_death: 0.8
   fully_vaccinated:
     ve_sympt_covid: 0.687
@@ -33,16 +33,16 @@ vaccination:
     ve_hospitalisation: 0.8
     ve_death: 0.85
   part_waned:
-    ve_sympt_covid: 0.6
+    ve_sympt_covid: 0.5
     ve_prop_prevent_infection: 0.8
     ve_infectiousness: 0.15
-    ve_hospitalisation: 0.84
-    ve_death: 0.74
+    ve_hospitalisation: 0.55
+    ve_death: 0.75
   fully_waned:
     ve_sympt_covid: 0.
     ve_prop_prevent_infection: 0.
     ve_infectiousness: 0.
-    ve_hospitalisation: 0.5
+    ve_hospitalisation: 0.
     ve_death: 0.65
   standard_supply: true # to get the timeseries of vaccine coverage
   lag: 14

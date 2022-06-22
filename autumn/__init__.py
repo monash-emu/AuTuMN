@@ -124,7 +124,7 @@ register_project(
 )
 
 register_project(
-    Models.TB,
+    Models.TBD,
     Region.KIRIBATI,
-   "autumn.projects.tuberculosis.kiribati.project",
+   "autumn.projects.tb_dynamics.kiribati.project",
 )

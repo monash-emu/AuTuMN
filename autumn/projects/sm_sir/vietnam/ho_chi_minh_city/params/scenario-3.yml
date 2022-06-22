@@ -3,6 +3,7 @@ description: >
   This variant is more immune-escape than Omicron, but not totally towards vaccination- and infection-related.
   Severity (towards hospitalization and fatality) is twice that of the Omicron variant (more severe).
   Booster dose is assumed to be effective for 120 days (~4 months).
+
 voc_emergence:
   delta:
     cross_protection:

@@ -81,6 +81,8 @@ priors = [
     UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.01, 0.4)),
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.02, 0.08)),
+    # emergence of delta
+    UniformPrior("voc_emergence.delta.icu_multiplier", (0.5, 1.5)),
     # emergence of omicron
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (725.0, 770.0)),  # 5 weeks interval
     # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),

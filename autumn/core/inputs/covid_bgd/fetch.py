@@ -21,9 +21,11 @@ BGD_DATA_PATH = INPUT_DATA_PATH / "covid_bgd"
 VACC_FILE = [
     BGD_DATA_PATH / vac_file
     for vac_file in list(BGD_DATA_PATH.glob("*"))
-    if "DOSE" in vac_file.stem
+    if "DOSE" in vac_file.stem and vac_file.suffix.endswith(".xls")
 ]
 
 
 def fetch_covid_bgd_data():
     pass
+
+

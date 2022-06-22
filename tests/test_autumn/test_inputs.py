@@ -4,14 +4,14 @@ from datetime import datetime
 import numpy as np
 import pytest
 
-from autumn.core.db import Database
+from autumn.core.db import get_database
 from autumn.core.inputs import database as input_database
 from autumn.core.inputs import (
     get_country_mixing_matrix, get_crude_birth_rate, get_death_rates_by_agegroup, get_life_expectancy_by_agegroup,
     get_population_by_agegroup,
 )
 from autumn.core.inputs.demography.queries import downsample_quantity, downsample_rate
-from autumn.models.covid_19.mixing_matrix.macrodistancing import get_mobility_data, weight_mobility_data
+from autumn.models.sm_sir.mixing_matrix.macrodistancing import get_mobility_data, weight_mobility_data
 
 
 @pytest.mark.github_only
@@ -19,12 +19,12 @@ def test_build_input_database(tmpdir, monkeypatch):
     """
     Ensure we can build the input database with nothing crashing
     """
-    input_db_path = os.path.join(tmpdir, "inputs.db")
+    input_db_path = os.path.join(tmpdir, "db")
     monkeypatch.setattr(input_database, "INPUT_DB_PATH", input_db_path)
     assert not os.path.exists(input_db_path)
     input_database.build_input_database(rebuild=True)
     assert os.path.exists(input_db_path)
-    db = Database(input_db_path)
+    db = get_database(input_db_path)
     expected_tables = set(["countries", "population", "birth_rates", "deaths", "life_expectancy"])
     assert set(db.table_names()).intersection(expected_tables) == expected_tables
 

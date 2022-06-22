@@ -1,18 +1,21 @@
+from pathlib import Path
 
 import pandas as pd
-
-from pathlib import Path
-from autumn.settings.folders import INPUT_DATA_PATH
 from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.settings.folders import INPUT_DATA_PATH
 
 URL = "1kAlNlxhkYv5MF4810gYCTudqiVO5D9xpVNqhzATaFK8"
 
 COVID_BASE_DATETIME = COVID_BASE_DATETIME.date()
-INPUT_DATA_PATH =Path(INPUT_DATA_PATH)
-VAC_PATH = INPUT_DATA_PATH/ "covid_phl"
+INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
+VAC_PATH = INPUT_DATA_PATH / "covid_phl"
 
 
-file_names = [file for file in list(VAC_PATH.glob('*')) if "NVOC Month END_" in file.stem]
+file_names = [
+    file
+    for file in list(VAC_PATH.glob("*"))
+    if "NVOC" in file.stem and file.suffix.endswith(".xlsx")
+]
 xlsx_file_path = file_names
 
 file_dates = [
@@ -38,7 +41,9 @@ def process_df(df, date):
         check_unnamed = ["unnamed" in col_name.lower() for col_name in col_names]
 
     col_names = [col.lower().replace(" ", "+") for col in col_names]
-    dose_col = list(df.loc[0].str.replace("Sum of CUMULATIVE_", "").str.lower())
+    df.loc[0] = df.loc[0].str.replace(" ", "_").str.upper()
+
+    dose_col = list(df.loc[0].str.replace("SUM_OF_CUMULATIVE_", ""))
     dose_col[0] = ""
 
     map_col = dict(zip(df.columns, col_names))
@@ -50,8 +55,8 @@ def process_df(df, date):
 
     df.columns = df[:1].values.tolist()[0]
     df = df[1:]
-    df.rename(columns={"Row Labels": "cml_dose"}, inplace=True)
-    df["cml_dose"] = df["cml_dose"].str.replace("Sum of CUMULATIVE_", "")
+    df.rename(columns={"ROW_LABELS": "cml_dose"}, inplace=True)
+    df["cml_dose"] = df["cml_dose"].str.replace("SUM_OF_CUMULATIVE_", "")
     df["date"] = date
 
     df["date_index"] = df["date"].apply(lambda d: (d - COVID_BASE_DATETIME).days)
@@ -70,6 +75,7 @@ def get_phl_vac(VAC_FILE, process_df):
             skiprows=1,
             usecols=lambda x: "Total Sum of" not in x,
         )
+
         df = process_df(df.copy(), date)
         dataframe_list.append(df)
     return pd.concat(dataframe_list)

@@ -150,7 +150,6 @@ mobility:
   region: null
   mixing: {}
   age_mixing: null
-  npi_effectiveness: {}
   # Mapping of Google mobility locations to Prem-specific locations
   google_mobility_locations:
     work:

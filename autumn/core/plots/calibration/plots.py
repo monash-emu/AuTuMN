@@ -107,17 +107,17 @@ def plot_acceptance_ratio(
     plotter.save_figure(fig, filename=f"acceptance_ratio", dpi_request=dpi_request)
 
 
-def plot_prior(i: int, prior_dict: dict, path: str):
+def plot_prior(i: int, prior_dict: dict, path=None, ax=None, print_distri=True, alpha=1.):
     if prior_dict["distribution"] == "lognormal":
         logger.error("Cannot plot prior distributions for lognormal.")
         return
-
-    fig, ax = pyplot.subplots()
+    if path is not None:
+        fig, ax = pyplot.subplots()
     x_range = workout_plot_x_range(prior_dict)
     x_values = np.linspace(x_range[0], x_range[1], num=1000)
     y_values = [calculate_prior(prior_dict, x, log=False) for x in x_values]
     zeros = [0.0 for i in x_values]
-    pyplot.fill_between(x_values, y_values, zeros, color="cornflowerblue")
+    ax.fill_between(x_values, y_values, zeros, color="cornflowerblue", alpha=alpha)
 
     if "distri_mean" in prior_dict:
         pyplot.axvline(
@@ -147,28 +147,30 @@ def plot_prior(i: int, prior_dict: dict, path: str):
     pyplot.ylabel("prior PDF")
 
     # place a text box in upper left corner to indicate the prior details
-    props = dict(boxstyle="round", facecolor="dimgray", alpha=0.5)
-    textstr = (
-        prior_dict["distribution"]
-        + "\n("
-        + str(round(float(prior_dict["distri_params"][0]), 3))
-        + ", "
-        + str(round(float(prior_dict["distri_params"][1]), 3))
-        + ")"
-    )
-    ax.text(
-        0.05,
-        0.95,
-        textstr,
-        transform=ax.transAxes,
-        fontsize=14,
-        verticalalignment="top",
-        bbox=props,
-    )
+    if print_distri:
+        props = dict(boxstyle="round", facecolor="dimgray", alpha=0.5)
+        textstr = (
+            prior_dict["distribution"]
+            + "\n("
+            + str(round(float(prior_dict["distri_params"][0]), 3))
+            + ", "
+            + str(round(float(prior_dict["distri_params"][1]), 3))
+            + ")"
+        )
+        ax.text(
+            0.05,
+            0.95,
+            textstr,
+            transform=ax.transAxes,
+            fontsize=14,
+            verticalalignment="top",
+            bbox=props,
+        )
 
-    pyplot.tight_layout()
-    filename = os.path.join(path, prior_dict["param_name"] + ".png")
-    pyplot.savefig(filename)
+    if path is not None:
+        pyplot.tight_layout()
+        filename = os.path.join(path, prior_dict["param_name"] + ".png")
+        pyplot.savefig(filename)
 
 
 def workout_plot_x_range(prior_dict):

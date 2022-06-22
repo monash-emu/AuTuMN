@@ -4,23 +4,21 @@ save files in data/targets/
 """
 import itertools
 import json
-import requests
-
 from pathlib import Path
 from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-
-from autumn.settings import PROJECTS_PATH, INPUT_DATA_PATH
+import requests
 from autumn.models.covid_19.constants import COVID_BASE_DATETIME
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
 
 PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
-PHL_doh_link = "1Fr7GQACtKcX3dj3Gstg5_eXJ2L1fvqcU"  # sheet 05 daily report
-PHL_fassster_link = "1NdCVu-op4-rqt_9u3XaS3I8MPqybo4bR"
+PHL_doh_link = "17DDeVv9I0xYLmezNkGYIbBLuoyWUoDfA"  # sheet 05 daily report
+PHL_fassster_link = "15eDyTjXng2Zh38DVhmeNy0nQSqOMlGj3"
 
 # destination folders filepaths
 phl_inputs_dir = INPUT_DATA_PATH / "covid_phl"

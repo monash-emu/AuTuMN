@@ -78,7 +78,11 @@ data/sir_example_*
 data/outputs
 
 # TeX stuff (all the automatically generated files, except .log which is included above)
-docs/tex/user/
+docs/tex/
+docs/master_files/vbui/
+docs/schemas/
+docs/tex/
+docs/tex_descriptions/
 
 # Random stuff
 

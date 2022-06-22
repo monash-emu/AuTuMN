@@ -31,6 +31,7 @@ class Region:
     BHUTAN = "bhutan"
     THIMPHU = "thimphu"
     MULTI = "multi"
+    KIRIBATI = "kiribati"
 
     REGIONS = [
         PHILIPPINES,

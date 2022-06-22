@@ -38,7 +38,7 @@ immunity_stratification:
     high: 0.6
 
 voc_emergence:
-  wild_type:
+  delta:
     starting_strain: true
     seed_prop: 1.
     new_voc_seed: null
@@ -50,12 +50,12 @@ voc_emergence:
     relative_latency: 1.0
     relative_active_period: 1.0
     cross_protection:
-      wild_type:
+      delta:
         early_reinfection: 1.  # 0% immune escape
-        late_reinfection: 0.4  # 15% immune escape - this makes the model almost SEIR, because protection is almost complete
+        late_reinfection: 0.1  # make wild-type late infection rate zero
       omicron:
         early_reinfection: 0.4  # 60% immune escape - I would say this is correct in the way I think about it
-        late_reinfection: 0.34  # 85% of 0.4 - again, correct to have the same relative amount of immunity
+        late_reinfection: 0.  # 85% of 0.4 - again, correct to have the same relative amount of immunity
       new_strain:
         early_reinfection: 0.4  # Turn off the new strain completely in the base case
         late_reinfection: 0.  # (although this is also achieved through delaying its emergence, so it's arbitrary)
@@ -74,7 +74,7 @@ voc_emergence:
     relative_latency: 0.667
     relative_active_period: 1.
     cross_protection:
-      wild_type:
+      delta:
         early_reinfection: 1.  # I have just been turning off reinfection with previous strains, because usually we just see complete replacement
         late_reinfection: 1.
       omicron:
@@ -98,7 +98,7 @@ voc_emergence:
     relative_latency: 0.667
     relative_active_period: 0.5
     cross_protection:
-      wild_type:
+      delta:
         early_reinfection: 1.  # I have just been turning off reinfection with previous strains, because usually we just see complete replacement
         late_reinfection: 1.
       omicron:

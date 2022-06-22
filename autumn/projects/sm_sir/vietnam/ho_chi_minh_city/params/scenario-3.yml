@@ -4,7 +4,7 @@ description: >
   Severity (towards hospitalization and fatality) is twice that of the Omicron variant (more severe).
   Booster dose is assumed to be effective for 120 days (~4 months).
 voc_emergence:
-  wild_type:
+  delta:
     cross_protection:
       new_strain:
         early_reinfection: 0.2 # = baseline / 2

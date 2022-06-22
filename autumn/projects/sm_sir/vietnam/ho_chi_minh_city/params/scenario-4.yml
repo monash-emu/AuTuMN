@@ -10,7 +10,7 @@ description: >
 #detect_prop: 0.1
 
 voc_emergence:
-  wild_type:
+  delta:
     cross_protection:
       new_strain:
         early_reinfection: 0. # fully immune-escape

@@ -3,7 +3,7 @@ contact_rate: 0.15405085394320367
 immunity_stratification.infection_risk_reduction.high: 0.5480948898848788
 immunity_stratification.infection_risk_reduction.low: 0.19748399832601582
 infectious_seed: 350.76362952471106
-mobility.microdistancing.behavior.parameters.max_effect: 0.07231840179880442
+mobility.microdistancing.behavior.parameters.max_effect: 0.2
 prop_icu_among_hospitalised: 0.03672862809171533
 sojourns.active.proportion_early: 0.004460032686302373
 sojourns.active.total_time: 7.773587653921577

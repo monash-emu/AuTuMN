@@ -47,8 +47,6 @@ voc_emergence:
     hosp_protection: 0.
     death_protection: 0.
     icu_multiplier: 1
-    relative_latency: 1.0
-    relative_active_period: 1.0
     cross_protection:
       delta:
         early_reinfection: 1.  # 0% immune escape

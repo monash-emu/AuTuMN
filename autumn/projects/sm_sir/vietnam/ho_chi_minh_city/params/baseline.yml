@@ -92,7 +92,7 @@ voc_emergence:
     immune_escape: 0.6
     hosp_protection: 0.9
     death_protection: 0.95
-    icu_multiplier: 0.5
+    icu_multiplier: 1.0
     relative_latency: 0.667
     relative_active_period: 0.5
     cross_protection:

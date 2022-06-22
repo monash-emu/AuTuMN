@@ -13,7 +13,7 @@ sojourns:
   latent:
     total_time: 4.
     proportion_early: 0.5
-  recovered: 180.
+  recovered: 120.
 
 population:
   region: Ho Chi Minh City
@@ -46,7 +46,7 @@ voc_emergence:
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
-    icu_multiplier: 1
+    icu_multiplier: 1.
     cross_protection:
       delta:
         early_reinfection: 1.  # 0% immune escape

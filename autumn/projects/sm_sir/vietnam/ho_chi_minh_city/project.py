@@ -42,7 +42,7 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 # )
 hospital_occupancy = pd.concat(
     [
-        ts_set["hospital_occupancy"].loc[592:615],  # from 14/08/2021 to 06/06/2021
+        ts_set["hospital_occupancy"].loc[592:615],  # from 14/08/2021 to 06/09/2021
         ts_set["hospital_occupancy"].loc[632:],  # truncated from 23 Sep 2021
     ]
 )

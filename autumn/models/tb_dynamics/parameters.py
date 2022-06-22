@@ -1,93 +1,20 @@
 """
 Type definition for model parameters
 """
-from numpy import int_
-from pydantic import BaseModel, Extra, root_validator, validator
-from pydantic.dataclasses import dataclass
-
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-#from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
+# from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
+from numpy import int_
+from pydantic import BaseModel, Extra, root_validator, validator
+from pydantic.dataclasses import dataclass
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
 
 """
 Commonly used checking processes
-"""
-
-
-def get_check_prop(name):
-
-    msg = f"Parameter '{name}' not in domain [0, 1], but is intended as a proportion"
-
-    def check_prop(value: float) -> float:
-        assert 0.0 <= value <= 1.0, msg
-        return value
-
-    return check_prop
-
-
-def get_check_non_neg(name):
-
-    msg = f"Parameter '{name}' is negative, but is intended to be non-negative"
-
-    def check_non_neg(value: float) -> float:
-        assert 0.0 <= value, msg
-        return value
-
-    return check_non_neg
-
-
-def get_check_all_prop(name):
-
-    msg = f"Parameter '{name}' contains values outside [0, 1], but is intended as a list of proportions"
-
-    def check_all_pos(values: list) -> float:
-        assert all([0.0 <= i_value <= 1.0 for i_value in values]), msg
-        return values
-
-    return check_all_pos
-
-
-def get_check_all_non_neg(name):
-
-    msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
-
-    def check_all_non_neg(values: list) -> float:
-        assert all([0.0 <= i_value for i_value in values]), msg
-        return values
-
-    return check_all_non_neg
-
-
-def get_check_all_dict_values_non_neg(name):
-
-    msg = f"Dictionary parameter '{name}' contains negative values, but is intended as a list of proportions"
-
-    def check_non_neg_values(dict_param: dict) -> float:
-        assert all([0.0 <= i_value for i_value in dict_param.values()]), msg
-        return dict_param
-
-    return check_non_neg_values
-
-
-def get_check_all_non_neg_if_present(name):
-
-    msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
-
-    def check_all_non_neg(values: float) -> float:
-        if values:
-            assert all([0.0 <= i_value for i_value in values]), msg
-        return values
-
-    return check_all_non_neg
-
-
-"""
-Parameter validation models
 """
 
 
@@ -107,6 +34,7 @@ class Time(BaseModel):
         assert end >= start, f"End time: {end} before start: {start}"
         return values
 
+
 class ParamConfig:
     """
     Config for parameters model
@@ -115,14 +43,16 @@ class ParamConfig:
     anystr_strip_whitespace = True  # Strip whitespace
     allow_mutation = False  # Params should be immutable
 
+
 class MixingMatrices(BaseModel):
     """
-    Config mixing matrices. None defaults and "prem" to Prem matrices. "extrapolated" for building synthetic matrices with age adjustment (age_adjust  = True) 
+    Config mixing matrices. None defaults and "prem" to Prem matrices. "extrapolated" for building synthetic matrices with age adjustment (age_adjust  = True)
     """
 
     type: Optional[str]
     source_iso3: Optional[str]
     age_adjust: Optional[bool]
+
 
 class Country(BaseModel):
     """
@@ -135,6 +65,7 @@ class Country(BaseModel):
     def check_length(iso3):
         assert len(iso3) == 3, f"ISO3 codes should have three digits, code is: {iso3}"
         return iso3
+
 
 class Population(BaseModel):
     """
@@ -150,6 +81,7 @@ class Population(BaseModel):
         assert 1800 <= year <= 2050, msg
         return year
 
+
 class CompartmentSojourn(BaseModel):
     """
     Compartment sojourn times, meaning the mean period of time spent in a compartment.
@@ -158,12 +90,6 @@ class CompartmentSojourn(BaseModel):
     total_time: float
     proportion_early: Optional[float]
 
-    check_total_positive = validator("total_time", allow_reuse=True)(
-        get_check_non_neg("total_time")
-    )
-    check_prop_early = validator("proportion_early", allow_reuse=True)(
-        get_check_prop("proportion_early")
-    )
 
 class Sojourns(BaseModel):
     """
@@ -174,10 +100,6 @@ class Sojourns(BaseModel):
     latent: CompartmentSojourn
     recovered: Optional[float]  # Doesn't have an early and late
 
-    check_recovered_positive = validator("recovered", allow_reuse=True)(
-        get_check_non_neg("recovered")
-    )
-
 
 @dataclass(config=ParamConfig)
 class Parameters:
@@ -185,7 +107,7 @@ class Parameters:
     description: Optional[str]
     country: Country
     # Country info
-    population: Population 
+    population: Population
     crude_birth_rate: float
     age_mixing: Optional[MixingMatrices]
     # Running time.
@@ -242,9 +164,3 @@ class Parameters:
     extra_params: dict
     haario_scaling_factor: float
     metropolis_initialisation: str
-
-    @validator("time_variant_tsr", pre=True, allow_reuse=True)
-    def check_time_variant_tsr(val):
-        msg = "Treatment success rate should always be > 0."
-        assert all([v > 0.0 for v in val.values()]), msg
-        return val

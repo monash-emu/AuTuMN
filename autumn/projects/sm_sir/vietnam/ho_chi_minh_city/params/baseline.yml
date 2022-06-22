@@ -9,8 +9,10 @@ ref_mixing_iso3: HKG
 sojourns:
   active:
     total_time: 6.
+    proportion_early: 0.333
   latent:
     total_time: 4.
+    proportion_early: 0.5
   recovered: 180.
 
 population:
@@ -45,6 +47,8 @@ voc_emergence:
     hosp_protection: 0.
     death_protection: 0.
     icu_multiplier: 1
+    relative_latency: 1.0
+    relative_active_period: 1.0
     cross_protection:
       wild_type:
         early_reinfection: 1.  # 0% immune escape
@@ -59,16 +63,16 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 732. # 1st Jan 2022
+      start_time: 763. # temporarily fixed to 1st Feb 2022
       entry_rate: 10.
       seed_duration: 10.
-    contact_rate_multiplier: 2.0
+    contact_rate_multiplier: 2.5
     immune_escape: 0.6
-    hosp_protection: 0.8
-    death_protection: 0.9
+    hosp_protection: 0.9
+    death_protection: 0.95
     icu_multiplier: 0.2
-    relative_latency: 0.5
-    relative_active_period: 0.3
+    relative_latency: 0.667
+    relative_active_period: 1.
     cross_protection:
       wild_type:
         early_reinfection: 1.  # 0% immune escape
@@ -88,11 +92,11 @@ voc_emergence:
       seed_duration: 10.
     contact_rate_multiplier: 4.0 # ~2 times more transmissible than Omicron
     immune_escape: 0.6
-    hosp_protection: 0.8
-    death_protection: 0.9
-    icu_multiplier: 0.2
-    relative_latency: 0.5
-    relative_active_period: 0.3
+    hosp_protection: 0.9
+    death_protection: 0.95
+    icu_multiplier: 0.5
+    relative_latency: 0.667
+    relative_active_period: 0.5
     cross_protection:
       wild_type:
         early_reinfection: 1.  # = omicron --> delta
@@ -104,13 +108,13 @@ voc_emergence:
         early_reinfection: 1. # = omicron --> omicron
         late_reinfection: 0.5 # Same immunity escape level with Omicron
 
-testing_to_detection:
-  assumed_tests_parameter: 0.001 # Malaysia model
-  assumed_cdr_parameter: 0.05 # fixed
-  smoothing_period: 14
-  floor_value: 0.
+#testing_to_detection:
+#  assumed_tests_parameter: 0.001 # Malaysia model
+#  assumed_cdr_parameter: 0.05 # fixed
+#  smoothing_period: 14
+#  floor_value: 0.
 
-#detect_prop: 0.2
+detect_prop: 0.2
 
 hospital_stay:
   hospital_all:
@@ -128,6 +132,7 @@ mobility:
   # Google mobility data
   smooth_google_data: true # whether to apply a 7-day moving average
   # Google mobility weightings
+  square_mobility_effect: true
   google_mobility_locations:
     work:
       workplaces: 1.
@@ -136,6 +141,44 @@ mobility:
       grocery_and_pharmacy: 0.25
       parks: 0.25
       transit_stations: 0.25
+  microdistancing:
+    behavior:
+      function_type: empiric
+      parameters:
+        max_effect: 0.2
+        times:
+          - 471 # 15th April 2021, first community case of COVID-19 detected in Ho Chi Minh City
+          - 505 # 19th May 2021, two new cases first detected after 20 days without any new case
+          - 518 # 01st Jun 2021, social distancing city-wide under Directive No. 15 of the PM, with Directive No.16 in place at Go Vap District
+          - 546 # 29th Jun 2021, Directive No.10 of HCMC's authorities in place
+          - 556 # 09th Jul 2021, Directive No.16 of the PM in place city-wide
+          - 573 # 26th Jul 2021, curfew from 6PM to 6AM
+          - 601 # 23th Aug 2021, total lockdown implemented
+          - 640 # 01st Oct 2021, lockdown started to ease
+          - 641 # 02nd Oct 2021, second day after eased lockdown
+          - 654 # 15th Oct 2021, 2 weeks after eased lockdown
+          - 671 # 01st Nov 2021, 1 month after eased lockdown, restaurants are serving on-site at 50% capacity
+          - 703 # 03rd Dec 2021, restaurants are allowed to open even after 10:00 PM and at maximum capacity
+          - 713 # 13th Dec 2021, students started coming back to school
+          - 805 # 15th Mar 2022, all foreign travel restrictions are eased
+        values:
+          - 0.0
+          - 0.2
+          - 0.4
+          - 0.5
+          - 0.7
+          - 0.8
+          - 0.9
+          - 0.7
+          - 0.5
+          - 0.4
+          - 0.3
+          - 0.2
+          - 0.1
+          - 0.0
+      locations:
+        - work
+        - other_locations
   mixing:
     school:
       append: false
@@ -156,22 +199,10 @@ mobility:
 
 prop_icu_among_hospitalised: 0.05
 
+booster_effect_duration: 120. # 4 months
+
 age_stratification:
   cfr:
-    multiplier: 0.8
+    multiplier: 0.55
   prop_hospital:
-    multiplier: 1.0
-
-additional_immunity:
-  times:
-    - 619 # 10th Sep 2021
-    - 632 # 23th Sep 2021
-    - 654 # 15th Oct 2021
-    - 732 # 1st Jan 2022
-    - 763 # 1st Feb 2022
-  values:
-    - 0.1
-    - 0.2
-    - 0.55
-    - 0.7
-    - 0.75
+    multiplier: 1.0 # fixed after various calibrations

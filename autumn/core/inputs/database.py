@@ -2,18 +2,19 @@ import logging
 import os
 
 from autumn.core.db import Database
-from autumn.settings import INPUT_DATA_PATH
+from autumn.core.db.database import ParquetDatabase, get_database
 from autumn.core.utils.timer import Timer
+from autumn.settings import INPUT_DATA_PATH
 
 from .covid_au.preprocess import preprocess_covid_au
-from .covid_phl.preprocess import preprocess_covid_phl
-from .covid_mys.preprocess import preprocess_covid_mys
-from .covid_lka.preprocess import preprocess_covid_lka
-from .covid_vnm.preprocess import preprocess_covid_vnm
-from .covid_mmr.preprocess import preprocess_covid_mmr
 from .covid_bgd.preprocess import preprocess_covid_bgd
 from .covid_btn.preprocess import preprocess_covid_btn
+from .covid_lka.preprocess import preprocess_covid_lka
+from .covid_mmr.preprocess import preprocess_covid_mmr
+from .covid_mys.preprocess import preprocess_covid_mys
+from .covid_phl.preprocess import preprocess_covid_phl
 from .covid_survey.preprocess import preprocess_covid_survey
+from .covid_vnm.preprocess import preprocess_covid_vnm
 from .demography.preprocess import preprocess_demography
 from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 _input_db = None
 
-INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "inputs.db")
+INPUT_DB_PATH = os.path.join(INPUT_DATA_PATH, "db")
 
 
 def get_input_db():
@@ -47,10 +48,10 @@ def build_input_database(rebuild: bool = False):
     Returns a Database, representing the input database.
     """
     if os.path.exists(INPUT_DB_PATH) and not rebuild:
-        input_db = Database(INPUT_DB_PATH)
+        input_db = get_database(INPUT_DB_PATH)
     else:
         logger.info("Building a new database.")
-        input_db = Database(INPUT_DB_PATH)
+        input_db = ParquetDatabase(INPUT_DB_PATH)
 
         with Timer("Deleting all existing data."):
             input_db.delete_everything()

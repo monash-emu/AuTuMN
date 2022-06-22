@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 
-from autumn.models.covid_19.mixing_matrix.mixing_adjusters.location_adjuster import LocationMixingAdjuster
+from autumn.models.sm_sir.mixing_matrix.mixing_adjusters.location_adjuster import LocationMixingAdjuster
 
 MM = np.ones([16, 16])
 HOME_MM = MM * 0.1

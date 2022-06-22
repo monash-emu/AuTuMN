@@ -1,139 +1,200 @@
-import os
+from typing import List, Union, Dict
+from pathlib import Path
+from importlib import import_module
 
-from autumn.core.project.params import read_param_value_from_string
-
-DISTRIBUTION_TRANSLATE = {
-    "trunc_normal": "truncated normal",
-}
+from autumn.core.project.project import Project
+from autumn.core.project.params import get_with_nested_key
+from autumn.settings.folders import BASE_PATH
 
 
-def write_main_param_table(
-    project,
-    main_table_params_list,
-    params_descriptions,
-    all_calibration_params_names,
-    all_priors,
-    output_dir_path,
+def get_params_folder(
+    model: str,
+    country: str,
+    region: str,
+    file_name: str,
+    base_folder: str="docs",
+) -> Path:
+    """
+    Find the directory to where we want to keep the files for the parameters,
+    including add any paths that weren't already present.
+    
+    Args:
+        model: Name of the model type
+        country: The country from which the region comes
+        region: The region considered
+    
+    """
+    
+    projects_dir = Path(BASE_PATH) / base_folder / "tex" / "tex_descriptions" / "projects"
+    app_dir = projects_dir / model / country / region
+    app_dir.mkdir(parents=True, exist_ok=True)
+    return app_dir / f"{file_name}.tex"
+
+
+def get_param_name(
+    parameter_definition: Dict[str, str],
+    param: str
+) -> str:
+    """
+    Simple function to essentially return the appropriate value of the PARAMETER_NAMES dictionary.
+
+    Args:
+        param: Name of the parameter of interest, with hierachical keys joined with "."
+
+    Returns:
+        The parameter name in an appropriate format to go into a table
+    """
+
+    name = parameter_definition[param] if param in parameter_definition else param.replace("_", " ")
+    return name[:1].upper() + name[1:]
+
+
+def get_param_explanation(
+    parameter_evidence: Dict[str, str], 
+    param: str
+) -> str:
+    """
+    Simple function to essentially return the appropriate value of the PARAMETER_EXPLANATIONS dictionary.
+
+    Args:
+        param: Name of the parameter of interest, with hierachical keys joined with "."
+
+    Returns:
+        The parameter explanation in an appropriate format to go into a table
+    """
+
+    explanation = parameter_evidence[param] if param in parameter_evidence else "assumed"
+    return explanation[:1].upper() + explanation[1:]
+
+
+def format_value_for_tex(value: Union[float, int, str]) -> str:
+    """
+    Get the parameter value itself in the format needed for writing to a TeX table.
+    Only adjusts float values, leaves both integers and strings unaffected.
+
+    Args:
+        value: The parameter's value
+
+    Returns:
+        The string version of the parameter value ready to write 
+    """
+    if isinstance(value, float):
+        return float('%.3g' % value)
+    elif isinstance(value, str):
+        return value[:1].upper() + value[1:]
+    else:
+        return value
+
+
+def format_prior_values(
+    distribution: str, 
+    parameters: List[float]
+) -> str:
+    """
+    Get the TeX-ready string to represent the values of the prior distribution.
+    This function needs to be extended considerably, only one example in here for now.
+
+    Args:
+        distribution: Name of the distribution, which will determine the parameter format
+        parameters: The values of the distribution parameters
+
+    Returns:
+        String in TeX format        
+    """
+    if distribution == "uniform":
+        return f"Range: [{parameters[0]}, {parameters[1]}]"
+
+
+def get_line_end(
+    is_last_line: bool,
+) -> str:
+    """
+    Get the characters needed for the end of a row of a TeX table being created by one
+    of the functions below.
+    Note that for some TeX-related reason, we can't put the \\ on the last line.
+
+    Args:
+        is_last_line: Whether this is the last line of the 
+
+    Returns:
+        The characters needed for the end of the line of the table
+    """
+    return "" if is_last_line else " \\\\ \n\hline"
+
+
+def write_param_table_rows(
+    file_name: Path,
+    project: Project,
+    params_to_write: List[str],
+    ignore_priors: bool=True,
 ):
-    tex_file_path = os.path.join(output_dir_path, "parameters_auto.tex")
-    with open(tex_file_path, "w") as tex_file:
-        write_param_table_header(tex_file, table_type="main_table")
-        # Write one row per parameter
-        for param in main_table_params_list:
-            if param not in params_descriptions:
-                print(
-                    f"Warning: parameter {param} won't be in the main table as there is no description available"
-                )
-                continue
+    """
+    Write parameter values to a TeX file in a format that can be incorporated
+    into a standard TeX table.
+    
+    Args:
+        file_name: Path to the file to be written
+        project: The AuTuMN project object being interrogated
+        params_to_write: The names of the requested parameters to be written
+        ignore_priors: Whether to ignore parameters that are project priors
+    """
+    base_params = project.param_set.baseline.to_dict()
 
-            param_info = params_descriptions[param]
+    # Get the dictionaries to pull the text from
+    model_constants = import_module(f"autumn.models.{project.model_name}.param_format")
 
-            if param in all_calibration_params_names:
-                display_value = get_prior_display(
-                    all_priors[all_calibration_params_names.index(param)],
-                    table_type="main_table",
-                )
+    with open(file_name, "w") as tex_file:
+        for i_param, param in enumerate(params_to_write):
+
+            # Get the ingredients
+            param_name = get_param_name(model_constants.PARAMETER_DEFINITION, param)
+            unit = model_constants.PARAMETER_UNITS[param] if param in model_constants.PARAMETER_UNITS else ""
+
+            # Ignore if the parameter is a calibration prior
+            if param in (prior["param_name"] for prior in project.calibration.all_priors) and ignore_priors:
+                value = "Calibrated"
+                unit = ""
             else:
-                display_value = get_fixed_param_display(project, param, param_info)
+                value = format_value_for_tex(get_with_nested_key(base_params, param))
+                msg = "Haven't indexed into single parameter"
+                assert not isinstance(value, dict), msg
+            explanation = get_param_explanation(model_constants.PARAMETER_EVIDENCE, param)
 
-            # write table row
-            table_row = f"\\hline {param_info['full_name']} & {display_value} & "
-            if "rationale" in param_info:
-                table_row += param_info["rationale"]
-            tex_file.write("\t " + table_row + " \n")
+            line_end = get_line_end(i_param == len(params_to_write) - 1)
 
-        # Finish up the table
-        tex_file.write("\n \\hline \n \\end{longtable}")
+            # Format for TeX
+            table_line = f"\n{param_name} & {value} {unit} & {explanation}{line_end}"
 
-
-def write_priors_table(params_descriptions, all_priors, output_dir_path):
-    tex_file_path = os.path.join(output_dir_path, "parameters_priors_auto.tex")
-    with open(tex_file_path, "w") as tex_file:
-        write_param_table_header(tex_file, table_type="priors_table")
-        # Write one row per parameter
-        for prior_dict in all_priors:
-            param = prior_dict["param_name"]
-
-            if param not in params_descriptions:
-                print(
-                    f"Warning: parameter {param} won't be in the priors table as there is no description available"
-                )
-                continue
-
-            param_info = params_descriptions[param]
-            display_value = get_prior_display(prior_dict, table_type="priors_table")
-            # write table row
-            table_row = f"\\hline {param_info['full_name']} & {display_value} & "
-            if "rationale" in param_info:
-                table_row += param_info["rationale"]
-            tex_file.write("\t " + table_row + " \n")
-
-        # Finish up the table
-        tex_file.write("\n \\hline \n \\end{longtable}")
+            # Write
+            tex_file.write(table_line)
 
 
-def write_param_table_header(tex_file, table_type="main_table"):
+def write_prior_table_rows(
+    file_name: Path,
+    project: Project,
+):
     """
-    :param tex_file: an open file
-    :param table_type: "main_table" or "priors_table"
+    Write prior values to a TeX file in a format that can be incorporated
+    into a standard TeX table.
+    
+    Args:
+        params_to_write: The names of the requested parameters to be written
     """
-    central_column_name = "Value" if table_type == "main_table" else "Distribution"
 
-    # Write the table header
-    tex_file.write(
-        "\\begin{longtable}[ht]{| >{\\raggedright}p{4cm} | >{\\raggedright}p{3cm} | p{6.8cm} |} \n"
-    )
-    tex_file.write("\t \hline \n")
-    tex_file.write(f"\t Parameter & {central_column_name} & Rationale \\\ \n")
-    tex_file.write("\t \endfirsthead \n")
-    tex_file.write("\t \\multicolumn{3}{c}{continuation of parameters table} \\\ \n ")
-    tex_file.write("\t \endhead \n \n")
+    # Get the dictionaries to pull the text from
+    model_constants = import_module(f"autumn.models.{project.model_name}.param_format")
 
+    with open(file_name, "w") as tex_file:
+        for i_prior, prior in enumerate(project.calibration.all_priors):
 
-def get_fixed_param_display(project, param, param_info):
-    # read raw parameter value
-    value = read_param_value_from_string(project.param_set.baseline.to_dict(), param)
+            # Get the ingredients
+            param_name = get_param_name(model_constants.PARAMETER_DEFINITION, prior["param_name"])
+            distribution_type = format_value_for_tex(prior["distribution"])
+            prior_parameters = format_prior_values(prior["distribution"], prior["distri_params"])
+            line_end = get_line_end(i_prior == len(project.calibration.all_priors) - 1)
 
-    # apply potential multiplier
-    multiplier = 1 if "multiplier" not in param_info else param_info["multiplier"]
-    display_value = multiplier * value
+            # Format for TeX
+            table_line = f"\n{param_name} & {distribution_type} & {prior_parameters}{line_end}"
 
-    # round up the value
-    if "n_digits" in param_info:
-        display_value = round(display_value, param_info["n_digits"])
-
-    # convert to string
-    display_value = str(display_value)
-
-    # add potential unit
-    if "unit" in param_info:
-        display_value += f" {param_info['unit']}"
-
-    return display_value
-
-
-def get_prior_display(prior_dict, table_type="main_table"):
-    """
-    Returns text describing a prior distribution
-    :param prior_dict: prior dictionary
-    :param table_type: "main_table" or "priors_table"
-    :return: string
-    """
-    display = "Calibration parameter \\newline " if table_type == "main_table" else ""
-
-    distri_type = prior_dict["distribution"]
-    distri_name = (
-        DISTRIBUTION_TRANSLATE[distri_type]
-        if distri_type in DISTRIBUTION_TRANSLATE
-        else distri_type
-    )
-    display += f"{distri_name} distribution \\newline "
-
-    distri_params = prior_dict["distri_params"]
-    display += f"parameters: [{distri_params[0]}, {distri_params[1]}]"
-
-    if "trunc_range" in prior_dict:
-        support = prior_dict["trunc_range"]
-        display += f" \\newline support: [{support[0]}, {support[1]}]"
-
-    return display
+            # Write
+            tex_file.write(table_line)

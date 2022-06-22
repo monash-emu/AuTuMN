@@ -1,17 +1,13 @@
-from typing import Optional
+from typing import Optional, List, Dict, Union
 import numpy as np
 import pandas as pd
+import itertools
 
 from summer import Stratification, Multiply
 
-from autumn.models.covid_19.mixing_matrix import build_dynamic_mixing_matrix
+from autumn.models.sm_sir.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.sm_sir.parameters import Parameters
 from autumn.models.sm_sir.constants import FlowName
-
-
-from typing import List, Dict, Union
-import itertools
-
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.core.utils.utils import weighted_average
 
@@ -132,7 +128,7 @@ def get_agegroup_strat(
     age_strat.set_population_split(age_split_props.to_dict())
 
     # Adjust infection flows based on the susceptibility of the age group
-    if type(age_suscept) == pd.Series:
+    if isinstance(age_suscept, pd.Series):
         age_strat.set_flow_adjustments(
             FlowName.INFECTION,
             {k: Multiply(v) for k, v in age_suscept.items()}

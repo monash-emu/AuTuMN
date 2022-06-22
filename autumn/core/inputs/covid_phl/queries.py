@@ -22,7 +22,7 @@ def get_phl_subregion_testing_numbers(region):
     test_values = df.daily_output_unique_individuals.to_numpy()
     epsilon = 1e-6  # A really tiny number to avoid having any zeros
     avg_vals = np.array(apply_moving_average(test_values, 7)) + epsilon
-    return test_dates, avg_vals
+    return pd.Series(avg_vals, index=test_dates)
 
 
 def get_phl_vac_coverage(
@@ -68,7 +68,7 @@ def get_phl_vac_coverage(
 
     df = input_db.query(
         "covid_phl_vac",
-        columns=["date_index", "vaccination", f"`{region}`"],
+        columns=["date_index", "vaccination", f"{region}"],
         conditions=cond_map,
     )
 

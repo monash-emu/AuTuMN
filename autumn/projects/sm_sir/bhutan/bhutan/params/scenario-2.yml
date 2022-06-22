@@ -1,14 +1,14 @@
-description: immune-escape VoC
+description: immune-escape VoC, reinstate microdistancing
 
 voc_emergence:
   omicron:
     cross_protection:
       new_strain:
-        early_reinfection: 0.
+        early_reinfection: 0.85
   new_strain:
     new_voc_seed:
       start_time: 897.  # 15 June 2022
-    immune_escape: 1.
+    immune_escape: 0.15
 
 mobility:
   microdistancing:
@@ -17,6 +17,10 @@ mobility:
         times:
           - 794.
           - 795.
+          - 897.
+          - 898.
         values:
           - 1.
           - 0.
+          - 0.
+          - 1.

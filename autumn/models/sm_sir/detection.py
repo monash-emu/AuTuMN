@@ -1,62 +1,11 @@
-from typing import Tuple, Callable, Any, Optional, List
+from typing import Tuple, Callable, Optional
 import numpy as np
 
+from autumn.core.inputs.testing.testing_data import get_testing_numbers_for_region
 from .parameters import TestingToDetection, Population
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.settings import COVID_BASE_AGEGROUPS
-from autumn.core.utils.utils import apply_moving_average
 from autumn.model_features.curve import scale_up_function
-from autumn.core.inputs.testing.eur_testing_data import (
-    get_uk_testing_numbers,
-    get_eu_testing_numbers,
-)
-from autumn.core.inputs.covid_au.queries import get_vic_testing_numbers
-from autumn.core.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
-from autumn.core.inputs.covid_lka.queries import get_lka_testing_numbers
-from autumn.core.inputs.covid_mmr.queries import get_mmr_testing_numbers
-from autumn.core.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
-from autumn.core.inputs.owid.queries import get_international_testing_numbers
-from autumn.core.inputs.covid_btn.queries import get_btn_testing_numbers
-
-
-def get_testing_numbers_for_region(
-    country_iso3: str, subregion: Optional[str]
-) -> Tuple[list, list]:
-    """
-    Use the appropriate function to retrieve the testing numbers applicable to the region being modelled.
-    Functions are taken from the autumn input tools module, as above.
-    """
-
-    subregion = subregion or False
-
-    if country_iso3 == "AUS":
-        test_dates, test_values = get_vic_testing_numbers()
-    elif country_iso3 == "PHL":
-        phl_region = subregion.lower() if subregion else "philippines"
-        test_dates, test_values = get_phl_subregion_testing_numbers(phl_region)
-    elif subregion == "Sabah":
-        test_dates, test_values = get_international_testing_numbers(country_iso3)
-    elif country_iso3 == "GBR":
-        test_dates, test_values = get_uk_testing_numbers()
-    elif country_iso3 in {"BEL", "ITA", "SWE", "FRA", "ESP"}:
-        test_dates, test_values = get_eu_testing_numbers(country_iso3)
-    elif country_iso3 == "LKA":
-        test_dates, test_values = get_lka_testing_numbers()
-    elif country_iso3 == "MMR":
-        test_dates, test_values = get_mmr_testing_numbers()
-    elif country_iso3 == "BGD" and subregion == "FDMN":
-        test_dates, test_values = get_coxs_bazar_testing_numbers()
-    elif country_iso3 == "BTN":
-        test_dates, test_values = get_btn_testing_numbers(subregion)
-
-    else:
-        test_dates, test_values = get_international_testing_numbers(country_iso3)
-
-    assert len(test_dates) == len(
-        test_values
-    ), "Length of test dates and test values are not equal"
-
-    return test_dates, test_values
 
 
 def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor_value: float=0.) -> Callable:
@@ -86,53 +35,41 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float, floor_value: flo
 
 
 def find_cdr_function_from_test_data(
-    test_detect_params, iso3: str, region: str, year: int
+    cdr_params: TestingToDetection,
+    iso3: str, 
+    region: Optional[str], 
+    year: int,
+    smoothing_period=1,
 ) -> Callable:
     """
     Sort out case detection rate from testing numbers, sequentially calling the functions above as required.
+    
+    Args:
+        cdr_params: The user-requests re the testing process
+        iso3: The country
+        region: The subregion of the country being simulated, if any
+        year: The year from which the population data should come
+        smooth_period: The period in days over which testing data should be smoothed
+    Return:
+        The function that takes time as its input and returns the CDR
     """
 
-    # Get the testing population denominator
-    testing_pops = get_population_by_agegroup(COVID_BASE_AGEGROUPS, iso3, region, year=year)
-
     # Get the numbers of tests performed
-    test_dates, test_values = get_testing_numbers_for_region(iso3, region)
+    test_df = get_testing_numbers_for_region(iso3, region)
+    smoothed_test_df = test_df.rolling(window=smoothing_period).mean().dropna()
 
-    # Convert test numbers to per capita testing rates
-    per_capita_tests = [i_tests / sum(testing_pops) for i_tests in test_values]
-
-    # Smooth the testing data if requested
-    if test_detect_params.smoothing_period:
-        smoothed_per_capita_tests = apply_moving_average(
-            per_capita_tests, test_detect_params.smoothing_period
-        )
-    else:
-        smoothed_per_capita_tests = per_capita_tests
-
-    # Check data
-    msg = "Negative test values present"
-    assert all((val >= 0.0 for val in smoothed_per_capita_tests)), msg
+    # Convert to per capita testing rates
+    total_pop = sum(get_population_by_agegroup(COVID_BASE_AGEGROUPS, iso3, region, year=year))
+    per_capita_tests_df = smoothed_test_df / total_pop
 
     # Calculate CDRs and the resulting CDR function
-    cdr_from_tests_func: Callable[[Any], float] = create_cdr_function(
-        test_detect_params.assumed_tests_parameter,
-        test_detect_params.assumed_cdr_parameter,
-        test_detect_params.floor_value,
-    )
+    cdr_test_params = cdr_params.assumed_tests_parameter, cdr_params.assumed_cdr_parameter, cdr_params.floor_value
+    cdr_from_tests_func = create_cdr_function(*cdr_test_params)
 
     # Get the final CDR function
-    cdr_function = scale_up_function(
-        test_dates,
-        [
-            cdr_from_tests_func(i_test_rate)
-            for i_test_rate in smoothed_per_capita_tests
-        ],
-        smoothness=0.2,
-        method=4,
-        bound_low=0.0,
-    )
-
-    return cdr_function
+    times = per_capita_tests_df.index
+    values = per_capita_tests_df.apply(cdr_from_tests_func)
+    return scale_up_function(times, values, smoothness=0.2, method=4, bound_low=0.0)
 
 
 def get_cdr_func(
@@ -159,7 +96,13 @@ def get_cdr_func(
     """
 
     if testing_params:
-        cdr_func = find_cdr_function_from_test_data(testing_params, iso3, pop_params.region, pop_params.year)
+        cdr_func = find_cdr_function_from_test_data(
+            testing_params, 
+            iso3, 
+            pop_params.region, 
+            pop_params.year,
+            testing_params.smoothing_period,
+        )
     else:
 
         def cdr_func(time, computed_values):

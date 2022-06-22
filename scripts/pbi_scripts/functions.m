@@ -416,7 +416,7 @@ shared Query_Diagnostics =
                 Table.AddColumn(
                     #"Replaced Value",
                     "Exclusive Duration (Including Child Operations)",
-                    each List.Sum(GetAllChildRows([Id], [Path])[Exclusive Duration]),
+                    each List.Sum(GetAllChildRows([Id], [Path]    )[Exclusive Duration]),
                     type number
                 ),
             AddTotalEDPct =

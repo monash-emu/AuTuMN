@@ -1,5 +1,6 @@
-from typing import Optional, Callable, Union, List
-
+from typing import Optional, Callable, Union, List, Any
+import operator
+from functools import reduce
 import re
 import yaml
 from copy import deepcopy
@@ -243,3 +244,21 @@ def read_param_value_from_string(params: dict, update_key: str):
             param_value = param_value[nested_key]
 
     return param_value
+
+
+def get_with_nested_key(
+    source_dict: dict, 
+    nested_key: str,
+) -> Any:
+    """
+    Get a value from a nested dictionary, with a key where "." characters denote
+    the layers of nesting 
+    E.g {'a': {'b': {'c': 5.0}}} => "a.b.c" = 5.0
+    
+    Args:
+        source_dict: The nested dictionary to get values from
+        nested_key: Key with nested layers separated by '.'
+    Return:
+        The value
+    """
+    return reduce(operator.getitem, nested_key.split("."), source_dict)

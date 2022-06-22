@@ -7,7 +7,7 @@ from matplotlib import pyplot
 from apps import covid_19
 from autumn.projects.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from autumn.models.covid_19.parameters import Parameters
-from autumn.models.covid_19.mixing_matrix import get_mobility_funcs
+from autumn.models.sm_sir.mixing_matrix import get_mobility_funcs
 from autumn.settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
@@ -42,7 +42,6 @@ def get_mobility_data():
             params.mobility.region,
             params.mobility.mixing,
             params.mobility.google_mobility_locations,
-            params.mobility.npi_effectiveness,
             False,  # turn-off squaring to visualise the raw effect
             params.mobility.smooth_google_data,
         )

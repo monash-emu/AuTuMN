@@ -20,7 +20,7 @@ def get_coxs_bazar_testing_numbers():
     test_dates = df.date_index.to_numpy()
     avg_vals = df["test"].to_numpy() + TINY_NUMBER
 
-    return test_dates, avg_vals
+    return pd.Series(avg_vals, index=test_dates)
 
 
 def get_bgd_vac_coverage(region: str, vaccine: str, dose: int):

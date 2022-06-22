@@ -1,0 +1,38 @@
+---
+# Base parameters for the tuberculosis model.
+
+# Parameters used to build a general model of tuberculosis
+time:
+  start: 1800.
+  end: 2020.
+  step: 0.1
+  critical_ranges: []
+
+# Country caracteristics
+country:
+  iso3: null
+region: null
+
+age_mixing: null
+
+import_ltbi_cases: null
+
+# set up a parameter for the birth rate (its time-variant value will be automatically defined)
+crude_birth_rate: 1.
+
+# requested outputs
+calculated_outputs: ["prevalence_infectious"]
+outputs_stratification: {}
+cumulative_output_start_time: 2020.
+
+# model structure
+# stratifications by 'age' and by 'organ' are pre-defined but they must be requested to be activated
+# other stratifications can be requested as "user_defined_stratifications"
+stratify_by: ["age"] #['age', 'location', 'organ']
+age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
+user_defined_stratifications: {} # this specifies user-defined  stratifications
+
+# demographics
+start_population_size: 5000000
+universal_death_rate: .014
+

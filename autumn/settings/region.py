@@ -66,6 +66,7 @@ class Region:
         BHUTAN,
         THIMPHU,
         MULTI,
+        KIRIBATI,
     ]
 
     MALAYSIA_REGIONS = [

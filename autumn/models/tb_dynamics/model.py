@@ -57,10 +57,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     """Location strata: For KIR, South Tarawa and other"""
 
-    if "location" in params.user_defined_stratifications:
-        location_strata = params.user_defined_stratifications["location"]["strata"]
-    else:
-        location_strata = []
 
     """Assign the initial population"""
     init_pop = assign_population(seed, params.start_population_size - seed, model)
@@ -71,7 +67,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Derived outputs
     request_outputs(
         model=model,
-        location_trata=location_strata,
     )
 
     return model

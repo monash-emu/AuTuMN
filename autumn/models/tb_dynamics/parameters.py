@@ -53,17 +53,7 @@ class MixingMatrices(BaseModel):
     source_iso3: Optional[str]
     age_adjust: Optional[bool]
 
-class Country(BaseModel):
-    """
-    The country that the model is based in. (The country may be, and often is, the same as the region.)
-    """
 
-    iso3: str
-
-    @validator("iso3", pre=True, allow_reuse=True)
-    def check_length(iso3):
-        assert len(iso3) == 3, f"ISO3 codes should have three digits, code is: {iso3}"
-        return iso3
 
 class Population(BaseModel):
     """
@@ -103,7 +93,7 @@ class Sojourns(BaseModel):
 class Parameters:
     # Metadata
     description: Optional[str]
-    country: Country
+    iso3: str
     # Country info
     population: Population 
     crude_birth_rate: float

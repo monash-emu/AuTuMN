@@ -9,9 +9,8 @@ time:
   critical_ranges: []
 
 # Country caracteristics
-country:
-  iso3: null
-region: null
+iso3: null
+
 
 age_mixing: null
 
@@ -31,8 +30,115 @@ cumulative_output_start_time: 2020.
 stratify_by: ["age"] #['age', 'location', 'organ']
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
 user_defined_stratifications: {} # this specifies user-defined  stratifications
+#  location:
+#    strata: ['rural', 'urban']
+#    proportions:
+#      rural: .2
+#      urban: .8
+#    adjustments:
+#      infection:
+#        rural: 1.2
+#      detection:
+#        rural: .65
 
 # demographics
 start_population_size: 5000000
 universal_death_rate: .014
 
+# basic infection and disease parameters
+contact_rate: 1.4
+
+# BCG coverage
+bcg_effect: "infection"  # infection or mortality
+time_variant_bcg_perc:
+  1930: 0.
+  1990: 99.
+# latency-related parameters
+age_specific_latency:
+  early_activation:
+    # unstratified: 1.1e-3
+    0: 6.6e-3
+    5: 2.7e-3
+    15: 2.7e-4
+  stabilisation:
+    # unstratified: 1.0e-2
+    0: 1.2e-2
+    5: 1.2e-2
+    15: 5.4e-3
+  late_activation:
+    # unstratified: 5.5e-6
+    0: 1.9e-11
+    5: 6.4e-6
+    15: 3.3e-6
+progression_multiplier: 1.
+
+# parameters related to post-disease-flows
+time_variant_tb_screening_rate:
+  shape: 0.05 # The shape parameter to the tanh-based curve
+  inflection_time: 1980. # Point at which curve inflects
+  start_asymptote: 0. # Starting value - lower asymptote
+  end_asymptote: 10. # End value - upper asymptote
+treatment_duration: .5
+prop_death_among_negative_tx_outcome: 0.2
+on_treatment_infect_multiplier: 0.08
+time_variant_tsr: {}
+
+# relative risks of reinfection
+rr_infection_latent: .21
+rr_infection_recovered: 1.
+
+# changes by age
+age_infectiousness_switch: 15.
+
+# changes by organ status
+incidence_props_pulmonary: .85
+incidence_props_smear_positive_among_pulmonary: .75
+smear_negative_infect_multiplier: .25
+extrapulmonary_infect_multiplier: 0.
+infect_death_rate_dict:
+  unstratified: .2
+  smear_positive: 0.389 # Ragonent et al. (CID 2020)
+  smear_negative: 0.025 # Ragonent et al. (CID 2020)
+self_recovery_rate_dict:
+  unstratified: .2
+  smear_positive: 0.231 # Ragonent et al. (CID 2020)
+  smear_negative: 0.130 # Ragonent et al. (CID 2020)
+passive_screening_sensitivity:
+  unstratified: .75
+  smear_positive: 1. # dummy value
+  smear_negative: .7 # dummy value
+  extrapulmonary: 0.5 # dummy value
+
+inflate_reactivation_for_diabetes: False
+
+#____________________#
+#   Interventions    #
+time_variant_acf: []
+acf_screening_sensitivity: .75
+
+time_variant_ltbi_screening: []
+ltbi_screening_sensitivity: .75
+pt_efficacy: .7
+pt_sae_prop: .016  # 3HP
+pt_destination_compartment: "recovered" # either 'recovered' or 'susceptible'
+
+awareness_raising: {}
+
+# PT in household contacts
+hh_contacts_pt: {}
+
+extra_params: {} # used to add parameters used for specific applications
+
+# Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
+haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio
+# type of Metropolis initialisation: either 'lhs' or 'current_params'
+metropolis_initialisation: "lhs"
+
+# FIXME: the parameters below should disappear
+prevalence_infectiousXlocation_majuro_dispersion_param: 1.
+prevalence_infectiousXlocation_ebeye_dispersion_param: 1.
+percentage_latentXlocation_majuro_dispersion_param: 1.
+notificationsXlocation_majuro_dispersion_param: 1.
+notificationsXlocation_ebeye_dispersion_param: 1.
+notificationsXlocation_other_dispersion_param: 1.
+population_size_dispersion_param: 1.

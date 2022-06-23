@@ -9,13 +9,7 @@ from .constants import BASE_COMPARTMENTS, Compartment, INFECTIOUS_COMPS
 
 def request_outputs(
     model: CompartmentalModel,
-    cumulative_start_time: float,
     location_strata: List[str],
-    time_variant_tb_screening_rate,
-    implement_acf: bool,
-    implement_ltbi_screening=False,
-    pt_efficacy=1.,
-    pt_sae_prop=0.
 ):
     out = TbOutputBuilder(model, location_strata)
 

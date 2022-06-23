@@ -31,6 +31,7 @@ class Region:
     BHUTAN = "bhutan"
     THIMPHU = "thimphu"
     MULTI = "multi"
+    KIRIBATI = "kiribati"
 
     REGIONS = [
         PHILIPPINES,
@@ -65,6 +66,7 @@ class Region:
         BHUTAN,
         THIMPHU,
         MULTI,
+        KIRIBATI,
     ]
 
     MALAYSIA_REGIONS = [

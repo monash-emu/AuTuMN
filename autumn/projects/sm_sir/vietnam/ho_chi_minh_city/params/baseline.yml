@@ -21,7 +21,7 @@ population:
 
 time:
   start: 511 # 25th May 2021
-  end: 1097 # 01st Jan 2023
+  end: 1159 # 01st Mar 2023
 
 activate_random_process: False
 
@@ -98,10 +98,10 @@ voc_emergence:
     cross_protection:
       delta:
         early_reinfection: 1.  # I have just been turning off reinfection with previous strains, because usually we just see complete replacement
-        late_reinfection: 1.
+        late_reinfection: 0.
       omicron:
         early_reinfection: 1.
-        late_reinfection: 1.
+        late_reinfection: 0.
       new_strain:
         early_reinfection: 1. # This should probably the same as wild_type to wild_type, so that the immunity to reinfection with the same strain is the same
         late_reinfection: 0.

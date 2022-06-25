@@ -7,6 +7,7 @@ from autumn.model_features.curve import tanh_based_scaleup
 
 from .constants import BASE_COMPARTMENTS, Compartment, INFECTIOUS_COMPS
 
+
 def request_outputs(
     model: CompartmentalModel,
     location_strata: List[str],
@@ -17,7 +18,7 @@ def request_outputs(
     out.request_compartment_output("population_size", BASE_COMPARTMENTS)
 
     # Percentage latent
-   
+
 
 class TbOutputBuilder:
     """Helps build derived outputs for the TB model"""
@@ -29,7 +30,6 @@ class TbOutputBuilder:
     def _normalise_timestep(self, vals):
         """Normalise flow outputs to be 'per unit time (year)'"""
         return vals / self.model.timestep
-
 
     def request_compartment_output(self, output_name, compartments, save_results=True):
         self.model.request_output_for_compartments(
@@ -44,4 +44,3 @@ class TbOutputBuilder:
                 strata={"location": location_stratum},
                 save_results=save_results,
             )
-

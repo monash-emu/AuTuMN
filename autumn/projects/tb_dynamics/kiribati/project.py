@@ -1,4 +1,10 @@
-from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
+from autumn.core.project import (
+    Project,
+    ParameterSet,
+    load_timeseries,
+    build_rel_path,
+    use_tuned_proposal_sds,
+)
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import (
@@ -14,13 +20,6 @@ baseline_params = base_params.update(default_path)
 
 
 param_set = ParameterSet(baseline=baseline_params)
-
-
-
-
-calibration = Calibration(
-    priors, targets, metropolis_init="current_params", metropolis_init_rel_step_size=0.1
-)
 
 
 project = Project(

@@ -11,7 +11,7 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-summerepi==2.7.0
+summerepi==2.7.1
 
 # Interaction
 jupyterlab

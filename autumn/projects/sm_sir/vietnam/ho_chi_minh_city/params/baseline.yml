@@ -37,6 +37,8 @@ immunity_stratification:
     low: 0.45
     high: 0.6
 
+# Assume that earlier strains cannot infect people recovered from newly emerging ones (simplified assumption).
+
 voc_emergence:
   delta:
     starting_strain: true
@@ -50,7 +52,7 @@ voc_emergence:
     cross_protection:
       delta:
         early_reinfection: 1.  # 0% immune escape
-        late_reinfection: 0.  # make wild-type late infection rate close to zero
+        late_reinfection: 0.  # make wild-type late infection rate equal to zero
       omicron:
         early_reinfection: 0.4  # 60% immune escape - I would say this is correct in the way I think about it
         late_reinfection: 0.  # proportionally to delta late reinfection rate, rounded for actual effects
@@ -98,10 +100,10 @@ voc_emergence:
     cross_protection:
       delta:
         early_reinfection: 1.  # I have just been turning off reinfection with previous strains, because usually we just see complete replacement
-        late_reinfection: 0.
+        late_reinfection: 1.
       omicron:
         early_reinfection: 1.
-        late_reinfection: 0.
+        late_reinfection: 1.
       new_strain:
         early_reinfection: 1. # This should probably the same as wild_type to wild_type, so that the immunity to reinfection with the same strain is the same
         late_reinfection: 0.

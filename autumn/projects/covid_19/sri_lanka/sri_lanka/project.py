@@ -36,7 +36,7 @@ priors = [
     # Global COVID priors
     *COVID_GLOBAL_PRIORS,
     # Regional parameters
-    UniformPrior("contact_rate", [0.02, 0.05]),
+    UniformPrior("contact_rate", [0.035, 0.075]),
     UniformPrior("infectious_seed", [450, 500]),
     # Detection
     UniformPrior("infection_fatality.multiplier", [0.1, 1.25]),

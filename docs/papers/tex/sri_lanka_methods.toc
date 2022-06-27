@@ -1,0 +1,39 @@
+\contentsline {section}{\numberline {1}Base model construction}{3}{}%
+\contentsline {subsection}{\numberline {1.1}Platform for infectious disease dynamics simulation}{3}{}%
+\contentsline {subsection}{\numberline {1.2}Base COVID-19 model}{3}{}%
+\contentsline {subsection}{\numberline {1.3}Age stratification}{4}{}%
+\contentsline {subsection}{\numberline {1.4}Clinical stratification}{5}{}%
+\contentsline {subsection}{\numberline {1.5}Hospitalisation}{5}{}%
+\contentsline {subsection}{\numberline {1.6}Infectiousness}{5}{}%
+\contentsline {subsection}{\numberline {1.7}Application of COVID-19-related death}{6}{}%
+\contentsline {subsection}{\numberline {1.8}Modelling Variants of Concern (VoC)}{8}{}%
+\contentsline {subsection}{\numberline {1.9}Modelling vaccine effects}{8}{}%
+\contentsline {section}{\numberline {2}Case detection and isolation}{9}{}%
+\contentsline {subsection}{\numberline {2.1}Determining the proportion of cases detected}{9}{}%
+\contentsline {subsection}{\numberline {2.2}Isolation of detected cases}{10}{}%
+\contentsline {section}{\numberline {3}Contact tracing and quarantine}{10}{}%
+\contentsline {subsection}{\numberline {3.1}Model adaptation}{10}{}%
+\contentsline {subsection}{\numberline {3.2}Contact tracing process}{10}{}%
+\contentsline {section}{\numberline {4}Implementation of non-pharmaceutical interventions}{11}{}%
+\contentsline {subsection}{\numberline {4.1}Isolation and quarantine}{11}{}%
+\contentsline {subsection}{\numberline {4.2}Community quarantine or ``lockdown" measures}{12}{}%
+\contentsline {subsection}{\numberline {4.3}School closures/re-openings}{13}{}%
+\contentsline {subsection}{\numberline {4.4}Workplace closures}{13}{}%
+\contentsline {subsection}{\numberline {4.5}Community-wide movement restriction}{13}{}%
+\contentsline {subsection}{\numberline {4.6}Household contacts}{13}{}%
+\contentsline {subsection}{\numberline {4.7}Microdistancing}{14}{}%
+\contentsline {section}{\numberline {5}Parameters}{15}{}%
+\contentsline {subsection}{\numberline {5.1}Non-age-structured parameters}{15}{}%
+\contentsline {subsection}{\numberline {5.2}Age-specific parameters}{15}{}%
+\contentsline {section}{\numberline {6}Model Calibration}{17}{}%
+\contentsline {subsection}{\numberline {6.1}General approach}{17}{}%
+\contentsline {subsection}{\numberline {6.2}Likelihood function}{17}{}%
+\contentsline {subsection}{\numberline {6.3}Calibration parameters}{17}{}%
+\contentsline {section}{\numberline {7}Ordinary differential equations}{19}{}%
+\contentsline {section}{\numberline {8}Calculation of outputs}{22}{}%
+\contentsline {subsection}{\numberline {8.1}Incidence}{22}{}%
+\contentsline {subsection}{\numberline {8.2}Hospital occupancy}{22}{}%
+\contentsline {subsection}{\numberline {8.3}ICU occupancy}{22}{}%
+\contentsline {subsection}{\numberline {8.4}Seropositive proportion}{22}{}%
+\contentsline {subsection}{\numberline {8.5}COVID-19-related mortality}{22}{}%
+\contentsline {subsection}{\numberline {8.6}Notifications}{22}{}%

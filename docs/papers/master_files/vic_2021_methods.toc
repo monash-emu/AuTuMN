@@ -1,0 +1,52 @@
+\contentsline {section}{\numberline {1}Preamble}{2}{section.1}%
+\contentsline {section}{\numberline {2}Base model construction}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Platform for infectious disease dynamics simulation}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Base COVID-19 model}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Age stratification}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Contact matrices construction}{4}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Clinical stratification}{4}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Hospitalisation}{5}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.7}Infectiousness}{6}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.8}Application of COVID-19-related death}{7}{subsection.2.8}%
+\contentsline {section}{\numberline {3}Case detection and isolation}{8}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Determining the proportion of cases detected}{8}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Isolation of detected cases}{8}{subsection.3.2}%
+\contentsline {section}{\numberline {4}Contact tracing and quarantine}{8}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Model adaptation}{9}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Contact tracing process}{9}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Testing data}{10}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Implementation of non-pharmaceutical interventions}{10}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Isolation and quarantine}{11}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Community quarantine or ``lockdown" measures}{11}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}School closures/re-openings}{12}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Workplace closures}{12}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Community-wide movement restriction}{12}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Household contacts}{12}{subsection.5.6}%
+\contentsline {subsection}{\numberline {5.7}Microdistancing}{13}{subsection.5.7}%
+\contentsline {section}{\numberline {6}Simulation of local NPI implementation during Victoria's second wave}{13}{section.6}%
+\contentsline {subsection}{\numberline {6.1}School closures}{14}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Macrodistancing in workplaces and other locations}{14}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Microdistancing approach}{15}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Between service mixing}{15}{section.7}%
+\contentsline {section}{\numberline {8}Model initialisation}{15}{section.8}%
+\contentsline {section}{\numberline {9}Vaccination}{16}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Model structure}{16}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Vaccination process}{16}{subsection.9.2}%
+\contentsline {section}{\numberline {10}Parameters}{16}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Non-age-stratified parameters}{16}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Age-specific parameters}{19}{subsection.10.2}%
+\contentsline {section}{\numberline {11}Calculation of outputs}{24}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Incidence}{24}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Hospital occupancy}{24}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}ICU occupancy}{24}{subsection.11.3}%
+\contentsline {subsection}{\numberline {11.4}Recovered proportion}{24}{subsection.11.4}%
+\contentsline {subsection}{\numberline {11.5}COVID-19-related mortality}{24}{subsection.11.5}%
+\contentsline {subsection}{\numberline {11.6}Notifications}{25}{subsection.11.6}%
+\contentsline {section}{\numberline {12}Calibration}{25}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Rationale for service-specific targets}{25}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}Assigning targets to services}{25}{subsection.12.2}%
+\contentsline {subsection}{\numberline {12.3}Variation of age-specific proportion parameters using ``adjuster" parameters}{26}{subsection.12.3}%
+\contentsline {subsection}{\numberline {12.4}Variation of the proportion of patients hospitalised}{26}{subsection.12.4}%
+\contentsline {section}{\numberline {13}Likelihood function}{26}{section.13}%
+\contentsline {section}{\numberline {14}Ordinary differential equations}{27}{section.14}%
+\contentsline {section}{\numberline {15}Implementation of the roadmap}{28}{section.15}%

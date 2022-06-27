@@ -107,6 +107,10 @@ def apply_reinfection_flows_with_strains(
             strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
 
             # Apply to model
+            
+            #FIXME: BUGG FOUND HERE !
+            #FIXME: source_filter variable does not include strain-based restrictions (which is normal)
+
             model.add_infection_frequency_flow(
                 FlowName.EARLY_REINFECTION,
                 strain_age_contact_rate,
@@ -115,6 +119,11 @@ def apply_reinfection_flows_with_strains(
                 source_filter,
                 dest_filter,
             )
+
+            #FIXME: Please check the flow created by the previous line of code. Its source does contain the filter {'strain' : 'delta'} (which is unexpected)
+            #FIXME: Also, note how the filter {'strain' : 'delta'} is used systematically for all iterations of these loops.
+
+
             if Compartment.WANED in base_compartments:
                 model.add_infection_frequency_flow(
                     FlowName.LATE_REINFECTION,

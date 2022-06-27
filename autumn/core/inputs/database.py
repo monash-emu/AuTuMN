@@ -19,6 +19,7 @@ from .demography.preprocess import preprocess_demography
 from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data
 from .social_mixing.preprocess import preprocess_social_mixing
+from .tb_kir.preprocess import preprocess_tb_kir
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,9 @@ def build_input_database(rebuild: bool = False):
 
         with Timer("Ingesting COVID BTN data."):
             preprocess_covid_btn(input_db)
+
+        with Timer("Ingesting TB KIR data."):
+            preprocess_tb_kir(input_db)
 
         with Timer("Ingesting COVID survey data"):
             preprocess_covid_survey(input_db)

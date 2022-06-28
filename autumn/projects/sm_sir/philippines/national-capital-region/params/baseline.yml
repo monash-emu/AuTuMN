@@ -16,13 +16,13 @@ population:
 
 time:
   start: 61  # 1 March 2020
-  end: 912  # 30 June 2022
+  end: 792
 
 activate_random_process: True
 random_process: 
   coefficients: [.7, .3]
   noise_sd: .1
-  values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0, 0, 0, 0, 0, 0]
 
 time_from_onset_to_event:  # Using time of symptom onset as reference
   notification:

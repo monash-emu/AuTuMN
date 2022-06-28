@@ -89,26 +89,27 @@ def apply_reinfection_flows_with_strains(
 
     """
 
-    # Loop over all source strain compartments
-    for source_strain in strain_strata:
-        source_filter = {"strain": source_strain}
+    # Loop over all infecting strains
+    for dest_strain in strain_strata:
+        dest_filter = {"strain": dest_strain}
 
-        # Loop over all infecting strains
-        for dest_strain in strain_strata:
-            dest_filter = {"strain": dest_strain}
+        # Adjust for infectiousness of infecting strain
+        strain_adjuster = voc_params[dest_strain].contact_rate_multiplier
 
-            # Adjust for infectiousness of infecting strain
-            strain_adjuster = voc_params[dest_strain].contact_rate_multiplier
+        # Loop over all age groups
+        for age_group in age_groups:
+            age_filter = {"agegroup": age_group}
+            dest_filter.update(age_filter)
+            source_filter = age_filter
 
-            # Loop over all age groups
-            for age_group in age_groups:
-                age_filter = {"agegroup": age_group}
-                dest_filter.update(age_filter)
-                source_filter.update(age_filter)
+            # Get an adjuster that considers both the relative infectiousness of the strain and the relative susceptibility of the age group
+            contact_rate_adjuster = strain_adjuster * suscept_adjs[age_group]
+            strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
 
-                # Get an adjuster that considers both the relative infectiousness of the strain and the relative susceptibility of the age group
-                contact_rate_adjuster = strain_adjuster * suscept_adjs[age_group]
-                strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
+            # Loop over all source strain compartments
+            for source_strain in strain_strata:
+                strain_filter = {"strain": source_strain}
+                source_filter.update(strain_filter)
 
                 # Apply to model
                 model.add_infection_frequency_flow(

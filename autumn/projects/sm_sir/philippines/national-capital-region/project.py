@@ -51,9 +51,9 @@ priors = [
 new_target_set = load_timeseries(build_rel_path("new_targets.json"))
 
 targets = [
-    NormalTarget(data=new_target_set["icu_occupancy"]),
+    # NormalTarget(data=new_target_set["icu_occupancy"]),
     NormalTarget(data=new_target_set["hospital_occupancy"]),
-    NormalTarget(data=ts_set["notifications"]), 
+    # NormalTarget(data=ts_set["notifications"]), 
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:
@@ -65,7 +65,7 @@ else:
     rp = None
 
 # Load proposal sds from yml file
-use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+# use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
@@ -78,6 +78,11 @@ plot_spec_filepath = build_rel_path("timeseries.json")
 with open(plot_spec_filepath) as f:
     plot_spec = json.load(f)
 
+new_plot_spec_filepath = build_rel_path("new_targets.json")
+with open(new_plot_spec_filepath) as nf:
+    new_plot_spec = json.load(nf)
+
+plot_spec.update(new_plot_spec)
 
 # Create and register the project.
 project = Project(Region.NCR, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)

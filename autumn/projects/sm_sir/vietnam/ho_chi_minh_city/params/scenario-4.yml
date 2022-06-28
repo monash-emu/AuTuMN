@@ -26,5 +26,5 @@ voc_emergence:
     new_voc_seed:
       start_time: 914 # 1st July 2022
     immune_escape: 1.0
-    hosp_protection: 0.
-    death_protection: 0.
+    hosp_protection: 0.9
+    death_protection: 0.95

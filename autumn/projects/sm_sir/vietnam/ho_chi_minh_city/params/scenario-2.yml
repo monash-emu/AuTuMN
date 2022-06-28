@@ -1,7 +1,7 @@
 description: >
   The new variant is twice as transmissible as Omicron (~4 times more transmissible than Delta VoC).
   This variant is more immune-escape than Omicron, but not totally towards vaccination- and infection-related.
-  Severity (towards hospitalization and fatality) is equal to that of the Omicron variant.
+  Severity (towards hospitalization and fatality) is half as that of the Omicron variant.
   Booster dose is assumed to be effective for 120 days (~4 months).
 
 voc_emergence:
@@ -21,5 +21,5 @@ voc_emergence:
     new_voc_seed:
       start_time: 914 # 1st July 2022
     immune_escape: 0.8
-    hosp_protection: 0.9
-    death_protection: 0.95
+    hosp_protection: 0.95
+    death_protection: 0.975

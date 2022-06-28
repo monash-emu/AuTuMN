@@ -13,7 +13,7 @@ sojourns:
   latent:
     total_time: 4.
     proportion_early: 0.5
-  recovered: 120.
+  recovered: 180.
 
 population:
   region: Ho Chi Minh City

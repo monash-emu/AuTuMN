@@ -89,47 +89,41 @@ def apply_reinfection_flows_with_strains(
 
     """
 
-    # Loop over all source strain compartments
-    for source_strain in strain_strata:
-        source_filter = {"strain": source_strain}
+    # Loop over all infecting strains
+    for dest_strain in strain_strata:
+        dest_filter = {"strain": dest_strain}
 
-        # Loop over all infecting strains
-        for dest_strain in strain_strata:
-            dest_filter = {"strain": dest_strain}
+        # Adjust for infectiousness of infecting strain
+        strain_adjuster = voc_params[dest_strain].contact_rate_multiplier
 
-            # Adjust for infectiousness of infecting strain
-            strain_adjuster = voc_params[dest_strain].contact_rate_multiplier
+        # Loop over all age groups
+        for age_group in age_groups:
+            age_filter = {"agegroup": age_group}
+            dest_filter.update(age_filter)
+            source_filter = age_filter
 
-            # Loop over all age groups
-            for age_group in age_groups:
-                age_filter = {"agegroup": age_group}
-                dest_filter.update(age_filter)
-                source_filter.update(age_filter)
+            # Get an adjuster that considers both the relative infectiousness of the strain and the relative susceptibility of the age group
+            contact_rate_adjuster = strain_adjuster * suscept_adjs[age_group]
+            strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
 
-                # Get an adjuster that considers both the relative infectiousness of the strain and the relative susceptibility of the age group
-                contact_rate_adjuster = strain_adjuster * suscept_adjs[age_group]
-                strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
-
-                # Apply to model
+            # Apply to model
+            model.add_infection_frequency_flow(
+                FlowName.EARLY_REINFECTION,
+                strain_age_contact_rate,
+                Compartment.RECOVERED,
+                infection_dest,
+                source_filter,
+                dest_filter,
+            )
+            if Compartment.WANED in base_compartments:
                 model.add_infection_frequency_flow(
-                    FlowName.EARLY_REINFECTION,
+                    FlowName.LATE_REINFECTION,
                     strain_age_contact_rate,
-                    Compartment.RECOVERED,
+                    Compartment.WANED,
                     infection_dest,
                     source_filter,
                     dest_filter,
-                    expected_flow_count=1,
                 )
-                if Compartment.WANED in base_compartments:
-                    model.add_infection_frequency_flow(
-                        FlowName.LATE_REINFECTION,
-                        strain_age_contact_rate,
-                        Compartment.WANED,
-                        infection_dest,
-                        source_filter,
-                        dest_filter,
-                        expected_flow_count=1,
-                    )
 
 
 def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments: List[str]):

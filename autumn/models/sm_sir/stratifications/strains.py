@@ -6,6 +6,7 @@ from summer import StrainStratification, Multiply, CompartmentalModel
 from autumn.models.sm_sir.constants import Compartment, FlowName
 from autumn.models.sm_sir.parameters import VocComponent
 from autumn.core.utils.utils import multiply_function_or_constant
+from autumn.model_features.strains import broadcast_infection_flows_over_source
 
 
 def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: float):
@@ -106,31 +107,28 @@ def apply_reinfection_flows_with_strains(
             contact_rate_adjuster = strain_adjuster * suscept_adjs[age_group]
             strain_age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
 
-            # Loop over all source strain compartments
-            for source_strain in strain_strata:
-                strain_filter = {"strain": source_strain}
-                source_filter.update(strain_filter)
-
-                # Apply to model
-                model.add_infection_frequency_flow(
-                    FlowName.EARLY_REINFECTION,
-                    strain_age_contact_rate,
-                    Compartment.RECOVERED,
+            # Need to broadcast the flows over the recovered status for the strains
+            broadcast_infection_flows_over_source(
+                model, 
+                FlowName.EARLY_REINFECTION,
+                Compartment.RECOVERED,
+                infection_dest,
+                source_filter, 
+                dest_filter,
+                strain_age_contact_rate,
+                exp_flows=1,
+            )
+            if Compartment.WANED in base_compartments:
+                broadcast_infection_flows_over_source(
+                    model,
+                    FlowName.LATE_REINFECTION,
+                    Compartment.WANED,
                     infection_dest,
                     source_filter,
                     dest_filter,
-                    expected_flow_count=1,
+                    strain_age_contact_rate,
+                    exp_flows=1,
                 )
-                if Compartment.WANED in base_compartments:
-                    model.add_infection_frequency_flow(
-                        FlowName.LATE_REINFECTION,
-                        strain_age_contact_rate,
-                        Compartment.WANED,
-                        infection_dest,
-                        source_filter,
-                        dest_filter,
-                        expected_flow_count=1,
-                    )
 
 
 def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments: List[str]):

@@ -71,18 +71,18 @@ priors = [
     # sojourns
     # UniformPrior("sojourns.latent.total_time", (3, 5.0)),
     # hospitalization multiplier
-    UniformPrior("age_stratification.prop_hospital.multiplier", (1.0, 3.0)),
+    UniformPrior("age_stratification.prop_hospital.multiplier", (0.8, 2.0)),
     # immunity stratification
     UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.1, 0.4)),
     UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.7)),
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing
-    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.01, 0.4)),
+    UniformPrior("mobility.microdistancing.behavior.parameters.max_effect", (0.01, 0.2)),
     # prop icu among hospitalization
     UniformPrior("prop_icu_among_hospitalised", (0.02, 0.08)),
     # emergence of delta
-    UniformPrior("voc_emergence.delta.icu_multiplier", (0.5, 1.5)),
+    UniformPrior("voc_emergence.delta.icu_multiplier", (0.5, 1.0)),
     # emergence of omicron
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (725.0, 770.0)),  # 5 weeks interval
     # UniformPrior("voc_emergence.omicron.death_protection", (0.8, 1.0)),
@@ -133,4 +133,4 @@ project = Project(
 
 
 # from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=10, relative_likelihood_reduction=0.2)
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=5, relative_likelihood_reduction=0.2)

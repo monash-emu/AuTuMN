@@ -5518,35 +5518,9 @@
       0.975
     ]
   },
-  "cumulative_hospital_admissions": {
-    "output_key": "cumulative_hospital_admissions",
-    "title": "Accumulated hospital admissions",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "cumulative_icu_admissions": {
-    "output_key": "cumulative_icu_admissions",
-    "title": "Accumulated ICU admissions",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "cumulative_notifications": {
-    "output_key": "cumulative_notifications",
-    "title": "Accumulated notifications",
+  "transformed_random_process": {
+    "output_key": "transformed_random_process",
+    "title": "Transformed random process",
     "times": [],
     "values": [],
     "quantiles": [

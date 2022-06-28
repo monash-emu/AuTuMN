@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, Union, Callable
+from typing import Optional, Dict, List
 
 import pandas as pd
 from summer import StrainStratification, Multiply, CompartmentalModel
@@ -6,6 +6,7 @@ from summer import StrainStratification, Multiply, CompartmentalModel
 from autumn.models.sm_sir.constants import Compartment, FlowName
 from autumn.models.sm_sir.parameters import VocComponent
 from autumn.core.utils.utils import multiply_function_or_constant
+from autumn.model_features.strains import broadcast_infection_flows_over_source
 
 
 def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: float):
@@ -61,48 +62,6 @@ def seed_vocs(model: CompartmentalModel, all_voc_params: Dict[str, VocComponent]
                 dest_strata={"strain": voc_name},
                 split_imports=True
             )
-
-
-def broadcast_infection_flows_over_source(
-    model: CompartmentalModel, 
-    flow_name: str,
-    source_comp: str,
-    dest_comp: str,
-    source_filter: Dict[str, str], 
-    dest_filter: Dict[str, str], 
-    contact_rate: Union[Callable, float],
-    exp_flows: int,
-):
-    """
-    Automatically broadcast all the flows over the different recovered statuses by strain.
-
-    Args:
-        model: The summer model object to be modified
-        flow_name: The name of the flow to feed straight through
-        source_comp: The source compartment to feed straight through
-        dest_comp: The destination compartment to feed straight through
-        source_filter: Any pre-existing source filtering being done on the flows
-        dest_filter: Any pre-existing destination filtering being done on the flows
-        contact_rate: The parameter value to feed straight through
-        exp_flows: The expected number of flows to be created to feed straight through
-
-    """
-
-    # Loop over all source strain compartments
-    for source_strain in model._disease_strains:
-        strain_filter = {"strain": source_strain}
-        source_filter.update(strain_filter)
-
-        # Apply to model
-        model.add_infection_frequency_flow(
-            flow_name,
-            contact_rate,
-            source_comp,
-            dest_comp,
-            source_filter,
-            dest_filter,
-            expected_flow_count=exp_flows,
-        )
 
 
 def apply_reinfection_flows_with_strains(

@@ -469,6 +469,8 @@ class RandomProcessParams(BaseModel):
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
     values: Optional[List[float]]
+    order: int
+    period: int
 
 
 class ParamConfig:

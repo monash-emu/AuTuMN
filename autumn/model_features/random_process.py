@@ -100,8 +100,8 @@ class RandomProcessProc(ComputedValueProcessor):
         return self.rp_time_variant_func(time)
 
 
-def set_up_random_process(start_time, end_time):
-    return RandomProcess(order=2, period=30, start_time=start_time, end_time=end_time)
+def set_up_random_process(start_time, end_time, order, period):
+    return RandomProcess(order, period, start_time, end_time)
 
 
 def get_random_process(
@@ -123,7 +123,7 @@ def get_random_process(
     """
 
     # Build the random process, using default values and coefficients
-    rp = set_up_random_process(time_params.start, time_params.end)
+    rp = set_up_random_process(time_params.start, time_params.end, process_params.order, process_params.period)
 
     # Update random process details based on the model parameters
     rp.update_config_from_params(process_params)

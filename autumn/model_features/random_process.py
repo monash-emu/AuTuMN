@@ -1,5 +1,4 @@
-from math import ceil
-from math import log, sqrt, pi
+from math import ceil, exp, log, sqrt, pi
 from typing import Tuple
 
 from summer.compute import ComputedValueProcessor

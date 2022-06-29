@@ -470,7 +470,7 @@ class RandomProcessParams(BaseModel):
     noise_sd: Optional[float]
     values: Optional[List[float]]
     order: int
-    period: int
+    time: Time
 
 
 class ParamConfig:

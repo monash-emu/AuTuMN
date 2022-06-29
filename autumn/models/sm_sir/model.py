@@ -318,7 +318,6 @@ def build_model(
 
         # Store random process as a computed value to make it available as an output
         rp_function, contact_rate = get_random_process(
-            time_params,
             params.random_process,
             params.contact_rate
         )

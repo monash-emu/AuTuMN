@@ -20,11 +20,14 @@ time:
 
 activate_random_process: True
 random_process: 
+  order: 1
+  time:
+    start: 61
+    end: 792
+    step: 30
   coefficients: [1.]
   noise_sd: .1
   values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0, 0, 0, 0, 0, 0]
-  order: 1
-  period: 30
 
 time_from_onset_to_event:  # Using time of symptom onset as reference
   notification:

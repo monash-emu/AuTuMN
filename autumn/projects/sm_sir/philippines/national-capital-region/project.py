@@ -23,8 +23,8 @@ param_set = ParameterSet(baseline=baseline_params)
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.07, 0.20]),
-    UniformPrior("sojourns.active.total_time", [4, 10]),
+    UniformPrior("contact_rate", [0.05, 0.20]),
+    # UniformPrior("sojourns.active.total_time", [4, 10]),
     UniformPrior("infectious_seed", [1, 400]),
     # UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.015]),
     # Vaccine-induced immunity
@@ -41,7 +41,7 @@ priors = [
     #     "age_stratification.prop_hospital.source_immunity_protection.high", [.85, 0.95]
     # ),
     # Hospital-related
-    # UniformPrior("age_stratification.prop_hospital.multiplier", [0.5, 1.5]),
+    UniformPrior("age_stratification.prop_hospital.multiplier", [0.5, 1.5]),
     # UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
     # UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
     # UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 8.0]),

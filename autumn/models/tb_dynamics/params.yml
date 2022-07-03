@@ -6,7 +6,7 @@ time:
   start: 1800.
   end: 2020.
   step: 0.1
-  critical_ranges: []
+  critical_range: [[2016,2020]]
 
 # Country caracteristics
 iso3: null

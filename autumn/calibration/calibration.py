@@ -169,24 +169,23 @@ class Calibration:
         self.includes_random_process = True
 
         # add priors for coefficients, using 80% weight for the first order, splitting remaining 20% between remaining orders
+        # only relevant if order > 1
         order = self.random_process.order
-        if order == 1:
-            coeff_means = [1.]
-        else:
+        if order > 1:
             coeff_means = [.8] + [.2 / (order - 1)] * (order - 1)
-        for i, coeff_mean in enumerate(coeff_means):
-            self.all_priors.append({
-                "param_name":  f"random_process.coefficients({i})",
-                "distribution": "trunc_normal",
-                "distri_params": [coeff_mean, 0.05],
-                "trunc_range": [0., 1.],
-            })
+            for i, coeff_mean in enumerate(coeff_means):
+                self.all_priors.append({
+                    "param_name":  f"random_process.coefficients({i})",
+                    "distribution": "trunc_normal",
+                    "distri_params": [coeff_mean, 0.05],
+                    "trunc_range": [0., 1.],
+                })
 
         # add prior for noise sd
         self.all_priors.append({
             "param_name": "random_process.noise_sd",
             "distribution": "uniform",
-            "distri_params": [0.49, 0.51],
+            "distri_params": [0.1, 1.], 
         })
 
         # add priors for rp values
@@ -411,7 +410,8 @@ class Calibration:
 
         # Update the random_process attribute with the current rp config for later likelihood evaluation
         if self.includes_random_process:
-            self.random_process.coefficients = [proposed_params[f"random_process.coefficients({i})"] for i in range(self.random_process.order)]
+            if self.random_process.order > 1:
+                self.random_process.coefficients = [proposed_params[f"random_process.coefficients({i})"] for i in range(self.random_process.order)]
             self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
             self.random_process.values = [0.] + [proposed_params[f"random_process.values({k})"] for k in range(1, len(self.random_process.values))]
 

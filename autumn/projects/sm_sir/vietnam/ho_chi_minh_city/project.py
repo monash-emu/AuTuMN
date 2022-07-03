@@ -104,9 +104,8 @@ priors = [
 
 
 if baseline_params.to_dict()["activate_random_process"]:
-    time_params = baseline_params.to_dict()["time"]
-    rp = set_up_random_process(time_params["start"], time_params["end"])
-
+    rp_params = baseline_params.to_dict()["random_process"]
+    rp = set_up_random_process(rp_params["time"]["start"], rp_params["time"]["end"], rp_params["order"], rp_params["time"]["step"])
     # rp = None  # use this when tuning proposal jumping steps
 else:
     rp = None

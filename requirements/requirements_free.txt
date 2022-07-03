@@ -11,7 +11,7 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-summerepi==2.7.1
+summerepi==3.1.0
 
 # Interaction
 jupyterlab
@@ -23,6 +23,7 @@ matplotlib
 seaborn
 plotly
 cufflinks
+kaleido
 
 # Numerical computing
 numpy
@@ -32,6 +33,7 @@ pyDOE
 numba
 scipy
 networkx
+computegraph
 
 # Database access
 SQLAlchemy

@@ -2,9 +2,6 @@ import numpy as np
 
 from typing import List
 from summer import CompartmentalModel
-
-from autumn.model_features.curve import tanh_based_scaleup
-
 from .constants import BASE_COMPARTMENTS, Compartment, INFECTIOUS_COMPS
 
 

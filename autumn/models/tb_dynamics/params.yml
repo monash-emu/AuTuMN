@@ -10,11 +10,11 @@ time:
 
 # Country caracteristics
 iso3: null
-
 age_mixing: null
 
 
 # set up a parameter for the birth rate (its time-variant value will be automatically defined)
 crude_birth_rate: 1.
+
 
 

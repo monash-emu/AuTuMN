@@ -3,7 +3,7 @@ from typing import List
 from summer import CompartmentalModel
 from autumn.models.tb_dynamics.parameters import Sojourns
 
-from autumn.models.tuberculosis.parameters import Parameters
+from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.project import Params, build_rel_path
 from autumn.model_features.curve import scale_up_function, tanh_based_scaleup
 from autumn.core import inputs
@@ -21,22 +21,6 @@ base_params = Params(
 )
 
 
-def assign_population(seed: float, total_pop: int, model: CompartmentalModel):
-    """
-    Assign the starting population to the model according to the user requests and total population of the model.
-
-    Args:
-        seed: The starting infectious seed
-        total_pop: The total population being modelled
-        model: The summer compartmental model object to have its starting population set
-
-    """
-    susceptible = total_pop - seed
-    init_pop = {Compartment.INFECTIOUS: seed, Compartment.SUSCEPTIBLE: susceptible}
-    # Assign to the model
-    model.set_initial_population(init_pop)
-
-
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
@@ -49,18 +33,26 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         infectious_compartments=INFECTIOUS_COMPS,
         timestep=time.step,
     )
-    seed = params.infectious_seed
+
+    init_pop = {
+        Compartment.INFECTIOUS: 1,
+        Compartment.SUSCEPTIBLE: 50000 - 1,
+    }
+    """Assign the initial population"""
+    model.set_initial_population(init_pop)
 
     """Location strata: For KIR, South Tarawa and other"""
-
-    """Assign the initial population"""
-    init_pop = assign_population(seed, params.start_population_size - seed, model)
+    if "location" in params.user_defined_stratifications:
+        location_strata = params.user_defined_stratifications["location"]["strata"]
+    else:
+        location_strata = []
 
     # Infection flows.
 
     # Derived outputs
     request_outputs(
-        model=model,
+        model,
+        location_strata,
     )
 
     return model

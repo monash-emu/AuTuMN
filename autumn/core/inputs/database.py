@@ -18,6 +18,7 @@ from .covid_vnm.preprocess import preprocess_covid_vnm
 from .demography.preprocess import preprocess_demography
 from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data
+from .school_closure.preprocess import preprocess_school_closure
 from .social_mixing.preprocess import preprocess_social_mixing
 from .tb_kir.preprocess import preprocess_tb_kir
 
@@ -83,6 +84,9 @@ def build_input_database(rebuild: bool = False):
 
         with Timer("Ingesting Our World in Data data."):
             preprocess_our_world_in_data(input_db)
+
+        with Timer("Ingesting school closure data."):
+            preprocess_school_closure(input_db)
 
         with Timer("Ingesting demography data."):
             country_df = preprocess_demography(input_db)

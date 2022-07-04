@@ -13,6 +13,8 @@ UNESCO_SCHOOL_CLOSURE_XLS = (
 UNESCO_SCHOOL_CLOSURE_CSV = INPUT_DATA_PATH / "school-closure" / "school_closure.csv"
 
 
-def fetch_school_closure_data(xls: Path, csv: Path) -> None:
-    pd.read_excel(xls).to_csv(csv, index=False)
+def fetch_school_closure_data() -> None:
+    pd.read_excel(UNESCO_SCHOOL_CLOSURE_XLS).to_csv(
+        UNESCO_SCHOOL_CLOSURE_CSV, index=False
+    )
     return None

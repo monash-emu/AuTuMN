@@ -17,7 +17,6 @@ from .outputs.common import CovidOutputsBuilder
 from .parameters import Parameters
 from .strat_processing.vaccination import add_vacc_rollout_requests, apply_standard_vacc_coverage
 from .strat_processing import tracing
-from .strat_processing.clinical import AbsRateIsolatedSystem, AbsPropSymptNonHospSystem
 from .strat_processing.strains import make_voc_seed_func
 from .strat_processing.vaccination import get_second_dose_delay_rate, find_vacc_strata
 from autumn.settings import COVID_BASE_AGEGROUPS
@@ -186,8 +185,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     compartment_periods = calc_compartment_periods(params.sojourn)
     within_early_exposed = 1. / compartment_periods[Compartment.EARLY_EXPOSED]
-    model.add_adjustment_system("isolated", AbsRateIsolatedSystem(within_early_exposed))
-    model.add_adjustment_system("sympt_non_hosp", AbsPropSymptNonHospSystem(within_early_exposed))
 
     """
     Contact tracing stratification.

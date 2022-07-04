@@ -404,9 +404,13 @@ def build_model(
     """
 
     # Apply the clinical stratification, or a None to indicate no clinical stratification to get a list for the outputs
-    clinical_strat = get_clinical_strat(
-        model, compartment_types, params, infectious_entry_flow, sympt_props, non_detect_func, cdr_func,
-    )
+    # clinical_strat = get_clinical_strat(
+    #     model, compartment_types, params, infectious_entry_flow, sympt_props, non_detect_func, cdr_func,
+    # )
+
+    # remove clinical strat
+    clinical_strat = None
+
     if clinical_strat:
         model.stratify_with(clinical_strat)
         clinical_strata = clinical_strat.strata

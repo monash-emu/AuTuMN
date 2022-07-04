@@ -81,5 +81,5 @@ class Parameters:
     # Running time.
     time: Time
     # Output requests
-    user_defined_stratifications: dict
+ 
    

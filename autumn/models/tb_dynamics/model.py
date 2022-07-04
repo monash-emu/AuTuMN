@@ -42,10 +42,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.set_initial_population(init_pop)
 
     """Location strata: For KIR, South Tarawa and other"""
-    if "location" in params.user_defined_stratifications:
-        location_strata = params.user_defined_stratifications["location"]["strata"]
-    else:
-        location_strata = []
+ 
+    location_strata = []
 
     # Infection flows.
 

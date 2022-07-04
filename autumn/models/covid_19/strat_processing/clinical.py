@@ -2,7 +2,6 @@ import numpy as np
 from typing import List, Dict
 
 from summer import Overwrite
-from summer.adjust import AdjustmentComponent, AdjustmentSystem
 
 from autumn.models.covid_19.constants import (
     Clinical, Compartment, FIXED_STRATA, INFECTIOUSNESS_ONSET, INFECT_DEATH, PROGRESS, RECOVERY
@@ -68,105 +67,17 @@ def get_abs_prop_isolated(prop_sympt: np.ndarray, prop_hosp: np.ndarray, cdr: fl
     target_prop_detected = prop_sympt * cdr
     return np.maximum(0., target_prop_detected - prop_hosp)
 
+def make_abs_rate_isolated_func(prop_sympt, prop_hosp, early_rate):
+    def abs_rate_isolated_func(time, computed_values):
+        return get_abs_prop_isolated(prop_sympt, prop_hosp, computed_values["cdr"]) * early_rate
+    return abs_rate_isolated_func
 
-class AbsRateIsolatedSystem(AdjustmentSystem):
-    """
-    Returns the absolute rate of infected becoming isolated at home - the third clinical stratum of the clinical
-    stratification (excludes those that are admitted to hospital).
-    We need the proportion of all cases that are symptomatic and the proportion of all cases that are hospitalised to
-    work this out.
-
-    Attributes:
-        early_rate: Rate by which all output is scaled
-        prop_sympt: Proportion of all cases that are symptomatic
-        prop_hosp: Proportion of all cases that are hospitalised
-
-    """
-
-    def __init__(self, early_rate: float):
-        self.early_rate = early_rate
-        self.prop_sympt = None
-        self.prop_hosp = None
-
-    def prepare_to_run(self, component_data: List[dict]):
-        """
-        Compile all components into arrays used for faster computation.
-
-        Args:
-            component_data: List containing the required data described in Attributes above
-
-        """
-
-        self.prop_sympt = np.empty_like(component_data, dtype=float)
-        self.prop_hosp = np.empty_like(component_data, dtype=float)
-
-        for i, component in enumerate(component_data):
-            self.prop_sympt[i] = component["proportion_sympt"]
-            self.prop_hosp[i] = component["proportion_hosp"]
-
-    def get_weights_at_time(self, time: float, computed_values: dict) -> np.ndarray:
-        """
-        Get the final value for the absolute proportion isolated needed at run-time.
-
-        Args:
-            Standard arguments for this summer method
-
-        Returns:
-            The final calculated value
-
-        """
-
-        return get_abs_prop_isolated(self.prop_sympt, self.prop_hosp, computed_values["cdr"]) * self.early_rate
-
-
-class AbsPropSymptNonHospSystem(AdjustmentSystem):
-    """
-    Returns the absolute rate of infected becoming symptomatic, including both detected and undetected symptomatic.
-
-    Attributes:
-        early_rate: Rate by which all output is scaled
-
-    """
-
-    def __init__(self, early_rate: float):
-        self.early_rate = early_rate
-        self.prop_sympt = None
-        self.prop_hosp = None
-
-    def prepare_to_run(self, component_data: List[dict]):
-        """
-        Compile all components into arrays used for faster computation.
-
-        Args:
-            component_data: List containing the required data described in Attributes above
-
-        """
-
-        self.prop_sympt = np.empty_like(component_data, dtype=float)
-        self.prop_hosp = np.empty_like(component_data, dtype=float)
-
-        for i, component in enumerate(component_data):
-            self.prop_sympt[i] = component["proportion_sympt"]
-            self.prop_hosp[i] = component["proportion_hosp"]
-
-    def get_weights_at_time(self, time: float, computed_values: dict) -> np.ndarray:
-        """
-        Get the final value for the absolute proportion isolated needed at run-time.
-        Here we have to calculate the absolute proportion detected and subtract it from the absolute proportion of
-        patients symptomatic but not hospitalised.
-
-        Args:
-            Standard arguments for this summer method
-
-        Returns:
-            The final calculated value
-
-        """
-
-        prop_isolated = get_abs_prop_isolated(self.prop_sympt, self.prop_hosp, computed_values["cdr"])
-        prop_sympt_non_hospital = self.prop_sympt - self.prop_hosp - prop_isolated
-        return prop_sympt_non_hospital * self.early_rate
-
+def make_abs_prop_sympt_nonhosp_func(prop_sympt, prop_hosp, early_rate):
+    def abs_prop_sympt_nonhosp_func(time, computed_values):
+        prop_isolated = get_abs_prop_isolated(prop_sympt, prop_hosp, computed_values["cdr"])
+        prop_sympt_non_hospital = prop_sympt - prop_hosp - prop_isolated
+        return prop_sympt_non_hospital * early_rate
+    return abs_prop_sympt_nonhosp_func
 
 def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]:
     """
@@ -186,11 +97,15 @@ def get_entry_adjustments(abs_props: dict, early_rate: float) -> Dict[str, dict]
         adj_values[agegroup], adjustments[agegroup] = {}, {}
 
         # Get time-varying symptomatic isolated non-community rate
-        key_props = {"proportion_sympt": abs_props["sympt"][age_idx], "proportion_hosp": abs_props["hospital"][age_idx]}
+        proportion_sympt = abs_props["sympt"][age_idx]
+        proportion_hosp = abs_props["hospital"][age_idx]
+
+        abs_rate_isolated = make_abs_rate_isolated_func(proportion_sympt, proportion_hosp, early_rate)
+        abs_prop_sympt_nonhosp = make_abs_prop_sympt_nonhosp_func(proportion_sympt, proportion_hosp, early_rate)
 
         # Variable flow rates, AdjustmentComponent contains data for the 'isolated' and 'sympt_non_hosp' systems
-        adj_values[agegroup][Clinical.SYMPT_ISOLATE] = AdjustmentComponent(system="isolated", data=key_props)
-        adj_values[agegroup][Clinical.SYMPT_NON_HOSPITAL] = AdjustmentComponent(system="sympt_non_hosp", data=key_props)
+        adj_values[agegroup][Clinical.SYMPT_ISOLATE] = abs_rate_isolated
+        adj_values[agegroup][Clinical.SYMPT_NON_HOSPITAL] = abs_prop_sympt_nonhosp
 
         # Calculate the constant flow rates
         adj_values[agegroup].update({stratum: abs_props[stratum][age_idx] * early_rate for stratum in FIXED_STRATA})

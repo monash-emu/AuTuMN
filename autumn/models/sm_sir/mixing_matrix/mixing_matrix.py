@@ -32,7 +32,7 @@ def build_dynamic_mixing_matrix(
     location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
     age_adjuster = AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None
 
-    def mixing_matrix_function(time: float) -> np.ndarray:
+    def mixing_matrix_function(time: float, computed_values: dict=None) -> np.ndarray:
         """
         The function to be called at model run-time to get the matrix.
         """

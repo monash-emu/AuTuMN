@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: sri_lanka_methods.aux
+Reallocating 'name_of_file' (item size: 1) to 18 items.
+The style file: unsrt2authabbrvpp.bst
+Reallocating 'name_of_file' (item size: 1) to 18 items.
+Database file #1: covid_library.bib
+You've used 10 entries,
+            1807 wiz_defined-function locations,
+            522 strings with 6232 characters,
+and the built_in function-call counts, 1889 in all, are:
+= -- 175
+> -- 19
+< -- 0
++ -- 10
+- -- 0
+* -- 146
+:= -- 282
+add.period$ -- 28
+call.type$ -- 10
+change.case$ -- 10
+chr.to.int$ -- 0
+cite$ -- 10
+duplicate$ -- 85
+empty$ -- 228
+format.name$ -- 9
+if$ -- 434
+int.to.chr$ -- 0
+int.to.str$ -- 10
+missing$ -- 9
+newline$ -- 51
+num.names$ -- 9
+pop$ -- 15
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 35
+stack$ -- 0
+substring$ -- 177
+swap$ -- 10
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 8
+width$ -- 12
+write$ -- 106

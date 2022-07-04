@@ -35,12 +35,28 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     init_pop = {
-        Compartment.INFECTIOUS: 1,
-        Compartment.SUSCEPTIBLE: 50000 - 1,
+        Compartment.INFECTIOUS: params.infectious_seed,
+        Compartment.SUSCEPTIBLE: params.start_population_size - params.infectious_seed,
     }
     """Assign the initial population"""
     model.set_initial_population(init_pop)
 
+    birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
+    birth_rates = [b / 1000.0 for b in birth_rates]  # Birth rates are provided / 1000 population
+    crude_birth_rate = scale_up_function(years, birth_rates, smoothness=0.2, method=5)
+    model.add_crude_birth_flow(
+        "birth",
+        crude_birth_rate,
+        Compartment.SUSCEPTIBLE,
+    )
+
+    # Death flows - later modified by age stratification
+    universal_death_rate = 1.0
+    model.add_universal_death_flows(
+        "universal_death", 
+        death_rate=universal_death_rate)
+
+   
     """Location strata: For KIR, South Tarawa and other"""
  
     location_strata = []

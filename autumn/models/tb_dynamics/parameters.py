@@ -81,5 +81,6 @@ class Parameters:
     # Running time.
     time: Time
     # Output requests
+    infectious_seed: float
  
    

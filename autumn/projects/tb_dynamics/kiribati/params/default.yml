@@ -7,3 +7,4 @@ time:
   step: 0.1
 
 start_population_size: 2000.
+infectious_seed: 1.

@@ -15,6 +15,8 @@ age_mixing: null
 
 # set up a parameter for the birth rate (its time-variant value will be automatically defined)
 crude_birth_rate: 1.
+start_population_size: 2000.
+infectious_seed: 1.
 
 
 

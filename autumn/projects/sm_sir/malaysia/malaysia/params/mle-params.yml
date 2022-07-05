@@ -1,5 +1,3 @@
-contact_rate: 0.17446018317359688
-voc_emergence.omicron.contact_rate_multiplier: 1.1047034557515576
-voc_emergence.omicron.new_voc_seed.start_time: 538.7652157816818
-voc_emergence.omicron.relative_active_period: 0.713457117972314
-voc_emergence.omicron.relative_latency: 0.5239638519608149
+contact_rate: 0.13623645040438614
+voc_emergence.omicron.contact_rate_multiplier: 1.1482115478856598
+voc_emergence.omicron.new_voc_seed.start_time: 520.4208058674113

@@ -66,7 +66,7 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[float]  # Doesn't have an early and late
+    recovered: Optional[float]  
 
 
 @dataclass(config=ParamConfig)

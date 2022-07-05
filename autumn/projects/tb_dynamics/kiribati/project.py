@@ -3,7 +3,6 @@ from autumn.core.project import (
     ParameterSet,
     load_timeseries,
     build_rel_path,
-    use_tuned_proposal_sds,
 )
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
@@ -18,7 +17,6 @@ from autumn.settings import Region, Models
 default_path = build_rel_path("params/default.yml")
 baseline_params = base_params.update(default_path)
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
-
 param_set = ParameterSet(baseline=baseline_params, scenarios = [])
 
 targets = [

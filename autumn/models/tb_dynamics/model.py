@@ -33,7 +33,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         infectious_compartments=INFECTIOUS_COMPS,
         timestep=time.step,
     )
-
     init_pop = {
         Compartment.INFECTIOUS: params.infectious_seed,
         Compartment.SUSCEPTIBLE: params.start_population_size - params.infectious_seed,
@@ -49,24 +48,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         crude_birth_rate,
         Compartment.SUSCEPTIBLE,
     )
-
-    # Death flows - later modified by age stratification
-    universal_death_rate = 1.0
-    model.add_universal_death_flows(
-        "universal_death", 
-        death_rate=universal_death_rate)
-
-   
-    """Location strata: For KIR, South Tarawa and other"""
- 
-    location_strata = []
-
-    # Infection flows.
+    # # Infection flows.
 
     # Derived outputs
     request_outputs(
-        model,
-        location_strata,
+        model
     )
 
     return model

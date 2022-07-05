@@ -36,9 +36,6 @@ voc_emergence: # Baseline has currently no VoC since the seed time is very far i
       omicron:
         early_reinfection: 1.
         late_reinfection: 0.
-      new_strain:
-        early_reinfection: 0.4  # 60% immune escape
-        late_reinfection: 0.
 
 # Mobility parameters
 is_dynamic_mixing_matrix: true
@@ -70,6 +67,7 @@ sojourns:
 age_stratification:
   prop_hospital:
     multiplier: 1.
+  prop_symptomatic: null
 
 detect_prop: 1.  # will prevent cdr process from being processed
 

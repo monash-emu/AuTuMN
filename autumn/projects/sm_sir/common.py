@@ -5,9 +5,9 @@ from autumn.core.project import load_timeseries, build_rel_path
 
 def get_WPRO_priors():
     priors = [
-        UniformPrior("contact_rate", (0.05, 0.3)),
+        UniformPrior("contact_rate", (0.03, 0.3)),
         UniformPrior("infectious_seed", (50, 300)),
-        UniformPrior("age_stratification.cfr.multiplier", (0.1, 0.7))
+        UniformPrior("age_stratification.cfr.multiplier", (0.05, 0.7))
     ]
     return priors
 

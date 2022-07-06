@@ -65,6 +65,8 @@ sojourns:
   recovered: 180.
 
 age_stratification:
+  cfr:
+    multiplier: 0.15
   prop_hospital:
     multiplier: 1.
   prop_symptomatic: null

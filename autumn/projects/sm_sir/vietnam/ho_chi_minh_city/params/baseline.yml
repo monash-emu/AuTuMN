@@ -199,7 +199,7 @@ mobility:
 
 prop_icu_among_hospitalised: 0.05
 
-booster_effect_duration: 120. # 4 months
+booster_effect_duration: 180. # 4 months
 
 age_stratification:
   cfr:

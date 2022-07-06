@@ -422,8 +422,8 @@ def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, 
         raw_data_booster = get_btn_vac_coverage(region="Bhutan", dose=3)
     elif iso3 == "VNM":
         if region == "Ho Chi Minh City":
-            raw_data_double = pd.Series({619: 0.1, 632: 0.2, 654: 0.55, 710: 0.66,
-                                         732: 0.7, 746: 0.0725, 763: 0.7288, 791: 0.7338})
+            raw_data_double = pd.Series({619: 0.0909, 632: 0.1818, 654: 0.5, 710: 0.6,
+                                         732: 0.6364, 746: 0.6591, 763: 0.6652, 791: 0.6671})
             raw_data_booster = pd.Series({619: 0.001, 632: 0.001, 654: 0.001, 710: 0.001,
                                           732: 0.142, 746: 0.383, 763: 0.456, 791: 0.474})
         elif region == "Hanoi":

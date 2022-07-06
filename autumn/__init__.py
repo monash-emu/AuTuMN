@@ -135,5 +135,5 @@ register_project(
 register_project(
     Models.SM_COVID,
     Region.PHILIPPINES,
-    "autumn.projects.hierarchical_sir.multi.project",
+    "autumn.projects.sm_covid.philippines.project",
 )

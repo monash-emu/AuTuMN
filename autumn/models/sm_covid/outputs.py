@@ -6,7 +6,7 @@ from numba import jit
 
 from autumn.model_features.outputs import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
-from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
+from .constants import IMMUNITY_STRATA, Compartment
 from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 

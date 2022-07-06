@@ -4,8 +4,6 @@ from typing import Tuple
 from summer.compute import ComputedValueProcessor
 
 from autumn.model_features.curve.scale_up import scale_up_function
-from autumn.models.sm_sir.parameters import Time, RandomProcessParams
-
 
 class RandomProcess:
     """
@@ -105,8 +103,8 @@ def set_up_random_process(start_time, end_time, order, period):
 
 
 def get_random_process(
-        process_params: RandomProcessParams,
-        contact_rate_value: float,
+        process_params,
+        contact_rate_value,
 ) -> Tuple[callable, callable]:
     """
     Work out the process that will contribute to the random process.

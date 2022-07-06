@@ -173,12 +173,8 @@ class Sojourns(BaseModel):
     Parameters for determining how long a person stays in a given compartment.
     """
 
-    active: CompartmentSojourn
-    latent: CompartmentSojourn
-    recovered: Optional[float]  # If there is a sojourn time for recovered, then there will be two compartments
-
-    check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
-
+    active: float
+    latent: float
 
 class MixingLocation(BaseModel):
 
@@ -306,7 +302,6 @@ class TimeDistribution(BaseModel):
 
 class TimeToEvent(BaseModel):
 
-    notification: TimeDistribution
     hospitalisation: TimeDistribution
     icu_admission: TimeDistribution
     death: TimeDistribution

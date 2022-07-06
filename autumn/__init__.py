@@ -130,3 +130,10 @@ register_project(
     Region.MULTI,
     "autumn.projects.hierarchical_sir.multi.project",
 )
+
+# SM_COVID model
+register_project(
+    Models.SM_COVID,
+    Region.PHILIPPINES,
+    "autumn.projects.hierarchical_sir.multi.project",
+)

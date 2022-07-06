@@ -209,37 +209,6 @@ def build_model(
     # immunity_low_risk_reduction = immunity_params.infection_risk_reduction.low
     # immunity_high_risk_reduction = immunity_params.infection_risk_reduction.high
 
-    # if voc_params:
-    #     # The code should run fine if VoC parameters have been submitted but the strain stratification hasn't been
-    #     # implemented yet - but at this stage we assume we don't want it to
-    #     msg = "Strain stratification not present in model"
-    #     assert "strain" in [strat.name for strat in model._stratifications], msg
-    #     adjust_susceptible_infection_with_strains(
-    #         immunity_low_risk_reduction,
-    #         immunity_high_risk_reduction,
-    #         immunity_strat,
-    #         voc_params,
-    #     )
-    #     adjust_reinfection_with_strains(
-    #         immunity_low_risk_reduction,
-    #         immunity_high_risk_reduction,
-    #         immunity_strat,
-    #         reinfection_flows,
-    #         voc_params,
-    #     )
-    # else:
-    #     adjust_susceptible_infection_without_strains(
-    #         immunity_low_risk_reduction,
-    #         immunity_high_risk_reduction,
-    #         immunity_strat,
-    #     )
-    #     adjust_reinfection_without_strains(
-    #         immunity_low_risk_reduction,
-    #         immunity_high_risk_reduction,
-    #         immunity_strat,
-    #         reinfection_flows,
-    #     )
-
     # # Apply the immunity stratification
     # model.stratify_with(immunity_strat)
 

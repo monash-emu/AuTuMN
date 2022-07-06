@@ -20,7 +20,7 @@ voc_emergence:
 
   new_strain:
     new_voc_seed:
-      start_time: 914 # 1st July 2022
+      start_time: 913 # 1st July 2022
     immune_escape: 0.8
     hosp_protection: 0.8
     death_protection: 0.9

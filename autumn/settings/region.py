@@ -93,6 +93,11 @@ class Region:
         # DAVAO_CITY,
     ]
 
+    WPRO_REGIONS = [
+        MALAYSIA,
+        NCR
+    ]
+
     @staticmethod
     def to_filename(name: str):
         return name.replace("-", "_")

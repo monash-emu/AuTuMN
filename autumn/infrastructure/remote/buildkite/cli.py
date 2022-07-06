@@ -17,6 +17,7 @@ from .pipelines import trigger_europe as trigger_europe_pipeline
 from .pipelines import trigger_philippines as trigger_philippines_pipeline
 from .pipelines import trigger_victoria as trigger_victoria_pipeline
 from .pipelines import trigger_malaysia as trigger_malaysia_pipeline
+from .pipelines import trigger_wpro as trigger_wpro_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -229,6 +230,15 @@ def trigger_europe():
     """
     logger.info("Triggering all European mixing optimisation calibrations.")
     _trigger_models(Region.MIXING_OPTI_REGIONS, trigger_europe_pipeline)
+
+
+@trigger.command("wpro")
+def trigger_wpro():
+    """
+    Trigger all European mixing optimization models
+    """
+    logger.info("Triggering all European mixing optimisation calibrations.")
+    _trigger_models(Region.WPRO_REGIONS, trigger_wpro_pipeline)
 
 
 @trigger.command("victoria")

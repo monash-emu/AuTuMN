@@ -73,8 +73,8 @@ priors = [
     # hospitalization multiplier
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.8, 2.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.1, 0.4)),
-    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.7)),
+    # UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.1, 0.4)),
+    # UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.7)),
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing
@@ -131,5 +131,5 @@ project = Project(
 )
 
 
-# from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
-# perform_all_params_proposal_tuning(project, calibration, priors, n_points=5, relative_likelihood_reduction=0.2)
+from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
+perform_all_params_proposal_tuning(project, calibration, priors, n_points=5, relative_likelihood_reduction=0.2)

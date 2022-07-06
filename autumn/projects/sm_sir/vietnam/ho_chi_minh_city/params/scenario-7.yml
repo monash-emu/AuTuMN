@@ -4,8 +4,7 @@ description: >
   This variant is more immune-escape than Omicron, but not totally towards vaccination- and infection-related.
   Severity (towards hospitalization and fatality) is twice that of the Omicron variant (more severe).
   Booster dose is assumed to be effective for 180 days (~ 6 months).
-  Booster dose is continued to be administered targetedly among age groups at the rate of 2200000 doses per month, i.e
-  20% of the population per month.
+  Booster dose is continued to be administered targetedly among age groups at the rate of 2200000 doses per month.
 
 voc_emergence:
   delta:
@@ -27,6 +26,6 @@ voc_emergence:
     hosp_protection: 0.8
     death_protection: 0.9
 
-future_monthly_booster_rate: 2200000.
+future_monthly_booster_rate: 2000000.
 
 future_booster_age_allocation: [60, 50, 25, 15, 0]

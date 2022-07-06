@@ -4,6 +4,7 @@ description: >
   This variant completely escapes both vaccination- and infection-related immunity.
   The severity of this new VoC towards hospitalization and death is the same as that of Omicron.
   Waning vaccine-induced immunity remained turned off, since it is totally escaped by the new VoC.
+  Booster dose is assumed to be effective for 180 days (~ 6 months).
 
 #time:
 #  start: 883 # 1st June 2022

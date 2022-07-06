@@ -2,7 +2,7 @@ description: >
   SCENARIO 1
   The new variant is twice as transmissible as Omicron (~4 times more transmissible than Delta VoC).
   The severity and immune escape of this variant is exactly the same as that of Omicron.
-  Booster dose is assumed to be effective for 120 days (~4 months).
+  Booster dose is assumed to be effective for 180 days (~ 6 months).
 #time:
 #  start: 883 # 1st June 2022
 

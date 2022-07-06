@@ -73,8 +73,8 @@ priors = [
     # hospitalization multiplier
     UniformPrior("age_stratification.prop_hospital.multiplier", (0.8, 2.0)),
     # immunity stratification
-    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.1, 0.4)),
-    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.7)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.05, 0.4)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.4, 0.8)),
     # UniformPrior("immunity_stratification.prop_immune", (0.7, 0.9)),
     # UniformPrior("immunity_stratification.prop_high_among_immune", (0.0, 1.0)),
     # Microdistancing
@@ -89,8 +89,8 @@ priors = [
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1, 3)),
     # UniformPrior("voc_emergence.omicron.hosp_protection", (0.8, 1.0)),
     UniformPrior("voc_emergence.omicron.icu_multiplier", (0.2, 0.6)),
-    UniformPrior("voc_emergence.omicron.relative_active_period", (0.3, 0.9)),
-    UniformPrior("voc_emergence.omicron.relative_latency", (0.3, 0.9)),
+    UniformPrior("voc_emergence.omicron.relative_active_period", (0.3, 0.7)),
+    UniformPrior("voc_emergence.omicron.relative_latency", (0.1, 0.6)),
     # emergence of delta
     # UniformPrior("voc_emergence.wild_type.icu_multiplier", (0.5, 1.3)),
     # UniformPrior("voc_emergence.wild_type.relative_active_period", (1.0, 3.5)),

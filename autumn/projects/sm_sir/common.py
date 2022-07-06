@@ -22,6 +22,5 @@ def get_tartgets(calibration_start_time, iso3, region):
     notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
     targets = [
         NormalTarget(infection_deaths_ts),
-        NormalTarget(notifications_ts)
     ]
     return targets

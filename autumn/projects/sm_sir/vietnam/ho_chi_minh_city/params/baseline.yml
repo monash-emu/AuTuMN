@@ -4,6 +4,13 @@ description: BASELINE
 country:
   iso3: VNM
 
+age_groups:
+  - 0
+  - 15
+  - 25
+  - 50
+  - 60
+
 ref_mixing_iso3: HKG
 
 sojourns:
@@ -199,10 +206,17 @@ mobility:
 
 prop_icu_among_hospitalised: 0.05
 
+future_monthly_booster_rate: 0.
 booster_effect_duration: 180. # 4 months
+
+future_booster_age_allocation: null
 
 age_stratification:
   cfr:
     multiplier: 0.55
   prop_hospital:
     multiplier: 1.0 # fixed after various calibrations
+
+requested_cumulative_outputs: ["hospital_occupancy", "icu_occupancy"]
+cumulative_start_time: 913 # 1st July 2022
+request_immune_prop_by_age: True

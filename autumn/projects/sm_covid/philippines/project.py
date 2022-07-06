@@ -53,7 +53,7 @@ with open(plot_spec_filepath) as f:
 
 
 # Create and register the project.
-project = Project(Region.NCR, Models.SM_COVID, build_model, param_set, calibration, plots=plot_spec)
+project = Project(Region.PHILIPPINES, Models.SM_COVID, build_model, param_set, calibration, plots=plot_spec)
 
 
 # from autumn.calibration._tuning import perform_all_params_proposal_tuning

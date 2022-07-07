@@ -237,7 +237,7 @@ def trigger_wpro():
     """
     Trigger all European mixing optimization models
     """
-    logger.info("Triggering all European mixing optimisation calibrations.")
+    logger.info("Triggering all WPRO calibrations.")
     _trigger_models(Region.WPRO_REGIONS, trigger_wpro_pipeline, "sm_sir")
 
 

@@ -27,7 +27,6 @@ class Time(BaseModel):
     critical_range: List[List[float]]
 
 
-
 class ParamConfig:
     """
     Config for parameters model
@@ -35,19 +34,6 @@ class ParamConfig:
 
     anystr_strip_whitespace = True  # Strip whitespace
     allow_mutation = False  # Params should be immutable
-
-
-class MixingMatrices(BaseModel):
-    """
-    Config mixing matrices. None defaults and "prem" to Prem matrices. "extrapolated" for building synthetic matrices with age adjustment (age_adjust  = True)
-    """
-
-    type: Optional[str]
-    source_iso3: Optional[str]
-    age_adjust: Optional[bool]
-
-
-
 
 
 class CompartmentSojourn(BaseModel):
@@ -66,7 +52,7 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[float]  
+    recovered: Optional[float]
 
 
 @dataclass(config=ParamConfig)
@@ -76,11 +62,8 @@ class Parameters:
     iso3: str
     # Country info
     crude_birth_rate: float
-    age_mixing: Optional[MixingMatrices]
     start_population_size: float
     # Running time.
     time: Time
     # Output requests
     infectious_seed: float
- 
-   

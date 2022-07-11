@@ -150,6 +150,7 @@ mobility:
       transit_stations: 0.25
   smooth_google_data: true  # whether to apply a 7-day moving average
   square_mobility_effect: true
+  microdistancing: {}
 
 # parameters related to immunity stratification (three strata: none / high / low)
 immunity_stratification:
@@ -198,4 +199,4 @@ random_process: null
 
 requested_cumulative_outputs: []
 cumulative_start_time: null
-request_incidence_by_age: False
+request_incidence_by_age: True

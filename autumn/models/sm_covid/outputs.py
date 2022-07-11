@@ -55,8 +55,10 @@ def get_immunity_prop_modifiers(
 class SmCovidOutputsBuilder(OutputsBuilder):
    
     def request_incidence(
-            self,            
+            self,      
+            age_groups: List[str],      
             incidence_flow: str,
+            request_incidence_by_age: bool,
     ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
@@ -66,8 +68,6 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         Args:
             age_groups: The modelled age groups
-            clinical_strata: The clinical strata implemented
-            strain_strata: The modelled strains, or None if model is not stratified by strain
             incidence_flow: The name of the flow representing incident cases
             request_incidence_by_age: Whether to save outputs for incidence by age
 
@@ -77,298 +77,254 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         self.model.request_output_for_flow(name="incidence", flow_name=incidence_flow)
 
         # Stratified
-        # for agegroup in age_groups:
-        #     agegroup_string = f"Xagegroup_{agegroup}"
-        #     agegroup_filter = {"agegroup": agegroup}
+        if request_incidence_by_age:
+            for agegroup in age_groups:
+                agegroup_string = f"Xagegroup_{agegroup}"
+                agegroup_filter = {"agegroup": agegroup}
+            
+                self.model.request_output_for_flow(
+                    name=f"incidence{agegroup_string}",
+                    flow_name=incidence_flow,
+                    dest_strata=agegroup_filter,
+                    save_results=True,
+                )   
 
-        #     age_incidence_sources = []
 
-        #     for immunity_stratum in IMMUNITY_STRATA:
-        #         immunity_string = f"Ximmunity_{immunity_stratum}"
-        #         immunity_filter = {"immunity": immunity_stratum}
+    # def request_infection_deaths(
+    #         self,
+    #         model_times: np.ndarray,
+    #         age_groups: List[str],
+    #         strain_strata: List[str],
+    #         iso3: str,
+    #         region: Union[str, None],
+    #         cfr_prop_requests: AgeSpecificProps,
+    #         time_from_onset_to_death: TimeDistribution,
+    #         voc_params: Optional[Dict[str, VocComponent]],
+    # ):
+    #     """
+    #     Request infection death-related outputs.
 
-        #         for strain in strain_strata:
-        #             strain_string = f"Xstrain_{strain}" if strain else ""
-        #             strain_filter = {"strain": strain} if strain else {}
-        #             sympt_incidence_sources = []
+    #     Args:
+    #         model_times: The model evaluation times
+    #         age_groups: Modelled age group lower breakpoints
+    #         strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+    #         iso3: The ISO3 code of the country being simulated
+    #         region: The sub-region being simulated, if any
+    #         cfr_prop_requests: All the CFR-related requests, including the proportions themselves
+    #         time_from_onset_to_death: Details of the statistical distribution for the time to death
+    #         voc_params: The parameters pertaining to the VoCs being implemented in the model
 
-        #             for clinical_stratum in clinical_strata:
-        #                 clinical_string = f"Xclinical_{clinical_stratum}" if clinical_stratum else ""
+    #     """
 
-        #                 # Work out what to filter by, depending on whether these stratifications have been implemented
-        #                 dest_filter = {"clinical": clinical_stratum} if clinical_stratum else {}
-        #                 dest_filter.update(agegroup_filter)
-        #                 dest_filter.update(immunity_filter)
-        #                 dest_filter.update(strain_filter)
+    #     cfr_request = cfr_prop_requests.values
+    #     cfr_props = convert_param_agegroups(iso3, region, cfr_request, age_groups)
 
-        #                 # Work out the fully stratified incidence string
-        #                 output_name = f"incidence{agegroup_string}{immunity_string}{clinical_string}{strain_string}"
-        #                 age_incidence_sources.append(output_name)
+    #     # Get the adjustments to the hospitalisation rates according to immunity status
+    #     source_immunity_dist = cfr_prop_requests.source_immunity_distribution
+    #     source_immunity_protection = cfr_prop_requests.source_immunity_protection
+    #     immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
-        #                 # Get the most highly stratified incidence calculation
-        #                 self.model.request_output_for_flow(
-        #                     name=output_name,
-        #                     flow_name=incidence_flow,
-        #                     dest_strata=dest_filter,
-        #                     save_results=False,
-        #                 )
+    #     # Pre-compute the probabilities of event occurrence within each time interval between model times
+    #     interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
 
-        #                 # Update the dictionaries of which outputs are relevant
-        #                 if clinical_stratum in ["", ClinicalStratum.DETECT]:
-        #                     detected_incidence_sources.append(output_name)
-        #                 if clinical_stratum in ["", ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]:
-        #                     sympt_incidence_sources.append(output_name)
+    #     # Request infection deaths for each age group
+    #     infection_deaths_sources = []
+    #     for agegroup in age_groups:
+    #         agegroup_string = f"Xagegroup_{agegroup}"
 
-        #             # Calculate the incidence of symptomatic disease in preparation for hospitalisation and deaths
-        #             sympt_inc_name = f"incidence_sympt{agegroup_string}{immunity_string}{strain_string}"
-        #             self.model.request_aggregate_output(
-        #                 name=sympt_inc_name,
-        #                 sources=sympt_incidence_sources,
-        #                 save_results=False,
-        #             )       
-                          
-        #     if request_incidence_by_age:
-        #         self.model.request_aggregate_output(
-        #             name=f"incidence{agegroup_string}",
-        #             sources=age_incidence_sources,
-        #             save_results=True,
-        #         )   
+    #         for immunity_stratum in IMMUNITY_STRATA:
+    #             immunity_string = f"Ximmunity_{immunity_stratum}"
 
-    def request_infection_deaths(
-            self,
-            model_times: np.ndarray,
-            age_groups: List[str],
-            strain_strata: List[str],
-            iso3: str,
-            region: Union[str, None],
-            cfr_prop_requests: AgeSpecificProps,
-            time_from_onset_to_death: TimeDistribution,
-            voc_params: Optional[Dict[str, VocComponent]],
-    ):
-        """
-        Request infection death-related outputs.
+    #             # Adjust CFR proportions for immunity
+    #             adj_death_props = cfr_props * immune_death_modifiers[immunity_stratum]
+    #             or_adjuster_func = get_apply_odds_ratio_to_prop(cfr_prop_requests.multiplier)
+    #             adj_death_props = adj_death_props.apply(or_adjuster_func)
 
-        Args:
-            model_times: The model evaluation times
-            age_groups: Modelled age group lower breakpoints
-            strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
-            iso3: The ISO3 code of the country being simulated
-            region: The sub-region being simulated, if any
-            cfr_prop_requests: All the CFR-related requests, including the proportions themselves
-            time_from_onset_to_death: Details of the statistical distribution for the time to death
-            voc_params: The parameters pertaining to the VoCs being implemented in the model
+    #             for strain in strain_strata:
+    #                 strain_string = f"Xstrain_{strain}" if strain else ""
 
-        """
+    #                 # Find the strata we are working with and work out the strings to refer to
+    #                 strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+    #                 output_name = f"infection_deaths{strata_string}"
+    #                 infection_deaths_sources.append(output_name)
 
-        cfr_request = cfr_prop_requests.values
-        cfr_props = convert_param_agegroups(iso3, region, cfr_request, age_groups)
+    #                 # Calculate the multiplier based on age, immunity and strain
+    #                 strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
+    #                 death_risk = adj_death_props[agegroup] * strain_risk_modifier
 
-        # Get the adjustments to the hospitalisation rates according to immunity status
-        source_immunity_dist = cfr_prop_requests.source_immunity_distribution
-        source_immunity_protection = cfr_prop_requests.source_immunity_protection
-        immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
+    #                 # Get the infection deaths function for convolution
+    #                 infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
 
-        # Pre-compute the probabilities of event occurrence within each time interval between model times
-        interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
+    #                 # Request the output
+    #                 self.model.request_function_output(
+    #                     name=output_name,
+    #                     sources=[f"incidence_sympt{strata_string}"],
+    #                     func=infection_deaths_func,
+    #                     save_results=False,
+    #                 )
 
-        # Request infection deaths for each age group
-        infection_deaths_sources = []
-        for agegroup in age_groups:
-            agegroup_string = f"Xagegroup_{agegroup}"
+    #     # Request aggregated infection deaths
+    #     self.model.request_aggregate_output(
+    #         name="infection_deaths",
+    #         sources=infection_deaths_sources
+    #     )
 
-            for immunity_stratum in IMMUNITY_STRATA:
-                immunity_string = f"Ximmunity_{immunity_stratum}"
+    # def request_hospitalisations(
+    #         self,
+    #         model_times: np.ndarray,
+    #         age_groups: List[int],
+    #         strain_strata: List[str],
+    #         iso3: str,
+    #         region: Union[str, None],
+    #         hosp_prop_requests: AgeSpecificProps,
+    #         time_from_onset_to_hospitalisation: TimeDistribution,
+    #         hospital_stay_duration: TimeDistribution,
+    #         voc_params: Optional[Dict[str, VocComponent]],
+    # ):
+    #     """
+    #     Request hospitalisation-related outputs.
 
-                # Adjust CFR proportions for immunity
-                adj_death_props = cfr_props * immune_death_modifiers[immunity_stratum]
-                or_adjuster_func = get_apply_odds_ratio_to_prop(cfr_prop_requests.multiplier)
-                adj_death_props = adj_death_props.apply(or_adjuster_func)
+    #     Args:
+    #         model_times: The model evaluation times
+    #         age_groups: Modelled age group lower breakpoints
+    #         strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+    #         iso3: The ISO3 code of the country being simulated
+    #         region: The sub-region being simulated, if any
+    #         hosp_prop_requests: The hospitalisation proportion-related requests, including the proportions themselves
+    #         time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
+    #         hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
+    #         voc_params: The parameters pertaining to the VoCs being implemented in the model
 
-                for strain in strain_strata:
-                    strain_string = f"Xstrain_{strain}" if strain else ""
+    #     """
 
-                    # Find the strata we are working with and work out the strings to refer to
-                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
-                    output_name = f"infection_deaths{strata_string}"
-                    infection_deaths_sources.append(output_name)
+    #     hosp_request = hosp_prop_requests.values
+    #     hosp_props = convert_param_agegroups(iso3, region, hosp_request, age_groups)
 
-                    # Calculate the multiplier based on age, immunity and strain
-                    strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
-                    death_risk = adj_death_props[agegroup] * strain_risk_modifier
+    #     # Get the adjustments to the hospitalisation rates according to immunity status
+    #     source_immunity_dist = hosp_prop_requests.source_immunity_distribution
+    #     source_immunity_protection = hosp_prop_requests.source_immunity_protection
+    #     immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
 
-                    # Get the infection deaths function for convolution
-                    infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
+    #     # Pre-compute the probabilities of event occurrence within each time interval between model times
+    #     interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
 
-                    # Request the output
-                    self.model.request_function_output(
-                        name=output_name,
-                        sources=[f"incidence_sympt{strata_string}"],
-                        func=infection_deaths_func,
-                        save_results=False,
-                    )
+    #     # Request hospital admissions for each age group
+    #     hospital_admissions_sources = []
+    #     for agegroup in age_groups:
+    #         agegroup_string = f"Xagegroup_{agegroup}"
 
-        # Request aggregated infection deaths
-        self.model.request_aggregate_output(
-            name="infection_deaths",
-            sources=infection_deaths_sources
-        )
+    #         for immunity_stratum in IMMUNITY_STRATA:
+    #             immunity_string = f"Ximmunity_{immunity_stratum}"
 
-    def request_hospitalisations(
-            self,
-            model_times: np.ndarray,
-            age_groups: List[int],
-            strain_strata: List[str],
-            iso3: str,
-            region: Union[str, None],
-            hosp_prop_requests: AgeSpecificProps,
-            time_from_onset_to_hospitalisation: TimeDistribution,
-            hospital_stay_duration: TimeDistribution,
-            voc_params: Optional[Dict[str, VocComponent]],
-    ):
-        """
-        Request hospitalisation-related outputs.
+    #             # Adjust the hospitalisation proportions for immunity
+    #             adj_hosp_props = hosp_props * immune_hosp_modifiers[immunity_stratum]
+    #             or_adjuster_func = get_apply_odds_ratio_to_prop(hosp_prop_requests.multiplier)
+    #             adj_hosp_props = adj_hosp_props.apply(or_adjuster_func)
 
-        Args:
-            model_times: The model evaluation times
-            age_groups: Modelled age group lower breakpoints
-            strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
-            iso3: The ISO3 code of the country being simulated
-            region: The sub-region being simulated, if any
-            hosp_prop_requests: The hospitalisation proportion-related requests, including the proportions themselves
-            time_from_onset_to_hospitalisation: Details of the statistical distribution for the time to hospitalisation
-            hospital_stay_duration: Details of the statistical distribution for hospitalisation stay duration
-            voc_params: The parameters pertaining to the VoCs being implemented in the model
+    #             for strain in strain_strata:
+    #                 strain_string = f"Xstrain_{strain}" if strain else ""
 
-        """
+    #                 # Find the strata we are working with and work out the strings to refer to
+    #                 strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+    #                 output_name = f"hospital_admissions{strata_string}"
+    #                 hospital_admissions_sources.append(output_name)
 
-        hosp_request = hosp_prop_requests.values
-        hosp_props = convert_param_agegroups(iso3, region, hosp_request, age_groups)
+    #                 # Calculate the multiplier based on age, immunity and strain
+    #                 strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
+    #                 hospital_risk = adj_hosp_props[agegroup] * strain_risk_modifier
 
-        # Get the adjustments to the hospitalisation rates according to immunity status
-        source_immunity_dist = hosp_prop_requests.source_immunity_distribution
-        source_immunity_protection = hosp_prop_requests.source_immunity_protection
-        immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
+    #                 # Get the hospitalisation function
+    #                 hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)
 
-        # Pre-compute the probabilities of event occurrence within each time interval between model times
-        interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
+    #                 # Request the output
+    #                 self.model.request_function_output(
+    #                     name=output_name,
+    #                     sources=[f"incidence_sympt{strata_string}"],
+    #                     func=hospital_admissions_func,
+    #                     save_results=False,
+    #                 )
 
-        # Request hospital admissions for each age group
-        hospital_admissions_sources = []
-        for agegroup in age_groups:
-            agegroup_string = f"Xagegroup_{agegroup}"
+    #     # Request aggregated hospital admissions
+    #     self.model.request_aggregate_output(
+    #         name="hospital_admissions",
+    #         sources=hospital_admissions_sources
+    #     )
 
-            for immunity_stratum in IMMUNITY_STRATA:
-                immunity_string = f"Ximmunity_{immunity_stratum}"
+    #     # Request aggregated hospital occupancy
+    #     probas_stay_greater_than = precompute_probas_stay_greater_than(hospital_stay_duration, model_times)
+    #     hospital_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
+    #     self.model.request_function_output(
+    #         name="hospital_occupancy",
+    #         sources=["hospital_admissions"],
+    #         func=hospital_occupancy_func
+    #     )
 
-                # Adjust the hospitalisation proportions for immunity
-                adj_hosp_props = hosp_props * immune_hosp_modifiers[immunity_stratum]
-                or_adjuster_func = get_apply_odds_ratio_to_prop(hosp_prop_requests.multiplier)
-                adj_hosp_props = adj_hosp_props.apply(or_adjuster_func)
+    # def request_icu_outputs(
+    #     self,
+    #     prop_icu_among_hospitalised: float,
+    #     time_from_hospitalisation_to_icu: TimeDistribution,
+    #     icu_stay_duration: TimeDistribution,
+    #     strain_strata: List[str],
+    #     model_times: np.ndarray,
+    #     voc_params: Optional[Dict[str, VocComponent]],
+    #     age_groups: List[int],
+    # ):
+    #     """
+    #     Request ICU-related outputs.
 
-                for strain in strain_strata:
-                    strain_string = f"Xstrain_{strain}" if strain else ""
+    #     Args:
+    #         prop_icu_among_hospitalised: Proportion ever requiring ICU stay among hospitalised cases (float)
+    #         time_from_hospitalisation_to_icu: Details of the statistical distribution for the time to ICU admission
+    #         icu_stay_duration: Details of the statistical distribution for ICU stay duration
+    #         strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
+    #         model_times: The model evaluation times
+    #         voc_params: The parameters pertaining to the VoCs being implemented in the model
+    #         age_groups: Modelled age group lower breakpoints
+    #     """
 
-                    # Find the strata we are working with and work out the strings to refer to
-                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
-                    output_name = f"hospital_admissions{strata_string}"
-                    hospital_admissions_sources.append(output_name)
+    #     # Pre-compute the probabilities of event occurrence within each time interval between model times
+    #     interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_icu, model_times)
 
-                    # Calculate the multiplier based on age, immunity and strain
-                    strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].hosp_protection
-                    hospital_risk = adj_hosp_props[agegroup] * strain_risk_modifier
+    #     icu_admissions_sources = []
+    #     for agegroup in age_groups:
+    #         agegroup_string = f"Xagegroup_{agegroup}"
 
-                    # Get the hospitalisation function
-                    hospital_admissions_func = make_calc_admissions_func(hospital_risk, interval_distri_densities)
+    #         for immunity_stratum in IMMUNITY_STRATA:
+    #             immunity_string = f"Ximmunity_{immunity_stratum}"
 
-                    # Request the output
-                    self.model.request_function_output(
-                        name=output_name,
-                        sources=[f"incidence_sympt{strata_string}"],
-                        func=hospital_admissions_func,
-                        save_results=False,
-                    )
+    #             for strain in strain_strata:
+    #                 strain_string = f"Xstrain_{strain}" if strain else ""
+    #                 strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+    #                 output_name = f"icu_admissions{strata_string}"
+    #                 icu_admissions_sources.append(output_name)
 
-        # Request aggregated hospital admissions
-        self.model.request_aggregate_output(
-            name="hospital_admissions",
-            sources=hospital_admissions_sources
-        )
+    #                 # Calculate the multiplier based on age, immunity and strain
+    #                 strain_risk_modifier = 1. if not strain else voc_params[strain].icu_multiplier
+    #                 icu_risk = prop_icu_among_hospitalised * strain_risk_modifier
 
-        # Request aggregated hospital occupancy
-        probas_stay_greater_than = precompute_probas_stay_greater_than(hospital_stay_duration, model_times)
-        hospital_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
-        self.model.request_function_output(
-            name="hospital_occupancy",
-            sources=["hospital_admissions"],
-            func=hospital_occupancy_func
-        )
+    #                 # Request ICU admissions
+    #                 icu_admissions_func = make_calc_admissions_func(icu_risk, interval_distri_densities)
+    #                 self.model.request_function_output(
+    #                     name=output_name,
+    #                     sources=[f"hospital_admissions{strata_string}"],
+    #                     func=icu_admissions_func,
+    #                     save_results=False,
+    #                 )
 
-    def request_icu_outputs(
-        self,
-        prop_icu_among_hospitalised: float,
-        time_from_hospitalisation_to_icu: TimeDistribution,
-        icu_stay_duration: TimeDistribution,
-        strain_strata: List[str],
-        model_times: np.ndarray,
-        voc_params: Optional[Dict[str, VocComponent]],
-        age_groups: List[int],
-    ):
-        """
-        Request ICU-related outputs.
+    #     # Request aggregated icu admissions
+    #     self.model.request_aggregate_output(
+    #         name="icu_admissions",
+    #         sources=icu_admissions_sources,
+    #     )
 
-        Args:
-            prop_icu_among_hospitalised: Proportion ever requiring ICU stay among hospitalised cases (float)
-            time_from_hospitalisation_to_icu: Details of the statistical distribution for the time to ICU admission
-            icu_stay_duration: Details of the statistical distribution for ICU stay duration
-            strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
-            model_times: The model evaluation times
-            voc_params: The parameters pertaining to the VoCs being implemented in the model
-            age_groups: Modelled age group lower breakpoints
-        """
-
-        # Pre-compute the probabilities of event occurrence within each time interval between model times
-        interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_icu, model_times)
-
-        icu_admissions_sources = []
-        for agegroup in age_groups:
-            agegroup_string = f"Xagegroup_{agegroup}"
-
-            for immunity_stratum in IMMUNITY_STRATA:
-                immunity_string = f"Ximmunity_{immunity_stratum}"
-
-                for strain in strain_strata:
-                    strain_string = f"Xstrain_{strain}" if strain else ""
-                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
-                    output_name = f"icu_admissions{strata_string}"
-                    icu_admissions_sources.append(output_name)
-
-                    # Calculate the multiplier based on age, immunity and strain
-                    strain_risk_modifier = 1. if not strain else voc_params[strain].icu_multiplier
-                    icu_risk = prop_icu_among_hospitalised * strain_risk_modifier
-
-                    # Request ICU admissions
-                    icu_admissions_func = make_calc_admissions_func(icu_risk, interval_distri_densities)
-                    self.model.request_function_output(
-                        name=output_name,
-                        sources=[f"hospital_admissions{strata_string}"],
-                        func=icu_admissions_func,
-                        save_results=False,
-                    )
-
-        # Request aggregated icu admissions
-        self.model.request_aggregate_output(
-            name="icu_admissions",
-            sources=icu_admissions_sources,
-        )
-
-        # Request ICU occupancy
-        probas_stay_greater_than = precompute_probas_stay_greater_than(icu_stay_duration, model_times)
-        icu_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
-        self.model.request_function_output(
-            name="icu_occupancy",
-            sources=["icu_admissions"],
-            func=icu_occupancy_func,
-        )
+    #     # Request ICU occupancy
+    #     probas_stay_greater_than = precompute_probas_stay_greater_than(icu_stay_duration, model_times)
+    #     icu_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
+    #     self.model.request_function_output(
+    #         name="icu_occupancy",
+    #         sources=["icu_admissions"],
+    #         func=icu_occupancy_func,
+    #     )
 
     def request_recovered_proportion(self, base_comps: List[str]):
         """
@@ -395,48 +351,48 @@ class SmCovidOutputsBuilder(OutputsBuilder):
     def request_random_process_outputs(self,):
         self.model.request_computed_value_output("transformed_random_process")
 
-    def request_immunity_props(self, immunity_strata, age_pops, request_immune_prop_by_age):
-        """
-        Track population distribution across immunity stratification, to make sure vaccination stratification is working
-        correctly.
+    # def request_immunity_props(self, immunity_strata, age_pops, request_immune_prop_by_age):
+    #     """
+    #     Track population distribution across immunity stratification, to make sure vaccination stratification is working
+    #     correctly.
 
-        Args:
-            strata: Immunity strata being implemented in the model
-            age_pops: Population size by age group
-            request_immune_prop_by_age: Whether to request age-specific immunity proportions
+    #     Args:
+    #         strata: Immunity strata being implemented in the model
+    #         age_pops: Population size by age group
+    #         request_immune_prop_by_age: Whether to request age-specific immunity proportions
 
-        """
+    #     """
 
-        for immunity_stratum in immunity_strata:
-            n_immune_name = f"n_immune_{immunity_stratum}"
-            prop_immune_name = f"prop_immune_{immunity_stratum}"
-            self.model.request_output_for_compartments(
-                n_immune_name,
-                self.compartments,
-                {"immunity": immunity_stratum},
-            )
-            self.model.request_function_output(
-                prop_immune_name,
-                lambda num, total: num / total,
-                [n_immune_name, "total_population"],
-            )
+    #     for immunity_stratum in immunity_strata:
+    #         n_immune_name = f"n_immune_{immunity_stratum}"
+    #         prop_immune_name = f"prop_immune_{immunity_stratum}"
+    #         self.model.request_output_for_compartments(
+    #             n_immune_name,
+    #             self.compartments,
+    #             {"immunity": immunity_stratum},
+    #         )
+    #         self.model.request_function_output(
+    #             prop_immune_name,
+    #             lambda num, total: num / total,
+    #             [n_immune_name, "total_population"],
+    #         )
 
-            # Calculate age-specific proportions if requested
-            if request_immune_prop_by_age:
-                for agegroup, popsize in age_pops.items():
-                    n_age_immune_name = f"n_immune_{immunity_stratum}Xagegroup_{agegroup}"
-                    prop_age_immune_name = f"prop_immune_{immunity_stratum}Xagegroup_{agegroup}"
-                    self.model.request_output_for_compartments(
-                        n_age_immune_name,
-                        self.compartments,
-                        {"immunity": immunity_stratum, "agegroup": agegroup},
-                        save_results=False,
-                    )
-                    self.model.request_function_output(
-                        prop_age_immune_name,
-                        make_age_immune_prop_func(popsize),
-                        [n_age_immune_name],
-                    )
+    #         # Calculate age-specific proportions if requested
+    #         if request_immune_prop_by_age:
+    #             for agegroup, popsize in age_pops.items():
+    #                 n_age_immune_name = f"n_immune_{immunity_stratum}Xagegroup_{agegroup}"
+    #                 prop_age_immune_name = f"prop_immune_{immunity_stratum}Xagegroup_{agegroup}"
+    #                 self.model.request_output_for_compartments(
+    #                     n_age_immune_name,
+    #                     self.compartments,
+    #                     {"immunity": immunity_stratum, "agegroup": agegroup},
+    #                     save_results=False,
+    #                 )
+    #                 self.model.request_function_output(
+    #                     prop_age_immune_name,
+    #                     make_age_immune_prop_func(popsize),
+    #                     [n_age_immune_name],
+    #                 )
 
 
     def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):

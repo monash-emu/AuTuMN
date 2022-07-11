@@ -13,7 +13,6 @@ from autumn.model_features.random_process import get_random_process
 from .outputs import SmCovidOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
-# from .stratifications.agegroup import get_agegroup_strat
 # from .stratifications.immunity import (
 #     get_immunity_strat,
 #     adjust_susceptible_infection_without_strains,
@@ -24,7 +23,7 @@ from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 #     apply_reported_vacc_coverage_with_booster,
 # )
 
-from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
+from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups, get_agegroup_strat
 from autumn.settings.constants import COVID_BASE_DATETIME
 
 # Base date used to calculate mixing matrix times
@@ -55,7 +54,7 @@ def build_model(
     iso3 = country.iso3
     region = pop.region
     age_groups = [str(age) for age in params.age_groups]
-    # age_strat_params = params.age_stratification
+    age_strat_params = params.age_stratification
     sojourns = params.sojourns
     
     time_params = params.time
@@ -156,39 +155,41 @@ def build_model(
     """
     Apply age stratification
     """
+    suscept_req = age_strat_params.susceptibility
+    sympt_req = age_strat_params.prop_symptomatic
 
-    # # Preprocess age-specific parameters to match model age bands if requested in this way
-    # if type(suscept_req) == dict:
-    #     suscept_adjs = convert_param_agegroups(iso3, region, suscept_req, age_groups)
-    # else:
-    #     suscept_adjs = suscept_req  # In which case it should be None or a float, confirmed in parameter validation
+    # Preprocess age-specific parameters to match model age bands if requested in this way
+    if type(suscept_req) == dict:
+        suscept_adjs = convert_param_agegroups(iso3, region, suscept_req, age_groups)
+    else:
+        suscept_adjs = suscept_req  # In which case it should be None or a float, confirmed in parameter validation
 
-    # if type(sympt_req) == dict:
-    #     sympt_props = convert_param_agegroups(iso3, region, sympt_req, age_groups)
-    #     sympt_props.index = sympt_props.index.map(str)  # Change int indices to string to match model format
-    # else:
-    #     sympt_props = sympt_req  # In which case it should be None or a float
+    if type(sympt_req) == dict:
+        sympt_props = convert_param_agegroups(iso3, region, sympt_req, age_groups)
+        sympt_props.index = sympt_props.index.map(str)  # Change int indices to string to match model format
+    else:
+        sympt_props = sympt_req  # In which case it should be None or a float
 
-    # # Get the age-specific mixing matrices
-    # mixing_matrices = build_synthetic_matrices(
-    #     iso3,
-    #     params.ref_mixing_iso3,
-    #     [int(age) for age in age_groups],
-    #     True,  # Always age-adjust, could change this to being a parameter
-    #     region
-    # )
+    # Get the age-specific mixing matrices
+    mixing_matrices = build_synthetic_matrices(
+        iso3,
+        params.ref_mixing_iso3,
+        [int(age) for age in age_groups],
+        True,  # Always age-adjust, could change this to being a parameter
+        region
+    )
 
-    # # Get the actual age stratification now
-    # age_strat = get_agegroup_strat(
-    #     params,
-    #     age_groups,
-    #     age_pops,
-    #     mixing_matrices,
-    #     compartment_types,
-    #     params.is_dynamic_mixing_matrix,
-    #     suscept_adjs,
-    # )
-    # model.stratify_with(age_strat)
+    # Get the actual age stratification now
+    age_strat = get_agegroup_strat(
+        params,
+        age_groups,
+        age_pops,
+        mixing_matrices,
+        BASE_COMPARTMENTS,
+        params.is_dynamic_mixing_matrix,
+        suscept_adjs,
+    )
+    model.stratify_with(age_strat)
 
     # """
     # Immunity stratification
@@ -252,10 +253,11 @@ def build_model(
     Get the applicable outputs
     """
 
-    model_times = model.times
+    # model_times = model.times
 
     outputs_builder = SmCovidOutputsBuilder(model, BASE_COMPARTMENTS)
     
-    outputs_builder.request_incidence(infectious_entry_flow)
+    outputs_builder.request_incidence(age_groups, infectious_entry_flow, params.request_incidence_by_age)
+    outputs_builder.request_recovered_proportion(BASE_COMPARTMENTS)
 
     return model

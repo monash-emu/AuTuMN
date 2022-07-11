@@ -1,11 +1,9 @@
 import pandas as pd
-
 from autumn.core.db import Database
+from autumn.core.utils.utils import create_date_index
+from autumn.settings.constants import COVID_BASE_DATETIME
 
 from .fetch import COVID_MYS_DIRPATH, COVID_MYS_VAC_CSV
-
-from autumn.settings.constants import COVID_BASE_DATETIME
-from autumn.core.utils.utils import create_date_index
 
 FILTER_COL = {
     "partial_5_11",
@@ -21,9 +19,10 @@ FILTER_COL = {
 
 
 def preprocess_covid_mys(input_db: Database):
+    pass
 
-    df = combine_vac_df()
-    input_db.dump_df("covid_mys_vac", df)
+    # df = combine_vac_df()
+    # input_db.dump_df("covid_mys_vac", df)
 
 
 def get_vac_df(file):

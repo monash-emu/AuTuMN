@@ -20,7 +20,7 @@ population:
 
 time:
   start: 0
-  end: 365
+  end: 800
   step: 1
 
 contact_rate: 0.1

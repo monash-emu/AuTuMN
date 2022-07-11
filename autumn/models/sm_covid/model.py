@@ -16,6 +16,7 @@ from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.immunity import (
     get_immunity_strat,
     adjust_susceptible_infection_without_strains,
+    set_dynamic_vaccination_flows
 )
 
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups, get_agegroup_strat
@@ -201,6 +202,10 @@ def build_model(
 
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
+
+    # Apply dynamic vaccination flows
+    set_dynamic_vaccination_flows(BASE_COMPARTMENTS, model, iso3, age_groups)
+
     
     """
     Get the applicable outputs

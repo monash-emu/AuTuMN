@@ -15,14 +15,14 @@ FILTER_COL = {
     "partial_missing",
     "full_missing",
     "booster_missing",
+    "booster2_missing",
 }
 
 
 def preprocess_covid_mys(input_db: Database):
-    pass
 
-    # df = combine_vac_df()
-    # input_db.dump_df("covid_mys_vac", df)
+    df = combine_vac_df()
+    input_db.dump_df("covid_mys_vac", df)
 
 
 def get_vac_df(file):

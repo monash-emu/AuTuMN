@@ -30,6 +30,25 @@ sojourns:
   latent: 3.
   active: 8.
 
+mobility:
+  region: null
+  mixing: {}
+  age_mixing: null
+  # Mapping of Google mobility locations to Prem-specific locations
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.25
+      grocery_and_pharmacy: 0.25
+      parks: 0.25
+      transit_stations: 0.25
+  smooth_google_data: true  # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  microdistancing: {}
+
+
+
 # Age-related parameters
 age_stratification:
   susceptibility:  # zhang-2020-a, ORs converted to RRs using Tables S14 and S15
@@ -135,32 +154,11 @@ age_stratification:
 
 is_dynamic_mixing_matrix: true
 
-mobility:
-  region: null
-  mixing: {}
-  age_mixing: null
-  # Mapping of Google mobility locations to Prem-specific locations
-  google_mobility_locations:
-    work:
-      workplaces: 1.
-    other_locations:
-      retail_and_recreation: 0.25
-      grocery_and_pharmacy: 0.25
-      parks: 0.25
-      transit_stations: 0.25
-  smooth_google_data: true  # whether to apply a 7-day moving average
-  square_mobility_effect: true
-  microdistancing: {}
-
-# parameters related to immunity stratification (three strata: none / high / low)
-immunity_stratification:
-  prop_immune: .8
-  prop_high_among_immune: .1
-
-  infection_risk_reduction:  # FIXME check source with Dave (that's using the figure showing VE against symptomatic disease)
-    none: 0.
-    low: 0.
-    high: 0.6
+# parameters related to immunity stratification (two strata: unvaccinated / vaccinated)
+vaccine_effects:
+  ve_infection: .5   #FIXME: dummy data 
+  ve_hospitalisation: .9  #FIXME: dummy data 
+  ve_death: .9  #FIXME: dummy data 
 
 time_from_onset_to_event:  # using time of symptom onset as reference 
   hospitalisation:
@@ -200,3 +198,4 @@ random_process: null
 requested_cumulative_outputs: []
 cumulative_start_time: null
 request_incidence_by_age: True
+request_immune_prop_by_age: True

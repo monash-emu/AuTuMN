@@ -351,48 +351,49 @@ class SmCovidOutputsBuilder(OutputsBuilder):
     def request_random_process_outputs(self,):
         self.model.request_computed_value_output("transformed_random_process")
 
-    # def request_immunity_props(self, immunity_strata, age_pops, request_immune_prop_by_age):
-    #     """
-    #     Track population distribution across immunity stratification, to make sure vaccination stratification is working
-    #     correctly.
 
-    #     Args:
-    #         strata: Immunity strata being implemented in the model
-    #         age_pops: Population size by age group
-    #         request_immune_prop_by_age: Whether to request age-specific immunity proportions
+    def request_immunity_props(self, immunity_strata, age_pops, request_immune_prop_by_age):
+        """
+        Track population distribution across immunity stratification, to make sure vaccination stratification is working
+        correctly.
 
-    #     """
+        Args:
+            strata: Immunity strata being implemented in the model
+            age_pops: Population size by age group
+            request_immune_prop_by_age: Whether to request age-specific immunity proportions
 
-    #     for immunity_stratum in immunity_strata:
-    #         n_immune_name = f"n_immune_{immunity_stratum}"
-    #         prop_immune_name = f"prop_immune_{immunity_stratum}"
-    #         self.model.request_output_for_compartments(
-    #             n_immune_name,
-    #             self.compartments,
-    #             {"immunity": immunity_stratum},
-    #         )
-    #         self.model.request_function_output(
-    #             prop_immune_name,
-    #             lambda num, total: num / total,
-    #             [n_immune_name, "total_population"],
-    #         )
+        """
 
-    #         # Calculate age-specific proportions if requested
-    #         if request_immune_prop_by_age:
-    #             for agegroup, popsize in age_pops.items():
-    #                 n_age_immune_name = f"n_immune_{immunity_stratum}Xagegroup_{agegroup}"
-    #                 prop_age_immune_name = f"prop_immune_{immunity_stratum}Xagegroup_{agegroup}"
-    #                 self.model.request_output_for_compartments(
-    #                     n_age_immune_name,
-    #                     self.compartments,
-    #                     {"immunity": immunity_stratum, "agegroup": agegroup},
-    #                     save_results=False,
-    #                 )
-    #                 self.model.request_function_output(
-    #                     prop_age_immune_name,
-    #                     make_age_immune_prop_func(popsize),
-    #                     [n_age_immune_name],
-    #                 )
+        for immunity_stratum in immunity_strata:
+            n_immune_name = f"n_immune_{immunity_stratum}"
+            prop_immune_name = f"prop_immune_{immunity_stratum}"
+            self.model.request_output_for_compartments(
+                n_immune_name,
+                self.compartments,
+                {"immunity": immunity_stratum},
+            )
+            self.model.request_function_output(
+                prop_immune_name,
+                lambda num, total: num / total,
+                [n_immune_name, "total_population"],
+            )
+
+            # Calculate age-specific proportions if requested
+            if request_immune_prop_by_age:
+                for agegroup, popsize in age_pops.items():
+                    n_age_immune_name = f"n_immune_{immunity_stratum}Xagegroup_{agegroup}"
+                    prop_age_immune_name = f"prop_immune_{immunity_stratum}Xagegroup_{agegroup}"
+                    self.model.request_output_for_compartments(
+                        n_age_immune_name,
+                        self.compartments,
+                        {"immunity": immunity_stratum, "agegroup": agegroup},
+                        save_results=False,
+                    )
+                    self.model.request_function_output(
+                        prop_age_immune_name,
+                        make_age_immune_prop_func(popsize),
+                        [n_age_immune_name],
+                    )
 
 
     def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):

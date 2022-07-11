@@ -13,15 +13,10 @@ from autumn.model_features.random_process import get_random_process
 from .outputs import SmCovidOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn
 from .constants import BASE_COMPARTMENTS, Compartment, FlowName
-# from .stratifications.immunity import (
-#     get_immunity_strat,
-#     adjust_susceptible_infection_without_strains,
-#     adjust_susceptible_infection_with_strains,
-#     adjust_reinfection_without_strains,
-#     adjust_reinfection_with_strains,
-#     apply_reported_vacc_coverage,
-#     apply_reported_vacc_coverage_with_booster,
-# )
+from .stratifications.immunity import (
+    get_immunity_strat,
+    adjust_susceptible_infection_without_strains,
+)
 
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups, get_agegroup_strat
 from autumn.settings.constants import COVID_BASE_DATETIME
@@ -195,69 +190,25 @@ def build_model(
     # Immunity stratification
     # """
 
-    # # Get the immunity stratification
-    # immunity_params = params.immunity_stratification
-    # immunity_strat = get_immunity_strat(
-    #     BASE_COMPARTMENTS,
-    #     immunity_params,
-    # )
+    # Get the immunity stratification
+    vaccine_effects_params = params.vaccine_effects
+    immunity_strat = get_immunity_strat(
+        BASE_COMPARTMENTS,
+    )
 
-    # # Adjust infection of susceptibles for immunity status
-    # reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
-    # if Compartment.WANED in compartment_types:
-    #     reinfection_flows.append(FlowName.LATE_REINFECTION)
+    # Adjust infection of susceptibles for immunity status
+    adjust_susceptible_infection_without_strains(vaccine_effects_params.ve_infection, immunity_strat)
 
-    # immunity_low_risk_reduction = immunity_params.infection_risk_reduction.low
-    # immunity_high_risk_reduction = immunity_params.infection_risk_reduction.high
-
-    # # Apply the immunity stratification
-    # model.stratify_with(immunity_strat)
-
-    # # Implement the dynamic immunity process
-    # vacc_coverage_available = ["BGD", "PHL", "BTN", "VNM"]
-    # vacc_region_available = ["Metro Manila", "Hanoi", "Ho Chi Minh City", None]
-    # is_dynamic_immunity = iso3 in vacc_coverage_available and region in vacc_region_available
-
-    # if is_dynamic_immunity:
-    #     thinning = 20 if iso3 == "BGD" else None
-
-    #     if iso3 == "PHL" or iso3 == "VNM":
-    #         apply_reported_vacc_coverage_with_booster(
-    #             compartment_types,
-    #             model,
-    #             age_groups,
-    #             iso3,
-    #             region,
-    #             thinning=thinning,
-    #             model_start_time=params.time.start,
-    #             start_immune_prop=immunity_params.prop_immune,
-    #             start_prop_high_among_immune=immunity_params.prop_high_among_immune,
-    #             booster_effect_duration=params.booster_effect_duration,
-    #             future_monthly_booster_rate=params.future_monthly_booster_rate,
-    #             future_booster_age_allocation=params.future_booster_age_allocation,
-    #             age_pops=age_pops,
-    #             model_end_time=params.time.end
-    #         )
-    #     else:
-    #         apply_reported_vacc_coverage(
-    #             compartment_types,
-    #             model,
-    #             iso3,
-    #             thinning=thinning,
-    #             model_start_time=params.time.start,
-    #             start_immune_prop=immunity_params.prop_immune,
-    #             additional_immunity_points=params.additional_immunity,
-    #         )
-
+    # Apply the immunity stratification
+    model.stratify_with(immunity_strat)
+    
     """
     Get the applicable outputs
     """
-
-    # model_times = model.times
-
     outputs_builder = SmCovidOutputsBuilder(model, BASE_COMPARTMENTS)
     
     outputs_builder.request_incidence(age_groups, infectious_entry_flow, params.request_incidence_by_age)
     outputs_builder.request_recovered_proportion(BASE_COMPARTMENTS)
+    outputs_builder.request_immunity_props(immunity_strat.strata, age_pops, params.request_immune_prop_by_age)
 
     return model

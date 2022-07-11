@@ -258,36 +258,11 @@ class AgeStratification(BaseModel):
     prop_hospital: AgeSpecificProps
     cfr: AgeSpecificProps
 
-
-class ImmunityRiskReduction(BaseModel):
-
-    none: float
-    low: float
-    high: float
-
-    check_none = validator("none", allow_reuse=True)(get_check_prop("none"))
-    check_low = validator("low", allow_reuse=True)(get_check_prop("low"))
-    check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_progression(cls, values):
-        msg = "Immunity stratification effects are not increasing"
-        assert values["none"] <= values["low"] <= values["high"], msg
-        return values
-
-
-class ImmunityStratification(BaseModel):
-
-    prop_immune: float
-    prop_high_among_immune: float
-    infection_risk_reduction: ImmunityRiskReduction
-
-    check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
-    check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(
-        get_check_prop("prop_high_among_immune")
-    )
+class VaccineEffects(BaseModel):
+    ve_infection: float
+    ve_hospitalisation: float
+    ve_death: float
     
-
 class TimeDistribution(BaseModel):
 
     distribution: str
@@ -353,7 +328,7 @@ class Parameters:
     prop_icu_among_hospitalised: float
 
     age_stratification: AgeStratification
-    immunity_stratification: ImmunityStratification
+    vaccine_effects: VaccineEffects
 
     # Random process
     activate_random_process: bool
@@ -363,6 +338,7 @@ class Parameters:
     requested_cumulative_outputs: List[str]
     cumulative_start_time: Optional[float]
     request_incidence_by_age: bool
+    request_immune_prop_by_age: bool
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

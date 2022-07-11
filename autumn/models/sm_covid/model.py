@@ -187,9 +187,9 @@ def build_model(
     )
     model.stratify_with(age_strat)
 
-    # """
-    # Immunity stratification
-    # """
+    """
+    Immunity stratification
+    """
 
     # Get the immunity stratification
     vaccine_effects_params = params.vaccine_effects
@@ -205,7 +205,6 @@ def build_model(
 
     # Apply dynamic vaccination flows
     set_dynamic_vaccination_flows(BASE_COMPARTMENTS, model, iso3, age_groups)
-
     
     """
     Get the applicable outputs

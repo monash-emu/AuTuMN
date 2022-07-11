@@ -197,5 +197,5 @@ random_process: null
 
 requested_cumulative_outputs: []
 cumulative_start_time: null
-request_incidence_by_age: True
-request_immune_prop_by_age: True
+request_incidence_by_age: False
+request_immune_prop_by_age: False

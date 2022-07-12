@@ -23,7 +23,7 @@ time:
   end: 800
   step: 1
 
-contact_rate: 0.1
+contact_rate: 0.05
 infectious_seed: 1
 
 sojourns:
@@ -32,7 +32,11 @@ sojourns:
 
 mobility:
   region: null
-  mixing: {}
+  mixing:
+    school:  # populate the school component to have schools always open when UNESCO data are not used
+      append: False
+      times: [0]
+      values: [1.]
   age_mixing: null
   # Mapping of Google mobility locations to Prem-specific locations
   google_mobility_locations:
@@ -46,8 +50,8 @@ mobility:
   smooth_google_data: true  # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
-
-
+  apply_unesco_school_data: true  # if true, will override school mixing inputs
+  unesco_partial_opening_value: .5
 
 # Age-related parameters
 age_stratification:

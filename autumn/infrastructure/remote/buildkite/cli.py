@@ -17,6 +17,7 @@ from .pipelines import trigger_europe as trigger_europe_pipeline
 from .pipelines import trigger_philippines as trigger_philippines_pipeline
 from .pipelines import trigger_victoria as trigger_victoria_pipeline
 from .pipelines import trigger_malaysia as trigger_malaysia_pipeline
+from .pipelines import trigger_wpro as trigger_wpro_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +232,15 @@ def trigger_europe():
     _trigger_models(Region.MIXING_OPTI_REGIONS, trigger_europe_pipeline)
 
 
+@trigger.command("wpro")
+def trigger_wpro():
+    """
+    Trigger all European mixing optimization models
+    """
+    logger.info("Triggering all WPRO calibrations.")
+    _trigger_models(Region.WPRO_REGIONS, trigger_wpro_pipeline, "sm_sir")
+
+
 @trigger.command("victoria")
 def trigger_victoria():
     """
@@ -258,7 +268,7 @@ def trigger_malaysia():
     _trigger_models(Region.MALAYSIA_REGIONS, trigger_malaysia_pipeline)
 
 
-def _trigger_models(regions, p):
+def _trigger_models(regions, p, model_str='covid_19'):
 
     logger.info("Gathering data for calibration trigger.")
     build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
@@ -274,7 +284,7 @@ def _trigger_models(regions, p):
     )
     cp = calibrate_pipeline
     for region in regions:
-        model = f"covid_19:{region}"
+        model = f"{model_str}:{region}"
         logger.info("Triggering model calibration %s with params:\n%s\n", model, params_str)
         trigger_pipeline(
             label=f"Trigger calibration for {model}",

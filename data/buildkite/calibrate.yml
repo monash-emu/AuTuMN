@@ -22,6 +22,8 @@ steps:
       value: hierarchical_sir:multi
     - label: Philippines (sir_example)
       value: sir_example:philippines
+    - label: Philippines (sm_covid)
+      value: sm_covid:philippines
     - label: Bangladesh (sm_sir)
       value: sm_sir:bangladesh
     - label: Bhutan (sm_sir)

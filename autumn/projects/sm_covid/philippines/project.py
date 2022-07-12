@@ -29,7 +29,7 @@ priors = [
 ]
 
 targets = [
-    NormalTarget(data=ts_set["incidence"]),
+    NormalTarget(data=ts_set["infection_deaths"]),
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:

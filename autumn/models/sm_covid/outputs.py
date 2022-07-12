@@ -93,7 +93,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     name=output_name,
                     flow_name=incidence_flow,
                     dest_strata=dest_filter,
-                    save_results=True,
+                    save_results=False,
                 ) 
 
             # Aggregated incidence by age
@@ -164,7 +164,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     name=output_name,
                     sources=[f"incidence{strata_string}"],
                     func=infection_deaths_func,
-                    save_results=True,
+                    save_results=False,
                 )
 
         # Request aggregated infection deaths

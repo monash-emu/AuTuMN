@@ -269,4 +269,6 @@ def build_model(
     outputs_builder.request_recovered_proportion(BASE_COMPARTMENTS)
     outputs_builder.request_immunity_props(immunity_strat.strata, age_pops, params.request_immune_prop_by_age)
 
+    outputs_builder.request_cumulative_outputs(params.requested_cumulative_outputs, params.cumulative_start_time)
+
     return model

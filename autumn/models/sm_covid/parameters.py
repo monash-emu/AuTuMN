@@ -221,32 +221,7 @@ class Mobility(BaseModel):
 class AgeSpecificProps(BaseModel):
 
     values: Dict[int, float]
-    source_immunity_distribution: Dict[str, float]
-    source_immunity_protection: Dict[str, float]
     multiplier: float
-
-    @validator("source_immunity_distribution", allow_reuse=True)
-    def check_source_dist(vals):
-        sum_of_values = sum(vals.values())
-        msg = f"Proportions by immunity status in source for parameters does not sum to one: {sum_of_values}"
-        assert sum_of_values == 1.0, msg
-        return vals
-
-    @validator("source_immunity_protection", allow_reuse=True)
-    def check_source_dist(protection_params):
-        msg = "Source protection estimates not proportions"
-        assert (
-            all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0
-        ), msg
-        return protection_params
-
-    check_props = validator("source_immunity_distribution", allow_reuse=True)(
-        get_check_all_dict_values_non_neg("source_immunity_distribution")
-    )
-    check_protections = validator("source_immunity_protection", allow_reuse=True)(
-        get_check_all_dict_values_non_neg("source_immunity_protection")
-    )
-
 
 class AgeStratification(BaseModel):
     """
@@ -258,7 +233,7 @@ class AgeStratification(BaseModel):
     ]  # Dictionary that represents each age group, single float or None
     prop_symptomatic: Optional[Union[Dict[int, float], float]]  # As for susceptibility
     prop_hospital: AgeSpecificProps
-    cfr: AgeSpecificProps
+    ifr: AgeSpecificProps
 
 class VaccineEffects(BaseModel):
     ve_infection: float

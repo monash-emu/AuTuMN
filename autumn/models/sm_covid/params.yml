@@ -112,23 +112,8 @@ age_stratification:
       75: 0.1340
       80: 0.2540
     multiplier: 1.
-    # Proportions at study mid-point reported 16th December in:
-    # https://ourworldindata.org/grapher/share-people-fully-vaccinated-covid?country=~GBR
-    # where "none" is complement of those fully vaccinated, and "high" is those boosted by the same date
-    source_immunity_distribution:
-      none: 0.312
-      low: 0.302
-      high: 0.386
-    # Approximately the values reported in Figure 2 of:
-    # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1054071/
-    # vaccine-surveillance-report-week-6.pdf
-    # 85% protection once boosted, 50% otherwise
-    source_immunity_protection:
-      none: 0.
-      low: 0.5
-      high: 0.85
 
-  cfr:
+  ifr:
     values:  # Table S2 of nyberg-2022 - Delta values are set as the default, can be over-written with Omicron (see NCR)
       0:  0.00001
       5:  0.00001
@@ -147,15 +132,7 @@ age_stratification:
       70: 0.0493
       75: 0.0493
       80: 0.159
-    multiplier: 1.
-    source_immunity_distribution:  # Same as for hospitalisation
-      none: 0.312
-      low: 0.302
-      high: 0.386
-    source_immunity_protection:  # Same as for hospitalisation
-      none: 0.
-      low: 0.5
-      high: 0.85
+    multiplier: 1.   
 
 is_dynamic_mixing_matrix: true
 
@@ -200,7 +177,7 @@ hospital_stay:
 activate_random_process: False
 random_process: null
 
-requested_cumulative_outputs: ["incidence"]
+requested_cumulative_outputs: ["incidence", "infection_deaths"]
 cumulative_start_time: 0.
 request_incidence_by_age: False
 request_immune_prop_by_age: False

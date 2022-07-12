@@ -17,7 +17,7 @@ PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
-PHL_doh_link = "1ypYwbKeA-usc38qbBCyCh28wh1L9JRv9"  # sheet 05 daily report
+PHL_doh_link = "1Nxl_LBmkX9XgV6vHui4w1Lj4zmMnqELk"  # sheet 05 daily report
 PHL_fassster_link = "15eDyTjXng2Zh38DVhmeNy0nQSqOMlGj3"
 
 # destination folders filepaths
@@ -26,7 +26,8 @@ PHL_doh_dest = phl_inputs_dir / "PHL_icu.csv"
 PHL_fassster_dest = phl_inputs_dir / "PHL_ConfirmedCases.zip"
 icu_o_dest = phl_inputs_dir / "PHL_icu_processed.csv"
 hosp_o_dest = phl_inputs_dir / "PHL_hosp_processed.csv"
-deaths_dest = phl_inputs_dir / "PHL_deaths_processed.csv"
+cml_deaths_dest = phl_inputs_dir / "PHL_deaths_processed.csv"
+daily_deaths_dest = phl_inputs_dir / "daily_deaths.csv"
 notifications_dest = phl_inputs_dir / "PHL_notifications_processed.csv"
 
 
@@ -160,13 +161,14 @@ def process_accumulated_death_data(df: pd.DataFrame):
     fassster_data_deaths["times"] = fassster_data_deaths["times"] / np.timedelta64(
         1, "D"
     )  # warning
-    accum_deaths = fassster_data_deaths.groupby(["Region", "times"]).size()
-    accum_deaths = accum_deaths.to_frame(name="daily_deaths").reset_index()
-    accum_deaths["accum_deaths"] = accum_deaths.groupby("Region")[
-        "daily_deaths"
-    ].transform(pd.Series.cumsum)
-    cumulative_deaths = accum_deaths[["Region", "times", "accum_deaths"]]
-    cumulative_deaths.to_csv(deaths_dest)
+    deaths_df = fassster_data_deaths.groupby(["Region", "times"]).size()
+    deaths_df = deaths_df.to_frame(name="daily_deaths").reset_index()
+    deaths_df.to_csv(daily_deaths_dest, index=False)
+    deaths_df["accum_deaths"] = deaths_df.groupby("Region")["daily_deaths"].transform(
+        pd.Series.cumsum
+    )
+    cml_deaths_df = deaths_df[["Region", "times", "accum_deaths"]]
+    cml_deaths_df.to_csv(cml_deaths_dest)
 
 
 def process_notifications_data(df: pd.DataFrame):
@@ -219,7 +221,9 @@ def process_notifications_data(df: pd.DataFrame):
     fassster_data_final.to_csv(notifications_dest)
 
 
-def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, file_path):
+def write_to_file(
+    icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, daily_deaths_tmp, file_path
+):
     with open(file_path, mode="r") as f:
         targets = json.load(f)
 
@@ -229,8 +233,10 @@ def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, file_path):
         )
         targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
         targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
-        targets["infection_deaths"]["times"] = list(deaths_tmp["times"])
-        targets["infection_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
+        targets["cumulative_deaths"]["times"] = list(deaths_tmp["times"])
+        targets["cumulative_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
+        targets["infection_deaths"]["times"] = list(daily_deaths_tmp["times"])
+        targets["infection_deaths"]["values"] = list(daily_deaths_tmp["daily_deaths"])
         targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
         targets["hospital_occupancy"]["values"] = list(hosp_tmp["nonicu_o"])
 
@@ -251,15 +257,17 @@ def update_calibration_phl():
     ]
     # read in csvs
     icu_occ = pd.read_csv(icu_o_dest)
-    deaths = pd.read_csv(deaths_dest)
+    deaths = pd.read_csv(cml_deaths_dest)
     notifications = pd.read_csv(notifications_dest)
     hosp_occ = pd.read_csv(hosp_o_dest)
+    daily_deaths = pd.read_csv(daily_deaths_dest)
 
     for region in phl_regions:
         icu_tmp = icu_occ.loc[icu_occ["region"] == region]
         deaths_tmp = deaths.loc[deaths["Region"] == region]
         notifications_tmp = notifications.loc[notifications["Region"] == region]
         hosp_tmp = hosp_occ.loc[hosp_occ["region"] == region]
+        daily_deaths_tmp = daily_deaths.loc[daily_deaths["Region"] == region]
 
         SM_SIR_NCR_TS = Path(
             PROJECTS_PATH,
@@ -269,7 +277,14 @@ def update_calibration_phl():
             "timeseries.json",
         )
 
-        write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, SM_SIR_NCR_TS)
+        write_to_file(
+            icu_tmp,
+            deaths_tmp,
+            notifications_tmp,
+            hosp_tmp,
+            daily_deaths_tmp,
+            SM_SIR_NCR_TS,
+        )
 
 
 def remove_files(filePath1):
@@ -279,8 +294,10 @@ def remove_files(filePath1):
         PHL_fassster_dest,
         PHL_doh_dest,
         icu_o_dest,
-        deaths_dest,
+        cml_deaths_dest,
         notifications_dest,
+        daily_deaths_dest,
+        hosp_o_dest,
     }
 
     for file in files:

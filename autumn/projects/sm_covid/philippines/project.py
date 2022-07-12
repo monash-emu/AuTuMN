@@ -25,7 +25,9 @@ param_set = ParameterSet(baseline=baseline_params)
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.07, 0.20]),    
+    UniformPrior("contact_rate", [0.03, 0.10]),  
+    UniformPrior("infectious_seed_time", [30, 90]),  
+    UniformPrior("age_stratification.ifr.multiplier", [.5, 1.5]),
 ]
 
 targets = [

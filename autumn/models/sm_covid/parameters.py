@@ -318,9 +318,11 @@ class Parameters:
     ref_mixing_iso3: str
     age_groups: List[int]
     time: Time
+    infectious_seed_time: float
+    seed_duration: float
+
     # Values
     contact_rate: float
-    infectious_seed: float
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility

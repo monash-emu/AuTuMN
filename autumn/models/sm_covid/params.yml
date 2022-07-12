@@ -20,11 +20,12 @@ population:
 
 time:
   start: 0
-  end: 800
+  end: 731  # 31 Dec 2021
   step: 1
 
 contact_rate: 0.05
-infectious_seed: 1
+infectious_seed_time: 60
+seed_duration: 7
 
 sojourns:
   latent: 3.

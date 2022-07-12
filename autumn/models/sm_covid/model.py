@@ -26,6 +26,22 @@ from autumn.settings.constants import COVID_BASE_DATETIME
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 
+def set_infectious_seed(model, infectious_seed_time, seed_duration, infectious_seed):
+
+    entry_rate = infectious_seed / seed_duration
+
+    def infectious_seed_func(time: float, computed_values):
+        return entry_rate if 0. < time - infectious_seed_time < seed_duration else 0.
+
+    model.add_importation_flow(
+        f"infectious_seeding",
+        infectious_seed_func,
+        dest=Compartment.INFECTIOUS,
+        split_imports=True
+    )
+
+
+
 def update_school_mixing_using_unesco_data(params: Parameters):
     """_summary_
     Load school closure data from UNESCO and convert it into a timeseries object overriding the baseline school mixing data. 
@@ -82,8 +98,7 @@ def build_model(
     region = pop.region
     age_groups = [str(age) for age in params.age_groups]
     age_strat_params = params.age_stratification
-    sojourns = params.sojourns
-    
+    sojourns = params.sojourns    
     time_params = params.time
     time_to_event_params = params.time_from_onset_to_event
 
@@ -123,14 +138,18 @@ def build_model(
     )
 
     # Assign the population to compartments
-    susceptible_pop = age_pops.sum() - params.infectious_seed
+    total_pop = age_pops.sum()
+    infectious_seed = total_pop * 10 / 1.e6  # seed prevalence of 10 per million population
+    susceptible_pop = total_pop - infectious_seed  # to leave room for the infectious seed
     init_pop = {
-        Compartment.INFECTIOUS: params.infectious_seed,
         Compartment.SUSCEPTIBLE: susceptible_pop,
     }
 
     # Assign to the model
     model.set_initial_population(init_pop)
+
+    # Set infectious seed
+    set_infectious_seed(model, params.infectious_seed_time, params.seed_duration, infectious_seed)
 
     """
     Add intercompartmental flows

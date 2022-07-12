@@ -187,8 +187,8 @@ def get_population_by_agegroup(
         population = [p * 11.0 / 9.0 for p in population]
 
     # Inflate population of Hanoi, Vietnam from 8.053 to 10.5 million people as of 2020
-    # Source:
     # noqa: E501
+    # Source:
     # https://congan.com.vn/tin-chinh/dan-so-ha-noi-du-bao-2020-tang-gan-bang-du-bao-cua-nam-2030_81257.html
     if region == "Hanoi":
         population = [p * 10.5 / 8.053 for p in population]

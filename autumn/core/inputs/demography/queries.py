@@ -1,14 +1,12 @@
 """
 Read demography data from input database.
 """
-from functools import lru_cache
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
 
 from autumn.core.inputs.database import get_input_db
-from autumn.settings import Region
 
 INF = float("inf")
 MAPPING_ISO_CODE = {
@@ -71,7 +69,6 @@ def get_death_rates_by_agegroup(age_breakpoints: List[float], country_iso_code: 
     Returns a list of death rates and a list of years.
     """
     age_breakpoints = _check_age_breakpoints(age_breakpoints)
-    input_db = get_input_db()
     rate_df = _get_death_rates(country_iso_code)
     years = rate_df["mean_year"].unique().tolist()
     orig_ages = rate_df["start_age"].unique().tolist()
@@ -141,8 +138,12 @@ def get_crude_birth_rate(country_iso_code: str):
 
 
 def get_population_by_agegroup(
-    age_breakpoints: List[int], country_iso_code: str, region: str = None, year: int = 2020
-):
+    age_breakpoints: List[int],
+    country_iso_code: str,
+    region: str = None,
+    year: int = 2020,
+    as_series: bool = False,
+) -> Union[List[int], pd.Series]:
     """
     Find population for age bins.
     Returns a list of ints, each item being the population for that age bracket.
@@ -154,14 +155,16 @@ def get_population_by_agegroup(
     input_db = get_input_db()
 
     # Work out the year that is nearest to the requested year, among available years.
-    available_years = list(input_db.query(
-        "population",
-        conditions={
-            "iso3": country_iso_code,
-            "region": region or None,
-        },
-    )["year"].unique())
-    nearest_year = min(available_years, key=lambda x: abs(x-year))
+    available_years = list(
+        input_db.query(
+            "population",
+            conditions={
+                "iso3": country_iso_code,
+                "region": region or None,
+            },
+        )["year"].unique()
+    )
+    nearest_year = min(available_years, key=lambda x: abs(x - year))
 
     pop_df = input_db.query(
         "population",
@@ -181,14 +184,21 @@ def get_population_by_agegroup(
     # Inflate population from 9 to 12 million to account for workers coming from other regions
     # Information communicated by Hoang Anh via Slack on 19 Aug 2021
     if region == "Ho Chi Minh City":
-        population = [p * 11. / 9. for p in population]
+        population = [p * 11.0 / 9.0 for p in population]
 
     # Inflate population of Hanoi, Vietnam from 8.053 to 10.5 million people as of 2020
-    # Source: https://congan.com.vn/tin-chinh/dan-so-ha-noi-du-bao-2020-tang-gan-bang-du-bao-cua-nam-2030_81257.html
+    # Source:
+    # noqa: E501
+    # https://congan.com.vn/tin-chinh/dan-so-ha-noi-du-bao-2020-tang-gan-bang-du-bao-cua-nam-2030_81257.html
     if region == "Hanoi":
         population = [p * 10.5 / 8.053 for p in population]
 
-    return [int(p) for p in population]
+    pop_data = [int(p) for p in population]
+
+    if as_series:
+        return pd.Series(data=pop_data, index=age_breakpoints)
+    else:
+        return pop_data
 
 
 def convert_ifr_agegroups(raw_ifr_props: list, iso3: str, pop_region: str, pop_year: int) -> list:
@@ -201,7 +211,7 @@ def convert_ifr_agegroups(raw_ifr_props: list, iso3: str, pop_region: str, pop_y
     prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
 
     # Calculate 75+ age bracket as weighted average between 75-79 and 80+
-    ifr_over75 = raw_ifr_props[-1] * prop_over_80 + raw_ifr_props[-2] * (1. - prop_over_80)
+    ifr_over75 = raw_ifr_props[-1] * prop_over_80 + raw_ifr_props[-2] * (1.0 - prop_over_80)
     return [*raw_ifr_props[:-2], ifr_over75]
 
 

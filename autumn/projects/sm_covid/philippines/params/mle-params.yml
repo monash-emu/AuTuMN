@@ -1,1 +1,14 @@
-contact_rate: 0.13567478358364315
+age_stratification.ifr.multiplier: 0.5771559507673508
+contact_rate: 0.0986558218507878
+infectious_seed_time: 69.75909264979425
+random_process.noise_sd: 0.312256096211893
+random_process.values(1): -0.9011238451937154
+random_process.values(10): -1.0933724835392191
+random_process.values(2): -1.1535378413207047
+random_process.values(3): -0.7684886085296141
+random_process.values(4): -1.0548182967757103
+random_process.values(5): -1.3882641390031953
+random_process.values(6): -0.9056290287461999
+random_process.values(7): -0.782897143555993
+random_process.values(8): -1.1234447336966888
+random_process.values(9): -1.0402903740448775

@@ -1,6 +1,7 @@
 {
   "infection_deaths": {
     "output_key": "infection_deaths",
+    "title": "Daily number of deaths",
     "times": [
       46,
       47,

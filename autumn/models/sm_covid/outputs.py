@@ -77,29 +77,46 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         self.model.request_output_for_flow(name="incidence", flow_name=incidence_flow)
 
         # Stratified
-        if request_incidence_by_age:
-            for agegroup in age_groups:
-                agegroup_string = f"Xagegroup_{agegroup}"
-                agegroup_filter = {"agegroup": agegroup}
-            
+        for agegroup in age_groups:
+            agegroup_string = f"Xagegroup_{agegroup}"
+            agegroup_filter = {"agegroup": agegroup}
+        
+            age_incidence_sources = []
+    
+            for immunity_stratum in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_stratum}"
+                immunity_filter = {"immunity": immunity_stratum}
+
+                dest_filter = agegroup_filter
+                dest_filter.update(immunity_filter)
+
+                output_name = f"incidence{agegroup_string}{immunity_string}"
+                age_incidence_sources.append(output_name)
+
                 self.model.request_output_for_flow(
-                    name=f"incidence{agegroup_string}",
+                    name=output_name,
                     flow_name=incidence_flow,
-                    dest_strata=agegroup_filter,
+                    dest_strata=dest_filter,
+                    save_results=False,
+                ) 
+
+            # Aggregated incidence by age
+            if request_incidence_by_age:
+                self.model.request_aggregate_output(
+                    name=f"incidence{agegroup_string}",
+                    sources=age_incidence_sources,
                     save_results=True,
-                )   
+                )     
 
 
     # def request_infection_deaths(
     #         self,
     #         model_times: np.ndarray,
     #         age_groups: List[str],
-    #         strain_strata: List[str],
     #         iso3: str,
     #         region: Union[str, None],
     #         cfr_prop_requests: AgeSpecificProps,
     #         time_from_onset_to_death: TimeDistribution,
-    #         voc_params: Optional[Dict[str, VocComponent]],
     # ):
     #     """
     #     Request infection death-related outputs.
@@ -107,19 +124,17 @@ class SmCovidOutputsBuilder(OutputsBuilder):
     #     Args:
     #         model_times: The model evaluation times
     #         age_groups: Modelled age group lower breakpoints
-    #         strain_strata: The names of the strains being implemented (or a list of an empty string if no strains)
     #         iso3: The ISO3 code of the country being simulated
     #         region: The sub-region being simulated, if any
     #         cfr_prop_requests: All the CFR-related requests, including the proportions themselves
     #         time_from_onset_to_death: Details of the statistical distribution for the time to death
-    #         voc_params: The parameters pertaining to the VoCs being implemented in the model
 
     #     """
 
     #     cfr_request = cfr_prop_requests.values
     #     cfr_props = convert_param_agegroups(iso3, region, cfr_request, age_groups)
 
-    #     # Get the adjustments to the hospitalisation rates according to immunity status
+    #     # Get the adjustments to the death rates according to immunity status
     #     source_immunity_dist = cfr_prop_requests.source_immunity_distribution
     #     source_immunity_protection = cfr_prop_requests.source_immunity_protection
     #     immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)

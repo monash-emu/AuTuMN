@@ -35,8 +35,9 @@ priors = [
     UniformPrior("age_stratification.ifr.multiplier", [.5, 1.5]),
 ]
 
+model_end_time = baseline_params.to_dict()["time"]["end"]
 targets = [
-    NormalTarget(data=ts_set["infection_deaths"]),
+    NormalTarget(data=ts_set["infection_deaths"].loc[:model_end_time]),
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:

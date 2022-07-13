@@ -117,7 +117,7 @@ def plot_prior(i: int, prior_dict: dict, path=None, ax=None, print_distri=True, 
     x_values = np.linspace(x_range[0], x_range[1], num=1000)
     y_values = [calculate_prior(prior_dict, x, log=False) for x in x_values]
     zeros = [0.0 for i in x_values]
-    ax.fill_between(x_values, y_values, zeros, color="cornflowerblue", alpha=alpha)
+    ax.fill_between(x_values, y_values, zeros, color="cornflowerblue", alpha=alpha, label="prior")
 
     if "distri_mean" in prior_dict:
         pyplot.axvline(
@@ -471,10 +471,8 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
     else:  # there is one chain per dataframe
         for idx, table_df in enumerate(mcmc_tables):
             accept_mask = table_df["accept"] == 1
-            if posterior:
-                table_df[accept_mask].loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
-            else:
-                table_df[accept_mask].ap_loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+            table_df[accept_mask][variable_key].plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+            
     title = "Posterior Loglikelihood" if posterior else "Loglikelihood"
     axis.set_ylabel(title)
     axis.set_xlabel("Metropolis iterations")

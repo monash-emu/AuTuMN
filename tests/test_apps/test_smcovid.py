@@ -62,3 +62,20 @@ def test_run_models_full(project_name):
     for sc_model in sc_models:
         assert type(sc_model) is CompartmentalModel
         assert sc_model.outputs is not None
+
+
+@pytest.mark.run_models
+@pytest.mark.github_only
+@pytest.mark.parametrize("project_name", SM_COVID_PROJECTS)
+def test_run_models_with_switched_random_process(project_name):
+    """
+    Run the model with or without random process activated, using the alternative 
+    configuration to what is specified from the baseline parameters.
+    """
+    project = get_project(Models.SM_COVID, project_name)
+    
+    params = project.param_set.baseline.update({"activate_random_process": not project.param_set.baseline['activate_random_process']})
+    baseline_model = project.run_baseline_model(params)
+
+    assert type(baseline_model) is CompartmentalModel
+    assert baseline_model.outputs is not None

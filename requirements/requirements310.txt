@@ -11,7 +11,7 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-summerepi==3.1.2
+summerepi==3.1.4
 
 # Interaction
 jupyterlab==3.2.0
@@ -52,9 +52,13 @@ gitpython
 pytest
 pytest-parallel
 pytest-benchmark
-black
 isort
 moto[s3]  # Mock out AWS S3 storage
+
+# Development
+black
+flake8
+pre-commit
 
 # Notebook management
 nbstripout

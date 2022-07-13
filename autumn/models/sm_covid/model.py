@@ -274,4 +274,7 @@ def build_model(
 
     outputs_builder.request_cumulative_outputs(params.requested_cumulative_outputs, params.cumulative_start_time)
 
+    if params.activate_random_process:
+        outputs_builder.request_random_process_outputs()
+
     return model

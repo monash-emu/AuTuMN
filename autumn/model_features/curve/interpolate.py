@@ -1,6 +1,7 @@
 """Builder functions for interpolating data - replaces scale_up.py
 
-build_sigmoidal_multicurve is the equivalent of scale_up_function(method=4)
+build_static_sigmoidal_multicurve is the equivalent of scale_up_function(method=4),
+with build_sigmoidal_multicurve producing a dynamic (parameterizable) version of this
 
 """
 
@@ -106,6 +107,30 @@ def build_sigmoidal_multicurve(x_points: jaxify.Array, curvature=16.0) -> callab
             return get_curve_at_t(t, ydata["values"], ydata["ranges"])
 
     return scaled_curve
+
+
+def build_static_sigmoidal_multicurve(
+    x_points: jaxify.Array, y_points: jaxify.Array, curvature=16.0
+) -> callable:
+    """Return a wrapped build_sigmoidal_multicurve function that operates against
+    a static array of y_points
+
+    Args:
+        x_points: x points
+        y_points: y points
+        curvature: Sigmoidal curvature.  Default produces the same behaviour as the old
+                   scale_up_function
+    Returns:
+        Fixed curve function
+    """
+
+    scale_data = get_scale_data(y_points)
+    scaled_curve = build_sigmoidal_multicurve(x_points, curvature)
+
+    def fixed_curve(t: float):
+        return scaled_curve(t, scale_data)
+
+    return fixed_curve
 
 
 def get_scale_data(points: jaxify.Array) -> dict:

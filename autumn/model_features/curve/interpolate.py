@@ -103,7 +103,7 @@ def build_sigmoidal_multicurve(x_points: jaxify.Array, curvature=16.0) -> callab
             elif t >= xmax:
                 return ydata["max"]
 
-            return get_curve_at_t(t, ydata)
+            return get_curve_at_t(t, ydata["values"], ydata["ranges"])
 
     return scaled_curve
 

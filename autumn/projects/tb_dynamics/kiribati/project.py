@@ -5,12 +5,11 @@ from autumn.core.project import (
     build_rel_path,
 )
 from autumn.calibration import Calibration
-from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
 from autumn.models.tb_dynamics import base_params, build_model
 from autumn.settings import Region, Models
 
-# Load and configure model parameters.
+# Load and configure model parameters
 default_path = build_rel_path("params/default.yml")
 baseline_params = base_params.update(default_path)
 ts_set = load_timeseries(build_rel_path("timeseries.json"))

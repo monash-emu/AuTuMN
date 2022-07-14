@@ -21,7 +21,6 @@ def test_tb_run_models_partial(project_name):
     params = baseline_params.update(
         {
             "time": {
-                "critical_ranges": [],
                 "end": baseline_params_dict["time"]["start"] + 5,
             },
         }

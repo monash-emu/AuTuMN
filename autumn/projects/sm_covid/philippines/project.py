@@ -8,7 +8,7 @@ from autumn.core.project import (
 )
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
-from autumn.calibration.targets import NormalTarget
+from autumn.calibration.targets import NegativeBinomialTarget
 from autumn.models.sm_covid import base_params, build_model
 from autumn.model_features.random_process import set_up_random_process
 from autumn.settings import Region, Models
@@ -37,7 +37,7 @@ priors = [
 
 model_end_time = baseline_params.to_dict()["time"]["end"]
 targets = [
-    NormalTarget(data=ts_set["infection_deaths"].loc[:model_end_time]),
+    NegativeBinomialTarget(data=ts_set["infection_deaths"].loc[:model_end_time], dispersion_param=7.),  # dispersion param from Watson et al. Lancet ID
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:

@@ -13,8 +13,8 @@ from autumn.core.utils.utils import weighted_average
 
 
 def get_relevant_indices(
-        standard_breaks: List[int],
-        model_groups: List[str],
+    standard_breaks: List[int],
+    model_groups: List[str],
 ) -> Dict[str, List[int]]:
     """
     Find the standard source age brackets relevant to each modelled age bracket.
@@ -24,7 +24,8 @@ def get_relevant_indices(
         model_groups: The age brackets being applied in the model
 
     Returns:
-        Keys are the modelled age groups, values are lists containing the standard agebreaks that apply to each one
+        Keys are the modelled age groups, values are lists containing the standard agebreaks that
+        apply to each one
 
     """
 
@@ -33,8 +34,12 @@ def get_relevant_indices(
     model_groups = [int(group) for group in model_groups]
     for i_age, model_agegroup in enumerate(model_groups):
         age_index_low = standard_breaks.index(model_agegroup)
-        age_index_up = standard_breaks[-1] if model_agegroup == model_groups[-1] else standard_breaks.index(model_groups[i_age + 1])
-        relevant_indices[str(model_agegroup)] = standard_breaks[age_index_low: age_index_up]
+        age_index_up = (
+            standard_breaks[-1]
+            if model_agegroup == model_groups[-1]
+            else standard_breaks.index(model_groups[i_age + 1])
+        )
+        relevant_indices[str(model_agegroup)] = standard_breaks[age_index_low:age_index_up]
 
     # Should be impossible for this check to fail
     msg = "Not all source age groups being mapped to modelled age groups"
@@ -44,10 +49,10 @@ def get_relevant_indices(
 
 
 def convert_param_agegroups(
-        iso3: str,
-        region: Union[None, str],
-        source_dict: Dict[int, float],
-        modelled_age_groups: List[str],
+    iso3: str,
+    region: Union[None, str],
+    source_dict: Dict[int, float],
+    modelled_age_groups: List[str],
 ) -> pd.Series:
     """
     Converts the source parameters to match the model age groups.
@@ -65,13 +70,16 @@ def convert_param_agegroups(
 
     # Get default age brackets and the population structured with these default categories
     source_agebreaks = list(source_dict.keys())
-    total_pops_5year_bands = get_population_by_agegroup(source_agebreaks, iso3, region=region, year=2020)
+    total_pops_5year_bands = get_population_by_agegroup(
+        source_agebreaks, iso3, region=region, year=2020
+    )
     total_pops_5year_dict = {age: pop for age, pop in zip(source_agebreaks, total_pops_5year_bands)}
 
     msg = "Modelled age group(s) incorrectly specified, not in standard age breaks"
     assert all([int(age_group) in source_agebreaks for age_group in modelled_age_groups]), msg
 
-    # Find out which of the standard source categories (values) apply to each modelled age group (keys)
+    # Find out which of the standard source categories (values) apply to each modelled
+    # age group (keys)
     relevant_source_indices = get_relevant_indices(source_agebreaks, modelled_age_groups)
 
     # For each age bracket
@@ -86,21 +94,22 @@ def convert_param_agegroups(
 
 
 def get_agegroup_strat(
-        params: Parameters,
-        age_groups: List[str],
-        age_pops: pd.Series,
-        matrices: np.array,
-        compartments: List[str],
-        is_dynamic_matrix: bool,
-        age_suscept: Optional[pd.Series],
+    params: Parameters,
+    age_groups: List[str],
+    age_pops: pd.Series,
+    matrices: np.array,
+    compartments: List[str],
+    is_dynamic_matrix: bool,
+    age_suscept: Optional[pd.Series],
 ) -> Stratification:
     """
     Function to create the age group stratification object.
 
     We use "Stratification" instead of "AgeStratification" for this model, to avoid triggering
-    automatic demography features (which work on the assumption that the time is in years, so would be totally wrong)
-    This will be revised in future versions of summer, in which model times will be datetime objects rather than AuTuMN
-    bespoke data structures.
+    automatic demography features (which work on the assumption that the time is in years, so would
+    be totally wrong)
+    This will be revised in future versions of summer, in which model times will be datetime objects
+    rather than AuTuMN bespoke data structures.
 
     Args:
         params: All model parameters
@@ -108,8 +117,10 @@ def get_agegroup_strat(
         age_pops: The population distribution by age
         matrices: The static age-specific mixing matrix
         compartments: All the model compartments
-        is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static (all locations) mixing matrix
-        age_suscept: Adjustments to infection rate based on the susceptibility of modelled age groups
+        is_dynamic_matrix: Whether to use the dynamically scaling matrix or the static
+                           (all locations) mixing matrix
+        age_suscept: Adjustments to infection rate based on the susceptibility of modelled age
+                     groups
 
     Returns:
         The age stratification summer object
@@ -120,7 +131,11 @@ def get_agegroup_strat(
 
     # Heterogeneous mixing by age
     dynamic_args = matrices, params.mobility, params.country
-    final_matrix = build_dynamic_mixing_matrix(*dynamic_args) if is_dynamic_matrix else matrices["all_locations"]
+    final_matrix = (
+        build_dynamic_mixing_matrix(*dynamic_args)
+        if is_dynamic_matrix
+        else matrices["all_locations"]
+    )
     age_strat.set_mixing_matrix(final_matrix)
 
     # Set distribution of starting population
@@ -128,10 +143,9 @@ def get_agegroup_strat(
     age_strat.set_population_split(age_split_props.to_dict())
 
     # Adjust infection flows based on the susceptibility of the age group
-    if isinstance(age_suscept, pd.Series):
+    if age_suscept is not None:
         age_strat.set_flow_adjustments(
-            FlowName.INFECTION,
-            {k: Multiply(v) for k, v in age_suscept.items()}
+            FlowName.INFECTION, {k: Multiply(v) for k, v in age_suscept.items()}
         )
 
     return age_strat

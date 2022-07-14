@@ -1,21 +1,16 @@
 ---
-# Base parameters for the tuberculosis model.
+# Base parameters for the tuberculosis model
 
-# Parameters used to build a general model of tuberculosis
+# Times to run over
 time:
   start: 1800.
   end: 2020.
   step: 0.1
-  critical_range: [[2016,2020]]
 
-# Country caracteristics
+# Country code
 iso3: null
-age_mixing: null
 
-# set up a parameter for the birth rate (its time-variant value will be automatically defined)
+# Set up a parameter for the birth rate (its time-variant value will be automatically defined)
 crude_birth_rate: 1.
 start_population_size: 2000.
 infectious_seed: 1.
-
-
-

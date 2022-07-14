@@ -1,12 +1,9 @@
 """
 Type definition for model parameters
 """
-from numpy import int_
-from pydantic import BaseModel, Extra, root_validator, validator
+from pydantic import BaseModel, Extra
 from pydantic.dataclasses import dataclass
-from datetime import date
-from typing import Any, Dict, List, Optional, Union
-from autumn.core.inputs.social_mixing.constants import LOCATIONS
+from typing import Optional
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
@@ -24,7 +21,6 @@ class Time(BaseModel):
     start: float
     end: float
     step: float
-    critical_range: List[List[float]]
 
 
 class ParamConfig:
@@ -36,25 +32,6 @@ class ParamConfig:
     allow_mutation = False  # Params should be immutable
 
 
-class CompartmentSojourn(BaseModel):
-    """
-    Compartment sojourn times, meaning the mean period of time spent in a compartment.
-    """
-
-    total_time: float
-    proportion_early: Optional[float]
-
-
-class Sojourns(BaseModel):
-    """
-    Parameters for determining how long a person stays in a given compartment.
-    """
-
-    active: CompartmentSojourn
-    latent: CompartmentSojourn
-    recovered: Optional[float]
-
-
 @dataclass(config=ParamConfig)
 class Parameters:
     # Metadata
@@ -63,7 +40,7 @@ class Parameters:
     # Country info
     crude_birth_rate: float
     start_population_size: float
-    # Running time.
+    # Running time
     time: Time
     # Output requests
     infectious_seed: float

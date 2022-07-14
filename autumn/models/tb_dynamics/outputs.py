@@ -1,11 +1,6 @@
-import numpy as np
-
-from typing import List
 from summer import CompartmentalModel
 
-from autumn.model_features.curve import tanh_based_scaleup
-
-from .constants import BASE_COMPARTMENTS, Compartment, INFECTIOUS_COMPS
+from .constants import BASE_COMPARTMENTS
 
 
 def request_outputs(model: CompartmentalModel):
@@ -13,8 +8,6 @@ def request_outputs(model: CompartmentalModel):
 
     # Population
     out.request_compartment_output("population_size", BASE_COMPARTMENTS)
-
-    # Percentage latent
 
 
 class TbOutputBuilder:

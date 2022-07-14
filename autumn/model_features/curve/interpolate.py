@@ -55,7 +55,7 @@ def make_norm_sigmoid(curvature: float) -> callable:
 def build_sigmoidal_multicurve(x_points: jaxify.Array, curvature=16.0) -> callable:
     """Build a sigmoidal smoothing function across points specified by
     x_points; the returned function takes the y values as arguments in
-    form of a scale_data dict with keys [min, max, valeus, ranges]
+    form of a scale_data dict with keys [min, max, values, ranges]
 
     Args:
         x_points: x values to interpolate across

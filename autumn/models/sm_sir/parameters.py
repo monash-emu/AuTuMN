@@ -2,12 +2,15 @@
 Type definition for model parameters
 """
 from pydantic import BaseModel, Extra, root_validator, validator
-from pydantic.dataclasses import dataclass
 
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
+from autumn.settings.constants import (
+    COVID_BASE_DATETIME,
+    GOOGLE_MOBILITY_LOCATIONS,
+    COVID_BASE_AGEGROUPS,
+)
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 BASE_DATE = COVID_BASE_DATETIME.date()
@@ -44,7 +47,10 @@ def get_check_non_neg(name):
 
 def get_check_all_prop(name):
 
-    msg = f"Parameter '{name}' contains values outside [0, 1], but is intended as a list of proportions"
+    msg = (
+        f"Parameter '{name}' contains values outside [0, 1], "
+        "but is intended as a list of proportions"
+    )
 
     def check_all_pos(values: list) -> float:
         assert all([0.0 <= i_value <= 1.0 for i_value in values]), msg
@@ -66,7 +72,7 @@ def get_check_all_non_neg(name):
 
 def get_check_all_dict_values_non_neg(name):
 
-    msg = f"Dictionary parameter '{name}' contains negative values, but is intended as a list of proportions"
+    msg = f"Parameter '{name}' contains negative values, but is intended as a list of proportions"
 
     def check_non_neg_values(dict_param: dict) -> float:
         assert all([0.0 <= i_value for i_value in dict_param.values()]), msg
@@ -119,7 +125,10 @@ class TimeSeries(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, inputs):
         value_series, time_series = inputs.get("values"), inputs.get("times")
-        msg = f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        msg = (
+            f"TimeSeries length mismatch, times length: {len(time_series)}, "
+            "values length: {len(value_series)}"
+        )
         assert len(time_series) == len(value_series), msg
         return inputs
 
@@ -130,7 +139,7 @@ class TimeSeries(BaseModel):
 
 class Country(BaseModel):
     """
-    The country that the model is based in. (The country may be, and often is, the same as the region.)
+    The country that the model is based in. (This may be, and often is, the same as the region.)
     """
 
     iso3: str
@@ -164,8 +173,12 @@ class CompartmentSojourn(BaseModel):
     total_time: float
     proportion_early: Optional[float]
 
-    check_total_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
-    check_prop_early = validator("proportion_early", allow_reuse=True)(get_check_prop("proportion_early"))
+    check_total_positive = validator("total_time", allow_reuse=True)(
+        get_check_non_neg("total_time")
+    )
+    check_prop_early = validator("proportion_early", allow_reuse=True)(
+        get_check_prop("proportion_early")
+    )
 
 
 class Sojourns(BaseModel):
@@ -175,9 +188,13 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[float]  # If there is a sojourn time for recovered, then there will be two compartments
+    recovered: Optional[
+        float
+    ]  # If there is a sojourn time for recovered, then there will be two compartments
 
-    check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
+    check_recovered_positive = validator("recovered", allow_reuse=True)(
+        get_check_non_neg("recovered")
+    )
 
 
 class MixingLocation(BaseModel):
@@ -208,7 +225,10 @@ class EmpiricMicrodistancingParams(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
         value_series, time_series = values.get("values"), values.get("times")
-        msg = f"TimeSeries length mismatch, times length: {len(time_series)}, values length: {len(value_series)}"
+        msg = (
+            f"TimeSeries length mismatch, times length: {len(time_series)}, "
+            "values length: {len(value_series)}"
+        )
         assert len(time_series) == len(value_series), msg
         return values
 
@@ -220,8 +240,12 @@ class TanhMicrodistancingParams(BaseModel):
     start_asymptote: float
     end_asymptote: float
 
-    check_lower_asymptote = validator("start_asymptote", allow_reuse=True)(get_check_prop("start_asymptote"))
-    check_upper_asymptote = validator("end_asymptote", allow_reuse=True)(get_check_prop("end_asymptote"))
+    check_lower_asymptote = validator("start_asymptote", allow_reuse=True)(
+        get_check_prop("start_asymptote")
+    )
+    check_upper_asymptote = validator("end_asymptote", allow_reuse=True)(
+        get_check_prop("end_asymptote")
+    )
 
     @validator("shape", allow_reuse=True)
     def shape_is_positive(shape):
@@ -270,9 +294,7 @@ class Mobility(BaseModel):
             msg = f"Mobility weights don't sum to one: {location_total}"
             assert abs(location_total - 1.0) < 1e-6, msg
             msg = "Google mobility key not recognised"
-            assert all(
-                [key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]
-            ), msg
+            assert all([key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]), msg
         return val
 
 
@@ -286,16 +308,17 @@ class AgeSpecificProps(BaseModel):
     @validator("source_immunity_distribution", allow_reuse=True)
     def check_source_dist(vals):
         sum_of_values = sum(vals.values())
-        msg = f"Proportions by immunity status in source for parameters does not sum to one: {sum_of_values}"
+        msg = (
+            f"Proportions by immunity status in source for parameters "
+            "does not sum to one: {sum_of_values}"
+        )
         assert sum_of_values == 1.0, msg
         return vals
 
     @validator("source_immunity_protection", allow_reuse=True)
-    def check_source_dist(protection_params):
+    def check_source_protection(protection_params):
         msg = "Source protection estimates not proportions"
-        assert (
-            all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0
-        ), msg
+        assert all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0, msg
         return protection_params
 
     check_props = validator("source_immunity_distribution", allow_reuse=True)(
@@ -358,8 +381,12 @@ class TestingToDetection(BaseModel):
     smoothing_period: int
     floor_value: float
 
-    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(get_check_non_neg("assumed_tests_parameter"))
-    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(get_check_prop("assumed_cdr_parameter"))
+    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(
+        get_check_non_neg("assumed_tests_parameter")
+    )
+    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(
+        get_check_prop("assumed_cdr_parameter")
+    )
 
     @validator("smoothing_period", allow_reuse=True)
     def check_smoothing_period(val):
@@ -369,9 +396,12 @@ class TestingToDetection(BaseModel):
     @root_validator(pre=True, allow_reuse=True)
     def check_floor_request(cls, values):
         floor_value, assumed_cdr = values["floor_value"], values["assumed_cdr_parameter"]
-        msg = f"Requested value for the CDR floor does not fall between zero and the assumed CDR parameter of {assumed_cdr}, value is: {floor_value}"
-        assert 0. <= floor_value <= assumed_cdr, msg
-        return values      
+        msg = (
+            f"Requested value for the CDR floor does not fall between zero and the assumed "
+            "CDR parameter of {assumed_cdr}, value is: {floor_value}"
+        )
+        assert 0.0 <= floor_value <= assumed_cdr, msg
+        return values
 
 
 class CrossImmunity(BaseModel):
@@ -379,8 +409,12 @@ class CrossImmunity(BaseModel):
     early_reinfection: float
     late_reinfection: float
 
-    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(get_check_prop("early_reinfection"))
-    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(get_check_prop("late_reinfection"))
+    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(
+        get_check_prop("early_reinfection")
+    )
+    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(
+        get_check_prop("late_reinfection")
+    )
 
 
 class VocSeed(BaseModel):
@@ -389,7 +423,9 @@ class VocSeed(BaseModel):
     entry_rate: float
     seed_duration: float
 
-    check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
+    check_seed_time = validator("seed_duration", allow_reuse=True)(
+        get_check_non_neg("seed_duration")
+    )
     check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))
 
 
@@ -414,7 +450,7 @@ class VocComponent(BaseModel):
     def check_starting_strain_multiplier(cls, values):
         if values["starting_strain"]:
             multiplier = values["contact_rate_multiplier"]
-            msg = f"Starting or 'wild type' strain must have a contact rate multiplier of one: {multiplier}"
+            msg = f"Starting strain must have a contact rate multiplier of 1.0: {multiplier}"
             assert multiplier == 1.0, msg
         return values
 
@@ -424,8 +460,12 @@ class VocComponent(BaseModel):
             assert 0.0 <= multiplier, "ICU multiplier negative"
         return multiplier
 
-    check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
-    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
+    check_immune_escape = validator("immune_escape", allow_reuse=True)(
+        get_check_prop("immune_escape")
+    )
+    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(
+        get_check_prop("hosp_protection")
+    )
     check_relative_latency = validator("relative_latency", allow_reuse=True)(
         get_check_non_neg("relative_latency")
     )
@@ -482,8 +522,7 @@ class ParamConfig:
     allow_mutation = False  # Params should be immutable
 
 
-@dataclass(config=ParamConfig)
-class Parameters:
+class Parameters(BaseModel):
     # Metadata
     description: Optional[str]
     country: Country
@@ -497,7 +536,7 @@ class Parameters:
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
-    detect_prop: float  # Not optional, so as always to have a back-up value available if testing to detection not used
+    detect_prop: float  # Required as a back-up value if testing to detection not used
     testing_to_detection: Optional[TestingToDetection]
     asympt_infectiousness_effect: Optional[float]
     isolate_infectiousness_effect: Optional[float]
@@ -520,10 +559,12 @@ class Parameters:
     future_monthly_booster_rate: Optional[float]
     future_booster_age_allocation: Optional[
         Union[
-            Dict[int, float], # to specify allocation proportions by age group (e.g. {70: .8, 50: .2})
-            List[int] # to specify a prioritisation order (e.g. [70, 50, 25, 15])
-            ]
+            Dict[
+                int, float
+            ],  # to specify allocation proportions by age group (e.g. {70: .8, 50: .2})
+            List[int],  # to specify a prioritisation order (e.g. [70, 50, 25, 15])
         ]
+    ]
 
     # Output-related
     requested_cumulative_outputs: List[str]
@@ -533,7 +574,10 @@ class Parameters:
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):
-        msg = "Not all requested age groups in the available age groups of 5-year increments from zero to 75"
+        msg = (
+            "Not all requested age groups in the available "
+            "age groups of 5-year increments from zero to 75"
+        )
         int_age_groups = [int(i_group) for i_group in COVID_BASE_AGEGROUPS]
         assert all([i_group in int_age_groups for i_group in age_groups]), msg
         return age_groups
@@ -543,9 +587,11 @@ class Parameters:
         if voc_emergence:
 
             msg = "Seed proportions do not sum to one"
-            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1., msg
+            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1.0, msg
 
-            starting_strains = [voc for voc, params in voc_emergence.items() if params.starting_strain]
+            starting_strains = [
+                voc for voc, params in voc_emergence.items() if params.starting_strain
+            ]
 
             msg = "Exactly one voc must be designated as the starting strain"
             assert len(starting_strains) == 1, msg
@@ -553,6 +599,6 @@ class Parameters:
             starting_strain = starting_strains[0]
 
             msg = "Currently requiring all the initial seed to be assigned to the starting strain"
-            assert voc_emergence[starting_strain].seed_prop == 1., msg
+            assert voc_emergence[starting_strain].seed_prop == 1.0, msg
 
         return voc_emergence

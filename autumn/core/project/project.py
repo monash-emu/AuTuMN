@@ -1,3 +1,8 @@
+# FIXME:
+# There is a lot of bad type(model) == ComparmentalModel
+# stuff in here, and lots of poking in model internals
+# It's all going to break at some point
+
 import os
 import logging
 import inspect
@@ -16,6 +21,8 @@ import numpy as np
 from summer.model import CompartmentalModel
 from summer.derived_outputs import DerivedOutputRequest
 
+from autumn.core.model_builder import RunnableModel
+
 from autumn.core.db.store import (
     save_model_outputs,
     build_outputs_table,
@@ -33,7 +40,7 @@ from autumn.core.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
-ModelBuilder = Callable[[dict,dict], CompartmentalModel]
+ModelBuilder = Callable[[dict, dict], CompartmentalModel]
 
 
 class Project:
@@ -67,8 +74,10 @@ class Project:
             self.calibration.run(self, max_seconds, chain_idx, num_chains)
 
     def run_baseline_model(
-        self, params: Params, derived_outputs_whitelist: Optional[List[str]] = None,
-        build_options: Optional[dict] = None
+        self,
+        params: Params,
+        derived_outputs_whitelist: Optional[List[str]] = None,
+        build_options: Optional[dict] = None,
     ) -> CompartmentalModel:
         """
         Run the project's baseline model with the given parameters.
@@ -76,12 +85,11 @@ class Project:
         """
         params_dict = params.to_dict()
         model = self.build_model(params_dict, build_options)
-        if type(model) is CompartmentalModel and derived_outputs_whitelist:
+        if isinstance(model, RunnableModel) and derived_outputs_whitelist:
             # Only calculate required derived outputs.
             model.set_derived_outputs_whitelist(derived_outputs_whitelist)
 
-        self._run_model(model)
-        return model
+        return self._run_model(model)
 
     def run_scenario_models(
         self,
@@ -89,12 +97,13 @@ class Project:
         scenario_params: List[Params],
         start_time: Optional[float] = None,
         start_times: Optional[List[float]] = None,
-        build_options: Optional[List[dict]] = None
+        build_options: Optional[List[dict]] = None,
     ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
         Returns the completed scenario models.
         """
+        raise NotImplementedError("Scenarios mess with parameters")
         # Figure out what start times to use for each scenario.
         if start_times is None and start_time is not None:
             # Use the same start time for each scenario.
@@ -108,9 +117,8 @@ class Project:
 
         models = []
         assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
-        for start_time, params, build_opt in \
-            zip(start_times, scenario_params, build_options):
-            
+        for start_time, params, build_opt in zip(start_times, scenario_params, build_options):
+
             params_dict = params.to_dict()
             model = self.build_model(params_dict, build_opt)
 
@@ -133,16 +141,18 @@ class Project:
         """
         Run the model.
         """
-        model.run(max_step=1)
+        return model.run(max_step=1)
 
     def write_params_to_tex(self, main_table_params_list, project_path, output_dir_path=None):
         """
-        Write the main parameter table as a tex file. Also write the table of calibrated parameters in a separate tex file.
+        Write the main parameter table as a tex file. Also write the table of calibrated parameters
+        in a separate tex file.
         :param main_table_params_list: ordered list of parameters to be included in the main table
         :param project_path: path of the project's directory
         :param output_dir_path: path of the directory where to dump the output tex files.
                Default is "docs/papers/<model_name>/projects/<region_name>".
         """
+        # FIXME: This has some undefined methods and will crash
         # Load parameters' descriptions (base model)
         base_params_descriptions_path = os.path.join(
             MODELS_PATH, self.model_name, "params_descriptions.json"
@@ -163,40 +173,43 @@ class Project:
                 DOCS_PATH, "papers", self.model_name, "projects", self.region_name
             )
 
+        # FIXME: The below code isn't implemented and will crash if uncommented
+        raise NotImplementedError()
         # Get list of priors
-        all_calibration_params_names = (
-            self.calibration.iterative_sampling_param_names
-            + self.calibration.independent_sampling_param_names
-        )
-        all_priors = (
-            self.calibration.iterative_sampling_priors
-            + self.calibration.independent_sampling_priors
-        )
+        # all_calibration_params_names = (
+        #     self.calibration.iterative_sampling_param_names
+        #     + self.calibration.independent_sampling_param_names
+        # )
+        # all_priors = (
+        #     self.calibration.iterative_sampling_priors
+        #     + self.calibration.independent_sampling_priors
+        # )
 
-        # Write main parameter table to tex file
-        write_main_param_table(
-            self,
-            main_table_params_list,
-            params_descriptions,
-            all_calibration_params_names,
-            all_priors,
-            output_dir_path,
-        )
+        # # Write main parameter table to tex file
+        # write_main_param_table(
+        #     self,
+        #     main_table_params_list,
+        #     params_descriptions,
+        #     all_calibration_params_names,
+        #     all_priors,
+        #     output_dir_path,
+        # )
 
-        # Write calibrated parameter table to tex file
-        write_priors_table(params_descriptions, all_priors, output_dir_path)
+        # # Write calibrated parameter table to tex file
+        # write_priors_table(params_descriptions, all_priors, output_dir_path)
 
     def get_path(self) -> Path:
         """
         Return a pathlib.Path to the current project directory
         """
-        return Path(BASE_PATH) / '/'.join(self._get_path().split('.')[:-1])  
+        return Path(BASE_PATH) / "/".join(self._get_path().split(".")[:-1])
 
     def __repr__(self):
         return f"Project<{self.model_name}, {self.region_name}>"
 
     def _get_path(self):
         return _PROJECTS[self.model_name][self.region_name]
+
 
 LOADED_PROJECTS = set()
 
@@ -316,15 +329,18 @@ class DiffOutput:
 
 def get_all_available_scenario_paths(scenario_dir_path):
     """
-    Automatically lists the paths of all the yml files starting with 'scenario-' available in a given directory.
+    Automatically lists the paths of all the yml files starting with 'scenario-' available in a
+    given directory.
     :param scenario_dir_path: path to the directory
     :return: a list of paths
     """
-    glob_str = os.path.join(scenario_dir_path, 'scenario-*.yml')
+    glob_str = os.path.join(scenario_dir_path, "scenario-*.yml")
     scenario_file_list = glob.glob(glob_str)
 
     # Sort by integer rather than string (so that 'scenario-2' comes before 'scenario-10')
-    file_list_sorted = sorted(scenario_file_list, key = lambda x: int(re.match('.*scenario-([0-9]*)',x).group(1)))
+    file_list_sorted = sorted(
+        scenario_file_list, key=lambda x: int(re.match(".*scenario-([0-9]*)", x).group(1))
+    )
 
     return file_list_sorted
 
@@ -346,12 +362,14 @@ def post_process_scenario_outputs(
     particularly those that require comparison to baseline.
 
     Args:
-        models (List[CompartmentalModel]): List of (run) models, as returned from run_baseline_model / run_scenario_models
-        run_id (int, optional): Required for multiple (usually remote) runs, not required for single local runs
+        models (List[CompartmentalModel]): List of (run) models, as returned from run_baseline_model
+                                           and run_scenario_models
+        run_id (int, optional): Required for multiple (usually remote) runs, not required for
+                                single local runs
         chain_id (int, optional): Used by MCMC runs, not required for single runs
 
     Returns:
-        dict: Dict whose keys are our expected table names, and values are the (processed) DataFrames
+        dict: Dict whose keys are our expected table names, and values are (processed) DataFrames
     """
     # Apply various post processing fixes
     calculate_differential_outputs(models, project.diff_output_requests)
@@ -370,6 +388,7 @@ def fix_cumulative_output_times(models: List[CompartmentalModel]):
     """
     Fix a bug with summer's cumulative outputs
     FIXME: Accessing private member of model class; prefer not to modify summer code just for this
+    Expect this to be broken!
     """
     baseline_model = models[0]
     if type(baseline_model) is CompartmentalModel:
@@ -377,7 +396,7 @@ def fix_cumulative_output_times(models: List[CompartmentalModel]):
             k
             for k, req in baseline_model._derived_output_requests.items()
             if req["request_type"] == DerivedOutputRequest.CUMULATIVE
-            and req["save_results"] == True
+            and req["save_results"] is True
         ]
     else:
         cum_out_keys = [k for k in baseline_model.derived_outputs.keys() if k.startswith("cum")]

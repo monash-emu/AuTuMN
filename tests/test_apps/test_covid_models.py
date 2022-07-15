@@ -1,5 +1,7 @@
 import pytest
+
 from summer import CompartmentalModel
+from autumn.core.model_builder import RunnableModel
 
 from autumn.settings import Models
 from autumn.core.project.project import _PROJECTS, get_project
@@ -22,7 +24,7 @@ def test_run_models_partial(project_name):
         {"time": {"end": baseline_params_dict["time"]["start"] + 5}}
     )
     model = project.run_baseline_model(baseline_params)
-    assert type(model) is CompartmentalModel
+    assert type(model) is RunnableModel
 
 
 @pytest.mark.run_models
@@ -36,7 +38,7 @@ def test_build_scenario_models(project_name):
     project = get_project(Models.COVID_19, project_name)
     for param in project.param_set.scenarios:
         model = project.build_model(param.to_dict())
-        assert type(model) is CompartmentalModel
+        assert type(model) is RunnableModel
 
 
 @pytest.mark.run_models

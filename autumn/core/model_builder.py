@@ -1,5 +1,6 @@
 from inspect import getfullargspec
 from pydantic import BaseModel
+from typing import Union
 
 from summer import CompartmentalModel
 from summer.parameters import Parameter, Function
@@ -96,7 +97,7 @@ def find_key_from_obj(obj, pydparams, params, layer=None):
 def get_full_runner(builder):
     graph_run = ComputeGraph(builder.input_graph).get_callable()
 
-    def run_everything(param_updates=None):
+    def run_everything(param_updates=None, **kwargs):
 
         parameters = builder.params_expanded.copy()
         if param_updates is not None:
@@ -105,7 +106,12 @@ def get_full_runner(builder):
         graph_outputs = graph_run(parameters=parameters)
         parameters.update(graph_outputs)
 
-        builder.model.run(parameters=parameters)
+        builder.model.run(parameters=parameters, **kwargs)
         return builder.model
 
     return run_everything
+
+
+# This union type should be checked against for anything expects
+# to able to call model.run() and have a CompartmentalModel returned
+RunnableModel = Union[CompartmentalModel, ModelBuilder]

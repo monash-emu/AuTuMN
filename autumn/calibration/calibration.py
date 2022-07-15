@@ -185,7 +185,7 @@ class Calibration:
         self.all_priors.append({
             "param_name": "random_process.noise_sd",
             "distribution": "uniform",
-            "distri_params": [0.1, 1.], 
+            "distri_params": [0.01, 1.], 
         })
 
         # add priors for rp values

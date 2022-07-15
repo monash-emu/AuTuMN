@@ -294,7 +294,7 @@ def calculate_r_hats(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataF
         for chain_id in chain_idx:
             mask =  mcmc_tables[0].chain == chain_id
             param_vals = mcmc_params[0][mask][param_name].to_list()
-            weights = mcmc_tables[0][mask].weight.to_list()
+            weights = mcmc_tables[0][mask][mcmc_tables[0]["accept"] == 1].weight.to_list()
             posterior_chains[chain_id] = flatten_list([[param_vals[i]] * w for i, w in enumerate(weights)])
 
         r_hats[param_name] = calculate_r_hat(posterior_chains)

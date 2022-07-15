@@ -1,6 +1,8 @@
 import pytest
 
-from autumn.core.model_builder import RunnableModel
+from summer import CompartmentalModel
+
+from autumn.core.model_builder import ModelBuilder
 
 from autumn.settings import Models
 from autumn.core.project.project import _PROJECTS, get_project
@@ -23,7 +25,7 @@ def test_run_models_partial(project_name):
     baseline_params_dict = baseline_params.to_dict()
     baseline_params = baseline_params.update({"time": {"end": baseline_params_dict["time"]["end"]}})
     model = project.run_baseline_model(baseline_params)
-    assert isinstance(model, RunnableModel)
+    assert isinstance(model, ModelBuilder)
 
 
 @pytest.mark.run_models
@@ -36,7 +38,7 @@ def test_build_scenario_models(project_name):
     project = get_project(Models.SM_SIR, project_name)
     for param in project.param_set.scenarios:
         model = project.build_model(param.to_dict())
-        assert isinstance(model, RunnableModel)
+        assert isinstance(model, ModelBuilder)
 
 
 @pytest.mark.run_models
@@ -49,7 +51,7 @@ def test_run_models_full(project_name):
     """
     project = get_project(Models.SM_SIR, project_name)
     baseline_model = project.run_baseline_model(project.param_set.baseline)
-    assert isinstance(baseline_model, RunnableModel)
+    assert isinstance(baseline_model, CompartmentalModel)
     assert baseline_model.outputs is not None
 
     start_times = [
@@ -59,5 +61,5 @@ def test_run_models_full(project_name):
         baseline_model, project.param_set.scenarios, start_times=start_times
     )
     for sc_model in sc_models:
-        assert isinstance(sc_model, RunnableModel)
+        assert isinstance(sc_model, CompartmentalModel)
         assert sc_model.outputs is not None

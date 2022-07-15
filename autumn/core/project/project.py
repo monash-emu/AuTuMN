@@ -21,7 +21,7 @@ import numpy as np
 from summer.model import CompartmentalModel
 from summer.derived_outputs import DerivedOutputRequest
 
-from autumn.core.model_builder import RunnableModel
+from autumn.core.model_builder import ModelBuilder
 
 from autumn.core.db.store import (
     save_model_outputs,
@@ -40,7 +40,7 @@ from autumn.core.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
-ModelBuilder = Callable[[dict, dict], CompartmentalModel]
+BuildModelFunc = Callable[[dict, dict], CompartmentalModel]
 
 
 class Project:
@@ -52,7 +52,7 @@ class Project:
         self,
         region_name: str,
         model_name: str,
-        build_model: ModelBuilder,
+        build_model: BuildModelFunc,
         param_set: ParameterSet,
         calibration,  # A Calibration instance
         plots: dict = {},  # Previously, targets JSON.
@@ -85,9 +85,12 @@ class Project:
         """
         params_dict = params.to_dict()
         model = self.build_model(params_dict, build_options)
-        if isinstance(model, RunnableModel) and derived_outputs_whitelist:
+        if derived_outputs_whitelist:
             # Only calculate required derived outputs.
-            model.set_derived_outputs_whitelist(derived_outputs_whitelist)
+            if isinstance(model, ModelBuilder):
+                model.model.set_derived_outputs_whitelist(derived_outputs_whitelist)
+            else:
+                model.set_derived_outputs_whitelist(derived_outputs_whitelist)
 
         return self._run_model(model)
 
@@ -103,7 +106,6 @@ class Project:
         Runs all the project's scenarios with the given parameters.
         Returns the completed scenario models.
         """
-        raise NotImplementedError("Scenarios mess with parameters")
         # Figure out what start times to use for each scenario.
         if start_times is None and start_time is not None:
             # Use the same start time for each scenario.
@@ -116,7 +118,7 @@ class Project:
             build_options = [None] * len(scenario_params)
 
         models = []
-        assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
+        assert baseline_model.outputs is not None, "Baseline model has not been run yet."
         for start_time, params, build_opt in zip(start_times, scenario_params, build_options):
 
             params_dict = params.to_dict()
@@ -127,6 +129,9 @@ class Project:
                 start_idx = get_scenario_start_index(baseline_model.times, start_time)
                 init_compartments = baseline_model.outputs[start_idx, :]
                 # Use initial conditions at the given start time.
+                if isinstance(model, ModelBuilder):
+                    msg = "Scenario start times not supported for parameterized models"
+                    raise NotImplementedError(msg)
                 if type(model) is CompartmentalModel:
                     model.initial_population = init_compartments
                 else:

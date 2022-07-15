@@ -109,7 +109,9 @@ def assign_population(builder: ModelBuilder, total_pop: int):
     builder.model.set_initial_population(builder.get_output("init_pop"))
 
 
-def add_latent_transitions(builder: ModelBuilder, latent_sojourn_params: CompartmentSojourn):
+def add_sojourn_transitions(
+    builder: ModelBuilder, sojourn_params: CompartmentSojourn, flow_desc: dict
+):
     """
     Add the transition flows taking people from infection through to infectiousness, depending on
     the model structure requested.
@@ -118,12 +120,21 @@ def add_latent_transitions(builder: ModelBuilder, latent_sojourn_params: Compart
     complexity to the code).
 
     Args:
-        latent_sojourn_params: The user requests relating to the latent period
-        model: The summer compartmental model object to have the flows applied to it
+        builder: The ModelBuilder
+        sojourn_params: The user requests relating to this sojourn period
 
-    Returns:
-        The name of the destination compartment for infection processes
-        The name of the flow that transitions people into the infectious state
+        flow_desc: Dictionary of mappings in the following format
+        {
+            "early_flow": {
+                # Created only if proportion_early specified
+                "name": Early flow name,
+                "compartment": Intermediary compartment created for this flow
+            },
+            # Primary flow (that may be subdivided)
+            "flow_name": Name of primary flow
+            "source": Origin compartment name
+            "dest": Final destination compartment name
+        }
 
     """
 
@@ -132,29 +143,29 @@ def add_latent_transitions(builder: ModelBuilder, latent_sojourn_params: Compart
     # The total time spent in the latent stage
     # latent_sojourn = latent_sojourn_params.total_time
     # The proportion of that time spent in early latency
-    latent_early_prop = latent_sojourn_params.proportion_early
+    early_prop = sojourn_params.proportion_early
 
     # If the latent compartment is divided into an early and a late stage
-    if latent_early_prop:
+    if early_prop:
 
         # Define this function using the same argument names as
-        # contained in the latent_sojourn_params object
-        # This way we can automaticall map the values later on
+        # contained in the sojourn_params object
+        # This way we can automatically map the values later on
         def get_latent_rate(total_time, proportion_early):
             return 1.0 / total_time / proportion_early
 
-        latent_rate = builder.get_mapped_func(get_latent_rate, latent_sojourn_params)
+        latent_rate = builder.get_mapped_func(get_latent_rate, sojourn_params)
 
         # Apply the transition between the two latent compartments
         model.add_transition_flow(
-            name=FlowName.WITHIN_LATENT,
+            name=flow_desc["early_flow"]["name"],
             fractional_rate=latent_rate,
-            source=Compartment.LATENT,
-            dest=Compartment.LATENT_LATE,
+            source=flow_desc["source"],
+            dest=flow_desc["early_flow"]["compartment"],
         )
 
         # The parameters for the transition out of latency (through the late latent stage)
-        progress_origin = Compartment.LATENT_LATE
+        progress_origin = flow_desc["early_flow"]["compartment"]
 
         # Equivalent to:
         # prop_latent_late = 1.0 - latent_early_prop
@@ -165,73 +176,22 @@ def add_latent_transitions(builder: ModelBuilder, latent_sojourn_params: Compart
             return progress_rate
 
         # Again, get a mapped function whose arguments are the values of latent_sojourn_params
-        progress_rate = builder.get_mapped_func(get_progress_rate, latent_sojourn_params)
+        progress_rate = builder.get_mapped_func(get_progress_rate, sojourn_params)
 
     # If the latent stage is just one compartment
     else:
 
         # The parameters for transition out of the single latent compartment
-        progress_origin = Compartment.LATENT
+        progress_origin = flow_desc["source"]
 
-        progress_rate = builder.get_mapped_func(
-            lambda total_time: 1.0 / total_time, latent_sojourn_params
-        )
+        progress_rate = builder.get_mapped_func(lambda total_time: 1.0 / total_time, sojourn_params)
 
     # Apply the transition out of latency flow
     model.add_transition_flow(
-        name=FlowName.PROGRESSION,
+        name=flow_desc["flow_name"],
         fractional_rate=progress_rate,
         source=progress_origin,
-        dest=Compartment.INFECTIOUS,
-    )
-
-
-def add_active_transitions(
-    active_sojourn_params: CompartmentSojourn,
-    model: CompartmentalModel,
-):
-    """
-    Implement the transitions through and out of the active compartment, based on the user requests
-    regarding sojourn times for the active compartment.
-
-    Args:
-        active_sojourn_params: The user requests relating to the active period
-        model: The summer compartmental model object to have the flows applied to it
-
-    """
-
-    active_sojourn = active_sojourn_params.total_time
-    active_early_prop = active_sojourn_params.proportion_early
-
-    # If the active compartment is divided into an early and a late stage
-    if active_early_prop:
-
-        # Apply the transition between the two active compartments
-        model.add_transition_flow(
-            name=FlowName.WITHIN_INFECTIOUS,
-            fractional_rate=1.0 / active_sojourn / active_early_prop,
-            source=Compartment.INFECTIOUS,
-            dest=Compartment.INFECTIOUS_LATE,
-        )
-
-        # The parameters for the transition out of active disease (through the late active stage)
-        prop_active_late = 1.0 - active_early_prop
-        recovery_rate = 1.0 / active_sojourn / prop_active_late
-        recovery_origin = Compartment.INFECTIOUS_LATE
-
-    # If the active compartment is just one compartment
-    else:
-
-        # The parameters for transition out of the single active compartment
-        recovery_origin = Compartment.INFECTIOUS
-        recovery_rate = 1.0 / active_sojourn
-
-    # Implement the recovery flow, now that we know the source and the rate
-    model.add_transition_flow(
-        name=FlowName.RECOVERY,
-        fractional_rate=recovery_rate,
-        source=recovery_origin,
-        dest=Compartment.RECOVERED,
+        dest=flow_desc["dest"],
     )
 
 
@@ -350,7 +310,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """
 
     # Latency
-    add_latent_transitions(builder, sojourns.latent)
+    # add_latent_transitions(builder, sojourns.latent)
+
+    latent_flow_desc = {
+        "early_flow": {"name": FlowName.WITHIN_LATENT, "compartment": Compartment.LATENT_LATE},
+        "flow_name": FlowName.PROGRESSION,
+        "source": Compartment.LATENT,
+        "dest": Compartment.INFECTIOUS,
+    }
+    add_sojourn_transitions(builder, sojourns.latent, latent_flow_desc)
+
     infection_dest, infectious_entry_flow = Compartment.LATENT, FlowName.PROGRESSION
 
     # Transmission
@@ -374,7 +343,17 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Active transition flows
-    add_active_transitions(sojourns.active, model)
+    # add_active_transitions(sojourns.active, model)
+    active_flow_desc = {
+        "early_flow": {
+            "name": FlowName.WITHIN_INFECTIOUS,
+            "compartment": Compartment.INFECTIOUS_LATE,
+        },
+        "flow_name": FlowName.RECOVERY,
+        "source": Compartment.INFECTIOUS,
+        "dest": Compartment.RECOVERED,
+    }
+    add_sojourn_transitions(builder, sojourns.active, active_flow_desc)
 
     # Add waning transition if waning being implemented
     if Compartment.WANED in compartment_types:

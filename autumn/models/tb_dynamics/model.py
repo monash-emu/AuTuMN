@@ -41,6 +41,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.SUSCEPTIBLE,
     )
 
+    #add death rate
+    universal_death_rate = 18 / 1000
+    model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
+
     # Derived outputs
     request_outputs(model)
 

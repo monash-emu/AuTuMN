@@ -38,8 +38,8 @@ class Parameters:
     description: Optional[str]
     iso3: str
     # Country info
-    crude_birth_rate: float
     start_population_size: float
+    crude_birth_rate: float
     # Running time
     time: Time
     # Output requests

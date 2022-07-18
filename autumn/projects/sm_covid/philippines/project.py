@@ -29,17 +29,27 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
+infection_deaths = ts_set["infection_deaths"]
+first_date_with_death = infection_deaths[round(infection_deaths) >= 1].index[0]
+model_end_time = baseline_params.to_dict()["time"]["end"]
+infection_deaths_target = infection_deaths.loc[first_date_with_death: model_end_time]
+
+# Work out max infectious seeding time so transmission starts before first observed deaths
+min_seed_time = 30.
+max_seed_time = first_date_with_death - 1
+assert max_seed_time > min_seed_time, "Max seed time is lower than min seed time."
+
 priors = [
     UniformPrior("contact_rate", [0.03, 0.20]),  
-    UniformPrior("infectious_seed_time", [30, 90]),  
+    UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),  
     UniformPrior("age_stratification.ifr.multiplier", [.5, 1.5]),
 
     # UniformPrior("infection_deaths_dispersion_param", [5, 15]),  # greater values lead to a more skewed likelihood
 ]
 
-model_end_time = baseline_params.to_dict()["time"]["end"]
+
 targets = [
-    NegativeBinomialTarget(data=ts_set["infection_deaths"].loc[:model_end_time], dispersion_param=7.),  # dispersion param from Watson et al. Lancet ID
+    NegativeBinomialTarget(data=infection_deaths_target, dispersion_param=7.),  # dispersion param from Watson et al. Lancet ID
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:

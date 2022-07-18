@@ -1,10 +1,9 @@
-import pandas as pd
 import os
 
+import pandas as pd
 from autumn.core.db import Database
 from autumn.core.utils.utils import create_date_index
-
-from autumn.settings import INPUT_DATA_PATH, COVID_BASE_DATETIME
+from autumn.settings import COVID_BASE_DATETIME, INPUT_DATA_PATH
 
 from .fetch import COVID_SURVEY_PATH
 
@@ -13,6 +12,19 @@ CSV_FILES = [
 ]
 MASKS = [file for file in CSV_FILES if "mask_" in file]
 AVOID_CONTACT = [file for file in CSV_FILES if "avoid_contact" in file]
+
+COLS = [
+    "iso_code",
+    "region",
+    "date",
+    "date_index",
+    "sample_size",
+    "pct",
+    "se",
+    "pct_unw",
+    "se_unw",
+]
+
 
 def preproc_csv(files):
     df = pd.concat(map(pd.read_csv, files))
@@ -35,36 +47,13 @@ def preprocess_covid_survey(input_db: Database):
 def get_mask():
     df = preproc_csv(MASKS)
 
-    df = df[
-        [
-            "iso_code",
-            "region",
-            "date",
-            "date_index",
-            "sample_size",
-            "percent_mc",
-            "mc_se",
-            "percent_mc_unw",
-            "mc_se_unw",
-        ]
-    ]
+    df = df[COLS]
 
     return df
 
+
 def get_avoid_contact():
     df = preproc_csv(AVOID_CONTACT)
-    df = df[
-        [
-            "iso_code",
-            "region",
-            "date",
-            "date_index",
-            "sample_size",
-            "pct_avoid_contact",
-            "avoid_contact_se",
-            "pct_avoid_contact_unw",
-            "avoid_contact_se_unw",
-        ]
-    ]
+    df = df[COLS]
 
     return df

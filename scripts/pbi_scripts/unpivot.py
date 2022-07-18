@@ -1,9 +1,9 @@
 import os
-import pandas as pd
 import sqlite3
 
+import pandas as pd
 
-db_path = "C:\\Users\Mili\Projects\covid_pbi\output"
+db_path = "C:\\Users\Mili\Projects\covid_pbi\output_test"
 list_of_files = os.listdir(db_path)
 
 db_files = [os.path.join(db_path, each) for each in list_of_files if ".db" in each]

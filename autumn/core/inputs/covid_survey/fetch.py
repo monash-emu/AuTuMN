@@ -1,9 +1,9 @@
-import requests
 import json
-import pandas as pd
-
-from autumn.settings import INPUT_DATA_PATH
 from pathlib import Path
+
+import pandas as pd
+import requests
+from autumn.settings import INPUT_DATA_PATH
 
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
@@ -22,12 +22,12 @@ def fetch_covid_survey_data():
         for indicator in indicators:
             if country == "Australia":
                 region = "Victoria"
-                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&region={region}&daterange={FROM_DATE}-{TODAY}"
+                API_URL = f"https://covidmap.umd.edu/apiv2/resources?indicator={indicator}&type=daily&country={country}&region={region}&daterange={FROM_DATE}-{TODAY}"
             elif country == "Philippines":
                 region = "National Capital Region"
-                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&region={region}&daterange={FROM_DATE}-{TODAY}"
+                API_URL = f"https://covidmap.umd.edu/apiv2/resources?indicator={indicator}&type=daily&country={country}&region={region}&daterange={FROM_DATE}-{TODAY}"
             else:
-                API_URL = f"https://covidmap.umd.edu/api/resources?indicator={indicator}&type=daily&country={country}&daterange={FROM_DATE}-{TODAY}"
+                API_URL = f"https://covidmap.umd.edu/apiv2/resources?indicator={indicator}&type=daily&country={country}&daterange={FROM_DATE}-{TODAY}"
 
             # request data from api
             response = requests.get(API_URL).text

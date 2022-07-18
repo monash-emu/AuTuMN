@@ -9,8 +9,6 @@ from autumn.core.model_builder import ModelBuilder
 from autumn.core.project import Params, build_rel_path
 from autumn.model_features.random_process import RandomProcessProc
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-from autumn.core.utils.utils import multiply_function_or_constant
-from autumn.model_features.computed_values import FunctionWrapper
 from autumn.model_features.random_process import get_random_process
 from .detection import get_cdr_func
 from .outputs import SmSirOutputsBuilder
@@ -221,7 +219,7 @@ def apply_reinfection_flows_without_strains(
         age_filter = {"agegroup": age_group}
 
         contact_rate_adjuster = age_adjuster
-        age_contact_rate = multiply_function_or_constant(contact_rate, contact_rate_adjuster)
+        age_contact_rate = [contact_rate, contact_rate_adjuster]
 
         model.add_infection_frequency_flow(
             FlowName.LATE_REINFECTION,
@@ -324,6 +322,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Transmission
     if params.activate_random_process:
+        raise NotImplementedError()
 
         # Store random process as a computed value to make it available as an output
         rp_function, contact_rate = get_random_process(params.random_process, params.contact_rate)
@@ -332,7 +331,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
 
     else:
-        contact_rate = params.contact_rate
+        contact_rate = builder.param("contact_rate")
 
     # Add the process of infecting the susceptibles for the first time
     model.add_infection_frequency_flow(
@@ -356,10 +355,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     add_sojourn_transitions(builder, sojourns.active, active_flow_desc)
 
     # Add waning transition if waning being implemented
+
     if Compartment.WANED in compartment_types:
         model.add_transition_flow(
             name=FlowName.WANING,
-            fractional_rate=1.0 / sojourns.recovered,
+            fractional_rate=Function(
+                lambda recovered: 1.0 / recovered, [builder.param("sojourns.recovered")]
+            ),
             source=Compartment.RECOVERED,
             dest=Compartment.WANED,
         )
@@ -408,11 +410,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     Testing-related processes
     """
 
+    # FIXME: Next up in parameterization...
     if testing_params or detect_prop < 1.0:
         is_undetected = True
-        cdr_func, non_detect_func = get_cdr_func(detect_prop, testing_params, pop, iso3)
-        model.add_computed_value_process("cdr", FunctionWrapper(cdr_func))
-        model.add_computed_value_process("undetected_prop", FunctionWrapper(non_detect_func))
+        cdr_func, non_detect_func = get_cdr_func(builder, detect_prop, testing_params, pop, iso3)
+        model.add_computed_value_func("cdr", cdr_func)
+        model.add_computed_value_func("undetected_prop", non_detect_func)
+        # model.add_computed_value_func("cdr", )
     else:
         is_undetected, non_detect_func, cdr_func = False, None, None
 
@@ -451,7 +455,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         model.stratify_with(strain_strat)
 
         # Seed the VoCs from the requested point in time
-        seed_vocs(model, voc_params, Compartment.INFECTIOUS)
+        seed_vocs(builder, voc_params, Compartment.INFECTIOUS)
 
         # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata

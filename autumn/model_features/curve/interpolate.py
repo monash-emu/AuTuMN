@@ -66,7 +66,7 @@ def build_sigmoidal_multicurve(x_points: jaxify.Array, curvature=16.0) -> callab
     Returns:
         The multisigmoidal function of (x, scale_data)
     """
-    xranges = fnp.diff(x_points)
+    xranges = fnp.diff(fnp.array(x_points))
     x_points = fnp.array(x_points)
 
     xmin = x_points.min()
@@ -124,13 +124,67 @@ def build_static_sigmoidal_multicurve(
         Fixed curve function
     """
 
-    scale_data = get_scale_data(y_points)
-    scaled_curve = build_sigmoidal_multicurve(x_points, curvature)
+    scale_data = get_scale_data(fnp.array(y_points))
+    # scaled_curve = build_sigmoidal_multicurve(fnp.array(x_points), curvature)
 
-    def fixed_curve(t: float):
-        return scaled_curve(t, scale_data)
+    # def fixed_curve(t: float):
+    #    return scaled_curve(t, scale_data)
 
-    return fixed_curve
+    # return fixed_curve
+
+    xranges = fnp.diff(fnp.array(x_points))
+    x_points = fnp.array(x_points)
+
+    xmin = x_points.min()
+    xmax = x_points.max()
+    xbounds = fnp.array([xmin, xmax])
+
+    sig = make_norm_sigmoid(curvature)
+
+    def _build_curve(x_val, xrange, ybase_val, yrange):
+        def get_curve_at_t(t):
+            offset = t - x_val
+            relx = offset / xrange
+            rely = sig(relx)
+            return ybase_val + (rely * yrange)
+
+        return get_curve_at_t
+
+    curve_funcs = []
+    for i, xrange in enumerate(xranges):
+        x_val = x_points[i]
+        ybase_val = scale_data["values"][i]
+        yrange = scale_data["ranges"][i]
+        get_curve_at_t = _build_curve(x_val, xrange, ybase_val, yrange)
+        curve_funcs.append(get_curve_at_t)
+
+    if jaxify.get_using_jax():
+        from jax import lax
+
+        def scaled_curve(t: float, ydata: dict):
+            # Branch on whether t is in bounds
+            bounds_state = sum(t > xbounds)
+            branches = [
+                lambda _, __, ___: ydata["min"],
+                get_curve_at_t,
+                lambda _, __, ___: ydata["max"],
+            ]
+            return lax.switch(bounds_state, branches, t, ydata["values"], ydata["ranges"])
+
+    else:
+        ymin = scale_data["min"]
+        ymax = scale_data["max"]
+
+        def scaled_curve(t: float):
+            if t < xmin:
+                return ymin
+            elif t >= xmax:
+                return ymax
+            else:
+                idx = sum(t >= x_points) - 1
+                return curve_funcs[idx](t)
+
+    return scaled_curve
 
 
 def get_scale_data(points: jaxify.Array) -> dict:

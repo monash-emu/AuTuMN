@@ -69,33 +69,60 @@ class ModelBuilder:
         else:
             raise KeyError("Key not found in initial parameters", key)
 
-    def get_mapped_func(self, func: callable, param_obj: BaseModel):
+    def get_mapped_func(self, func: callable, param_obj: BaseModel, kwargs=None):
         argspec = getfullargspec(func)
-        msg = f"Function arguments do not match pydantic object"
-        assert all([hasattr(param_obj, arg) for arg in argspec.args]), msg
+
+        kwargs = {} if kwargs is None else kwargs
+
+        supplied_argkeys = list(kwargs)
+
+        msg = f"Function arguments {argspec} do not match pydantic object {param_obj}"
+        assert all(
+            [hasattr(param_obj, arg) for arg in argspec.args if arg not in supplied_argkeys]
+        ), msg
         base_key = self._find_key_from_obj(param_obj)
-        return Function(func, [], {arg: Parameter(f"{base_key}.{arg}") for arg in argspec.args})
+        mapped_args = {arg: Parameter(f"{base_key}.{arg}") for arg in argspec.args}
+        mapped_args.update(kwargs)
+        return Function(func, [], mapped_args)
 
 
-def find_key_from_obj(obj, pydparams, params, layer=None):
+def find_key_from_obj(obj, pydparams, params, layer=None, is_dict=False):
     if layer is None:
         layer = []
     for k, v in params.items():
-        cur_pydobj = getattr(pydparams, k)
+        if is_dict:
+            cur_pydobj = pydparams[k]
+        else:
+            cur_pydobj = getattr(pydparams, k)
         if cur_pydobj is obj:
             if isinstance(cur_pydobj, BaseModel):
                 return ".".join(layer + [k])
             else:
                 raise Exception("Try using subkeys")
-        if isinstance(cur_pydobj, BaseModel):
+        if isinstance(cur_pydobj, dict):
+            res = find_key_from_obj(obj, cur_pydobj, v, layer + [k], True)
+            if res is not None:
+                return res
+        elif isinstance(cur_pydobj, BaseModel):
             assert isinstance(v, dict)
             res = find_key_from_obj(obj, cur_pydobj, v, layer + [k])
             if res is not None:
                 return res
+    if layer is None:
+        raise Exception(f"Unable to match {obj} in parameters dictionary")
 
 
-def get_full_runner(builder):
+def get_full_runner(builder, use_jax=False):
     graph_run = ComputeGraph(builder.input_graph).get_callable()
+
+    if use_jax:
+        from summer.runner.jax.util import get_runner
+        from summer.runner.jax.model_impl import build_run_model
+
+        jrunner = get_runner(builder.model)
+        jax_run_func, jax_runner_dict = build_run_model(jrunner)
+
+    model_input_p = [p.name for p in list(builder.model.get_input_parameters())]
 
     def run_everything(param_updates=None, **kwargs):
 
@@ -106,10 +133,29 @@ def get_full_runner(builder):
         graph_outputs = graph_run(parameters=parameters)
         parameters.update(graph_outputs)
 
-        builder.model.run(parameters=parameters, **kwargs)
-        return builder.model
+        model_params = {k: v for k, v in parameters.items() if k in model_input_p}
 
-    return run_everything
+        if use_jax:
+            return jax_run_func(parameters=model_params)
+        else:
+            builder.model.run(parameters=model_params, **kwargs)
+            return builder.model
+
+    def run_inputs(param_updates=None):
+        parameters = builder.params_expanded.copy()
+        if param_updates is not None:
+            parameters.update(param_updates)
+
+        graph_outputs = graph_run(parameters=parameters)
+        parameters.update(graph_outputs)
+
+        model_params = {k: v for k, v in parameters.items() if k in model_input_p}
+        return model_params
+
+    if use_jax:
+        return run_everything, run_inputs, jax_run_func, jax_runner_dict
+    else:
+        return run_everything
 
 
 # This union type should be checked against for anything expects

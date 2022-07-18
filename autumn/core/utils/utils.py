@@ -9,7 +9,6 @@ import numpy
 import pandas as pd
 import numpy as np
 from typing import List, Union, Callable, Dict, Optional
-from responses import Call
 
 from autumn.core.utils.s3 import download_from_s3, list_s3, get_s3_client
 from autumn.core import registry
@@ -17,10 +16,7 @@ from autumn.settings.folders import PROJECTS_PATH
 from autumn.core.utils import secrets
 
 
-def merge_dicts(
-    src: dict, 
-    dest: dict
-) -> dict:
+def merge_dicts(src: dict, dest: dict) -> dict:
     """
     Merge src dict into dest dict.
 
@@ -29,7 +25,7 @@ def merge_dicts(
         dest: Destination dictionary
     Returns:
         The merged dictionary
-        
+
     """
     for key, value in src.items():
         if isinstance(value, dict):
@@ -45,9 +41,7 @@ def merge_dicts(
     return dest
 
 
-def flatten_list(
-    x: List[list]
-) -> list:
+def flatten_list(x: List[list]) -> list:
     """
     Transform a list of lists into a single flat list.
 
@@ -60,9 +54,7 @@ def flatten_list(
     return [v for sublist in x for v in sublist]
 
 
-def run_command(
-    cmds: str
-) -> str:
+def run_command(cmds: str) -> str:
     """
     Run a process and retun the stdout.
 
@@ -74,13 +66,10 @@ def run_command(
         return ""
 
 
-def change_parameter_unit(
-    parameter_dict: dict, 
-    multiplier: float
-) -> dict:
+def change_parameter_unit(parameter_dict: dict, multiplier: float) -> dict:
     """
-    Currently only used to adapt the latency parameters from the earlier functions according to whether they are needed as by year rather than by day.
-    Could be more generally applicable.
+    Currently only used to adapt the latency parameters from the earlier functions according to
+    whether they are needed as by year rather than by day. Could be more generally applicable.
 
     Args:
         parameter_dict: The dictionary whose values need to be adjusted
@@ -90,18 +79,15 @@ def change_parameter_unit(
 
     """
     return {
-        param_key: param_value * multiplier
-        for param_key, param_value in parameter_dict.items()
+        param_key: param_value * multiplier for param_key, param_value in parameter_dict.items()
     }
 
 
-def apply_moving_average(
-    data: list, 
-    period: int
-) -> List[float]:
+def apply_moving_average(data: list, period: int) -> List[float]:
     """
     Smooth the data by applying moving average with a specified period.
-    *** This is now deprecated; timeseries should be expressed as Pandas Series (not lists), and the appropriate pandas methods used ***
+    *** This is now deprecated; timeseries should be expressed as Pandas Series (not lists),
+    and the appropriate pandas methods used ***
 
     Args:
         data: The data to be averaged over
@@ -121,8 +107,10 @@ def apply_odds_ratio_to_proportion(proportion: float, odds_ratio: float) -> floa
     """
     Use an odds ratio to adjust a proportion.
 
-    Starts from the premise that the odds associated with the original proportion (p1) = p1 / (1 - p1)
-    and similarly, that the odds associated with the adjusted proportion (p2) = p2 / (1 - p2)
+    Starts from the premise that the odds associated with the original proportion
+    (p1) = p1 / (1 - p1)
+    and similarly, that the odds associated with the adjusted proportion
+    (p2) = p2 / (1 - p2)
     We want to multiply the odds associated with p1 by a certain odds ratio.
     That, is we need to solve the following equation for p2:
         p1 / (1 - p1) * OR = p2 / (1 - p2)
@@ -175,8 +163,8 @@ def subdivide_props(
     base_props: numpy.ndarray, split_props: Union[numpy.ndarray, float]
 ) -> numpy.ndarray:
     """
-    Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according to the split
-    proportions provided (split_props).
+    Split an array (base_props) of proportions into two arrays (split_arr, complement_arr) according
+    to the split proportions provided (split_props).
     Frequently used in the (old) covid_19 model to split people between different clinical pathways.
 
     """
@@ -192,7 +180,8 @@ def update_mle_from_remote_calibration(model: str, region: str, run_id=None):
     Args:
         model: Model name (e.g. 'covid_19')
         region: Region name
-        run_id: Optional run identifier such as 'covid_19/calabarzon/1626941419/5495a75'. If None, the latest run is used.
+        run_id: Optional run identifier such as 'covid_19/calabarzon/1626941419/5495a75'.
+                If None, the latest run is used.
 
     """
 
@@ -201,15 +190,13 @@ def update_mle_from_remote_calibration(model: str, region: str, run_id=None):
     if run_id is None:
         run_id = find_latest_run_id(model, region, s3_client)
 
-    msg = f'Could not read run ID {run_id}, use format "{{app}}/{{region}}/{{timestamp}}/{{commit}}" - exiting'
+    msg = f'Could not read run ID {run_id}, use format "{{app}}/{{region}}/{{timestamp}}/{{commit}}" - exiting'  # noqa: E501
     assert len(run_id.split("/")) == 4, msg
 
     # Define the destination folder
     project_registry_name = registry._PROJECTS[model][region]
     region_subfolder_names = (
-        project_registry_name.split(f"autumn.projects.{model}.")[1]
-        .split(".project")[0]
-        .split(".")
+        project_registry_name.split(f"autumn.projects.{model}.")[1].split(".project")[0].split(".")
     )
     destination_dir_path = os.path.join(PROJECTS_PATH, model)
     for region_subfolder_name in region_subfolder_names:
@@ -243,8 +230,11 @@ def find_latest_run_id(model, region, s3_client):
     all_commits = [f.split("/")[3] for f in all_files]
 
     n_commits = len(list(numpy.unique(all_commits)))
-    msg = f"There must be exactly one run on the server associated with the latest timestamp, found {n_commits}."
-    msg += f"Please enter the run_id manually for model {model}, region {region}."
+    msg = (
+        f"There must be exactly one run on the server"
+        " associated with the latest timestamp, found {n_commits}."
+        " Please enter the run_id manually for model {model}, region {region}."
+    )
     assert n_commits == 1, msg
 
     commit = all_commits[0]
@@ -291,7 +281,7 @@ def create_date_index(base_datetime, df, datecol):
                 df["date"], errors="raise", format=fmt, infer_datetime_format=False
             ).dt.date
 
-        except:
+        except Exception:
             continue
 
         else:
@@ -310,9 +300,7 @@ def check_list_increasing(list_to_check: Union[list, tuple]):
         list_to_check: The iterable that should be non-decreasing
 
     """
-    assert all(
-        list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1)
-    )
+    assert all(list_to_check[i] <= list_to_check[i + 1] for i in range(len(list_to_check) - 1))
 
 
 def get_complement_prop(numerator: float, denominator: float):
@@ -339,7 +327,8 @@ def return_constant_value(value: float) -> Callable:
         value: The value that the function will return
 
     Returns:
-        The function that returns the value, ignoring the time input which is needed for standard summer syntax
+        The function that returns the value, ignoring the time input which is needed for standard
+        summer syntax
 
     """
 
@@ -358,7 +347,8 @@ def get_product_two_functions(function_1: Callable, function_2: Callable) -> Cal
         function_2: Second function of time
 
     Returns:
-        New function of time that returns a scalar, being the product of the two other functions at that point in time
+        New function of time that returns a scalar, being the product of the two other functions at
+        that point in time
 
     """
 
@@ -368,40 +358,14 @@ def get_product_two_functions(function_1: Callable, function_2: Callable) -> Cal
     return product_function
 
 
-def multiply_function_or_constant(
-    function_or_constant: Union[callable, float],
-    multiplier: float,
-) -> Union[callable, float]:
-    """
-    Multiply a function that returns a single value and takes inputs in the standard format of a summer time-varying
-    process by a multiplier - or do the same if the value is just a simple float.
-
-    Args:
-        function_or_constant: The function or constant to be multiplied
-        multiplier: The value for this thing to be multiplied by
-
-    Returns:
-        The same type of object as the function_or_constant input, but multiplied by the desired number
-
-    """
-
-    if callable(function_or_constant):
-
-        def revised_function(t, c):
-            return function_or_constant(t, c) * multiplier
-
-        return revised_function
-    else:
-        return function_or_constant * multiplier
-
-
 def weighted_average(
     distribution: Dict[str, float],
     weights: Dict[str, float],
     rounding: Optional[int] = None,
 ) -> float:
     """
-    Calculate a weighted average from dictionaries with the same keys, representing the values and the weights.
+    Calculate a weighted average from dictionaries with the same keys, representing the values and
+    the weights.
 
     Args:
         distribution: The values
@@ -424,7 +388,8 @@ def weighted_average(
 
 def wrap_series_transform_for_ndarray(process_to_apply: callable) -> callable:
     """
-    Return a function that converts an ndarray to a Series, applies a transform, and returns the result as a new ndarray
+    Return a function that converts an ndarray to a Series, applies a transform, and returns the
+    result as a new ndarray
 
     Args:
         process_to_apply: A function that can be applied to a pandas series

@@ -146,6 +146,6 @@ future_booster_age_allocation: null
 # future_booster_age_allocation: [60, 50, 25, 15, 0]
 
 requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
-cumulative_start_time: 883  # 1 June 2022
+cumulative_start_time: 932  # 20 July 2022
 request_incidence_by_age: True
 request_immune_prop_by_age: True

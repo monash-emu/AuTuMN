@@ -1,8 +1,8 @@
 description: >
-  SCENARIO 4
+  SCENARIO 5
   The new variant is twice as transmissible as Omicron (~4 times more transmissible than Delta VoC).
   This variant completely escapes both vaccination- and infection-related immunity.
-  The severity of this new VoC towards hospitalization and death is the same as that of Omicron.
+  Infection of previous VoCs has no protection towards hospitalization or death upon infection of this VoC.
   Waning vaccine-induced immunity remained turned off, since it is totally escaped by the new VoC.
   Booster dose is assumed to be effective for 180 days (~ 6 months).
 
@@ -28,5 +28,5 @@ voc_emergence:
     new_voc_seed:
       start_time: 913 # 1st July 2022
     immune_escape: 1.0
-    hosp_protection: 0.9
-    death_protection: 0.95
+    hosp_protection: 0.
+    death_protection: 0.

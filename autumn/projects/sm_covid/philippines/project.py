@@ -3,7 +3,7 @@ from autumn.core.project import (
     ParameterSet,
     load_timeseries,
     build_rel_path,
-    # use_tuned_proposal_sds,
+    use_tuned_proposal_sds,
     get_all_available_scenario_paths,
 )
 from autumn.calibration import Calibration
@@ -64,6 +64,9 @@ if baseline_params.to_dict()["activate_random_process"]:
 else:
     rp = None
 
+# Load proposal sds from yml file
+use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+
 calibration = Calibration(
     priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
 )
@@ -80,5 +83,5 @@ with open(plot_spec_filepath) as f:
 project = Project(Region.PHILIPPINES, Models.SM_COVID, build_model, param_set, calibration, plots=plot_spec)
 
 
-# from autumn.calibration._tuning import perform_all_params_proposal_tuning
+# from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
 # perform_all_params_proposal_tuning(project, calibration, priors, n_points=20, relative_likelihood_reduction=0.2)

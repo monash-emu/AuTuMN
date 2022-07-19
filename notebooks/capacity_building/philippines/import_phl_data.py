@@ -7,26 +7,13 @@ from zipfile import ZipFile # To manage zip files
 # Then external package imports
 import pandas as pd  # pd is an alias for pandas. This is similar to dataframes in R
 import numpy as np
-from summer import CompartmentalModel
-from matplotlib import pyplot as plt  # matplotlib is a common visualisation package for Python
-
-# This time, we're going to do some interactive plotting!
-pd.options.plotting.backend = "plotly"
-
-# URL to the department of health Google drive repository.
-# What is the data type here, a tuple or string? Do you know how to check for the type?
 
 # Shareable google drive links
 PHL_DOH_LINK = "1fFKoNVan7PS6BpBr01nwByNTLLu6z1AA"  # sheet 05 daily report.
 PHL_FASSSTER_LINK = "15eDyTjXng2Zh38DVhmeNy0nQSqOMlGj3" # Fassster google drive zip file.
 
-
-# We define a day zero for the analysis.
-COVID_BASE_DATE = datetime(2019, 12, 31)
-
 # By defining a region variable, we can easily change the analysis later.
 region = "NATIONAL CAPITAL REGION (NCR)"
-
 
 """
 Utility functions

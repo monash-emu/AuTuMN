@@ -530,6 +530,8 @@ class Parameters:
     cumulative_start_time: Optional[float]
     request_incidence_by_age: bool
     request_immune_prop_by_age: bool
+    request_hospital_admissions_by_age: bool
+    request_hospital_occupancy_by_age: bool
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

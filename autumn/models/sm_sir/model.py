@@ -590,6 +590,8 @@ def build_model(
         time_to_event_params.hospitalisation,
         params.hospital_stay.hospital_all,
         voc_params,
+        params.request_hospital_admissions_by_age,
+        params.request_hospital_occupancy_by_age,
     )
     outputs_builder.request_icu_outputs(
         params.prop_icu_among_hospitalised,

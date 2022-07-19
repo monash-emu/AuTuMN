@@ -65,7 +65,7 @@ else:
     rp = None
 
 # Load proposal sds from yml file
-use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
+# use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"

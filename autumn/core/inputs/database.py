@@ -16,6 +16,7 @@ from .covid_phl.preprocess import preprocess_covid_phl
 from .covid_survey.preprocess import preprocess_covid_survey
 from .covid_vnm.preprocess import preprocess_covid_vnm
 from .demography.preprocess import preprocess_demography
+from .gisaid_voc.preprocess import preprocess_covid_gisaid
 from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data
 from .school_closure.preprocess import preprocess_school_closure
@@ -94,7 +95,7 @@ def build_input_database(rebuild: bool = False):
         with Timer("Ingesting social mixing data."):
             preprocess_social_mixing(input_db, country_df)
 
-        with Timer("Ingesting mobility data."):
-            preprocess_mobility(input_db, country_df)
+        with Timer("Ingesting gisaid data."):
+            preprocess_covid_gisaid(input_db)
 
     return input_db

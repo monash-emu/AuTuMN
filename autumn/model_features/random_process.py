@@ -80,8 +80,8 @@ class RandomProcess:
         # calculate the distance between each W_t and the associated normal distribution's centre
         sum_of_squares = sum([(x - mu)**2 for (x, mu) in zip(self.values, normal_means)])
 
-        # calculate the joint log-likelihood
-        log_likelihood = - len(self.values) * log(self.noise_sd * sqrt(2. * pi)) - sum_of_squares / (2. * self.noise_sd**2)
+        # calculate the joint log-likelihood (normalised)
+        log_likelihood = - log(self.noise_sd * sqrt(2. * pi)) - sum_of_squares / (2. * self.noise_sd**2 * len(self.values))
 
         return log_likelihood
 

@@ -42,7 +42,7 @@ def get_scenario_params(n_boosters, target, voc_emerge):
             },
             "new_strain": {
                 "new_voc_seed": {
-                    "start_time": 897.,  # 15 June 2022
+                    "start_time": 944.,  # 1 Aug 2022
                 },
                 "contact_rate_multiplier": 1.,
                 "immune_escape": 1.

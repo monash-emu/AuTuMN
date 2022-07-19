@@ -1,28 +1,31 @@
 from typing import Callable, Dict
 
-import numpy as np
-
+from autumn.core import jaxify
 from autumn.models.sm_sir.parameters import MicroDistancingFunc
 from autumn.models.sm_sir.constants import LOCATIONS
-from autumn.model_features.curve import scale_up_function, tanh_based_scaleup
+from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
+from autumn.model_features.curve import tanh_based_scaleup
 from autumn.core.utils.utils import return_constant_value, get_product_two_functions
 from autumn.core.inputs.covid_survey.queries import get_percent_mc
 
+fnp = jaxify.get_modules()["numpy"]
 
 ADJUSTER_SUFFIX = "_adjuster"
 
 
 def get_microdistancing_funcs(
-        params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool, iso3: str
+    params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool, iso3: str
 ) -> Dict[str, Callable[[float], float]]:
     """
     Returns a dictionary of time-varying functions.
     Each key is a location and each function represents microdistancing effects at that location.
-    `params` can specify one or more microdistancing functions, which may also have an "adjuster" function.
+    `params` can specify one or more microdistancing functions, which may also have an "adjuster"
+    function.
 
     Args:
         params: Microdistancing function requests
-        square_mobility_effect: Whether to square the effect on transmission (to account for both infector and infectee)
+        square_mobility_effect: Whether to square the effect on transmission (to account for both
+                                infector and infectee)
         iso3: ISO3 code of the modelled country
 
     Returns:
@@ -30,7 +33,8 @@ def get_microdistancing_funcs(
 
     """
 
-    # Supports any number of microdistancing functions contributing to contact rates, with any user-defined names
+    # Supports any number of microdistancing functions contributing to contact rates, with any
+    # user-defined names
     final_adjustments = {}
     power = 2 if square_mobility_effect else 1
 
@@ -61,21 +65,26 @@ def get_microdistancing_funcs(
 
             # Otherwise no adjustments
             else:
-                waning_adjustment = return_constant_value(1.)
+                waning_adjustment = return_constant_value(1.0)
 
             if loc in params[key].locations:
-                microdist_component_funcs.append(get_product_two_functions(microdist_func, waning_adjustment))
+                microdist_component_funcs.append(
+                    get_product_two_functions(microdist_func, waning_adjustment)
+                )
 
-        # Generate the overall composite contact adjustment function as the product of the reciprocal all the effects
+        # Generate the overall composite contact adjustment function as the product of the
+        # reciprocal all the effects
         if len(microdist_component_funcs) > 0:
 
             def microdist_composite_func(time: float) -> float:
-                effects = [(1. - func(time)) ** power for func in microdist_component_funcs]
-                return np.product(effects)
+                effects = fnp.array(
+                    [(1.0 - func(time)) ** power for func in microdist_component_funcs]
+                )
+                return fnp.product(effects)
 
         else:
 
-            microdist_composite_func = return_constant_value(1.)
+            microdist_composite_func = return_constant_value(1.0)
 
         # Get the final location-specific microdistancing functions
         final_adjustments[loc] = microdist_composite_func
@@ -85,8 +94,8 @@ def get_microdistancing_funcs(
 
 def get_microdist_func_component(func_params: MicroDistancingFunc, iso3: str):
     """
-    Get a single function of time using the standard parameter request structure for any microdistancing function, or
-    adjustment to a microdistancing function.
+    Get a single function of time using the standard parameter request structure for any
+    microdistancing function, or adjustment to a microdistancing function.
     In future, this could use more general code for requesting functions of time.
 
     Args:
@@ -105,7 +114,7 @@ def get_microdist_func_component(func_params: MicroDistancingFunc, iso3: str):
         micro_times = func_params.parameters.times
         multiplier = func_params.parameters.max_effect
         micro_vals = [multiplier * value for value in func_params.parameters.values]
-        return scale_up_function(micro_times, micro_vals, method=4)
+        return build_static_sigmoidal_multicurve(micro_times, micro_vals)
 
     elif func_params.function_type == "constant":
         return return_constant_value(func_params.parameters.effect)
@@ -115,4 +124,4 @@ def get_microdist_func_component(func_params: MicroDistancingFunc, iso3: str):
         micro_times = list(survey_data[0])
         multiplier = func_params.parameters.effect
         micro_vals = [multiplier * value for value in survey_data[1]]
-        return scale_up_function(micro_times, micro_vals, method=4)
+        return build_static_sigmoidal_multicurve(micro_times, micro_vals)

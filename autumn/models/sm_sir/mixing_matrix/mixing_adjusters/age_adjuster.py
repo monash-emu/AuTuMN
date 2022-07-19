@@ -3,7 +3,7 @@ import numpy as np
 
 from autumn.models.sm_sir.parameters import TimeSeries
 from autumn.settings.constants import COVID_BASE_AGEGROUPS
-from autumn.model_features.curve import scale_up_function
+from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 
 from .base_adjuster import BaseMixingAdjuster
 
@@ -14,11 +14,12 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
     The mixing matrix is expected to be 16x16.
     This is currently unused.
 
-    *** Note that this object works quite differently from location_adjuster, which is potentially confusing
-    because the both inherit from the same parent class ***
+    *** Note that this object works quite differently from location_adjuster, which is potentially
+    confusing because the both inherit from the same parent class ***
 
-    Specifically, this one adjusts the cells of the matrix according to ratios applied to their working values,
-    whereas location adjuster subtracts absolute values of the starting matrices from the current values.
+    Specifically, this one adjusts the cells of the matrix according to ratios applied to their
+    working values, whereas location adjuster subtracts absolute values of the starting matrices
+    from the current values.
 
     Attributes:
         adjustment_funcs: The adjustment functions to be applied for each age group
@@ -32,7 +33,7 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
 
         self.adjustment_funcs = {}
         for age_idx, timeseries in age_mixing.items():
-            func = scale_up_function(timeseries.times, timeseries.values, method=4)
+            func = build_static_sigmoidal_multicurve(timeseries.times, timeseries.values)
             self.adjustment_funcs[str(age_idx)] = func
 
     def get_adjustment(self, time: float, mixing_matrix: np.ndarray) -> np.ndarray:
@@ -52,11 +53,11 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
         adjusted_matrix = mixing_matrix.copy()
         for i_row_agegroup, row_agegroup in enumerate(COVID_BASE_AGEGROUPS):
             row_adjust_func = self.adjustment_funcs.get(row_agegroup)
-            row_multiplier = row_adjust_func(time) if row_adjust_func else 1.
+            row_multiplier = row_adjust_func(time) if row_adjust_func else 1.0
 
             for j_col_agegroup, col_agegroup in enumerate(COVID_BASE_AGEGROUPS):
                 col_adjust_func = self.adjustment_funcs.get(col_agegroup)
-                col_multiplier = col_adjust_func(time) if col_adjust_func else 1.
+                col_multiplier = col_adjust_func(time) if col_adjust_func else 1.0
 
                 adjusted_matrix[i_row_agegroup, j_col_agegroup] *= row_multiplier * col_multiplier
 

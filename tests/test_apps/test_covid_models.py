@@ -1,4 +1,5 @@
 import pytest
+
 from summer import CompartmentalModel
 
 from autumn.settings import Models

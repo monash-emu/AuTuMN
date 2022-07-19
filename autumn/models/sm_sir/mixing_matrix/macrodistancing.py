@@ -5,7 +5,7 @@ import pandas as pd
 from autumn.models.sm_sir.constants import LOCATIONS
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.models.sm_sir.parameters import Country, MixingLocation
-from autumn.model_features.curve import scale_up_function
+from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.utils.utils import apply_moving_average
 
@@ -15,7 +15,8 @@ def weight_mobility_data(
 ) -> pd.DataFrame:
     """
     Get weighted average for each modelled location from Google mobility estimates.
-    Uses the user-specified request to define the mapping of Google mobility locations to the modelled locations.
+    Uses the user-specified request to define the mapping of Google mobility locations to the
+    modelled locations.
     Modelled locations are:
         - work
         - other_locations
@@ -33,22 +34,27 @@ def weight_mobility_data(
     'work':
         {'workplaces': 1.0},
     'other_locations':
-        {'retail_and_recreation': 0.25, 'grocery_and_pharmacy': 0.25, 'parks': 0.25, 'transit_stations': 0.25},
+        {'retail_and_recreation': 0.25,
+        'grocery_and_pharmacy': 0.25,
+        'parks': 0.25,
+        'transit_stations': 0.25},
     'home':
         {'residential': 1.0}
     }
     Values for the sub-dictionaries for each modelled location must sum to one
     (which is confirmed in parameter validation).
 
-    If a location is not specified, that location will not be scaled - this will be sorted out in later stages of
-    processing.
+    If a location is not specified, that location will not be scaled - this will be sorted out
+    in later stages of processing.
 
     Args:
         google_mob_df: The Google mobility data provided in raw form
-        location_map: The mapping instructions from modelled locations (first keys) to Google locations (second keys)
+        location_map: The mapping instructions from modelled locations (first keys) to Google
+                      locations (second keys)
 
     Returns:
-        Dataframe containing the keys for scaling the modelled locations over time based on these mobility inputs
+        Dataframe containing the keys for scaling the modelled locations over time based on these
+        mobility inputs
 
     """
 
@@ -73,8 +79,8 @@ def get_mobility_funcs(
     smooth_google_data: bool,
 ) -> Dict[str, Callable[[float], float]]:
     """
-    Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
-    each location.
+    Loads Google mobility data, combines it with user requested timeseries data and then returns a
+    mobility function for each location.
 
     Args:
         country: Country being simulated
@@ -93,19 +99,25 @@ def get_mobility_funcs(
     mob_df, google_mobility_days = get_mobility_data(country.iso3, region, COVID_BASE_DATETIME)
     model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
-    # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
+    # Currently the only options are to use raw mobility or 7-day moving average (although easy to
+    # change, of course)
     if smooth_google_data:
         for loc in model_loc_mobility_values.columns:
             model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
     # Build mixing data timeseries (change to dict, rather than parameters object)
     mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
-    mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
+    mobility_requests = update_mixing_data(
+        mobility_requests, model_loc_mobility_values, google_mobility_days
+    )
 
-    # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
+    # Build the time variant location-specific macrodistancing adjustment functions from mixing
+    # timeseries
     mobility_funcs = {}
     for location, timeseries in mobility_requests.items():
-        mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
+        mobility_funcs[location] = build_static_sigmoidal_multicurve(
+            timeseries.index, timeseries**power
+        )
 
     return mobility_funcs
 
@@ -114,8 +126,8 @@ def update_mixing_data(
     mob_values: dict, google_mobility_values: pd.DataFrame, google_mobility_days: list
 ) -> Dict[str, Dict[str, float]]:
     """
-    Incorporate the user requests relating to mobility change with the Google mobility data, according to how the
-    requests have been submitted.
+    Incorporate the user requests relating to mobility change with the Google mobility data,
+    according to how the requests have been submitted.
 
     Args:
         mob_values: User requests mobility parameter object
@@ -123,7 +135,8 @@ def update_mixing_data(
         google_mobility_days: Values of Google mobility on these dates
 
     Returns:
-        The final processed mobility values by location with standard keys for each location (times and values)
+        The final processed mobility values by location with standard keys for each location
+        (times and values)
 
     """
 
@@ -151,22 +164,29 @@ def update_mixing_data(
             elif loc_mixing["append"]:
                 first_append_day = min(loc_mixing["times"])
 
-                # All requested dates are after the Google Mobility data starts, so we can just join the two lists
+                # All requested dates are after the Google Mobility data starts, so we can just
+                # join the two lists
                 if google_mobility_days[-1] < first_append_day:
                     mob_values[loc_key]["times"] = google_mobility_days + loc_mixing["times"]
                     mob_values[loc_key]["values"] = mobility_values + loc_mixing["values"]
 
-                # Requested days start during the Google mobility data, so we truncate the Google mobility data
+                # Requested days start during the Google mobility data, so we truncate the Google
+                # mobility data
                 else:
                     merge_idx = None
                     for idx, day in enumerate(google_mobility_days):
                         if day >= first_append_day:
                             merge_idx = idx
                             break
-                    mob_values[loc_key]["times"] = google_mobility_days[:merge_idx] + loc_mixing["times"]
-                    mob_values[loc_key]["values"] = mobility_values[:merge_idx] + loc_mixing["values"]
+                    mob_values[loc_key]["times"] = (
+                        google_mobility_days[:merge_idx] + loc_mixing["times"]
+                    )
+                    mob_values[loc_key]["values"] = (
+                        mobility_values[:merge_idx] + loc_mixing["values"]
+                    )
 
-            # If no data have been loaded, no need to append, just use the user-specified requests directly
+            # If no data have been loaded, no need to append, just use the user-specified requests
+            # directly
             else:
                 mob_values[loc_key] = loc_mixing
 
@@ -180,7 +200,8 @@ def update_mixing_data(
         if loc_mixing:
             loc_mixing["values"] = parse_values(loc_mixing["values"])
 
-    # Reformat data so that we only have times and values as the keys within each location key, without append
+    # Reformat data so that we only have times and values as the keys within each location key,
+    # without append
     return {k: pd.Series(v["values"], index=v["times"]) for k, v in mob_values.items()}
 
 
@@ -191,13 +212,14 @@ def get_mobility_specific_period(
     split_dates: List[float],
 ) -> Tuple[pd.DataFrame, dict]:
     """
-    Loads google mobility data, splits it for the requested time duration and then returns a mobility function for each
-    location.
+    Loads google mobility data, splits it for the requested time duration and then returns a
+    mobility function for each location.
 
     Args:
         country: Country request
         region: Any sub-region of the country
-        google_mobility_locations: The mapping instructions from modelled locations (first keys) to Google locations (second keys)
+        google_mobility_locations: The mapping instructions from modelled locations (first keys) to
+                                   Google locations (second keys)
         split_dates: The dates at which we want to split the data
 
     Returns:
@@ -205,9 +227,7 @@ def get_mobility_specific_period(
 
     """
 
-    google_mob_data, google_mobility_days = get_mobility_data(
-        country, region, COVID_BASE_DATETIME
-    )
+    google_mob_data, google_mobility_days = get_mobility_data(country, region, COVID_BASE_DATETIME)
     mobility_values = weight_mobility_data(google_mob_data, google_mobility_locations)
 
     start_idx = google_mobility_days.index(split_dates[0])
@@ -304,7 +324,8 @@ def scale_prev_up_to_1(prev_vals: List[float], multiplier: float) -> float:
 
 def close_gap_to_1(prev_vals: List[float], fraction: float) -> float:
     """
-    Reduce the difference between the last value and one (full mobility) according to the "fraction" request.
+    Reduce the difference between the last value and one (full mobility) according to the
+    "fraction" request.
 
     """
 
@@ -344,7 +365,8 @@ def average_mobility(prev_vals: List[float], period: int) -> float:
 
 def copy_mobility(prev_vals: List[float], ignore_vals: int) -> float:
     """
-    Returns the mobility level at the requested time by ignoring the last values defined by ignore_vals.
+    Returns the mobility level at the requested time by ignoring the last values defined by
+    ignore_vals.
 
     """
 
@@ -352,11 +374,10 @@ def copy_mobility(prev_vals: List[float], ignore_vals: int) -> float:
     return prev_val[1]
 
 
-def close_to_max_last_period(
-    prev_vals: List[float], period: int, fraction: float
-) -> float:
+def close_to_max_last_period(prev_vals: List[float], period: int, fraction: float) -> float:
     """
-    Partial return from last mobility estimate to the highest level observed over the recent period specified.
+    Partial return from last mobility estimate to the highest level observed over the recent period
+    specified.
 
     """
 

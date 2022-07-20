@@ -8,3 +8,4 @@ time:
 
 start_population_size: 33048.
 infectious_seed: 1.
+crude_death_rate: 0.018

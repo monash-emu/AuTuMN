@@ -40,6 +40,7 @@ class Parameters:
     # Country info
     start_population_size: float
     crude_birth_rate: float
+    crude_death_rate: float
     # Running time
     time: Time
     # Output requests

@@ -46,8 +46,8 @@ def fetch_input_data():
     with Timer("Fetching COVID MMR data."):
         fetch_covid_mmr_data()
 
-    # with Timer("Fetching COVID survey data."):
-    #     fetch_covid_survey_data()
+    with Timer("Fetching COVID survey data."):
+        fetch_covid_survey_data()
 
     with Timer("Fetching school closure data."):
         fetch_school_closure_data()

@@ -6,7 +6,7 @@ from autumn.model_features.curve import scale_up_function
 from autumn.core import inputs
 
 from .constants import Compartment, BASE_COMPARTMENTS, INFECTIOUS_COMPS
-
+from .stratifications.age import get_age_strat
 from .outputs import request_outputs
 
 base_params = Params(
@@ -42,6 +42,10 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # add death rate
     universal_death_rate = params.crude_death_rate
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
+
+    #Age Stratification
+    age_strat  = get_age_strat(params)
+    model.stratify_with(age_strat)
 
     # Derived outputs
     request_outputs(model)

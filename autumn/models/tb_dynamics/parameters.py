@@ -43,5 +43,7 @@ class Parameters:
     crude_death_rate: float
     # Running time
     time: Time
+    #Model structure
+    age_breakpoints: list
     # Output requests
     infectious_seed: float

@@ -1,0 +1,16 @@
+---
+# Base parameters for the tuberculosis model
+
+# Times to run over
+time:
+  start: 1800.
+  end: 2020.
+  step: 0.1
+
+# Country code
+iso3: null
+
+# Set up a parameter for the birth rate (its time-variant value will be automatically defined)
+crude_birth_rate: 1.
+start_population_size: 2000.
+infectious_seed: 1.

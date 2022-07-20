@@ -130,3 +130,10 @@ register_project(
     Region.MULTI,
     "autumn.projects.hierarchical_sir.multi.project",
 )
+
+# New TB Dynamics
+register_project(
+    Models.TBD,
+    Region.KIRIBATI,
+    "autumn.projects.tb_dynamics.kiribati.project",
+)

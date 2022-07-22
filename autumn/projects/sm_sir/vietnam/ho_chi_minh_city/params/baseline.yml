@@ -224,3 +224,4 @@ request_hospital_admissions_by_age: True
 request_hospital_occupancy_by_age: True
 request_icu_admissions_by_age: True
 request_icu_occupancy_by_age: True
+request_infection_deaths_by_age: True

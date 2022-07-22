@@ -613,6 +613,7 @@ def build_model(
         age_strat_params.cfr,
         time_to_event_params.death,
         voc_params,
+        params.request_infection_deaths_by_age,
     )
     outputs_builder.request_recovered_proportion(compartment_types)
     if params.activate_random_process:

@@ -186,6 +186,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             cfr_prop_requests: AgeSpecificProps,
             time_from_onset_to_death: TimeDistribution,
             voc_params: Optional[Dict[str, VocComponent]],
+            request_infection_deaths_by_age: bool,
     ):
         """
         Request infection death-related outputs.
@@ -199,6 +200,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             cfr_prop_requests: All the CFR-related requests, including the proportions themselves
             time_from_onset_to_death: Details of the statistical distribution for the time to death
             voc_params: The parameters pertaining to the VoCs being implemented in the model
+            request_infection_deaths_by_age: Whether to save outputs for infection deaths by age
 
         """
 
@@ -218,6 +220,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
+            age_infection_deaths_sources = []
+
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
@@ -233,6 +237,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
                     output_name = f"infection_deaths{strata_string}"
                     infection_deaths_sources.append(output_name)
+                    age_infection_deaths_sources.append(output_name)
 
                     # Calculate the multiplier based on age, immunity and strain
                     strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
@@ -248,6 +253,13 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         func=infection_deaths_func,
                         save_results=False,
                     )
+
+            # Request infection deaths by age
+            self.model.request_aggregate_output(
+                name=f"infection_deaths{agegroup_string}",
+                sources=age_infection_deaths_sources,
+                save_results=True,
+            )
 
         # Request aggregated infection deaths
         self.model.request_aggregate_output(

@@ -298,6 +298,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
 
+        # Functions to retrieve hospital occupancy from hospital admissions
         probas_stay_greater_than = precompute_probas_stay_greater_than(hospital_stay_duration, model_times)
         hospital_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
 
@@ -340,6 +341,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         save_results=False,
                     )
 
+            # Request hospital admissions by age
             if request_hospital_admissions_by_age:
                 self.model.request_aggregate_output(
                     name=f"hospital_admissions{agegroup_string}",
@@ -347,6 +349,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     save_results=True,
                 )
 
+            # Request hospital occupancy by age
             if request_hospital_occupancy_by_age:
                 self.model.request_function_output(
                     name=f"hospital_occupancy{agegroup_string}",

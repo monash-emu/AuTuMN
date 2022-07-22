@@ -6,4 +6,4 @@ class Models:
     SM_SIR = "sm_sir"
     HIERARCHICAL_SIR = "hierarchical_sir"
 
-    MODELS = [COVID_19, TB, TBS, EXAMPLE, SM_SIR, HIERARCHICAL_SIR]
+    MODELS = [COVID_19, TB, EXAMPLE, SM_SIR, HIERARCHICAL_SIR]

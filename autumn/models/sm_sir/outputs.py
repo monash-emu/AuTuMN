@@ -379,6 +379,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         model_times: np.ndarray,
         voc_params: Optional[Dict[str, VocComponent]],
         age_groups: List[int],
+        request_icu_admissions_by_age: bool,
+        request_icu_occupancy_by_age: bool,
     ):
         """
         Request ICU-related outputs.
@@ -391,14 +393,22 @@ class SmSirOutputsBuilder(OutputsBuilder):
             model_times: The model evaluation times
             voc_params: The parameters pertaining to the VoCs being implemented in the model
             age_groups: Modelled age group lower breakpoints
+            request_icu_admissions_by_age: Whether to save outputs for ICU admissions by age
+            request_icu_occupancy_by_age: Whether to save outputs for ICU occupancy by age
         """
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_hospitalisation_to_icu, model_times)
 
+        # Functions to retrieve ICU occupancy from ICU admissions
+        probas_stay_greater_than = precompute_probas_stay_greater_than(icu_stay_duration, model_times)
+        icu_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
+
         icu_admissions_sources = []
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
+
+            age_icu_admissions_sources = []
 
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
@@ -408,6 +418,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
                     output_name = f"icu_admissions{strata_string}"
                     icu_admissions_sources.append(output_name)
+                    age_icu_admissions_sources.append(output_name)
 
                     # Calculate the multiplier based on age, immunity and strain
                     strain_risk_modifier = 1. if not strain else voc_params[strain].icu_multiplier
@@ -422,6 +433,22 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         save_results=False,
                     )
 
+            # Request ICU admissions by age
+            if request_icu_admissions_by_age:
+                self.model.request_aggregate_output(
+                    name=f"icu_admissions{agegroup_string}",
+                    sources=age_icu_admissions_sources,
+                    save_results=True,
+                )
+
+            # Request ICU occupancy by age
+            if request_icu_occupancy_by_age:
+                self.model.request_function_output(
+                    name=f"icu_occupancy{agegroup_string}",
+                    sources=[f"icu_admissions{agegroup_string}"],
+                    func=icu_occupancy_func,
+                )
+
         # Request aggregated icu admissions
         self.model.request_aggregate_output(
             name="icu_admissions",
@@ -429,8 +456,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
         )
 
         # Request ICU occupancy
-        probas_stay_greater_than = precompute_probas_stay_greater_than(icu_stay_duration, model_times)
-        icu_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
         self.model.request_function_output(
             name="icu_occupancy",
             sources=["icu_admissions"],

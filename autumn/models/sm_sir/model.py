@@ -601,6 +601,8 @@ def build_model(
         model_times,
         voc_params,
         age_groups,
+        params.request_icu_admissions_by_age,
+        params.request_icu_occupancy_by_age,
     )
     outputs_builder.request_infection_deaths(
         model_times,

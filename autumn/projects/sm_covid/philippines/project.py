@@ -35,7 +35,7 @@ first_date_with_death = infection_deaths[round(infection_deaths) >= 1].index[0]
 model_end_time = baseline_params.to_dict()["time"]["end"]
 
 infection_deaths_target = infection_deaths.loc[first_date_with_death: model_end_time]
-cumulative_deaths_target = cumulative_infection_deaths[first_date_with_death: model_end_time]
+cumulative_deaths_target = cumulative_infection_deaths[: model_end_time][-1:]
 
 # Work out max infectious seeding time so transmission starts before first observed deaths
 min_seed_time = 30.

@@ -31,6 +31,8 @@ class Region:
     BHUTAN = "bhutan"
     THIMPHU = "thimphu"
     MULTI = "multi"
+    KIRIBATI = "kiribati"
+    NORTHERN_TERRITORY = "northern-territory"
 
     REGIONS = [
         PHILIPPINES,
@@ -65,6 +67,8 @@ class Region:
         BHUTAN,
         THIMPHU,
         MULTI,
+        KIRIBATI,
+        NORTHERN_TERRITORY,
     ]
 
     MALAYSIA_REGIONS = [
@@ -93,10 +97,7 @@ class Region:
         # DAVAO_CITY,
     ]
 
-    WPRO_REGIONS = [
-        MALAYSIA,
-        NCR
-    ]
+    WPRO_REGIONS = [MALAYSIA, NCR]
 
     @staticmethod
     def to_filename(name: str):

@@ -395,6 +395,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             age_groups: Modelled age group lower breakpoints
             request_icu_admissions_by_age: Whether to save outputs for ICU admissions by age
             request_icu_occupancy_by_age: Whether to save outputs for ICU occupancy by age
+
         """
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times

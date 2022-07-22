@@ -220,3 +220,8 @@ age_stratification:
 requested_cumulative_outputs: ["hospital_occupancy", "icu_occupancy"]
 cumulative_start_time: 913 # 1st July 2022
 request_immune_prop_by_age: True
+request_hospital_admissions_by_age: True
+request_hospital_occupancy_by_age: True
+request_icu_admissions_by_age: True
+request_icu_occupancy_by_age: True
+request_infection_deaths_by_age: True

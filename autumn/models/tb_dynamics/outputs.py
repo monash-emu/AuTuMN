@@ -24,3 +24,15 @@ class TbOutputBuilder:
         self.model.request_output_for_compartments(
             output_name, compartments, save_results=save_results
         )
+
+    def request_flow_output(self, output_name, flow_name, save_results=True):
+        self.model.request_output_for_flow(output_name, flow_name, save_results=save_results)
+        for location_stratum in self.locs:
+            loc_output_name = f"{output_name}Xlocation_{location_stratum}"
+            self.model.request_output_for_flow(
+                loc_output_name,
+                flow_name,
+                source_strata={"location": location_stratum},
+                save_results=save_results,
+            )
+        

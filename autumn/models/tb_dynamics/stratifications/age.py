@@ -19,7 +19,6 @@ def get_age_strat(params: Parameters) -> AgeStratification:
         )
 
     death_adjs = {str(k): Overwrite(v) for k, v in universal_death_funcs.items()}
-    print(death_adjs)
     for comp in BASE_COMPARTMENTS:
         flow_name = f"universal_death_for_{comp}"
         strat.set_flow_adjustments(flow_name, death_adjs)

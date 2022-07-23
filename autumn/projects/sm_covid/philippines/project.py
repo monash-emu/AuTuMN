@@ -68,7 +68,7 @@ else:
 # use_tuned_proposal_sds(priors, build_rel_path("proposal_sds.yml"))
 
 calibration = Calibration(
-    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params"
+    priors=priors, targets=targets, random_process=rp, metropolis_init="current_params", haario_scaling_factor=2.4, fixed_proposal_steps=500, metropolis_init_rel_step_size=.05
 )
 
 # FIXME: Replace with flexible Python plot request API.

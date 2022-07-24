@@ -10,9 +10,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 # https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
 os.environ["OMP_NUM_THREADS"] = "1"
 
-from autumn.settings import Models, Region
 from autumn.core.registry import register_project
-
+from autumn.settings import Models, Region
 
 # TB projects
 register_project(
@@ -20,9 +19,7 @@ register_project(
     Region.MARSHALL_ISLANDS,
     "autumn.projects.tuberculosis.marshall_islands.project",
 )
-register_project(
-    Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.philippines.project"
-)
+register_project(Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.philippines.project")
 
 # Example projects
 register_project(
@@ -121,6 +118,13 @@ register_project(
     Models.SM_SIR,
     Region.THIMPHU,
     "autumn.projects.sm_sir.bhutan.thimphu.project",
+)
+
+
+register_project(
+    Models.SM_SIR,
+    Region.NORTHERN_TERRITORY,
+    "autumn.projects.sm_sir.australia.northern-territory.project",
 )
 
 

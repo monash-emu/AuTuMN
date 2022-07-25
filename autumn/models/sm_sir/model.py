@@ -590,6 +590,8 @@ def build_model(
         time_to_event_params.hospitalisation,
         params.hospital_stay.hospital_all,
         voc_params,
+        params.request_hospital_admissions_by_age,
+        params.request_hospital_occupancy_by_age,
     )
     outputs_builder.request_icu_outputs(
         params.prop_icu_among_hospitalised,
@@ -599,6 +601,8 @@ def build_model(
         model_times,
         voc_params,
         age_groups,
+        params.request_icu_admissions_by_age,
+        params.request_icu_occupancy_by_age,
     )
     outputs_builder.request_infection_deaths(
         model_times,
@@ -609,6 +613,7 @@ def build_model(
         age_strat_params.cfr,
         time_to_event_params.death,
         voc_params,
+        params.request_infection_deaths_by_age,
     )
     outputs_builder.request_recovered_proportion(compartment_types)
     if params.activate_random_process:

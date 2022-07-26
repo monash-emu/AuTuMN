@@ -705,6 +705,7 @@ class Calibration:
                 all_params_dict,
                 proposed_loglike,
                 proposed_log_posterior,
+                proposed_acceptance_quantity,
                 accept,
                 self.run_num,
             )
@@ -1012,6 +1013,7 @@ class CalibrationOutputs:
         self,
         all_params_dict: dict,
         proposed_loglike: float,
+        proposed_ap_loglikelihood: float,
         proposed_acceptance_quantity: float,
         accept: bool,
         i_run: int,
@@ -1027,7 +1029,8 @@ class CalibrationOutputs:
             "chain": self.chain_id,
             "run": i_run,
             "loglikelihood": proposed_loglike,
-            "ap_loglikelihood": proposed_acceptance_quantity,
+            "ap_loglikelihood": proposed_ap_loglikelihood,
+            "acceptance_quantity": proposed_acceptance_quantity,    
             "accept": 1 if accept else 0,
             "weight": 0,  # Default to zero, re-calculate this later.
         }

@@ -452,13 +452,18 @@ def plot_multiple_param_traces(
     plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
-def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0, posterior=False):
+def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0, variable_key='loglikelihood'):
     """
     Plot the loglikelihood traces for each MCMC run.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
 
-    variable_key = "ap_loglikelihood" if posterior else "loglikelihood"
+    titles = {
+        "loglikelihood": "Loglikelihood",
+        "ap_loglikelihood": "Posterior Loglikelihood",
+        "acceptance_quantity": "Acceptance quantity",
+    }
+    assert variable_key in titles.keys()
 
     if len(mcmc_tables) == 1:  # there may be multiple chains within a single dataframe
         table_df = mcmc_tables[0]
@@ -473,14 +478,13 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
             accept_mask = table_df["accept"] == 1
             table_df[accept_mask][variable_key].plot.line(ax=axis, alpha=0.8, linewidth=0.7)
             
-    title = "Posterior Loglikelihood" if posterior else "Loglikelihood"
-    axis.set_ylabel(title)
+    axis.set_ylabel(titles[variable_key])
     axis.set_xlabel("Metropolis iterations")
 
     if burn_in:
         axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
-        y_min = min(table_df.loglikelihood[burn_in:])
-        y_max = max(table_df.loglikelihood[burn_in:])
+        y_min = min(table_df[variable_key][burn_in:])
+        y_max = max(table_df[variable_key][burn_in:])
         axis.set_ylim((y_min - 0.2 * (y_max - y_min), y_max + 0.2 * (y_max - y_min)))
 
     plotter.save_figure(fig, filename=f"{variable_key}-traces", title_text=f"{variable_key}-traces")

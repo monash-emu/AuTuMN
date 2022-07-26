@@ -31,10 +31,10 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 infection_deaths, cumulative_infection_deaths = ts_set["infection_deaths"], ts_set["cumulative_infection_deaths"]
 
-first_date_with_death = infection_deaths[round(infection_deaths) >= 1].index[0]
+first_date_with_death = 93  # infection_deaths[round(infection_deaths) >= 1].index[0]
 model_end_time = baseline_params.to_dict()["time"]["end"]
 
-infection_deaths_target = infection_deaths.loc[first_date_with_death: model_end_time]
+infection_deaths_target = infection_deaths.loc[first_date_with_death: model_end_time].rolling(window=7).mean()[6:][::7]
 cumulative_deaths_target = cumulative_infection_deaths.loc[: model_end_time][-1:]
 
 # Work out max infectious seeding time so transmission starts before first observed deaths

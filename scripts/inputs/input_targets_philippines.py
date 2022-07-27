@@ -17,8 +17,8 @@ PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
-PHL_doh_link = "1Nxl_LBmkX9XgV6vHui4w1Lj4zmMnqELk"  # sheet 05 daily report
-PHL_fassster_link = "15eDyTjXng2Zh38DVhmeNy0nQSqOMlGj3"
+PHL_doh_link = "1hukjrjCAAn88tG948KYd0ZqNO9oPUB7n"  # sheet 05 daily report
+PHL_fassster_link = "1U2mbe9_NLZRQYJFF88vP-N3Uerxui64C"
 
 # destination folders filepaths
 phl_inputs_dir = INPUT_DATA_PATH / "covid_phl"
@@ -51,9 +51,7 @@ def main():
     process_occupancy_data(working_df, "hospital")
 
     # Now fassster data
-    working_df = pd.read_csv(
-        fassster_filename
-    )  # copy_davao_city_to_region(fassster_filename)
+    working_df = pd.read_csv(fassster_filename)  # copy_davao_city_to_region(fassster_filename)
     working_df = rename_regions(working_df, "Region", "NCR", "4A", "07", "11")
     working_df = duplicate_data(working_df, "Region")
     working_df = filter_df_by_regions(working_df, "Region")
@@ -76,9 +74,7 @@ def fetch_phl_data():
         output_file.write(req.content)
 
     with ZipFile(PHL_fassster_dest) as z:
-        filename = [
-            each.filename for each in z.filelist if each.filename.startswith("2022")
-        ]
+        filename = [each.filename for each in z.filelist if each.filename.startswith("2022")]
         if len(filename) == 1:
             with z.open(filename[0]) as f:
                 pd.read_csv(f).to_csv(phl_inputs_dir / filename[0])
@@ -88,16 +84,13 @@ def fassster_data_filepath():
     fassster_filename = [
         filename
         for filename in phl_inputs_dir.glob("*")
-        if filename.stem.startswith("ConfirmedCases_Final_")
-        or filename.stem.startswith("2022")
+        if filename.stem.startswith("ConfirmedCases_Final_") or filename.stem.startswith("2022")
     ]
     fassster_filename = fassster_filename[0]
     return fassster_filename
 
 
-def rename_regions(
-    df: pd.DataFrame, regionSpelling, ncrName, calName, cenVisName, davName
-):
+def rename_regions(df: pd.DataFrame, regionSpelling, ncrName, calName, cenVisName, davName):
     # df = pd.read_csv(filePath)
     df[regionSpelling] = df[regionSpelling].replace(
         {
@@ -152,9 +145,7 @@ def process_occupancy_data(df: pd.DataFrame, occupancy_type: str) -> None:
 
 def process_accumulated_death_data(df: pd.DataFrame):
     fassster_data_deaths = df[df["Date_Died"].notna()]
-    fassster_data_deaths.loc[:, "Date_Died"] = pd.to_datetime(
-        fassster_data_deaths["Date_Died"]
-    )
+    fassster_data_deaths.loc[:, "Date_Died"] = pd.to_datetime(fassster_data_deaths["Date_Died"])
     fassster_data_deaths.loc[:, "times"] = (
         fassster_data_deaths.loc[:, "Date_Died"] - COVID_BASE_DATETIME
     )
@@ -173,9 +164,7 @@ def process_accumulated_death_data(df: pd.DataFrame):
 
 def process_notifications_data(df: pd.DataFrame):
     fassster_data_agg = df.groupby(["Region", "Report_Date"]).size()
-    fassster_data_agg = fassster_data_agg.to_frame(
-        name="daily_notifications"
-    ).reset_index()
+    fassster_data_agg = fassster_data_agg.to_frame(name="daily_notifications").reset_index()
     fassster_data_agg["Report_Date"] = pd.to_datetime(fassster_data_agg["Report_Date"])
     # make sure all dates within range are included
     fassster_data_agg["times"] = fassster_data_agg.Report_Date - COVID_BASE_DATETIME
@@ -221,16 +210,12 @@ def process_notifications_data(df: pd.DataFrame):
     fassster_data_final.to_csv(notifications_dest)
 
 
-def write_to_file(
-    icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, daily_deaths_tmp, file_path
-):
+def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, daily_deaths_tmp, file_path):
     with open(file_path, mode="r") as f:
         targets = json.load(f)
 
         targets["notifications"]["times"] = list(notifications_tmp["times"])
-        targets["notifications"]["values"] = list(
-            notifications_tmp["mean_daily_notifications"]
-        )
+        targets["notifications"]["values"] = list(notifications_tmp["mean_daily_notifications"])
         targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
         targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
         targets["cumulative_deaths"]["times"] = list(deaths_tmp["times"])

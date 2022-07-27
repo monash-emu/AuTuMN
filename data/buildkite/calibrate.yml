@@ -42,8 +42,12 @@ steps:
       value: sm_sir:myanmar
     - label: National Capital Region (sm_sir)
       value: sm_sir:national-capital-region
+    - label: Northern Territory (sm_sir)
+      value: sm_sir:northern-territory
     - label: Thimphu (sm_sir)
       value: sm_sir:thimphu
+    - label: Kiribati (tb_dynamics)
+      value: tb_dynamics:kiribati
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)

@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Optional, Union
 from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
+from autumn.models.sm_sir.parameters import VocComponent
+
 BASE_DATE = COVID_BASE_DATETIME.date()
 
 # Forbid additional arguments to prevent extraneous parameter specification
@@ -308,6 +310,8 @@ class Parameters:
 
     age_stratification: AgeStratification
     vaccine_effects: VaccineEffects
+
+    voc_emergence: Optional[Dict[str, VocComponent]]
 
     # Random process
     activate_random_process: bool

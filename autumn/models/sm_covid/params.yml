@@ -142,6 +142,8 @@ vaccine_effects:
   ve_hospitalisation: .9  #FIXME: dummy data 
   ve_death: .9  #FIXME: dummy data 
 
+voc_emergence: null
+
 time_from_onset_to_event:  # using time of symptom onset as reference 
   hospitalisation:
     distribution: gamma

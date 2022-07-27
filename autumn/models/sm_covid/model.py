@@ -19,7 +19,10 @@ from .stratifications.immunity import (
     set_dynamic_vaccination_flows
 )
 
+
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups, get_agegroup_strat
+from autumn.models.sm_sir.stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
+
 from autumn.settings.constants import COVID_BASE_DATETIME
 
 # Base date used to calculate mixing matrix times
@@ -240,6 +243,27 @@ def build_model(
         suscept_adjs,
     )
     model.stratify_with(age_strat)
+
+    """
+    Apply strains stratification
+    """
+
+    voc_params = params.voc_emergence
+    if params.voc_emergence:
+
+        # Build and apply the stratification
+        strain_strat = get_strain_strat(voc_params, BASE_COMPARTMENTS)
+        model.stratify_with(strain_strat)
+
+        # Seed the VoCs from the requested point in time
+        seed_vocs(model, voc_params, Compartment.INFECTIOUS)
+
+        # Keep track of the strain strata, which are needed for various purposes below
+        strain_strata = strain_strat.strata
+
+    # Need a placeholder for outputs and reinfection flows otherwise
+    else:
+        strain_strata = [""]
 
     """
     Immunity stratification

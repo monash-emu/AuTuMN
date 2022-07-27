@@ -18,10 +18,11 @@ from .stratifications.immunity import (
     adjust_susceptible_infection_without_strains,
     set_dynamic_vaccination_flows
 )
+from .stratifications.strains import seed_vocs_using_gisaid
 
-
+# Import modules from sm_sir model
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups, get_agegroup_strat
-from autumn.models.sm_sir.stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
+from autumn.models.sm_sir.stratifications.strains import get_strain_strat, apply_reinfection_flows_with_strains
 
 from autumn.settings.constants import COVID_BASE_DATETIME
 
@@ -256,7 +257,7 @@ def build_model(
         model.stratify_with(strain_strat)
 
         # Seed the VoCs from the requested point in time
-        seed_vocs(model, voc_params, Compartment.INFECTIOUS)
+        seed_vocs_using_gisaid(model, voc_params, Compartment.INFECTIOUS, country.country_name)
 
         # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata

@@ -10,8 +10,6 @@ from typing import Any, Dict, List, Optional, Union
 from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
-from autumn.models.sm_sir.parameters import VocComponent
-
 BASE_DATE = COVID_BASE_DATETIME.date()
 
 # Forbid additional arguments to prevent extraneous parameter specification
@@ -136,6 +134,7 @@ class Country(BaseModel):
     """
 
     iso3: str
+    country_name: str
 
     @validator("iso3", pre=True, allow_reuse=True)
     def check_length(iso3):
@@ -242,6 +241,59 @@ class VaccineEffects(BaseModel):
     ve_hospitalisation: float
     ve_death: float
     
+class VocSeed(BaseModel):
+
+    time_from_gisaid_report: float
+    entry_rate: float
+    seed_duration: float
+
+    check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
+    check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))
+
+class VocComponent(BaseModel):
+    """
+    Parameters defining the emergence profile of the Variants of Concerns
+    """
+
+    starting_strain: bool
+    seed_prop: float
+    new_voc_seed: Optional[VocSeed]
+    contact_rate_multiplier: float
+    relative_latency: Optional[float]
+    relative_active_period: Optional[float]
+    vacc_immune_escape: float
+    cross_protection: Dict[str, float]
+    hosp_protection: Optional[float]
+    death_protection: Optional[float]
+    icu_multiplier: Optional[float]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_starting_strain_multiplier(cls, values):
+        if values["starting_strain"]:
+            multiplier = values["contact_rate_multiplier"]
+            msg = f"Starting or 'wild type' strain must have a contact rate multiplier of one: {multiplier}"
+            assert multiplier == 1.0, msg
+        return values
+
+    @validator("icu_multiplier", pre=True, allow_reuse=True)
+    def check_times(multiplier):
+        if multiplier:
+            assert 0.0 <= multiplier, "ICU multiplier negative"
+        return multiplier
+
+    check_immune_escape = validator("vacc_immune_escape", allow_reuse=True)(get_check_prop("vacc_immune_escape"))
+    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
+    check_relative_latency = validator("relative_latency", allow_reuse=True)(
+        get_check_non_neg("relative_latency")
+    )
+    check_relative_active_period = validator("relative_active_period", allow_reuse=True)(
+        get_check_non_neg("relative_active_period")
+    )
+    check_death_protection = validator("death_protection", allow_reuse=True)(
+        get_check_prop("death_protection")
+    )
+
+
 class TimeDistribution(BaseModel):
 
     distribution: str

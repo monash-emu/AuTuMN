@@ -120,5 +120,4 @@ def set_dynamic_vaccination_flows(
             dest=compartment, 
             source_strata={"immunity": ImmunityStratum.UNVACCINATED}, 
             dest_strata={"immunity": ImmunityStratum.VACCINATED}, 
-            expected_flow_count=len(age_groups)
         )

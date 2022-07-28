@@ -151,23 +151,23 @@ voc_emergence: null
 #     new_voc_seed: null
 #     contact_rate_multiplier: 1.
 #     vacc_immune_escape: 0.
-#     hosp_protection: 0.
-#     death_protection: 0.
-#     icu_multiplier: 1.
+#     hosp_risk_adjuster: 1.
+#     death_risk_adjuster: 1.
+#     icu_risk_adjuster: 1.
 #     cross_protection:
 #       wild_type: 1.
-#       delta: 0.4 # 60% immune escape
+#       delta: 0.4 # 60% immune escape # FIXME
 #   delta:
 #     starting_strain: false
 #     seed_prop: 0.
 #     new_voc_seed:
 #       time_from_gisaid_report: 0.
 #       seed_duration: 10.
-#     contact_rate_multiplier: 1.
-#     vacc_immune_escape: 0.
-#     hosp_protection: 0.
-#     death_protection: 0.
-#     icu_multiplier: 1.
+#     contact_rate_multiplier: 1. # FIXME
+#     vacc_immune_escape: 0. # FIXME
+#     hosp_risk_adjuster: 2.1  # Fisman et al. doi: 10.1503/cmaj.211248
+#     death_risk_adjuster: 2.3 # Fisman et al. doi: 10.1503/cmaj.211248
+#     icu_risk_adjuster: 3.4 # Fisman et al. doi: 10.1503/cmaj.211248
 #     cross_protection:
 #       wild_type: 1.
 #       delta: 1.

@@ -261,9 +261,9 @@ class VocComponent(BaseModel):
     relative_active_period: Optional[float]
     vacc_immune_escape: float
     cross_protection: Dict[str, float]
-    hosp_protection: Optional[float]
-    death_protection: Optional[float]
-    icu_multiplier: Optional[float]
+    hosp_risk_adjuster: Optional[float]
+    death_risk_adjuster: Optional[float]
+    icu_risk_adjuster: Optional[float]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_starting_strain_multiplier(cls, values):

@@ -177,7 +177,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     infection_deaths_sources.append(output_name)
 
                     # Calculate the multiplier based on age, immunity and strain
-                    strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
+                    strain_risk_modifier = 1. if not strain else voc_params[strain].death_risk_adjuster
                     death_risk = adj_death_props[agegroup] * strain_risk_modifier
 
                     # Get the infection deaths function for convolution

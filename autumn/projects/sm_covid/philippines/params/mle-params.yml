@@ -1,14 +1,14 @@
-age_stratification.ifr.multiplier: 1.178324013169653
-contact_rate: 0.06682816810495322
-infectious_seed_time: 56.03484802636622
-random_process.noise_sd: 0.40267351043452476
-random_process.values(1): -0.645906559719928
-random_process.values(10): -0.8099586648176997
-random_process.values(2): -0.4889010546174284
-random_process.values(3): -0.7180325037085831
-random_process.values(4): -0.6885407547594038
-random_process.values(5): -0.6006129913171807
-random_process.values(6): -0.49479078835117996
-random_process.values(7): -0.7442934481718513
-random_process.values(8): -0.692198244635313
-random_process.values(9): -0.6673527429383039
+age_stratification.ifr.multiplier: 1. #178324013169653
+# contact_rate: 0.06682816810495322
+# infectious_seed_time: 56.03484802636622
+# random_process.noise_sd: 0.40267351043452476
+# random_process.values(1): -0.645906559719928
+# random_process.values(10): -0.8099586648176997
+# random_process.values(2): -0.4889010546174284
+# random_process.values(3): -0.7180325037085831
+# random_process.values(4): -0.6885407547594038
+# random_process.values(5): -0.6006129913171807
+# random_process.values(6): -0.49479078835117996
+# random_process.values(7): -0.7442934481718513
+# random_process.values(8): -0.692198244635313
+# random_process.values(9): -0.6673527429383039

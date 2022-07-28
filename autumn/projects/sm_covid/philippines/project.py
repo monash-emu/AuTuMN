@@ -46,6 +46,7 @@ priors = [
     UniformPrior("contact_rate", [0.03, 0.20]),  
     UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),  
     UniformPrior("age_stratification.ifr.multiplier", [.5, 1.5]),
+    UniformPrior("voc_emergence.delta.new_voc_seed.time_from_gisaid_report", [-30, 30]),
 
     # UniformPrior("infection_deaths_dispersion_param", [5, 15]),  # greater values lead to a more skewed likelihood
 ]

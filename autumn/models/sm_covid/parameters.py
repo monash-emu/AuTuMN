@@ -156,7 +156,6 @@ class Population(BaseModel):
         assert 1900 <= year <= 2050, msg
         return year
 
-
 class CompartmentSojourn(BaseModel):
     """
     Compartment sojourn times, i.e. the mean period of time spent in a compartment.
@@ -273,22 +272,18 @@ class VocComponent(BaseModel):
             assert multiplier == 1.0, msg
         return values
 
-    @validator("icu_multiplier", pre=True, allow_reuse=True)
+    @validator("icu_risk_adjuster", pre=True, allow_reuse=True)
     def check_times(multiplier):
         if multiplier:
             assert 0.0 <= multiplier, "ICU multiplier negative"
         return multiplier
 
     check_immune_escape = validator("vacc_immune_escape", allow_reuse=True)(get_check_prop("vacc_immune_escape"))
-    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
     check_relative_latency = validator("relative_latency", allow_reuse=True)(
         get_check_non_neg("relative_latency")
     )
     check_relative_active_period = validator("relative_active_period", allow_reuse=True)(
         get_check_non_neg("relative_active_period")
-    )
-    check_death_protection = validator("death_protection", allow_reuse=True)(
-        get_check_prop("death_protection")
     )
 
 
@@ -354,6 +349,8 @@ class Parameters:
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
    
+    compartment_replicates: Dict[str, int]
+
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay
     prop_icu_among_hospitalised: float
@@ -379,3 +376,15 @@ class Parameters:
         int_age_groups = [int(i_group) for i_group in COVID_BASE_AGEGROUPS]
         assert all([i_group in int_age_groups for i_group in age_groups]), msg
         return age_groups
+
+    @validator("compartment_replicates", allow_reuse=True)
+    def validate_comp_replicates(compartment_replicates):
+        replicated_comps = list(compartment_replicates.keys())
+        msg = "Replicated compartments must be latent and infectious"
+        assert replicated_comps == ["latent", "infectious"], msg
+
+        n_replicates = list(compartment_replicates.values())
+        msg = "Number of requested replicates should be positive"
+        assert all([n > 0 for n in n_replicates]), msg
+        
+        return compartment_replicates

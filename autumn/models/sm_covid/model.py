@@ -12,17 +12,16 @@ from autumn.model_features.computed_values import FunctionWrapper
 from autumn.model_features.random_process import get_random_process
 from .outputs import SmCovidOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn
-from .constants import BASE_COMPARTMENTS, Compartment, FlowName
+from .constants import Compartment, REPLICABLE_COMPARTMENTS, FlowName
 from .stratifications.immunity import (
     get_immunity_strat,
     adjust_susceptible_infection_without_strains,
     set_dynamic_vaccination_flows
 )
-from .stratifications.strains import seed_vocs_using_gisaid, apply_reinfection_flows_with_strains, adjust_reinfection_with_strains, adjust_susceptible_infection_with_strains
+from .stratifications.strains import get_strain_strat, seed_vocs_using_gisaid, apply_reinfection_flows_with_strains, adjust_reinfection_with_strains, adjust_susceptible_infection_with_strains
 
 # Import modules from sm_sir model
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups, get_agegroup_strat
-from autumn.models.sm_sir.stratifications.strains import get_strain_strat
 
 from autumn.settings.constants import COVID_BASE_DATETIME
 
@@ -30,7 +29,7 @@ from autumn.settings.constants import COVID_BASE_DATETIME
 base_params = Params(build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False)
 
 
-def set_infectious_seed(model, infectious_seed_time, seed_duration, infectious_seed):
+def set_infectious_seed(model, infectious_seed_time, seed_duration, infectious_seed, dest_compartment):
 
     entry_rate = infectious_seed / seed_duration
 
@@ -40,7 +39,7 @@ def set_infectious_seed(model, infectious_seed_time, seed_duration, infectious_s
     model.add_importation_flow(
         FlowName.PRIMARY_INFECTIOUS_SEEDING,
         infectious_seed_func,
-        dest=Compartment.INFECTIOUS,
+        dest=dest_compartment,
         split_imports=True
     )
 
@@ -107,13 +106,20 @@ def build_model(
     time_params = params.time
     time_to_event_params = params.time_from_onset_to_event
 
-    # Determine the infectious compartment(s)
-    infectious_compartments = [Compartment.INFECTIOUS]
+    # Determine the lists of latent and infectious compartments based on replicate requests
+    n_latent_comps = params.compartment_replicates['latent']
+    latent_compartments = [f"{Compartment.LATENT}_{i}" for i in range(n_latent_comps)]
+
+    n_infectious_comps = params.compartment_replicates['infectious']
+    infectious_compartments = [f"{Compartment.INFECTIOUS}_{i}" for i in range(n_infectious_comps)]
+
+    # Define the full list of compartments
+    base_compartments = [Compartment.SUSCEPTIBLE] + latent_compartments + infectious_compartments + [Compartment.RECOVERED]
 
     # Create the model object
     model = CompartmentalModel(
         times=(time_params.start, time_params.end),
-        compartments=BASE_COMPARTMENTS,
+        compartments=base_compartments,
         infectious_compartments=infectious_compartments,
         timestep=time_params.step,
         ref_date=COVID_BASE_DATETIME,
@@ -154,22 +160,31 @@ def build_model(
     model.set_initial_population(init_pop)
 
     # Set infectious seed
-    set_infectious_seed(model, params.infectious_seed_time, params.seed_duration, infectious_seed)
+    set_infectious_seed(model, params.infectious_seed_time, params.seed_duration, infectious_seed, infectious_compartments[0])
 
     """
     Add intercompartmental flows
     """
-    # From latent to active infection
-    progression_rate = 1. / sojourns.latent
+    # Transition within latent states 
+    progression_rate = 1. / (sojourns.latent * n_latent_comps)
+    for i_latent in range(n_latent_comps - 1):
+        model.add_transition_flow(
+            name=f"within_latent_{i_latent}",
+            fractional_rate=progression_rate,
+            source=latent_compartments[i_latent],
+            dest=latent_compartments[i_latent + 1],
+        )
+
+    # Progression from latent to active
     model.add_transition_flow(
         name=FlowName.PROGRESSION,
         fractional_rate=progression_rate,
-        source=Compartment.LATENT,
-        dest=Compartment.INFECTIOUS,
+        source=latent_compartments[-1],
+        dest=infectious_compartments[0],
     )
 
     # Transmission
-    infection_dest, infectious_entry_flow = Compartment.LATENT, FlowName.PROGRESSION
+    infection_dest, infectious_entry_flow = latent_compartments[0], FlowName.PROGRESSION
 
     if params.activate_random_process:
 
@@ -194,12 +209,21 @@ def build_model(
         dest=infection_dest,
     )
 
-    # Add recovery flow 
-    recovery_rate = 1. / sojourns.active
+    # Transition within infectious states 
+    recovery_rate = 1. / (sojourns.active * n_infectious_comps)
+    for i_active in range(n_infectious_comps - 1):
+        model.add_transition_flow(
+            name=f"within_infectious_{i_active}",
+            fractional_rate=recovery_rate,
+            source=infectious_compartments[i_active],
+            dest=infectious_compartments[i_active + 1],
+        )
+        
+    # Recovery transition
     model.add_transition_flow(
         name=FlowName.RECOVERY,
         fractional_rate=recovery_rate,
-        source=Compartment.INFECTIOUS,
+        source=infectious_compartments[-1],
         dest=Compartment.RECOVERED,
     )
 
@@ -240,7 +264,7 @@ def build_model(
         age_groups,
         age_pops,
         mixing_matrices,
-        BASE_COMPARTMENTS,
+        base_compartments,
         params.is_dynamic_mixing_matrix,
         suscept_adjs,
     )
@@ -251,7 +275,7 @@ def build_model(
     """
     if voc_params:
         # Build the stratification using the same function as for the sm_sir model
-        strain_strat = get_strain_strat(voc_params, BASE_COMPARTMENTS)
+        strain_strat = get_strain_strat(voc_params, base_compartments)
         # Make sure the original infectious seed is split according to the strain-specific seed proportions
         strain_strat.set_flow_adjustments(
             FlowName.PRIMARY_INFECTIOUS_SEEDING, 
@@ -261,7 +285,7 @@ def build_model(
         model.stratify_with(strain_strat)
 
         # Seed the VoCs from the requested point in time
-        seed_vocs_using_gisaid(model, voc_params, Compartment.INFECTIOUS, country.country_name, infectious_seed)
+        seed_vocs_using_gisaid(model, voc_params, infectious_compartments[0], country.country_name, infectious_seed)
 
         # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata
@@ -276,8 +300,8 @@ def build_model(
     if voc_params:
         apply_reinfection_flows_with_strains(
             model,
-            BASE_COMPARTMENTS,
-            Compartment.LATENT,
+            base_compartments,
+            latent_compartments[0],
             age_groups,
             voc_params,
             strain_strata,
@@ -292,7 +316,7 @@ def build_model(
     # Get the immunity stratification
     vaccine_effects_params = params.vaccine_effects
     immunity_strat = get_immunity_strat(
-        BASE_COMPARTMENTS,
+        base_compartments,
     )
 
     # Adjust all transmission flows for immunity status and strain status (when relevant)
@@ -317,18 +341,18 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     # Apply dynamic vaccination flows
-    set_dynamic_vaccination_flows(BASE_COMPARTMENTS, model, iso3, age_groups)
+    set_dynamic_vaccination_flows(base_compartments, model, iso3, age_groups)
     
     """
     Get the applicable outputs
     """
     model_times = model.times
 
-    outputs_builder = SmCovidOutputsBuilder(model, BASE_COMPARTMENTS)
+    outputs_builder = SmCovidOutputsBuilder(model, base_compartments)
     
     outputs_builder.request_incidence(age_groups, strain_strata, infectious_entry_flow, params.request_incidence_by_age)
     outputs_builder.request_infection_deaths(model_times, age_groups, strain_strata, iso3, region, age_strat_params.ifr, params.vaccine_effects.ve_death, time_to_event_params.death, voc_params)
-    outputs_builder.request_recovered_proportion(BASE_COMPARTMENTS)
+    outputs_builder.request_recovered_proportion(base_compartments)
     outputs_builder.request_immunity_props(immunity_strat.strata, age_pops, params.request_immune_prop_by_age)
 
     outputs_builder.request_cumulative_outputs(params.requested_cumulative_outputs, params.cumulative_start_time)

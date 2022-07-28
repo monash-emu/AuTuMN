@@ -24,6 +24,10 @@ time:
   end: 731  # 31 Dec 2021
   step: 1
 
+compartment_replicates:
+  latent: 4
+  infectious: 4
+
 contact_rate: 0.05
 infectious_seed_time: 60
 seed_duration: 7

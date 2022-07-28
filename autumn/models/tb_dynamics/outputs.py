@@ -7,7 +7,7 @@ def request_outputs(model: CompartmentalModel):
     out = TbOutputBuilder(model)
 
     # Population
-    out.request_compartment_output("total_population", BASE_COMPARTMENTS)
+    out.request_compartment_output("population_size", BASE_COMPARTMENTS)
 
 
 class TbOutputBuilder:

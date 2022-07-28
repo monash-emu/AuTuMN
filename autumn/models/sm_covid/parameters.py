@@ -256,8 +256,6 @@ class VocComponent(BaseModel):
     seed_prop: float
     new_voc_seed: Optional[VocSeed]
     contact_rate_multiplier: float
-    relative_latency: Optional[float]
-    relative_active_period: Optional[float]
     vacc_immune_escape: float
     cross_protection: Dict[str, float]
     hosp_risk_adjuster: Optional[float]
@@ -279,12 +277,6 @@ class VocComponent(BaseModel):
         return multiplier
 
     check_immune_escape = validator("vacc_immune_escape", allow_reuse=True)(get_check_prop("vacc_immune_escape"))
-    check_relative_latency = validator("relative_latency", allow_reuse=True)(
-        get_check_non_neg("relative_latency")
-    )
-    check_relative_active_period = validator("relative_active_period", allow_reuse=True)(
-        get_check_non_neg("relative_active_period")
-    )
 
 
 class TimeDistribution(BaseModel):

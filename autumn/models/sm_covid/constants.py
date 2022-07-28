@@ -12,6 +12,7 @@ class Compartment:
 
 # All available flows
 class FlowName:
+    PRIMARY_INFECTIOUS_SEEDING = "primary_infectious_seeding"
     INFECTION = "infection"
     PROGRESSION = "progression"
     RECOVERY = "recovery"

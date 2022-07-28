@@ -1,7 +1,7 @@
 from typing import List
 import pandas as pd
 
-from summer import CompartmentalModel
+from summer import CompartmentalModel, Multiply
 
 from autumn.core import inputs
 from autumn.core.project import Params, build_rel_path
@@ -35,10 +35,10 @@ def set_infectious_seed(model, infectious_seed_time, seed_duration, infectious_s
     entry_rate = infectious_seed / seed_duration
 
     def infectious_seed_func(time: float, computed_values):
-        return entry_rate if 0. < time - infectious_seed_time < seed_duration else 0.
+        return entry_rate if 0. < time - infectious_seed_time < seed_duration else 0.  
 
     model.add_importation_flow(
-        f"infectious_seeding",
+        FlowName.PRIMARY_INFECTIOUS_SEEDING,
         infectious_seed_func,
         dest=Compartment.INFECTIOUS,
         split_imports=True
@@ -102,7 +102,8 @@ def build_model(
     region = pop.region
     age_groups = [str(age) for age in params.age_groups]
     age_strat_params = params.age_stratification
-    sojourns = params.sojourns    
+    sojourns = params.sojourns
+    voc_params = params.voc_emergence
     time_params = params.time
     time_to_event_params = params.time_from_onset_to_event
 
@@ -248,12 +249,15 @@ def build_model(
     """
     Apply strains stratification
     """
-
-    voc_params = params.voc_emergence
-    if params.voc_emergence:
-
-        # Build and apply the stratification
+    if voc_params:
+        # Build the stratification using the same function as for the sm_sir model
         strain_strat = get_strain_strat(voc_params, BASE_COMPARTMENTS)
+        # Make sure the original infectious seed is split according to the strain-specific seed proportions
+        strain_strat.set_flow_adjustments(
+            FlowName.PRIMARY_INFECTIOUS_SEEDING, 
+            {strain: Multiply(voc_params[strain].seed_prop) for strain in voc_params}
+        )
+        # Apply the stratification
         model.stratify_with(strain_strat)
 
         # Seed the VoCs from the requested point in time

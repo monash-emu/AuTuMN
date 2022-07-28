@@ -162,7 +162,6 @@ voc_emergence: null
 #     seed_prop: 0.
 #     new_voc_seed:
 #       time_from_gisaid_report: 0.
-#       entry_rate: 10.
 #       seed_duration: 10.
 #     contact_rate_multiplier: 1.
 #     vacc_immune_escape: 0.

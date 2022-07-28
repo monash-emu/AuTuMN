@@ -18,11 +18,11 @@ from .stratifications.immunity import (
     adjust_susceptible_infection_without_strains,
     set_dynamic_vaccination_flows
 )
-from .stratifications.strains import seed_vocs_using_gisaid
+from .stratifications.strains import seed_vocs_using_gisaid, apply_reinfection_flows_with_strains, adjust_reinfection_with_strains, adjust_susceptible_infection_with_strains
 
 # Import modules from sm_sir model
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups, get_agegroup_strat
-from autumn.models.sm_sir.stratifications.strains import get_strain_strat, apply_reinfection_flows_with_strains
+from autumn.models.sm_sir.stratifications.strains import get_strain_strat
 
 from autumn.settings.constants import COVID_BASE_DATETIME
 
@@ -261,7 +261,7 @@ def build_model(
         model.stratify_with(strain_strat)
 
         # Seed the VoCs from the requested point in time
-        seed_vocs_using_gisaid(model, voc_params, Compartment.INFECTIOUS, country.country_name)
+        seed_vocs_using_gisaid(model, voc_params, Compartment.INFECTIOUS, country.country_name, infectious_seed)
 
         # Keep track of the strain strata, which are needed for various purposes below
         strain_strata = strain_strat.strata
@@ -269,6 +269,21 @@ def build_model(
     # Need a placeholder for outputs and reinfection flows otherwise
     else:
         strain_strata = [""]
+
+    """
+    Apply the reinfection flows (knowing the strain stratification)
+    """
+    if voc_params:
+        apply_reinfection_flows_with_strains(
+            model,
+            BASE_COMPARTMENTS,
+            Compartment.LATENT,
+            age_groups,
+            voc_params,
+            strain_strata,
+            contact_rate,
+            suscept_adjs,
+        )
 
     """
     Immunity stratification
@@ -280,8 +295,23 @@ def build_model(
         BASE_COMPARTMENTS,
     )
 
-    # Adjust infection of susceptibles for immunity status
-    adjust_susceptible_infection_without_strains(vaccine_effects_params.ve_infection, immunity_strat)
+    # Adjust all transmission flows for immunity status and strain status (when relevant)
+    ve_against_infection = vaccine_effects_params.ve_infection
+    if voc_params:
+        msg = "Strain stratification not present in model"
+        assert "strain" in [strat.name for strat in model._stratifications], msg
+        adjust_susceptible_infection_with_strains(
+            ve_against_infection,
+            immunity_strat,
+            voc_params,
+        )
+        adjust_reinfection_with_strains(
+            ve_against_infection,
+            immunity_strat,
+            voc_params,
+        )
+    else:
+        adjust_susceptible_infection_without_strains(ve_against_infection, immunity_strat)
 
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)

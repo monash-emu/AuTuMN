@@ -17,6 +17,7 @@ class FlowName:
     PROGRESSION = "progression"
     RECOVERY = "recovery"
     VACCINATION = "vaccination"
+    REINFECTION = "reinfection"
 
 
 # Routinely implemented compartments

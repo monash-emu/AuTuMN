@@ -244,11 +244,9 @@ class VaccineEffects(BaseModel):
 class VocSeed(BaseModel):
 
     time_from_gisaid_report: float
-    entry_rate: float
     seed_duration: float
 
     check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
-    check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))
 
 class VocComponent(BaseModel):
     """

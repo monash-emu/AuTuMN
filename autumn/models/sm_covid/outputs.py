@@ -364,11 +364,11 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
 
         # All the compartments other than the fully susceptible have been infected at least once
-        recovered_compartments = [comp for comp in base_comps if comp != Compartment.SUSCEPTIBLE]
+        ever_infected_compartments = [comp for comp in base_comps if comp != Compartment.SUSCEPTIBLE]
 
         self.model.request_output_for_compartments(
             "ever_infected",
-            recovered_compartments,
+            ever_infected_compartments,
         )
         self.model.request_function_output(
             "prop_ever_infected",

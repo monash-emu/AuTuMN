@@ -39,11 +39,6 @@ def assign_population(seed: float, total_pop: int, model: CompartmentalModel):
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """Build the compartmental model from the provided parameters.
-
-    Args:
-        params (dict): Build the compartmental model from the provided parameters.
-        build_options (dict, optional). Defaults to None.
-
     Returns:
         CompartmentalModel: Returns tb_dynamics Model
     """
@@ -85,8 +80,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     """Add Stratification to the model"""
     age_strat = get_age_strat(params.age_breakpoints, iso3, age_pops, BASE_COMPARTMENTS)
     model.stratify_with(age_strat)
-    print(age_breakpoints)
-    print(params.age_breakpoints)
 
     """Generate outputs"""
     request_outputs(model)

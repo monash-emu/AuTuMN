@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import date
-from summer import CompartmentalModel, Stratification, Multiply
+from summer import CompartmentalModel, Stratification, Multiply, StrainStratification
 from typing import Dict, Union, List
 
 from autumn.core.utils.utils import multiply_function_or_constant

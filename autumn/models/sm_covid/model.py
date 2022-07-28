@@ -296,8 +296,8 @@ def build_model(
 
     outputs_builder = SmCovidOutputsBuilder(model, BASE_COMPARTMENTS)
     
-    outputs_builder.request_incidence(age_groups, infectious_entry_flow, params.request_incidence_by_age)
-    outputs_builder.request_infection_deaths(model_times, age_groups, iso3, region, age_strat_params.ifr, params.vaccine_effects.ve_death, time_to_event_params.death)
+    outputs_builder.request_incidence(age_groups, strain_strata, infectious_entry_flow, params.request_incidence_by_age)
+    outputs_builder.request_infection_deaths(model_times, age_groups, strain_strata, iso3, region, age_strat_params.ifr, params.vaccine_effects.ve_death, time_to_event_params.death, voc_params)
     outputs_builder.request_recovered_proportion(BASE_COMPARTMENTS)
     outputs_builder.request_immunity_props(immunity_strat.strata, age_pops, params.request_immune_prop_by_age)
 

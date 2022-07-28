@@ -56,7 +56,8 @@ class SmCovidOutputsBuilder(OutputsBuilder):
    
     def request_incidence(
             self,      
-            age_groups: List[str],      
+            age_groups: List[str],     
+            strain_strata: List[str], 
             incidence_flow: str,
             request_incidence_by_age: bool,
     ):
@@ -68,6 +69,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         Args:
             age_groups: The modelled age groups
+            strain_strata: The modelled strains
             incidence_flow: The name of the flow representing incident cases
             request_incidence_by_age: Whether to save outputs for incidence by age
 
@@ -82,19 +84,24 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             age_incidence_sources = []    
 
             for immunity_stratum in IMMUNITY_STRATA:
-                immunity_string = f"Ximmunity_{immunity_stratum}"
+                immunity_string = f"Ximmunity_{immunity_stratum}"                
                 
-                dest_filter = {"agegroup": agegroup, "immunity": immunity_stratum}
+                for strain in strain_strata:
+                    strain_string = f"Xstrain_{strain}" if strain else ""
+                    strain_filter = {"strain": strain} if strain else {}
 
-                output_name = f"incidence{agegroup_string}{immunity_string}"
-                age_incidence_sources.append(output_name)
+                    dest_filter = {"agegroup": agegroup, "immunity": immunity_stratum}
+                    dest_filter.update(strain_filter)
 
-                self.model.request_output_for_flow(
-                    name=output_name,
-                    flow_name=incidence_flow,
-                    dest_strata=dest_filter,
-                    save_results=False,
-                ) 
+                    output_name = f"incidence{agegroup_string}{immunity_string}{strain_string}"
+                    age_incidence_sources.append(output_name)
+
+                    self.model.request_output_for_flow(
+                        name=output_name,
+                        flow_name=incidence_flow,
+                        dest_strata=dest_filter,
+                        save_results=False,
+                    ) 
 
             # Aggregated incidence by age
             if request_incidence_by_age:
@@ -109,11 +116,13 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             self,
             model_times: np.ndarray,
             age_groups: List[str],
+            strain_strata: List[str],
             iso3: str,
             region: Union[str, None],
             ifr_prop_requests: AgeSpecificProps,
             ve_death: float,
             time_from_onset_to_death: TimeDistribution,
+            voc_params: Optional[Dict[str, VocComponent]],
     ):
         """
         Request infection death-related outputs.
@@ -121,11 +130,13 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         Args:
             model_times: The model evaluation times
             age_groups: Modelled age group lower breakpoints
+            strain_strata: The modelled strains
             iso3: The ISO3 code of the country being simulated
             region: The sub-region being simulated, if any
             ifr_prop_requests: All the CFR-related requests, including the proportions themselves
             ve_death: Vaccine efficacy against mortality
             time_from_onset_to_death: Details of the statistical distribution for the time to death
+            voc_params: The strain-specific parameters
 
         """
 
@@ -138,34 +149,47 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         # Prepare odds adjuster function
         or_adjuster_func = get_apply_odds_ratio_to_prop(ifr_prop_requests.multiplier)
 
+        # Prepare immunity modifiers
+        immune_death_modifiers = {
+            ImmunityStratum.UNVACCINATED: 1.,
+            ImmunityStratum.VACCINATED: 1. - ve_death,
+        }
+
         # Request infection deaths for each age group
         infection_deaths_sources = []
         for agegroup in age_groups:
-            agegroup_string = f"Xagegroup_{agegroup}"
-            
-            raw_age_ifr = or_adjuster_func(ifr_props[agegroup])
+            agegroup_string = f"Xagegroup_{agegroup}"            
 
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
-                # Adjust IFR proportions for immunity
-                death_risk = raw_age_ifr if immunity_stratum == ImmunityStratum.UNVACCINATED else raw_age_ifr * (1 - ve_death) 
+                # Adjust CFR proportions for immunity
+                adj_death_props = ifr_props * immune_death_modifiers[immunity_stratum]
+                or_adjuster_func = get_apply_odds_ratio_to_prop(ifr_prop_requests.multiplier)
+                adj_death_props = adj_death_props.apply(or_adjuster_func)
 
-                # Find the strata we are working with and work out the strings to refer to
-                strata_string = f"{agegroup_string}{immunity_string}"
-                output_name = f"infection_deaths{strata_string}"
-                infection_deaths_sources.append(output_name)
+                for strain in strain_strata:
+                    strain_string = f"Xstrain_{strain}" if strain else ""
 
-                # Get the infection deaths function for convolution
-                infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
+                    # Find the strata we are working with and work out the strings to refer to
+                    strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
+                    output_name = f"infection_deaths{strata_string}"
+                    infection_deaths_sources.append(output_name)
 
-                # Request the output
-                self.model.request_function_output(
-                    name=output_name,
-                    sources=[f"incidence{strata_string}"],
-                    func=infection_deaths_func,
-                    save_results=False,
-                )
+                    # Calculate the multiplier based on age, immunity and strain
+                    strain_risk_modifier = 1. if not strain else 1. - voc_params[strain].death_protection
+                    death_risk = adj_death_props[agegroup] * strain_risk_modifier
+
+                    # Get the infection deaths function for convolution
+                    infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
+
+                    # Request the output
+                    self.model.request_function_output(
+                        name=output_name,
+                        sources=[f"incidence{strata_string}"],
+                        func=infection_deaths_func,
+                        save_results=False,
+                    )
 
         # Request aggregated infection deaths
         self.model.request_aggregate_output(

@@ -166,7 +166,7 @@ def build_model(
     Add intercompartmental flows
     """
     # Transition within latent states 
-    progression_rate = 1. / (sojourns.latent * n_latent_comps)
+    progression_rate = n_latent_comps * 1. / sojourns.latent
     for i_latent in range(n_latent_comps - 1):
         model.add_transition_flow(
             name=f"within_latent_{i_latent}",
@@ -210,7 +210,7 @@ def build_model(
     )
 
     # Transition within infectious states 
-    recovery_rate = 1. / (sojourns.active * n_infectious_comps)
+    recovery_rate = n_infectious_comps * 1. / sojourns.active
     for i_active in range(n_infectious_comps - 1):
         model.add_transition_flow(
             name=f"within_infectious_{i_active}",

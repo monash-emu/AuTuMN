@@ -487,7 +487,11 @@ class Calibration:
                         mu = model_output[i]
                         # work out parameter p to match the distribution mean with the model output
                         p = mu / (mu + n)
-                        ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weights[i]
+
+                        this_ll = stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weights[i]
+                        if this_ll == - np.inf:
+                            this_ll = -1.e15 
+                        ll += this_ll
                 else:
                     raise ValueError("Distribution not supported in loglikelihood_distri")
 

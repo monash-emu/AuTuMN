@@ -5,7 +5,7 @@ def get_calibration_object(model, region):
     project = get_project(model, region)
     calib = project.calibration
 
-    calib.end_time = max([max(t.data.index) for t in calib.targets])
+    calib.end_time = 2 + max([max(t.data.index) for t in calib.targets])
     calib.model_parameters = project.param_set.baseline
     calib._is_first_run = False
     calib.project = project
@@ -22,5 +22,6 @@ def get_calibration_object(model, region):
 def calculate_objective_to_minimize(calib, params_dict):
     loglikelihood = calib.loglikelihood(params_dict)
     logprior = calib.logprior(params_dict)
+    log_rp_likelihood = calib.random_process.evaluate_rp_loglikelihood()
 
-    return - (loglikelihood + logprior)
+    return - (loglikelihood + logprior + log_rp_likelihood)

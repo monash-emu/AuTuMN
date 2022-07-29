@@ -401,7 +401,7 @@ class Calibration:
         """
         Run the model with a set of params.
         """
-        logger.info(f"Running iteration {self.run_num}...")
+        # logger.info(f"Running iteration {self.run_num}...")
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for param_name, value in proposed_params.items():
@@ -622,7 +622,7 @@ class Calibration:
         if max_iters:
             if self.n_iters_real >= max_iters:
                 msg = f"Not resuming run. Existing run already has {self.n_iters_real} iterations; max_iters = {max_iters}"
-                logger.info(msg)
+                # logger.info(msg)
                 return
 
         while True:
@@ -720,26 +720,26 @@ class Calibration:
                 elapsed_time = time() - start_time
                 if elapsed_time > available_time:
                     msg = f"Stopping MCMC simulation after {self.n_iters_real} iterations because of {available_time}s time limit"
-                    logger.info(msg)
+                    # logger.info(msg)
                     break
             if max_iters:
                 # Stop running if we have performed enough iterations
                 if self.n_iters_real >= max_iters:
                     msg = f"Stopping MCMC simulation after {self.n_iters_real} iterations, maximum iterations hit"
-                    logger.info(msg)
+                    # logger.info(msg)
                     break
 
             # Check that the pre-adaptive phase ended with a decent acceptance ratio
             if self.adaptive_proposal and self.run_num == self.n_steps_fixed_proposal:
                 acceptance_ratio = self.n_accepted / self.run_num
-                logger.info(
-                    "Pre-adaptive phase completed at %s iterations after %s runs with an acceptance ratio of %s.",
-                    self.n_iters_real,
-                    self.run_num,
-                    acceptance_ratio,
-                )
+                # logger.info(
+                #     "Pre-adaptive phase completed at %s iterations after %s runs with an acceptance ratio of %s.",
+                #     self.n_iters_real,
+                #     self.run_num,
+                #     acceptance_ratio,
+                # )
                 if acceptance_ratio < ADAPTIVE_METROPOLIS["MIN_ACCEPTANCE_RATIO"]:
-                    logger.info("Acceptance ratio too low, restart sampling from scratch.")
+                    # logger.info("Acceptance ratio too low, restart sampling from scratch.")
                     (
                         self.run_num,
                         self.n_accepted,
@@ -748,8 +748,8 @@ class Calibration:
                     ) = (0, 0, None, None)
                     self.reduce_proposal_step_size()
                     self.output.delete_stored_iterations()
-                else:
-                    logger.info("Acceptance ratio acceptable, continue sampling.")
+                # else:
+                    # logger.info("Acceptance ratio acceptable, continue sampling.")
 
     def reduce_proposal_step_size(self):
         """
@@ -954,10 +954,10 @@ class CalibrationOutputs:
         self.output_db_path = os.path.join(self.output_dir, db_name)
         if os.path.exists(self.output_db_path):
             # Delete existing data.
-            logger.info("File found at %s, recreating %s", self.output_db_path, self.output_dir)
+            # logger.info("File found at %s, recreating %s", self.output_db_path, self.output_dir)
             shutil.rmtree(self.output_dir)
 
-        logger.info("Created data directory at %s", self.output_dir)
+        # logger.info("Created data directory at %s", self.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
         self.db = db.ParquetDatabase(self.output_db_path)
 
@@ -1051,7 +1051,7 @@ class CalibrationOutputs:
         Write in-memory calibration data to disk
         """
         if not self.mcmc_runs:
-            logger.info("No data to write to disk")
+            # logger.info("No data to write to disk")
             return
 
         # Close Parquet writer used to write data for outputs / derived outputs.

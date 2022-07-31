@@ -31,12 +31,18 @@ class ParamConfig:
     anystr_strip_whitespace = True  # Strip whitespace
     allow_mutation = False  # Params should be immutable
 
+class MixingMatrices(BaseModel):
+    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
+    source_iso3: Optional[str]
+    age_adjust: Optional[bool]  # Only relevant if 'extrapolated' selected
+
 
 @dataclass(config=ParamConfig)
 class Parameters:
     # Metadata
     description: Optional[str]
     iso3: str
+    age_mixing: Optional[MixingMatrices]
     # Country info
     start_population_size: float
     crude_birth_rate: float

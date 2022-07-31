@@ -5,6 +5,8 @@ from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.project import Params, build_rel_path
 from autumn.model_features.curve import scale_up_function
 from autumn.core import inputs
+from autumn.core.inputs.social_mixing.queries import get_prem_mixing_matrices
+from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 
 from .constants import Compartment, BASE_COMPARTMENTS, INFECTIOUS_COMPS
 from .stratifications.age import get_age_strat
@@ -60,6 +62,31 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
     assign_population(seed, age_pops.sum(), model)
 
+    """Build age mixing matrix"""
+
+    if params.age_mixing:
+        if params.age_mixing.type == "prem":
+            age_mixing_matrices = get_prem_mixing_matrices(
+                params.iso3, params.age_breakpoints, None
+            )
+        elif params.age_mixing.type == "extrapolated":
+            age_mixing_matrices = build_synthetic_matrices(
+                params.iso3,
+                params.age_mixing.source_iso3,
+                params.age_breakpoints,
+                params.age_mixing.age_adjust,
+                requested_locations=["all_locations"],
+            )
+        else:
+            raise Exception("Invalid mixing matrix type specified in parameters")
+    else:
+        # Default to prem matrices (old model runs)
+        age_mixing_matrices = get_prem_mixing_matrices(params.iso3, params.age_breakpoints, None)
+
+    age_mixing_matrix = age_mixing_matrices["all_locations"]
+    # convert daily contact rates to yearly rates
+    age_mixing_matrix *= 365.25
+
     """Assign the initial population"""
 
     birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
@@ -78,7 +105,9 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
     """Add Stratification to the model"""
-    age_strat = get_age_strat(params.age_breakpoints, iso3, age_pops, BASE_COMPARTMENTS)
+    age_strat = get_age_strat(
+        params.age_breakpoints, iso3, age_pops, age_mixing_matrix, BASE_COMPARTMENTS
+    )
     model.stratify_with(age_strat)
 
     """Generate outputs"""

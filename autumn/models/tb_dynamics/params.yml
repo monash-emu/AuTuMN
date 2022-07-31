@@ -16,3 +16,4 @@ start_population_size: 2000.
 infectious_seed: 1.
 #stratification
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
+age_mixing: null

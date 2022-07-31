@@ -62,7 +62,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
     assign_population(seed, age_pops.sum(), model)
 
-    """Build age mixing matrix"""
+    # Build age mixing matrix
 
     if params.age_mixing:
         if params.age_mixing.type == "prem":
@@ -87,30 +87,30 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # convert daily contact rates to yearly rates
     age_mixing_matrix *= 365.25
 
-    """Assign the initial population"""
+    # Assign the initial population
 
     birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
     birth_rates = [b / 1000.0 for b in birth_rates]  # Birth rates are provided / 1000 population
     crude_birth_rate = scale_up_function(years, birth_rates, smoothness=0.2, method=5)
 
-    """Add crude birth flow to the model"""
+    #Add crude birth flow to the model
     model.add_crude_birth_flow(
         "birth",
         crude_birth_rate,
         Compartment.SUSCEPTIBLE,
     )
 
-    """Add universal death flow to the model"""
+    # Add universal death flow to the model
     universal_death_rate = params.crude_death_rate
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
-    """Add Stratification to the model"""
+    #Add Age stratification to the model
     age_strat = get_age_strat(
         params.age_breakpoints, iso3, age_pops, age_mixing_matrix, BASE_COMPARTMENTS
     )
     model.stratify_with(age_strat)
 
-    """Generate outputs"""
+    # Generate outputs
     request_outputs(model)
 
     return model

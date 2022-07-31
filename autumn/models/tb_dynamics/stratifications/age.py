@@ -14,10 +14,18 @@ def get_age_strat(
     compartments: List[str]
 ) -> AgeStratification:
 
-    """Stratify the model by age
+    """
+     Function to create the age group stratification object..
+
+    Args:
+        params: All model parameters
+        age_groups: List of age groups as string
+        age_pops: The population distribution by age
+        age_mixing_matrix: The age-specific mixing matrix
+        compartments: All the model compartments
 
     Returns:
-        Stratification object
+        The age stratification summer object
     """
     strat = AgeStratification("age", age_breakpoints, compartments)
     strat.set_mixing_matrix(age_mixing_matrix)

@@ -62,8 +62,26 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
     assign_population(seed, age_pops.sum(), model)
 
-    # Assign the initial population
+    # build mixing matrix
+    if params.age_mixing:
+        if params.age_mixing.type == 'prem':
+            age_mixing_matrices = get_prem_mixing_matrices(params.iso3, params.age_breakpoints, None)
+        elif params.age_mixing.type == 'extrapolated':
+            age_mixing_matrices = build_synthetic_matrices(
+                params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust,
+                requested_locations=["all_locations"]
+            )
+        else:
+            raise Exception("Invalid mixing matrix type specified in parameters")
+    else:
+        # Default to prem matrices (old model runs)
+        age_mixing_matrices = get_prem_mixing_matrices(params.iso3, params.age_breakpoints, None)
 
+    age_mixing_matrix = age_mixing_matrices["all_locations"]
+    # convert daily contact rates to yearly rates
+    age_mixing_matrix *= 365.25
+
+    # Assign the initial population
     birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
     birth_rates = [b / 1000.0 for b in birth_rates]  # Birth rates are provided / 1000 population
     crude_birth_rate = scale_up_function(years, birth_rates, smoothness=0.2, method=5)
@@ -81,7 +99,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
 
     #Add Age stratification to the model
     age_strat = get_age_strat(
-        params.age_breakpoints, iso3, age_pops, BASE_COMPARTMENTS
+        params.age_breakpoints, iso3, age_pops, age_mixing_matrix ,BASE_COMPARTMENTS
     )
     model.stratify_with(age_strat)
 

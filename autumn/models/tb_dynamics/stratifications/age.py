@@ -10,7 +10,6 @@ def get_age_strat(
     age_breakpoints: List[str],
     iso3: str,
     age_pops: pd.Series,
-    age_mixing_matrix,
     compartments: List[str]
 ) -> AgeStratification:
 
@@ -28,7 +27,6 @@ def get_age_strat(
         The age stratification summer object
     """
     strat = AgeStratification("age", age_breakpoints, compartments)
-    strat.set_mixing_matrix(age_mixing_matrix)
     age_split_props = age_pops / age_pops.sum()
     strat.set_population_split(age_split_props.to_dict())
 

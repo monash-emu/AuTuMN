@@ -1,4 +1,6 @@
 class Region:
+    AUSTRALIA = "australia"
+    BRUNEI = "brunei"
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     MANILA = "manila"

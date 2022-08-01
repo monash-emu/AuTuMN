@@ -19,7 +19,7 @@ def get_tartgets(calibration_start_time, iso3, region):
     ts_set = load_timeseries(time_series_path)
 
     infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
-    notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+    #notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
     targets = [
         NormalTarget(infection_deaths_ts),
     ]

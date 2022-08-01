@@ -3,22 +3,25 @@ from pydantic import BaseModel
 from typing import Union
 
 from summer import CompartmentalModel
-from summer.parameters import Parameter, Function
+from summer.parameters import Parameter, Function, Data
 from computegraph import ComputeGraph
 from computegraph.utils import expand_nested_dict, is_var
+
+
+GraphObj = Union[Function, Data]
 
 
 class ModelBuilder:
     def __init__(self, model: CompartmentalModel, params: dict, pyd_params: BaseModel):
         self.model = model
-        self.params = params
-        self.params_expanded = expand_nested_dict(params, include_parents=True)
-        self.pyd_params = pyd_params
+        self._params = params
+        self._params_expanded = expand_nested_dict(params, include_parents=True)
+        self.params = self._pyd_params = pyd_params
         self.input_graph = {}
 
         self.required_outputs = set()
 
-    def add_output(self, key, graph_obj):
+    def add_output(self, key: str, graph_obj: GraphObj):
         if key in self.input_graph:
             raise Exception(f"Key {key} already exists in graph as {self.input_graph[key]}")
         self.input_graph[key] = graph_obj
@@ -27,30 +30,35 @@ class ModelBuilder:
         self.run = get_full_runner(self)
 
     def _get_func_args(self, key):
-        return [Parameter(k) for k in [*self.params_expanded[key]]]
+        return [Parameter(k) for k in [*self._params_expanded[key]]]
 
     def _get_func_kwargs(self, key):
-        return {k: Parameter(k) for k in [*self.params_expanded[key]]}
+        return {k: Parameter(k) for k in [*self._params_expanded[key]]}
 
     def _find_key_from_obj(self, obj):
-        return find_key_from_obj(obj, self.pyd_params, self.params, None)
+        return find_key_from_obj(obj, self._pyd_params, self._params, None)
 
-    def param(self, key):
+    def param(self, key: str, create: bool = False):
         """Get a Parameter (computegraph Variable) for the given key
         If this key is not contained in the initial parameters, register it
-        as a required additional parameter
+        as a required additional parameter (or raise an Exception if create is False)
 
         Args:
             key: Key of the parameter
+            create: Add this parameter as an output if required - will raise an exception
+                    if False if key is not already present in the input parameters
 
         Returns:
             computegraph Parameter
         """
         if is_var(key, "parameters"):
             key = key.name
-        if key not in self.params_expanded:
-            if key not in self.required_outputs:
-                self.required_outputs.add(key)
+        if key not in self._params_expanded:
+            if create:
+                if key not in self.required_outputs:
+                    self.required_outputs.add(key)
+            else:
+                raise KeyError(f"Parameter {key} not found in input parameters")
         return Parameter(key)
 
     def get_output(self, key):
@@ -64,8 +72,8 @@ class ModelBuilder:
         Args:
             key (str): Parameter key
         """
-        if key in self.params_expanded:
-            return self.params_expanded[key]
+        if key in self._params_expanded:
+            return self._params_expanded[key]
         else:
             raise KeyError("Key not found in initial parameters", key)
 
@@ -126,7 +134,7 @@ def get_full_runner(builder, use_jax=False):
 
     def run_everything(param_updates=None, **kwargs):
 
-        parameters = builder.params_expanded.copy()
+        parameters = builder._params_expanded.copy()
         if param_updates is not None:
             parameters.update(param_updates)
 
@@ -142,7 +150,7 @@ def get_full_runner(builder, use_jax=False):
             return builder.model
 
     def run_inputs(param_updates=None):
-        parameters = builder.params_expanded.copy()
+        parameters = builder._params_expanded.copy()
         if param_updates is not None:
             parameters.update(param_updates)
 

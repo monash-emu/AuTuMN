@@ -24,7 +24,12 @@ try:
     # FIXME: We need to find a more appropriate place to ensure this happens globally
     _jax_config.update("jax_platform_name", "cpu")
     _jax_config.update("jax_enable_x64", True)
-    os.environ["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
+
+    N_CORES = os.cpu_count()
+
+    os.environ[
+        "XLA_FLAGS"
+    ] = f"--xla_force_host_platform_device_count={N_CORES} --xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
 
     Array = Union[jnp.ndarray, np.ndarray]
 

@@ -12,5 +12,6 @@ The base model consisted of six compartments representing particular clinical st
 BCG vaccination was incorporated through a time-variant and age-specific process reducing the risk of infection (base-case analysis) or reducing the severity of TB (sensitivity analysis. We fitted model parameters using local data on population size, TB prevalence, LTBI prevalence and TB notifications, while considering uncertainty around the most critical model parameters.
 Data sources: Programmatic data (Case notification, incidence, prevalence of TB and comorbidity in Kiribati), census survey. If data is unavailable, data can be extracted from literature, database of UN and other international organizations.
 Baseline data available: Case notification, incidence, prevalence, population, age structure, household sizes.
+The birth rate and crude death rate was taken from [United Nations's Popilation Division website] (https://population.un.org/wpp/Download/Standard/Mortality/)
 
 

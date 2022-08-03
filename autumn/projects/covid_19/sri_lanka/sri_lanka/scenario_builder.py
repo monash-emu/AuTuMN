@@ -1,9 +1,9 @@
 from autumn.models.covid_19.mixing_matrix.macrodistancing import get_mobility_specific_period
 
-scenario_start_time = [505, 484, 556, 481, 506, 640]  # 505 - 20 May, 476 - 29th April,
+scenario_start_time = [505, 495, 556, 481, 506, 640]  # 505 - 20 May, 476 - 29th April,
 # 567 - 21st July 2021, 481 - 25 April, 507- May 21, 650 - Oct 01
-lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from April 29 - May 29",
-                  "What if lockdown was initiated from July 21 - Aug 31", "No vaccination",
+lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from May 9 - June 9",
+                  "What if lockdown was initiated from July 20 - Aug 30", "No vaccination",
                   "Second lockdown based on WHO mortalilty threshold",
                   "Faster increase in mobility after lockdown ends on 01st October"]
 scenario_end_time = [791, 791, 791, 791, 791, 791]
@@ -50,9 +50,9 @@ def get_all_scenario_dicts(country: str):
                     "values": [["repeat_prev"]] + [1.5]
                 }
 
-        if i_lockdown_scenario == 1:  # What if lockdown was initiated from April 29 - May 29
+        if i_lockdown_scenario == 1:  # What if lockdown was initiated from May 9 - June 9
 
-            # lockdown mobility from 21May -21 June applied from April 29 - May 29
+            # lockdown mobility from 21May -21 June applied from May 9 - June 9
             times1, values1 = get_mobility_specific_period(country, None,
                                                            {'work': {'workplaces': 1.},
                                                             'other_locations': {'retail_and_recreation': 0.333,
@@ -60,16 +60,13 @@ def get_all_scenario_dicts(country: str):
                                                                                 'transit_stations': 0.334},
                                                             'home': {'residential': 1.}}, [507, 537])
 
-            times1 = [*range(485, 515)]  # lockdown values from May 21 - June 21 is assigned from April 29 -May 29
+            times1 = [*range(496, 526)]  # lockdown values from May 21 - June 21 is assigned from May 9 -June 9
 
             # from May 30 - 21 June, the average mobility after lockdown
-            times2 = [*range(515, 539)]
+            times2 = [*range(526, 539)]
             values2 = {'work': [0.6] * len(times2), 'other_locations': [0.72] * len(times2)}
 
             # From June 22nd onwards actual mobility levels
-            # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown)
-            # from Sep 01 st onwards
-
             times3, values3 = get_mobility_specific_period(country, None,
                                                            {'work': {'workplaces': 1.},
                                                             'other_locations': {'retail_and_recreation': 0.333,

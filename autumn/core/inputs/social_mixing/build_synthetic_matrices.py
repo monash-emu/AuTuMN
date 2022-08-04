@@ -318,7 +318,6 @@ def _check_model_ready_matrices(matrices):
         matrices["home"] + matrices["school"] + matrices["work"] + matrices["other_locations"]
     )
     error = all_contacts - sum_contacts_by_location
-    print("Checking")
     assert (
         abs(error).max()
     ) < 1.0e-6, "The sum of the 4 location-specific matrices should match the all_locations matrix"

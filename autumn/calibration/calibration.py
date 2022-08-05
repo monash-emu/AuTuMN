@@ -273,10 +273,23 @@ class Calibration:
     ):
         self.project = project
         self.model_parameters = project.param_set.baseline
+
+        # adjust random process values number if required
+        if self.model_parameters['random_process']:
+            n_values = len(self.model_parameters['random_process']['values'])
+            n_updates = len(self.random_process.values)
+            if n_values >= n_updates:
+                self.model_parameters['random_process']['values'] = self.model_parameters['random_process']['values'][:n_updates]
+            else:
+                rp_values = self.model_parameters['random_process']['values'] + [0.] * (n_updates - n_values)
+                self.model_parameters = self.model_parameters.update(
+                    {
+                        "random_process.values": rp_values
+                    }, calibration_format=True
+                )
+
         self.chain_idx = chain_idx
         model_parameters_data = self.model_parameters.to_dict()
-
-        # 
 
         # Figure out which derived outputs we have to calculate.
         derived_outputs_to_plot = derived_outputs_to_plot or []

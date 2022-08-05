@@ -37,10 +37,12 @@ class RandomProcess:
         self.values = [0.] * n_updates
 
     def update_config_from_params(self, rp_params):
+        n_updates = len(self.values)
         if rp_params.values:
-            msg = f"Incorrect number of specified random process values. Expected {len(self.values)}, found {len(rp_params.values)}."
-            assert len(self.values) == len(rp_params.values), msg
-            self.values = rp_params.values
+            if len(rp_params.values) >= n_updates:
+                self.values = rp_params.values[:n_updates]
+            else:
+                self.values = rp_params.values + [0.] * (n_updates - len(rp_params.values))
         if rp_params.noise_sd:
             self.noise_sd = rp_params.noise_sd
         if rp_params.coefficients:

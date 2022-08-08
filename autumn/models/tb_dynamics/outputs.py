@@ -16,11 +16,11 @@ class TbOutputBuilder:
     def __init__(self, model) -> None:
         self.model = model
 
-    def _normalise_timestep(self, vals):
-        """Normalise flow outputs to be 'per unit time (year)'"""
-        return vals / self.model.timestep
 
     def request_compartment_output(self, output_name, compartments, save_results=True):
         self.model.request_output_for_compartments(
             output_name, compartments, save_results=save_results
         )
+
+  
+        

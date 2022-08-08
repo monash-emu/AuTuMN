@@ -29,8 +29,12 @@ REFERENCE_YEAR = {
 
 
 def build_synthetic_matrices(
-        modelled_country_iso3, proxy_country_iso3, modelled_age_breaks, age_adjust, modelled_region_name=None,
-        requested_locations=LOCATIONS
+    modelled_country_iso3,
+    proxy_country_iso3,
+    modelled_age_breaks,
+    age_adjust,
+    modelled_region_name=None,
+    requested_locations=LOCATIONS,
 ):
     """
     :param modelled_country_iso3: The name of the modelled country
@@ -43,19 +47,31 @@ def build_synthetic_matrices(
     """
 
     # Load contact matrices for the source country
-    source_matrices, source_age_breaks = load_socialmixr_matrices(proxy_country_iso3, requested_locations)
+    source_matrices, source_age_breaks = load_socialmixr_matrices(
+        proxy_country_iso3, requested_locations
+    )
 
     # adjust matrices for modelled region's age distribution
     if age_adjust:
         age_adjusted_matrices = adjust_matrices_for_age_distribution(
-            source_matrices, proxy_country_iso3, modelled_country_iso3, source_age_breaks, modelled_region_name, requested_locations
+            source_matrices,
+            proxy_country_iso3,
+            modelled_country_iso3,
+            source_age_breaks,
+            modelled_region_name,
+            requested_locations,
         )
     else:
         age_adjusted_matrices = source_matrices
 
     # convert matrices to match modelled age groups
     model_ready_matrices = convert_matrices_agegroups(
-        age_adjusted_matrices, source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name, requested_locations
+        age_adjusted_matrices,
+        source_age_breaks,
+        modelled_age_breaks,
+        modelled_country_iso3,
+        modelled_region_name,
+        requested_locations,
     )
 
     return model_ready_matrices
@@ -71,15 +87,21 @@ def load_socialmixr_matrices(proxy_country_iso3, requested_locations):
     :return: location-specific contact matrices (in a dictionary) and list of associated lower age bounds
     """
     available_source_countries = os.listdir(SOURCE_MATRICES_PATH)
-    assert proxy_country_iso3 in available_source_countries, f"No socialmixr data found for {proxy_country_iso3}"
+    assert (
+        proxy_country_iso3 in available_source_countries
+    ), f"No socialmixr data found for {proxy_country_iso3}"
 
     matrices = {}
     for i, location in enumerate(requested_locations):
         matrix_path = os.path.join(SOURCE_MATRICES_PATH, proxy_country_iso3, f"{location}.csv")
         msg = f"Could not find the required file {matrix_path}"
-        assert f"{location}.csv" in os.listdir(os.path.join(SOURCE_MATRICES_PATH, proxy_country_iso3)), msg
+        assert f"{location}.csv" in os.listdir(
+            os.path.join(SOURCE_MATRICES_PATH, proxy_country_iso3)
+        ), msg
 
-        loc_matrix = pd.read_csv(matrix_path,)
+        loc_matrix = pd.read_csv(
+            matrix_path,
+        )
         # remove first column containing age brackets
         loc_matrix.drop(columns=loc_matrix.columns[0], axis=1, inplace=True)
         matrices[location] = loc_matrix.to_numpy()
@@ -88,7 +110,9 @@ def load_socialmixr_matrices(proxy_country_iso3, requested_locations):
         if i == 0:
             # work out age breakpoints
             ref_col_names = copy(col_names)
-            age_breaks = [age_group.split(",")[0].split("+")[0].replace("[", "") for age_group in col_names]
+            age_breaks = [
+                age_group.split(",")[0].split("+")[0].replace("[", "") for age_group in col_names
+            ]
         else:
             # check that all matrices use the same age brackets in the same order
             assert col_names == ref_col_names
@@ -100,8 +124,12 @@ def load_socialmixr_matrices(proxy_country_iso3, requested_locations):
 
 
 def adjust_matrices_for_age_distribution(
-    source_matrices, proxy_country_iso3, modelled_country_iso3, source_age_breaks, modelled_region_name=None,
-    requested_locations=LOCATIONS
+    source_matrices,
+    proxy_country_iso3,
+    modelled_country_iso3,
+    source_age_breaks,
+    modelled_region_name=None,
+    requested_locations=LOCATIONS,
 ):
     """
     Converts matrix based on the age distribution of the proxy country and that of the modelled country
@@ -123,9 +151,12 @@ def adjust_matrices_for_age_distribution(
     )
 
     # Calculate age-specific population ratios
-    assert all([p > 0. for p in age_proportions_proxy]), "All age proportions must be >0 to prevent division by zero."
+    assert all(
+        [p > 0.0 for p in age_proportions_proxy]
+    ), "All age proportions must be >0 to prevent division by zero."
     age_pop_ratio = [
-        p_modelled / p_proxy for (p_modelled, p_proxy) in zip(age_proportions_modelled, age_proportions_proxy)
+        p_modelled / p_proxy
+        for (p_modelled, p_proxy) in zip(age_proportions_modelled, age_proportions_proxy)
     ]
 
     # Convert into a diagonal matrix to prepare columns multiplication
@@ -140,7 +171,7 @@ def adjust_matrices_for_age_distribution(
 
 
 def find_source_age_group_contributions(
-        source_breaks, modelled_breaks, modelled_iso3, modelled_region
+    source_breaks, modelled_breaks, modelled_iso3, modelled_region
 ):
 
     # Get upper bounds for both classifications (assumed final band's upper bound = 100)
@@ -161,7 +192,9 @@ def find_source_age_group_contributions(
             source_lower, source_upper = int(source_age_break), source_upper_bounds[j_source]
             if model_upper > source_lower and model_lower < source_upper:
                 overlap_range = max(source_lower, model_lower), min(source_upper, model_upper)
-                contributions_array[i_break, j_source] = _get_proportion_between_ages_among_agegroup(
+                contributions_array[
+                    i_break, j_source
+                ] = _get_proportion_between_ages_among_agegroup(
                     overlap_range, (source_lower, source_upper), modelled_iso3, modelled_region
                 )
 
@@ -171,7 +204,12 @@ def find_source_age_group_contributions(
 
 
 def convert_matrices_agegroups(
-    matrices, source_age_breaks, modelled_age_breaks, modelled_country_iso3, modelled_region_name=None, requested_locations=LOCATIONS
+    matrices,
+    source_age_breaks,
+    modelled_age_breaks,
+    modelled_country_iso3,
+    modelled_region_name=None,
+    requested_locations=LOCATIONS,
 ):
     """
     Transform the contact matrices to match the model age stratification.
@@ -198,14 +236,17 @@ def convert_matrices_agegroups(
         for i_model in range(n_modelled_groups):
             i_contributions = source_age_break_contributions[i_model, :].reshape(n_source_groups, 1)
             for j_model in range(n_modelled_groups):
-                j_contributions = source_age_break_contributions[j_model, :].reshape(n_source_groups, 1)
+                j_contributions = source_age_break_contributions[j_model, :].reshape(
+                    n_source_groups, 1
+                )
 
                 # Sum over contactees' contributions for each contactor's contribution
                 sums_over_contactees = np.dot(base_matrix, j_contributions)
 
                 # Average over contactors' contributions
-                average_over_contactors = \
-                    float(np.dot(np.transpose(i_contributions), sums_over_contactees)) / float(sum(i_contributions))
+                average_over_contactors = float(
+                    np.dot(np.transpose(i_contributions), sums_over_contactees)
+                ) / float(sum(i_contributions))
 
                 output_matrix[i_model, j_model] = average_over_contactors
 
@@ -233,7 +274,7 @@ def _get_proportion_between_ages_among_agegroup(
     Work out the proportion of population aged within age_range_numerator among the age group age_range_denominator
     """
     if age_range_numerator == age_range_denominator:
-        return 1.
+        return 1.0
 
     numerator_low, numerator_up = age_range_numerator
     denominator_low, denominator_up = age_range_denominator
@@ -249,13 +290,13 @@ def _get_proportion_between_ages_among_agegroup(
     )[1]
 
     if numerator_low == denominator_low and numerator_up == denominator_up:
-        result = 1.
+        result = 1.0
     elif popsize_denominator == 0:
-        result = 0.
+        result = 0.0
     else:
         result = popsize_numerator / popsize_denominator
 
-    assert 0. <= result <= 1.
+    assert 0.0 <= result <= 1.0
     return result
 
 
@@ -273,9 +314,13 @@ def _check_model_ready_matrices(matrices):
     Check that the all_locations matrix is approximately the sum of the 4 location-specific matrices
     """
     all_contacts = matrices["all_locations"]
-    sum_contacts_by_location = matrices["home"] + matrices["school"] + matrices["work"] + matrices["other_locations"]
+    sum_contacts_by_location = (
+        matrices["home"] + matrices["school"] + matrices["work"] + matrices["other_locations"]
+    )
     error = all_contacts - sum_contacts_by_location
-    assert abs(error.max()) < 1.e-6, "The sum of the 4 location-specific matrices should match the all_locations matrix"
+    assert (
+        abs(error).max()
+    ) < 1.0e-6, "The sum of the 4 location-specific matrices should match the all_locations matrix"
 
 
 def _clean_up_model_ready_matrices(matrices):
@@ -283,12 +328,17 @@ def _clean_up_model_ready_matrices(matrices):
     Adjust the 'other locations' matrix such that the sum of the 4 location-specific matrices is equal to the
     all_locations matrix.
     """
-    other_locations_matrix = matrices["all_locations"] - (matrices["home"] + matrices["school"] + matrices["work"])
-    other_locations_matrix[other_locations_matrix < 0.] = 0
+    other_locations_matrix = matrices["all_locations"] - (
+        matrices["home"] + matrices["school"] + matrices["work"]
+    )
+    other_locations_matrix[other_locations_matrix < 0.0] = 0
     matrices["other_locations"] = other_locations_matrix
+    matrices["all_locations"] = (
+        matrices["home"] + matrices["school"] + matrices["work"] + matrices["other_locations"]
+    )
     return matrices
 
 
 def _check_population_contributions_array(contributions_array):
     msg = "The sum of the contributions from each source age bin should be equal to 1"
-    assert max(abs(np.sum(contributions_array, 0) - 1)) < 1.e-3, msg
+    assert max(abs(np.sum(contributions_array, 0) - 1)) < 1.0e-3, msg

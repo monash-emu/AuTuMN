@@ -157,13 +157,13 @@ history:
     ve_prop_prevent_infection: 0.85
     ve_infectiousness_ratio: 0.3
     ve_hospitalisation: 0.95
-    ve_death: 0.93
+    ve_death: 0.95
   waned:
     ve_sympt_covid: 0.28
     ve_prop_prevent_infection: 0.8
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.5
-    ve_death: 0.95
+    ve_death: 0.8
   natural_immunity_duration: 425.
 
 sojourn:

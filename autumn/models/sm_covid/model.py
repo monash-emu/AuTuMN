@@ -341,7 +341,7 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     # Apply dynamic vaccination flows
-    set_dynamic_vaccination_flows(base_compartments, model, iso3, age_groups)
+    set_dynamic_vaccination_flows(base_compartments, model, iso3, age_pops)
     
     """
     Get the applicable outputs

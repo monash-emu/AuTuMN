@@ -25,6 +25,12 @@ for country in WPR_Countries:
     timeseries_file_name = "timeseries.json"
     complete_timeseries_name = os.path.join(folder_path, timeseries_file_name)
     timeseries_file = open(complete_timeseries_name, "w")
+    # writing generate_project_WPR into country specific project file
+    source_path = build_rel_path("timeseries_dummy.txt")
+    source_path = f"{source_path}"
+    shutil.copy(source_path, complete_timeseries_name)
+
+
 
     # writing generate_project_WPR into country specific project file
     source_path = build_rel_path("generate_project_WPR.py")
@@ -32,7 +38,7 @@ for country in WPR_Countries:
     shutil.copy(source_path, project_file_path)
 
     # in each project file replacing the country name to corresponding country
-    with open(project_file_path,'r+') as project_file:
+    with open(project_file_path, 'r+') as project_file:
         read_file = project_file.read()
         project_file.seek(0)
 

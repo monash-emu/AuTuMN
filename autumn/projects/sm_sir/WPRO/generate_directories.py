@@ -1,14 +1,8 @@
 import os
-#from WPR_constants import WPR_Countries
+from WPR_constants import WPR_Countries
 from autumn.core.project import build_rel_path
 import shutil
-
-WPR_Countries = [
-    "australia",
-    "brunei",
-    "philippines",
-    "malaysia"
-]
+import re
 
 for country in WPR_Countries:
     # If a country folder does not exist generate one
@@ -37,5 +31,17 @@ for country in WPR_Countries:
     source_path = f"{source_path}"
     shutil.copy(source_path, project_file_path)
 
-    country_name = country
+    # in each project file replacing the country name to corresponding country
+    with open(project_file_path,'r+') as project_file:
+        read_file = project_file.read()
+        project_file.seek(0)
+
+        read_file = re.sub("country_name", f'"{country}"', read_file)
+        project_file.write(read_file)
+        project_file.truncate()
+
+
+
+
+
 

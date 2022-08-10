@@ -7,7 +7,6 @@ from autumn.calibration import Calibration
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.sm_sir.WPRO.common import get_WPRO_priors, get_tartgets
-from autumn.projects.sm_sir.WPRO.generate_directories import country_name
 
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")
@@ -42,4 +41,4 @@ with open(plot_spec_filepath) as f:
 
 ## Create and register the project
 project = Project(
-    country_name, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)
+    country_name, Models.WPRO, build_model, param_set, calibration, plots=plot_spec)

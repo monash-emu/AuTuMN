@@ -28,3 +28,26 @@ def test_tb_run_models_partial(project_name):
     model = project.run_baseline_model(params)
     assert type(model) is CompartmentalModel
 
+
+@pytest.mark.run_models
+@pytest.mark.github_only
+@pytest.mark.parametrize("project_name", TB_PROJECTS)
+def test_run_models_full(project_name):
+    """
+    Smoke test: ensure our models run to completion without crashing.
+    This takes ~30s per model.
+    """
+    project = get_project(Models.TBD, project_name)
+    baseline_model = project.run_baseline_model(project.param_set.baseline)
+    assert type(baseline_model) is CompartmentalModel
+    assert baseline_model.outputs is not None
+
+    start_times = [
+        sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
+    ]
+    sc_models = project.run_scenario_models(
+        baseline_model, project.param_set.scenarios, start_times=start_times
+    )
+    for sc_model in sc_models:
+        assert type(sc_model) is CompartmentalModel
+        assert sc_model.outputs is not None

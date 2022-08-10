@@ -43,23 +43,11 @@ vaccination:
     ve_infectiousness: 0.
     ve_hospitalisation: 0.35
     ve_death: 0.4
-  standard_supply: false # to get the timeseries of vaccine coverage
+  standard_supply: true # to get the timeseries of vaccine coverage
   lag: 14
   second_dose_delay: 30.
   vacc_full_effect_duration: 90.
   vacc_part_effect_duration: 360.
-  roll_out_components:
-    - age_min: 15
-      supply_period_coverage:
-        coverage: 0.7587 # 58% total population coverage by Oct 15
-        start_time: 481 # 25 April 2021
-        end_time: 654 # 15 Oct 2021
-    - age_min: 15
-      supply_period_coverage:
-        coverage: 0.18 #80% coverage by Jan 1 among 15+ age_group
-        start_time: 655 #16  Oct 2021
-        end_time: 732 # 1 Jan 2022
-
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

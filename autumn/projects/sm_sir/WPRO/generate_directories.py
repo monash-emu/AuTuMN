@@ -3,6 +3,7 @@ from WPR_constants import WPR_Countries
 from autumn.core.project import build_rel_path
 import shutil
 import re
+from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 
 for country in WPR_Countries:
     # If a country folder does not exist generate one
@@ -54,9 +55,10 @@ for country in WPR_Countries:
     baseline_file_path = f"{baseline_file_path}"
 
     # writing basic baseline content into country specific baseline file
-    source_path_baseline = build_rel_path("generate_baseline_file.py")
+    source_path_baseline = build_rel_path("generate_baseline_file.yml")
     source_path_baseline = f"{source_path_baseline}"
     shutil.copy(source_path_baseline, baseline_file_path)
+
 
 
 

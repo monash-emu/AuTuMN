@@ -1,0 +1,13 @@
+---
+ref_mixing_iso3: CHN
+
+population:
+  year: 2020
+
+time:
+  start: 450.
+  end: 1200.
+
+activate_random_process: False
+
+voc_emergence: null # better to include this in params.yml

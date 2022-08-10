@@ -7,7 +7,7 @@ from autumn.calibration import Calibration
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.sm_sir.WPRO.common import get_WPRO_priors, get_tartgets
-
+from autumn.projects.sm_sir.WPRO.generate_directories import country_name
 
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")
@@ -29,14 +29,7 @@ calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 
 priors = get_WPRO_priors()
 
-
-directory_path = os.getcwd()
-folder_name = os.path.basename(directory_path)
-
-country = f"{folder_name}"
-region = f"{folder_name}"
-
-targets = get_tartgets(calibration_start_time, country, region)
+targets = get_tartgets(calibration_start_time, country_name, country_name)
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
@@ -49,4 +42,4 @@ with open(plot_spec_filepath) as f:
 
 ## Create and register the project
 project = Project(
-    country, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)
+    country_name, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec)

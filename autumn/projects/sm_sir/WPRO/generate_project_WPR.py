@@ -12,12 +12,14 @@ from autumn.projects.sm_sir.WPRO.common import get_WPRO_priors, get_tartgets
 mle_path = build_rel_path("params/mle-params.yml")
 
 # Check whether the specified path exists or not
-isExist = os.path.exists(mle_path)
-
-if isExist:
-    baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
-     mle_path, calibration_format=True
- )
+isExistMLE = os.path.exists(mle_path)
+baseline_path = build_rel_path("params/baseline.yml")
+isExistBaseline = os.path.exists(baseline_path)
+if isExistBaseline:
+    baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
+elif isExistMLE:
+    baseline_params = base_params.update(build_rel_path("params/baseline.yml")).\
+        update(mle_path, calibration_format=True)
 else:
     baseline_params = base_params
 

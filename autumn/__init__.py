@@ -146,5 +146,5 @@ register_project(
 register_project(
     Models.WPRO,
     Region.wpro_MALAYSIA,
-    "autumn.projects.sm_sir.WPRO.australia.australia.project",
+    "autumn.projects.sm_sir.WPRO.malaysia.malaysia.project",
 )

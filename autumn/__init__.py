@@ -141,3 +141,10 @@ register_project(
     Region.KIRIBATI,
     "autumn.projects.tb_dynamics.kiribati.project",
 )
+
+# WPRO models
+register_project(
+    Models.WPRO,
+    Region.wpro_MALAYSIA,
+    "autumn.projects.sm_sir.WPRO.australia.australia.project",
+)

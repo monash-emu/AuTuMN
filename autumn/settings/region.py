@@ -1,6 +1,7 @@
 class Region:
     wpro_AUSTRALIA = "australia"
     wpro_BRUNEI = "brunei"
+    wpro_MALAYSIA = "malaysia"
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     MANILA = "manila"

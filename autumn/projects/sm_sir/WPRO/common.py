@@ -12,10 +12,10 @@ def get_WPRO_priors():
     return priors
 
 
-def get_tartgets(calibration_start_time, iso3, region):
+def get_tartgets(calibration_start_time, country_name, region_name):
     seperator = "/"
     timeseries_file = "timeseries.json"
-    time_series_path = build_rel_path(f"{iso3}{seperator}{region}{seperator}{timeseries_file}")
+    time_series_path = build_rel_path(f"{country_name}{seperator}{region_name}{seperator}{timeseries_file}")
     ts_set = load_timeseries(time_series_path)
 
     infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]

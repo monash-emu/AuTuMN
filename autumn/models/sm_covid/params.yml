@@ -33,7 +33,7 @@ infectious_seed_time: 60
 seed_duration: 7
 
 sojourns:
-  latent: 3.
+  latent: 5.5
   active: 8.
 
 mobility:

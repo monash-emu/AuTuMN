@@ -37,7 +37,13 @@ for country in WPR_Countries:
         read_file = project_file.read()
         project_file.seek(0)
 
+        country_text = country
+        if '-' in country_text:
+            country_text = country_text.replace('-', '_')
+        region_name = country_text.upper()  # get the corresponding iso3 code
+
         read_file = re.sub("country_name", f'"{country}"', read_file)
+        read_file = re.sub("COUNTRY_NAME", f"{region_name}", read_file)
         project_file.write(read_file)
         project_file.truncate()
 

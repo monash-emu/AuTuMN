@@ -39,6 +39,10 @@ class Region:
     NORTHERN_TERRITORY = "northern-territory"
 
     REGIONS = [
+        wpro_AUSTRALIA,
+        wpro_PHILIPPINES,
+        wpro_BRUNEI_DARUSSALAM,
+        wpro_MALAYSIA,
         PHILIPPINES,
         MANILA,
         NCR,

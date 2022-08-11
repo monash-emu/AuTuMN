@@ -1,6 +1,6 @@
 activate_random_process: false
 country:
-  iso3: iso3
+  iso3: MYS
 population:
   year: 2020
 ref_mixing_iso3: CHN

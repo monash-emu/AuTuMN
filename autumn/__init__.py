@@ -142,9 +142,3 @@ register_project(
     "autumn.projects.tb_dynamics.kiribati.project",
 )
 
-# WPRO models
-register_project(
-    Models.WPRO,
-    Region.wpro_MALAYSIA,
-    "autumn.projects.sm_sir.WPRO.malaysia.malaysia.project",
-)

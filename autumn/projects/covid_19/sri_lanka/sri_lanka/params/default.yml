@@ -34,7 +34,7 @@ vaccination:
     ve_death: 0.85
   part_waned:
     ve_sympt_covid: 0.5
-    ve_prop_prevent_infection: 0.8
+    ve_prop_prevent_infection: 0.7
     ve_infectiousness: 0.15
     ve_hospitalisation: 0.55
     ve_death: 0.75

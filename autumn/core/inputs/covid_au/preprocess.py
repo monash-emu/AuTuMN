@@ -1,36 +1,24 @@
 import pandas as pd
-
 from autumn.core.db import Database
 from autumn.core.utils.utils import create_date_index
-
 from autumn.settings.constants import COVID_BASE_DATETIME
 
 from .fetch import (
     COVID_AU_CSV_PATH,
-    COVID_LGA_CSV_PATH,
-    MOBILITY_LGA_PATH,
-    COVID_VAC_COV_CSV,
     COVID_AU_YOUGOV,
-    COVID_VIDA_VAC_CSV,
+    COVID_LGA_CSV_PATH,
+    COVID_VAC_COV_CSV,
     COVID_VIDA_POP_CSV,
+    COVID_VIDA_VAC_CSV,
+    MOBILITY_LGA_PATH,
+    NT_DATA,
 )
 
 
 def preprocess_covid_au(input_db: Database):
-    df = pd.read_csv(COVID_AU_CSV_PATH)
-    input_db.dump_df("covid_au", df)
-    df = pd.read_csv(COVID_LGA_CSV_PATH)
-    df = reshape_to_clusters(df)
-    input_db.dump_df("covid_dhhs_test", df)
-    df = pd.read_csv(COVID_VAC_COV_CSV)
-    input_db.dump_df("vic_2021", df) # True vaccination numbers
-    df = pd.read_csv(COVID_AU_YOUGOV)
-    df = process_yougov(df)
-    input_db.dump_df("yougov_vic", df)
-    df = pd.read_csv(COVID_VIDA_VAC_CSV)
-    input_db.dump_df("vida_vac_model",df)
-    df = pd.read_csv(COVID_VIDA_POP_CSV)
-    input_db.dump_df("vida_pop",df)
+    df = pd.read_excel(NT_DATA, sheet_name="Testing", skiprows=[0], usecols=[1, 4])
+    df = create_date_index(COVID_BASE_DATETIME, df, "testdate")
+    input_db.dump_df("covid_nt", df)
 
 
 def reshape_to_clusters(lga_test):

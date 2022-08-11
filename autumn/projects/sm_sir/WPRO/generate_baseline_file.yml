@@ -1,13 +1,10 @@
----
-ref_mixing_iso3: CHN
-
+activate_random_process: false
+country:
+  iso3: iso3
 population:
   year: 2020
-
+ref_mixing_iso3: CHN
 time:
-  start: 450.
-  end: 1200.
-
-activate_random_process: False
-
-voc_emergence: null # better to include this in params.yml
+  end: 1200.0
+  start: 450.0
+voc_emergence: null

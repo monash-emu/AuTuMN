@@ -1,6 +1,6 @@
 WPR_Countries = [
     "australia",
-    "brunei",
+    "brunei-darussalam",
     "philippines",
     "malaysia"
 ]

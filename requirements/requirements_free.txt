@@ -34,6 +34,7 @@ numba
 scipy
 networkx
 computegraph
+numpyro
 
 # Database access
 SQLAlchemy

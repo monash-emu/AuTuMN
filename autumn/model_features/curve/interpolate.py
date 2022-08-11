@@ -5,7 +5,8 @@ with build_sigmoidal_multicurve producing a dynamic (parameterizable) version of
 
 """
 
-from autumn.core import jaxify
+from summer import jaxify
+from autumn.model_features.functional import binary_search_ge
 
 
 def set_using_jax(use_jax):
@@ -76,7 +77,8 @@ def build_sigmoidal_multicurve(x_points: jaxify.Array, curvature=16.0) -> callab
     sig = make_norm_sigmoid(curvature)
 
     def get_curve_at_t(t, values, ranges):
-        idx = sum(t >= x_points) - 1
+        # idx = sum(t >= x_points) - 1
+        idx = binary_search_ge(t, x_points)
 
         offset = t - x_points[idx]
         relx = offset / xranges[idx]
@@ -141,27 +143,20 @@ def build_static_sigmoidal_multicurve(
 
     sig = make_norm_sigmoid(curvature)
 
-    def _build_curve(x_val, xrange, ybase_val, yrange):
-        def get_curve_at_t(t):
-            offset = t - x_val
-            relx = offset / xrange
-            rely = sig(relx)
-            return ybase_val + (rely * yrange)
-
-        return get_curve_at_t
-
-    curve_funcs = []
-    for i, xrange in enumerate(xranges):
-        x_val = x_points[i]
-        ybase_val = scale_data["values"][i]
-        yrange = scale_data["ranges"][i]
-        get_curve_at_t = _build_curve(x_val, xrange, ybase_val, yrange)
-        curve_funcs.append(get_curve_at_t)
-
     if jaxify.get_using_jax():
         from jax import lax
 
-        def scaled_curve(t: float, ydata: dict):
+        ydata = scale_data
+
+        def get_curve_at_t(t, values, ranges):
+            # idx = sum(t >= x_points) - 1
+            idx = binary_search_ge(t, x_points)  # - 1 ? FIXME: We _need_ to verify this!
+            offset = t - x_points[idx]
+            relx = offset / xranges[idx]
+            rely = sig(relx)
+            return values[idx] + (rely * ranges[idx])
+
+        def scaled_curve(t: float):
             # Branch on whether t is in bounds
             bounds_state = sum(t > xbounds)
             branches = [
@@ -172,6 +167,24 @@ def build_static_sigmoidal_multicurve(
             return lax.switch(bounds_state, branches, t, ydata["values"], ydata["ranges"])
 
     else:
+
+        def _build_curve(x_val, xrange, ybase_val, yrange):
+            def get_curve_at_t(t):
+                offset = t - x_val
+                relx = offset / xrange
+                rely = sig(relx)
+                return ybase_val + (rely * yrange)
+
+            return get_curve_at_t
+
+        curve_funcs = []
+        for i, xrange in enumerate(xranges):
+            x_val = x_points[i]
+            ybase_val = scale_data["values"][i]
+            yrange = scale_data["ranges"][i]
+            get_curve_at_t = _build_curve(x_val, xrange, ybase_val, yrange)
+            curve_funcs.append(get_curve_at_t)
+
         ymin = scale_data["min"]
         ymax = scale_data["max"]
 

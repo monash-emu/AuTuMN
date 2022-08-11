@@ -34,6 +34,7 @@ numba
 scipy==1.8.1
 networkx
 computegraph
+numpyro
 
 # Database access
 SQLAlchemy

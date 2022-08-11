@@ -1,4 +1,4 @@
-from autumn.core import jaxify
+from summer import jaxify
 
 fnp = jaxify.get_modules()["numpy"]
 

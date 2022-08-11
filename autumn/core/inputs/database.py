@@ -59,6 +59,9 @@ def build_input_database(rebuild: bool = False):
         with Timer("Deleting all existing data."):
             input_db.delete_everything()
 
+        with Timer("Ingesting COVID NT data."):
+            preprocess_covid_au(input_db)
+
         with Timer("Ingesting COVID PHL data."):
             preprocess_covid_phl(input_db)
 

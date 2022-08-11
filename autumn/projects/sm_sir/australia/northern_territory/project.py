@@ -1,10 +1,41 @@
 import json
+import pandas as pd
+from typing import Dict
+import datetime
+
+from summer.utils import ref_times_to_dti
+
 from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
+
+
+def get_ts_date_indexes(
+    ts_set: Dict[str, pd.Series], 
+    ref_time: datetime.datetime,
+)-> Dict[str, pd.Series]:
+    """
+    Get a version of a time series set, but with each
+    constituent time series having date indexes,
+    rather than integer.
+    
+    Args:
+        ts_set: The time series set we want to change
+        ref_time: The model's reference time
+    Returns:
+        A modified version of the time series set
+    
+    """
+    new_ts_set = {}
+    for indicator, ts in ts_set.items():
+        new_ts = ts.copy()
+        new_ts.index = ref_times_to_dti(ref_time, new_ts.index)
+        new_ts_set[indicator] = new_ts
+    return new_ts_set
+
 
 # Load and configure model parameters
 baseline_params = base_params.update(build_rel_path("params/baseline.yml"))

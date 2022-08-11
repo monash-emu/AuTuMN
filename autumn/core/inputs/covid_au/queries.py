@@ -2,10 +2,8 @@ from datetime import date, datetime
 
 import numpy as np
 import pandas as pd
-
 from autumn.core.inputs.database import get_input_db
 from autumn.core.utils.utils import apply_moving_average
-
 from autumn.settings.constants import COVID_BASE_DATETIME
 
 TINY_NUMBER = 1e-6
@@ -24,6 +22,18 @@ def get_vic_testing_numbers():
     test_values = df.tests.to_numpy()
     avg_vals = np.array(apply_moving_average(test_values, 7)) + TINY_NUMBER
     return test_dates, avg_vals
+
+
+def get_nt_testing_numbers():
+    """
+    Returns number of tests administered in Northern Territory.
+    """
+
+    input_db = get_input_db()
+    df = input_db.query("covid_nt", columns=["date_index", "total"])
+    test_series = pd.Series(list(df["total"]), index=df["date_index"]).dropna()
+    test_series += TINY_NUMBER
+    return test_series
 
 
 def get_dhhs_testing_numbers(cluster: str = None):
@@ -46,9 +56,7 @@ def get_dhhs_testing_numbers(cluster: str = None):
     return test_dates, avg_vals
 
 
-def get_historical_vac_coverage(
-    cluster: str = None, start_age: int = 0, end_age: int = 89, dose=1
-):
+def get_historical_vac_coverage(cluster: str = None, start_age: int = 0, end_age: int = 89, dose=1):
     """
     Returns vaccination coverage in Victorian health cluster.
     """
@@ -78,6 +86,7 @@ def get_historical_vac_coverage(
     avg_vals = np.array(apply_moving_average(coverage_values, 7)) + TINY_NUMBER
     return vac_dates, avg_vals
 
+
 def update_cond_map(cluster, cond_map):
     if cluster is None:
         cluster = "Victoria"
@@ -99,7 +108,9 @@ def get_modelled_vac_num(input_db, cond_map, dose):
     return df
 
 
-def get_both_vacc_coverage(cluster: str=None, start_age: int=0, end_age: int=89, dose="dose_1"):
+def get_both_vacc_coverage(
+    cluster: str = None, start_age: int = 0, end_age: int = 89, dose="dose_1"
+):
     """
     Use the following function (get_modelled_vac_coverage) to get the same data out for both vaccines from data provided
     by Vida at the Department.
@@ -107,17 +118,23 @@ def get_both_vacc_coverage(cluster: str=None, start_age: int=0, end_age: int=89,
     """
 
     # Extract the data
-    az_times, az_values = get_modelled_vac_coverage(cluster, start_age, end_age, vaccine="astra_zeneca", dose=dose)
-    pfizer_times, pfizer_values = get_modelled_vac_coverage(cluster, start_age, end_age, vaccine="pfizer", dose=dose)
+    az_times, az_values = get_modelled_vac_coverage(
+        cluster, start_age, end_age, vaccine="astra_zeneca", dose=dose
+    )
+    pfizer_times, pfizer_values = get_modelled_vac_coverage(
+        cluster, start_age, end_age, vaccine="pfizer", dose=dose
+    )
 
-    assert all(az_times == pfizer_times), "Modelled coverage times are different for Pfizer and Astra-Zeneca"
+    assert all(
+        az_times == pfizer_times
+    ), "Modelled coverage times are different for Pfizer and Astra-Zeneca"
     times = az_times
     both_values = az_values + pfizer_values
     return times, both_values
 
 
 def get_modelled_vac_coverage(
-    cluster: str = None, start_age: int = 0, end_age: int = 89, vaccine="pfizer", dose='dose_1'
+    cluster: str = None, start_age: int = 0, end_age: int = 89, vaccine="pfizer", dose="dose_1"
 ):
     """Returns the vaccination coverage per Vida's DHHS model
 
@@ -145,7 +162,7 @@ def get_modelled_vac_coverage(
 
     cond_map = {
         "vaccine_brand_name": vaccine,
-        "start_age>": start_age, 
+        "start_age>": start_age,
         "end_age<": end_age,
     }
 
@@ -174,7 +191,7 @@ def vida_pop(cluster, start_age, end_age, input_db):
     pop = input_db.query(
         "vida_pop",
         columns=["popn"],
-        conditions={            
+        conditions={
             "cluster_id": cluster,
             "start_age>": start_age,
             "end_age<": end_age,
@@ -210,7 +227,7 @@ def update_cond_map(cluster, cond_map):
 
 
 def get_yougov_date():
-    """ Return the entire YouGov table for Victoria"""
+    """Return the entire YouGov table for Victoria"""
     input_db = get_input_db()
     df = input_db.query("yougov_vic")
     return df

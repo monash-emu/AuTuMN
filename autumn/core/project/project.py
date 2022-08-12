@@ -1,35 +1,34 @@
-import os
-import logging
-import inspect
-import re
 import glob
-from datetime import datetime
-from typing import List, Callable, Optional, Dict, Tuple
-from importlib import import_module, reload as reload_module
+import inspect
 import json
+import logging
+import os
+import re
+from datetime import datetime
+from importlib import import_module
+from importlib import reload as reload_module
 from pathlib import Path
+from typing import Callable, Dict, List, Optional, Tuple
 
-
-import yaml
-import pandas as pd
 import numpy as np
-from summer.model import CompartmentalModel
-from summer.derived_outputs import DerivedOutputRequest
-
-from autumn.core.db.store import (
-    save_model_outputs,
-    build_outputs_table,
-    build_derived_outputs_table,
-    Table,
-)
+import pandas as pd
+import yaml
 from autumn.core.db.database import FeatherDatabase
-from autumn.core.utils.timer import Timer
-from autumn.core.utils.git import get_git_branch, get_git_hash
-from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH
+from autumn.core.db.store import (
+    Table,
+    build_derived_outputs_table,
+    build_outputs_table,
+    save_model_outputs,
+)
+from autumn.core.project.params import read_yaml_file
 from autumn.core.registry import _PROJECTS
+from autumn.core.utils.git import get_git_branch, get_git_hash
+from autumn.core.utils.timer import Timer
+from autumn.settings import BASE_PATH, DOCS_PATH, MODELS_PATH, OUTPUT_DATA_PATH
+from summer.derived_outputs import DerivedOutputRequest
+from summer.model import CompartmentalModel
 
 from .params import ParameterSet, Params
-from autumn.core.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ class Project:
         self.plots = plots or {}
         self.calibration = calibration
         self.diff_output_requests = diff_output_requests or []
-        self.ts_set = ts_set or Non
+        self.ts_set = ts_set or None
 
     def calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
         """

@@ -1,7 +1,8 @@
 from typing import List, Dict, Optional, Union
 
-from scipy import stats
+# from scipy import stats
 import numpy as np
+
 from numba import jit
 
 from autumn.model_features.outputs import OutputsBuilder
@@ -9,6 +10,14 @@ from autumn.models.sm_jax.parameters import TimeDistribution, VocComponent, AgeS
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
 from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_jax.stratifications.agegroup import convert_param_agegroups
+
+from summer import jaxify
+
+scipy = jaxify.get_modules()["scipy"]
+
+
+def gamma_cdf(shape, scale, x):
+    return scipy.special.gammainc(shape, x / scale)
 
 
 def get_immunity_prop_modifiers(

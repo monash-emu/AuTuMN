@@ -32,7 +32,7 @@ class Region:
     THIMPHU = "thimphu"
     MULTI = "multi"
     KIRIBATI = "kiribati"
-    NORTHERN_TERRITORY = "northern-territory"
+    NORTHERN_TERRITORY = "northern_territory"
 
     REGIONS = [
         PHILIPPINES,

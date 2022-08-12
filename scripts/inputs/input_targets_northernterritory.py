@@ -13,7 +13,7 @@ LOCAL_RUN = False
 STATES = ["ACT", "VIC", "NSW", "WA", "SA", "TAS", "QLD", "NT"]
 
 SM_SIR_PATH = {
-    "NT": Path(PROJECTS_PATH, "sm_sir", "australia", "northern-territory", "timeseries.json")
+    "NT": Path(PROJECTS_PATH, "sm_sir", "australia", "northern_territory", "timeseries.json")
 }
 
 

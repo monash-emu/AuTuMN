@@ -33,8 +33,6 @@ mobility:
 
 activate_random_process: False
 
-voc_emergence: null
-
 age_stratification:
   cfr:
     values:  # Replace with Omicron-applicable values from Nyberg
@@ -111,3 +109,11 @@ voc_emergence:
       ba_2:
         early_reinfection: 1.
         late_reinfection: 0.
+
+immunity_stratification:
+  prop_immune: .8
+  prop_high_among_immune: .1
+  infection_risk_reduction:
+    none: 0.
+    low: 0.
+    high: 0.6

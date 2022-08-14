@@ -376,16 +376,18 @@ def build_model(pdict: dict, build_options: dict = None) -> CompartmentalModel:
     )
     if clinical_strat:
         model.stratify_with(clinical_strat)
-        clinical_strata = clinical_strat.strata
 
-    # Need a placeholder for outputs otherwise
+    outputs_builder = SmSirOutputsBuilder(model, compartment_types)
+
+    if Compartment.INFECTIOUS_LATE in compartment_types:
+        incidence_flow = FlowName.WITHIN_INFECTIOUS
+    elif Compartment.LATENT in compartment_types:
+        incidence_flow = FlowName.PROGRESSION
     else:
-        clinical_strata = [""]
+        incidence_flow = FlowName.INFECTION
 
-    return builder
-    """
-    Apply strains stratification
-    """
+    outputs_builder.request_incidence(incidence_flow, False)
+    outputs_builder.request_notifications(time_to_event_params.notification)
 
     voc_params = params.voc_emergence
     if params.voc_emergence:
@@ -483,6 +485,8 @@ def build_model(pdict: dict, build_options: dict = None) -> CompartmentalModel:
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
+    return builder
+
     """
     Get the applicable outputs
     """
@@ -495,12 +499,7 @@ def build_model(pdict: dict, build_options: dict = None) -> CompartmentalModel:
         outputs_builder.request_cdr()
 
     # Determine what flow will be used to track disease incidence
-    if Compartment.INFECTIOUS_LATE in compartment_types:
-        incidence_flow = FlowName.WITHIN_INFECTIOUS
-    elif Compartment.LATENT in compartment_types:
-        incidence_flow = FlowName.PROGRESSION
-    else:
-        incidence_flow = FlowName.INFECTION
+
     outputs_builder.request_incidence(
         age_groups, clinical_strata, strain_strata, incidence_flow, params.request_incidence_by_age
     )

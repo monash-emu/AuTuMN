@@ -3,7 +3,7 @@ from typing import List, Dict, Optional, Union
 # from scipy import stats
 import numpy as np
 
-from numba import jit
+from numba import jit as numbajit
 
 from autumn.model_features.outputs import OutputsBuilder
 from autumn.models.sm_jax.parameters import TimeDistribution, VocComponent, AgeSpecificProps
@@ -11,13 +11,41 @@ from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
 from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_jax.stratifications.agegroup import convert_param_agegroups
 
+from summer.parameters.params import Function, Data, Parameter, DerivedOutput
+
 from summer import jaxify
 
-scipy = jaxify.get_modules()["scipy"]
+modules = jaxify.get_modules()
+scipy = modules["scipy"]
+jnp = modules["numpy"]
 
 
 def gamma_cdf(shape, scale, x):
     return scipy.special.gammainc(shape, x / scale)
+
+
+def apply_odds_ratio_to_proportion(proportion: float, odds_ratio: float) -> float:
+    """
+    Use an odds ratio to adjust a proportion.
+
+    Starts from the premise that the odds associated with the original proportion (p1) = p1 / (1 - p1)
+    and similarly, that the odds associated with the adjusted proportion (p2) = p2 / (1 - p2)
+    We want to multiply the odds associated with p1 by a certain odds ratio.
+    That, is we need to solve the following equation for p2:
+        p1 / (1 - p1) * OR = p2 / (1 - p2)
+    Solving the above for p2:
+        p2 = p1 * OR / (p1 * (OR - 1) + 1)
+
+    Args:
+        proportion: The original proportion (p1 in the description above)
+        odds_ratio: The odds ratio to adjust by (OR above)
+    Returns:
+        The adjusted proportion (p2 above)
+
+    """
+
+    # Transform and return
+    return proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
 
 def get_immunity_prop_modifiers(
@@ -66,6 +94,13 @@ def get_immunity_prop_modifiers(
 
 
 class SmSirOutputsBuilder(OutputsBuilder):
+    def get_strata_for_strat(self, strat_name: str):
+        stratification = self.model.get_stratification(strat_name)
+        if stratification:
+            return stratification.strata
+        else:
+            return None
+
     def request_cdr(self):
         """
         Register the CDR computed value as a derived output.
@@ -75,9 +110,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
     def request_incidence(
         self,
-        age_groups: List[str],
-        clinical_strata: List[str],
-        strain_strata: List[str],
         incidence_flow: str,
         request_incidence_by_age: bool,
     ):
@@ -96,6 +128,11 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
+        age_groups = self.get_strata_for_strat("agegroup")
+        clinical_strata = self.get_strata_for_strat("clinical") or [""]
+        strain_strata = self.get_strata_for_strat("strain") or [""]
+        immunity_strata = self.get_strata_for_strat("immunity") or [""]
+
         # Unstratified
         self.model.request_output_for_flow(name="incidence", flow_name=incidence_flow)
 
@@ -110,9 +147,9 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
             age_incidence_sources = []
 
-            for immunity_stratum in IMMUNITY_STRATA:
-                immunity_string = f"Ximmunity_{immunity_stratum}"
-                immunity_filter = {"immunity": immunity_stratum}
+            for immunity_stratum in immunity_strata:
+                immunity_string = f"Ximmunity_{immunity_stratum}" if immunity_stratum else ""
+                immunity_filter = {"immunity": immunity_stratum} if immunity_stratum else {}
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -174,9 +211,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             name="ever_detected_incidence", sources=detected_incidence_sources
         )
 
-    def request_notifications(
-        self, time_from_onset_to_notification: TimeDistribution, model_times: np.ndarray
-    ):
+    def request_notifications(self, time_from_onset_to_notification: TimeDistribution):
         """
         Request notification calculations.
 
@@ -186,16 +221,28 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         """
 
+        model_times = self.model.times
+
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         density_intervals = precompute_density_intervals(
             time_from_onset_to_notification, model_times
         )
 
+        self.model.builder.add_output("notifications_density_intervals", Data(density_intervals))
+
         # Request notifications
-        notifications_func = make_calc_notifications_func(density_intervals)
-        self.model.request_function_output(
+        # notifications_func = make_calc_notifications_func(density_intervals)
+
+        notifications_func = Function(
+            convolve_probability,
+            [
+                DerivedOutput("ever_detected_incidence"),
+                Parameter("notifications_density_intervals"),
+            ],
+        )
+
+        self.model.request_param_function_output(
             name="notifications",
-            sources=["ever_detected_incidence"],
             func=notifications_func,
         )
 
@@ -254,7 +301,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
                 # Adjust CFR proportions for immunity
                 adj_death_props = cfr_props * immune_death_modifiers[immunity_stratum]
+
                 or_adjuster_func = get_apply_odds_ratio_to_prop(cfr_prop_requests.multiplier)
+                odds_ratio = cfr_prop_requests.multiplier
+                # adj_death_props = {k:}
                 adj_death_props = adj_death_props.apply(or_adjuster_func)
 
                 for strain in strain_strata:
@@ -263,6 +313,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     # Find the strata we are working with and work out the strings to refer to
                     strata_string = f"{agegroup_string}{immunity_string}{strain_string}"
                     output_name = f"infection_deaths{strata_string}"
+
                     infection_deaths_sources.append(output_name)
                     age_infection_deaths_sources.append(output_name)
 
@@ -286,11 +337,14 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     )
 
             # Request infection deaths by age
-            self.model.request_aggregate_output(
-                name=f"infection_deaths{agegroup_string}",
-                sources=age_infection_deaths_sources,
-                save_results=True,
-            )
+            if request_infection_deaths_by_age:
+                self.model.request_aggregate_output(
+                    name=f"infection_deaths{agegroup_string}",
+                    sources=age_infection_deaths_sources,
+                    save_results=True,
+                )
+
+        # Request param func output that consumes all
 
         # Request aggregated infection deaths
         self.model.request_aggregate_output(
@@ -614,10 +668,11 @@ def build_statistical_distribution(distribution_details: TimeDistribution):
         A scipy statistical distribution object
 
     """
+    from scipy import stats
 
     if distribution_details.distribution == "gamma":
-        shape = distribution_details.parameters["shape"]
-        scale = distribution_details.parameters["mean"] / shape
+        shape = distribution_details.shape.value
+        scale = distribution_details.mean.value / shape
         return stats.gamma(a=shape, scale=scale)
 
 
@@ -636,9 +691,9 @@ def precompute_density_intervals(distribution_details, model_times):
     """
 
     distribution = build_statistical_distribution(distribution_details)
-    lags = [t - model_times[0] for t in model_times]
+    lags = model_times - model_times[0]
     cdf_values = distribution.cdf(lags)
-    interval_distri_densities = np.diff(cdf_values)
+    interval_distri_densities = np.gradient(cdf_values)
     return interval_distri_densities
 
 
@@ -657,14 +712,14 @@ def precompute_probas_stay_greater_than(distribution_details, model_times):
     """
 
     distribution = build_statistical_distribution(distribution_details)
-    lags = [t - model_times[0] for t in model_times]
+    lags = model_times - model_times[0]
     cdf_values = distribution.cdf(lags)
-    probas_stay_greater_than = 1 - cdf_values
+    probas_stay_greater_than = 1.0 - cdf_values
     return probas_stay_greater_than
 
 
-@jit
-def convolve_probability(
+@numbajit
+def _convolve_probability(
     source_output: np.ndarray, density_intervals: np.ndarray, scale: float = 1.0, lag: int = 1
 ) -> np.ndarray:
     """
@@ -691,6 +746,10 @@ def convolve_probability(
         convolved_output[i] = scale * convolution_sum
 
     return convolved_output
+
+
+def convolve_probability(source_output, density_kernel):
+    return jnp.convolve(source_output, density_kernel)[0 : len(source_output)]
 
 
 def apply_convolution_for_event(

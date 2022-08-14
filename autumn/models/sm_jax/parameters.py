@@ -199,8 +199,10 @@ class CompartmentSojourn(BaseModel):
     Compartment sojourn times, i.e. the mean period of time spent in a compartment.
     """
 
-    total_time: pclass(constraints.non_negative, "Total mean time in compartment")
-    proportion_early: Optional[pclass(constraints.unit_interval, "Proportion early")]
+    total_time: pclass(constraints.non_negative, "total_time", "Total mean time in compartment")
+    proportion_early: Optional[
+        pclass(constraints.unit_interval, "proportion_early", "Proportion early")
+    ]
 
 
 class Sojourns(BaseModel):
@@ -318,7 +320,7 @@ class AgeSpecificProps(BaseModel):
     values: Dict[int, float]
     source_immunity_distribution: Dict[str, float]
     source_immunity_protection: Dict[str, float]
-    multiplier: float
+    multiplier: pclass(constraints.non_negative)
 
     @validator("source_immunity_distribution", allow_reuse=True)
     def check_source_dist(vals):
@@ -356,13 +358,9 @@ class AgeStratification(BaseModel):
 
 class ImmunityRiskReduction(BaseModel):
 
-    none: float
-    low: float
-    high: float
-
-    check_none = validator("none", allow_reuse=True)(get_check_prop("none"))
-    check_low = validator("low", allow_reuse=True)(get_check_prop("low"))
-    check_high = validator("high", allow_reuse=True)(get_check_prop("high"))
+    none: pclass(constraints.unit_interval)
+    low: pclass(constraints.unit_interval)
+    high: pclass(constraints.unit_interval)
 
     @root_validator(pre=True, allow_reuse=True)
     def check_progression(cls, values):
@@ -373,14 +371,9 @@ class ImmunityRiskReduction(BaseModel):
 
 class ImmunityStratification(BaseModel):
 
-    prop_immune: float
-    prop_high_among_immune: float
+    prop_immune: pclass(constraints.unit_interval)
+    prop_high_among_immune: pclass(constraints.unit_interval)
     infection_risk_reduction: ImmunityRiskReduction
-
-    check_prop_immune = validator("prop_immune", allow_reuse=True)(get_check_prop("prop_immune"))
-    check_high_immune = validator("prop_high_among_immune", allow_reuse=True)(
-        get_check_prop("prop_high_among_immune")
-    )
 
 
 class TestingToDetection(BaseModel):
@@ -471,12 +464,15 @@ validate_dist = partial(validate_expected, "distribution")
 
 
 @dataclass
-class GammaDistribution:
+class GammaDistribution(ParamStruct):
     distribution: str
-    shape: pclass(constraints.positive)
-    mean: pclass()
+    shape: pclass(constraints.positive, desc="shape")
+    mean: pclass(desc="mean")
 
     _check_dist = validate_dist("gamma")
+
+    def __repr__(self):
+        return f"Gamma: {self.shape},{self.mean}"
 
 
 TimeDistribution = GammaDistribution

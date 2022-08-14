@@ -74,3 +74,40 @@ age_stratification:
       70: 0.0357
       75: 0.0357
       80: 0.1110
+
+voc_emergence:
+  ba_1:
+    starting_strain: true
+    seed_prop: 1.
+    new_voc_seed: null
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      ba_1:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      ba_2:  # Parameters currently irrelevant
+        early_reinfection: 0.
+        late_reinfection: 0.
+  ba_2:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 10000.
+      entry_rate: 10.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      ba_1:  # Parameters currently irrelevant
+        early_reinfection: 1.
+        late_reinfection: 1.
+      ba_2:  # Parameters currently irrelevant
+        early_reinfection: 1.
+        late_reinfection: 0.

@@ -7,7 +7,7 @@ from autumn.settings import COVID_BASE_DATETIME, INPUT_DATA_PATH, PROJECTS_PATH
 
 COVID_AUS_DIRPATH = Path(INPUT_DATA_PATH, "covid_au")
 URL = "https://govtstats.covid19nearme.com.au/data/all.csv"
-NT_DATA = COVID_AUS_DIRPATH / "NT data.xlsx"
+NT_DATA = COVID_AUS_DIRPATH / "NT data.secret.xlsx"
 
 LOCAL_RUN = False
 STATES = ["ACT", "VIC", "NSW", "WA", "SA", "TAS", "QLD", "NT"]

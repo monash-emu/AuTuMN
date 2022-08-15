@@ -26,6 +26,7 @@ from .stratifications.immunity import (
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
+from .stratifications.indigenous import get_indigenous_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 from autumn.settings.constants import COVID_BASE_DATETIME
 
@@ -549,6 +550,13 @@ def build_model(
                 start_immune_prop=immunity_params.prop_immune,
                 additional_immunity_points=params.additional_immunity,
             )
+
+    """
+    Indigenous stratification (for the Northern Territory application, only)
+    """
+
+    if params.indigenous:
+        indigenous_strat = get_indigenous_strat(compartment_types)
 
     """
     Get the applicable outputs

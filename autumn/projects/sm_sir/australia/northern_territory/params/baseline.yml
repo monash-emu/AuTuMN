@@ -117,3 +117,5 @@ immunity_stratification:
     none: 0.
     low: 0.
     high: 0.6
+
+indigenous: true

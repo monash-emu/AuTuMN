@@ -27,6 +27,8 @@ EXTRA_UNCERTAINTY_OUTPUTS = {
     "prop_ever_infected": "Proportion ever infected"
 }
 
+REQUESTED_UNC_QUANTILES = [.025, .25, .5, .75, .975]
+
 def get_school_project(region):
 
     assert region in Region.SCHOOL_PROJECT_REGIONS, f"{region} is not registered as a school project Region"
@@ -141,7 +143,7 @@ def get_school_project_timeseries(region):
         "title": "Daily number of deaths",
         "times": (pd.to_datetime(data["date"])- COVID_BASE_DATETIME).dt.days.to_list(),
         "values": data["smoothed_new_deaths"].to_list(),
-        "quantiles": [.025, .25, .5, .75, .975]
+        "quantiles": REQUESTED_UNC_QUANTILES
     }
 
     # Repeat same process for cumulated deaths
@@ -157,7 +159,7 @@ def get_school_project_timeseries(region):
         "title": "Cumulative number of deaths",
         "times": (pd.to_datetime(data["date"])- COVID_BASE_DATETIME).dt.days.to_list(),
         "values": data["total_deaths"].to_list(),
-        "quantiles": [.025, .25, .5, .75, .975]
+        "quantiles": REQUESTED_UNC_QUANTILES
     }
 
     # add extra derived output with no data to request uncertainty
@@ -167,7 +169,7 @@ def get_school_project_timeseries(region):
             "title": title,
             "times": [],
             "values": [],
-            "quantiles": [.025, .25, .5, .75, .975]
+            "quantiles": REQUESTED_UNC_QUANTILES
         }
 
     return timeseries

@@ -52,7 +52,7 @@ priors = [
 ]
 start_time = baseline_params["time"]["start"]
 targets = [
-    NormalTarget(data=ts_set["notifications"].loc[: start_time]),
+    NormalTarget(data=ts_set["notifications"].loc[start_time:]),
 ]
 
 calibration = Calibration(

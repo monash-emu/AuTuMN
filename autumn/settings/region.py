@@ -99,6 +99,7 @@ class Region:
 
     WPRO_REGIONS = [MALAYSIA, NCR]
 
+    SCHOOL_PROJECT_REGIONS = [PHILIPPINES, FRANCE]
     @staticmethod
     def to_filename(name: str):
         return name.replace("-", "_")

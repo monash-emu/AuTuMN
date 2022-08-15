@@ -568,7 +568,10 @@ def build_model(
             index=age_groups
         )
 
-        indigenous_proportions = indigenous_age_pops / age_pops
+        non_indigenous_age_pops = age_pops - indigenous_age_pops
+
+        indigenous_proportions = indigenous_age_pops / indigenous_age_pops.sum()
+        non_indigenous_proportions = non_indigenous_age_pops / non_indigenous_age_pops.sum()
 
         overall_indigenous_prop = indigenous_age_pops.sum() / age_pops.sum()
 
@@ -578,8 +581,9 @@ def build_model(
         )
         model.stratify_with(indigenous_strat)
 
-
-        # model.adjust_population_split("")
+        
+        model.adjust_population_split("agegroup", {"indigenous": "indigenous"}, indigenous_proportions.to_dict())
+        model.adjust_population_split("agegroup", {"indigenous": "non_indigenous"}, non_indigenous_proportions.to_dict())
 
     """
     Get the applicable outputs

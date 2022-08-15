@@ -21,12 +21,10 @@ def get_indigenous_strat(
     """
 
     strat = Stratification("indigenous", ["indigenous", "non_indigenous"], compartments)
-
     strat.set_population_split(
         {
             "indigenous": overall_indigenous_prop, 
             "non_indigenous": 1. - overall_indigenous_prop
         }
     )
-
     return strat

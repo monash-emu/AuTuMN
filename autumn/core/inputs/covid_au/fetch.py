@@ -2,9 +2,9 @@
 This file imports Google mobility data and saves it to disk as a CSV.
 """
 
-import pandas as pd
-
 from pathlib import Path
+
+import pandas as pd
 from autumn.settings import INPUT_DATA_PATH
 
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
@@ -13,7 +13,7 @@ INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 DATA_URL = "https://raw.githubusercontent.com/M3IT/COVID-19_Data/master/Data/COVID_AU_state_daily_change.csv"
 COVID_AU_DIRPATH = INPUT_DATA_PATH / "covid_au"
 COVID_AU_CSV_PATH = COVID_AU_DIRPATH / "COVID_AU_state_daily_change.csv"
-NT_DATA = COVID_AU_DIRPATH / "NT data.secret.xlsx"
+NT_DATA = COVID_AU_DIRPATH / "NT-data.secret.xlsx"
 
 YOUGOV_URL = "https://github.com/YouGov-Data/covid-19-tracker/raw/master/data/australia.zip"
 COVID_AU_YOUGOV = COVID_AU_DIRPATH / "yougov_australia.csv"

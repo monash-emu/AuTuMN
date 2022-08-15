@@ -1,17 +1,16 @@
-from email.mime import base
-import json
-import pandas as pd
-from typing import Dict
 import datetime
+import json
+from email.mime import base
+from typing import Dict
 
-from summer.utils import ref_times_to_dti
-
-from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path
+import pandas as pd
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
+from autumn.core.project import ParameterSet, Project, build_rel_path, load_timeseries
 from autumn.models.sm_sir import base_params, build_model
-from autumn.settings import Region, Models
+from autumn.settings import Models, Region
+from summer.utils import ref_times_to_dti
 
 
 def get_ts_date_indexes(
@@ -48,7 +47,7 @@ ts_path = build_rel_path("timeseries.secret.json")
 ts_set = load_timeseries(ts_path)
 priors = [
     UniformPrior("contact_rate", (0.03, 0.08)),
-    UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.2, 0.6))
+    UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.2, 0.6)),
 ]
 start_time = baseline_params["time"]["start"]
 targets = [

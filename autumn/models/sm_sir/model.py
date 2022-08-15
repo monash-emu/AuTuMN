@@ -557,33 +557,38 @@ def build_model(
 
     if params.indigenous:
 
-
+        # Get the population totals from the database
         age_pops = pd.Series(
             inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year),
-            index=age_groups
+            index=age_groups,
         )
-
         indigenous_age_pops = pd.Series(
             inputs.get_population_by_agegroup(age_groups, iso3, "NT_ABORIGINAL", pop.year),
-            index=age_groups
+            index=age_groups,
         )
-
         non_indigenous_age_pops = age_pops - indigenous_age_pops
 
-        indigenous_proportions = indigenous_age_pops / indigenous_age_pops.sum()
-        non_indigenous_proportions = non_indigenous_age_pops / non_indigenous_age_pops.sum()
-
+        # Get the stratification object, including the overall population split
         overall_indigenous_prop = indigenous_age_pops.sum() / age_pops.sum()
-
         indigenous_strat = get_indigenous_strat(
             compartment_types,
             overall_indigenous_prop,
         )
         model.stratify_with(indigenous_strat)
 
-        
-        model.adjust_population_split("agegroup", {"indigenous": "indigenous"}, indigenous_proportions.to_dict())
-        model.adjust_population_split("agegroup", {"indigenous": "non_indigenous"}, non_indigenous_proportions.to_dict())
+        # Distribute the population within their Indigenous status category
+        indigenous_agedist = indigenous_age_pops / indigenous_age_pops.sum()
+        non_indigenous_agedist = non_indigenous_age_pops / non_indigenous_age_pops.sum()  
+        model.adjust_population_split(
+            "agegroup", 
+            {"indigenous": "indigenous"}, 
+            indigenous_agedist.to_dict(),
+        )
+        model.adjust_population_split(
+            "agegroup", 
+            {"indigenous": "non_indigenous"}, 
+            non_indigenous_agedist.to_dict(),
+        )
 
     """
     Get the applicable outputs

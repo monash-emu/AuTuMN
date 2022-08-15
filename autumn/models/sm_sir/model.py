@@ -556,7 +556,24 @@ def build_model(
     """
 
     if params.indigenous:
-        indigenous_strat = get_indigenous_strat(compartment_types)
+        indigenous_strat = get_indigenous_strat(
+            compartment_types, 
+        )
+        model.stratify_with(indigenous_strat)
+
+        age_pops = pd.Series(
+            inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year),
+            index=age_groups
+        )
+
+        indigenous_age_pops = pd.Series(
+            inputs.get_population_by_agegroup(age_groups, iso3, "NT_ABORIGINAL", pop.year),
+            index=age_groups
+        )
+
+        indigenous_proportions = indigenous_age_pops / age_pops
+
+        # model.adjust_population_split()
 
     """
     Get the applicable outputs

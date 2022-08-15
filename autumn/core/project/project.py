@@ -25,7 +25,7 @@ from autumn.core.db.store import (
 from autumn.core.db.database import FeatherDatabase
 from autumn.core.utils.timer import Timer
 from autumn.core.utils.git import get_git_branch, get_git_hash
-from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH
+from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH, Region, Models
 from autumn.core.registry import _PROJECTS
 
 from .params import ParameterSet, Params
@@ -203,24 +203,33 @@ LOADED_PROJECTS = set()
 
 def get_project(model_name: str, project_name: str, reload=False) -> Project:
     """
-    Returns a registered project
+    Returns a project
     """
-    assert model_name in _PROJECTS, f"Model {model_name} not registered as a project."
-    msg = f"Project {project_name} not registered as a project using model {model_name}."
-    assert project_name in _PROJECTS[model_name], msg
-    import_path = _PROJECTS[model_name][project_name]
+    # If a school closure project is requested, will call the relevant project builder function 
+    if model_name == Models.SM_COVID and project_name in Region.SCHOOL_PROJECT_REGIONS:
+        # Ugly import within function definition to avoid circular imports
+        from autumn.projects.sm_covid.common_school.project_maker import get_school_project
+        project = get_school_project(project_name)
 
-    project_module = import_module(import_path)
-    if import_path in LOADED_PROJECTS and reload:
-        reload_module(project_module)
+    # Otherwise, the project is loaded from the relevant project.py file 
+    else:
+        assert model_name in _PROJECTS, f"Model {model_name} not registered as a project."
+        msg = f"Project {project_name} not registered as a project using model {model_name}."
+        assert project_name in _PROJECTS[model_name], msg
+        import_path = _PROJECTS[model_name][project_name]
 
-    try:
-        project = project_module.project
-    except (AttributeError, AssertionError):
-        msg = f"Cannot find a Project instance named 'project' in {import_path}"
-        raise ImportError(msg)
+        project_module = import_module(import_path)
+        if import_path in LOADED_PROJECTS and reload:
+            reload_module(project_module)
 
-    LOADED_PROJECTS.add(import_path)
+        try:
+            project = project_module.project
+        except (AttributeError, AssertionError):
+            msg = f"Cannot find a Project instance named 'project' in {import_path}"
+            raise ImportError(msg)
+
+        LOADED_PROJECTS.add(import_path)
+        
     return project
 
 

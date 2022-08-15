@@ -148,7 +148,7 @@ mobility:
   region: null
   mixing: {}
   age_mixing: null
-  # Mapping of Google mobility locations to Prem-specific locations
+  # Mapping of Google mobility locations to matrix locations
   google_mobility_locations:
     work:
       workplaces: 1.

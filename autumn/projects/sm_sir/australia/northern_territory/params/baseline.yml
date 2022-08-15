@@ -2,13 +2,11 @@
 country:
   iso3: AUS
 
-
 population:
   region: Northern Territory
   year: 2020
 
-
-ref_mixing_iso3: CHN
+ref_mixing_iso3: GBR
 
 contact_rate: 0.4
 

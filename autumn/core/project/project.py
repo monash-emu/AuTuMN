@@ -1,39 +1,38 @@
-import os
-import logging
-import inspect
-import re
 import glob
-from datetime import datetime
-from typing import List, Callable, Optional, Dict, Tuple
-from importlib import import_module, reload as reload_module
+import inspect
 import json
+import logging
+import os
+import re
+from datetime import datetime
+from importlib import import_module
+from importlib import reload as reload_module
 from pathlib import Path
+from typing import Callable, Dict, List, Optional, Tuple
 
-
-import yaml
-import pandas as pd
 import numpy as np
-from summer.model import CompartmentalModel
-from summer.derived_outputs import DerivedOutputRequest
-
-from autumn.core.db.store import (
-    save_model_outputs,
-    build_outputs_table,
-    build_derived_outputs_table,
-    Table,
-)
+import pandas as pd
+import yaml
 from autumn.core.db.database import FeatherDatabase
-from autumn.core.utils.timer import Timer
-from autumn.core.utils.git import get_git_branch, get_git_hash
-from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH
+from autumn.core.db.store import (
+    Table,
+    build_derived_outputs_table,
+    build_outputs_table,
+    save_model_outputs,
+)
+from autumn.core.project.params import read_yaml_file
 from autumn.core.registry import _PROJECTS
+from autumn.core.utils.git import get_git_branch, get_git_hash
+from autumn.core.utils.timer import Timer
+from autumn.settings import BASE_PATH, DOCS_PATH, MODELS_PATH, OUTPUT_DATA_PATH
+from summer.derived_outputs import DerivedOutputRequest
+from summer.model import CompartmentalModel
 
 from .params import ParameterSet, Params
-from autumn.core.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
-ModelBuilder = Callable[[dict,dict], CompartmentalModel]
+ModelBuilder = Callable[[dict, dict], CompartmentalModel]
 
 
 class Project:
@@ -48,16 +47,18 @@ class Project:
         build_model: ModelBuilder,
         param_set: ParameterSet,
         calibration,  # A Calibration instance
-        plots: dict = {},  # Previously, targets JSON.
-        diff_output_requests: List[Tuple[str, str]] = [],
+        plots: dict = None,  # Previously, targets JSON.
+        diff_output_requests: List[Tuple[str, str]] = None,
+        ts_set: dict = None,
     ):
         self.region_name = region_name
         self.model_name = model_name
         self.build_model = build_model
         self.param_set = param_set
-        self.plots = plots
+        self.plots = plots or {}
         self.calibration = calibration
-        self.diff_output_requests = diff_output_requests
+        self.diff_output_requests = diff_output_requests or []
+        self.ts_set = ts_set or None
 
     def calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
         """
@@ -67,8 +68,10 @@ class Project:
             self.calibration.run(self, max_seconds, chain_idx, num_chains)
 
     def run_baseline_model(
-        self, params: Params, derived_outputs_whitelist: Optional[List[str]] = None,
-        build_options: Optional[dict] = None
+        self,
+        params: Params,
+        derived_outputs_whitelist: Optional[List[str]] = None,
+        build_options: Optional[dict] = None,
     ) -> CompartmentalModel:
         """
         Run the project's baseline model with the given parameters.
@@ -89,7 +92,7 @@ class Project:
         scenario_params: List[Params],
         start_time: Optional[float] = None,
         start_times: Optional[List[float]] = None,
-        build_options: Optional[List[dict]] = None
+        build_options: Optional[List[dict]] = None,
     ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
@@ -108,9 +111,8 @@ class Project:
 
         models = []
         assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
-        for start_time, params, build_opt in \
-            zip(start_times, scenario_params, build_options):
-            
+        for start_time, params, build_opt in zip(start_times, scenario_params, build_options):
+
             params_dict = params.to_dict()
             model = self.build_model(params_dict, build_opt)
 
@@ -190,13 +192,14 @@ class Project:
         """
         Return a pathlib.Path to the current project directory
         """
-        return Path(BASE_PATH) / '/'.join(self._get_path().split('.')[:-1])  
+        return Path(BASE_PATH) / "/".join(self._get_path().split(".")[:-1])
 
     def __repr__(self):
         return f"Project<{self.model_name}, {self.region_name}>"
 
     def _get_path(self):
         return _PROJECTS[self.model_name][self.region_name]
+
 
 LOADED_PROJECTS = set()
 
@@ -320,11 +323,13 @@ def get_all_available_scenario_paths(scenario_dir_path):
     :param scenario_dir_path: path to the directory
     :return: a list of paths
     """
-    glob_str = os.path.join(scenario_dir_path, 'scenario-*.yml')
+    glob_str = os.path.join(scenario_dir_path, "scenario-*.yml")
     scenario_file_list = glob.glob(glob_str)
 
     # Sort by integer rather than string (so that 'scenario-2' comes before 'scenario-10')
-    file_list_sorted = sorted(scenario_file_list, key = lambda x: int(re.match('.*scenario-([0-9]*)',x).group(1)))
+    file_list_sorted = sorted(
+        scenario_file_list, key=lambda x: int(re.match(".*scenario-([0-9]*)", x).group(1))
+    )
 
     return file_list_sorted
 

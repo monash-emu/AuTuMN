@@ -13,17 +13,14 @@ INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 DATA_URL = "https://raw.githubusercontent.com/M3IT/COVID-19_Data/master/Data/COVID_AU_state_daily_change.csv"
 COVID_AU_DIRPATH = INPUT_DATA_PATH / "covid_au"
 COVID_AU_CSV_PATH = COVID_AU_DIRPATH / "COVID_AU_state_daily_change.csv"
+NT_DATA = COVID_AU_DIRPATH / "NT data.xlsx"
 
-YOUGOV_URL = (
-    "https://github.com/YouGov-Data/covid-19-tracker/raw/master/data/australia.zip"
-)
+YOUGOV_URL = "https://github.com/YouGov-Data/covid-19-tracker/raw/master/data/australia.zip"
 COVID_AU_YOUGOV = COVID_AU_DIRPATH / "yougov_australia.csv"
 
 COVID_LGA_CSV_PATH = COVID_AU_DIRPATH / "lga_test.csv"
 MOBILITY_DIRPATH = INPUT_DATA_PATH / "mobility"
-MOBILITY_LGA_PATH = (
-    MOBILITY_DIRPATH / "LGA to Cluster mapping dictionary with proportions.csv"
-)
+MOBILITY_LGA_PATH = MOBILITY_DIRPATH / "LGA to Cluster mapping dictionary with proportions.csv"
 
 COVID_VAC_COV_CSV = COVID_AU_DIRPATH / "vac_cov.csv"
 COVID_VIDA_VAC_CSV = COVID_AU_DIRPATH / "vida_vac.secret.csv"

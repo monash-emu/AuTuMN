@@ -7,13 +7,12 @@ from autumn.settings import COVID_BASE_DATETIME, INPUT_DATA_PATH, PROJECTS_PATH
 
 COVID_AUS_DIRPATH = Path(INPUT_DATA_PATH, "covid_au")
 URL = "https://govtstats.covid19nearme.com.au/data/all.csv"
-NT_DATA = COVID_AUS_DIRPATH / "NT data.secret.xlsx"
+NT_DATA = COVID_AUS_DIRPATH / "NT-data.secret.xlsx"
 
-LOCAL_RUN = False
 STATES = ["ACT", "VIC", "NSW", "WA", "SA", "TAS", "QLD", "NT"]
 
 SM_SIR_PATH = {
-    "NT": Path(PROJECTS_PATH, "sm_sir", "australia", "northern_territory", "timeseries.json")
+    "NT": Path(PROJECTS_PATH, "sm_sir", "australia", "northern_territory", "timeseries.secret.json")
 }
 
 
@@ -28,8 +27,9 @@ TARGETS_ABC = {
 
 TARGETS_NT = {
     "notifications": "total_cases",
-    "hospital_admission": "total",
+    "hospital_admission": "total_hosp",
     "icu_admission": "freq.",
+    "infection_deaths": "total_deaths",
 }
 
 
@@ -54,6 +54,13 @@ nt_param_map = {
         "usecols": [1, 2],
         "datecol": "icu_date",
     },
+    "Deaths": {
+        "sheet_name": "Deaths Time Series",
+        "skipfooter": 2,
+        "skiprows": [0, 2],
+        "usecols": [0, 2],
+        "datecol": "dec_date",
+    },
 }
 
 
@@ -66,8 +73,7 @@ def main():
         df = pd.read_excel(NT_DATA, **dict(kwargs))
         df = create_date_index(COVID_BASE_DATETIME, df, date[1])
 
-        if LOCAL_RUN or each == "Cases":
-            update_timeseries(TARGETS_NT, df, SM_SIR_PATH["NT"])
+        update_timeseries(TARGETS_NT, df, SM_SIR_PATH["NT"])
 
 
 def fetch_abc_aus_data():

@@ -207,7 +207,7 @@ time_from_onset_to_event:  # using time of symptom onset as reference
   death:
     distribution: gamma
     parameters:
-      shape: 120.
+      shape: 10.
       mean: 15.93 # Malahat Khalili et al. . https://doi.org/10.1017/S0950268820001430
 
 prop_icu_among_hospitalised: .08  # NSW data

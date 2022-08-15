@@ -1,3 +1,4 @@
+from email.mime import base
 import json
 import pandas as pd
 from typing import Dict
@@ -49,8 +50,9 @@ priors = [
     UniformPrior("contact_rate", (0.03, 0.08)),
     UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.2, 0.6))
 ]
+start_time = baseline_params["time"]["start"]
 targets = [
-    NormalTarget(data=ts_set["notifications"]),
+    NormalTarget(data=ts_set["notifications"].loc[: start_time]),
 ]
 
 calibration = Calibration(

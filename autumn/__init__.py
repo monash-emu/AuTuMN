@@ -141,3 +141,12 @@ register_project(
     Region.KIRIBATI,
     "autumn.projects.tb_dynamics.kiribati.project",
 )
+
+# WPRO list
+import json
+from pathlib import Path
+
+wpro_list = json.load(open(Path(__file__).parent / "wpro_list.json"))
+
+for wpro_project in wpro_list:
+    register_project(Models.SM_SIR, wpro_project["region"], wpro_project["path"])

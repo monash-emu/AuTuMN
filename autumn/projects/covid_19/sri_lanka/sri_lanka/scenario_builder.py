@@ -1,10 +1,10 @@
 from autumn.models.covid_19.mixing_matrix.macrodistancing import get_mobility_specific_period
 
-scenario_start_time = [505, 495, 556, 481, 506, 640]  # 505 - 20 May, 476 - 29th April,
-# 567 - 21st July 2021, 481 - 25 April, 507- May 21, 650 - Oct 01
-lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from May 9 - June 9",
-                  "What if lockdown was initiated from July 20 - Aug 30", "No vaccination",
-                  "Second lockdown based on WHO mortalilty threshold",
+scenario_start_time = [505, 476, 556, 481, 640, 640]  # 505 - 20 May, 476 - 21st April,
+# 556 - 9th July 2021, 481 - 25 April, 650 - Oct 01
+lockdown_title = ["No lockdowns placed", "What if lockdown was initiated from April 21 - June 21",
+                  "What if lockdown was initiated from July 10 - Oct 01", "No vaccination",
+                  "Slower increase in mobility after lockdown ends on 01st October",
                   "Faster increase in mobility after lockdown ends on 01st October"]
 scenario_end_time = [791, 791, 791, 791, 791, 791]
 
@@ -30,7 +30,7 @@ def get_vaccine_roll_out(lockdown_scenario):
 
 
 def get_all_scenario_dicts(country: str):
-    num_scenarios = 5
+    num_scenarios = 4
     all_scenario_dicts = []
 
     for i_lockdown_scenario in [*range(0, num_scenarios)]:
@@ -43,16 +43,27 @@ def get_all_scenario_dicts(country: str):
         }
         # mobility parameters
         if i_lockdown_scenario == 0:
+
+
+            # from May 21 - 21 June, the average mobility observed before May 21
+            times1 = [*range(507, 539)]
+            values1 = {'work': [0.68] * len(times1), 'other_locations': [0.78] * len(times1)}
+
+            # from August 21 - 01st October the average mobility observed before August 21
+            times2 = [*range(599, 641)]
+            values2 = {'work': [0.65] * len(times2), 'other_locations': [0.85] * len(times2)}
+
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {
                     "append": True,
-                    "times": [scenario_start_time[i_lockdown_scenario]] + [scenario_start_time[i_lockdown_scenario]+1],
-                    "values": [["repeat_prev"]] + [1.5]
+                    "times": [scenario_start_time[i_lockdown_scenario]] + times1 + times2 + [times2[-1] + 1],
+                    "values": [["repeat_prev"]] + values1[key_loc] + values2[key_loc] +
+                              [["repeat_prev"]]
                 }
 
-        if i_lockdown_scenario == 1:  # What if lockdown was initiated from May 9 - June 9
+        if i_lockdown_scenario == 1:  # What if lockdown was initiated from April 29 - May 29
 
-            # lockdown mobility from 21May -21 June applied from May 9 - June 9
+            # lockdown mobility from 21May -21 June applied from April 29 - May 29
             times1, values1 = get_mobility_specific_period(country, None,
                                                            {'work': {'workplaces': 1.},
                                                             'other_locations': {'retail_and_recreation': 0.333,
@@ -60,13 +71,16 @@ def get_all_scenario_dicts(country: str):
                                                                                 'transit_stations': 0.334},
                                                             'home': {'residential': 1.}}, [507, 537])
 
-            times1 = [*range(496, 526)]  # lockdown values from May 21 - June 21 is assigned from May 9 -June 9
+            times1 = [*range(485, 515)]  # lockdown values from May 21 - June 21 is assigned from April 29 -May 29
 
             # from May 30 - 21 June, the average mobility after lockdown
-            times2 = [*range(526, 539)]
-            values2 = {'work': [0.6] * len(times2), 'other_locations': [0.72] * len(times2)}
+            times2 = [*range(515, 539)]
+            values2 = {'work': [0.65] * len(times2), 'other_locations': [0.8] * len(times2)}
 
             # From June 22nd onwards actual mobility levels
+            # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown)
+            # from Sep 01 st onwards
+
             times3, values3 = get_mobility_specific_period(country, None,
                                                            {'work': {'workplaces': 1.},
                                                             'other_locations': {'retail_and_recreation': 0.333,
@@ -78,10 +92,11 @@ def get_all_scenario_dicts(country: str):
                 scenario_dict["mobility"]["mixing"][key_loc] = {
                     "append": True,
                     "times": [scenario_start_time[i_lockdown_scenario]] + times1 + times2 +
-                              times3 + [times3[-1] + 1],
+                             times3 + [times3[-1] + 1],
                     "values": [["repeat_prev"]] + values1[key_loc] + values2[key_loc] +
                               values3[key_loc] + [["repeat_prev"]]
                 }
+
         if i_lockdown_scenario == 2:  # What if lockdown was initiated from July 21 - Aug 31
 
             # lockdown mobility from 21Aug -01 Oct is assigned from July 21 - Aug 31 in the scenario
@@ -90,59 +105,48 @@ def get_all_scenario_dicts(country: str):
                                                             'other_locations': {'retail_and_recreation': 0.333,
                                                                                 'grocery_and_pharmacy': 0.333,
                                                                                 'transit_stations': 0.334},
-                                                            'home': {'residential': 1.}}, [599, 630])
-            times1 = [*range(568, 599)]  # July 21 - Aug 31
+                                                            'home': {'residential': 1.}}, [599, 640])
+            times1 = [*range(568, 609)]  # July 21 - 31 August
 
-            times3 = [*range(599, 641)]
-            values3 = {'work': [0.5] * len(times3), 'other_locations': [0.5] * len(times3)}
+            times2 = [*range(609, 640)]
+            values2 = {'work': [0.71] * len(times2), 'other_locations': [0.96] * len(times2)}
 
             # In the scenarios applying the actual values observed from Oct 02 -Oct 12 (after lockdown) frm Sep 01 st onwards
-            times2, values2 = get_mobility_specific_period(country, None,
-                                                           {'work': {'workplaces': 1.},
-                                                            'other_locations': {'retail_and_recreation': 0.333,
-                                                                                'grocery_and_pharmacy': 0.333,
-                                                                                'transit_stations': 0.334},
-                                                            'home': {'residential': 1.}}, [641, 670])
-            #times2 = [*range(610, 639)]  # from Sep 01st onwards
-
-            for key_loc in ["other_locations", "work"]:
-                scenario_dict["mobility"]["mixing"][key_loc] = {
-                    "append": True,
-                    "times": [scenario_start_time[i_lockdown_scenario]] + times1 + times3 +
-                             times2 + [times2[-1] + 1],
-                    "values": [["repeat_prev"]] + values1[key_loc] + values3[key_loc] + values2[key_loc] +
-                              [["repeat_prev"]]
-                }
-        if i_lockdown_scenario == 4:  # What if lockdown was initiated based on death indicator on 13th June 2021            # lockdown mobility from 21May -21 June applied from April 29 - May 29
-            times1, values1 = get_mobility_specific_period(country, None,
-                                                           {'work': {'workplaces': 1.},
-                                                            'other_locations': {'retail_and_recreation': 0.333,
-                                                                                'grocery_and_pharmacy': 0.333,
-                                                                                'transit_stations': 0.334},
-                                                            'home': {'residential': 1.}}, [507, 537])
-
-            times1 = [*range(530, 560)]  # lockdown values from May 21 - June 21 is assigned from 13June -July 13th
-
-            # from May 21 - 13 June, the average mobility before lockdown
-            times2 = [*range(507, 530)]
-            values2 = {'work': [0.65] * len(times2), 'other_locations': [0.8] * len(times2)}
-
-            # From July 13th onwards actual mobility levels
             times3, values3 = get_mobility_specific_period(country, None,
                                                            {'work': {'workplaces': 1.},
                                                             'other_locations': {'retail_and_recreation': 0.333,
                                                                                 'grocery_and_pharmacy': 0.333,
                                                                                 'transit_stations': 0.334},
-                                                            'home': {'residential': 1.}}, [560, 670])
+                                                            'home': {'residential': 1.}}, [640, 670])
 
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {
                     "append": True,
-                    "times": [scenario_start_time[i_lockdown_scenario]] + times2 + times1 +
-                              times3 + [times3[-1] + 1],
-                    "values": [["repeat_prev"]] + values2[key_loc] + values1[key_loc] +
-                              values3[key_loc] + [["repeat_prev"]]
+                    "times": [scenario_start_time[i_lockdown_scenario]] + times1 + times2 +
+                    times3 + [times3[-1] + 1],
+                    "values": [["repeat_prev"]] + values1[key_loc] + values2[key_loc] + values3[key_loc] +
+                              [["repeat_prev"]]
                 }
+
+        if i_lockdown_scenario == 4:  # "Slower increase in mobility after lockdown ends on 01st October"
+            for key_loc in ["other_locations", "work"]:
+                if key_loc == "other_locations":
+                    scenario_dict["mobility"]["mixing"][key_loc] = {
+                        "append": True,
+                        "times": [scenario_start_time[i_lockdown_scenario]] + [
+                            scenario_start_time[i_lockdown_scenario] + 1] +
+                                 [671, 672, 701, 702, 731, 732],
+                        "values": [["repeat_prev"]] + [0.85] + [0.85, 0.9, 0.9, 0.95, 0.95, 1.04]
+                    }
+                if key_loc == "work":
+                    scenario_dict["mobility"]["mixing"][key_loc] = {
+                        "append": True,
+                        "times": [scenario_start_time[i_lockdown_scenario]] + [
+                            scenario_start_time[i_lockdown_scenario] + 1] +
+                                 [671, 672, 701, 702, 731, 732],
+                        "values": [["repeat_prev"]] + [0.7] + [0.7, 0.75, 0.75, 0.8, 0.8, 1.00]
+                    }
+            # scenario 3 is the same mobility as baseline but no vaccination
 
         if i_lockdown_scenario == 5:  # "Faster increase in mobility after lockdown ends on 01st October"
             for key_loc in ["other_locations", "work"]:
@@ -190,5 +194,3 @@ def get_all_scenario_dicts(country: str):
 
         all_scenario_dicts.append(scenario_dict)
     return all_scenario_dicts
-
-

@@ -16,6 +16,7 @@ ROHINGYA_POP = os.path.join(
 )
 BTN_DATA_PATH = os.path.join(INPUT_DATA_PATH, "covid_btn")
 NT_ABORIGINAL_POP = Path(INPUT_DATA_PATH, "covid_au", "Aboriginal population.csv")
+NT_POP = Path(INPUT_DATA_PATH, "covid_au", "NT-population.csv")
 
 
 def preprocess_demography(input_db: Database):
@@ -465,10 +466,21 @@ def get_bhutan_pop(BTN_DATA_PATH, add_pop_cols):
 
 
 def get_nt_aboriginal_pop(path: Path) -> pd.DataFrame:
+    def fix_nt_pop(df):
+        df["population"] = df["population"] / 1000
+        df["start_age"] = df["age"].apply(lambda s: 100 if "+" in s else int(s.split("-")[0]))
+        df["end_age"] = df["age"].apply(lambda s: 104 if "+" in s else int(s.split("-")[1]))
+
+        return df
+
     df = pd.read_csv(NT_ABORIGINAL_POP)
     df = add_pop_cols(df, "AUS", "Australia", "NT_ABORIGINAL", "2020")
-    df["population"] = df["population"] / 1000
+    df = fix_nt_pop(df)
 
-    df["start_age"] = df["age"].apply(lambda s: 100 if s == "100+" else int(s.split("-")[0]))
-    df["end_age"] = df["age"].apply(lambda s: None if s == "100+" else int(s.split("-")[1]))
+    df_nt_pop = pd.read_csv(NT_POP)
+    df_nt_pop = add_pop_cols(df_nt_pop, "AUS", "Australia", "Northern Territory", "2020")
+    df_nt_pop = fix_nt_pop(df_nt_pop)
+
+    df = pd.concat([df, df_nt_pop], ignore_index=True)
+
     return df.drop(columns="age")

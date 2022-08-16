@@ -52,22 +52,27 @@ def get_nt_vac_coverage(
     """
     input_db = get_input_db()
 
+    def filter_df(df):
+        return df[(df["start_age"] >= start_age) & (df["end_age"] <= end_age)]
+
     cond_map = {
         "population": pop_type,
         "dose_number": dose,
-        "start_age>": start_age,
-        "end_age<": end_age,
     }
 
     pop = get_pop(pop_type, start_age, end_age, input_db)
+    pop = filter_df(pop)
+    pop = pop["population"].sum()
+
     df = get_historical_vac_num(input_db, cond_map)
+    df = filter_df(df)
 
     # Total number of vaccinations per day
     df = df[["date_index", "doses"]].groupby(["date_index"], as_index=False).sum()
 
     # Cumulative vaccination and coverage
     df["cml_doses"] = df["doses"].cumsum()
-    df["cml_coverage"] = df.cml_n / pop
+    df["cml_coverage"] = df["cml_doses"] / pop
 
     vac_dates = df.date_index.to_numpy()
     coverage_values = df.cml_coverage.to_numpy()
@@ -88,13 +93,12 @@ def get_historical_vac_num(input_db, cond_map):
 def get_pop(pop_type, start_age, end_age, input_db):
     pop = input_db.query(
         "population",
-        columns=["population"],
+        columns=["start_age", "end_age", "population"],
         conditions={
+            "country": "Australia",
+            "iso3": "AUS",
             "year": 2020,
             "region": pop_type,
-            "start_age>": start_age,
-            "end_age<": end_age,
         },
     )
-    pop = pop.population.sum()
     return pop

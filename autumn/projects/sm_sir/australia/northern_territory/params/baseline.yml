@@ -11,11 +11,14 @@ time:
   end: 1000.
   step: 1.
 
-contact_rate: 0.05
+infectious_seed: 2.
+contact_rate: 0.055
 
 ref_mixing_iso3: GBR
 
 detect_prop: 0.4
+
+is_dynamic_mixing_matrix: true
 
 mobility:
   google_mobility_locations:
@@ -102,13 +105,13 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.
       ba_2:
-        early_reinfection: 0.4
+        early_reinfection: 0.3
         late_reinfection: 0.
   ba_2:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 730.
+      start_time: 725.
       entry_rate: 15.
       seed_duration: 10.
     contact_rate_multiplier: 1.

@@ -12,7 +12,14 @@ time:
   step: 1.
 
 infectious_seed: 2.
-contact_rate: 0.055
+contact_rate: 0.045
+
+sojourns:
+  active:
+    proportion_early: 0.333
+  latent:
+    proportion_early: 0.5
+  recovered: 180.
 
 ref_mixing_iso3: GBR
 
@@ -105,14 +112,14 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.
       ba_2:
-        early_reinfection: 0.3
+        early_reinfection: 0.45
         late_reinfection: 0.
   ba_2:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 725.
-      entry_rate: 15.
+      start_time: 715.
+      entry_rate: 20.
       seed_duration: 10.
     contact_rate_multiplier: 1.
     immune_escape: 0.
@@ -136,3 +143,25 @@ immunity_stratification:
     high: 0.6
 
 indigenous: true
+
+time_from_onset_to_event:  # Using time of symptom onset as reference
+  notification:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 3.
+  hospitalisation:
+    distribution: gamma
+    parameters:
+      shape: 8.
+      mean: 5.
+  icu_admission:  # Using time of hospitalisation as reference
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 2.
+  death:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 20.

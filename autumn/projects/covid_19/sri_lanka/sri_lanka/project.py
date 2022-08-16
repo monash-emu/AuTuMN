@@ -39,7 +39,7 @@ priors = [
     UniformPrior("contact_rate", [0.02, 0.05]),
     UniformPrior("infectious_seed", [450, 500]),
     # Detection
-    UniformPrior("infection_fatality.multiplier", [0.1, 1.25]),
+    UniformPrior("infection_fatality.multiplier", [0.5, 2.5]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.001, 0.02]),
     UniformPrior("contact_tracing.assumed_trace_prop", [0.55, 0.9]),
     UniformPrior("hospital_reporting", [0.25, 0.75]),

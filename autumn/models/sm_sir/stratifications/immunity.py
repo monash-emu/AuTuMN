@@ -9,6 +9,7 @@ from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
+from autumn.core.inputs.covid_au.queries import get_nt_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -429,6 +430,8 @@ def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, 
         elif region == "Hanoi":
             raw_data_double = pd.Series({822: 0.9, 884: 0.54})
             raw_data_booster = pd.Series({822: 0.045, 884: 0.045})
+    elif iso3 == "AUS" and region == "Northern Territory":
+        raw_data_double = get_nt_vac_coverage()
 
     # Add on the starting effective coverage value
     historical_vacc_data = {        

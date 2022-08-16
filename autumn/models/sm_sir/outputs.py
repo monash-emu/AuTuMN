@@ -543,7 +543,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         [n_age_immune_name],
                     )
 
-
     def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
         """
         Compute cumulative outputs for requested outputs.
@@ -556,6 +555,44 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for output in requested_cumulative_outputs:
             self.model.request_cumulative_output(name=f"cumulative_{output}", source=output, start_time=cumulative_start_time)
 
+    def request_strain_prevalence(
+            self, 
+            compartment_types: List[str],
+            strains: List[str],
+        ):
+        """
+        Calculate the proportion of the total prevalence contributed by each strain.
+
+        One-liner for plotting the strain proportions in a notebook would be:
+        derived_df[[f"strain_propXstrain_{strain}" for strain in model._stratifications[2].strata]].plot.area()
+
+        Args:
+            compartment_types: The unstratified compartment names
+            strains: The names of the strains being implemented
+        """
+
+        # Get the total number of prevalent cases for the denominator
+        self.model.request_output_for_compartments(
+            name="total_prevalence",
+            compartments=compartment_types,
+            save_results=False,
+        )
+
+        # Get the strain-specific prevalence
+        for strain in strains:
+            self.model.request_output_for_compartments(
+                name=f"strain_prevXstrain_{strain}",
+                compartments=compartment_types,
+                strata={"strain": strain},
+                save_results=False,
+            )
+
+            # Calculate the proportion for each strain
+            self.model.request_function_output(
+                name=f"strain_propXstrain_{strain}",
+                sources=[f"strain_prevXstrain_{strain}", "total_prevalence"],
+                func=lambda num, denom: num / denom,
+            )
 
 def build_statistical_distribution(distribution_details: TimeDistribution):
     """

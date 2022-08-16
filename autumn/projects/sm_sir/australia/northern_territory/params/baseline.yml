@@ -29,6 +29,24 @@ mobility:
 
 activate_random_process: False
 
+age_groups:
+  - 0
+  - 5
+  - 10
+  - 15
+  - 20
+  - 25
+  - 30
+  - 35
+  - 40
+  - 45
+  - 50
+  - 55
+  - 60
+  - 65
+  - 70
+  - 75
+
 age_stratification:
   cfr:
     values:  # Replace with Omicron-applicable values from Nyberg

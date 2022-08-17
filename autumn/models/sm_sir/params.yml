@@ -171,7 +171,7 @@ immunity_stratification:
     low: 0.
     high: 0.6
   
-vaccination_data_thinning: None
+vaccination_data_thinning: null
 
 time_from_onset_to_event:  # using time of symptom onset as reference
   notification:

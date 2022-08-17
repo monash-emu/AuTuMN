@@ -517,7 +517,7 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     # Implement the dynamic immunity process
-    vacc_coverage_available = ["BGD", "BTN", "MYS"]
+    vacc_coverage_available = ["BGD", "BTN"]
     simple_boosting = ["AUS"]
     vacc_booster_available = ["PHL", "VNM"]
     vacc_region_available = ["Metro Manila", "Hanoi", "Ho Chi Minh City", None, "Northern Territory"]

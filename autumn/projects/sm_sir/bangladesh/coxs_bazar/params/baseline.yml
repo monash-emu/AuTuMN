@@ -77,4 +77,4 @@ hospital_stay:
     parameters:
       mean: 20.
 
-
+vaccination_data_thinning: 20

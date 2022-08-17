@@ -78,3 +78,5 @@ testing_to_detection:
   assumed_cdr_parameter: 0.0015
   smoothing_period: 14
   floor_value: 0.
+
+vaccination_data_thinning: 20

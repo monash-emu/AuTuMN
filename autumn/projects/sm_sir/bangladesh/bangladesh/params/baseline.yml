@@ -133,3 +133,5 @@ age_stratification:
     multiplier: 0.035
   prop_hospital:
     multiplier: 0.06
+
+vaccination_data_thinning: 20

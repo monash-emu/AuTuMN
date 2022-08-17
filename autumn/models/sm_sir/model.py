@@ -521,7 +521,6 @@ def build_model(
     is_dynamic_immunity = iso3 in vacc_coverage_available and region in vacc_region_available
 
     if is_dynamic_immunity:
-        thinning = 20 if iso3 == "BGD" else None
 
         if iso3 == "PHL" or iso3 == "VNM":
             apply_reported_vacc_coverage_with_booster(
@@ -530,7 +529,7 @@ def build_model(
                 age_groups,
                 iso3,
                 region,
-                thinning=thinning,
+                thinning=params.vaccination_data_thinning,
                 model_start_time=params.time.start,
                 start_immune_prop=immunity_params.prop_immune,
                 start_prop_high_among_immune=immunity_params.prop_high_among_immune,
@@ -545,7 +544,7 @@ def build_model(
                 compartment_types,
                 model,
                 iso3,
-                thinning=thinning,
+                thinning=params.vaccination_data_thinning,
                 model_start_time=params.time.start,
                 start_immune_prop=immunity_params.prop_immune,
             )

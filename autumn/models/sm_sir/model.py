@@ -548,7 +548,6 @@ def build_model(
                 thinning=thinning,
                 model_start_time=params.time.start,
                 start_immune_prop=immunity_params.prop_immune,
-                additional_immunity_points=params.additional_immunity,
             )
 
     """

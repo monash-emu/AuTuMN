@@ -234,7 +234,6 @@ def apply_reported_vacc_coverage(
         thinning: int,
         model_start_time: int,
         start_immune_prop: float,
-        additional_immunity_points: TimeSeries,
 ):
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -252,8 +251,6 @@ def apply_reported_vacc_coverage(
 
     if iso3 == "BGD":
         raw_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
-    elif iso3 == "PHL":
-        raw_data = get_phl_vac_coverage(dose="SECOND_DOSE")
     elif iso3 == "BTN":
         raw_data = get_btn_vac_coverage(region="Bhutan", dose=2)
     elif iso3 == "MYS":
@@ -262,35 +259,16 @@ def apply_reported_vacc_coverage(
         raw_data = get_nt_vac_coverage(dose=2)
 
     vaccine_data = raw_data[raw_data.index > model_start_time]
-    # vaccine_data = pd.concat(pd.Series({model_start_time: start_immune_prop}), raw_data)
 
     vaccine_data = pd.concat((pd.Series({model_start_time: start_immune_prop}), vaccine_data))
 
     vaccine_data = vaccine_data[::2]
 
-    # # Add on the starting effective coverage value
-    # if iso3 == "BGD" or iso3 == "PHL" or iso3 == "BTN" or iso3 == "MYS":
-    #     vaccine_data = pd.concat(
-    #         (
-    #             pd.Series({model_start_time: start_immune_prop}),
-    #             raw_data
-    #         )
-    #     )
-    # else:
-    #     vaccine_data = pd.Series({model_start_time: start_immune_prop})
-
-    # Add user-requested additional immunity points
-    if additional_immunity_points:
-        additional_vacc_series = pd.Series({k: v for k, v in zip(additional_immunity_points.times, additional_immunity_points.values)})
-        vacc_data_with_waning = pd.concat((vaccine_data, additional_vacc_series))
-    else:
-        vacc_data_with_waning = vaccine_data
-
     # Be explicit about each of the three immunity categories
     vaccine_df = pd.DataFrame(
         {
-            "none": 1. - vacc_data_with_waning,
-            "low": vacc_data_with_waning,
+            "none": 1. - vaccine_data,
+            "low": vaccine_data,
         },
     )
     vaccine_df["high"] = 0.

@@ -516,7 +516,6 @@ class Parameters:
 
     # Vaccination/immunity-related
     booster_effect_duration: float
-    additional_immunity: Optional[TimeSeries]
     future_monthly_booster_rate: Optional[float]
     future_booster_age_allocation: Optional[
         Union[

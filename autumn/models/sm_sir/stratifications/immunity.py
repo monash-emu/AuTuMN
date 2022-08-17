@@ -249,6 +249,7 @@ def apply_reported_vacc_coverage(
 
     """
 
+    # Get the raw data from the loading functions
     if iso3 == "BGD":
         raw_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
     elif iso3 == "BTN":
@@ -258,24 +259,33 @@ def apply_reported_vacc_coverage(
     elif iso3 == "AUS":
         raw_data = get_nt_vac_coverage(dose=2)
 
-    vaccine_data = raw_data[raw_data.index > model_start_time]
+    # Get rid of any data that is from before the model starts running
+    vaccine_data = raw_data[model_start_time < raw_data.index]
 
-    vaccine_data = pd.concat((pd.Series({model_start_time: start_immune_prop}), vaccine_data))
-
-    vaccine_data = vaccine_data[::2]
+    # Add on the user requested starting proportion
+    vaccine_data = pd.concat(
+        (
+            pd.Series({model_start_time: start_immune_prop}), 
+            vaccine_data,
+        )
+    )
 
     # Be explicit about each of the three immunity categories
     vaccine_df = pd.DataFrame(
         {
             "none": 1. - vaccine_data,
             "low": vaccine_data,
+            "high": 0.,
         },
     )
-    vaccine_df["high"] = 0.
 
-    # Apply to model, as below
-    thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
-    add_dynamic_immunity_to_model(compartments, thinned_df, model, "all_ages")
+    # Apply to model
+    add_dynamic_immunity_to_model(
+        compartments, 
+        vaccine_df[::thinning], 
+        model, 
+        "all_ages"
+    )
 
 
 def get_recently_vaccinated_prop(coverage_df: pd.DataFrame, recent_timeframe: float) -> pd.DataFrame:

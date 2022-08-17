@@ -17,3 +17,6 @@ infectious_seed: 1.
 #stratification
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
 age_mixing: null
+
+# basic infection and disease parameters
+contact_rate: 1.4

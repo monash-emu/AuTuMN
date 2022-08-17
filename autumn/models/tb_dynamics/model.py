@@ -68,21 +68,35 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     birth_rates = [b / 1000.0 for b in birth_rates]  # Birth rates are provided / 1000 population
     crude_birth_rate = scale_up_function(years, birth_rates, smoothness=0.2, method=5)
 
-    #Add crude birth flow to the model
+    # Add crude birth flow to the model
     model.add_crude_birth_flow(
         "birth",
         crude_birth_rate,
         Compartment.SUSCEPTIBLE,
     )
 
+    # Add transition flow
+    contact_rate = params.contact_rate
+    contact_rate_latent = params.contact_rate * params.rr_infection_latent
+
+    model.add_infection_frequency_flow(
+        "infection",
+        contact_rate,
+        Compartment.SUSCEPTIBLE,
+        Compartment.EARLY_LATENT
+    )
+    model.add_infection_frequency_flow(
+        "infection_from_latent",
+        contact_rate_latent,
+        Compartment.LATE_LATENT,
+        Compartment.EARLY_LATENT,
+    )
     # Add universal death flow to the model
     universal_death_rate = params.crude_death_rate
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
-    #Add Age stratification to the model
-    age_strat = get_age_strat(
-        params.age_breakpoints, iso3, age_pops, BASE_COMPARTMENTS
-    )
+    # Add Age stratification to the model
+    age_strat = get_age_strat(params.age_breakpoints, iso3, age_pops, BASE_COMPARTMENTS)
     model.stratify_with(age_strat)
 
     # Generate outputs

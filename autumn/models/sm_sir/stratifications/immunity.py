@@ -296,6 +296,7 @@ def apply_general_coverage(
         model_start_time: int,
         start_immune_prop: float,
         start_prop_high_among_immune: float,
+        boosting: bool=False,
 ):
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -337,7 +338,7 @@ def apply_general_coverage(
     # Thin as per request
     vaccine_data = vaccine_data[::thinning]
 
-    # Format according to the immunity strata
+    # Format according to the request
     two_strata_data = vaccine_data[["never", "full"]]
     two_strata_data.columns = ["none", "low"]
     two_strata_data["high"] = 0.
@@ -348,7 +349,7 @@ def apply_general_coverage(
     # Apply to model
     add_dynamic_immunity_to_model(
         compartments, 
-        two_strata_data, 
+        three_strata_data if boosting else two_strata_data, 
         model, 
         "all_ages"
     )

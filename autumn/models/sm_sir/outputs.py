@@ -563,9 +563,6 @@ class SmSirOutputsBuilder(OutputsBuilder):
         """
         Calculate the proportion of the total prevalence contributed by each strain.
 
-        One-liner for plotting the strain proportions in a notebook would be:
-        derived_df[[f"strain_propXstrain_{strain}" for strain in model._stratifications[2].strata]].plot.area()
-
         Args:
             compartment_types: The unstratified compartment names
             strains: The names of the strains being implemented

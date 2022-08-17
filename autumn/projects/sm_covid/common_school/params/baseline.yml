@@ -5,3 +5,33 @@ country:
   country_name: Philippines
 
 ref_mixing_iso3: HKG
+
+# Parameters below are MLE for France
+
+age_stratification:
+  ifr:
+    multiplier: 0.5037767302184167
+
+contact_rate: 0.038387557750256165
+
+infectious_seed_time: 20.136140829663276
+
+random_process:
+  noise_sd: 0.996766006663876
+  values: 
+    - 0.
+    - -1.0319658023504714
+    - -1.7837507988076873
+    - -0.39216532721001807
+    - -0.572871270765422
+    - -0.5864804468446225
+    - -0.3568098667825119
+    - -0.8097273849390747
+    - -1.6004940643493286
+    - -1.0216021860771891
+    - -0.20405266265057453
+
+voc_emergence:
+  delta:
+    new_voc_seed:
+      time_from_gisaid_report: 2.016845900106553

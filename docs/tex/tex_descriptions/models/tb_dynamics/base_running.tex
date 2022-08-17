@@ -1,0 +1,38 @@
+% This file is the basic running of the model, just the population growth of Kiribati
+
+
+\section{Population growth}
+\subsection{Crude birth rate and death rate}
+Births are modelled using time-variant crude birth rates that are multiplied by the modelled population 
+size to determine the number of newborn individuals entering the model at each time. A time-variant 
+and age-specific rate or non-TB-related mortality applies to all model compartments to simulate 
+deaths from other causes than TB. We use estimates from the UN population division \footnote{https://population.un.org/wpp/Download/Standard/Mortality/}  to inform the 
+birth and mortality rates. No data specific to the Marshall Islands were available, so we used the crude 
+birth rates and mortality rates by age of the Federated States of Micronesia.
+We also apply additional death rates to the compartments I and T to reflect mortality induced by TB 
+disease
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{cbr.png}
+    \caption{The crude birth rate of Kiribati from 1950 to 2020.}
+    \label{fig:cbr}
+\end{figure}
+
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{cdr.png}
+    \caption{The death rate of Kiribati from 1950 to 2020, stratified by age group.}
+    \label{fig:cdr}
+\end{figure}
+
+\subsection{Comparing modeled population with actual population}
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{modelled_total.png}
+    \caption{Comparing modelled population with actual population of Kirbati from 1950 to 2020. The red dots represent the actual population size of Kiribati,
+     while the blue line represents the modelled population size}
+    \label{fig:modelled_total}
+\end{figure}
+
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{compare_pop.png}
+    \caption{Comparing modelled population with actual population by age groups of Kirbati from 1950 to 2020.}
+    \label{fig:compare_group}
+\end{figure}

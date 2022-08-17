@@ -1,0 +1,27 @@
+\documentclass{article}
+\author{
+    Epidemiological Modelling Unit,
+    \\ School of Public Health and Preventive Medicine,
+    \\ Monash University
+}
+\usepackage{graphicx}
+\usepackage[style=nature, backend=biber]{biblatex}
+\usepackage{threeparttable}
+\usepackage{tabularx}
+\usepackage[left=2.5cm,right=2.5cm]{geometry}
+\usepackage[labelfont=bf]{caption}
+
+\addbibresource{../../references/emu_library.bib}
+\title{Modelling methods, Kiribati application}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+\input{../../tex_descriptions/models/tb_dynamics/model_description.tex}
+\input{../../tex_descriptions/models/tb_dynamics/base_running.tex}
+
+\newpage    
+\printbibliography
+\end{document}

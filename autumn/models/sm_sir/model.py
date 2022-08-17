@@ -671,7 +671,7 @@ def build_model(
 
     # Strain-specific proportions of prevalent cases
     if params.voc_emergence:
-        ever_infected_compartments = [i_comp for i_comp in compartment_types if "susceptible" not in i_comp]
+        ever_infected_compartments = [comp for comp in compartment_types if "infectious" in comp]
         outputs_builder.request_strain_prevalence(
             ever_infected_compartments,
             strain_strata,

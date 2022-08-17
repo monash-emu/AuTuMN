@@ -9,6 +9,7 @@ from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
+from autumn.core.inputs.covid_au.queries import get_nt_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -257,17 +258,26 @@ def apply_reported_vacc_coverage(
         raw_data = get_btn_vac_coverage(region="Bhutan", dose=2)
     elif iso3 == "MYS":
         raw_data = get_mys_vac_coverage(dose="full")
+    elif iso3 == "AUS":
+        raw_data = get_nt_vac_coverage(dose=2)
 
-    # Add on the starting effective coverage value
-    if iso3 == "BGD" or iso3 == "PHL" or iso3 == "BTN" or iso3 == "MYS":
-        vaccine_data = pd.concat(
-            (
-                pd.Series({model_start_time: start_immune_prop}),
-                raw_data
-            )
-        )
-    else:
-        vaccine_data = pd.Series({model_start_time: start_immune_prop})
+    vaccine_data = raw_data[raw_data.index > model_start_time]
+    # vaccine_data = pd.concat(pd.Series({model_start_time: start_immune_prop}), raw_data)
+
+    vaccine_data = pd.concat((pd.Series({model_start_time: start_immune_prop}), vaccine_data))
+
+    vaccine_data = vaccine_data[::2]
+
+    # # Add on the starting effective coverage value
+    # if iso3 == "BGD" or iso3 == "PHL" or iso3 == "BTN" or iso3 == "MYS":
+    #     vaccine_data = pd.concat(
+    #         (
+    #             pd.Series({model_start_time: start_immune_prop}),
+    #             raw_data
+    #         )
+    #     )
+    # else:
+    #     vaccine_data = pd.Series({model_start_time: start_immune_prop})
 
     # Add user-requested additional immunity points
     if additional_immunity_points:

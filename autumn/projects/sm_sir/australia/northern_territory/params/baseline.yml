@@ -135,8 +135,8 @@ voc_emergence:
         late_reinfection: 0.
 
 immunity_stratification:
-  prop_immune: .8
-  prop_high_among_immune: .1
+  prop_immune: .5  # Close to starting value around October 2021
+  prop_high_among_immune: .0
   infection_risk_reduction:
     none: 0.
     low: 0.

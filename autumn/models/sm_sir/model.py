@@ -23,6 +23,7 @@ from .stratifications.immunity import (
     adjust_reinfection_with_strains,
     apply_reported_vacc_coverage,
     apply_reported_vacc_coverage_with_booster,
+    apply_general_coverage,
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
@@ -516,7 +517,8 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     # Implement the dynamic immunity process
-    vacc_coverage_available = ["BGD", "BTN", "AUS", "MYS"]
+    vacc_coverage_available = ["BGD", "BTN", "MYS"]
+    simple_boosting = ["AUS"]
     vacc_booster_available = ["PHL", "VNM"]
     vacc_region_available = ["Metro Manila", "Hanoi", "Ho Chi Minh City", None, "Northern Territory"]
 
@@ -536,6 +538,16 @@ def build_model(
             future_booster_age_allocation=params.future_booster_age_allocation,
             age_pops=age_pops,
             model_end_time=params.time.end
+        )
+    elif iso3 in simple_boosting and region in vacc_region_available:
+        apply_general_coverage(
+            compartment_types,
+            model,
+            iso3,
+            thinning=params.vaccination_data_thinning,
+            model_start_time=params.time.start,
+            start_immune_prop=immunity_params.prop_immune,
+            start_prop_high_among_immune=immunity_params.prop_high_among_immune,
         )
     elif iso3 in vacc_coverage_available and region in vacc_region_available:
         apply_reported_vacc_coverage(

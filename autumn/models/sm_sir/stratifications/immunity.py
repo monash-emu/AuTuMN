@@ -288,6 +288,71 @@ def apply_reported_vacc_coverage(
     )
 
 
+def apply_general_coverage(
+        compartments: List[str],
+        model: CompartmentalModel,
+        iso3: str,
+        thinning: int,
+        model_start_time: int,
+        start_immune_prop: float,
+        start_prop_high_among_immune: float,
+):
+    """
+    Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
+    apply it to the model as a dynamic stratum.
+
+    Args:
+        compartments: Unstratified model compartment types being implemented
+        model: The model itself
+        iso3: The ISO-3 code for the country being implemented
+        thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
+        model_start_time: Model starting time
+        start_immune_prop: Vaccination coverage at the time that the model starts running
+
+    """
+
+    # Get the raw data from the loading functions and drop rows with any nans
+    if iso3 == "AUS":
+        vaccine_data = pd.DataFrame(
+            {
+                "full": get_nt_vac_coverage(dose=2), 
+                "boost": get_nt_vac_coverage(dose=3),
+            }
+        ).dropna(axis=0)
+
+    # Get rid of any data that is from before the model starts running
+    vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
+
+    # Add on the user requested starting proportion and move it to the start
+    vaccine_data.loc[model_start_time] = {
+        "full": start_immune_prop, 
+        "boost": start_immune_prop * start_prop_high_among_immune,
+    }
+    vaccine_data.sort_index(inplace=True)
+
+    # Get all the proportions we could be interested in
+    vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
+    vaccine_data["never"] = 1. - vaccine_data["full"]
+
+    # Thin as per request
+    vaccine_data = vaccine_data[::thinning]
+
+    # Format according to the immunity strata
+    two_strata_data = vaccine_data[["never", "full"]]
+    two_strata_data.columns = ["none", "low"]
+    two_strata_data["high"] = 0.
+
+    three_strata_data = vaccine_data[["never", "full_only", "boost"]]
+    three_strata_data.columns = ["none", "low", "high"]
+
+    # Apply to model
+    add_dynamic_immunity_to_model(
+        compartments, 
+        two_strata_data, 
+        model, 
+        "all_ages"
+    )
+
 def get_recently_vaccinated_prop(coverage_df: pd.DataFrame, recent_timeframe: float) -> pd.DataFrame:
     """
     Calculate the proportion of the population vaccinated in a given recent timeframe over time.

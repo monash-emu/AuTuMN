@@ -658,8 +658,10 @@ class Calibration:
                 proposed_logprior = self.logprior(all_params_dict)
 
                 # Evaluate the log-likelihood of the random process if applicable
-                if self.includes_random_process:
-                    proposed_logprior += self.random_process.evaluate_rp_loglikelihood()
+                
+                # FIXME: remove rp contribution (for a quick test)
+                # if self.includes_random_process:
+                #     proposed_logprior += self.random_process.evaluate_rp_loglikelihood()
 
                 # posterior distribution
                 proposed_log_posterior = proposed_loglike + proposed_logprior

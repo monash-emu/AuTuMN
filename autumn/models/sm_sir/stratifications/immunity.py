@@ -395,6 +395,8 @@ def apply_reported_vacc_coverage_with_booster(
         extra_coverage = future_monthly_booster_rate / age_pops.sum()
         dynamic_strata_distributions =  get_immune_strata_distributions_from_fixed_increment(historical_vacc_data, extra_coverage, model_end_time, booster_effect_duration, thinning)
 
+        dynamic_strata_distributions = dynamic_strata_distributions.dropna(axis=0)
+
         # Add transition flows to the models
         add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, "all_ages")    
 
@@ -431,22 +433,21 @@ def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, 
             raw_data_double = pd.Series({822: 0.9, 884: 0.54})
             raw_data_booster = pd.Series({822: 0.045, 884: 0.045})
     elif iso3 == "AUS" and region == "Northern Territory":
-        raw_data_double = get_nt_vac_coverage()
+        raw_data_double = get_nt_vac_coverage(dose=2)
+        raw_data_booster = get_nt_vac_coverage(dose=3)
+
+    # Truncate input data from the model start time
+    raw_data_double = raw_data_double.loc[model_start_time:]
+    raw_data_booster = raw_data_booster.loc[model_start_time:]
+
+    # Replace the starting value with the user request
+    raw_data_double[model_start_time] = start_immune_prop
+    raw_data_booster[model_start_time] = start_immune_prop * start_prop_high_among_immune
 
     # Add on the starting effective coverage value
     historical_vacc_data = {        
-        'double': pd.concat(
-            (
-                pd.Series({model_start_time: start_immune_prop}),
-                raw_data_double
-            )
-        ),
-        'booster': pd.concat(
-            (
-                pd.Series({model_start_time: start_immune_prop * start_prop_high_among_immune}),
-                raw_data_booster
-            )
-        )               
+        'double': raw_data_double,
+        'booster': raw_data_booster,               
     }
 
     return historical_vacc_data
@@ -488,7 +489,8 @@ def get_immune_strata_distributions_from_fixed_increment(
         # also extend double_vacc_data to keep the same format as booster_data
         vacc_data["double"].loc[new_time] = latest_double_coverage
 
-    waned_booster_data = get_recently_vaccinated_prop(vacc_data["booster"], booster_effect_duration)
+    # waned_booster_data = get_recently_vaccinated_prop(vacc_data["booster"], booster_effect_duration)
+    waned_booster_data = vacc_data["booster"]
 
     # Create a single dataframe with the strata distributions over time
     strata_distributions_df = pd.DataFrame(

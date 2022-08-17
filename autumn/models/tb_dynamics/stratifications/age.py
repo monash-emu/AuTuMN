@@ -1,14 +1,18 @@
 from typing import List
 import pandas as pd
 import numpy as np
-from summer import AgeStratification, Overwrite
+from summer import AgeStratification, Overwrite, Multiply
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve import scale_up_function
-
+from autumn.models.tuberculosis.parameters import Parameters
+from autumn.core.utils.utils import change_parameter_unit
+from autumn.models.tuberculosis.utils import (
+    get_parameter_dict_from_function,
+    create_step_function_from_dict,
+)
 
 def get_age_strat( 
-    age_breakpoints: List[str],
-    iso3: str,
+    params: Parameters,
     age_pops: pd.Series,
     compartments: List[str]
 ) -> AgeStratification:
@@ -17,8 +21,7 @@ def get_age_strat(
      Function to create the age group stratification object..
 
     Args:
-        params: All model parameters
-        age_groups: List of age groups as string
+        params: Parameter class 
         age_pops: The population distribution by age
         age_mixing_matrix: The age-specific mixing matrix
         compartments: All the model compartments
@@ -26,6 +29,8 @@ def get_age_strat(
     Returns:
         The age stratification summer object
     """
+    age_breakpoints = params.age_breakpoints
+    iso3 = params.iso3
     strat = AgeStratification("age", age_breakpoints, compartments)
     age_split_props = age_pops / age_pops.sum()
     strat.set_population_split(age_split_props.to_dict())
@@ -41,5 +46,20 @@ def get_age_strat(
     for comp in compartments:
         flow_name = f"universal_death_for_{comp}"
         strat.set_flow_adjustments(flow_name, death_adjs)
+
+     # Set age-specific latency parameters (early/late activation + stabilisation).
+    for flow_name, latency_params in params.age_specific_latency.items():
+        is_activation_flow = flow_name in ["early_activation", "late_activation"]
+        if is_activation_flow:
+            # Apply progression multiplier.
+            latency_params = {
+                k: v * params.progression_multiplier for k, v in latency_params.items()
+            }
+
+        step_func = create_step_function_from_dict(latency_params)
+        step_func_as_dict = get_parameter_dict_from_function(step_func, params.age_breakpoints)
+        adjs = change_parameter_unit(step_func_as_dict, 365.251)
+        adjs = {str(k): Multiply(v) for k, v in adjs.items()}
+        strat.set_flow_adjustments(flow_name, adjs)
 
     return strat

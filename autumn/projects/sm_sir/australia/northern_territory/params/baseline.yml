@@ -7,12 +7,12 @@ population:
   year: 2020
 
 time:
-  start: 650.
+  start: 675.
   end: 1000.
   step: 1.
 
 infectious_seed: 2.
-contact_rate: 0.045
+contact_rate: 0.053
 
 sojourns:
   active:
@@ -23,7 +23,7 @@ sojourns:
 
 ref_mixing_iso3: GBR
 
-detect_prop: 0.4
+detect_prop: 0.35
 
 is_dynamic_mixing_matrix: true
 
@@ -112,13 +112,13 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.
       ba_2:
-        early_reinfection: 0.45
+        early_reinfection: 0.25
         late_reinfection: 0.
   ba_2:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 715.
+      start_time: 738.
       entry_rate: 20.
       seed_duration: 10.
     contact_rate_multiplier: 1.

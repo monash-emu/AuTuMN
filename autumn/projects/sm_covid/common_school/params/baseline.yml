@@ -5,3 +5,33 @@ country:
   country_name: Philippines
 
 ref_mixing_iso3: HKG
+
+age_stratification:
+  ifr:
+    multiplier: 0.603938773597063
+
+contact_rate: 0.03335307445616853
+
+infectious_seed_time: 15.108933833045329
+
+# random_process.noise_sd: 0.9527944877793121
+
+random_process:
+  values:
+    - 0.
+    - -1.4373077479588399
+    - -0.900820174252621
+    - -0.4741107308737449
+    - -0.5220769746694465
+    - -0.5043765118056387
+    - -0.333395161977019
+    - -1.0278496634183796
+    - -0.771720327291364
+    - -1.4401535658006543
+    - 0.005643335957093321
+
+
+voc_emergence:
+  delta:
+    new_voc_seed:
+      time_from_gisaid_report: 29.535177544016463

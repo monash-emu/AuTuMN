@@ -296,7 +296,7 @@ def apply_general_coverage(
         model_start_time: int,
         start_immune_prop: float,
         start_prop_high_among_immune: float,
-        boosting: bool=False,
+        boosting: bool=True,
 ):
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to

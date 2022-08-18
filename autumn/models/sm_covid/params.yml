@@ -237,5 +237,5 @@ random_process:
 
 requested_cumulative_outputs: ["incidence", "infection_deaths"]
 cumulative_start_time: 0.
-request_incidence_by_age: False
+request_incidence_by_age: True
 request_immune_prop_by_age: False

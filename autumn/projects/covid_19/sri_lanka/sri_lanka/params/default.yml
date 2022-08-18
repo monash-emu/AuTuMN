@@ -139,7 +139,7 @@ voc_emergence:
     entry_rate: 25.
     seed_duration: 10.
     contact_rate_multiplier: 1.3 # LSHTM's estimate
-    ifr_multiplier: 1.51
+    ifr_multiplier: 1.21
     hosp_multiplier: 1.52
   delta:
     start_time: 517 #

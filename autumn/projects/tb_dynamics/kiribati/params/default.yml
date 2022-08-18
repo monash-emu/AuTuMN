@@ -12,7 +12,5 @@ crude_death_rate: 1.
 age_breakpoints: [0, 5, 15, 35, 50]
 
 age_mixing:
-  # type: "prem"
-  type: extrapolated
   source_iso3: FJI
   age_adjust: true

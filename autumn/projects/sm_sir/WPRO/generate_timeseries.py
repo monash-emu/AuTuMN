@@ -25,25 +25,43 @@ def get_timeseries_data(region):
 
     input_db = get_input_db()
     timeseries = {}
+    if '-' in region:
+        region = region.replace('-', " ")
     iso3 = get_iso3_from_country_name(region.title())
 
     # read new daily deaths from inputs
     data = input_db.query(
         table_name='owid',
-        conditions= {"iso_code": iso3},
+        conditions={"iso_code": iso3},
         columns=["date", "new_deaths"]
     )
 
     # apply moving average
-    data["smoothed_new_deaths"] = data["new_deaths"].rolling(7).mean()[6:]
-    data.dropna(inplace=True)
+    # data["smoothed_new_deaths"] = data["new_deaths"].rolling(7).mean()[6:]
+    # data.dropna(inplace=True)
 
     # add daily deaths to timeseries dict
     timeseries["infection_deaths"] = {
         "output_key": "infection_deaths",
         "title": "Daily number of deaths",
         "times": (pd.to_datetime(data["date"])- COVID_BASE_DATETIME).dt.days.to_list(),
-        "values": data["smoothed_new_deaths"].to_list(),
+        "values": data["new_deaths"].to_list(),
+        "quantiles": REQUESTED_UNC_QUANTILES
+    }
+
+    # read new daily notifications from inputs
+    data = input_db.query(
+        table_name='owid',
+        conditions={"iso_code": iso3},
+        columns=["date", "new_cases"]
+    )
+
+    # add daily notifications to timeseries dict
+    timeseries["infection_deaths"] = {
+        "output_key": "notifications",
+        "title": "Daily number of confirmed cases",
+        "times": (pd.to_datetime(data["date"])- COVID_BASE_DATETIME).dt.days.to_list(),
+        "values": data["new_cases"].to_list(),
         "quantiles": REQUESTED_UNC_QUANTILES
     }
 

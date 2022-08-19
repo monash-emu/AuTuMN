@@ -1,5 +1,4 @@
 import os
-from WPR_constants import WPR_Countries
 from autumn.core.project import build_rel_path
 from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 import shutil
@@ -7,7 +6,10 @@ import re
 import yaml
 import json
 from autumn.projects.sm_sir.WPRO.generate_timeseries import get_timeseries_data
+from pathlib import Path
 
+wpro_list = json.load(open(Path(__file__).parent.parent.parent.parent / "wpro_list.json"))
+WPR_Countries = wpro_list["region"]
 
 for country in WPR_Countries:
     # If a country folder does not exist generate one

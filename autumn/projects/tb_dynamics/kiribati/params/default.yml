@@ -14,3 +14,5 @@ age_breakpoints: [0, 5, 15, 35, 50]
 age_mixing:
   source_iso3: FJI
   age_adjust: true
+
+contact_rate: 0.14

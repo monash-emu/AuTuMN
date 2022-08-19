@@ -5,6 +5,9 @@ from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 import shutil
 import re
 import yaml
+import json
+from autumn.projects.sm_sir.WPRO.generate_timeseries import get_timeseries_data
+
 
 for country in WPR_Countries:
     # If a country folder does not exist generate one
@@ -50,11 +53,9 @@ for country in WPR_Countries:
     # generate timeseries.json file
     timeseries_file_name = "timeseries.json"
     complete_timeseries_name = os.path.join(folder_path, timeseries_file_name)
-    timeseries_file = open(complete_timeseries_name, "w")
-    # writing generate_project_WPR into country specific project file
-    source_path_timeseries = build_rel_path("timeseries_dummy.txt")
-    source_path_timeseries = f"{source_path_timeseries}"
-    shutil.copy(source_path_timeseries, complete_timeseries_name)
+    with open(complete_timeseries_name, "w") as timefile:
+        timeseries_data = get_timeseries_data(country)
+        json.dump(timeseries_data, timefile)
 
     # create baseline.yml file
     baseline_file_name = "baseline.yml"

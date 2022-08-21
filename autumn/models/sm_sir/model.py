@@ -522,42 +522,44 @@ def build_model(
     vacc_booster_available = ["PHL", "VNM"]
     vacc_region_available = ["Metro Manila", "Hanoi", "Ho Chi Minh City", None, "Northern Territory"]
 
-    if iso3 in vacc_booster_available and region in vacc_region_available:
-        apply_reported_vacc_coverage_with_booster(
-            compartment_types,
-            model,
-            age_groups,
-            iso3,
-            region,
-            thinning=params.vaccination_data_thinning,
-            model_start_time=params.time.start,
-            start_immune_prop=immunity_params.prop_immune,
-            start_prop_high_among_immune=immunity_params.prop_high_among_immune,
-            booster_effect_duration=params.booster_effect_duration,
-            future_monthly_booster_rate=params.future_monthly_booster_rate,
-            future_booster_age_allocation=params.future_booster_age_allocation,
-            age_pops=age_pops,
-            model_end_time=params.time.end
-        )
-    elif iso3 in simple_boosting and region in vacc_region_available:
-        apply_general_coverage(
-            compartment_types,
-            model,
-            iso3,
-            thinning=params.vaccination_data_thinning,
-            model_start_time=params.time.start,
-            start_immune_prop=immunity_params.prop_immune,
-            start_prop_high_among_immune=immunity_params.prop_high_among_immune,
-        )
-    elif iso3 in vacc_coverage_available and region in vacc_region_available:
-        apply_reported_vacc_coverage(
-            compartment_types,
-            model,
-            iso3,
-            thinning=params.vaccination_data_thinning,
-            model_start_time=params.time.start,
-            start_immune_prop=immunity_params.prop_immune,
-        )
+    if params.description != "no vaccination":
+
+        if iso3 in vacc_booster_available and region in vacc_region_available:
+            apply_reported_vacc_coverage_with_booster(
+                compartment_types,
+                model,
+                age_groups,
+                iso3,
+                region,
+                thinning=params.vaccination_data_thinning,
+                model_start_time=params.time.start,
+                start_immune_prop=immunity_params.prop_immune,
+                start_prop_high_among_immune=immunity_params.prop_high_among_immune,
+                booster_effect_duration=params.booster_effect_duration,
+                future_monthly_booster_rate=params.future_monthly_booster_rate,
+                future_booster_age_allocation=params.future_booster_age_allocation,
+                age_pops=age_pops,
+                model_end_time=params.time.end
+            )
+        elif iso3 in simple_boosting and region in vacc_region_available:
+            apply_general_coverage(
+                compartment_types,
+                model,
+                iso3,
+                thinning=params.vaccination_data_thinning,
+                model_start_time=params.time.start,
+                start_immune_prop=immunity_params.prop_immune,
+                start_prop_high_among_immune=immunity_params.prop_high_among_immune,
+            )
+        elif iso3 in vacc_coverage_available and region in vacc_region_available:
+            apply_reported_vacc_coverage(
+                compartment_types,
+                model,
+                iso3,
+                thinning=params.vaccination_data_thinning,
+                model_start_time=params.time.start,
+                start_immune_prop=immunity_params.prop_immune,
+            )
 
     """
     Indigenous stratification (for the Northern Territory application, only)

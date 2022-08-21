@@ -7,7 +7,9 @@ import pandas as pd
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
-from autumn.core.project import ParameterSet, Project, build_rel_path, load_timeseries
+from autumn.core.project import (
+    ParameterSet, Project, build_rel_path, load_timeseries, get_all_available_scenario_paths
+)
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Models, Region
 from summer.utils import ref_times_to_dti
@@ -39,7 +41,12 @@ def get_ts_date_indexes(
 
 # Load and configure model parameters
 baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
-param_set = ParameterSet(baseline=baseline_params)
+
+scenario_dir_path = build_rel_path("params/")
+scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
+scenario_params = [baseline_params.update(p) for p in scenario_paths]
+
+param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 ts_path = build_rel_path("timeseries.secret.json")
 

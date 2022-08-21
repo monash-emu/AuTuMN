@@ -40,8 +40,11 @@ def get_ts_date_indexes(
 
 
 # Load and configure model parameters
-baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
-
+baseline_params = base_params.update(
+    build_rel_path("params/baseline.yml")
+).update(
+    build_rel_path("params/mle-params.yml"), calibration_format=True,
+)
 scenario_dir_path = build_rel_path("params/")
 scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
@@ -54,7 +57,7 @@ ts_path = build_rel_path("timeseries.secret.json")
 ts_set = load_timeseries(ts_path)
 priors = [
     UniformPrior("contact_rate", (0.03, 0.08)),
-    UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.2, 0.6)),
+    UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.1, 0.5)),
 ]
 start_time = baseline_params["time"]["start"]
 targets = [

@@ -330,25 +330,24 @@ def apply_general_coverage(
     }
     vaccine_data.sort_index(inplace=True)
 
-    # Get all the proportions we could be interested in
-    vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
-    vaccine_data["never"] = 1. - vaccine_data["full"]
-
-    # Thin as per request
+    # Thin as per user request
     vaccine_data = vaccine_data[::thinning]
 
-    # Format according to the request
-    two_strata_data = vaccine_data[["never", "full"]]
-    two_strata_data.columns = ["none", "low"]
-    two_strata_data["high"] = 0.
-
-    three_strata_data = vaccine_data[["never", "full_only", "boost"]]
-    three_strata_data.columns = ["none", "low", "high"]
+    # Format the data to match the model's immunity structure
+    vaccine_data["never"] = 1. - vaccine_data["full"]
+    if boosting:
+        vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
+        strata_data = vaccine_data[["never", "full_only", "boost"]]
+        strata_data.columns = ["none", "low", "high"]
+    else:
+        strata_data = vaccine_data[["never", "full"]]
+        strata_data.columns = ["none", "low"]
+        strata_data["high"] = 0.
 
     # Apply to model
     add_dynamic_immunity_to_model(
         compartments, 
-        three_strata_data if boosting else two_strata_data, 
+        strata_data,
         model, 
         "all_ages"
     )

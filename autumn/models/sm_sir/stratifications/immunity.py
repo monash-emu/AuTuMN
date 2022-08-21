@@ -293,7 +293,6 @@ def apply_general_coverage(
         model: CompartmentalModel,
         iso3: str,
         thinning: int,
-        model_start_time: int,
         start_immune_prop: float,
         start_prop_high_among_immune: float,
         boosting: bool=True,
@@ -307,7 +306,6 @@ def apply_general_coverage(
         model: The model itself
         iso3: The ISO-3 code for the country being implemented
         thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
-        model_start_time: Model starting time
         start_immune_prop: Vaccination coverage at the time that the model starts running
 
     """
@@ -322,6 +320,7 @@ def apply_general_coverage(
         ).dropna(axis=0)
 
     # Get rid of any data that is from before the model starts running
+    model_start_time = model.times[0]
     vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
 
     # Add on the user requested starting proportion and move it to the start

@@ -547,7 +547,6 @@ def build_model(
                 model,
                 iso3,
                 thinning=params.vaccination_data_thinning,
-                model_start_time=params.time.start,
                 start_immune_prop=immunity_params.prop_immune,
                 start_prop_high_among_immune=immunity_params.prop_high_among_immune,
             )

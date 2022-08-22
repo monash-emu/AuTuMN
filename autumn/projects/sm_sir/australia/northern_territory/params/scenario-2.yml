@@ -49,5 +49,8 @@ voc_emergence:
   ba_2:  # Switch off BA.2
     new_voc_seed:
       start_time: 10000.
+  ba_5:  # Switch off BA.5
+    new_voc_seed:
+      start_time: 10000.
 
 vacc_delay: 180.

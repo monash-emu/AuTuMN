@@ -1,8 +1,7 @@
 description: early outbreak
 
-immunity_stratification:  # Have to manually adjust these
+immunity_stratification:
   prop_immune: 0.
-  prop_high_among_immune: 0.
 
 age_stratification:
   prop_hospital:

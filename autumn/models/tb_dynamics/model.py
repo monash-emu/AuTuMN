@@ -102,7 +102,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.EARLY_LATENT,
     )
     #Add transition flow.
-    stabilisation_rate = 1.0 #will be overwritten by stratification
+    stabilisation_rate = 1.0 # will be overwritten by stratification
     early_activation_rate = 1.0
     late_activation_rate = 1.0
     model.add_transition_flow(
@@ -144,6 +144,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     model.stratify_with(age_strat)
 
     # Generate outputs
-    request_outputs(model)
+    request_outputs(
+        model,
+        BASE_COMPARTMENTS)
 
     return model

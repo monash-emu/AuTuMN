@@ -60,14 +60,16 @@ priors = [
     UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.1, 0.5)),
 ]
 start_time = baseline_params["time"]["start"]
+hosp_first_above_20 = 744  # 13th January 2022
+hosp_last_above_20 = 780  # 18th February 2022
 targets = [
     NormalTarget(data=ts_set["notifications"].loc[start_time:]),
+    NormalTarget(data=ts_set["hospital_admissions"].loc[hosp_first_above_20: hosp_last_above_20]),
 ]
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
 )
-
 
 with open(ts_path) as f:
     plot_spec = json.load(f)

@@ -14,7 +14,8 @@ from autumn.models.tb_dynamics.utils import (
 def get_age_strat( 
     params: Parameters,
     age_pops: pd.Series,
-    compartments: List[str]
+    compartments: List[str],
+    age_mixing_matrix,
 ) -> AgeStratification:
 
     """
@@ -32,6 +33,8 @@ def get_age_strat(
     age_breakpoints = params.age_breakpoints
     iso3 = params.iso3
     strat = AgeStratification("age", age_breakpoints, compartments)
+    # set age mixing matrix
+    strat.set_mixing_matrix(age_mixing_matrix)
     age_split_props = age_pops / age_pops.sum()
     strat.set_population_split(age_split_props.to_dict())
 

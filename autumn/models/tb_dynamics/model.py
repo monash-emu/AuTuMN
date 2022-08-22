@@ -139,6 +139,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         params,
         age_pops,
         BASE_COMPARTMENTS,
+        age_mixing_matrix,
     )
     model.stratify_with(age_strat)
 

@@ -60,7 +60,7 @@ priors = [
     UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.1, 0.5)),
     UniformPrior("voc_emergence.ba_2.cross_protection.ba_5.early_reinfection", (0.1, 0.5)),
     UniformPrior("detect_prop", (0.25, 0.5)),
-    UniformPrior("sojourns.latent", (2., 4.)),
+    UniformPrior("sojourns.latent.total_time", (2., 4.)),
 ]
 start_time = baseline_params["time"]["start"]
 end_emergency_period = 895  # 13th June 2022

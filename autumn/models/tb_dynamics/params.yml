@@ -21,7 +21,7 @@ age_mixing: null
 # basic infection and disease parameters
 contact_rate: 1.4
 
-#latency parameters
+# latency parameters
 age_specific_latency:
   early_activation:
     # unstratified: 1.1e-3

@@ -4,9 +4,9 @@ import numpy as np
 from summer import AgeStratification, Overwrite, Multiply
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve import scale_up_function
-from autumn.models.tuberculosis.parameters import Parameters
+from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.utils.utils import change_parameter_unit
-from autumn.models.tuberculosis.utils import (
+from autumn.models.tb_dynamics.utils import (
     get_parameter_dict_from_function,
     create_step_function_from_dict,
 )

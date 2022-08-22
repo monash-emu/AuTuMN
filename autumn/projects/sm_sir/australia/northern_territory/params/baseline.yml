@@ -112,7 +112,10 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.
       ba_2:
-        early_reinfection: 0.25
+        early_reinfection: 0.3
+        late_reinfection: 0.
+      ba_5:
+        early_reinfection: 0.
         late_reinfection: 0.
   ba_2:
     starting_strain: false
@@ -131,6 +134,31 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 1.
       ba_2:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      ba_5:
+        early_reinfection: 0.3
+        late_reinfection: 0.
+  ba_5:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 835.
+      entry_rate: 20.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.2
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      ba_1:
+        early_reinfection: 1.
+        late_reinfection: 1.
+      ba_2:
+        early_reinfection: 1.
+        late_reinfection: 1.
+      ba_5:
         early_reinfection: 1.
         late_reinfection: 0.
 

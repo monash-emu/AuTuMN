@@ -59,6 +59,7 @@ age_groups:
 
 age_stratification:
   cfr:
+    multiplier: 0.5
     values:  # Replace with Omicron-applicable values from Nyberg
       0:  0.00005
       5:  0.00005
@@ -173,9 +174,9 @@ immunity_stratification:
 indigenous: true
 
 indigenous_risk_scale:
-  hospitalisation: 1.
-  icu: 5.
-  death: 2.94
+  hospitalisation: 2.2
+  icu: 5.3
+  death: 3.4
 
 time_from_onset_to_event:  # Using time of symptom onset as reference
   notification:

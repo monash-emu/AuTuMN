@@ -135,14 +135,19 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         age_mixing_matrix = age_mixing_matrices["all_locations"]
         # convert daily contact rates to yearly rates
         age_mixing_matrix *= 365.25
-
-    #Add Age stratification to the model
-    age_strat = get_age_strat(
-        params,
-        age_pops,
-        BASE_COMPARTMENTS,
-        age_mixing_matrix = age_mixing_matrix,
-    )
+        #Add Age stratification to the model
+        age_strat = get_age_strat(
+            params,
+            age_pops,
+            BASE_COMPARTMENTS,
+            age_mixing_matrix = age_mixing_matrix,
+        )
+    else:
+        age_strat = get_age_strat(
+            params,
+            age_pops,
+            BASE_COMPARTMENTS,
+        )
     model.stratify_with(age_strat)
 
     # Generate outputs

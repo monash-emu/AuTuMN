@@ -168,7 +168,7 @@ immunity_stratification:
   prop_high_among_immune: .0
   infection_risk_reduction:
     none: 0.
-    low: 0.
+    low: 0.2
     high: 0.6
 
 indigenous: true

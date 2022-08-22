@@ -67,7 +67,7 @@ end_emergency_period = 895  # 13th June 2022
 hosp_first_above_20 = 744  # 13th January 2022
 hosp_last_above_20 = 780  # 18th February 2022
 targets = [
-    NormalTarget(data=ts_set["notifications"].loc[start_time: end_emergency_period]),
+    NormalTarget(data=ts_set["notifications"].loc[start_time:]),
     NormalTarget(data=ts_set["hospital_admissions"].loc[hosp_first_above_20: hosp_last_above_20]),
 ]
 

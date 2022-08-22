@@ -669,4 +669,12 @@ def build_model(
         cumulative_start_time
     )
 
+    # Strain-specific proportions of prevalent cases
+    if params.voc_emergence:
+        ever_infected_compartments = [comp for comp in compartment_types if "infectious" in comp]
+        outputs_builder.request_strain_prevalence(
+            ever_infected_compartments,
+            strain_strata,
+        )
+
     return model

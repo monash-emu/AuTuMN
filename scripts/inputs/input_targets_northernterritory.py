@@ -43,13 +43,13 @@ nt_param_map = {
     "Hosp_adm": {
         "sheet_name": "Hosp admit time series",
         "skipfooter": 2,
-        "skiprows": [0, 1],
-        "usecols": [1, 4],
+        "skiprows": [0],
+        "usecols": [1, 5],
         "datecol": "hosp_admit_date",
     },
     "ICU_adm": {
         "sheet_name": "Hosp admit ICU time series",
-        "skipfooter": 2,
+        "skipfooter": 1,
         "skiprows": [0, 1, 3],
         "usecols": [1, 2],
         "datecol": "icu_date",

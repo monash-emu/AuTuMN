@@ -7,7 +7,11 @@ from pydantic.dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
-from autumn.settings.constants import COVID_BASE_DATETIME, GOOGLE_MOBILITY_LOCATIONS, COVID_BASE_AGEGROUPS
+from autumn.settings.constants import (
+    COVID_BASE_DATETIME,
+    GOOGLE_MOBILITY_LOCATIONS,
+    COVID_BASE_AGEGROUPS,
+)
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 BASE_DATE = COVID_BASE_DATETIME.date()
@@ -164,8 +168,12 @@ class CompartmentSojourn(BaseModel):
     total_time: float
     proportion_early: Optional[float]
 
-    check_total_positive = validator("total_time", allow_reuse=True)(get_check_non_neg("total_time"))
-    check_prop_early = validator("proportion_early", allow_reuse=True)(get_check_prop("proportion_early"))
+    check_total_positive = validator("total_time", allow_reuse=True)(
+        get_check_non_neg("total_time")
+    )
+    check_prop_early = validator("proportion_early", allow_reuse=True)(
+        get_check_prop("proportion_early")
+    )
 
 
 class Sojourns(BaseModel):
@@ -175,9 +183,13 @@ class Sojourns(BaseModel):
 
     active: CompartmentSojourn
     latent: CompartmentSojourn
-    recovered: Optional[float]  # If there is a sojourn time for recovered, then there will be two compartments
+    recovered: Optional[
+        float
+    ]  # If there is a sojourn time for recovered, then there will be two compartments
 
-    check_recovered_positive = validator("recovered", allow_reuse=True)(get_check_non_neg("recovered"))
+    check_recovered_positive = validator("recovered", allow_reuse=True)(
+        get_check_non_neg("recovered")
+    )
 
 
 class MixingLocation(BaseModel):
@@ -220,8 +232,12 @@ class TanhMicrodistancingParams(BaseModel):
     start_asymptote: float
     end_asymptote: float
 
-    check_lower_asymptote = validator("start_asymptote", allow_reuse=True)(get_check_prop("start_asymptote"))
-    check_upper_asymptote = validator("end_asymptote", allow_reuse=True)(get_check_prop("end_asymptote"))
+    check_lower_asymptote = validator("start_asymptote", allow_reuse=True)(
+        get_check_prop("start_asymptote")
+    )
+    check_upper_asymptote = validator("end_asymptote", allow_reuse=True)(
+        get_check_prop("end_asymptote")
+    )
 
     @validator("shape", allow_reuse=True)
     def shape_is_positive(shape):
@@ -270,9 +286,7 @@ class Mobility(BaseModel):
             msg = f"Mobility weights don't sum to one: {location_total}"
             assert abs(location_total - 1.0) < 1e-6, msg
             msg = "Google mobility key not recognised"
-            assert all(
-                [key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]
-            ), msg
+            assert all([key in GOOGLE_MOBILITY_LOCATIONS for key in val[location].keys()]), msg
         return val
 
 
@@ -293,9 +307,7 @@ class AgeSpecificProps(BaseModel):
     @validator("source_immunity_protection", allow_reuse=True)
     def check_source_dist(protection_params):
         msg = "Source protection estimates not proportions"
-        assert (
-            all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0
-        ), msg
+        assert all([0.0 <= val <= 1.0 for val in protection_params.values()]) == 1.0, msg
         return protection_params
 
     check_props = validator("source_immunity_distribution", allow_reuse=True)(
@@ -348,6 +360,12 @@ class ImmunityStratification(BaseModel):
     )
 
 
+class IndigenousRiskScale(BaseModel):
+    icu: float
+    hospitalisation: float
+    death: float
+
+
 class TestingToDetection(BaseModel):
     """
     Empiric approach to building the case detection rate that is based on per capita testing rates.
@@ -358,8 +376,12 @@ class TestingToDetection(BaseModel):
     smoothing_period: int
     floor_value: float
 
-    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(get_check_non_neg("assumed_tests_parameter"))
-    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(get_check_prop("assumed_cdr_parameter"))
+    check_tests = validator("assumed_tests_parameter", allow_reuse=True)(
+        get_check_non_neg("assumed_tests_parameter")
+    )
+    check_cdr = validator("assumed_cdr_parameter", allow_reuse=True)(
+        get_check_prop("assumed_cdr_parameter")
+    )
 
     @validator("smoothing_period", allow_reuse=True)
     def check_smoothing_period(val):
@@ -370,8 +392,8 @@ class TestingToDetection(BaseModel):
     def check_floor_request(cls, values):
         floor_value, assumed_cdr = values["floor_value"], values["assumed_cdr_parameter"]
         msg = f"Requested value for the CDR floor does not fall between zero and the assumed CDR parameter of {assumed_cdr}, value is: {floor_value}"
-        assert 0. <= floor_value <= assumed_cdr, msg
-        return values      
+        assert 0.0 <= floor_value <= assumed_cdr, msg
+        return values
 
 
 class CrossImmunity(BaseModel):
@@ -379,8 +401,12 @@ class CrossImmunity(BaseModel):
     early_reinfection: float
     late_reinfection: float
 
-    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(get_check_prop("early_reinfection"))
-    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(get_check_prop("late_reinfection"))
+    check_early_reinfect = validator("early_reinfection", allow_reuse=True)(
+        get_check_prop("early_reinfection")
+    )
+    check_late_reinfect = validator("late_reinfection", allow_reuse=True)(
+        get_check_prop("late_reinfection")
+    )
 
 
 class VocSeed(BaseModel):
@@ -389,7 +415,9 @@ class VocSeed(BaseModel):
     entry_rate: float
     seed_duration: float
 
-    check_seed_time = validator("seed_duration", allow_reuse=True)(get_check_non_neg("seed_duration"))
+    check_seed_time = validator("seed_duration", allow_reuse=True)(
+        get_check_non_neg("seed_duration")
+    )
     check_entry_rate = validator("entry_rate", allow_reuse=True)(get_check_non_neg("entry_rate"))
 
 
@@ -424,8 +452,12 @@ class VocComponent(BaseModel):
             assert 0.0 <= multiplier, "ICU multiplier negative"
         return multiplier
 
-    check_immune_escape = validator("immune_escape", allow_reuse=True)(get_check_prop("immune_escape"))
-    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(get_check_prop("hosp_protection"))
+    check_immune_escape = validator("immune_escape", allow_reuse=True)(
+        get_check_prop("immune_escape")
+    )
+    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(
+        get_check_prop("hosp_protection")
+    )
     check_relative_latency = validator("relative_latency", allow_reuse=True)(
         get_check_non_neg("relative_latency")
     )
@@ -520,13 +552,17 @@ class Parameters:
     future_monthly_booster_rate: Optional[float]
     future_booster_age_allocation: Optional[
         Union[
-            Dict[int, float], # to specify allocation proportions by age group (e.g. {70: .8, 50: .2})
-            List[int] # to specify a prioritisation order (e.g. [70, 50, 25, 15])
-            ]
+            Dict[
+                int, float
+            ],  # to specify allocation proportions by age group (e.g. {70: .8, 50: .2})
+            List[int],  # to specify a prioritisation order (e.g. [70, 50, 25, 15])
         ]
+    ]
 
     # Indigenous-related
     indigenous: bool
+
+    indigenous_risk_scale: Optional[IndigenousRiskScale]
 
     # Output-related
     requested_cumulative_outputs: List[str]
@@ -551,9 +587,11 @@ class Parameters:
         if voc_emergence:
 
             msg = "Seed proportions do not sum to one"
-            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1., msg
+            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1.0, msg
 
-            starting_strains = [voc for voc, params in voc_emergence.items() if params.starting_strain]
+            starting_strains = [
+                voc for voc, params in voc_emergence.items() if params.starting_strain
+            ]
 
             msg = "Exactly one voc must be designated as the starting strain"
             assert len(starting_strains) == 1, msg
@@ -561,6 +599,6 @@ class Parameters:
             starting_strain = starting_strains[0]
 
             msg = "Currently requiring all the initial seed to be assigned to the starting strain"
-            assert voc_emergence[starting_strain].seed_prop == 1., msg
+            assert voc_emergence[starting_strain].seed_prop == 1.0, msg
 
         return voc_emergence

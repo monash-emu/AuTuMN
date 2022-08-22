@@ -63,15 +63,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Assign the initial population
     assign_population(seed, age_pops.sum(), model)
 
-    #Set mixing matrix
-    if params.age_mixing:
-        age_mixing_matrices = build_synthetic_matrices(
-            params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,
-            requested_locations=["all_locations"]
-        )
-        age_mixing_matrix = age_mixing_matrices["all_locations"]
-        # convert daily contact rates to yearly rates
-        age_mixing_matrix *= 365.25
+ 
 
     contact_rate = params.contact_rate
     contact_rate_latent = params.contact_rate * params.rr_infection_latent
@@ -134,12 +126,22 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     universal_death_rate = params.crude_death_rate
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
+       #Set mixing matrix
+    if params.age_mixing:
+        age_mixing_matrices = build_synthetic_matrices(
+            params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,
+            requested_locations=["all_locations"]
+        )
+        age_mixing_matrix = age_mixing_matrices["all_locations"]
+        # convert daily contact rates to yearly rates
+        age_mixing_matrix *= 365.25
+
     #Add Age stratification to the model
     age_strat = get_age_strat(
         params,
         age_pops,
         BASE_COMPARTMENTS,
-        age_mixing_matrix,
+        age_mixing_matrix = age_mixing_matrix,
     )
     model.stratify_with(age_strat)
 

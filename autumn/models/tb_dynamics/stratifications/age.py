@@ -15,7 +15,7 @@ def get_age_strat(
     params: Parameters,
     age_pops: pd.Series,
     compartments: List[str],
-    age_mixing_matrix,
+    age_mixing_matrix = None,
 ) -> AgeStratification:
 
     """
@@ -34,7 +34,9 @@ def get_age_strat(
     iso3 = params.iso3
     strat = AgeStratification("age", age_breakpoints, compartments)
     # set age mixing matrix
-    strat.set_mixing_matrix(age_mixing_matrix)
+    if age_mixing_matrix is not None:
+        strat.set_mixing_matrix(age_mixing_matrix)
+        
     age_split_props = age_pops / age_pops.sum()
     strat.set_population_split(age_split_props.to_dict())
 

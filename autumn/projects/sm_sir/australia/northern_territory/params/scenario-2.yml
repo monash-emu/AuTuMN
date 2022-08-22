@@ -1,11 +1,10 @@
-description: no vaccination
+description: early outbreak
 
-immunity_stratification:
+immunity_stratification:  # Have to manually adjust these
   prop_immune: 0.
   prop_high_among_immune: 0.
 
 age_stratification:
-
   prop_hospital:
     values:  # Back to the sm_sir model's baseline parameters
       0: 0.0046
@@ -46,9 +45,10 @@ age_stratification:
       80: 0.159
 
 voc_emergence:
-  ba_1:
+  ba_1:  # This is now Delta instead
     contact_rate_multiplier: 0.6667
-  ba_2:
+  ba_2:  # Switch off BA.2
     new_voc_seed:
       start_time: 10000.
-      
+
+vacc_delay: 180.

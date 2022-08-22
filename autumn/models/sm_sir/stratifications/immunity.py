@@ -296,7 +296,7 @@ def apply_general_coverage(
         start_immune_prop: float,
         start_prop_high_among_immune: float,
         boosting: bool=True,
-        vacc_adj: float=1.,
+        vacc_delay: float=1.,
         trunc_full: int=10000,
         trunc_boost: int=10000,
 ):
@@ -322,11 +322,7 @@ def apply_general_coverage(
             }
         ).dropna(axis=0)
 
-    # Get rid of any data that is from before the model starts running
-    model_start_time = model.times[0]
-    vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
-
-    # Truncate data based on user request for NT scenarios
+    # Truncate data based on user request for NT (Scenario 1)
     truncations = {
         "full": trunc_full,
         "boost": trunc_boost,
@@ -338,6 +334,13 @@ def apply_general_coverage(
         )
         trunc_value = vaccine_data.loc[trunc_index, dose]
         vaccine_data.loc[trunc_index:, dose] = trunc_value
+
+    # Delay vaccination based on user requests for NT (Scenario 2)
+    vaccine_data.index += vacc_delay
+
+    # Get rid of any data that is from before the model starts running
+    model_start_time = model.times[0]
+    vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
 
     # Add on the user requested starting proportion and move it to the start
     vaccine_data.loc[model_start_time] = {

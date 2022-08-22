@@ -562,7 +562,7 @@ class Parameters:
     # NT-specific
     indigenous: bool
     indigenous_risk_scale: Optional[IndigenousRiskScale]
-    vacc_adjustment: float
+    vacc_delay: float
     truncate_full_vacc: int
     truncate_boost_vacc: int
 

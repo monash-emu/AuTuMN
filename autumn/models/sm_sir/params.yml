@@ -218,7 +218,7 @@ future_monthly_booster_rate: null
 future_booster_age_allocation: null
 
 indigenous: false
-vacc_adjustment: 1.
+vacc_delay: 0.
 truncate_full_vacc: 10000
 truncate_boost_vacc: 10000
 

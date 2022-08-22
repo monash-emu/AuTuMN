@@ -173,9 +173,9 @@ immunity_stratification:
 indigenous: true
 
 indigenous_risk_scale:
-  icu: 1.
   hospitalisation: 1.
-  death: 1.
+  icu: 5.
+  death: 2.94
 
 time_from_onset_to_event:  # Using time of symptom onset as reference
   notification:

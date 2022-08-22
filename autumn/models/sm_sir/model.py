@@ -555,6 +555,9 @@ def build_model(pdict: dict, build_options: dict = None) -> CompartmentalModel:
                 thinning=params.vaccination_data_thinning,
                 start_immune_prop=immunity_params.prop_immune,
                 start_prop_high_among_immune=immunity_params.prop_high_among_immune,
+                vacc_adj=params.vacc_adjustment,
+                trunc_full=params.truncate_full_vacc,
+                trunc_boost=params.truncate_boost_vacc,
             )
         elif iso3 in vacc_coverage_available and region in vacc_region_available:
             apply_reported_vacc_coverage(

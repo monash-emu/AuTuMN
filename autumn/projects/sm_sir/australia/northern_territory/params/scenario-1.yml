@@ -1,7 +1,4 @@
-# Need to change this to the reduced vaccination coverage scenario
-description: no vaccination
+description: delayed coverage
 
-voc_emergence:
-  ba_2:
-    new_voc_seed:
-      start_time: 10000.
+truncate_full_vacc: 652  # 13th October 2021
+truncate_boost_vacc: 744  # 13th January 2021

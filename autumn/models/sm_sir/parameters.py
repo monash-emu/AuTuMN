@@ -559,10 +559,12 @@ class Parameters:
         ]
     ]
 
-    # Indigenous-related
+    # NT-specific
     indigenous: bool
-
     indigenous_risk_scale: Optional[IndigenousRiskScale]
+    vacc_adjustment: float
+    truncate_full_vacc: int
+    truncate_boost_vacc: int
 
     # Output-related
     requested_cumulative_outputs: List[str]

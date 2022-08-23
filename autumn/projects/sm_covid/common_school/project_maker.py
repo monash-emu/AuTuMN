@@ -67,8 +67,15 @@ def get_school_project(region):
         priors=priors, targets=targets, random_process=rp, metropolis_init="current_params", haario_scaling_factor=2.4, fixed_proposal_steps=500, metropolis_init_rel_step_size=.02
     )
 
+    diff_output_requests =  [
+        ["cumulative_incidence", "ABSOLUTE"],
+        ["cumulative_infection_deaths", "ABSOLUTE"],
+        ["cumulative_incidence", "RELATIVE"],
+        ["cumulative_infection_deaths", "RELATIVE"],
+    ]
+
     # create the project object to be returned
-    project = Project(region, Models.SM_COVID, build_model, param_set, calibration, plots=timeseries)
+    project = Project(region, Models.SM_COVID, build_model, param_set, calibration, plots=timeseries, diff_output_requests=diff_output_requests)
 
     return project
 

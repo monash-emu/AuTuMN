@@ -50,6 +50,7 @@ class Project:
         calibration,  # A Calibration instance
         plots: dict = {},  # Previously, targets JSON.
         diff_output_requests: List[Tuple[str, str]] = [],
+        post_diff_output_requests: Dict[str, Dict] = {}
     ):
         self.region_name = region_name
         self.model_name = model_name
@@ -58,6 +59,7 @@ class Project:
         self.plots = plots
         self.calibration = calibration
         self.diff_output_requests = diff_output_requests
+        self.post_diff_output_requests = post_diff_output_requests
 
     def calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
         """
@@ -364,6 +366,8 @@ def post_process_scenario_outputs(
     """
     # Apply various post processing fixes
     calculate_differential_outputs(models, project.diff_output_requests)
+    calculate_post_diff_outputs(models, project.post_diff_output_requests)
+
     fix_cumulative_output_times(models)
 
     # Build outputs for storage in a database.
@@ -467,3 +471,25 @@ OUTPUT_CALCS = {
     DiffOutput.RELATIVE: calc_relative_diff_output,
     DiffOutput.ABSOLUTE: calc_absolute_diff_output,
 }
+
+def calculate_post_diff_outputs(
+    models: List[CompartmentalModel], post_diff_output_requests: Dict[str, Dict]
+):
+    """
+    Calculate outputs based on previously-computed differential outputs
+
+    Models list assumed to be in order [baseline, sc1, sc2, ..., scN]
+
+    post_diff_output_requests has form
+    {
+        "<output name>": {
+            'sources': List[str],
+            'func': Callable
+        },
+        ...
+    }
+    """
+    for new_output_name, func_details in post_diff_output_requests.items():
+        for model in models:
+            calculated_sources = [model.derived_outputs[s] for s in func_details['sources']]
+            model.derived_outputs[new_output_name] = func_details['func'](*calculated_sources)

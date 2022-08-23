@@ -48,6 +48,8 @@ age_stratification:
       80: 0.159
 
 voc_emergence:
+  ba_1:
+    contact_rate_multiplier: 0.6667
   ba_2:  # Switch off BA.2
     new_voc_seed:
       start_time: 10000.
@@ -56,3 +58,5 @@ voc_emergence:
       start_time: 10000.
 
 vacc_delay: 187.
+
+prop_icu_among_hospitalised: 0.05

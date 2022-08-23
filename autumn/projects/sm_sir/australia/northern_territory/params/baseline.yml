@@ -59,7 +59,10 @@ age_groups:
 
 age_stratification:
   cfr:
-    multiplier: 0.2
+    multiplier: 0.15
+    source_immunity_protection:
+      high: 0.9
+      low: 0.8
     values:  # Replace with Omicron-applicable values from Nyberg
       0:  0.00005
       5:  0.00005
@@ -144,7 +147,7 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 835.
+      start_time: 820.
       entry_rate: 20.
       seed_duration: 10.
     contact_rate_multiplier: 1.
@@ -174,9 +177,9 @@ immunity_stratification:
 indigenous: true
 
 indigenous_risk_scale:
-  hospitalisation: 2.2
-  icu: 5.3
-  death: 3.4
+  hospitalisation: 1.
+  icu: 4.5
+  death: 3.
 
 time_from_onset_to_event:  # Using time of symptom onset as reference
   notification:

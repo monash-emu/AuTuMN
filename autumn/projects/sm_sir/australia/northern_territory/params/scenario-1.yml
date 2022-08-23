@@ -4,4 +4,4 @@ immunity_stratification:  # Close to ceiling value obtained from truncate_full_v
   prop_immune: 0.54
 
 truncate_full_vacc: 652  # 13th October 2021
-truncate_boost_vacc: 744  # 13th January 2022
+truncate_boost_vacc: 759  # 28th January 2022

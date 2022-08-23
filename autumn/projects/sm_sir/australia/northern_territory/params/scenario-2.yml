@@ -2,6 +2,10 @@ description: early outbreak
 
 immunity_stratification:
   prop_immune: 0.
+  infection_risk_reduction:  # VE against infection with Delta
+    none: 0.
+    low: 0.75
+    high: 0.9
 
 age_stratification:
   prop_hospital:
@@ -44,8 +48,6 @@ age_stratification:
       80: 0.159
 
 voc_emergence:
-  ba_1:  # This is now Delta instead
-    contact_rate_multiplier: 0.6667
   ba_2:  # Switch off BA.2
     new_voc_seed:
       start_time: 10000.
@@ -53,4 +55,4 @@ voc_emergence:
     new_voc_seed:
       start_time: 10000.
 
-vacc_delay: 180.
+vacc_delay: 187.

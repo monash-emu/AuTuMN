@@ -59,7 +59,7 @@ age_groups:
 
 age_stratification:
   cfr:
-    multiplier: 0.5
+    multiplier: 0.2
     values:  # Replace with Omicron-applicable values from Nyberg
       0:  0.00005
       5:  0.00005
@@ -138,7 +138,7 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.
       ba_5:
-        early_reinfection: 0.3
+        early_reinfection: 0.2
         late_reinfection: 0.
   ba_5:
     starting_strain: false
@@ -147,7 +147,7 @@ voc_emergence:
       start_time: 835.
       entry_rate: 20.
       seed_duration: 10.
-    contact_rate_multiplier: 1.2
+    contact_rate_multiplier: 1.
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
@@ -166,7 +166,7 @@ voc_emergence:
 immunity_stratification:
   prop_immune: .6  # Close to starting value around early November 2021
   prop_high_among_immune: .0
-  infection_risk_reduction:
+  infection_risk_reduction:  # VE against infection with Omicron - Dutch study and others
     none: 0.
     low: 0.2
     high: 0.6
@@ -201,3 +201,10 @@ time_from_onset_to_event:  # Using time of symptom onset as reference
       mean: 20.
 
 vaccination_data_thinning: 2
+
+prop_icu_among_hospitalised: 0.02
+
+requested_cumulative_outputs:
+  - infection_deaths
+  - icu_admissions
+  - hospital_admissions

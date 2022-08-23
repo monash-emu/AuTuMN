@@ -57,8 +57,8 @@ ts_path = build_rel_path("timeseries.secret.json")
 ts_set = load_timeseries(ts_path)
 priors = [
     UniformPrior("contact_rate", (0.03, 0.08)),
-    UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.1, 0.5)),
-    UniformPrior("voc_emergence.ba_2.cross_protection.ba_5.early_reinfection", (0.1, 0.5)),
+    UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.1, 0.7)),
+    UniformPrior("voc_emergence.ba_2.cross_protection.ba_5.early_reinfection", (0.1, 0.7)),
     UniformPrior("detect_prop", (0.25, 0.5)),
     UniformPrior("sojourns.latent.total_time", (2., 4.)),
 ]

@@ -13,21 +13,19 @@ EXTRA_UNCERTAINTY_OUTPUTS = {
 REQUESTED_UNC_QUANTILES = [.025, .25, .5, .75, .975]
 
 
-def get_timeseries_data(region):
+def get_timeseries_data(iso3):
     """
     Create a dictionarie containing country-specific timeseries. This equivalent to loading data from the timeseries json file in
     other projects.
     Args:
-        region: The modelled region
+        iso3: iso3 code
     Returns:
         timeseries: A dictionary containing the timeseries
+
     """
 
     input_db = get_input_db()
     timeseries = {}
-    if '-' in region:
-        region = region.replace('-', " ")
-    iso3 = get_iso3_from_country_name(region.title())
 
     # read new daily deaths from inputs
     data = input_db.query(

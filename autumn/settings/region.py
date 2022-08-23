@@ -1,8 +1,14 @@
 class Region:
     wpro_AUSTRALIA = "australia"
-    wpro_BRUNEI_DARUSSALAM = "brunei-darussalam"
     wpro_MALAYSIA = "malaysia"
     wpro_PHILIPPINES = "philippines"
+    wpro_CHINA = "china"
+    wpro_MONGOLIA ="mongolia"
+    wpro_NEW_ZEALAND = "new-zealand"
+    wpro_SOUTH_KOREA = "south-korea"
+    wpro_VIET_NAM = "viet-nam"
+    wpro_SINGAPORE = "singapore"
+    wpro_JAPAN = "japan"
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     MANILA = "manila"
@@ -41,8 +47,14 @@ class Region:
     REGIONS = [
         wpro_AUSTRALIA,
         wpro_PHILIPPINES,
-        wpro_BRUNEI_DARUSSALAM,
         wpro_MALAYSIA,
+        wpro_CHINA,
+        wpro_MONGOLIA,
+        wpro_NEW_ZEALAND,
+        wpro_SOUTH_KOREA,
+        wpro_VIET_NAM,
+        wpro_SINGAPORE,
+        wpro_JAPAN,
         PHILIPPINES,
         MANILA,
         NCR,

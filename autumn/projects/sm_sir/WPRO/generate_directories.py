@@ -52,22 +52,26 @@ for country in WPR_Countries:
         project_file.write(read_file)
         project_file.truncate()
 
+    country_text = country
+
+    if country == "south-korea":
+        iso3_name = "KOR"
+    else:
+        if '-' in country_text:
+            country_text = country_text.replace('-', " ")
+        iso3_name = get_iso3_from_country_name(f"{country_text.title()}")  # get the corresponding iso3 code
+
     # generate timeseries.json file
     timeseries_file_name = "timeseries.json"
     complete_timeseries_name = os.path.join(folder_path, timeseries_file_name)
     with open(complete_timeseries_name, "w") as timefile:
-        timeseries_data = get_timeseries_data(country)
+        timeseries_data = get_timeseries_data(iso3_name)
         json.dump(timeseries_data, timefile)
 
     # create baseline.yml file
     baseline_file_name = "baseline.yml"
     baseline_file_path = os.path.join(params_path, baseline_file_name)
     baseline_file_path = f"{baseline_file_path}"
-
-    country_text = country
-    if '-' in country_text:
-        country_text = country_text.replace('-', " ")
-    iso3_name = get_iso3_from_country_name(f"{country_text.title()}")  # get the corresponding iso3 code
 
     # in the yml file update iso3 to corresponding country value
     with open("generate_baseline_file.yml", 'r') as stream:

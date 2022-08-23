@@ -197,12 +197,12 @@ time_from_onset_to_event:  # using time of symptom onset as reference
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 5. # FIXME: need an estimate
+      mean: 7.7 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
   icu_admission:  # using time of hospitalisation as reference
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 2. # FIXME: need an estimate
+      mean: 2.8 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
   death:
     distribution: gamma
     parameters:
@@ -216,8 +216,8 @@ hospital_stay:
     distribution: gamma
     parameters:
       shape: 5.
-      mean: 3. # South Africa data
-      
+      mean: 12.8 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
+
   icu:
     distribution: gamma
     parameters:

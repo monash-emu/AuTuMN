@@ -358,7 +358,10 @@ def build_model(
     outputs_builder = SmCovidOutputsBuilder(model, base_compartments)
     
     outputs_builder.request_incidence(age_groups, strain_strata, infectious_entry_flow, params.request_incidence_by_age)
+    
     outputs_builder.request_hospitalisations(model_times, age_groups, strain_strata, iso3, region, age_strat_params.prop_symptomatic, age_strat_params.prop_hospital, params.vaccine_effects.ve_hospitalisation, time_to_event_params.hospitalisation, params.hospital_stay.hospital_all, voc_params)  
+    outputs_builder.request_peak_hospital_occupancy()
+    
     outputs_builder.request_infection_deaths(model_times, age_groups, strain_strata, iso3, region, age_strat_params.ifr, params.vaccine_effects.ve_death, time_to_event_params.death, voc_params)
     outputs_builder.request_recovered_proportion(base_compartments)
     outputs_builder.request_immunity_props(immunity_strat.strata, age_pops, params.request_immune_prop_by_age)

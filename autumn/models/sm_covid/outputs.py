@@ -295,6 +295,18 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             func=hospital_occupancy_func
         )
 
+
+    def request_peak_hospital_occupancy(self):
+        """
+        Create an output for the peak hospital occupancy. This is stored as a timeseries, although this is 
+        actually a constant output.
+        """
+        self.model.request_function_output(
+            'peak_hospital_occupancy',
+            lambda hosp_occupancy: np.repeat(hosp_occupancy.max(), hosp_occupancy.size),
+            ["hospital_occupancy"],
+        )
+
     # def request_icu_outputs(
     #     self,
     #     prop_icu_among_hospitalised: float,
@@ -452,7 +464,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
         self.model.request_function_output(
             'student_weeks_missed',
-            lambda total: np.repeat(n_student_weeks_missed, len(total)),  # constant function
+            lambda total: np.repeat(n_student_weeks_missed, total.size),  # constant function
             ["total_population"],  # could be anything here, really...
         )
 

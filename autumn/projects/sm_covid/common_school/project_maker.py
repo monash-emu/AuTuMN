@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 from autumn.core.project import (
     Project,
     ParameterSet,
@@ -67,6 +67,7 @@ def get_school_project(region):
         priors=priors, targets=targets, random_process=rp, metropolis_init="current_params", haario_scaling_factor=2.4, fixed_proposal_steps=500, metropolis_init_rel_step_size=.02
     )
 
+    # List differential output requests
     diff_output_requests =  [
         ["cumulative_incidence", "ABSOLUTE"],
         ["cumulative_infection_deaths", "ABSOLUTE"],
@@ -74,8 +75,28 @@ def get_school_project(region):
         ["cumulative_infection_deaths", "RELATIVE"],
     ]
 
+    # create additional output to capture ratio between weeks of school missed and averted deaths
+    def calc_missed_school_death_ratio(deaths_averted):        
+        student_weeks_missed = 100.  # FIXME: this will come from another derived output
+
+        ratio = []
+        for d in deaths_averted:
+            if d == 0.:
+                ratio.append(1.e6)  # some very large number
+            else:
+                ratio.append(student_weeks_missed / d)
+
+        return np.array(ratio)
+
+    post_diff_output_requests = {
+        "missed_school_death_ratio": {
+            "sources": ["abs_diff_cumulative_infection_deaths"],
+            "func": calc_missed_school_death_ratio
+        }
+    }
+
     # create the project object to be returned
-    project = Project(region, Models.SM_COVID, build_model, param_set, calibration, plots=timeseries, diff_output_requests=diff_output_requests)
+    project = Project(region, Models.SM_COVID, build_model, param_set, calibration, plots=timeseries, diff_output_requests=diff_output_requests, post_diff_output_requests=post_diff_output_requests)
 
     return project
 

@@ -17,7 +17,7 @@ from autumn.core.inputs.database import get_input_db
 from autumn.settings.constants import COVID_BASE_DATETIME
 
 MIXING_PROXY = {
-    "philipinnes": "HKG",
+    "philippines": "HKG",
     "france": "BEL"
 }
 

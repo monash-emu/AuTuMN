@@ -1,2 +1,5 @@
-contact_rate: 0.06
-voc_emergence.ba_1.cross_protection.ba_2.early_reinfection: 0.2095597266546862
+contact_rate: 0.05855688679086353
+detect_prop: 0.30172932787890566
+sojourns.latent.total_time: 2.5526723810204652
+voc_emergence.ba_1.cross_protection.ba_2.early_reinfection: 0.2214924105670368
+voc_emergence.ba_2.cross_protection.ba_5.early_reinfection: 0.29658853655365974

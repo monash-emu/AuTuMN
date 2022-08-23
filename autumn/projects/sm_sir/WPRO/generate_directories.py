@@ -86,7 +86,12 @@ for country in WPR_Countries:
     # writing basic baseline content into country specific baseline file
     source_path_baseline = build_rel_path("generate_baseline_file.yml")
     source_path_baseline = f"{source_path_baseline}"
-    shutil.copy(source_path_baseline, baseline_file_path)
+
+    # check if the baseline file exists and if so if it is empty
+    if os.path.exists(baseline_file_path) and os.stat(baseline_file_path).st_size == 0:
+        shutil.copy(source_path_baseline, baseline_file_path)
+    if not os.path.exists(baseline_file_path):  # if baseline file is created for the first time
+        shutil.copy(source_path_baseline, baseline_file_path)
 
 
 

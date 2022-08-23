@@ -55,7 +55,7 @@ def get_timeseries_data(iso3):
     )
 
     # add daily notifications to timeseries dict
-    timeseries["infection_deaths"] = {
+    timeseries["notifications"] = {
         "output_key": "notifications",
         "title": "Daily number of confirmed cases",
         "times": (pd.to_datetime(data["date"])- COVID_BASE_DATETIME).dt.days.to_list(),

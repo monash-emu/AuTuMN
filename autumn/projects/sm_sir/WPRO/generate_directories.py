@@ -81,7 +81,7 @@ for country in WPR_Countries:
     load_yml_params['country']['iso3'] = iso3_name
     # Save the yml file again
     with open("generate_baseline_file.yml", 'w') as stream:
-        yaml.dump(load_yml_params, stream, default_flow_style=False)
+        yaml.dump(load_yml_params, stream, default_flow_style=False, sort_keys=False)
 
     # writing basic baseline content into country specific baseline file
     source_path_baseline = build_rel_path("generate_baseline_file.yml")
@@ -89,9 +89,9 @@ for country in WPR_Countries:
 
     # check if the baseline file exists and if so if it is empty
     if os.path.exists(baseline_file_path) and os.stat(baseline_file_path).st_size == 0:
-        shutil.copy(source_path_baseline, baseline_file_path)
+        shutil.copyfile(source_path_baseline, baseline_file_path)
     if not os.path.exists(baseline_file_path):  # if baseline file is created for the first time
-        shutil.copy(source_path_baseline, baseline_file_path)
+        shutil.copyfile(source_path_baseline, baseline_file_path)
 
 
 

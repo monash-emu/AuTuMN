@@ -126,7 +126,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     universal_death_rate = params.crude_death_rate
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
-       #Set mixing matrix
+    #Set mixing matrix
     if params.age_mixing:
         age_mixing_matrices = build_synthetic_matrices(
             params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,

@@ -97,25 +97,24 @@ age_stratification:
     70: 0.803
     75: 0.803
 
-  prop_hospital:
-    values:  #FIXME: These are Delta-related values. Need to update with wild-type values.
-      0: 0.0046
-      5: 0.0046
-      10: 0.0033
-      15: 0.0033
-      20: 0.0133
-      25: 0.0133
-      30: 0.0150
-      35: 0.0150
-      40: 0.0140
-      45: 0.0140
-      50: 0.0238
-      55: 0.0238
-      60: 0.0529
-      65: 0.0529
-      70: 0.1340
-      75: 0.1340
-      80: 0.2540
+  prop_hospital: # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
+    values:  
+      0: 0.0777
+      5: 0.0069
+      10: 0.0034
+      15: 0.0051
+      20: 0.0068 
+      25: 0.0080
+      30: 0.0124 
+      35: 0.0129
+      40: 0.0190 
+      45: 0.0331
+      50: 0.0383 
+      55: 0.0579
+      60: 0.0617
+      65: 0.1030
+      70: 0.1072
+      75: 0.0703
     multiplier: 1.
 
   ifr:

@@ -24,8 +24,25 @@ MIXING_PROXY = {
 EXTRA_UNCERTAINTY_OUTPUTS = {
     "cumulative_incidence": "Cumulative number of infections",
     "transformed_random_process": "Transformed random process",
-    "prop_ever_infected": "Proportion ever infected"
-}
+    "prop_ever_infected": "Proportion ever infected",
+    "hospital_occupancy": "Hospital beds occupied with COVID-19 patients",
+    "peak_hospital_occupancy": "Peak COVID-19 hospital occupancy",
+
+    "missed_school_death_ratio": "Student-weeks of school missed per death averted",
+
+    "abs_diff_cumulative_incidence": "COVID-19 infections averted",
+    "abs_diff_cumulative_infection_deaths": "COVID-19 deaths averted",
+    "rel_diff_cumulative_incidence": "COVID-19 infections averted (rel)",
+    "rel_diff_cumulative_infection_deaths": "COVID-19 deaths averted (rel)",
+}    
+
+
+diff_output_requests =  [
+        ["cumulative_incidence", "ABSOLUTE"],
+        ["cumulative_infection_deaths", "ABSOLUTE"],
+        ["cumulative_incidence", "RELATIVE"],
+        ["cumulative_infection_deaths", "RELATIVE"],
+    ]
 
 REQUESTED_UNC_QUANTILES = [.025, .25, .5, .75, .975]
 

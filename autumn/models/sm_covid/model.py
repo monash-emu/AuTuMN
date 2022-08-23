@@ -45,7 +45,7 @@ def set_infectious_seed(model, infectious_seed_time, seed_duration, infectious_s
 
 
 
-def update_school_mixing_using_unesco_data(params: Parameters):
+def process_unesco_data(params: Parameters):
     """_summary_
     Load school closure data from UNESCO and convert it into a timeseries object overriding the baseline school mixing data. 
     
@@ -58,23 +58,31 @@ def update_school_mixing_using_unesco_data(params: Parameters):
     unesco_data = input_db.query(
         table_name='school_closure', 
         conditions= {"country_id": params.country.iso3},
-        columns=["date", "status"]
+        columns=["date", "status", "weeks_partially_open", "weeks_fully_closed", "enrolment_(pre-primary_to_upper_secondary)"]
     )
 
-    # Convert the categorical data into a numerical timeseries
-    unesco_data.replace(
-        {"Closed due to COVID-19": 0., "Fully open": 1., "Academic break": 1., "Partially open": params.mobility.unesco_partial_opening_value}, 
-        inplace=True
-    )
+    # Update the school mixing data if requested
+    if params.mobility.apply_unesco_school_data:
+        # Convert the categorical data into a numerical timeseries
+        unesco_data.replace(
+            {"Closed due to COVID-19": 0., "Fully open": 1., "Academic break": 1., "Partially open": params.mobility.unesco_partial_opening_value}, 
+            inplace=True
+        )
 
-    # Remove rows where status values are repeated (only keeps first and last timepoints for each plateau phase)
-    unesco_data = unesco_data[unesco_data["status"].diff(periods=-1).diff() != 0]  
+        # Remove rows where status values are repeated (only keeps first and last timepoints for each plateau phase)
+        unesco_data = unesco_data[unesco_data["status"].diff(periods=-1).diff() != 0]  
 
-    # Override the baseline school mixing data with the UNESCO timeseries
-    params.mobility.mixing["school"].append = False  # to override the baseline data rather than append 
-    params.mobility.mixing["school"].times = (pd.to_datetime(unesco_data["date"])- COVID_BASE_DATETIME).dt.days.to_list()
-    params.mobility.mixing["school"].values = unesco_data["status"].to_list()
+        # Override the baseline school mixing data with the UNESCO timeseries
+        params.mobility.mixing["school"].append = False  # to override the baseline data rather than append 
+        params.mobility.mixing["school"].times = (pd.to_datetime(unesco_data["date"])- COVID_BASE_DATETIME).dt.days.to_list()
+        params.mobility.mixing["school"].values = unesco_data["status"].to_list()
 
+    # read n_weeks_closed, n_weeks_partial
+    n_weeks_closed, n_weeks_partial = unesco_data['weeks_fully_closed'].max(), unesco_data['weeks_partially_open'].max()
+    n_students = unesco_data['enrolment_(pre-primary_to_upper_secondary)'].iloc[0]
+    student_weeks_missed = n_students * (n_weeks_closed + n_weeks_partial * (1. - params.mobility.unesco_partial_opening_value))
+
+    return student_weeks_missed
 
 def build_model(
         params: dict,
@@ -254,9 +262,8 @@ def build_model(
         region
     )
 
-    # Apply UNESCO school closure data if requested
-    if params.mobility.apply_unesco_school_data:
-        update_school_mixing_using_unesco_data(params)
+    # Apply UNESCO school closure data. This will update the school mixing params
+    student_weeks_missed = process_unesco_data(params)
 
     # Get the actual age stratification now
     age_strat = get_agegroup_strat(
@@ -359,5 +366,8 @@ def build_model(
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
+
+    # request extra output to store the number of students*weeks of school missed
+    outputs_builder.request_student_weeks_missed_output(student_weeks_missed)
 
     return model

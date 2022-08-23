@@ -438,6 +438,17 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             self.model.request_cumulative_output(name=f"cumulative_{output}", source=output, start_time=cumulative_start_time)
 
 
+    def request_student_weeks_missed_output(self, n_student_weeks_missed):
+        """
+            Store the number of students*weeks of school missed. This is a single float that will be stored as a derived output
+        """
+        self.model.request_function_output(
+            'student_weeks_missed',
+            lambda total: np.repeat(n_student_weeks_missed, len(total)),  # constant function
+            ["total_population"],  # could be anything here, really...
+        )
+
+
 def build_statistical_distribution(distribution_details: TimeDistribution):
     """
     Generate a scipy statistical distribution object that can then be used multiple times to evaluate the cdf

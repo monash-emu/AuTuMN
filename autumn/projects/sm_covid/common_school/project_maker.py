@@ -76,21 +76,21 @@ def get_school_project(region):
     ]
 
     # create additional output to capture ratio between weeks of school missed and averted deaths
-    def calc_missed_school_death_ratio(deaths_averted):        
-        student_weeks_missed = 100.  # FIXME: this will come from another derived output
-
+    def calc_missed_school_death_ratio(deaths_averted, student_weeks_missed):        
         ratio = []
         for d in deaths_averted:
             if d == 0.:
-                ratio.append(1.e6)  # some very large number
+                this_ratio = 1.e6
             else:
-                ratio.append(student_weeks_missed / d)
+                this_ratio = student_weeks_missed[0] / d
+
+            ratio.append(min(this_ratio, 1.e6))
 
         return np.array(ratio)
 
     post_diff_output_requests = {
         "missed_school_death_ratio": {
-            "sources": ["abs_diff_cumulative_infection_deaths"],
+            "sources": ["abs_diff_cumulative_infection_deaths", "student_weeks_missed"],
             "func": calc_missed_school_death_ratio
         }
     }

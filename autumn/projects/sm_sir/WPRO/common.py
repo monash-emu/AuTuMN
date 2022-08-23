@@ -7,7 +7,8 @@ def get_WPRO_priors():
     priors = [
         UniformPrior("contact_rate", (0.03, 0.3)),
         UniformPrior("infectious_seed", (50, 500)),
-        UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.7))
+        UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.7)),
+        UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
     ]
     return priors
 

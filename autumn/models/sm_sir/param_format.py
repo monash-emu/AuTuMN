@@ -81,6 +81,26 @@ PARAMETER_DEFINITION = {
         "period with active disease",
     "mobility.microdistancing.behaviour.parameters.max_effect":
         "maximum effect of microdistancing",
+    "voc_emergence.ba_1.cross_protection.ba_2.early_reinfection":
+        "BA.1 infection cross protection against BA.2 infection",
+    "voc_emergence.ba_1.cross_protection.ba_5.early_reinfection":
+        "BA.1 infection cross protection against BA.5 infection",
+    "voc_emergence.ba_2.cross_protection.ba_1.early_reinfection":
+        "BA.2 infection cross protection against BA.1 infection",
+    "voc_emergence.ba_2.cross_protection.ba_5.early_reinfection":
+        "BA.2 infection cross protection against BA.5 infection",
+    "voc_emergence.ba_5.cross_protection.ba_1.early_reinfection":
+        "BA.5 infection cross protection against BA.1 infection",
+    "voc_emergence.ba_5.cross_protection.ba_2.early_reinfection":
+        "BA.5 infection cross protection against BA.2 infection",
+    "detect_prop":
+        "Proportion of symptomatic cases detected",
+    "age_stratification.cfr.multiplier":
+        "Adjustment to base case fatality rates",
+    "age_stratification.prop_hospital.multiplier":
+        "Adjustment to base hospitalisation rates",
+    "sojourns.recovered":
+        "Average duration of natural immunity",
 }
 
 PARAMETER_EVIDENCE = {
@@ -88,6 +108,8 @@ PARAMETER_EVIDENCE = {
 
 PARAMETER_UNITS = {
     "booster_effect_duration":
+        "days",
+    "time_from_onset_to_event.notification.parameters.mean":
         "days",
     "hospital_stay.hospital_all.parameters.mean":
         "days",

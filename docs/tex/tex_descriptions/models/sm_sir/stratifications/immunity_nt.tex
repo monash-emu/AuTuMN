@@ -1,0 +1,86 @@
+\section{Vaccination history stratification}
+\subsection{General approach}
+% Referring to the immunity stratification as the vaccination stratification here, for the NT application
+History of vaccination is captured by stratifying all model compartments by vaccination status.
+Three vaccination strata are included to represent the following categories:
+\begin{itemize}
+    \item Persons who have received fewer than two doses of a COVID-19 vaccine (no vaccination or one dose only)
+    \item Persons who have received exactly two doses of a COVID-19 vaccine
+    \item Persons who have received at least three doses of a COVID-19 vaccine
+\end{itemize}
+Throughout the analysis period, all the vaccination schedules available in Australia
+consisted of a two dose primary course.
+The following are not considered in this approach to simulating vaccination:
+\begin{itemize}
+    \item Any effect of receiving a single dose of vaccine
+    \item Waning of vaccine-induced immunity
+    \item Any additional effect from receiving additional vaccine doses following the third dose
+\end{itemize}
+The effect of vaccination on transmission is to partially reduce 
+the force of infection for all persons at-risk of infection in the vaccinated stratum.
+This applies to both fully susceptible (never previously infected) persons,
+as well as recovered persons who are at risk of reinfection.
+Emerging variants of concern (VoCs) may escape this immunity, as described in the section on strains.
+
+\subsection{Application to first infection}
+The first infection episode with SARS-CoV-2 
+is represented through the transition from the susceptible
+to the first latent compartment.
+The susceptible compartment is not stratified by strain,
+because these persons have no infection history.
+Therefore, for infection of persons never previously infected,
+only the vaccination-induced immunity status is relevant.
+The rate of infection for a particular vaccination status is adjusted by the factor:
+\[1 - p_{i}\]
+Where \(p_{i}\) represents the protection afforded by vaccination stratum \(_{i}\).
+
+\subsection{Application to re-infection}
+Persons who have recovered from previous infection episodes 
+remain in a compartment that is stratified
+according to the last infecting strain.
+The recovered compartment is replicated into early and late stages,
+which can afford different levels of protection against re-infection.
+The rate of reinfection is adjusted by the factor:
+\[(1 - p_{i})\times (1 - n_{k,l})\]
+Where the additional term \(n_{k,l}\) represents the cross-protection
+afforded by past infection with strain \(_{k}\)
+against infecting strain \(_{l}\).
+In this way, cross-protection can be thought of as the complement
+of ``immune escape''/
+
+\subsection{Adjusting age-specific severity parameters for immunity}
+We use inputs for the age-specific case fatality rate and the age-specific hospitalisation rate from Nyberg et al., 
+which provides estimates of these quantities in a population that already had substantial vaccine-induced immunity.
+We therefore adjust these quantities for pre-existing immunity, to account for protection against death and hospitalisation.
+We apply the following method to ensure that after adjusting the parameters for a specific age bracket for immunity,
+the average parameter value would be equal to that reported by Nyberg et al. if weights were applied according to the
+distribution of immunity in the population that was described in this study.
+To do this, we estimate the proportion of the population in each of the three modelled immunity categories
+in the United Kingdom around the mid-point of the study,
+and the protection afforded by each of the immunity classes (see Table \ref{tab:immunity_weighting}).
+
+
+\begin{table}
+    \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{| X | X | X | X |}
+        \hline
+        \textbf{Immunity category} & \textbf{Proportion of population} \tnote{a} & 
+        \textbf{Protection against hospitalisation} \tnote{b} & 
+        \textbf{Protection against death} \tnote{b} \\
+        \hline
+        No immunity, unvaccinated & 0.312 & 0 & 0 \\
+        \hline
+        Low immunity, vaccinated with two doses & 0.302 & 0.5 & 0.8 \\
+        \hline
+        High immunity, vaccinated with three doses & 0.386 & 0.85 & 0.9 \\
+        \hline
+	\end{tabularx}
+	\caption{Values used to re-weight the severity estimates provided in Nyberg et al. to separate immunity classes.}
+	\label{tab:immunity_weighting}
+    \begin{tablenotes}
+        \item[a] Estimated population distribution as at 16th December 2021 (study mid-point),
+        taken from Our World In Data.
+        \item[b] Estimated protection against hospitalisation or death following Omicron infection.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}

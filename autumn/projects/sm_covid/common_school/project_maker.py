@@ -28,7 +28,7 @@ EXTRA_UNCERTAINTY_OUTPUTS = {
     "hospital_occupancy": "Hospital beds occupied with COVID-19 patients",
     "peak_hospital_occupancy": "Peak COVID-19 hospital occupancy",
 
-    "missed_school_death_ratio": "Student-weeks of school missed per death averted",
+    "death_missed_school_ratio": "Deaths averted per student-week of school missed",
 
     "abs_diff_cumulative_incidence": "COVID-19 infections averted",
     "abs_diff_cumulative_infection_deaths": "COVID-19 deaths averted",
@@ -92,23 +92,18 @@ def get_school_project(region):
         ["cumulative_infection_deaths", "RELATIVE"],
     ]
 
-    # create additional output to capture ratio between weeks of school missed and averted deaths
-    def calc_missed_school_death_ratio(deaths_averted, student_weeks_missed):        
-        ratio = []
-        for d in deaths_averted:
-            if d == 0.:
-                this_ratio = 1.e6
-            else:
-                this_ratio = student_weeks_missed[0] / d
-
-            ratio.append(min(this_ratio, 1.e6))
-
-        return np.array(ratio)
+    # create additional output to capture ratio between averted deaths and weeks of school missed 
+    def calc_death_missed_school_ratio(deaths_averted, student_weeks_missed):       
+                
+        if student_weeks_missed[0] == 0.:
+            return np.repeat(0, deaths_averted.size)
+        else:
+            return deaths_averted / student_weeks_missed[0]
 
     post_diff_output_requests = {
-        "missed_school_death_ratio": {
+        "death_missed_school_ratio": {
             "sources": ["abs_diff_cumulative_infection_deaths", "student_weeks_missed"],
-            "func": calc_missed_school_death_ratio
+            "func": calc_death_missed_school_ratio
         }
     }
 

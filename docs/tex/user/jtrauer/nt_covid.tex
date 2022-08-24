@@ -29,39 +29,39 @@
 \input{../../tex_descriptions/models/sm_sir/stratifications/strains.tex}
 % Note that it would be good to flesh out this strain section to be NT-specific
 %\input{../../tex_descriptions/models/sm_sir/stratifications/immunity.tex}
-%\input{../../tex_descriptions/models/sm_sir/mixing_matrix/mixing_matrix.tex}
+\input{../../tex_descriptions/models/sm_sir/mixing_matrix/mixing_matrix.tex}
 
-% \begin{table}[h]
-%     \begin{threeparttable}
-%     \begin{tabularx}{\textwidth}{| X | X |}
-%         \hline
-%         \textbf{Matrix contact setting} & \textbf{Data used to scale contacts} \\
-%         \hline
-%         Home & Not scaled \\
-%         \hline
-%         Other locations & Facebook ``tiles visited'' metric \tnote{a} \\
-%         \hline
-%         Work & Facebook ``tiles visited'' metric \tnote{a} \\
-%         \hline
-%         School & Historical timeline of school closures/re-openings in Bhutan \\
-%         \hline
-% 	\end{tabularx}
-% 	\caption{\textbf{Scaling of mobility values by matrix setting.}}
-% 	\label{tab:location_scaling}
-%     \begin{tablenotes}
-%         \item[a] Google mobility data not available for Bhutan.
-%     \end{tablenotes}
-%     \end{threeparttable}
-% \end{table}
+\begin{table}[h]
+    \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{| X | X |}
+        \hline
+        \textbf{Matrix contact setting} & \textbf{Data used to scale contacts} \\
+        \hline
+        Home & Not scaled \\
+        \hline
+        Other locations & 
+        Flat average of three Google mobility settings time series values
+        \begin{itemize}
+            \item Grocery and pharmacy
+            \item Retail and recreation
+            \item Transit stations
+        \end{itemize}
+        Note that Google provides a mobility metric for parks, 
+        which was not used because of the dramatic seasonal variation of this indicator
+        in the NT.
+        \\
+        \hline
+        Work & Direct scaling according to the Google mobility workplace time series value \\
+        \hline
+        School & Mobility not scaled because schools only briefly closed in the NT \\
+        \hline
+	\end{tabularx}
+	\caption{\textbf{Scaling of mobility values by matrix setting.}}
+	\label{tab:location_scaling}
+    \end{threeparttable}
+\end{table}
 
-% \subsection{Estimation of microdistancing effect}
-% In addition to the mobility considerations, we also consider that other
-% behavioural changes independent of whether certain settings were visited
-% may be relevant in Bhutan.
-% This further scales the rates of contact at the work and other locations settings,
-% with the effect squared as for the mobility considerations.
-
-%\input{../../tex_descriptions/models/sm_sir/outputs.tex}
+\input{../../tex_descriptions/models/sm_sir/outputs.tex}
 \section{Parameters}
 \input{../../tex_descriptions/models/sm_sir/parameters_age_specific.tex}
 

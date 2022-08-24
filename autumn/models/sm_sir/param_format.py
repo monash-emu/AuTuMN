@@ -4,13 +4,13 @@ PARAMETER_DEFINITION = {
     "age_stratification.cfr.source_immunity_distribution.low":
         "proportion of population received two doses but no booster",
     "age_stratification.cfr.source_immunity_distribution.none":
-        "proportion of population not received primary course",
+        "proportion of population not received primary (two dose) course",
     "age_stratification.cfr.source_immunity_protection.high":
         "protection against severe disease from booster assumed for evidence source setting",
     "age_stratification.cfr.source_immunity_protection.low":
         "protection against severe disease from primary course for evidence source setting",
     "asympt_infectiousness_effect":
-        "relative infectiousness of asymptomatic persons",
+        "relative infectiousness of asymptomatic persons per unit time",
     "booster_effect_duration":
         "duration of booster effect",
     "contact_rate":
@@ -104,6 +104,20 @@ PARAMETER_DEFINITION = {
 }
 
 PARAMETER_EVIDENCE = {
+    "infectious_seed":
+        "arbitrary",
+    "age_stratification.cfr.multiplier":
+        "adapted to match local epidemiology",
+    "ref_mixing_iso3":
+        "closest demographic profile to Australia",
+    "voc_emergence.ba_1.cross_protection.ba_5.early_reinfection":
+        "no immunity from BA.1 is retained through to the BA.5 period",
+    "voc_emergence.ba_2.cross_protection.ba_1.early_reinfection":
+        "immunity from subsequent strains is assumed to completely protect against previous strains",
+    "voc_emergence.ba_5.cross_protection.ba_1.early_reinfection":
+        "immunity from subsequent strains is assumed to completely protect against previous strains",
+    "voc_emergence.ba_5.cross_protection.ba_2.early_reinfection":
+        "immunity from subsequent strains is assumed to completely protect against previous strains",
 }
 
 PARAMETER_UNITS = {
@@ -131,4 +145,12 @@ PARAMETER_UNITS = {
         "days",
     "sojourns.active.total_time":
         "days",
+    "voc_emergence.ba_1.cross_protection.ba_2.early_reinfection":
+        "multiplier",
+    "voc_emergence.ba_2.cross_protection.ba_5.early_reinfection":
+        "multiplier",
+    "detect_prop":
+        "proportion",
+    "contact_rate":
+        "probability",
 }

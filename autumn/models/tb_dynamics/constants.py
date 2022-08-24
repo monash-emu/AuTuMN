@@ -23,3 +23,8 @@ INFECTIOUS_COMPS = [
     Compartment.INFECTIOUS,
     Compartment.ON_TREATMENT,
 ]
+
+LATENT_COMPS = [
+    Compartment.EARLY_LATENT,
+    Compartment.LATE_LATENT,
+]

@@ -1,10 +1,11 @@
 import json
-from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path
+
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
+from autumn.core.project import ParameterSet, Project, build_rel_path, load_timeseries
 from autumn.models.sm_sir import base_params, build_model, set_up_random_process
-from autumn.settings import Region, Models
+from autumn.settings import Models, Region
 
 # Load and configure model parameters
 baseline_params = base_params.update(build_rel_path("params/baseline.yml"))

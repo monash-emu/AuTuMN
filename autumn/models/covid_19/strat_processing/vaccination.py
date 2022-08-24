@@ -536,6 +536,12 @@ def apply_standard_vacc_coverage(
         coverage_times, coverage_values = get_standard_vacc_coverage(iso3, agegroup, age_pops, one_dose_vacc_params)
         lagged_cov_times = [i + vacc_lag for i in coverage_times]
 
+        lagged_cov_times = [0.] + lagged_cov_times  # to avoid the issue that the first coverage value
+        # is zero and the second one is positive.
+        # So when you create a piecewise function from this, the first value of the piecewise function is
+        # the rate in the first period - which is the daily rate when the program starts.
+
+        coverage_values = [0.] + coverage_values
         # Get the vaccination rate function of time from the coverage values
         rollout_period_times, vaccination_rates = get_piecewise_vacc_rates(lagged_cov_times, coverage_values)
 

@@ -47,7 +47,7 @@ steps:
     - label: National Capital Region (sm_sir)
       value: sm_sir:national-capital-region
     - label: Northern Territory (sm_sir)
-      value: sm_sir:northern-territory
+      value: sm_sir:northern_territory
     - label: Thimphu (sm_sir)
       value: sm_sir:thimphu
     - label: Kiribati (tb_dynamics)

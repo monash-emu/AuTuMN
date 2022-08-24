@@ -8,4 +8,11 @@ time:
 
 start_population_size: 33048.
 infectious_seed: 1.
-crude_death_rate: 0.018
+crude_death_rate: 1.
+age_breakpoints: [0, 5, 15, 35, 50]
+
+age_mixing:
+  source_iso3: FJI
+  age_adjust: true
+
+contact_rate: 0.14

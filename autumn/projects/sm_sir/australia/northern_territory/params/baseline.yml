@@ -1,0 +1,167 @@
+---
+country:
+  iso3: AUS
+
+population:
+  region: Northern Territory
+  year: 2020
+
+time:
+  start: 650.
+  end: 1000.
+  step: 1.
+
+infectious_seed: 2.
+contact_rate: 0.045
+
+sojourns:
+  active:
+    proportion_early: 0.333
+  latent:
+    proportion_early: 0.5
+  recovered: 180.
+
+ref_mixing_iso3: GBR
+
+detect_prop: 0.4
+
+is_dynamic_mixing_matrix: true
+
+mobility:
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.333
+      grocery_and_pharmacy: 0.333
+      parks: 0.
+      transit_stations: 0.334
+
+activate_random_process: False
+
+age_groups:
+  - 0
+  - 5
+  - 10
+  - 15
+  - 20
+  - 25
+  - 30
+  - 35
+  - 40
+  - 45
+  - 50
+  - 55
+  - 60
+  - 65
+  - 70
+  - 75
+
+age_stratification:
+  cfr:
+    values:  # Replace with Omicron-applicable values from Nyberg
+      0:  0.00005
+      5:  0.00005
+      10: 0.00001
+      15: 0.00001
+      20: 0.00002
+      25: 0.00002
+      30: 0.00005
+      35: 0.00005
+      40: 0.0001
+      45: 0.0001
+      50: 0.0005
+      55: 0.0005
+      60: 0.002
+      65: 0.002
+      70: 0.0083
+      75: 0.0083
+      80: 0.0512
+  prop_hospital:
+    values:  # Replace with Omicron-applicable values from Nyberg
+      0:  0.0110
+      5:  0.0110
+      10: 0.0038
+      15: 0.0038
+      20: 0.0060
+      25: 0.0060
+      30: 0.0066
+      35: 0.0066
+      40: 0.0059
+      45: 0.0059
+      50: 0.0077
+      55: 0.0077
+      60: 0.0139
+      65: 0.0139
+      70: 0.0357
+      75: 0.0357
+      80: 0.1110
+
+voc_emergence:
+  ba_1:
+    starting_strain: true
+    seed_prop: 1.
+    new_voc_seed: null
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      ba_1:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      ba_2:
+        early_reinfection: 0.45
+        late_reinfection: 0.
+  ba_2:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 715.
+      entry_rate: 20.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      ba_1:
+        early_reinfection: 1.
+        late_reinfection: 1.
+      ba_2:
+        early_reinfection: 1.
+        late_reinfection: 0.
+
+immunity_stratification:
+  prop_immune: .8
+  prop_high_among_immune: .1
+  infection_risk_reduction:
+    none: 0.
+    low: 0.
+    high: 0.6
+
+indigenous: true
+
+time_from_onset_to_event:  # Using time of symptom onset as reference
+  notification:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 3.
+  hospitalisation:
+    distribution: gamma
+    parameters:
+      shape: 8.
+      mean: 5.
+  icu_admission:  # Using time of hospitalisation as reference
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 2.
+  death:
+    distribution: gamma
+    parameters:
+      shape: 5.
+      mean: 20.

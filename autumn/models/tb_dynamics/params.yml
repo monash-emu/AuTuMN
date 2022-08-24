@@ -14,3 +14,32 @@ iso3: null
 crude_birth_rate: 1.
 start_population_size: 2000.
 infectious_seed: 1.
+#stratification
+age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
+age_mixing: null
+
+# basic infection and disease parameters
+contact_rate: 1.4
+
+# latency parameters
+age_specific_latency:
+  early_activation:
+    # unstratified: 1.1e-3
+    0: 6.6e-3
+    5: 2.7e-3
+    15: 2.7e-4
+  stabilisation:
+    # unstratified: 1.0e-2
+    0: 1.2e-2
+    5: 1.2e-2
+    15: 5.4e-3
+  late_activation:
+    # unstratified: 5.5e-6
+    0: 1.9e-11
+    5: 6.4e-6
+    15: 3.3e-6
+
+# relative risks of reinfection
+rr_infection_latent: .21
+rr_infection_recovered: 1.
+progression_multiplier: 1.

@@ -148,7 +148,7 @@ mobility:
   region: null
   mixing: {}
   age_mixing: null
-  # Mapping of Google mobility locations to Prem-specific locations
+  # Mapping of Google mobility locations to matrix locations
   google_mobility_locations:
     work:
       workplaces: 1.
@@ -208,7 +208,7 @@ hospital_stay:
       shape: 5.
       mean: 4.7 # NSW data: https://aci.health.nsw.gov.au/__data/assets/pdf_file/0007/698785/20220112-COVID-19-Risk-Monitoring-Dashboard.pdf
 
-activate_random_process: True
+activate_random_process: true
 random_process: null
 
 additional_immunity: null
@@ -216,12 +216,14 @@ booster_effect_duration: 90
 future_monthly_booster_rate: null
 future_booster_age_allocation: null
 
+indigenous: false
+
 requested_cumulative_outputs: []
 cumulative_start_time: null
-request_incidence_by_age: False
-request_immune_prop_by_age: False
-request_hospital_admissions_by_age: False
-request_hospital_occupancy_by_age: False
-request_icu_admissions_by_age: False
-request_icu_occupancy_by_age: False
-request_infection_deaths_by_age: False
+request_incidence_by_age: false
+request_immune_prop_by_age: false
+request_hospital_admissions_by_age: false
+request_hospital_occupancy_by_age: false
+request_icu_admissions_by_age: false
+request_icu_occupancy_by_age: false
+request_infection_deaths_by_age: false

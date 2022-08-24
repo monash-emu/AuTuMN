@@ -18,7 +18,8 @@ from autumn.settings.constants import COVID_BASE_DATETIME
 
 MIXING_PROXY = {
     "philippines": "HKG",
-    "france": "BEL"
+    "france": "BEL",
+    "australia": "GBR"
 }
 
 EXTRA_UNCERTAINTY_OUTPUTS = {

@@ -26,6 +26,8 @@ steps:
       value: sm_covid:france
     - label: Philippines (sm_covid)
       value: sm_covid:philippines
+    - label: Australia (sm_covid)
+      value: sm_covid:australia
     - label: Bangladesh (sm_sir)
       value: sm_sir:bangladesh
     - label: Bhutan (sm_sir)

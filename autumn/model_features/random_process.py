@@ -4,8 +4,6 @@ from typing import Tuple
 from summer.compute import ComputedValueProcessor
 
 from autumn.model_features.curve.scale_up import scale_up_function
-from autumn.models.sm_sir.parameters import Time, RandomProcessParams
-
 
 class RandomProcess:
     """
@@ -82,8 +80,8 @@ class RandomProcess:
         # calculate the distance between each W_t and the associated normal distribution's centre
         sum_of_squares = sum([(x - mu)**2 for (x, mu) in zip(self.values, normal_means)])
 
-        # calculate the joint log-likelihood
-        log_likelihood = - len(self.values) * log(self.noise_sd * sqrt(2. * pi)) - sum_of_squares / (2. * self.noise_sd**2)
+        # calculate the joint log-likelihood (normalised)
+        log_likelihood = - log(self.noise_sd * sqrt(2. * pi)) - sum_of_squares / (2. * self.noise_sd**2 * len(self.values))
 
         return log_likelihood
 
@@ -105,8 +103,8 @@ def set_up_random_process(start_time, end_time, order, period):
 
 
 def get_random_process(
-        process_params: RandomProcessParams,
-        contact_rate_value: float,
+        process_params,
+        contact_rate_value,
 ) -> Tuple[callable, callable]:
     """
     Work out the process that will contribute to the random process.

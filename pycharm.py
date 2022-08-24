@@ -5,8 +5,8 @@ Entry point for IDE users to run an application.
 from autumn.settings import Region, Models
 from autumn.core.project import get_project, run_project_locally
 
-region = Region.KIRIBATI
-model = Models.TBD
+region = Region.PHILIPPINES
+model = Models.SM_COVID
 
 project = get_project(model, region)
 
@@ -14,4 +14,4 @@ project = get_project(model, region)
 run_project_locally(project, run_scenarios=False)
 
 # Run a calibration
-# project.calibrate(max_seconds=20, chain_idx=1, num_chains=1)
+# project.calibrate(max_seconds=5, chain_idx=1, num_chains=1)

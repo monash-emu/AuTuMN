@@ -18,7 +18,7 @@ The following are not considered in this approach to simulating vaccination:
 \end{itemize}
 The effect of vaccination on transmission is to partially reduce 
 the force of infection for all persons at-risk of infection in the vaccinated stratum.
-This applies to both fully susceptible (never previously infected) persons,
+This applies equally to both fully susceptible (never previously infected) persons,
 as well as recovered persons who are at risk of reinfection.
 Emerging variants of concern (VoCs) may escape this immunity, as described in the section on strains.
 
@@ -46,18 +46,20 @@ Where the additional term \(n_{k,l}\) represents the cross-protection
 afforded by past infection with strain \(_{k}\)
 against infecting strain \(_{l}\).
 In this way, cross-protection can be thought of as the complement
-of ``immune escape''/
+of ``immune escape''.
 
 \subsection{Adjusting age-specific severity parameters for immunity}
-We use inputs for the age-specific case fatality rate and the age-specific hospitalisation rate from Nyberg et al., 
+We use inputs for the age-specific case fatality rate and the age-specific hospitalisation rate from the United Kingdom \cite{nyberg-2022}, 
 which provides estimates of these quantities in a population that already had substantial vaccine-induced immunity.
 We therefore adjust these quantities for pre-existing immunity, to account for protection against death and hospitalisation.
-We apply the following method to ensure that after adjusting the parameters for a specific age bracket for immunity,
-the average parameter value would be equal to that reported by Nyberg et al. if weights were applied according to the
+We apply a weighting method to ensure that after adjusting the parameters for a specific age bracket for immunity,
+the average parameter value would be equal to the UK values if weights were applied according to the
 distribution of immunity in the population that was described in this study.
-To do this, we estimate the proportion of the population in each of the three modelled immunity categories
+To do this, we estimate the proportion of the population 
+in each of the three modelled immunity categories
 in the United Kingdom around the mid-point of the study,
-and the protection afforded by each of the immunity classes (see Table \ref{tab:immunity_weighting}).
+and the protection afforded by each of the immunity classes 
+(see Table \ref{tab:immunity_weighting}).
 
 
 \begin{table}

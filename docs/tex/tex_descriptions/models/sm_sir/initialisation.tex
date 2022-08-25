@@ -1,5 +1,11 @@
 \section{Infectious seed}
-The infectious seed value is assigned to the early infectious compartment.
-This value is subtracted from the total modelled population and assigned to the susceptible compartment, while all other compartments are assigned a starting value of zero.
-This process is undertaken before age stratification is applied,
-with the stratification process then splitting these values proportionately according to the starting age distribution of the population.
+The infectious seed value is assigned to the early infectious compartment
+(i.e. the fully infectious compartment).
+This value is subtracted from the total modelled population,
+with the remainder of the total population then assigned to the susceptible compartment, 
+while all other compartments are assigned a starting value of zero.
+This process is undertaken before stratifications are applied,
+with the stratification processes then splitting these values proportionately
+according to the starting age distribution of the population.
+The exception to this is seeding by strain,
+with all of the starting infectious seed assigned to the starting strain.

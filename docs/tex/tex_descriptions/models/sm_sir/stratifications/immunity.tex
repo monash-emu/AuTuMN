@@ -1,29 +1,23 @@
 \section{Vaccination history stratification}
-% Referring to the immunity stratification as the vaccination stratification here, for the NT application
+% Referring to the immunity stratification as the vaccination stratification here, for the Bhutan application
 History of vaccination is captured by stratifying all model compartments by vaccination status.
-Three vaccination strata are included to represent the following categories:
-\begin{itemize}
-    \item Persons who have received fewer than two doses of a COVID-19 vaccine (no vaccination or one dose only)
-    \item Persons who have received exactly two doses of a COVID-19 vaccine
-    \item Persons who have received at least three doses of a COVID-19 vaccine
-\end{itemize}
-Throughout the analysis period, all the vaccination schedules available in Australia
-consisted of a two dose primary course.
+Two vaccination strata are included to represent those who have received at least two doses of a COVID-19 vaccine,
+and those who have not.
 The following are not considered in this approach to simulating vaccination:
 \begin{itemize}
     \item Any effect of receiving a single dose of vaccine
     \item Waning of vaccine-induced immunity
-    \item Any additional effect from receiving additional vaccine doses following the third dose
+    \item Any additional effect from receiving additional vaccine doses following the second dose
 \end{itemize}
-The effect of vaccination on transmission is to partially reduce 
-the force of infection for all persons at-risk of infection in the vaccinated stratum.
-This applies to both fully susceptible (never previously infected) persons,
+The effect of vaccination on transmission is to partially reduce the rate of infection for all persons at-risk of infection in the vaccinated stratum.
+This includes both fully susceptible (never previously infected) persons,
 as well as recovered persons who are at risk of reinfection.
-Emerging variants of concern (VoCs) may escape this immunity, as described in the section on strains.
+Emerging variants of concern (VoCs) may escape this immunity, as described further below.
+% To illustrate this further, the next steps would be to display the population distribution by stratum,
+% and/or to explain the implementation of the dynamic proportions code
 
 \section{Immunity-strain interaction}
-The strains/VoCs implemented in the model may escape both vaccine-induced, 
-as follows.
+The strains/VoCs implemented in the model may escape both vaccine-induced and natural immunity, as follows.
 
 \subsection{Application to first infection}
 The first infection episode with SARS-CoV-2 is represented through the transition from the susceptible
@@ -65,15 +59,15 @@ and the protection afforded by each of the immunity classes (see Table \ref{tab:
 
 \begin{table}
     \begin{threeparttable}
-    \begin{tabularx}{\textwidth}{| X | X | X | X }
+    \begin{tabularx}{\textwidth}{| X | X | X |}
         \hline
-        \textbf{Immunity category} & \textbf{Proportion of population} \tnote{a} & \textbf{Estimated protection} \tnote{b} & None\\
+        \textbf{Immunity category} & \textbf{Proportion of population} \tnote{a} & \textbf{Estimated protection} \tnote{b} \\
         \hline
-        No immunity, unvaccinated & 0.312 & 0 & None \\
+        No immunity, unvaccinated & 0.312 & 0 \\
         \hline
-        Low immunity, vaccinated with two doses & 0.302 & 0.5 & None \\
+        Low immunity, vaccinated with two doses & 0.302 & 0.5 \\
         \hline
-        High immunity, vaccinated with three doses & 0.386 & 0.85 & None \\
+        High immunity, vaccinated with three doses & 0.386 & 0.85 \\
         \hline
 	\end{tabularx}
 	\caption{Values used to re-weight the severity estimates provided in Nyberg et al. to separate immunity classes.}

@@ -1,0 +1,115 @@
+\documentclass{article}
+\author{
+    Epidemiological Modelling Unit,
+    \\ School of Public Health and Preventive Medicine,
+    \\ Monash University
+}
+\usepackage{graphicx}
+\usepackage{biblatex}
+\usepackage{threeparttable}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage[left=2.5cm,right=2.5cm]{geometry}
+\input{../../tex_utils/inline_code.tex}  % Manual creation of an inline code command
+
+\bibliography{../../references/emu_library}
+
+\title{Modelling methods, Northern Territory application}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+\input{../../tex_descriptions/models/sm_sir/model_description.tex}
+\input{../../tex_descriptions/models/sm_sir/model_structure.tex}
+\input{../../tex_descriptions/models/sm_sir/stratifications/agegroup.tex}
+\input{../../tex_descriptions/models/sm_sir/initialisation.tex}
+\input{../../tex_descriptions/models/sm_sir/stratifications/clinical.tex}
+\input{../../tex_descriptions/models/sm_sir/stratifications/strains.tex}
+\subsection{NT strains simulated}
+We modelled BA.1, BA.2 and BA.5 as three sequentially emerging strains
+in the Northern Territory.
+Other strains contributed less to local disease burden 
+and so can be considered to be represented by these three strains.
+In the counterfactual scenario of early Delta emergence,
+the later Omicron strains (BA.2 and BA.5) were not introduced into the model
+and parameters for the first strain (BA.1) were adjusted
+to reflect the characteristics of Delta.
+\input{../../tex_descriptions/models/sm_sir/stratifications/immunity_nt.tex}
+\input{../../tex_descriptions/models/sm_sir/mixing_matrix/mixing_matrix.tex}
+
+\begin{table}[h]
+    \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{| X | X |}
+        \hline
+        \textbf{Matrix contact setting} & \textbf{Data used to scale contacts} \\
+        \hline
+        Home & Not scaled \\
+        \hline
+        Other locations & 
+        Flat average of three Google mobility settings time series values
+        \begin{itemize}
+            \item Grocery and pharmacy
+            \item Retail and recreation
+            \item Transit stations
+        \end{itemize}
+        Note that Google provides a mobility metric for parks, 
+        which was not used because of the dramatic seasonal variation of this indicator
+        in the NT.
+        \\
+        \hline
+        Work & Direct scaling according to the Google mobility workplace time series value \\
+        \hline
+        School & Mobility not scaled because schools only briefly closed in the NT \\
+        \hline
+	\end{tabularx}
+	\caption{Scaling of mobility values by matrix setting.}
+	\label{tab:location_scaling}
+    \end{threeparttable}
+\end{table}
+
+\input{../../tex_descriptions/models/sm_sir/outputs.tex}
+\section{Parameters}
+\input{../../tex_descriptions/models/sm_sir/parameters_age_specific.tex}
+
+\begin{table}[h]
+    \begin{tabularx}{\textwidth}{| X | p{2.5cm} | X |}
+    \hline
+    \textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+    \hline
+    \input{../../tex_descriptions/projects/sm_sir/northern_territory/northern_territory/auto_fixed_params.tex} \\
+    \hline
+    \end{tabularx}
+	\caption{Epidemiological fixed parameter values.}
+    \label{tab:fixed_params}
+\end{table}
+
+\begin{table}[h]
+    \begin{tabularx}{\textwidth}{| X | p{2.5cm} | X |}
+    \hline
+    \textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+    \hline
+    \input{../../tex_descriptions/projects/sm_sir/northern_territory/northern_territory/auto_output_params.tex} \\
+    \hline
+    \end{tabularx}
+	\caption{Output-related fixed parameter values.}
+    \label{tab:output_params}
+\end{table}
+
+\begin{table}[h]
+    \begin{tabularx}{\textwidth}{| X | p{2.5cm} | X |}
+    \hline
+    \textbf{Parameter} & \textbf{Distribution type} & \textbf{Distribution parameters} \\
+    \hline
+    \input{../../tex_descriptions/projects/sm_sir/northern_territory/northern_territory/auto_priors.tex} \\
+    \hline
+    \end{tabularx}
+	\caption{Prior distributions of parameters used in model calibration.}
+    \label{tab:priors}
+\end{table}
+
+\newpage
+\printbibliography
+
+\end{document}

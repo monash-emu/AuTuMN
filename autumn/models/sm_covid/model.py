@@ -223,14 +223,14 @@ def build_model(
         dest=infection_dest,
     )
 
-    # Transition within infectious states 
-    recovery_rate = n_infectious_comps * 1. / sojourns.active
-    for i_active in range(n_infectious_comps - 1):
+    # Transition within active states 
+    recovery_rate = n_active_comps * 1. / sojourns.active
+    for i_active in range(n_active_comps - 1):
         model.add_transition_flow(
             name=f"within_infectious_{i_active}",
             fractional_rate=recovery_rate,
-            source=infectious_compartments[i_active],
-            dest=infectious_compartments[i_active + 1],
+            source=active_compartments[i_active],
+            dest=active_compartments[i_active + 1],
         )
         
     # Recovery transition
@@ -283,10 +283,11 @@ def build_model(
     )
 
     # adjust the infectiousness of the infectious latent compartments using this stratification (summer design flaw, we should be able to do this with no stratification)
-    age_strat.add_infectiousness_adjustments(
-        infectious_latent_comps, 
-        {agegroup: Multiply(params.latency_infectiousness.rel_infectiousness) for agegroup in age_groups}
-    )
+    for infectious_latent_comp in infectious_latent_comps:
+        age_strat.add_infectiousness_adjustments(
+            infectious_latent_comp, 
+            {agegroup: Multiply(params.latency_infectiousness.rel_infectiousness) for agegroup in age_groups}
+        )
 
     model.stratify_with(age_strat)
 

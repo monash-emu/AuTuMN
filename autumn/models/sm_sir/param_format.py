@@ -104,6 +104,10 @@ PARAMETER_DEFINITION = {
 }
 
 PARAMETER_EVIDENCE = {
+    "immunity_stratification.infection_risk_reduction.high":
+        "viral load substantially lower in boosted compared to two dose vaccinated persons \cite{puhach-2022}",
+    "immunity_stratification.infection_risk_reduction.low":
+        "half of estimate of 40\% for Delta \cite{eyre-2022, harris-2021}",
     "infectious_seed":
         "arbitrary",
     "age_stratification.cfr.multiplier":

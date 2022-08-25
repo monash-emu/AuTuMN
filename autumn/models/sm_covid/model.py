@@ -118,11 +118,17 @@ def build_model(
     n_latent_comps = params.compartment_replicates['latent']
     latent_compartments = [f"{Compartment.LATENT}_{i}" for i in range(n_latent_comps)]
 
-    n_infectious_comps = params.compartment_replicates['infectious']
-    infectious_compartments = [f"{Compartment.INFECTIOUS}_{i}" for i in range(n_infectious_comps)]
+    n_active_comps = params.compartment_replicates['infectious']
+    active_compartments = [f"{Compartment.INFECTIOUS}_{i}" for i in range(n_active_comps)]
 
     # Define the full list of compartments
-    base_compartments = [Compartment.SUSCEPTIBLE] + latent_compartments + infectious_compartments + [Compartment.RECOVERED]
+    base_compartments = [Compartment.SUSCEPTIBLE] + latent_compartments + active_compartments + [Compartment.RECOVERED]
+
+    # work out the list of infectious compartments
+    n_infectious_latent_comps = params.latency_infectiousness.n_infectious_comps
+    assert n_infectious_latent_comps <= n_latent_comps, "Number of infectious latent comps greater than number of latent comps."
+    infectious_latent_comps = latent_compartments[-n_infectious_latent_comps:]
+    infectious_compartments = infectious_latent_comps + active_compartments
 
     # Create the model object
     model = CompartmentalModel(
@@ -275,6 +281,13 @@ def build_model(
         params.is_dynamic_mixing_matrix,
         suscept_adjs,
     )
+
+    # adjust the infectiousness of the infectious latent compartments using this stratification (summer design flaw, we should be able to do this with no stratification)
+    age_strat.add_infectiousness_adjustments(
+        infectious_latent_comps, 
+        {agegroup: Multiply(params.latency_infectiousness.rel_infectiousness) for agegroup in age_groups}
+    )
+
     model.stratify_with(age_strat)
 
     """

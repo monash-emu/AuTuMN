@@ -28,6 +28,10 @@ compartment_replicates:
   latent: 4
   infectious: 4
 
+latency_infectiousness:
+  n_infectious_comps: 2
+  rel_infectiousness: .5
+
 contact_rate: 0.05
 infectious_seed_time: 60
 seed_duration: 7

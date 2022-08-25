@@ -176,6 +176,15 @@ class Sojourns(BaseModel):
     active: float
     latent: float
 
+
+class LatencyInfectiousness(BaseModel):
+    """
+    Parameters to define how many latent compartments are infectious and their relative
+    infectiousness compared to the active disease compartments
+    """
+    n_infectious_comps: int
+    rel_infectiousness: float
+
 class MixingLocation(BaseModel):
 
     append: bool  # Whether to append or overwrite times / values
@@ -342,6 +351,7 @@ class Parameters:
     mobility: Mobility
    
     compartment_replicates: Dict[str, int]
+    latency_infectiousness: LatencyInfectiousness
 
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay

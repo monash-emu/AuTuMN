@@ -15,11 +15,12 @@ mle_path = build_rel_path("params/mle-params.yml")
 isExistMLE = os.path.exists(mle_path)
 baseline_path = build_rel_path("params/baseline.yml")
 isExistBaseline = os.path.exists(baseline_path)
-if isExistBaseline:
-    baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
-elif isExistMLE:
+
+if isExistMLE:
     baseline_params = base_params.update(build_rel_path("params/baseline.yml")).\
         update(mle_path, calibration_format=True)
+elif isExistBaseline:
+    baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
 else:
     baseline_params = base_params
 

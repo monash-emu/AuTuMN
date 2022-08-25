@@ -1,5 +1,7 @@
 import os
 import warnings
+import json
+from pathlib import Path
 
 # Ignore future warnings they're annoying.
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -141,3 +143,16 @@ register_project(
     Region.KIRIBATI,
     "autumn.projects.tb_dynamics.kiribati.project",
 )
+
+# register Western Pacific countries
+wpro_list = json.load(open(Path(__file__).parent / "wpro_list.json"))
+wpro_countries = wpro_list["region"]
+wpro_paths = wpro_list["path"]
+
+for idx, wpro_project in enumerate(wpro_countries):
+    region_name = f"wpro_{wpro_countries[idx].upper()}"
+    register_project(
+          Models.WPRO,
+          region_name,
+          wpro_paths[idx]
+    )

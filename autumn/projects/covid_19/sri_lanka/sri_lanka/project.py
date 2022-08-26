@@ -49,8 +49,8 @@ priors = [
                 trunc_range=[0.3, np.inf],
     ),
     #VoC
-    UniformPrior("voc_emergence.alpha_beta.start_time", [400, 470]),
-    UniformPrior("voc_emergence.delta.start_time", [515, 550]),
+    UniformPrior("voc_emergence.alpha_beta.start_time", [380, 440]),
+    UniformPrior("voc_emergence.delta.start_time", [475, 525]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [0.5, 5.0]),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", [0.5, 10.0]),
     #waning

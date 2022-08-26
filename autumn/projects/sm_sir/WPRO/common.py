@@ -6,9 +6,12 @@ from autumn.core.project import load_timeseries, build_rel_path
 def get_WPRO_priors():
     priors = [
         UniformPrior("contact_rate", (0.03, 0.3)),
-        UniformPrior("infectious_seed", (50, 500)),
+        UniformPrior("infectious_seed", (1000, 10000)),
         UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.7)),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
+        UniformPrior("sojourns.latent.total_time", (2, 12)),
+        UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (1, 3)),
+        UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1, 3))
     ]
     return priors
 

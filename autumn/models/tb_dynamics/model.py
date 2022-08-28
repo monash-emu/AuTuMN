@@ -3,13 +3,13 @@ import pandas as pd
 
 from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.project import Params, build_rel_path
-from autumn.model_features.curve import scale_up_function
+from autumn.model_features.curve import scale_up_function, tanh_based_scaleup
 from autumn.core import inputs
-from autumn.core.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 
 from .constants import Compartment, BASE_COMPARTMENTS, INFECTIOUS_COMPS
 from .stratifications.age import get_age_strat
+from .stratifications.custom import get_custom_strat
 from .outputs import request_outputs
 
 base_params = Params(
@@ -63,8 +63,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Assign the initial population
     assign_population(seed, age_pops.sum(), model)
 
- 
-
     contact_rate = params.contact_rate
     contact_rate_latent = params.contact_rate * params.rr_infection_latent
     contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
@@ -92,8 +90,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
-    #Add transition flow.
-    stabilisation_rate = 1.0 # will be overwritten by stratification
+    # Add transition flow.
+    stabilisation_rate = 1.0  # will be overwritten by stratification
     early_activation_rate = 1.0
     late_activation_rate = 1.0
     model.add_transition_flow(
@@ -114,6 +112,46 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
     )
+    # Post-active-disease flows
+    model.add_transition_flow(
+        "self_recovery",
+        params.self_recovery_rate_dict["unstratified"],
+        Compartment.INFECTIOUS,
+        Compartment.RECOVERED,
+    )
+
+    # Detection rate for infected people.
+    detection_rate = 1. # will be resolved later
+
+    model.add_transition_flow(
+        "detection",
+        detection_rate,
+        Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
+    )
+
+    # Treatment recovery, releapse, death flows.
+    # Relapse and treatment death need to be adjusted by age later.
+    treatment_recovery_rate = 1.0
+    treatment_death_rate = 1.0
+    relapse_rate = 1.0
+    model.add_transition_flow(
+        "treatment_recovery",
+        treatment_recovery_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.RECOVERED,
+    )
+    model.add_death_flow(
+        "treatment_death",
+        treatment_death_rate,
+        Compartment.ON_TREATMENT,
+    )
+    model.add_transition_flow(
+        "relapse",
+        relapse_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.INFECTIOUS,
+    )
 
     # Add crude birth flow to the model
     model.add_crude_birth_flow(
@@ -126,21 +164,24 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     universal_death_rate = params.crude_death_rate
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
-    #Set mixing matrix
+    # Set mixing matrix
     if params.age_mixing:
         age_mixing_matrices = build_synthetic_matrices(
-            params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,
-            requested_locations=["all_locations"]
+            params.iso3,
+            params.age_mixing.source_iso3,
+            params.age_breakpoints,
+            params.age_mixing.age_adjust,
+            requested_locations=["all_locations"],
         )
         age_mixing_matrix = age_mixing_matrices["all_locations"]
         # convert daily contact rates to yearly rates
         age_mixing_matrix *= 365.25
-        #Add Age stratification to the model
+        # Add Age stratification to the model
         age_strat = get_age_strat(
             params,
             age_pops,
             BASE_COMPARTMENTS,
-            age_mixing_matrix = age_mixing_matrix,
+            age_mixing_matrix=age_mixing_matrix,
         )
     else:
         age_strat = get_age_strat(
@@ -150,9 +191,20 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
     model.stratify_with(age_strat)
 
+    # Custom stratification
+    custom_strats = [s for s in params.custom_stratifications.keys() if s in params.stratify_by]
+    for strat_name in custom_strats:
+        assert "_" not in strat_name, "Stratification name should not include '_'"
+        strat_details = params.custom_stratifications[strat_name]
+        custom_strat = get_custom_strat(strat_name, strat_details, params)
+        model.stratify_with(custom_strat)
+
+    if "location" in params.custom_stratifications:
+        location_strata = params.custom_stratifications["location"]["strata"]
+    else:
+        location_strata = []
+
     # Generate outputs
-    request_outputs(
-        model,
-        BASE_COMPARTMENTS)
+    request_outputs(model, BASE_COMPARTMENTS,location_strata)
 
     return model

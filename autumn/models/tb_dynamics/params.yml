@@ -17,9 +17,10 @@ infectious_seed: 1.
 #stratification
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
 age_mixing: null
+custom_stratifications: {} # this specifies user-defined  stratifications, i.e location, will be overwritten later
 
 # basic infection and disease parameters
-contact_rate: 1.4
+contact_rate: 1.
 
 # latency parameters
 age_specific_latency:
@@ -39,7 +40,22 @@ age_specific_latency:
     5: 6.4e-6
     15: 3.3e-6
 
-# relative risks of reinfection
+# Relative risks of reinfection
 rr_infection_latent: .21
 rr_infection_recovered: 1.
 progression_multiplier: 1.
+
+self_recovery_rate_dict:
+  unstratified: .2
+  smear_positive: 0.231 # Ragonent et al. (CID 2020)
+  smear_negative: 0.130 # Ragonent et al. (CID 2020)
+# time variant
+time_variant_tsr: {}
+time_variant_acf: []
+acf_screening_sensitivity: .75
+time_variant_ltbi_screening: []
+time_variant_ltbi_screening: []
+ltbi_screening_sensitivity: .75
+pt_efficacy: .7
+
+

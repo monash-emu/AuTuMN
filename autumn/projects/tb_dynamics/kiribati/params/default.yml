@@ -9,10 +9,27 @@ time:
 start_population_size: 33048.
 infectious_seed: 1.
 crude_death_rate: 1.
-age_breakpoints: [0, 5, 15, 35, 50]
+
 
 age_mixing:
   source_iso3: FJI
   age_adjust: true
-
+# TB related
 contact_rate: 0.14
+# Stratification
+stratify_by: ["age", "location"]
+age_breakpoints: [0, 5, 15, 35, 50]
+custom_stratifications: # custom stratifications
+  location:
+    strata: ["starawa", "other"]
+    proportions:
+      starawa: .6
+      other: .4
+    prop_mixing_same_stratum: .95
+    adjustments:
+      infection:
+        starawa: 1.
+        other: 1.
+      detection:
+        starawa: 1.
+        other: 1.

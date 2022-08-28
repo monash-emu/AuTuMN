@@ -58,3 +58,21 @@ class Parameters:
     rr_infection_recovered: float
     age_specific_latency: dict
     progression_multiplier: float
+    self_recovery_rate_dict: dict
+    # Stratification
+    stratify_by: list
+    custom_stratifications: dict
+
+    # Treatment
+    time_variant_tsr: dict
+    
+    # Interventions
+    time_variant_acf: list
+    time_variant_ltbi_screening: list
+    acf_screening_sensitivity: float
+
+    time_variant_ltbi_screening: list
+    ltbi_screening_sensitivity: float
+
+    pt_efficacy: float
+  

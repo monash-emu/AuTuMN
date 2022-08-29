@@ -219,8 +219,8 @@ def apply_general_coverage(
 
     for i_age, age_cat in enumerate(age_vacc_categories):
 
-        start_age = int(age_vacc_categories[i_age]) if i_age != age_vacc_categories[0] else None
-        end_age = int(age_vacc_categories[i_age + 1]) if i_age != age_vacc_categories[-1] else None
+        start_age = int(age_vacc_categories[i_age]) if age_cat != age_vacc_categories[0] else None
+        end_age = int(age_vacc_categories[i_age + 1]) if age_cat != age_vacc_categories[-1] else None
 
         # Get the raw data from the loading functions and drop rows with any nans
         if iso3 == "AUS":
@@ -307,7 +307,6 @@ def apply_reported_vacc_coverage(
         thinning: int,
         model_start_time: int,
         start_immune_prop: float,
-        additional_immunity_points: TimeSeries,
 ):
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -342,13 +341,6 @@ def apply_reported_vacc_coverage(
         )
     else:
         vaccine_data = pd.Series({model_start_time: start_immune_prop})
-
-    # Add user-requested additional immunity points
-    if additional_immunity_points:
-        additional_vacc_series = pd.Series({k: v for k, v in zip(additional_immunity_points.times, additional_immunity_points.values)})
-        vacc_data_with_waning = pd.concat((vaccine_data, additional_vacc_series))
-    else:
-        vacc_data_with_waning = vaccine_data
 
     # Be explicit about each of the three immunity categories
     vaccine_df = pd.DataFrame(

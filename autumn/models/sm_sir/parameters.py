@@ -526,6 +526,7 @@ class Parameters:
             ]
         ]
     vaccination_data_thinning: Optional[int]
+    age_specific_vacc: bool
 
     # Indigenous-related
     indigenous: bool

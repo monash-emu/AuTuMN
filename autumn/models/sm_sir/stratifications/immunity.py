@@ -13,6 +13,8 @@ from autumn.core.inputs.covid_au.queries import get_nt_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
+from autumn.model_features.outputs import get_strata
+
 
 ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),
@@ -200,6 +202,7 @@ def apply_general_coverage(
         start_immune_prop: float,
         start_prop_high_among_immune: float,
         boosting: bool=True,
+        age_specific_vacc: bool=False,
 ):
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -212,47 +215,51 @@ def apply_general_coverage(
         start_immune_prop: Vaccination coverage at the time that the model starts running
     """
 
-    # Get the raw data from the loading functions and drop rows with any nans
-    if iso3 == "AUS":
-        vaccine_data = pd.DataFrame(
-            {
-                "full": get_nt_vac_coverage(dose=2), 
-                "boost": get_nt_vac_coverage(dose=3),
-            }
-        ).dropna(axis=0)
+    age_vacc_categories = get_strata(model, "agegroup") if age_specific_vacc else ["all_ages"]
 
-    # Get rid of any data that is from before the model starts running
-    model_start_time = model.times[0]
-    vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
+    for age_cat in age_vacc_categories:
 
-    # Add on the user requested starting proportion and move it to the start
-    vaccine_data.loc[model_start_time] = {
-        "full": start_immune_prop, 
-        "boost": start_immune_prop * start_prop_high_among_immune,
-    }
-    vaccine_data.sort_index(inplace=True)
+        # Get the raw data from the loading functions and drop rows with any nans
+        if iso3 == "AUS":
+            vaccine_data = pd.DataFrame(
+                {
+                    "full": get_nt_vac_coverage(dose=2), 
+                    "boost": get_nt_vac_coverage(dose=3),
+                }
+            ).dropna(axis=0)
 
-    # Thin as per user request
-    vaccine_data = vaccine_data[::thinning]
+        # Get rid of any data that is from before the model starts running
+        model_start_time = model.times[0]
+        vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
 
-    # Format the data to match the model's immunity structure
-    vaccine_data["never"] = 1. - vaccine_data["full"]
-    if boosting:
-        vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
-        strata_data = vaccine_data[["never", "full_only", "boost"]]
-        strata_data.columns = ["none", "low", "high"]
-    else:
-        strata_data = vaccine_data[["never", "full"]]
-        strata_data.columns = ["none", "low"]
-        strata_data["high"] = 0.
+        # Add on the user requested starting proportion and move it to the start
+        vaccine_data.loc[model_start_time] = {
+            "full": start_immune_prop, 
+            "boost": start_immune_prop * start_prop_high_among_immune,
+        }
+        vaccine_data.sort_index(inplace=True)
 
-    # Apply to model
-    add_dynamic_immunity_to_model(
-        compartments, 
-        strata_data,
-        model, 
-        "all_ages"
-    )
+        # Thin as per user request
+        vaccine_data = vaccine_data[::thinning]
+
+        # Format the data to match the model's immunity structure
+        vaccine_data["never"] = 1. - vaccine_data["full"]
+        if boosting:
+            vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
+            strata_data = vaccine_data[["never", "full_only", "boost"]]
+            strata_data.columns = ["none", "low", "high"]
+        else:
+            strata_data = vaccine_data[["never", "full"]]
+            strata_data.columns = ["none", "low"]
+            strata_data["high"] = 0.
+
+        # Apply to model
+        add_dynamic_immunity_to_model(
+            compartments, 
+            strata_data,
+            model, 
+            age_cat,
+        )
 
 
 def get_immunity_strat(

@@ -142,6 +142,7 @@ immunity_stratification:
     low: 0.
     high: 0.6
 vaccination_data_thinning: 2
+age_specific_vacc: true
 
 indigenous: true
 

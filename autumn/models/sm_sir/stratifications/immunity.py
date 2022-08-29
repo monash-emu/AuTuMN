@@ -217,14 +217,17 @@ def apply_general_coverage(
 
     age_vacc_categories = get_strata(model, "agegroup") if age_specific_vacc else ["all_ages"]
 
-    for age_cat in age_vacc_categories:
+    for i_age, age_cat in enumerate(age_vacc_categories):
+
+        start_age = int(age_vacc_categories[i_age]) if i_age != age_vacc_categories[0] else None
+        end_age = int(age_vacc_categories[i_age + 1]) if i_age != age_vacc_categories[-1] else None
 
         # Get the raw data from the loading functions and drop rows with any nans
         if iso3 == "AUS":
             vaccine_data = pd.DataFrame(
                 {
-                    "full": get_nt_vac_coverage(dose=2), 
-                    "boost": get_nt_vac_coverage(dose=3),
+                    "full": get_nt_vac_coverage(dose=2, start_age=start_age, end_age=end_age),
+                    "boost": get_nt_vac_coverage(dose=3, start_age=start_age, end_age=end_age),
                 }
             ).dropna(axis=0)
 

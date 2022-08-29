@@ -194,6 +194,32 @@ def adjust_reinfection_with_strains(
                 )
 
 
+def get_recent_sum_series(
+    series: pd.Series, 
+    recency: int,
+):
+    """
+    Sum up the values of a pandas series that occur
+    on the nominated index (date) or up to a certain value
+    below (before) that point - according to the value
+    of the index, not its order.
+
+    Args:
+        series: The series to work from
+        recency: The number of index values to look back
+    Returns:
+        New datframe with summe for each index of the one submitted
+    """
+
+    indices = series.index
+    series_diff = series.diff()
+    new_series = pd.Series(index=indices)
+    for i in indices:
+        mask = indices.to_series().between(i - recency, i)
+        new_series.loc[i] = series_diff.loc[mask].sum()
+    return new_series
+
+
 def apply_general_coverage(
         compartments: List[str],
         model: CompartmentalModel,
@@ -226,11 +252,11 @@ def apply_general_coverage(
         if iso3 == "PHL":
             full_series = get_phl_vac_coverage(dose="SECOND_DOSE")
             booster_series = get_phl_vac_coverage(dose="BOOSTER_DOSE")
-            assert not age_specific_vacc, "Code will run, but will just be replicating calculations"
+            assert not age_specific_vacc, "Philippines data not age-specific, so just replicating calculations"
         elif iso3 == "MYS":
             full_series = get_mys_vac_coverage(dose="full")
             booster_series = get_mys_vac_coverage(dose="booster")
-            assert not age_specific_vacc, "Code will run, but will just be replicating calculations"
+            assert not age_specific_vacc, "Malaysia data not age-specific, so just replicating calculations"
         elif iso3 == "AUS":
             full_series = get_nt_vac_coverage(dose=2, start_age=start_age, end_age=end_age)
             booster_series = get_nt_vac_coverage(dose=3, start_age=start_age, end_age=end_age)
@@ -245,6 +271,13 @@ def apply_general_coverage(
         # Get rid of any data that is from before the model starts running
         model_start_time = model.times[0]
         vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
+
+        # Add a column for the proportion of the population recently vaccinated
+        recency_param = 30
+        if recency_param:
+            vaccine_data["recent_boost"] = get_recent_sum_series(
+                vaccine_data["boost"], recency_param
+            )
 
         # Add on the user requested starting proportion and move it to the start
         vaccine_data.loc[model_start_time] = {
@@ -327,7 +360,10 @@ def get_recently_vaccinated_prop(coverage_df: pd.DataFrame, recent_timeframe: fl
     # Calculate cumulative proportion recently vaccinated
     recent_prop_df = coverage_df.copy()
     for index in coverage_df.index:
-        recent_prop_df.loc[index] = vaccine_increment_df.loc[(vaccine_increment_df.index > index - recent_timeframe) & (vaccine_increment_df.index <= index)].sum()
+        recent_prop_df.loc[index] = vaccine_increment_df.loc[
+            (vaccine_increment_df.index > index - recent_timeframe) & 
+            (vaccine_increment_df.index <= index)
+        ].sum()
 
     return recent_prop_df
 

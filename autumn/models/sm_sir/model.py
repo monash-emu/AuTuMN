@@ -21,7 +21,6 @@ from .stratifications.immunity import (
     adjust_susceptible_infection_with_strains,
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
-    apply_reported_vacc_coverage,
     apply_reported_vacc_coverage_with_booster,
     apply_general_coverage,
 )

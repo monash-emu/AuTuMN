@@ -60,15 +60,62 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         inputs.get_population_by_agegroup(age_breakpoints, iso3, None, time.start),
         index=age_breakpoints,
     )
+    # Assign the initial population
     assign_population(seed, age_pops.sum(), model)
 
-    # Assign the initial population
+ 
+
+    contact_rate = params.contact_rate
+    contact_rate_latent = params.contact_rate * params.rr_infection_latent
+    contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
 
     birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
     birth_rates = [b / 1000.0 for b in birth_rates]  # Birth rates are provided / 1000 population
     crude_birth_rate = scale_up_function(years, birth_rates, smoothness=0.2, method=5)
 
-    #Add crude birth flow to the model
+    # Add infection flow.
+    model.add_infection_frequency_flow(
+        "infection",
+        contact_rate,
+        Compartment.SUSCEPTIBLE,
+        Compartment.EARLY_LATENT,
+    )
+    model.add_infection_frequency_flow(
+        "infection_from_latent",
+        contact_rate_latent,
+        Compartment.LATE_LATENT,
+        Compartment.EARLY_LATENT,
+    )
+    model.add_infection_frequency_flow(
+        "infection_from_recovered",
+        contact_rate_recovered,
+        Compartment.RECOVERED,
+        Compartment.EARLY_LATENT,
+    )
+    #Add transition flow.
+    stabilisation_rate = 1.0 # will be overwritten by stratification
+    early_activation_rate = 1.0
+    late_activation_rate = 1.0
+    model.add_transition_flow(
+        "stabilisation",
+        stabilisation_rate,
+        Compartment.EARLY_LATENT,
+        Compartment.LATE_LATENT,
+    )
+    model.add_transition_flow(
+        "early_activation",
+        early_activation_rate,
+        Compartment.EARLY_LATENT,
+        Compartment.INFECTIOUS,
+    )
+    model.add_transition_flow(
+        "late_activation",
+        late_activation_rate,
+        Compartment.LATE_LATENT,
+        Compartment.INFECTIOUS,
+    )
+
+    # Add crude birth flow to the model
     model.add_crude_birth_flow(
         "birth",
         crude_birth_rate,
@@ -79,13 +126,33 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     universal_death_rate = params.crude_death_rate
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
-    #Add Age stratification to the model
-    age_strat = get_age_strat(
-        params.age_breakpoints, iso3, age_pops, BASE_COMPARTMENTS
-    )
+    #Set mixing matrix
+    if params.age_mixing:
+        age_mixing_matrices = build_synthetic_matrices(
+            params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,
+            requested_locations=["all_locations"]
+        )
+        age_mixing_matrix = age_mixing_matrices["all_locations"]
+        # convert daily contact rates to yearly rates
+        age_mixing_matrix *= 365.25
+        #Add Age stratification to the model
+        age_strat = get_age_strat(
+            params,
+            age_pops,
+            BASE_COMPARTMENTS,
+            age_mixing_matrix = age_mixing_matrix,
+        )
+    else:
+        age_strat = get_age_strat(
+            params,
+            age_pops,
+            BASE_COMPARTMENTS,
+        )
     model.stratify_with(age_strat)
 
     # Generate outputs
-    request_outputs(model)
+    request_outputs(
+        model,
+        BASE_COMPARTMENTS)
 
     return model

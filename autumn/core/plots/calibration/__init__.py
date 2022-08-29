@@ -92,12 +92,8 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     plots.plot_acceptance_ratio(plotter, mcmc_tables, 0)
 
     logger.info("Plotting loglikelihood traces")
-
-    plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN, posterior=False)
-    plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN, posterior=True)
-
-    for mle_only in [True, False]:
-        plots.plot_parallel_coordinates_flat(plotter, mcmc_params, mcmc_tables, priors, mle_only)
+    for variable_key in ["loglikelihood", "ap_loglikelihood", "acceptance_quantity"]:
+        plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN, variable_key=variable_key)
 
     logger.info("MCMC plots complete")
 

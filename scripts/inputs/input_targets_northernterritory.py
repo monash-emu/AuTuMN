@@ -27,8 +27,8 @@ TARGETS_ABC = {
 
 TARGETS_NT = {
     "notifications": "total_cases",
-    "hospital_admission": "total_hosp",
-    "icu_admission": "freq.",
+    "hospital_admissions": "total_hosp",
+    "icu_admissions": "freq.",
     "infection_deaths": "total_deaths",
 }
 

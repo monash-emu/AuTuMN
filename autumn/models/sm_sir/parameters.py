@@ -1,6 +1,7 @@
 """
 Type definition for model parameters
 """
+from lib2to3.pgen2.token import OP
 from pydantic import BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
@@ -524,6 +525,7 @@ class Parameters:
             List[int] # to specify a prioritisation order (e.g. [70, 50, 25, 15])
             ]
         ]
+    vaccination_data_thinning: Optional[int]
 
     # Indigenous-related
     indigenous: bool

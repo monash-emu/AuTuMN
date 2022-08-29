@@ -9,6 +9,7 @@ from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
+from autumn.core.inputs.covid_au.queries import get_nt_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -189,6 +190,69 @@ def adjust_reinfection_with_strains(
                     source_strata={"strain": infected_strain},
                     dest_strata={"strain": infecting_strain},
                 )
+
+
+def apply_general_coverage(
+        compartments: List[str],
+        model: CompartmentalModel,
+        iso3: str,
+        thinning: int,
+        start_immune_prop: float,
+        start_prop_high_among_immune: float,
+        boosting: bool=True,
+):
+    """
+    Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
+    apply it to the model as a dynamic stratum.
+    Args:
+        compartments: Unstratified model compartment types being implemented
+        model: The model itself
+        iso3: The ISO-3 code for the country being implemented
+        thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
+        start_immune_prop: Vaccination coverage at the time that the model starts running
+    """
+
+    # Get the raw data from the loading functions and drop rows with any nans
+    if iso3 == "AUS":
+        vaccine_data = pd.DataFrame(
+            {
+                "full": get_nt_vac_coverage(dose=2), 
+                "boost": get_nt_vac_coverage(dose=3),
+            }
+        ).dropna(axis=0)
+
+    # Get rid of any data that is from before the model starts running
+    model_start_time = model.times[0]
+    vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
+
+    # Add on the user requested starting proportion and move it to the start
+    vaccine_data.loc[model_start_time] = {
+        "full": start_immune_prop, 
+        "boost": start_immune_prop * start_prop_high_among_immune,
+    }
+    vaccine_data.sort_index(inplace=True)
+
+    # Thin as per user request
+    vaccine_data = vaccine_data[::thinning]
+
+    # Format the data to match the model's immunity structure
+    vaccine_data["never"] = 1. - vaccine_data["full"]
+    if boosting:
+        vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
+        strata_data = vaccine_data[["never", "full_only", "boost"]]
+        strata_data.columns = ["none", "low", "high"]
+    else:
+        strata_data = vaccine_data[["never", "full"]]
+        strata_data.columns = ["none", "low"]
+        strata_data["high"] = 0.
+
+    # Apply to model
+    add_dynamic_immunity_to_model(
+        compartments, 
+        strata_data,
+        model, 
+        "all_ages"
+    )
 
 
 def get_immunity_strat(

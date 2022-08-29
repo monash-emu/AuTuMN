@@ -23,6 +23,7 @@ from .stratifications.immunity import (
     adjust_reinfection_with_strains,
     apply_reported_vacc_coverage,
     apply_reported_vacc_coverage_with_booster,
+    apply_general_coverage,
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
@@ -514,6 +515,18 @@ def build_model(
 
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
+
+
+
+    apply_general_coverage(
+        compartment_types,
+        model,
+        iso3,
+        thinning=params.vaccination_data_thinning,
+        start_immune_prop=immunity_params.prop_immune,
+        start_prop_high_among_immune=immunity_params.prop_high_among_immune,
+    )
+
 
     # Implement the dynamic immunity process
     vacc_coverage_available = ["BGD", "PHL", "BTN", "VNM"]

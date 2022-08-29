@@ -215,6 +215,7 @@ additional_immunity: null
 booster_effect_duration: 90
 future_monthly_booster_rate: null
 future_booster_age_allocation: null
+vaccination_data_thinning: null
 
 indigenous: false
 

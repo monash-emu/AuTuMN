@@ -223,13 +223,24 @@ def apply_general_coverage(
         end_age = int(age_vacc_categories[i_age + 1]) if age_cat != age_vacc_categories[-1] else None
 
         # Get the raw data from the loading functions and drop rows with any nans
-        if iso3 == "AUS":
-            vaccine_data = pd.DataFrame(
-                {
-                    "full": get_nt_vac_coverage(dose=2, start_age=start_age, end_age=end_age),
-                    "boost": get_nt_vac_coverage(dose=3, start_age=start_age, end_age=end_age),
-                }
-            ).dropna(axis=0)
+        if iso3 == "PHL":
+            full_series = get_phl_vac_coverage(dose="SECOND_DOSE")
+            booster_series = get_phl_vac_coverage(dose="BOOSTER_DOSE")
+            assert not age_specific_vacc, "Code will run, but will just be replicating calculations"
+        elif iso3 == "MYS":
+            full_series = get_mys_vac_coverage(dose="full")
+            booster_series = get_mys_vac_coverage(dose="booster")
+            assert not age_specific_vacc, "Code will run, but will just be replicating calculations"
+        elif iso3 == "AUS":
+            full_series = get_nt_vac_coverage(dose=2, start_age=start_age, end_age=end_age)
+            booster_series = get_nt_vac_coverage(dose=3, start_age=start_age, end_age=end_age)
+
+        vaccine_data = pd.DataFrame(
+            {
+                "full": full_series,
+                "boost": booster_series,
+            }
+        ).dropna(axis=0)
 
         # Get rid of any data that is from before the model starts running
         model_start_time = model.times[0]
@@ -298,62 +309,6 @@ def get_immunity_strat(
     immunity_strat.set_population_split(immunity_split_props)
 
     return immunity_strat
-
-
-def apply_reported_vacc_coverage(
-        compartments: List[str],
-        model: CompartmentalModel,
-        iso3: str,
-        thinning: int,
-        model_start_time: int,
-        start_immune_prop: float,
-):
-    """
-    Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
-    apply it to the model as a dynamic stratum.
-
-    Args:
-        compartments: Unstratified model compartment types being implemented
-        model: The model itself
-        iso3: The ISO-3 code for the country being implemented
-        thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
-        model_start_time: Model starting time
-        start_immune_prop: Vaccination coverage at the time that the model starts running
-
-    """
-
-    if iso3 == "BGD":
-        raw_data = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
-    elif iso3 == "PHL":
-        raw_data = get_phl_vac_coverage(dose="SECOND_DOSE")
-    elif iso3 == "BTN":
-        raw_data = get_btn_vac_coverage(region="Bhutan", dose=2)
-    elif iso3 == "MYS":
-        raw_data = get_mys_vac_coverage(dose="full")
-
-    # Add on the starting effective coverage value
-    if iso3 == "BGD" or iso3 == "PHL" or iso3 == "BTN" or iso3 == "MYS":
-        vaccine_data = pd.concat(
-            (
-                pd.Series({model_start_time: start_immune_prop}),
-                raw_data
-            )
-        )
-    else:
-        vaccine_data = pd.Series({model_start_time: start_immune_prop})
-
-    # Be explicit about each of the three immunity categories
-    vaccine_df = pd.DataFrame(
-        {
-            "none": 1. - vacc_data_with_waning,
-            "low": vacc_data_with_waning,
-        },
-    )
-    vaccine_df["high"] = 0.
-
-    # Apply to model, as below
-    thinned_df = vaccine_df[::thinning] if thinning else vaccine_df
-    add_dynamic_immunity_to_model(compartments, thinned_df, model, "all_ages")
 
 
 def get_recently_vaccinated_prop(coverage_df: pd.DataFrame, recent_timeframe: float) -> pd.DataFrame:

@@ -110,7 +110,7 @@ def test_get_crude_birth_rate():
         2012.5,
         2017.5,
     ]
-    assert birth_rates == [
+    assert birth_rates.to_list() == [
         22.981,
         22.742,
         21.427,

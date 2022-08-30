@@ -525,6 +525,7 @@ def build_model(
         start_immune_prop=immunity_params.prop_immune,
         start_prop_high_among_immune=immunity_params.prop_high_among_immune,
         age_specific_vacc=params.age_specific_vacc,
+        booster_effect_duration=params.booster_effect_duration,
     )
 
 

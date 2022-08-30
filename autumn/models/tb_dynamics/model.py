@@ -140,7 +140,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
     )
-    # Treatment Deathgg
+    # Treatment Death
     model.add_death_flow(
         "treatment_death",
         treatment_death_rate,
@@ -152,7 +152,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.ON_TREATMENT,
         Compartment.INFECTIOUS,
     )
-
 
     # Add crude birth flow to the model
     model.add_crude_birth_flow(

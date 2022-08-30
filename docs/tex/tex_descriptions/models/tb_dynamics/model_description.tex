@@ -32,9 +32,16 @@ infection for the currently and previously infected individuals, compared to the
 individuals.
 \begin{figure}[!htbp]
     \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{images/model.png}
-    \caption{TIllustration of the model structure. 
+    \caption{Illustration of the model structure. 
     Boxes represent the different compartments types: susceptible (S), early latent (E), late latent (L), infectious (I), on treatment (T) and recovered (R). The subscripts indicate whether compartments are stratified by age (a), geography (g) and form of tuberculosis (f). Blue and orange arrows represent progression flows and transmission flows, respectively. 
     The flows associated with the modelled interventions are shown in purple. ACF, active case finding.}
     \label{fig:model}
 \end{figure}
+
+\subsection{Stratification by age}
+The model is stratified using five categories: 0-4, 5-14, 15-34, 35-49 and 50+ years old. We assume 
+heterogeneous mixing by age using an age-specific contact rate matrix. Since no local estimates of 
+contact patterns by age were available for the Marshall Islands, we used a contact survey conducted in 
+the Fijian population and adjusted the estimates to account for age distribution differences between
+the two countries.
 

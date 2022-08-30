@@ -58,3 +58,5 @@ class Parameters:
     rr_infection_recovered: float
     age_specific_latency: dict
     progression_multiplier: float
+    self_recovery_rate: float
+    infect_death_rate: float

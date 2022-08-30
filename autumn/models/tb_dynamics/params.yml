@@ -43,3 +43,6 @@ age_specific_latency:
 rr_infection_latent: .21
 rr_infection_recovered: 1.
 progression_multiplier: 1.
+
+self_recovery_rate: .2
+infect_death_rate: .2

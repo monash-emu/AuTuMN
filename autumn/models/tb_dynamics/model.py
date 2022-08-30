@@ -92,7 +92,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
-    #Add transition flow.
+    # Add transition flow.
     stabilisation_rate = 1.0 # will be overwritten by stratification
     early_activation_rate = 1.0
     late_activation_rate = 1.0
@@ -114,6 +114,45 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
     )
+    # Add post-diseases flows
+    model.add_transition_flow(
+        "self_recovery",
+        params.self_recovery_rate,
+        Compartment.INFECTIOUS,
+        Compartment.RECOVERED,
+    )
+    detection_rate = 0.7
+    model.add_transition_flow(
+        "detection",
+        detection_rate,
+        Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
+    )
+
+    # Treatment recovery, releapse, death flows.
+    # Relapse and treatment death need to be adjusted by age later.
+    treatment_recovery_rate = 1.0
+    treatment_death_rate = 1.0
+    relapse_rate = 1.0
+    model.add_transition_flow(
+        "treatment_recovery",
+        treatment_recovery_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.RECOVERED,
+    )
+    # Treatment Deathgg
+    model.add_death_flow(
+        "treatment_death",
+        treatment_death_rate,
+        Compartment.ON_TREATMENT,
+    )
+    model.add_transition_flow(
+        "relapse",
+        relapse_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.INFECTIOUS,
+    )
+
 
     # Add crude birth flow to the model
     model.add_crude_birth_flow(
@@ -126,7 +165,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     universal_death_rate = params.crude_death_rate
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
-    #Set mixing matrix
+    # Infection death
+    model.add_death_flow(
+        "infect_death",
+        params.infect_death_rate,
+        Compartment.INFECTIOUS,
+    )
+
+    # Set mixing matrix
     if params.age_mixing:
         age_mixing_matrices = build_synthetic_matrices(
             params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,

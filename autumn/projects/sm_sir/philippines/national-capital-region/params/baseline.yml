@@ -81,8 +81,8 @@ mobility:
       append: false
       times:
         - 2021-01-01  # any past date
-        - 2022-08-15  # more schools reopen mid-August
-        - 2022-08-17
+        - 2022-08-22  # more schools reopen 22 August
+        - 2022-08-25
       values:
         - 0.10
         - 0.10

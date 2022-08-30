@@ -1,14 +1,14 @@
 from typing import Tuple, Callable, Optional
 
-from computegraph.types import Function, local
-from summer.parameters import Time, Parameter, ComputedValue, Data
+from computegraph.types import Function
+from summer.parameters import Time, Data
 
 from autumn.core.model_builder import ModelBuilder
 from .parameters import TestingToDetection, Population
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.settings import COVID_BASE_AGEGROUPS
 from autumn.model_features.curve.interpolate import build_sigmoidal_multicurve, get_scale_data
-from summer import jaxify
+from computegraph import jaxify
 
 fnp = jaxify.get_modules()["numpy"]
 
@@ -68,23 +68,21 @@ def find_cdr_function_from_test_data(
     # values = per_capita_tests_df.apply(cdr_from_tests_func)
 
     # Add the smoothed per capita testing rates
-    builder.add_output("per_capita_test_data", Data(fnp.array(per_capita_tests_df)))
+    per_capita_test_data = Data(fnp.array(per_capita_tests_df))
 
     # Add our function that computes CDR for these rates (and parameters)
-    cdr_data_func = builder.get_mapped_func(
-        cdr_from_tests_func, cdr_params, {"tests_per_capita": local("per_capita_test_data")}
+    cdr_test_data = builder.get_mapped_func(
+        cdr_from_tests_func, cdr_params, {"tests_per_capita": per_capita_test_data}
     )
 
-    builder.add_output("cdr_test_data", cdr_data_func)
-
     # Add an output that transforms this into scale_data for the sigmoidal curve interpolator
-    builder.add_output("cdr_ydata", Function(get_scale_data, [local("cdr_test_data")]))
+    cdr_ydata = Function(get_scale_data, [cdr_test_data])
 
     # Define a smoothed sigmoidal curve function
     cdr_smoothed_func = build_sigmoidal_multicurve(times)
 
     # Return the final Function object that will be used inside the model
-    return Function(cdr_smoothed_func, [Time, Parameter("cdr_ydata")])
+    return Function(cdr_smoothed_func, [Time, cdr_ydata])
 
 
 def get_cdr_func(
@@ -120,13 +118,8 @@ def get_cdr_func(
             testing_params.smoothing_period,
         )
     else:
+        cdr_func = detect_prop
 
-        def cdr_func(time):
-            return detect_prop
+    non_detect_func = 1.0 - cdr_func
 
-    def non_detect_func(cdr):
-        return 1.0 - cdr
-
-    non_detect_model_func = Function(non_detect_func, [ComputedValue("cdr")])
-
-    return cdr_func, non_detect_model_func
+    return cdr_func, non_detect_func

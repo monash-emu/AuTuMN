@@ -2,7 +2,7 @@ from typing import List
 import pandas as pd
 
 from summer import CompartmentalModel
-from summer.experimental.model_builder import ModelBuilder, AbstractParameter
+from summer.experimental.model_builder import ModelBuilder
 from summer.parameters.params import Function, Parameter
 
 from autumn.core import inputs
@@ -67,7 +67,7 @@ def get_compartments(sojourns: Sojourns) -> List[str]:
     return compartments
 
 
-def assign_population(builder: ModelBuilder, seed: AbstractParameter, total_pop: float):
+def assign_population(builder: ModelBuilder, seed: Parameter, total_pop: float):
     """
     Assign the starting population to the model according to the user requests and total population of the model.
 
@@ -80,19 +80,14 @@ def assign_population(builder: ModelBuilder, seed: AbstractParameter, total_pop:
 
     model = builder.model
 
-    # Split by seed and remainder susceptible
-    def get_initial_pop(seed, total_pop):
-        susceptible = total_pop - seed
-        init_pop = {
-            Compartment.INFECTIOUS: seed,
-            Compartment.SUSCEPTIBLE: susceptible,
-        }
-        return init_pop
-
-    pop_func = Function(get_initial_pop, [seed, total_pop])
+    susceptible = total_pop - seed
+    init_pop = {
+        Compartment.INFECTIOUS: seed,
+        Compartment.SUSCEPTIBLE: susceptible,
+    }
 
     # Assign to the model
-    model.set_initial_population(pop_func)
+    model.set_initial_population(init_pop)
 
 
 def add_sojourn_transitions(

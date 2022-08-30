@@ -1,4 +1,4 @@
-from summer import jaxify
+from computegraph import jaxify
 
 fnp = jaxify.get_modules()["numpy"]
 

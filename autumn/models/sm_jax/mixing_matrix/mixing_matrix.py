@@ -8,6 +8,9 @@ from .mixing_adjusters import AgeMixingAdjuster, LocationMixingAdjuster
 from .microdistancing import get_microdistancing_funcs
 from .macrodistancing import get_mobility_funcs
 
+from computegraph.types import Function
+from summer.parameters import Time
+
 
 def build_dynamic_mixing_matrix(
     base_matrices: Dict[str, np.ndarray], mobility: Mobility, country: Country
@@ -42,18 +45,17 @@ def build_dynamic_mixing_matrix(
     location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
     age_adjuster = AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None
 
-    mixing_matrix = jnp.array(base_matrices["all_locations"])
-
-    def mixing_matrix_function(time: float, computed_values: dict = None) -> np.ndarray:
+    def mixing_matrix_function(time: float) -> np.ndarray:
         """
         The function to be called at model run-time to get the matrix.
         """
 
+        mixing_matrix = jnp.array(base_matrices["all_locations"])
         # Base matrix
-        mixing_matrix = np.copy(base_matrices["all_locations"])
+        # mixing_matrix = np.copy(base_matrices["all_locations"])
 
         # Apply adjustments - *** note that the order of these adjustments can't be reversed ***
         mixing_matrix = location_adjuster.get_adjustment(time, mixing_matrix)
         return age_adjuster.get_adjustment(time, mixing_matrix) if age_adjuster else mixing_matrix
 
-    return mixing_matrix_function
+    return Function(mixing_matrix_function, [Time])

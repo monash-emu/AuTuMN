@@ -13,7 +13,7 @@ from autumn.models.sm_jax.stratifications.agegroup import convert_param_agegroup
 
 from summer.parameters.params import Function, Data, Parameter, DerivedOutput
 
-from summer import jaxify
+from computegraph import jaxify
 
 modules = jaxify.get_modules()
 scipy = modules["scipy"]
@@ -228,7 +228,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             time_from_onset_to_notification, model_times
         )
 
-        self.model.builder.add_output("notifications_density_intervals", Data(density_intervals))
+        notifications_density_intervals = Data(density_intervals)
 
         # Request notifications
         # notifications_func = make_calc_notifications_func(density_intervals)
@@ -237,7 +237,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             convolve_probability,
             [
                 DerivedOutput("ever_detected_incidence"),
-                Parameter("notifications_density_intervals"),
+                notifications_density_intervals,
             ],
         )
 

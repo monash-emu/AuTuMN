@@ -1,10 +1,10 @@
-from typing import List, Union
+from typing import List, Union, Optional
 from copy import copy
 import pandas as pd
 
 from summer import Stratification, Multiply, Overwrite, CompartmentalModel
 from summer.experimental.model_builder import ModelBuilder
-from summer.parameters.params import ComputedValue
+from computegraph.types import GraphObject
 
 from autumn.models.sm_jax.constants import ClinicalStratum, CLINICAL_STRATA, Compartment
 from autumn.models.sm_jax.parameters import Parameters
@@ -15,9 +15,9 @@ def get_clinical_strat(
     compartments: List[str],
     params: Parameters,
     infectious_entry_flow: str,
-    sympt_props: Union[None, float, pd.Series],
-    non_detect_func: Union[None, callable],
-    cdr_func: Union[None, callable],
+    sympt_props: Union[float, pd.Series],
+    non_detect_func: Optional[GraphObject],
+    cdr_func: Optional[GraphObject],
 ) -> Union[None, Stratification]:
     """
     Only stratify the infectious compartments, because in the dynamic model we are only interested in the
@@ -70,19 +70,10 @@ def get_clinical_strat(
         if type(sympt_props) == pd.Series:
             for age_group, sympt_prop in sympt_props.items():
 
-                # def abs_cdr_func(time, computed_values, age_sympt_prop=sympt_prop):
-                #    return computed_values["cdr"] * age_sympt_prop
-
-                # def abs_non_detect_func(time, computed_values, age_sympt_prop=sympt_prop):
-                #    return computed_values["undetected_prop"] * age_sympt_prop
-
                 adjustments = {
                     ClinicalStratum.ASYMPT: 1.0 - sympt_prop,
-                    ClinicalStratum.SYMPT_NON_DETECT: (
-                        ComputedValue("undetected_prop"),
-                        sympt_prop,
-                    ),
-                    ClinicalStratum.DETECT: (ComputedValue("cdr"), sympt_prop),
+                    ClinicalStratum.SYMPT_NON_DETECT: non_detect_func * sympt_prop,
+                    ClinicalStratum.DETECT: cdr_func * sympt_prop,
                 }
                 clinical_strat.set_flow_adjustments(
                     infectious_entry_flow, adjustments, dest_strata={"agegroup": age_group}
@@ -93,9 +84,9 @@ def get_clinical_strat(
             sympt_prop = sympt_props
 
             adjustments = {
-                ClinicalStratum.ASYMPT: 1.0 - sympt_props,
-                ClinicalStratum.SYMPT_NON_DETECT: (ComputedValue("undetected_prop"), sympt_prop),
-                ClinicalStratum.DETECT: (ComputedValue("cdr"), sympt_prop),
+                ClinicalStratum.ASYMPT: 1.0 - sympt_prop,
+                ClinicalStratum.SYMPT_NON_DETECT: non_detect_func * sympt_prop,
+                ClinicalStratum.DETECT: cdr_func * sympt_prop,
             }
             clinical_strat.set_flow_adjustments(
                 infectious_entry_flow,
@@ -161,8 +152,8 @@ def get_clinical_strat(
 
         # Work out the splits based on detection
         adjustments = {
-            ClinicalStratum.SYMPT_NON_DETECT: Multiply(ComputedValue("undetected_prop")),
-            ClinicalStratum.DETECT: Multiply(ComputedValue("cdr")),
+            ClinicalStratum.SYMPT_NON_DETECT: non_detect_func,
+            ClinicalStratum.DETECT: cdr_func,
         }
         clinical_strat.set_flow_adjustments(
             infectious_entry_flow,

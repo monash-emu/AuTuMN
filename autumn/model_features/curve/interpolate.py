@@ -5,7 +5,7 @@ with build_sigmoidal_multicurve producing a dynamic (parameterizable) version of
 
 """
 
-from summer import jaxify
+from computegraph import jaxify
 from autumn.model_features.functional import binary_search_ge
 
 

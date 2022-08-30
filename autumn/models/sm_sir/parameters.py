@@ -526,6 +526,7 @@ class Parameters:
         ]
     vaccination_data_thinning: Optional[int]
     age_specific_vacc: bool
+    extra_vacc_coverage: Optional[Dict[str, dict]]
 
     # Indigenous-related
     indigenous: bool

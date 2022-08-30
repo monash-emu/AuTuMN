@@ -195,7 +195,7 @@ def adjust_reinfection_with_strains(
                 )
 
 
-def get_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
+def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
 
     # Get the raw data from the loading functions and drop rows with any nans
     if iso3 == "PHL":
@@ -222,7 +222,7 @@ def get_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
     return vaccine_data
 
 
-def apply_general_coverage(
+def apply_vacc_coverage(
         compartments: List[str],
         model: CompartmentalModel,
         iso3: str,
@@ -232,7 +232,7 @@ def apply_general_coverage(
         boosting: bool=True,
         age_specific_vacc: bool=False,
         booster_effect_duration: float=0.,
-
+        extra_coverage: dict={},
 ):
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -247,16 +247,8 @@ def apply_general_coverage(
 
     age_vacc_categories = get_strata(model, "agegroup") if age_specific_vacc else ["all_ages"]
 
-    user_request = {
-        "20": {
-            "full": [0.8],
-            "boost": [0.6],
-            "index": [500],
-        },
-    }
-
     msg = "Age group in requests not present in model or 'all_ages' if vaccination not age-specific"
-    assert all([i in age_vacc_categories for i in user_request.keys()]), msg
+    assert all([i in age_vacc_categories for i in extra_coverage.keys()]), msg
 
     for i_age, age_cat in enumerate(age_vacc_categories[3:]):
 
@@ -264,7 +256,7 @@ def apply_general_coverage(
         end_age = int(age_vacc_categories[i_age + 1]) if age_cat != age_vacc_categories[-1] else None
 
         # Get the data
-        vaccine_data = get_vacc_coverage(iso3, start_age, end_age, age_specific_vacc)
+        vaccine_data = get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc)
 
         # Get rid of any data that is from before the model starts running
         model_start_time = model.times[0]
@@ -277,14 +269,14 @@ def apply_general_coverage(
                 booster_effect_duration,
             )
 
-        # Add on the user requested starting proportion and move it to the start
+        # Add on the user requested starting proportions
         vaccine_data.loc[model_start_time] = {
             "full": start_immune_prop, 
             "boost": start_immune_prop * start_prop_high_among_immune,
         }
 
         # Add on any custom user requests
-        age_user_request = user_request.get(age_cat)
+        age_user_request = extra_coverage.get(age_cat)
         if age_user_request:
             msg = f"Request for {age_cat} does not have standard keys"
             assert list(age_user_request.keys()) == ["full", "boost", "index"], msg
@@ -296,6 +288,7 @@ def apply_general_coverage(
             request_df.index = request_index
             vaccine_data.append(request_df)
 
+        # Sort
         vaccine_data.sort_index(inplace=True)
 
         # Thin as per user request
@@ -323,6 +316,35 @@ def apply_general_coverage(
             model, 
             age_cat,
         )
+
+
+def add_dynamic_immunity_to_model(
+        compartments: List[str],
+        strata_distributions: pd.DataFrame,
+        model: CompartmentalModel,
+        agegroup: str,
+):
+    """
+    Use the dynamic flow processes to control the distribution of the population by vaccination status.
+
+    Args:
+        compartments: The types of compartment being implemented in the model, before stratification
+        strata_distributions: The target proportions at each time point
+        model: The model to be adapted
+        agegroup: Relevant agegroup for vaccination flow
+    """
+    sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
+    age_filter = {} if agegroup == "all_ages" else {"agegroup": agegroup}
+    for comp in compartments:
+        for transition, strata in ACTIVE_FLOWS.items():
+            model.add_transition_flow(
+                transition,
+                sc_functions[transition],
+                comp,
+                comp,
+                source_strata={"immunity": strata[0], **age_filter},
+                dest_strata={"immunity": strata[1], **age_filter},
+            )
 
 
 def get_immunity_strat(
@@ -358,34 +380,3 @@ def get_immunity_strat(
     immunity_strat.set_population_split(immunity_split_props)
 
     return immunity_strat
-
-
-def add_dynamic_immunity_to_model(
-        compartments: List[str],
-        strata_distributions: pd.DataFrame,
-        model: CompartmentalModel,
-        agegroup: str,
-):
-    """
-    Use the dynamic flow processes to control the distribution of the population by vaccination status.
-
-    Args:
-        compartments: The types of compartment being implemented in the model, before stratification
-        strata_distributions: The target proportions at each time point
-        model: The model to be adapted
-        agegroup: Relevant agegroup for vaccination flow. 
-
-    """
-
-    sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
-    age_filter = {} if agegroup == "all_ages" else {"agegroup": agegroup}
-    for comp in compartments:
-        for transition, strata in ACTIVE_FLOWS.items():
-            model.add_transition_flow(
-                transition,
-                sc_functions[transition],
-                comp,
-                comp,
-                source_strata={"immunity": strata[0], **age_filter},
-                dest_strata={"immunity": strata[1], **age_filter},
-            )

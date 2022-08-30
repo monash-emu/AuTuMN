@@ -271,7 +271,7 @@ def apply_general_coverage(
         # Add a column for the proportion of the population recently vaccinated
         recency_param = 30
         if recency_param:
-            vaccine_data["recent_boost"] = get_recent_sum_series(
+            vaccine_data["recent_boost"] = lagged_cumsum(
                 vaccine_data["boost"].diff(), 
                 recency_param
             )

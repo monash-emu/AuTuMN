@@ -104,4 +104,7 @@ def build_input_database(rebuild: bool = False):
         with Timer("Ingesting gisaid data."):
             preprocess_covid_gisaid(input_db)
 
+        with Timer("Ingesting mobility data."):
+            preprocess_mobility(input_db, country_df)
+
     return input_db

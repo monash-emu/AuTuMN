@@ -223,7 +223,6 @@ def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
 
 
 def apply_vacc_coverage(
-        compartments: List[str],
         model: CompartmentalModel,
         iso3: str,
         thinning: int,
@@ -311,7 +310,6 @@ def apply_vacc_coverage(
 
         # Apply to model
         add_dynamic_immunity_to_model(
-            compartments, 
             strata_data,
             model, 
             age_cat,
@@ -319,7 +317,6 @@ def apply_vacc_coverage(
 
 
 def add_dynamic_immunity_to_model(
-        compartments: List[str],
         strata_distributions: pd.DataFrame,
         model: CompartmentalModel,
         agegroup: str,
@@ -335,7 +332,7 @@ def add_dynamic_immunity_to_model(
     """
     sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
     age_filter = {} if agegroup == "all_ages" else {"agegroup": agegroup}
-    for comp in compartments:
+    for comp in list(set([comp.name for comp in model.compartments])):
         for transition, strata in ACTIVE_FLOWS.items():
             model.add_transition_flow(
                 transition,

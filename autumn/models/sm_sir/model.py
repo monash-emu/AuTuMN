@@ -515,7 +515,6 @@ def build_model(
     model.stratify_with(immunity_strat)
 
     apply_vacc_coverage(
-        compartment_types,
         model,
         iso3,
         thinning=params.vaccination_data_thinning,

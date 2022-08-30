@@ -13,6 +13,10 @@ from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
 
+"""
+THIS FUNCTION HAS BEEN TOTALLY RUINED BY THE VACCINATION RESTRUCTURE
+"""
+
 def get_scenario_params(n_boosters, target, voc_emerge):
     doses_txt = {
         200000: "200K", 500000: "500K", 1000000: "1M"

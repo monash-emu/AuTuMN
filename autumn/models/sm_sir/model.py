@@ -517,11 +517,9 @@ def build_model(
     apply_vacc_coverage(
         model,
         iso3,
-        thinning=params.vaccination_data_thinning,
         start_immune_prop=immunity_params.prop_immune,
         start_prop_high_among_immune=immunity_params.prop_high_among_immune,
-        age_specific_vacc=params.age_specific_vacc,
-        booster_effect_duration=params.booster_effect_duration,
+        vacc_params=params.vaccination,
     )
 
     """

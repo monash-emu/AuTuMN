@@ -12,7 +12,7 @@ from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
 from autumn.core.inputs.covid_au.queries import get_nt_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
-from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
+from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, Vaccination
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
 from autumn.model_features.outputs import get_strata
 
@@ -225,13 +225,9 @@ def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
 def apply_vacc_coverage(
         model: CompartmentalModel,
         iso3: str,
-        thinning: int,
         start_immune_prop: float,
         start_prop_high_among_immune: float,
-        boosting: bool=True,
-        age_specific_vacc: bool=False,
-        booster_effect_duration: float=0.,
-        extra_coverage: dict={},
+        vacc_params: Vaccination,
 ):
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -243,6 +239,11 @@ def apply_vacc_coverage(
         thinning: Thin out the empiric data to save time with curve fitting and because this must be >=2 (as below)
         start_immune_prop: Vaccination coverage at the time that the model starts running
     """
+
+    age_specific_vacc = vacc_params.age_specific_vacc
+    booster_effect_duration = vacc_params.booster_effect_duration
+    extra_coverage = vacc_params.extra_coverage
+    boosting = vacc_params.boosting
 
     age_vacc_categories = get_strata(model, "agegroup") if age_specific_vacc else ["all_ages"]
 
@@ -291,7 +292,7 @@ def apply_vacc_coverage(
         vaccine_data.sort_index(inplace=True)
 
         # Thin as per user request
-        vaccine_data = vaccine_data[::thinning]
+        vaccine_data = vaccine_data[::vacc_params.data_thinning]
 
         # Format the data to match the model's immunity structure
         vaccine_data["never"] = 1. - vaccine_data["full"]

@@ -141,9 +141,11 @@ immunity_stratification:
     none: 0.
     low: 0.
     high: 0.6
-vaccination_data_thinning: 2
+
+vaccination:
+  data_thinning: 2
+  
 age_specific_vacc: true
-booster_effect_duration: null
 
 indigenous: true
 

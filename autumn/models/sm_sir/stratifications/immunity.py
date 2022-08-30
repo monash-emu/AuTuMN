@@ -194,30 +194,26 @@ def adjust_reinfection_with_strains(
                 )
 
 
-def get_recent_sum_series(
-    series: pd.Series, 
-    recency: int,
-):
+def lagged_cumsum(series, lag):
     """
     Sum up the values of a pandas series that occur
     on the nominated index (date) or up to a certain value
     below (before) that point - according to the value
-    of the index, not its order.
+    of the index, not its order. Creates a series with the
+    same indices as the one submitted, but with the summed
+    values in place of the original ones.
 
     Args:
         series: The series to work from
-        recency: The number of index values to look back
+        lag: The number of index values to look back
     Returns:
-        New datframe with summe for each index of the one submitted
+        New series with sums for each index of the one submitted
     """
-
-    indices = series.index
-    series_diff = series.diff()
-    new_series = pd.Series(index=indices)
-    for i in indices:
-        mask = indices.to_series().between(i - recency, i)
-        new_series.loc[i] = series_diff.loc[mask].sum()
-    return new_series
+    out_series = pd.Series(
+        index=pd.RangeIndex(series.index[0], series.index[-1] + 1), 
+        data=series,
+    ).fillna(0)
+    return out_series.rolling(lag).sum()
 
 
 def apply_general_coverage(
@@ -276,7 +272,8 @@ def apply_general_coverage(
         recency_param = 30
         if recency_param:
             vaccine_data["recent_boost"] = get_recent_sum_series(
-                vaccine_data["boost"], recency_param
+                vaccine_data["boost"].diff(), 
+                recency_param
             )
 
         # Add on the user requested starting proportion and move it to the start

@@ -247,7 +247,18 @@ def apply_general_coverage(
 
     age_vacc_categories = get_strata(model, "agegroup") if age_specific_vacc else ["all_ages"]
 
-    for i_age, age_cat in enumerate(age_vacc_categories):
+    user_request = {
+        "20": {
+            "full": [0.8],
+            "boost": [0.6],
+            "index": [500],
+        },
+    }
+
+    msg = "Age group in requests not present in model or 'all_ages' if vaccination not age-specific"
+    assert all([i in age_vacc_categories for i in user_request.keys()]), msg
+
+    for i_age, age_cat in enumerate(age_vacc_categories[3:]):
 
         start_age = int(age_vacc_categories[i_age]) if age_cat != age_vacc_categories[0] else None
         end_age = int(age_vacc_categories[i_age + 1]) if age_cat != age_vacc_categories[-1] else None
@@ -260,7 +271,7 @@ def apply_general_coverage(
         vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
 
         # Add a column for the proportion of the population recently vaccinated
-        if booster_effect_duration:
+        if booster_effect_duration and not vaccine_data.empty:
             vaccine_data["recent_boost"] = lagged_cumsum(
                 vaccine_data["boost"].diff(), 
                 booster_effect_duration,
@@ -271,6 +282,20 @@ def apply_general_coverage(
             "full": start_immune_prop, 
             "boost": start_immune_prop * start_prop_high_among_immune,
         }
+
+        # Add on any custom user requests
+        age_user_request = user_request.get(age_cat)
+        if age_user_request:
+            msg = f"Request for {age_cat} does not have standard keys"
+            assert list(age_user_request.keys()) == ["full", "boost", "index"], msg
+            msg = f"Request for {age_cat} does not have same number of observations for full, boost and index"
+            assert len(set([len(vals) for vals in age_user_request.values()])) == 1, msg
+
+            request_index = age_user_request.pop("index")
+            request_df = pd.DataFrame.from_dict(age_user_request)
+            request_df.index = request_index
+            vaccine_data.append(request_df)
+
         vaccine_data.sort_index(inplace=True)
 
         # Thin as per user request

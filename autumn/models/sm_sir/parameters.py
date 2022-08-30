@@ -516,7 +516,7 @@ class Parameters:
     random_process: Optional[RandomProcessParams]
 
     # Vaccination/immunity-related
-    booster_effect_duration: float
+    booster_effect_duration: Optional[float]
     future_monthly_booster_rate: Optional[float]
     future_booster_age_allocation: Optional[
         Union[

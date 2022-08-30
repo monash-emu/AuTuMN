@@ -5,6 +5,7 @@ from copy import deepcopy
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
 
+from autumn.core.utils.pandas import lagged_cumsum
 from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
@@ -194,28 +195,6 @@ def adjust_reinfection_with_strains(
                 )
 
 
-def lagged_cumsum(series, lag):
-    """
-    Sum up the values of a pandas series that occur
-    on the nominated index (date) or up to a certain value
-    below (before) that point - according to the value
-    of the index, not its order. Creates a series with the
-    same indices as the one submitted, but with the summed
-    values in place of the original ones.
-
-    Args:
-        series: The series to work from
-        lag: The number of index values to look back
-    Returns:
-        New series with sums for each index of the one submitted
-    """
-    out_series = pd.Series(
-        index=pd.RangeIndex(series.index[0], series.index[-1] + 1), 
-        data=series,
-    ).fillna(0)
-    return out_series.rolling(lag).sum()
-
-
 def apply_general_coverage(
         compartments: List[str],
         model: CompartmentalModel,
@@ -288,7 +267,11 @@ def apply_general_coverage(
 
         # Format the data to match the model's immunity structure
         vaccine_data["never"] = 1. - vaccine_data["full"]
-        if boosting:
+        if boosting and recency_param:
+            vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["recent_boost"]
+            strata_data = vaccine_data[["never", "full_only", "recent_boost"]]
+            strata_data.columns = ["none", "low", "high"]
+        elif boosting:
             vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
             strata_data = vaccine_data[["never", "full_only", "boost"]]
             strata_data.columns = ["none", "low", "high"]

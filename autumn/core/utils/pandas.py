@@ -40,3 +40,26 @@ def pdfilt(df: pd.DataFrame, filters: List[str]) -> pd.DataFrame:
     for f in filters:
         df = _pdfilt(df, f)
     return df
+
+
+def lagged_cumsum(series, lag):
+    """
+    Sum up the values of a pandas series that occur
+    on the nominated index (date) or up to a certain value
+    below (before) that point - according to the value
+    of the index, not its order. Creates a series with the
+    same indices as the one submitted, but with the summed
+    values in place of the original ones.
+
+    Args:
+        series: The series to work from
+        lag: The number of index values to look back
+    Returns:
+        New series with sums for each index of the one submitted
+    """
+    out_series = pd.Series(
+        index=pd.RangeIndex(series.index[0], series.index[-1] + 1), 
+        data=series,
+    ).fillna(0)
+    return out_series.rolling(lag).sum()
+    

@@ -44,11 +44,11 @@ def get_all_scenario_dicts(country: str):
 
             # from May 21 - 21 June, the average mobility observed before May 21
             times1 = [*range(507, 539)]
-            values1 = {'work': [0.68] * len(times1), 'other_locations': [0.78] * len(times1)}
+            values1 = {'work': [0.72] * len(times1), 'other_locations': [0.84] * len(times1)}
 
             # from August 21 - 01st October the average mobility observed before August 21
             times2 = [*range(599, 641)]
-            values2 = {'work': [0.65] * len(times2), 'other_locations': [0.85] * len(times2)}
+            values2 = {'work': [0.87] * len(times2), 'other_locations': [1.1] * len(times2)}
 
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {

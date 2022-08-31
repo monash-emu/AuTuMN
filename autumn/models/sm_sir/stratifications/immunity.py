@@ -223,12 +223,19 @@ def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
 
 
 def add_user_request_to_vacc(
-    extra_coverage, 
-    age_cat, 
-    vaccine_data
-):
+    extra_coverage: Dict[str, dict], 
+    age_cat: str,
+    vaccine_data: pd.DataFrame
+) -> pd.DataFrame:
     """
-    Add on any custom user requests.
+    Add on any custom user requests to the vaccination data dataframe.
+
+    Args:
+        extra_coverage: The user request for extra coverage values
+        age_cat: The age group being considered (or 'all_ages')
+        vaccine_data: The partially processed empiric vaccination data
+    Returns:
+        The dataframe with the user requests included
     """
     age_user_request = extra_coverage.get(age_cat)
     if age_user_request:
@@ -246,16 +253,21 @@ def add_user_request_to_vacc(
 
 
 def get_strata_values_from_vacc_data(
-    boosting, 
-    booster_effect_duration, 
-    vaccine_data
-):
+    boosting: bool,
+    booster_waning: bool,
+    vaccine_data: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Format the data to match the model's immunity structure.
+
+    Args:
+        boosting: Whether there is a boosted stratum modelled
+        booster_waning: Whether the the boosted stratum only considers recently boosted
+        vaccine_data: The fully processed vaccine data dataframe
     """
 
     vaccine_data["never"] = 1. - vaccine_data["full"]
-    if boosting and booster_effect_duration:
+    if boosting and booster_waning:
         vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["recent_boost"]
         strata_data = vaccine_data[["never", "full_only", "recent_boost"]]
         strata_data.columns = ["none", "low", "high"]
@@ -346,7 +358,7 @@ def apply_vacc_coverage(
         # Get the actual values for the model strata
         strata_data = get_strata_values_from_vacc_data(
             boosting, 
-            booster_effect_duration, 
+            bool(booster_effect_duration),
             vaccine_data,
         )
 

@@ -102,9 +102,9 @@ priors = [
 ]
 
 targets = [
-    NormalTarget(data=ts_set["icu_occupancy"].loc[725:]),
-    NormalTarget(data=ts_set["hospital_occupancy"].loc[725:]),
-    NormalTarget(data=ts_set["notifications"].loc[730:770]),  # peak notifications
+    NormalTarget(data=ts_set["ncr_icu_occupancy"].loc[725:]),
+    NormalTarget(data=ts_set["ncr_hospital_occupancy"].loc[725:]),
+    NormalTarget(data=ts_set["notifications"].loc[725:]),
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:

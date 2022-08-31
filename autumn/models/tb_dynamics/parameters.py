@@ -52,6 +52,7 @@ class Parameters:
     # Model structure
     age_breakpoints: list
     infectious_seed: float
+    cumulative_start_time: float
     # Base TB model
     contact_rate: float
     rr_infection_latent: float

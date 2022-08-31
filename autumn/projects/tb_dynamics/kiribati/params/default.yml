@@ -15,4 +15,4 @@ age_mixing:
   source_iso3: FJI
   age_adjust: true
 
-contact_rate: 0.14
+contact_rate: 0.0018

@@ -48,6 +48,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     time = params.time
     iso3 = params.iso3
     seed = params.infectious_seed
+    cumulative_start_time = params.cumulative_start_time
     age_breakpoints = [str(age) for age in params.age_breakpoints]
 
     model = CompartmentalModel(
@@ -121,13 +122,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.INFECTIOUS,
         Compartment.RECOVERED,
     )
-    detection_rate = 0.7
-    model.add_transition_flow(
-        "detection",
-        detection_rate,
-        Compartment.INFECTIOUS,
-        Compartment.ON_TREATMENT,
-    )
 
     # Treatment recovery, releapse, death flows.
     # Relapse and treatment death need to be adjusted by age later.
@@ -198,6 +192,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Generate outputs
     request_outputs(
         model,
+        cumulative_start_time,
         BASE_COMPARTMENTS)
 
     return model

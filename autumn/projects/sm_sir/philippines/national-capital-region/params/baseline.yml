@@ -95,7 +95,7 @@ immunity_stratification:
 sojourns:
   latent:
     total_time: 3.
-  recovered: 180.
+  recovered: 150.
 
 age_stratification:
   cfr:

@@ -27,14 +27,12 @@ def assign_population(seed: float, total_pop: int, model: CompartmentalModel):
         model: The summer compartmental model object to have its starting population set
 
     """
-
     # Split by seed and remainder susceptible
     susceptible = total_pop - seed
     init_pop = {
         Compartment.INFECTIOUS: seed,
         Compartment.SUSCEPTIBLE: susceptible,
     }
-
     # Assign to the model
     model.set_initial_population(init_pop)
 
@@ -63,8 +61,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
     # Assign the initial population
     assign_population(seed, age_pops.sum(), model)
-
- 
 
     contact_rate = params.contact_rate
     contact_rate_latent = params.contact_rate * params.rr_infection_latent

@@ -15,4 +15,5 @@ age_mixing:
   source_iso3: FJI
   age_adjust: true
 
-contact_rate: 0.0018
+contact_rate: 0.00178
+cumulative_start_time: 1950.

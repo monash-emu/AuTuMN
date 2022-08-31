@@ -245,6 +245,32 @@ def add_user_request_to_vacc(
     return vaccine_data
 
 
+def get_strata_values_from_vacc_data(
+    boosting, 
+    booster_effect_duration, 
+    vaccine_data
+):
+    """
+    Format the data to match the model's immunity structure.
+    """
+
+    vaccine_data["never"] = 1. - vaccine_data["full"]
+    if boosting and booster_effect_duration:
+        vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["recent_boost"]
+        strata_data = vaccine_data[["never", "full_only", "recent_boost"]]
+        strata_data.columns = ["none", "low", "high"]
+    elif boosting:
+        vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
+        strata_data = vaccine_data[["never", "full_only", "boost"]]
+        strata_data.columns = ["none", "low", "high"]
+    else:
+        strata_data = vaccine_data[["never", "full"]]
+        strata_data.columns = ["none", "low"]
+        strata_data["high"] = 0.
+    
+    return strata_data
+
+
 def apply_vacc_coverage(
         model: CompartmentalModel,
         iso3: str,
@@ -255,6 +281,7 @@ def apply_vacc_coverage(
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
     apply it to the model as a dynamic stratum.
+
     Args:
         compartments: Unstratified model compartment types being implemented
         model: The model itself
@@ -279,7 +306,12 @@ def apply_vacc_coverage(
         end_age = int(age_vacc_categories[i_age + 1]) if age_cat != age_vacc_categories[-1] else None
 
         # Get the data
-        vaccine_data = get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc)
+        vaccine_data = get_reported_vacc_coverage(
+            iso3, 
+            start_age, 
+            end_age, 
+            age_specific_vacc,
+        )
 
         # Get rid of any data that is from before the model starts running
         model_start_time = model.times[0]
@@ -311,20 +343,12 @@ def apply_vacc_coverage(
         # Thin as per user request
         vaccine_data = vaccine_data[::vacc_params.data_thinning]
 
-        # Format the data to match the model's immunity structure
-        vaccine_data["never"] = 1. - vaccine_data["full"]
-        if boosting and booster_effect_duration:
-            vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["recent_boost"]
-            strata_data = vaccine_data[["never", "full_only", "recent_boost"]]
-            strata_data.columns = ["none", "low", "high"]
-        elif boosting:
-            vaccine_data["full_only"] = vaccine_data["full"] - vaccine_data["boost"]
-            strata_data = vaccine_data[["never", "full_only", "boost"]]
-            strata_data.columns = ["none", "low", "high"]
-        else:
-            strata_data = vaccine_data[["never", "full"]]
-            strata_data.columns = ["none", "low"]
-            strata_data["high"] = 0.
+        # Get the actual values for the model strata
+        strata_data = get_strata_values_from_vacc_data(
+            boosting, 
+            booster_effect_duration, 
+            vaccine_data,
+        )
 
         # Apply to model
         add_dynamic_immunity_to_model(

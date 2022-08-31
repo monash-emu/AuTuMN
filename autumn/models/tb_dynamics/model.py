@@ -71,8 +71,13 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
 
     birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
-    birth_rates = [b / 1000.0 for b in birth_rates]  # Birth rates are provided / 1000 population
-    crude_birth_rate = scale_up_function(years, birth_rates, smoothness=0.2, method=5)
+    birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
+    crude_birth_rate = scale_up_function(
+        years.to_list(), 
+        birth_rates.to_list(), 
+        smoothness=0.2, 
+        method=5
+    )
 
     # Add infection flow.
     model.add_infection_frequency_flow(

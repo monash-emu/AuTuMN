@@ -142,8 +142,6 @@ immunity_stratification:
     low: 0.
     high: 0.6
 
-indigenous: true
-
 time_from_onset_to_event:  # Using time of symptom onset as reference
   notification:
     distribution: gamma

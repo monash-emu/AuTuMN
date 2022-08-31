@@ -222,6 +222,29 @@ def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
     return vaccine_data
 
 
+def add_user_request_to_vacc(
+    extra_coverage, 
+    age_cat, 
+    vaccine_data
+):
+    """
+    Add on any custom user requests.
+    """
+    age_user_request = extra_coverage.get(age_cat)
+    if age_user_request:
+        msg = f"Request for {age_cat} does not have standard keys"
+        assert list(age_user_request.keys()) == ["full", "boost", "index"], msg
+        msg = f"Request for {age_cat} does not have same number of observations for full, boost and index"
+        assert len(set([len(vals) for vals in age_user_request.values()])) == 1, msg
+
+        request_index = age_user_request.pop("index")
+        request_df = pd.DataFrame.from_dict(age_user_request)
+        request_df.index = request_index
+        vaccine_data.append(request_df)
+    
+    return vaccine_data
+
+
 def apply_vacc_coverage(
         model: CompartmentalModel,
         iso3: str,
@@ -242,7 +265,7 @@ def apply_vacc_coverage(
 
     age_specific_vacc = vacc_params.age_specific_vacc
     booster_effect_duration = vacc_params.booster_effect_duration
-    extra_coverage = vacc_params.extra_coverage
+    extra_coverage = vacc_params.extra_vacc_coverage
     boosting = vacc_params.boosting
 
     age_vacc_categories = get_strata(model, "agegroup") if age_specific_vacc else ["all_ages"]
@@ -276,17 +299,11 @@ def apply_vacc_coverage(
         }
 
         # Add on any custom user requests
-        age_user_request = extra_coverage.get(age_cat)
-        if age_user_request:
-            msg = f"Request for {age_cat} does not have standard keys"
-            assert list(age_user_request.keys()) == ["full", "boost", "index"], msg
-            msg = f"Request for {age_cat} does not have same number of observations for full, boost and index"
-            assert len(set([len(vals) for vals in age_user_request.values()])) == 1, msg
-
-            request_index = age_user_request.pop("index")
-            request_df = pd.DataFrame.from_dict(age_user_request)
-            request_df.index = request_index
-            vaccine_data.append(request_df)
+        vaccine_data = add_user_request_to_vacc(
+            extra_coverage, 
+            age_cat, 
+            vaccine_data
+        )
 
         # Sort
         vaccine_data.sort_index(inplace=True)

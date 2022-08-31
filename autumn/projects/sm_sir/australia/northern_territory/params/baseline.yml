@@ -144,8 +144,7 @@ immunity_stratification:
 
 vaccination:
   data_thinning: 2
-  
-age_specific_vacc: true
+  age_specific_vacc: true
 
 indigenous: true
 

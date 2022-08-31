@@ -16,9 +16,7 @@ never been infected with Mycobacterium tuberculosis (M.tb). Latent TB infection 
 using two successive compartments: early latent (E) and late latent (L) to capture the declining risk of 
 disease progression over time from infection \cite{ragonnet-2017}. The active disease compartment (I) represents 
 individuals who have progressed to the active stage of TB disease. Diseased individuals who recover 
-through self-cure progress directly to the recovered compartment (R). All diseased individuals who 
-are detected are assumed to be started on treatment (compartment T). Treatment may result in cure 
-(progression to R), relapse (return to I) or death.
+through self-cure progress directly to the recovered compartment (R).
 \newline
 Non-TB-related mortality is modelled by applying death rates to all model compartments. In addition, 
 disease-specific mortality is implemented by applying increased mortality rates to the active disease 
@@ -33,7 +31,8 @@ individuals.
 \begin{figure}[!htbp]
     \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{images/model.png}
     \caption{Illustration of the model structure. 
-    Boxes represent the different compartments types: susceptible (S), early latent (E), late latent (L), infectious (I), on treatment (T) and recovered (R). The subscripts indicate whether compartments are stratified by age (a), geography (g) and form of tuberculosis (f). Blue and orange arrows represent progression flows and transmission flows, respectively. 
+    Boxes represent the different compartments types: susceptible (S), early latent (E), late latent (L), infectious (I), on treatment (T) and recovered (R).
+    The subscripts indicate whether compartments are stratified by age (a), geography (g) and form of tuberculosis (f). Blue and orange arrows represent progression flows and transmission flows, respectively. 
     The flows associated with the modelled interventions are shown in purple. ACF, active case finding.}
     \label{fig:model}
 \end{figure}

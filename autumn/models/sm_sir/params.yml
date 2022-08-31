@@ -216,7 +216,7 @@ vaccination:
   booster_effect_duration: null
   data_thinning: null
   age_specific_vacc: false
-  extra_vacc_coverage: null
+  extra_vacc_coverage: {}
 
 indigenous: false
 

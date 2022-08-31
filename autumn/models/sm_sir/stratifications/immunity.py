@@ -270,7 +270,7 @@ def apply_vacc_coverage(
 
     age_vacc_categories = get_strata(model, "agegroup") if age_specific_vacc else ["all_ages"]
 
-    msg = "Age group in requests not present in model or 'all_ages' if vaccination not age-specific"
+    msg = "Age group in requests not present in model (or 'all_ages' if vaccination not age-specific)"
     assert all([i in age_vacc_categories for i in extra_coverage.keys()]), msg
 
     for i_age, age_cat in enumerate(age_vacc_categories[3:]):

@@ -56,7 +56,9 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
             micro_effect = microdistancing_func(time) if microdistancing_func else 1.0
 
             # Apply the adjustment by subtracting the contacts that need to come off
-            mobility_reduction = 1.0 - macro_effect * micro_effect
-            mixing_matrix -= mobility_reduction * self.base_matrices[loc_key]
+            if microdistancing_func or mobility_func:
+
+                mobility_reduction = 1.0 - macro_effect * micro_effect
+                mixing_matrix -= mobility_reduction * self.base_matrices[loc_key]
 
         return mixing_matrix

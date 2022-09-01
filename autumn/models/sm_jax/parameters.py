@@ -17,7 +17,7 @@ from autumn.settings.constants import (
 )
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
-from summer.experimental.model_builder import ParamStruct, parameter_class as pclass
+from summer2.experimental.model_builder import ParamStruct, parameter_class as pclass
 
 from numpyro.distributions import constraints
 from numbers import Real
@@ -418,46 +418,16 @@ class VocComponent(BaseModel):
     """
 
     starting_strain: bool
-    seed_prop: float
+    seed_prop: pclass()
     new_voc_seed: Optional[VocSeed]
-    contact_rate_multiplier: float
-    relative_latency: Optional[float]
-    relative_active_period: Optional[float]
-    immune_escape: float
+    contact_rate_multiplier: pclass(constraints.non_negative)
+    relative_latency: Optional[pclass(constraints.non_negative)]
+    relative_active_period: Optional[pclass(constraints.non_negative)]
+    immune_escape: pclass()
     cross_protection: Dict[str, CrossImmunity]
-    hosp_protection: Optional[float]
-    death_protection: Optional[float]
-    icu_multiplier: Optional[float]
-
-    @root_validator(pre=True, allow_reuse=True)
-    def check_starting_strain_multiplier(cls, values):
-        if values["starting_strain"]:
-            multiplier = values["contact_rate_multiplier"]
-            msg = f"Starting or 'wild type' strain must have a contact rate multiplier of one: {multiplier}"
-            assert multiplier == 1.0, msg
-        return values
-
-    @validator("icu_multiplier", pre=True, allow_reuse=True)
-    def check_times(multiplier):
-        if multiplier:
-            assert 0.0 <= multiplier, "ICU multiplier negative"
-        return multiplier
-
-    check_immune_escape = validator("immune_escape", allow_reuse=True)(
-        get_check_prop("immune_escape")
-    )
-    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(
-        get_check_prop("hosp_protection")
-    )
-    check_relative_latency = validator("relative_latency", allow_reuse=True)(
-        get_check_non_neg("relative_latency")
-    )
-    check_relative_active_period = validator("relative_active_period", allow_reuse=True)(
-        get_check_non_neg("relative_active_period")
-    )
-    check_death_protection = validator("death_protection", allow_reuse=True)(
-        get_check_prop("death_protection")
-    )
+    hosp_protection: Optional[pclass(constraints.unit_interval)]
+    death_protection: Optional[pclass(constraints.unit_interval)]
+    icu_multiplier: Optional[pclass(constraints.non_negative)]
 
 
 validate_dist = partial(validate_expected, "distribution")
@@ -531,8 +501,8 @@ class Parameters(ParamStruct):
         constraints.unit_interval
     )  # Not optional, so as always to have a back-up value available if testing to detection not used
     testing_to_detection: Optional[TestingToDetection]
-    asympt_infectiousness_effect: Optional[float]
-    isolate_infectiousness_effect: Optional[float]
+    asympt_infectiousness_effect: Optional[pclass()]
+    isolate_infectiousness_effect: Optional[pclass()]
 
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay
@@ -576,24 +546,3 @@ class Parameters(ParamStruct):
         int_age_groups = [int(i_group) for i_group in COVID_BASE_AGEGROUPS]
         assert all([i_group in int_age_groups for i_group in age_groups]), msg
         return age_groups
-
-    @validator("voc_emergence", allow_reuse=True)
-    def check_starting_strain(voc_emergence):
-        if voc_emergence:
-
-            msg = "Seed proportions do not sum to one"
-            assert sum([voc_emergence[voc].seed_prop for voc in voc_emergence]) == 1.0, msg
-
-            starting_strains = [
-                voc for voc, params in voc_emergence.items() if params.starting_strain
-            ]
-
-            msg = "Exactly one voc must be designated as the starting strain"
-            assert len(starting_strains) == 1, msg
-
-            starting_strain = starting_strains[0]
-
-            msg = "Currently requiring all the initial seed to be assigned to the starting strain"
-            assert voc_emergence[starting_strain].seed_prop == 1.0, msg
-
-        return voc_emergence

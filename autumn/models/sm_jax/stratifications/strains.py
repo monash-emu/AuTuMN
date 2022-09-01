@@ -1,12 +1,20 @@
 from typing import Optional, Dict, List
 
 import pandas as pd
-from summer import StrainStratification, Multiply, CompartmentalModel
+from summer2 import StrainStratification, Multiply, CompartmentalModel
+from summer2.parameters import Function, Time
+
+from jax import numpy as jnp
 
 from autumn.models.sm_jax.constants import Compartment, FlowName
 from autumn.models.sm_jax.parameters import VocComponent
 from autumn.core.utils.utils import multiply_function_or_constant
 from autumn.model_features.strains import broadcast_infection_flows_over_source
+
+
+def voc_seed_func(time, entry_rate, start_time, seed_duration):
+    offset = time - start_time
+    return jnp.where(offset > 0, jnp.where(offset < seed_duration, entry_rate, 0.0), 0.0)
 
 
 def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: float):
@@ -23,11 +31,7 @@ def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: floa
         The simple step function
 
     """
-
-    def voc_seed_func(time: float, computed_values):
-        return entry_rate if 0.0 < time - start_time < seed_duration else 0.0
-
-    return voc_seed_func
+    return Function(voc_seed_func, [Time, entry_rate, start_time, seed_duration])
 
 
 def seed_vocs(

@@ -9,12 +9,15 @@ from importlib import import_module, reload as reload_module
 import json
 from pathlib import Path
 
+from computegraph.utils import expand_nested_dict
 
 import yaml
 import pandas as pd
 import numpy as np
 from summer.model import CompartmentalModel
 from summer.derived_outputs import DerivedOutputRequest
+
+from summer2.model import CompartmentalModel as CompartmentModel2
 
 from autumn.core.db.store import (
     save_model_outputs,
@@ -33,7 +36,7 @@ from autumn.core.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
-ModelBuilder = Callable[[dict,dict], CompartmentalModel]
+ModelBuilder = Callable[[dict, dict], CompartmentalModel]
 
 
 class Project:
@@ -59,6 +62,10 @@ class Project:
         self.calibration = calibration
         self.diff_output_requests = diff_output_requests
 
+        self._model = None
+        self._is_calibrating = False
+        self._cal_params = [p["param_name"] for p in calibration.all_priors]
+
     def calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
         """
         Calibrate the model using the baseline parameters.
@@ -66,22 +73,44 @@ class Project:
         with Timer(f"Running calibration for {self.model_name} {self.region_name}."):
             self.calibration.run(self, max_seconds, chain_idx, num_chains)
 
+    def _start_calibrating(self):
+        self._is_calibrating = True
+        self._model = None
+
     def run_baseline_model(
-        self, params: Params, derived_outputs_whitelist: Optional[List[str]] = None,
-        build_options: Optional[dict] = None
+        self,
+        params: Params,
+        derived_outputs_whitelist: Optional[List[str]] = None,
+        build_options: Optional[dict] = None,
     ) -> CompartmentalModel:
         """
         Run the project's baseline model with the given parameters.
         Returns the completed baseline model.
         """
         params_dict = params.to_dict()
-        model = self.build_model(params_dict, build_options)
-        if type(model) is CompartmentalModel and derived_outputs_whitelist:
-            # Only calculate required derived outputs.
-            model.set_derived_outputs_whitelist(derived_outputs_whitelist)
-
-        self._run_model(model)
-        return model
+        if self._model is None:
+            model = self.build_model(params_dict, build_options)
+            if derived_outputs_whitelist:
+                # Only calculate required derived outputs.
+                model.set_derived_outputs_whitelist(derived_outputs_whitelist)
+            if isinstance(model, CompartmentModel2):
+                model.finalize()
+                self._model = model
+                pdict_filt = {
+                    k: v
+                    for k, v in expand_nested_dict(params_dict).items()
+                    if k in model.get_input_parameters()
+                }
+                self._runner = self._model.get_runner(pdict_filt, dyn_params=self._cal_params)
+                self._runner.run(pdict_filt)
+                return self._runner.model
+            else:
+                model.run()
+                return model
+        else:
+            pdict_exp = expand_nested_dict(params_dict)
+            self._runner.run(pdict_exp)
+            return self._runner.model
 
     def run_scenario_models(
         self,
@@ -89,7 +118,7 @@ class Project:
         scenario_params: List[Params],
         start_time: Optional[float] = None,
         start_times: Optional[List[float]] = None,
-        build_options: Optional[List[dict]] = None
+        build_options: Optional[List[dict]] = None,
     ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
@@ -108,9 +137,8 @@ class Project:
 
         models = []
         assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
-        for start_time, params, build_opt in \
-            zip(start_times, scenario_params, build_options):
-            
+        for start_time, params, build_opt in zip(start_times, scenario_params, build_options):
+
             params_dict = params.to_dict()
             model = self.build_model(params_dict, build_opt)
 
@@ -129,11 +157,11 @@ class Project:
 
         return models
 
-    def _run_model(self, model: CompartmentalModel):
+    def _run_model(self, model: CompartmentalModel, parameters: dict):
         """
         Run the model.
         """
-        model.run(max_step=1)
+        model.run(parameters=parameters)
 
     def write_params_to_tex(self, main_table_params_list, project_path, output_dir_path=None):
         """
@@ -190,13 +218,14 @@ class Project:
         """
         Return a pathlib.Path to the current project directory
         """
-        return Path(BASE_PATH) / '/'.join(self._get_path().split('.')[:-1])  
+        return Path(BASE_PATH) / "/".join(self._get_path().split(".")[:-1])
 
     def __repr__(self):
         return f"Project<{self.model_name}, {self.region_name}>"
 
     def _get_path(self):
         return _PROJECTS[self.model_name][self.region_name]
+
 
 LOADED_PROJECTS = set()
 
@@ -320,11 +349,13 @@ def get_all_available_scenario_paths(scenario_dir_path):
     :param scenario_dir_path: path to the directory
     :return: a list of paths
     """
-    glob_str = os.path.join(scenario_dir_path, 'scenario-*.yml')
+    glob_str = os.path.join(scenario_dir_path, "scenario-*.yml")
     scenario_file_list = glob.glob(glob_str)
 
     # Sort by integer rather than string (so that 'scenario-2' comes before 'scenario-10')
-    file_list_sorted = sorted(scenario_file_list, key = lambda x: int(re.match('.*scenario-([0-9]*)',x).group(1)))
+    file_list_sorted = sorted(
+        scenario_file_list, key=lambda x: int(re.match(".*scenario-([0-9]*)", x).group(1))
+    )
 
     return file_list_sorted
 

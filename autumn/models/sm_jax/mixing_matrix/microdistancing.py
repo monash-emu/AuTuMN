@@ -13,7 +13,7 @@ ADJUSTER_SUFFIX = "_adjuster"
 
 
 def get_microdistancing_funcs(
-        params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool, iso3: str
+    params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool, iso3: str
 ) -> Dict[str, Callable[[float], float]]:
     """
     Returns a dictionary of time-varying functions.
@@ -61,24 +61,23 @@ def get_microdistancing_funcs(
 
             # Otherwise no adjustments
             else:
-                waning_adjustment = return_constant_value(1.)
+                waning_adjustment = return_constant_value(1.0)
 
             if loc in params[key].locations:
-                microdist_component_funcs.append(get_product_two_functions(microdist_func, waning_adjustment))
+                microdist_component_funcs.append(
+                    get_product_two_functions(microdist_func, waning_adjustment)
+                )
 
         # Generate the overall composite contact adjustment function as the product of the reciprocal all the effects
         if len(microdist_component_funcs) > 0:
 
             def microdist_composite_func(time: float) -> float:
-                effects = [(1. - func(time)) ** power for func in microdist_component_funcs]
+                effects = [(1.0 - func(time)) ** power for func in microdist_component_funcs]
                 return np.product(effects)
 
-        else:
-
-            microdist_composite_func = return_constant_value(1.)
+            final_adjustments[loc] = microdist_composite_func
 
         # Get the final location-specific microdistancing functions
-        final_adjustments[loc] = microdist_composite_func
 
     return final_adjustments
 

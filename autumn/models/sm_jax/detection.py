@@ -1,7 +1,7 @@
 from typing import Tuple, Callable, Optional
 
 from computegraph.types import Function
-from summer.parameters import Time, Data
+from summer2.parameters import Time, Data
 
 from autumn.core.model_builder import ModelBuilder
 from .parameters import TestingToDetection, Population

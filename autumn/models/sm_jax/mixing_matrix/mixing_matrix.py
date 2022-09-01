@@ -9,7 +9,7 @@ from .microdistancing import get_microdistancing_funcs
 from .macrodistancing import get_mobility_funcs
 
 from computegraph.types import Function
-from summer.parameters import Time
+from summer2.parameters import Time
 
 
 def build_dynamic_mixing_matrix(

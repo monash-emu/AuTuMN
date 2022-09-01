@@ -11,7 +11,7 @@ from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
 from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_jax.stratifications.agegroup import convert_param_agegroups
 
-from summer.parameters.params import Function, Data, Parameter, DerivedOutput
+from summer2.parameters.params import Function, Data, Parameter, DerivedOutput
 
 from computegraph import jaxify
 

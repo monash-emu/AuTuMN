@@ -1,9 +1,9 @@
 from typing import List
 import pandas as pd
 
-from summer import CompartmentalModel
-from summer.experimental.model_builder import ModelBuilder
-from summer.parameters.params import Function, Parameter
+from summer2 import CompartmentalModel
+from summer2.experimental.model_builder import ModelBuilder
+from summer2.parameters.params import Function, Parameter
 
 from autumn.core import inputs
 from autumn.core.project import Params, build_rel_path
@@ -238,7 +238,6 @@ def build_model(pdict: dict, build_options: dict = None) -> CompartmentalModel:
         infectious_compartments=infectious_compartments,
         timestep=time_params.step,
         ref_date=COVID_BASE_DATETIME,
-        takes_params=True,
     )
 
     # We call this here to 'link' the model and the builder - the model will now be aware of
@@ -480,12 +479,10 @@ def build_model(pdict: dict, build_options: dict = None) -> CompartmentalModel:
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
-    return builder
-
     """
     Get the applicable outputs
     """
-
+    return model
     model_times = model.times
 
     outputs_builder = SmSirOutputsBuilder(model, compartment_types)
@@ -495,11 +492,13 @@ def build_model(pdict: dict, build_options: dict = None) -> CompartmentalModel:
 
     # Determine what flow will be used to track disease incidence
 
-    outputs_builder.request_incidence(
-        age_groups, clinical_strata, strain_strata, incidence_flow, params.request_incidence_by_age
-    )
+    # outputs_builder.request_incidence(
+    #    age_groups, clinical_strata, strain_strata, incidence_flow, params.request_incidence_by_age
+    # )
 
     outputs_builder.request_notifications(time_to_event_params.notification, model_times)
+    return model
+
     outputs_builder.request_hospitalisations(
         model_times,
         age_groups,

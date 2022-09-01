@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import itertools
 
-from summer import Stratification, Multiply
+from summer2 import Stratification, Multiply
 
 from autumn.models.sm_jax.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.sm_jax.parameters import Parameters

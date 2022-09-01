@@ -2,8 +2,8 @@ from typing import List, Union, Optional
 from copy import copy
 import pandas as pd
 
-from summer import Stratification, Multiply, Overwrite, CompartmentalModel
-from summer.experimental.model_builder import ModelBuilder
+from summer2 import Stratification, Multiply, Overwrite, CompartmentalModel
+from summer2.experimental.model_builder import ModelBuilder
 from computegraph.types import GraphObject
 
 from autumn.models.sm_jax.constants import ClinicalStratum, CLINICAL_STRATA, Compartment

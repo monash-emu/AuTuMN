@@ -141,3 +141,11 @@ register_project(
     Region.KIRIBATI,
     "autumn.projects.tb_dynamics.kiribati.project",
 )
+
+
+# sm_jax
+register_project(
+    Models.SM_JAX,
+    Region.MALAYSIA,
+    "autumn.projects.sm_jax.malaysia.project",
+)

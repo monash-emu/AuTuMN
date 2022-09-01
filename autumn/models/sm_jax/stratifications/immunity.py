@@ -2,8 +2,8 @@ from typing import Optional, List, Dict
 import pandas as pd
 from copy import deepcopy
 
-from summer import Stratification, Multiply
-from summer import CompartmentalModel
+from summer2 import Stratification, Multiply
+from summer2 import CompartmentalModel
 
 from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage

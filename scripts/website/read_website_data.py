@@ -75,7 +75,7 @@ print("Fetching object list from AWS S3")
 objs = fetch_all_objects()
 keys = [o["Key"] for o in objs]
 print("Found", len(keys), "objects.")
-APPS = ["covid_19", "tuberculosis", "sm_sir", "hierarchical_sir", "sm_covid"]
+APPS = ["covid_19", "tuberculosis", "sm_sir", "hierarchical_sir", "sm_covid", "sm_jax"]
 apps = {}
 reports = {
     "dhhs": {"title": "DHHS", "description": "Weekly report for DHHS", "files": []},

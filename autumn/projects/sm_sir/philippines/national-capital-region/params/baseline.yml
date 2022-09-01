@@ -137,7 +137,7 @@ age_stratification:
       75: 0.0357
       80: 0.1110
 
-future_monthly_booster_rate: 200000.
+# future_monthly_booster_rate: 200000.
 booster_effect_duration: 180.
 
 future_booster_age_allocation: null
@@ -146,6 +146,6 @@ future_booster_age_allocation: null
 # future_booster_age_allocation: [60, 50, 25, 15, 0]
 
 requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
-cumulative_start_time: 932  # 20 July 2022
+cumulative_start_time: 975  # 1 Sep 2022
 request_incidence_by_age: True
 request_immune_prop_by_age: True

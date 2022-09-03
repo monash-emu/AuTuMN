@@ -513,13 +513,15 @@ def build_model(
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
-    apply_vacc_coverage(
-        model,
-        iso3,
-        start_immune_prop=immunity_params.prop_immune,
-        start_prop_high_among_immune=immunity_params.prop_high_among_immune,
-        vacc_params=params.vaccination,
-    )
+    # Apply vaccination coverage if available
+    if iso3 in ["PHL", "AUS"]:
+        apply_vacc_coverage(
+            model,
+            iso3,
+            start_immune_prop=immunity_params.prop_immune,
+            start_prop_high_among_immune=immunity_params.prop_high_among_immune,
+            vacc_params=params.vaccination,
+        )
 
     """
     Get the applicable outputs

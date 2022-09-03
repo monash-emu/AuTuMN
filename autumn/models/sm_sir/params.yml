@@ -218,8 +218,6 @@ vaccination:
   age_specific_vacc: false
   extra_vacc_coverage: {}
 
-indigenous: false
-
 requested_cumulative_outputs: []
 cumulative_start_time: null
 request_incidence_by_age: false

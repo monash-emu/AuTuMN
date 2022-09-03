@@ -146,8 +146,6 @@ vaccination:
   data_thinning: 2
   age_specific_vacc: true
 
-indigenous: true
-
 time_from_onset_to_event:  # Using time of symptom onset as reference
   notification:
     distribution: gamma

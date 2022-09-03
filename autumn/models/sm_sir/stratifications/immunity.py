@@ -6,7 +6,6 @@ from summer import CompartmentalModel
 
 from autumn.core.utils.pandas import increment_last_period
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
-from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
 from autumn.core.inputs.covid_au.queries import get_nt_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, Vaccination
@@ -199,10 +198,6 @@ def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
         full_series = get_phl_vac_coverage(dose="SECOND_DOSE")
         booster_series = get_phl_vac_coverage(dose="BOOSTER_DOSE")
         assert not age_specific_vacc, "Philippines data not age-specific, so just replicating calculations"
-    elif iso3 == "MYS":
-        full_series = get_mys_vac_coverage(dose="full")
-        booster_series = get_mys_vac_coverage(dose="booster")
-        assert not age_specific_vacc, "Malaysia data not age-specific, so just replicating calculations"
     elif iso3 == "AUS":
         full_series = get_nt_vac_coverage(dose=2, start_age=start_age, end_age=end_age)
         booster_series = get_nt_vac_coverage(dose=3, start_age=start_age, end_age=end_age)
@@ -326,6 +321,17 @@ def apply_vacc_coverage(
         model_start_time = model.times[0]
         vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
 
+        # Add on the user requested starting proportions
+        starting_values = {
+            "full": start_immune_prop, 
+            "boost": start_immune_prop * start_prop_high_among_immune,
+        }
+        vaccine_data.loc[model_start_time] = starting_values
+        vaccine_data.loc[-1000] = starting_values  # To prevent issues with interpolation later
+
+        # Sort
+        vaccine_data.sort_index(inplace=True)
+
         # Add a column for the proportion of the population recently vaccinated
         if booster_effect_duration and not vaccine_data.empty:
             vaccine_data["recent_boost"] = increment_last_period(
@@ -333,21 +339,12 @@ def apply_vacc_coverage(
                 vaccine_data["boost"]
             )
 
-        # Add on the user requested starting proportions
-        vaccine_data.loc[model_start_time] = {
-            "full": start_immune_prop, 
-            "boost": start_immune_prop * start_prop_high_among_immune,
-        }
-
         # Add on any custom user requests
         vaccine_data = add_user_request_to_vacc(
             extra_coverage, 
             age_cat, 
             vaccine_data
         )
-
-        # Sort
-        vaccine_data.sort_index(inplace=True)
 
         # Thin as per user request
         vaccine_data = vaccine_data[::vacc_params.data_thinning]

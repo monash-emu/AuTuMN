@@ -124,29 +124,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.RECOVERED,
     )
 
-    # Treatment recovery, releapse, death flows.
-    # Relapse and treatment death need to be adjusted by age later.
-    treatment_recovery_rate = 1.0
-    treatment_death_rate = 1.0
-    relapse_rate = 1.0
-    model.add_transition_flow(
-        "treatment_recovery",
-        treatment_recovery_rate,
-        Compartment.ON_TREATMENT,
-        Compartment.RECOVERED,
-    )
-    # Treatment Death
-    model.add_death_flow(
-        "treatment_death",
-        treatment_death_rate,
-        Compartment.ON_TREATMENT,
-    )
-    model.add_transition_flow(
-        "relapse",
-        relapse_rate,
-        Compartment.ON_TREATMENT,
-        Compartment.INFECTIOUS,
-    )
 
     # Add crude birth flow to the model
     model.add_crude_birth_flow(

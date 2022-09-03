@@ -28,10 +28,8 @@ def request_outputs(
     output_builder.request_flow_output(
         "mortality_infectious_raw", "infect_death", save_results=False
     )
-    output_builder.request_flow_output(
-        "mortality_on_treatment_raw", "treatment_death", save_results=False
-    )
-    sources = ["mortality_infectious_raw", "mortality_on_treatment_raw"]
+   
+    sources = ["mortality_infectious_raw"]
     output_builder.request_aggregation_output(
         "mortality_raw",
         sources,

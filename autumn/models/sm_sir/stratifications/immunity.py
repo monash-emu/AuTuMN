@@ -1,14 +1,11 @@
 from typing import Optional, List, Dict
 import pandas as pd
-from copy import deepcopy
 
 from summer import Stratification, Multiply
 from summer import CompartmentalModel
 
-from autumn.core.utils.pandas import lagged_cumsum
-from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
+from autumn.core.utils.pandas import increment_last_period
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
-from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
 from autumn.core.inputs.covid_au.queries import get_nt_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
@@ -331,9 +328,9 @@ def apply_vacc_coverage(
 
         # Add a column for the proportion of the population recently vaccinated
         if booster_effect_duration and not vaccine_data.empty:
-            vaccine_data["recent_boost"] = lagged_cumsum(
-                vaccine_data["boost"].diff(), 
+            vaccine_data["recent_boost"] = increment_last_period(
                 booster_effect_duration,
+                vaccine_data["boost"]
             )
 
         # Add on the user requested starting proportions

@@ -3,8 +3,8 @@
 
 import re
 from typing import List
-
 import pandas as pd
+import numpy as np
 
 
 def _pdfilt(df, fstr):
@@ -42,24 +42,24 @@ def pdfilt(df: pd.DataFrame, filters: List[str]) -> pd.DataFrame:
     return df
 
 
-def lagged_cumsum(series, lag):
+def increment_last_period(
+    recency: int, 
+    values: pd.Series,
+) -> pd.Series:
     """
-    Sum up the values of a pandas series that occur
-    on the nominated index (date) or up to a certain value
-    below (before) that point - according to the value
-    of the index, not its order. Creates a series with the
-    same indices as the one submitted, but with the summed
-    values in place of the original ones.
+    Find the increase in a series of increasing values over
+    a preceding period of a certain duration.
 
     Args:
-        series: The series to work from
-        lag: The number of index values to look back
+        recency: How far to look back to find the increment
+        values: The series of values to look back into
     Returns:
-        New series with sums for each index of the one submitted
+        Series for the increases over the preceding period
     """
-    out_series = pd.Series(
-        index=pd.RangeIndex(series.index[0], series.index[-1] + 1), 
-        data=series,
-    ).fillna(0)
-    return out_series.rolling(lag).sum()
-    
+    assert values.is_monotonic_increasing
+    assert values.index.is_monotonic_increasing
+
+    return values - pd.Series(
+        np.interp(values.index - recency, values.index, values), 
+        index=values.index
+    )

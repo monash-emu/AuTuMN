@@ -20,7 +20,7 @@ through self-cure progress directly to the recovered compartment (R).
 \newline
 Non-TB-related mortality is modelled by applying death rates to all model compartments. In addition, 
 disease-specific mortality is implemented by applying increased mortality rates to the active disease 
-compartments (I and T).
+compartments (I).
 \newline
 Reinfection occurs in the model in two different ways. First, latently infected individuals may be 
 reinfected, with this process modelled using a flow from the late latent (L) to the early latent 
@@ -31,9 +31,8 @@ individuals.
 \begin{figure}[!htbp]
     \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{images/model.png}
     \caption{Illustration of the model structure. 
-    Boxes represent the different compartments types: susceptible (S), early latent (E), late latent (L), infectious (I), on treatment (T) and recovered (R).
-    The subscripts indicate whether compartments are stratified by age (a), geography (g) and form of tuberculosis (f). Blue and orange arrows represent progression flows and transmission flows, respectively. 
-    The flows associated with the modelled interventions are shown in purple. ACF, active case finding.}
+    Boxes represent the different compartments types: susceptible (S), early latent (E), late latent (L), infectious (I), and recovered (R).
+    The subscripts indicate whether compartments are stratified by age (a).}
     \label{fig:model}
 \end{figure}
 

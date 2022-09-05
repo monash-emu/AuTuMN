@@ -8,7 +8,7 @@ population:
 
 time:
   start: 675.
-  end: 1000.
+  end: 1278.
   step: 1.
 
 infectious_seed: 2.

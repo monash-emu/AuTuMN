@@ -157,11 +157,11 @@ class Project:
 
         return models
 
-    def _run_model(self, model: CompartmentalModel, parameters: dict):
+    def _run_model(self, model: CompartmentalModel):
         """
         Run the model.
         """
-        model.run(parameters=parameters)
+        model.run()
 
     def write_params_to_tex(self, main_table_params_list, project_path, output_dir_path=None):
         """

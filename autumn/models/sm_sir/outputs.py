@@ -227,7 +227,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         )
 
         self.model.request_function_output(
-            name="notificationsXnonindigenous",
+            name="notificationsXnon_indigenous",
             sources=["ever_detected_incidenceXnonindigenous"],
             func=notifications_func,
         )

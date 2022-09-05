@@ -331,20 +331,20 @@ def apply_vacc_coverage(
 
         # Sort
         vaccine_data.sort_index(inplace=True)
-
-        # Add a column for the proportion of the population recently vaccinated
-        if booster_effect_duration and not vaccine_data.empty:
-            vaccine_data["recent_boost"] = increment_last_period(
-                booster_effect_duration,
-                vaccine_data["boost"]
-            )
-
+        
         # Add on any custom user requests
         vaccine_data = add_user_request_to_vacc(
             extra_coverage, 
             age_cat, 
             vaccine_data
         )
+        
+        # Add a column for the proportion of the population recently vaccinated
+        if booster_effect_duration and not vaccine_data.empty:
+            vaccine_data["recent_boost"] = increment_last_period(
+                booster_effect_duration,
+                vaccine_data["boost"]
+            )
 
         # Thin as per user request
         vaccine_data = vaccine_data[::vacc_params.data_thinning]

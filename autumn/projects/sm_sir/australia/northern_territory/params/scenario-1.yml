@@ -1,5 +1,8 @@
 description: Omicron evolution
 
+time:
+  start: 978.
+  
 voc_emergence:
   future:
     new_voc_seed:

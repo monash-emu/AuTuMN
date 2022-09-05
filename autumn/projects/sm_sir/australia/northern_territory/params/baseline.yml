@@ -208,6 +208,13 @@ vaccination_data_thinning: 2
 prop_icu_among_hospitalised: 0.02
 
 requested_cumulative_outputs:
-  - infection_deaths
-  - icu_admissions
+  - notifications
   - hospital_admissions
+  - hospital_admissionsXindigenous
+  - hospital_admissionsXnon_indigenous
+  - icu_admissions
+  - icu_admissionsXindigenous
+  - icu_admissionsXnon_indigenous
+  - infection_deaths
+  - infection_deathsXindigenous
+  - infection_deathsXnon_indigenous

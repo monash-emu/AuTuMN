@@ -209,6 +209,8 @@ prop_icu_among_hospitalised: 0.02
 
 requested_cumulative_outputs:
   - notifications
+  - notificationsXindigenous
+  - notificationsXnon_indigenous
   - hospital_admissions
   - hospital_admissionsXindigenous
   - hospital_admissionsXnon_indigenous

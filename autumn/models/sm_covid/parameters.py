@@ -265,6 +265,7 @@ class VocComponent(BaseModel):
     seed_prop: float
     new_voc_seed: Optional[VocSeed]
     contact_rate_multiplier: float
+    incubation_overwrite_value: Optional[float]
     vacc_immune_escape: float
     cross_protection: Dict[str, float]
     hosp_risk_adjuster: Optional[float]

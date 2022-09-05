@@ -1,11 +1,15 @@
-description: early outbreak
+description: worst case
 
-immunity_stratification:
-  prop_immune: 0.
-  infection_risk_reduction:  # VE against infection with Delta
-    none: 0.
-    low: 0.75
-    high: 0.9
+voc_emergence:
+  ba_5:
+    cross_protection:
+      future:
+        early_reinfection: 0.3
+        late_reinfection: 0.
+  future:
+    contact_rate_multiplier: 1.5
+    new_voc_seed:
+      start_time: 980.
 
 age_stratification:
   prop_hospital:
@@ -46,17 +50,3 @@ age_stratification:
       70: 0.0493
       75: 0.0493
       80: 0.159
-
-voc_emergence:
-  ba_1:
-    contact_rate_multiplier: 0.6667
-  ba_2:  # Switch off BA.2
-    new_voc_seed:
-      start_time: 10000.
-  ba_5:  # Switch off BA.5
-    new_voc_seed:
-      start_time: 10000.
-
-vacc_delay: 187.
-
-prop_icu_among_hospitalised: 0.05

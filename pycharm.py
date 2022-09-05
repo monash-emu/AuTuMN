@@ -11,7 +11,7 @@ model = Models.SM_COVID
 project = get_project(model, region)
 
 # Run a model manually
-run_project_locally(project, run_scenarios=False)
+run_project_locally(project, run_scenarios=True)
 
 # Run a calibration
 # project.calibrate(max_seconds=5, chain_idx=1, num_chains=1)

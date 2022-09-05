@@ -65,7 +65,12 @@ def process_unesco_data(params: Parameters):
     if params.mobility.apply_unesco_school_data:
         # Convert the categorical data into a numerical timeseries
         unesco_data.replace(
-            {"Closed due to COVID-19": 0., "Fully open": 1., "Academic break": 1., "Partially open": params.mobility.unesco_partial_opening_value}, 
+            {
+                "Academic break": 0., 
+                "Fully open": 1.,                 
+                "Partially open": params.mobility.unesco_partial_opening_value,  # switched to 1. to model counterfactual no-closure scenario
+                "Closed due to COVID-19": params.mobility.unesco_full_closure_value,  # switched to 1. to model counterfactual no-closure scenario
+            }, 
             inplace=True
         )
 

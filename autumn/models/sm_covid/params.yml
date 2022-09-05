@@ -61,7 +61,8 @@ mobility:
   square_mobility_effect: true
   microdistancing: {}
   apply_unesco_school_data: true  # if true, will override school mixing inputs
-  unesco_partial_opening_value: .5
+  unesco_partial_opening_value: .2
+  unesco_full_closure_value: 0.
 
 # Age-related parameters
 age_stratification:

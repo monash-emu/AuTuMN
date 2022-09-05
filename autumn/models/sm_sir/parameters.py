@@ -525,9 +525,6 @@ class Parameters:
             ]
         ]
 
-    # Indigenous-related
-    indigenous: bool
-
     # Output-related
     requested_cumulative_outputs: List[str]
     cumulative_start_time: Optional[float]

@@ -216,14 +216,14 @@ def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, daily_deaths
 
         targets["notifications"]["times"] = list(notifications_tmp["times"])
         targets["notifications"]["values"] = list(notifications_tmp["mean_daily_notifications"])
-        targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
-        targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
+        # targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
+        # targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
         targets["cumulative_deaths"]["times"] = list(deaths_tmp["times"])
         targets["cumulative_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
         targets["infection_deaths"]["times"] = list(daily_deaths_tmp["times"])
         targets["infection_deaths"]["values"] = list(daily_deaths_tmp["daily_deaths"])
-        targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
-        targets["hospital_occupancy"]["values"] = list(hosp_tmp["nonicu_o"])
+        # targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
+        # targets["hospital_occupancy"]["values"] = list(hosp_tmp["nonicu_o"])
 
     with open(file_path, "w") as f:
         json.dump(targets, f, indent=2)

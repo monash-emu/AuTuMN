@@ -199,8 +199,8 @@ def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
         booster_series = get_phl_vac_coverage(dose="BOOSTER_DOSE")
         assert not age_specific_vacc, "Philippines data not age-specific, so just replicating calculations"
     elif iso3 == "AUS":
-        full_series = get_nt_vac_coverage(dose=2, start_age=start_age, end_age=end_age)
-        booster_series = get_nt_vac_coverage(dose=3, start_age=start_age, end_age=end_age)
+        full_series = get_nt_vac_coverage(dose=2)
+        booster_series = get_nt_vac_coverage(dose=3)
     else:
         raise ValueError("Data for country not available (in this function)")
     

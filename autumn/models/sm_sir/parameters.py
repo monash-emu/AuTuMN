@@ -464,9 +464,9 @@ class VocComponent(BaseModel):
     check_relative_active_period = validator("relative_active_period", allow_reuse=True)(
         get_check_non_neg("relative_active_period")
     )
-    check_death_protection = validator("death_protection", allow_reuse=True)(
-        get_check_prop("death_protection")
-    )
+    # check_death_protection = validator("death_protection", allow_reuse=True)(
+    #     get_check_prop("death_protection")
+    # )
 
 
 class TimeDistribution(BaseModel):

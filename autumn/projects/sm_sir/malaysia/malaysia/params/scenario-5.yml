@@ -1,0 +1,8 @@
+description: Vaccine coverage halved
+
+time:
+  start: 450
+
+immunity_stratification:
+  prop_immune: .41
+  prop_high_among_immune: .0

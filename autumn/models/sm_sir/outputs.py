@@ -102,6 +102,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
             []
         )  # Collect detected incidence unstratified for notifications calculation
 
+        detected_incidence_sources_indig = []
+
+        detected_incidence_sources_nonindig = []
+
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
             agegroup_filter = {"agegroup": agegroup}
@@ -148,6 +152,11 @@ class SmSirOutputsBuilder(OutputsBuilder):
                             # Update the dictionaries of which outputs are relevant
                             if clinical_stratum in ["", ClinicalStratum.DETECT]:
                                 detected_incidence_sources.append(output_name)
+                                if indig_status == "indigenous":
+                                    detected_incidence_sources_indig.append(output_name)
+                                else:
+                                    detected_incidence_sources_nonindig.append(output_name)
+
                             if clinical_stratum in [
                                 "",
                                 ClinicalStratum.SYMPT_NON_DETECT,
@@ -175,6 +184,17 @@ class SmSirOutputsBuilder(OutputsBuilder):
             name="ever_detected_incidence", sources=detected_incidence_sources
         )
 
+        # Compute detected incidence to prepare for notifications calculations
+        self.model.request_aggregate_output(
+            name="ever_detected_incidenceXindigenous", sources=detected_incidence_sources_indig
+        )
+
+        # Compute detected incidence to prepare for notifications calculations
+        self.model.request_aggregate_output(
+            name="ever_detected_incidenceXnonindigenous",
+            sources=detected_incidence_sources_nonindig,
+        )
+
     def request_notifications(
         self, time_from_onset_to_notification: TimeDistribution, model_times: np.ndarray
     ):
@@ -197,6 +217,18 @@ class SmSirOutputsBuilder(OutputsBuilder):
         self.model.request_function_output(
             name="notifications",
             sources=["ever_detected_incidence"],
+            func=notifications_func,
+        )
+
+        self.model.request_function_output(
+            name="notificationsXindigenous",
+            sources=["ever_detected_incidenceXindigenous"],
+            func=notifications_func,
+        )
+
+        self.model.request_function_output(
+            name="notificationsXnonindigenous",
+            sources=["ever_detected_incidenceXnonindigenous"],
             func=notifications_func,
         )
 

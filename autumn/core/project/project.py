@@ -152,10 +152,15 @@ class Project:
                 start_idx = get_scenario_start_index(baseline_model.times, start_time)
                 init_compartments = baseline_model.outputs[start_idx, :]
                 # Use initial conditions at the given start time.
-                if type(model) is CompartmentalModel:
+                if isinstance(model, CompartmentalModel):
                     model.initial_population = init_compartments
+                elif isinstance(model, CompartmentModel2):
+                    if start_time != baseline_model.times[0]:
+                        raise ValueError(
+                            "Scenario start times must match baseline start times for summer2 models"
+                        )
                 else:
-                    model.compartment_values = init_compartments
+                    raise TypeError("Invalid model type", model, type(model))
 
             self._run_model(model)
             models.append(model)
@@ -239,13 +244,14 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
     """
     Returns a project
     """
-    # If a school closure project is requested, will call the relevant project builder function 
+    # If a school closure project is requested, will call the relevant project builder function
     if model_name == Models.SM_COVID and project_name in Region.SCHOOL_PROJECT_REGIONS:
         # Ugly import within function definition to avoid circular imports
         from autumn.projects.sm_covid.common_school.project_maker import get_school_project
+
         project = get_school_project(project_name)
 
-    # Otherwise, the project is loaded from the relevant project.py file 
+    # Otherwise, the project is loaded from the relevant project.py file
     else:
         assert model_name in _PROJECTS, f"Model {model_name} not registered as a project."
         msg = f"Project {project_name} not registered as a project using model {model_name}."
@@ -263,7 +269,7 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
             raise ImportError(msg)
 
         LOADED_PROJECTS.add(import_path)
-        
+
     return project
 
 
@@ -506,6 +512,7 @@ OUTPUT_CALCS = {
     DiffOutput.ABSOLUTE: calc_absolute_diff_output,
 }
 
+
 def calculate_post_diff_outputs(
     models: List[CompartmentalModel], post_diff_output_requests: Dict[str, Dict]
 ):
@@ -525,5 +532,5 @@ def calculate_post_diff_outputs(
     """
     for new_output_name, func_details in post_diff_output_requests.items():
         for model in models:
-            calculated_sources = [model.derived_outputs[s] for s in func_details['sources']]
-            model.derived_outputs[new_output_name] = func_details['func'](*calculated_sources)
+            calculated_sources = [model.derived_outputs[s] for s in func_details["sources"]]
+            model.derived_outputs[new_output_name] = func_details["func"](*calculated_sources)

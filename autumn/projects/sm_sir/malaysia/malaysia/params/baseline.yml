@@ -33,6 +33,9 @@ immunity_stratification:
   infection_risk_reduction:  # High parameter now irrelevant, because prop_high_among_immune is zero
     low: 0.6
 
+vaccination:
+  data_thinning: 2
+
 voc_emergence:
   wild_type:
     starting_strain: true
@@ -121,7 +124,6 @@ age_stratification:
     multiplier: 0.35
   prop_hospital:
     multiplier: 0.385
-
 
 mobility:
   mixing:

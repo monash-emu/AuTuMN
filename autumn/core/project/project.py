@@ -17,7 +17,7 @@ import pandas as pd
 import yaml
 from autumn.core.db.database import FeatherDatabase
 
-from summer2.model import CompartmentalModel as CompartmentModel2
+from summer2.model import CompartmentalModel as CompartmentalModel2
 
 from autumn.core.db.store import (
     Table,
@@ -68,6 +68,7 @@ class Project:
         self.ts_set = ts_set or None
 
         self._model = None
+        self._scenario_models = None
         self._is_calibrating = False
         self._cal_params = [p["param_name"] for p in calibration.all_priors]
 
@@ -98,16 +99,9 @@ class Project:
             if derived_outputs_whitelist:
                 # Only calculate required derived outputs.
                 model.set_derived_outputs_whitelist(derived_outputs_whitelist)
-            if isinstance(model, CompartmentModel2):
-                model.finalize()
+            if isinstance(model, CompartmentalModel2):
                 self._model = model
-                pdict_filt = {
-                    k: v
-                    for k, v in expand_nested_dict(params_dict).items()
-                    if k in model.get_input_parameters()
-                }
-                self._runner = self._model.get_runner(pdict_filt, dyn_params=self._cal_params)
-                self._runner.run(pdict_filt)
+                self._runner = self._initialize_model(model, params_dict, True)
                 return self._runner.model
             else:
                 model.run()
@@ -121,51 +115,58 @@ class Project:
         self,
         baseline_model: CompartmentalModel,
         scenario_params: List[Params],
-        start_time: Optional[float] = None,
-        start_times: Optional[List[float]] = None,
         build_options: Optional[List[dict]] = None,
     ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
         Returns the completed scenario models.
         """
-        # Figure out what start times to use for each scenario.
-        if start_times is None and start_time is not None:
-            # Use the same start time for each scenario.
-            start_times = [start_time] * len(scenario_params)
-        elif start_times is None:
-            # No start times specified - use whatever the model defaults are.
-            start_times = [None] * len(scenario_params)
-
         if build_options is None:
             build_options = [None] * len(scenario_params)
 
         models = []
-        assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
-        for start_time, params, build_opt in zip(start_times, scenario_params, build_options):
+        assert baseline_model.outputs is not None, "Baseline model has not been run yet."
 
-            params_dict = params.to_dict()
-            model = self.build_model(params_dict, build_opt)
+        if isinstance(baseline_model, CompartmentalModel2):
+            if self._scenario_models is None:
+                self._scenario_models = {}
+                for model_idx, params in enumerate(scenario_params):
+                    params_dict = params.to_dict()
+                    model = self.build_model(params_dict, None)
+                    if model.times[0] != baseline_model.times[0]:
+                        raise ValueError("Scenario start times must match baseline start times")
+                    runner = self._initialize_model(model, params_dict, False)
+                    self._scenario_models[model_idx] = runner
+            for model_idx, params in enumerate(scenario_params):
+                pdict_exp = expand_nested_dict(params.to_dict())
+                self._scenario_models[model_idx].run(pdict_exp)
+                models.append(self._scenario_models[model_idx].model)
+        else:
+            for model_idx, (params, build_opt) in enumerate(zip(scenario_params, build_options)):
 
-            if start_time is not None:
-                # Find the initial conditions for the given start time
-                start_idx = get_scenario_start_index(baseline_model.times, start_time)
-                init_compartments = baseline_model.outputs[start_idx, :]
-                # Use initial conditions at the given start time.
-                if isinstance(model, CompartmentalModel):
-                    model.initial_population = init_compartments
-                elif isinstance(model, CompartmentModel2):
-                    if start_time != baseline_model.times[0]:
-                        raise ValueError(
-                            "Scenario start times must match baseline start times for summer2 models"
-                        )
-                else:
-                    raise TypeError("Invalid model type", model, type(model))
+                params_dict = params.to_dict()
 
-            self._run_model(model)
-            models.append(model)
+                model = self.build_model(params_dict, build_opt)
+
+                if model.times[0] != baseline_model.times[0]:
+                    raise ValueError("Scenario start times must match baseline start times")
+
+                self._run_model(model)
+                models.append(model)
 
         return models
+
+    def _initialize_model(self, model: CompartmentalModel2, params_dict, run=True):
+        model.finalize()
+        pdict_filt = {
+            k: v
+            for k, v in expand_nested_dict(params_dict).items()
+            if k in model.get_input_parameters()
+        }
+        runner = model.get_runner(pdict_filt, dyn_params=self._cal_params)
+        if run:
+            runner.run(pdict_filt)
+        return runner
 
     def _run_model(self, model: CompartmentalModel):
         """
@@ -342,12 +343,7 @@ def run_project_locally(project: Project, run_scenarios=True):
     if run_scenarios:
         num_scenarios = len(project.param_set.scenarios)
         with Timer(f"Running {num_scenarios} model scenarios"):
-            start_times = [
-                sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
-            ]
-            sc_models = project.run_scenario_models(
-                baseline_model, project.param_set.scenarios, start_times=start_times
-            )
+            sc_models = project.run_scenario_models(baseline_model, project.param_set.scenarios)
     else:
         sc_models = []
 

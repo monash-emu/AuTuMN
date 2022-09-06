@@ -39,7 +39,7 @@ def test_build_scenario_models(project_name):
 
 
 @pytest.mark.run_models
-@pytest.mark.github_only
+# @pytest.mark.github_only
 @pytest.mark.parametrize("project_name", SM_JAX_PROJECTS)
 def test_run_models_full(project_name):
     """
@@ -51,12 +51,7 @@ def test_run_models_full(project_name):
     assert type(baseline_model) is CompartmentalModel
     assert baseline_model.outputs is not None
 
-    start_times = [
-        sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
-    ]
-    sc_models = project.run_scenario_models(
-        baseline_model, project.param_set.scenarios, start_times=start_times
-    )
+    sc_models = project.run_scenario_models(baseline_model, project.param_set.scenarios)
     for sc_model in sc_models:
         assert type(sc_model) is CompartmentalModel
         assert sc_model.outputs is not None

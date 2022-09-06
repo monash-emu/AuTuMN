@@ -28,21 +28,35 @@ Age-structured parameters are presented in Table \ref{tab:age_params}.
         80 and above & 0.803 & 1.41 & $5.12\times10^{-2}$ \tnote{b} & 0.111 \tnote{b} \\
         \hline
         Justification and source & 
-        Table 1 of systematic review and meta-analysis with appropriate accounting for testing during the pre-symptomatic period\cite{sah-2021}. & 
-        Conversion of odds ratios presented in Table S15 of Zhang et al. 2020 to relative risks using data presented in Table S14 of the same study \cite{zhang-2020-a}. &
-        Table S2 from Supplemental Materials to Nyberg et al. for ``Hospital admission up to 14 days after positive test''. &  % FIXME: Reference corrupted
-        Table S2 from Supplemental Materials to Nyberg et al. for ``Death within 28 days after positive test''. \\  % FIXME: Reference corrupted
+        Table 1 of systematic review and meta-analysis 
+        with appropriate accounting for testing during the pre-symptomatic period\cite{sah-2021}. & 
+        Conversion of odds ratios presented in Table S15 
+        of Zhang et al. 2020 to relative risks 
+        using data presented in Table S14 of the same study \cite{zhang-2020-a}. &
+        Table S2 from Supplemental Materials to Nyberg et al. 
+        for ``Hospital admission up to 14 days after positive test'', Omicron column.
+        The values are adapted for background immunity (in the UK) before being applied to the
+        model \cite{nyberg-2022}. &
+        Table S2 from Supplemental Materials to Nyberg et al. 
+        for ``Death within 28 days after positive test'', Omicron column.
+        The values are adapted for background immunity (in the UK) before being applied to the
+        model \cite{nyberg-2022}. \\
+        % Note that Nyberg reference is corrupted.
         \hline
 	\end{tabularx}
-	\caption{\textbf{Values used to estimate age-specific parameters.}
+	\caption{Values used to estimate age-specific parameters.
     Note that these base parameter values are then adjusted for immunity considerations.}
 	\label{tab:age_params}
     \begin{tablenotes}
-        \item[a] Proportion of incident episodes developing symptoms.
+        \item[a] Proportion of incident infection episodes resulting in symptoms.
         \item[b] Modelled age groups are five year brackets to 75 and above.
-        These values are used to calculated weighted value for the modelled 75 and above age bracket.
-        The value for the 75 and above age group is calculated as the weighted average of the parameters for the 75 to 79 and the 80 and above age groups.
-        The weights applied to each of these two groups is the size of the population in the country of application in each of these brackets.
+        These values are used to calculate a weighted value 
+        for the modelled 75 and above age bracket.
+        The value for the 75 and above age group 
+        is calculated as the weighted average 
+        of the parameters for the 75 to 79 and the 80 and above age groups.
+        The weights applied to each of these two groups 
+        is the size of the population in the country of application in each of these brackets.
     \end{tablenotes}
     \end{threeparttable}
 \end{table}

@@ -117,7 +117,7 @@ def plot_prior(i: int, prior_dict: dict, path=None, ax=None, print_distri=True, 
     x_values = np.linspace(x_range[0], x_range[1], num=1000)
     y_values = [calculate_prior(prior_dict, x, log=False) for x in x_values]
     zeros = [0.0 for i in x_values]
-    ax.fill_between(x_values, y_values, zeros, color="cornflowerblue", alpha=alpha)
+    ax.fill_between(x_values, y_values, zeros, color="cornflowerblue", alpha=alpha, label="prior")
 
     if "distri_mean" in prior_dict:
         pyplot.axvline(
@@ -294,7 +294,7 @@ def calculate_r_hats(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataF
         for chain_id in chain_idx:
             mask =  mcmc_tables[0].chain == chain_id
             param_vals = mcmc_params[0][mask][param_name].to_list()
-            weights = mcmc_tables[0][mask].weight.to_list()
+            weights = mcmc_tables[0][mask][mcmc_tables[0]["accept"] == 1].weight.to_list()
             posterior_chains[chain_id] = flatten_list([[param_vals[i]] * w for i, w in enumerate(weights)])
 
         r_hats[param_name] = calculate_r_hat(posterior_chains)
@@ -452,13 +452,18 @@ def plot_multiple_param_traces(
     plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
-def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0, posterior=False):
+def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0, variable_key='loglikelihood'):
     """
     Plot the loglikelihood traces for each MCMC run.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
 
-    variable_key = "ap_loglikelihood" if posterior else "loglikelihood"
+    titles = {
+        "loglikelihood": "Loglikelihood",
+        "ap_loglikelihood": "Posterior Loglikelihood",
+        "acceptance_quantity": "Acceptance quantity",
+    }
+    assert variable_key in titles.keys()
 
     if len(mcmc_tables) == 1:  # there may be multiple chains within a single dataframe
         table_df = mcmc_tables[0]
@@ -471,18 +476,15 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
     else:  # there is one chain per dataframe
         for idx, table_df in enumerate(mcmc_tables):
             accept_mask = table_df["accept"] == 1
-            if posterior:
-                table_df[accept_mask].loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
-            else:
-                table_df[accept_mask].ap_loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
-    title = "Posterior Loglikelihood" if posterior else "Loglikelihood"
-    axis.set_ylabel(title)
+            table_df[accept_mask][variable_key].plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+            
+    axis.set_ylabel(titles[variable_key])
     axis.set_xlabel("Metropolis iterations")
 
     if burn_in:
         axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
-        y_min = min(table_df.loglikelihood[burn_in:])
-        y_max = max(table_df.loglikelihood[burn_in:])
+        y_min = min(table_df[variable_key][burn_in:])
+        y_max = max(table_df[variable_key][burn_in:])
         axis.set_ylim((y_min - 0.2 * (y_max - y_min), y_max + 0.2 * (y_max - y_min)))
 
     plotter.save_figure(fig, filename=f"{variable_key}-traces", title_text=f"{variable_key}-traces")

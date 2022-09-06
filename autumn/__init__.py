@@ -124,7 +124,7 @@ register_project(
 register_project(
     Models.SM_SIR,
     Region.NORTHERN_TERRITORY,
-    "autumn.projects.sm_sir.australia.northern-territory.project",
+    "autumn.projects.sm_sir.australia.northern_territory.project",
 )
 
 

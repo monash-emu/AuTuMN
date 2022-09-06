@@ -1,5 +1,11 @@
 import json
-from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths
+from autumn.core.project import (
+    Project,
+    ParameterSet,
+    load_timeseries,
+    build_rel_path,
+    get_all_available_scenario_paths,
+)
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
@@ -28,10 +34,10 @@ targets = [
 
 priors = [
     UniformPrior("contact_rate", (0.15, 0.4)),
-    UniformPrior("sojourns.latent.total_time", (2., 4.)),
-    UniformPrior("sojourns.active.total_time", (1., 5.)),
-    UniformPrior("infectious_seed", (50., 300.)),
-    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", (0., 0.6)),
+    UniformPrior("sojourns.latent.total_time", (2.0, 4.0)),
+    UniformPrior("sojourns.active.total_time", (1.0, 5.0)),
+    UniformPrior("infectious_seed", (50.0, 300.0)),
+    UniformPrior("mobility.microdistancing.behaviour.parameters.max_effect", (0.0, 0.6)),
 ]
 
 calibration = Calibration(
@@ -46,5 +52,11 @@ with open(plot_spec_filepath) as f:
 
 # Create and register the project
 project = Project(
-    Region.BHUTAN, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+    Region.BHUTAN,
+    Models.SM_SIR,
+    build_model,
+    param_set,
+    calibration,
+    plots=plot_spec,
+    ts_set=ts_set,
 )

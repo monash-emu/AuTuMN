@@ -25,7 +25,3 @@ voc_emergence:
     immune_escape: 0.8
     hosp_protection: 0.8
     death_protection: 0.9
-
-future_monthly_booster_rate: 2000000.
-
-future_booster_age_allocation: [60, 50, 25, 15, 0]

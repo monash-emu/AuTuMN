@@ -187,13 +187,12 @@ class Calibration:
                 )
 
         # add prior for noise sd
-        self.all_priors.append(
-            {
-                "param_name": "random_process.noise_sd",
-                "distribution": "uniform",
-                "distri_params": [0.1, 1.0],
-            }
-        )
+
+        self.all_priors.append({
+            "param_name": "random_process.noise_sd",
+            "distribution": "uniform",
+            "distri_params": [0.01, 1.], 
+        })
 
         # add priors for rp values
         n_values = len(self.random_process.values)
@@ -694,6 +693,7 @@ class Calibration:
 
                 # transform the density
                 proposed_acceptance_quantity = proposed_log_posterior
+                
                 for i, prior_dict in enumerate(
                     self.iterative_sampling_priors
                 ):  # multiply the density with the determinant of the Jacobian
@@ -734,6 +734,7 @@ class Calibration:
                 all_params_dict,
                 proposed_loglike,
                 proposed_log_posterior,
+                proposed_acceptance_quantity,
                 accept,
                 self.run_num,
             )
@@ -1040,6 +1041,7 @@ class CalibrationOutputs:
         self,
         all_params_dict: dict,
         proposed_loglike: float,
+        proposed_ap_loglikelihood: float,
         proposed_acceptance_quantity: float,
         accept: bool,
         i_run: int,
@@ -1055,7 +1057,8 @@ class CalibrationOutputs:
             "chain": self.chain_id,
             "run": i_run,
             "loglikelihood": proposed_loglike,
-            "ap_loglikelihood": proposed_acceptance_quantity,
+            "ap_loglikelihood": proposed_ap_loglikelihood,
+            "acceptance_quantity": proposed_acceptance_quantity,    
             "accept": 1 if accept else 0,
             "weight": 0,  # Default to zero, re-calculate this later.
         }

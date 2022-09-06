@@ -65,7 +65,12 @@ def process_unesco_data(params: Parameters):
     if params.mobility.apply_unesco_school_data:
         # Convert the categorical data into a numerical timeseries
         unesco_data.replace(
-            {"Closed due to COVID-19": 0., "Fully open": 1., "Academic break": 1., "Partially open": params.mobility.unesco_partial_opening_value}, 
+            {
+                "Academic break": 0., 
+                "Fully open": 1.,                 
+                "Partially open": params.mobility.unesco_partial_opening_value,  # switched to 1. to model counterfactual no-closure scenario
+                "Closed due to COVID-19": params.mobility.unesco_full_closure_value,  # switched to 1. to model counterfactual no-closure scenario
+            }, 
             inplace=True
         )
 
@@ -181,13 +186,16 @@ def build_model(
     """
     # Transition within latent states 
     progression_rate = n_latent_comps * 1. / sojourns.latent
+    latent_progression_flows = []
     for i_latent in range(n_latent_comps - 1):
+        flown_name = f"within_latent_{i_latent}"
         model.add_transition_flow(
-            name=f"within_latent_{i_latent}",
+            name=flown_name,
             fractional_rate=progression_rate,
             source=latent_compartments[i_latent],
             dest=latent_compartments[i_latent + 1],
         )
+        latent_progression_flows.append(flown_name)
 
     # Progression from latent to active
     model.add_transition_flow(
@@ -196,6 +204,7 @@ def build_model(
         source=latent_compartments[-1],
         dest=infectious_compartments[0],
     )
+    latent_progression_flows.append(FlowName.PROGRESSION)
 
     # Transmission
     infection_dest, infectious_entry_flow = latent_compartments[0], FlowName.PROGRESSION
@@ -296,7 +305,7 @@ def build_model(
     """
     if voc_params:
         # Build the stratification using the same function as for the sm_sir model
-        strain_strat = get_strain_strat(voc_params, base_compartments)
+        strain_strat = get_strain_strat(voc_params, base_compartments, latent_progression_flows)
         # Make sure the original infectious seed is split according to the strain-specific seed proportions
         strain_strat.set_flow_adjustments(
             FlowName.PRIMARY_INFECTIOUS_SEEDING, 

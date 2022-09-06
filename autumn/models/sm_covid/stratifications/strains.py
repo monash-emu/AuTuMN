@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import date
-from summer import CompartmentalModel, Stratification, Multiply, StrainStratification
+from summer import CompartmentalModel, Stratification, Multiply, StrainStratification, Overwrite
 from typing import Dict, Union, List
 
 from autumn.core.utils.utils import multiply_function_or_constant
@@ -14,7 +14,7 @@ from autumn.model_features.strains import broadcast_infection_flows_over_source
 from autumn.models.sm_sir.stratifications.strains import make_voc_seed_func
 
 
-def get_strain_strat(voc_params: Dict[str, VocComponent], compartments: List[str]):
+def get_strain_strat(voc_params: Dict[str, VocComponent], compartments: List[str], latent_progression_flows: List[str]):
     """
     Stratify the model by strain, with at least two strata, being wild or "ancestral" virus type and the variants of
     concern ("VoC").
@@ -25,6 +25,7 @@ def get_strain_strat(voc_params: Dict[str, VocComponent], compartments: List[str
     Args:
         voc_params: All the VoC parameters (one VocComponent parameters object for each VoC)
         compartments: All the model's unstratified compartment types
+        latent_progression_flows: List of flows related to latency progression
 
     Returns:
         The strain stratification summer object
@@ -45,7 +46,20 @@ def get_strain_strat(voc_params: Dict[str, VocComponent], compartments: List[str
     # Adjust the contact rate
     transmissibility_adjustment = {strain: Multiply(voc_params[strain].contact_rate_multiplier) for strain in strains}
     strain_strat.set_flow_adjustments(FlowName.INFECTION, transmissibility_adjustment)
-   
+
+    # Adjust latency transition
+    adjustments_latent = {strain: None for strain in strains}  
+    n_latent_transitions = len(latent_progression_flows)
+    for strain in strains:
+        if voc_params[strain].incubation_overwrite_value:
+            progression_rate = n_latent_transitions * 1. / voc_params[strain].incubation_overwrite_value
+            adjustments_latent.update(
+                {strain: Overwrite(progression_rate)}
+            )
+
+    for flowname in latent_progression_flows:
+        strain_strat.set_flow_adjustments(flowname, adjustments_latent)
+
     return strain_strat
 
 

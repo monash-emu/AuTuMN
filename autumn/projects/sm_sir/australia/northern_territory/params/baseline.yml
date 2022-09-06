@@ -135,12 +135,16 @@ voc_emergence:
         late_reinfection: 0.
 
 immunity_stratification:
-  prop_immune: .8
-  prop_high_among_immune: .1
+  prop_immune: 0.
+  prop_high_among_immune: 0.
   infection_risk_reduction:
     none: 0.
     low: 0.
     high: 0.6
+
+vaccination:
+  data_thinning: 2
+  booster_effect_duration: 180.
 
 time_from_onset_to_event:  # Using time of symptom onset as reference
   notification:

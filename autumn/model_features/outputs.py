@@ -1,3 +1,21 @@
+from summer import CompartmentalModel
+
+
+def get_strata(model: CompartmentalModel, strat_name: str):
+    """
+    Get the names of the strata implemented for a particular stratification name.
+
+    Args:
+        model: The model we want to interrogate
+        strat_name: The string for the stratification
+
+    Returns:
+        List of the strata name for that stratification
+    """
+    for strat in model._stratifications:
+        if strat_name == strat.name:
+            return strat.strata
+
 
 class OutputsBuilder:
 

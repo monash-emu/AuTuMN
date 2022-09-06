@@ -455,9 +455,9 @@ class VocComponent(BaseModel):
     check_immune_escape = validator("immune_escape", allow_reuse=True)(
         get_check_prop("immune_escape")
     )
-    check_hosp_protection = validator("hosp_protection", allow_reuse=True)(
-        get_check_prop("hosp_protection")
-    )
+    # check_hosp_protection = validator("hosp_protection", allow_reuse=True)(
+    #     get_check_prop("hosp_protection")
+    # )
     check_relative_latency = validator("relative_latency", allow_reuse=True)(
         get_check_non_neg("relative_latency")
     )

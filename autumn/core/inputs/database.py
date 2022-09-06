@@ -59,6 +59,9 @@ def build_input_database(rebuild: bool = False):
         with Timer("Deleting all existing data."):
             input_db.delete_everything()
 
+        with Timer("Ingesting COVID NT data."):
+            preprocess_covid_au(input_db)
+
         with Timer("Ingesting COVID PHL data."):
             preprocess_covid_phl(input_db)
 
@@ -97,6 +100,9 @@ def build_input_database(rebuild: bool = False):
 
         with Timer("Ingesting social mixing data."):
             preprocess_social_mixing(input_db, country_df)
+
+        with Timer("Ingesting gisaid data."):
+            preprocess_covid_gisaid(input_db)
 
         with Timer("Ingesting mobility data."):
             preprocess_mobility(input_db, country_df)

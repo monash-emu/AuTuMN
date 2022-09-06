@@ -1,38 +1,39 @@
-import os
-import logging
-import inspect
-import re
 import glob
-from datetime import datetime
-from typing import List, Callable, Optional, Dict, Tuple
-from importlib import import_module, reload as reload_module
+import inspect
 import json
+import logging
+import os
+import re
+from datetime import datetime
+from importlib import import_module
+from importlib import reload as reload_module
 from pathlib import Path
+from typing import Callable, Dict, List, Optional, Tuple
 
 from computegraph.utils import expand_nested_dict
 
-import yaml
-import pandas as pd
 import numpy as np
-from summer.model import CompartmentalModel
-from summer.derived_outputs import DerivedOutputRequest
+import pandas as pd
+import yaml
+from autumn.core.db.database import FeatherDatabase
 
 from summer2.model import CompartmentalModel as CompartmentModel2
 
 from autumn.core.db.store import (
-    save_model_outputs,
-    build_outputs_table,
-    build_derived_outputs_table,
     Table,
+    build_derived_outputs_table,
+    build_outputs_table,
+    save_model_outputs,
 )
-from autumn.core.db.database import FeatherDatabase
-from autumn.core.utils.timer import Timer
-from autumn.core.utils.git import get_git_branch, get_git_hash
-from autumn.settings import OUTPUT_DATA_PATH, MODELS_PATH, DOCS_PATH, BASE_PATH
+from autumn.core.project.params import read_yaml_file
 from autumn.core.registry import _PROJECTS
+from autumn.core.utils.git import get_git_branch, get_git_hash
+from autumn.core.utils.timer import Timer
+from autumn.settings import BASE_PATH, DOCS_PATH, MODELS_PATH, OUTPUT_DATA_PATH, Region, Models
+from summer.derived_outputs import DerivedOutputRequest
+from summer.model import CompartmentalModel
 
 from .params import ParameterSet, Params
-from autumn.core.project.params import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
@@ -51,16 +52,20 @@ class Project:
         build_model: ModelBuilder,
         param_set: ParameterSet,
         calibration,  # A Calibration instance
-        plots: dict = {},  # Previously, targets JSON.
-        diff_output_requests: List[Tuple[str, str]] = [],
+        plots: dict = None,  # Previously, targets JSON.
+        diff_output_requests: List[Tuple[str, str]] = None,
+        post_diff_output_requests: Dict[str, Dict] = None,
+        ts_set: dict = None,
     ):
         self.region_name = region_name
         self.model_name = model_name
         self.build_model = build_model
         self.param_set = param_set
-        self.plots = plots
+        self.plots = plots or {}
         self.calibration = calibration
-        self.diff_output_requests = diff_output_requests
+        self.diff_output_requests = diff_output_requests or []
+        self.post_diff_output_requests = post_diff_output_requests or {}
+        self.ts_set = ts_set or None
 
         self._model = None
         self._is_calibrating = False
@@ -232,24 +237,33 @@ LOADED_PROJECTS = set()
 
 def get_project(model_name: str, project_name: str, reload=False) -> Project:
     """
-    Returns a registered project
+    Returns a project
     """
-    assert model_name in _PROJECTS, f"Model {model_name} not registered as a project."
-    msg = f"Project {project_name} not registered as a project using model {model_name}."
-    assert project_name in _PROJECTS[model_name], msg
-    import_path = _PROJECTS[model_name][project_name]
+    # If a school closure project is requested, will call the relevant project builder function 
+    if model_name == Models.SM_COVID and project_name in Region.SCHOOL_PROJECT_REGIONS:
+        # Ugly import within function definition to avoid circular imports
+        from autumn.projects.sm_covid.common_school.project_maker import get_school_project
+        project = get_school_project(project_name)
 
-    project_module = import_module(import_path)
-    if import_path in LOADED_PROJECTS and reload:
-        reload_module(project_module)
+    # Otherwise, the project is loaded from the relevant project.py file 
+    else:
+        assert model_name in _PROJECTS, f"Model {model_name} not registered as a project."
+        msg = f"Project {project_name} not registered as a project using model {model_name}."
+        assert project_name in _PROJECTS[model_name], msg
+        import_path = _PROJECTS[model_name][project_name]
 
-    try:
-        project = project_module.project
-    except (AttributeError, AssertionError):
-        msg = f"Cannot find a Project instance named 'project' in {import_path}"
-        raise ImportError(msg)
+        project_module = import_module(import_path)
+        if import_path in LOADED_PROJECTS and reload:
+            reload_module(project_module)
 
-    LOADED_PROJECTS.add(import_path)
+        try:
+            project = project_module.project
+        except (AttributeError, AssertionError):
+            msg = f"Cannot find a Project instance named 'project' in {import_path}"
+            raise ImportError(msg)
+
+        LOADED_PROJECTS.add(import_path)
+        
     return project
 
 
@@ -386,6 +400,8 @@ def post_process_scenario_outputs(
     """
     # Apply various post processing fixes
     calculate_differential_outputs(models, project.diff_output_requests)
+    calculate_post_diff_outputs(models, project.post_diff_output_requests)
+
     fix_cumulative_output_times(models)
 
     # Build outputs for storage in a database.
@@ -489,3 +505,25 @@ OUTPUT_CALCS = {
     DiffOutput.RELATIVE: calc_relative_diff_output,
     DiffOutput.ABSOLUTE: calc_absolute_diff_output,
 }
+
+def calculate_post_diff_outputs(
+    models: List[CompartmentalModel], post_diff_output_requests: Dict[str, Dict]
+):
+    """
+    Calculate outputs based on previously-computed differential outputs
+
+    Models list assumed to be in order [baseline, sc1, sc2, ..., scN]
+
+    post_diff_output_requests has form
+    {
+        "<output name>": {
+            'sources': List[str],
+            'func': Callable
+        },
+        ...
+    }
+    """
+    for new_output_name, func_details in post_diff_output_requests.items():
+        for model in models:
+            calculated_sources = [model.derived_outputs[s] for s in func_details['sources']]
+            model.derived_outputs[new_output_name] = func_details['func'](*calculated_sources)

@@ -206,10 +206,8 @@ mobility:
 
 prop_icu_among_hospitalised: 0.05
 
-future_monthly_booster_rate: 0.
-booster_effect_duration: 180. # 6 months
-
-future_booster_age_allocation: null
+vaccination:
+  booster_effect_duration: 180. # 6 months
 
 age_stratification:
   cfr:

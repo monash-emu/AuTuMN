@@ -1,18 +1,17 @@
-from typing import Tuple, Optional
-import pandas as pd
 import os
 from datetime import datetime
+from typing import Optional, Tuple
 
-from autumn.settings import COVID_BASE_AGEGROUPS
-from autumn.core.inputs.covid_au.queries import get_vic_testing_numbers
-from autumn.core.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
+import pandas as pd
+from autumn.core.inputs.covid_au.queries import get_nt_testing_numbers
+from autumn.core.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
+from autumn.core.inputs.covid_btn.queries import get_btn_testing_numbers
 from autumn.core.inputs.covid_lka.queries import get_lka_testing_numbers
 from autumn.core.inputs.covid_mmr.queries import get_mmr_testing_numbers
-from autumn.core.inputs.covid_bgd.queries import get_coxs_bazar_testing_numbers
+from autumn.core.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 from autumn.core.inputs.owid.queries import get_international_owid_numbers
-from autumn.core.inputs.covid_btn.queries import get_btn_testing_numbers
-from autumn.settings.folders import INPUT_DATA_PATH
 from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.settings.folders import INPUT_DATA_PATH
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
 EUR_TESTING_FOLDER = os.path.join(INPUT_DATA_PATH, "testing")
@@ -77,8 +76,7 @@ def convert_weekly_total_to_daily_numbers(year_week, n_tests_per_week):
 
 
 def get_testing_numbers_for_region(
-    country_iso3: str, 
-    subregion: Optional[str]
+    country_iso3: str, subregion: Optional[str]
 ) -> Tuple[list, list]:
     """
     Use the appropriate function to retrieve the testing numbers applicable to the region being modelled.
@@ -108,9 +106,11 @@ def get_testing_numbers_for_region(
         test_df = get_coxs_bazar_testing_numbers()
     elif country_iso3 == "BTN":
         test_df = get_btn_testing_numbers(subregion)
+    elif country_iso3 == "AUS" and subregion == "Northern Territory":
+        test_df = get_nt_testing_numbers()
     else:
         test_df = get_international_owid_numbers(country_iso3)
-        
+
     # Check data and return
     msg = "Negative test values present"
     assert (test_df >= 0).all(), msg

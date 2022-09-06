@@ -23,9 +23,8 @@ def get_lka_vac_coverage(age_group, age_pops=None, params=None):
     """Provides vaccination coverage for a given age.
     It is assumed all ages above 14 have uniform coverage"""
 
-    from autumn.models.sm_sir.parameters import TimeSeries
+    vaccinated_population = get_population_by_agegroup([0,11], "LKA")[1] # 10+ pop
 
-    vaccinated_population = get_population_by_agegroup([0, 15], "LKA")[1]  # 15+ pop
     input_db = get_input_db()
 
     df = input_db.query(
@@ -36,16 +35,22 @@ def get_lka_vac_coverage(age_group, age_pops=None, params=None):
     )
     df.dropna(how="any", inplace=True)
 
+    df.loc[df["date_index"] == 452, "cml_vac_dose_1"] = 0  # Have to make the first date zero!
+    df.sort_values("date_index", inplace=True)
+    df.reset_index(drop=True, inplace=True)
+
     df["cml_coverage"] = df.cml_vac_dose_1 / vaccinated_population
 
     times = df.date_index.to_numpy()
 
-    if int(age_group) < 15:
-        coverage_values = (df.cml_coverage * 0).to_numpy()
+    if int(age_group) < 0:
+        coverage_values = (df.cml_coverage * 0).tolist()
     else:
-        coverage_values = df.cml_coverage.to_numpy()
+        coverage_values = df.cml_coverage.tolist()
 
-    coverage_too_large = any(coverage_values >= 0.99)
+
+    coverage_too_large = any([each >= 0.99 for each in coverage_values])
+
     unequal_len = len(times) != len(coverage_values)
     if any([coverage_too_large, unequal_len]):
         AssertionError("Unrealistic coverage")

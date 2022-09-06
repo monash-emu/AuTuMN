@@ -3,14 +3,13 @@ from typing import Tuple, Callable, Optional
 from computegraph.types import Function
 from summer2.parameters import Time, Data
 
-from autumn.core.model_builder import ModelBuilder
+from summer2.experimental.model_builder import ModelBuilder
 from .parameters import TestingToDetection, Population
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.settings import COVID_BASE_AGEGROUPS
 from autumn.model_features.curve.interpolate import build_sigmoidal_multicurve, get_scale_data
-from computegraph import jaxify
 
-fnp = jaxify.get_modules()["numpy"]
+from jax import numpy as jnp
 
 
 def find_cdr_function_from_test_data(
@@ -50,9 +49,9 @@ def find_cdr_function_from_test_data(
         # Find the single unknown parameter to the function - i.e. for minus b,
         # where CDR = 1 - (1 - f) * exp(-b * t)
         exponent_multiplier = (
-            fnp.log((1.0 - assumed_cdr_parameter) / (1.0 - floor_value)) / assumed_tests_parameter
+            jnp.log((1.0 - assumed_cdr_parameter) / (1.0 - floor_value)) / assumed_tests_parameter
         )
-        cdr = 1.0 - fnp.exp(exponent_multiplier * tests_per_capita) * (1.0 - floor_value)
+        cdr = 1.0 - jnp.exp(exponent_multiplier * tests_per_capita) * (1.0 - floor_value)
         return cdr
 
     # Construct the function based on this parameter
@@ -68,7 +67,7 @@ def find_cdr_function_from_test_data(
     # values = per_capita_tests_df.apply(cdr_from_tests_func)
 
     # Add the smoothed per capita testing rates
-    per_capita_test_data = Data(fnp.array(per_capita_tests_df))
+    per_capita_test_data = Data(jnp.array(per_capita_tests_df))
 
     # Add our function that computes CDR for these rates (and parameters)
     cdr_test_data = builder.get_mapped_func(

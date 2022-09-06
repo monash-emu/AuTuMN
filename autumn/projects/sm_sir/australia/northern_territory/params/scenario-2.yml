@@ -8,6 +8,7 @@ voc_emergence:
         late_reinfection: 0.
   future:
     contact_rate_multiplier: 1.5
+    hosp_protection: -1.3
     death_protection: -1.3
     new_voc_seed:
       start_time: 980.

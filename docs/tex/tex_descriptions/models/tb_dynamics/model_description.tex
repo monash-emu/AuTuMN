@@ -7,7 +7,7 @@
 We use a deterministic compartmental model including six types of compartments that represent 
 different states of infection and disease. The model uses the same conceptual approach and similar 
 assumptions to previously published models \cite{trauer-2017, ragonnet-2019, ragonnet-2021, ragonnet-2022}. 
-Here we describe the model structure without treatment compartmentand health system related factors. 
+Here we describe the model structure without treatment compartment and related factors. 
 \newline
 A susceptible compartment (S) is used to represent individuals who have 
 never been infected with \emph{Mycobacterium tuberculosis (M.tb)}. Latent TB infection (LTBI) is modelled 
@@ -26,11 +26,12 @@ compartment (E). Second, individuals who have recovered from TB disease may be r
 return to the early latent compartment. The structure of our model allows for differential risk of 
 infection for the currently and previously infected individuals, compared to the infection-naive 
 individuals.
-\begin{figure}[!htbp]
+\begin{figure}[!htp]
+    \vspace*{-1cm}
     \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{images/model.png}
     \caption{Illustration of the model structure. 
     Boxes represent the different compartments types: susceptible (S), early latent (E), late latent (L), infectious (I), and recovered (R).
-    The subscripts indicate whether compartments are stratified by age (a).}
+    The subscript indicates that compartments are stratified by age (a).}
     \label{fig:model}
 \end{figure}
 

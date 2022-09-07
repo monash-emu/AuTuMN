@@ -513,7 +513,7 @@ def build_model(
     # Apply the immunity stratification
     model.stratify_with(immunity_strat)
 
-    # Apply vaccination coverage if available
+    # Apply vaccination coverage if available - Malaysia now supported by adding MYS to the following list
     if iso3 in ["PHL", "AUS"]:
         apply_vacc_coverage(
             model,

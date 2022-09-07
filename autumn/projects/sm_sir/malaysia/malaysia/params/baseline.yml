@@ -43,9 +43,9 @@ voc_emergence:
     new_voc_seed: null
     contact_rate_multiplier: .6
     immune_escape: 0.
-    hosp_protection: 0.
+    hosp_protection: 0.4
     death_protection: 0.4
-    icu_multiplier: 1.
+    icu_multiplier: 0.85
     cross_protection:
       wild_type:
         early_reinfection: 1.
@@ -65,7 +65,7 @@ voc_emergence:
       seed_duration: 1.
     contact_rate_multiplier: 100.
     immune_escape: 0.2
-    hosp_protection: 0.75
+    hosp_protection: 0.7
     death_protection: 0.85
     relative_latency: 0.6667
     relative_active_period: 1.

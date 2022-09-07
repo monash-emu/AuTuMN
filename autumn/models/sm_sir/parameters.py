@@ -355,6 +355,7 @@ class Vaccination(BaseModel):
     data_thinning: Optional[int]
     age_specific_vacc: bool
     extra_vacc_coverage: Optional[Dict[str, dict]]
+    scenario: Optional[int]
 
 
 class TestingToDetection(BaseModel):

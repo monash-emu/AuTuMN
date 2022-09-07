@@ -35,6 +35,7 @@ immunity_stratification:
 
 vaccination:
   data_thinning: 4
+  scenario: 0
 
 voc_emergence:
   wild_type:

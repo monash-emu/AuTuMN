@@ -192,7 +192,7 @@ def adjust_reinfection_with_strains(
                 )
 
 
-def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
+def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc, scenario_number = 0):
 
     # Get the raw data from the loading functions and drop rows with any nans
     if iso3 == "PHL":
@@ -214,6 +214,14 @@ def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
             "boost": booster_series,
         }
     ).dropna(axis=0)
+
+    if iso3 == "MYS":
+        if scenario_number == 1:  # no vaccination scenario
+            vaccine_data["full"] = 0
+            vaccine_data["boost"] = 0
+        if scenario_number == 2:  # vaccine coverage halved
+            vaccine_data["full"] = vaccine_data["full"]/2
+            vaccine_data["boost"] = vaccine_data["boost"] / 2
 
     return vaccine_data
 
@@ -302,7 +310,7 @@ def apply_vacc_coverage(
     booster_effect_duration = vacc_params.booster_effect_duration
     extra_coverage = vacc_params.extra_vacc_coverage
     boosting = vacc_params.boosting
-
+    scenario_number = vacc_params.scenario
     age_vacc_categories = get_strata(model, "agegroup") if age_specific_vacc else ["all_ages"]
 
     msg = "Age group in requests not present in model (or 'all_ages' if vaccination not age-specific)"
@@ -319,6 +327,7 @@ def apply_vacc_coverage(
             start_age, 
             end_age, 
             age_specific_vacc,
+            scenario_number
         )
 
         # Thin as per user request

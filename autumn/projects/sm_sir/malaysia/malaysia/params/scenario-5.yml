@@ -1,0 +1,5 @@
+description: Vaccine coverage halved
+
+vaccination:
+  data_thinning: 4
+  scenario: 2

@@ -2,7 +2,7 @@ description: VoC 1.2 times more transimissible than Delta and vaccination covera
 
 voc_emergence:
   wild_type:
-    contact_rate_multiplier: .75
+    contact_rate_multiplier: 1.2
 
 vaccination:
   data_thinning: 4

@@ -18,7 +18,7 @@ sojourns:
   recovered: 180.
 
 time:
-  start: 450.
+  start: 461.
   end: 1200.
 
 activate_random_process: False
@@ -41,10 +41,10 @@ voc_emergence:
     starting_strain: true
     seed_prop: 1.
     new_voc_seed: null
-    contact_rate_multiplier: 1.
+    contact_rate_multiplier: .6
     immune_escape: 0.
     hosp_protection: 0.
-    death_protection: 0.
+    death_protection: 0.4
     icu_multiplier: 1.
     cross_protection:
       wild_type:

@@ -1,0 +1,8 @@
+description: no vaccination
+
+immunity_stratification:
+  prop_immune: .0
+  prop_high_among_immune: .0
+
+vaccination:
+  data_thinning: 4

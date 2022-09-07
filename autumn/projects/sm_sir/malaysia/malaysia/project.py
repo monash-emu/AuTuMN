@@ -37,14 +37,14 @@ targets = [
 priors = [
     UniformPrior("contact_rate", (0.1, 0.3)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
-    UniformPrior("sojourns.latent.total_time", (5, 20)),
+    UniformPrior("sojourns.latent.total_time", (15, 30)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1.1, 1.3)),
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (520, 675)),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.1, 1.75)),
-    UniformPrior("voc_emergence.delta.new_voc_seed.start_time", (350, 400)),
+    UniformPrior("voc_emergence.delta.new_voc_seed.start_time", (300, 365)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.4, 1.3)),
-    UniformPrior("sojourns.recovered", (60, 240))
+    UniformPrior("sojourns.recovered", (100, 250))
 ]
 
 calibration = Calibration(

@@ -49,7 +49,12 @@ class Parameters:
     crude_death_rate: float
     # Running time
     time: Time
-    #Model structure
+    # Model structure
     age_breakpoints: list
-    # Output requests
     infectious_seed: float
+    # Base TB model
+    contact_rate: float
+    rr_infection_latent: float
+    rr_infection_recovered: float
+    age_specific_latency: dict
+    progression_multiplier: float

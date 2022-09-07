@@ -17,8 +17,8 @@ PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
-PHL_doh_link = "1hZo1_S0-RjbiS25DjUa_PiX8GoRWvn7O"  # sheet 05 daily report
-PHL_fassster_link = "17uaW9kXIkXBevQtEeX4zYLdOxqGvxkFT"
+PHL_doh_link = "1XvLw1OECJqOAubPfJ6Z2LPH-VyUzaT-c"  # sheet 05 daily report
+PHL_fassster_link = "1Cg_jsjhXsOtsqcMVUSHK6F7y9Ky8VxZL"
 
 # destination folders filepaths
 phl_inputs_dir = INPUT_DATA_PATH / "covid_phl"
@@ -216,14 +216,14 @@ def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, daily_deaths
 
         targets["notifications"]["times"] = list(notifications_tmp["times"])
         targets["notifications"]["values"] = list(notifications_tmp["mean_daily_notifications"])
-        targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
-        targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
+        # targets["icu_occupancy"]["times"] = list(icu_tmp["times"])
+        # targets["icu_occupancy"]["values"] = list(icu_tmp["icu_o"])
         targets["cumulative_deaths"]["times"] = list(deaths_tmp["times"])
         targets["cumulative_deaths"]["values"] = list(deaths_tmp["accum_deaths"])
         targets["infection_deaths"]["times"] = list(daily_deaths_tmp["times"])
         targets["infection_deaths"]["values"] = list(daily_deaths_tmp["daily_deaths"])
-        targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
-        targets["hospital_occupancy"]["values"] = list(hosp_tmp["nonicu_o"])
+        # targets["hospital_occupancy"]["times"] = list(hosp_tmp["times"])
+        # targets["hospital_occupancy"]["values"] = list(hosp_tmp["nonicu_o"])
 
     with open(file_path, "w") as f:
         json.dump(targets, f, indent=2)

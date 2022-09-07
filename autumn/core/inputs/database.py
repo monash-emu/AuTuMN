@@ -101,6 +101,9 @@ def build_input_database(rebuild: bool = False):
         with Timer("Ingesting social mixing data."):
             preprocess_social_mixing(input_db, country_df)
 
+        with Timer("Ingesting gisaid data."):
+            preprocess_covid_gisaid(input_db)
+
         with Timer("Ingesting mobility data."):
             preprocess_mobility(input_db, country_df)
 

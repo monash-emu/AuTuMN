@@ -81,12 +81,13 @@ def build_synthetic_calibration(targets: dict, funcs: list, chains: int, runs: i
         do_columns.append(o)
         do_data[o] = []
 
-    mcmc_columns = ["chain", "run", "loglikelihood", "ap_loglikelihood", "accept", "weight"]
+    mcmc_columns = ["chain", "run", "loglikelihood", "ap_loglikelihood", "acceptance_quantity", "accept", "weight"]
     mcmc_data = {
         "chain": [],
         "run": [],
         "loglikelihood": [],
         "ap_loglikelihood": [],
+        "acceptance_quantity": [],
         "accept": [],
         "weight": [],
     }
@@ -109,7 +110,8 @@ def build_synthetic_calibration(targets: dict, funcs: list, chains: int, runs: i
             mcmc_data["run"].append(run)
             mcmc_data["loglikelihood"].append(-1 * random.random())
             mcmc_data["ap_loglikelihood"].append(-1 * random.random())
-
+            mcmc_data["acceptance_quantity"].append(-1 * random.random())
+            
             for param in params:
                 params_data["chain"].append(chain)
                 params_data["run"].append(run)

@@ -1,5 +1,9 @@
-description: no vaccination
+description: VoC 1.2 times more transimissible than Delta and vaccination coverage halved
+
+voc_emergence:
+  wild_type:
+    contact_rate_multiplier: .75
 
 vaccination:
   data_thinning: 4
-  scenario: 1
+  scenario: 2

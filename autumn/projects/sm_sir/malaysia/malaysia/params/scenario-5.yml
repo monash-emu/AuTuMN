@@ -1,5 +1,5 @@
-description: Vaccine coverage halved
+description: VoC 1.2 times more transimissible than Delta
 
-vaccination:
-  data_thinning: 4
-  scenario: 2
+voc_emergence:
+  wild_type:
+    contact_rate_multiplier: .75

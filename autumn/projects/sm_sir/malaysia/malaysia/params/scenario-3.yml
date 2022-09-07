@@ -1,20 +1,9 @@
-description: VoC completely escapes immunity
+description: VoC 1.2 times more transimissible than Delta and no vaccination
 
 voc_emergence:
   wild_type:
-    cross_protection:
-      new_strain:
-        early_reinfection: 0.
-        late_reinfection: 0.
-  omicron:
-    cross_protection:
-      new_strain:
-        early_reinfection: 0.
-        late_reinfection: 0.
-  new_strain:
-    new_voc_seed:
-      start_time: 852 # May 01, 2022
-    immune_escape: 1.
-    hosp_protection: 0.75
-    icu_multiplier: 0.55
-    death_protection: 0.85
+    contact_rate_multiplier: .75
+
+vaccination:
+  data_thinning: 4
+  scenario: 1

@@ -113,6 +113,12 @@ for (iso3 in iso3_list){
       m = contact_matrix(survey, filter=key_filter, age.limits = age_lower_bounds)
     }
     matrices[[key]] = m$matrix
+    
+    n_NaN = sum(is.nan(m$matrix))
+    if (n_NaN > 0){
+      print("NaN found in this matrix")
+      print(key_filter)
+    }
   }
   matrices$all = matrices$home + matrices$school + matrices$work + matrices$other_locations
   

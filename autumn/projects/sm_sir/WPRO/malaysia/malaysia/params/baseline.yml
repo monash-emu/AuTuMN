@@ -37,7 +37,7 @@ voc_emergence:
     contact_rate_multiplier: 100.0
     immune_escape: 0.2
     hosp_protection: 0.75
-    death_protection: 0.85
+    death_protection: 0.875
     relative_latency: 0.667
     relative_active_period: 0.7
     icu_multiplier: 0.55
@@ -73,3 +73,7 @@ immunity_stratification:
     low: 0.6
 
 activate_random_process: false
+
+age_stratification:
+  cfr:
+    multiplier: 0.5

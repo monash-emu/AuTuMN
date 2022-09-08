@@ -15,8 +15,8 @@ PARAMETER_DEFINITION = {
 PARAMETER_EVIDENCE = {
     "infectious_seed":"abitrary",
     "start_population_size":"UN Population Division",
-    "crude_birth_rate":"UN's Population Division",
-    "crude_death_rate":"UN's Population Division",
+    "crude_birth_rate":"UN Population Division",
+    "crude_death_rate":"UN Population Division",
     "contact_rate":"Assumed",
     "rr_infection_latent":"\cite{ragonnet-2022}",
     "rr_infection_recovered":"\cite{ragonnet-2022}",

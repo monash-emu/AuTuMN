@@ -8,7 +8,7 @@ time:
 
 start_population_size: 33048.
 infectious_seed: 1.
-crude_death_rate: 1.
+crude_death_rate: 1. #time-variant
 age_breakpoints: [0, 5, 15, 35, 50]
 
 age_mixing:

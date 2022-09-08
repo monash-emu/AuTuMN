@@ -203,34 +203,29 @@ voc_emergence:
 time_from_onset_to_event:  # using time of symptom onset as reference 
   hospitalisation:
     distribution: gamma
-    parameters:
-      shape: 5.
-      mean: 7.7 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
+    shape: 5.
+    mean: 7.7 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
   icu_admission:  # using time of hospitalisation as reference
     distribution: gamma
-    parameters:
-      shape: 5.
-      mean: 2.8 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
+    shape: 5.
+    mean: 2.8 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
   death:
     distribution: gamma
-    parameters:
-      shape: 10.
-      mean: 15.93 # Malahat Khalili et al. . https://doi.org/10.1017/S0950268820001430
+    shape: 10.
+    mean: 15.93 # Malahat Khalili et al. . https://doi.org/10.1017/S0950268820001430
 
 prop_icu_among_hospitalised: .08  # NSW data
 
 hospital_stay:
   hospital_all:
     distribution: gamma
-    parameters:
-      shape: 5.
-      mean: 12.8 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
+    shape: 5.
+    mean: 12.8 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
 
   icu:
     distribution: gamma
-    parameters:
-      shape: 5.
-      mean: 4.7 # NSW data: https://aci.health.nsw.gov.au/__data/assets/pdf_file/0007/698785/20220112-COVID-19-Risk-Monitoring-Dashboard.pdf
+    shape: 5.
+    mean: 4.7 # NSW data: https://aci.health.nsw.gov.au/__data/assets/pdf_file/0007/698785/20220112-COVID-19-Risk-Monitoring-Dashboard.pdf
 
 activate_random_process: True
 random_process: 

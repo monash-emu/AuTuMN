@@ -70,7 +70,15 @@ class Project:
         self._model = None
         self._scenario_models = None
         self._is_calibrating = False
-        self._cal_params = [p["param_name"] for p in calibration.all_priors]
+        self._cal_params = [
+            p["param_name"]
+            for p in calibration.all_priors
+            if not p["param_name"].startswith("random_process")
+        ]
+        if any(
+            [p["param_name"].startswith("random_process.values") for p in calibration.all_priors]
+        ):
+            self._cal_params.append("random_process.values")
 
     def calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
         """
@@ -249,6 +257,11 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
     if model_name == Models.SM_COVID and project_name in Region.SCHOOL_PROJECT_REGIONS:
         # Ugly import within function definition to avoid circular imports
         from autumn.projects.sm_covid.common_school.project_maker import get_school_project
+
+        project = get_school_project(project_name)
+    elif model_name == Models.SM_COVID2 and project_name in Region.SCHOOL_PROJECT_REGIONS:
+        # Ugly import within function definition to avoid circular imports
+        from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
         project = get_school_project(project_name)
 

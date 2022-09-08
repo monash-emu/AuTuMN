@@ -35,10 +35,16 @@ from autumn.models.sm_jax.stratifications.agegroup import (
 
 from autumn.settings.constants import COVID_BASE_DATETIME
 
-# Base date used to calculate mixing matrix times
-base_params = Params(
-    build_rel_path("params.yml"), validator=lambda d: Parameters(**d), validate=False
-)
+from pathlib import Path
+
+
+def get_base_params():
+    base_params = Params(
+        str(Path(__file__).parent.resolve() / "params.yml"),
+        validator=lambda d: Parameters(**d),
+        validate=False,
+    )
+    return base_params
 
 
 def set_infectious_seed(
@@ -117,7 +123,7 @@ def process_unesco_data(params: Parameters):
     return student_weeks_missed
 
 
-def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
+def build_model(params: dict, build_options: dict = None, ret_builder=False) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
 
@@ -434,8 +440,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         voc_params,
     )
 
-    return model
-
     outputs_builder.request_peak_hospital_occupancy()
 
     outputs_builder.request_infection_deaths(
@@ -449,6 +453,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         time_to_event_params.death,
         voc_params,
     )
+
     outputs_builder.request_recovered_proportion(base_compartments)
     outputs_builder.request_immunity_props(
         immunity_strat.strata, age_pops, params.request_immune_prop_by_age
@@ -464,4 +469,8 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # request extra output to store the number of students*weeks of school missed
     outputs_builder.request_student_weeks_missed_output(student_weeks_missed)
 
-    return model
+    if ret_builder:
+        builder.set_model(model)
+        return model, builder
+    else:
+        return model

@@ -3,14 +3,14 @@ import numpy as np
 from autumn.core.project import (
     Project,
     ParameterSet,
-    build_rel_path,
+    # build_rel_path,
     get_all_available_scenario_paths,
 )
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NegativeBinomialTarget
-from autumn.models.sm_covid2 import base_params, build_model
-from autumn.model_features.random_process import set_up_random_process
+from autumn.models.sm_covid2 import get_base_params, build_model
+from autumn.model_features.jax.random_process import set_up_random_process
 from autumn.settings import Region, Models
 from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 from autumn.core.inputs.database import get_input_db
@@ -40,6 +40,10 @@ diff_output_requests = [
 ]
 
 REQUESTED_UNC_QUANTILES = [0.025, 0.25, 0.5, 0.75, 0.975]
+
+from pathlib import Path
+
+param_path = Path(__file__).parent.resolve() / "params"
 
 
 def get_school_project(region):
@@ -101,6 +105,7 @@ def get_school_project(region):
         haario_scaling_factor=2.4,
         fixed_proposal_steps=500,
         metropolis_init_rel_step_size=0.02,
+        using_summer2=True,
     )
 
     # List differential output requests
@@ -152,8 +157,10 @@ def get_school_project_parameter_set(region):
         param_set: A ParameterSet object containing parameter sets for baseline and scenarios
     """
     # get common parameters
+    base_params = get_base_params()
+
     common_params = base_params.update(
-        build_rel_path("params/baseline.yml")
+        param_path / "baseline.yml"
     )  # may want to update this with MLE params at some point
 
     # get country-specific parameters
@@ -167,7 +174,7 @@ def get_school_project_parameter_set(region):
     baseline_params = common_params.update(country_params)
 
     # get scenario parameters
-    scenario_dir_path = build_rel_path("params/")
+    scenario_dir_path = param_path
     scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
     scenario_params = [baseline_params.update(p) for p in scenario_paths]
 

@@ -4,6 +4,8 @@ Type definition for model parameters
 from pydantic import BaseModel as _BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 
+from functools import partial
+
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
@@ -42,6 +44,22 @@ class BaseModel(_BaseModel, ParamStruct):
 """
 Commonly used checking processes
 """
+
+
+def validate_expected(field: str, expected: str):
+    """Returns a validator that asserts that the member field {field}
+    has value {expected}
+
+    Args:
+        field: Member field to validate
+        expected: Expected value
+    """
+
+    def check_field_value(value_to_check):
+        assert value_to_check == expected, f"Invalid {field}: {value_to_check}"
+        return value_to_check
+
+    return validator(field)(check_field_value)
 
 
 def get_check_prop(name):
@@ -186,15 +204,8 @@ class CompartmentSojourn(BaseModel):
     Compartment sojourn times, i.e. the mean period of time spent in a compartment.
     """
 
-    total_time: float
-    proportion_early: Optional[float]
-
-    check_total_positive = validator("total_time", allow_reuse=True)(
-        get_check_non_neg("total_time")
-    )
-    check_prop_early = validator("proportion_early", allow_reuse=True)(
-        get_check_prop("proportion_early")
-    )
+    total_time: pclass(constraints.non_negative)
+    proportion_early: Optional[pclass(constraints.non_negative)]
 
 
 class Sojourns(BaseModel):
@@ -202,8 +213,8 @@ class Sojourns(BaseModel):
     Parameters for determining how long a person stays in a given compartment.
     """
 
-    active: float
-    latent: float
+    active: pclass(constraints.non_negative)
+    latent: pclass(constraints.non_negative)
 
 
 class LatencyInfectiousness(BaseModel):
@@ -213,7 +224,7 @@ class LatencyInfectiousness(BaseModel):
     """
 
     n_infectious_comps: int
-    rel_infectiousness: float
+    rel_infectiousness: pclass(constraints.non_negative)
 
 
 class MixingLocation(BaseModel):
@@ -262,7 +273,7 @@ class Mobility(BaseModel):
 class AgeSpecificProps(BaseModel):
 
     values: Dict[int, float]
-    multiplier: float
+    multiplier: pclass(constraints.non_negative)
 
 
 class AgeStratification(BaseModel):
@@ -279,19 +290,15 @@ class AgeStratification(BaseModel):
 
 
 class VaccineEffects(BaseModel):
-    ve_infection: float
-    ve_hospitalisation: float
-    ve_death: float
+    ve_infection: pclass()
+    ve_hospitalisation: pclass()
+    ve_death: pclass()
 
 
 class VocSeed(BaseModel):
 
-    time_from_gisaid_report: float
-    seed_duration: float
-
-    check_seed_time = validator("seed_duration", allow_reuse=True)(
-        get_check_non_neg("seed_duration")
-    )
+    time_from_gisaid_report: pclass()
+    seed_duration: pclass(constraints.non_negative)
 
 
 class VocComponent(BaseModel):
@@ -302,13 +309,13 @@ class VocComponent(BaseModel):
     starting_strain: bool
     seed_prop: float
     new_voc_seed: Optional[VocSeed]
-    contact_rate_multiplier: float
+    contact_rate_multiplier: pclass()
     incubation_overwrite_value: Optional[float]
-    vacc_immune_escape: float
-    cross_protection: Dict[str, float]
-    hosp_risk_adjuster: Optional[float]
-    death_risk_adjuster: Optional[float]
-    icu_risk_adjuster: Optional[float]
+    vacc_immune_escape: pclass(constraints.unit_interval)
+    cross_protection: Dict[str, pclass()]
+    hosp_risk_adjuster: Optional[pclass(constraints.non_negative)]
+    death_risk_adjuster: Optional[pclass(constraints.non_negative)]
+    icu_risk_adjuster: Optional[pclass(constraints.non_negative)]
 
     @root_validator(pre=True, allow_reuse=True)
     def check_starting_strain_multiplier(cls, values):
@@ -318,28 +325,23 @@ class VocComponent(BaseModel):
             assert multiplier == 1.0, msg
         return values
 
-    @validator("icu_risk_adjuster", pre=True, allow_reuse=True)
-    def check_times(multiplier):
-        if multiplier:
-            assert 0.0 <= multiplier, "ICU multiplier negative"
-        return multiplier
 
-    check_immune_escape = validator("vacc_immune_escape", allow_reuse=True)(
-        get_check_prop("vacc_immune_escape")
-    )
+validate_dist = partial(validate_expected, "distribution")
 
 
-class TimeDistribution(BaseModel):
-
+@dataclass
+class GammaDistribution(ParamStruct):
     distribution: str
-    parameters: dict
+    shape: pclass(constraints.positive, desc="shape")
+    mean: pclass(desc="mean")
 
-    @validator("distribution", allow_reuse=True)
-    def check_distribution(distribution):
-        supported_distributions = ("gamma",)
-        msg = f"Requested time distribution not supported: {distribution}"
-        assert distribution in supported_distributions, msg
-        return distribution
+    _check_dist = validate_dist("gamma")
+
+    def __repr__(self):
+        return f"Gamma: {self.shape},{self.mean}"
+
+
+TimeDistribution = GammaDistribution
 
 
 class TimeToEvent(BaseModel):
@@ -374,7 +376,7 @@ class ParamConfig:
 
 
 @dataclass(config=ParamConfig)
-class Parameters:
+class Parameters(ParamStruct):
     # Metadata
     description: Optional[str]
     country: Country
@@ -382,11 +384,11 @@ class Parameters:
     ref_mixing_iso3: str
     age_groups: List[int]
     time: Time
-    infectious_seed_time: float
+    infectious_seed_time: pclass()
     seed_duration: float
 
     # Values
-    contact_rate: float
+    contact_rate: pclass()
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility

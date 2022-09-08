@@ -9,7 +9,7 @@ from summer2.parameters import Function, Data, Time
 from autumn.model_features.functional import piecewise_constant
 
 from autumn.core.inputs.database import get_input_db
-from autumn.models.sm_covid.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
+from autumn.models.sm_covid2.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.settings.constants import COVID_BASE_DATETIME
 
 SATURATION_COVERAGE = 0.80

@@ -5,6 +5,7 @@ from time import time
 from typing import List, Callable
 import pickle
 from copy import copy
+import re
 
 import yaml
 import numpy as np
@@ -94,6 +95,7 @@ class Calibration:
         jumping_stdev_adjustment: float = 0.5,
         random_process=None,
         hierarchical_priors: list = [],
+        using_summer2: bool = False,
     ):
         """
         Defines a new calibration.
@@ -125,6 +127,8 @@ class Calibration:
         if seed is None:
             seed = int(time())
         self.seed = seed
+
+        self.using_summer2 = using_summer2
 
         # Set this to True for mock tests that have trouble with pickling
         self._no_pickle = False
@@ -188,11 +192,13 @@ class Calibration:
 
         # add prior for noise sd
 
-        self.all_priors.append({
-            "param_name": "random_process.noise_sd",
-            "distribution": "uniform",
-            "distri_params": [0.01, 1.], 
-        })
+        self.all_priors.append(
+            {
+                "param_name": "random_process.noise_sd",
+                "distribution": "uniform",
+                "distri_params": [0.01, 1.0],
+            }
+        )
 
         # add priors for rp values
         n_values = len(self.random_process.values)
@@ -422,8 +428,21 @@ class Calibration:
         logger.info(f"Running iteration {self.run_num}...")
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
-        for param_name, value in proposed_params.items():
-            param_updates[param_name] = value
+        if self.using_summer2 and self.includes_random_process:
+            # Random process values are an array in summer2 parameters
+            rp_param_values = np.empty_like(self.random_process.values)
+            for param_name, value in proposed_params.items():
+                if param_name.startswith("random_process.values"):
+                    m = re.match(".*\(([0-9]*)\)", param_name)
+                    idx = int(m.group(1))
+                    rp_param_values[idx] = value
+                else:
+                    param_updates[param_name] = value
+            param_updates["random_process.values"] = rp_param_values
+
+        else:
+            for param_name, value in proposed_params.items():
+                param_updates[param_name] = value
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
 
         # Update the random_process attribute with the current rp config for later likelihood evaluation
@@ -693,7 +712,7 @@ class Calibration:
 
                 # transform the density
                 proposed_acceptance_quantity = proposed_log_posterior
-                
+
                 for i, prior_dict in enumerate(
                     self.iterative_sampling_priors
                 ):  # multiply the density with the determinant of the Jacobian
@@ -1058,7 +1077,7 @@ class CalibrationOutputs:
             "run": i_run,
             "loglikelihood": proposed_loglike,
             "ap_loglikelihood": proposed_ap_loglikelihood,
-            "acceptance_quantity": proposed_acceptance_quantity,    
+            "acceptance_quantity": proposed_acceptance_quantity,
             "accept": 1 if accept else 0,
             "weight": 0,  # Default to zero, re-calculate this later.
         }

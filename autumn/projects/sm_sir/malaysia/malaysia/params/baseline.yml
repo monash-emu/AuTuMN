@@ -99,6 +99,14 @@ age_stratification:
     multiplier: 0.385
 
 mobility:
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.333
+      grocery_and_pharmacy: 0.333
+      parks: 0.
+      transit_stations: 0.334
   mixing:
     school:
       append: false

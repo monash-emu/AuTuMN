@@ -299,6 +299,7 @@ def apply_general_coverage(
         vacc_delay: float=1.,
         trunc_full: int=10000,
         trunc_boost: int=10000,
+        waning_vacc: bool=False,
 ):
     """
     Collate up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -351,6 +352,9 @@ def apply_general_coverage(
 
     # Thin as per user request
     vaccine_data = vaccine_data[::thinning]
+
+    if waning_vacc:
+        vaccine_data.append(pd.DataFrame([[0.6, 0.5]], columns=["full", "boost"], index=[1000.]))
 
     # Format the data to match the model's immunity structure
     vaccine_data["never"] = 1. - vaccine_data["full"]

@@ -556,6 +556,7 @@ def build_model(pdict: dict, build_options: dict = None) -> CompartmentalModel:
             vacc_delay=params.vacc_delay,
             trunc_full=params.truncate_full_vacc,
             trunc_boost=params.truncate_boost_vacc,
+            waning_vacc=params.waning_vacc_scenario,
         )
     elif iso3 in vacc_coverage_available and region in vacc_region_available:
         apply_reported_vacc_coverage(

@@ -565,6 +565,7 @@ class Parameters:
     vacc_delay: float
     truncate_full_vacc: int
     truncate_boost_vacc: int
+    waning_vacc_scenario: bool
 
     # Output-related
     requested_cumulative_outputs: List[str]

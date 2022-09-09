@@ -221,6 +221,7 @@ indigenous: false
 vacc_delay: 0.
 truncate_full_vacc: 10000
 truncate_boost_vacc: 10000
+waning_vacc_scenario: false
 
 requested_cumulative_outputs: []
 cumulative_start_time: null

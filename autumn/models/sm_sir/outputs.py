@@ -581,11 +581,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         Calculate the proportion of the total prevalence contributed by each strain.
 
         Some code that might be useful for pulling these outputs out later:
-        def get_strata(model, strat_name):
-            for strat in model._stratifications:
-                if strat_name == strat.name:
-                    return strat.strata
         derived_df[[f"strain_propXstrain_{strain}" for strain in get_strata(model, 'strain')]].plot.area()
+        You'll need get_strata from ./autumn/model_features/outputs/
 
         Args:
             compartment_types: The unstratified compartment names

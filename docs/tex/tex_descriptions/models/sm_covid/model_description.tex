@@ -61,8 +61,18 @@ The base model structure consists of a sequence of one susceptible compartment (
 \end{figure}
 
 The main rationale for using four serial compartments for both the latent and active states is to achieve an Erlang distribution for the time spent in each of these states. This distribution is more realistic than
-the exponential distribution that would have been associated with a single compartment, because the Erlang distribution does not have a large density mass around 0 and is not heavy-tailed. Figure [\textcolor{red}{add Fig Ref}] 
-illustrates the modelled distributions of the 
+the exponential distribution that would have been associated with a single compartment, because the Erlang distribution does not have a large density mass around 0 and is not heavy-tailed. Figure \ref{fig:sojourn} 
+illustrates the modelled distributions of the incubation period and the active disease period. 
+
+\begin{figure}[ht]
+    \begin{center}
+    \includegraphics[width=0.75\textwidth]{../../tex_descriptions/models/sm_covid/sojourns.pdf}
+    \end{center}
+    \caption{Modelled distributions of the incubation and active disease periods.
+    } 
+    \label{fig:sojourn}
+\end{figure}
+
 The four active disease compartments have all exactly the same characteristics. However, the last two latent compartments ($E^3$ and $E^4$) are infectious whereas the first two ($E^1$ and $E^2$) are not. We further assume that 
 the infectious latent compartments are half as infectious as the active disease compartments.
 
@@ -78,12 +88,13 @@ the infectious latent compartments are half as infectious as the active disease 
 
 
 \subsubsection{Dynamic social mixing}
-Mixing matrices.
 
-Google data.
-
-School closure.
-
+\textcolor{red}{\begin{itemize}
+    \item Mixing matrices.
+    \item Google data
+    \item School closure.
+\end{itemize}
+}
 \subsubsection{Random transmission adjustment}
 \input{../../tex_descriptions/models/sm_covid/random_process.tex} 
 

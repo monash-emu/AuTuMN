@@ -10,7 +10,7 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 600.0
+  start: 635.0
 
 infectious_seed: 2.
 
@@ -41,7 +41,7 @@ voc_emergence:
     contact_rate_multiplier: 100.0
     immune_escape: 0.2
     hosp_protection: 0.75
-    death_protection: 0.5
+    death_protection: 0.4
     relative_latency: 0.6667
     relative_active_period: 1.0
     icu_multiplier: 0.55
@@ -88,4 +88,4 @@ immunity_stratification:
 
 age_stratification:
   cfr:
-    multiplier: 0.02
+    multiplier: 0.01

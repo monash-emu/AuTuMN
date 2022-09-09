@@ -10,8 +10,8 @@ def get_WPRO_priors():
         UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.7)),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
         UniformPrior("sojourns.latent.total_time", (2, 12)),
-        UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (500, 600)),
-        UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (1, 3))
+        UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (500, 800)),
+        UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.8, 3))
     ]
     return priors
 

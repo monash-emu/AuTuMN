@@ -1,0 +1,8 @@
+description: Omicron evolution, vaccine waning
+
+voc_emergence:
+  future:
+    new_voc_seed:
+      start_time: 980.
+
+waning_vacc_scenario: false

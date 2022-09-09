@@ -1,0 +1,17 @@
+The risk of SARS-CoV2 transmission per contact is adjusted by a time-variant random process, making
+the model semi-mechanistic. This random process reflects the fact that all the variations observed in the transmission
+risk cannot be explained solely by the factors that are included explicitly in the model such as vaccination, dynamic mobility or new variants' emergence.
+We therefore allow for random perturbations to the risk of transmission over time, although these perturbation are highly auto-correlated
+to avoid significant changes in short periods of time.
+
+We use a Wiener process $W(t)$  defined by:
+
+\begin{equation}
+    \begin{split}
+    W(0) & = 0 \\
+    W(t+1) & \sim \mathcal{N}(W(t), \epsilon) \quad ,
+    \end{split}
+\end{equation}
+
+where $\mathcal{N}$ denotes the Normal distribution and where the standard deviation $\epsilon$ is automatically calibrated by the MCMC.
+The Wiener process is updated on a fortnightly basis and is exponentiated before being applied to the risk of transmission per contact (see Equation \ref{foi}).

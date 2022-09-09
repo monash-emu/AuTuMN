@@ -3,8 +3,9 @@ as for the hospital pressure indicator. We use the age-specific infection fatali
 ODriscoll et al. (\textcolor{red}{ADD REF HERE}), adjusted for vaccination status and for the infecting strain
 to estimate COVID-19 mortality. Using the same notations as in Section \ref{hosp}, the number of COVID-19
 deaths observed at time $t$ is obtained by:
-
-$$ \mu(t) = \sum_{a,v,s} ifr^{a,v,s} \int_{u \geq 0}  i^{a,v,s}(t-u)g_{d}(u) du   \quad, $$
+\begin{equation}
+\mu(t) = \sum_{a,v,s} ifr^{a,v,s} \int_{u \geq 0}  i^{a,v,s}(t-u)g_{d}(u) du   \quad,
+\end{equation}
 where $ifr^{a,v,s}$ is the risk of death given infection for age $a$, vaccination status $v$ and strain $s$, 
 and $g_d$ is the probability density function of the statistical distribution chosen to represent the 
 time from symptom onset to death (\textcolor{red}{See Table XX}).

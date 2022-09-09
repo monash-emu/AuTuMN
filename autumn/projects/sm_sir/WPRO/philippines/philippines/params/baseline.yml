@@ -10,7 +10,7 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 450.0
+  start: 350.0
 
 voc_emergence:
   wild_type:
@@ -73,3 +73,17 @@ immunity_stratification:
   prop_high_among_immune: 0.0
   infection_risk_reduction:
     low: 0.6
+
+mobility:
+  google_mobility_locations:
+    work:
+      workplaces: 1.
+    other_locations:
+      retail_and_recreation: 0.333
+      grocery_and_pharmacy: 0.333
+      parks: 0.
+      transit_stations: 0.334
+
+age_stratification:
+  cfr:
+    multiplier: 0.05

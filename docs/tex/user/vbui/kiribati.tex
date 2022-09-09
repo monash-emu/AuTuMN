@@ -16,6 +16,7 @@
 \title{Modelling methods, Kiribati application}
 
 \begin{document}
+\linespread{1.25}
 
 \maketitle
 \tableofcontents
@@ -34,10 +35,9 @@ disease.
 \begin{table}[!htp]
     \caption{\textbf{Model Parameters}}
     \label{tab:parameter}
-    \begin{threeparttable}
-    \begin{tabularx}{\textwidth}{ X  c  c }
+    \begin{tabularx}{\textwidth}{ X  X  c }
         \hline
-        \textbf{Parameter} & \textbf{Value} & \textbf{Source} \\
+        \textbf{Parameter} & \textbf{Value} & \textbf{Evidence} \\
         \hline
         \textbf{Population characteristics} & & \\
         \input{../../tex_descriptions/projects/tb_dynamics/kiribati/kiribati/auto_fixed_params.tex} \\
@@ -45,14 +45,31 @@ disease.
         Universal death rate & Time-variant & UN Population Divison \\
         \hline
         \textbf{\emph{M.tb} infection and TB} \\
-        Rate of stabilization from early to late latency (age 0-4/5-14/15+) & 4.4/4.4/2 per year & Ragonnet et al.\cite{ragonnet-2022} \\
-        Rate of rapid progression to active TB (age 0-4/5-14/15+) & 2.4/2/0.1 per year & Ragonnet et al.\cite{ragonnet-2022} \\
-        Rate of late reactivation (age 0-4/5-14/15+) & 7e\textsuperscript{-9}/2.3e\textsuperscript{-3}/1.2e\textsuperscript{-3} per year & Ragonnet et al.\cite{ragonnet-2022} \\
-        Relative risk of reinfection while latently infected (ref. infection-naive) & 0.2 & Ragonnet et al.\cite{ragonnet-2022} \\
-        Relative risk of reinfection after recovery (ref. infection-naive) & 1 & Ragonnet et al.\cite{ragonnet-2022} \\
+        Rate of stabilization from early to late latency &    
+        \begin{minipage}[t]{0.3\textwidth}
+            Age 0-4: 4.4 per year \newline
+            Age 5-14: 4.4 per year \newline
+            Age 15+: 2 per year \newline
+        \end{minipage}
+        & Ragonnet et al.\cite{ragonnet-2017} \\
+        Rate of rapid progression to active TB (age 0-4/5-14/15+) & 
+        \begin{minipage}[t]{0.3\textwidth}
+            Age 0-4: 2.4 per year \newline
+            Age 5-14: 2 per year \newline
+            Age 15+: 0.1 per year \newline
+        \end{minipage}
+        & Ragonnet et al.\cite{ragonnet-2017} \\
+        Rate of late reactivation (age 0-4/5-14/15+) & 
+        \begin{minipage}[t]{0.3\textwidth}
+            Age 0-4: 7e\textsuperscript{-9} \newline
+            Age 5-14: 2.3e\textsuperscript{-3} \newline
+            Age 15+: 1.2e\textsuperscript{-3} \newline
+        \end{minipage}
+        & Ragonnet et al.\cite{ragonnet-2017} \\
+        Relative risk of reinfection while latently infected (ref. infection-naive) & 0.2 & Andrews et al.\cite{andrews-2012} \\
+        Relative risk of reinfection after recovery (ref. infection-naive) & 1 & Andrews et al.\cite{andrews-2012} \\
         \hline
 	\end{tabularx}
-    \end{threeparttable}
 \end{table}
 
 \begin{figure}[!htp]

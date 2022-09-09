@@ -22,12 +22,8 @@ steps:
       value: hierarchical_sir:multi
     - label: Philippines (sir_example)
       value: sir_example:philippines
-    - label: France (sm_covid)
-      value: sm_covid:france
-    - label: Philippines (sm_covid)
-      value: sm_covid:philippines
-    - label: Australia (sm_covid)
-      value: sm_covid:australia
+    - label: Malaysia (sm_jax)
+      value: sm_jax:malaysia
     - label: Bangladesh (sm_sir)
       value: sm_sir:bangladesh
     - label: Bhutan (sm_sir)
@@ -47,7 +43,7 @@ steps:
     - label: National Capital Region (sm_sir)
       value: sm_sir:national-capital-region
     - label: Northern Territory (sm_sir)
-      value: sm_sir:northern_territory
+      value: sm_sir:northern-territory
     - label: Thimphu (sm_sir)
       value: sm_sir:thimphu
     - label: Kiribati (tb_dynamics)

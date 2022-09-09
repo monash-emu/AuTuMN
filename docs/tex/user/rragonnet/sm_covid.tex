@@ -1,18 +1,25 @@
 \documentclass{article}
 \author{
-    Add Authors List here!
+    ---------------  Add Authors List here  ---------------
 }
 \usepackage{graphicx}
-\usepackage{biblatex}
+\usepackage{biblatex} 
 \usepackage{threeparttable}
 \usepackage{tabularx}
 \usepackage[hidelinks]{hyperref}
 \usepackage[left=2.5cm,right=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{bbm}
+
+\setlength{\abovecaptionskip}{-15pt}  % reduce the margin between figures and captions
 \input{../../tex_utils/inline_code.tex}  % Manual creation of an inline code command
 
 \bibliography{../../references/emu_library}
 
-\title{Estimating the impact of school closures on COVID-19 disease burden}
+\title{
+    Estimating the impact of school closures on COVID-19 disease burden\\
+    \Large Supplementary Appendix
+}
 
 \date{\vspace{-5ex}} % This removes the date from the title page
 
@@ -22,6 +29,9 @@
 \newpage
 
 \input{../../tex_descriptions/models/sm_covid/model_description.tex}
+
+\input{../../tex_descriptions/projects/sm_covid/school_closures/calibration_description.tex}
+
 
 \newpage
 \printbibliography

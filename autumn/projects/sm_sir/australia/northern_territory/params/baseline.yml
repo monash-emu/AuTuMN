@@ -237,8 +237,8 @@ time_from_onset_to_event:  # Using time of symptom onset as reference
       shape: 5.
       mean: 20.
 
-vaccination_data_thinning: 2
-waning_vacc_scenario: true  # Temporary switch on
+vaccination_data_thinning: 4
+waning_vacc_scenario: false
 
 prop_icu_among_hospitalised: 0.02
 

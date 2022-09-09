@@ -18,7 +18,7 @@ ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),
     "boosting": ("low", "high"),
     "waning": ("high", "low"),
-    "complete_waning": ("low", "none"),
+    # "complete_waning": ("low", "none"),
 }
 
 
@@ -353,8 +353,21 @@ def apply_general_coverage(
     # Thin as per user request
     vaccine_data = vaccine_data[::thinning]
 
+    # *** Hack to add in some future values ***
     if waning_vacc:
-        vaccine_data.append(pd.DataFrame([[0.6, 0.5]], columns=["full", "boost"], index=[1000.]))
+        vaccine_data = vaccine_data.append(
+            pd.DataFrame(
+                [
+                    [0.9, 0.5],  # Full, then boost values
+                    [0.9, 0.4], 
+                ], 
+                columns=["full", "boost"], 
+                index=[
+                    1000.,  # Same number of indexes to match values above
+                    1200.,
+                ]
+                )
+            )
 
     # Format the data to match the model's immunity structure
     vaccine_data["never"] = 1. - vaccine_data["full"]

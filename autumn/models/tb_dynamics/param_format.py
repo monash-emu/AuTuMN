@@ -9,7 +9,9 @@ PARAMETER_DEFINITION = {
     "rr_infection_latent":"relative risk of reinfection while latently infected (ref. infection-naive)",
     "rr_infection_recovered":"Relative risk of reinfection after recovery (ref. infection-naive)",
     "self_recovery_rate:":"self recovery rate",
-    "infect_death_rate":"infect death rate"
+    "infect_death_rate":"infect death rate",
+    "age_specific_latency.early_activation": "Rate of rapid progression to active TB",
+    "age_specific_latency.early_stabilisation":"Rate of stabilization from early to late latency",
 }
 
 PARAMETER_EVIDENCE = {
@@ -18,8 +20,10 @@ PARAMETER_EVIDENCE = {
     "crude_birth_rate":"UN Population Division",
     "crude_death_rate":"UN Population Division",
     "contact_rate":"Assumed",
-    "rr_infection_latent":"\cite{ragonnet-2022}",
-    "rr_infection_recovered":"\cite{ragonnet-2022}",
+    "rr_infection_latent":"\cite{andrews-2012}",
+    "rr_infection_recovered":"\cite{andrews-2012}",
+    "age_specific_latency.early_activation": "\cite{andrews-2012}",
+    "age_specific_latency.early_stabilisation":"\cite{andrews-2012}",
 }
 
 PARAMETER_UNITS = {

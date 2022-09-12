@@ -5,4 +5,4 @@ voc_emergence:
     new_voc_seed:
       start_time: 980.
 
-waning_vacc_scenario: false
+waning_vacc_scenario: true

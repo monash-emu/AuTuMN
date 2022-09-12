@@ -5,18 +5,23 @@
 \section{Model description}
 
 \subsection{General approach}
-We use a compartmental model of COVID-19 transmission governed by ordinary differential equations (ODEs). Our model captures
-important factors of COVID-19 transmission and disease such as age-specific characteristics, heterogeneous mixing,
-vaccination and the emergence of different variants of concern. The ODE-based model is used to capture only states
-relevant to transmission, whereas hospitalisations and deaths are estimated through a convolution process. This process combines
-the model-estimated disease incidence with statistical distributions modelling the time to hospitalisation, the hospital stay duration
-and the time to death. This approach presents two main advantages. First it reduces the complexity of the dynamic system relying
-on numerical solving of ODEs, which is computationally expensive. Second, the convolution approach allows for more flexibility and produces
-more realistic assumptions regarding the timings of hospitalisations and deaths, compared to what could be achieved with a simple 
-compartmental approach. The following sections describe the model in details.
+We use a semi-mechanistic compartmental model of COVID-19 transmission governed by ordinary differential equations (ODEs). 
+Our model captures important factors of COVID-19 transmission and disease such as age-specific characteristics, 
+heterogeneous mixing, vaccination and the emergence of different variants of concern. 
+The ODE-based model is used to capture only states relevant to transmission, whereas hospitalisations and deaths are
+estimated through a convolution process. This process combines the model-estimated disease incidence with 
+statistical distributions modelling the time to hospitalisation, the hospital stay duration and the time to death.
+This approach presents two main advantages. First it reduces the complexity of the dynamic system relying on 
+numerical solving of ODEs, which is computationally expensive. Second, the convolution approach allows for more flexibility 
+and produces more realistic assumptions regarding the timings of hospitalisations and deaths, 
+compared to what could be achieved with a simple compartmental approach. The following sections describe the model in details.
 
+% ____________________________________________________
+% Let's talk about the transmission model
+%______________________________________________________
 
-\subsection{Transmission model structure}
+\subsection{Transmission model}
+\label{trans} 
 \subsubsection{Compartment types and sequence}
 Model compartments represent sequential progressions through the processes of 
 infection with, progression through, and recovery from the phases of SARS-CoV-2
@@ -29,7 +34,7 @@ infection and COVID-19 disease. The following types of compartments are implemen
     \item Latent
     \begin{itemize}
         \item Persons recently infected with SARS-CoV-2, but not in the active phase of the disease yet.
-        \item These individuals may still be infectious (see infectiousness section for details).
+        \item These individuals may still be infectious (see details in next paragraph).
     \end{itemize}
     \item Active
     \begin{itemize}
@@ -42,7 +47,7 @@ infection and COVID-19 disease. The following types of compartments are implemen
         strain than the one that most recently infected the individual (see strain stratification section for details).
     \end{itemize}
 \end{itemize}
-The base model structure consists of a sequence of one susceptible compartment ($S$), four latent compartments ($E_1$, ..., $E_4$), four active disease compartments ($I_1$, ..., $I_4$) and one recovered compartment ($R$) (Figure \ref{fig:se4i4r}).
+The base model structure consists of a sequence of one susceptible compartment ($S$), four latent compartments ($E_1$, ..., $E_4$), four active disease compartments ($I^1$, ..., $I^4$) and one recovered compartment ($R$) (Figure \ref{fig:se4i4r}).
 
 \begin{figure}[ht]
     \begin{center}
@@ -56,14 +61,61 @@ The base model structure consists of a sequence of one susceptible compartment (
 \end{figure}
 
 The main rationale for using four serial compartments for both the latent and active states is to achieve an Erlang distribution for the time spent in each of these states. This distribution is more realistic than
-the exponential distribution that would have been associated with a single compartment, because the Erlang distribution does not have a large density mass around 0 and is not heavy-tailed. 
-The four active disease compartments have all exactly the same characteristics. However, the last two latent compartments are infectious whereas the first two are not. We further assume that 
+the exponential distribution that would have been associated with a single compartment, because the Erlang distribution does not have a large density mass around 0 and is not heavy-tailed. Figure \ref{fig:sojourn} 
+illustrates the modelled distributions of the incubation period and the active disease period. 
+
+\begin{figure}[ht]
+    \begin{center}
+    \includegraphics[width=0.75\textwidth]{../../tex_descriptions/models/sm_covid/sojourns.pdf}
+    \end{center}
+    \caption{Modelled distributions of the incubation and active disease periods.
+    } 
+    \label{fig:sojourn}
+\end{figure}
+
+The four active disease compartments have all exactly the same characteristics. However, the last two latent compartments ($E^3$ and $E^4$) are infectious whereas the first two ($E^1$ and $E^2$) are not. We further assume that 
 the infectious latent compartments are half as infectious as the active disease compartments.
 
-\subsubsection{Stratification by age}
+\subsubsection{Model stratification by age}
+\label{age}
 \input{../../tex_descriptions/models/sm_covid/stratifications/agegroup.tex}
 
-\subsubsection{Stratification by vaccination status}
+\subsubsection{Capturing the effects of vaccination}
+\input{../../tex_descriptions/models/sm_covid/stratifications/immunity.tex}
+
+\subsubsection{Modelling multiple viral strains}
+\input{../../tex_descriptions/models/sm_covid/stratifications/strains.tex} 
 
 
-\subsubsection{Stratification by strain}
+\subsubsection{Dynamic social mixing}
+
+\textcolor{red}{\begin{itemize}
+    \item Mixing matrices.
+    \item Google data
+    \item School closure.
+\end{itemize}
+}
+\subsubsection{Random transmission adjustment}
+\input{../../tex_descriptions/models/sm_covid/random_process.tex} 
+
+\subsubsection{Ordinary differential equations}
+\label{ODEs}
+\input{../../tex_descriptions/models/sm_covid/odes.tex} 
+
+
+
+% ____________________________________________________
+% Now, let's talk about the convolution processes
+%______________________________________________________
+\subsection{Estimation of COVID-19-related hospital pressure and deaths}
+The transmission model described in Section \ref{trans} provides estimates of COVID-19 incidence over time, disaggregated by age, vaccination status and strain. 
+We combine these incidence estimates with the age-, vaccination- and strain-specific risks of hospitalisation and deaths as well as 
+statistical distributions of time to events to compute COVID-19-related hospital pressure and deaths over time.
+
+\subsubsection{COVID-19-related hospital pressure}
+\label{hosp}
+\input{../../tex_descriptions/models/sm_covid/hospitalisations.tex} 
+
+\subsubsection{COVID-19 deaths}
+\input{../../tex_descriptions/models/sm_covid/deaths.tex} 
+

@@ -7,6 +7,7 @@ from summer import CompartmentalModel
 from autumn.core.utils.pandas import increment_last_period
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.core.inputs.covid_au.queries import get_nt_vac_coverage
+from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, Vaccination
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
@@ -201,6 +202,9 @@ def get_reported_vacc_coverage(iso3, start_age, end_age, age_specific_vacc):
     elif iso3 == "AUS":
         full_series = get_nt_vac_coverage(dose=2)
         booster_series = get_nt_vac_coverage(dose=3)
+    elif iso3 == "MYS":
+        full_series = get_mys_vac_coverage(dose="full")
+        booster_series = get_mys_vac_coverage(dose="booster")
     else:
         raise ValueError("Data for country not available (in this function)")
     
@@ -317,6 +321,9 @@ def apply_vacc_coverage(
             age_specific_vacc,
         )
 
+        # Thin as per user request
+        vaccine_data = vaccine_data[::vacc_params.data_thinning]
+
         # Get rid of any data that is from before the model starts running
         model_start_time = model.times[0]
         vaccine_data = vaccine_data[model_start_time < vaccine_data.index]
@@ -345,9 +352,6 @@ def apply_vacc_coverage(
                 booster_effect_duration,
                 vaccine_data["boost"]
             )
-
-        # Thin as per user request
-        vaccine_data = vaccine_data[::vacc_params.data_thinning]
 
         # Get the actual values for the model strata
         strata_data = get_strata_values_from_vacc_data(

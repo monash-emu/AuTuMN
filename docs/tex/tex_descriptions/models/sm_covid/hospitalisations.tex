@@ -9,21 +9,23 @@ of the pandemic in the Netherlands, adjusted for vaccination status and for the 
 The ``hospital pressure'' indicator can therefore be interpreted as the level of hospital occupancy that
 would be observed in the analysed country if the rates of hospitalisation given infection in this country were the same
 as in the Netherlands. This indicator is expected to be approximately proportional to the actual hospital occupancy level of the 
-studied country. Note that this indicator is used in order to make comparisons between scenarios and that the relative
-differences between scenarios should be interpreted rather than the absolute values of the indicator. 
+studied country. Note that this indicator is used in order to make comparisons between scenarios such that one should interpret the relative
+differences between scenarios rather than the absolute values of the indicator. 
 
-Let us denote $i^{a,v,s}(t)$ the number of new disease episodes estimated to start at time $t$ for people aged $a$ with vaccination status $v$
+Let us denote $i_{a,v,s}(t)$ the number of new disease episodes estimated to start at time $t$ for people aged $a$ with vaccination status $v$
 and infected with strain $s$. The number of new hospital admissions occurring at time $t$ is calculated using the following
 convolution product:
-
-$$ \eta(t) = \sum_{a,v,s} p_{hosp}^{a,v,s} \int_{u \geq 0}  i^{a,v,s}(t-u)g_{h}(u) du   \quad,$$ 
-where $p_{hosp}^{a,v,s}$ is the risk of hospitalisation given infection for age $a$, vaccination status $v$ and strain $s$ 
+\begin{equation}
+ \eta(t) = \sum_{a,v,s} \kappa_{a,v,s} \int_{u \geq 0}  i_{a,v,s}(t-u)g_{h}(u) du   \quad,
+ \end{equation}
+where $\kappa_{a,v,s}$ is the risk of hospitalisation given infection for age $a$, vaccination status $v$ and strain $s$ 
 based on the Netherlands data, and $g_h$ is the probability density function of the statistical distribution chosen to represent the 
 time from symptom onset to hospitalisation (\textcolor{red}{See Table XX}). 
 
 We then compute the ``hospital pressure'' quantity, which is an indicator of hospital occupancy level, by combining the number of new 
 hospital admissions $\eta$ with the statistical distribution used to model hospital stay duration:
-
-$$ h(t) = \int_{u \geq 0}  \eta(t-u) (1 - \tau(u)) du   \quad,$$ 
+\begin{equation}
+h(t) = \int_{u \geq 0}  \eta(t-u) (1 - \tau(u)) du   \quad,
+\end{equation}
 where $\tau$ is the cumulative density function of the statistical distribution chosen to represent the 
 hospital stay duration (\textcolor{red}{See Table XX}). 

@@ -140,14 +140,12 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         """
 
-        ifr_request = ifr_prop_requests.values
-        ifr_props = convert_param_agegroups(iso3, region, ifr_request, age_groups)
+        age_ifr_request = ifr_prop_requests.values
+        age_ifr_props = convert_param_agegroups(iso3, region, age_ifr_request, age_groups)
+        ifr_multiplier = ifr_prop_requests.multiplier
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
-
-        # Prepare odds adjuster function
-        or_adjuster_func = get_apply_odds_ratio_to_prop(ifr_prop_requests.multiplier)
 
         # Prepare immunity modifiers
         immune_death_modifiers = {
@@ -164,9 +162,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
                 # Adjust CFR proportions for immunity
-                adj_death_props = ifr_props * immune_death_modifiers[immunity_stratum]
-                or_adjuster_func = get_apply_odds_ratio_to_prop(ifr_prop_requests.multiplier)
-                adj_death_props = adj_death_props.apply(or_adjuster_func)
+                age_immune_death_props = age_ifr_props * immune_death_modifiers[immunity_stratum]
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -179,7 +175,9 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
                     # Calculate the multiplier based on age, immunity and strain
                     strain_risk_modifier = 1. if not strain else voc_params[strain].death_risk_adjuster
-                    death_risk = adj_death_props[agegroup] * strain_risk_modifier
+                    death_risk = age_immune_death_props[agegroup] * strain_risk_modifier * ifr_multiplier
+
+                    assert death_risk <= 1., "The overall death risk is greater than one."
 
                     # Get the infection deaths function for convolution
                     infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)

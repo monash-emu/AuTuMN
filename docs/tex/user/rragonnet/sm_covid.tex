@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[draft]{article}
 \author{
     ---------------  Add Authors List here  ---------------
 }
@@ -11,10 +11,19 @@
 \usepackage{amsmath}
 \usepackage{bbm}
 
+% code below is to add a new sectioning level (e.g. 2.1.3.4)
+% this new level will be requested using the \paragraph{} command
+\usepackage{titlesec}
+\setcounter{secnumdepth}{4}
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+ 
 \setlength{\abovecaptionskip}{-15pt}  % reduce the margin between figures and captions
 \input{../../tex_utils/inline_code.tex}  % Manual creation of an inline code command
 
-\bibliography{../../references/emu_library}
+\bibliography{../../references/emu_library} 
 
 \title{
     Estimating the impact of school closures on COVID-19 disease burden\\

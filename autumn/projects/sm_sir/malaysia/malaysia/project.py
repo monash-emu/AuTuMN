@@ -8,6 +8,8 @@ from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 
+from autumn.projects.sm_sir.malaysia.malaysia.scenario_builder import get_all_scenario_dicts
+
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
@@ -15,7 +17,8 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
 )
 scenario_dir_path = build_rel_path("params/")
 scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
-
+#all_scenario_dicts = get_all_scenario_dicts("MYS")
+#scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_dicts]
 scenario_params = [baseline_params.update(p) for p in scenario_paths]
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 

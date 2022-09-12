@@ -1,0 +1,28 @@
+description: What if nation-wide lockdown was not implemented
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-05-31
+        - 2021-06-01
+        - 2021-06-28
+        - 2021-06-29
+      values:
+        - - repeat_prev
+        - .69
+        - .69
+        - 1.
+    work:
+      append: true
+      times:
+        - 2021-05-31
+        - 2021-06-01
+        - 2021-06-28
+        - 2021-06-29
+      values:
+        - - repeat_prev
+        - .7
+        - .7
+        - 1.

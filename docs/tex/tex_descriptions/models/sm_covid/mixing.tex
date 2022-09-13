@@ -1,6 +1,6 @@
 The model captures changes in social interactions over time through a dynamic age-specific mixing matrix. The following
 sections describe how this matrix is defined and how it captures the different non-pharmaceutical interventions implemented
-in the analysed countries.
+in the analysed countries, including school closures.
 
 \paragraph{Reference mixing matrices}
 We extracted country-specific contact matrices using the \textit{socialmixr} R package (version 0.1.8 ) which derives social mixing matrices from 
@@ -12,7 +12,7 @@ the raw matrices to account for dynamic mobility.
 For countries where contact survey data were not available, we used the matrices from a reference country among 
 those with available data (\textcolor{red}{Still need to come up with a plan for this}). The reference matrices were 
 then adjusted to account for age distribution differences between the modelled country and the reference country. For each 
-location $L$ (home, school, work, other locations) the age-specific contact matrix of the modelled country $C^L = (c_{i,j}^L) \in R_{+}^{5 \times 5}$ 
+location $L$ $\in$ \{``home'', ``school'', ``work'', ``other locations''\} the age-specific contact matrix of the modelled country $C^L = (c_{i,j}^L) \in R_{+}^{5 \times 5}$ 
 is defined such that $c_{i,j}^L$ is the average number of contacts that a typical individual aged $i$ has with individuals aged $j$. 
 Let us denote $Q^L = (q_{i,j}^L) \in R_{+}^{5 \times 5}$ the original matrix associated with location $L$ for the reference country, where $q_{i,j}^L$ is defined using the same 
 convention as for $c_{i,j}^L$. Let $\pi_j$ denote the proportion of people aged $j$ in the modelled country in 2020, and $\rho_j$ the proportion of people aged $j$ in the reference country 
@@ -33,48 +33,61 @@ To capture mobility changes over time, the contributions of the matrices \(C_{S}
 The modifying functions $s$ (for schools), $w$ (for work) and $l$ (for other-locations) are each squared to capture the effect of the mobility changes on 
 both the infector and the infectee in any given interaction that could potentially result in transmission. 
 
-\textbf{School closure/re-opening }
+\vspace{5pt}
+\textbf{School closure/re-opening}
+
 Reduced attendance at schools is represented through the function $s$, which represents the proportion of all school students 
-currently attending on-site teaching. If schools are fully closed, \(s(t)=0\) and \(C_{S}\) does not contribute to the overall 
+currently attending on-site teaching. If schools are fully closed at time $t$, \(s(t)=0\) and \(C_{S}\) does not contribute to the overall 
 mixing matrix \(C(t)\). 
-\(s(t)\) is derived from UNESCO data on school closures since the start of the COVID-19 pandemic. 
+The function $s$ is derived from the UNESCO database on school closures since the start of the COVID-19 pandemic (\textcolor{red}{ADD REF HERE}).
+This database provides school opening status over time as a categorical variable taking the following values: ``Fully open'', ``Partially open'', ``Academic break'', ``Closed due to COVID-19''.
+Table \ref{tab:unesco_categories} indicates how the different categorical values are converted into the numerical function $s$.
 
-\textcolor{red}{Detail the UNESCO data and the partial closure assumption. Also include an image here}
+\begin{table}[ht]  
+  \begin{center}
+      \begin{tabular}{p{5cm} | p{5cm}}
+          \hline
+          \textbf{UNESCO category} & \textbf{Assumed proportion of students on-site ($s(t)$)} \\
+          \hline
+          Fully open & 100\% \\
+          Partially open & 10-30\% \\
+          Academic break & 0\% \\
+          Closed due to COVID-19 & 0\% \\
+          \hline
+      \end{tabular}
+    \end{center}
+      \caption{Assumed percentage of students on-site for the different UNESCO school closure categories.}
+      \label{tab:unesco_categories}
+  \end{table}
 
+We included uncertainty around the value associated with the partial closure category, as there is no quantitative data available to 
+inform this parameter. The partial closure periods are likely to be periods where only a small fraction of students such as children of ``essential workers'' were 
+attending school. We assume that between 10 and 30\% of students attended on-site learning during these periods.
 
+To model the counterfactual ``no school closure'' scenario, we assume that the schools were ``Fully open'' during the
+periods reported as ``Partially open'' or ``Closed due to COVID-19''.
 
+Figure \ref{fig:unesco} summarises the UNESCO data on school closure for the analysed countries.
 
-\textbf{Workplace closures}
-Workplace closures are represented by quadratically reducing the contribution of workplace contacts to the total mixing matrix over time. This is achieved through the scaling term \(w(t)^{2}\) which modifies the contribution of \(C_{W}\) to the overall mixing matrix \(C(t)\). The profile of the function \(w(t)\) is set by fitting a polynomial spline function to Google mobility data for workplace attendance (Table \ref{tab:mobility_map}).
+\begin{figure}[p]
+  \begin{center}
+  \includegraphics[width=0.73\textwidth]{../../tex_descriptions/projects/sm_covid/school_closures/unesco.png}
+  \end{center}
+  \caption{UNESCO data on school closures during the COVID-19 pandemic.
+  } 
+  \label{fig:unesco}
+\end{figure}
 
-\textbf{Community-wide movement restriction}
-Community-wide movement restriction (or ``lockdown") measures are represented by proportionally reducing the contribution of the other locations contacts to the total mixing matrix over time. This is achieved through the scaling term \(l(t)^{2}\) which modifies the contribution of \(C_{L}\) to the overall mixing matrix \(C(t)\). The profile of the function \(l(t)\) is set by fitting a polynomial spline function to an average of Google mobility data for various locations, as indicated in Table \ref{tab:mobility_map}.
+\vspace{5pt}
+\textbf{Dynamic mobility outside of schools and homes}
 
-\begin{table}[ht]
-\renewcommand{\baselinestretch}{1}
-    \begin{tabular}{| p{4.4cm} | p{4.4cm} | p{5cm} |}
-        \hline
-        \textbf{location} & \textbf{Approach} & \textbf{Google mobility types} \\
-        \hline
-        School & Policy response & Not applicable \\
-      \hline
-      Household & Constant & Not applicable \\
-      \hline
-      Workplace & Google mobility & Workplace \\
-      \hline
-      Other locations & Google mobility & 
-      Unweighted average of: \begin{itemize}
-			\item Retail and recreation
-          \item Grocery and pharmacy
-          \item Parks
-          \item Transit stations
-      \end{itemize}\\
-      \hline
-    \end{tabular}
-    \title{Mapping of Google mobility data to contact locations.}
-    \caption{\textbf{Mapping of Google mobility data to contact locations.}}
-    \label{tab:mobility_map}
-\end{table}
+Changes to people's mobility in places other than schools and homes are modelled using Google Mobility data. We use the ``Workplace''
+category of the Google data to scale the work-related matrix contribution $C_W$ to overall mixing over time, using the adjusting function
+$w$. The ``other locations'' matrix $C_L$ is scaled through the adjusting function $l$ which is defined as the average of the Google mobility
+indicators across the following Google categories: ``Retail and recreation'', ``Grocery and pharmacy'' and ``Transit stations''.
+
+\vspace{5pt}
+\textbf{Household contacts}
 
 The contribution of household contacts to the overall mixing matrix is fixed over time. Although Google provides mobility 
 estimates for residential contacts, the nature of these data are different from those for each of the other Google mobility 

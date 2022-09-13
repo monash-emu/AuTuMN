@@ -35,7 +35,7 @@ def get_tartgets(calibration_start_time, country_name, region_name):
 def variant_start_time(variants: list, region_name: str):
     variant_times = []
     for variant in variants:
-        variant_first_time = get_first_variant_report_date(variant, region_name)
+        variant_first_time = get_first_variant_report_date(variant, region_name.title())
         first_report_date_as_int = (variant_first_time - COVID_BASE_DATETIME).days
         variant_times.append(first_report_date_as_int)
     return variant_times

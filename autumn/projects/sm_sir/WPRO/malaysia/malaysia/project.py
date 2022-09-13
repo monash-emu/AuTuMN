@@ -28,7 +28,8 @@ param_set = ParameterSet(baseline=baseline_params)
 
 # # Load and configure calibration settings
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
-variant_times = variant_start_time(["delta", "omicron"], "Malaysia")
+
+variant_times = variant_start_time(["delta", "omicron"], "malaysia")
 priors = get_WPRO_priors(variant_times)
 
 targets = get_tartgets(calibration_start_time, "malaysia", "malaysia")
@@ -44,4 +45,4 @@ with open(plot_spec_filepath) as f:
 
 ## Create and register the project
 project = Project(
-    Region.wpro_MALAYSIA, Models.WPRO, build_model, param_set, calibration, plots=plot_spec)
+    Region.wpro_malaysia, Models.WPRO, build_model, param_set, calibration, plots=plot_spec)

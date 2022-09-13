@@ -64,13 +64,12 @@ immunity_stratification:
   prop_high_among_immune: 0.0
   infection_risk_reduction:
     low: 0.6
-
 mobility:
   google_mobility_locations:
     work:
-      workplaces: 1.
+      workplaces: 1.0
     other_locations:
       retail_and_recreation: 0.333
       grocery_and_pharmacy: 0.333
-      parks: 0.
+      parks: 0.0
       transit_stations: 0.334

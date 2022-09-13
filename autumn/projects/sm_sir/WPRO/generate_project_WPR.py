@@ -29,7 +29,8 @@ param_set = ParameterSet(baseline=baseline_params)
 # # Load and configure calibration settings
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 
-priors = get_WPRO_priors()
+variant_times = variant_start_time(["delta", "omicron"], country_name)
+priors = get_WPRO_priors(variant_times)
 
 targets = get_tartgets(calibration_start_time, country_name, country_name)
 

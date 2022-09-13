@@ -1,16 +1,17 @@
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
 from autumn.core.project import load_timeseries, build_rel_path
+from autumn.models.sm_covid.stratifications.strains import get_first_variant_report_date
+from autumn.settings.constants import COVID_BASE_DATETIME
 
-
-def get_WPRO_priors():
+def get_WPRO_priors(variant_times):
     priors = [
         UniformPrior("contact_rate", (0.03, 0.3)),
         UniformPrior("infectious_seed", (1000, 10000)),
         UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.7)),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
         UniformPrior("sojourns.latent.total_time", (2, 12)),
-        UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (500, 800)),
+        UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (variant_times[1]-150, variant_times[1]+100)),
         UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.8, 3))
     ]
     return priors
@@ -29,3 +30,12 @@ def get_tartgets(calibration_start_time, country_name, region_name):
         NormalTarget(notifications_ts)
     ]
     return targets
+
+
+def variant_start_time(variants: list, region_name: str):
+    variant_times = []
+    for variant in variants:
+        variant_first_time = get_first_variant_report_date(variant, region_name)
+        first_report_date_as_int = (variant_first_time - COVID_BASE_DATETIME).days
+        variant_times.append(first_report_date_as_int)
+    return variant_times

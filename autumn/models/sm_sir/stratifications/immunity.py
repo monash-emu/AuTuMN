@@ -18,7 +18,7 @@ ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),
     "boosting": ("low", "high"),
     "waning": ("high", "low"),
-    # "complete_waning": ("low", "none"),
+    "complete_waning": ("low", "none"),
 }
 
 
@@ -358,13 +358,11 @@ def apply_general_coverage(
         vaccine_data = vaccine_data.append(
             pd.DataFrame(
                 [
-                    [0.9, 0.5],  # Full, then boost values
-                    [0.9, 0.4], 
+                    [0.73, 0.48],  # Full, then boost values
                 ], 
                 columns=["full", "boost"], 
                 index=[
-                    1000.,  # Same number of indexes to match values above
-                    1200.,
+                    1128.,  # Same number of indexes to match values above
                 ]
                 )
             )

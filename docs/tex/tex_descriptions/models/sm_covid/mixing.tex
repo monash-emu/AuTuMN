@@ -18,17 +18,21 @@ Let us denote $Q^L = (q_{i,j}^L) \in R_{+}^{5 \times 5}$ the original matrix ass
 convention as for $c_{i,j}^L$. Let $\pi_j$ denote the proportion of people aged $j$ in the modelled country in 2020, and $\rho_j$ the proportion of people aged $j$ in the reference country 
 at the time of the contact survey. 
 The contact matrices $C^L$ were obtained from:
-$$
-c_{i,j}^L = q_{i,j}^L \times \frac{\pi_j}{\rho_j} . 
-$$
+
+\begin{equation}
+  c_{i,j}^L = q_{i,j}^L \times \frac{\pi_j}{\rho_j} . 
+\end{equation}
 
 The overall contact matrix (before adjustments for mobility changes) results from the summation of the four location-specific 
 contact matrices: \(C_{0}=C_{H}+C_{S}+C_{W}+C_{L}\), where \(C_{H}\), \(C_{S}\), \(C_{W}\) and \(C_{L}\) are the age-specific
 contact matrices associated with households, schools, workplaces and other locations, respectively.
 
-\paragraph[blabla]{Modifications of contact rates over time}
+\paragraph{Modifications of contact rates over time}
 To capture mobility changes over time, the contributions of the matrices \(C_{S}\), \(C_{W}\) and \(C_{L}\) vary with time such that the input contact matrix can be written:
-\[C(t)= C_{H}+ s(t)^{2}C_{S}+ w(t)^{2}C_{W}+l(t)^{2}C_{L}\]
+
+\begin{equation}
+  C(t)= C_{H}+ s(t)^{2}C_{S}+ w(t)^{2}C_{W}+l(t)^{2}C_{L}
+\end{equation}
 
 The modifying functions $s$ (for schools), $w$ (for work) and $l$ (for other-locations) are each squared to capture the effect of the mobility changes on 
 both the infector and the infectee in any given interaction that could potentially result in transmission. 
@@ -90,7 +94,7 @@ indicators across the following Google categories: ``Retail and recreation'', ``
 \textbf{Household contacts}
 
 The contribution of household contacts to the overall mixing matrix is fixed over time. Although Google provides mobility 
-estimates for residential contacts, the nature of these data are different from those for each of the other Google mobility 
+estimates for residential contacts, the nature of these data is different from that of each of the other Google mobility 
 types. They represent the time spent in that location, as opposed to other categories, which measure a change in total visitors 
 rather than the duration. The daily frequency with which people attend their residence is likely to be close to one and we 
 considered that household members likely have a daily opportunity for infection with each other household member regardless of

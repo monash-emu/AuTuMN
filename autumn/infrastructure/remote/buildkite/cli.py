@@ -4,7 +4,7 @@ import pprint
 
 import click
 
-from autumn.settings import Region
+from autumn.settings import Region, Models
 from autumn.infrastructure.remote.aws import cli as aws
 from autumn.core.utils.runs import read_run_id
 
@@ -97,6 +97,7 @@ def calibrate():
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
 
+
 @buildkite_cli.command()
 def resume():
     """Run a calibration job in Buildkite"""
@@ -141,7 +142,6 @@ def resume():
                 fp.trigger_field.key: fp.trigger_field.get_option(trigger_downstream),
             },
         )
-
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
@@ -238,7 +238,7 @@ def trigger_wpro():
     Trigger all European mixing optimization models
     """
     logger.info("Triggering all WPRO calibrations.")
-    _trigger_models(Region.WPRO_REGIONS, trigger_wpro_pipeline, "sm_sir")
+    _trigger_models(Region.WPRO_REGIONS, trigger_wpro_pipeline, Models.WPRO)
 
 
 @trigger.command("victoria")
@@ -268,7 +268,7 @@ def trigger_malaysia():
     _trigger_models(Region.MALAYSIA_REGIONS, trigger_malaysia_pipeline)
 
 
-def _trigger_models(regions, p, model_str='covid_19'):
+def _trigger_models(regions, p, model_str="covid_19"):
 
     logger.info("Gathering data for calibration trigger.")
     build_number = os.environ["BUILDKITE_BUILD_NUMBER"]

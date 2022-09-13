@@ -119,7 +119,11 @@ class Region:
         # DAVAO_CITY,
     ]
 
-    WPRO_REGIONS = [MALAYSIA, NCR]
+    WPRO_REGIONS = [
+        wpro_AUSTRALIA,
+        wpro_PHILIPPINES,
+        wpro_MALAYSIA
+    ]
 
     SCHOOL_PROJECT_REGIONS = [PHILIPPINES, FRANCE, AUSTRALIA]
     @staticmethod

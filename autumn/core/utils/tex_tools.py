@@ -107,6 +107,7 @@ def format_prior_values(
 
 def get_line_end(
     is_last_line: bool,
+    request_hline: bool,
 ) -> str:
     """
     Get the characters needed for the end of a row of a TeX table being created by one
@@ -119,13 +120,22 @@ def get_line_end(
     Returns:
         The characters needed for the end of the line of the table
     """
-    return "" if is_last_line else " \\\\ \n\hline"
+    if is_last_line:
+        if request_hline:
+            return " \\\\ \n\hline"
+        else:
+            return "\\\\ \n"
+    else:
+        return ""
+       # return "" if is_last_line else " \\\\ \n\hline"
+    
 
 
 def write_param_table_rows(
     file_name: Path,
     project: Project,
     params_to_write: List[str],
+    request_hline: bool=True,
     ignore_priors: bool=True,
 ):
     """
@@ -160,7 +170,7 @@ def write_param_table_rows(
                 assert not isinstance(value, dict), msg
             explanation = get_param_explanation(model_constants.PARAMETER_EVIDENCE, param)
 
-            line_end = get_line_end(i_param == len(params_to_write) - 1)
+            line_end = get_line_end(i_param == len(params_to_write) - 1,request_hline)
 
             # Format for TeX
             table_line = f"\n{param_name} & {value} {unit} & {explanation}{line_end}"

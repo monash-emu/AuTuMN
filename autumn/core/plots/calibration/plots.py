@@ -107,7 +107,7 @@ def plot_acceptance_ratio(
     plotter.save_figure(fig, filename=f"acceptance_ratio", dpi_request=dpi_request)
 
 
-def plot_prior(i: int, prior_dict: dict, path=None, ax=None, print_distri=True, alpha=1.):
+def plot_prior(i: int, prior_dict: dict, path=None, ax=None, print_distri=True, alpha=1.0):
     if prior_dict["distribution"] == "lognormal":
         logger.error("Cannot plot prior distributions for lognormal.")
         return
@@ -184,7 +184,7 @@ def workout_plot_x_range(prior_dict):
         shape = prior_dict["distri_params"][0]
         scale = prior_dict["distri_params"][1]
         x_range = stats.gamma.ppf([0.005, 0.995], shape, 0.0, scale)
-    elif prior_dict["distribution"] == "normal":        
+    elif prior_dict["distribution"] == "normal":
         mean = prior_dict["distri_params"][0]
         sd = prior_dict["distri_params"][1]
         x_range = stats.norm.ppf([0.005, 0.995], mean, sd)
@@ -269,7 +269,7 @@ def make_ess_table(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFra
         for param_name in param_options:
             posterior_chain = get_posterior([table_df], [mcmc_tables[i_chain]], param_name, burn_in)
             ess = calculate_effective_sample_size(posterior_chain)
-            ess_table[f"chain_{i_chain}"][param_name] = ess
+            ess_table.loc[f"chain_{i_chain}", param_name] = ess
 
         ess_table[f"chain_{i_chain}"]["average ESS"] = ess_table[f"chain_{i_chain}"][
             0 : len(param_options)
@@ -280,7 +280,9 @@ def make_ess_table(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFra
     return ess_table
 
 
-def calculate_r_hats(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFrame], burn_in: int):
+def calculate_r_hats(
+    mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFrame], burn_in: int
+):
     """
     Calculates the R_hat statistic for all parameters
     :return: a dictionary
@@ -292,10 +294,12 @@ def calculate_r_hats(mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataF
     for param_name in param_options:
         posterior_chains = {}
         for chain_id in chain_idx:
-            mask =  mcmc_tables[0].chain == chain_id
+            mask = mcmc_tables[0].chain == chain_id
             param_vals = mcmc_params[0][mask][param_name].to_list()
             weights = mcmc_tables[0][mask][mcmc_tables[0]["accept"] == 1].weight.to_list()
-            posterior_chains[chain_id] = flatten_list([[param_vals[i]] * w for i, w in enumerate(weights)])
+            posterior_chains[chain_id] = flatten_list(
+                [[param_vals[i]] * w for i, w in enumerate(weights)]
+            )
 
         r_hats[param_name] = calculate_r_hat(posterior_chains)
 
@@ -426,7 +430,9 @@ def plot_multiple_param_traces(
             param_name = params_to_plot[i]
 
             for i_chain in range(len(mcmc_params_list)):
-                param_values = get_posterior([mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], param_name, burn_in)
+                param_values = get_posterior(
+                    [mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], param_name, burn_in
+                )
                 axis.plot(param_values, alpha=0.8, linewidth=0.3)
 
             axis.set_title(
@@ -452,7 +458,9 @@ def plot_multiple_param_traces(
     plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
-def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0, variable_key='loglikelihood'):
+def plot_loglikelihood_trace(
+    plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0, variable_key="loglikelihood"
+):
     """
     Plot the loglikelihood traces for each MCMC run.
     """
@@ -477,7 +485,7 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
         for idx, table_df in enumerate(mcmc_tables):
             accept_mask = table_df["accept"] == 1
             table_df[accept_mask][variable_key].plot.line(ax=axis, alpha=0.8, linewidth=0.7)
-            
+
     axis.set_ylabel(titles[variable_key])
     axis.set_xlabel("Metropolis iterations")
 
@@ -758,7 +766,6 @@ def plot_single_param_loglike(
     Plots the loglikelihood against parameter values.
     """
 
-
     fig, axis, _, _, _, _ = plotter.get_figure()
     plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis, posterior)
     axis.set_xlabel(param_name)
@@ -826,21 +833,21 @@ def plot_param_vs_param_by_chain(
 
 
 def plot_param_vs_param(
-        plotter: Plotter,
-        mcmc_params: List[pd.DataFrame],
-        mcmc_tables: List[pd.DataFrame],
-        parameters: list,
-        burn_in: int,
-        style: str,
-        bins: int,
-        label_font_size: int,
-        label_chars: int,
-        dpi_request: int,
-        label_param_string=True,
-        show_ticks=False,
-        file_name="parameter_correlation_matrix",
-        tight_layout=False,
-        short_label=False,
+    plotter: Plotter,
+    mcmc_params: List[pd.DataFrame],
+    mcmc_tables: List[pd.DataFrame],
+    parameters: list,
+    burn_in: int,
+    style: str,
+    bins: int,
+    label_font_size: int,
+    label_chars: int,
+    dpi_request: int,
+    label_param_string=True,
+    show_ticks=False,
+    file_name="parameter_correlation_matrix",
+    tight_layout=False,
+    short_label=False,
 ):
     """
     Plot the parameter correlation matrices for each parameter combination.
@@ -853,18 +860,22 @@ def plot_param_vs_param(
     fig, axes, _, _, _, _ = plotter.get_figure(n_panels=len(parameters) ** 2)
     row_data, col_data = {}, {}
     if tight_layout:
-        fig.tight_layout(pad=0.)
+        fig.tight_layout(pad=0.0)
 
     # Get x and y data separately and collate up over the chains
     for row_idx, row_param_name in enumerate(parameters):
         row_data[row_param_name] = []
         for i_chain in range(len(mcmc_params_list)):
-            values = get_posterior([mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], row_param_name, burn_in)
+            values = get_posterior(
+                [mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], row_param_name, burn_in
+            )
             row_data[row_param_name] += values[row_param_name].to_list()
     for col_idx, col_param_name in enumerate(parameters):
         col_data[col_param_name] = []
         for i_chain in range(len(mcmc_params_list)):
-            values = get_posterior([mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], col_param_name, burn_in)
+            values = get_posterior(
+                [mcmc_params_list[i_chain]], [mcmc_tables_list[i_chain]], col_param_name, burn_in
+            )
             col_data[col_param_name] += values[col_param_name].to_list()
 
     # Loop over parameter combinations
@@ -914,11 +925,14 @@ def plot_param_vs_param(
             y_param_label = row_param_name if label_param_string else str(row_idx + 1)
             if row_idx == len(parameters) - 1:
                 axis.set_xlabel(
-                    get_plot_text_dict(x_param_label, get_short_text=short_label), fontsize=label_font_size, labelpad=3,
+                    get_plot_text_dict(x_param_label, get_short_text=short_label),
+                    fontsize=label_font_size,
+                    labelpad=3,
                 )
             if col_idx == 0:
                 axis.set_ylabel(
-                    get_plot_text_dict(y_param_label, get_short_text=short_label), fontsize=label_font_size
+                    get_plot_text_dict(y_param_label, get_short_text=short_label),
+                    fontsize=label_font_size,
                 )
 
     # Save
@@ -1025,7 +1039,7 @@ def plot_multi_output_single_run(
     title_font_size: int,
     label_font_size: int,
     dpi_request=300,
-    xaxis_date=True
+    xaxis_date=True,
 ):
 
     # Except not the dispersion parameters - only the epidemiological ones
@@ -1042,14 +1056,18 @@ def plot_multi_output_single_run(
 
         if i < len(chosen_outputs):
             output_name = chosen_outputs[i]
-            derived_output_tables = db.load.load_derived_output_tables(calib_dir_path, column=output_name)
+            derived_output_tables = db.load.load_derived_output_tables(
+                calib_dir_path, column=output_name
+            )
 
             for scenario in selected_scenarios:
 
-                times, values = get_output_from_run_id(output_name, mcmc_tables, derived_output_tables, run_id, scenario)
+                times, values = get_output_from_run_id(
+                    output_name, mcmc_tables, derived_output_tables, run_id, scenario
+                )
 
                 # Plot the prior
-                linestyle = 'dotted' if scenario == 0 else 'solid'
+                linestyle = "dotted" if scenario == 0 else "solid"
                 axis.plot(times, values, color=COLOR_THEME[scenario], linestyle=linestyle)
 
             axis.set_title(

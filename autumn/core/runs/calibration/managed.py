@@ -5,50 +5,59 @@ from autumn.core import db
 
 from autumn.core.runs.utils import collate_columns_to_urun
 
+
 class ManagedCalibrationRun:
     def __init__(self, manager):
         self._manager = manager
-        self.data_path = self._manager.local_path / 'data/calibration_outputs'
+        self.data_path = self._manager.local_path / "data/calibration_outputs"
         self._collated_db = None
-        
+
     def get_mcmc_runs(self, raw=False, auto_download=True):
         if self._collated_db is None:
-            db_path = self.data_path / 'mcmc_collated.db'
+            db_path = self.data_path / "mcmc_collated.db"
             if not db_path.exists():
                 self._collate(auto_download)
             self._collated_db = db.get_database(str(db_path))
 
-        runs = self._collated_db.query('mcmc_run')
+        runs = self._collated_db.query("mcmc_run")
         if not raw:
             runs = collate_columns_to_urun(runs)
-            runs = runs.pivot_table(index='urun')
+            runs = runs.pivot_table(index="urun")
         return runs
-        
+
     def get_mcmc_params(self, raw=False, auto_download=True):
         if self._collated_db is None:
-            db_path = self.data_path / 'mcmc_collated.db'
+            db_path = self.data_path / "mcmc_collated.db"
             if not db_path.exists():
                 self._collate(auto_download)
             self._collated_db = db.get_database(str(db_path))
-            
-        params = self._collated_db.query('mcmc_params')
+
+        params = self._collated_db.query("mcmc_params")
         if not raw:
-            params = collate_columns_to_urun(params,drop=True)
-            params = params.pivot_table(index='urun',columns='name')
+            params = collate_columns_to_urun(params, drop=True)
+            params = params.pivot_table(index="urun", columns="name")
             params.columns = params.columns.droplevel()
         return params
 
     def get_mle_params(self, auto_download=True):
-        return self._get_meta('mle-params.yml', auto_download)
+        return self._get_meta("mle-params.yml", auto_download)
 
     def get_priors(self, auto_download=True):
-        return self._get_meta('priors-0.yml', auto_download)
+        return self._get_meta("priors-0.yml", auto_download)
 
     def get_params(self, auto_download=True):
-        return self._get_meta('params-0.yml', auto_download)
+        return self._get_meta("params-0.yml", auto_download)
 
     def get_targets(self, auto_download=True):
-        return self._get_meta('targets-0.yml', auto_download)
+        return self._get_meta("targets-0.yml", auto_download)
+
+    def get_derived_outputs(self, auto_download=True):
+        db_path = self.data_path / "derived_outputs.db"
+        if self._collated_db is None:
+            if not db_path.exists():
+                self._collate_derived(auto_download)
+            self._collated_db = db.get_database(str(db_path))
+        return self._collated_db.query("derived_outputs")
 
     def _get_meta(self, path_ext, auto_download=True):
         meta_path = self.data_path / path_ext
@@ -57,8 +66,8 @@ class ManagedCalibrationRun:
                 self.download_meta()
             else:
                 raise FileNotFoundError(meta_path)
-        return yaml.load(open(meta_path, 'r'), Loader=yaml.UnsafeLoader)
-    
+        return yaml.load(open(meta_path, "r"), Loader=yaml.UnsafeLoader)
+
     def _collate(self, auto_download=True):
         try:
             database_paths = db.load.find_db_paths(str(self.data_path))
@@ -68,11 +77,23 @@ class ManagedCalibrationRun:
                 database_paths = db.load.find_db_paths(str(self.data_path))
             else:
                 raise FileNotFoundError(self.data_path, "Try downloading data")
-        collated_db_path = str(self.data_path / 'mcmc_collated.db')
+        collated_db_path = str(self.data_path / "mcmc_collated.db")
         db.process.collate_databases(
-                database_paths, collated_db_path, tables=["mcmc_run", "mcmc_params"]
-            )
-        
+            database_paths, collated_db_path, tables=["mcmc_run", "mcmc_params"]
+        )
+
+    def _collate_derived(self, auto_download=True):
+        try:
+            database_paths = db.load.find_db_paths(str(self.data_path))
+        except:
+            if auto_download:
+                self.download_outputs()
+                database_paths = db.load.find_db_paths(str(self.data_path))
+            else:
+                raise FileNotFoundError(self.data_path, "Try downloading data")
+        collated_db_path = str(self.data_path / "derived_outputs.db")
+        db.process.collate_databases(database_paths, collated_db_path, tables=["derived_outputs"])
+
     def download_mcmc(self):
         mcmc_mstr = f"{self._manager.run_id}/data/calibration_outputs/.*/mcmc_.*.parquet"
         for f in self._manager.remote.list_contents():
@@ -82,9 +103,8 @@ class ManagedCalibrationRun:
                 self._manager.remote.download(f)
 
     def download_meta(self):
-        """Download all metadata files - anything that's a .yml
-        """
-        for f in self._manager.remote.list_contents('.yml'):
+        """Download all metadata files - anything that's a .yml"""
+        for f in self._manager.remote.list_contents(".yml"):
             self._manager.remote.download(f)
 
     def download_outputs(self, include_full_outputs=False):

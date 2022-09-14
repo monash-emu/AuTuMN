@@ -5,11 +5,11 @@ steps:
     key: model-name
     options:
     - label: Wpro_Australia (WPRO)
-      value: WPRO:wpro_AUSTRALIA
+      value: WPRO:wpro_australia
     - label: Wpro_Malaysia (WPRO)
-      value: WPRO:wpro_MALAYSIA
+      value: WPRO:wpro_malaysia
     - label: Wpro_Philippines (WPRO)
-      value: WPRO:wpro_PHILIPPINES
+      value: WPRO:wpro_philippines
     - label: Belgium (covid_19)
       value: covid_19:belgium
     - label: France (covid_19)

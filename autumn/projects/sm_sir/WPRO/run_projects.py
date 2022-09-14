@@ -1,5 +1,5 @@
 from autumn.core.project import get_project, ParameterSet
-iso3s = ["wpro_malaysia"]
+iso3s = ["WPRO_MALAYSIA"]
 
 for iso3 in iso3s:
     project = get_project("WPRO", iso3)

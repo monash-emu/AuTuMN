@@ -1,14 +1,14 @@
 class Region:
-    wpro_australia = "australia"
-    wpro_malaysia = "malaysia"
-    wpro_philippines = "philippines"
-    wpro_CHINA = "china"
-    wpro_MONGOLIA = "mongolia"
-    wpro_NEW_ZEALAND = "new-zealand"
-    wpro_SOUTH_KOREA = "south-korea"
-    wpro_VIET_NAM = "viet-nam"
-    wpro_SINGAPORE = "singapore"
-    wpro_JAPAN = "japan"
+    WPRO_AUSTRALIA = "wpro_australia"
+    WPRO_MALAYSIA = "wpro_malaysia"
+    WPRO_PHILIPPINES = "wpro_philippines"
+    WPRO_CHINA = "wpro_china"
+    WPRO_MONGOLIA = "wpro_mongolia"
+    WPRO_NEW_ZEALAND = "wpro_new-zealand"
+    WPRO_SOUTH_KOREA = "wpro_south-korea"
+    WPRO_VIET_NAM = "wpro_viet-nam"
+    WPRO_SINGAPORE = "wpro_singapore"
+    WPRO_JAPAN = "wpro_japan"
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     MANILA = "manila"
@@ -46,16 +46,16 @@ class Region:
     AUSTRALIA = "australia"
 
     REGIONS = [
-        wpro_australia,
-        wpro_philippines,
-        wpro_malaysia,
-        wpro_CHINA,
-        wpro_MONGOLIA,
-        wpro_NEW_ZEALAND,
-        wpro_SOUTH_KOREA,
-        wpro_VIET_NAM,
-        wpro_SINGAPORE,
-        wpro_JAPAN,
+        WPRO_AUSTRALIA,
+        WPRO_PHILIPPINES,
+        WPRO_MALAYSIA,
+        WPRO_CHINA,
+        WPRO_MONGOLIA,
+        WPRO_NEW_ZEALAND,
+        WPRO_SOUTH_KOREA,
+        WPRO_VIET_NAM,
+        WPRO_SINGAPORE,
+        WPRO_JAPAN,
         PHILIPPINES,
         MANILA,
         NCR,
@@ -120,9 +120,9 @@ class Region:
     ]
 
     WPRO_REGIONS = [
-        wpro_australia,
-        wpro_philippines,
-        wpro_malaysia
+        WPRO_AUSTRALIA,
+        WPRO_PHILIPPINES,
+        WPRO_MALAYSIA
     ]
 
     SCHOOL_PROJECT_REGIONS = [PHILIPPINES, FRANCE, AUSTRALIA]

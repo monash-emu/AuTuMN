@@ -45,4 +45,4 @@ with open(plot_spec_filepath) as f:
 
 ## Create and register the project
 project = Project(
-    Region.wpro_philippines, Models.WPRO, build_model, param_set, calibration, plots=plot_spec)
+    Region.WPRO_PHILIPPINES, Models.WPRO, build_model, param_set, calibration, plots=plot_spec)

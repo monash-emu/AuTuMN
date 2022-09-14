@@ -28,6 +28,7 @@ from autumn.core.db.store import (
 from autumn.core.project.params import read_yaml_file
 from autumn.core.registry import _PROJECTS
 from autumn.core.utils.git import get_git_branch, get_git_hash
+from autumn.core.utils.runs import build_run_id
 from autumn.core.utils.timer import Timer
 from autumn.settings import BASE_PATH, DOCS_PATH, MODELS_PATH, OUTPUT_DATA_PATH, Region, Models
 from summer.derived_outputs import DerivedOutputRequest
@@ -244,6 +245,9 @@ class Project:
 
     def _get_path(self):
         return _PROJECTS[self.model_name][self.region_name]
+
+    def _gen_run_id(self):
+        return build_run_id(self.model_name, self.region_name, get_git_hash()[0:8])
 
 
 LOADED_PROJECTS = set()

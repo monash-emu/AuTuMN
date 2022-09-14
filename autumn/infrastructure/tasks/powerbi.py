@@ -11,6 +11,9 @@ from autumn.infrastructure.tasks.full import FULL_RUN_DATA_DIR
 from autumn.infrastructure.tasks.utils import get_project_from_run_id
 from autumn.core.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from autumn.core.utils.timer import Timer
+from .storage import StorageMode, MockStorage, S3Storage, LocalStorage
+from autumn.core.runs import ManagedRun
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +25,7 @@ POWERBI_COLLATED_PATH = os.path.join(POWERBI_DATA_DIR, "collated")
 POWERBI_COLLATED_PRUNED_PATH = os.path.join(POWERBI_DATA_DIR, "collated-pruned")
 
 
-def powerbi_task(run_id: str, urunid: str, quiet: bool):
+def powerbi_task(run_id: str, urunid: str, quiet: bool, store="s3"):
     s3_client = get_s3_client()
     project = get_project_from_run_id(run_id)
 
@@ -34,20 +37,30 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
 
             os.makedirs(dirpath)
 
+    mr = ManagedRun(run_id, s3_client=s3_client)
+
+    if store == StorageMode.MOCK:
+        storage = MockStorage()
+    elif store == StorageMode.S3:
+        s3_client = get_s3_client()
+        storage = S3Storage(s3_client, run_id, REMOTE_BASE_DIR, not quiet)
+    elif store == StorageMode.LOCAL:
+        storage = LocalStorage(run_id, REMOTE_BASE_DIR)
+
     # Find the full model run databases in AWS S3.
-    key_prefix = os.path.join(run_id, os.path.relpath(FULL_RUN_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = []
-    for filename_base in ["mcmc_run", "mcmc_params", "derived_outputs"]:
-        chain_db_keys += list_s3(s3_client, key_prefix, key_suffix=f"{filename_base}.feather")
+    # key_prefix = os.path.join(run_id, os.path.relpath(FULL_RUN_DATA_DIR, REMOTE_BASE_DIR))
+    # chain_db_keys = []
+    # for filename_base in ["mcmc_run", "mcmc_params", "derived_outputs"]:
+    #    chain_db_keys += list_s3(s3_client, key_prefix, key_suffix=f"{filename_base}.feather")
 
     # Download the full model run databases.
-    with Timer(f"Downloading full model run data"):
-        for src_key in chain_db_keys:
-            download_from_run_s3(s3_client, run_id, src_key, quiet)
+    # with Timer(f"Downloading full model run data"):
+    #    for src_key in chain_db_keys:
+    #        download_from_run_s3(s3_client, run_id, src_key, quiet)
 
     # No urunid supplied; get a single candidate dataframe (ie the MLE run)
     if urunid == "mle":
-        all_mcmc_df = pd.concat(load_mcmc_tables(FULL_RUN_DATA_DIR), ignore_index=True)
+        all_mcmc_df = mr.full_run.get_mcmc_runs()
         candidates_df = db.process.select_pruning_candidates(all_mcmc_df, 1)
     else:
         c, r = (int(x) for x in urunid.split("_"))
@@ -55,7 +68,7 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
         candidates_df.loc[0] = dict(chain=c, run=r)
 
     # Remove unnecessary data from each full model run database.
-    full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
+    full_db_paths = db.load.find_db_paths(mr.full_run.local_path)
     with Timer(f"Pruning chain databases"):
         get_dest_path = lambda p: os.path.join(POWERBI_PRUNED_DIR, os.path.basename(p))
         for full_db_path in full_db_paths:
@@ -84,7 +97,8 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
 
     # Upload final database to AWS S3
     with Timer(f"Uploading PowerBI data to AWS S3"):
-        upload_to_run_s3(s3_client, run_id, dest_db_path, quiet)
+        # upload_to_run_s3(s3_client, run_id, dest_db_path, quiet)
+        storage.store(dest_db_path)
 
     # Create uncertainty plots
     with Timer(f"Creating uncertainty plots"):
@@ -92,4 +106,5 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool):
 
     # Upload the plots to AWS S3.
     with Timer(f"Uploading plots to AWS S3"):
-        upload_to_run_s3(s3_client, run_id, POWERBI_PLOT_DIR, quiet)
+        # upload_to_run_s3(s3_client, run_id, POWERBI_PLOT_DIR, quiet)
+        storage.store(POWERBI_PLOT_DIR)

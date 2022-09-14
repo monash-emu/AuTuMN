@@ -1,18 +1,16 @@
 import logging
 import os
 import sys
-from tempfile import TemporaryDirectory
 from pathlib import Path, PurePosixPath
-import shutil
 
 from autumn.core import db, plots
-from autumn.core.runs import ManagedRun
 from autumn.settings import REMOTE_BASE_DIR
 from autumn.core.utils.parallel import run_parallel_tasks, gather_exc_plus
 from autumn.core.utils.fs import recreate_dir
-from autumn.core.utils.s3 import upload_to_run_s3, get_s3_client
+from autumn.core.utils.s3 import get_s3_client
 from autumn.core.utils.timer import Timer
 from .utils import get_project_from_run_id, set_logging_config
+from .storage import StorageMode, MockStorage, S3Storage, LocalStorage
 
 logger = logging.getLogger(__name__)
 
@@ -24,43 +22,6 @@ CALIBRATE_PLOTS_DIR = REMOTE_BASE_DIR / "plots"
 CALIBRATE_LOG_DIR = REMOTE_BASE_DIR / "logs"
 CALIBRATE_DIRS = [CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, CALIBRATE_LOG_DIR]
 MLE_PARAMS_PATH = CALIBRATE_DATA_DIR / "mle-params.yml"
-
-
-class StorageMode:
-    S3 = "s3"
-    LOCAL = "local"
-    MOCK = "mock"
-
-
-class MockStorage:
-    def store(self, src_path):
-        pass
-
-
-class S3Storage:
-    def __init__(self, client, run_id, local_base_path, verbose=False):
-        self.client = client
-        self.run_id = run_id
-        self.local_base_path = local_base_path
-        self.verbose = verbose
-
-    def store(self, src_path):
-        upload_to_run_s3(self.client, self.run_id, src_path, not self.verbose)
-
-
-class LocalStorage:
-    def __init__(self, run_id, local_base_path):
-        self.managed_run = ManagedRun(run_id)
-        self.source_base = local_base_path
-        self.dest_base = self.managed_run.local_path
-
-    def store(self, src_path):
-        rel_path = Path(src_path).relative_to(self.source_base)
-        dest_path = self.dest_base / rel_path
-        if src_path.is_dir():
-            shutil.copytree(src_path, dest_path, dirs_exist_ok=True)
-        else:
-            shutil.copyfile(src_path, dest_path)
 
 
 def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool, store="s3"):

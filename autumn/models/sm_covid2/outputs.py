@@ -152,7 +152,10 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
 
         ifr_request = ifr_prop_requests.values
-        ifr_props = Data(np.array(convert_param_agegroups(iso3, region, ifr_request, age_groups)))
+        age_ifr_props = Data(
+            np.array(convert_param_agegroups(iso3, region, ifr_request, age_groups))
+        )
+        ifr_multiplier = ifr_prop_requests.multiplier
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         # death_distri_densities = Data(
@@ -174,10 +177,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
                 # Adjust CFR proportions for immunity
-                adj_death_props = ifr_props * immune_death_modifiers[immunity_stratum]
-                adj_death_props = Function(
-                    apply_odds_ratio_to_proportion, [adj_death_props, ifr_prop_requests.multiplier]
-                )
+                age_immune_death_props = age_ifr_props * immune_death_modifiers[immunity_stratum]
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -193,7 +193,9 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                         1.0 if not strain else voc_params[strain].death_risk_adjuster
                     )
 
-                    death_risk = adj_death_props[age_idx] * strain_risk_modifier
+                    death_risk = (
+                        age_immune_death_props[age_idx] * strain_risk_modifier * ifr_multiplier
+                    )
 
                     death_risk.node_name = f"death_risk{strata_string}"
 

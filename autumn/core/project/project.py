@@ -9,6 +9,7 @@ from importlib import import_module
 from importlib import reload as reload_module
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
+from sys import stdout
 
 from computegraph.utils import expand_nested_dict
 
@@ -38,6 +39,8 @@ from summer.model import CompartmentalModel
 from .params import ParameterSet, Params
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 ModelBuilder = Callable[[dict, dict], CompartmentalModel]
 

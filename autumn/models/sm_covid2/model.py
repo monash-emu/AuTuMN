@@ -469,8 +469,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # request extra output to store the number of students*weeks of school missed
     outputs_builder.request_student_weeks_missed_output(student_weeks_missed)
 
+    builder.set_model(model)
     if ret_builder:
-        builder.set_model(model)
         return model, builder
     else:
         return model

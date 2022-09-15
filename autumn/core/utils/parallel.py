@@ -11,7 +11,7 @@ from typing import List, Callable, Any
 logger = logging.getLogger(__name__)
 
 
-MAX_WORKERS = mp.cpu_count() - 1
+MAX_WORKERS = mp.cpu_count()
 
 
 def gather_exc_plus(filename="crash.log"):
@@ -67,9 +67,7 @@ def run_parallel_tasks(func: Callable, arg_list: List[Any], auto_exit=True):
         logger.info("Parallel task completed: %s", result)
         success_results.append(result)
 
-    logger.info(
-        "Successfully ran %s parallel tasks: %s", len(success_results), success_results
-    )
+    logger.info("Successfully ran %s parallel tasks: %s", len(success_results), success_results)
     if failure_exceptions:
         logger.info("Failed to run %s parallel tasks", len(failure_exceptions))
         for f in failure_exceptions:

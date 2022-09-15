@@ -479,7 +479,7 @@ def plot_loglikelihood_trace(
         chain_idx = list(table_df["chain"].unique())
         for chain_id in chain_idx:
             chain_mask = table_df["chain"] == chain_id
-            masked_df = table_df[accept_mask][chain_mask]
+            masked_df = table_df[accept_mask & chain_mask]
             axis.plot(masked_df["run"], masked_df[variable_key], alpha=0.8, linewidth=0.7)
     else:  # there is one chain per dataframe
         for idx, table_df in enumerate(mcmc_tables):

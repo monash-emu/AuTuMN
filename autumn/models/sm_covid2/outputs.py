@@ -1,14 +1,23 @@
 from typing import List, Dict, Optional, Union
 
-from scipy import stats
 import numpy as np
-from numba import jit
+
+from jax import scipy as scipy
+from jax import numpy as jnp
 
 from autumn.model_features.outputs import OutputsBuilder
-from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
+from autumn.model_features.agegroup import convert_param_agegroups
+from autumn.models.sm_covid2.parameters import TimeDistribution, VocComponent, AgeSpecificProps
 from .constants import IMMUNITY_STRATA, Compartment, ImmunityStratum
-from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
-from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
+from autumn.core.utils.utils import weighted_average
+from autumn.models.sm_jax.outputs import apply_odds_ratio_to_proportion
+
+
+from summer2.parameters import Function, Data, DerivedOutput
+
+
+def gamma_cdf(shape, scale, x):
+    return scipy.special.gammainc(shape, x / scale)
 
 
 def get_immunity_prop_modifiers(
@@ -142,15 +151,17 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         """
 
-        age_ifr_request = ifr_prop_requests.values
-        age_ifr_props = convert_param_agegroups(iso3, region, age_ifr_request, age_groups)
+        ifr_request = ifr_prop_requests.values
+        age_ifr_props = Data(
+            np.array(convert_param_agegroups(iso3, region, ifr_request, age_groups))
+        )
         ifr_multiplier = ifr_prop_requests.multiplier
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
-        interval_distri_densities = precompute_density_intervals(
-            time_from_onset_to_death, model_times
-        )
-
+        # death_distri_densities = Data(
+        #    precompute_density_intervals(time_from_onset_to_death, model_times)
+        # )
+        death_distri_densities = build_density_interval_func(time_from_onset_to_death, model_times)
         # Prepare immunity modifiers
         immune_death_modifiers = {
             ImmunityStratum.UNVACCINATED: 1.0,
@@ -159,7 +170,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         # Request infection deaths for each age group
         infection_deaths_sources = []
-        for agegroup in age_groups:
+        for age_idx, agegroup in enumerate(age_groups):
             agegroup_string = f"Xagegroup_{agegroup}"
 
             for immunity_stratum in IMMUNITY_STRATA:
@@ -181,28 +192,44 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     strain_risk_modifier = (
                         1.0 if not strain else voc_params[strain].death_risk_adjuster
                     )
+
                     death_risk = (
-                        age_immune_death_props[agegroup] * strain_risk_modifier * ifr_multiplier
+                        age_immune_death_props[age_idx] * strain_risk_modifier * ifr_multiplier
                     )
 
-                    assert death_risk <= 1.0, "The overall death risk is greater than one."
+                    death_risk.node_name = f"death_risk{strata_string}"
 
-                    # Get the infection deaths function for convolution
-                    infection_deaths_func = make_calc_deaths_func(
-                        death_risk, interval_distri_densities
-                    )
+                    # infection_deaths_func = Function(
+                    #    convolve_probability,
+                    #    [
+                    #        death_risk * DerivedOutput(f"incidence{strata_string}"),
+                    #        death_distri_densities,
+                    #    ],
+                    # )
 
                     # Request the output
-                    self.model.request_function_output(
+                    self.model.request_param_function_output(
                         name=output_name,
-                        sources=[f"incidence{strata_string}"],
-                        func=infection_deaths_func,
+                        func=death_risk * DerivedOutput(f"incidence{strata_string}"),
                         save_results=False,
                     )
 
         # Request aggregated infection deaths
         self.model.request_aggregate_output(
-            name="infection_deaths", sources=infection_deaths_sources
+            name="infection_deaths_preconv", sources=infection_deaths_sources, save_results=False
+        )
+
+        infection_deaths_func = Function(
+            convolve_probability,
+            [
+                DerivedOutput("infection_deaths_preconv"),
+                death_distri_densities,
+            ],
+        )
+
+        self.model.request_param_function_output(
+            name="infection_deaths",
+            func=infection_deaths_func,
         )
 
     def request_hospitalisations(
@@ -239,10 +266,12 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         symptomatic_props = convert_param_agegroups(
             iso3, region, symptomatic_prop_requests, age_groups
         )
-        hosp_props = convert_param_agegroups(iso3, region, hosp_prop_requests.values, age_groups)
+        hosp_props = Data(
+            np.array(convert_param_agegroups(iso3, region, hosp_prop_requests.values, age_groups))
+        )
 
         # Get the adjustments to the hospitalisation rates according to immunity status
-        or_adjuster_func = get_apply_odds_ratio_to_prop(hosp_prop_requests.multiplier)
+        # or_adjuster_func = get_apply_odds_ratio_to_prop(hosp_prop_requests.multiplier)
 
         # Prepare immunity modifiers
         immune_hosp_modifiers = {
@@ -251,13 +280,13 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         }
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
-        interval_distri_densities = precompute_density_intervals(
+        hospitalisation_density_intervals = build_density_interval_func(
             time_from_onset_to_hospitalisation, model_times
         )
 
         # Request hospital admissions for each age group
         hospital_admissions_sources = []
-        for agegroup in age_groups:
+        for agegroup_idx, agegroup in enumerate(age_groups):
             agegroup_string = f"Xagegroup_{agegroup}"
 
             for immunity_stratum in IMMUNITY_STRATA:
@@ -265,7 +294,10 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
                 # Adjust the hospitalisation proportions for immunity
                 adj_hosp_props = hosp_props * immune_hosp_modifiers[immunity_stratum]
-                adj_hosp_props = adj_hosp_props.apply(or_adjuster_func)
+                # adj_hosp_props = adj_hosp_props.apply(or_adjuster_func)
+                adj_hosp_props = Function(
+                    apply_odds_ratio_to_proportion, [adj_hosp_props, hosp_prop_requests.multiplier]
+                )
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -279,36 +311,71 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     strain_risk_modifier = (
                         1.0 if not strain else voc_params[strain].hosp_risk_adjuster
                     )
-                    hospital_risk_given_symptoms = adj_hosp_props[agegroup] * strain_risk_modifier
+                    hospital_risk_given_symptoms = (
+                        adj_hosp_props[agegroup_idx] * strain_risk_modifier
+                    )
                     hospital_risk_given_infection = (
                         hospital_risk_given_symptoms * symptomatic_props[agegroup]
                     )
 
                     # Get the hospitalisation function
-                    hospital_admissions_func = make_calc_admissions_func(
-                        hospital_risk_given_infection, interval_distri_densities
-                    )
+                    # hospital_admissions_func = make_calc_admissions_func(
+                    #    hospital_risk_given_infection, interval_distri_densities
+                    # )
+
+                    # hospital_admissions_func = Function(
+                    #     convolve_probability,
+                    #     [
+                    #         hospital_risk_given_infection
+                    #         * DerivedOutput(f"incidence{strata_string}"),
+                    #         hospitalisation_density_intervals,
+                    #     ],
+                    # )
 
                     # Request the output
-                    self.model.request_function_output(
+                    self.model.request_param_function_output(
                         name=output_name,
-                        sources=[f"incidence{strata_string}"],
-                        func=hospital_admissions_func,
+                        func=hospital_risk_given_infection
+                        * DerivedOutput(f"incidence{strata_string}"),
                         save_results=False,
                     )
 
         # Request aggregated hospital admissions
         self.model.request_aggregate_output(
-            name="hospital_admissions", sources=hospital_admissions_sources
+            name="hospital_admissions_preconv",
+            sources=hospital_admissions_sources,
+            save_results=False,
+        )
+
+        hospital_admissions_func = Function(
+            convolve_probability,
+            [
+                DerivedOutput("hospital_admissions_preconv"),
+                hospitalisation_density_intervals,
+            ],
+        )
+
+        self.model.request_param_function_output(
+            name="hospital_admissions",
+            func=hospital_admissions_func,
+            save_results=True,
         )
 
         # Request aggregated hospital occupancy
-        probas_stay_greater_than = precompute_probas_stay_greater_than(
-            hospital_stay_duration, model_times
+        probas_stay_greater_than = build_probas_stay_func(hospital_stay_duration, model_times)
+
+        # hospital_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
+
+        hospital_occupancy_func = Function(
+            convolve_probability,
+            [
+                DerivedOutput("hospital_admissions"),
+                probas_stay_greater_than,
+            ],
         )
-        hospital_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
-        self.model.request_function_output(
-            name="hospital_occupancy", sources=["hospital_admissions"], func=hospital_occupancy_func
+
+        self.model.request_param_function_output(
+            name="hospital_occupancy", func=hospital_occupancy_func
         )
 
     def request_peak_hospital_occupancy(self):
@@ -497,6 +564,7 @@ def build_statistical_distribution(distribution_details: TimeDistribution):
         A scipy statistical distribution object
 
     """
+    from scipy import stats
 
     if distribution_details.distribution == "gamma":
         shape = distribution_details.parameters["shape"]
@@ -504,153 +572,26 @@ def build_statistical_distribution(distribution_details: TimeDistribution):
         return stats.gamma(a=shape, scale=scale)
 
 
-def precompute_density_intervals(distribution_details, model_times):
-    """
-    Calculate the event probability associated with every possible time interval between two model times.
-
-    Args:
-        distribution_details: User requests for the distribution type
-        model_times: The model evaluation times
-
-    Returns:
-        A list of the integrals of the PDF of the probability distribution of interest over each time period
-        Its length is len(model_times) - 1
-
-    """
-
-    distribution = build_statistical_distribution(distribution_details)
-    lags = [t - model_times[0] for t in model_times]
-    cdf_values = distribution.cdf(lags)
-    interval_distri_densities = np.diff(cdf_values)
+def build_density_interval_func(dist: TimeDistribution, model_times):
+    lags = Data(model_times - model_times[0])
+    shape = dist.shape
+    scale = dist.mean / dist.shape
+    cdf_values = Function(gamma_cdf, [shape, scale, lags])
+    interval_distri_densities = Function(jnp.gradient, [cdf_values])
     return interval_distri_densities
 
 
-def precompute_probas_stay_greater_than(distribution_details, model_times):
-    """
-    Calculate the probability that duration of stay is greater than every possible time interval between two model times
-
-    Args:
-        distribution_details: User requests for the distribution type
-        model_times: The model evaluation times
-
-    Returns:
-        A list of the values of 1 - CDF for the probability distribution of interest over each time period
-        Its length is len(model_times)
-
-    """
-
-    distribution = build_statistical_distribution(distribution_details)
-    lags = [t - model_times[0] for t in model_times]
-    cdf_values = distribution.cdf(lags)
-    probas_stay_greater_than = 1 - cdf_values
+def build_probas_stay_func(dist: TimeDistribution, model_times):
+    lags = Data(model_times - model_times[0])
+    shape = dist.shape
+    scale = dist.mean / dist.shape
+    cdf_values = Function(gamma_cdf, [shape, scale, lags])
+    probas_stay_greater_than = 1.0 - cdf_values
     return probas_stay_greater_than
 
 
-@jit
-def convolve_probability(
-    source_output: np.ndarray, density_intervals: np.ndarray, scale: float = 1.0, lag: int = 1
-) -> np.ndarray:
-    """
-    Calculate a convolved output.
-
-    Args:
-        source_output: Previously computed model output on which the calculation is based
-        density_intervals: Overall probability density of occurence at particular timestep
-        scale: Total probability scale of event occuring
-        lag: Lag in output; defaults to 1 to reflect that events cannot occur at the same time
-
-    Returns:
-        A numpy array of the convolved output
-
-    """
-    convolved_output = np.zeros_like(source_output)
-
-    offset = 1 - lag
-
-    for i in range(source_output.size):
-        trunc_source_output = source_output[: i + offset][::-1]
-        trunc_intervals = density_intervals[: i + offset]
-        convolution_sum = (trunc_source_output * trunc_intervals).sum()
-        convolved_output[i] = scale * convolution_sum
-
-    return convolved_output
-
-
-def apply_convolution_for_event(
-    source_output: np.ndarray, density_intervals: np.ndarray, event_proba: float
-):
-    """
-    Calculate a convolved output.
-
-    Args:
-        source_output: Previously computed model output on which the calculation is based
-        density_intervals: Overall probability distribution of event occurring at a particular time given that it occurs
-        event_proba: Total probability of the event occurring
-
-    Returns:
-        A numpy array of the convolved output
-
-    """
-
-    return convolve_probability(source_output, density_intervals, scale=event_proba)
-
-
-def apply_convolution_for_occupancy(
-    source_output: np.ndarray, probas_stay_greater_than: np.ndarray
-):
-    """
-    Calculate a convolved output.
-
-    Args:
-        source_output: Previously computed model output on which the calculation is based
-        probas_stay_greater_than: Probability that duration of stay is greater than each possible time interval between
-        two model times
-
-    Returns:
-        A numpy array for the convolved output
-
-    """
-
-    return convolve_probability(source_output, probas_stay_greater_than, lag=0)
-
-
-"""
-Below are a few factory functions used when declaring functions within loops. This should prevent issues.
-"""
-
-
-def make_calc_notifications_func(density_intervals):
-    def notifications_func(detected_incidence):
-        notifications = apply_convolution_for_event(detected_incidence, density_intervals, 1.0)
-        return notifications
-
-    return notifications_func
-
-
-def make_calc_deaths_func(death_risk, density_intervals):
-    def deaths_func(detected_incidence):
-        deaths = apply_convolution_for_event(detected_incidence, density_intervals, death_risk)
-        return deaths
-
-    return deaths_func
-
-
-def make_calc_admissions_func(admission_risk, density_intervals):
-    def admissions_func(reference_output):
-        admissions = apply_convolution_for_event(
-            reference_output, density_intervals, admission_risk
-        )
-        return admissions
-
-    return admissions_func
-
-
-def make_calc_occupancy_func(probas_stay_greater_than):
-    def occupancy_func(admissions):
-        occupancy = apply_convolution_for_occupancy(admissions, probas_stay_greater_than)
-        return occupancy
-
-    return occupancy_func
+def convolve_probability(source_output, density_kernel):
+    return jnp.convolve(source_output, density_kernel)[0 : len(source_output)]
 
 
 def make_age_immune_prop_func(popsize):

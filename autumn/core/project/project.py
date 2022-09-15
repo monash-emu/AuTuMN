@@ -4,11 +4,12 @@ import json
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from importlib import import_module
 from importlib import reload as reload_module
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
+from sys import stdout
 
 from computegraph.utils import expand_nested_dict
 
@@ -29,6 +30,7 @@ from autumn.core.project.params import read_yaml_file
 from autumn.core.registry import _PROJECTS
 from autumn.core.utils.git import get_git_branch, get_git_hash
 from autumn.core.utils.runs import build_run_id
+from autumn.core.runs import ManagedRun
 from autumn.core.utils.timer import Timer
 from autumn.settings import BASE_PATH, DOCS_PATH, MODELS_PATH, OUTPUT_DATA_PATH, Region, Models
 from summer.derived_outputs import DerivedOutputRequest
@@ -37,8 +39,45 @@ from summer.model import CompartmentalModel
 from .params import ParameterSet, Params
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 ModelBuilder = Callable[[dict, dict], CompartmentalModel]
+
+
+class LocalTaskRunner:
+    def __init__(self, project):
+        self.project = project
+
+    def calibrate(self, num_chains: int, runtime: str, trigger=False, burn_in=500, samples=100):
+        from autumn.infrastructure.tasks.calibrate import calibrate_task
+
+        assert isinstance(runtime, str), "Runtime must be supplied as HMS strings"
+        runtime_s = pd.to_timedelta(runtime) / timedelta(seconds=1)
+        run_id = self.project._gen_run_id()
+
+        logger.info(f"Calibrating {num_chains} chains for {runtime} with run_id {run_id}")
+        calibrate_task(run_id, runtime_s, num_chains, False, "local")
+
+        if trigger:
+            logger.info(f"Triggering full run for {run_id}")
+            self.full_run(run_id, burn_in, samples)
+            self.powerbi(run_id)
+
+        return ManagedRun(run_id)
+
+    def full_run(self, run_id: str, burn_in: int, samples: int):
+        from autumn.infrastructure.tasks.full import full_model_run_task
+
+        full_model_run_task(run_id, burn_in, samples, False, "local")
+        return ManagedRun(run_id)
+
+    def powerbi(self, run_id):
+        from autumn.infrastructure.tasks.powerbi import powerbi_task
+
+        powerbi_task(run_id, "mle", False, "local")
+
+        return ManagedRun(run_id)
 
 
 class Project:
@@ -67,13 +106,22 @@ class Project:
         self.diff_output_requests = diff_output_requests or []
         self.post_diff_output_requests = post_diff_output_requests or {}
         self.ts_set = ts_set or None
+        self.tasks = LocalTaskRunner(self)
 
         self._model = None
         self._scenario_models = None
         self._is_calibrating = False
-        self._cal_params = [p["param_name"] for p in calibration.all_priors]
+        self._cal_params = [
+            p["param_name"]
+            for p in calibration.all_priors
+            if not p["param_name"].startswith("random_process")
+        ]
+        if any(
+            [p["param_name"].startswith("random_process.values") for p in calibration.all_priors]
+        ):
+            self._cal_params.append("random_process.values")
 
-    def calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
+    def _calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
         """
         Calibrate the model using the baseline parameters.
         """
@@ -175,57 +223,6 @@ class Project:
         """
         model.run()
 
-    def write_params_to_tex(self, main_table_params_list, project_path, output_dir_path=None):
-        """
-        Write the main parameter table as a tex file. Also write the table of calibrated parameters in a separate tex file.
-        :param main_table_params_list: ordered list of parameters to be included in the main table
-        :param project_path: path of the project's directory
-        :param output_dir_path: path of the directory where to dump the output tex files.
-               Default is "docs/papers/<model_name>/projects/<region_name>".
-        """
-        # Load parameters' descriptions (base model)
-        base_params_descriptions_path = os.path.join(
-            MODELS_PATH, self.model_name, "params_descriptions.json"
-        )
-        with open(base_params_descriptions_path, mode="r") as f:
-            params_descriptions = json.load(f)
-
-        # Load parameters' descriptions (project-specific)
-        updated_descriptions_path = os.path.join(project_path, "params_descriptions.json")
-        if os.path.isfile(updated_descriptions_path):
-            with open(updated_descriptions_path, mode="r") as f:
-                updated_params_descriptions = json.load(f)
-            params_descriptions.update(updated_params_descriptions)
-
-        # work out output dir path
-        if output_dir_path is None:
-            output_dir_path = os.path.join(
-                DOCS_PATH, "papers", self.model_name, "projects", self.region_name
-            )
-
-        # Get list of priors
-        all_calibration_params_names = (
-            self.calibration.iterative_sampling_param_names
-            + self.calibration.independent_sampling_param_names
-        )
-        all_priors = (
-            self.calibration.iterative_sampling_priors
-            + self.calibration.independent_sampling_priors
-        )
-
-        # Write main parameter table to tex file
-        write_main_param_table(
-            self,
-            main_table_params_list,
-            params_descriptions,
-            all_calibration_params_names,
-            all_priors,
-            output_dir_path,
-        )
-
-        # Write calibrated parameter table to tex file
-        write_priors_table(params_descriptions, all_priors, output_dir_path)
-
     def get_path(self) -> Path:
         """
         Return a pathlib.Path to the current project directory
@@ -253,6 +250,11 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
     if model_name == Models.SM_COVID and project_name in Region.SCHOOL_PROJECT_REGIONS:
         # Ugly import within function definition to avoid circular imports
         from autumn.projects.sm_covid.common_school.project_maker import get_school_project
+
+        project = get_school_project(project_name)
+    elif model_name == Models.SM_COVID2 and project_name in Region.SCHOOL_PROJECT_REGIONS:
+        # Ugly import within function definition to avoid circular imports
+        from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
         project = get_school_project(project_name)
 

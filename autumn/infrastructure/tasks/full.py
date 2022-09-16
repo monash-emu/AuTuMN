@@ -1,6 +1,9 @@
 import logging
 import os
 import sys
+from pathlib import Path, PurePosixPath
+import tempfile
+import shutil
 
 import pandas as pd
 import numpy as np
@@ -10,8 +13,6 @@ from autumn.core import db, plots
 from autumn.core.db.database import get_database
 from autumn.core.db.store import Table
 from autumn.core.db.process import find_mle_run
-from autumn.settings import REMOTE_BASE_DIR
-from autumn.infrastructure.tasks.calibrate import CALIBRATE_DATA_DIR
 from autumn.infrastructure.tasks.utils import get_project_from_run_id, set_logging_config
 from autumn.core.utils.fs import recreate_dir
 from autumn.core.utils.parallel import run_parallel_tasks, gather_exc_plus
@@ -26,17 +27,19 @@ logger = logging.getLogger(__name__)
 
 N_CANDIDATES = 15
 
-FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
-FULL_RUN_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
-FULL_RUN_LOG_DIR = os.path.join(REMOTE_BASE_DIR, "logs")
-FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
-TABLES_TO_DOWNLOAD = [Table.MCMC, Table.PARAMS]
-
 
 def full_model_run_task(
     run_id: str, burn_in: int, sample_size: int, quiet: bool, store: str = "s3"
 ):
     project = get_project_from_run_id(run_id)
+
+    REMOTE_BASE_DIR = Path(tempfile.mkdtemp())
+    FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
+    FULL_RUN_PLOTS_DIR = os.path.join(REMOTE_BASE_DIR, "plots")
+    FULL_RUN_LOG_DIR = os.path.join(REMOTE_BASE_DIR, "logs")
+    FULL_RUN_DIRS = [FULL_RUN_DATA_DIR, FULL_RUN_PLOTS_DIR, FULL_RUN_LOG_DIR]
+
+    paths = {"FULL_RUN_DATA_DIR": FULL_RUN_DATA_DIR, "FULL_RUN_LOG_DIR": FULL_RUN_LOG_DIR}
 
     # Set up directories for output data.
     # Set up directories for plots and output data.
@@ -44,9 +47,7 @@ def full_model_run_task(
         for dirpath in FULL_RUN_DIRS:
             recreate_dir(dirpath)
 
-    s3_client = get_s3_client()
-
-    mr = ManagedRun(run_id, s3_client=s3_client)
+    mr = ManagedRun(run_id)
 
     if store == StorageMode.MOCK:
         storage = MockStorage()
@@ -55,21 +56,6 @@ def full_model_run_task(
         storage = S3Storage(s3_client, run_id, REMOTE_BASE_DIR, not quiet)
     elif store == StorageMode.LOCAL:
         storage = LocalStorage(run_id, REMOTE_BASE_DIR)
-
-    # Find the calibration chain databases in AWS S3.
-    # key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
-    # chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".parquet")
-    # chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
-
-    # Download the calibration chain databases.
-    # with Timer(f"Downloading calibration data"):
-    #    for src_key in chain_db_keys:
-    #        download_from_run_s3(s3_client, run_id, src_key, quiet)
-
-    # Run the models for the full time period plus all scenarios.
-    # db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
-    # chain_ids = [int(p.split("/")[-1].split("-")[-1]) for p in db_paths]
-    # num_chains = len(chain_ids)
 
     # Select the runs to sample for each chain.  Do this before
     # we enter the parallel loop, so we can filter candidate outputs before
@@ -134,6 +120,7 @@ def full_model_run_task(
                 mcmc_params.loc[subset_runs[subset_id].index],
                 candidates_df,
                 quiet,
+                paths,
             )
             for subset_id in range(len(subset_runs))
         ]
@@ -173,6 +160,8 @@ def full_model_run_task(
         # upload_to_run_s3(s3_client, run_id, FULL_RUN_PLOTS_DIR, quiet)
         storage.store(FULL_RUN_PLOTS_DIR)
 
+    shutil.rmtree(REMOTE_BASE_DIR)
+
 
 def run_full_model_for_subset(
     run_id: str,
@@ -181,6 +170,7 @@ def run_full_model_for_subset(
     mcmc_params_df: pd.DataFrame,
     candidates_df: pd.DataFrame,
     quiet: bool,
+    paths: dict,
 ) -> int:
     """
     Run the full model (all time steps, all scenarios) for a subset of accepted calibration runs.
@@ -198,6 +188,9 @@ def run_full_model_for_subset(
     Returns:
         subset_id (int): The current subset
     """
+
+    FULL_RUN_DATA_DIR = paths["FULL_RUN_DATA_DIR"]
+    FULL_RUN_LOG_DIR = paths["FULL_RUN_LOG_DIR"]
 
     set_logging_config(not quiet, subset_id, FULL_RUN_LOG_DIR, task="full")
     # msg = "Running full models for chain %s with burn-in of %s and sample size of %s."

@@ -11,6 +11,7 @@ class ManagedCalibrationRun:
         self._manager = manager
         self.data_path = self._manager.local_path / "data/calibration_outputs"
         self._collated_db = None
+        self._collated_db_do = None
 
     def get_mcmc_runs(self, raw=False, auto_download=True):
         if self._collated_db is None:
@@ -53,11 +54,11 @@ class ManagedCalibrationRun:
 
     def get_derived_outputs(self, auto_download=True):
         db_path = self.data_path / "derived_outputs.db"
-        if self._collated_db is None:
+        if self._collated_db_do is None:
             if not db_path.exists():
                 self._collate_derived(auto_download)
-            self._collated_db = db.get_database(str(db_path))
-        return self._collated_db.query("derived_outputs")
+            self._collated_db_do = db.get_database(str(db_path))
+        return self._collated_db_do.query("derived_outputs")
 
     def _get_meta(self, path_ext, auto_download=True):
         meta_path = self.data_path / path_ext

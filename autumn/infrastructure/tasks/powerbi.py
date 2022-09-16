@@ -1,13 +1,13 @@
 import logging
 import os
 import shutil
+from pathlib import Path
+import tempfile
 
 import pandas as pd
 
 from autumn.core import db, plots
-from autumn.core.db.load import load_mcmc_tables
 from autumn.settings import REMOTE_BASE_DIR
-from autumn.infrastructure.tasks.full import FULL_RUN_DATA_DIR
 from autumn.infrastructure.tasks.utils import get_project_from_run_id
 from autumn.core.utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from autumn.core.utils.timer import Timer
@@ -17,15 +17,18 @@ from autumn.core.runs import ManagedRun
 
 logger = logging.getLogger(__name__)
 
-POWERBI_PLOT_DIR = os.path.join(REMOTE_BASE_DIR, "plots", "uncertainty")
-POWERBI_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "powerbi")
-POWERBI_DIRS = [POWERBI_DATA_DIR, POWERBI_PLOT_DIR]
-POWERBI_PRUNED_DIR = os.path.join(POWERBI_DATA_DIR, "pruned")
-POWERBI_COLLATED_PATH = os.path.join(POWERBI_DATA_DIR, "collated")
-POWERBI_COLLATED_PRUNED_PATH = os.path.join(POWERBI_DATA_DIR, "collated-pruned")
-
 
 def powerbi_task(run_id: str, urunid: str, quiet: bool, store="s3"):
+
+    REMOTE_BASE_DIR = Path(tempfile.mkdtemp())
+
+    POWERBI_PLOT_DIR = os.path.join(REMOTE_BASE_DIR, "plots", "uncertainty")
+    POWERBI_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "powerbi")
+    POWERBI_DIRS = [POWERBI_DATA_DIR, POWERBI_PLOT_DIR]
+    POWERBI_PRUNED_DIR = os.path.join(POWERBI_DATA_DIR, "pruned")
+    POWERBI_COLLATED_PATH = os.path.join(POWERBI_DATA_DIR, "collated")
+    POWERBI_COLLATED_PRUNED_PATH = os.path.join(POWERBI_DATA_DIR, "collated-pruned")
+
     s3_client = get_s3_client()
     project = get_project_from_run_id(run_id)
 
@@ -108,3 +111,5 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool, store="s3"):
     with Timer(f"Uploading plots to AWS S3"):
         # upload_to_run_s3(s3_client, run_id, POWERBI_PLOT_DIR, quiet)
         storage.store(POWERBI_PLOT_DIR)
+
+    shutil.rmtree(REMOTE_BASE_DIR)

@@ -358,7 +358,7 @@ def apply_general_coverage(
         vaccine_data = vaccine_data.append(
             pd.DataFrame(
                 [
-                    [0.78, 0.43],  # Full, then boost values
+                    [0.68, 0.43],  # Full, then boost values
                 ], 
                 columns=["full", "boost"], 
                 index=[

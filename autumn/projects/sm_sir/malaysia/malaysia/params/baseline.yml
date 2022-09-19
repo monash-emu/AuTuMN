@@ -147,3 +147,7 @@ mobility:
         - 0.5
         - 0.
         - 0.
+
+
+requested_cumulative_outputs: ['infection_deaths']
+cumulative_start_time: 367

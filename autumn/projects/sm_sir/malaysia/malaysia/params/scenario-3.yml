@@ -1,9 +1,28 @@
-description: more transimissible VoC and no vaccination
+description: What if nation-wide lockdown was not implemented
 
-voc_emergence:
-  wild_type:
-    contact_rate_multiplier: 1.2
-
-vaccination:
-  data_thinning: 4
-  scenario: 1
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2021-05-31
+        - 2021-06-01
+        - 2021-06-28
+        - 2021-06-29
+      values:
+        - - repeat_prev
+        - .8
+        - .8
+        - 1.
+    work:
+      append: true
+      times:
+        - 2021-05-31
+        - 2021-06-01
+        - 2021-06-28
+        - 2021-06-29
+      values:
+        - - repeat_prev
+        - .8
+        - .8
+        - 1.

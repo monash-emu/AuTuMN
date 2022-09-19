@@ -1,5 +1,0 @@
-description: VoC 1.2 times more transimissible than Delta
-
-voc_emergence:
-  wild_type:
-    contact_rate_multiplier: 1.2

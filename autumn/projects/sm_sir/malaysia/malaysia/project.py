@@ -41,12 +41,12 @@ priors = [
     UniformPrior("contact_rate", (0.01, 0.1)),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
     UniformPrior("sojourns.latent.total_time", (5, 20)),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (3, 4.5)),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (2, 4)),
     UniformPrior("voc_emergence.delta.new_voc_seed.start_time", (400, 500)),
-    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (3, 5)),
+    UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2, 3.5)),
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (520, 675)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
-    UniformPrior("voc_emergence.omicron.relative_active_period", (0.4, 1.3)),
+    UniformPrior("voc_emergence.omicron.relative_active_period", (0.5, 1.5)),
     UniformPrior("sojourns.recovered", (150, 300))
 ]
 

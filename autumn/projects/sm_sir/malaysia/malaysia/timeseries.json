@@ -7386,5 +7386,266 @@
       0.75,
       0.975
     ]
+  },
+  "infection_deathsXagegroup_0": {
+    "output_key": "infection_deathsXagegroup_0",
+    "title": "infection deaths 0-15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "infection_deathsXagegroup_15": {
+    "output_key": "infection_deathsXagegroup_15",
+    "title": "infection deaths 15-25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "infection_deathsXagegroup_25": {
+    "output_key": "infection_deathsXagegroup_25",
+    "title": "infection deaths 25-50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "infection_deathsXagegroup_50": {
+    "output_key": "infection_deathsXagegroup_50",
+    "title": "infection deaths 50-70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "infection_deathsXagegroup_70": {
+    "output_key": "infection_deathsXagegroup_70",
+    "title": "infection deaths 70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_admissionsXagegroup_0": {
+    "output_key": "hospital_admissionsXagegroup_0",
+    "title": "hospital_admissions 0-15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_admissionsXagegroup_15": {
+    "output_key": "hospital_admissionsXagegroup_15",
+    "title": "hospital_admissions 15-25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_admissionsXagegroup_25": {
+    "output_key": "hospital_admissionsXagegroup_25",
+    "title": "hospital_admissions 25-50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_admissionsXagegroup_50": {
+    "output_key": "hospital_admissionsXagegroup_50",
+    "title": "hospital_admissions 50-70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_admissionsXagegroup_70": {
+    "output_key": "hospital_admissionsXagegroup_70",
+    "title": "hospital_admissions 70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_occupancyXagegroup_0": {
+    "output_key": "hospital_occupancyXagegroup_0",
+    "title": "hospital_occupancy 0-15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_occupancyXagegroup_15": {
+    "output_key": "hospital_occupancyXagegroup_15",
+    "title": "hospital_occupancy 15-25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_occupancyXagegroup_25": {
+    "output_key": "hospital_occupancyXagegroup_25",
+    "title": "hospital_occupancy 25-50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_occupancyXagegroup_50": {
+    "output_key": "hospital_occupancyXagegroup_50",
+    "title": "hospital_occupancy 50-70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "hospital_occupancyXagegroup_70": {
+    "output_key": "hospital_occupancyXagegroup_70",
+    "title": "hospital_occupancy 70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "icu_occupancyXagegroup_0": {
+    "output_key": "icu_occupancyXagegroup_0",
+    "title": "icu_occupancy 0-15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "icu_occupancyXagegroup_15": {
+    "output_key": "icu_occupancyXagegroup_15",
+    "title": "icu_occupancy 15-25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "icu_occupancyXagegroup_25": {
+    "output_key": "icu_occupancyXagegroup_25",
+    "title": "icu_occupancy 25-50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "icu_occupancyXagegroup_50": {
+    "output_key": "icu_occupancyXagegroup_50",
+    "title": "icu_occupancy 50-70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "icu_occupancyXagegroup_70": {
+    "output_key": "icu_occupancyXagegroup_70",
+    "title": "icu_occupancy 70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
+
 }

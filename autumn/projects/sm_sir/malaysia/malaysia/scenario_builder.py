@@ -33,7 +33,7 @@ def get_all_scenario_dicts(country: str):
 
         if i_lockdown_scenario == 2:  # What if state and nation-wide MCOs not implemented
 
-            # from Jan 13-March 31st other location mobility and work are fixed at respectively, 0.85 and 0.80
+            # from Jan 13-March 31st other location mobility and work are fixed at respectively, 0.95 and 0.90
             times1 = [*range(379, 457)]
             values1 = {'work': [0.95] * len(times1), 'other_locations': [0.9] * len(times1)}
 

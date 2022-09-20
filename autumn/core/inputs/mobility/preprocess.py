@@ -23,7 +23,9 @@ DHHS_LGA_TO_CLUSTER = os.path.join(
 
 DHHS_LGA_TO_HSP = os.path.join(INPUT_DATA_PATH, "covid_au", "LGA_HSP map_v2.csv")
 
-MOBILITY_LGA_PATH = DHHS_LGA_TO_HSP  # Swap with DHHS_LGA_TO_CLUSTER to obtain previous mapping
+MOBILITY_LGA_PATH = (
+    DHHS_LGA_TO_HSP  # Swap with DHHS_LGA_TO_CLUSTER to obtain previous mapping
+)
 
 
 COUNTRY_NAME_ISO3_MAP = {
@@ -139,15 +141,21 @@ def preprocess_mobility(input_db: Database, country_df):
     mob_df = mob_df[major_region_mask | davao_mask].copy()
 
     # These two regions are the same
-    mob_df.loc[(mob_df.sub_region_1 == "National Capital Region"), "sub_region_1"] = "Metro Manila"
-    mob_df.loc[(mob_df.metro_area == "Davao City Metropolitan Area"), "sub_region_1"] = "Davao City"
+    mob_df.loc[
+        (mob_df.sub_region_1 == "National Capital Region"), "sub_region_1"
+    ] = "Metro Manila"
+    mob_df.loc[
+        (mob_df.metro_area == "Davao City Metropolitan Area"), "sub_region_1"
+    ] = "Davao City"
     mob_df.loc[
         (mob_df.sub_region_1 == "Federal Territory of Kuala Lumpur"), "sub_region_1"
     ] = "Kuala Lumpur"
 
     # Read and append mobility predictions for Vietnam
     vnm_mob = pd.read_csv(VNM_CSV_PATH)
-    mob_df = mob_df.merge(vnm_mob, on=["date", "country_region", "sub_region_1"], how="left")
+    mob_df = mob_df.merge(
+        vnm_mob, on=["date", "country_region", "sub_region_1"], how="left"
+    )
     col_str = "workplaces_percent_change_from_baseline"
     mob_df.loc[
         (mob_df["country_region"] == "Vietnam") & (mob_df[f"{col_str}_x"].isna()),

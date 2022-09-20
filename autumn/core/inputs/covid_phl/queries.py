@@ -1,19 +1,16 @@
 from typing import List
-
 import numpy as np
 import pandas as pd
+
 from autumn.core.inputs.database import get_input_db
-from autumn.core.inputs.demography.queries import get_population_by_agegroup
 from autumn.core.utils.utils import apply_moving_average, check_list_increasing
+from autumn.core.inputs.demography.queries import get_population_by_agegroup
 
 
 def get_phl_subregion_testing_numbers(region):
     """
     Returns 7-day moving average of number of tests administered in Philippines & sub regions.
     """
-
-    # A hack to revet back to national testing for the sub regions.
-    region = "philippines" if region in {"western visayas", "barmm"} else region
 
     input_db = get_input_db()
     df = input_db.query(

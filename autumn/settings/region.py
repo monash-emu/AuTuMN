@@ -34,8 +34,6 @@ class Region:
     KIRIBATI = "kiribati"
     NORTHERN_TERRITORY = "northern-territory"
     AUSTRALIA = "australia"
-    BARMM = "barmm"
-    WESTERN_VISAYAS = "western-visayas"
 
     REGIONS = [
         PHILIPPINES,
@@ -73,8 +71,6 @@ class Region:
         KIRIBATI,
         NORTHERN_TERRITORY,
         AUSTRALIA,
-        BARMM,
-        WESTERN_VISAYAS,
     ]
 
     MALAYSIA_REGIONS = [
@@ -106,7 +102,6 @@ class Region:
     WPRO_REGIONS = [MALAYSIA, NCR]
 
     SCHOOL_PROJECT_REGIONS = [PHILIPPINES, FRANCE, AUSTRALIA]
-
     @staticmethod
     def to_filename(name: str):
         return name.replace("-", "_")

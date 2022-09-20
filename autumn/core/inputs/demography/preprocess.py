@@ -17,7 +17,6 @@ ROHINGYA_POP = os.path.join(
 BTN_DATA_PATH = os.path.join(INPUT_DATA_PATH, "covid_btn")
 NT_ABORIGINAL_POP = Path(INPUT_DATA_PATH, "covid_au", "Aboriginal population.csv")
 NT_POP = Path(INPUT_DATA_PATH, "covid_au", "NT-population.csv")
-PHL_SUBREGION_POP = Path(POP_DIRPATH, "PHL_WESTERN_VISAYAS_BARAMM_POP.csv")
 
 
 def preprocess_demography(input_db: Database):
@@ -269,9 +268,6 @@ def read_population_df(loc_df: pd.DataFrame):
     pop_aboriginal = get_nt_aboriginal_pop(NT_ABORIGINAL_POP)
     pop_df = pop_df.append(pop_aboriginal)
 
-    pop_phl_subregion = get_phl_subregion_pop(PHL_SUBREGION_POP)
-    pop_df = pop_df.append(pop_phl_subregion)
-
     # Ensure all numbers are actually numbers
     numeric_cols = ["year", "start_age", "end_age", "population"]
     pop_df[numeric_cols] = pop_df[numeric_cols].apply(pd.to_numeric)
@@ -488,7 +484,3 @@ def get_nt_aboriginal_pop(path: Path) -> pd.DataFrame:
     df = pd.concat([df, df_nt_pop], ignore_index=True)
 
     return df.drop(columns="age")
-
-
-def get_phl_subregion_pop(path: Path) -> pd.DataFrame:
-    return pd.read_csv(path)

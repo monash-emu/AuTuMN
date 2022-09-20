@@ -72,22 +72,6 @@ register_project(
     Region.NCR,
     "autumn.projects.sm_sir.philippines.national-capital-region.project",
 )
-
-
-register_project(
-    Models.SM_SIR,
-    Region.BARMM,
-    "autumn.projects.sm_sir.philippines.barmm.project",
-)
-
-
-register_project(
-    Models.SM_SIR,
-    Region.WESTERN_VISAYAS,
-    "autumn.projects.sm_sir.philippines.western-visayas.project",
-)
-
-
 register_project(
     Models.SM_SIR,
     Region.MALAYSIA,

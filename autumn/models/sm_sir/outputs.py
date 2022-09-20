@@ -67,7 +67,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
             clinical_strata: List[str],
             strain_strata: List[str],
             incidence_flow: str,
-            request_incidence_by_age: bool
+            request_incidence_by_age: bool,
+            request_notifications_by_age: bool
     ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
@@ -81,7 +82,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             strain_strata: The modelled strains, or None if model is not stratified by strain
             incidence_flow: The name of the flow representing incident cases
             request_incidence_by_age: Whether to save outputs for incidence by age
-
+            request_notifications_by_age: Whether to save outputs for notifications by age
         """
 
         # Unstratified
@@ -89,6 +90,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Stratified
         detected_incidence_sources = []  # Collect detected incidence unstratified for notifications calculation
+        detected_age_incidence_sources = []  # collect age specific detected incidence for notifications
+        # stratified by age
 
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
@@ -129,6 +132,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         # Update the dictionaries of which outputs are relevant
                         if clinical_stratum in ["", ClinicalStratum.DETECT]:
                             detected_incidence_sources.append(output_name)
+                            detected_age_incidence_sources.append(output_name)
                         if clinical_stratum in ["", ClinicalStratum.SYMPT_NON_DETECT, ClinicalStratum.DETECT]:
                             sympt_incidence_sources.append(output_name)
 
@@ -145,7 +149,13 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     name=f"incidence{agegroup_string}",
                     sources=age_incidence_sources,
                     save_results=True,
-                )   
+                )
+
+            if request_notifications_by_age:
+                self.model.request_aggregate_output(
+                    name=f"ever_detected_incidence{agegroup_string}",
+                    sources=detected_age_incidence_sources,
+                )
 
         # Compute detected incidence to prepare for notifications calculations
         self.model.request_aggregate_output(
@@ -154,7 +164,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         )
 
     def request_notifications(
-            self, time_from_onset_to_notification: TimeDistribution, model_times: np.ndarray
+            self, time_from_onset_to_notification: TimeDistribution, model_times: np.ndarray,
+            request_notifications_by_age: bool, age_groups: List[str]
     ):
         """
         Request notification calculations.
@@ -162,7 +173,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         Args:
             time_from_onset_to_notification: Details of the statistical distribution used to model time to notification
             model_times: The model evaluation times
-
+            request_notifications_by_age: Whether to save outputs for notifications by age
+            age_groups: Modelled age group lower breakpoints
         """
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
@@ -175,6 +187,17 @@ class SmSirOutputsBuilder(OutputsBuilder):
             sources=["ever_detected_incidence"],
             func=notifications_func,
         )
+
+        if request_notifications_by_age:
+            for agegroup in age_groups:
+                agegroup_string = f"Xagegroup_{agegroup}"
+                # Request notifications by age
+
+                self.model.request_function_output(
+                    name=f"notifications{agegroup_string}",
+                    sources=[f"ever_detected_incidence{agegroup_string}"],
+                    func=notifications_func,
+                )
 
     def request_infection_deaths(
             self,

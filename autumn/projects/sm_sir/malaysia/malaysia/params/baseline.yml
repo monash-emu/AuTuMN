@@ -152,7 +152,7 @@ mobility:
 requested_cumulative_outputs: ['infection_deaths']
 cumulative_start_time: 367
 
-request_incidence_by_age: true
+request_notifications_by_age: true
 request_hospital_admissions_by_age: true
 request_hospital_occupancy_by_age: true
 request_icu_admissions_by_age: true

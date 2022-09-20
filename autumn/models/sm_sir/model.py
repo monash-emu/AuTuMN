@@ -26,7 +26,6 @@ from .stratifications.immunity import (
 )
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
-from .stratifications.indigenous import get_indigenous_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 from autumn.settings.constants import COVID_BASE_DATETIME
 
@@ -551,45 +550,6 @@ def build_model(
                 start_immune_prop=immunity_params.prop_immune,
                 additional_immunity_points=params.additional_immunity,
             )
-
-    """
-    Indigenous stratification (for the Northern Territory application, only)
-    """
-
-    if params.indigenous:
-
-        # Get the population totals from the database
-        age_pops = pd.Series(
-            inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year),
-            index=age_groups,
-        )
-        indigenous_age_pops = pd.Series(
-            inputs.get_population_by_agegroup(age_groups, iso3, "NT_ABORIGINAL", pop.year),
-            index=age_groups,
-        )
-        non_indigenous_age_pops = age_pops - indigenous_age_pops
-
-        # Get the stratification object, including the overall population split
-        overall_indigenous_prop = indigenous_age_pops.sum() / age_pops.sum()
-        indigenous_strat = get_indigenous_strat(
-            compartment_types,
-            overall_indigenous_prop,
-        )
-        model.stratify_with(indigenous_strat)
-
-        # Distribute the population within their Indigenous status category
-        indigenous_agedist = indigenous_age_pops / indigenous_age_pops.sum()
-        non_indigenous_agedist = non_indigenous_age_pops / non_indigenous_age_pops.sum()  
-        model.adjust_population_split(
-            "agegroup", 
-            {"indigenous": "indigenous"}, 
-            indigenous_agedist.to_dict(),
-        )
-        model.adjust_population_split(
-            "agegroup", 
-            {"indigenous": "non_indigenous"}, 
-            non_indigenous_agedist.to_dict(),
-        )
 
     """
     Get the applicable outputs

@@ -13,47 +13,62 @@ from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
 
-"""
-THIS FUNCTION HAS BEEN TOTALLY RUINED BY THE VACCINATION RESTRUCTURE
-"""
-
-def get_scenario_params(n_boosters, target, voc_emerge):
-    doses_txt = {
-        200000: "200K", 500000: "500K", 1000000: "1M"
+def get_scenario_params(pinas_lakas, voc_assumption):
+    pinas_lakas_txt = {
+        True: "with PinasLakas", False: "with current vacc rates"
     }
-    target_txt = {True: "targeted", False: "uniform"}
-    voc_txt = {True: "with immune escape VoC", False: "no new VoC"}
+    voc_txt = {
+        None: "no new VoC",
+        "trans": "new more transmissible VoC",
+        "ie": "new immune escape VoC"
+    }
 
-    description = f"{doses_txt[n_boosters]} boosters per mth / {target_txt[target]} allocation / {voc_txt[voc_emerge]}"
+    description = f"{pinas_lakas_txt[pinas_lakas]} / {voc_txt[voc_assumption]}"
     
     sc_param_dict = {
         "description": description,
-        # "future_monthly_booster_rate": n_boosters,
+        "pinas_lakas": pinas_lakas
     }
     
-    # if target:
-        # sc_param_dict["future_booster_age_allocation"] = [60, 50, 25, 15, 0]
-    
-    if voc_emerge:
+    if voc_assumption == "trans":
         sc_param_dict["voc_emergence"] = {
             "omicron": {
                 "cross_protection": {
                     "new_strain": {
-                        "early_reinfection": 0.,
+                        "early_reinfection": 1.,
                         "late_reinfection": 0.
                     }
                 }
             },
             "new_strain": {
                 "new_voc_seed": {
-                    "start_time": 944.,  # 1 Aug 2022
+                    "start_time": 1005.,  # 1 Oct 2022
+                },
+                "contact_rate_multiplier": 2.,
+                "immune_escape": 0.
+            }
+        }
+    elif voc_assumption == "ie":
+        sc_param_dict["voc_emergence"] = {
+            "omicron": {
+                "cross_protection": {
+                    "new_strain": {
+                        "early_reinfection": .5,
+                        "late_reinfection": 0.
+                    }
+                }
+            },
+            "new_strain": {
+                "new_voc_seed": {
+                    "start_time": 1005.,  # 1 Oct 2022
                 },
                 "contact_rate_multiplier": 1.,
-                "immune_escape": 1.
+                "immune_escape": 0.5
             }
         }
 
     return sc_param_dict
+
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
@@ -64,18 +79,16 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
 # scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 # scenario_params = [baseline_params.update(p) for p in scenario_paths]
 
-# scenario_params = []
-# for n_boosters in [200000, 500000, 1000000]:
-#     for target in [False, True]:
-#         for voc_emerge in [False, True]:
-            
-#             if n_boosters == 200000 and not target and not voc_emerge:
-#                 continue  # as this is the baseline scenario
-#             else:
-#                 update_params = get_scenario_params(n_boosters, target, voc_emerge)
-#                 scenario_params.append(baseline_params.update(update_params))
+scenario_params = []
+for voc_assumption in [None, 'trans', 'ie']:
+    for pinas_lakas in [False, True]:    
+        if voc_assumption is None and not pinas_lakas:
+            continue  # as this is the baseline scenario
+        else:
+            update_params = get_scenario_params(pinas_lakas, voc_assumption)
+            scenario_params.append(baseline_params.update(update_params))
 
-param_set = ParameterSet(baseline=baseline_params)
+param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))

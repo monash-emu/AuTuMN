@@ -211,12 +211,13 @@ hospital_stay:
 activate_random_process: true
 random_process: null
 
-vaccination:
-  boosting: true
-  booster_effect_duration: null
-  data_thinning: null
-  age_specific_vacc: false
-  extra_vacc_coverage: {}
+additional_immunity: null
+booster_effect_duration: 90
+future_monthly_booster_rate: null
+future_booster_age_allocation: null
+pinas_lakas: false
+
+indigenous: false
 
 requested_cumulative_outputs: []
 cumulative_start_time: null

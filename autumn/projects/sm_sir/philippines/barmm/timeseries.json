@@ -1838,8 +1838,8 @@
       0.975
     ]
   },
-  "ncr_icu_occupancy": {
-    "output_key": "ncr_icu_occupancy",
+  "icu_occupancy": {
+    "output_key": "icu_occupancy",
     "title": "ICU occupancy in NCR",
     "times": [
       345,
@@ -4792,9 +4792,9 @@
       0.975
     ]
   },
-  "ncr_hospital_occupancy": {
+  "hospital_occupancy": {
     "title": "Hospital occupancy in NCR",
-    "output_key": "ncr_hospital_occupancy",
+    "output_key": "hospital_occupancy",
     "times": [
       345,
       346,

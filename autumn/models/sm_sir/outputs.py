@@ -90,7 +90,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Stratified
         detected_incidence_sources = []  # Collect detected incidence unstratified for notifications calculation
-        detected_age_incidence_sources = []  # collect age specific detected incidence for notifications
+
         # stratified by age
 
         for agegroup in age_groups:
@@ -98,7 +98,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             agegroup_filter = {"agegroup": agegroup}
 
             age_incidence_sources = []
-
+            detected_age_incidence_sources = []  # collect age specific detected incidence for notifications
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
                 immunity_filter = {"immunity": immunity_stratum}

@@ -327,6 +327,8 @@ def apply_reported_vacc_coverage_with_booster(
         age_pops: pd.Series,
         model_end_time: float,
         pinas_lakas: bool,
+        current_daily_rates: dict,
+        latest_vacc_coverage: dict,
 ):
     """
     Collage up the reported values for vaccination coverage for a country and then call add_dynamic_immunity_to_model to
@@ -349,11 +351,11 @@ def apply_reported_vacc_coverage_with_booster(
         model_end_time: Model end time
         pinas_lakas: Whether the Philippines PinasLakas program is active or not
     """
-    historical_vacc_data = get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, start_prop_high_among_immune)
+    historical_vacc_data = get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, start_prop_high_among_immune, latest_vacc_coverage)
 
     # Daily doses outside of PinasLakas intervention
-    double_cov_monthly_increment_senior = 25 * 30 / age_pops.loc['60']  # will also be applied to all ages
-    booster_cov_monthly_increment =  7179 * 30 / age_pops.sum()
+    double_cov_monthly_increment_senior = current_daily_rates['double'] * 30 / age_pops.loc['60']  # will also be applied to all ages
+    booster_cov_monthly_increment =  current_daily_rates['booster'] * 30 / age_pops.sum()
 
     for agegroup in age_groups: 
         # Create dataframe with dynamic distributions including future booster rates and waning       
@@ -397,7 +399,7 @@ def apply_reported_vacc_coverage_with_booster(
         add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, agegroup)
 
 
-def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, start_prop_high_among_immune) -> pd.DataFrame:
+def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, start_prop_high_among_immune, latest_vacc_coverage) -> pd.DataFrame:
     """_summary_
 
      Args:
@@ -417,9 +419,11 @@ def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, 
         raw_data_double = get_phl_vac_coverage(dose="SECOND_DOSE")
         raw_data_booster = get_phl_vac_coverage(dose="BOOSTER_DOSE") + get_phl_vac_coverage(dose="ADDITIONAL_DOSE")
 
-        # manually add recent coverage (t=966 -> 23Aug2022)
-        raw_data_double.loc[966] = .86
-        raw_data_booster.loc[966] = .35
+        # manually add recent coverage
+        for time_int, cov in latest_vacc_coverage['double'].items():
+            raw_data_double.loc[time_int] = cov
+        for time_int, cov in latest_vacc_coverage['booster'].items():
+            raw_data_booster.loc[time_int] = cov
 
     elif iso3 == "BTN":
         raw_data_double = get_btn_vac_coverage(region="Bhutan", dose=2)

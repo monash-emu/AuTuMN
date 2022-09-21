@@ -538,7 +538,9 @@ def build_model(
                 future_booster_age_allocation=params.future_booster_age_allocation,
                 age_pops=age_pops,
                 model_end_time=params.time.end,
-                pinas_lakas=params.pinas_lakas
+                pinas_lakas=params.pinas_lakas,
+                current_daily_rates=params.current_daily_rates,
+                latest_vacc_coverage=params.latest_vacc_coverage
             )
         else:
             apply_reported_vacc_coverage(

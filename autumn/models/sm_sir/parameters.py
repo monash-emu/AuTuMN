@@ -518,6 +518,9 @@ class Parameters:
     booster_effect_duration: float
     additional_immunity: Optional[TimeSeries]
     pinas_lakas: bool
+    current_daily_rates: dict
+    latest_vacc_coverage: dict
+
     future_monthly_booster_rate: Optional[float]
     future_booster_age_allocation: Optional[
         Union[

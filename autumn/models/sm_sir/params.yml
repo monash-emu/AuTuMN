@@ -216,6 +216,12 @@ booster_effect_duration: 90
 future_monthly_booster_rate: null
 future_booster_age_allocation: null
 pinas_lakas: false
+current_daily_rates: 
+  double: 0
+  booster: 0
+latest_vacc_coverage:
+  double: {}
+  booster: {}
 
 indigenous: false
 

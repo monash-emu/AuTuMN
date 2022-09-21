@@ -137,9 +137,18 @@ age_stratification:
       75: 0.0357
       80: 0.1110
 
-vaccination:
-  booster_effect_duration: 180.
 
+booster_effect_duration: 180.
+
+current_daily_rates: 
+  double: 0  # FIXME: waiting for DoH data
+  booster: 0 # FIXME: waiting for DoH data
+
+latest_vacc_coverage:  # (t=973 -> 1Sep2022)
+  double:
+    973: .67
+  booster: 
+    973: .07
 requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
 cumulative_start_time: 932  # 20 July 2022
 request_incidence_by_age: True

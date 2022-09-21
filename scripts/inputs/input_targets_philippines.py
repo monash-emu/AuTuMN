@@ -17,7 +17,7 @@ PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
-PHL_doh_link = "1ULjAmO7dE9YEEI8j7MWeSujRSRPhlvE1"  # sheet 05 daily report
+PHL_doh_link = "1QsnI2cC4ZXs_SY5yHd1R63tDmouc3fz_"  # sheet 05 daily report
 PHL_fassster_link = "1Cg_jsjhXsOtsqcMVUSHK6F7y9Ky8VxZL"
 
 # destination folders filepaths
@@ -44,6 +44,8 @@ def main():
         "REGION IV-A (CALABAR ZON)",
         "REGION VII (CENTRAL VISAYAS)",
         "REGION XI (DAVAO REGION)",
+        "BARMM",
+        "REGION VI (WESTERN VISAYAS)",
     )
     working_df = duplicate_data(working_df, "region")
     working_df = filter_df_by_regions(working_df, "region")
@@ -52,7 +54,16 @@ def main():
 
     # Now fassster data
     working_df = pd.read_csv(fassster_filename)  # copy_davao_city_to_region(fassster_filename)
-    working_df = rename_regions(working_df, "Region", "NCR", "4A", "07", "11")
+    working_df = rename_regions(
+        working_df,
+        "Region",
+        "NCR",
+        "4A",
+        "07",
+        "11",
+        "BARMM",
+        "06",
+    )
     working_df = duplicate_data(working_df, "Region")
     working_df = filter_df_by_regions(working_df, "Region")
     process_accumulated_death_data(working_df)
@@ -90,14 +101,18 @@ def fassster_data_filepath():
     return fassster_filename
 
 
-def rename_regions(df: pd.DataFrame, regionSpelling, ncrName, calName, cenVisName, davName):
+def rename_regions(
+    df: pd.DataFrame, regionSpelling, ncrName, calName, cenVisName, davName, BarName, wesVisName
+):
     # df = pd.read_csv(filePath)
     df[regionSpelling] = df[regionSpelling].replace(
         {
-            ncrName: "manila",
+            ncrName: "national-capital-region",
             calName: "calabarzon",
             cenVisName: "central_visayas",
             davName: "davao_region",
+            BarName: "barmm",
+            wesVisName: "western-visayas",
         }
     )
     return df
@@ -115,9 +130,11 @@ def filter_df_by_regions(df: pd.DataFrame, regionSpelling):
     regions = [
         "calabarzon",
         "central_visayas",
-        "manila",
+        "national-capital-region",
         "davao_city",
         "davao_region",
+        "barmm",
+        "western-visayas",
         "philippines",
     ]
     return df[df[regionSpelling].isin(regions)]
@@ -175,9 +192,11 @@ def process_notifications_data(df: pd.DataFrame):
     regions = [
         "calabarzon",
         "central_visayas",
-        "manila",
+        "national-capital-region",
         "davao_city",
         "davao_region",
+        "barmm",
+        "western-visayas",
         "philippines",
     ]
     all_regions_x_times = pd.DataFrame(
@@ -231,11 +250,13 @@ def write_to_file(icu_tmp, deaths_tmp, notifications_tmp, hosp_tmp, daily_deaths
 
 def update_calibration_phl():
 
-    # Only manila/NCR used by sm_sir model
+    # Only ncr, barmm and western-visayas used by sm_sir model
     phl_regions = [
         # "calabarzon",
         # "central_visayas",
-        "manila",
+        "national-capital-region",
+        "barmm",
+        "western-visayas",
         # "davao_city",
         # "davao_region",
         # "philippines",
@@ -254,11 +275,11 @@ def update_calibration_phl():
         hosp_tmp = hosp_occ.loc[hosp_occ["region"] == region]
         daily_deaths_tmp = daily_deaths.loc[daily_deaths["Region"] == region]
 
-        SM_SIR_NCR_TS = Path(
+        SM_SIR_TS = Path(
             PROJECTS_PATH,
             "sm_sir",
             "philippines",
-            "national-capital-region",
+            region,
             "timeseries.json",
         )
 
@@ -268,7 +289,7 @@ def update_calibration_phl():
             notifications_tmp,
             hosp_tmp,
             daily_deaths_tmp,
-            SM_SIR_NCR_TS,
+            SM_SIR_TS,
         )
 
 

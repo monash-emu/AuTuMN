@@ -9,5 +9,5 @@ immunity_stratification.infection_risk_reduction.low: 0.1515016684830748
 infectious_seed: 343.1154121328551
 prop_icu_among_hospitalised: 0.11267437076115117
 sojourns.active.total_time: 4.675289064234894
-testing_to_detection.assumed_cdr_parameter: 0.005268733826773762
+detect_prop: .1
 time_from_onset_to_event.hospitalisation.parameters.mean: 6.724758952818325

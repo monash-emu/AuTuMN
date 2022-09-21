@@ -10,6 +10,20 @@ from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
 from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 
+PHL_HOSP_SHIFT = {
+    "Metro Manila": {
+        "hosp": 1147.,
+        "icu": 122.
+    },
+    "BARMM": {
+        "hosp": 0.,
+        "icu": 0.
+    },
+    "Western Visayas": {
+        "hosp": 467.,
+        "icu": 9.
+    }    
+}
 
 def get_immunity_prop_modifiers(
         source_pop_immunity_dist: Dict[str, float],
@@ -382,13 +396,15 @@ class SmSirOutputsBuilder(OutputsBuilder):
             func=hospital_occupancy_func
         )
 
-        if region == 'Metro Manila':
+        if region in PHL_HOSP_SHIFT:
+            shift = PHL_HOSP_SHIFT[region]['hosp']
             # add manually shifted hosp occupancy output for NCR to account for non-COVID-19 cases included in hospital reports
             self.model.request_function_output(
                 name="ncr_hospital_occupancy",
                 sources=["hospital_occupancy"],
-                func=lambda h: h + 1147.  # 1147 is the lowest value reported since 1 Jan 2022
+                func=lambda h: h + shift  # shift is the lowest value reported since 1 Jan 2022
             )
+
 
     def request_icu_outputs(
         self,
@@ -484,12 +500,13 @@ class SmSirOutputsBuilder(OutputsBuilder):
             func=icu_occupancy_func,
         )
 
-        if region == 'Metro Manila':
-            # add manually shifted hosp occupancy output for NCR to account for non-COVID-19 cases included in hospital reports
+        if region in PHL_HOSP_SHIFT:
+            shift = PHL_HOSP_SHIFT[region]['icu']
+            # add manually shifted icu occupancy output for NCR to account for non-COVID-19 cases included in hospital reports
             self.model.request_function_output(
                 name="ncr_icu_occupancy",
                 sources=["icu_occupancy"],
-                func=lambda h: h + 122.  # 122 is the lowest value reported since 1 Jan 2022
+                func=lambda h: h + shift  # shift is the lowest value reported since 1 Jan 2022
             )
 
     def request_recovered_proportion(self, base_comps: List[str]):

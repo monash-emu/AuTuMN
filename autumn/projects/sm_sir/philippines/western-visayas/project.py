@@ -119,8 +119,8 @@ priors = [
 ]
 
 targets = [
-    NormalTarget(data=ts_set["ncr_icu_occupancy"].loc[725:]),
-    NormalTarget(data=ts_set["ncr_hospital_occupancy"].loc[725:]),
+    # NormalTarget(data=ts_set["ncr_icu_occupancy"].loc[725:]),
+    # NormalTarget(data=ts_set["ncr_hospital_occupancy"].loc[725:]),
     NormalTarget(data=ts_set["notifications"].loc[725:]),
 ]
 

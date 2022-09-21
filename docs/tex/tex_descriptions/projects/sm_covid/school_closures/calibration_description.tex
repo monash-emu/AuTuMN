@@ -1,2 +1,78 @@
-\section{Model calibration}
-Describe the calibration here.
+\section{Model calibration and uncertainty propagation}
+\label{calibration}
+\textcolor{red}{REVISE THE SECTION BELOW WHEN FINALISED}
+The model was calibrated using a Bayesian approach. In particular, we used the adaptive 
+Metropolis algorithm introduced by Haario \textit{et al.} to sample parameters from their 
+posterior distributions \cite{haario-2001}. For each country, we ran 8 independent Metropolis 
+chains initialised using Latin Hypercube Sampling based on the parameter priors. 
+We ran simulations for X hours per chain in order to achieve at least 50,000 iterations per 
+chain. We discarded the first 25,000 iterations of each chain as burn-in and combined the 
+samples of the 8 chains to project epidemic trajectories over time. 
+For each modelled country, the epidemic projections presented in our analysis are associated with 1000 parameter sets 
+randomly sampled from the posterior distributions obtained from MCMC sampling. 
+The definitions of the prior distributions and the likelihood are detailed in the following sections.
+
+\subsection{Parameters varied during calibration}
+
+The parameters varied during calibration along with their associated prior distributions 
+are listed in Table (\textcolor{red}{add ref to table here}) and indicated with the superscript \textsuperscript{c}.
+We used uniform prior distributions for all calibrated parameters. The primary parameters varied during calibration are 
+the unadjusted risk of transmission per contact ($\beta$), the IFR multiplier ($m_C$), the infection seeding times of 
+each strain and the proportion of students on-site during ``Partially open'' periods. Note that the values of the random 
+process $W_t$ described in Section \ref{random_process} are also treated like calibrated parameters by the MCMC. 
+They are associated with an improper uniform prior distribution, whereas the auto-regressive component described in 
+Equation \ref{eq:random_process} is incorporated in the posterior likelihood computation (Section \ref{likelihood}).
+
+\subsection{Calibration targets}
+\label{targets}
+For each country model calibration is achieved by targeting two COVID-19 burden indicators: the 
+reported number of COVID-19 deaths over time and country-level seroprevalence estimates. The following sections
+presents the data used for calibration.
+\subsubsection{COVID-19 deaths}
+\textcolor{red}{NEED TO COMPLETE THIS}
+
+\subsubsection{Seroprevalence estimates}
+\label{sero}
+\textcolor{red}{Use Angus' description here.}
+
+\subsection{Likelihood definition}
+\label{likelihood}
+Let $d_w$ denote the rounded average daily number of COVID-19 deaths during week $w$, and $\hat{d_w}^\theta$ 
+the associated predicted number of deaths according to the model with parameter set $\theta$. 
+
+Let us denote $m$ the sample size associated with the seroprevalence survey selected from SeroTracker (Section \ref{sero}), 
+and $k$ the number of seropositive individuals observed in the survey.
+Let $\hat{\pi}^\theta$ denote the modelled proportion ever infected by the time the survey was conducted (using midpoint date) 
+associated with the parameter set $\theta$. 
+The likelihood was defined as follows:
+
+\begin{equation}
+    \label{eq:likelihood}
+    \mathcal{L}(\theta) := f_{m,\hat{\pi}^\theta}(k) \times \prod_w g_r(d_w | \:\hat{d_w}^\theta) \quad ,
+\end{equation}
+where $f_{n,p}(.)$ is the probability mass function of a binomial distribution $\mathcal{B}(n,p)$, and 
+$g_r(. | \mu)$ is the probability mass function of a negative binomial distribution with mean $\mu$ and 
+overdispersion parameter $r$. The parameter $r$ is automatically estimated by the MCMC algorithm.
+
+The likelihood described above represents the goodness of fit of a particular model parameterisation with regards to the targeted data. 
+This quantity needs to be adjusted for the prior likelihood of the parameter set in order to compute the MCMC acceptance quantity $\mathcal{Q}(\theta)$.
+As we used uniform priors for all the parameters, the inclusion of the individual parameters' priors in the acceptance quantity is not necessary. 
+Indeed, their respective contributions would cancel out as the same quantity would appear in the numerator and the denominator of the 
+MCMC acceptance quantity ratio. However, the auto-regressive relationship described in Equation \ref{eq:random_process}
+must be accounted for as part of the combined prior likelihood of a parameter set. This is what prevents unrealistic fluctuations of the random process.
+If $W^\theta$ represents the random process associated with the parameter set $\theta$, the overall MCMC acceptance quantity is obtained by:
+
+\begin{equation}
+    \label{eq:acc_qtt}
+    \begin{split}
+    \mathcal{Q}(\theta) & = \mathcal{L}(\theta) \times \prod_{i=1}^{n} z_{W^\theta_{i-1},\sigma}(W^\theta_i) \\
+                        & = f_{m,\hat{\pi}^\theta}(k) \times \prod_w g_r(d_w | \:\hat{d_w}^\theta) \times \prod_{i=1}^{n} z_{W^\theta_{i-1},\sigma}(W^\theta_i) \quad ,
+    \end{split}
+\end{equation}
+where $z_{\mu,\sigma}(.)$ represents the probability density function of the normal distribution $\mathcal{N}(\mu, \sigma)$, and $n$ is the number 
+of random process updates. The standard deviation $\sigma$ is automatically estimated by the MCMC.
+
+\subsection{Model coding and run time}
+\textcolor{red}{NEED TO COMPLETE THIS. Maybe David can help here?}
+Can probably find a better title for this section\dots
+\input{../../tex_descriptions/models/sm_covid/runtime.tex}

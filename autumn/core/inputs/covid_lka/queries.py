@@ -23,7 +23,9 @@ def get_lka_vac_coverage(age_group, age_pops=None, params=None):
     """Provides vaccination coverage for a given age.
     It is assumed all ages above 14 have uniform coverage"""
 
-    vaccinated_population = get_population_by_agegroup([0,11], "LKA")[1] # 10+ pop
+    from autumn.models.covid_19.parameters import TimeSeries
+
+    vaccinated_population = get_population_by_agegroup([0, 11], "LKA")[1]  # 10+ pop
 
     input_db = get_input_db()
 
@@ -47,7 +49,6 @@ def get_lka_vac_coverage(age_group, age_pops=None, params=None):
         coverage_values = (df.cml_coverage * 0).tolist()
     else:
         coverage_values = df.cml_coverage.tolist()
-
 
     coverage_too_large = any([each >= 0.99 for each in coverage_values])
 

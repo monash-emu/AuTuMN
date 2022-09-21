@@ -1,0 +1,146 @@
+---
+
+country:
+  iso3: PHL
+
+age_groups:
+  - 0
+  - 15
+  - 25
+  - 50
+  - 60
+
+ref_mixing_iso3: HKG
+
+population:
+  region: Western Visayas
+  year: 2020
+
+time:
+  start: 640  # 650
+  end: 1277  # 30 June 2023
+
+activate_random_process: False
+
+time_from_onset_to_event:  # Using time of symptom onset as reference
+  notification:
+    parameters:
+      mean: 1.
+
+voc_emergence: # Baseline has currently no VoC since the seed time is very far in the future
+  omicron:
+    starting_strain: true
+    seed_prop: 1.
+    new_voc_seed: null
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 0.
+      new_strain:
+        early_reinfection: 0.4  # 60% immune escape
+        late_reinfection: 0.
+  new_strain:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 10000.  # Very far in the future
+      entry_rate: 10.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.
+    immune_escape: 0.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 1.
+    cross_protection:
+      omicron:
+        early_reinfection: 1.
+        late_reinfection: 1.
+      new_strain:
+        early_reinfection: 1.
+        late_reinfection: 0.
+
+testing_to_detection:
+  assumed_tests_parameter: 1.e-4
+  assumed_cdr_parameter: 0.02
+  smoothing_period: 7
+  floor_value: 0.
+
+# Mobility parameters
+is_dynamic_mixing_matrix: true
+
+mobility:
+  region: Western Visayas
+  smooth_google_data: true  # whether to apply a 7-day moving average
+  mixing:
+    school:
+      append: false
+      times:
+        - 2021-01-01  # any past date
+        - 2022-08-22  # more schools reopen 22 August
+        - 2022-08-25
+      values:
+        - 0.10
+        - 0.10
+        - 0.90
+
+immunity_stratification:
+  prop_immune: 0.2
+  prop_high_among_immune: 0.
+
+sojourns:
+  latent:
+    total_time: 3.
+  recovered: 150.
+
+age_stratification:
+  cfr:
+    values:  # Replace with Omicron values
+      0:  0.00005
+      5:  0.00005
+      10: 0.00001
+      15: 0.00001
+      20: 0.00002
+      25: 0.00002
+      30: 0.00005
+      35: 0.00005
+      40: 0.0001
+      45: 0.0001
+      50: 0.0005
+      55: 0.0005
+      60: 0.002
+      65: 0.002
+      70: 0.0083
+      75: 0.0083
+      80: 0.0512
+  prop_hospital:
+    values:  # Replace with Omicron values
+      0:  0.0110
+      5:  0.0110
+      10: 0.0038
+      15: 0.0038
+      20: 0.0060
+      25: 0.0060
+      30: 0.0066
+      35: 0.0066
+      40: 0.0059
+      45: 0.0059
+      50: 0.0077
+      55: 0.0077
+      60: 0.0139
+      65: 0.0139
+      70: 0.0357
+      75: 0.0357
+      80: 0.1110
+
+vaccination:
+  booster_effect_duration: 180.
+
+requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
+cumulative_start_time: 932  # 20 July 2022
+request_incidence_by_age: True
+request_immune_prop_by_age: True

@@ -5,6 +5,8 @@ import re
 import yaml
 from copy import deepcopy
 
+from pathlib import Path
+
 from autumn.core.utils.utils import merge_dicts
 
 
@@ -97,6 +99,9 @@ class Params:
         return final_params
 
     def _load_path_or_dict(self, new_params: PathOrDict) -> dict:
+
+        if isinstance(new_params, Path):
+            new_params = str(new_params)
         t = type(new_params)
         if t is str:
             # It's a path (hopefully), load it.
@@ -108,7 +113,7 @@ class Params:
             raise ValueError(f"Loaded parameter data must be a string or dict, got {t}")
 
     def __reduce__(self):
-        return (self.__class__, (self.to_dict(), ))
+        return (self.__class__, (self.to_dict(),))
 
     def __repr__(self):
         return "Params" + repr(self.to_dict())
@@ -233,7 +238,7 @@ def read_param_value_from_string(params: dict, update_key: str):
         not is_arr_update
     ), "array items not supported by this function"  # FIXME only supports nested dictionaries for for the moment
     param_value = params[current_key]
-        
+
     for nested_key in nested_keys:
         is_arr_key = re.match(ARRAY_REQUEST_REGEX, nested_key)
         if is_arr_key:
@@ -247,14 +252,14 @@ def read_param_value_from_string(params: dict, update_key: str):
 
 
 def get_with_nested_key(
-    source_dict: dict, 
+    source_dict: dict,
     nested_key: str,
 ) -> Any:
     """
     Get a value from a nested dictionary, with a key where "." characters denote
-    the layers of nesting 
+    the layers of nesting
     E.g {'a': {'b': {'c': 5.0}}} => "a.b.c" = 5.0
-    
+
     Args:
         source_dict: The nested dictionary to get values from
         nested_key: Key with nested layers separated by '.'

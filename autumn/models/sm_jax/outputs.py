@@ -3,8 +3,6 @@ from typing import List, Dict, Optional, Union
 # from scipy import stats
 import numpy as np
 
-from numba import jit as numbajit
-
 from autumn.model_features.outputs import OutputsBuilder
 from autumn.models.sm_jax.parameters import TimeDistribution, VocComponent, AgeSpecificProps
 from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
@@ -13,11 +11,8 @@ from autumn.models.sm_jax.stratifications.agegroup import convert_param_agegroup
 
 from summer2.parameters.params import Function, Data, Parameter, DerivedOutput
 
-from computegraph import jaxify
-
-modules = jaxify.get_modules()
-scipy = modules["scipy"]
-jnp = modules["numpy"]
+from jax import scipy as scipy
+from jax import numpy as jnp
 
 
 def gamma_cdf(shape, scale, x):
@@ -716,36 +711,6 @@ def precompute_probas_stay_greater_than(distribution_details, model_times):
     cdf_values = distribution.cdf(lags)
     probas_stay_greater_than = 1.0 - cdf_values
     return probas_stay_greater_than
-
-
-@numbajit
-def _convolve_probability(
-    source_output: np.ndarray, density_intervals: np.ndarray, scale: float = 1.0, lag: int = 1
-) -> np.ndarray:
-    """
-    Calculate a convolved output.
-
-    Args:
-        source_output: Previously computed model output on which the calculation is based
-        density_intervals: Overall probability density of occurence at particular timestep
-        scale: Total probability scale of event occuring
-        lag: Lag in output; defaults to 1 to reflect that events cannot occur at the same time
-
-    Returns:
-        A numpy array of the convolved output
-
-    """
-    convolved_output = np.zeros_like(source_output)
-
-    offset = 1 - lag
-
-    for i in range(source_output.size):
-        trunc_source_output = source_output[: i + offset][::-1]
-        trunc_intervals = density_intervals[: i + offset]
-        convolution_sum = (trunc_source_output * trunc_intervals).sum()
-        convolved_output[i] = scale * convolution_sum
-
-    return convolved_output
 
 
 def convolve_probability(source_output, density_kernel):

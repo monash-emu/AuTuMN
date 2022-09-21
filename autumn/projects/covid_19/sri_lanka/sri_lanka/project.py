@@ -1,9 +1,15 @@
 import numpy as np
 from autumn.calibration.proposal_tuning import perform_all_params_proposal_tuning
-from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path, get_all_available_scenario_paths, \
-    use_tuned_proposal_sds
+from autumn.core.project import (
+    Project,
+    ParameterSet,
+    load_timeseries,
+    build_rel_path,
+    get_all_available_scenario_paths,
+    use_tuned_proposal_sds,
+)
 from autumn.calibration import Calibration
-from autumn.calibration.priors import UniformPrior, BetaPrior,TruncNormalPrior
+from autumn.calibration.priors import UniformPrior, BetaPrior, TruncNormalPrior
 from autumn.calibration.targets import (
     NormalTarget,
     get_dispersion_priors_for_gaussian_targets,
@@ -14,13 +20,14 @@ from autumn.projects.covid_19.sri_lanka.sri_lanka.scenario_builder import get_al
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
-#scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(7, 9)]
+# scenario_paths = [build_rel_path(f"params/scenario-{i}.yml") for i in range(7, 9)]
 mle_path = build_rel_path("params/mle-params.yml")
 baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
 all_scenario_dicts = get_all_scenario_dicts("LKA")
-#scenario_params = [baseline_params.update(p) for p in scenario_paths]
+# scenario_params = [baseline_params.update(p) for p in scenario_paths]
 scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_dicts]
-param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
+# Disable scenario params for tests
+param_set = ParameterSet(baseline=baseline_params)
 
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 notifications_ts = ts_set["notifications"].rolling(7).mean().loc[350::7]
@@ -40,7 +47,7 @@ priors = [
     # Detection
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.009, 0.025]),
     UniformPrior("infection_fatality.multiplier", [0.09, 0.13]),
-    #VoC
+    # VoC
     UniformPrior("voc_emergence.alpha_beta.start_time", [370, 410]),
     UniformPrior("voc_emergence.alpha_beta.contact_rate_multiplier", [3.2, 4.5]),
     UniformPrior("voc_emergence.delta.start_time", [475, 530]),
@@ -64,4 +71,4 @@ project = Project(
     Region.SRI_LANKA, Models.COVID_19, build_model, param_set, calibration, plots=plot_spec
 )
 
-#perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)
+# perform_all_params_proposal_tuning(project, calibration, priors, n_points=50, relative_likelihood_reduction=0.2)

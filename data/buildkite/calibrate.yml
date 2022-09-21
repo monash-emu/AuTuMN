@@ -26,6 +26,8 @@ steps:
       value: sm_jax:malaysia
     - label: Bangladesh (sm_sir)
       value: sm_sir:bangladesh
+    - label: Barmm (sm_sir)
+      value: sm_sir:barmm
     - label: Bhutan (sm_sir)
       value: sm_sir:bhutan
     - label: Coxs_Bazar (sm_sir)
@@ -46,6 +48,8 @@ steps:
       value: sm_sir:northern-territory
     - label: Thimphu (sm_sir)
       value: sm_sir:thimphu
+    - label: Western Visayas (sm_sir)
+      value: sm_sir:western-visayas
     - label: Kiribati (tb_dynamics)
       value: tb_dynamics:kiribati
     - label: Marshall Islands (tuberculosis)

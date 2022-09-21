@@ -14,7 +14,16 @@ statistical distributions modelling the time to hospitalisation, the hospital st
 This approach presents two main advantages. First it reduces the complexity of the dynamic system relying on 
 numerical solving of ODEs, which is computationally expensive. Second, the convolution approach allows for more flexibility 
 and produces more realistic assumptions regarding the timings of hospitalisations and deaths, 
-compared to what could be achieved with a simple compartmental approach. The following sections describe the model in details.
+compared to what could be achieved with a simple compartmental approach. The following sections describe the model in details
+and Figure \ref{fig:concept} summarises the overall approach used in our analysis.
+
+\begin{figure}[ht]
+    \begin{center}
+    \includegraphics[width=0.9\textwidth]{../../tex_descriptions/models/sm_covid/Conceptual_approach.pdf}
+    \end{center}
+    \caption{Conceptual approach used to build and calibrate the models} 
+    \label{fig:concept}
+\end{figure}
 
 % ____________________________________________________
 % Let's talk about the transmission model
@@ -73,7 +82,7 @@ illustrates the modelled distributions of the incubation period and the active d
     \label{fig:sojourn}
 \end{figure}
 
-The four active disease compartments have all exactly the same characteristics. However, the last two latent compartments ($E^3$ and $E^4$) are infectious whereas the first two ($E^1$ and $E^2$) are not. We further assume that 
+The four active disease compartments all have exactly the same characteristics. However, the last two latent compartments ($E^3$ and $E^4$) are infectious whereas the first two ($E^1$ and $E^2$) are not. We further assume that 
 the infectious latent compartments are half as infectious as the active disease compartments.
 
 \subsubsection{Model stratification by age}
@@ -81,6 +90,7 @@ the infectious latent compartments are half as infectious as the active disease 
 \input{../../tex_descriptions/models/sm_covid/stratifications/agegroup.tex}
 
 \subsubsection{Capturing the effects of vaccination}
+\label{vaccination}
 \input{../../tex_descriptions/models/sm_covid/stratifications/immunity.tex}
 
 \subsubsection{Modelling multiple viral strains}
@@ -88,14 +98,11 @@ the infectious latent compartments are half as infectious as the active disease 
 
 
 \subsubsection{Dynamic social mixing}
+\label{mixing}
+\input{../../tex_descriptions/models/sm_covid/mixing.tex} 
 
-\textcolor{red}{\begin{itemize}
-    \item Mixing matrices.
-    \item Google data
-    \item School closure.
-\end{itemize}
-}
 \subsubsection{Random transmission adjustment}
+\label{random_process}
 \input{../../tex_descriptions/models/sm_covid/random_process.tex} 
 
 \subsubsection{Ordinary differential equations}

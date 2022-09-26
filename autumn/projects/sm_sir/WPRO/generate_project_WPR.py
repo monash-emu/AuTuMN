@@ -1,7 +1,11 @@
 import json
 import os
-from autumn.core.project import Project, ParameterSet, build_rel_path,\
-    get_all_available_scenario_paths
+from autumn.core.project import (
+    Project,
+    ParameterSet,
+    build_rel_path,
+    get_all_available_scenario_paths,
+)
 from autumn.calibration import Calibration
 
 from autumn.models.sm_sir import base_params, build_model
@@ -17,8 +21,9 @@ baseline_path = build_rel_path("params/baseline.yml")
 isExistBaseline = os.path.exists(baseline_path)
 
 if isExistMLE:
-    baseline_params = base_params.update(build_rel_path("params/baseline.yml")).\
-        update(mle_path, calibration_format=True)
+    baseline_params = base_params.update(build_rel_path("params/baseline.yml")).update(
+        mle_path, calibration_format=True
+    )
 elif isExistBaseline:
     baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
 else:
@@ -45,4 +50,5 @@ with open(plot_spec_filepath) as f:
 
 ## Create and register the project
 project = Project(
-    Region.WPRO_COUNTRY_NAME, Models.WPRO, build_model, param_set, calibration, plots=plot_spec)
+    Region.WPRO_COUNTRY_NAME, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+)

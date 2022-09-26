@@ -7,6 +7,5 @@ class Models:
     SM_SIR = "sm_sir"
     HIERARCHICAL_SIR = "hierarchical_sir"
     SM_COVID = "sm_covid"
-    WPRO = "WPRO"
 
-    MODELS = [COVID_19, TB, TBS, EXAMPLE, SM_SIR, HIERARCHICAL_SIR, SM_COVID, WPRO]
+    MODELS = [COVID_19, TB, TBS, EXAMPLE, SM_SIR, HIERARCHICAL_SIR, SM_COVID]

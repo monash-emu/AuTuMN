@@ -151,8 +151,4 @@ wpro_paths = wpro_list["path"]
 
 for idx, wpro_project in enumerate(wpro_countries):
     region_name = f"wpro_{wpro_countries[idx]}"
-    register_project(
-          Models.WPRO,
-          region_name,
-          wpro_paths[idx]
-    )
+    register_project(Models.SM_SIR, region_name, wpro_paths[idx])

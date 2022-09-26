@@ -93,10 +93,10 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.07, 0.20]),
-    UniformPrior("sojourns.active.total_time", [4, 10]),
-    UniformPrior("infectious_seed", [1, 400]),
-    UniformPrior("detect_prop", [0.005, 0.2]),
+    UniformPrior("contact_rate", [0.07, 0.15]),
+    UniformPrior("sojourns.active.total_time", [2, 6]),
+    UniformPrior("infectious_seed", [450, 700]),
+    UniformPrior("detect_prop", [0.015, 0.05]),
     # Vaccine-induced immunity
     UniformPrior(
         "immunity_stratification.infection_risk_reduction.low", [0.038, 0.438]
@@ -111,11 +111,11 @@ priors = [
         "age_stratification.prop_hospital.source_immunity_protection.high", [.85, 0.95]
     ),
     # Hospital-related
-    UniformPrior("age_stratification.prop_hospital.multiplier", [0.5, 1.5]),
-    UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 7.0]),
-    UniformPrior("prop_icu_among_hospitalised", [0.05, 0.20]),
-    UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 8.0]),
-    UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
+    UniformPrior("age_stratification.prop_hospital.multiplier", [0.2, .5]),
+    UniformPrior("time_from_onset_to_event.hospitalisation.parameters.mean", [2.0, 5.0]),
+    UniformPrior("prop_icu_among_hospitalised", [0.04, 0.10]),
+    # UniformPrior("hospital_stay.hospital_all.parameters.mean", [2.0, 8.0]),
+    # UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
 ]
 
 targets = [

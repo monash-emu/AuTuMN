@@ -366,7 +366,7 @@ def apply_reported_vacc_coverage_with_booster(
             if agegroup == "60":
                 vacc_data["double"].loc[1012] = .9
             else:
-                vacc_data["double"].loc[1012] = vacc_data["double"].loc[966] + double_cov_monthly_increment_senior * (1012 - 966) / 30. # apply standard monthly increment
+                vacc_data["double"].loc[1012] = vacc_data["double"].loc[973] + double_cov_monthly_increment_senior * (1012 - 973) / 30. # apply standard monthly increment
 
         latest_historical_time = max(vacc_data["booster"].index)
         latest_booster_coverage = vacc_data["booster"].loc[latest_historical_time]
@@ -416,8 +416,15 @@ def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, 
         raw_data_double = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=2)
         raw_data_booster = get_bgd_vac_coverage(region="BGD", vaccine="total", dose=3)
     elif iso3 == "PHL":
-        raw_data_double = get_phl_vac_coverage(dose="SECOND_DOSE")
-        raw_data_booster = get_phl_vac_coverage(dose="BOOSTER_DOSE") + get_phl_vac_coverage(dose="ADDITIONAL_DOSE")
+        if region == "Metro Manila":
+            raw_data_double = get_phl_vac_coverage(dose="SECOND_DOSE")
+            raw_data_booster = get_phl_vac_coverage(dose="BOOSTER_DOSE") + get_phl_vac_coverage(dose="ADDITIONAL_DOSE")
+        elif region == "BARMM":
+            raw_data_double = pd.Series({732: 0.175})
+            raw_data_booster = pd.Series({732: 0.0142})
+        elif region == "Western Visayas":
+            raw_data_double = pd.Series({732: 0.4247})
+            raw_data_booster = pd.Series({732: 0.0552})
 
         # manually add recent coverage
         for time_int, cov in latest_vacc_coverage['double'].items():

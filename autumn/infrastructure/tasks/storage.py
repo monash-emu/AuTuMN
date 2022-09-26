@@ -1,8 +1,8 @@
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from autumn.core.runs import ManagedRun
-from autumn.core.utils.s3 import upload_to_run_s3, get_s3_client
+from autumn.core.utils.s3 import upload_s3
 
 
 class StorageMode:
@@ -23,9 +23,15 @@ class S3Storage:
         self.local_base_path = local_base_path
         self.verbose = verbose
 
-    def store(self, src_path):
-        src_path = str(src_path)
-        upload_to_run_s3(self.client, self.run_id, src_path, not self.verbose)
+    def store(self, src_path: Path):
+
+        src_path = Path(src_path)
+        rel_path = src_path.relative_to(self.local_base_path)
+
+        src_path_str = str(src_path)
+        dest_key = str(PurePosixPath(self.run_id) / rel_path)
+
+        upload_s3(self.client, src_path_str, dest_key)
 
 
 class LocalStorage:
@@ -34,7 +40,7 @@ class LocalStorage:
         self.source_base = local_base_path
         self.dest_base = self.managed_run.local_path
 
-    def store(self, src_path):
+    def store(self, src_path: Path):
         src_path = Path(src_path)
         rel_path = src_path.relative_to(self.source_base)
         dest_path = self.dest_base / rel_path

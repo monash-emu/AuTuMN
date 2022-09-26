@@ -67,7 +67,7 @@ voc_emergence: # Baseline has currently no VoC since the seed time is very far i
 detect_prop: 0.5
 
 # Mobility parameters
-is_dynamic_mixing_matrix: true
+is_dynamic_mixing_matrix: false
 
 mobility:
   region: Metro Manila

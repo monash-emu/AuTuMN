@@ -136,8 +136,8 @@ age_stratification:
 booster_effect_duration: 180.
 
 current_daily_rates: 
-  double: 0  # FIXME: waiting for DoH data
-  booster: 0 # FIXME: waiting for DoH data
+  double: 24
+  booster: 1453 
 
 latest_vacc_coverage:  # (t=973 -> 1Sep2022)
   double:

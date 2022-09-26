@@ -28,7 +28,7 @@ class S3Storage:
         src_path = Path(src_path)
         rel_path = src_path.relative_to(self.local_base_path)
 
-        src_path_str = str(src_path_str)
+        src_path_str = str(src_path)
         dest_key = str(PurePosixPath(self.run_id) / rel_path)
 
         upload_s3(self.client, src_path_str, dest_key)

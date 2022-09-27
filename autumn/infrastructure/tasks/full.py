@@ -292,7 +292,9 @@ def select_full_run_samples(
 ) -> pd.DataFrame:
 
     accept_mask = mcmc_runs_df["accept"] == 1
-    df_accepted = mcmc_runs_df[accept_mask]
+    chain_mask = mcmc_runs_df["chain"] > 1
+
+    df_accepted = mcmc_runs_df[accept_mask][chain_mask]
     mle_idx = find_mle_run(df_accepted).index[0]
     df_accepted = df_accepted.drop(index=mle_idx)
 

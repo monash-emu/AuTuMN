@@ -30,6 +30,8 @@ Malaysia regional population stats
 Philippines sub region population numbers are provided by the FASSSTER team except for 
 [Davao City population](https://www.citypopulation.de/en/philippines/mindanao/admin/davao_del_sur/112402__davao/)
 [Davao Region population](https://www.citypopulation.de/en/philippines/admin/11__davao/)
+[Western Visayas](https://www.citypopulation.de/en/philippines/admin/06__western_visayas/)
+[BARAMM](https://www.citypopulation.de/en/philippines/admin/15__muslim_mindanao/)
 
 Sri Lanka sub region population
 [Western Province](https://www.citypopulation.de/en/srilanka/prov/admin/1__western/)

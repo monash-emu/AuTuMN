@@ -5,6 +5,7 @@ from time import time
 from typing import List, Callable
 import pickle
 from copy import copy
+import re
 
 import yaml
 import numpy as np
@@ -37,7 +38,7 @@ from .utils import (
 )
 from .targets import truncnormal_logpdf
 
-ModelBuilder = Callable[[dict,dict], CompartmentalModel]
+ModelBuilder = Callable[[dict, dict], CompartmentalModel]
 
 logger = logging.getLogger(__name__)
 
@@ -93,21 +94,24 @@ class Calibration:
         initial_jumping_stdev_ratio: float = 0.25,
         jumping_stdev_adjustment: float = 0.5,
         random_process=None,
-        hierarchical_priors: list = []
+        hierarchical_priors: list = [],
+        using_summer2: bool = False,
     ):
         """
         Defines a new calibration.
         """
         check_hierarchical_priors(hierarchical_priors, priors)
         self.hierarchical_priors = hierarchical_priors
-        self.all_priors = [p.to_dict() for p in priors] + [h_p.to_dict() for h_p in hierarchical_priors]
+        self.all_priors = [p.to_dict() for p in priors] + [
+            h_p.to_dict() for h_p in hierarchical_priors
+        ]
 
         self.includes_random_process = False
         if random_process is not None:
             self.random_process = random_process
             self.set_up_random_process()
-        
-        #self.targets = [t.to_dict() for t in targets]
+
+        # self.targets = [t.to_dict() for t in targets]
         self.targets = remove_early_points_to_prevent_crash(targets, self.all_priors)
 
         self.haario_scaling_factor = haario_scaling_factor
@@ -124,29 +128,34 @@ class Calibration:
             seed = int(time())
         self.seed = seed
 
+        self.using_summer2 = using_summer2
+
         # Set this to True for mock tests that have trouble with pickling
         self._no_pickle = False
 
     @staticmethod
     def from_existing(pkl_file, output_dir):
-        obj = pickle.load(open(pkl_file, 'rb'))
+        obj = pickle.load(open(pkl_file, "rb"))
         obj.output = CalibrationOutputs.from_existing(obj.chain_idx, output_dir)
         return obj
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        del state['transform']
-        del state['project']
-        del state['output']
+        del state["transform"]
+        del state["project"]
+        del state["output"]
 
         # Probably can't pickle models...
-        state['latest_model'] = None
+        state["latest_model"] = None
 
         # These are items that are not members of the class/object dictionary,
         # but are still required for restoring state
-        state['_extra'] = {}
-        state['_extra']['project'] = {'model_name': self.project.model_name, 'project_name': self.project.region_name}
-        state['_extra']['rng'] = np.random.get_state()
+        state["_extra"] = {}
+        state["_extra"]["project"] = {
+            "model_name": self.project.model_name,
+            "project_name": self.project.region_name,
+        }
+        state["_extra"]["rng"] = np.random.get_state()
 
         return state
 
@@ -154,16 +163,14 @@ class Calibration:
 
         # These are items that are not members of the class/object dictionary,
         # but are still required for restoring state
-        _extra = state.pop('_extra')
+        _extra = state.pop("_extra")
 
         self.__dict__.update(state)
-        self.project = get_project(**_extra['project'])
+        self.project = get_project(**_extra["project"])
         self.build_transformations(update_jumping_stdev=False)
-        np.random.set_state(_extra['rng'])
+        np.random.set_state(_extra["rng"])
 
-        #self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
-
-    
+        # self.output = CalibrationOutputs.open_existing(self.chain_idx, state[])
 
     def set_up_random_process(self):
         self.includes_random_process = True
@@ -172,21 +179,26 @@ class Calibration:
         # only relevant if order > 1
         order = self.random_process.order
         if order > 1:
-            coeff_means = [.8] + [.2 / (order - 1)] * (order - 1)
+            coeff_means = [0.8] + [0.2 / (order - 1)] * (order - 1)
             for i, coeff_mean in enumerate(coeff_means):
-                self.all_priors.append({
-                    "param_name":  f"random_process.coefficients({i})",
-                    "distribution": "trunc_normal",
-                    "distri_params": [coeff_mean, 0.05],
-                    "trunc_range": [0., 1.],
-                })
+                self.all_priors.append(
+                    {
+                        "param_name": f"random_process.coefficients({i})",
+                        "distribution": "trunc_normal",
+                        "distri_params": [coeff_mean, 0.05],
+                        "trunc_range": [0.0, 1.0],
+                    }
+                )
 
         # add prior for noise sd
-        self.all_priors.append({
-            "param_name": "random_process.noise_sd",
-            "distribution": "uniform",
-            "distri_params": [0.01, 1.], 
-        })
+
+        self.all_priors.append(
+            {
+                "param_name": "random_process.noise_sd",
+                "distribution": "uniform",
+                "distri_params": [0.01, 1.0],
+            }
+        )
 
         # add priors for rp values
         n_values = len(self.random_process.values)
@@ -194,15 +206,18 @@ class Calibration:
             {
                 "param_name": f"random_process.values({i_val})",
                 "distribution": "uniform",
-                "distri_params": [-2., 2.],
-                "skip_evaluation": True
-            } for i_val in range(1, n_values)  # the very first value will be fixed to 0.
+                "distri_params": [-2.0, 2.0],
+                "skip_evaluation": True,
+            }
+            for i_val in range(1, n_values)  # the very first value will be fixed to 0.
         ]
 
     def split_priors_by_type(self):
         # Distinguish independent sampling parameters from standard (iteratively sampled) calibration parameters
         independent_sample_idxs = [
-            idx for idx in range(len(self.all_priors)) if self.all_priors[idx].get("sampling") == "lhs"
+            idx
+            for idx in range(len(self.all_priors))
+            if self.all_priors[idx].get("sampling") == "lhs"
         ]
 
         self.iterative_sampling_priors = [
@@ -224,8 +239,12 @@ class Calibration:
             for i in range(len(self.independent_sampling_priors))
         ]
 
-    def tune_proposal(self, param_name, project: Project, n_points=100, relative_likelihood_reduction=0.5):
-        assert param_name in self.iterative_sampling_param_names, f"{param_name} is not an iteratively sampled parameter"
+    def tune_proposal(
+        self, param_name, project: Project, n_points=100, relative_likelihood_reduction=0.5
+    ):
+        assert (
+            param_name in self.iterative_sampling_param_names
+        ), f"{param_name} is not an iteratively sampled parameter"
         assert n_points > 1, "A minimum of two points is required to perform proposal tuning"
 
         self._is_first_run = True
@@ -241,6 +260,7 @@ class Calibration:
         self.project = project
         self.model_parameters = project.param_set.baseline
         self.end_time = 2 + max([max(t.data.index) for t in self.targets])
+
         target_names = [t.data.name for t in self.targets]
         self.derived_outputs_whitelist = list(set(target_names))
         self.run_mode = CalibrationMode.AUTUMN_MCMC
@@ -250,9 +270,13 @@ class Calibration:
         prior_dict = [p_dict for p_dict in self.all_priors if p_dict["param_name"] == param_name][0]
         lower_bound, upper_bound = get_parameter_finite_range_from_prior(prior_dict)
 
-        starting_point = read_current_parameter_values(self.all_priors, self.model_parameters.to_dict())
+        starting_point = read_current_parameter_values(
+            self.all_priors, self.model_parameters.to_dict()
+        )
 
-        eval_points = list(np.linspace(start=lower_bound, stop=upper_bound, num=n_points, endpoint=True))
+        eval_points = list(
+            np.linspace(start=lower_bound, stop=upper_bound, num=n_points, endpoint=True)
+        )
         eval_log_postertiors = []
         for i_run, eval_point in enumerate(eval_points):
             self.run_num = i_run
@@ -276,7 +300,7 @@ class Calibration:
         self.chain_idx = chain_idx
         model_parameters_data = self.model_parameters.to_dict()
 
-        # 
+        #
 
         # Figure out which derived outputs we have to calculate.
         derived_outputs_to_plot = derived_outputs_to_plot or []
@@ -352,19 +376,19 @@ class Calibration:
                     if isinstance(current_params, Params):
                         distri_params[i] = current_params[p]
                     else:
-                        param_index = [par['param_name'] for par in self.all_priors].index(p)
+                        param_index = [par["param_name"] for par in self.all_priors].index(p)
                         distri_params[i] = current_params[param_index]
-            
+
             # update prior lists
             for prior in self.all_priors:
                 if prior["param_name"] == h_p.name:
                     prior["distri_params"] = distri_params
-                    break    
+                    break
 
             for prior in self.iterative_sampling_priors:
                 if prior["param_name"] == h_p.name:
                     prior["distri_params"] = distri_params
-                    break   
+                    break
 
     def validate_target_start_time(self, model_parameters_data):
         model_start = model_parameters_data["time"]["start"]
@@ -390,7 +414,7 @@ class Calibration:
             "git_branch": get_git_branch(),
             "git_commit": get_git_hash(),
             "seed_chain": self.seed_chain,
-            "seed": self.seed
+            "seed": self.seed,
         }
         self.output.write_metadata(f"meta-{chain_idx}.yml", metadata)
         self.output.write_metadata(f"params-{chain_idx}.yml", model_parameters_data)
@@ -404,29 +428,52 @@ class Calibration:
         logger.info(f"Running iteration {self.run_num}...")
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
-        for param_name, value in proposed_params.items():
-            param_updates[param_name] = value
+        if self.using_summer2 and self.includes_random_process:
+            # Random process values are an array in summer2 parameters
+            rp_param_values = np.empty_like(self.random_process.values)
+            for param_name, value in proposed_params.items():
+                if param_name.startswith("random_process.values"):
+                    m = re.match(".*\(([0-9]*)\)", param_name)
+                    idx = int(m.group(1))
+                    rp_param_values[idx] = value
+                else:
+                    param_updates[param_name] = value
+            param_updates["random_process.values"] = rp_param_values
+
+        else:
+            for param_name, value in proposed_params.items():
+                param_updates[param_name] = value
         iter_params = self.model_parameters.update(param_updates, calibration_format=True)
 
         # Update the random_process attribute with the current rp config for later likelihood evaluation
         if self.includes_random_process:
             if self.random_process.order > 1:
-                self.random_process.coefficients = [proposed_params[f"random_process.coefficients({i})"] for i in range(self.random_process.order)]
+                self.random_process.coefficients = [
+                    proposed_params[f"random_process.coefficients({i})"]
+                    for i in range(self.random_process.order)
+                ]
             self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
-            self.random_process.values = [0.] + [proposed_params[f"random_process.values({k})"] for k in range(1, len(self.random_process.values))]
+            self.random_process.values = [0.0] + [
+                proposed_params[f"random_process.values({k})"]
+                for k in range(1, len(self.random_process.values))
+            ]
 
         if self._is_first_run:
-            self.build_options = dict(enable_validation = True)
+            self.build_options = dict(enable_validation=True)
+            self.project._start_calibrating()
 
         self.latest_model = self.project.run_baseline_model(
-            iter_params, derived_outputs_whitelist=self.derived_outputs_whitelist,
-            build_options = self.build_options
+            iter_params,
+            derived_outputs_whitelist=self.derived_outputs_whitelist,
+            build_options=self.build_options,
         )
-        
+
         if self._is_first_run:
             self._is_first_run = False
-            self.build_options['enable_validation'] = False
-            self.build_options['derived_outputs_idx_cache'] = self.latest_model._derived_outputs_idx_cache
+            self.build_options["enable_validation"] = False
+            self.build_options[
+                "derived_outputs_idx_cache"
+            ] = self.latest_model._derived_outputs_idx_cache
 
         return self.latest_model
 
@@ -460,11 +507,13 @@ class Calibration:
 
                     if target.loglikelihood_distri == "normal":
                         squared_distance = (data - model_output) ** 2
-                        ll += -(0.5 / normal_sd ** 2) * np.sum(
+                        ll += -(0.5 / normal_sd**2) * np.sum(
                             [w * d for (w, d) in zip(time_weights, squared_distance)]
                         )
                     else:  # this is a truncated normal likelihood
-                        logpdf_arr =  truncnormal_logpdf(data, model_output, target.trunc_range, normal_sd)
+                        logpdf_arr = truncnormal_logpdf(
+                            data, model_output, target.trunc_range, normal_sd
+                        )
                         ll += (logpdf_arr * time_weights).sum()
                 elif target.loglikelihood_distri == "poisson":
                     for i in range(len(data)):
@@ -503,12 +552,11 @@ class Calibration:
             if target.stdev is None:
                 if (
                     # Do we ever use this?  Doesn't show up anywhere in the codebase..
-                    target.cis is not None
+                    target.cis
+                    is not None
                 ):  # match normal likelihood 95% width with data 95% CI with
-                # +++ This will crash, but we should rewrite it when it does (Romain to explain), since this is very opaque right now...
-                    target.stdev = (
-                        target["cis"][0][1] - target["cis"][0][0]
-                    ) / 4.0
+                    # +++ This will crash, but we should rewrite it when it does (Romain to explain), since this is very opaque right now...
+                    target.stdev = (target["cis"][0][1] - target["cis"][0][0]) / 4.0
                 else:
                     target.stdev = 0.25 / 4.0 * max(target.data)
 
@@ -571,12 +619,13 @@ class Calibration:
             self.write_outputs()
 
     def write_outputs(self):
-        """Ensure output data from run is written to disk, including model state for resume
-        """
+        """Ensure output data from run is written to disk, including model state for resume"""
         self.output.write_data_to_disk()
         if not self._no_pickle:
-            state_pkl_filename = os.path.join(self.output.output_dir, f"calstate-{self.chain_idx}.pkl")
-            pickle.dump(self, open(state_pkl_filename, 'wb'))
+            state_pkl_filename = os.path.join(
+                self.output.output_dir, f"calstate-{self.chain_idx}.pkl"
+            )
+            pickle.dump(self, open(state_pkl_filename, "wb"))
 
     def test_in_prior_support(self, iterative_params):
         in_support = True
@@ -591,10 +640,7 @@ class Calibration:
 
         return in_support
 
-    def run_autumn_mcmc(
-        self,
-        available_time
-    ):
+    def run_autumn_mcmc(self, available_time):
         """
         Run our hand-rolled MCMC algorithm to calibrate model parameters.
         """
@@ -606,7 +652,7 @@ class Calibration:
         self.n_accepted = 0
         self.n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
         self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
-    
+
         self.enter_mcmc_loop(available_time)
 
     def resume_autumn_mcmc(self, available_time: int = None, max_iters: int = None, finalise=True):
@@ -615,7 +661,7 @@ class Calibration:
         finally:
             if finalise:
                 self.write_outputs()
-            
+
     def enter_mcmc_loop(self, available_time: int = None, max_iters: int = None):
         start_time = time()
 
@@ -666,7 +712,7 @@ class Calibration:
 
                 # transform the density
                 proposed_acceptance_quantity = proposed_log_posterior
-                
+
                 for i, prior_dict in enumerate(
                     self.iterative_sampling_priors
                 ):  # multiply the density with the determinant of the Jacobian
@@ -685,7 +731,9 @@ class Calibration:
                 if is_auto_accept:
                     accept = True
                 else:
-                    accept_prob = np.exp(proposed_acceptance_quantity - self.last_acceptance_quantity)
+                    accept_prob = np.exp(
+                        proposed_acceptance_quantity - self.last_acceptance_quantity
+                    )
                     accept = (np.random.binomial(n=1, p=accept_prob, size=1) > 0)[0]
             else:
                 accept = False
@@ -759,7 +807,7 @@ class Calibration:
             self.iterative_sampling_priors[i]["jumping_stdev"] *= self.jumping_stdev_adjustment
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
-        scaling_factor = haario_scaling_factor ** 2 / len(
+        scaling_factor = haario_scaling_factor**2 / len(
             self.iterative_sampling_priors
         )  # from Haario et al. 2001
         cov_matrix = np.cov(self.mcmc_trace_matrix, rowvar=False)
@@ -974,17 +1022,16 @@ class CalibrationOutputs:
         obj.chain_id = chain_id
 
         # List of dicts for tracking MCMC progress.
-        #obj.mcmc_runs = []
-        #obj.mcmc_params = []
+        # obj.mcmc_runs = []
+        # obj.mcmc_params = []
         obj.load_mcmc()
 
         return obj
 
     def load_mcmc(self):
-        """Read MCMC calibration data from disk (for resuming an existing run)
-        """
-        self.mcmc_runs = self.db.query('mcmc_run').to_dict('records')
-        self.mcmc_params = self.db.query('mcmc_params').to_dict('records')
+        """Read MCMC calibration data from disk (for resuming an existing run)"""
+        self.mcmc_runs = self.db.query("mcmc_run").to_dict("records")
+        self.mcmc_params = self.db.query("mcmc_params").to_dict("records")
 
     def write_metadata(self, filename, data):
         file_path = os.path.join(self.output_dir, filename)
@@ -1002,11 +1049,11 @@ class CalibrationOutputs:
         Record the model outputs for this iteration
         """
         assert model and model.outputs is not None, "No model has been run"
-        #outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
+        # outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
         derived_outputs_df = db.store.build_derived_outputs_table(
             [model], run_id=iter_num, chain_id=self.chain_id
         )
-        #self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
+        # self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
         self.db.append_df(db.store.Table.DERIVED, derived_outputs_df)
 
     def store_mcmc_iteration(
@@ -1030,7 +1077,7 @@ class CalibrationOutputs:
             "run": i_run,
             "loglikelihood": proposed_loglike,
             "ap_loglikelihood": proposed_ap_loglikelihood,
-            "acceptance_quantity": proposed_acceptance_quantity,    
+            "acceptance_quantity": proposed_acceptance_quantity,
             "accept": 1 if accept else 0,
             "weight": 0,  # Default to zero, re-calculate this later.
         }
@@ -1081,6 +1128,7 @@ def check_hierarchical_priors(hierarchical_priors, priors):
             msg = f"{p_name} is defined as a hyper-parameter but is not associated with a prior"
             assert p_name in prior_names, msg
 
+
 def get_parameter_bounds_from_priors(prior_dict):
     """
     Determine lower and upper bounds of a parameter by analysing its assigned prior distribution
@@ -1094,7 +1142,7 @@ def get_parameter_bounds_from_priors(prior_dict):
         lower_bound = 0.0
         upper_bound = float("inf")
     elif prior_dict["distribution"] == "normal":
-        lower_bound = - float("inf")
+        lower_bound = -float("inf")
         upper_bound = float("inf")
     elif prior_dict["distribution"] == "trunc_normal":
         lower_bound = prior_dict["trunc_range"][0]
@@ -1130,12 +1178,8 @@ def get_parameter_finite_range_from_prior(prior_dict):
     elif prior_dict["distribution"] == "normal":
         mu = prior_dict["distri_params"][0]
         sd = prior_dict["distri_params"][1]
-        prior_low = stats.norm.ppf(
-            0.025, loc=mu, scale=sd
-        )
-        prior_high = stats.norm.ppf(
-            0.975, loc=mu, scale=sd
-        )
+        prior_low = stats.norm.ppf(0.025, loc=mu, scale=sd)
+        prior_high = stats.norm.ppf(0.975, loc=mu, scale=sd)
     elif prior_dict["distribution"] == "beta":
         prior_low = stats.beta.ppf(
             0.025,
@@ -1187,7 +1231,7 @@ def remove_early_points_to_prevent_crash(target_outputs, priors):
                 t_idx for t_idx, t_val in enumerate(target.data.index) if t_val > latest_start_time
             )
             target.data = target.data.iloc[first_idx_to_keep:]
-            #target["values"] = target["values"][first_idx_to_keep:]
+            # target["values"] = target["values"][first_idx_to_keep:]
 
     return target_outputs
 

@@ -1,0 +1,7 @@
+contact_rate: 0.17446018317359688
+sojourns.latent.total_time: 10.274439583131274
+testing_to_detection.assumed_cdr_parameter: 0.05191887320322571
+voc_emergence.omicron.contact_rate_multiplier: 1.1047034557515576
+voc_emergence.omicron.new_voc_seed.start_time: 538.7652157816818
+voc_emergence.omicron.relative_active_period: 0.713457117972314
+voc_emergence.omicron.relative_latency: 0.5239638519608149

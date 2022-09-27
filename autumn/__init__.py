@@ -72,6 +72,22 @@ register_project(
     Region.NCR,
     "autumn.projects.sm_sir.philippines.national-capital-region.project",
 )
+
+
+register_project(
+    Models.SM_SIR,
+    Region.BARMM,
+    "autumn.projects.sm_sir.philippines.barmm.project",
+)
+
+
+register_project(
+    Models.SM_SIR,
+    Region.WESTERN_VISAYAS,
+    "autumn.projects.sm_sir.philippines.western-visayas.project",
+)
+
+
 register_project(
     Models.SM_SIR,
     Region.MALAYSIA,
@@ -140,4 +156,12 @@ register_project(
     Models.TBD,
     Region.KIRIBATI,
     "autumn.projects.tb_dynamics.kiribati.project",
+)
+
+
+# sm_jax
+register_project(
+    Models.SM_JAX,
+    Region.MALAYSIA,
+    "autumn.projects.sm_jax.malaysia.project",
 )

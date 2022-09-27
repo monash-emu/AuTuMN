@@ -12,8 +12,8 @@ from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroup
 
 
 def get_immunity_prop_modifiers(
-        source_pop_immunity_dist: Dict[str, float],
-        source_pop_protection: Dict[str, float],
+    source_pop_immunity_dist: Dict[str, float],
+    source_pop_protection: Dict[str, float],
 ):
     """
     Work out how much we are going to adjust the age-specific hospitalisation and mortality rates by to account for pre-
@@ -38,28 +38,31 @@ def get_immunity_prop_modifiers(
     """
 
     # Take the complement
-    immunity_effect = {k: 1. - v for k, v in source_pop_protection.items()}
+    immunity_effect = {k: 1.0 - v for k, v in source_pop_protection.items()}
 
     # Work out the adjustments based on the protection provided by immunity
-    effective_weights = [immunity_effect[stratum] * source_pop_immunity_dist[stratum] for stratum in IMMUNITY_STRATA]
-    no_immunity_modifier = 1. / sum(effective_weights)
-    immune_modifiers = {strat: no_immunity_modifier * immunity_effect[strat] for strat in IMMUNITY_STRATA}
+    effective_weights = [
+        immunity_effect[stratum] * source_pop_immunity_dist[stratum] for stratum in IMMUNITY_STRATA
+    ]
+    no_immunity_modifier = 1.0 / sum(effective_weights)
+    immune_modifiers = {
+        strat: no_immunity_modifier * immunity_effect[strat] for strat in IMMUNITY_STRATA
+    }
 
     # Unnecessary check that the weighted average we have calculated does come out to one
     msg = "Values used don't appear to create a weighted average with weights summing to one, something went wrong"
-    assert weighted_average(immune_modifiers, source_pop_immunity_dist, rounding=4) == 1., msg
+    assert weighted_average(immune_modifiers, source_pop_immunity_dist, rounding=4) == 1.0, msg
 
     return immune_modifiers
 
 
 class SmCovidOutputsBuilder(OutputsBuilder):
-   
     def request_incidence(
-            self,      
-            age_groups: List[str],     
-            strain_strata: List[str], 
-            incidence_flow: str,
-            request_incidence_by_age: bool,
+        self,
+        age_groups: List[str],
+        strain_strata: List[str],
+        incidence_flow: str,
+        request_incidence_by_age: bool,
     ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
@@ -80,12 +83,12 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         # Stratified
         for agegroup in age_groups:
-            agegroup_string = f"Xagegroup_{agegroup}"        
-            age_incidence_sources = []    
+            agegroup_string = f"Xagegroup_{agegroup}"
+            age_incidence_sources = []
 
             for immunity_stratum in IMMUNITY_STRATA:
-                immunity_string = f"Ximmunity_{immunity_stratum}"                
-                
+                immunity_string = f"Ximmunity_{immunity_stratum}"
+
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
                     strain_filter = {"strain": strain} if strain else {}
@@ -101,7 +104,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                         flow_name=incidence_flow,
                         dest_strata=dest_filter,
                         save_results=False,
-                    ) 
+                    )
 
             # Aggregated incidence by age
             if request_incidence_by_age:
@@ -109,20 +112,19 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     name=f"incidence{agegroup_string}",
                     sources=age_incidence_sources,
                     save_results=True,
-                )     
-
+                )
 
     def request_infection_deaths(
-            self,
-            model_times: np.ndarray,
-            age_groups: List[str],
-            strain_strata: List[str],
-            iso3: str,
-            region: Union[str, None],
-            ifr_prop_requests: AgeSpecificProps,
-            ve_death: float,
-            time_from_onset_to_death: TimeDistribution,
-            voc_params: Optional[Dict[str, VocComponent]],
+        self,
+        model_times: np.ndarray,
+        age_groups: List[str],
+        strain_strata: List[str],
+        iso3: str,
+        region: Union[str, None],
+        ifr_prop_requests: AgeSpecificProps,
+        ve_death: float,
+        time_from_onset_to_death: TimeDistribution,
+        voc_params: Optional[Dict[str, VocComponent]],
     ):
         """
         Request infection death-related outputs.
@@ -140,33 +142,31 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         """
 
-        ifr_request = ifr_prop_requests.values
-        ifr_props = convert_param_agegroups(iso3, region, ifr_request, age_groups)
+        age_ifr_request = ifr_prop_requests.values
+        age_ifr_props = convert_param_agegroups(iso3, region, age_ifr_request, age_groups)
+        ifr_multiplier = ifr_prop_requests.multiplier
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
-        interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
-
-        # Prepare odds adjuster function
-        or_adjuster_func = get_apply_odds_ratio_to_prop(ifr_prop_requests.multiplier)
+        interval_distri_densities = precompute_density_intervals(
+            time_from_onset_to_death, model_times
+        )
 
         # Prepare immunity modifiers
         immune_death_modifiers = {
-            ImmunityStratum.UNVACCINATED: 1.,
-            ImmunityStratum.VACCINATED: 1. - ve_death,
+            ImmunityStratum.UNVACCINATED: 1.0,
+            ImmunityStratum.VACCINATED: 1.0 - ve_death,
         }
 
         # Request infection deaths for each age group
         infection_deaths_sources = []
         for agegroup in age_groups:
-            agegroup_string = f"Xagegroup_{agegroup}"            
+            agegroup_string = f"Xagegroup_{agegroup}"
 
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
                 # Adjust CFR proportions for immunity
-                adj_death_props = ifr_props * immune_death_modifiers[immunity_stratum]
-                or_adjuster_func = get_apply_odds_ratio_to_prop(ifr_prop_requests.multiplier)
-                adj_death_props = adj_death_props.apply(or_adjuster_func)
+                age_immune_death_props = age_ifr_props * immune_death_modifiers[immunity_stratum]
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -178,11 +178,19 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     infection_deaths_sources.append(output_name)
 
                     # Calculate the multiplier based on age, immunity and strain
-                    strain_risk_modifier = 1. if not strain else voc_params[strain].death_risk_adjuster
-                    death_risk = adj_death_props[agegroup] * strain_risk_modifier
+                    strain_risk_modifier = (
+                        1.0 if not strain else voc_params[strain].death_risk_adjuster
+                    )
+                    death_risk = (
+                        age_immune_death_props[agegroup] * strain_risk_modifier * ifr_multiplier
+                    )
+
+                    assert death_risk <= 1.0, "The overall death risk is greater than one."
 
                     # Get the infection deaths function for convolution
-                    infection_deaths_func = make_calc_deaths_func(death_risk, interval_distri_densities)
+                    infection_deaths_func = make_calc_deaths_func(
+                        death_risk, interval_distri_densities
+                    )
 
                     # Request the output
                     self.model.request_function_output(
@@ -194,23 +202,22 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         # Request aggregated infection deaths
         self.model.request_aggregate_output(
-            name="infection_deaths",
-            sources=infection_deaths_sources
+            name="infection_deaths", sources=infection_deaths_sources
         )
 
     def request_hospitalisations(
-            self,
-            model_times: np.ndarray,
-            age_groups: List[int],
-            strain_strata: List[str],
-            iso3: str,
-            region: Union[str, None],
-            symptomatic_prop_requests: Dict[str, float],
-            hosp_prop_requests: AgeSpecificProps,
-            ve_hospitalisation: float,
-            time_from_onset_to_hospitalisation: TimeDistribution,
-            hospital_stay_duration: TimeDistribution,
-            voc_params: Optional[Dict[str, VocComponent]],
+        self,
+        model_times: np.ndarray,
+        age_groups: List[int],
+        strain_strata: List[str],
+        iso3: str,
+        region: Union[str, None],
+        symptomatic_prop_requests: Dict[str, float],
+        hosp_prop_requests: AgeSpecificProps,
+        ve_hospitalisation: float,
+        time_from_onset_to_hospitalisation: TimeDistribution,
+        hospital_stay_duration: TimeDistribution,
+        voc_params: Optional[Dict[str, VocComponent]],
     ):
         """
         Request hospitalisation-related outputs.
@@ -229,7 +236,9 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         """
 
-        symptomatic_props = convert_param_agegroups(iso3, region, symptomatic_prop_requests, age_groups)
+        symptomatic_props = convert_param_agegroups(
+            iso3, region, symptomatic_prop_requests, age_groups
+        )
         hosp_props = convert_param_agegroups(iso3, region, hosp_prop_requests.values, age_groups)
 
         # Get the adjustments to the hospitalisation rates according to immunity status
@@ -237,12 +246,14 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         # Prepare immunity modifiers
         immune_hosp_modifiers = {
-            ImmunityStratum.UNVACCINATED: 1.,
-            ImmunityStratum.VACCINATED: 1. - ve_hospitalisation,
+            ImmunityStratum.UNVACCINATED: 1.0,
+            ImmunityStratum.VACCINATED: 1.0 - ve_hospitalisation,
         }
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
-        interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
+        interval_distri_densities = precompute_density_intervals(
+            time_from_onset_to_hospitalisation, model_times
+        )
 
         # Request hospital admissions for each age group
         hospital_admissions_sources = []
@@ -265,12 +276,18 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     hospital_admissions_sources.append(output_name)
 
                     # Calculate the multiplier based on age, immunity and strain
-                    strain_risk_modifier = 1. if not strain else voc_params[strain].hosp_risk_adjuster                    
+                    strain_risk_modifier = (
+                        1.0 if not strain else voc_params[strain].hosp_risk_adjuster
+                    )
                     hospital_risk_given_symptoms = adj_hosp_props[agegroup] * strain_risk_modifier
-                    hospital_risk_given_infection = hospital_risk_given_symptoms * symptomatic_props[agegroup]
+                    hospital_risk_given_infection = (
+                        hospital_risk_given_symptoms * symptomatic_props[agegroup]
+                    )
 
                     # Get the hospitalisation function
-                    hospital_admissions_func = make_calc_admissions_func(hospital_risk_given_infection, interval_distri_densities)
+                    hospital_admissions_func = make_calc_admissions_func(
+                        hospital_risk_given_infection, interval_distri_densities
+                    )
 
                     # Request the output
                     self.model.request_function_output(
@@ -282,27 +299,25 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
         # Request aggregated hospital admissions
         self.model.request_aggregate_output(
-            name="hospital_admissions",
-            sources=hospital_admissions_sources
+            name="hospital_admissions", sources=hospital_admissions_sources
         )
 
         # Request aggregated hospital occupancy
-        probas_stay_greater_than = precompute_probas_stay_greater_than(hospital_stay_duration, model_times)
+        probas_stay_greater_than = precompute_probas_stay_greater_than(
+            hospital_stay_duration, model_times
+        )
         hospital_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
         self.model.request_function_output(
-            name="hospital_occupancy",
-            sources=["hospital_admissions"],
-            func=hospital_occupancy_func
+            name="hospital_occupancy", sources=["hospital_admissions"], func=hospital_occupancy_func
         )
-
 
     def request_peak_hospital_occupancy(self):
         """
-        Create an output for the peak hospital occupancy. This is stored as a timeseries, although this is 
+        Create an output for the peak hospital occupancy. This is stored as a timeseries, although this is
         actually a constant output.
         """
         self.model.request_function_output(
-            'peak_hospital_occupancy',
+            "peak_hospital_occupancy",
             lambda hosp_occupancy: np.repeat(hosp_occupancy.max(), hosp_occupancy.size),
             ["hospital_occupancy"],
         )
@@ -384,7 +399,9 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
 
         # All the compartments other than the fully susceptible have been infected at least once
-        ever_infected_compartments = [comp for comp in base_comps if comp != Compartment.SUSCEPTIBLE]
+        ever_infected_compartments = [
+            comp for comp in base_comps if comp != Compartment.SUSCEPTIBLE
+        ]
 
         self.model.request_output_for_compartments(
             "ever_infected",
@@ -396,10 +413,10 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             sources=["ever_infected", "total_population"],
         )
 
-
-    def request_random_process_outputs(self,):
+    def request_random_process_outputs(
+        self,
+    ):
         self.model.request_computed_value_output("transformed_random_process")
-
 
     def request_immunity_props(self, immunity_strata, age_pops, request_immune_prop_by_age):
         """
@@ -444,7 +461,6 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                         [n_age_immune_name],
                     )
 
-
     def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
         """
         Compute cumulative outputs for requested outputs.
@@ -455,15 +471,16 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
 
         for output in requested_cumulative_outputs:
-            self.model.request_cumulative_output(name=f"cumulative_{output}", source=output, start_time=cumulative_start_time)
-
+            self.model.request_cumulative_output(
+                name=f"cumulative_{output}", source=output, start_time=cumulative_start_time
+            )
 
     def request_student_weeks_missed_output(self, n_student_weeks_missed):
         """
-            Store the number of students*weeks of school missed. This is a single float that will be stored as a derived output
+        Store the number of students*weeks of school missed. This is a single float that will be stored as a derived output
         """
         self.model.request_function_output(
-            'student_weeks_missed',
+            "student_weeks_missed",
             lambda total: np.repeat(n_student_weeks_missed, total.size),  # constant function
             ["total_population"],  # could be anything here, really...
         )
@@ -528,8 +545,11 @@ def precompute_probas_stay_greater_than(distribution_details, model_times):
     probas_stay_greater_than = 1 - cdf_values
     return probas_stay_greater_than
 
+
 @jit
-def convolve_probability(source_output: np.ndarray, density_intervals: np.ndarray, scale: float = 1.0, lag: int = 1) -> np.ndarray:
+def convolve_probability(
+    source_output: np.ndarray, density_intervals: np.ndarray, scale: float = 1.0, lag: int = 1
+) -> np.ndarray:
     """
     Calculate a convolved output.
 
@@ -546,17 +566,19 @@ def convolve_probability(source_output: np.ndarray, density_intervals: np.ndarra
     convolved_output = np.zeros_like(source_output)
 
     offset = 1 - lag
-    
+
     for i in range(source_output.size):
-        trunc_source_output = source_output[:i+offset][::-1]
-        trunc_intervals = density_intervals[:i+offset]
+        trunc_source_output = source_output[: i + offset][::-1]
+        trunc_intervals = density_intervals[: i + offset]
         convolution_sum = (trunc_source_output * trunc_intervals).sum()
         convolved_output[i] = scale * convolution_sum
 
     return convolved_output
 
 
-def apply_convolution_for_event(source_output: np.ndarray, density_intervals: np.ndarray, event_proba: float):
+def apply_convolution_for_event(
+    source_output: np.ndarray, density_intervals: np.ndarray, event_proba: float
+):
     """
     Calculate a convolved output.
 
@@ -573,7 +595,9 @@ def apply_convolution_for_event(source_output: np.ndarray, density_intervals: np
     return convolve_probability(source_output, density_intervals, scale=event_proba)
 
 
-def apply_convolution_for_occupancy(source_output: np.ndarray, probas_stay_greater_than: np.ndarray):
+def apply_convolution_for_occupancy(
+    source_output: np.ndarray, probas_stay_greater_than: np.ndarray
+):
     """
     Calculate a convolved output.
 
@@ -596,16 +620,14 @@ Below are a few factory functions used when declaring functions within loops. Th
 
 
 def make_calc_notifications_func(density_intervals):
-
     def notifications_func(detected_incidence):
-        notifications = apply_convolution_for_event(detected_incidence, density_intervals, 1.)
+        notifications = apply_convolution_for_event(detected_incidence, density_intervals, 1.0)
         return notifications
 
     return notifications_func
 
 
 def make_calc_deaths_func(death_risk, density_intervals):
-    
     def deaths_func(detected_incidence):
         deaths = apply_convolution_for_event(detected_incidence, density_intervals, death_risk)
         return deaths
@@ -614,16 +636,16 @@ def make_calc_deaths_func(death_risk, density_intervals):
 
 
 def make_calc_admissions_func(admission_risk, density_intervals):
-
     def admissions_func(reference_output):
-        admissions = apply_convolution_for_event(reference_output, density_intervals, admission_risk)
+        admissions = apply_convolution_for_event(
+            reference_output, density_intervals, admission_risk
+        )
         return admissions
 
     return admissions_func
 
 
 def make_calc_occupancy_func(probas_stay_greater_than):
-
     def occupancy_func(admissions):
         occupancy = apply_convolution_for_occupancy(admissions, probas_stay_greater_than)
         return occupancy
@@ -633,14 +655,15 @@ def make_calc_occupancy_func(probas_stay_greater_than):
 
 def make_age_immune_prop_func(popsize):
     """
-    Create a simple function to calculate immune proportion for a given age group 
+    Create a simple function to calculate immune proportion for a given age group
 
     Args:
         popsize: Population size of the relevant age group
-    
+
     Returns:
-        A function converitng a number of individuals into the associated proportion among the relevant age group 
+        A function converitng a number of individuals into the associated proportion among the relevant age group
     """
+
     def age_immune_prop_func(n_immune):
         return n_immune / popsize
 

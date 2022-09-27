@@ -21,7 +21,6 @@ example_parameters = [
         "testing_to_detection.assumed_cdr_parameter",
         "testing_to_detection.floor_value",
         "testing_to_detection.smoothing_period",    
-        "booster_effect_duration",
         "immunity_stratification.infection_risk_reduction.high",
         "immunity_stratification.infection_risk_reduction.low", 
     ]

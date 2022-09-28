@@ -3,12 +3,13 @@ from autumn.models.sm_sir.mixing_matrix.macrodistancing import get_mobility_spec
 lockdown_title = ["No vaccination",
                   "Vaccine coverage halved",
                   "What if state and nation-wide MCOs not implemented",
+                  "What if state-wide MCO not implemented",
                   "What if nation-wide MCO not implemented"]
 
 
 def get_all_scenario_dicts(country: str):
 
-    num_scenarios = 4
+    num_scenarios = 5
     all_scenario_dicts = []
 
     for i_lockdown_scenario in [*range(0, num_scenarios)]:
@@ -45,8 +46,8 @@ def get_all_scenario_dicts(country: str):
                                                                                 'transit_stations': 0.334},
                                                             'home': {'residential': 1.}}, [457, 518])
 
-            # from June 1-28th other location mobility and work are fixed at 0.85
-            times3 = [*range(518, 546)]
+            # from June 1-Oct 01st other location mobility and work are fixed at 0.85
+            times3 = [*range(518, 640)]
             values3 = {'work': [0.85] * len(times3), 'other_locations': [0.85] * len(times3)}
 
             # mobility from 29th of June onwards
@@ -55,7 +56,7 @@ def get_all_scenario_dicts(country: str):
                                                             'other_locations': {'retail_and_recreation': 0.333,
                                                                                 'grocery_and_pharmacy': 0.333,
                                                                                 'transit_stations': 0.334},
-                                                            'home': {'residential': 1.}}, [546, 900])
+                                                            'home': {'residential': 1.}}, [640, 900])
 
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {
@@ -65,10 +66,31 @@ def get_all_scenario_dicts(country: str):
                               values4[key_loc] + [["repeat_prev"]],
                 }
 
-        if i_lockdown_scenario == 3:  # jun 1st - 28th june MCO not implemented
+        if i_lockdown_scenario == 3:  # 13th jan - 31st march MCO not implemented
 
-            # from June 1-28th other location mobility and work are fixed at 0.85
-            times1 = [*range(518, 545)]
+            # from Jan 13-31st March other location mobility and work are fixed at 0.95 and 0.9, respectively
+            times1 = [*range(379, 456)]
+            values1 = {'work': [0.9] * len(times1), 'other_locations': [0.95] * len(times1)}
+
+            # mobility from 1st April onwards unchanged
+            times2, values2 = get_mobility_specific_period(country, None,
+                                                           {'work': {'workplaces': 1.},
+                                                            'other_locations': {'retail_and_recreation': 0.333,
+                                                                                'grocery_and_pharmacy': 0.333,
+                                                                                'transit_stations': 0.334},
+                                                            'home': {'residential': 1.}}, [456, 900])
+
+            for key_loc in ["other_locations", "work"]:
+                scenario_dict["mobility"]["mixing"][key_loc] = {
+                    "append": True,
+                    "times": [378] + times1 + times2 + [times2[-1] + 1],
+                    "values": [["repeat_prev"]] + values1[key_loc] + values2[key_loc] + [["repeat_prev"]],
+                }
+
+        if i_lockdown_scenario == 4:  # jun 1st - 28th june MCO not implemented (mobility changed till oct 1st, 2021)
+
+            # from June 1- Oct 01 st other location mobility and work are fixed at 0.85
+            times1 = [*range(518, 640)]
             values1 = {'work': [0.85] * len(times1), 'other_locations': [0.85] * len(times1)}
 
             # mobility from 29th of June onwards
@@ -77,12 +99,12 @@ def get_all_scenario_dicts(country: str):
                                                             'other_locations': {'retail_and_recreation': 0.333,
                                                                                 'grocery_and_pharmacy': 0.333,
                                                                                 'transit_stations': 0.334},
-                                                            'home': {'residential': 1.}}, [545, 900])
+                                                            'home': {'residential': 1.}}, [640, 900])
 
             for key_loc in ["other_locations", "work"]:
                 scenario_dict["mobility"]["mixing"][key_loc] = {
                     "append": True,
-                    "times": [517] + times1 + times2 +[times2[-1] + 1],
+                    "times": [517] + times1 + times2 + [times2[-1] + 1],
                     "values": [["repeat_prev"]] + values1[key_loc] + values2[key_loc] + [["repeat_prev"]],
                 }
 

@@ -158,3 +158,4 @@ request_hospital_occupancy_by_age: true
 request_icu_admissions_by_age: true
 request_icu_occupancy_by_age: true
 request_infection_deaths_by_age: true
+request_non_hospitalised_notifications: true

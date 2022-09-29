@@ -228,3 +228,4 @@ request_icu_admissions_by_age: false
 request_icu_occupancy_by_age: false
 request_infection_deaths_by_age: false
 request_notifications_by_age: false
+request_non_hospitalised_notifications: false

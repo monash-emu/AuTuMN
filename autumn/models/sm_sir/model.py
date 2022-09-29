@@ -592,6 +592,11 @@ def build_model(
         voc_params,
         params.request_infection_deaths_by_age,
     )
+
+    outputs_builder.request_non_hospitalised_notifications(
+            age_groups,
+            params.request_notifications_by_age,
+    )
     outputs_builder.request_recovered_proportion(compartment_types)
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

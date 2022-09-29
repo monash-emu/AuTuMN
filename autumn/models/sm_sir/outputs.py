@@ -515,6 +515,23 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 func=lambda h: h + 122.  # 122 is the lowest value reported since 1 Jan 2022
             )
 
+    def request_non_hospitalised_notifications(
+            self,
+            age_groups: List[int],
+            request_notifications_by_age: bool
+    ):
+
+        for agegroup in age_groups:
+            agegroup_string = f"Xagegroup_{agegroup}"
+
+            if request_notifications_by_age:
+                self.model.request_function_output(
+                    name=f"age_non_hosp_notifications{agegroup_string}",
+                    sources=[f"notifications{agegroup_string}", f"hospital_admissions{agegroup_string}"],
+                    func=f"notifications{agegroup_string}" - f"hospital_admissions{agegroup_string}"
+                )
+
+
     def request_recovered_proportion(self, base_comps: List[str]):
         """
         Track the total population ever infected and the proportion of the total population.

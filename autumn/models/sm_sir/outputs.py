@@ -520,15 +520,17 @@ class SmSirOutputsBuilder(OutputsBuilder):
             age_groups: List[int],
             request_notifications_by_age: bool
     ):
+        def get_output_difference(output1, output2):
+            return output1-output2
 
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
             if request_notifications_by_age:
                 self.model.request_function_output(
-                    name=f"age_non_hosp_notifications{agegroup_string}",
+                    name=f"non_hosp_notifications{agegroup_string}",
                     sources=[f"notifications{agegroup_string}", f"hospital_admissions{agegroup_string}"],
-                    func=f"notifications{agegroup_string}" - f"hospital_admissions{agegroup_string}"
+                    func=get_output_difference
                 )
 
 

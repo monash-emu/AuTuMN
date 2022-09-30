@@ -7646,6 +7646,70 @@
       0.75,
       0.975
     ]
+  },
+  "non_hosp_notificationsXagegroup_0": {
+    "output_key": "age_non_hosp_notificationsXagegroup_0",
+    "title": "non_hosp_notifications 0",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hosp_notificationsXagegroup_15": {
+    "output_key": "age_non_hosp_notificationsXagegroup_15",
+    "title": "non_hosp_notifications 15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hosp_notificationsXagegroup_25": {
+    "output_key": "age_non_hosp_notificationsXagegroup_25",
+    "title": "non_hosp_notifications 25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hosp_notificationsXagegroup_50": {
+    "output_key": "age_non_hosp_notificationsXagegroup_50",
+    "title": "non_hosp_notifications 50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "non_hosp_notificationsXagegroup_70": {
+    "output_key": "age_non_hosp_notificationsXagegroup_70",
+    "title": "non_hosp_notifications 70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
-
 }

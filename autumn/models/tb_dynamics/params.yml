@@ -9,6 +9,7 @@ time:
 
 # Country code
 iso3: null
+cumulative_start_time: 1980
 
 # Set up a parameter for the birth rate (its time-variant value will be automatically defined)
 crude_birth_rate: 1.
@@ -47,4 +48,11 @@ progression_multiplier: 1.
 self_recovery_rate: .2
 infect_death_rate: .2
 
-cumulative_start_time: 1980
+prop_death_among_negative_tx_outcome: .2
+time_variant_tsr: {}
+treatment_duration: .5
+# changes by age
+age_infectiousness_switch: 15.
+on_treatment_infect_multiplier: 0.08
+
+

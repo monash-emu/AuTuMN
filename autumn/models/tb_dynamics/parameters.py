@@ -61,3 +61,13 @@ class Parameters:
     progression_multiplier: float
     self_recovery_rate: float
     infect_death_rate: float
+    time_variant_bcg_perc: dict
+    bcg_effect: str
+    #treatment
+    treatment_duration: float
+    prop_death_among_negative_tx_outcome: float
+    time_variant_tsr: dict
+    age_infectiousness_switch: float
+    on_treatment_infect_multiplier: float
+   
+   

@@ -6,7 +6,7 @@ from autumn.settings.constants import COVID_BASE_DATETIME
 
 def get_WPRO_priors(variant_times):
     priors = [
-        UniformPrior("contact_rate", (0.01, 0.3)),
+        UniformPrior("contact_rate", (0.008, 0.3)),
         UniformPrior("infectious_seed", (1000, 10000)),
         UniformPrior("age_stratification.cfr.multiplier", (0.001, 0.7)),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),

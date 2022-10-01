@@ -17,12 +17,14 @@ ts_set = load_timeseries(build_rel_path("timeseries.json"))
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 targets = [
-    NormalTarget(ts_set["population_size"], stdev=2500.0),
+    NormalTarget(ts_set["total_population"], stdev=2500.0),  
 ]
 
 priors = [
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.2, 1.0]),
+    UniformPrior("contact_rate", [0.002, 0.01]),
+    UniformPrior("infectious_seed", [300, 1000]),
 ]
 calibration = Calibration(
     priors, targets, metropolis_init="current_params", metropolis_init_rel_step_size=0.1

@@ -51,8 +51,16 @@ infect_death_rate: .2
 prop_death_among_negative_tx_outcome: .2
 time_variant_tsr: {}
 treatment_duration: .5
-# changes by age
+# infectious changes by age
 age_infectiousness_switch: 15.
 on_treatment_infect_multiplier: 0.08
+
+time_variant_tb_screening_rate:
+  shape: 0.05 # The shape parameter to the tanh-based curve
+  inflection_time: 1980. # Point at which curve inflects
+  start_asymptote: 0. # Starting value - lower asymptote
+  end_asymptote: 10. # End value - upper asymptote
+
+passive_screening_sensitivity: 0.75
 
 

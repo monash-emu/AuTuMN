@@ -63,6 +63,10 @@ class Parameters:
     infect_death_rate: float
     time_variant_bcg_perc: dict
     bcg_effect: str
+    # Detection
+    time_variant_tb_screening_rate: dict
+    passive_screening_sensitivity: float
+
     #treatment
     treatment_duration: float
     prop_death_among_negative_tx_outcome: float

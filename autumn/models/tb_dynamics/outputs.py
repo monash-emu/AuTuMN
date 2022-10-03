@@ -62,6 +62,10 @@ def request_outputs(
     sources = ["incidence_norm", "total_population"]
     output_builder.request_output_func("incidence", calculate_per_hundred_thousand, sources)
 
+       # Passive Notifications (normalized to per year)
+    sources = ["infectious_population_size", "total_population"]
+    output_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
+
 
 class TbOutputBuilder(OutputsBuilder):
     """Helps build derived outputs for the TB model"""

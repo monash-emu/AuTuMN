@@ -3,7 +3,7 @@ import pandas as pd
 
 from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.project import Params, build_rel_path
-from autumn.model_features.curve import scale_up_function
+from autumn.model_features.curve import scale_up_function, tanh_based_scaleup
 from autumn.core import inputs
 from autumn.core.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
@@ -141,6 +141,25 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         "infect_death",
         params.infect_death_rate,
         Compartment.INFECTIOUS,
+    )
+
+       # Detection rate for infected people.
+
+    func_params = params.time_variant_tb_screening_rate
+    screening_rate_func = tanh_based_scaleup(
+        func_params["shape"],
+        func_params["inflection_time"],
+        func_params["start_asymptote"],
+        func_params["end_asymptote"],
+    )
+    def detection_rate(t, cv=None):
+        return screening_rate_func(t, cv) * params.passive_screening_sensitivity
+
+    model.add_transition_flow(
+        "detection",
+        detection_rate,
+        Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
     )
 
     # Treatment recovery, releapse, death flows.

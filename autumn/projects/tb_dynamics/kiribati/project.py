@@ -26,6 +26,9 @@ priors = [
     UniformPrior("rr_infection_recovered", [0.2, 1.0]),
     UniformPrior("contact_rate", [0.002, 0.01]),
     UniformPrior("infectious_seed", [300, 1000]),
+    UniformPrior("time_variant_tb_screening_rate.inflection_time", [2000.0, 2020.0]),
+    UniformPrior("time_variant_tb_screening_rate.shape", [0.07, 0.1]),
+    UniformPrior("time_variant_tb_screening_rate.end_asymptote", [0.4, 0.55]),
 ]
 calibration = Calibration(
     priors, targets, metropolis_init="current_params", metropolis_init_rel_step_size=0.1

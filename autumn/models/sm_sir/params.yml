@@ -121,7 +121,7 @@ age_stratification:
     # 85% protection once boosted, 50% otherwise
     source_immunity_protection:
       none: 0.
-      low: 0.75
+      low: 0.6
       high: 0.85
 
   cfr:

@@ -2,8 +2,8 @@ contact_rate: 0.06162130426882231
 sojourns.latent.total_time: 14.22940249189543
 sojourns.recovered: 267.8221927694143
 testing_to_detection.assumed_cdr_parameter: 0.041825344568988655
-voc_emergence.delta.contact_rate_multiplier: 2.9887222996277134
-voc_emergence.delta.new_voc_seed.start_time: 435.2124047285624
+voc_emergence.delta.contact_rate_multiplier: 2.5887222996277134
+voc_emergence.delta.new_voc_seed.start_time: 425.2124047285624
 voc_emergence.omicron.contact_rate_multiplier: 3.1542612152630363
 voc_emergence.omicron.new_voc_seed.start_time: 595.3391480635358
 voc_emergence.omicron.relative_active_period: 0.9943580008557313

@@ -66,6 +66,9 @@ def request_outputs(
     sources = ["infectious_population_size", "total_population"]
     output_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
 
+    sources = ["passive_notifications_raw"]
+    output_builder.request_aggregation_output("notifications_raw", sources, save_results=False)
+    output_builder.request_normalise_flow_output("notifications", "notifications_raw")
 
 class TbOutputBuilder(OutputsBuilder):
     """Helps build derived outputs for the TB model"""

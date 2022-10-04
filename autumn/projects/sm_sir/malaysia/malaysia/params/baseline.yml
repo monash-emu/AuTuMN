@@ -51,7 +51,7 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 1.
       delta:
-        early_reinfection: .5
+        early_reinfection: .2
         late_reinfection: 0.
       omicron:
         early_reinfection: 1.
@@ -121,7 +121,7 @@ hospital_stay:
 
 age_stratification:
   cfr:
-    multiplier: 0.125
+    multiplier: 0.15
   prop_hospital:
     multiplier: 0.25
 

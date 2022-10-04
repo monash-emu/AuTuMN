@@ -121,7 +121,7 @@ age_stratification:
     # 85% protection once boosted, 50% otherwise
     source_immunity_protection:
       none: 0.
-      low: 0.5
+      low: 0.75
       high: 0.85
 
   cfr:
@@ -150,7 +150,7 @@ age_stratification:
       high: 0.386
     source_immunity_protection:  # Same as for hospitalisation
       none: 0.
-      low: 0.5
+      low: 0.75
       high: 0.85
 
 is_dynamic_mixing_matrix: false

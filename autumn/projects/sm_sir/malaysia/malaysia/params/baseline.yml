@@ -38,7 +38,7 @@ vaccination:
   scenario: 0
 
 voc_emergence:
-  wild_type:
+  beta:
     starting_strain: true
     seed_prop: 1.
     contact_rate_multiplier: 1.
@@ -47,11 +47,11 @@ voc_emergence:
     death_protection: 0.75
     icu_multiplier: 1.
     cross_protection:
-      wild_type:
+      beta:
         early_reinfection: 1.
         late_reinfection: 1.
       delta:
-        early_reinfection: 1.
+        early_reinfection: .5
         late_reinfection: 0.
       omicron:
         early_reinfection: 1.
@@ -63,13 +63,13 @@ voc_emergence:
       start_time: 460.
       entry_rate: 10.
       seed_duration: 1.
-    contact_rate_multiplier: 3.15
+    contact_rate_multiplier: 1.
     immune_escape: 0.
-    hosp_protection: 0.
+    hosp_protection: 0.475
     death_protection: 0.
-    icu_multiplier: 1.
+    icu_multiplier: 0.8
     cross_protection:
-      wild_type:
+      beta:
         early_reinfection: 1.
         late_reinfection: 0.
       delta:
@@ -85,15 +85,15 @@ voc_emergence:
       start_time: 580.
       entry_rate: 10.
       seed_duration: 1.
-    contact_rate_multiplier: 3.
+    contact_rate_multiplier: 1.
     immune_escape: 0.2
     hosp_protection: 0.45
-    death_protection: 0.95
+    death_protection: 0.75
     relative_latency: 0.6667
     relative_active_period: 1.
     icu_multiplier: 0.35
     cross_protection:
-      wild_type:
+      beta:
         early_reinfection: 1.
         late_reinfection: 0.
       delta:
@@ -121,7 +121,7 @@ hospital_stay:
 
 age_stratification:
   cfr:
-    multiplier: 0.28
+    multiplier: 0.125
   prop_hospital:
     multiplier: 0.25
 

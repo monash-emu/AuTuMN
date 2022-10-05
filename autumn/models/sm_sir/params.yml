@@ -242,3 +242,5 @@ request_notifications_by_age: false
 request_non_hospitalised_notifications: false
 request_strain_prevalence: []
 strains: null
+request_immunity_props: []
+age_pops: [0, 5]

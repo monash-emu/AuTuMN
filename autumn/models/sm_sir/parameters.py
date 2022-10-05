@@ -541,6 +541,8 @@ class Parameters:
     request_non_hospitalised_notifications: bool
     request_strain_prevalence: List[str]
     strains: List[str]
+    request_immunity_props: List[str]
+    age_pops: List[int]
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

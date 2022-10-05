@@ -162,3 +162,5 @@ request_non_hospitalised_notifications: true
 
 request_strain_prevalence: [BASE_COMPARTMENTS]
 strains: ['beta', 'delta', 'omicron']
+
+request_immunity_props: ['none', 'low', 'high']

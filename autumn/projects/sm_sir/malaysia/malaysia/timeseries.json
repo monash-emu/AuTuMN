@@ -7426,6 +7426,45 @@
       0.975
     ]
   },
+  "prop_immune_none": {
+    "output_key": "prop_immune_none",
+    "title": "prop_immune_none",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prop_immune_low": {
+    "output_key": "prop_immune_low",
+    "title": "prop_immune_low",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "prop_immune_high": {
+    "output_key": "prop_immune_high",
+    "title": "prop_immune_high",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "infection_deathsXagegroup_0": {
     "output_key": "infection_deathsXagegroup_0",
     "title": "infection deaths 0-5",

@@ -7,8 +7,8 @@ time:
   step: 0.1
 
 start_population_size: 33048.
-infectious_seed: 1.
-crude_death_rate: 1.
+infectious_seed: 300.
+crude_death_rate: 0.0008
 age_breakpoints: [0, 5, 15, 35, 50]
 
 age_mixing:
@@ -16,4 +16,4 @@ age_mixing:
   age_adjust: true
 
 contact_rate: 0.00178
-cumulative_start_time: 1950.
+cumulative_start_time: 1990.

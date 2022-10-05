@@ -146,7 +146,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     # Set mixing matrix
     if params.age_mixing:
         age_mixing_matrices = build_synthetic_matrices(
-            params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust.bit_length,
+            params.iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust,
             requested_locations=["all_locations"]
         )
         age_mixing_matrix = age_mixing_matrices["all_locations"]

@@ -7387,6 +7387,45 @@
       0.975
     ]
   },
+  "strain_propXstrain_beta": {
+    "output_key": "strain_propXstrain_beta",
+    "title": "Proportion beta",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "strain_propXstrain_delta": {
+    "output_key": "strain_propXstrain_delta",
+    "title": "Proportion delta",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "strain_propXstrain_omicron": {
+    "output_key": "strain_propXstrain_omicron",
+    "title": "Proportion omicron",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "infection_deathsXagegroup_0": {
     "output_key": "infection_deathsXagegroup_0",
     "title": "infection deaths 0-5",

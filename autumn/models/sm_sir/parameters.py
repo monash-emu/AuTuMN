@@ -539,6 +539,8 @@ class Parameters:
     request_infection_deaths_by_age: bool
     request_notifications_by_age: bool
     request_non_hospitalised_notifications: bool
+    request_strain_prevalence: List[str]
+    strains: List[str]
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

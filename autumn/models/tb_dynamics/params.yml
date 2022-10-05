@@ -21,7 +21,17 @@ age_mixing: null
 # basic infection and disease parameters
 contact_rate: 0.0025
 
-# latency parameters
+# relative risks of reinfection
+rr_infection_latent: .21
+rr_infection_recovered: 1.
+progression_multiplier: 1.
+
+self_recovery_rate: .2
+infect_death_rate: .2
+
+cumulative_start_time: 1980
+
+# latency-related parameters
 age_specific_latency:
   early_activation:
     # unstratified: 1.1e-3
@@ -38,13 +48,3 @@ age_specific_latency:
     0: 1.9e-11
     5: 6.4e-6
     15: 3.3e-6
-
-# relative risks of reinfection
-rr_infection_latent: .21
-rr_infection_recovered: 1.
-progression_multiplier: 1.
-
-self_recovery_rate: .2
-infect_death_rate: .2
-
-cumulative_start_time: 1980

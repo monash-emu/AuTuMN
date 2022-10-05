@@ -59,7 +59,7 @@ class RandomProcess:
         :param transform_func: function used to transform the R interval into the desired interval
         :return: a time-variant function
         """
-        process_values = np.cumsum(self.delta_values).tolist()
+        process_values = np.cumsum(self.delta_values)
         if transform_func is None:
             values = process_values
         else:
@@ -84,7 +84,13 @@ class RandomProcess:
         process_values = np.cumsum(self.delta_values).tolist()
         # calculate the centre of the normal distribution followed by each W_t
         normal_means = [
-            sum([self.coefficients[k] * process_values[i - k - 1] for k in range(self.order) if i > k])
+            sum(
+                [
+                    self.coefficients[k] * process_values[i - k - 1]
+                    for k in range(self.order)
+                    if i > k
+                ]
+            )
             for i in range(len(process_values))
         ]
 

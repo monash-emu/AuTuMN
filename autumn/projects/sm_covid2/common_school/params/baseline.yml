@@ -18,7 +18,8 @@ infectious_seed_time: 15.108933833045329
 
 random_process:
   delta_values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-
+  time:
+    step: 30
 
 voc_emergence:
   delta:

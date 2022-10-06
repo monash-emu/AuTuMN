@@ -102,7 +102,7 @@ def get_school_project(region):
         targets=targets,
         random_process=rp,
         metropolis_init="current_params",
-        haario_scaling_factor=2.4,
+        haario_scaling_factor=1.2, # 2.4,
         fixed_proposal_steps=500,
         metropolis_init_rel_step_size=0.02,
         using_summer2=True,

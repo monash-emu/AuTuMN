@@ -202,7 +202,7 @@ def build_model(
         name=FlowName.PROGRESSION,
         fractional_rate=progression_rate,
         source=latent_compartments[-1],
-        dest=infectious_compartments[0],
+        dest=active_compartments[0],
     )
     latent_progression_flows.append(FlowName.PROGRESSION)
 

@@ -38,14 +38,14 @@ class RandomProcess:
         # initialise update times and values
         n_updates = ceil((end_time - start_time) / period)
         self.update_times = [start_time + i * period for i in range(n_updates)]
-        self.values = [0.0] * n_updates
+        self.delta_values = [0.0] * n_updates
 
     def update_config_from_params(self, rp_params):
-        if rp_params.values:
+        if rp_params.delta_values:
             # FIXME: Validation using param_array_classes
             # msg = f"Incorrect number of specified random process values. Expected {len(self.values)}, found {len(rp_params.values)}."
             # assert len(self.values) == len(rp_params.values), msg
-            self.values = rp_params.values
+            self.delta_values = rp_params.delta_values
         if rp_params.noise_sd:
             self.noise_sd = rp_params.noise_sd
         if rp_params.coefficients:
@@ -59,10 +59,11 @@ class RandomProcess:
         :param transform_func: function used to transform the R interval into the desired interval
         :return: a time-variant function
         """
+        process_values = np.cumsum(self.delta_values)
         if transform_func is None:
-            values = self.values
+            values = process_values
         else:
-            values = transform_func(self.values)
+            values = transform_func(process_values)
 
         # Build our interpolation function
         sc_func = build_sigmoidal_multicurve(self.update_times)
@@ -80,18 +81,25 @@ class RandomProcess:
         Evaluate the log-likelihood of the process's values, given the AR coefficients and a value of noise standard deviation
         :return: the loglikelihood (float)
         """
+        process_values = np.cumsum(self.delta_values).tolist()
         # calculate the centre of the normal distribution followed by each W_t
         normal_means = [
-            sum([self.coefficients[k] * self.values[i - k - 1] for k in range(self.order) if i > k])
-            for i in range(len(self.values))
+            sum(
+                [
+                    self.coefficients[k] * process_values[i - k - 1]
+                    for k in range(self.order)
+                    if i > k
+                ]
+            )
+            for i in range(len(process_values))
         ]
 
         # calculate the distance between each W_t and the associated normal distribution's centre
-        sum_of_squares = sum([(x - mu) ** 2 for (x, mu) in zip(self.values, normal_means)])
+        sum_of_squares = sum([(x - mu) ** 2 for (x, mu) in zip(process_values, normal_means)])
 
         # calculate the joint log-likelihood (normalised)
         log_likelihood = -log(self.noise_sd * sqrt(2.0 * pi)) - sum_of_squares / (
-            2.0 * self.noise_sd**2 * len(self.values)
+            2.0 * self.noise_sd**2 * len(process_values)
         )
 
         return log_likelihood

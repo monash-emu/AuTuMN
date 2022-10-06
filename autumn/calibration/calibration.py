@@ -201,15 +201,15 @@ class Calibration:
         )
 
         # add priors for rp values
-        n_values = len(self.random_process.values)
+        n_delta_values = len(self.random_process.delta_values)
         self.all_priors += [
             {
-                "param_name": f"random_process.values({i_val})",
+                "param_name": f"random_process.delta_values({i_val})",
                 "distribution": "uniform",
                 "distri_params": [-2.0, 2.0],
                 "skip_evaluation": True,
             }
-            for i_val in range(1, n_values)  # the very first value will be fixed to 0.
+            for i_val in range(1, n_delta_values)  # the very first value will be fixed to 0.
         ]
 
     def split_priors_by_type(self):
@@ -430,15 +430,15 @@ class Calibration:
         param_updates = {"time.end": self.end_time}
         if self.using_summer2 and self.includes_random_process:
             # Random process values are an array in summer2 parameters
-            rp_param_values = np.empty_like(self.random_process.values)
+            rp_param_delta_values = np.empty_like(self.random_process.delta_values)
             for param_name, value in proposed_params.items():
-                if param_name.startswith("random_process.values"):
+                if param_name.startswith("random_process.delta_values"):
                     m = re.match(".*\(([0-9]*)\)", param_name)
                     idx = int(m.group(1))
-                    rp_param_values[idx] = value
+                    rp_param_delta_values[idx] = value
                 else:
                     param_updates[param_name] = value
-            param_updates["random_process.values"] = rp_param_values
+            param_updates["random_process.delta_values"] = rp_param_delta_values
 
         else:
             for param_name, value in proposed_params.items():
@@ -453,9 +453,9 @@ class Calibration:
                     for i in range(self.random_process.order)
                 ]
             self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
-            self.random_process.values = [0.0] + [
-                proposed_params[f"random_process.values({k})"]
-                for k in range(1, len(self.random_process.values))
+            self.random_process.delta_values = [0.0] + [
+                proposed_params[f"random_process.delta_values({k})"]
+                for k in range(1, len(self.random_process.delta_values))
             ]
 
         if self._is_first_run:

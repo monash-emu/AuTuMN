@@ -117,9 +117,9 @@ class Project:
             if not p["param_name"].startswith("random_process")
         ]
         if any(
-            [p["param_name"].startswith("random_process.values") for p in calibration.all_priors]
+            [p["param_name"].startswith("random_process.delta_values") for p in calibration.all_priors]
         ):
-            self._cal_params.append("random_process.values")
+            self._cal_params.append("random_process.delta_values")
 
     def _calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
         """

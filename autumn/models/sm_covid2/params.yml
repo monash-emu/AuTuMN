@@ -230,7 +230,7 @@ activate_random_process: True
 random_process: 
   order: 1
   noise_sd: .5
-  values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+  delta_values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
   time: 
     start: 92  # 1 Apr 2020. Need to make sure this is greater than the seed time to prevent identifiability issues with contact rate
     end: 731  # 31 Dec 2021

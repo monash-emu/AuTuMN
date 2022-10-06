@@ -321,7 +321,7 @@ class RandomProcessParams(BaseModel):
 
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
-    values: Optional[List[float]]
+    delta_values: Optional[List[float]]
     order: int
     time: Time
 

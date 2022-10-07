@@ -23,7 +23,7 @@ scenario_params = [baseline_params.update(sc_dict) for sc_dict in all_scenario_d
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings
-calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
+calibration_start_time = 426 #param_set.baseline.to_dict()["time"]["start"]
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 notifications_end_time = 762
 notifications_ts = ts_set["notifications"].loc[calibration_start_time:]

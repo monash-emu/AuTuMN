@@ -16,10 +16,10 @@ infectious_seed_time: 15.108933833045329
 
 # random_process.noise_sd: 0.9527944877793121
 
-random_process:
-  delta_values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+random_process:  # print the delta_values from the project file to have the correct list length
+  delta_values: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   time:
-    step: 30
+    step: 14
 
 voc_emergence:
   delta:

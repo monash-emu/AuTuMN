@@ -74,7 +74,7 @@ def get_school_project(region):
 
     # define calibration targets
     model_end_time = param_set.baseline.to_dict()["time"]["end"]
-    infection_deaths_target = infection_deaths.loc[first_date_with_death:model_end_time][::7]
+    infection_deaths_target = infection_deaths.loc[first_date_with_death:model_end_time][::14]
     cumulative_deaths_target = cumulative_infection_deaths.loc[:model_end_time][-1:]
     targets = [
         NegativeBinomialTarget(

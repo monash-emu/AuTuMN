@@ -39,7 +39,7 @@ targets = [
 
 priors = [
     UniformPrior("contact_rate", (0.01, 0.1)),
-    UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
+    UniformPrior("detect_prop", (0.07, 0.3)),
     UniformPrior("sojourns.latent.total_time", (5, 20)),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", (2, 4)),
     UniformPrior("voc_emergence.delta.new_voc_seed.start_time", (400, 500)),

@@ -61,7 +61,7 @@ def test_plot_post_calibration(tmp_path):
         "calibration-fit",
         "params-vs-loglikelihood",
         "posteriors",
-        "autocorrelations",
+        # "autocorrelations",
     ]
     for fname in expected_files:
         p = os.path.join(plot_dir, fname)

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from os.path import exists 
 from autumn.core.project import (
     Project,
     ParameterSet,
@@ -73,7 +74,7 @@ def get_school_project(region):
 
     # define calibration targets
     model_end_time = param_set.baseline.to_dict()["time"]["end"]
-    infection_deaths_target = infection_deaths.loc[first_date_with_death:model_end_time][::7]
+    infection_deaths_target = infection_deaths.loc[first_date_with_death:model_end_time][::14]
     cumulative_deaths_target = cumulative_infection_deaths.loc[:model_end_time][-1:]
     targets = [
         NegativeBinomialTarget(
@@ -102,7 +103,7 @@ def get_school_project(region):
         targets=targets,
         random_process=rp,
         metropolis_init="current_params",
-        haario_scaling_factor=2.4,
+        haario_scaling_factor=1.2, # 2.4,
         fixed_proposal_steps=500,
         metropolis_init_rel_step_size=0.02,
         using_summer2=True,
@@ -161,7 +162,7 @@ def get_school_project_parameter_set(region):
 
     common_params = base_params.update(
         param_path / "baseline.yml"
-    )  # may want to update this with MLE params at some point
+    )
 
     # get country-specific parameters
     country_name = region.title()
@@ -172,6 +173,11 @@ def get_school_project_parameter_set(region):
 
     # build full set of country-specific baseline parameters
     baseline_params = common_params.update(country_params)
+
+    # update using MLE params, if available
+    mle_path= param_path / "mle_files" /  f"mle_{region}.yml"
+    if exists(mle_path):
+        baseline_params = baseline_params.update(mle_path, calibration_format=True)
 
     # get scenario parameters
     scenario_dir_path = param_path
@@ -263,7 +269,7 @@ def get_school_project_priors(first_date_with_death):
     assert max_seed_time > min_seed_time, "Max seed time is lower than min seed time."
 
     priors = [
-        UniformPrior("contact_rate", [0.03, 0.20]),
+        UniformPrior("contact_rate", [0.01, 0.1]),
         UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
         UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
         UniformPrior("voc_emergence.delta.new_voc_seed.time_from_gisaid_report", [-30, 30]),

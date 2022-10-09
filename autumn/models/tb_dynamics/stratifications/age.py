@@ -13,8 +13,8 @@ from autumn.models.tb_dynamics.utils import (
 
 def get_age_strat( 
     params: Parameters,
-    age_pops: pd.Series,
     compartments: List[str],
+    age_pops: pd.Series = None,
     age_mixing_matrix = None,
 ) -> AgeStratification:
 
@@ -36,9 +36,10 @@ def get_age_strat(
     # set age mixing matrix
     if age_mixing_matrix is not None:
         strat.set_mixing_matrix(age_mixing_matrix)
-        
-    age_split_props = age_pops / age_pops.sum()
-    strat.set_population_split(age_split_props.to_dict())
+    #set age prop split
+    if age_pops is not None:    
+        age_split_props = age_pops / age_pops.sum()
+        strat.set_population_split(age_split_props.to_dict())
 
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breakpoints, iso3)
     universal_death_funcs = {}

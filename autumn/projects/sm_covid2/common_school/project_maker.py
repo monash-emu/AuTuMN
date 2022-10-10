@@ -78,10 +78,10 @@ def get_school_project(region):
     cumulative_deaths_target = cumulative_infection_deaths.loc[:model_end_time][-1:]
     targets = [
         NegativeBinomialTarget(
-            data=infection_deaths_target, dispersion_param=7.0
+            data=infection_deaths_target, dispersion_param=10, #7.0
         ),  # dispersion param from Watson et al. Lancet ID
         NegativeBinomialTarget(
-            data=cumulative_deaths_target, dispersion_param=40.0
+            data=cumulative_deaths_target, dispersion_param=60, #40.0
         ),  # dispersion param from Watson et al. Lancet ID
     ]
 

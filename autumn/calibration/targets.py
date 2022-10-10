@@ -75,6 +75,18 @@ class NormalTarget(BaseTarget):
         self.stdev = stdev
         self.loglikelihood_distri = "normal"
 
+class BinomialTarget(BaseTarget):
+    """
+    A calibration target sampled from a binomial distribution
+    The data represents proportions.
+    sample size is the size of the denominators used to compute the proportions
+    """
+
+    def __init__(self, data: pd.Series, sample_sizes, **kwargs):
+        super().__init__(data, **kwargs)
+        self.sample_size = sample_size
+        self.loglikelihood_distri = "binomial"
+
 
 def get_dispersion_priors_for_gaussian_targets(targets: List[BaseTarget]):
     """

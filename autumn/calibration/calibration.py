@@ -537,6 +537,15 @@ class Calibration:
                         # work out parameter p to match the distribution mean with the model output
                         p = mu / (mu + n)
                         ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weights[i]
+                elif target.loglikelihood_distri == "binomial":
+                    for i in range(len(data)):
+                        mu = model_output[i]
+                        # use a binomial (n, p) where n is the sample size observed in the data and p the modelled proportion
+                        # We then evaluate the binomial density for k, which represents the numerator observed in the data
+                        n = target.sample_sizes[i]
+                        p = model_output[i]
+                        k = round(data[i] * n)                        
+                        ll += stats.binom.logpmf(k, n, p) * time_weights[i]
                 else:
                     raise ValueError("Distribution not supported in loglikelihood_distri")
 

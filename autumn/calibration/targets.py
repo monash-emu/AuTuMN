@@ -84,7 +84,7 @@ class BinomialTarget(BaseTarget):
 
     def __init__(self, data: pd.Series, sample_sizes, **kwargs):
         super().__init__(data, **kwargs)
-        self.sample_size = sample_size
+        self.sample_sizes = sample_sizes
         self.loglikelihood_distri = "binomial"
 
 

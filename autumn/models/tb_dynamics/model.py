@@ -17,24 +17,24 @@ base_params = Params(
 )
 
 
-def assign_population(seed: float, total_pop: int, model: CompartmentalModel):
-    """
-    Assign the starting population to the model according to the user requests and total population of the model.
+# def assign_population(seed: float, total_pop: int, model: CompartmentalModel):
+#     """
+#     Assign the starting population to the model according to the user requests and total population of the model.
 
-    Args:
-        seed: The starting infectious seed
-        total_pop: The total population being modelled
-        model: The summer compartmental model object to have its starting population set
+#     Args:
+#         seed: The starting infectious seed
+#         total_pop: The total population being modelled
+#         model: The summer compartmental model object to have its starting population set
 
-    """
-    # Split by seed and remainder susceptible
-    susceptible = total_pop - seed
-    init_pop = {
-        Compartment.INFECTIOUS: seed,
-        Compartment.SUSCEPTIBLE: susceptible,
-    }
-    # Assign to the model
-    model.set_initial_population(init_pop)
+#     """
+#     # Split by seed and remainder susceptible
+#     susceptible = total_pop - seed
+#     init_pop = {
+#         Compartment.INFECTIOUS: seed,
+#         Compartment.SUSCEPTIBLE: susceptible,
+#     }
+#     # Assign to the model
+#     model.set_initial_population(init_pop)
 
 
 def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
@@ -46,6 +46,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     time = params.time
     iso3 = params.iso3
     seed = params.infectious_seed
+    start_population_size = params.start_population_size
     cumulative_start_time = params.cumulative_start_time
     age_breakpoints = [str(age) for age in params.age_breakpoints]
 
@@ -55,12 +56,16 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         infectious_compartments=INFECTIOUS_COMPS,
         timestep=time.step,
     )
-    age_pops = pd.Series(
-        inputs.get_population_by_agegroup(age_breakpoints, iso3, None, time.start),
-        index=age_breakpoints,
-    )
-    # Assign the initial population
-    assign_population(seed, age_pops.sum(), model)
+    # age_pops = pd.Series(
+    #     inputs.get_population_by_agegroup(age_breakpoints, iso3, None, time.start),
+    #     index=age_breakpoints,
+    # )
+    # Set initial population
+    init_pop = {
+        Compartment.INFECTIOUS: seed,
+        Compartment.SUSCEPTIBLE: start_population_size - seed,
+    }
+    model.set_initial_population(init_pop)
 
     contact_rate = params.contact_rate
     contact_rate_latent = params.contact_rate * params.rr_infection_latent
@@ -154,16 +159,15 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         age_mixing_matrix *= 365.25
         #Add Age stratification to the model
         age_strat = get_age_strat(
-            params,
-            age_pops,
-            BASE_COMPARTMENTS,
+            params = params,
+            compartments = BASE_COMPARTMENTS,
             age_mixing_matrix = age_mixing_matrix,
         )
     else:
         age_strat = get_age_strat(
-            params,
-            age_pops,
-            BASE_COMPARTMENTS,
+            params = params,
+            #age_pops,
+            compartments = BASE_COMPARTMENTS,
         )
     model.stratify_with(age_strat)
 

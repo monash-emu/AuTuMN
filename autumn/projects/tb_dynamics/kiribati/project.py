@@ -21,6 +21,7 @@ targets = [
 ]
 
 priors = [
+    UniformPrior("start_population_size", [2000, 12000]),
     UniformPrior("contact_rate", [0.002, 0.01]),
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.2, 1.0]),

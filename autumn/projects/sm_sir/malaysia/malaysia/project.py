@@ -49,6 +49,12 @@ priors = [
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.5, 1.5)),
     UniformPrior("sojourns.recovered", (150, 300))
 ]
+diff_output_requests = [
+    ["notifications", "ABSOLUTE"],
+    ["infection_deaths", "ABSOLUTE"],
+    ["icu_occupancy", "ABSOLUTE"],
+    ["hospital_occupancy", "ABSOLUTE"],
+]
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=None, metropolis_init="current_params"
@@ -60,5 +66,6 @@ with open(plot_spec_filepath) as f:
 
 # Create and register the project
 project = Project(
-    Region.MALAYSIA, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec
+    Region.MALAYSIA, Models.SM_SIR, build_model, param_set, calibration, plots=plot_spec,
+    diff_output_requests=diff_output_requests
 )

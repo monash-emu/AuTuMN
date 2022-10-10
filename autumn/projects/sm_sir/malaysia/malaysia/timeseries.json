@@ -7387,6 +7387,19 @@
       0.975
     ]
   },
+  "abs_diff_notifications": {
+    "output_key": "abs_diff_notifications",
+    "title": "abs_diff_notifications",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "strain_propXstrain_beta": {
     "output_key": "strain_propXstrain_beta",
     "title": "Proportion beta",

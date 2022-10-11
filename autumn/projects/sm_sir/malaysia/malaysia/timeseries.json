@@ -7400,6 +7400,71 @@
       0.975
     ]
   },
+    "abs_diff_infection_deaths": {
+    "output_key": "abs_diff_infection_deaths",
+    "title": "abs_diff_infection_deaths",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+    "abs_diff_icu_occupancy": {
+    "output_key": "abs_diff_icu_occupancy",
+    "title": "abs_diff_icu_occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+    "abs_diff_icu_admissions": {
+    "output_key": "abs_diff_icu_admissions",
+    "title": "abs_diff_icu_admissions",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancy": {
+    "output_key": "abs_diff_hospital_occupancy",
+    "title": "abs_diff_hospital_occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissions": {
+    "output_key": "abs_diff_hospital_admissions",
+    "title": "abs_diff_hospital_admissions",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "strain_propXstrain_beta": {
     "output_key": "strain_propXstrain_beta",
     "title": "Proportion beta",
@@ -7439,9 +7504,9 @@
       0.975
     ]
   },
-  "prop_immune_none": {
-    "output_key": "prop_immune_none",
-    "title": "prop_immune_none",
+  "n_immune_none": {
+    "output_key": "n_immune_none",
+    "title": "n_immune_none",
     "times": [],
     "values": [],
     "quantiles": [
@@ -7452,9 +7517,9 @@
       0.975
     ]
   },
-  "prop_immune_low": {
-    "output_key": "prop_immune_low",
-    "title": "prop_immune_low",
+  "n_immune_low": {
+    "output_key": "n_immune_low",
+    "title": "n_immune_low",
     "times": [],
     "values": [],
     "quantiles": [
@@ -7465,9 +7530,9 @@
       0.975
     ]
   },
-  "prop_immune_high": {
-    "output_key": "prop_immune_high",
-    "title": "prop_immune_high",
+  "n_immune_high": {
+    "output_key": "n_immune_high",
+    "title": "n_immune_high",
     "times": [],
     "values": [],
     "quantiles": [

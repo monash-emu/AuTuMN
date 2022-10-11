@@ -54,6 +54,8 @@ diff_output_requests = [
     ["infection_deaths", "ABSOLUTE"],
     ["icu_occupancy", "ABSOLUTE"],
     ["hospital_occupancy", "ABSOLUTE"],
+    ["icu_admissions", "ABSOLUTE"],
+    ["hospital_admissions", "ABSOLUTE"]
 ]
 
 calibration = Calibration(

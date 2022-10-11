@@ -189,14 +189,14 @@ def get_school_project_parameter_set(region, first_date_with_death):
         }
     }
     baseline_params = baseline_params.update(rp_update_params)
+    
+    # make sure length of random process' delta_values is consistent with requested time-period
+    baseline_params = resize_rp_delta_values(baseline_params)  
 
     # update using MLE params, if available
     mle_path= param_path / "mle_files" /  f"mle_{region}.yml"
     if exists(mle_path):
         baseline_params = baseline_params.update(mle_path, calibration_format=True)
-
-    # make sure length of random process' delta_values is consistent with requested time-period
-    baseline_params = resize_rp_delta_values(baseline_params)  
 
     # get scenario parameters
     scenario_dir_path = param_path

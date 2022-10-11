@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from os.path import exists 
+from math import ceil
 from autumn.core.project import (
     Project,
     ParameterSet,
@@ -9,7 +10,7 @@ from autumn.core.project import (
 )
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
-from autumn.calibration.targets import NegativeBinomialTarget
+from autumn.calibration.targets import NegativeBinomialTarget, BinomialTarget
 from autumn.models.sm_covid2 import get_base_params, build_model
 from autumn.model_features.jax.random_process import set_up_random_process
 from autumn.settings import Region, Models
@@ -53,9 +54,6 @@ def get_school_project(region):
         region in Region.SCHOOL_PROJECT_REGIONS
     ), f"{region} is not registered as a school project Region"
 
-    # Get parameter set
-    param_set = get_school_project_parameter_set(region)
-
     # Load timeseries
     timeseries = get_school_project_timeseries(region)
     # format timeseries using pandas Series
@@ -68,6 +66,9 @@ def get_school_project(region):
         pd_timeseries["cumulative_infection_deaths"],
     )
     first_date_with_death = infection_deaths[round(infection_deaths) >= 1].index[0]
+
+    # Get parameter set
+    param_set = get_school_project_parameter_set(region, first_date_with_death)
 
     # Define priors
     priors = get_school_project_priors(first_date_with_death)
@@ -83,6 +84,10 @@ def get_school_project(region):
         NegativeBinomialTarget(
             data=cumulative_deaths_target, dispersion_param=100, #40.0
         ),  # dispersion param from Watson et al. Lancet ID
+        # BinomialTarget(
+        #     data=pd.Series(data=[.2], index=[800]) , 
+        #     sample_sizes = [10000]
+        # )
     ]
 
     # set up random process if relevant
@@ -147,12 +152,13 @@ def get_school_project(region):
     return project
 
 
-def get_school_project_parameter_set(region):
+def get_school_project_parameter_set(region, first_date_with_death):
     """
     Get the country-specific parameter sets.
 
     Args:
         region: Modelled region
+        first_date_with_death: first time when COVID-19 deaths were observed
 
     Returns:
         param_set: A ParameterSet object containing parameter sets for baseline and scenarios
@@ -174,10 +180,23 @@ def get_school_project_parameter_set(region):
     # build full set of country-specific baseline parameters
     baseline_params = common_params.update(country_params)
 
+    # update random process time periods according to first_date_with_death
+    rp_update_params = {
+        "random_process": {
+            "time": {
+                "start": first_date_with_death
+            }
+        }
+    }
+    baseline_params = baseline_params.update(rp_update_params)
+
     # update using MLE params, if available
     mle_path= param_path / "mle_files" /  f"mle_{region}.yml"
     if exists(mle_path):
         baseline_params = baseline_params.update(mle_path, calibration_format=True)
+
+    # make sure length of random process' delta_values is consistent with requested time-period
+    baseline_params = resize_rp_delta_values(baseline_params)  
 
     # get scenario parameters
     scenario_dir_path = param_path
@@ -189,6 +208,26 @@ def get_school_project_parameter_set(region):
 
     return param_set
 
+
+def resize_rp_delta_values(params):
+    """
+    Make sure that the length of the delta_values list is consistent with the requested time periods of the random process
+
+    Args:
+        params: the model parameters
+    """
+    rp_params = params['random_process']
+    n_expected_values = ceil((rp_params['time']['end'] - rp_params['time']['start']) / rp_params['time']['step']) 
+    n_passed_values = len(rp_params['delta_values'])
+    if n_passed_values < n_expected_values:
+        new_delta_values = rp_params['delta_values'] + [0.] * (n_expected_values - n_passed_values)
+        return params.update({"random_process": {"delta_values": new_delta_values}})
+    elif n_passed_values > n_expected_values:
+        new_delta_values = rp_params['delta_values'][:n_expected_values]
+        return params.update({"random_process": {"delta_values": new_delta_values}})
+    else:
+        return params
+        
 
 def get_school_project_timeseries(region):
     """

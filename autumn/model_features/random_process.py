@@ -83,7 +83,7 @@ class RandomProcess:
         sum_of_squares = sum([(x - mu)**2 for (x, mu) in zip(process_values, normal_means)])
 
         # calculate the joint log-likelihood (normalised)
-        log_likelihood = - len(process_values) * log(self.noise_sd * sqrt(2. * pi)) - sum_of_squares / (2. * self.noise_sd**2)
+        log_likelihood = - log(self.noise_sd * sqrt(2. * pi)) - sum_of_squares / (2. * self.noise_sd**2 * len(process_values))
 
         return log_likelihood
 

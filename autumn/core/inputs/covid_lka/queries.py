@@ -2,7 +2,7 @@ import pandas as pd
 
 from autumn.core.inputs.database import get_input_db
 from autumn.core.inputs.demography.queries import get_population_by_agegroup
-from autumn.models.sm_sir.parameters import TimeSeries
+
 
 def get_lka_testing_numbers():
     """
@@ -18,35 +18,42 @@ def get_lka_testing_numbers():
 
     return pd.Series(df.Sri_Lanka_PCR_tests_done.to_numpy(), index=df.date_index)
 
+
 def get_lka_vac_coverage(age_group, age_pops=None, params=None):
-    """ Provides vaccination coverage for a given age.
+    """Provides vaccination coverage for a given age.
     It is assumed all ages above 14 have uniform coverage"""
 
-    vaccinated_population = get_population_by_agegroup([0,15], "LKA")[1] # 15+ pop
+    from autumn.models.covid_19.parameters import TimeSeries
+
+    vaccinated_population = get_population_by_agegroup([0, 11], "LKA")[1]  # 10+ pop
+
     input_db = get_input_db()
 
-    df = input_db.query("covid_lka",
-    columns = ["date_index", "Sri_Lanka_COVID19_Vaccination_1st_Doses_Total"]
+    df = input_db.query(
+        "covid_lka", columns=["date_index", "Sri_Lanka_COVID19_Vaccination_1st_Doses_Total"]
     )
-    df.rename(columns={"Sri_Lanka_COVID19_Vaccination_1st_Doses_Total": "cml_vac_dose_1"}, inplace =True)
+    df.rename(
+        columns={"Sri_Lanka_COVID19_Vaccination_1st_Doses_Total": "cml_vac_dose_1"}, inplace=True
+    )
     df.dropna(how="any", inplace=True)
 
+    df.loc[df["date_index"] == 452, "cml_vac_dose_1"] = 0  # Have to make the first date zero!
+    df.sort_values("date_index", inplace=True)
+    df.reset_index(drop=True, inplace=True)
+
     df["cml_coverage"] = df.cml_vac_dose_1 / vaccinated_population
-    
+
     times = df.date_index.to_numpy()
 
-    if int(age_group) < 15:
-        coverage_values = (df.cml_coverage * 0).to_numpy()
+    if int(age_group) < 0:
+        coverage_values = (df.cml_coverage * 0).tolist()
     else:
-        coverage_values = df.cml_coverage.to_numpy()
+        coverage_values = df.cml_coverage.tolist()
 
-    coverage_too_large = any(coverage_values >= .99)
+    coverage_too_large = any([each >= 0.99 for each in coverage_values])
+
     unequal_len = len(times) != len(coverage_values)
-    if any([coverage_too_large,unequal_len]):
+    if any([coverage_too_large, unequal_len]):
         AssertionError("Unrealistic coverage")
-    
+
     return TimeSeries(times=times, values=coverage_values)
-
-
-
-

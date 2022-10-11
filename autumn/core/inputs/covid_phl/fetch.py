@@ -11,9 +11,7 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # From DoH google drive folder, shareable link changes with every update
-DATA_URL = (
-    "1QB6-m1BSgTh_0wO49eXbE_djH3qCewna"  # shareable link for sheet 07 testing data
-)
+DATA_URL = "1TVGfNr9j6IVBmBOmj2OSdNYb7Qsbgrl-"  # shareable link for sheet 07 testing data
 
 COVID_PHL_DIRPATH = INPUT_DATA_PATH / "covid_phl"
 COVID_PHL_CSV_PATH = COVID_PHL_DIRPATH / "COVID_Phl_testing.csv"

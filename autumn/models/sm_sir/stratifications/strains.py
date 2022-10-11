@@ -159,9 +159,13 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
     population_split = {strain: voc_params[strain].seed_prop for strain in strains}
     strain_strat.set_population_split(population_split)
 
+    # Adjust the contact rate
+    transmissibility_adjustment = {strain: Multiply(voc_params[strain].contact_rate_multiplier) for strain in strains}
+    strain_strat.set_flow_adjustments(FlowName.INFECTION, transmissibility_adjustment)
+
     # Start from blank adjustments sets
     adjustments_latent = {strain: None for strain in strains}  
-    adjustments_active = {strain: None for strain in strains}
+    adjustments_active = {strain: None for strain in strains}    
     for strain in strains:
         if voc_params[strain].relative_latency:
             adjustments_latent.update(
@@ -170,7 +174,7 @@ def get_strain_strat(voc_params: Optional[Dict[str, VocComponent]], compartments
         if voc_params[strain].relative_active_period:
             adjustments_active.update(
                 {strain: Multiply(1. / voc_params[strain].relative_active_period)}
-            )
+            )        
     
     # Adjust the latent compartment transitions
     if Compartment.LATENT_LATE in compartments:

@@ -10,9 +10,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 # https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
 os.environ["OMP_NUM_THREADS"] = "1"
 
-from autumn.settings import Models, Region
 from autumn.core.registry import register_project
-
+from autumn.settings import Models, Region
 
 # TB projects
 register_project(
@@ -20,9 +19,7 @@ register_project(
     Region.MARSHALL_ISLANDS,
     "autumn.projects.tuberculosis.marshall_islands.project",
 )
-register_project(
-    Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.philippines.project"
-)
+register_project(Models.TB, Region.PHILIPPINES, "autumn.projects.tuberculosis.philippines.project")
 
 # Example projects
 register_project(
@@ -75,6 +72,22 @@ register_project(
     Region.NCR,
     "autumn.projects.sm_sir.philippines.national-capital-region.project",
 )
+
+
+register_project(
+    Models.SM_SIR,
+    Region.BARMM,
+    "autumn.projects.sm_sir.philippines.barmm.project",
+)
+
+
+register_project(
+    Models.SM_SIR,
+    Region.WESTERN_VISAYAS,
+    "autumn.projects.sm_sir.philippines.western-visayas.project",
+)
+
+
 register_project(
     Models.SM_SIR,
     Region.MALAYSIA,
@@ -124,6 +137,13 @@ register_project(
 )
 
 
+register_project(
+    Models.SM_SIR,
+    Region.NORTHERN_TERRITORY,
+    "autumn.projects.sm_sir.australia.northern_territory.project",
+)
+
+
 # Hierarchical SIR project
 register_project(
     Models.HIERARCHICAL_SIR,
@@ -136,4 +156,12 @@ register_project(
     Models.TBD,
     Region.KIRIBATI,
     "autumn.projects.tb_dynamics.kiribati.project",
+)
+
+
+# sm_jax
+register_project(
+    Models.SM_JAX,
+    Region.MALAYSIA,
+    "autumn.projects.sm_jax.malaysia.project",
 )

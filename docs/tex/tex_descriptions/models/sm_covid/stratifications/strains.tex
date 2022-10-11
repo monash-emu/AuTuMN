@@ -1,0 +1,11 @@
+
+The model is stratified by ``strain'' to simulate the emergence of multiple variants of concern (VoC).
+This approach explicitly represents multiple competing strains, each with a separate force of infection calculation.
+We assume that VoCs can have different levels of transmissibility, incubation period's duration and disease severity 
+(hospitalisation and death risks) compared to the ancestral COVID-19 strain. In addition, VoCs are assumed to escape 
+immunity partially for both vaccination- and infection-related immunity. The parameters used to represent the VOCs'
+characteristics are presented in \textcolor{red}{Table XXX}.
+
+Seeding of each new strain into the model is achieved through the importation of a small number (10 per million population) of new infectious persons with the relevant strain into the model.
+The seeding process is done over a ten-day period and the start of this period is set between 30 days before and 30 days after the emergence date
+as reported by GISAID \textcolor{red}{Table XXX}. The exact start date is automatically calibrated by the MCMC algorithm.

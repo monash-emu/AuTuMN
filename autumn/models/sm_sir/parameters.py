@@ -348,6 +348,15 @@ class ImmunityStratification(BaseModel):
     )
 
 
+class Vaccination(BaseModel):
+
+    boosting: bool
+    booster_effect_duration: Optional[float]
+    data_thinning: Optional[int]
+    age_specific_vacc: bool
+    extra_vacc_coverage: Optional[Dict[str, dict]]
+
+
 class TestingToDetection(BaseModel):
     """
     Empiric approach to building the case detection rate that is based on per capita testing rates.
@@ -515,21 +524,18 @@ class Parameters:
     random_process: Optional[RandomProcessParams]
 
     # Vaccination/immunity-related
-    booster_effect_duration: float
-    additional_immunity: Optional[TimeSeries]
-    future_monthly_booster_rate: Optional[float]
-    future_booster_age_allocation: Optional[
-        Union[
-            Dict[int, float], # to specify allocation proportions by age group (e.g. {70: .8, 50: .2})
-            List[int] # to specify a prioritisation order (e.g. [70, 50, 25, 15])
-            ]
-        ]
+    vaccination: Vaccination
 
     # Output-related
     requested_cumulative_outputs: List[str]
     cumulative_start_time: Optional[float]
     request_incidence_by_age: bool
     request_immune_prop_by_age: bool
+    request_hospital_admissions_by_age: bool
+    request_hospital_occupancy_by_age: bool
+    request_icu_admissions_by_age: bool
+    request_icu_occupancy_by_age: bool
+    request_infection_deaths_by_age: bool
 
     @validator("age_groups", allow_reuse=True)
     def validate_age_groups(age_groups):

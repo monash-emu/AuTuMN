@@ -5,6 +5,9 @@ class Models:
     TBS = "tuberculosis_strains"
     EXAMPLE = "sir_example"
     SM_SIR = "sm_sir"
+    SM_JAX = "sm_jax"
     HIERARCHICAL_SIR = "hierarchical_sir"
+    SM_COVID = "sm_covid"
+    SM_COVID2 = "sm_covid2"
 
-    MODELS = [COVID_19, TB, TBS, EXAMPLE, SM_SIR, HIERARCHICAL_SIR]
+    MODELS = [COVID_19, TB, TBS, EXAMPLE, SM_SIR, SM_JAX, HIERARCHICAL_SIR, SM_COVID, SM_COVID2]

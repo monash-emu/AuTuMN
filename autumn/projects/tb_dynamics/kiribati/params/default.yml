@@ -2,9 +2,17 @@
 iso3: "KIR"
 
 time:
-  start: 1800.
+  start: 1900.
   end: 2050.
   step: 0.1
 
-start_population_size: 2000.
-infectious_seed: 1.
+start_population_size: 26000.
+crude_death_rate: 0.0008
+age_breakpoints: [0, 5, 15, 35, 50]
+
+age_mixing:
+  source_iso3: FJI
+  age_adjust: true
+
+contact_rate: 0.00178
+cumulative_start_time: 1990.

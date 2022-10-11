@@ -22,8 +22,12 @@ steps:
       value: hierarchical_sir:multi
     - label: Philippines (sir_example)
       value: sir_example:philippines
+    - label: Malaysia (sm_jax)
+      value: sm_jax:malaysia
     - label: Bangladesh (sm_sir)
       value: sm_sir:bangladesh
+    - label: Barmm (sm_sir)
+      value: sm_sir:barmm
     - label: Bhutan (sm_sir)
       value: sm_sir:bhutan
     - label: Coxs_Bazar (sm_sir)
@@ -40,8 +44,14 @@ steps:
       value: sm_sir:myanmar
     - label: National Capital Region (sm_sir)
       value: sm_sir:national-capital-region
+    - label: Northern Territory (sm_sir)
+      value: sm_sir:northern-territory
     - label: Thimphu (sm_sir)
       value: sm_sir:thimphu
+    - label: Western Visayas (sm_sir)
+      value: sm_sir:western-visayas
+    - label: Kiribati (tb_dynamics)
+      value: tb_dynamics:kiribati
     - label: Marshall Islands (tuberculosis)
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)

@@ -188,13 +188,15 @@ def write_prior_table_rows(
         for i_prior, prior in enumerate(project.calibration.all_priors):
 
             # Get the ingredients
+            param_key = prior["param_name"]
             param_name = get_param_name(model_constants.PARAMETER_DEFINITION, prior["param_name"])
             distribution_type = format_value_for_tex(prior["distribution"])
             prior_parameters = format_prior_values(prior["distribution"], prior["distri_params"])
+            unit = f", {model_constants.PARAMETER_UNITS[param_key]}" if param_key in model_constants.PARAMETER_UNITS else ""
             line_end = get_line_end(i_prior == len(project.calibration.all_priors) - 1)
 
             # Format for TeX
-            table_line = f"\n{param_name} & {distribution_type} & {prior_parameters}{line_end}"
+            table_line = f"\n{param_name} & {distribution_type} & {prior_parameters}{unit}{line_end}"
 
             # Write
             tex_file.write(table_line)

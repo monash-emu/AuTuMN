@@ -1,11 +1,9 @@
 from math import ceil, exp, log, sqrt, pi
 from typing import Tuple
-
+import numpy as np
 from summer.compute import ComputedValueProcessor
 
 from autumn.model_features.curve.scale_up import scale_up_function
-from autumn.models.sm_sir.parameters import Time, RandomProcessParams
-
 
 class RandomProcess:
     """
@@ -36,13 +34,13 @@ class RandomProcess:
         # initialise update times and values
         n_updates = ceil((end_time - start_time) / period)
         self.update_times = [start_time + i * period for i in range(n_updates)]
-        self.values = [0.] * n_updates
+        self.delta_values = [0.] * n_updates
 
     def update_config_from_params(self, rp_params):
-        if rp_params.values:
-            msg = f"Incorrect number of specified random process values. Expected {len(self.values)}, found {len(rp_params.values)}."
-            assert len(self.values) == len(rp_params.values), msg
-            self.values = rp_params.values
+        if rp_params.delta_values:
+            msg = f"Incorrect number of specified random process values. Expected {len(self.delta_values)}, found {len(rp_params.delta_values)}."
+            assert len(self.delta_values) == len(rp_params.delta_values), msg
+            self.delta_values = rp_params.delta_values
         if rp_params.noise_sd:
             self.noise_sd = rp_params.noise_sd
         if rp_params.coefficients:
@@ -56,10 +54,11 @@ class RandomProcess:
         :param transform_func: function used to transform the R interval into the desired interval
         :return: a time-variant function
         """
+        process_values = np.cumsum(self.delta_values).tolist()
         if transform_func is None:
-            values = self.values
+            values = process_values
         else:
-            values = [transform_func(v) for v in self.values]
+            values = [transform_func(v) for v in process_values]
 
         sc_func = scale_up_function(self.update_times, values, method=4)
 
@@ -73,17 +72,18 @@ class RandomProcess:
         Evaluate the log-likelihood of the process's values, given the AR coefficients and a value of noise standard deviation
         :return: the loglikelihood (float)
         """
+        process_values = np.cumsum(self.delta_values).tolist()
         # calculate the centre of the normal distribution followed by each W_t
         normal_means = [
-            sum([self.coefficients[k] * self.values[i - k - 1] for k in range(self.order) if i > k])
-            for i in range(len(self.values))
+            sum([self.coefficients[k] * process_values[i - k - 1] for k in range(self.order) if i > k])
+            for i in range(len(process_values))
         ]
 
         # calculate the distance between each W_t and the associated normal distribution's centre
-        sum_of_squares = sum([(x - mu)**2 for (x, mu) in zip(self.values, normal_means)])
+        sum_of_squares = sum([(x - mu)**2 for (x, mu) in zip(process_values, normal_means)])
 
-        # calculate the joint log-likelihood
-        log_likelihood = - len(self.values) * log(self.noise_sd * sqrt(2. * pi)) - sum_of_squares / (2. * self.noise_sd**2)
+        # calculate the joint log-likelihood (normalised)
+        log_likelihood = - log(self.noise_sd * sqrt(2. * pi)) - sum_of_squares / (2. * self.noise_sd**2 * len(process_values))
 
         return log_likelihood
 
@@ -105,8 +105,8 @@ def set_up_random_process(start_time, end_time, order, period):
 
 
 def get_random_process(
-        process_params: RandomProcessParams,
-        contact_rate_value: float,
+        process_params,
+        contact_rate_value,
 ) -> Tuple[callable, callable]:
     """
     Work out the process that will contribute to the random process.

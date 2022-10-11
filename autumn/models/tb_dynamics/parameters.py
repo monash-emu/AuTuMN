@@ -1,12 +1,9 @@
 """
 Type definition for model parameters
 """
-from numpy import int_
-from pydantic import BaseModel, Extra, root_validator, validator
+from pydantic import BaseModel, Extra
 from pydantic.dataclasses import dataclass
-from datetime import date
-from typing import Any, Dict, List, Optional, Union
-from autumn.core.inputs.social_mixing.constants import LOCATIONS
+from typing import Optional
 
 # Forbid additional arguments to prevent extraneous parameter specification
 BaseModel.Config.extra = Extra.forbid
@@ -24,7 +21,6 @@ class Time(BaseModel):
     start: float
     end: float
     step: float
-    critical_range: List[List[float]]
 
 
 class ParamConfig:
@@ -35,24 +31,10 @@ class ParamConfig:
     anystr_strip_whitespace = True  # Strip whitespace
     allow_mutation = False  # Params should be immutable
 
-
-class CompartmentSojourn(BaseModel):
-    """
-    Compartment sojourn times, meaning the mean period of time spent in a compartment.
-    """
-
-    total_time: float
-    proportion_early: Optional[float]
-
-
-class Sojourns(BaseModel):
-    """
-    Parameters for determining how long a person stays in a given compartment.
-    """
-
-    active: CompartmentSojourn
-    latent: CompartmentSojourn
-    recovered: Optional[float]
+class MixingMatrices(BaseModel):
+    type: Optional[str]  # None defaults to Prem matrices, otherwise 'prem' or 'extrapolated' - see build_model
+    source_iso3: Optional[str]
+    age_adjust: Optional[bool]  # Only relevant if 'extrapolated' selected
 
 
 @dataclass(config=ParamConfig)
@@ -60,10 +42,22 @@ class Parameters:
     # Metadata
     description: Optional[str]
     iso3: str
+    age_mixing: Optional[MixingMatrices]
     # Country info
-    crude_birth_rate: float
     start_population_size: float
-    # Running time.
+    crude_birth_rate: float
+    crude_death_rate: float
+    # Running time
     time: Time
-    # Output requests
+    # Model structure
+    age_breakpoints: list
     infectious_seed: float
+    cumulative_start_time: float
+    # Base TB model
+    contact_rate: float
+    rr_infection_latent: float
+    rr_infection_recovered: float
+    age_specific_latency: dict
+    progression_multiplier: float
+    self_recovery_rate: float
+    infect_death_rate: float

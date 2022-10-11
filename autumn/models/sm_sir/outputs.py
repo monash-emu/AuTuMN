@@ -98,10 +98,11 @@ class SmSirOutputsBuilder(OutputsBuilder):
             agegroup_filter = {"agegroup": agegroup}
 
             age_incidence_sources = []
-            detected_age_incidence_sources = []  # collect age specific detected incidence for notifications
+
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
                 immunity_filter = {"immunity": immunity_stratum}
+                detected_age_incidence_sources = []  # collect age specific and immunity specific incidence for notifications
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -142,7 +143,12 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         name=sympt_inc_name,
                         sources=sympt_incidence_sources,
                         save_results=False,
-                    )       
+                    )
+                if request_notifications_by_age:
+                    self.model.request_aggregate_output(
+                        name=f"ever_detected_incidence{agegroup_string}{immunity_string}",
+                        sources=detected_age_incidence_sources,
+                    )
                           
             if request_incidence_by_age:
                 self.model.request_aggregate_output(
@@ -151,11 +157,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
                     save_results=True,
                 )
 
-            if request_notifications_by_age:
-                self.model.request_aggregate_output(
-                    name=f"ever_detected_incidence{agegroup_string}",
-                    sources=detected_age_incidence_sources,
-                )
+
 
         # Compute detected incidence to prepare for notifications calculations
         self.model.request_aggregate_output(
@@ -193,11 +195,14 @@ class SmSirOutputsBuilder(OutputsBuilder):
                 agegroup_string = f"Xagegroup_{agegroup}"
                 # Request notifications by age
 
-                self.model.request_function_output(
-                    name=f"notifications{agegroup_string}",
-                    sources=[f"ever_detected_incidence{agegroup_string}"],
-                    func=notifications_func,
-                )
+                for immunity_stratum in IMMUNITY_STRATA:
+                    immunity_string = f"Ximmunity_{immunity_stratum}"
+
+                    self.model.request_function_output(
+                        name=f"notifications{agegroup_string}{immunity_string}",
+                        sources=[f"ever_detected_incidence{agegroup_string}{immunity_string}"],
+                        func=notifications_func,
+                    )
 
     def request_infection_deaths(
             self,
@@ -243,10 +248,9 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
-            age_infection_deaths_sources = []
-
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
+                age_infection_deaths_sources = []
 
                 # Adjust CFR proportions for immunity
                 adj_death_props = cfr_props * immune_death_modifiers[immunity_stratum]
@@ -277,12 +281,12 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         save_results=False,
                     )
 
-            # Request infection deaths by age
-            self.model.request_aggregate_output(
-                name=f"infection_deaths{agegroup_string}",
-                sources=age_infection_deaths_sources,
-                save_results=True,
-            )
+                # Request infection deaths by age
+                self.model.request_aggregate_output(
+                    name=f"infection_deaths{agegroup_string}{immunity_string}",
+                    sources=age_infection_deaths_sources,
+                    save_results=True,
+                )
 
         # Request aggregated infection deaths
         self.model.request_aggregate_output(
@@ -342,10 +346,9 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
-            age_hospital_admissions_sources = []
-
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
+                age_hospital_admissions_sources = []
 
                 # Adjust the hospitalisation proportions for immunity
                 adj_hosp_props = hosp_props * immune_hosp_modifiers[immunity_stratum]
@@ -376,21 +379,21 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         save_results=False,
                     )
 
-            # Request hospital admissions by age
-            if request_hospital_admissions_by_age:
-                self.model.request_aggregate_output(
-                    name=f"hospital_admissions{agegroup_string}",
-                    sources=age_hospital_admissions_sources,
-                    save_results=True,
-                )
+                # Request hospital admissions by age
+                if request_hospital_admissions_by_age:
+                    self.model.request_aggregate_output(
+                        name=f"hospital_admissions{agegroup_string}{immunity_string}",
+                        sources=age_hospital_admissions_sources,
+                        save_results=True,
+                    )
 
-            # Request hospital occupancy by age
-            if request_hospital_occupancy_by_age:
-                self.model.request_function_output(
-                    name=f"hospital_occupancy{agegroup_string}",
-                    sources=[f"hospital_admissions{agegroup_string}"],
-                    func=hospital_occupancy_func,
-                )
+                # Request hospital occupancy by age
+                if request_hospital_occupancy_by_age:
+                    self.model.request_function_output(
+                        name=f"hospital_occupancy{agegroup_string}{immunity_string}",
+                        sources=[f"hospital_admissions{agegroup_string}{immunity_string}"],
+                        func=hospital_occupancy_func,
+                    )
 
         # Request aggregated hospital admissions
         self.model.request_aggregate_output(
@@ -453,10 +456,9 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
-            age_icu_admissions_sources = []
-
             for immunity_stratum in IMMUNITY_STRATA:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
+                age_icu_admissions_sources = []
 
                 for strain in strain_strata:
                     strain_string = f"Xstrain_{strain}" if strain else ""
@@ -478,21 +480,21 @@ class SmSirOutputsBuilder(OutputsBuilder):
                         save_results=False,
                     )
 
-            # Request ICU admissions by age
-            if request_icu_admissions_by_age:
-                self.model.request_aggregate_output(
-                    name=f"icu_admissions{agegroup_string}",
-                    sources=age_icu_admissions_sources,
-                    save_results=True,
-                )
+                # Request ICU admissions by age
+                if request_icu_admissions_by_age:
+                    self.model.request_aggregate_output(
+                        name=f"icu_admissions{agegroup_string}{immunity_string}",
+                        sources=age_icu_admissions_sources,
+                        save_results=True,
+                    )
 
-            # Request ICU occupancy by age
-            if request_icu_occupancy_by_age:
-                self.model.request_function_output(
-                    name=f"icu_occupancy{agegroup_string}",
-                    sources=[f"icu_admissions{agegroup_string}"],
-                    func=icu_occupancy_func,
-                )
+                # Request ICU occupancy by age
+                if request_icu_occupancy_by_age:
+                    self.model.request_function_output(
+                        name=f"icu_occupancy{agegroup_string}{immunity_string}",
+                        sources=[f"icu_admissions{agegroup_string}{immunity_string}"],
+                        func=icu_occupancy_func,
+                    )
 
         # Request aggregated icu admissions
         self.model.request_aggregate_output(
@@ -526,13 +528,16 @@ class SmSirOutputsBuilder(OutputsBuilder):
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
-            if request_notifications_by_age:
-                self.model.request_function_output(
-                    name=f"non_hosp_notifications{agegroup_string}",
-                    sources=[f"notifications{agegroup_string}", f"hospital_admissions{agegroup_string}"],
-                    func=get_output_difference
-                )
+            for immunity_stratum in IMMUNITY_STRATA:
+                immunity_string = f"Ximmunity_{immunity_stratum}"
 
+                if request_notifications_by_age:
+                    self.model.request_function_output(
+                        name=f"non_hosp_notifications{agegroup_string}{immunity_string}",
+                        sources=[f"notifications{agegroup_string}{immunity_string}",
+                                 f"hospital_admissions{agegroup_string}{immunity_string}"],
+                        func=get_output_difference
+                    )
 
     def request_recovered_proportion(self, base_comps: List[str]):
         """

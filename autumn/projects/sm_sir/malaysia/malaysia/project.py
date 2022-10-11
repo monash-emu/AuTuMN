@@ -49,12 +49,21 @@ priors = [
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.5, 1.5)),
     UniformPrior("sojourns.recovered", (150, 300))
 ]
-diff_output_requests = [
-    ["notifications", "ABSOLUTE"],
-    ["infection_deaths", "ABSOLUTE"],
-    ["icu_occupancy", "ABSOLUTE"],
-    ["hospital_occupancy", "ABSOLUTE"],
-]
+
+output_names = ["notifications", "hospital_admissions", "hospital_occupancy", "infection_deaths",
+                "icu_admissions", "icu_occupancy", "non_hosp_notifications"]
+
+age_groups = ["0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75"]
+
+immunity_strata = ["none", "low", "high"]
+
+diff_output_requests = []
+
+for output in output_names:
+    for agegroup in age_groups:
+        for immunity_stratum in immunity_strata:
+            appending_output_name = f"{output}Xagegroup_{agegroup}Ximmunity_{immunity_stratum}"
+            diff_output_requests.append([appending_output_name, "ABSOLUTE"])
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=None, metropolis_init="current_params"

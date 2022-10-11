@@ -79,10 +79,10 @@ def get_school_project(region):
     cumulative_deaths_target = cumulative_infection_deaths.loc[:model_end_time][-1:]
     targets = [
         NegativeBinomialTarget(
-            data=infection_deaths_target, dispersion_param=100, #7.0
+            data=infection_deaths_target #, dispersion_param=100, #7.0
         ),  # dispersion param from Watson et al. Lancet ID
         NegativeBinomialTarget(
-            data=cumulative_deaths_target, dispersion_param=100, #40.0
+            data=cumulative_deaths_target #, dispersion_param=100, #40.0
         ),  # dispersion param from Watson et al. Lancet ID
         # BinomialTarget(
         #     data=pd.Series(data=[.2], index=[800]) , 
@@ -312,6 +312,10 @@ def get_school_project_priors(first_date_with_death):
         UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
         UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
         UniformPrior("voc_emergence.delta.new_voc_seed.time_from_gisaid_report", [-30, 30]),
+
+        # dispersion params for targets
+        UniformPrior("infection_deaths_dispersion_param", [50., 200.]),
+        UniformPrior("cumulative_infection_deaths_dispersion_param", [50., 200.])        
     ]
 
     return priors

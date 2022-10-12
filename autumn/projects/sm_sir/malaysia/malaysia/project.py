@@ -49,7 +49,7 @@ priors = [
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.5, 1.5)),
     UniformPrior("sojourns.recovered", (150, 300)),
     UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.4, 0.59)),
-    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.6, 0.8)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.6, 0.8)),
 
 ]
 diff_output_requests = [

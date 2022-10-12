@@ -31,7 +31,8 @@ immunity_stratification:
   prop_high_among_immune: .0
 
   infection_risk_reduction:  # High parameter now irrelevant, because prop_high_among_immune is zero
-    low: 0.6
+    low: 0.5
+    high: 0.7
 
 vaccination:
   data_thinning: 4

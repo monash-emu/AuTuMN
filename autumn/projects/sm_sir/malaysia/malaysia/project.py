@@ -41,13 +41,15 @@ priors = [
     UniformPrior("contact_rate", (0.01, 0.1)),
     UniformPrior("detect_prop", (0.07, 0.3)),
     UniformPrior("sojourns.latent.total_time", (5, 20)),
-    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (2, 4)),
+    UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.5, 3)),
     UniformPrior("voc_emergence.delta.new_voc_seed.start_time", (400, 500)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2, 3.5)),
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (520, 675)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.5, 1.5)),
-    UniformPrior("sojourns.recovered", (150, 300))
+    UniformPrior("sojourns.recovered", (150, 300)),
+    UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.4, 0.7)),
+
 ]
 diff_output_requests = [
     ["notifications", "ABSOLUTE"],

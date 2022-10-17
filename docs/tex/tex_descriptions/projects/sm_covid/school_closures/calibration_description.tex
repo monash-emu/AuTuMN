@@ -26,13 +26,10 @@ Equation \ref{eq:random_process} is incorporated in the posterior likelihood com
 \subsection{Calibration targets}
 \label{targets}
 For each country model calibration is achieved by targeting two COVID-19 burden indicators: the 
-reported number of COVID-19 deaths over time and country-level seroprevalence estimates. The following sections
-presents the data used for calibration.
-\subsubsection{COVID-19 deaths}
-\textcolor{red}{NEED TO COMPLETE THIS}
+reported number of COVID-19 deaths over time and country-level seroprevalence estimates. 
 
-\subsubsection{Seroprevalence estimates}
-\label{sero}
+We used the daily number of COVID-19 deaths reported by Our World in Data and applied a 7-day moving average to the observed data. 
+We used the online platform SeroTracker to extract country-specific seroprevalence estimates.
 \textcolor{red}{Use Angus' description here.}
 
 \subsection{Likelihood definition}
@@ -40,7 +37,7 @@ presents the data used for calibration.
 Let $d_w$ denote the rounded average daily number of COVID-19 deaths during week $w$, and $\hat{d_w}^\theta$ 
 the associated predicted number of deaths according to the model with parameter set $\theta$. 
 
-Let us denote $m$ the sample size associated with the seroprevalence survey selected from SeroTracker (Section \ref{sero}), 
+Let us denote $m$ the sample size associated with the seroprevalence survey selected from SeroTracker (Section \ref{targets}), 
 and $k$ the number of seropositive individuals observed in the survey.
 Let $\hat{\pi}^\theta$ denote the modelled proportion ever infected by the time the survey was conducted (using midpoint date) 
 associated with the parameter set $\theta$. 

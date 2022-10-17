@@ -7712,6 +7712,19 @@
       0.975
     ]
   },
+  "notificationsXagegroup_65": {
+    "output_key": "notificationsXagegroup_65",
+    "title": "notifications 65-70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "notificationsXagegroup_70": {
     "output_key": "notificationsXagegroup_70",
     "title": "notifications 70-75",
@@ -7897,6 +7910,19 @@
   "infection_deathsXagegroup_60": {
     "output_key": "infection_deathsXagegroup_60",
     "title": "infection deaths 60-65",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "infection_deathsXagegroup_65": {
+    "output_key": "infection_deathsXagegroup_65",
+    "title": "infection deaths 65-70",
     "times": [],
     "values": [],
     "quantiles": [

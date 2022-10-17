@@ -81,13 +81,13 @@ def get_school_project(region):
         NegativeBinomialTarget(
             data=infection_deaths_target #, dispersion_param=100, #7.0
         ),  # dispersion param from Watson et al. Lancet ID
-        NegativeBinomialTarget(
-            data=cumulative_deaths_target #, dispersion_param=100, #40.0
-        ),  # dispersion param from Watson et al. Lancet ID
-        # BinomialTarget(
-        #     data=pd.Series(data=[.2], index=[800]) , 
-        #     sample_sizes = [10000]
-        # )
+        # NegativeBinomialTarget(
+        #     data=cumulative_deaths_target #, dispersion_param=100, #40.0
+        # ),  # dispersion param from Watson et al. Lancet ID
+        BinomialTarget(
+            data=pd.Series(data=[.051], index=[199], name="prop_ever_infected") , 
+            sample_sizes = [82126]
+        )
     ]
 
     # set up random process if relevant

@@ -5,8 +5,8 @@ The model was calibrated using a Bayesian approach. In particular, we used the a
 Metropolis algorithm introduced by Haario \textit{et al.} to sample parameters from their 
 posterior distributions \cite{haario-2001}. For each country, we ran 8 independent Metropolis 
 chains initialised using Latin Hypercube Sampling based on the parameter priors. 
-We ran simulations for X hours per chain in order to achieve at least 50,000 iterations per 
-chain. We discarded the first 25,000 iterations of each chain as burn-in and combined the 
+We ran simulations for 1 hour per chain yielding at least 60,000 iterations per 
+chain. We discarded the first 30,000 iterations of each chain as burn-in and combined the 
 samples of the 8 chains to project epidemic trajectories over time. 
 For each modelled country, the epidemic projections presented in our analysis are associated with 1000 parameter sets 
 randomly sampled from the posterior distributions obtained from MCMC sampling. 
@@ -69,7 +69,5 @@ If $W^\theta$ represents the random process associated with the parameter set $\
 where $z_{\mu,\sigma}(.)$ represents the probability density function of the normal distribution $\mathcal{N}(\mu, \sigma)$, and $n$ is the number 
 of random process updates. The standard deviation $\sigma$ is automatically estimated by the MCMC.
 
-\subsection{Model coding and run time}
-\textcolor{red}{NEED TO COMPLETE THIS. Maybe David can help here?}
-Can probably find a better title for this section\dots
+\subsection{Software implementation}
 \input{../../tex_descriptions/models/sm_covid/runtime.tex}

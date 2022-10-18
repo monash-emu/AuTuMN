@@ -325,7 +325,6 @@ def get_school_project_priors(first_date_with_death):
 
         # dispersion params for targets
         UniformPrior("infection_deaths_dispersion_param", [50., 200.]),
-        UniformPrior("cumulative_infection_deaths_dispersion_param", [50., 200.])        
     ]
 
     return priors

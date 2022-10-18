@@ -23,7 +23,7 @@ MIXING_PROXY = {"philippines": "HKG", "france": "BEL", "australia": "GBR"}
 EXTRA_UNCERTAINTY_OUTPUTS = {
     "cumulative_incidence": "Cumulative number of infections",
     "transformed_random_process": "Transformed random process",
-    "prop_ever_infected": "Proportion ever infected",
+    # "prop_ever_infected": "Proportion ever infected",
     "hospital_occupancy": "Hospital beds occupied with COVID-19 patients",
     "peak_hospital_occupancy": "Peak COVID-19 hospital occupancy",
     "death_missed_school_ratio": "Deaths averted per student-week of school missed",
@@ -231,14 +231,14 @@ def resize_rp_delta_values(params):
 
 def get_school_project_timeseries(region):
     """
-    Create a dictionarie containing country-specific timeseries. This equivalent to loading data from the timeseries json file in
+    Create a dictionary containing country-specific timeseries. This equivalent to loading data from the timeseries json file in
     other projects.
 
     Args:
         region: The modelled region
 
     Returns:
-        timeseries: A dictionary containig the timeseries
+        timeseries: A dictionary containing the timeseries
     """
 
     input_db = get_input_db()
@@ -276,6 +276,16 @@ def get_school_project_timeseries(region):
         "values": data["total_deaths"].to_list(),
         "quantiles": REQUESTED_UNC_QUANTILES,
     }
+
+    # add sero data (hard-coded for now)
+    timeseries["prop_ever_infected"] = {
+        "output_key": "prop_ever_infected",
+        "title": "Proportion ever infected",
+        "times": [199.],
+        "values": [.051],
+        "quantiles": REQUESTED_UNC_QUANTILES,
+    }
+
 
     # add extra derived output with no data to request uncertainty
     for output_key, title in EXTRA_UNCERTAINTY_OUTPUTS.items():

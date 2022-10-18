@@ -12,6 +12,11 @@ from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
 from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
+from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.core.inputs.database import get_input_db
+from numpy import log
+
+SATURATION_COVERAGE = .80
 
 ACTIVE_FLOWS = {
     "vaccination": ("none", "low"),
@@ -25,6 +30,8 @@ def adjust_susceptible_infection_without_strains(
         low_immune_effect: float,
         high_immune_effect: float,
         immunity_strat: Stratification,
+        immune_effect: Optional[float],
+        vaccine_model: str
 ):
     """
     Apply the modification to the immunity stratification to account for immunity to first infection (from the
@@ -35,9 +42,34 @@ def adjust_susceptible_infection_without_strains(
         low_immune_effect: The protection from low immunity
         high_immune_effect: The protection from high immunity
         immunity_strat: The immunity stratification, to be modified
-
+        vaccine_model: if vaccine model is WPRO it is unvaccinated and fully vaccinated model
+        immune_effect: if it is WPRO model the protection from vaccination
     """
+    if vaccine_model == "WPRO":
+        infection_adjustments = {
+            ImmunityStratum.UNVACCINATED: None,
+            ImmunityStratum.VACCINATED: Multiply(1.0 - immune_effect),
+        }
 
+        immunity_strat.set_flow_adjustments(
+            FlowName.INFECTION,
+            infection_adjustments,
+        )
+    else:
+        # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
+        low_non_cross_multiplier = 1.0 - low_immune_effect
+        high_non_cross_multiplier = 1.0 - high_immune_effect
+
+        infection_adjustments = {
+            ImmunityStratum.NONE: None,
+            ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
+            ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
+        }
+
+        immunity_strat.set_flow_adjustments(
+            FlowName.INFECTION,
+            infection_adjustments,
+        )
     # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
     low_non_cross_multiplier = 1.0 - low_immune_effect
     high_non_cross_multiplier = 1.0 - high_immune_effect
@@ -194,6 +226,7 @@ def adjust_reinfection_with_strains(
 def get_immunity_strat(
         compartments: List[str],
         immunity_params: ImmunityStratification,
+        vaccine_model: str
 ) -> Stratification:
     """
     This stratification is intended to capture all the immunity consideration.
@@ -204,24 +237,35 @@ def get_immunity_strat(
     Args:
         compartments: Unstratified model compartment types being implemented
         immunity_params: All the immunity-related model parameters
-
+        vaccine_model: if vaccine model is WPRO it is unvaccinated and fully vaccinated model
     Returns:
         The summer Stratification object that captures immunity from anything other than cross-immunity between strains
 
     """
+    if vaccine_model == "WPRO":
+        # Create the immunity stratification, which applies to all compartments
+        immunity_strat = Stratification("immunity", IMMUNITY_STRATA, compartments)
 
-    # Create the immunity stratification, which applies to all compartments
-    immunity_strat = Stratification("immunity", IMMUNITY_STRATA, compartments)
+        # Set distribution of starting population (all unvaccinated)
+        immunity_split_props = {
+            ImmunityStratum.UNVACCINATED: 1.0,
+            ImmunityStratum.VACCINATED: 0.
+        }
+        immunity_strat.set_population_split(immunity_split_props)
 
-    # Set distribution of starting population
-    p_immune = immunity_params.prop_immune
-    p_high_among_immune = immunity_params.prop_high_among_immune
-    immunity_split_props = {
-        ImmunityStratum.NONE: 1.0 - p_immune,
-        ImmunityStratum.LOW: p_immune * (1.0 - p_high_among_immune),
-        ImmunityStratum.HIGH: p_immune * p_high_among_immune,
-    }
-    immunity_strat.set_population_split(immunity_split_props)
+    else:
+        # Create the immunity stratification, which applies to all compartments
+        immunity_strat = Stratification("immunity", IMMUNITY_STRATA, compartments)
+
+        # Set distribution of starting population
+        p_immune = immunity_params.prop_immune
+        p_high_among_immune = immunity_params.prop_high_among_immune
+        immunity_split_props = {
+            ImmunityStratum.NONE: 1.0 - p_immune,
+            ImmunityStratum.LOW: p_immune * (1.0 - p_high_among_immune),
+            ImmunityStratum.HIGH: p_immune * p_high_among_immune,
+        }
+        immunity_strat.set_population_split(immunity_split_props)
 
     return immunity_strat
 
@@ -568,12 +612,77 @@ def get_immune_strata_distributions_using_priority(
 
     return thinned_strata_distributions_df, agegroup_allocated_doses
 
+def get_time_variant_vaccination_rates(iso3: str, age_pops: pd.Series):
+    """
+    Create a time-variant function returning the vaccination rates matching coverage data over time
+
+    Args:
+        iso3: Country ISO3 code
+        age_pops: Population size of the modelled age groups
+
+    Returns:
+        A function of time returning the instantaneous vaccnation rate
+    """
+    total_pop = age_pops.sum()
+
+    # Load vaccine coverage data and prepare pandas dataframe for calculations
+    input_db = get_input_db()
+    vacc_data = input_db.query(table_name='owid', conditions= {"iso_code": iso3}, columns=["date", "people_fully_vaccinated_per_hundred"])
+    vacc_data.dropna(inplace=True)
+    vacc_data["date_int"] = (pd.to_datetime(vacc_data.date)- COVID_BASE_DATETIME).dt.days
+    vacc_data["n_doses"] = total_pop * vacc_data["people_fully_vaccinated_per_hundred"] / 100.
+    vacc_data.drop(["people_fully_vaccinated_per_hundred", "date"], axis=1)
+    t_min, t_max = vacc_data["date_int"].iloc[0], vacc_data["date_int"].iloc[-1]
+
+    """
+     Determine age-specific time-variant transition rates 
+    """
+    # Work out maximum vaccination coverage by age
+    max_data_coverage = vacc_data["n_doses"].max() / total_pop
+    saturation_coverage = max(SATURATION_COVERAGE, max_data_coverage)
+    saturation_doses = {agegroup: popsize * saturation_coverage  for agegroup, popsize in age_pops.items()}
+
+    # Work out the minimum number of doses required before each agegroup becomes eligible for vaccination
+    trigger_doses = {agegroup: sum([saturation_doses[a] for a in age_pops.index if int(a) > int(agegroup)]) for agegroup in age_pops.index}
+
+    # Create time-variant vaccination rate functions for each age group
+    tv_vacc_rate_funcs = {}
+    for agegroup, this_sat_doses in saturation_doses.items():
+        # Work out age-specific coverage over time
+        vacc_data[f"coverage_agegroup_{agegroup}"] = (vacc_data['n_doses'] - trigger_doses[agegroup]).clip(lower=0.).clip(upper=this_sat_doses) / age_pops.loc[agegroup]
+
+        # For each time interval [t0, t1], the vaccination rate alpha verifies: (1 - V0) * exp(-alpha * delta_t) = 1 - V1
+        # Then alpha = (log(1 - V0) - log(1 - V1)) / delta_t
+        vacc_data[f"log_unvacc_p_agegroup_{agegroup}"] = log(1. - vacc_data[f"coverage_agegroup_{agegroup}"])
+        vacc_data[f"vacc_rate_agegroup_{agegroup}"] = - vacc_data[f"log_unvacc_p_agegroup_{agegroup}"].diff(periods=-1) / vacc_data["date_int"].diff(periods=-1)
+
+        # Create a continuous scale-up function
+        tv_vacc_rate_funcs[agegroup] = make_tv_vacc_rate_func(agegroup, t_min, t_max, vacc_data)
+
+    return tv_vacc_rate_funcs
+
+
+def make_tv_vacc_rate_func(agegroup: str, t_min: int, t_max: int, vacc_data: pd.DataFrame):
+    """
+    Simple factory function
+    """
+    def tv_vacc_rate(t, computed_values=None):
+        if t < t_min or t >= t_max:
+            return 0.
+        else:
+            return vacc_data[vacc_data["date_int"] <= t].iloc[-1][f"vacc_rate_agegroup_{agegroup}"]
+
+    return tv_vacc_rate
+
 
 def add_dynamic_immunity_to_model(
         compartments: List[str],
         strata_distributions: pd.DataFrame,
         model: CompartmentalModel,
         agegroup: str,
+        age_pops: Optional[pd.Series],
+        iso3: Optional[str],
+        vaccine_model: str
 ):
     """
     Use the dynamic flow processes to control the distribution of the population by vaccination status.
@@ -583,18 +692,37 @@ def add_dynamic_immunity_to_model(
         strata_distributions: The target proportions at each time point
         model: The model to be adapted
         agegroup: Relevant agegroup for vaccination flow. 
-
+        iso3: Country ISO3 code
+        age_pops: Population size of modelled age groups
+        vaccine_model: if vaccine model is WPRO it is unvaccinated and fully vaccinated model
     """
 
-    sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
-    age_filter = {} if agegroup == "all_ages" else {"agegroup": agegroup}
-    for comp in compartments:
-        for transition, strata in ACTIVE_FLOWS.items():
-            model.add_transition_flow(
-                transition,
-                sc_functions[transition],
-                comp,
-                comp,
-                source_strata={"immunity": strata[0], **age_filter},
-                dest_strata={"immunity": strata[1], **age_filter},
-            )
+    if vaccine_model == "WPRO":
+        # Get vaccination coverage data and determine time-variant transition rate
+        tv_vacc_rate_funcs = get_time_variant_vaccination_rates(iso3, age_pops)
+
+        # Request transition flows
+        for agegroup, tv_vacc_rate in tv_vacc_rate_funcs.items():
+
+            for compartment in compartments:
+                model.add_transition_flow(
+                    name=FlowName.VACCINATION,
+                    fractional_rate=tv_vacc_rate,
+                    source=compartment,
+                    dest=compartment,
+                    source_strata={"immunity": ImmunityStratum.UNVACCINATED, "agegroup": agegroup},
+                    dest_strata={"immunity": ImmunityStratum.VACCINATED, "agegroup": agegroup},
+                )
+    else:
+        sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
+        age_filter = {} if agegroup == "all_ages" else {"agegroup": agegroup}
+        for comp in compartments:
+            for transition, strata in ACTIVE_FLOWS.items():
+                model.add_transition_flow(
+                    transition,
+                    sc_functions[transition],
+                    comp,
+                    comp,
+                    source_strata={"immunity": strata[0], **age_filter},
+                    dest_strata={"immunity": strata[1], **age_filter},
+                )

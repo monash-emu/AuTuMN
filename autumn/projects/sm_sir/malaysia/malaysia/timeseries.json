@@ -7368,9 +7368,9 @@
       0.975
     ]
   },
-  "abs_diff_infection_deaths": {
-    "output_key": "abs_diff_infection_deaths",
-    "title": "abs_diff_infection_deaths",
+  "abs_diff_notificationsXagegroup_5": {
+    "output_key": "abs_diff_notificationsXagegroup_5",
+    "title": "abs_diff_notificationsXagegroup_5",
     "times": [],
     "values": [],
     "quantiles": [
@@ -7381,9 +7381,9 @@
       0.975
     ]
   },
-  "abs_diff_icu_occupancy": {
-    "output_key": "abs_diff_icu_occupancy",
-    "title": "abs_diff_icu_occupancy",
+  "abs_diff_notificationsXagegroup_10": {
+    "output_key": "abs_diff_notificationsXagegroup_10",
+    "title": "abs_diff_notificationsXagegroup_10",
     "times": [],
     "values": [],
     "quantiles": [
@@ -7394,9 +7394,9 @@
       0.975
     ]
   },
-  "abs_diff_icu_admissions": {
-    "output_key": "abs_diff_icu_admissions",
-    "title": "abs_diff_icu_admissions",
+  "abs_diff_notificationsXagegroup_15": {
+    "output_key": "abs_diff_notificationsXagegroup_15",
+    "title": "abs_diff_notificationsXagegroup_15",
     "times": [],
     "values": [],
     "quantiles": [
@@ -7407,9 +7407,9 @@
       0.975
     ]
   },
-  "abs_diff_hospital_occupancy": {
-    "output_key": "abs_diff_hospital_occupancy",
-    "title": "abs_diff_hospital_occupancy",
+  "abs_diff_notificationsXagegroup_20": {
+    "output_key": "abs_diff_notificationsXagegroup_20",
+    "title": "abs_diff_notificationsXagegroup_20",
     "times": [],
     "values": [],
     "quantiles": [
@@ -7420,9 +7420,1386 @@
       0.975
     ]
   },
-  "abs_diff_hospital_admissions": {
-    "output_key": "abs_diff_hospital_admissions",
-    "title": "abs_diff_hospital_admissions",
+  "abs_diff_notificationsXagegroup_25": {
+    "output_key": "abs_diff_notificationsXagegroup_25",
+    "title": "abs_diff_notificationsXagegroup_25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_30": {
+    "output_key": "abs_diff_notificationsXagegroup_30",
+    "title": "abs_diff_notificationsXagegroup_30",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_35": {
+    "output_key": "abs_diff_notificationsXagegroup_35",
+    "title": "abs_diff_notificationsXagegroup_35",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_40": {
+    "output_key": "abs_diff_notificationsXagegroup_40",
+    "title": "abs_diff_notificationsXagegroup_40",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_45": {
+    "output_key": "abs_diff_notificationsXagegroup_45",
+    "title": "abs_diff_notificationsXagegroup_45",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_50": {
+    "output_key": "abs_diff_notificationsXagegroup_50",
+    "title": "abs_diff_notificationsXagegroup_50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_55": {
+    "output_key": "abs_diff_notificationsXagegroup_55",
+    "title": "abs_diff_notificationsXagegroup_55",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_60": {
+    "output_key": "abs_diff_notificationsXagegroup_60",
+    "title": "abs_diff_notificationsXagegroup_60",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_65": {
+    "output_key": "abs_diff_notificationsXagegroup_65",
+    "title": "abs_diff_notificationsXagegroup_65",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_70": {
+    "output_key": "abs_diff_notificationsXagegroup_70",
+    "title": "abs_diff_notificationsXagegroup_70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_notificationsXagegroup_75": {
+    "output_key": "abs_diff_notificationsXagegroup_75",
+    "title": "abs_diff_notificationsXagegroup_75",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_0": {
+    "output_key": "abs_diff_infection_deathsXagegroup_0",
+    "title": "abs_diff_infection_deathsXagegroup_0",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_5": {
+    "output_key": "abs_diff_infection_deathsXagegroup_5",
+    "title": "abs_diff_infection_deathsXagegroup_5",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_10": {
+    "output_key": "abs_diff_infection_deathsXagegroup_10",
+    "title": "abs_diff_infection_deathsXagegroup_10",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_15": {
+    "output_key": "abs_diff_infection_deathsXagegroup_15",
+    "title": "abs_diff_infection_deathsXagegroup_15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_20": {
+    "output_key": "abs_diff_infection_deathsXagegroup_20",
+    "title": "abs_diff_infection_deathsXagegroup_20",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_25": {
+    "output_key": "abs_diff_infection_deathsXagegroup_25",
+    "title": "abs_diff_infection_deathsXagegroup_25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_30": {
+    "output_key": "abs_diff_infection_deathsXagegroup_30",
+    "title": "abs_diff_infection_deathsXagegroup_30",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_35": {
+    "output_key": "abs_diff_infection_deathsXagegroup_35",
+    "title": "abs_diff_infection_deathsXagegroup_35",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_40": {
+    "output_key": "abs_diff_infection_deathsXagegroup_40",
+    "title": "abs_diff_infection_deathsXagegroup_40",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_45": {
+    "output_key": "abs_diff_infection_deathsXagegroup_45",
+    "title": "abs_diff_infection_deathsXagegroup_45",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_50": {
+    "output_key": "abs_diff_infection_deathsXagegroup_50",
+    "title": "abs_diff_infection_deathsXagegroup_50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_55": {
+    "output_key": "abs_diff_infection_deathsXagegroup_55",
+    "title": "abs_diff_infection_deathsXagegroup_55",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_60": {
+    "output_key": "abs_diff_infection_deathsXagegroup_60",
+    "title": "abs_diff_infection_deathsXagegroup_60",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_65": {
+    "output_key": "abs_diff_infection_deathsXagegroup_65",
+    "title": "abs_diff_infection_deathsXagegroup_65",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_70": {
+    "output_key": "abs_diff_infection_deathsXagegroup_70",
+    "title": "abs_diff_infection_deathsXagegroup_70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_infection_deathsXagegroup_75": {
+    "output_key": "abs_diff_infection_deathsXagegroup_75",
+    "title": "abs_diff_infection_deathsXagegroup_75",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_0": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_0",
+    "title": "abs_diff_icu_occupancyXagegroup_0",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_5": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_5",
+    "title": "abs_diff_icu_occupancyXagegroup_5",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_10": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_10",
+    "title": "abs_diff_icu_occupancyXagegroup_10",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_15": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_15",
+    "title": "abs_diff_icu_occupancyXagegroup_15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_20": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_20",
+    "title": "abs_diff_icu_occupancyXagegroup_20",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_25": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_25",
+    "title": "abs_diff_icu_occupancyXagegroup_25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_30": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_30",
+    "title": "abs_diff_icu_occupancyXagegroup_30",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_35": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_35",
+    "title": "abs_diff_icu_occupancyXagegroup_35",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_40": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_40",
+    "title": "abs_diff_icu_occupancyXagegroup_40",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_45": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_45",
+    "title": "abs_diff_icu_occupancyXagegroup_45",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_50": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_50",
+    "title": "abs_diff_icu_occupancyXagegroup_50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_55": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_55",
+    "title": "abs_diff_icu_occupancyXagegroup_55",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_60": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_60",
+    "title": "abs_diff_icu_occupancyXagegroup_60",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_65": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_65",
+    "title": "abs_diff_icu_occupancyXagegroup_65",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_70": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_70",
+    "title": "abs_diff_icu_occupancyXagegroup_70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_occupancyXagegroup_75": {
+    "output_key": "abs_diff_icu_occupancyXagegroup_75",
+    "title": "abs_diff_icu_occupancyXagegroup_75",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_0": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_0",
+    "title": "abs_diff_icu_admissionsXagegroup_0",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_5": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_5",
+    "title": "abs_diff_icu_admissionsXagegroup_5",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_10": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_10",
+    "title": "abs_diff_icu_admissionsXagegroup_10",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_15": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_15",
+    "title": "abs_diff_icu_admissionsXagegroup_15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_20": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_20",
+    "title": "abs_diff_icu_admissionsXagegroup_20",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_25": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_25",
+    "title": "abs_diff_icu_admissionsXagegroup_25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_30": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_30",
+    "title": "abs_diff_icu_admissionsXagegroup_30",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_35": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_35",
+    "title": "abs_diff_icu_admissionsXagegroup_35",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_40": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_40",
+    "title": "abs_diff_icu_admissionsXagegroup_40",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_45": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_45",
+    "title": "abs_diff_icu_admissionsXagegroup_45",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_50": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_50",
+    "title": "abs_diff_icu_admissionsXagegroup_50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_55": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_55",
+    "title": "abs_diff_icu_admissionsXagegroup_55",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_60": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_60",
+    "title": "abs_diff_icu_admissionsXagegroup_60",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_65": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_65",
+    "title": "abs_diff_icu_admissionsXagegroup_65",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_70": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_70",
+    "title": "abs_diff_icu_admissionsXagegroup_70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_icu_admissionsXagegroup_75": {
+    "output_key": "abs_diff_icu_admissionsXagegroup_75",
+    "title": "abs_diff_icu_admissionsXagegroup_75",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_0": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_0",
+    "title": "abs_diff_hospital_occupancyXagegroup_0",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_5": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_5",
+    "title": "abs_diff_hospital_occupancyXagegroup_5",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_10": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_10",
+    "title": "abs_diff_hospital_occupancyXagegroup_10",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_15": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_15",
+    "title": "abs_diff_hospital_occupancyXagegroup_15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_20": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_20",
+    "title": "abs_diff_hospital_occupancyXagegroup_20",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_25": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_25",
+    "title": "abs_diff_hospital_occupancyXagegroup_25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_30": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_30",
+    "title": "abs_diff_hospital_occupancyXagegroup_30",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_35": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_35",
+    "title": "abs_diff_hospital_occupancyXagegroup_35",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_40": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_40",
+    "title": "abs_diff_hospital_occupancyXagegroup_40",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_45": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_45",
+    "title": "abs_diff_hospital_occupancyXagegroup_45",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_50": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_50",
+    "title": "abs_diff_hospital_occupancyXagegroup_50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_55": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_55",
+    "title": "abs_diff_hospital_occupancyXagegroup_55",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_60": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_60",
+    "title": "abs_diff_hospital_occupancyXagegroup_60",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_65": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_65",
+    "title": "abs_diff_hospital_occupancyXagegroup_65",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_70": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_70",
+    "title": "abs_diff_hospital_occupancyXagegroup_70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_occupancyXagegroup_75": {
+    "output_key": "abs_diff_hospital_occupancyXagegroup_75",
+    "title": "abs_diff_hospital_occupancyXagegroup_75",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_0": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_0",
+    "title": "abs_diff_hospital_admissionsXagegroup_0",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_5": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_5",
+    "title": "abs_diff_hospital_admissionsXagegroup_5",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_10": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_10",
+    "title": "abs_diff_hospital_admissionsXagegroup_10",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_15": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_15",
+    "title": "abs_diff_hospital_admissionsXagegroup_15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_20": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_20",
+    "title": "abs_diff_hospital_admissionsXagegroup_20",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_25": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_25",
+    "title": "abs_diff_hospital_admissionsXagegroup_25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_30": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_30",
+    "title": "abs_diff_hospital_admissionsXagegroup_30",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_35": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_35",
+    "title": "abs_diff_hospital_admissionsXagegroup_35",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_40": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_40",
+    "title": "abs_diff_hospital_admissionsXagegroup_40",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_45": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_45",
+    "title": "abs_diff_hospital_admissionsXagegroup_45",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_50": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_50",
+    "title": "abs_diff_hospital_admissionsXagegroup_50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_55": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_55",
+    "title": "abs_diff_hospital_admissionsXagegroup_55",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_60": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_60",
+    "title": "abs_diff_hospital_admissionsXagegroup_60",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_65": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_65",
+    "title": "abs_diff_hospital_admissionsXagegroup_65",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_70": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_70",
+    "title": "abs_diff_hospital_admissionsXagegroup_70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_hospital_admissionsXagegroup_75": {
+    "output_key": "abs_diff_hospital_admissionsXagegroup_75",
+    "title": "abs_diff_hospital_admissionsXagegroup_75",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },  "abs_diff_non_hosp_notificationsXagegroup_0": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_0",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_0",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_5": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_5",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_5",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_10": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_10",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_10",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_15": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_15",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_15",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_20": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_20",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_20",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_25": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_25",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_25",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_30": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_30",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_30",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_35": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_35",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_35",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_40": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_40",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_40",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_45": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_45",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_45",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_50": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_50",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_50",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_55": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_55",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_55",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_60": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_60",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_60",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_65": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_65",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_65",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_70": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_70",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_70",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "abs_diff_non_hosp_notificationsXagegroup_75": {
+    "output_key": "abs_diff_non_hosp_notificationsXagegroup_75",
+    "title": "abs_diff_non_hosp_notificationsXagegroup_75",
     "times": [],
     "values": [],
     "quantiles": [

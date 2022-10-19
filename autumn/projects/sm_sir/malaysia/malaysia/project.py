@@ -53,7 +53,7 @@ priors = [
 
 ]
 diff_output_requests = [
-    ["notifications", "ABSOLUTE"],
+    ["notificationsXagegroup_0", "ABSOLUTE"],
     ["infection_deaths", "ABSOLUTE"],
     ["icu_occupancy", "ABSOLUTE"],
     ["hospital_occupancy", "ABSOLUTE"],

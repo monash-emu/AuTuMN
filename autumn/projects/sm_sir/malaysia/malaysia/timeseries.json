@@ -7342,38 +7342,6 @@
       0.975
     ]
   },
-  "transformed_random_process": {
-    "output_key": "transformed_random_process",
-    "title": "Transformed random process",
-    "times": [
-      1,
-      364
-    ],
-    "values": [
-      1,
-      1
-    ],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "cdr": {
-    "output_key": "cdr",
-    "title": "Proportion detected among symptomatic",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
   "cumulative_infection_deaths": {
     "output_key": "cumulative_infection_deaths",
     "title": "Accumulated deaths",
@@ -7387,9 +7355,9 @@
       0.975
     ]
   },
-  "abs_diff_notifications": {
-    "output_key": "abs_diff_notifications",
-    "title": "abs_diff_notifications",
+  "abs_diff_notificationsXagegroup_0": {
+    "output_key": "abs_diff_notificationsXagegroup_0",
+    "title": "abs_diff_notificationsXagegroup_0",
     "times": [],
     "values": [],
     "quantiles": [
@@ -7455,84 +7423,6 @@
   "abs_diff_hospital_admissions": {
     "output_key": "abs_diff_hospital_admissions",
     "title": "abs_diff_hospital_admissions",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "strain_propXstrain_beta": {
-    "output_key": "strain_propXstrain_beta",
-    "title": "Proportion beta",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "strain_propXstrain_delta": {
-    "output_key": "strain_propXstrain_delta",
-    "title": "Proportion delta",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "strain_propXstrain_omicron": {
-    "output_key": "strain_propXstrain_omicron",
-    "title": "Proportion omicron",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "n_immune_none": {
-    "output_key": "n_immune_none",
-    "title": "n_immune_none",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "n_immune_low": {
-    "output_key": "n_immune_low",
-    "title": "n_immune_low",
-    "times": [],
-    "values": [],
-    "quantiles": [
-      0.025,
-      0.25,
-      0.5,
-      0.75,
-      0.975
-    ]
-  },
-  "n_immune_high": {
-    "output_key": "n_immune_high",
-    "title": "n_immune_high",
     "times": [],
     "values": [],
     "quantiles": [

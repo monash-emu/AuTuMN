@@ -55,10 +55,20 @@ class ImmunityStratum:
     HIGH = "high"
 
 
+class ImmunityStratumWPRO:
+    UNVACCINATED = "unvaccinated"
+    VACCINATED = "vaccinated"
+
+
 IMMUNITY_STRATA = [
     ImmunityStratum.NONE,
     ImmunityStratum.LOW,
     ImmunityStratum.HIGH
+]
+
+IMMUNITY_STRATA_WPRO = [
+    ImmunityStratumWPRO.UNVACCINATED,
+    ImmunityStratumWPRO.VACCINATED
 ]
 
 LOCATIONS = ["home", "other_locations", "school", "work"]

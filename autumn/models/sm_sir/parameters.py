@@ -319,6 +319,11 @@ class AgeStratification(BaseModel):
     cfr: AgeSpecificProps
 
 
+class VaccineEffects(BaseModel):
+    ve_infection: float
+    vaccine_model: str
+
+
 class ImmunityRiskReduction(BaseModel):
 
     none: float
@@ -524,7 +529,7 @@ class Parameters:
             List[int] # to specify a prioritisation order (e.g. [70, 50, 25, 15])
             ]
         ]
-
+    vaccine_effects: VaccineEffects
     # Indigenous-related
     indigenous: bool
 

@@ -17,13 +17,16 @@ from .constants import BASE_COMPARTMENTS, Compartment, FlowName
 from .stratifications.agegroup import get_agegroup_strat
 from .stratifications.immunity import (
     get_immunity_strat,
+    get_immunity_strat_wpro,
     adjust_susceptible_infection_without_strains,
     adjust_susceptible_infection_with_strains,
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
     apply_reported_vacc_coverage,
     apply_reported_vacc_coverage_with_booster,
+    set_dynamic_vaccination_flows_wpro
 )
+
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
 from .stratifications.indigenous import get_indigenous_strat
@@ -465,55 +468,87 @@ def build_model(
     """
     Immunity stratification
     """
+    vaccine_effects_params = params.vaccine_effects
+    if vaccine_effects_params.vaccine_model == "WPRO":
 
-    # Get the immunity stratification
-    immunity_params = params.immunity_stratification
-    immunity_strat = get_immunity_strat(
-        compartment_types,
-        immunity_params,
-    )
-
-    # Adjust infection of susceptibles for immunity status
-    reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
-    if Compartment.WANED in compartment_types:
-        reinfection_flows.append(FlowName.LATE_REINFECTION)
-
-    immunity_low_risk_reduction = immunity_params.infection_risk_reduction.low
-    immunity_high_risk_reduction = immunity_params.infection_risk_reduction.high
-
-    if voc_params:
-        # The code should run fine if VoC parameters have been submitted but the strain stratification hasn't been
-        # implemented yet - but at this stage we assume we don't want it to
-        msg = "Strain stratification not present in model"
-        assert "strain" in [strat.name for strat in model._stratifications], msg
-        adjust_susceptible_infection_with_strains(
-            immunity_low_risk_reduction,
-            immunity_high_risk_reduction,
-            immunity_strat,
-            voc_params,
+        immunity_strat = get_immunity_strat_wpro(
+            compartment_types,
         )
-        adjust_reinfection_with_strains(
-            immunity_low_risk_reduction,
-            immunity_high_risk_reduction,
-            immunity_strat,
-            reinfection_flows,
-            voc_params,
-        )
+
+        # Adjust all transmission flows for immunity status and strain status (when relevant)
+        ve_against_infection = vaccine_effects_params.ve_infection
+        if voc_params:
+            msg = "Strain stratification not present in model"
+            assert "strain" in [strat.name for strat in model._stratifications], msg
+            adjust_susceptible_infection_with_strains(
+                ve_against_infection,
+                immunity_strat,
+                voc_params,
+            )
+            adjust_reinfection_with_strains(
+                ve_against_infection,
+                immunity_strat,
+                voc_params,
+            )
+        else:
+            adjust_susceptible_infection_without_strains(ve_against_infection, immunity_strat)
+
+        # Apply the immunity stratification
+        model.stratify_with(immunity_strat)
+
+        # Apply dynamic vaccination flows
+        set_dynamic_vaccination_flows_wpro(compartment_types, model, iso3, age_pops)
+
     else:
-        adjust_susceptible_infection_without_strains(
-            immunity_low_risk_reduction,
-            immunity_high_risk_reduction,
-            immunity_strat,
-        )
-        adjust_reinfection_without_strains(
-            immunity_low_risk_reduction,
-            immunity_high_risk_reduction,
-            immunity_strat,
-            reinfection_flows,
+
+        # Get the immunity stratification
+        immunity_params = params.immunity_stratification
+        immunity_strat = get_immunity_strat(
+            compartment_types,
+            immunity_params,
         )
 
-    # Apply the immunity stratification
-    model.stratify_with(immunity_strat)
+        # Adjust infection of susceptibles for immunity status
+        reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
+        if Compartment.WANED in compartment_types:
+            reinfection_flows.append(FlowName.LATE_REINFECTION)
+
+        immunity_low_risk_reduction = immunity_params.infection_risk_reduction.low
+        immunity_high_risk_reduction = immunity_params.infection_risk_reduction.high
+
+        if voc_params:
+            # The code should run fine if VoC parameters have been submitted but the strain stratification hasn't been
+            # implemented yet - but at this stage we assume we don't want it to
+            msg = "Strain stratification not present in model"
+            assert "strain" in [strat.name for strat in model._stratifications], msg
+            adjust_susceptible_infection_with_strains(
+                immunity_low_risk_reduction,
+                immunity_high_risk_reduction,
+                immunity_strat,
+                voc_params,
+            )
+            adjust_reinfection_with_strains(
+                immunity_low_risk_reduction,
+                immunity_high_risk_reduction,
+                immunity_strat,
+                reinfection_flows,
+                voc_params,
+            )
+        else:
+            adjust_susceptible_infection_without_strains(
+                immunity_low_risk_reduction,
+                immunity_high_risk_reduction,
+                immunity_strat,
+            )
+            adjust_reinfection_without_strains(
+                immunity_low_risk_reduction,
+                immunity_high_risk_reduction,
+                immunity_strat,
+                reinfection_flows,
+            )
+
+        # Apply the immunity stratification
+        model.stratify_with(immunity_strat)
 
     # Implement the dynamic immunity process
     vacc_coverage_available = ["BGD", "PHL", "BTN", "VNM"]

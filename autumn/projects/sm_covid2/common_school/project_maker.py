@@ -23,7 +23,7 @@ MIXING_PROXY = {"philippines": "HKG", "france": "BEL", "australia": "GBR"}
 EXTRA_UNCERTAINTY_OUTPUTS = {
     "cumulative_incidence": "Cumulative number of infections",
     "transformed_random_process": "Transformed random process",
-    "prop_ever_infected": "Proportion ever infected",
+    # "prop_ever_infected": "Proportion ever infected",
     "hospital_occupancy": "Hospital beds occupied with COVID-19 patients",
     "peak_hospital_occupancy": "Peak COVID-19 hospital occupancy",
     "death_missed_school_ratio": "Deaths averted per student-week of school missed",
@@ -81,13 +81,13 @@ def get_school_project(region):
         NegativeBinomialTarget(
             data=infection_deaths_target #, dispersion_param=100, #7.0
         ),  # dispersion param from Watson et al. Lancet ID
-        NegativeBinomialTarget(
-            data=cumulative_deaths_target #, dispersion_param=100, #40.0
-        ),  # dispersion param from Watson et al. Lancet ID
-        # BinomialTarget(
-        #     data=pd.Series(data=[.2], index=[800]) , 
-        #     sample_sizes = [10000]
-        # )
+        # NegativeBinomialTarget(
+        #     data=cumulative_deaths_target #, dispersion_param=100, #40.0
+        # ),  # dispersion param from Watson et al. Lancet ID
+        BinomialTarget(
+            data=pd.Series(data=[.051], index=[199], name="prop_ever_infected") , 
+            sample_sizes = [82126]
+        )
     ]
 
     # set up random process if relevant
@@ -107,10 +107,10 @@ def get_school_project(region):
         priors=priors,
         targets=targets,
         random_process=rp,
-        metropolis_init="current_params",
+        metropolis_init="current_params",  # "lhs"
         haario_scaling_factor=1.2, # 2.4,
         fixed_proposal_steps=500,
-        metropolis_init_rel_step_size=0.02,
+        metropolis_init_rel_step_size=0.1,
         using_summer2=True,
     )
 
@@ -231,14 +231,14 @@ def resize_rp_delta_values(params):
 
 def get_school_project_timeseries(region):
     """
-    Create a dictionarie containing country-specific timeseries. This equivalent to loading data from the timeseries json file in
+    Create a dictionary containing country-specific timeseries. This equivalent to loading data from the timeseries json file in
     other projects.
 
     Args:
         region: The modelled region
 
     Returns:
-        timeseries: A dictionary containig the timeseries
+        timeseries: A dictionary containing the timeseries
     """
 
     input_db = get_input_db()
@@ -276,6 +276,16 @@ def get_school_project_timeseries(region):
         "values": data["total_deaths"].to_list(),
         "quantiles": REQUESTED_UNC_QUANTILES,
     }
+
+    # add sero data (hard-coded for now)
+    timeseries["prop_ever_infected"] = {
+        "output_key": "prop_ever_infected",
+        "title": "Proportion ever infected",
+        "times": [199.],
+        "values": [.051],
+        "quantiles": REQUESTED_UNC_QUANTILES,
+    }
+
 
     # add extra derived output with no data to request uncertainty
     for output_key, title in EXTRA_UNCERTAINTY_OUTPUTS.items():
@@ -315,7 +325,6 @@ def get_school_project_priors(first_date_with_death):
 
         # dispersion params for targets
         UniformPrior("infection_deaths_dispersion_param", [50., 200.]),
-        UniformPrior("cumulative_infection_deaths_dispersion_param", [50., 200.])        
     ]
 
     return priors

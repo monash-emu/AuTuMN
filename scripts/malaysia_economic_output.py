@@ -47,8 +47,9 @@ def get_mle_outputs(chain, run):
 
 
 def output_files(file_type, df):
-    df = df.sort_values(by=BASE_COLS)
-    cols_to_output = BASE_COLS + EXTRA_COLS + list(df.columns[df.columns.str.contains("abs_diff")])
+    output = BASE_COLS + ["month"] if file_type == "scenario" else BASE_COLS
+    df = df.sort_values(by=output)
+    cols_to_output = output + EXTRA_COLS + list(df.columns[df.columns.str.contains("abs_diff")])
     df = df[cols_to_output]
 
     for scenario in SCENARIOS:
@@ -57,7 +58,7 @@ def output_files(file_type, df):
 
 
 df = pd.concat(get_full_derived_outputs())
-output_files("sensitivity", df)
+output_files("sensitivity_scenario", df)
 
 
 mr = ManagedRun(run_id)

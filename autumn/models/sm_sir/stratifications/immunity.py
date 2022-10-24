@@ -9,7 +9,8 @@ from autumn.core.inputs.covid_bgd.queries import get_bgd_vac_coverage
 from autumn.core.inputs.covid_phl.queries import get_phl_vac_coverage
 from autumn.core.inputs.covid_btn.queries import get_btn_vac_coverage
 from autumn.core.inputs.covid_mys.queries import get_mys_vac_coverage
-from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName, IMMUNITY_STRATA_WPRO, ImmunityStratumWPRO
+from autumn.models.sm_sir.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName, IMMUNITY_STRATA_WPRO,\
+    ImmunityStratumWPRO
 from autumn.models.sm_sir.parameters import ImmunityStratification, VocComponent, TimeSeries
 from autumn.model_features.solve_transitions import calculate_transition_rates_from_dynamic_props
 from autumn.settings.constants import COVID_BASE_DATETIME
@@ -73,6 +74,37 @@ def set_dynamic_vaccination_flows(
 
 
 def adjust_susceptible_infection_without_strains(
+        low_immune_effect: float,
+        high_immune_effect: float,
+        immunity_strat: Stratification,
+):
+    """
+    Apply the modification to the immunity stratification to account for immunity to first infection (from the
+    susceptible compartment), i.e. vaccine-induced immunity (or for some models this stratification could be taken
+    to represent past infection prior to the beginning of the simulation period).
+    Args:
+        low_immune_effect: The protection from low immunity
+        high_immune_effect: The protection from high immunity
+        immunity_strat: The immunity stratification, to be modified
+    """
+
+    # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
+    low_non_cross_multiplier = 1.0 - low_immune_effect
+    high_non_cross_multiplier = 1.0 - high_immune_effect
+
+    infection_adjustments = {
+        ImmunityStratum.NONE: None,
+        ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
+        ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
+    }
+
+    immunity_strat.set_flow_adjustments(
+        FlowName.INFECTION,
+        infection_adjustments,
+    )
+
+
+def adjust_susceptible_infection_without_strains_wpro(
         immune_effect: float,
         immunity_strat: Stratification,
 ):
@@ -88,8 +120,8 @@ def adjust_susceptible_infection_without_strains(
     """
 
     infection_adjustments = {
-        ImmunityStratum.UNVACCINATED: None,
-        ImmunityStratum.VACCINATED: Multiply(1.0 - immune_effect),
+        ImmunityStratumWPRO.UNVACCINATED: None,
+        ImmunityStratumWPRO.VACCINATED: Multiply(1.0 - immune_effect),
     }
 
     immunity_strat.set_flow_adjustments(
@@ -775,10 +807,10 @@ def set_dynamic_vaccination_flows_wpro(
 
         for compartment in compartments:
             model.add_transition_flow(
-                name=FlowName.VACCINATION,
+                name=FlowName.WITHIN_INFECTIOUS,
                 fractional_rate=tv_vacc_rate,
                 source=compartment,
                 dest=compartment,
-                source_strata={"immunity": ImmunityStratum.UNVACCINATED, "agegroup": agegroup},
-                dest_strata={"immunity": ImmunityStratum.VACCINATED, "agegroup": agegroup},
+                source_strata={"immunity": ImmunityStratumWPRO.UNVACCINATED, "agegroup": agegroup},
+                dest_strata={"immunity": ImmunityStratumWPRO.VACCINATED, "agegroup": agegroup},
             )

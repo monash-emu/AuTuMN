@@ -19,6 +19,7 @@ from .stratifications.immunity import (
     get_immunity_strat,
     get_immunity_strat_wpro,
     adjust_susceptible_infection_without_strains,
+    adjust_susceptible_infection_without_strains_wpro,
     adjust_susceptible_infection_with_strains,
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
@@ -491,7 +492,7 @@ def build_model(
                 voc_params,
             )
         else:
-            adjust_susceptible_infection_without_strains(ve_against_infection, immunity_strat)
+            adjust_susceptible_infection_without_strains_wpro(ve_against_infection, immunity_strat)
 
         # Apply the immunity stratification
         model.stratify_with(immunity_strat)

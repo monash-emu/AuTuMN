@@ -20,7 +20,7 @@ class FlowName:
     WANING = "waning"
     EARLY_REINFECTION = "early_reinfection"
     LATE_REINFECTION = "late_reinfection"
-
+    VACCINATION = "vaccination"
 
 # Routinely implemented compartments
 BASE_COMPARTMENTS = [

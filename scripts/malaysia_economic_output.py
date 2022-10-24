@@ -46,19 +46,18 @@ def get_mle_outputs(chain, run):
         yield table_df.groupby(BASE_COLS + ["month"], as_index=False).sum()
 
 
-def output_files(file_type, df):
-    output = BASE_COLS + ["month"] if file_type == "scenario" else BASE_COLS
-    df = df.sort_values(by=output)
-    cols_to_output = output + EXTRA_COLS + list(df.columns[df.columns.str.contains("abs_diff")])
+def output_files(file_type, cols_to_output, df):
     df = df[cols_to_output]
-
     for scenario in SCENARIOS:
         required_outputs = df.loc[(df["scenario"] == scenario)]
         required_outputs.to_csv(f"{Path.cwd()}/{file_type}_{scenario}.csv", index=False)
 
 
 df = pd.concat(get_full_derived_outputs())
-output_files("sensitivity_scenario", df)
+df = df.sort_values(by=BASE_COLS)
+cols_to_output = BASE_COLS + EXTRA_COLS + list(df.columns[df.columns.str.contains("abs_diff")])
+
+output_files("sensitivity_scenario", cols_to_output, df)
 
 
 mr = ManagedRun(run_id)
@@ -74,4 +73,25 @@ chain, run = tuple(*chain_run)
 
 
 df = pd.concat(get_mle_outputs(chain, run))
-output_files("scenario", df)
+df = df.sort_values(by=BASE_COLS + ["month"])
+
+base_columns = [
+    "notifications",
+    "hospital_admissions",
+    "infection_deaths",
+    "hospital_occupancy",
+    "non_hosp_notifications",
+    "icu_admissions",
+    "icu_occupancy",
+]
+
+cols_to_output = [
+    df_col
+    for col in base_columns
+    for df_col in df.columns
+    if col in df_col and "abs_diff" not in df_col
+]
+cols_to_output = BASE_COLS + ["month"] + EXTRA_COLS + cols_to_output
+
+
+output_files("scenario", cols_to_output, df)

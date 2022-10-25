@@ -320,7 +320,7 @@ class AgeStratification(BaseModel):
 
 
 class VaccineEffects(BaseModel):
-    ve_infection: float
+    ve_infection: Optional[float]
     vaccine_model: str
     ve_hospitalisation: Optional[float]
     ve_death: Optional[float]

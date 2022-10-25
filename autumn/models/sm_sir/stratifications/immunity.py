@@ -495,7 +495,7 @@ def apply_reported_vacc_coverage_with_booster(
         dynamic_strata_distributions =  get_immune_strata_distributions_from_fixed_increment(historical_vacc_data, extra_coverage, model_end_time, booster_effect_duration, thinning)
 
         # Add transition flows to the models
-        add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, "all_ages")    
+        add_dynamic_immunity_to_model(compartment_types, dynamic_strata_distributions, model, "all_ages")
 
 
 def get_historical_vacc_data(iso3, region, model_start_time, start_immune_prop, start_prop_high_among_immune) -> pd.DataFrame:
@@ -736,9 +736,6 @@ def add_dynamic_immunity_to_model(
         strata_distributions: pd.DataFrame,
         model: CompartmentalModel,
         agegroup: str,
-        age_pops: Optional[pd.Series],
-        iso3: Optional[str],
-        vaccine_model: str
 ):
     """
     Use the dynamic flow processes to control the distribution of the population by vaccination status.
@@ -748,40 +745,21 @@ def add_dynamic_immunity_to_model(
         strata_distributions: The target proportions at each time point
         model: The model to be adapted
         agegroup: Relevant agegroup for vaccination flow. 
-        iso3: Country ISO3 code
-        age_pops: Population size of modelled age groups
-        vaccine_model: if vaccine model is WPRO it is unvaccinated and fully vaccinated model
+
     """
 
-    if vaccine_model == "WPRO":
-        # Get vaccination coverage data and determine time-variant transition rate
-        tv_vacc_rate_funcs = get_time_variant_vaccination_rates(iso3, age_pops)
-
-        # Request transition flows
-        for agegroup, tv_vacc_rate in tv_vacc_rate_funcs.items():
-
-            for compartment in compartments:
-                model.add_transition_flow(
-                    name=FlowName.VACCINATION,
-                    fractional_rate=tv_vacc_rate,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata={"immunity": ImmunityStratum.UNVACCINATED, "agegroup": agegroup},
-                    dest_strata={"immunity": ImmunityStratum.VACCINATED, "agegroup": agegroup},
-                )
-    else:
-        sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
-        age_filter = {} if agegroup == "all_ages" else {"agegroup": agegroup}
-        for comp in compartments:
-            for transition, strata in ACTIVE_FLOWS.items():
-                model.add_transition_flow(
-                    transition,
-                    sc_functions[transition],
-                    comp,
-                    comp,
-                    source_strata={"immunity": strata[0], **age_filter},
-                    dest_strata={"immunity": strata[1], **age_filter},
-                )
+    sc_functions = calculate_transition_rates_from_dynamic_props(strata_distributions, ACTIVE_FLOWS)
+    age_filter = {} if agegroup == "all_ages" else {"agegroup": agegroup}
+    for comp in compartments:
+        for transition, strata in ACTIVE_FLOWS.items():
+            model.add_transition_flow(
+               transition,
+               sc_functions[transition],
+               comp,
+               comp,
+               source_strata={"immunity": strata[0], **age_filter},
+               dest_strata={"immunity": strata[1], **age_filter},
+            )
 
 
 def set_dynamic_vaccination_flows_wpro(

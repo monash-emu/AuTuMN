@@ -233,3 +233,5 @@ voc_emergence: null # Emergence of Variants of Concern
 vaccine_effects:
   ve_hospitalisation: null
   ve_death: null
+  vaccine_model: sm_sir
+  ve_infection: null

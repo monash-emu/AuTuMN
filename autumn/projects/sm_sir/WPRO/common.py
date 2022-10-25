@@ -9,8 +9,8 @@ def get_WPRO_priors(variant_times):
         UniformPrior("infectious_seed", (1000, 10000)),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
         UniformPrior("sojourns.latent.total_time", (2, 12)),
-        # UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (variant_times[1]-150, variant_times[1]+100)),
-        # UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.8, 3))
+        UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (variant_times[1]-150, variant_times[1]+100)),
+        UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.8, 3))
     ]
     return priors
 

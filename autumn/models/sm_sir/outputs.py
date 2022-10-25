@@ -6,7 +6,7 @@ from numba import jit
 
 from autumn.model_features.outputs import OutputsBuilder
 from autumn.models.sm_sir.parameters import TimeDistribution, VocComponent, AgeSpecificProps
-from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum
+from .constants import IMMUNITY_STRATA, Compartment, ClinicalStratum, IMMUNITY_STRATA_WPRO, ImmunityStratumWPRO
 from autumn.core.utils.utils import weighted_average, get_apply_odds_ratio_to_prop
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 
@@ -67,7 +67,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
             clinical_strata: List[str],
             strain_strata: List[str],
             incidence_flow: str,
-            request_incidence_by_age: bool
+            request_incidence_by_age: bool,
+            vaccine_model: str
     ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
@@ -81,6 +82,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             strain_strata: The modelled strains, or None if model is not stratified by strain
             incidence_flow: The name of the flow representing incident cases
             request_incidence_by_age: Whether to save outputs for incidence by age
+            vaccine_model: to differenrtiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
 
         """
 
@@ -89,6 +91,10 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Stratified
         detected_incidence_sources = []  # Collect detected incidence unstratified for notifications calculation
+        if vaccine_model == "WPRO":
+            immunity_strata_type = IMMUNITY_STRATA_WPRO
+        else:
+            immunity_strata_type = IMMUNITY_STRATA
 
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
@@ -96,7 +102,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
             age_incidence_sources = []
 
-            for immunity_stratum in IMMUNITY_STRATA:
+            for immunity_stratum in immunity_strata_type:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
                 immunity_filter = {"immunity": immunity_stratum}
 
@@ -187,6 +193,9 @@ class SmSirOutputsBuilder(OutputsBuilder):
             time_from_onset_to_death: TimeDistribution,
             voc_params: Optional[Dict[str, VocComponent]],
             request_infection_deaths_by_age: bool,
+            vaccine_model: str,
+            ve_death: float
+
     ):
         """
         Request infection death-related outputs.
@@ -201,7 +210,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
             time_from_onset_to_death: Details of the statistical distribution for the time to death
             voc_params: The parameters pertaining to the VoCs being implemented in the model
             request_infection_deaths_by_age: Whether to save outputs for infection deaths by age
-
+            vaccine_model: to differenrtiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
+            ve_death: Vaccine efficacy against mortality
         """
 
         cfr_request = cfr_prop_requests.values
@@ -210,19 +220,29 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Get the adjustments to the hospitalisation rates according to immunity status
         source_immunity_dist = cfr_prop_requests.source_immunity_distribution
         source_immunity_protection = cfr_prop_requests.source_immunity_protection
-        immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
+
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_death, model_times)
 
         # Request infection deaths for each age group
         infection_deaths_sources = []
+        if vaccine_model == "WPRO":
+            immunity_strata_type = IMMUNITY_STRATA_WPRO
+            immune_death_modifiers = {
+                ImmunityStratumWPRO.UNVACCINATED: 1.,
+                ImmunityStratumWPRO.VACCINATED: 1. - ve_death,
+            }
+        else:
+            immunity_strata_type = IMMUNITY_STRATA
+            immune_death_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
+
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
             age_infection_deaths_sources = []
 
-            for immunity_stratum in IMMUNITY_STRATA:
+            for immunity_stratum in immunity_strata_type:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
                 # Adjust CFR proportions for immunity
@@ -280,6 +300,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
             voc_params: Optional[Dict[str, VocComponent]],
             request_hospital_admissions_by_age: bool,
             request_hospital_occupancy_by_age: bool,
+            vaccine_model: str,
+            ve_hospitalisation: float,
     ):
         """
         Request hospitalisation-related outputs.
@@ -296,6 +318,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             voc_params: The parameters pertaining to the VoCs being implemented in the model
             request_hospital_admissions_by_age: Whether to save outputs for hospital admissions by age
             request_hospital_occupancy_by_age: Whether to save outputs for hospital occupancy by age
+            vaccine_model: to differenrtiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
 
         """
 
@@ -305,7 +328,17 @@ class SmSirOutputsBuilder(OutputsBuilder):
         # Get the adjustments to the hospitalisation rates according to immunity status
         source_immunity_dist = hosp_prop_requests.source_immunity_distribution
         source_immunity_protection = hosp_prop_requests.source_immunity_protection
-        immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
+        if vaccine_model == "WPRO":
+            immunity_strata_type = IMMUNITY_STRATA_WPRO
+            # Prepare immunity modifiers
+            immune_hosp_modifiers = {
+                ImmunityStratumWPRO.UNVACCINATED: 1.,
+                ImmunityStratumWPRO.VACCINATED: 1. - ve_hospitalisation,
+            }
+        else:
+            immunity_strata_type = IMMUNITY_STRATA
+            immune_hosp_modifiers = get_immunity_prop_modifiers(source_immunity_dist, source_immunity_protection)
+
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
         interval_distri_densities = precompute_density_intervals(time_from_onset_to_hospitalisation, model_times)
@@ -316,12 +349,14 @@ class SmSirOutputsBuilder(OutputsBuilder):
 
         # Request hospital admissions for each age group
         hospital_admissions_sources = []
+
+
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
             age_hospital_admissions_sources = []
 
-            for immunity_stratum in IMMUNITY_STRATA:
+            for immunity_stratum in immunity_strata_type:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
                 # Adjust the hospitalisation proportions for immunity
@@ -393,6 +428,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
         age_groups: List[int],
         request_icu_admissions_by_age: bool,
         request_icu_occupancy_by_age: bool,
+        vaccine_model: str
     ):
         """
         Request ICU-related outputs.
@@ -407,7 +443,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             age_groups: Modelled age group lower breakpoints
             request_icu_admissions_by_age: Whether to save outputs for ICU admissions by age
             request_icu_occupancy_by_age: Whether to save outputs for ICU occupancy by age
-
+            vaccine_model: to differenrtiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
         """
 
         # Pre-compute the probabilities of event occurrence within each time interval between model times
@@ -418,12 +454,18 @@ class SmSirOutputsBuilder(OutputsBuilder):
         icu_occupancy_func = make_calc_occupancy_func(probas_stay_greater_than)
 
         icu_admissions_sources = []
+
+        if vaccine_model == "WPRO":
+            immunity_strata_type = IMMUNITY_STRATA_WPRO
+        else:
+            immunity_strata_type = IMMUNITY_STRATA
+
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
 
             age_icu_admissions_sources = []
 
-            for immunity_stratum in IMMUNITY_STRATA:
+            for immunity_stratum in immunity_strata_type:
                 immunity_string = f"Ximmunity_{immunity_stratum}"
 
                 for strain in strain_strata:

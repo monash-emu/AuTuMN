@@ -69,6 +69,8 @@ is_dynamic_mixing_matrix: true
 vaccine_effects:
   vaccine_model: WPRO
   ve_infection: 0.8
+  ve_hospitalisation: 0.5 # need to see how this works with sm_sir model
+  ve_death: 0.5
 
 activate_random_process: false
 

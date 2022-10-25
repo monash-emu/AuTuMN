@@ -229,3 +229,7 @@ request_icu_occupancy_by_age: false
 request_infection_deaths_by_age: false
 
 voc_emergence: null # Emergence of Variants of Concern
+
+vaccine_effects:
+  ve_hospitalisation: null
+  ve_death: null

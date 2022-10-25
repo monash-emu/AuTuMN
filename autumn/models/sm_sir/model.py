@@ -649,7 +649,8 @@ def build_model(
         clinical_strata,
         strain_strata,
         incidence_flow,
-        params.request_incidence_by_age
+        params.request_incidence_by_age,
+        params.vaccine_effects.vaccine_model
     )
 
     outputs_builder.request_notifications(
@@ -668,6 +669,8 @@ def build_model(
         voc_params,
         params.request_hospital_admissions_by_age,
         params.request_hospital_occupancy_by_age,
+        params.vaccine_effects.vaccine_model,
+        params.vaccine_effects.ve_hospitalisation,
     )
     outputs_builder.request_icu_outputs(
         params.prop_icu_among_hospitalised,
@@ -679,6 +682,8 @@ def build_model(
         age_groups,
         params.request_icu_admissions_by_age,
         params.request_icu_occupancy_by_age,
+        params.vaccine_effects.vaccine_model,
+
     )
     outputs_builder.request_infection_deaths(
         model_times,
@@ -690,6 +695,8 @@ def build_model(
         time_to_event_params.death,
         voc_params,
         params.request_infection_deaths_by_age,
+        params. vaccine_effects.vaccine_model,
+        params.vaccine_effects. ve_death
     )
     outputs_builder.request_recovered_proportion(compartment_types)
     if params.activate_random_process:

@@ -801,13 +801,12 @@ def set_dynamic_vaccination_flows_wpro(
     """
     # Get vaccination coverage data and determine time-variant transition rate
     tv_vacc_rate_funcs = get_time_variant_vaccination_rates(iso3, age_pops)
-
     # Request transition flows
     for agegroup, tv_vacc_rate in tv_vacc_rate_funcs.items():
 
         for compartment in compartments:
             model.add_transition_flow(
-                name=FlowName.WITHIN_INFECTIOUS,
+                name=FlowName.VACCINATION,
                 fractional_rate=tv_vacc_rate,
                 source=compartment,
                 dest=compartment,

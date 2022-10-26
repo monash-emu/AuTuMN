@@ -422,7 +422,7 @@ class VocComponent(BaseModel):
         if values["starting_strain"]:
             multiplier = values["contact_rate_multiplier"]
             msg = f"Starting or 'wild type' strain must have a contact rate multiplier of one: {multiplier}"
-            assert multiplier == 1.0, msg
+            #assert multiplier == 1.0, msg
         return values
 
     @validator("icu_multiplier", pre=True, allow_reuse=True)

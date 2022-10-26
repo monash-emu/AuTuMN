@@ -89,3 +89,9 @@ immunity_stratification:
 age_stratification:
   cfr:
     multiplier: 0.01
+
+vaccine_effects:
+  vaccine_model: WPRO
+  ve_infection: 0.8
+  ve_hospitalisation: 0.5
+  ve_death: 0.5

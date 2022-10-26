@@ -19,7 +19,6 @@ from .stratifications.immunity import (
     get_immunity_strat,
     get_immunity_strat_wpro,
     adjust_susceptible_infection_without_strains,
-    adjust_susceptible_infection_without_strains_wpro,
     adjust_susceptible_infection_with_strains,
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
@@ -478,21 +477,30 @@ def build_model(
 
         # Adjust all transmission flows for immunity status and strain status (when relevant)
         ve_against_infection = vaccine_effects_params.ve_infection
+        reinfection_flows = [FlowName.EARLY_REINFECTION] if voc_params else []
         if voc_params:
             msg = "Strain stratification not present in model"
             assert "strain" in [strat.name for strat in model._stratifications], msg
             adjust_susceptible_infection_with_strains(
-                ve_against_infection,
-                immunity_strat,
-                voc_params,
+                immunity_strat=immunity_strat,
+                voc_params=voc_params,
+                vaccine_model=vaccine_effects_params.vaccine_model,
+                immune_effect=ve_against_infection,
             )
             adjust_reinfection_with_strains(
-                ve_against_infection,
-                immunity_strat,
-                voc_params,
+                immune_effect=ve_against_infection,
+                immunity_strat=immunity_strat,
+                voc_params=voc_params,
+                reinfection_flows=reinfection_flows,
+                vaccine_model= vaccine_effects_params.vaccine_model,
             )
         else:
-            adjust_susceptible_infection_without_strains_wpro(ve_against_infection, immunity_strat)
+            adjust_susceptible_infection_without_strains(
+                vaccine_model=vaccine_effects_params.vaccine_model,
+                immune_effect=ve_against_infection,
+                immunity_strat=immunity_strat,
+                voc_params=voc_params,
+            )
 
         # Apply the immunity stratification
         model.stratify_with(immunity_strat)
@@ -522,24 +530,29 @@ def build_model(
             # implemented yet - but at this stage we assume we don't want it to
             msg = "Strain stratification not present in model"
             assert "strain" in [strat.name for strat in model._stratifications], msg
+
             adjust_susceptible_infection_with_strains(
-                immunity_low_risk_reduction,
-                immunity_high_risk_reduction,
-                immunity_strat,
-                voc_params,
+                low_immune_effect=immunity_low_risk_reduction,
+                high_immune_effect=immunity_high_risk_reduction,
+                immunity_strat=immunity_strat,
+                voc_params=voc_params,
+                vaccine_model=vaccine_effects_params.vaccine_model
             )
             adjust_reinfection_with_strains(
-                immunity_low_risk_reduction,
-                immunity_high_risk_reduction,
-                immunity_strat,
-                reinfection_flows,
-                voc_params,
+                low_immune_effect=immunity_low_risk_reduction,
+                high_immune_effect=immunity_high_risk_reduction,
+                immunity_strat=immunity_strat,
+                voc_params=voc_params,
+                reinfection_flows=reinfection_flows,
+                vaccine_model=vaccine_effects_params.vaccine_model
+
             )
         else:
             adjust_susceptible_infection_without_strains(
-                immunity_low_risk_reduction,
-                immunity_high_risk_reduction,
-                immunity_strat,
+                low_immune_effect=immunity_low_risk_reduction,
+                high_immune_effect=immunity_high_risk_reduction,
+                immunity_strat=immunity_strat,
+                vaccine_model=vaccine_effects_params.vaccine_model
             )
             adjust_reinfection_without_strains(
                 immunity_low_risk_reduction,

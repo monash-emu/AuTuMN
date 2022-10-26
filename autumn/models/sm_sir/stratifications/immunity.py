@@ -74,9 +74,12 @@ def set_dynamic_vaccination_flows(
 
 
 def adjust_susceptible_infection_without_strains(
-        low_immune_effect: float,
-        high_immune_effect: float,
+        vaccine_model: str,
         immunity_strat: Stratification,
+        immune_effect=0.0,
+        low_immune_effect=0.0,
+        high_immune_effect=0.0
+
 ):
     """
     Apply the modification to the immunity stratification to account for immunity to first infection (from the
@@ -86,43 +89,25 @@ def adjust_susceptible_infection_without_strains(
         low_immune_effect: The protection from low immunity
         high_immune_effect: The protection from high immunity
         immunity_strat: The immunity stratification, to be modified
-    """
-
-    # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
-    low_non_cross_multiplier = 1.0 - low_immune_effect
-    high_non_cross_multiplier = 1.0 - high_immune_effect
-
-    infection_adjustments = {
-        ImmunityStratum.NONE: None,
-        ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
-        ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
-    }
-
-    immunity_strat.set_flow_adjustments(
-        FlowName.INFECTION,
-        infection_adjustments,
-    )
-
-
-def adjust_susceptible_infection_without_strains_wpro(
-        immune_effect: float,
-        immunity_strat: Stratification,
-):
-    """
-    Apply the modification to the immunity stratification to account for immunity to first infection (from the
-    susceptible compartment), i.e. vaccine-induced immunity (or for some models this stratification could be taken
-    to represent past infection prior to the beginning of the simulation period).
-
-    Args:
         immune_effect: The protection from vaccination
-        immunity_strat: The immunity stratification, to be modified
-
+        vaccine_model: to differentiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
     """
+    if vaccine_model == "WPRO":
+        infection_adjustments = {
+            ImmunityStratumWPRO.UNVACCINATED: None,
+            ImmunityStratumWPRO.VACCINATED: Multiply(1.0 - immune_effect),
+        }
+    else:
 
-    infection_adjustments = {
-        ImmunityStratumWPRO.UNVACCINATED: None,
-        ImmunityStratumWPRO.VACCINATED: Multiply(1.0 - immune_effect),
-    }
+        # The infection rate accounting for vaccination-induced immunity (using similar naming as for when we do the same with strains below)
+        low_non_cross_multiplier = 1.0 - low_immune_effect
+        high_non_cross_multiplier = 1.0 - high_immune_effect
+
+        infection_adjustments = {
+            ImmunityStratum.NONE: None,
+            ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
+            ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
+        }
 
     immunity_strat.set_flow_adjustments(
         FlowName.INFECTION,
@@ -131,10 +116,12 @@ def adjust_susceptible_infection_without_strains_wpro(
 
 
 def adjust_susceptible_infection_with_strains(
-        low_immune_effect: float,
-        high_immune_effect: float,
         immunity_strat: Stratification,
         voc_params: Optional[Dict[str, VocComponent]],
+        vaccine_model: str,
+        immune_effect=0.0,
+        low_immune_effect=0.0,
+        high_immune_effect=0.0,
 ):
     """
     Apply the modification to the immunity stratification to account for immunity to first infection (from the
@@ -147,6 +134,8 @@ def adjust_susceptible_infection_with_strains(
         high_immune_effect: The protection from high immunity
         immunity_strat: The immunity stratification, to be modified
         voc_params: The parameters relating to the VoCs being implemented
+        immune_effect: The protection from immunity (associated with WPRO model)
+        vaccine_model: to differentiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
 
     """
 
@@ -155,15 +144,25 @@ def adjust_susceptible_infection_with_strains(
         # The vaccination-specific immunity that will be retained after allowing for the strain's immune escape against vaccination-induced immunity
         non_cross_effect = 1.0 - voc_params[infecting_strain].immune_escape
 
-        # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
-        low_non_cross_multiplier = 1.0 - low_immune_effect * non_cross_effect
-        high_non_cross_multiplier = 1.0 - high_immune_effect * non_cross_effect
+        if vaccine_model == "WPRO":
+            # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
+            non_cross_multiplier = 1.0 - immune_effect * non_cross_effect
 
-        infection_adjustments = {
-            ImmunityStratum.NONE: None,
-            ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
-            ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
-        }
+            infection_adjustments = {
+                ImmunityStratumWPRO.UNVACCINATED: None,
+                ImmunityStratumWPRO.VACCINATED: Multiply(non_cross_multiplier),
+            }
+
+        else:
+            # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
+            low_non_cross_multiplier = 1.0 - low_immune_effect * non_cross_effect
+            high_non_cross_multiplier = 1.0 - high_immune_effect * non_cross_effect
+
+            infection_adjustments = {
+                ImmunityStratum.NONE: None,
+                ImmunityStratum.LOW: Multiply(low_non_cross_multiplier),
+                ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier),
+            }
 
         immunity_strat.set_flow_adjustments(
             FlowName.INFECTION,
@@ -214,11 +213,14 @@ def adjust_reinfection_without_strains(
 
 
 def adjust_reinfection_with_strains(
-        low_immune_effect: float,
-        high_immune_effect: float,
         immunity_strat: Stratification,
         reinfection_flows: List[str],
         voc_params: Optional[Dict[str, VocComponent]],
+        vaccine_model: str,
+        immune_effect=0.0,
+        low_immune_effect=0.0,
+        high_immune_effect=0.0,
+
 ):
     """
     Adjust the rate of reinfection for immunity, in cases in which we do need to worry about cross-strain immunity, so
@@ -231,6 +233,8 @@ def adjust_reinfection_with_strains(
         immunity_strat: The immunity stratification, to be modified
         reinfection_flows: The names of the transition flows representing reinfection
         voc_params: The parameters relating to the VoCs being implemented
+        immune_effect: The infection protection from vaccine immunity associated witht he WPRO model
+        vaccine_model: to differentiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
 
     """
 
@@ -243,6 +247,8 @@ def adjust_reinfection_with_strains(
         low_non_cross_multiplier = 1.0 - low_immune_effect * non_cross_effect
         high_non_cross_multiplier = 1.0 - high_immune_effect * non_cross_effect
 
+        non_cross_multiplier = 1.0 - immune_effect * non_cross_effect # for the WPRO model
+
         # Considering people recovered from infection with each modelled strain
         for infected_strain in voc_params:
 
@@ -252,12 +258,19 @@ def adjust_reinfection_with_strains(
                 # Cross protection from previous infection with the "infected" strain against the "infecting" strain
                 cross_effect = 1.0 - getattr(voc_params[infected_strain].cross_protection[infecting_strain], flow)
 
-                # Combine the two mechanisms of protection
-                reinfection_adjustments = {
-                    ImmunityStratum.NONE: Multiply(cross_effect),
-                    ImmunityStratum.LOW: Multiply(low_non_cross_multiplier * cross_effect),
-                    ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier * cross_effect),
-                }
+                if vaccine_model == "WPRO":
+                    # Combine the two mechanisms of protection
+                    reinfection_adjustments = {
+                        ImmunityStratumWPRO.UNVACCINATED: Multiply(cross_effect),
+                        ImmunityStratumWPRO.VACCINATED: Multiply(non_cross_multiplier * cross_effect),
+                    }
+                else:
+                    # Combine the two mechanisms of protection
+                    reinfection_adjustments = {
+                        ImmunityStratum.NONE: Multiply(cross_effect),
+                        ImmunityStratum.LOW: Multiply(low_non_cross_multiplier * cross_effect),
+                        ImmunityStratum.HIGH: Multiply(high_non_cross_multiplier * cross_effect),
+                    }
 
                 immunity_strat.set_flow_adjustments(
                     flow,
@@ -266,6 +279,50 @@ def adjust_reinfection_with_strains(
                     dest_strata={"strain": infecting_strain},
                 )
 
+
+# def adjust_reinfection_with_strains_wpro(
+#     immune_effect: float,
+#     immunity_strat: Stratification,
+#     voc_params: Dict[str, VocComponent],
+#     reinfection_flows: List[str],
+# ):
+#     """
+#     Adjust the rate of reinfection for immunity, in cases in which we do need to worry about cross-strain immunity, so
+#     we have to consider every possible combination of cross-immunity between strains (including the immunity conferred
+#     by infection with a certain strain and reinfection with that same strain).
+#     Args:
+#         immune_effect: The infection protection from vaccine immunity
+#         immunity_strat: The immunity stratification, to be modified
+#         voc_params: The parameters relating to the VoCs being implemented
+#     """
+#
+#     for infecting_strain in voc_params:
+#         for flow in reinfection_flows:
+#             # The vaccination-specific immunity that will be retained after allowing for the strain's immune escape against vaccination-induced immunity
+#             non_cross_effect = 1.0 - voc_params[infecting_strain].immune_escape
+#
+#             # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
+#             non_cross_multiplier = 1.0 - immune_effect * non_cross_effect
+#
+#             # Considering people recovered from infection with each modelled strain
+#             for infected_strain in voc_params:
+#
+#                 # Cross protection from previous infection with the "infected" strain against the "infecting" strain
+#                 cross_effect_multiplier = 1.0 - getattr(voc_params[infected_strain].cross_protection[infecting_strain], flow)
+#
+#                 # Combine the two mechanisms of protection
+#                 reinfection_adjustments = {
+#                     ImmunityStratumWPRO.UNVACCINATED: Multiply(cross_effect_multiplier),
+#                     ImmunityStratumWPRO.VACCINATED: Multiply(non_cross_multiplier * cross_effect_multiplier),
+#                 }
+#
+#                 immunity_strat.set_flow_adjustments(
+#                     flow,
+#                     reinfection_adjustments,
+#                     source_strata={"strain": infected_strain},
+#                     dest_strata={"strain": infecting_strain},
+#                 )
+#
 
 def get_immunity_strat(
         compartments: List[str],

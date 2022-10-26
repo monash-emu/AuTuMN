@@ -210,7 +210,7 @@ class SmSirOutputsBuilder(OutputsBuilder):
             time_from_onset_to_death: Details of the statistical distribution for the time to death
             voc_params: The parameters pertaining to the VoCs being implemented in the model
             request_infection_deaths_by_age: Whether to save outputs for infection deaths by age
-            vaccine_model: to differenrtiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
+            vaccine_model: to differentiate of it is sm_sir default vaccination or for WPRO model unvaccinated and vaccinated classification
             ve_death: Vaccine efficacy against mortality
         """
 

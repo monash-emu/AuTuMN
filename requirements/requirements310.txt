@@ -55,7 +55,7 @@ fpdf2
 gitpython
 
 # Testing
-pytest
+pytest==7.1.3
 pytest-parallel
 pytest-benchmark
 isort

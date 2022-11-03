@@ -7,8 +7,8 @@ population:
 ref_mixing_iso3: CHN
 
 time:
-  end: 1200.0
-  start: 480.0
+  end: 850.0
+  start: 470.0
 
 voc_emergence:
   wild_type:
@@ -36,11 +36,11 @@ voc_emergence:
       seed_duration: 1.0
     contact_rate_multiplier: 100.0
     immune_escape: 0.2
-    hosp_protection: 0.75
-    death_protection: 0.98
+    hosp_protection: 0.85
+    death_protection: 0.9
     relative_latency: 0.667
     relative_active_period: 0.7
-    icu_multiplier: 0.55
+    icu_multiplier: 0.4
     cross_protection:
       wild_type:
         early_reinfection: 1.0
@@ -68,12 +68,12 @@ is_dynamic_mixing_matrix: true
 
 vaccine_effects:
   vaccine_model: WPRO
-  ve_infection: 0.7
-  ve_hospitalisation: 0.5
-  ve_death: 0.5
+  ve_infection: 0.4
+  ve_hospitalisation: 0.85
+  ve_death: 0.95
 
 activate_random_process: false
 
 age_stratification:
   cfr:
-    multiplier: 0.8
+    multiplier: 0.5

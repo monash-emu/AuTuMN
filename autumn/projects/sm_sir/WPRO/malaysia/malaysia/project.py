@@ -36,7 +36,7 @@ calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 
 variant_times = variant_start_time(["delta", "omicron"], "malaysia")
 priors = get_WPRO_priors(variant_times)
-priors = priors + [UniformPrior("age_stratification.cfr.multiplier", (0.001, 0.5)),
+priors = priors + [UniformPrior("age_stratification.cfr.multiplier", (0.2, 0.8)),
                    UniformPrior("contact_rate", (0.008, 0.3))]
 
 targets = get_tartgets(calibration_start_time, "malaysia", "malaysia")

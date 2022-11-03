@@ -10,7 +10,7 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 350.0
+  start: 440.0
 
 voc_emergence:
   wild_type:
@@ -90,6 +90,6 @@ age_stratification:
 
 vaccine_effects:
   vaccine_model: WPRO
-  ve_infection: 0.8
+  ve_infection: 0.5
   ve_hospitalisation: 0.5
   ve_death: 0.5

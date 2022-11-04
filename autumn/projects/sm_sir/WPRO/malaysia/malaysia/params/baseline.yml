@@ -11,7 +11,7 @@ time:
   start: 470.0
 
 voc_emergence:
-  wild_type:
+  delta:
     starting_strain: true
     seed_prop: 1.0
     new_voc_seed: null
@@ -21,7 +21,7 @@ voc_emergence:
     death_protection: 0.0
     icu_multiplier: 1.0
     cross_protection:
-      wild_type:
+      delta:
         early_reinfection: 1.0
         late_reinfection: 1.0
       omicron:
@@ -42,7 +42,7 @@ voc_emergence:
     relative_active_period: 0.7
     icu_multiplier: 0.4
     cross_protection:
-      wild_type:
+      delta:
         early_reinfection: 1.0
         late_reinfection: 0.0
       omicron:

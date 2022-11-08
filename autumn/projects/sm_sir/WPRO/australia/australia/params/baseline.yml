@@ -62,10 +62,10 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 110685.
+      start_time: 750.
       entry_rate: 10.
       seed_duration: 1.
-    contact_rate_multiplier: 3.75
+    contact_rate_multiplier: 1.75
     immune_escape: 0.
     hosp_protection: 0.
     death_protection: 0.
@@ -76,10 +76,10 @@ voc_emergence:
         late_reinfection: 0.0
       omicron:
         early_reinfection: 1.0
-        late_reinfection: 1.0
-      ba_2:
-        early_reinfection: 1.0
         late_reinfection: 0.0
+      ba_2:
+        early_reinfection: 0.1
+        late_reinfection: 0.
 
 mobility:
   google_mobility_locations:

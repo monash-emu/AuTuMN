@@ -38,7 +38,9 @@ variant_times = variant_start_time(["delta", "omicron"], "australia")
 priors = get_WPRO_priors(variant_times)
 
 priors = priors + [UniformPrior("age_stratification.cfr.multiplier", (0.001, 0.1)),
-                   UniformPrior("contact_rate", (0.01, 0.15))]
+                   UniformPrior("contact_rate", (0.01, 0.15)),
+                   UniformPrior("voc_emergence.ba_2.contact_rate_multiplier", (1, 5)),
+                   UniformPrior("voc_emergence.ba_2.cross_protection.ba_2.early_reinfection", (0.1, 0.5))]
 targets = get_tartgets(calibration_start_time, "australia", "australia")
 
 calibration = Calibration(

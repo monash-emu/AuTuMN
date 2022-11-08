@@ -1,5 +1,5 @@
 age_stratification.cfr.multiplier: 0.015488442042123619
-contact_rate: 0.08696409076121259
+contact_rate: 0.096409076121259
 infectious_seed: 4865.777654733374
 sojourns.latent.total_time: 11.886788095312637
 testing_to_detection.assumed_cdr_parameter: 0.09933564153873006

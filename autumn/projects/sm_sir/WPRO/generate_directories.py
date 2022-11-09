@@ -32,30 +32,33 @@ for country in WPR_Countries:
     project_file_path = os.path.join(folder_path, file_name)
     project_file_path = f"{project_file_path}"
 
-    # writing generate_project_WPR into country specific project file
-    source_path = build_rel_path("generate_project_WPR.py")
-    source_path = f"{source_path}"
-    shutil.copy(source_path, project_file_path)
+    if not os.path.exists(project_file_path):
+        # writing generate_project_WPR into country specific project file
+        source_path = build_rel_path("generate_project_WPR.py")
+        source_path = f"{source_path}"
+        shutil.copy(source_path, project_file_path)
 
-    # in each project file replacing the country name to corresponding country
-    with open(project_file_path, 'r+') as project_file:
-        read_file = project_file.read()
-        project_file.seek(0)
+        # in each project file replacing the country name to corresponding country
+        with open(project_file_path, 'r+') as project_file:
+            read_file = project_file.read()
+            project_file.seek(0)
 
-        country_text = country
-        if '-' in country_text:
-            country_text = country_text.replace('-', '_')
-        region_name = country_text.upper() # get the corresponding iso3 code
+            country_text = country
+            if '-' in country_text:
+                country_text = country_text.replace('-', '_')
+            region_name = country_text.upper() # get the corresponding iso3 code
 
-        read_file = re.sub("country_name", f'"{country}"', read_file)
-        read_file = re.sub("COUNTRY_NAME", f"{region_name}", read_file)
-        project_file.write(read_file)
-        project_file.truncate()
+            read_file = re.sub("country_name", f'"{country}"', read_file)
+            read_file = re.sub("COUNTRY_NAME", f"{region_name}", read_file)
+            project_file.write(read_file)
+            project_file.truncate()
 
     country_text = country
 
     if country == "south-korea":
         iso3_name = "KOR"
+    elif country == "vietnam":
+        iso3_name = "VNM"
     else:
         if '-' in country_text:
             country_text = country_text.replace('-', " ")

@@ -6,7 +6,7 @@ class Region:
     WPRO_MONGOLIA = "wpro_mongolia"
     WPRO_NEW_ZEALAND = "wpro_new-zealand"
     WPRO_SOUTH_KOREA = "wpro_south-korea"
-    WPRO_VIET_NAM = "wpro_viet-nam"
+    WPRO_VIETNAM = "wpro_vietnam"
     WPRO_SINGAPORE = "wpro_singapore"
     WPRO_JAPAN = "wpro_japan"
     PHILIPPINES = "philippines"
@@ -53,7 +53,7 @@ class Region:
         WPRO_MONGOLIA,
         WPRO_NEW_ZEALAND,
         WPRO_SOUTH_KOREA,
-        WPRO_VIET_NAM,
+        WPRO_VIETNAM,
         WPRO_SINGAPORE,
         WPRO_JAPAN,
         PHILIPPINES,
@@ -122,7 +122,8 @@ class Region:
     WPRO_REGIONS = [
         WPRO_AUSTRALIA,
         WPRO_PHILIPPINES,
-        WPRO_MALAYSIA
+        WPRO_MALAYSIA,
+        WPRO_VIETNAM
     ]
 
     SCHOOL_PROJECT_REGIONS = [PHILIPPINES, FRANCE, AUSTRALIA]

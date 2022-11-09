@@ -4,12 +4,14 @@ WPR_countries = {
     "region": ["malaysia",
                "australia",
                "philippines",
+               "vietnam"
 
 ],
 
     "path": ["autumn.projects.sm_sir.WPRO.malaysia.malaysia.project",
              "autumn.projects.sm_sir.WPRO.australia.australia.project",
              "autumn.projects.sm_sir.WPRO.philippines.philippines.project",
+             "autumn.projects.sm_sir.WPRO.vietnam.vietnam.project",
              ]
 }
 

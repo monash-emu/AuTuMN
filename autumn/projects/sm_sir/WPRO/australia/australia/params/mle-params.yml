@@ -1,7 +1,9 @@
-age_stratification.cfr.multiplier: 0.015488442042123619
-contact_rate: 0.096409076121259
-infectious_seed: 4865.777654733374
-sojourns.latent.total_time: 11.886788095312637
-testing_to_detection.assumed_cdr_parameter: 0.09933564153873006
-voc_emergence.omicron.contact_rate_multiplier: 0.9539238766882652
-voc_emergence.omicron.new_voc_seed.start_time: 655.6215220256431
+age_stratification.cfr.multiplier: 0.012608536301382957
+contact_rate: 0.05531712763023775
+infectious_seed: 1379.9048131647535
+sojourns.latent.total_time: 6.382329188277388
+testing_to_detection.assumed_cdr_parameter: 0.052059406456029765
+voc_emergence.ba_2.contact_rate_multiplier: 4.735590226682746
+voc_emergence.ba_2.cross_protection.ba_2.early_reinfection: 0.48264032115560296
+voc_emergence.omicron.contact_rate_multiplier: 0.9674272148211113
+voc_emergence.omicron.new_voc_seed.start_time: 669.2690045729173

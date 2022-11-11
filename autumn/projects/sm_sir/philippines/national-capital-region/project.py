@@ -13,7 +13,7 @@ from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
 
-def get_scenario_params(pinas_lakas, voc_assumption):
+def get_scenario_params(pinas_lakas, voc_assumption, dropped_mask_compliance):
     pinas_lakas_txt = {
         True: "with increased booster rates", False: "with current booster rates"
     }
@@ -22,13 +22,28 @@ def get_scenario_params(pinas_lakas, voc_assumption):
         "trans": "new more transmissible VoC",
         "ie": "new immune escape VoC"
     }
+    mask_txt = {
+        True: "reduced mask compliance", False: "mask compliance unchanged"
+    }
 
-    description = f"{pinas_lakas_txt[pinas_lakas]} / {voc_txt[voc_assumption]}"
+    description = f"{pinas_lakas_txt[pinas_lakas]} / {voc_txt[voc_assumption]} / {mask_txt[dropped_mask_compliance]}"
     
     sc_param_dict = {
         "description": description,
-        "pinas_lakas": pinas_lakas
+        "pinas_lakas": pinas_lakas,
     }
+
+    if dropped_mask_compliance:
+        sc_param_dict["mobility"] = {
+            "microdistancing": {
+                "behaviour": {
+                    "parameters": {
+                        "times": [1050, 1080],
+                        "values": [.684, .274]
+                    }
+                }
+            }
+        }
     
     if voc_assumption == "trans":
         sc_param_dict["voc_emergence"] = {
@@ -81,19 +96,20 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
 
 scenario_params = []
 for voc_assumption in [None, 'trans', 'ie']:
-    for pinas_lakas in [False, True]:    
-        if voc_assumption is None and not pinas_lakas:
-            continue  # as this is the baseline scenario
-        else:
-            update_params = get_scenario_params(pinas_lakas, voc_assumption)
-            scenario_params.append(baseline_params.update(update_params))
+    for pinas_lakas in [False, True]:  
+        for dropped_mask_compliance in [False, True]: 
+            if voc_assumption is None and not pinas_lakas and not dropped_mask_compliance:
+                continue  # as this is the baseline scenario
+            else:
+                update_params = get_scenario_params(pinas_lakas, voc_assumption, dropped_mask_compliance)
+                scenario_params.append(baseline_params.update(update_params))
 
 param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 priors = [
-    UniformPrior("contact_rate", [0.07, 0.20]),
+    UniformPrior("contact_rate", [0.15, 0.25]),
     UniformPrior("sojourns.active.total_time", [4, 10]),
     UniformPrior("infectious_seed", [1, 400]),
     UniformPrior("testing_to_detection.assumed_cdr_parameter", [0.005, 0.015]),

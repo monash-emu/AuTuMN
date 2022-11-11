@@ -87,6 +87,14 @@ mobility:
         - 0.10
         - 0.10
         - 0.90
+  microdistancing:
+    behaviour:
+      function_type: empiric
+      parameters: 
+        max_effect: .46
+        times: [0.]
+        values: [.684]
+      locations: ["work", "other_locations"]
 
 immunity_stratification:
   prop_immune: 0.2
@@ -156,6 +164,6 @@ future_booster_age_allocation: null
 # future_booster_age_allocation: [60, 50, 25, 15, 0]
 
 requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
-cumulative_start_time: 975  # 1 Sep 2022
+cumulative_start_time: 1050  # 15 Nov 2022
 request_incidence_by_age: True
 request_immune_prop_by_age: True

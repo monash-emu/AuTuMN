@@ -10,20 +10,20 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 450.0
+  start: 440.0
 
 voc_emergence:
-  wild_type:
+  delta:
     starting_strain: true
     seed_prop: 1.0
     new_voc_seed: null
-    contact_rate_multiplier: 1.0
+    contact_rate_multiplier: 0.9
     immune_escape: 0.0
     hosp_protection: 0.0
     death_protection: 0.0
     icu_multiplier: 1.0
     cross_protection:
-      wild_type:
+      delta:
         early_reinfection: 1.0
         late_reinfection: 1.0
       omicron:
@@ -36,15 +36,15 @@ voc_emergence:
       start_time: 700.0
       entry_rate: 10.0
       seed_duration: 1.0
-    contact_rate_multiplier: 100.0
+    contact_rate_multiplier: 2.0
     immune_escape: 0.2
-    hosp_protection: 0.75
-    death_protection: 0.85
+    hosp_protection: 0.5
+    death_protection: 1.0
     relative_latency: 0.6667
     relative_active_period: 1.0
     icu_multiplier: 0.55
     cross_protection:
-      wild_type:
+      delta:
         early_reinfection: 1.0
         late_reinfection: 0.0
       omicron:
@@ -83,3 +83,7 @@ vaccine_effects:
   ve_infection: 0.5
   ve_hospitalisation: 0.5
   ve_death: 0.5
+
+age_stratification:
+  cfr:
+    multiplier: 0.2

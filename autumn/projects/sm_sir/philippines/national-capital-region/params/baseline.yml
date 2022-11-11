@@ -141,14 +141,14 @@ age_stratification:
 booster_effect_duration: 180.
 
 current_daily_rates: 
-  double: 25
-  booster: 7179
+  double: 0.
+  booster: 3776
 
-latest_vacc_coverage:  # (t=966 -> 23Aug2022)
+latest_vacc_coverage:  # (t=1043 -> 8Nov2022)
   double:
-    966: .86
+    1043: .925
   booster: 
-    966: .35
+    1043: .381
 
 future_booster_age_allocation: null
 # future_booster_age_allocation:

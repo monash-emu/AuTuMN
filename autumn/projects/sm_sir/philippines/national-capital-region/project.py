@@ -15,7 +15,7 @@ from autumn.settings import Region, Models
 
 def get_scenario_params(pinas_lakas, voc_assumption):
     pinas_lakas_txt = {
-        True: "with PinasLakas", False: "with current vacc rates"
+        True: "with increased booster rates", False: "with current booster rates"
     }
     voc_txt = {
         None: "no new VoC",
@@ -42,7 +42,7 @@ def get_scenario_params(pinas_lakas, voc_assumption):
             },
             "new_strain": {
                 "new_voc_seed": {
-                    "start_time": 1005.,  # 1 Oct 2022
+                    "start_time": 1050.,  # 15 Nov 2022
                 },
                 "contact_rate_multiplier": 2.,
                 "immune_escape": 0.
@@ -60,7 +60,7 @@ def get_scenario_params(pinas_lakas, voc_assumption):
             },
             "new_strain": {
                 "new_voc_seed": {
-                    "start_time": 1005.,  # 1 Oct 2022
+                    "start_time": 1050.,  # 15 Nov 2022
                 },
                 "contact_rate_multiplier": 1.,
                 "immune_escape": 0.5

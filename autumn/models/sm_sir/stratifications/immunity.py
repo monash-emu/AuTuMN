@@ -361,12 +361,15 @@ def apply_reported_vacc_coverage_with_booster(
         # Create dataframe with dynamic distributions including future booster rates and waning       
         vacc_data = deepcopy(historical_vacc_data)        
         
-        if pinas_lakas:   # 8 Oct -> t=1012
-            vacc_data["booster"].loc[1012] = .5
-            if agegroup == "60":
-                vacc_data["double"].loc[1012] = .9
-            else:
-                vacc_data["double"].loc[1012] = vacc_data["double"].loc[973] + double_cov_monthly_increment_senior * (1012 - 973) / 30. # apply standard monthly increment
+        if pinas_lakas:   # 31 Dec 2022 -> t=1096
+            vacc_data["booster"].loc[1096] = .7
+            vacc_data["double"].loc[1096] = max(vacc_data["double"])  # just repeat the latest value
+
+
+            # if agegroup == "60":
+            #     vacc_data["double"].loc[1012] = .9
+            # else:
+            #     vacc_data["double"].loc[1012] = vacc_data["double"].loc[973] + double_cov_monthly_increment_senior * (1012 - 973) / 30. # apply standard monthly increment
 
         latest_historical_time = max(vacc_data["booster"].index)
         latest_booster_coverage = vacc_data["booster"].loc[latest_historical_time]

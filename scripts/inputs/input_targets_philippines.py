@@ -1,5 +1,5 @@
 """add comment in script explaining what its for
-This is where the scripts to prepross the data go
+This is where the scripts to preprocess the data go
 save files in data/targets/
 """
 import itertools
@@ -17,8 +17,8 @@ PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
-PHL_doh_link = "1QsnI2cC4ZXs_SY5yHd1R63tDmouc3fz_"  # sheet 05 daily report
-PHL_fassster_link = "1Cg_jsjhXsOtsqcMVUSHK6F7y9Ky8VxZL"
+PHL_doh_link = "1j3X7-9Iry0c7RIH9GgO7RhhBt5Gn7LYR"  # sheet 05 daily report
+PHL_fassster_link = "1PhZcRIngr6Xq2hlJJvmHpoiqsIOmxjFl"
 
 # destination folders filepaths
 phl_inputs_dir = INPUT_DATA_PATH / "covid_phl"

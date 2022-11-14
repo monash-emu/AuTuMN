@@ -57,7 +57,7 @@ voc_emergence:
         late_reinfection: 0.0
       ba_5:
         early_reinfection: 1.
-        late_reinfection: 0.
+        late_reinfection: 0.1
   ba_5: #omicron ba5
     starting_strain: false
     seed_prop: 0.
@@ -75,11 +75,11 @@ voc_emergence:
         early_reinfection: 1.0
         late_reinfection: 0.0
       ba_2:
-        early_reinfection: 0.5
+        early_reinfection: 1.0
         late_reinfection: 0.0
       ba_5:
-        early_reinfection: 0.1
-        late_reinfection: 0.
+        early_reinfection: 1.
+        late_reinfection: 0.1
 
 mobility:
   google_mobility_locations:
@@ -114,6 +114,6 @@ age_stratification:
 
 vaccine_effects:
   vaccine_model: WPRO
-  ve_infection: 0.4
+  ve_infection: 0.1
   ve_hospitalisation: 0.5
   ve_death: 0.5

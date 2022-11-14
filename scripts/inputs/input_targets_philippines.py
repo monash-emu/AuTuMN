@@ -18,7 +18,7 @@ INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
 PHL_doh_link = "1j3X7-9Iry0c7RIH9GgO7RhhBt5Gn7LYR"  # sheet 05 daily report
-PHL_fassster_link = "1Cg_jsjhXsOtsqcMVUSHK6F7y9Ky8VxZL"
+PHL_fassster_link = "1PhZcRIngr6Xq2hlJJvmHpoiqsIOmxjFl"
 
 # destination folders filepaths
 phl_inputs_dir = INPUT_DATA_PATH / "covid_phl"

@@ -4,6 +4,7 @@ from autumn.core.project import load_timeseries, build_rel_path
 from autumn.models.sm_covid.stratifications.strains import get_first_variant_report_date
 from autumn.settings.constants import COVID_BASE_DATETIME
 
+
 def get_WPRO_priors(variant_times):
     priors = [
         UniformPrior("infectious_seed", (1000, 10000)),
@@ -11,6 +12,17 @@ def get_WPRO_priors(variant_times):
         UniformPrior("sojourns.latent.total_time", (4, 15)),
         UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (variant_times[1]-150, variant_times[1]+100)),
         UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.8, 3.5))
+    ]
+    return priors
+
+
+def get_AUS_priors(variant_times):
+    priors = [
+        UniformPrior("infectious_seed", (1000, 10000)),
+        UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
+        UniformPrior("sojourns.latent.total_time", (4, 15)),
+        UniformPrior("voc_emergence.ba2.new_voc_seed.start_time", (690, 750)),
+        UniformPrior("voc_emergence.ba2.contact_rate_multiplier", (0.8, 3.5))
     ]
     return priors
 

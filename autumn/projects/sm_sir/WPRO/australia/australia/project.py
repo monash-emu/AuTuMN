@@ -10,7 +10,7 @@ from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
-from autumn.projects.sm_sir.WPRO.common import get_WPRO_priors, get_tartgets, variant_start_time
+from autumn.projects.sm_sir.WPRO.common import get_AUS_priors, get_tartgets, variant_start_time
 
 # Load and configure model parameters.
 mle_path = build_rel_path("params/mle-params.yml")
@@ -35,7 +35,7 @@ param_set = ParameterSet(baseline=baseline_params)
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 
 variant_times = variant_start_time(["delta", "omicron"], "australia")
-priors = get_WPRO_priors(variant_times)
+priors = get_AUS_priors(variant_times)
 
 priors = priors + [UniformPrior("age_stratification.cfr.multiplier", (0.001, 0.1)),
                    UniformPrior("contact_rate", (0.01, 0.15)),

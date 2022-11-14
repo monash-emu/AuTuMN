@@ -10,12 +10,12 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 645.0
+  start: 680.0 # Nov 10,2021
 
 infectious_seed: 2.
 
 voc_emergence:
-  delta:
+  ba_1: # this is to reflect ba1
     starting_strain: true
     seed_prop: 1.0
     new_voc_seed: null
@@ -25,16 +25,16 @@ voc_emergence:
     death_protection: 0.0
     icu_multiplier: 1.0
     cross_protection:
-      delta:
+      ba_1:
         early_reinfection: 1.0
         late_reinfection: 1.0
-      omicron:
+      ba_2:
         early_reinfection: 0.4
         late_reinfection: 0.4
-      ba_2:
+      ba_5:
         early_reinfection: 1.
         late_reinfection: 0.
-  omicron: # this is to reflect ba1
+  ba_2: # this is to reflect ba2
     starting_strain: false
     seed_prop: 0.0
     new_voc_seed:
@@ -49,20 +49,20 @@ voc_emergence:
     relative_active_period: 1.0
     icu_multiplier: 0.55
     cross_protection:
-      delta:
-        early_reinfection: 1.0
-        late_reinfection: 0.0
-      omicron:
+      ba_1:
         early_reinfection: 1.0
         late_reinfection: 0.0
       ba_2:
+        early_reinfection: 1.0
+        late_reinfection: 0.0
+      ba_5:
         early_reinfection: 1.
         late_reinfection: 0.
-  ba_2: #omicron ba2
+  ba_5: #omicron ba5
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 750.
+      start_time: 720.
       entry_rate: 10.
       seed_duration: 1.
     contact_rate_multiplier: 1.75
@@ -71,13 +71,13 @@ voc_emergence:
     death_protection: 0.
     icu_multiplier: 1.
     cross_protection:
-      delta:
-        early_reinfection: 1.0
-        late_reinfection: 0.0
-      omicron:
+      ba_1:
         early_reinfection: 1.0
         late_reinfection: 0.0
       ba_2:
+        early_reinfection: 0.5
+        late_reinfection: 0.0
+      ba_5:
         early_reinfection: 0.1
         late_reinfection: 0.
 

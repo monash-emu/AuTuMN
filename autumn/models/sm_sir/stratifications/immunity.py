@@ -280,50 +280,6 @@ def adjust_reinfection_with_strains(
                 )
 
 
-# def adjust_reinfection_with_strains_wpro(
-#     immune_effect: float,
-#     immunity_strat: Stratification,
-#     voc_params: Dict[str, VocComponent],
-#     reinfection_flows: List[str],
-# ):
-#     """
-#     Adjust the rate of reinfection for immunity, in cases in which we do need to worry about cross-strain immunity, so
-#     we have to consider every possible combination of cross-immunity between strains (including the immunity conferred
-#     by infection with a certain strain and reinfection with that same strain).
-#     Args:
-#         immune_effect: The infection protection from vaccine immunity
-#         immunity_strat: The immunity stratification, to be modified
-#         voc_params: The parameters relating to the VoCs being implemented
-#     """
-#
-#     for infecting_strain in voc_params:
-#         for flow in reinfection_flows:
-#             # The vaccination-specific immunity that will be retained after allowing for the strain's immune escape against vaccination-induced immunity
-#             non_cross_effect = 1.0 - voc_params[infecting_strain].immune_escape
-#
-#             # Adjust the rate of infection considering the protection of that immunity status (incorporating the strain's escape properties)
-#             non_cross_multiplier = 1.0 - immune_effect * non_cross_effect
-#
-#             # Considering people recovered from infection with each modelled strain
-#             for infected_strain in voc_params:
-#
-#                 # Cross protection from previous infection with the "infected" strain against the "infecting" strain
-#                 cross_effect_multiplier = 1.0 - getattr(voc_params[infected_strain].cross_protection[infecting_strain], flow)
-#
-#                 # Combine the two mechanisms of protection
-#                 reinfection_adjustments = {
-#                     ImmunityStratumWPRO.UNVACCINATED: Multiply(cross_effect_multiplier),
-#                     ImmunityStratumWPRO.VACCINATED: Multiply(non_cross_multiplier * cross_effect_multiplier),
-#                 }
-#
-#                 immunity_strat.set_flow_adjustments(
-#                     flow,
-#                     reinfection_adjustments,
-#                     source_strata={"strain": infected_strain},
-#                     dest_strata={"strain": infecting_strain},
-#                 )
-#
-
 def get_immunity_strat(
         compartments: List[str],
         immunity_params: ImmunityStratification,

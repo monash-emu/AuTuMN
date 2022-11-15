@@ -59,27 +59,27 @@ voc_emergence:
         early_reinfection: 1.
         late_reinfection: 0.1
   ba_5: #omicron ba5
+    contact_rate_multiplier: 0.
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
       start_time: 720.
       entry_rate: 10.
       seed_duration: 1.
-    contact_rate_multiplier: 1.75
-    immune_escape: 0.
+    immune_escape: 1.
     hosp_protection: 0.
     death_protection: 0.
     icu_multiplier: 1.
     cross_protection:
       ba_1:
         early_reinfection: 1.0
-        late_reinfection: 0.0
+        late_reinfection: 0.
       ba_2:
         early_reinfection: 1.0
-        late_reinfection: 0.0
+        late_reinfection: 0.
       ba_5:
         early_reinfection: 1.
-        late_reinfection: 0.1
+        late_reinfection: 1.
 
 mobility:
   google_mobility_locations:
@@ -100,11 +100,13 @@ sojourns:
     proportion_early: 0.5
   recovered: 180.0
 
-testing_to_detection:
-  assumed_tests_parameter: 0.001
-  assumed_cdr_parameter: 0.12
-  smoothing_period: 14
-  floor_value: 0.0
+detect_prop: 0.35
+
+#testing_to_detection:
+#  assumed_tests_parameter: 0.001
+#  assumed_cdr_parameter: 0.12
+#  smoothing_period: 14
+#  floor_value: 0.0
 
 is_dynamic_mixing_matrix: true
 

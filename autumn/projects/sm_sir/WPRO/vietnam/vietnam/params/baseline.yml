@@ -33,12 +33,12 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.0
     new_voc_seed:
-      start_time: 700.0
+      start_time: 690.0
       entry_rate: 10.0
       seed_duration: 1.0
     contact_rate_multiplier: 2.0
     immune_escape: 0.2
-    hosp_protection: 0.5
+    hosp_protection: 0.95
     death_protection: 1.0
     relative_latency: 0.6667
     relative_active_period: 1.0
@@ -80,10 +80,10 @@ mobility:
 
 vaccine_effects:
   vaccine_model: WPRO
-  ve_infection: 0.5
-  ve_hospitalisation: 0.5
-  ve_death: 0.5
+  ve_infection: 0.65
+  ve_hospitalisation: 0.8
+  ve_death: 0.99
 
 age_stratification:
   cfr:
-    multiplier: 0.2
+    multiplier: 0.65

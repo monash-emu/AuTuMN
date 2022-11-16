@@ -39,7 +39,7 @@ priors = get_WPRO_priors(variant_times)
 priors = priors + [UniformPrior("age_stratification.cfr.multiplier", (0.2, 1.0)),
                    UniformPrior("contact_rate", (0.008, 0.3)),
                    UniformPrior("sojourns.recovered", (250, 350)),
-                   UniformPrior("delta.cross_protection.omicron.early_reinfection", (0.0, 1.0))]
+                   UniformPrior("voc_emergence.delta.cross_protection.omicron.early_reinfection", (0.0, 1.0))]
 
 targets = get_tartgets(calibration_start_time, "malaysia", "malaysia")
 

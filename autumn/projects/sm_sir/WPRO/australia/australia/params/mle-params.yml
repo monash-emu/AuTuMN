@@ -4,6 +4,6 @@ infectious_seed: 1379.9048131647535
 sojourns.latent.total_time: 6.382329188277388
 testing_to_detection.assumed_cdr_parameter: 0.0752059406456029765
 voc_emergence.ba_2.contact_rate_multiplier: 1.109674272148211113
-voc_emergence.ba_2.new_voc_seed.start_time: 730.2690045729173
-voc_emergence.ba_5.contact_rate_multiplier: 25.
-voc_emergence.ba_5.new_voc_seed.start_time: 850.
+voc_emergence.ba_2.new_voc_seed.start_time: 690.2690045729173
+voc_emergence.ba_5.contact_rate_multiplier: 1.75
+voc_emergence.ba_5.new_voc_seed.start_time: 740.

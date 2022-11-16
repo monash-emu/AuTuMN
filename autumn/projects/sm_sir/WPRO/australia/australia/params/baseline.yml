@@ -10,7 +10,7 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 680.0 # Nov 10,2021
+  start: 670.0 # Oct 31,2021
 
 infectious_seed: 2.
 
@@ -31,6 +31,9 @@ voc_emergence:
       ba_2:
         early_reinfection: 0.4
         late_reinfection: 0.4
+      ba_3:
+        early_reinfection: 1.
+        late_reinfection: 0.
       ba_5:
         early_reinfection: 1.
         late_reinfection: 0.
@@ -44,7 +47,7 @@ voc_emergence:
     contact_rate_multiplier: 100.0
     immune_escape: 1.
     hosp_protection: 0.75
-    death_protection: 0.2
+    death_protection: 0.5
     relative_latency: 0.6667
     relative_active_period: 1.0
     icu_multiplier: 0.55
@@ -55,9 +58,37 @@ voc_emergence:
       ba_2:
         early_reinfection: 1.0
         late_reinfection: 0.0
+      ba_3:
+        early_reinfection: 0.8
+        late_reinfection: 0.
       ba_5:
-        early_reinfection: 1.
-        late_reinfection: 0.1
+        early_reinfection: 0.
+        late_reinfection: 0.
+  ba_3: #omicron ba3
+    contact_rate_multiplier: 4.
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      start_time: 710.
+      entry_rate: 10.
+      seed_duration: 1.
+    immune_escape: 1.
+    hosp_protection: 0.
+    death_protection: 0.
+    icu_multiplier: 0.
+    cross_protection:
+      ba_1:
+        early_reinfection: 1.0
+        late_reinfection: 0.
+      ba_2:
+        early_reinfection: 1.0
+        late_reinfection: 0.
+      ba_3:
+        early_reinfection: 1.0
+        late_reinfection: 0.
+      ba_5:
+        early_reinfection: 0.6
+        late_reinfection: 1.
   ba_5: #omicron ba5
     contact_rate_multiplier: 0.
     starting_strain: false
@@ -73,10 +104,13 @@ voc_emergence:
     cross_protection:
       ba_1:
         early_reinfection: 1.0
-        late_reinfection: 1.
+        late_reinfection: 0.
       ba_2:
         early_reinfection: 1.0
-        late_reinfection: 1.
+        late_reinfection: 0.
+      ba_3:
+        early_reinfection: 1.0
+        late_reinfection: 0.
       ba_5:
         early_reinfection: 1.
         late_reinfection: 1.
@@ -98,7 +132,7 @@ sojourns:
   latent:
     total_time: 4.0
     proportion_early: 0.5
-  recovered: 180.0
+#  recovered: 180.0
 
 #detect_prop: 0.15
 

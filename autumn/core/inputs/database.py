@@ -17,6 +17,7 @@ from .covid_survey.preprocess import preprocess_covid_survey
 from .covid_vnm.preprocess import preprocess_covid_vnm
 from .demography.preprocess import preprocess_demography
 from .gisaid_voc.preprocess import preprocess_covid_gisaid
+from .sero_survey.preprocess import preprocess_covid_serosurvey
 from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data
 from .school_closure.preprocess import preprocess_school_closure
@@ -103,5 +104,8 @@ def build_input_database(rebuild: bool = False):
 
         with Timer("Ingesting gisaid data."):
             preprocess_covid_gisaid(input_db)
+
+        with Timer("Ingesting serosurvey data."):
+            preprocess_covid_serosurvey(input_db)
 
     return input_db

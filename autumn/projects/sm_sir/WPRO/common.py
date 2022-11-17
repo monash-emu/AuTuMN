@@ -3,6 +3,7 @@ from autumn.calibration.targets import NormalTarget
 from autumn.core.project import load_timeseries, build_rel_path
 from autumn.models.sm_covid.stratifications.strains import get_first_variant_report_date
 from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.core.inputs.database import get_input_db
 
 
 def get_WPRO_priors(variant_times):
@@ -49,3 +50,14 @@ def variant_start_time(variants: list, region_name: str):
         first_report_date_as_int = (variant_first_time - COVID_BASE_DATETIME).days
         variant_times.append(first_report_date_as_int)
     return variant_times
+
+
+def get_serosurvey_data(country: str):
+    input_db = get_input_db()
+    sero_prevalence = input_db.query(
+        table_name='sero-survey',
+        conditions={"Country": country, "Grade of Estimate Scope": "National"},
+        columns=["Serum positive prevalence", "seroprevalence"]
+    )
+
+    return sero_prevalence

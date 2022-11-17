@@ -27,19 +27,19 @@ voc_emergence:
         early_reinfection: 1.0
         late_reinfection: 1.0
       omicron:
-        early_reinfection: 0.4
-        late_reinfection: 0.4
+        early_reinfection: 0.0
+        late_reinfection: 0.0
   omicron:
     starting_strain: false
     seed_prop: 0.0
     new_voc_seed:
-      start_time: 680.0
+      start_time: 730.0
       entry_rate: 10.0
       seed_duration: 1.0
-    contact_rate_multiplier: 2.0
+    contact_rate_multiplier: 3
     immune_escape: 0.2
     hosp_protection: 0.95
-    death_protection: .93
+    death_protection: .96
     relative_latency: 0.6667
     relative_active_period: 1.0
     icu_multiplier: 0.55
@@ -86,4 +86,4 @@ vaccine_effects:
 
 age_stratification:
   cfr:
-    multiplier: 0.65
+    multiplier: 0.8

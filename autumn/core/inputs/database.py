@@ -53,6 +53,7 @@ def build_input_database(rebuild: bool = False):
         from .school_closure.preprocess import preprocess_school_closure
         from .social_mixing.preprocess import preprocess_social_mixing
         from .tb_kir.preprocess import preprocess_tb_kir
+        from .tb_camau.preprocess import preprocess_tb_camau
         from .sero_survey.preprocess import preprocess_covid_serosurvey
 
         logger.info("Building a new database.")
@@ -108,5 +109,8 @@ def build_input_database(rebuild: bool = False):
 
         with Timer("Ingesting mobility data."):
             preprocess_mobility(input_db, country_df)
+
+        with Timer("Ingesting Ca Mau data."):
+            preprocess_tb_camau(input_db)
 
     return input_db

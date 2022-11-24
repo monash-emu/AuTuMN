@@ -85,8 +85,8 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool, store="s3"):
         db.process.collate_databases(pruned_db_paths, POWERBI_COLLATED_PATH)
 
     # Calculate uncertainty for model outputs.
-    with Timer(f"Calculating uncertainty quartiles"):
-        db.uncertainty.add_uncertainty_quantiles(POWERBI_COLLATED_PATH, project.plots)
+    # with Timer(f"Calculating uncertainty quartiles"):
+    #    db.uncertainty.add_uncertainty_quantiles(POWERBI_COLLATED_PATH, project.plots)
 
     # Remove unnecessary data from the database.
     with Timer(f"Pruning final database"):
@@ -104,8 +104,8 @@ def powerbi_task(run_id: str, urunid: str, quiet: bool, store="s3"):
         storage.store(dest_db_path)
 
     # Create uncertainty plots
-    with Timer(f"Creating uncertainty plots"):
-        plots.uncertainty.plot_uncertainty(project.plots, dest_db_path, POWERBI_PLOT_DIR)
+    # with Timer(f"Creating uncertainty plots"):
+    #    plots.uncertainty.plot_uncertainty(project.plots, dest_db_path, POWERBI_PLOT_DIR)
 
     # Upload the plots to AWS S3.
     with Timer(f"Uploading plots to AWS S3"):

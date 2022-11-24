@@ -71,6 +71,9 @@ def get_mobility_funcs(
     google_mobility_locations: Dict[str, Dict[str, float]],
     square_mobility_effect: bool,
     smooth_google_data: bool,
+    lockdown_1_mobility: float,
+    lockdown_2_mobility: float,
+    constant_mobility: bool
 ) -> Dict[str, Callable[[float], float]]:
     """
     Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
@@ -93,20 +96,23 @@ def get_mobility_funcs(
     mob_df, google_mobility_days = get_mobility_data(country.iso3, region, COVID_BASE_DATETIME)
     model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
-    # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
-    if smooth_google_data:
-        for loc in model_loc_mobility_values.columns:
-            model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
+    if not constant_mobility:
+        # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
+        if smooth_google_data:
+            for loc in model_loc_mobility_values.columns:
+                model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
-    # Build mixing data timeseries (change to dict, rather than parameters object)
-    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
-    mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
+        # Build mixing data timeseries (change to dict, rather than parameters object)
+        mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
+        mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
 
-    # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
-    mobility_funcs = {}
-    for location, timeseries in mobility_requests.items():
-        mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
+        # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
+        mobility_funcs = {}
+        for location, timeseries in mobility_requests.items():
+            mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
 
+    else:
+        mobility_funcs = [lockdown_1_mobility, lockdown_2_mobility]
     return mobility_funcs
 
 

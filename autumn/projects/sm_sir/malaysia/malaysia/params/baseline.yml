@@ -131,6 +131,7 @@ age_stratification:
 mobility:
   lockdown_1_mobility: 1.
   lockdown_2_mobility: 1.
+  constant_mobility: false
   google_mobility_locations:
     work:
       workplaces: 1.

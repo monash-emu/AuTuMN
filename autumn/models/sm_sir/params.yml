@@ -156,6 +156,7 @@ age_stratification:
 is_dynamic_mixing_matrix: false
 
 mobility:
+  constant_mobility: false
   region: null
   mixing: {}
   age_mixing: null
@@ -244,3 +245,5 @@ request_strain_prevalence: []
 strains: null
 request_immunity_props: []
 age_pops: [0, 5]
+
+

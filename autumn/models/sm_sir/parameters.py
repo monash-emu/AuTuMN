@@ -262,6 +262,8 @@ class Mobility(BaseModel):
     smooth_google_data: bool
     square_mobility_effect: bool
     google_mobility_locations: Dict[str, Dict[str, float]]
+    lockdown_1_mobility: Optional[float]
+    lockdown_2_mobility: Optional[float]
 
     @validator("google_mobility_locations", allow_reuse=True)
     def check_location_weights(val):

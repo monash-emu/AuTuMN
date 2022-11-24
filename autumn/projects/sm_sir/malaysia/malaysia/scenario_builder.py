@@ -1,5 +1,6 @@
 from autumn.models.sm_sir.mixing_matrix.macrodistancing import get_mobility_specific_period
-import random
+from autumn.projects.sm_sir.malaysia.malaysia.project import priors
+
 
 lockdown_title = ["No vaccination",
                   "Vaccine coverage halved",
@@ -38,9 +39,7 @@ def get_all_scenario_dicts(country: str):
 
             # from Jan 13-March 31st other location mobility and work are fixed at respectively, 0.95 and 0.90
             times1 = [*range(379, 457)]
-            mobility_values_substitute = random.uniform(0.8, 1.0)
-            values1 = {'work': [mobility_values_substitute] * len(times1),
-                       'other_locations': [mobility_values_substitute] * len(times1)}
+            values1 = {'work': [0.95] * len(times1), 'other_locations': [0.9] * len(times1)}
 
             # actual mobility from 31st March to 1st June
             times2, values2 = get_mobility_specific_period(country, None,
@@ -95,7 +94,9 @@ def get_all_scenario_dicts(country: str):
 
             # from June 1- Oct 01 st other location mobility and work are fixed at 0.85
             times1 = [*range(518, 640)]
-            values1 = {'work': [0.85] * len(times1), 'other_locations': [0.85] * len(times1)}
+            june_mobility_substitute = priors.mobility.lockdown_2_mobility
+            values1 = {'work': june_mobility_substitute * len(times1),
+                      'other_locations': june_mobility_substitute * len(times1)}
 
             # mobility from 29th of June onwards
             times2, values2 = get_mobility_specific_period(country, None,

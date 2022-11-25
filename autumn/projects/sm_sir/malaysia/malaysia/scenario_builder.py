@@ -17,7 +17,7 @@ def get_all_scenario_dicts(country: str):
 
         scenario_dict = {
             "description": "scenario:"+f"{i_lockdown_scenario+1}" + f" {lockdown_title[i_lockdown_scenario]}",
-            "mobility": {"mixing": {}},
+            "mobility": {"lockdown_1_mobility": {}, "mixing": {}},
             "vaccination": {}
         }
 
@@ -92,11 +92,9 @@ def get_all_scenario_dicts(country: str):
 
             # from June 1- Oct 01 st other location mobility and work are fixed at 0.85
             times1 = [*range(518, 640)]
-            #june_mobility_substitute = priors.mobility.lockdown_2_mobility
-            values1 = {'work': [0.95] * len(times1), 'other_locations': [0.9] * len(times1)}
-            #values1 = {'work': june_mobility_substitute * len(times1),
-            #          'other_locations': june_mobility_substitute * len(times1)}
-
+            scenario_dict["mobility"]["constant_mobility"] = True
+            values1 = {'work': [scenario_dict["mobility"]["lockdown_1_mobility"]] * len(times1),
+                       'other_locations': [scenario_dict["mobility"]["lockdown_1_mobility"]] * len(times1)}
             # mobility from 29th of June onwards
             times2, values2 = get_mobility_specific_period(country, None,
                                                            {'work': {'workplaces': 1.},
@@ -111,6 +109,8 @@ def get_all_scenario_dicts(country: str):
                     "times": [517] + times1 + times2 + [times2[-1] + 1],
                     "values": [["repeat_prev"]] + values1[key_loc] + values2[key_loc] + [["repeat_prev"]],
                 }
+
+
         if i_lockdown_scenario == 5:  # What if no vaccination and no MCOs implemented
 
             # from Jan 13-March 31st other location mobility and work are fixed at respectively, 0.95 and 0.90

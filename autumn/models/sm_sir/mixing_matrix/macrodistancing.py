@@ -96,23 +96,25 @@ def get_mobility_funcs(
     mob_df, google_mobility_days = get_mobility_data(country.iso3, region, COVID_BASE_DATETIME)
     model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
-    if not constant_mobility:
-        # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
-        if smooth_google_data:
-            for loc in model_loc_mobility_values.columns:
-                model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
+    # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)
+    if smooth_google_data:
+        for loc in model_loc_mobility_values.columns:
+            model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
-        # Build mixing data timeseries (change to dict, rather than parameters object)
-        mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
-        mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
-
-        # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
-        mobility_funcs = {}
-        for location, timeseries in mobility_requests.items():
+    # Build mixing data timeseries (change to dict, rather than parameters object)
+    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
+    mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
+    # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
+    mobility_funcs = {}
+    for location, timeseries in mobility_requests.items():
+        if not constant_mobility:
             mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
+        else: # having fixed mobility for counterfactuals
+            lockdown_data = [lockdown_1_mobility]*len(timeseries)
+            mobility_timeseries = pd.Series(lockdown_data)
+            mobility_funcs[location] = scale_up_function(mobility_timeseries.index, mobility_timeseries ** power, method=4) # here give as the timeseries the constant values we are getting as parametersscale_up_function(timeseries.index, timeseries ** 1, method=4)
 
-    else:
-        mobility_funcs = [lockdown_1_mobility, lockdown_2_mobility]
+
     return mobility_funcs
 
 

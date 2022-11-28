@@ -15,8 +15,15 @@ SCENARIOS = [0, 1, 2, 3, 4, 5, 6]
 BASE_COLS = ["year", "scenario", "chain", "run"]
 EXTRA_COLS = ["n_immune_none", "n_immune_low", "n_immune_high"]
 
-run_id = "sm_sir/malaysia/1666178263/9dd3ece"
+run_id = "sm_sir/malaysia/1666652876/d5266ac"
 region = "malaysia"
+
+
+mr = ManagedRun(run_id)
+pbi = mr.powerbi.get_db()
+# full_run = mr.full_run.get_derived_outputs()
+mcmc_params = mr.calibration.get_mcmc_params()
+
 
 proper_path = Path.cwd() / "data/outputs/runs" / run_id / "data/full_model_runs"
 database_paths = db.load.find_db_paths(proper_path)
@@ -55,13 +62,40 @@ def output_files(file_type, cols_to_output, df):
 
 df = pd.concat(get_full_derived_outputs())
 df = df.sort_values(by=BASE_COLS)
-cols_to_output = BASE_COLS + EXTRA_COLS + list(df.columns[df.columns.str.contains("abs_diff")])
+
+base_columns = [
+    "notifications",
+    # "non_hosp_notifications",
+    "hospital_admissions",
+    "hospital_occupancy",
+    "icu_occupancy",
+    "infection_deaths",
+    "icu_admissions",
+    "ever_detected_incidence",
+]
+
+cols_to_output = [
+    df_col
+    for col in base_columns
+    for df_col in df.columns
+    if col in df_col and "abs_diff" not in df_col and "Xagegroup" in df_col
+]
+
+cols_to_output = BASE_COLS + EXTRA_COLS + cols_to_output
+
+
+chain_run = (
+    pbi.db.query("mcmc_run")
+    .sort_values(by="loglikelihood", ascending=False)
+    .head(1000)[["chain", "run"]]
+    .values
+)
+
+
+df = df[df[["chain", "run"]].apply(tuple, axis=1).isin([tuple(x) for x in chain_run])]
 
 output_files("sensitivity_scenario", cols_to_output, df)
 
-
-mr = ManagedRun(run_id)
-pbi = mr.powerbi.get_db()
 
 chain_run = (
     pbi.db.query("mcmc_run")
@@ -75,23 +109,7 @@ chain, run = tuple(*chain_run)
 df = pd.concat(get_mle_outputs(chain, run))
 df = df.sort_values(by=BASE_COLS + ["month"])
 
-base_columns = [
-    "notifications",
-    "hospital_admissions",
-    "infection_deaths",
-    "hospital_occupancy",
-    "non_hosp_notifications",
-    "icu_admissions",
-    "icu_occupancy",
-]
 
-cols_to_output = [
-    df_col
-    for col in base_columns
-    for df_col in df.columns
-    if col in df_col and "abs_diff" not in df_col
-]
-cols_to_output = BASE_COLS + ["month"] + EXTRA_COLS + cols_to_output
-
+cols_to_output.insert(4, "month")
 
 output_files("scenario", cols_to_output, df)

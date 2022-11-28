@@ -264,7 +264,7 @@ class Mobility(BaseModel):
     google_mobility_locations: Dict[str, Dict[str, float]]
     lockdown_1_mobility: Optional[float]
     lockdown_2_mobility: Optional[float]
-    constant_mobility: bool
+    scenario_number: int
 
     @validator("google_mobility_locations", allow_reuse=True)
     def check_location_weights(val):

@@ -156,7 +156,7 @@ age_stratification:
 is_dynamic_mixing_matrix: false
 
 mobility:
-  constant_mobility: false
+  scenario_number: 0
   region: null
   mixing: {}
   age_mixing: null

@@ -8,7 +8,7 @@ from autumn.models.sm_sir.parameters import Country, MixingLocation
 from autumn.model_features.curve import scale_up_function
 from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.utils.utils import apply_moving_average
-
+import matplotlib.pyplot as plt
 
 def weight_mobility_data(
     google_mob_df: pd.DataFrame, location_map: Dict[str, Dict[str, float]]
@@ -73,7 +73,7 @@ def get_mobility_funcs(
     smooth_google_data: bool,
     lockdown_1_mobility: float,
     lockdown_2_mobility: float,
-    constant_mobility: bool
+    scenario_number: int
 ) -> Dict[str, Callable[[float], float]]:
     """
     Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
@@ -107,13 +107,18 @@ def get_mobility_funcs(
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
     for location, timeseries in mobility_requests.items():
-        if not constant_mobility:
-            mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
-        else: # having fixed mobility for counterfactuals
-            lockdown_data = [lockdown_1_mobility]*len(timeseries)
-            mobility_timeseries = pd.Series(lockdown_data)
-            mobility_funcs[location] = scale_up_function(mobility_timeseries.index, mobility_timeseries ** power, method=4) # here give as the timeseries the constant values we are getting as parametersscale_up_function(timeseries.index, timeseries ** 1, method=4)
+        if scenario_number == 2:  # jun 1st - 28th june MCO not implemented
+            if location != "school":
+                lockdown_times = [*range(518, 640)]
+                lockdown_data = [lockdown_1_mobility]*len(lockdown_times)
+                mobility_timeseries = timeseries.replace(to_replace=lockdown_times, value=lockdown_data)
+                mobility_funcs[location] = scale_up_function(mobility_timeseries.index, mobility_timeseries ** power, method=4) # here give as the timeseries the constant values we are getting as parametersscale_up_function(timeseries.index, timeseries ** 1, method=4)
+                plt.plot(mobility_timeseries.index, mobility_timeseries.values)
+            else:
+                mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
 
+        else:
+            mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
 
     return mobility_funcs
 

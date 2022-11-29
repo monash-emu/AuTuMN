@@ -19,7 +19,7 @@ sojourns:
 
 time:
   start: 367. #jan 01, 2021
-  end: 970.
+  end: 1003.
 
 activate_random_process: False
 

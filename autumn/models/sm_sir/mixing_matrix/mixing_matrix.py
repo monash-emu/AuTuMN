@@ -28,7 +28,7 @@ def build_dynamic_mixing_matrix(
     square, smooth, locs = mobility.square_mobility_effect, mobility.smooth_google_data, mobility.google_mobility_locations
     mobility_funcs = get_mobility_funcs(country, mobility.region, mobility.mixing, locs, square, smooth,
                                         mobility.lockdown_1_mobility, mobility.lockdown_2_mobility,
-                                        mobility.scenario_number)
+                                        mobility.scenario_number, mobility.constant_mobility)
     # Get adjusters
     location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
     age_adjuster = AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None

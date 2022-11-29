@@ -265,6 +265,7 @@ class Mobility(BaseModel):
     lockdown_1_mobility: Optional[float]
     lockdown_2_mobility: Optional[float]
     scenario_number: int
+    constant_mobility: bool
 
     @validator("google_mobility_locations", allow_reuse=True)
     def check_location_weights(val):

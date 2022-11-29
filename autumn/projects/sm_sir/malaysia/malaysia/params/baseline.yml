@@ -129,8 +129,9 @@ age_stratification:
     multiplier: 0.25
 
 mobility:
-  lockdown_1_mobility: 1.
-  lockdown_2_mobility: 1.
+  lockdown_1_mobility: 0.8 #national lockdown in june, 2021
+  lockdown_2_mobility: 0.9 # state wide lockdown in jan, 2021
+  constant_mobility: false
   scenario_number: 0
   google_mobility_locations:
     work:

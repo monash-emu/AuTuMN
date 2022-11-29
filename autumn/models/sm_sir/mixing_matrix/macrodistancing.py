@@ -8,7 +8,11 @@ from autumn.models.sm_sir.parameters import Country, MixingLocation
 from autumn.model_features.curve import scale_up_function
 from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.utils.utils import apply_moving_average
+
 import matplotlib.pyplot as plt
+from summer.utils import ref_times_to_dti
+from autumn.core.plots.utils import REF_DATE
+
 
 def weight_mobility_data(
     google_mob_df: pd.DataFrame, location_map: Dict[str, Dict[str, float]]
@@ -73,7 +77,8 @@ def get_mobility_funcs(
     smooth_google_data: bool,
     lockdown_1_mobility: float,
     lockdown_2_mobility: float,
-    scenario_number: int
+    scenario_number: int,
+    constant_mobility: bool
 ) -> Dict[str, Callable[[float], float]]:
     """
     Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
@@ -106,14 +111,36 @@ def get_mobility_funcs(
     mobility_requests = update_mixing_data(mobility_requests, model_loc_mobility_values, google_mobility_days)
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
+    lockdown_1_times = [*range(518, 640)]  # national lockdown from jun 1st - 1st OCt
+    lockdown_2_times = [*range(379, 457)]  # from Jan 13-March 31st state wide lockdown
+
     for location, timeseries in mobility_requests.items():
-        if scenario_number == 2:  # jun 1st - 28th june MCO not implemented
+        if constant_mobility:
+
             if location != "school":
-                lockdown_times = [*range(518, 640)]
-                lockdown_data = [lockdown_1_mobility]*len(lockdown_times)
-                mobility_timeseries = timeseries.replace(to_replace=lockdown_times, value=lockdown_data)
-                mobility_funcs[location] = scale_up_function(mobility_timeseries.index, mobility_timeseries ** power, method=4) # here give as the timeseries the constant values we are getting as parametersscale_up_function(timeseries.index, timeseries ** 1, method=4)
-                plt.plot(mobility_timeseries.index, mobility_timeseries.values)
+                if scenario_number == 4 or scenario_number == 5: # both nation-wide nad state wide lockdown are removed
+                    lockdown_1_data = [lockdown_1_mobility] * len(lockdown_1_times)
+                    lockdown_2_data = [lockdown_2_mobility] * len(lockdown_2_times)
+                    mobility_timeseries = timeseries
+                    mobility_timeseries[lockdown_1_times] = lockdown_1_data
+                    mobility_timeseries[lockdown_2_times] = lockdown_2_data
+                    mobility_funcs[location] = scale_up_function(mobility_timeseries.index, mobility_timeseries ** power,
+                                                                 method=4)
+                else:
+
+                    if scenario_number == 2:  # jun 1st - 1st OCt MCO not implemented
+                        lockdown_mobility = lockdown_1_mobility
+                        lockdown_times = lockdown_1_times
+                    if scenario_number == 3:  # 13th jan - 31st march MCO not implemented
+                        lockdown_mobility = lockdown_2_mobility
+                        lockdown_times = lockdown_2_times
+
+                    lockdown_data = [lockdown_mobility] * len(lockdown_times)
+                    mobility_timeseries = timeseries
+                    mobility_timeseries[lockdown_times] = lockdown_data
+                    mobility_funcs[location] = scale_up_function(mobility_timeseries.index, mobility_timeseries ** power,
+                                                                 method=4)
+
             else:
                 mobility_funcs[location] = scale_up_function(timeseries.index, timeseries ** power, method=4)
 

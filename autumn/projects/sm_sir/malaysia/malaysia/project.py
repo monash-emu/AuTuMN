@@ -50,8 +50,8 @@ priors = [
     UniformPrior("sojourns.recovered", (150, 300)),
     UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.5, 0.64)),
     UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.65, 0.8)),
-    UniformPrior("mobility.lockdown_1_mobility", [0.8, 1.0], sampling="lhs"),  # jan lockdown
-    UniformPrior("mobility.lockdown_2_mobility", [0.7, 0.9], sampling="lhs")  # june lockdown
+    UniformPrior("mobility.lockdown_2_mobility", [0.8, 1.0], sampling="lhs"),  # jan lockdown
+    UniformPrior("mobility.lockdown_1_mobility", [0.7, 0.9], sampling="lhs")  # june lockdown
 
 ]
 

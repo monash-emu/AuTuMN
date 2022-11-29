@@ -157,6 +157,7 @@ is_dynamic_mixing_matrix: false
 
 mobility:
   scenario_number: 0
+  constant_mobility: false
   region: null
   mixing: {}
   age_mixing: null

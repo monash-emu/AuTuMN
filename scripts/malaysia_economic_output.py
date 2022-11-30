@@ -50,13 +50,13 @@ def get_mle_outputs(chain, run):
         table_df = preprocess_db(db_path)
         mask = (table_df["chain"] == chain) & (table_df["run"] == run)
         table_df = table_df[mask]
-        yield table_df.groupby(BASE_COLS, as_index=False).sum()
+        yield table_df.groupby(BASE_COLS + ["month"], as_index=False).sum()
 
 
 def output_files(file_type, cols_to_output, df):
 
     df = df[cols_to_output]
-    df = group_by_year(df)
+
     for scenario in SCENARIOS:
         required_outputs = df.loc[(df["scenario"] == scenario)]
         required_outputs.to_csv(f"{Path.cwd()}/{file_type}_{scenario}.csv", index=False)
@@ -108,6 +108,7 @@ chain_run = (
 
 
 df = df[df[["chain", "run"]].apply(tuple, axis=1).isin([tuple(x) for x in chain_run])]
+df = group_by_year(df)
 
 output_files("sensitivity_scenario", cols_to_output, df)
 
@@ -122,7 +123,9 @@ chain, run = tuple(*chain_run)
 
 
 df = pd.concat(get_mle_outputs(chain, run))
-df = group_by_year(df)
-df = df.sort_values(by=BASE_COLS)
+df = df.sort_values(by=BASE_COLS + ["month"])
+
+
+cols_to_output.insert(4, "month")
 
 output_files("scenario", cols_to_output, df)

@@ -15,7 +15,7 @@ SCENARIOS = [0, 1, 2, 3, 4, 5, 6]
 BASE_COLS = ["year", "scenario", "chain", "run"]
 EXTRA_COLS = ["n_immune_none", "n_immune_low", "n_immune_high"]
 
-run_id = "sm_sir/malaysia/1666652876/d5266ac"
+run_id = "sm_sir/malaysia/1669700473/e2df111"
 region = "malaysia"
 
 
@@ -54,10 +54,25 @@ def get_mle_outputs(chain, run):
 
 
 def output_files(file_type, cols_to_output, df):
+
     df = df[cols_to_output]
+
     for scenario in SCENARIOS:
         required_outputs = df.loc[(df["scenario"] == scenario)]
         required_outputs.to_csv(f"{Path.cwd()}/{file_type}_{scenario}.csv", index=False)
+
+
+def group_by_year(df):
+
+    is_valid_year_count = all(df.groupby(["chain", "run", "scenario"]).year.count() == 2)
+    if is_valid_year_count:
+        df = df.groupby(["chain", "run", "scenario", "year"], as_index=False).sum()
+
+    else:
+
+        return AssertionError("Incorrect number of years")
+
+    return df
 
 
 df = pd.concat(get_full_derived_outputs())
@@ -93,6 +108,7 @@ chain_run = (
 
 
 df = df[df[["chain", "run"]].apply(tuple, axis=1).isin([tuple(x) for x in chain_run])]
+df = group_by_year(df)
 
 output_files("sensitivity_scenario", cols_to_output, df)
 

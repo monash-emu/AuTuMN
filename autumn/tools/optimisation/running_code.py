@@ -21,5 +21,4 @@ params_dict = {
 
 y = calculate_objective_to_minimize(calib, params_dict)
 
-print(y)
-# I obtained y = 319.83403546126465 on my laptop 
+# I obtained y = 329.5768886693134 on my laptop 

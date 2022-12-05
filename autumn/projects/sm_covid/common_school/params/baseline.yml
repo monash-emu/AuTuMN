@@ -17,7 +17,7 @@ infectious_seed_time: 15.108933833045329
 # random_process.noise_sd: 0.9527944877793121
 
 random_process:
-  values:
+  delta_values:
     - 0.
     - -1.4373077479588399
     - -0.900820174252621

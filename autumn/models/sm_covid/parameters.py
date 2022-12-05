@@ -176,6 +176,15 @@ class Sojourns(BaseModel):
     active: float
     latent: float
 
+
+class LatencyInfectiousness(BaseModel):
+    """
+    Parameters to define how many latent compartments are infectious and their relative
+    infectiousness compared to the active disease compartments
+    """
+    n_infectious_comps: int
+    rel_infectiousness: float
+
 class MixingLocation(BaseModel):
 
     append: bool  # Whether to append or overwrite times / values
@@ -204,6 +213,8 @@ class Mobility(BaseModel):
     microdistancing: Optional[dict]  # this is not used for the sm_covid model. Still included to prevent crash in mixing matrix code
     apply_unesco_school_data: bool
     unesco_partial_opening_value: Optional[float]
+    unesco_full_closure_value: Optional[float]
+
 
     @validator("google_mobility_locations", allow_reuse=True)
     def check_location_weights(val):
@@ -256,6 +267,7 @@ class VocComponent(BaseModel):
     seed_prop: float
     new_voc_seed: Optional[VocSeed]
     contact_rate_multiplier: float
+    incubation_overwrite_value: Optional[float]
     vacc_immune_escape: float
     cross_protection: Dict[str, float]
     hosp_risk_adjuster: Optional[float]
@@ -309,7 +321,7 @@ class RandomProcessParams(BaseModel):
 
     coefficients: Optional[List[float]]
     noise_sd: Optional[float]
-    values: Optional[List[float]]
+    delta_values: Optional[List[float]]
     order: int
     time: Time
 
@@ -342,6 +354,7 @@ class Parameters:
     mobility: Mobility
    
     compartment_replicates: Dict[str, int]
+    latency_infectiousness: LatencyInfectiousness
 
     time_from_onset_to_event: TimeToEvent
     hospital_stay: HospitalStay

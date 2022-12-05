@@ -74,6 +74,22 @@ register_project(
     Region.NCR,
     "autumn.projects.sm_sir.philippines.national-capital-region.project",
 )
+
+
+register_project(
+    Models.SM_SIR,
+    Region.BARMM,
+    "autumn.projects.sm_sir.philippines.barmm.project",
+)
+
+
+register_project(
+    Models.SM_SIR,
+    Region.WESTERN_VISAYAS,
+    "autumn.projects.sm_sir.philippines.western-visayas.project",
+)
+
+
 register_project(
     Models.SM_SIR,
     Region.MALAYSIA,
@@ -152,3 +168,12 @@ wpro_paths = wpro_list["path"]
 for idx, wpro_project in enumerate(wpro_countries):
     region_name = f"wpro_{wpro_countries[idx]}"
     register_project(Models.SM_SIR, region_name, wpro_paths[idx])
+
+
+# sm_jax
+register_project(
+    Models.SM_JAX,
+    Region.MALAYSIA,
+    "autumn.projects.sm_jax.malaysia.project",
+)
+

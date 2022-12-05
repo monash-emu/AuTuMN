@@ -1,0 +1,76 @@
+\section{Outputs}
+
+\subsection{Incidence}
+Incidence represents the rate of onset of new disease episodes,
+(regardless of whether symptoms or case detection occur).
+It is calculated as the rate of transition between the early and late active model compartments.
+Therefore, this indicator is slightly lagged relative to the onset of infectiousness,
+and occurs at the same point in the disease episode as for case isolation
+(for those persons for whom self-isolation occurs).
+Thus, this indicator can be reasonably considered as relating to the point in a disease episode
+at which significant symptoms would develop.
+However, we stress that this indicator includes all disease episodes,
+including asymptomatic and symptomatic undetected episodes.
+
+\subsection{Notifications}
+Notifications are derived from the calculation of incidence described above,
+but limited to the detected clinical stratum (see \ref{clin}).
+Therefore, this considers case detection as being interchangeable with notification
+(with cases detected by the surveillance system being universally included
+in the case notification data provided to us for model calibration).
+A gamma distribution convolution is then applied to the detected case incidence to allow for the time lag
+between symptom onset and case reporting.  % Refer to the parameters table for the specific parameters
+The mass of the gamma distribution between each sequential pair of time points is
+used in the calculation.
+
+\subsection{COVID-19-related mortality}
+% This has been adapted to the NT application to remove reference to different strain severity
+COVID-19-related deaths are derived from the calculation of incidence described above,
+but limited to the two symptomatic clinical strata (both detected and undetected).
+Calculations are made separately for each age group and each vaccine-induced immunity stratum, 
+given that these factors influence disease-induced mortality rates.
+A convolution is applied to each age and immunity-specific 
+symptomatic incidence rate calculation.
+The age-specific base case fatality rate (CFR) 
+is first determined as a model input,  % Refer to the parameters table
+which is then adjusted according to the protection afforded by vaccine-induced immunity.
+This is then be adjusted to better match the local epidemic characteristics through an
+``adjuster'' parameter.
+This parameter applies equally to each age group 
+and acts to inflate or deflate the case fatality rate
+adjusted for vaccine-induced immunity.
+However, rather than directly multiplying the case fatality rate by this adjuster,
+we apply the adjuster to the odds of death equivalent to the risk of death parameter.
+That is, the adjusted case fatality rate is calculated as:
+\[CFR_{adj} = \frac{CFR_{base} \times adjuster}{CFR_{base} \times (adjuster - 1) + 1}\]
+% Next, the adjusted CFR is again adjusted for the severity of the strain
+% responsible for the disease episode.
+Having determined the age and immunity-specific CFR,
+a gamma-distributed convolution is calculated such that the total density
+of the distribution is equal to the CFR determined as described above.  % Refer to the parameters table 
+As for notifications, the mass of the gamma distribution 
+between each sequential pair of time points is
+used in this calculation.
+
+\subsection{Hospital admissions}
+The rate of new hospital admissions is calculated from symptomatic incidence in 
+an analogous way to that described for the mortality in the previous section.
+Age and immunity-specific risks of hospitalisation are calculated,
+with adjustment of all rates for local context as required, and a convolution is applied.
+As for notifications and deaths, the mass of the gamma distribution 
+between each sequential pair of time points is
+used in the calculation.
+
+\subsection{Hospital occupancy}
+Having calculated the rate of hospital admissions,
+a second gamma-distributed convolution is applied to this output to calculate
+the total hospital occupancy from the admissions at every previous time point modelled.
+Differing from the convolution used to calculate the rates of notifications,
+the gamma distribution is used to determine the probability that an admitted patient
+would remain in hospital after the time lag from the hospital admission rate being considered.
+That is, the complement of the cumulative distribution function for the rate of hospital
+discharge is applied.
+
+\subsection{ICU admissions and occupancy}
+The calcuation of ICU admissions and occupancy is analogous 
+to that of hospital admissions and occupancy.

@@ -355,6 +355,15 @@ class ImmunityStratification(BaseModel):
     )
 
 
+class Vaccination(BaseModel):
+
+    boosting: bool
+    booster_effect_duration: Optional[float]
+    data_thinning: Optional[int]
+    age_specific_vacc: bool
+    extra_vacc_coverage: Optional[Dict[str, dict]]
+
+
 class TestingToDetection(BaseModel):
     """
     Empiric approach to building the case detection rate that is based on per capita testing rates.
@@ -522,18 +531,10 @@ class Parameters:
     random_process: Optional[RandomProcessParams]
 
     # Vaccination/immunity-related
-    booster_effect_duration: float
-    additional_immunity: Optional[TimeSeries]
-    future_monthly_booster_rate: Optional[float]
-    future_booster_age_allocation: Optional[
-        Union[
-            Dict[int, float], # to specify allocation proportions by age group (e.g. {70: .8, 50: .2})
-            List[int] # to specify a prioritisation order (e.g. [70, 50, 25, 15])
-            ]
-        ]
     vaccine_effects: VaccineEffects
     # Indigenous-related
-    indigenous: bool
+    vaccination: Vaccination
+
 
     # Output-related
     requested_cumulative_outputs: List[str]

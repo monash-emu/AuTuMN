@@ -53,8 +53,7 @@ class Opti:
         """
 
         sc_params = self.project.param_set.baseline.update(self.root_model_params).update(sc_dict)
-        start_time = sc_params.to_dict()["time"]["start"]
         sc_models = self.project.run_scenario_models(
-            baseline_model=self.root_model, scenario_params=[sc_params], start_time=start_time
+            baseline_model=self.root_model, scenario_params=[sc_params]
         )
         return sc_models[0]

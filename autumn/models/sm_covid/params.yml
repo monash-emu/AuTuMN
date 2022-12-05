@@ -28,12 +28,16 @@ compartment_replicates:
   latent: 4
   infectious: 4
 
+latency_infectiousness:
+  n_infectious_comps: 2
+  rel_infectiousness: .5
+
 contact_rate: 0.05
 infectious_seed_time: 60
 seed_duration: 7
 
 sojourns:
-  latent: 5.5
+  latent: 6.57  # Pooled estimate from Wu et al. doi:10.1001/jamanetworkopen.2022.28008
   active: 8.
 
 mobility:
@@ -49,15 +53,15 @@ mobility:
     work:
       workplaces: 1.
     other_locations:
-      retail_and_recreation: 0.25
-      grocery_and_pharmacy: 0.25
-      parks: 0.25
-      transit_stations: 0.25
+      retail_and_recreation: 0.33334
+      grocery_and_pharmacy: 0.33333
+      transit_stations: 0.33333
   smooth_google_data: true  # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
   apply_unesco_school_data: true  # if true, will override school mixing inputs
-  unesco_partial_opening_value: .5
+  unesco_partial_opening_value: .2
+  unesco_full_closure_value: 0.
 
 # Age-related parameters
 age_stratification:
@@ -153,6 +157,7 @@ voc_emergence:
     seed_prop: 1.
     new_voc_seed: null
     contact_rate_multiplier: 1.
+    incubation_overwrite_value: 6.65 # Wu et al. doi:10.1001/jamanetworkopen.2022.28008
     vacc_immune_escape: 0.
     hosp_risk_adjuster: 1.
     death_risk_adjuster: 1.
@@ -168,6 +173,7 @@ voc_emergence:
       time_from_gisaid_report: 0.
       seed_duration: 10.
     contact_rate_multiplier: 1.38 # DOI: 10.1503/cmaj.211248
+    incubation_overwrite_value: 4.41 # Wu et al. doi:10.1001/jamanetworkopen.2022.28008
     vacc_immune_escape: .32 # DOI: 10.1503/cmaj.211248
     hosp_risk_adjuster: 2.1  # Fisman et al. doi: 10.1503/cmaj.211248
     death_risk_adjuster: 2.3 # Fisman et al. doi: 10.1503/cmaj.211248
@@ -183,6 +189,7 @@ voc_emergence:
   #     time_from_gisaid_report: 0.
   #     seed_duration: 10.
   #   contact_rate_multiplier: 1.92 # DOI: 10.1503/cmaj.211248
+  #   incubation_overwrite_value: 3.42 # Wu et al. doi:10.1001/jamanetworkopen.2022.28008
   #   vacc_immune_escape: .55  # DOI: 10.1503/cmaj.211248
   #   hosp_risk_adjuster: 0.861 # 2.1 * .41 using HR of Omicron vs Delta (Nyberg doi.org/10.1016/S0140-6736(22)00462-7)
   #   death_risk_adjuster: 0.713 # 2.3 * 0.31 using HR of Omicron vs Delta (Nyberg doi.org/10.1016/S0140-6736(22)00462-7)
@@ -228,7 +235,7 @@ activate_random_process: True
 random_process: 
   order: 1
   noise_sd: .5
-  values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+  delta_values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
   time: 
     start: 92  # 1 Apr 2020. Need to make sure this is greater than the seed time to prevent identifiability issues with contact rate
     end: 731  # 31 Dec 2021

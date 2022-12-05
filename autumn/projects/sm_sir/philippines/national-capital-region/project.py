@@ -13,6 +13,10 @@ from autumn.models.sm_sir import base_params, build_model, set_up_random_process
 from autumn.settings import Region, Models
 
 
+"""
+THIS FUNCTION HAS BEEN TOTALLY RUINED BY THE VACCINATION RESTRUCTURE
+"""
+
 def get_scenario_params(n_boosters, target, voc_emerge):
     doses_txt = {
         200000: "200K", 500000: "500K", 1000000: "1M"
@@ -24,11 +28,11 @@ def get_scenario_params(n_boosters, target, voc_emerge):
     
     sc_param_dict = {
         "description": description,
-        "future_monthly_booster_rate": n_boosters,
+        # "future_monthly_booster_rate": n_boosters,
     }
     
-    if target:
-        sc_param_dict["future_booster_age_allocation"] = [60, 50, 25, 15, 0]
+    # if target:
+        # sc_param_dict["future_booster_age_allocation"] = [60, 50, 25, 15, 0]
     
     if voc_emerge:
         sc_param_dict["voc_emergence"] = {
@@ -60,18 +64,18 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
 # scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 # scenario_params = [baseline_params.update(p) for p in scenario_paths]
 
-scenario_params = []
-for n_boosters in [200000, 500000, 1000000]:
-    for target in [False, True]:
-        for voc_emerge in [False, True]:
+# scenario_params = []
+# for n_boosters in [200000, 500000, 1000000]:
+#     for target in [False, True]:
+#         for voc_emerge in [False, True]:
             
-            if n_boosters == 200000 and not target and not voc_emerge:
-                continue  # as this is the baseline scenario
-            else:
-                update_params = get_scenario_params(n_boosters, target, voc_emerge)
-                scenario_params.append(baseline_params.update(update_params))
+#             if n_boosters == 200000 and not target and not voc_emerge:
+#                 continue  # as this is the baseline scenario
+#             else:
+#                 update_params = get_scenario_params(n_boosters, target, voc_emerge)
+#                 scenario_params.append(baseline_params.update(update_params))
 
-param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
+param_set = ParameterSet(baseline=baseline_params)
 
 # Load and configure calibration settings.
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
@@ -101,12 +105,10 @@ priors = [
     UniformPrior("hospital_stay.icu.parameters.mean", [3.0, 10.0]),
 ]
 
-new_target_set = load_timeseries(build_rel_path("new_targets.json"))
-
 targets = [
-    NormalTarget(data=new_target_set["icu_occupancy"].loc[725:]),
-    NormalTarget(data=new_target_set["hospital_occupancy"].loc[725:]),
-    NormalTarget(data=ts_set["notifications"].loc[730:770]),  # peak notifications
+    NormalTarget(data=ts_set["ncr_icu_occupancy"].loc[725:]),
+    NormalTarget(data=ts_set["ncr_hospital_occupancy"].loc[725:]),
+    NormalTarget(data=ts_set["notifications"].loc[725:]),
 ]
 
 if baseline_params.to_dict()["activate_random_process"]:

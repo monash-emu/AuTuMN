@@ -117,7 +117,7 @@ class FileDatabase(BaseDatabase, ABC):
     ) -> pd.DataFrame:
         """Returns a dataframe"""
         fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
-        
+
         if conditions:
             if columns:
                 tmp_columns = columns + list(conditions)
@@ -129,10 +129,10 @@ class FileDatabase(BaseDatabase, ABC):
                     df = df[df[k].isnull()]
                 else:
                     df = df[df[k] == v]
-    
+
             if columns:
                 df = df[columns]
-            
+
             df = df.copy()
         else:
             df = self.read_file(fpath, columns)
@@ -241,18 +241,22 @@ class Database(BaseDatabase):
         self.engine = get_sql_engine(self.database_path)
 
     def dump_df(self, table_name: str, df: pd.DataFrame, append=True):
-        exists_mode = 'append' if append else 'replace'
+        exists_mode = "append" if append else "replace"
         df.to_sql(table_name, con=self.engine, if_exists=exists_mode, index=False)
 
     def query(
-        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {},
-        as_copy=True
+        self,
+        table_name: str,
+        columns: List[str] = [],
+        conditions: Dict[str, Any] = {},
+        as_copy=True,
     ) -> pd.DataFrame:
         """
         method to query table_name
 
         as_copy can be False if needed for performance, but only if you promise not to modify the returned data...
         """
+
         def sanitize(name):
             if " " in name:
                 return f"`{name}`"
@@ -282,7 +286,7 @@ class Database(BaseDatabase):
 
         if query not in self._cache:
             self._cache[query] = df = pd.read_sql_query(query, con=self.engine)
-        
+
         df = self._cache[query]
 
         # Backwards compatibility fix for old column names with square brackets
@@ -310,6 +314,7 @@ DATABASE_TYPES = [Database, FeatherDatabase, ParquetDatabase]
 
 
 def get_database(database_path: str) -> BaseDatabase:
+    database_path = str(database_path)
     """Returns the correct kind of BaseDatabase for a given database path"""
     for db_type in DATABASE_TYPES:
         if db_type.is_compatible(database_path):

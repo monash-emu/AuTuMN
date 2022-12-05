@@ -4,16 +4,21 @@ import json
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from importlib import import_module
 from importlib import reload as reload_module
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
+from sys import stdout
+
+from computegraph.utils import expand_nested_dict
 
 import numpy as np
 import pandas as pd
 import yaml
 from autumn.core.db.database import FeatherDatabase
+
+from summer2.model import CompartmentalModel as CompartmentalModel2
 
 from autumn.core.db.store import (
     Table,
@@ -24,6 +29,8 @@ from autumn.core.db.store import (
 from autumn.core.project.params import read_yaml_file
 from autumn.core.registry import _PROJECTS
 from autumn.core.utils.git import get_git_branch, get_git_hash
+from autumn.core.utils.runs import build_run_id
+from autumn.core.runs import ManagedRun
 from autumn.core.utils.timer import Timer
 from autumn.settings import BASE_PATH, DOCS_PATH, MODELS_PATH, OUTPUT_DATA_PATH, Region, Models
 from summer.derived_outputs import DerivedOutputRequest
@@ -32,8 +39,45 @@ from summer.model import CompartmentalModel
 from .params import ParameterSet, Params
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 ModelBuilder = Callable[[dict, dict], CompartmentalModel]
+
+
+class LocalTaskRunner:
+    def __init__(self, project):
+        self.project = project
+
+    def calibrate(self, num_chains: int, runtime: str, trigger=False, burn_in=500, samples=100):
+        from autumn.infrastructure.tasks.calibrate import calibrate_task
+
+        assert isinstance(runtime, str), "Runtime must be supplied as HMS strings"
+        runtime_s = pd.to_timedelta(runtime) / timedelta(seconds=1)
+        run_id = self.project._gen_run_id()
+
+        logger.info(f"Calibrating {num_chains} chains for {runtime} with run_id {run_id}")
+        calibrate_task(run_id, runtime_s, num_chains, False, "local")
+
+        if trigger:
+            logger.info(f"Triggering full run for {run_id}")
+            self.full_run(run_id, burn_in, samples)
+            self.powerbi(run_id)
+
+        return ManagedRun(run_id)
+
+    def full_run(self, run_id: str, burn_in: int, samples: int):
+        from autumn.infrastructure.tasks.full import full_model_run_task
+
+        full_model_run_task(run_id, burn_in, samples, False, "local")
+        return ManagedRun(run_id)
+
+    def powerbi(self, run_id):
+        from autumn.infrastructure.tasks.powerbi import powerbi_task
+
+        powerbi_task(run_id, "mle", False, "local")
+
+        return ManagedRun(run_id)
 
 
 class Project:
@@ -62,13 +106,31 @@ class Project:
         self.diff_output_requests = diff_output_requests or []
         self.post_diff_output_requests = post_diff_output_requests or {}
         self.ts_set = ts_set or None
+        self.tasks = LocalTaskRunner(self)
 
-    def calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
+        self._model = None
+        self._scenario_models = None
+        self._is_calibrating = False
+        self._cal_params = [
+            p["param_name"]
+            for p in calibration.all_priors
+            if not p["param_name"].startswith("random_process")
+        ]
+        if any(
+            [p["param_name"].startswith("random_process.delta_values") for p in calibration.all_priors]
+        ):
+            self._cal_params.append("random_process.delta_values")
+
+    def _calibrate(self, max_seconds: float, chain_idx: int, num_chains: int):
         """
         Calibrate the model using the baseline parameters.
         """
         with Timer(f"Running calibration for {self.model_name} {self.region_name}."):
             self.calibration.run(self, max_seconds, chain_idx, num_chains)
+
+    def _start_calibrating(self):
+        self._is_calibrating = True
+        self._model = None
 
     def run_baseline_model(
         self,
@@ -81,115 +143,85 @@ class Project:
         Returns the completed baseline model.
         """
         params_dict = params.to_dict()
-        model = self.build_model(params_dict, build_options)
-        if type(model) is CompartmentalModel and derived_outputs_whitelist:
-            # Only calculate required derived outputs.
-            model.set_derived_outputs_whitelist(derived_outputs_whitelist)
-
-        self._run_model(model)
-        return model
+        if self._model is None:
+            model = self.build_model(params_dict, build_options)
+            if derived_outputs_whitelist:
+                # Only calculate required derived outputs.
+                model.set_derived_outputs_whitelist(derived_outputs_whitelist)
+            if isinstance(model, CompartmentalModel2):
+                self._model = model
+                self._runner = self._initialize_model(model, params_dict, True)
+                return self._runner.model
+            else:
+                model.run()
+                return model
+        else:
+            pdict_exp = expand_nested_dict(params_dict)
+            self._runner.run(pdict_exp)
+            return self._runner.model
 
     def run_scenario_models(
         self,
         baseline_model: CompartmentalModel,
         scenario_params: List[Params],
-        start_time: Optional[float] = None,
-        start_times: Optional[List[float]] = None,
         build_options: Optional[List[dict]] = None,
     ) -> List[CompartmentalModel]:
         """
         Runs all the project's scenarios with the given parameters.
         Returns the completed scenario models.
         """
-        # Figure out what start times to use for each scenario.
-        if start_times is None and start_time is not None:
-            # Use the same start time for each scenario.
-            start_times = [start_time] * len(scenario_params)
-        elif start_times is None:
-            # No start times specified - use whatever the model defaults are.
-            start_times = [None] * len(scenario_params)
-
         if build_options is None:
             build_options = [None] * len(scenario_params)
 
         models = []
-        assert baseline_model.outputs is not None, "Baseline mode has not been run yet."
-        for start_time, params, build_opt in zip(start_times, scenario_params, build_options):
+        assert baseline_model.outputs is not None, "Baseline model has not been run yet."
 
-            params_dict = params.to_dict()
-            model = self.build_model(params_dict, build_opt)
+        if isinstance(baseline_model, CompartmentalModel2):
+            if self._scenario_models is None:
+                self._scenario_models = {}
+                for model_idx, params in enumerate(scenario_params):
+                    params_dict = params.to_dict()
+                    model = self.build_model(params_dict, None)
+                    if model.times[0] != baseline_model.times[0]:
+                        raise ValueError("Scenario start times must match baseline start times")
+                    runner = self._initialize_model(model, params_dict, False)
+                    self._scenario_models[model_idx] = runner
+            for model_idx, params in enumerate(scenario_params):
+                pdict_exp = expand_nested_dict(params.to_dict())
+                self._scenario_models[model_idx].run(pdict_exp)
+                models.append(self._scenario_models[model_idx].model)
+        else:
+            for model_idx, (params, build_opt) in enumerate(zip(scenario_params, build_options)):
 
-            if start_time is not None:
-                # Find the initial conditions for the given start time
-                start_idx = get_scenario_start_index(baseline_model.times, start_time)
-                init_compartments = baseline_model.outputs[start_idx, :]
-                # Use initial conditions at the given start time.
-                if type(model) is CompartmentalModel:
-                    model.initial_population = init_compartments
-                else:
-                    model.compartment_values = init_compartments
+                params_dict = params.to_dict()
 
-            self._run_model(model)
-            models.append(model)
+                model = self.build_model(params_dict, build_opt)
+
+                if model.times[0] != baseline_model.times[0]:
+                    raise ValueError("Scenario start times must match baseline start times")
+
+                self._run_model(model)
+                models.append(model)
 
         return models
+
+    def _initialize_model(self, model: CompartmentalModel2, params_dict, run=True):
+        model.finalize()
+        pdict_filt = {
+            k: v
+            for k, v in expand_nested_dict(params_dict).items()
+            if k in model.get_input_parameters()
+        }
+        runner = model.get_runner(pdict_filt, dyn_params=self._cal_params)
+        if run:
+            runner.run(pdict_filt)
+        return runner
 
     def _run_model(self, model: CompartmentalModel):
         """
         Run the model.
         """
-        model.run(max_step=1)
-
-    def write_params_to_tex(self, main_table_params_list, project_path, output_dir_path=None):
-        """
-        Write the main parameter table as a tex file. Also write the table of calibrated parameters in a separate tex file.
-        :param main_table_params_list: ordered list of parameters to be included in the main table
-        :param project_path: path of the project's directory
-        :param output_dir_path: path of the directory where to dump the output tex files.
-               Default is "docs/papers/<model_name>/projects/<region_name>".
-        """
-        # Load parameters' descriptions (base model)
-        base_params_descriptions_path = os.path.join(
-            MODELS_PATH, self.model_name, "params_descriptions.json"
-        )
-        with open(base_params_descriptions_path, mode="r") as f:
-            params_descriptions = json.load(f)
-
-        # Load parameters' descriptions (project-specific)
-        updated_descriptions_path = os.path.join(project_path, "params_descriptions.json")
-        if os.path.isfile(updated_descriptions_path):
-            with open(updated_descriptions_path, mode="r") as f:
-                updated_params_descriptions = json.load(f)
-            params_descriptions.update(updated_params_descriptions)
-
-        # work out output dir path
-        if output_dir_path is None:
-            output_dir_path = os.path.join(
-                DOCS_PATH, "papers", self.model_name, "projects", self.region_name
-            )
-
-        # Get list of priors
-        all_calibration_params_names = (
-            self.calibration.iterative_sampling_param_names
-            + self.calibration.independent_sampling_param_names
-        )
-        all_priors = (
-            self.calibration.iterative_sampling_priors
-            + self.calibration.independent_sampling_priors
-        )
-
-        # Write main parameter table to tex file
-        write_main_param_table(
-            self,
-            main_table_params_list,
-            params_descriptions,
-            all_calibration_params_names,
-            all_priors,
-            output_dir_path,
-        )
-
-        # Write calibrated parameter table to tex file
-        write_priors_table(params_descriptions, all_priors, output_dir_path)
+        model.run()
 
     def get_path(self) -> Path:
         """
@@ -203,6 +235,9 @@ class Project:
     def _get_path(self):
         return _PROJECTS[self.model_name][self.region_name]
 
+    def _gen_run_id(self):
+        return build_run_id(self.model_name, self.region_name, get_git_hash()[0:8])
+
 
 LOADED_PROJECTS = set()
 
@@ -211,13 +246,19 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
     """
     Returns a project
     """
-    # If a school closure project is requested, will call the relevant project builder function 
+    # If a school closure project is requested, will call the relevant project builder function
     if model_name == Models.SM_COVID and project_name in Region.SCHOOL_PROJECT_REGIONS:
         # Ugly import within function definition to avoid circular imports
         from autumn.projects.sm_covid.common_school.project_maker import get_school_project
+
+        project = get_school_project(project_name)
+    elif model_name == Models.SM_COVID2 and project_name in Region.SCHOOL_PROJECT_REGIONS:
+        # Ugly import within function definition to avoid circular imports
+        from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
+
         project = get_school_project(project_name)
 
-    # Otherwise, the project is loaded from the relevant project.py file 
+    # Otherwise, the project is loaded from the relevant project.py file
     else:
         assert model_name in _PROJECTS, f"Model {model_name} not registered as a project."
         msg = f"Project {project_name} not registered as a project using model {model_name}."
@@ -235,7 +276,7 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
             raise ImportError(msg)
 
         LOADED_PROJECTS.add(import_path)
-        
+
     return project
 
 
@@ -308,12 +349,7 @@ def run_project_locally(project: Project, run_scenarios=True):
     if run_scenarios:
         num_scenarios = len(project.param_set.scenarios)
         with Timer(f"Running {num_scenarios} model scenarios"):
-            start_times = [
-                sc_params.to_dict()["time"]["start"] for sc_params in project.param_set.scenarios
-            ]
-            sc_models = project.run_scenario_models(
-                baseline_model, project.param_set.scenarios, start_times=start_times
-            )
+            sc_models = project.run_scenario_models(baseline_model, project.param_set.scenarios)
     else:
         sc_models = []
 
@@ -478,6 +514,7 @@ OUTPUT_CALCS = {
     DiffOutput.ABSOLUTE: calc_absolute_diff_output,
 }
 
+
 def calculate_post_diff_outputs(
     models: List[CompartmentalModel], post_diff_output_requests: Dict[str, Dict]
 ):
@@ -497,5 +534,5 @@ def calculate_post_diff_outputs(
     """
     for new_output_name, func_details in post_diff_output_requests.items():
         for model in models:
-            calculated_sources = [model.derived_outputs[s] for s in func_details['sources']]
-            model.derived_outputs[new_output_name] = func_details['func'](*calculated_sources)
+            calculated_sources = [model.derived_outputs[s] for s in func_details["sources"]]
+            model.derived_outputs[new_output_name] = func_details["func"](*calculated_sources)

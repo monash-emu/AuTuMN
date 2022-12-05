@@ -1,6 +1,8 @@
 import os
 import shutil
 
+from pathlib import Path
+
 
 def recreate_dir(dirpath: str):
     """
@@ -10,3 +12,7 @@ def recreate_dir(dirpath: str):
         shutil.rmtree(dirpath)
 
     os.makedirs(dirpath)
+
+
+def ls(path: Path, pattern="*"):
+    return list(path.glob(pattern))

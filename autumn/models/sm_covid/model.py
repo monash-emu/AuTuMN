@@ -65,7 +65,12 @@ def process_unesco_data(params: Parameters):
     if params.mobility.apply_unesco_school_data:
         # Convert the categorical data into a numerical timeseries
         unesco_data.replace(
-            {"Closed due to COVID-19": 0., "Fully open": 1., "Academic break": 1., "Partially open": params.mobility.unesco_partial_opening_value}, 
+            {
+                "Academic break": 0., 
+                "Fully open": 1.,                 
+                "Partially open": params.mobility.unesco_partial_opening_value,  # switched to 1. to model counterfactual no-closure scenario
+                "Closed due to COVID-19": params.mobility.unesco_full_closure_value,  # switched to 1. to model counterfactual no-closure scenario
+            }, 
             inplace=True
         )
 
@@ -118,11 +123,17 @@ def build_model(
     n_latent_comps = params.compartment_replicates['latent']
     latent_compartments = [f"{Compartment.LATENT}_{i}" for i in range(n_latent_comps)]
 
-    n_infectious_comps = params.compartment_replicates['infectious']
-    infectious_compartments = [f"{Compartment.INFECTIOUS}_{i}" for i in range(n_infectious_comps)]
+    n_active_comps = params.compartment_replicates['infectious']
+    active_compartments = [f"{Compartment.INFECTIOUS}_{i}" for i in range(n_active_comps)]
 
     # Define the full list of compartments
-    base_compartments = [Compartment.SUSCEPTIBLE] + latent_compartments + infectious_compartments + [Compartment.RECOVERED]
+    base_compartments = [Compartment.SUSCEPTIBLE] + latent_compartments + active_compartments + [Compartment.RECOVERED]
+
+    # work out the list of infectious compartments
+    n_infectious_latent_comps = params.latency_infectiousness.n_infectious_comps
+    assert n_infectious_latent_comps <= n_latent_comps, "Number of infectious latent comps greater than number of latent comps."
+    infectious_latent_comps = latent_compartments[-n_infectious_latent_comps:]
+    infectious_compartments = infectious_latent_comps + active_compartments
 
     # Create the model object
     model = CompartmentalModel(
@@ -175,21 +186,25 @@ def build_model(
     """
     # Transition within latent states 
     progression_rate = n_latent_comps * 1. / sojourns.latent
+    latent_progression_flows = []
     for i_latent in range(n_latent_comps - 1):
+        flown_name = f"within_latent_{i_latent}"
         model.add_transition_flow(
-            name=f"within_latent_{i_latent}",
+            name=flown_name,
             fractional_rate=progression_rate,
             source=latent_compartments[i_latent],
             dest=latent_compartments[i_latent + 1],
         )
+        latent_progression_flows.append(flown_name)
 
     # Progression from latent to active
     model.add_transition_flow(
         name=FlowName.PROGRESSION,
         fractional_rate=progression_rate,
         source=latent_compartments[-1],
-        dest=infectious_compartments[0],
+        dest=active_compartments[0],
     )
+    latent_progression_flows.append(FlowName.PROGRESSION)
 
     # Transmission
     infection_dest, infectious_entry_flow = latent_compartments[0], FlowName.PROGRESSION
@@ -217,14 +232,14 @@ def build_model(
         dest=infection_dest,
     )
 
-    # Transition within infectious states 
-    recovery_rate = n_infectious_comps * 1. / sojourns.active
-    for i_active in range(n_infectious_comps - 1):
+    # Transition within active states 
+    recovery_rate = n_active_comps * 1. / sojourns.active
+    for i_active in range(n_active_comps - 1):
         model.add_transition_flow(
             name=f"within_infectious_{i_active}",
             fractional_rate=recovery_rate,
-            source=infectious_compartments[i_active],
-            dest=infectious_compartments[i_active + 1],
+            source=active_compartments[i_active],
+            dest=active_compartments[i_active + 1],
         )
         
     # Recovery transition
@@ -275,6 +290,14 @@ def build_model(
         params.is_dynamic_mixing_matrix,
         suscept_adjs,
     )
+
+    # adjust the infectiousness of the infectious latent compartments using this stratification (summer design flaw, we should be able to do this with no stratification)
+    for infectious_latent_comp in infectious_latent_comps:
+        age_strat.add_infectiousness_adjustments(
+            infectious_latent_comp, 
+            {agegroup: Multiply(params.latency_infectiousness.rel_infectiousness) for agegroup in age_groups}
+        )
+
     model.stratify_with(age_strat)
 
     """
@@ -282,7 +305,7 @@ def build_model(
     """
     if voc_params:
         # Build the stratification using the same function as for the sm_sir model
-        strain_strat = get_strain_strat(voc_params, base_compartments)
+        strain_strat = get_strain_strat(voc_params, base_compartments, latent_progression_flows)
         # Make sure the original infectious seed is split according to the strain-specific seed proportions
         strain_strat.set_flow_adjustments(
             FlowName.PRIMARY_INFECTIOUS_SEEDING, 

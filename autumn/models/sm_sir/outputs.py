@@ -417,11 +417,20 @@ class SmSirOutputsBuilder(OutputsBuilder):
             func=hospital_occupancy_func
         )
 
+        if region == 'Metro Manila':
+            # add manually shifted hosp occupancy output for NCR to account for non-COVID-19 cases included in hospital reports
+            self.model.request_function_output(
+                name="ncr_hospital_occupancy",
+                sources=["hospital_occupancy"],
+                func=lambda h: h + 1147.  # 1147 is the lowest value reported since 1 Jan 2022
+            )
+
     def request_icu_outputs(
         self,
         prop_icu_among_hospitalised: float,
         time_from_hospitalisation_to_icu: TimeDistribution,
         icu_stay_duration: TimeDistribution,
+        region: str,
         strain_strata: List[str],
         model_times: np.ndarray,
         voc_params: Optional[Dict[str, VocComponent]],
@@ -517,6 +526,14 @@ class SmSirOutputsBuilder(OutputsBuilder):
             func=icu_occupancy_func,
         )
 
+        if region == 'Metro Manila':
+            # add manually shifted hosp occupancy output for NCR to account for non-COVID-19 cases included in hospital reports
+            self.model.request_function_output(
+                name="ncr_icu_occupancy",
+                sources=["icu_occupancy"],
+                func=lambda h: h + 122.  # 122 is the lowest value reported since 1 Jan 2022
+            )
+
     def request_recovered_proportion(self, base_comps: List[str]):
         """
         Track the total population ever infected and the proportion of the total population.
@@ -606,11 +623,8 @@ class SmSirOutputsBuilder(OutputsBuilder):
         Calculate the proportion of the total prevalence contributed by each strain.
 
         Some code that might be useful for pulling these outputs out later:
-        def get_strata(model, strat_name):
-            for strat in model._stratifications:
-                if strat_name == strat.name:
-                    return strat.strata
         derived_df[[f"strain_propXstrain_{strain}" for strain in get_strata(model, 'strain')]].plot.area()
+        You'll need get_strata from ./autumn/model_features/outputs/
 
         Args:
             compartment_types: The unstratified compartment names

@@ -94,6 +94,8 @@ def test_get_life_expectancy_by_agegroup():
 def test_get_crude_birth_rate():
     country_iso_code = "AUS"
     birth_rates, years = get_crude_birth_rate(country_iso_code)
+    birth_rates = birth_rates.to_list()
+    years = years.to_list()
     assert years == [
         1952.5,
         1957.5,

@@ -6,23 +6,6 @@ from autumn.core.db.database import ParquetDatabase, get_database
 from autumn.core.utils.timer import Timer
 from autumn.settings import INPUT_DATA_PATH
 
-from .covid_au.preprocess import preprocess_covid_au
-from .covid_bgd.preprocess import preprocess_covid_bgd
-from .covid_btn.preprocess import preprocess_covid_btn
-from .covid_lka.preprocess import preprocess_covid_lka
-from .covid_mmr.preprocess import preprocess_covid_mmr
-from .covid_mys.preprocess import preprocess_covid_mys
-from .covid_phl.preprocess import preprocess_covid_phl
-from .covid_survey.preprocess import preprocess_covid_survey
-from .covid_vnm.preprocess import preprocess_covid_vnm
-from .demography.preprocess import preprocess_demography
-from .gisaid_voc.preprocess import preprocess_covid_gisaid
-from .mobility.preprocess import preprocess_mobility
-from .owid.preprocess import preprocess_our_world_in_data
-from .school_closure.preprocess import preprocess_school_closure
-from .social_mixing.preprocess import preprocess_social_mixing
-from .tb_kir.preprocess import preprocess_tb_kir
-
 logger = logging.getLogger(__name__)
 
 _input_db = None
@@ -50,9 +33,29 @@ def build_input_database(rebuild: bool = False):
 
     Returns a Database, representing the input database.
     """
+
     if os.path.exists(INPUT_DB_PATH) and not rebuild:
         input_db = get_database(INPUT_DB_PATH)
     else:
+        from .covid_au.preprocess import preprocess_covid_au
+        from .covid_bgd.preprocess import preprocess_covid_bgd
+        from .covid_btn.preprocess import preprocess_covid_btn
+        from .covid_lka.preprocess import preprocess_covid_lka
+        from .covid_mmr.preprocess import preprocess_covid_mmr
+        from .covid_mys.preprocess import preprocess_covid_mys
+        from .covid_phl.preprocess import preprocess_covid_phl
+        from .covid_survey.preprocess import preprocess_covid_survey
+        from .covid_vnm.preprocess import preprocess_covid_vnm
+        from .demography.preprocess import preprocess_demography
+        from .gisaid_voc.preprocess import preprocess_covid_gisaid
+        from .mobility.preprocess import preprocess_mobility
+        from .owid.preprocess import preprocess_our_world_in_data
+        from .school_closure.preprocess import preprocess_school_closure
+        from .social_mixing.preprocess import preprocess_social_mixing
+        from .tb_kir.preprocess import preprocess_tb_kir
+        from .tb_camau.preprocess import preprocess_tb_camau
+        from .sero_survey.preprocess import preprocess_covid_serosurvey
+
         logger.info("Building a new database.")
         input_db = ParquetDatabase(INPUT_DB_PATH)
 
@@ -101,7 +104,13 @@ def build_input_database(rebuild: bool = False):
         with Timer("Ingesting social mixing data."):
             preprocess_social_mixing(input_db, country_df)
 
-        with Timer("Ingesting gisaid data."):
-            preprocess_covid_gisaid(input_db)
+        with Timer("Ingesting serosurvey data."):
+            preprocess_covid_serosurvey(input_db)
+
+        with Timer("Ingesting mobility data."):
+            preprocess_mobility(input_db, country_df)
+
+        with Timer("Ingesting Ca Mau data."):
+            preprocess_tb_camau(input_db)
 
     return input_db

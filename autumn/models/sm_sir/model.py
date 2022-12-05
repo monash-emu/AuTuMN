@@ -22,14 +22,12 @@ from .stratifications.immunity import (
     adjust_susceptible_infection_with_strains,
     adjust_reinfection_without_strains,
     adjust_reinfection_with_strains,
-    apply_reported_vacc_coverage,
-    apply_reported_vacc_coverage_with_booster,
-    set_dynamic_vaccination_flows_wpro
+    set_dynamic_vaccination_flows_wpro,
+    apply_vacc_coverage,
 )
 
 from .stratifications.strains import get_strain_strat, seed_vocs, apply_reinfection_flows_with_strains
 from .stratifications.clinical import get_clinical_strat
-from .stratifications.indigenous import get_indigenous_strat
 from autumn.models.sm_sir.stratifications.agegroup import convert_param_agegroups
 from autumn.settings.constants import COVID_BASE_DATETIME
 
@@ -509,8 +507,6 @@ def build_model(
         set_dynamic_vaccination_flows_wpro(compartment_types, model, iso3, age_pops)
 
     else:
-
-        # Get the immunity stratification
         immunity_params = params.immunity_stratification
         immunity_strat = get_immunity_strat(
             compartment_types,
@@ -530,29 +526,24 @@ def build_model(
             # implemented yet - but at this stage we assume we don't want it to
             msg = "Strain stratification not present in model"
             assert "strain" in [strat.name for strat in model._stratifications], msg
-
             adjust_susceptible_infection_with_strains(
-                low_immune_effect=immunity_low_risk_reduction,
-                high_immune_effect=immunity_high_risk_reduction,
-                immunity_strat=immunity_strat,
-                voc_params=voc_params,
-                vaccine_model=vaccine_effects_params.vaccine_model
+                immunity_low_risk_reduction,
+                immunity_high_risk_reduction,
+                immunity_strat,
+                voc_params,
             )
             adjust_reinfection_with_strains(
-                low_immune_effect=immunity_low_risk_reduction,
-                high_immune_effect=immunity_high_risk_reduction,
-                immunity_strat=immunity_strat,
-                voc_params=voc_params,
-                reinfection_flows=reinfection_flows,
-                vaccine_model=vaccine_effects_params.vaccine_model
-
+                immunity_low_risk_reduction,
+                immunity_high_risk_reduction,
+                immunity_strat,
+                reinfection_flows,
+                voc_params,
             )
         else:
             adjust_susceptible_infection_without_strains(
-                low_immune_effect=immunity_low_risk_reduction,
-                high_immune_effect=immunity_high_risk_reduction,
-                immunity_strat=immunity_strat,
-                vaccine_model=vaccine_effects_params.vaccine_model
+                immunity_low_risk_reduction,
+                immunity_high_risk_reduction,
+                immunity_strat,
             )
             adjust_reinfection_without_strains(
                 immunity_low_risk_reduction,
@@ -563,82 +554,6 @@ def build_model(
 
         # Apply the immunity stratification
         model.stratify_with(immunity_strat)
-
-        # Implement the dynamic immunity process
-        vacc_coverage_available = ["BGD", "PHL", "BTN", "VNM"]
-        vacc_region_available = ["Metro Manila", "Hanoi", "Ho Chi Minh City", None]
-
-        is_dynamic_immunity = iso3 in vacc_coverage_available and region in vacc_region_available
-
-        if is_dynamic_immunity:
-            thinning = 20 if iso3 == "BGD" else None
-
-            if iso3 == "PHL" or iso3 == "VNM":
-                apply_reported_vacc_coverage_with_booster(
-                    compartment_types,
-                    model,
-                    age_groups,
-                    iso3,
-                    region,
-                    thinning=thinning,
-                    model_start_time=params.time.start,
-                    start_immune_prop=immunity_params.prop_immune,
-                    start_prop_high_among_immune=immunity_params.prop_high_among_immune,
-                    booster_effect_duration=params.booster_effect_duration,
-                    future_monthly_booster_rate=params.future_monthly_booster_rate,
-                    future_booster_age_allocation=params.future_booster_age_allocation,
-                    age_pops=age_pops,
-                    model_end_time=params.time.end,
-                )
-            else:
-                apply_reported_vacc_coverage(
-                    compartment_types,
-                    model,
-                    iso3,
-                    thinning=thinning,
-                    model_start_time=params.time.start,
-                    start_immune_prop=immunity_params.prop_immune,
-                    additional_immunity_points=params.additional_immunity,
-                )
-
-    """
-    Indigenous stratification (for the Northern Territory application, only)
-    """
-
-    if params.indigenous:
-
-        # Get the population totals from the database
-        age_pops = pd.Series(
-            inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year),
-            index=age_groups,
-        )
-        indigenous_age_pops = pd.Series(
-            inputs.get_population_by_agegroup(age_groups, iso3, "NT_ABORIGINAL", pop.year),
-            index=age_groups,
-        )
-        non_indigenous_age_pops = age_pops - indigenous_age_pops
-
-        # Get the stratification object, including the overall population split
-        overall_indigenous_prop = indigenous_age_pops.sum() / age_pops.sum()
-        indigenous_strat = get_indigenous_strat(
-            compartment_types,
-            overall_indigenous_prop,
-        )
-        model.stratify_with(indigenous_strat)
-
-        # Distribute the population within their Indigenous status category
-        indigenous_agedist = indigenous_age_pops / indigenous_age_pops.sum()
-        non_indigenous_agedist = non_indigenous_age_pops / non_indigenous_age_pops.sum()  
-        model.adjust_population_split(
-            "agegroup", 
-            {"indigenous": "indigenous"}, 
-            indigenous_agedist.to_dict(),
-        )
-        model.adjust_population_split(
-            "agegroup", 
-            {"indigenous": "non_indigenous"}, 
-            non_indigenous_agedist.to_dict(),
-        )
 
     """
     Get the applicable outputs
@@ -690,6 +605,7 @@ def build_model(
         params.prop_icu_among_hospitalised,
         time_to_event_params.icu_admission,
         params.hospital_stay.icu,
+        region,
         strain_strata,
         model_times,
         voc_params,

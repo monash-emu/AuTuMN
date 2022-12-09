@@ -119,7 +119,7 @@ def get_mobility_funcs(
 
             if location != "school":
                 if scenario_number == 4 or scenario_number == 5: # both nation-wide nad state wide lockdown are removed
-                    lockdown_1_data = [lockdown_1_mobility] * len(lockdown_1_times)
+                    lockdown_1_data = 0.8 * len(lockdown_1_times) # [lockdown_1_mobility] * len(lockdown_1_times)
                     lockdown_2_data = [lockdown_2_mobility] * len(lockdown_2_times)
                     mobility_timeseries = timeseries
                     mobility_timeseries[lockdown_1_times] = lockdown_1_data

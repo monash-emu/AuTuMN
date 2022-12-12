@@ -116,9 +116,10 @@ def get_mobility_funcs(
 
     for location, timeseries in mobility_requests.items():
         if constant_mobility:
-
+            lockdown_1_mobility = 0.8 # to get mobility without uncertainty
+            lockdown_2_mobility = 0.95
             if location != "school":
-                if scenario_number == 4 or scenario_number == 5: # both nation-wide nad state wide lockdown are removed
+                if scenario_number == 4 or scenario_number == 5:  # both nation-wide and state wide lockdown are removed
                     lockdown_1_data = [lockdown_1_mobility] * len(lockdown_1_times)
                     lockdown_2_data = [lockdown_2_mobility] * len(lockdown_2_times)
                     mobility_timeseries = timeseries
@@ -126,6 +127,7 @@ def get_mobility_funcs(
                     mobility_timeseries[lockdown_2_times] = lockdown_2_data
                     mobility_funcs[location] = scale_up_function(mobility_timeseries.index, mobility_timeseries ** power,
                                                                  method=4)
+
                 else:
 
                     if scenario_number == 2:  # jun 1st - 1st OCt MCO not implemented

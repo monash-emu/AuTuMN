@@ -42,7 +42,7 @@ priors = priors + [UniformPrior("age_stratification.cfr.multiplier", (0.008, 0.1
                    UniformPrior("voc_emergence.ba_2.contact_rate_multiplier", (1, 5)),
                    UniformPrior("voc_emergence.ba_1.cross_protection.ba_2.early_reinfection", (0.4, 0.8)),
                    UniformPrior("sojourns.recovered", (250, 450))]
-print(priors)
+
 targets = get_tartgets(calibration_start_time, "australia", "australia")
 
 calibration = Calibration(

@@ -21,8 +21,8 @@ def get_AUS_priors(variant_times):
         UniformPrior("infectious_seed", (1000, 10000)),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
         UniformPrior("sojourns.latent.total_time", (4, 15)),
-        UniformPrior("voc_emergence.ba2.new_voc_seed.start_time", (690, 750)),
-        UniformPrior("voc_emergence.ba2.contact_rate_multiplier", (0.8, 3.5))
+        UniformPrior("voc_emergence.ba_2.new_voc_seed.start_time", (690, 750)),
+        UniformPrior("voc_emergence.ba_2.contact_rate_multiplier", (0.8, 3.5))
     ]
     return priors
 

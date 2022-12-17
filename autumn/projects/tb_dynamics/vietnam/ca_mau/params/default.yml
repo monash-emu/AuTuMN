@@ -1,0 +1,62 @@
+---
+iso3: "VNM"
+
+
+time:
+  start: 1900.
+  end: 2050.
+  step: 0.1
+
+start_population_size: 26000.
+crude_death_rate: 0.0008
+stratify_by: ["age", "organ"]
+age_breakpoints: [0, 5, 15, 35, 50]
+
+age_mixing:
+  source_iso3: VNM
+  age_adjust: true
+
+contact_rate: 0.00178
+cumulative_start_time: 1986.
+
+# BCG coverage
+bcg_effect: "infection"  # infection or mortality
+time_variant_bcg_perc:
+  1930: 0.
+  1987: 62.
+  2000: 98.
+  2001: 97.
+  2002: 97.
+  2003: 97.
+  2004: 96.
+  2005: 95.
+  2006: 95.
+  2007: 94.
+  2008: 92.
+  2009: 97.
+  2010: 94.
+  2011: 98.
+  2012: 98.
+  2013: 95.
+  2014: 96.
+  2015: 97.
+  2016: 95.
+  2017: 97.
+  2018: 95.
+  2019: 96.
+  2019: 95.
+
+time_variant_tsr: # should always be > 0
+  2000: .92
+  2001: .93
+  2002: .92
+  2003: .93
+  2004: .93
+  2005: .93
+  2006: .93
+  2007: .91
+  2008: .92
+  2009: .92
+  2010: .92
+  2011: .93
+  2017.: .92

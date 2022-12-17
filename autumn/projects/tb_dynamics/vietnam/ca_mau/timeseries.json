@@ -1,0 +1,181 @@
+{
+    "prevalence_infectious": {
+      "title": "TB prevalence (/100,000)",
+      "output_key": "prevalence_infectious",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "prevalence_infectiousXlocation_starawa": {
+      "title": "TB prevalence in South Tarawa (/100,000)",
+      "output_key": "prevalence_infectiousXlocation_starawa",
+      "times": [2000.0],
+      "values": [350.0],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "prevalence_infectiousXlocation_other": {
+      "title": "TB prevalence in Other Islands (/100,000)",
+      "output_key": "prevalence_infectiousXlocation_other",
+      "times": [2000.0],
+      "values": [20.0],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "percentage_latent": {
+      "title": "LTBI prevalence (%)",
+      "output_key": "percentage_latent",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "percentage_latentXlocation_starawa": {
+      "title": "LTBI prevalence in South Tarawa (%)",
+      "output_key": "percentage_latentXlocation_starawa",
+      "times": [2015.0],
+      "values": [250],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "percentage_latentXlocation_other": {
+      "title": "LTBI prevalence in Other Islands (%)",
+      "output_key": "percentage_latentXlocation_other",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "notifications": {
+      "title": "Notifications",
+      "output_key": "notifications",
+      "times": [2000.0, 2001.0, 2002.0, 2003.0, 2004.0, 2005.0, 2006.0, 2007.0, 2008.0, 2009.0, 2010.0, 2011.0, 2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+      "values": [252, 189, 196, 284, 310, 332, 378, 334, 335, 278, 286, 343, 346, 472, 473, 559, 575, 422, 349, 436, 425],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "notificationsXlocation_starawa": {
+      "title": "Notifications in South Tarawa",
+      "output_key": "notificationsXlocation_starawa",
+      "times": [2000.0, 2001.0, 2002.0, 2003.0, 2004.0, 2005.0, 2006.0, 2007.0, 2008.0, 2009.0, 2010.0, 2011.0, 2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+      "values": [150, 120, 140, 220, 230, 220, 278, 234, 235, 178, 186, 243, 246, 372, 373, 359, 475, 322, 249, 236, 225],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "notificationsXlocation_other": {
+      "title": "Notifications in Other Islands",
+      "output_key": "notificationsXlocation_other",
+      "times": [2000.0, 2001.0, 2002.0, 2003.0, 2004.0, 2005.0, 2006.0, 2007.0, 2008.0, 2009.0, 2010.0, 2011.0, 2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+      "values": [102, 79, 56, 64, 100, 132, 100, 100, 100, 100, 100, 100, 100, 100, 100, 200, 100, 100, 100, 200, 200],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "total_population": {
+      "title": "Population size",
+      "output_key": "total_population",
+      "times": [1955.0, 1960.0, 1965.0, 1970.0, 1975.0, 1980.0, 1985.0, 1990.0, 1995.0, 2000.0, 2005.0, 2010.0, 2015.0, 2020.0],
+      "values": [36573.0, 41202.0, 46429.0, 51551.0, 55114.0, 59301, 63986.0, 72400.0, 77723.0, 84396.0, 92325.0, 102927.0, 110930.0, 119449.0],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "incidence": {
+      "title": "TB incidence (/100,000/y)",
+      "output_key": "incidence",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "incidenceXlocation_starawa": {
+      "title": "TB incidence in South Tarawa (/100,000/y)",
+      "output_key": "incidenceXlocation_starawa",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "incidenceXlocation_other": {
+      "title": "TB incidence in Other Islands (/100,000/y)",
+      "output_key": "incidenceXlocation_other",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+  
+    "mortality": {
+      "title": "TB mortality (/100,000/y)",
+      "output_key": "mortality",
+      "times": [2018.0],
+      "values": [51.0] ,
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "mortalityXlocation_starawa": {
+      "title": "TB mortality in South Tarawa (/100,000/y)",
+      "output_key": "mortalityXlocation_starawa",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "mortalityXlocation_other": {
+      "title": "TB mortality in Other Islands (/100,000/y)",
+      "output_key": "mortalityXlocation_other",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "cumulative_diseased": {
+      "title": "Cumulative TB incidence",
+      "output_key": "cumulative_diseased",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+      "differentiate": "relative"
+    },
+    "cumulative_deaths": {
+      "title": "Cumulative TB deaths",
+      "output_key": "cumulative_deaths",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975],
+      "differentiate": "relative"
+    },
+    "screening_rate": {
+      "title": "TB screening rate",
+      "output_key": "screening_rate",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "cumulative_pt": {
+      "title": "Cumulative PT provided",
+      "output_key": "cumulative_pt",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "cumulative_pt_sae": {
+      "title": "Cumulative PT SAEs",
+      "output_key": "cumulative_pt_sae",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+  
+    "abs_diff_cumulative_deaths": {
+      "title": "Cumulative deaths (abs diff)",
+      "output_key": "abs_diff_cumulative_deaths",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "abs_diff_cumulative_diseased": {
+      "title": "Cumulative incidence (abs diff)",
+      "output_key": "abs_diff_cumulative_diseased",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "abs_diff_cumulative_pt": {
+      "title": "Cumulative PT (abs diff)",
+      "output_key": "abs_diff_cumulative_pt",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "abs_diff_cumulative_pt_sae": {
+      "title": "Cumulative SAEs (abs diff)",
+      "output_key": "abs_diff_cumulative_pt_sae",
+      "times": [],
+      "values": [],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    }
+  }

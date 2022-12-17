@@ -76,6 +76,37 @@ passive_screening_sensitivity:
 
 awareness_raising: {}
 
+# parameters related to post-disease-flows
+time_variant_tb_screening_rate:
+  shape: 0.05 # The shape parameter to the tanh-based curve
+  inflection_time: 1980. # Point at which curve inflects
+  start_asymptote: 0. # Starting value - lower asymptote
+  end_asymptote: 10. # End value - upper asymptote
+treatment_duration: .5
+prop_death_among_negative_tx_outcome: 0.2
+on_treatment_infect_multiplier: 0.08
+time_variant_tsr: {}
+
+# changes by site of infection
+incidence_props_pulmonary: .85
+incidence_props_smear_positive_among_pulmonary: .75
+smear_negative_infect_multiplier: .25
+extrapulmonary_infect_multiplier: 0.
+infect_death_rate_dict:
+  unstratified: .2
+  smear_positive: 0.389 # Ragonent et al. (CID 2020)
+  smear_negative: 0.025 # Ragonent et al. (CID 2020)
+self_recovery_rate_dict:
+  unstratified: .2
+  smear_positive: 0.231 # Ragonent et al. (CID 2020)
+  smear_negative: 0.130 # Ragonent et al. (CID 2020)
+passive_screening_sensitivity:
+  unstratified: .75
+  smear_positive: 1. # dummy value
+  smear_negative: .7 # dummy value
+  extrapulmonary: 0.5 # dummy value
+
+
 time_variant_tb_screening_rate:
   shape: 0.05 # The shape parameter to the tanh-based curve
   inflection_time: 1980. # Point at which curve inflects

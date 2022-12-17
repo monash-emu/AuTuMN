@@ -23,7 +23,7 @@ class Region:
     BALI = "bali"
     VIETNAM = "vietnam"
     HO_CHI_MINH_CITY = "ho_chi_minh_city"
-    CA_MAU = "ca_mau"
+    CAMAU = "camau"
     HANOI = "hanoi"
     MYANMAR = "myanmar"
     BANGLADESH = "bangladesh"
@@ -63,7 +63,7 @@ class Region:
         BALI,
         VIETNAM,
         HO_CHI_MINH_CITY,
-        CA_MAU,
+        CAMAU,
         HANOI,
         MYANMAR,
         BANGLADESH,

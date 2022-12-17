@@ -50,6 +50,7 @@ class Parameters:
     # Running time
     time: Time
     # Model structure
+    stratify_by: list
     age_breakpoints: list
     infectious_seed: float
     cumulative_start_time: float
@@ -60,6 +61,7 @@ class Parameters:
     age_specific_latency: dict
     progression_multiplier: float
     self_recovery_rate: float
+    time_variant_tsr: dict
     infect_death_rate: float
     time_variant_bcg_perc: dict
     bcg_effect: str
@@ -68,9 +70,12 @@ class Parameters:
     age_infectiousness_switch: float
 
     # Treatment
+    treatment_duration: float
+    time_variant_tsr: dict
+    prop_death_among_negative_tx_outcome: float
     on_treatment_infect_multiplier: float
 
-    # Defining organ stratification
+    # Defining sites of infection
     incidence_props_pulmonary: float
     incidence_props_smear_positive_among_pulmonary: float
     smear_negative_infect_multiplier: float

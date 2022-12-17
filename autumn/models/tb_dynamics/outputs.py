@@ -1,13 +1,13 @@
 from summer import CompartmentalModel
 from autumn.model_features.outputs import OutputsBuilder
-from .constants import Compartment, LATENT_COMPS, INFECTIOUS_COMPS
+from .constants import BASE_COMPARTMENTS, LATENT_COMPS, INFECTIOUS_COMPS
 
 
 def request_outputs(
-    model: CompartmentalModel, cumulative_start_time: float, compartments: Compartment
+    model: CompartmentalModel, cumulative_start_time: float
 ):
-    output_builder = TbOutputBuilder(model, compartments)
-
+    output_builder = TbOutputBuilder(model)
+    output_builder.request_compartment_output("total_population", BASE_COMPARTMENTS)
     # Latency
     output_builder.request_compartment_output(
         "latent_population_size", LATENT_COMPS, save_results=False
@@ -65,6 +65,9 @@ def request_outputs(
 
 class TbOutputBuilder(OutputsBuilder):
     """Helps build derived outputs for the TB model"""
+
+    def __init__(self, model) -> None:
+        self.model = model
 
     def request_compartment_output(self, output_name, compartments, save_results=True):
         self.model.request_output_for_compartments(

@@ -9,7 +9,7 @@ from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import NormalTarget
 from autumn.models.tb_dynamics import base_params, build_model
 from autumn.settings import Region, Models
-from autumn.projects.tb_dynamics.vietnam.ca_mau.calibration_utils import get_natural_history_priors_from_cid
+from autumn.projects.tb_dynamics.vietnam.camau.calibration_utils import get_natural_history_priors_from_cid
 
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
@@ -45,7 +45,7 @@ calibration = Calibration(
 )
 
 project = Project(
-    Region.CA_MAU,
+    Region.CAMAU,
     Models.TBD,
     build_model,
     param_set,

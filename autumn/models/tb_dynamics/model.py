@@ -1,16 +1,16 @@
 from summer import CompartmentalModel
-import pandas as pd
+#import pandas as pd
 
 from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.project import Params, build_rel_path
-from autumn.model_features.curve import scale_up_function
+from autumn.model_features.curve import scale_up_function, tanh_based_scaleup
 from autumn.core import inputs
-from autumn.core.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-from autumn.core.inputs.tb_camau import queries
+#from autumn.core.inputs.tb_camau import queries
 
 from .constants import Compartment, BASE_COMPARTMENTS, INFECTIOUS_COMPS
 from .stratifications.age import get_age_strat
+from .stratifications.organ import get_organ_strat
 from .outputs import request_outputs
 
 base_params = Params(
@@ -72,15 +72,6 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     contact_rate_latent = params.contact_rate * params.rr_infection_latent
     contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
 
-    years, birth_rates = queries.get_camau_birth_rate()
-    birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
-    crude_birth_rate = scale_up_function(
-        years.tolist(), 
-        birth_rates.tolist(), 
-        smoothness=0.2, 
-        method=5
-    )
-
     # Add infection flow.
     model.add_infection_frequency_flow(
         "infection",
@@ -129,8 +120,59 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         Compartment.INFECTIOUS,
         Compartment.RECOVERED,
     )
+    # Detection rate for infected people.
+    if "organ" in params.stratify_by:
+        detection_rate = 1.0
+    else:
+        func_params = params.time_variant_tb_screening_rate
+        screening_rate_func = tanh_based_scaleup(
+            func_params["shape"],
+            func_params["inflection_time"],
+            func_params["start_asymptote"],
+            func_params["end_asymptote"],
+        )
 
+        def detection_rate(t, cv=None):
+            return screening_rate_func(t, cv) * params.passive_screening_sensitivity["unstratified"]
 
+    model.add_transition_flow(
+        "detection",
+        detection_rate,
+        Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
+    )
+
+    # Treatment recovery, releapse, death flows.
+    # Relapse and treatment death need to be adjusted by age later.
+    treatment_recovery_rate = 1.0
+    treatment_death_rate = 1.0
+    relapse_rate = 1.0
+    model.add_transition_flow(
+        "treatment_recovery",
+        treatment_recovery_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.RECOVERED,
+    )
+    model.add_death_flow(
+        "treatment_death",
+        treatment_death_rate,
+        Compartment.ON_TREATMENT,
+    )
+    model.add_transition_flow(
+        "relapse",
+        relapse_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.INFECTIOUS,
+    )
+
+    birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
+    birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
+    crude_birth_rate = scale_up_function(
+        years.to_list(), 
+        birth_rates.to_list(), 
+        smoothness=0.2, 
+        method=5
+    )
     # Add crude birth flow to the model
     model.add_crude_birth_flow(
         "birth",
@@ -139,14 +181,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Add universal death flow to the model
-    years, death_rates = queries.get_camau_death_rate()
-    death_rates = death_rates / 1000.0  # Birth rates are provided / 1000 population
-    universal_death_rate = scale_up_function(
-        years.tolist(), 
-        death_rates.tolist(), 
-        smoothness=0.2, 
-        method=5
-    )
+    universal_death_rate= 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
     # Infection death
@@ -179,10 +214,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
         )
     model.stratify_with(age_strat)
 
+    if "organ" in params.stratify_by:
+        organ_strat = get_organ_strat(params)
+        model.stratify_with(organ_strat)
+
     # Generate outputs
     request_outputs(
         model,
-        cumulative_start_time,
-        BASE_COMPARTMENTS)
+        cumulative_start_time
+    )
 
     return model

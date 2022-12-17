@@ -7,6 +7,7 @@ from autumn.model_features.curve import scale_up_function
 from autumn.core import inputs
 from autumn.core.inputs.social_mixing.queries import get_prem_mixing_matrices
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
+from autumn.core.inputs.tb_camau import queries
 
 from .constants import Compartment, BASE_COMPARTMENTS, INFECTIOUS_COMPS
 from .stratifications.age import get_age_strat
@@ -48,7 +49,7 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     seed = params.infectious_seed
     start_population_size = params.start_population_size
     cumulative_start_time = params.cumulative_start_time
-    age_breakpoints = [str(age) for age in params.age_breakpoints]
+    #age_breakpoints = [str(age) for age in params.age_breakpoints]
 
     model = CompartmentalModel(
         times=(time.start, time.end),
@@ -71,11 +72,11 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     contact_rate_latent = params.contact_rate * params.rr_infection_latent
     contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
 
-    birth_rates, years = inputs.get_crude_birth_rate(params.iso3)
+    years, birth_rates = queries.get_camau_birth_rate()
     birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
     crude_birth_rate = scale_up_function(
-        years.to_list(), 
-        birth_rates.to_list(), 
+        years.tolist(), 
+        birth_rates.tolist(), 
         smoothness=0.2, 
         method=5
     )
@@ -138,7 +139,14 @@ def build_model(params: dict, build_options: dict = None) -> CompartmentalModel:
     )
 
     # Add universal death flow to the model
-    universal_death_rate = params.crude_death_rate
+    years, death_rates = queries.get_camau_death_rate()
+    death_rates = death_rates / 1000.0  # Birth rates are provided / 1000 population
+    universal_death_rate = scale_up_function(
+        years.tolist(), 
+        death_rates.tolist(), 
+        smoothness=0.2, 
+        method=5
+    )
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
     # Infection death

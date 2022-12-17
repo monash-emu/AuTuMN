@@ -61,3 +61,28 @@ class Parameters:
     progression_multiplier: float
     self_recovery_rate: float
     infect_death_rate: float
+    time_variant_bcg_perc: dict
+    bcg_effect: str
+
+    # Characterising age stratification
+    age_infectiousness_switch: float
+
+    # Treatment
+    on_treatment_infect_multiplier: float
+
+    # Defining organ stratification
+    incidence_props_pulmonary: float
+    incidence_props_smear_positive_among_pulmonary: float
+    smear_negative_infect_multiplier: float
+    extrapulmonary_infect_multiplier: float
+
+    #intervention
+    awareness_raising: Optional[dict]
+
+    # Detection
+    time_variant_tb_screening_rate: dict
+    passive_screening_sensitivity: dict
+
+    self_recovery_rate_dict: dict
+    infect_death_rate_dict: dict
+

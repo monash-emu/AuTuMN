@@ -1,5 +1,6 @@
 from summer import CompartmentalModel
 from autumn.model_features.outputs import OutputsBuilder
+import numpy as np
 from .constants import BASE_COMPARTMENTS, LATENT_COMPS, INFECTIOUS_COMPS
 
 
@@ -61,6 +62,15 @@ def request_outputs(
     )
     sources = ["incidence_norm", "total_population"]
     output_builder.request_output_func("incidence", calculate_per_hundred_thousand, sources)
+
+       # Notifications (normalized to per year)
+    output_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
+    null_func = lambda: np.zeros_like(model.times)
+    output_builder.request_output_func("active_notifications_raw", null_func, [], save_results=False)
+
+    sources = ["passive_notifications_raw", "active_notifications_raw"]
+    output_builder.request_aggregation_output("notifications_raw", sources, save_results=False)
+    output_builder.request_normalise_flow_output("notifications", "notifications_raw")
 
 
 class TbOutputBuilder(OutputsBuilder):

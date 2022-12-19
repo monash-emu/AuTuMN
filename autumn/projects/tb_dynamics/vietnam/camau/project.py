@@ -20,6 +20,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 targets = [
     NormalTarget(ts_set["total_population"], stdev=2500.0),
+    NormalTarget(ts_set["notifications"], stdev=40.0)
 ]
 # Add uncertainty around natural history using our CID estimates
 natural_history_priors = []

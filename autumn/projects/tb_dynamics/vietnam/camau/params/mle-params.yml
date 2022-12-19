@@ -1,13 +1,13 @@
-contact_rate: 0.008302253705250492
+contact_rate: 0.004902253705250492
 infect_death_rate_dict.smear_negative: 0.017029286203121843
 infect_death_rate_dict.smear_positive: 0.3350068712137164
-infectious_seed: 1944.8258827705358
+infectious_seed: 1500
 progression_multiplier: 1.9929734947833826
 rr_infection_latent: 0.20117931356313018
 rr_infection_recovered: 0.9936487490268631
 self_recovery_rate_dict.smear_negative: 0.1221285000539895
 self_recovery_rate_dict.smear_positive: 0.17700000235545008
-start_population_size: 230000
+start_population_size: 250000
 time_variant_tb_screening_rate.end_asymptote: 0.4013575932062696
 time_variant_tb_screening_rate.inflection_time: 2019.2621896042012
 time_variant_tb_screening_rate.shape: 0.09759337035286209

@@ -65,10 +65,8 @@ def request_outputs(
 
        # Notifications (normalized to per year)
     output_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
-    null_func = lambda: np.zeros_like(model.times)
-    output_builder.request_output_func("active_notifications_raw", null_func, [], save_results=False)
 
-    sources = ["passive_notifications_raw", "active_notifications_raw"]
+    sources = ["passive_notifications_raw"]
     output_builder.request_aggregation_output("notifications_raw", sources, save_results=False)
     output_builder.request_normalise_flow_output("notifications", "notifications_raw")
 

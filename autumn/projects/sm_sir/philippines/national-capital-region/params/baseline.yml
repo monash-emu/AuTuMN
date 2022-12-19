@@ -149,14 +149,16 @@ age_stratification:
 booster_effect_duration: 180.
 
 current_daily_rates: 
-  double: 0.
-  booster: 3776
+  double: 334.  # daily average over last seven days ending 15 Dec 2022
+  booster: 1218.  # daily average over last seven days ending 15 Dec 2022
 
 latest_vacc_coverage:  # (t=1043 -> 8Nov2022)
   double:
-    1043: .925
+    1043: .925  # 8 Nov
+    1080: .926   # 15 Dec
   booster: 
-    1043: .381
+    1043: .381   # 8 Nov
+    1080: .385   # 15 Dec
 
 future_booster_age_allocation: null
 # future_booster_age_allocation:
@@ -164,6 +166,6 @@ future_booster_age_allocation: null
 # future_booster_age_allocation: [60, 50, 25, 15, 0]
 
 requested_cumulative_outputs: ['notifications', "hospital_admissions", "icu_admissions"]
-cumulative_start_time: 1050  # 15 Nov 2022
+cumulative_start_time: 1085  # 20 Dec 2022
 request_incidence_by_age: True
 request_immune_prop_by_age: True

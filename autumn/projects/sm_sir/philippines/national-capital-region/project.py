@@ -26,7 +26,8 @@ def get_scenario_params(pinas_lakas, voc_assumption, dropped_mask_compliance):
         True: "reduced mask compliance", False: "mask compliance unchanged"
     }
 
-    description = f"{pinas_lakas_txt[pinas_lakas]} / {voc_txt[voc_assumption]} / {mask_txt[dropped_mask_compliance]}"
+    # description = f"{pinas_lakas_txt[pinas_lakas]} / {voc_txt[voc_assumption]} / {mask_txt[dropped_mask_compliance]}"
+    description = voc_txt[voc_assumption]
     
     sc_param_dict = {
         "description": description,
@@ -57,7 +58,7 @@ def get_scenario_params(pinas_lakas, voc_assumption, dropped_mask_compliance):
             },
             "new_strain": {
                 "new_voc_seed": {
-                    "start_time": 1050.,  # 15 Nov 2022
+                    "start_time": 1085.,  # 20 Dec 2022
                 },
                 "contact_rate_multiplier": 2.,
                 "immune_escape": 0.
@@ -75,7 +76,7 @@ def get_scenario_params(pinas_lakas, voc_assumption, dropped_mask_compliance):
             },
             "new_strain": {
                 "new_voc_seed": {
-                    "start_time": 1050.,  # 15 Nov 2022
+                    "start_time": 1085.,  # 20 Dec 2022
                 },
                 "contact_rate_multiplier": 1.,
                 "immune_escape": 0.5
@@ -96,8 +97,8 @@ baseline_params = base_params.update(build_rel_path("params/baseline.yml")).upda
 
 scenario_params = []
 for voc_assumption in [None, 'trans', 'ie']:
-    for pinas_lakas in [False, True]:  
-        for dropped_mask_compliance in [False, True]: 
+    for pinas_lakas in [False]: # , True]:  
+        for dropped_mask_compliance in [False]: #, True]: 
             if voc_assumption is None and not pinas_lakas and not dropped_mask_compliance:
                 continue  # as this is the baseline scenario
             else:

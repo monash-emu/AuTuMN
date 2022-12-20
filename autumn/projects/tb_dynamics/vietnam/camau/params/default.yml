@@ -44,7 +44,7 @@ time_variant_bcg_perc:
   2017: 97.
   2018: 95.
   2019: 96.
-  2019: 95.
+  2020: 95.
 
 time_variant_tsr: # should always be > 0
   2000: .92

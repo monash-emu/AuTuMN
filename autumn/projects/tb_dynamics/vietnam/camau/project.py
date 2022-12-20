@@ -14,7 +14,8 @@ from autumn.projects.tb_dynamics.vietnam.camau.calibration_utils import get_natu
 # Load and configure model parameters.
 default_path = build_rel_path("params/default.yml")
 mle_path = build_rel_path("params/mle-params.yml")
-baseline_params = base_params.update(default_path).update(mle_path, calibration_format=True)
+baseline_params = base_params.update(default_path)
+#.update(mle_path, calibration_format=True)
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
 param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 

@@ -56,8 +56,8 @@ age_infectiousness_switch: 15.
 on_treatment_infect_multiplier: 0.08
 
 # changes by organ status
-incidence_props_pulmonary: .85
-incidence_props_smear_positive_among_pulmonary: .75
+incidence_props_pulmonary: .80
+incidence_props_smear_positive_among_pulmonary: .70
 smear_negative_infect_multiplier: .25
 extrapulmonary_infect_multiplier: 0.
 infect_death_rate_dict:
@@ -109,7 +109,7 @@ passive_screening_sensitivity:
 
 time_variant_tb_screening_rate:
   shape: 0.05 # The shape parameter to the tanh-based curve
-  inflection_time: 1980. # Point at which curve inflects
+  inflection_time: 1990. # Point at which curve inflects
   start_asymptote: 0. # Starting value - lower asymptote
   end_asymptote: 10. # End value - upper asymptote
 

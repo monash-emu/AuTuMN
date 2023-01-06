@@ -1,1 +1,1 @@
-from .model import build_model, get_base_params
+from .model import build_model, base_params

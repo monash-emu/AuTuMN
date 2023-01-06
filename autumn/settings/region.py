@@ -36,6 +36,7 @@ class Region:
     AUSTRALIA = "australia"
     BARMM = "barmm"
     WESTERN_VISAYAS = "western-visayas"
+    PAKISTAN = "pakistan"
 
     REGIONS = [
         PHILIPPINES,
@@ -75,6 +76,7 @@ class Region:
         AUSTRALIA,
         BARMM,
         WESTERN_VISAYAS,
+        PAKISTAN
     ]
 
     MALAYSIA_REGIONS = [

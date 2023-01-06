@@ -176,10 +176,10 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     # Create the model object
     model = CompartmentalModel(
-        times=(time_params.start, time_params.end),
+        times=(time_params['start'], time_params['end']),
         compartments=base_compartments,
         infectious_compartments=infectious_compartments,
-        timestep=time_params.step,
+        timestep=time_params['step'],
         ref_date=COVID_BASE_DATETIME,
     )
 

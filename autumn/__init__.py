@@ -165,3 +165,10 @@ register_project(
     Region.MALAYSIA,
     "autumn.projects.sm_jax.malaysia.project",
 )
+
+# summer2_template
+register_project(
+    Models.SUMMER2_TEMPLATE,
+    Region.PAKISTAN,
+    "autumn.projects.summer2_template.pakistan.project",
+)

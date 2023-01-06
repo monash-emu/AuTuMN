@@ -1,46 +1,39 @@
 from pathlib import Path
 
 from summer2 import CompartmentalModel
-from summer2.experimental.model_builder import ModelBuilder
+from summer2.parameters import Parameter
 
-from autumn.core.project import Params #, build_rel_path
-
-from .parameters import Parameters
+from autumn.core.project import Params 
 
 base_params = Params(
-    str(Path(__file__).parent.resolve() / "params.yml"),
-    validator=lambda d: Parameters(**d),
-    validate=False,
+    str(Path(__file__).parent.resolve() / "params.yml")
 )
 
 
-def build_model(params: dict, ret_builder=False) -> CompartmentalModel:
-
-    builder = ModelBuilder(params, Parameters)
-    params = builder.params
+def build_model(config: dict, ret_build=False) -> CompartmentalModel:
 
     base_compartments = ["S", "I", "R"]
-    time_params = params.time
+    time_config = config['time']
 
     # Create the model object
     model = CompartmentalModel(
-        times=(time_params['start'], time_params['end']),
+        times=(time_config['start'], time_config['end']),
         compartments=base_compartments,
         infectious_compartments=["I"],
-        timestep=time_params['step'],
+        timestep=time_config['step'],
     )
    
     # Initial compartment sizes 
     init_pop = {
-        "S": params.pop_size - params.infection_seed,
-        "I": params.infection_seed
+        "S": config['pop_size'] - config['infection_seed'],
+        "I": config['infection_seed']
     }
     model.set_initial_population(init_pop)
 
     # Transmission flow
     model.add_infection_frequency_flow(
         name="infection",
-        contact_rate=params.contact_rate,
+        contact_rate=Parameter('contact_rate'),
         source="S",
         dest="I",
     )
@@ -48,19 +41,12 @@ def build_model(params: dict, ret_builder=False) -> CompartmentalModel:
     # Recovery flow
     model.add_transition_flow(
         name="recovery",
-        fractional_rate=params.recovery_rate,
+        fractional_rate=config['recovery_rate'],
         source="I",
         dest="R",
     )
 
     # Track incidence
     model.request_output_for_flow(name="incidence", flow_name="infection")
-
-    # Update builder with finalised model
-    builder.set_model(model)     
-
-    # Return model object (and builder if requested)
-    if ret_builder:
-        return model, builder
-    else:
-        return model
+   
+    return model

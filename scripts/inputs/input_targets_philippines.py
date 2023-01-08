@@ -17,8 +17,8 @@ PROJECTS_PATH = Path(PROJECTS_PATH)
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 # shareable google drive links
-PHL_doh_link = "1pF1vg4znMwdhqWaYkNjTJaZC4V0Yy90_"  # sheet 05 daily report
-PHL_fassster_link = "1LD6Vis985YUTe_g37WFnDKCI_eucjq9P"
+PHL_doh_link = "1vXT3sXfzh-vlhJssFyCN5JS--2Zurcc0"  # sheet 05 daily report
+PHL_fassster_link = "1eQoxoLNovazA8IPWz9miyBS_0hI_UAkx"
 
 # destination folders filepaths
 phl_inputs_dir = INPUT_DATA_PATH / "covid_phl"
@@ -85,7 +85,7 @@ def fetch_phl_data():
         output_file.write(req.content)
 
     with ZipFile(PHL_fassster_dest) as z:
-        filename = [each.filename for each in z.filelist if each.filename.startswith("2022")]
+        filename = [each.filename for each in z.filelist if each.filename.startswith("2023")]
         if len(filename) == 1:
             with z.open(filename[0]) as f:
                 pd.read_csv(f).to_csv(phl_inputs_dir / filename[0])
@@ -95,7 +95,7 @@ def fassster_data_filepath():
     fassster_filename = [
         filename
         for filename in phl_inputs_dir.glob("*")
-        if filename.stem.startswith("ConfirmedCases_Final_") or filename.stem.startswith("2022")
+        if filename.stem.startswith("ConfirmedCases_Final_") or filename.stem.startswith("2023")
     ]
     fassster_filename = fassster_filename[0]
     return fassster_filename

@@ -6,9 +6,7 @@ from pathlib import Path
 import pandas as pd
 from autumn.settings import INPUT_DATA_PATH
 
-GOOGLE_MOBILITY_URL = (
-    "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv"
-)
+GOOGLE_MOBILITY_URL = "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv"
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
 MOBILITY_DIRPATH = INPUT_DATA_PATH / "mobility"

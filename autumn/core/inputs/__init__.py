@@ -38,7 +38,7 @@ def fetch_input_data():
     with Timer("Fetching COVID PHL data."):
         fetch_covid_phl_data()
 
-    with Timer("Fetching COVID PHL data."):
+    with Timer("Fetching COVID MYS data."):
         fetch_covid_mys_data()
 
     with Timer("Fetching OWID data."):

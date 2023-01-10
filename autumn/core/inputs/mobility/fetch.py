@@ -20,18 +20,24 @@ FB_MOVEMENT_2022 = MOBILITY_DIRPATH / "movement-range-2022.txt"
 # Keep required countries due to large CSV filesize.
 COUNTRY_FILTER = {
     "AU": "AUS",  # Australia
-    "BT": "BTN",  # Bhutan
     "BD": "BGD",  # Bangladesh
     "BE": "BEL",  # Belgium
+    "BT": "BTN",  # Bhutan
+    "CN": "CHN",  # China
     "ES": "ESP",  # Spain
     "FR": "FRA",  # France
     "GB": "GBR",  # United Kingdom"
     "IT": "ITA",  # Italy
+    "JP": "JPN",  # Japan
+    "KR": "KOR",  # Korea
     "LK": "LKA",  # Sri Lanka
     "MM": "MMR",  # Myanmar
+    "MN": "MNG",  # Mongolia
     "MY": "MYS",  # Malaysia
+    "NZ": "NZL",  # New Zealand
     "PH": "PHL",  # Philippines
     "SE": "SWE",  # Sweden
+    "SG": "SGP",  # Singapore
     "VN": "VNM",  # Vietnam
 }
 

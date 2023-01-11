@@ -9,6 +9,8 @@ time:
 
 start_population_size: 26000.
 crude_death_rate: 0.0008
+crude_birth_rate: 0.2
+infectious_seed: 1.
 stratify_by: ["age", "organ"]
 age_breakpoints: [0, 5, 15, 35, 50]
 

@@ -83,6 +83,8 @@ def get_first_variant_report_date(variant: str, country: str):
     }
 
     assert variant in variants_map, f"Variant {variant} not available from current GISAID database"
+    if '-' in country:
+        country = country.replace('-', ' ')
 
     input_db = get_input_db()
     report_dates = input_db.query(

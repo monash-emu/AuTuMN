@@ -59,11 +59,11 @@ testing_to_detection:
   smoothing_period: 14
   floor_value: 0.0
 is_dynamic_mixing_matrix: true
-immunity_stratification:
-  prop_immune: 0.8
-  prop_high_among_immune: 0.0
-  infection_risk_reduction:
-    low: 0.6
+vaccine_effects:
+  vaccine_model: WPRO
+  ve_infection: 0.1
+  ve_hospitalisation: 0.5
+  ve_death: 0.1
 mobility:
   google_mobility_locations:
     work:

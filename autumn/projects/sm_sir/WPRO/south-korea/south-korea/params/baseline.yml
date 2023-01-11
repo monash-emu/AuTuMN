@@ -1,12 +1,17 @@
 activate_random_process: false
+
 country:
   iso3: KOR
+
 population:
   year: 2020
+
 ref_mixing_iso3: CHN
+
 time:
   end: 1200.0
   start: 450.0
+
 voc_emergence:
   wild_type:
     starting_strain: true
@@ -45,6 +50,7 @@ voc_emergence:
       omicron:
         early_reinfection: 1.0
         late_reinfection: 0.0
+
 sojourns:
   active:
     total_time: 7.75
@@ -53,17 +59,21 @@ sojourns:
     total_time: 4.0
     proportion_early: 0.5
   recovered: 180.0
+
 testing_to_detection:
   assumed_tests_parameter: 0.001
   assumed_cdr_parameter: 0.12
   smoothing_period: 14
   floor_value: 0.0
+
 is_dynamic_mixing_matrix: true
-immunity_stratification:
-  prop_immune: 0.8
-  prop_high_among_immune: 0.0
-  infection_risk_reduction:
-    low: 0.6
+
+vaccine_effects:
+  vaccine_model: WPRO
+  ve_infection: 0.1
+  ve_hospitalisation: 0.5
+  ve_death: 0.1
+
 mobility:
   google_mobility_locations:
     work:

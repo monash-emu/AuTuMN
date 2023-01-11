@@ -28,7 +28,7 @@ WPRO_REGIONS = {
     "philippines": "PHL",
     "vietnam": "VNM",
     "japan": "JPN",
-    "mongolia": "MOG",
+    "mongolia": "MNG",
     "new-zealand": "NZL",
     "south-korea": "KOR",
     "singapore": "SGP",

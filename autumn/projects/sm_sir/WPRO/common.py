@@ -10,8 +10,11 @@ def get_WPRO_priors(variant_times):
         UniformPrior("infectious_seed", (1000, 10000)),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
         UniformPrior("sojourns.latent.total_time", (4, 15)),
-        UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (variant_times[1]-150, variant_times[1]+100)),
-        UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.8, 3.5))
+        UniformPrior(
+            "voc_emergence.omicron.new_voc_seed.start_time",
+            (variant_times[1] - 150, variant_times[1] + 100),
+        ),
+        UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (0.8, 3.5)),
     ]
     return priors
 
@@ -22,23 +25,22 @@ def get_AUS_priors(variant_times):
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
         UniformPrior("sojourns.latent.total_time", (4, 15)),
         UniformPrior("voc_emergence.ba_2.new_voc_seed.start_time", (690, 750)),
-        UniformPrior("voc_emergence.ba_2.contact_rate_multiplier", (0.8, 3.5))
+        UniformPrior("voc_emergence.ba_2.contact_rate_multiplier", (0.8, 3.5)),
     ]
     return priors
 
 
-def get_tartgets(calibration_start_time, country_name, region_name):
+def get_targets(calibration_start_time, country_name, region_name):
     seperator = "/"
     timeseries_file = "timeseries.json"
-    time_series_path = build_rel_path(f"{country_name}{seperator}{region_name}{seperator}{timeseries_file}")
+    time_series_path = build_rel_path(
+        f"{country_name}{seperator}{region_name}{seperator}{timeseries_file}"
+    )
     ts_set = load_timeseries(time_series_path)
 
     infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
     notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
-    targets = [
-        NormalTarget(infection_deaths_ts),
-        NormalTarget(notifications_ts)
-    ]
+    targets = [NormalTarget(infection_deaths_ts), NormalTarget(notifications_ts)]
     return targets
 
 

@@ -12,8 +12,9 @@ from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synt
 from autumn.model_features.jax.random_process import get_random_process
 from .outputs import TbOutputsBuilder
 from .parameters import Parameters
-from .constants import Compartment, FlowName
+from .constants import Compartment
 from .stratifications.age import get_age_strat
+from autumn.model_features.curve import scale_up_function
 
 
 from .constants import BASE_COMPARTMENTS, INFECTIOUS_COMPS, LATENT_COMPS
@@ -99,7 +100,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
     # Add the process of infecting the susceptibles
     model.add_infection_frequency_flow(
-        name=FlowName.INFECTION,
+        name="infection",
         contact_rate=contact_rate,
         source=Compartment.SUSCEPTIBLE,
         dest=Compartment.EARLY_LATENT,
@@ -152,6 +153,21 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.INFECTIOUS,
     )
 
+        # Entry flows
+    birth_rates, years = inputs.get_crude_birth_rate(iso3)
+    birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
+    crude_birth_rate = scale_up_function(
+        years.to_list(), 
+        birth_rates.to_list(), 
+        smoothness=0.2, 
+        method=5
+    )
+    model.add_crude_birth_flow(
+        "birth",
+        crude_birth_rate,
+        Compartment.SUSCEPTIBLE,
+    )
+
     universal_death_rate= 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
@@ -172,7 +188,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         age_strat = get_age_strat(
             params = params,
             compartments = BASE_COMPARTMENTS,
-            age_mixing_matrix = age_mixing_matrix,
+            #age_mixing_matrix = age_mixing_matrix,
         )
     else:
         age_strat = get_age_strat(

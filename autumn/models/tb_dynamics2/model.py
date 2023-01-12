@@ -15,9 +15,11 @@ from .parameters import Parameters
 from .constants import Compartment
 from .stratifications.age import get_age_strat
 from autumn.model_features.curve import scale_up_function
-
+from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
+from summer2.parameters.params import Function
 
 from .constants import BASE_COMPARTMENTS, INFECTIOUS_COMPS, LATENT_COMPS
+from summer2.parameters import Time
 
 from pathlib import Path
 
@@ -156,12 +158,11 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         # Entry flows
     birth_rates, years = inputs.get_crude_birth_rate(iso3)
     birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
-    crude_birth_rate = scale_up_function(
-        years.to_list(), 
-        birth_rates.to_list(), 
-        smoothness=0.2, 
-        method=5
+    tfunc = build_static_sigmoidal_multicurve(
+        years.to_list(),
+        birth_rates.to_list()
     )
+    crude_birth_rate = Function(tfunc, [Time])
     model.add_crude_birth_flow(
         "birth",
         crude_birth_rate,

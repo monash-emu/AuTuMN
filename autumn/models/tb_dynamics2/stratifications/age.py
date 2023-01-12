@@ -4,6 +4,7 @@ import numpy as np
 from summer2 import AgeStratification, Overwrite, Multiply
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve import scale_up_function
+from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.utils.utils import change_parameter_unit
 from autumn.models.tb_dynamics.utils import (
@@ -46,8 +47,8 @@ def get_age_strat(
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breakpoints, iso3)
     universal_death_funcs = {}
     for age in age_breakpoints:
-        universal_death_funcs[age] = scale_up_function(
-            death_rate_years, death_rates_by_age[age], smoothness=0.2, method=5
+        universal_death_funcs[age] = build_static_sigmoidal_multicurve(
+            death_rate_years, death_rates_by_age[age]
         )
 
     death_adjs = {str(k): Overwrite(v) for k, v in universal_death_funcs.items()}

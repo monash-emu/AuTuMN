@@ -1,5 +1,7 @@
 from autumn.model_features.outputs import OutputsBuilder
 
+from summer2.parameters import DerivedOutput
+
 
 class TbOutputsBuilder(OutputsBuilder):
     """Helps build derived outputs for the TB model"""
@@ -12,9 +14,8 @@ class TbOutputsBuilder(OutputsBuilder):
             output_name, compartments, save_results=save_results
         )
 
-    def request_output_func(self, output_name, func, sources, save_results=True):
-        # self.model.request_function_output(output_name, func, sources, save_results=save_results)
-        pass
+    def request_function_output(self, output_name, func, save_results=True):
+        self.model.request_function_output(output_name, func, save_results=save_results)
 
     def request_flow_output(self, output_name, flow_name, save_results=True):
         self.model.request_output_for_flow(output_name, flow_name, save_results=save_results)
@@ -22,13 +23,9 @@ class TbOutputsBuilder(OutputsBuilder):
     def request_aggregation_output(self, output_name, sources, save_results=True):
         self.model.request_aggregate_output(output_name, sources, save_results=save_results)
 
-    def _normalise_timestep(self, vals):
-        """Normalise flow outputs to be 'per unit time (year)'"""
-        return vals / self.model.timestep
-
     def request_normalise_flow_output(self, output_name, source, save_results=True):
-        self.request_output_func(
-            output_name, self._normalise_timestep, [source], save_results=save_results
+        self.model.request_function_output(
+            output_name, DerivedOutput(source) / self.model.timestep, save_results=save_results
         )
 
 

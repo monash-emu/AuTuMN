@@ -19,7 +19,7 @@ from autumn.model_features.curve.interpolate import build_static_sigmoidal_multi
 from summer2.parameters.params import Function
 
 from .constants import BASE_COMPARTMENTS, INFECTIOUS_COMPS, LATENT_COMPS
-from summer2.parameters import Time
+from summer2.parameters import Time, DerivedOutput
 
 from pathlib import Path
 
@@ -53,11 +53,10 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     iso3 = country.iso3
     seed = params.infectious_seed
     start_population_size = params.start_population_size
-    #age_breakpoints = [str(age) for age in params.age_breakpoints]
-    #age_strat_params = params.age_stratification
+    # age_breakpoints = [str(age) for age in params.age_breakpoints]
+    # age_strat_params = params.age_stratification
     time_params = params.time
     cumulative_start_time = params.cumulative_start_time
-
 
     # Create the model object
     model = CompartmentalModel(
@@ -93,7 +92,6 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # Assign to the model
     model.set_initial_population(init_pop)
 
-
     """
     Add intercompartmental flows
     """
@@ -120,7 +118,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
-    stabilisation_rate = 1.0 # will be overwritten by stratification
+    stabilisation_rate = 1.0  # will be overwritten by stratification
     early_activation_rate = 1.0
     late_activation_rate = 1.0
     model.add_transition_flow(
@@ -148,20 +146,17 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.INFECTIOUS,
         Compartment.RECOVERED,
     )
-        # Infection death
+    # Infection death
     model.add_death_flow(
         "infect_death",
         params.infect_death_rate,
         Compartment.INFECTIOUS,
     )
 
-        # Entry flows
+    # Entry flows
     birth_rates, years = inputs.get_crude_birth_rate(iso3)
     birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
-    tfunc = build_static_sigmoidal_multicurve(
-        years.to_list(),
-        birth_rates.to_list()
-    )
+    tfunc = build_static_sigmoidal_multicurve(years.to_list(), birth_rates.to_list())
     crude_birth_rate = Function(tfunc, [Time])
     model.add_crude_birth_flow(
         "birth",
@@ -169,9 +164,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.SUSCEPTIBLE,
     )
 
-    universal_death_rate= 1.0
+    universal_death_rate = 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
-
 
     """
     Apply age stratification
@@ -179,26 +173,28 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # Set mixing matrix
     if params.age_mixing:
         age_mixing_matrices = build_synthetic_matrices(
-            iso3, params.age_mixing.source_iso3, params.age_breakpoints, params.age_mixing.age_adjust,
-            requested_locations=["all_locations"]
+            iso3,
+            params.age_mixing.source_iso3,
+            params.age_breakpoints,
+            params.age_mixing.age_adjust,
+            requested_locations=["all_locations"],
         )
         age_mixing_matrix = age_mixing_matrices["all_locations"]
         # convert daily contact rates to yearly rates
         age_mixing_matrix *= 365.25
-        #Add Age stratification to the model
+        # Add Age stratification to the model
         age_strat = get_age_strat(
-            params = params,
-            compartments = BASE_COMPARTMENTS,
-            #age_mixing_matrix = age_mixing_matrix,
+            params=params,
+            compartments=BASE_COMPARTMENTS,
+            # age_mixing_matrix = age_mixing_matrix,
         )
     else:
         age_strat = get_age_strat(
-            params = params,
-            compartments = BASE_COMPARTMENTS,
+            params=params,
+            compartments=BASE_COMPARTMENTS,
         )
     model.stratify_with(age_strat)
 
-   
     """
     Get the applicable outputs
     """
@@ -210,28 +206,32 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         "latent_population_size", LATENT_COMPS, save_results=False
     )
     sources = ["latent_population_size", "total_population"]
-    outputs_builder.request_output_func("percentage_latent", calculate_percentage, sources)
+    # outputs_builder.request_output_func("percentage_latent", calculate_percentage, sources)
+    outputs_builder.request_function_output(
+        "percentage_latent",
+        100.0 * DerivedOutput("latent_population_size") / DerivedOutput("total_population"),
+    )
 
     # Prevalence
     outputs_builder.request_compartment_output(
         "infectious_population_size", INFECTIOUS_COMPS, save_results=False
     )
     sources = ["infectious_population_size", "total_population"]
-    outputs_builder.request_output_func(
-        "prevalence_infectious", calculate_per_hundred_thousand, sources
+    # outputs_builder.request_output_func(
+    #    "prevalence_infectious", calculate_per_hundred_thousand, sources
+    # )
+    outputs_builder.request_function_output(
+        "prevalence_infectious",
+        1e5 * DerivedOutput("infectious_population_size") / DerivedOutput("total_population"),
     )
 
     # Death
     outputs_builder.request_flow_output(
         "mortality_infectious_raw", "infect_death", save_results=False
     )
-   
+
     sources = ["mortality_infectious_raw"]
-    outputs_builder.request_aggregation_output(
-        "mortality_raw",
-        sources,
-        save_results=False
-    )
+    outputs_builder.request_aggregation_output("mortality_raw", sources, save_results=False)
     model.request_cumulative_output(
         "cumulative_deaths",
         "mortality_raw",
@@ -257,15 +257,19 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         "incidence_norm", "incidence_raw", save_results=False
     )
     sources = ["incidence_norm", "total_population"]
-    outputs_builder.request_output_func("incidence", calculate_per_hundred_thousand, sources)
+    # outputs_builder.request_output_func("incidence", calculate_per_hundred_thousand, sources)
+    outputs_builder.request_function_output(
+        "incidence", 1e5 * DerivedOutput("incidence_norm") / DerivedOutput("total_population")
+    )
 
     # request extra output to store the number of students*weeks of school missed
- 
+
     builder.set_model(model)
     if ret_builder:
         return model, builder
     else:
         return model
+
 
 def calculate_percentage(sub_pop_size, total_pop_size):
     return 100 * sub_pop_size / total_pop_size
@@ -277,4 +281,3 @@ def calculate_per_hundred_thousand(sub_pop_size, total_pop_size):
 
 def calculate_proportion(sub_pop_size, total_pop_size):
     return sub_pop_size / total_pop_size
-

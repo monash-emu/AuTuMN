@@ -24,6 +24,7 @@ class Region:
     VIETNAM = "vietnam"
     HO_CHI_MINH_CITY = "ho_chi_minh_city"
     HANOI = "hanoi"
+    CAMAU = "camau"
     MYANMAR = "myanmar"
     BANGLADESH = "bangladesh"
     DHAKA = "dhaka"

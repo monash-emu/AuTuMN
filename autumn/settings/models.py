@@ -9,5 +9,6 @@ class Models:
     HIERARCHICAL_SIR = "hierarchical_sir"
     SM_COVID = "sm_covid"
     SM_COVID2 = "sm_covid2"
+    TBD2 = "tb_dynamics2"
 
     MODELS = [COVID_19, TB, TBS, EXAMPLE, SM_SIR, SM_JAX, HIERARCHICAL_SIR, SM_COVID, SM_COVID2]

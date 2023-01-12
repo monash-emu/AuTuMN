@@ -157,6 +157,12 @@ register_project(
     Region.KIRIBATI,
     "autumn.projects.tb_dynamics.kiribati.project",
 )
+# New TB Dynamics
+register_project(
+    Models.TBD,
+    Region.CAMAU,
+    "autumn.projects.tb_dynamics.vietnam.camau.project",
+)
 
 
 # sm_jax
@@ -165,3 +171,11 @@ register_project(
     Region.MALAYSIA,
     "autumn.projects.sm_jax.malaysia.project",
 )
+
+register_project(
+    Models.TBD2,
+    Region.CAMAU,
+    "autumn.projects.tb_dynamics2.vietnam.camau2.project",
+)
+
+

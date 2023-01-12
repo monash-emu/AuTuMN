@@ -10,7 +10,7 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 450.0
+  start: 580.0
 
 voc_emergence:
   wild_type:
@@ -26,20 +26,23 @@ voc_emergence:
       wild_type:
         early_reinfection: 1.0
         late_reinfection: 1.0
-      omicron:
+      ba_1:
         early_reinfection: 0.4
         late_reinfection: 0.4
-  omicron:
+      ba_2:
+        early_reinfection: 0.4
+        late_reinfection: 0.4
+  ba_1:
     starting_strain: false
     seed_prop: 0.0
     new_voc_seed:
-      start_time: 700.0
+      start_time: 860.0
       entry_rate: 10.0
       seed_duration: 1.0
-    contact_rate_multiplier: 100.0
+    contact_rate_multiplier: 2.0
     immune_escape: 0.2
     hosp_protection: 0.75
-    death_protection: 0.85
+    death_protection: 0.5
     relative_latency: 0.6667
     relative_active_period: 1.0
     icu_multiplier: 0.55
@@ -47,7 +50,34 @@ voc_emergence:
       wild_type:
         early_reinfection: 1.0
         late_reinfection: 0.0
-      omicron:
+      ba_1:
+        early_reinfection: 1.0
+        late_reinfection: 0.0
+      ba_2:
+        early_reinfection: 0.4
+        late_reinfection: 0.4
+  ba_2:
+    starting_strain: false
+    seed_prop: 0.0
+    new_voc_seed:
+      start_time: 920.0
+      entry_rate: 10.0
+      seed_duration: 1.0
+    contact_rate_multiplier: 1.5
+    immune_escape: 0.2
+    hosp_protection: 0.75
+    death_protection: 0.5
+    relative_latency: 0.6667
+    relative_active_period: 1.0
+    icu_multiplier: 0.55
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.0
+        late_reinfection: 0.0
+      ba_1:
+        early_reinfection: 1.0
+        late_reinfection: 0.0
+      ba_2:
         early_reinfection: 1.0
         late_reinfection: 0.0
 
@@ -83,8 +113,3 @@ mobility:
       grocery_and_pharmacy: 0.333
       parks: 0.0
       transit_stations: 0.334
-vaccine_effects:
-  vaccine_model: WPRO
-  ve_infection: 0.4
-  ve_hospitalisation: 0.85
-  ve_death: 0.95

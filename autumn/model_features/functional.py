@@ -45,6 +45,7 @@ def binary_search_ge(x: float, points: jaxify.Array) -> int:
         The index value satisying the above conditions
     """
     from jax import lax
+    from jax import numpy as jnp
 
     def cond(state):
         low, high = state
@@ -54,8 +55,8 @@ def binary_search_ge(x: float, points: jaxify.Array) -> int:
         low, high = state
         midpoint = (0.5 * (low + high)).astype(int)
         update_upper = x < points[midpoint]
-        low = fnp.where(update_upper, low, midpoint)
-        high = fnp.where(update_upper, midpoint, high)
+        low = jnp.where(update_upper, low, midpoint)
+        high = jnp.where(update_upper, midpoint, high)
         return (low, high)
 
     low, high = lax.while_loop(cond, body, (0, len(points) - 1))

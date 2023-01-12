@@ -111,6 +111,49 @@ def build_sigmoidal_multicurve(x_points: jaxify.Array, curvature=16.0) -> callab
     return scaled_curve
 
 
+def build_linear_interpolator(x_points: jaxify.Array) -> callable:
+    """Build a sigmoidal smoothing function across points specified by
+    x_points; the returned function takes the y values as arguments in
+    form of a scale_data dict with keys [min, max, values, ranges]
+
+    Args:
+        x_points: x values to interpolate across
+        curvature: Sigmoidal curvature.  Default produces the same behaviour as the old
+                   scale_up_function
+
+    Returns:
+        The multisigmoidal function of (x, scale_data)
+    """
+    xranges = fnp.diff(fnp.array(x_points))
+    x_points = fnp.array(x_points)
+
+    xmin = x_points.min()
+    xmax = x_points.max()
+    xbounds = fnp.array([xmin, xmax])
+
+    def get_curve_at_t(t, values, ranges):
+        # idx = sum(t >= x_points) - 1
+        idx = binary_search_ge(t, x_points)
+
+        offset = t - x_points[idx]
+        relx = offset / xranges[idx]
+        return values[idx] + (relx * ranges[idx])
+
+    from jax import lax
+
+    def scaled_curve(t: float, ydata: dict):
+        # Branch on whether t is in bounds
+        bounds_state = sum(t > xbounds)
+        branches = [
+            lambda _, __, ___: ydata["min"],
+            get_curve_at_t,
+            lambda _, __, ___: ydata["max"],
+        ]
+        return lax.switch(bounds_state, branches, t, ydata["values"], ydata["ranges"])
+
+    return scaled_curve
+
+
 def build_static_sigmoidal_multicurve(
     x_points: jaxify.Array, y_points: jaxify.Array, curvature=16.0
 ) -> callable:

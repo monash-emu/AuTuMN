@@ -2,6 +2,7 @@ from typing import List
 import pandas as pd
 import numpy as np
 from summer2 import AgeStratification, Overwrite, Multiply
+from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve import scale_up_function
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
@@ -14,18 +15,20 @@ from autumn.models.tb_dynamics.utils import (
 )
 from autumn.models.tb_dynamics.constants import Compartment, INFECTIOUS_COMPS
 from math import log, exp
-def get_age_strat( 
+
+
+def get_age_strat(
     params: Parameters,
     compartments: List[str],
     age_pops: pd.Series = None,
-    age_mixing_matrix = None,
+    age_mixing_matrix=None,
 ) -> AgeStratification:
 
     """
      Function to create the age group stratification object..
 
     Args:
-        params: Parameter class 
+        params: Parameter class
         age_pops: The population distribution by age
         age_mixing_matrix: The age-specific mixing matrix
         compartments: All the model compartments
@@ -39,24 +42,23 @@ def get_age_strat(
     # set age mixing matrix
     if age_mixing_matrix is not None:
         strat.set_mixing_matrix(age_mixing_matrix)
-    #set age prop split
-    if age_pops is not None:    
+    # set age prop split
+    if age_pops is not None:
         age_split_props = age_pops / age_pops.sum()
         strat.set_population_split(age_split_props.to_dict())
 
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breakpoints, iso3)
     universal_death_funcs = {}
     for age in age_breakpoints:
-        universal_death_funcs[age] = build_static_sigmoidal_multicurve(
-            death_rate_years, death_rates_by_age[age]
+        universal_death_funcs[age] = Function(
+            build_static_sigmoidal_multicurve(death_rate_years, death_rates_by_age[age]), [Time]
         )
 
     death_adjs = {str(k): Overwrite(v) for k, v in universal_death_funcs.items()}
-    for comp in compartments:
-        flow_name = f"universal_death_for_{comp}"
-        strat.set_flow_adjustments(flow_name, death_adjs)
 
-     # Set age-specific latency parameters (early/late activation + stabilisation).
+    strat.set_flow_adjustments("universal_death", death_adjs)
+
+    # Set age-specific latency parameters (early/late activation + stabilisation).
     for flow_name, latency_params in params.age_stratification.items():
         is_activation_flow = flow_name in ["early_activation", "late_activation"]
         if is_activation_flow:
@@ -95,11 +97,6 @@ def get_age_strat(
             inf_adjs[str(age_low)] = Multiply(average_infectiousness)
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
-     # Set age-specific treatment recovery, relapse and treatment death rates
-    
+    # Set age-specific treatment recovery, relapse and treatment death rates
 
     return strat
-
-
-
-

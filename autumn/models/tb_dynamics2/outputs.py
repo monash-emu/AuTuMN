@@ -13,7 +13,8 @@ class TbOutputsBuilder(OutputsBuilder):
         )
 
     def request_output_func(self, output_name, func, sources, save_results=True):
-        self.model.request_function_output(output_name, func, sources, save_results=save_results)
+        # self.model.request_function_output(output_name, func, sources, save_results=save_results)
+        pass
 
     def request_flow_output(self, output_name, flow_name, save_results=True):
         self.model.request_output_for_flow(output_name, flow_name, save_results=save_results)
@@ -41,18 +42,3 @@ def calculate_per_hundred_thousand(sub_pop_size, total_pop_size):
 
 def calculate_proportion(sub_pop_size, total_pop_size):
     return sub_pop_size / total_pop_size
-
-
-    
-
-       
- 
-
-
-
-  
-
- 
-  
-
-

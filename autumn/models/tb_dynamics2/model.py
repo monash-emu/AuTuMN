@@ -186,7 +186,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         age_strat = get_age_strat(
             params=params,
             compartments=BASE_COMPARTMENTS,
-            # age_mixing_matrix = age_mixing_matrix,
+            age_mixing_matrix = age_mixing_matrix,
         )
     else:
         age_strat = get_age_strat(
@@ -205,7 +205,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     outputs_builder.request_compartment_output(
         "latent_population_size", LATENT_COMPS, save_results=False
     )
-    sources = ["latent_population_size", "total_population"]
+    #sources = ["latent_population_size", "total_population"]
     # outputs_builder.request_output_func("percentage_latent", calculate_percentage, sources)
     outputs_builder.request_function_output(
         "percentage_latent",

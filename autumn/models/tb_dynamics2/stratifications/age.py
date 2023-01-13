@@ -73,30 +73,30 @@ def get_age_strat(
         adjs = {str(k): Overwrite(v) for k, v in adjs.items()}
         strat.set_flow_adjustments(flow_name, adjs)
 
-    for comp in INFECTIOUS_COMPS:
-        # We assume that infectiousness increases with age
-        # A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase  with  age.
-        # This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
-        inf_adjs = {}
-        for i, age_low in enumerate(params.age_breakpoints):
-            if i < len(params.age_breakpoints) - 1:
-                age_up = params.age_breakpoints[i + 1]
-                # Calculate the average of the sigmoidal function(x -> 1 / (1 + exp(-(x-alpha)))) between the age bounds
-                average_infectiousness = (
-                    log(1 + exp(age_up - params.age_infectiousness_switch))
-                    - log(1 + exp(age_low - params.age_infectiousness_switch))
-                ) / (age_up - age_low)
-            else:
-                # Set infectiousness to 1. for the oldest age group
-                average_infectiousness = 1.0
+    # for comp in INFECTIOUS_COMPS:
+    #     # We assume that infectiousness increases with age
+    #     # A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase  with  age.
+    #     # This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
+    #     inf_adjs = {}
+    #     for i, age_low in enumerate(params.age_breakpoints):
+    #         if i < len(params.age_breakpoints) - 1:
+    #             age_up = params.age_breakpoints[i + 1]
+    #             # Calculate the average of the sigmoidal function(x -> 1 / (1 + exp(-(x-alpha)))) between the age bounds
+    #             average_infectiousness = (
+    #                 log(1 + exp(age_up - params.age_infectiousness_switch))
+    #                 - log(1 + exp(age_low - params.age_infectiousness_switch))
+    #             ) / (age_up - age_low)
+    #         else:
+    #             # Set infectiousness to 1. for the oldest age group
+    #             average_infectiousness = 1.0
 
-            # if comp == Compartment.ON_TREATMENT:
-            #     # Apply infectiousness multiplier for people on treatment,
-            #     average_infectiousness *= params.on_treatment_infect_multiplier
+    #         # if comp == Compartment.ON_TREATMENT:
+    #         #     # Apply infectiousness multiplier for people on treatment,
+    #         #     average_infectiousness *= params.on_treatment_infect_multiplier
 
-            inf_adjs[str(age_low)] = Multiply(average_infectiousness)
+    #         inf_adjs[str(age_low)] = Multiply(average_infectiousness)
 
-        strat.add_infectiousness_adjustments(comp, inf_adjs)
+    #     strat.add_infectiousness_adjustments(comp, inf_adjs)
     # Set age-specific treatment recovery, relapse and treatment death rates
 
     return strat

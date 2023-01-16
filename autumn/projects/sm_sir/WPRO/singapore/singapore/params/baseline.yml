@@ -83,8 +83,3 @@ mobility:
       grocery_and_pharmacy: 0.333
       parks: 0.0
       transit_stations: 0.334
-vaccine_effects:
-  vaccine_model: WPRO
-  ve_infection: 0.4
-  ve_hospitalisation: 0.85
-  ve_death: 0.95

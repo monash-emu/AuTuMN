@@ -68,12 +68,6 @@ testing_to_detection:
 
 is_dynamic_mixing_matrix: true
 
-vaccine_effects:
-  vaccine_model: WPRO
-  ve_infection: 0.1
-  ve_hospitalisation: 0.5
-  ve_death: 0.1
-
 mobility:
   google_mobility_locations:
     work:

@@ -56,6 +56,8 @@ steps:
       value: tuberculosis:marshall-islands
     - label: Philippines (tuberculosis)
       value: tuberculosis:philippines
+    - label: Camau (tb_dynamics2)
+    - value: tb_dynamics2:camau
     required: true
     select: Model Region
   - default: '8'

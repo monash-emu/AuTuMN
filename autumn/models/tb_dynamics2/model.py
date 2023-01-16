@@ -7,14 +7,12 @@ from summer2.experimental.model_builder import ModelBuilder
 from jax import numpy as jnp
 
 from autumn.core import inputs
-from autumn.core.project import Params, build_rel_path
+from autumn.core.project import Params
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-from autumn.model_features.jax.random_process import get_random_process
 from .outputs import TbOutputsBuilder
 from .parameters import Parameters
 from .constants import Compartment
 from .stratifications.age import get_age_strat
-from autumn.model_features.curve import scale_up_function
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from summer2.parameters.params import Function
 
@@ -181,7 +179,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         )
         age_mixing_matrix = age_mixing_matrices["all_locations"]
         # convert daily contact rates to yearly rates
-        age_mixing_matrix *= 365.25
+        age_mixing_matrix *= 365.251
         # Add Age stratification to the model
         age_strat = get_age_strat(
             params=params,
@@ -270,14 +268,3 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     else:
         return model
 
-
-def calculate_percentage(sub_pop_size, total_pop_size):
-    return 100 * sub_pop_size / total_pop_size
-
-
-def calculate_per_hundred_thousand(sub_pop_size, total_pop_size):
-    return 1e5 * sub_pop_size / total_pop_size
-
-
-def calculate_proportion(sub_pop_size, total_pop_size):
-    return sub_pop_size / total_pop_size

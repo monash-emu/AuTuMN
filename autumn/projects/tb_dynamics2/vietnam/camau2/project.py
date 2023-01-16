@@ -26,22 +26,18 @@ targets = [
 
 
 priors = [
-    UniformPrior("start_population_size", [180000, 300000]),
+    UniformPrior("start_population_size", [20000, 300000]),
     UniformPrior("contact_rate", [0.002, 0.01]),
     UniformPrior("infectious_seed", [100, 2000]),
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.2, 1.0]),
-    # UniformPrior("time_variant_tb_screening_rate.inflection_time", [1990.0, 2020.0]),
-    # UniformPrior("time_variant_tb_screening_rate.shape", [0.07, 0.1]),
-    # UniformPrior("time_variant_tb_screening_rate.end_asymptote", [0.4, 0.55]),
     UniformPrior("progression_multiplier", [0.5, 2.0]),
-    # *natural_history_priors
 ]
 calibration = Calibration(
     priors=priors,
     targets=targets,
     metropolis_init="current_params",  # "lhs"
-    haario_scaling_factor=1.2, # 2.4,
+    haario_scaling_factor=2.4, # 2.4,
     fixed_proposal_steps=500,
     metropolis_init_rel_step_size=0.1,
     using_summer2=True,

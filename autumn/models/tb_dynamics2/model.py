@@ -250,11 +250,6 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         "incidence", 1e5 * DerivedOutput("incidence_norm") / DerivedOutput("total_population")
     )
 
-    outputs_builder.request_compartment_output(
-        "infectious_population_size", INFECTIOUS_COMPS, save_results=False
-    )
-
-    outputs_builder.request_function_output(1e5 * DerivedOutput("infectious_population_size") / DerivedOutput("total_population"))
 
     builder.set_model(model)
     if ret_builder:

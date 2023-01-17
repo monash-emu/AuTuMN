@@ -234,31 +234,27 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         start_time=cumulative_start_time,
     )
     # Disease incidence
-    outputs_builder.request_flow_output(
-        "incidence_early_raw", "early_activation", save_results=False
-    )
+    outputs_builder.request_flow_output("incidence_early_raw", "early_activation", save_results=False)
     outputs_builder.request_flow_output("incidence_late_raw", "late_activation", save_results=False)
     sources = ["incidence_early_raw", "incidence_late_raw"]
     outputs_builder.request_aggregation_output("incidence_raw", sources, save_results=False)
     sources = ["incidence_raw", "total_population"]
-    model.request_cumulative_output(
-        "cumulative_diseased",
-        "incidence_raw",
-        start_time=cumulative_start_time,
-    )
+    model.request_cumulative_output("cumulative_diseased", "incidence_raw", start_time=cumulative_start_time)
     # Normalise incidence so that it is per unit time (year), not per timestep
     outputs_builder.request_normalise_flow_output("incidence_early", "incidence_early_raw")
     outputs_builder.request_normalise_flow_output("incidence_late", "incidence_late_raw")
-    outputs_builder.request_normalise_flow_output(
-        "incidence_norm", "incidence_raw", save_results=False
-    )
+    outputs_builder.request_normalise_flow_output("incidence_norm", "incidence_raw", save_results=False)
     sources = ["incidence_norm", "total_population"]
     # outputs_builder.request_output_func("incidence", calculate_per_hundred_thousand, sources)
     outputs_builder.request_function_output(
         "incidence", 1e5 * DerivedOutput("incidence_norm") / DerivedOutput("total_population")
     )
 
-    # request extra output to store the number of students*weeks of school missed
+    outputs_builder.request_compartment_output(
+        "infectious_population_size", INFECTIOUS_COMPS, save_results=False
+    )
+
+    outputs_builder.request_function_output(1e5 * DerivedOutput("infectious_population_size") / DerivedOutput("total_population"))
 
     builder.set_model(model)
     if ret_builder:

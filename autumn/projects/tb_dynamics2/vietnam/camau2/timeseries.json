@@ -2,8 +2,8 @@
     "total_population": {
       "title": "Population size",
       "output_key": "total_population",
-      "times": [2009, 2019],
-      "values": [1207100, 1194300],
+      "times": [1995, 2009, 2019],
+      "values": [1041800, 1207100, 1194300],
       "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
     }
   }

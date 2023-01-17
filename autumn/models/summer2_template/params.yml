@@ -9,5 +9,47 @@ time:
 contact_rate: .1
 recovery_rate: .2
 
-pop_size: 1000000.
+pop_size: 24000000.
 infection_seed: 10.
+la_active_early_progression: 0.40178
+la_lb_proportion: 0.05000
+lb_active_late_progression_rate: 0.00201
+natural_death_rate: 0.01515
+sn_detection_rate: 0.00000
+sp_detection_rate: 0.00000
+sn_detection_rate_m: 0.00000
+sp_detection_rate_m: 0.00000
+treatment_cure_rate: 0.00000
+treatment_cure_rate_m: 0.00000
+death_tb_sn: 0.02500
+death_tb_sp: 0.39000
+failure_therapy_tb: 0.10000
+failure_therapy_tb_m: 0.30000
+sn_natural_cure_rate: 0.30000
+sp_natural_cure_rate: 0.15000
+death_tb_treatment: 0.10000
+death_tb_treatment_m: 0.30000
+population_growth_rate: 0.01920
+bcg_waning_rate: 0.03000
+bcg_proportion: 0.40000
+sn_to_sp_rate: 0.50000
+sp_to_sn_rate: 0.23000
+treatment_smear_clearance: 0.00000
+treatment_smear_clearance_m: 0.00000
+latent_treatment_rate: 0.00000
+latent_treatment_rate_m: 0.00000
+force_of_infection_scale: 5.00000
+immunity_relative_risk: 0.20000
+amplification_MDR_per_failure: 0.05300
+scale_up_interventions: 0.00000
+
+#now transmission params
+
+ri_active_sn: 0.24
+ri_active_sp: 1
+ri_active_sn_mdr: 0.2088
+ri_active_sp_mdr: 0.87
+ri_detected_sn: 0.12
+ri_detected_sp: 0.5
+ri_detected_sn_mdr: 0.1044
+ri_detected_sp_mdr: 0.435

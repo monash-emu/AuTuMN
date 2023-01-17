@@ -1,7 +1,7 @@
 """
 Type definition for model parameters
 """
-from pydantic import BaseModel as _BaseModel, Extra, root_validator, validator
+from pydantic import BaseModel as _BaseModel, Extra, validator
 from pydantic.dataclasses import dataclass
 from typing import Optional
 

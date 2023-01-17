@@ -51,8 +51,6 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     iso3 = country.iso3
     seed = params.infectious_seed
     start_population_size = params.start_population_size
-    # age_breakpoints = [str(age) for age in params.age_breakpoints]
-    # age_strat_params = params.age_stratification
     time_params = params.time
     cumulative_start_time = params.cumulative_start_time
 

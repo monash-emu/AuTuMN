@@ -10,7 +10,6 @@ from autumn.settings import Region, Models
 
 # Load and configure model parameters.
 baseline_params = base_params.update(build_rel_path("params/baseline.yml"))
-
 scenario_dir_path = build_rel_path("params/")
 scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
 

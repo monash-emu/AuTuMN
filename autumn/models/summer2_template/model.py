@@ -12,7 +12,7 @@ base_params = Params(
 
 def build_model(config: dict, ret_build=False) -> CompartmentalModel:
 
-    base_compartments = ["S", "I", "R"]
+    base_compartments = ["S","La", "Lb", "I", "R"]
     time_config = config['time']
 
     # Create the model object
@@ -32,12 +32,27 @@ def build_model(config: dict, ret_build=False) -> CompartmentalModel:
 
     # Transmission flow
     model.add_infection_frequency_flow(
-        name="infection",
+        name="infection_fast",
         contact_rate=Parameter('contact_rate'),
         source="S",
-        dest="I",
+        dest="La",
     )
 
+    #transmission to Late latency
+    model.add_infection_frequency_flow(
+        name="infection_slow",
+        contact_rate=Parameter('contact_rate'),
+        source="S",
+        dest="Lb",
+    )
+    
+    # Activation flow
+    model.add_transition_flow(
+        name="activation",
+        fractional_rate=config['la_active_early_progression'],
+        source="La",
+        dest="I",
+    )
     # Recovery flow
     model.add_transition_flow(
         name="recovery",
@@ -47,6 +62,6 @@ def build_model(config: dict, ret_build=False) -> CompartmentalModel:
     )
 
     # Track incidence
-    model.request_output_for_flow(name="incidence", flow_name="infection")
+    model.request_output_for_flow(name="incidence", flow_name="activation")
    
     return model

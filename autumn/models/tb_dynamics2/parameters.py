@@ -1,17 +1,24 @@
 """
 Type definition for model parameters
 """
-from pydantic import BaseModel, Extra, validator
+from pydantic import BaseModel as _BaseModel, Extra, root_validator, validator
 from pydantic.dataclasses import dataclass
 from typing import Optional
 
+from summer2.experimental.model_builder import (
+    ParamStruct,
+    parameter_class as pclass
+    )
+
 # Forbid additional arguments to prevent extraneous parameter specification
-BaseModel.Config.extra = Extra.forbid
+_BaseModel.Config.extra = Extra.forbid
 
 """
 Commonly used checking processes
 """
 
+class BaseModel(_BaseModel, ParamStruct):
+    pass
 
 class Time(BaseModel):
     """
@@ -51,13 +58,13 @@ class MixingMatrices(BaseModel):
 
 
 @dataclass(config=ParamConfig)
-class Parameters:
+class Parameters(ParamStruct):
     # Metadata
     description: Optional[str]
     country: Country
     age_mixing: Optional[MixingMatrices]
     # Country info
-    start_population_size: float
+    start_population_size: pclass()
     crude_birth_rate: float
     crude_death_rate: float
     # Running time
@@ -65,13 +72,13 @@ class Parameters:
     # Model structure
     stratify_by: list
     age_breakpoints: Optional[list]
-    infectious_seed: float
+    infectious_seed: pclass()
     cumulative_start_time: float
     # Base TB model
-    contact_rate: float
-    rr_infection_latent: float
-    rr_infection_recovered: float
-    progression_multiplier: float
+    contact_rate: pclass()
+    rr_infection_latent: pclass()
+    rr_infection_recovered: pclass()
+    progression_multiplier: pclass()
     self_recovery_rate: float
     infect_death_rate: float
 

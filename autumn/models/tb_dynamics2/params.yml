@@ -35,16 +35,22 @@ age_stratification:
     0: 6.6e-3
     5: 2.7e-3
     15: 2.7e-4
+    35: 2.7e-4
+    50: 2.7e-4
   stabilisation:
     # unstratified: 1.0e-2
     0: 1.2e-2
     5: 1.2e-2
     15: 5.4e-3
+    35: 5.4e-3
+    50: 5.4e-3
   late_activation:
     # unstratified: 5.5e-6
     0: 1.9e-11
     5: 6.4e-6
     15: 3.3e-6
+    35: 3.3e-6
+    50: 3.3e-6
 
 # relative risks of reinfection
 rr_infection_latent: .21

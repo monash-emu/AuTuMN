@@ -1,19 +1,17 @@
 from typing import List
 import pandas as pd
 import numpy as np
-from summer2 import AgeStratification, Overwrite, Multiply
+from summer2 import Stratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
-from autumn.model_features.curve import scale_up_function
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.utils.utils import change_parameter_unit
 from autumn.models.tb_dynamics.utils import (
-    create_sloping_step_function,
     get_parameter_dict_from_function,
     create_step_function_from_dict,
 )
-from autumn.models.tb_dynamics.constants import Compartment, INFECTIOUS_COMPS
+from autumn.models.tb_dynamics2.constants import INFECTIOUS_COMPS
 from math import log, exp
 
 
@@ -22,7 +20,7 @@ def get_age_strat(
     compartments: List[str],
     age_pops: pd.Series = None,
     age_mixing_matrix=None,
-) -> AgeStratification:
+) -> Stratification:
 
     """
      Function to create the age group stratification object..
@@ -38,7 +36,7 @@ def get_age_strat(
     """
     age_breakpoints = params.age_breakpoints
     iso3 = params.country.iso3
-    strat = AgeStratification("age", age_breakpoints, compartments)
+    strat = Stratification("age", age_breakpoints, compartments)
     # set age mixing matrix
     if age_mixing_matrix is not None:
         strat.set_mixing_matrix(age_mixing_matrix)
@@ -66,11 +64,10 @@ def get_age_strat(
             latency_params = {
                 k: v * params.progression_multiplier for k, v in latency_params.items()
             }
-
-        step_func = create_step_function_from_dict(latency_params)
-        step_func_as_dict = get_parameter_dict_from_function(step_func, params.age_breakpoints)
-        adjs = change_parameter_unit(step_func_as_dict, 365.251)
-        adjs = {str(k): Overwrite(v) for k, v in adjs.items()}
+        latency_params = {
+            k: v * 365.251 for k, v in latency_params.items()
+        }
+        adjs = {str(k): Overwrite(v) for k, v in latency_params.items()}
         strat.set_flow_adjustments(flow_name, adjs)
 
     for comp in INFECTIOUS_COMPS:

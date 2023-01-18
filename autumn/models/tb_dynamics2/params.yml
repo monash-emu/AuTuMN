@@ -63,3 +63,32 @@ infect_death_rate: .2
 calculated_outputs: ["prevalence_infectious"]
 outputs_stratification: {}
 cumulative_output_start_time: 2020.
+
+passive_screening_sensitivity:
+  unstratified: .75
+  smear_positive: 1. # dummy value
+  smear_negative: .7 # dummy value
+  extrapulmonary: 0.5 # dummy value
+
+time_variant_tb_screening_rate:
+  1986.0: 0.60
+  2000.0: 0.90
+
+time_variant_tsr: # should always be > 0
+  1986: .60
+  2000: .92
+  2001: .93
+  2002: .92
+  2003: .93
+  2004: .93
+  2005: .93
+  2006: .93
+  2007: .91
+  2008: .92
+  2009: .92
+  2010: .92
+  2011: .93
+  2012: .92
+
+treatment_duration: 0.5
+

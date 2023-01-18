@@ -15,6 +15,7 @@ from .constants import Compartment
 from .stratifications.age import get_age_strat
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from summer2.parameters.params import Function
+from autumn.model_features.curve import tanh_based_scaleup
 
 from .constants import BASE_COMPARTMENTS, INFECTIOUS_COMPS, LATENT_COMPS
 from summer2.parameters import Time, DerivedOutput
@@ -142,6 +143,17 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.INFECTIOUS,
         Compartment.RECOVERED,
     )
+  
+    
+    tfunc = build_static_sigmoidal_multicurve([float(k) for k in params.time_variant_tb_screening_rate.keys()], [float(v) for v in params.time_variant_tb_screening_rate.values()])
+    detection_rate = Function(tfunc, [Time])
+
+    model.add_transition_flow(
+        "detection",
+        detection_rate,
+        Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
+    )
     # Infection death
     model.add_death_flow(
         "infect_death",
@@ -149,9 +161,12 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.INFECTIOUS,
     )
 
+
+
     # Entry flows
     birth_rates, years = inputs.get_crude_birth_rate(iso3)
     birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
+
     tfunc = build_static_sigmoidal_multicurve(years.to_list(), birth_rates.to_list())
     crude_birth_rate = Function(tfunc, [Time])
     model.add_crude_birth_flow(
@@ -162,6 +177,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     universal_death_rate = 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
+
+    
 
     """
     Apply age stratification

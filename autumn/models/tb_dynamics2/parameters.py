@@ -89,6 +89,13 @@ class Parameters(ParamStruct):
     calculated_outputs: list
     outputs_stratification: dict
     cumulative_output_start_time: float
+    
+      # Detection
+    time_variant_tb_screening_rate: dict
+    passive_screening_sensitivity: dict
+    time_variant_tsr: dict
+
+    treatment_duration: float
 
 
 

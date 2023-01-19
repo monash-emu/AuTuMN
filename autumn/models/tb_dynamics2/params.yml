@@ -91,4 +91,6 @@ time_variant_tsr: # should always be > 0
   2012: .92
 
 treatment_duration: 0.5
+prop_death_among_negative_tx_outcome: 0.2
+on_treatment_infect_multiplier: 0.08
 

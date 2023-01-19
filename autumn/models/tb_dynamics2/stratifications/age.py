@@ -5,14 +5,16 @@ from summer2 import Stratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
+from autumn.model_features.curve import scale_up_function
 from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.utils.utils import change_parameter_unit
 from autumn.models.tb_dynamics.utils import (
     get_parameter_dict_from_function,
     create_step_function_from_dict,
 )
-from autumn.models.tb_dynamics2.constants import INFECTIOUS_COMPS
+from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 from math import log, exp
+
 
 
 def get_age_strat(
@@ -87,13 +89,34 @@ def get_age_strat(
                 # Set infectiousness to 1. for the oldest age group
                 average_infectiousness = 1.0
 
-            # if comp == Compartment.ON_TREATMENT:
-            #     # Apply infectiousness multiplier for people on treatment,
-            #     average_infectiousness *= params.on_treatment_infect_multiplier
+            if comp == Compartment.ON_TREATMENT:
+                # Apply infectiousness multiplier for people on treatment,
+                average_infectiousness *= params.on_treatment_infect_multiplier
 
             inf_adjs[str(age_low)] = Multiply(average_infectiousness)
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
     # Set age-specific treatment recovery, relapse and treatment death rates
+    time_variant_tsr = build_static_sigmoidal_multicurve(
+        list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
+    )
+    treatment_recovery_funcs = {}
+    for age in params.age_breakpoints:
+        def get_treatment_recovery_rate(t, age=age):
+            death_rate = universal_death_funcs[age]
+            floor_val = 1 / params.treatment_duration
+            dynamic_val = (
+                death_rate
+                / params.prop_death_among_negative_tx_outcome
+                * (1.0 / (1.0 - time_variant_tsr) - 1.0)
+            )
+            print(max(floor_val, dynamic_val))
+
+        # def make_get_treatment_recovery_rate(t, age):
+        #     return Function(get_treatment_recovery_rate, [Time, age])
+        # treatment_recovery_funcs[age] = make_get_treatment_recovery_rate
+      
+
+   
 
     return strat

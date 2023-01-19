@@ -96,6 +96,8 @@ class Parameters(ParamStruct):
     time_variant_tsr: dict
 
     treatment_duration: float
+    prop_death_among_negative_tx_outcome: float
+    on_treatment_infect_multiplier: float
 
 
 

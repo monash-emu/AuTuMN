@@ -154,14 +154,9 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.INFECTIOUS,
         Compartment.ON_TREATMENT,
     )
-    # Infection death
-    model.add_death_flow(
-        "infect_death",
-        params.infect_death_rate,
-        Compartment.INFECTIOUS,
-    )
+     # Treatment recovery, releapse, death flows.
 
-
+  
 
     # Entry flows
     birth_rates, years = inputs.get_crude_birth_rate(iso3)
@@ -177,9 +172,12 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     universal_death_rate = 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
-
-    
-
+      # Infection death
+    model.add_death_flow(
+        "infect_death",
+        params.infect_death_rate,
+        Compartment.INFECTIOUS,
+    )
     """
     Apply age stratification
     """

@@ -13,8 +13,10 @@ from autumn.models.tb_dynamics.utils import (
     create_step_function_from_dict,
 )
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
+
 from math import log, exp
 
+from jax import numpy as jnp
 
 
 def get_age_strat(
@@ -66,9 +68,7 @@ def get_age_strat(
             latency_params = {
                 k: v * params.progression_multiplier for k, v in latency_params.items()
             }
-        latency_params = {
-            k: v * 365.251 for k, v in latency_params.items()
-        }
+        latency_params = {k: v * 365.251 for k, v in latency_params.items()}
         adjs = {str(k): Overwrite(v) for k, v in latency_params.items()}
         strat.set_flow_adjustments(flow_name, adjs)
 
@@ -97,30 +97,35 @@ def get_age_strat(
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
     # Set age-specific treatment recovery, relapse and treatment death rates
-    time_variant_tsr = Function(build_static_sigmoidal_multicurve(
-        list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values()), [Time]
-    ))
+    time_variant_tsr = Function(
+        build_static_sigmoidal_multicurve(
+            list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
+        ),
+        [Time],
+    )
     treatment_recovery_funcs = {}
-    def get_treatment_recovery_rate(t, treatment_duration, prop_death, death_rate, tsr):
+
+    def get_treatment_recovery_rate(treatment_duration, prop_death, death_rate, tsr):
         floor_val = 1 / treatment_duration
-        dynamic_val = (
-            death_rate
-                / prop_death
-                * (1.0 / (1.0 - tsr) - 1.0)
-        )
-        return(max(floor_val, dynamic_val))
+        dynamic_val = death_rate / prop_death * (1.0 / (1.0 - tsr) - 1.0)
+        return jnp.max(jnp.array((floor_val, dynamic_val)))
 
     for age in params.age_breakpoints:
         death_rate = universal_death_funcs[age]
-        treatment_recovery_funcs[age] = Function(get_treatment_recovery_rate, [Time, params.treatment_duration, params.prop_death_among_negative_tx_outcome, death_rate,  time_variant_tsr[age]])
-           
+        treatment_recovery_funcs[age] = Function(
+            get_treatment_recovery_rate,
+            [
+                params.treatment_duration,
+                params.prop_death_among_negative_tx_outcome,
+                death_rate,
+                time_variant_tsr,
+            ],
+        )
+
     treatment_recovery_adjs = {str(k): Overwrite(v) for k, v in treatment_recovery_funcs.items()}
     strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
-        # def make_get_treatment_recovery_rate(t, age):
-        #     return Function(get_treatment_recovery_rate, [Time, age])
-        # treatment_recovery_funcs[age] = make_get_treatment_recovery_rate
-      
-
-   
+    # def make_get_treatment_recovery_rate(t, age):
+    #     return Function(get_treatment_recovery_rate, [Time, age])
+    # treatment_recovery_funcs[age] = make_get_treatment_recovery_rate
 
     return strat

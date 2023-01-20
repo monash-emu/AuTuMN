@@ -158,11 +158,24 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
   
     treatment_recovery_rate = 1.0
+    treatment_death_rate = 1.0
+    relapse_rate = 1.0
     model.add_transition_flow(
         "treatment_recovery",
         treatment_recovery_rate,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
+    )
+    model.add_death_flow(
+        "treatment_death",
+        treatment_death_rate,
+        Compartment.ON_TREATMENT,
+    )
+    model.add_transition_flow(
+        "relapse",
+        relapse_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.INFECTIOUS,
     )
     # Entry flows
     birth_rates, years = inputs.get_crude_birth_rate(iso3)

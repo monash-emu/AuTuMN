@@ -97,21 +97,25 @@ def get_age_strat(
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
     # Set age-specific treatment recovery, relapse and treatment death rates
-    time_variant_tsr = build_static_sigmoidal_multicurve(
-        list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
-    )
+    time_variant_tsr = Function(build_static_sigmoidal_multicurve(
+        list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values()), [Time]
+    ))
     treatment_recovery_funcs = {}
-    for age in params.age_breakpoints:
-        def get_treatment_recovery_rate(t, age=age):
-            death_rate = universal_death_funcs[age]
-            floor_val = 1 / params.treatment_duration
-            dynamic_val = (
-                death_rate
-                / params.prop_death_among_negative_tx_outcome
-                * (1.0 / (1.0 - time_variant_tsr) - 1.0)
-            )
-            print(max(floor_val, dynamic_val))
+    def get_treatment_recovery_rate(t, treatment_duration, prop_death, death_rate, tsr):
+        floor_val = 1 / treatment_duration
+        dynamic_val = (
+            death_rate
+                / prop_death
+                * (1.0 / (1.0 - tsr) - 1.0)
+        )
+        return(max(floor_val, dynamic_val))
 
+    for age in params.age_breakpoints:
+        death_rate = universal_death_funcs[age]
+        treatment_recovery_funcs[age] = Function(get_treatment_recovery_rate, [Time, params.treatment_duration, params.prop_death_among_negative_tx_outcome, death_rate,  time_variant_tsr[age]])
+           
+    treatment_recovery_adjs = {str(k): Overwrite(v) for k, v in treatment_recovery_funcs.items()}
+    strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
         # def make_get_treatment_recovery_rate(t, age):
         #     return Function(get_treatment_recovery_rate, [Time, age])
         # treatment_recovery_funcs[age] = make_get_treatment_recovery_rate

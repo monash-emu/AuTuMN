@@ -122,7 +122,7 @@ def get_age_strat(
             ],
         )
 
-    treatment_recovery_adjs = {str(k): Overwrite(v) for k, v in treatment_recovery_funcs.items()}
+    treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
     strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
     # def make_get_treatment_recovery_rate(t, age):
     #     return Function(get_treatment_recovery_rate, [Time, age])

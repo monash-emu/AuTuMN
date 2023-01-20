@@ -19,13 +19,24 @@ def get_WPRO_priors(variant_times):
     return priors
 
 
-def get_AUS_priors(variant_times):
+def get_AUS_priors():
     priors = [
         UniformPrior("infectious_seed", (1000, 10000)),
         UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
         UniformPrior("sojourns.latent.total_time", (4, 15)),
         UniformPrior("voc_emergence.ba_2.new_voc_seed.start_time", (690, 750)),
         UniformPrior("voc_emergence.ba_2.contact_rate_multiplier", (0.8, 3.5)),
+    ]
+    return priors
+
+
+def get_JPN_priors():
+    priors = [
+        UniformPrior("infectious_seed", (1000, 10000)),
+        UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
+        UniformPrior("sojourns.latent.total_time", (4, 15)),
+        UniformPrior("voc_emergence.ba_2.new_voc_seed.start_time", (890, 950)),
+        UniformPrior("voc_emergence.ba_2.contact_rate_multiplier", (1.0, 2.0)),
     ]
     return priors
 

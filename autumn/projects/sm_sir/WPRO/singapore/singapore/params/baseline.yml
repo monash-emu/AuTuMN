@@ -10,7 +10,7 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 450.0
+  start: 550.0
 
 voc_emergence:
   wild_type:
@@ -33,10 +33,10 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.0
     new_voc_seed:
-      start_time: 700.0
+      start_time: 760.0
       entry_rate: 10.0
       seed_duration: 1.0
-    contact_rate_multiplier: 100.0
+    contact_rate_multiplier: 0.8
     immune_escape: 0.2
     hosp_protection: 0.75
     death_protection: 0.85
@@ -70,7 +70,7 @@ is_dynamic_mixing_matrix: true
 
 vaccine_effects:
   vaccine_model: WPRO
-  ve_infection: 0.1
+  ve_infection: 0.05
   ve_hospitalisation: 0.5
   ve_death: 0.1
 

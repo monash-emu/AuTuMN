@@ -105,7 +105,7 @@ def get_age_strat(
     )
     treatment_recovery_funcs = {}
     treatment_death_funcs = {}
-
+    treatment_relapse_funcs = {}
     def get_treatment_recovery_rate(treatment_duration, prop_death, death_rate, tsr):
         floor_val = 1 / treatment_duration
         dynamic_val = death_rate / prop_death * (1.0 / (1.0 - tsr) - 1.0)
@@ -119,6 +119,13 @@ def get_age_strat(
                 / tsr
                 - death_rate
         )
+
+    def get_treatment_relapse_rate(prop_death, trr, tsr):
+        return (
+                trr
+                * (1.0 / tsr - 1.0)
+                * (1.0 - prop_death)
+            )
 
     for age in params.age_breakpoints:
         death_rate = universal_death_funcs[age]
@@ -140,11 +147,21 @@ def get_age_strat(
                 time_variant_tsr
             ],
         )
+        treatment_relapse_funcs[age] = Function(
+            get_treatment_relapse_rate,
+            [
+                params.prop_death_among_negative_tx_outcome,
+                treatment_recovery_funcs[age],
+                time_variant_tsr
+            ]
+        )
 
     treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
     treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}
+    treatment_relapse_adjs = {str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()}
     strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
     strat.set_flow_adjustments("treatment_death", treatment_death_adjs)
+    strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
     # def make_get_treatment_recovery_rate(t, age):
     #     return Function(get_treatment_recovery_rate, [Time, age])
     # treatment_recovery_funcs[age] = make_get_treatment_recovery_rate

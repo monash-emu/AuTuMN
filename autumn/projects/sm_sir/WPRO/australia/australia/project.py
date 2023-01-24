@@ -35,7 +35,7 @@ param_set = ParameterSet(baseline=baseline_params)
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 
 variant_times = variant_start_time(["delta", "omicron"], "australia")
-priors = get_AUS_priors(variant_times)
+priors = get_AUS_priors()
 
 priors = priors + [
     UniformPrior("age_stratification.cfr.multiplier", (0.008, 0.1)),

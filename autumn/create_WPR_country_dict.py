@@ -10,7 +10,6 @@ WPR_countries = {
                "new-zealand",
                "south-korea",
                "singapore",
-               "china"
                ],
 
     "path": ["autumn.projects.sm_sir.WPRO.malaysia.malaysia.project",
@@ -22,8 +21,7 @@ WPR_countries = {
              "autumn.projects.sm_sir.WPRO.new-zealand.new-zealand.project",
              "autumn.projects.sm_sir.WPRO.south-korea.south-korea.project",
              "autumn.projects.sm_sir.WPRO.singapore.singapore.project",
-             "autumn.projects.sm_sir.WPRO.china.china.project",
-             ]
+              ]
 }
 
 with open("wpro_list.json", "w") as outfile:

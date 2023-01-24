@@ -10,7 +10,7 @@ from autumn.calibration import Calibration
 
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
-from autumn.projects.sm_sir.WPRO.common import get_WPRO_priors, get_targets, variant_start_time
+from autumn.projects.sm_sir.WPRO.common import get_SIN_priors, get_targets, variant_start_time
 from autumn.calibration.priors import UniformPrior
 
 # Load and configure model parameters.
@@ -36,11 +36,11 @@ param_set = ParameterSet(baseline=baseline_params)
 calibration_start_time = param_set.baseline.to_dict()["time"]["start"]
 
 variant_times = variant_start_time(["delta", "omicron"], "singapore")
-priors = get_WPRO_priors(variant_times)
+priors = get_SIN_priors(variant_times)
 priors = priors + [
-    UniformPrior("age_stratification.cfr.multiplier", (0.01, 0.1)),
-    UniformPrior("contact_rate", (0.01, 0.1)),
-    UniformPrior("vaccine_effects.ve_infection", (0.01, 0.5)),
+    UniformPrior("age_stratification.cfr.multiplier", (0.1, 0.5)),
+    UniformPrior("contact_rate", (0.05, 0.15)),
+    UniformPrior("vaccine_effects.ve_infection", (0.5, 0.1)),
 ]
 
 targets = get_targets(calibration_start_time, "singapore", "singapore")

@@ -40,6 +40,18 @@ def get_JPN_priors():
     ]
     return priors
 
+def get_SIN_priors():
+    priors = [
+        UniformPrior("infectious_seed", (1000, 10000)),
+        UniformPrior("testing_to_detection.assumed_cdr_parameter", (0.01, 0.1)),
+        UniformPrior("sojourns.latent.total_time", (4, 15)),
+        UniformPrior("voc_emergence.ba_1.contact_rate_multiplier", (0.8, 1.5)),
+        UniformPrior("voc_emergence.ba_1.new_voc_seed.start_time", (580, 650)),
+        UniformPrior("voc_emergence.ba_2.contact_rate_multiplier", (1.0, 2.0)),
+        UniformPrior("voc_emergence.ba_2.new_voc_seed.start_time", (655, 700)),
+    ]
+    return priors
+
 
 def get_targets(calibration_start_time, country_name, region_name):
     seperator = "/"

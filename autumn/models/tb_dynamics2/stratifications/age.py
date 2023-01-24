@@ -159,9 +159,9 @@ def get_age_strat(
     treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
     treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}
     treatment_relapse_adjs = {str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()}
-    strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
-    strat.set_flow_adjustments("treatment_death", treatment_death_adjs)
-    strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
+    # strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
+    # strat.set_flow_adjustments("treatment_death", treatment_death_adjs)
+    # strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
     # def make_get_treatment_recovery_rate(t, age):
     #     return Function(get_treatment_recovery_rate, [Time, age])
     # treatment_recovery_funcs[age] = make_get_treatment_recovery_rate

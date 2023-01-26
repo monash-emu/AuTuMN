@@ -283,7 +283,10 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     outputs_builder.request_function_output(
         "incidence", 1e5 * DerivedOutput("incidence_norm") / DerivedOutput("total_population")
     )
-
+    outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
+    outputs_builder.request_function_output(
+        "notifications", DerivedOutput("passive_notifications_raw") / time_params.step
+    )
 
     builder.set_model(model)
     if ret_builder:

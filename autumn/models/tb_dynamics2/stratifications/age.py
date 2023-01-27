@@ -1,6 +1,6 @@
 from typing import List
 import pandas as pd
-from summer2 import Stratification, Overwrite, Multiply
+from summer2 import AgeStratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
@@ -23,7 +23,7 @@ def get_age_strat(
     compartments: List[str],
     age_pops: pd.Series = None,
     age_mixing_matrix=None,
-) -> Stratification:
+) -> AgeStratification:
 
     """
      Function to create the age group stratification object..
@@ -39,7 +39,7 @@ def get_age_strat(
     """
     age_breakpoints = params.age_breakpoints
     iso3 = params.country.iso3
-    strat = Stratification("age", age_breakpoints, compartments)
+    strat = AgeStratification("age", age_breakpoints, compartments)
     # set age mixing matrix
     if age_mixing_matrix is not None:
         strat.set_mixing_matrix(age_mixing_matrix)

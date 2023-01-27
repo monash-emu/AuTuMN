@@ -73,6 +73,7 @@ passive_screening_sensitivity:
 time_variant_tb_screening_rate:
   1986.0: 0.60
   2000.0: 0.90
+  2019.0: 0.92
 
 time_variant_tsr: # should always be > 0
   1986: .60

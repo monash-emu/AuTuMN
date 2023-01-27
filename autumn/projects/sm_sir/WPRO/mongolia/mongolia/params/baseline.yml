@@ -10,7 +10,7 @@ ref_mixing_iso3: CHN
 
 time:
   end: 1200.0
-  start: 495.0
+  start: 310.0
 
 voc_emergence:
   wild_type:
@@ -26,28 +26,58 @@ voc_emergence:
       wild_type:
         early_reinfection: 1.0
         late_reinfection: 1.0
-      omicron:
+      ba_1:
         early_reinfection: 0.4
         late_reinfection: 0.4
-  omicron:
+      ba_2:
+        early_reinfection: 0.4
+        late_reinfection: 0.4
+  ba_1:
     starting_strain: false
     seed_prop: 0.0
     new_voc_seed:
-      start_time: 520.0
+      start_time: 500.0
       entry_rate: 10.0
       seed_duration: 1.0
     contact_rate_multiplier: 1.2
     immune_escape: 0.2
     hosp_protection: 0.75
-    death_protection: 0.85
+    death_protection: 0.65
     relative_latency: 0.6667
     relative_active_period: 1.0
     icu_multiplier: 0.55
     cross_protection:
       wild_type:
         early_reinfection: 1.0
+        late_reinfection: 0.4
+      ba_1:
+        early_reinfection: 1.0
         late_reinfection: 0.0
-      omicron:
+      ba_2:
+        early_reinfection: 0.4
+        late_reinfection: 0.0
+  ba_2:
+    starting_strain: false
+    seed_prop: 0.0
+    new_voc_seed:
+      start_time: 650.0
+      entry_rate: 10.0
+      seed_duration: 1.0
+    contact_rate_multiplier: 1.4
+    immune_escape: 0.2
+    hosp_protection: 0.75
+    death_protection: 0.875
+    relative_latency: 0.6667
+    relative_active_period: 1.0
+    icu_multiplier: 0.55
+    cross_protection:
+      wild_type:
+        early_reinfection: 1.0
+        late_reinfection: 0.4
+      ba_1:
+        early_reinfection: 1.0
+        late_reinfection: 0.0
+      ba_2:
         early_reinfection: 1.0
         late_reinfection: 0.0
 
@@ -58,7 +88,7 @@ sojourns:
   latent:
     total_time: 4.0
     proportion_early: 0.5
-  recovered: 180.0
+  recovered: 420.0
 
 testing_to_detection:
   assumed_tests_parameter: 0.001
@@ -79,6 +109,6 @@ mobility:
       transit_stations: 0.334
 vaccine_effects:
   vaccine_model: WPRO
-  ve_infection: 0.4
+  ve_infection: 0.9
   ve_hospitalisation: 0.85
   ve_death: 0.95

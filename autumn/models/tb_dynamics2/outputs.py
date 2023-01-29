@@ -14,6 +14,7 @@ class TbOutputsBuilder(OutputsBuilder):
             output_name, compartments, save_results=save_results
         )
 
+
     def request_function_output(self, output_name, func, save_results=True):
         self.model.request_function_output(output_name, func, save_results=save_results)
 

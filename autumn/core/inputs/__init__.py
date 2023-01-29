@@ -29,8 +29,8 @@ def fetch_input_data():
     Fetch input data from external sources,
     which can then be used to build the input database.
     """
-    # with Timer("Fetching mobility data."):
-    #     fetch_mobility_data()
+    with Timer("Fetching mobility data."):
+        fetch_mobility_data()
 
     with Timer("Fetching John Hopkins data."):
         fetch_john_hopkins_data()

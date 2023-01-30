@@ -6,11 +6,7 @@ from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.model_features.curve import scale_up_function
 from autumn.models.tb_dynamics.parameters import Parameters
-from autumn.core.utils.utils import change_parameter_unit
-from autumn.models.tb_dynamics.utils import (
-    get_parameter_dict_from_function,
-    create_step_function_from_dict,
-)
+
 from scipy.integrate import quad
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
@@ -68,8 +64,8 @@ def get_age_strat(
             latency_params = {
                 k: v * params.progression_multiplier for k, v in latency_params.items()
             }
-        latency_params = {k: v for k, v in latency_params.items()}
-        step_func_as_dict = get_parameter_dict_from_function(latency_params, age_breakpoints)
+
+        step_func_as_dict = get_parameter_dict(latency_params, age_breakpoints)
         adjs = change_parameter_unit(step_func_as_dict, 365.251)
         strat.set_flow_adjustments(flow_name, adjs)
 

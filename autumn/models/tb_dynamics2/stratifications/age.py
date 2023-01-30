@@ -11,6 +11,7 @@ from autumn.models.tb_dynamics.utils import (
     get_parameter_dict_from_function,
     create_step_function_from_dict,
 )
+from scipy.integrate import quad
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
 from math import log, exp
@@ -67,8 +68,9 @@ def get_age_strat(
             latency_params = {
                 k: v * params.progression_multiplier for k, v in latency_params.items()
             }
-        latency_params = {k: v * 365.251 for k, v in latency_params.items()}
-        adjs = {str(k): Multiply(v) for k, v in latency_params.items()}
+        latency_params = {k: v for k, v in latency_params.items()}
+        step_func_as_dict = get_parameter_dict_from_function(latency_params, age_breakpoints)
+        adjs = change_parameter_unit(step_func_as_dict, 365.251)
         strat.set_flow_adjustments(flow_name, adjs)
 
     for comp in INFECTIOUS_COMPS:
@@ -76,9 +78,9 @@ def get_age_strat(
         # A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase  with  age.
         # This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
         inf_adjs = {}
-        for i, age_low in enumerate(params.age_breakpoints):
-            if i < len(params.age_breakpoints) - 1:
-                age_up = params.age_breakpoints[i + 1]
+        for i, age_low in enumerate(age_breakpoints):
+            if i < len(age_breakpoints) - 1:
+                age_up = age_breakpoints[i + 1]
                 # Calculate the average of the sigmoidal function(x -> 1 / (1 + exp(-(x-alpha)))) between the age bounds
                 average_infectiousness = (
                     log(1 + exp(age_up - params.age_infectiousness_switch))
@@ -163,3 +165,72 @@ def get_age_strat(
     # strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
 
     return strat
+
+def get_latency_value(input_dict, breakpoints):
+    dict_keys, dict_values = order_dict_by_keys(input_dict)
+    if breakpoints >= dict_keys[-1]:
+        return dict_values[-1]
+    else:
+        for key in range(len(dict_keys)):
+            if breakpoints < dict_keys[key + 1]:
+                return dict_values[key]
+
+def get_parameter_dict(input_dict, breakpoints, upper_value=100.0):
+    """
+    create a dictionary of parameter values from a continuous function, an arbitrary upper value and some breakpoints
+        within which to evaluate the function
+    """
+    revised_breakpoints = breakpoints
+    revised_breakpoints.append(upper_value)
+    param_values = []
+    for n_breakpoint in range(len(revised_breakpoints) - 1):
+        param_values.append(
+            quad(Function(
+            get_latency_value,
+            [   
+                input_dict,
+                breakpoints
+            ]
+            ), revised_breakpoints[n_breakpoint], revised_breakpoints[n_breakpoint + 1])[0] / (revised_breakpoints[n_breakpoint + 1] - revised_breakpoints[n_breakpoint])
+        )
+    return {str(key): value for key, value in zip(revised_breakpoints, param_values)}
+
+def order_dict_by_keys(input_dict):
+    """
+    sort the input dictionary keys and return two separate lists with keys and values as lists with corresponding
+        elements
+
+    :param input_dict: dict
+        dictionary to be sorted
+    :return:
+        :dict_keys: list
+            sorted list of what were the dictionary keys
+        : list
+            values applicable to the sorted list of dictionary keys
+    """
+    dict_keys = list(input_dict.keys())
+    dict_keys.sort()
+    return dict_keys, [input_dict[key] for key in dict_keys]
+
+def change_parameter_unit(
+    parameter_dict: dict, 
+    multiplier: float
+) -> dict:
+    """
+    Currently only used to adapt the latency parameters from the earlier functions according to whether they are needed as by year rather than by day.
+    Could be more generally applicable.
+
+    Args:
+        parameter_dict: The dictionary whose values need to be adjusted
+        multiplier: The value to multiply the dictionary's values by
+    Returns:
+        The dictionary with values multiplied by the multiplier argument
+
+    """
+    return {
+        param_key: param_value * multiplier
+        for param_key, param_value in parameter_dict.items()
+    }
+
+
+

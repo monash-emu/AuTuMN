@@ -56,23 +56,21 @@ def get_age_strat(
         )
 
     death_adjs = {str(k): Overwrite(v) for k, v in universal_death_funcs.items()}
-
     strat.set_flow_adjustments("universal_death", death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
-    # for flow_name, latency_params in params.age_stratification.items():
-    #     is_activation_flow = flow_name in ["early_activation", "late_activation"]
-    #     if is_activation_flow:
-    #         # Apply progression multiplier.
-    #         latency_params = {
-    #             k: v * params.progression_multiplier for k, v in latency_params.items()
-    #         }
-    #         print(latency_params.items())
-
-    #     adjs = {
-    #         str(k): v * 365.251 for k, v in latency_params.items()
-    #     }
-    #     strat.set_flow_adjustments(flow_name, adjs)
+    for flow_name, latency_params in params.age_stratification.items():
+        is_activation_flow = flow_name in ["early_activation", "late_activation"]
+        latency_mapped = map_params(latency_params, age_breakpoints)
+        if is_activation_flow:
+            # Apply progression multiplier.
+            latency_mapped = {
+                k: v * params.progression_multiplier for k, v in latency_mapped.items()
+            }
+        adjs = {k: v * 365.251 for k, v in latency_mapped.items()}
+        adjs = {str(k): Multiply(v) for k, v in adjs.items()}
+        strat.set_flow_adjustments(flow_name, adjs)
+    
 
     for comp in INFECTIOUS_COMPS:
         # We assume that infectiousness increases with age
@@ -166,3 +164,31 @@ def get_age_strat(
     # strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
 
     return strat
+
+def map_params(input_dict, modelled_age_groups):
+    dict_keys, dict_values = order_dict_by_keys(input_dict)
+    age_groups = modelled_age_groups
+    params_vals = dict_values
+    for age in modelled_age_groups:
+        if age > dict_keys[-1]:
+            #params.append(dict_values[-1])
+            params_vals.append(dict_values[-1])
+    
+    return {str(key): value for key, value in zip(age_groups, params_vals)}
+
+def order_dict_by_keys(input_dict):
+    """
+    sort the input dictionary keys and return two separate lists with keys and values as lists with corresponding
+        elements
+
+    :param input_dict: dict
+        dictionary to be sorted
+    :return:
+        :dict_keys: list
+            sorted list of what were the dictionary keys
+        : list
+            values applicable to the sorted list of dictionary keys
+    """
+    dict_keys = list(input_dict.keys())
+    dict_keys.sort()
+    return dict_keys, [input_dict[key] for key in dict_keys]

@@ -115,9 +115,9 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
-    stabilisation_rate = 3.652  # will be overwritten by stratification
-    early_activation_rate = 0.402 * params.progression_multiplier
-    late_activation_rate = 0.002 * params.progression_multiplier
+    stabilisation_rate = 1
+    early_activation_rate = 1
+    late_activation_rate = 1
     model.add_transition_flow(
         "stabilisation",
         stabilisation_rate,

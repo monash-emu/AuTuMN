@@ -115,9 +115,9 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
-    stabilisation_rate = 1.0  # will be overwritten by stratification
-    early_activation_rate = 1.0
-    late_activation_rate = 1.0
+    stabilisation_rate = 3.652  # will be overwritten by stratification
+    early_activation_rate = 0.402 * params.progression_multiplier
+    late_activation_rate = 0.002 * params.progression_multiplier
     model.add_transition_flow(
         "stabilisation",
         stabilisation_rate,
@@ -211,7 +211,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         )
         age_mixing_matrix = age_mixing_matrices["all_locations"]
         # convert daily contact rates to yearly rates
-        age_mixing_matrix *= 365.25
+        age_mixing_matrix *= 365.251
         # Add Age stratification to the model
         age_strat = get_age_strat(
             params=params,

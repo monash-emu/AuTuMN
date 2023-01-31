@@ -60,16 +60,19 @@ def get_age_strat(
     strat.set_flow_adjustments("universal_death", death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
-    for flow_name, latency_params in params.age_stratification.items():
-        is_activation_flow = flow_name in ["early_activation", "late_activation"]
-        if is_activation_flow:
-            # Apply progression multiplier.
-            latency_params = {
-                k: v * params.progression_multiplier for k, v in latency_params.items()
-            }
-        latency_params = {k: v * 365.251 for k, v in latency_params.items()}
-        adjs = {str(k): Multiply(v) for k, v in latency_params.items()}
-        strat.set_flow_adjustments(flow_name, adjs)
+    # for flow_name, latency_params in params.age_stratification.items():
+    #     is_activation_flow = flow_name in ["early_activation", "late_activation"]
+    #     if is_activation_flow:
+    #         # Apply progression multiplier.
+    #         latency_params = {
+    #             k: v * params.progression_multiplier for k, v in latency_params.items()
+    #         }
+    #         print(latency_params.items())
+
+    #     adjs = {
+    #         str(k): v * 365.251 for k, v in latency_params.items()
+    #     }
+    #     strat.set_flow_adjustments(flow_name, adjs)
 
     for comp in INFECTIOUS_COMPS:
         # We assume that infectiousness increases with age

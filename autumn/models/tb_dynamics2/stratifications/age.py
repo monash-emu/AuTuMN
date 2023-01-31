@@ -6,8 +6,11 @@ from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.model_features.curve import scale_up_function
 from autumn.models.tb_dynamics.parameters import Parameters
-
-from scipy.integrate import quad
+from autumn.core.utils.utils import change_parameter_unit
+from autumn.models.tb_dynamics.utils import (
+    get_parameter_dict_from_function,
+    create_step_function_from_dict,
+)
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
 from math import log, exp
@@ -57,25 +60,28 @@ def get_age_strat(
     strat.set_flow_adjustments("universal_death", death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
-    for flow_name, latency_params in params.age_stratification.items():
-        is_activation_flow = flow_name in ["early_activation", "late_activation"]
-        if is_activation_flow:
-            # Apply progression multiplier.
-            latency_params = {
-                k: v * params.progression_multiplier for k, v in latency_params.items()
-            }
-        latency_params = {k: v * 365.251 for k, v in latency_params.items()}
-        adjs = {str(k): Multiply(v) for k, v in latency_params.items()}
-        strat.set_flow_adjustments(flow_name, adjs)
+    # for flow_name, latency_params in params.age_stratification.items():
+    #     is_activation_flow = flow_name in ["early_activation", "late_activation"]
+    #     if is_activation_flow:
+    #         # Apply progression multiplier.
+    #         latency_params = {
+    #             k: v * params.progression_multiplier for k, v in latency_params.items()
+    #         }
+    #         print(latency_params.items())
+
+    #     adjs = {
+    #         str(k): v * 365.251 for k, v in latency_params.items()
+    #     }
+    #     strat.set_flow_adjustments(flow_name, adjs)
 
     for comp in INFECTIOUS_COMPS:
         # We assume that infectiousness increases with age
         # A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase  with  age.
         # This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
         inf_adjs = {}
-        for i, age_low in enumerate(age_breakpoints):
-            if i < len(age_breakpoints) - 1:
-                age_up = age_breakpoints[i + 1]
+        for i, age_low in enumerate(params.age_breakpoints):
+            if i < len(params.age_breakpoints) - 1:
+                age_up = params.age_breakpoints[i + 1]
                 # Calculate the average of the sigmoidal function(x -> 1 / (1 + exp(-(x-alpha)))) between the age bounds
                 average_infectiousness = (
                     log(1 + exp(age_up - params.age_infectiousness_switch))

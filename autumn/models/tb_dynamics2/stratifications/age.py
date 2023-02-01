@@ -69,7 +69,7 @@ def get_age_strat(
             }
 
         adjs = change_parameter_unit(latency_mapped, 365.251)
-        adjs = {str(k): v * 365.251 for k, v in adjs.items()}
+        adjs = {str(k): Overwrite(v) for k, v in adjs.items()}
         strat.set_flow_adjustments(flow_name, adjs)
     
 

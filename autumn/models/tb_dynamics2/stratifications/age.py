@@ -1,6 +1,6 @@
 from typing import List
 import pandas as pd
-from summer2 import AgeStratification, Overwrite, Multiply
+from summer2 import Stratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
@@ -23,7 +23,7 @@ def get_age_strat(
     compartments: List[str],
     age_pops: pd.Series = None,
     age_mixing_matrix=None,
-) -> AgeStratification:
+) -> Stratification:
 
     """
      Function to create the age group stratification object..
@@ -39,7 +39,7 @@ def get_age_strat(
     """
     age_breakpoints = params.age_breakpoints
     iso3 = params.country.iso3
-    strat = AgeStratification("age", age_breakpoints, compartments)
+    strat = Stratification("age", age_breakpoints, compartments)
     # set age mixing matrix
     if age_mixing_matrix is not None:
         strat.set_mixing_matrix(age_mixing_matrix)
@@ -67,8 +67,9 @@ def get_age_strat(
             latency_mapped = {
                 k: v * params.progression_multiplier for k, v in latency_mapped.items()
             }
-        adjs = {k: v * 365.251 for k, v in latency_mapped.items()}
-        adjs = {str(k): Multiply(v) for k, v in adjs.items()}
+
+        adjs = change_parameter_unit(latency_mapped, 365.251)
+        adjs = {str(k): v * 365.251 for k, v in adjs.items()}
         strat.set_flow_adjustments(flow_name, adjs)
     
 
@@ -192,3 +193,4 @@ def order_dict_by_keys(input_dict):
     dict_keys = list(input_dict.keys())
     dict_keys.sort()
     return dict_keys, [input_dict[key] for key in dict_keys]
+

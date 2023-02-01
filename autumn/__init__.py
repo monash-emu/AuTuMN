@@ -165,3 +165,9 @@ register_project(
     Region.MALAYSIA,
     "autumn.projects.sm_jax.malaysia.project",
 )
+
+register_project(
+    Models.TBD2,
+    Region.CAMAU,
+    "autumn.projects.tb_dynamics2.vietnam.camau.project",
+)

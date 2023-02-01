@@ -1,0 +1,91 @@
+---
+# Parameters used to build a general model of tb_dynamics
+description: BASELINE
+
+country:
+  iso3: VNM
+  country_name: Vietnam
+
+age_breakpoints: [0, 5, 15, 35, 50]
+start_population_size: 2000.
+crude_death_rate: 0.0008
+
+
+age_infectiousness_switch: 15.
+
+age_mixing:
+  source_iso3: VNM
+  age_adjust: true
+
+stratify_by: ["age"]
+
+
+time:
+  start: 1900
+  end: 2020  
+  step: 0.1
+cumulative_start_time: 1990.
+
+contact_rate: 0.00178
+
+# Age-related parameters
+age_stratification:
+  early_activation:
+    # unstratified: 1.1e-3
+    0: 2.4107
+    5: 0.9862
+    15: 0.0986
+  stabilisation:
+    # unstratified: 1.0e-2
+    0: 4.383
+    5: 4.383
+    15: 1.972
+  late_activation:
+    # unstratified: 5.5e-6
+    0: 6.939769e-9
+    5: 0.0023
+    15: 0.0012
+
+# relative risks of reinfection
+rr_infection_latent: .21
+rr_infection_recovered: 1.
+progression_multiplier: 1.
+
+self_recovery_rate: .2
+infect_death_rate: .2
+# requested outputs
+calculated_outputs: ["prevalence_infectious"]
+outputs_stratification: {}
+cumulative_output_start_time: 2020.
+
+passive_screening_sensitivity:
+  unstratified: .75
+  smear_positive: 1. # dummy value
+  smear_negative: .7 # dummy value
+  extrapulmonary: 0.5 # dummy value
+
+time_variant_tb_screening_rate:
+  1986.0: 0.60
+  2000.0: 0.90
+  2019.0: 0.92
+
+time_variant_tsr: # should always be > 0
+  1986: .60
+  2000: .92
+  2001: .93
+  2002: .92
+  2003: .93
+  2004: .93
+  2005: .93
+  2006: .93
+  2007: .91
+  2008: .92
+  2009: .92
+  2010: .92
+  2011: .93
+  2012: .92
+
+treatment_duration: 0.5
+prop_death_among_negative_tx_outcome: 0.2
+on_treatment_infect_multiplier: 0.08
+

@@ -1,0 +1,52 @@
+---
+# Parameters used to build a general model of tb_dynamics
+description: BASELINE
+
+country:
+  iso3: VNM
+  country_name: Vietnam
+
+start_population_size: 26000.
+crude_death_rate: 0.0008
+crude_birth_rate: 0.2
+infectious_seed: 1.
+age_breakpoints: [0, 5, 15, 35, 50]
+
+age_mixing:
+  source_iso3: VNM
+  age_adjust: true
+stratify_by: ["age"]
+
+age_infectiousness_switch: 15.
+
+time:
+  start: 1800
+  end: 2020  
+  step: 0.1
+cumulative_start_time: 1990.
+
+contact_rate: 0.00178
+
+# Age-related parameters
+age_stratification:
+  early_activation:
+    # unstratified: 1.1e-3
+    0: 2.4107
+    5: 0.9862
+    15: 0.0986
+  stabilisation:
+    # unstratified: 1.0e-2
+    0: 4.383
+    5: 4.383
+    15: 1.972
+  late_activation:
+    # unstratified: 5.5e-6
+    0: 6.939769e-9
+    5: 0.0023
+    15: 0.0012
+
+
+# requested outputs
+calculated_outputs: ["prevalence_infectious"]
+outputs_stratification: {}
+cumulative_output_start_time: 2020.

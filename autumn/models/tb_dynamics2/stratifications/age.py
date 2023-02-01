@@ -4,13 +4,10 @@ from summer2 import Stratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
-from autumn.model_features.curve import scale_up_function
 from autumn.models.tb_dynamics.parameters import Parameters
 from autumn.core.utils.utils import change_parameter_unit
-from autumn.models.tb_dynamics.utils import (
-    get_parameter_dict_from_function,
-    create_step_function_from_dict,
-)
+from copy import copy
+
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
 from math import log, exp
@@ -56,6 +53,7 @@ def get_age_strat(
         )
 
     death_adjs = {str(k): Overwrite(v) for k, v in universal_death_funcs.items()}
+
     strat.set_flow_adjustments("universal_death", death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
@@ -67,9 +65,8 @@ def get_age_strat(
             latency_mapped = {
                 k: v * params.progression_multiplier for k, v in latency_mapped.items()
             }
-
-        adjs = change_parameter_unit(latency_mapped, 365.251)
-        adjs = {str(k): Overwrite(v) for k, v in adjs.items()}
+        adjs = copy(latency_mapped)
+        adjs = {str(k): Multiply(v) for k, v in adjs.items()}
         strat.set_flow_adjustments(flow_name, adjs)
     
 

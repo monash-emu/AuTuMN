@@ -152,11 +152,11 @@ register_project(
 )
 
 # New TB Dynamics
-register_project(
-    Models.TBD,
-    Region.KIRIBATI,
-    "autumn.projects.tb_dynamics.kiribati.project",
-)
+# register_project(
+#     Models.TBD,
+#     Region.KIRIBATI,
+#     "autumn.projects.tb_dynamics.kiribati.project",
+# )
 
 
 
@@ -170,7 +170,7 @@ register_project(
 register_project(
     Models.TBD2,
     Region.CAMAU,
-    "autumn.projects.tb_dynamics2.vietnam.camau2.project",
+    "autumn.projects.tb_dynamics2.vietnam.camau.project",
 )
 
 

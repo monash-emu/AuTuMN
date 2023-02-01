@@ -42,7 +42,6 @@ def test_run_models_full(project_name):
     assert type(baseline_model) is CompartmentalModel
     assert baseline_model.outputs is not None
 
-   
 
 @pytest.mark.run_models
 @pytest.mark.github_only
@@ -56,5 +55,3 @@ def test_run_models_full(project_name):
     baseline_model = project.build_model(project.param_set.baseline.to_dict())
     assert type(baseline_model) is CompartmentalModel
     assert baseline_model.outputs is not None
-
- 

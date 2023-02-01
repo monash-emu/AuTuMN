@@ -30,26 +30,21 @@ contact_rate: 0.00178
 
 # Age-related parameters
 age_stratification:
-  early_activation: 
+  early_activation:
     # unstratified: 1.1e-3
-    0: 6.6e-3
-    5: 2.7e-3
-    15: 2.7e-4
-    
-  stabilisation: 
-    #unstratified: 1.0e-2
-    0: 1.2e-2
-    5: 1.2e-2
-    15: 5.4e-3
-    # 35: 5.4e-3
-    # 50: 5.4e-3
-  late_activation: 
-    #unstratified: 5.5e-6
-    0: 1.9e-11
-    5: 6.4e-6
-    15: 3.3e-6
-    # 35: 3.3e-6
-    # 50: 3.3e-6
+    0: 2.4107
+    5: 0.9862
+    15: 0.0986
+  stabilisation:
+    # unstratified: 1.0e-2
+    0: 4.383
+    5: 4.383
+    15: 1.972
+  late_activation:
+    # unstratified: 5.5e-6
+    0: 6.939769e-9
+    5: 0.0023
+    15: 0.0012
 
 # relative risks of reinfection
 rr_infection_latent: .21

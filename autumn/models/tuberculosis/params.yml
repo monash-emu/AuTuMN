@@ -57,19 +57,19 @@ time_variant_bcg_perc:
 age_specific_latency:
   early_activation:
     # unstratified: 1.1e-3
-    0: 2.4107
-    5: 0.9862
-    15: 0.0986
+    0: 6.6e-3
+    5: 2.7e-3
+    15: 2.7e-4
   stabilisation:
     # unstratified: 1.0e-2
-    0: 4.383
-    5: 4.383
-    15: 1.972
+    0: 1.2e-2
+    5: 1.2e-2
+    15: 5.4e-3
   late_activation:
     # unstratified: 5.5e-6
-    0: 6.939769e-9
-    5: 0.0023
-    15: 0.0012
+    0: 1.9e-11
+    5: 6.4e-6
+    15: 3.3e-6
 progression_multiplier: 1.
 
 # parameters related to post-disease-flows

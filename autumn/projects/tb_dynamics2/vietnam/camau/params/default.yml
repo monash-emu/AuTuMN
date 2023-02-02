@@ -20,7 +20,7 @@ stratify_by: ["age"]
 age_infectiousness_switch: 15.
 
 time:
-  start: 1800
+  start: 1900
   end: 2020  
   step: 0.1
 cumulative_start_time: 1990.

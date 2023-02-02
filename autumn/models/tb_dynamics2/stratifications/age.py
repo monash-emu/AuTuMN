@@ -1,12 +1,11 @@
 from typing import List
 import pandas as pd
-from summer2 import Stratification, Overwrite, Multiply
+from summer2 import AgeStratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.models.tb_dynamics.parameters import Parameters
-from autumn.core.utils.utils import change_parameter_unit
-from copy import copy
+
 
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
@@ -20,7 +19,7 @@ def get_age_strat(
     compartments: List[str],
     age_pops: pd.Series = None,
     age_mixing_matrix=None,
-) -> Stratification:
+) -> AgeStratification:
 
     """
      Function to create the age group stratification object..
@@ -36,7 +35,7 @@ def get_age_strat(
     """
     age_breakpoints = params.age_breakpoints
     iso3 = params.country.iso3
-    strat = Stratification("age", age_breakpoints, compartments)
+    strat = AgeStratification("age", age_breakpoints, compartments)
     # set age mixing matrix
     if age_mixing_matrix is not None:
         strat.set_mixing_matrix(age_mixing_matrix)
@@ -53,20 +52,18 @@ def get_age_strat(
         )
 
     death_adjs = {str(k): Overwrite(v) for k, v in universal_death_funcs.items()}
-
     strat.set_flow_adjustments("universal_death", death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
     for flow_name, latency_params in params.age_stratification.items():
         is_activation_flow = flow_name in ["early_activation", "late_activation"]
-        latency_mapped = map_params(latency_params, age_breakpoints)
+        latency_mapped = map_params_to_model_agegroups(latency_params, age_breakpoints)
         if is_activation_flow:
             # Apply progression multiplier.
             latency_mapped = {
                 k: v * params.progression_multiplier for k, v in latency_mapped.items()
             }
-        adjs = copy(latency_mapped)
-        adjs = {str(k): Multiply(v) for k, v in adjs.items()}
+        adjs = {str(k): Multiply(v) for k, v in latency_mapped.items()}
         strat.set_flow_adjustments(flow_name, adjs)
     
 
@@ -163,10 +160,9 @@ def get_age_strat(
 
     return strat
 
-def map_params(input_dict, targets):
+def map_params_to_model_agegroups(input_dict, targets):
     results = {}
     for t in targets:
-        keys = [k for k in input_dict.keys() if k <= t]
-        results[t] = input_dict[max(keys)] if keys else None
+        results[str(t)] = input_dict[max([k for k in input_dict.keys() if k <= t])] 
     return results
 

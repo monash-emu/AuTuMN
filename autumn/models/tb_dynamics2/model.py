@@ -145,16 +145,16 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
   
     
-    # tfunc = build_static_sigmoidal_multicurve([float(k) for k in params.time_variant_tb_screening_rate.keys()], [float(v) for v in params.time_variant_tb_screening_rate.values()])
-    # detection_rate = Function(tfunc, [Time])
+    tfunc = build_static_sigmoidal_multicurve([float(k) for k in params.time_variant_tb_screening_rate.keys()], [float(v) for v in params.time_variant_tb_screening_rate.values()])
+    detection_rate = Function(tfunc, [Time])
 
-    # model.add_transition_flow(
-    #     "detection",
-    #     detection_rate,
-    #     Compartment.INFECTIOUS,
-    #     Compartment.ON_TREATMENT,
-    # )
-     # Treatment recovery, releapse, death flows.
+    model.add_transition_flow(
+        "detection",
+        detection_rate,
+        Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
+    )
+    # Treatment recovery, releapse, death flows.
 
   
     # treatment_recovery_rate = 1.0
@@ -247,9 +247,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         "infectious_population_size", INFECTIOUS_COMPS, save_results=False
     )
    
-    # outputs_builder.request_output_func(
-    #    "prevalence_infectious", calculate_per_hundred_thousand, sources
-    # )
+
     outputs_builder.request_function_output(
         "prevalence_infectious",
         1e5 * DerivedOutput("infectious_population_size") / DerivedOutput("total_population"),
@@ -281,10 +279,10 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     outputs_builder.request_function_output(
         "incidence", 1e5 * DerivedOutput("incidence_norm") / DerivedOutput("total_population")
     )
-    # outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
-    # outputs_builder.request_function_output(
-    #     "notifications", DerivedOutput("passive_notifications_raw") / time_params.step
-    # )
+    outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
+    outputs_builder.request_function_output(
+        "notifications", DerivedOutput("passive_notifications_raw") / time_params.step
+    )
 
     builder.set_model(model)
     if ret_builder:

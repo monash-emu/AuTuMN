@@ -175,11 +175,14 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     for age, multiplier in bcg_multilier_dict.items():
         if multiplier < 1.0:
             average_age = get_average_age_for_bcg(age, params.age_breakpoints)
+            print(average_age)
             bcg_adjs[str(age)] = Multiply(
                 make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age)
             )
         else:
             bcg_adjs[str(age)] = None
+
+    print(bcg_adjs)
 
     if params.bcg_effect == "infection":
         flow_affected_by_bcg = "infection"

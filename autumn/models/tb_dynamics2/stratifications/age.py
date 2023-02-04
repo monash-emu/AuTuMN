@@ -92,12 +92,12 @@ def get_age_strat(
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
     #Set age-specific treatment recovery, relapse and treatment death rates
-    time_variant_tsr = Function(
-        build_static_sigmoidal_multicurve(
-            list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
-        ),
-        [Time],
-    )
+    # time_variant_tsr = Function(
+    #     build_static_sigmoidal_multicurve(
+    #         list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
+    #     ),
+    #     [Time],
+    # )
     # treatment_recovery_funcs = {}
     # treatment_death_funcs = {}
     # treatment_relapse_funcs = {}

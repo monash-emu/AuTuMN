@@ -22,17 +22,18 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 targets = [
     NormalTarget(ts_set["total_population"], stdev=2500.0),
     #NormalTarget(ts_set["notifications"], stdev=40.0),
-    NormalTarget(ts_set["percentage_latent"], stdev=2.0)
+    NormalTarget(ts_set["percentage_latent"], stdev=2.0),
+    NormalTarget(ts_set["incidence"], stdev=5.0)
 ]
 
 
 priors = [
     UniformPrior("start_population_size", [20000, 300000]),
-    UniformPrior("contact_rate", [0.001, 0.01]),
+    UniformPrior("contact_rate", [0.0001, 0.01]),
     UniformPrior("infectious_seed", [100, 2000]),
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.2, 1.0]),
-    UniformPrior("progression_multiplier", [0.5, 2.0]),
+    UniformPrior("progression_multiplier", [0.1, 2.0]),
 ]
 calibration = Calibration(
     priors=priors,

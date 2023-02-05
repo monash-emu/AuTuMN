@@ -39,10 +39,10 @@ pyDOE
 numba
 scipy==1.8.1
 networkx
-numpyro
+numpyro==0.10.1
 
 # Database access
-SQLAlchemy
+SQLAlchemy==1.4.46
 pyarrow
 
 # Utility

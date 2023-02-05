@@ -182,7 +182,6 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
         else:
             bcg_adjs[str(age)] = None
 
-    print(bcg_adjs)
 
     if params.bcg_effect == "infection":
         flow_affected_by_bcg = "infection"

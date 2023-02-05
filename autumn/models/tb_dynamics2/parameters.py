@@ -99,5 +99,8 @@ class Parameters(ParamStruct):
     prop_death_among_negative_tx_outcome: float
     on_treatment_infect_multiplier: float
 
+    time_variant_bcg_perc: dict
+    bcg_effect: str
+
 
 

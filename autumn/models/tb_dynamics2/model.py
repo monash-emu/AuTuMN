@@ -145,37 +145,38 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
   
     
-    # tfunc = build_static_sigmoidal_multicurve([float(k) for k in params.time_variant_tb_screening_rate.keys()], [float(v) for v in params.time_variant_tb_screening_rate.values()])
-    # detection_rate = Function(tfunc, [Time])
+    tfunc = build_static_sigmoidal_multicurve([float(k) for k in params.time_variant_tb_screening_rate.keys()], [float(v) for v in params.time_variant_tb_screening_rate.values()])
+    detection_rate = Function(tfunc, [Time])
 
-    # model.add_transition_flow(
-    #     "detection",
-    #     detection_rate,
-    #     Compartment.INFECTIOUS,
-    #     Compartment.ON_TREATMENT,
-    # )
-    # Treatment recovery, releapse, death flows.
+    model.add_transition_flow(
+        "detection",
+        detection_rate,
+        Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
+    )
 
-    # treatment_recovery_rate = 1.0
-    # treatment_death_rate = 1.0
-    # relapse_rate = 1.0
-    # model.add_transition_flow(
-    #     "treatment_recovery",
-    #     treatment_recovery_rate,
-    #     Compartment.ON_TREATMENT,
-    #     Compartment.RECOVERED,
-    # )
-    # model.add_death_flow(
-    #     "treatment_death",
-    #     treatment_death_rate,
-    #     Compartment.ON_TREATMENT,
-    # )
-    # model.add_transition_flow(
-    #     "relapse",
-    #     relapse_rate,
-    #     Compartment.ON_TREATMENT,
-    #     Compartment.INFECTIOUS,
-    # )
+    #Treatment recovery, releapse, death flows.
+
+    treatment_recovery_rate = 1.0
+    treatment_death_rate = 1.0
+    relapse_rate = 1.0
+    model.add_transition_flow(
+        "treatment_recovery",
+        treatment_recovery_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.RECOVERED,
+    )
+    model.add_death_flow(
+        "treatment_death",
+        treatment_death_rate,
+        Compartment.ON_TREATMENT,
+    )
+    model.add_transition_flow(
+        "relapse",
+        relapse_rate,
+        Compartment.ON_TREATMENT,
+        Compartment.INFECTIOUS,
+    )
     # Entry flows
     birth_rates, years = inputs.get_crude_birth_rate(iso3)
     birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population

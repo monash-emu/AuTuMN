@@ -64,6 +64,13 @@ passive_screening_sensitivity:
   smear_negative: .7 # dummy value
   extrapulmonary: 0.5 # dummy value
 
+# bcg_multilier_dict:
+#   0: 0.3
+#   5: 0.3
+#   15: 0.7375
+#   35: 1.0
+#   50: 1.0
+
 time_variant_tb_screening_rate:
   1986.0: 0.60
   2000.0: 0.90
@@ -88,4 +95,41 @@ time_variant_tsr: # should always be > 0
 treatment_duration: 0.5
 prop_death_among_negative_tx_outcome: 0.2
 on_treatment_infect_multiplier: 0.08
+
+bcg_effect: "infection"
+time_variant_bcg_perc:
+  1930: 0.
+  1990: 49.
+  1991: 71.
+  1992: 72.
+  1993: 88.
+  1994: 96.
+  1995: 71.
+  1996: 98.
+  1997: 94.
+  1998: 81.
+  1999: 81.
+  2000: 89.
+  2001: 99.
+  2002: 90.
+  2003: 93.
+  2004: 91.
+  2005: 93.
+  2006: 92.
+  2007: 92.
+  2008: 95.
+  2009: 98.
+  2010: 99.
+  2011: 80.
+  2012: 97.
+  2013: 93.
+  2014: 89.
+  2015: 99.
+  2016: 94.
+  2017: 92.
+  2018: 98.
+  2019: 89.
+
+
+
 

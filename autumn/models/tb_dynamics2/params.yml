@@ -98,7 +98,7 @@ on_treatment_infect_multiplier: 0.08
 
 bcg_effect: "infection"
 time_variant_bcg_perc:
-  1930: 0.
+  1981: 0.
   1990: 49.
   1991: 71.
   1992: 72.
@@ -129,6 +129,8 @@ time_variant_bcg_perc:
   2017: 92.
   2018: 98.
   2019: 89.
+
+cdr_adjustment: 1.0
 
 
 

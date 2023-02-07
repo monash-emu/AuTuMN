@@ -146,7 +146,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
   
     
     tfunc = build_static_sigmoidal_multicurve([float(k) for k in params.time_variant_tb_screening_rate.keys()], [float(v) for v in params.time_variant_tb_screening_rate.values()])
-    detection_rate = Function(tfunc, [Time])
+    detection_rate = params.cdr_adjustment * Function(tfunc, [Time])
 
     model.add_transition_flow(
         "detection",
@@ -197,6 +197,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         params.infect_death_rate,
         Compartment.INFECTIOUS,
     )
+    # model.add_computed_value_func("sigmoid_param", crude_birth_rate)
+    # model.request_computed_value_output("sigmoid_param")
     """
     Apply age stratification
     """
@@ -277,10 +279,10 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     outputs_builder.request_function_output(
         "incidence", 1e5 * DerivedOutput("incidence_norm") / DerivedOutput("total_population")
     )
-    # outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
-    # outputs_builder.request_function_output(
-    #     "notifications", DerivedOutput("passive_notifications_raw") / time_params.step
-    # )
+    outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
+    outputs_builder.request_function_output(
+        "notifications", DerivedOutput("passive_notifications_raw") / time_params.step
+    )
 
     builder.set_model(model)
     if ret_builder:

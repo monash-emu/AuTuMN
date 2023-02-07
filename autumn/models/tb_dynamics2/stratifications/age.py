@@ -6,17 +6,6 @@ from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.models.tb_dynamics.parameters import Parameters
 
-from autumn.model_features.curve import scale_up_function
-
-from scipy.integrate import quad
-from copy import copy
-
-from autumn.models.tuberculosis.utils import (
-    create_sloping_step_function,
-    get_parameter_dict_from_function,
-    create_step_function_from_dict,
-)
-
 
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
@@ -186,7 +175,6 @@ def get_age_strat(
             )
         else:
             bcg_adjs[str(age)] = None
-
 
     if params.bcg_effect == "infection":
         flow_affected_by_bcg = "infection"

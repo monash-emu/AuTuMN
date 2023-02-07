@@ -91,6 +91,7 @@ class Parameters(ParamStruct):
     cumulative_output_start_time: float
     
       # Detection
+    cdr_adjustment: pclass()
     time_variant_tb_screening_rate: dict
     passive_screening_sensitivity: dict
     time_variant_tsr: dict
@@ -101,6 +102,7 @@ class Parameters(ParamStruct):
 
     time_variant_bcg_perc: dict
     bcg_effect: str
+
 
 
 

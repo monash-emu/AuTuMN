@@ -23,7 +23,7 @@ targets = [
     NormalTarget(ts_set["total_population"], stdev=2500.0),
     NormalTarget(ts_set["notifications"], stdev=20.0),
     NormalTarget(ts_set["percentage_latent"], stdev=2.0),
-    NormalTarget(ts_set["incidence"], stdev=5.0)
+    #NormalTarget(ts_set["incidence"], stdev=5.0)
 ]
 
 
@@ -34,7 +34,7 @@ priors = [
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.2, 0.6]),
     UniformPrior("progression_multiplier", [0.1, 2.0]),
-    UniformPrior("cdr_adjustment", [0.8, 1.2])
+    UniformPrior("cdr_adjustment", [0.6, 1.4])
 ]
 calibration = Calibration(
     priors=priors,

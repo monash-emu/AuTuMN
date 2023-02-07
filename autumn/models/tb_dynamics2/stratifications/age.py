@@ -6,7 +6,6 @@ from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.models.tb_dynamics.parameters import Parameters
 
-
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
 from math import log, exp
@@ -160,7 +159,6 @@ def get_age_strat(
 
     #Add BCG effect without stratifying for BCG
 
-    
     bcg_multilier_dict = {'0': 0.3, '5': 0.3, '15': 0.7375, '35': 1.0, '50': 1.0}
     bcg_coverage_func = build_static_sigmoidal_multicurve(
         list(params.time_variant_bcg_perc.keys()),
@@ -170,7 +168,7 @@ def get_age_strat(
     for age, multiplier in bcg_multilier_dict.items():
         if multiplier < 1.0:
             average_age = get_average_age_for_bcg(age, params.age_breakpoints)
-            bcg_adjs[str(age)] = Multiply(
+            bcg_adjs[age] = Multiply(
                 make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age)
             )
         else:

@@ -72,7 +72,7 @@ class Parameters(ParamStruct):
     # Model structure
     stratify_by: list
     age_breakpoints: Optional[list]
-    infectious_seed: pclass()
+    infectious_seed: float
     cumulative_start_time: float
     # Base TB model
     contact_rate: pclass()

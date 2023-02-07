@@ -165,14 +165,17 @@ def get_age_strat(
         list(params.time_variant_bcg_perc.values()),
     )
     bcg_adjs = {}
+  
+
     for age, multiplier in bcg_multilier_dict.items():
         if multiplier < 1.0:
             average_age = get_average_age_for_bcg(age, params.age_breakpoints)
             bcg_adjs[age] = Multiply(
-                make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age)
+                Function(bcg_multiplier_func, [Time, bcg_coverage_func, multiplier, average_age])
             )
         else:
             bcg_adjs[str(age)] = None
+
 
     if params.bcg_effect == "infection":
         flow_affected_by_bcg = "infection"
@@ -200,12 +203,24 @@ def get_average_age_for_bcg(agegroup, age_breakpoints):
     else:
         return 0.5 * (age_breakpoints[agegroup_idx] + age_breakpoints[agegroup_idx + 1])
 
+def bcg_multiplier_func(t, tfunc, fmultiplier, faverage_age):
+    return 1.0 - tfunc(t - faverage_age) / 100.0 * (1.0 - fmultiplier)
 
-def make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age):
-    def bcg_multiplier_func(t, computed_values):
-        return 1.0 - bcg_coverage_func(t - average_age) / 100.0 * (1.0 - multiplier)
 
-    return bcg_multiplier_func
+# def make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age):
+#     def bcg_multiplier_func(t, computed_values):
+#         return 1.0 - bcg_coverage_func(t - average_age) / 100.0 * (1.0 - multiplier)
+
+#     return bcg_multiplier_func
+
+
+    
+
+# def make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age):
+#     def bcg_multiplier_func(t, computed_values):
+#         return 1.0 - bcg_coverage_func(t - average_age) / 100.0 * (1.0 - multiplier)
+
+#     return bcg_multiplier_func
 
 
 

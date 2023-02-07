@@ -144,10 +144,9 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.RECOVERED,
     )
   
-    
-    tfunc = build_static_sigmoidal_multicurve([float(k) for k in params.time_variant_tb_screening_rate.keys()], [float(v) for v in params.time_variant_tb_screening_rate.values()])
+ 
+    tfunc =  build_static_sigmoidal_multicurve([k for k in params.time_variant_tb_screening_rate.keys()], [v for v in params.time_variant_tb_screening_rate.values()])
     detection_rate = params.cdr_adjustment * Function(tfunc, [Time])
-
     model.add_transition_flow(
         "detection",
         detection_rate,

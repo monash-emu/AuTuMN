@@ -34,7 +34,7 @@ priors = [
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.2, 0.6]),
     UniformPrior("progression_multiplier", [0.1, 2.0]),
-    UniformPrior("cdr_adjustment", [0.8, 1.2]),
+    UniformPrior("cdr_adjustment", [0.8, 1.2])
 ]
 calibration = Calibration(
     priors=priors,

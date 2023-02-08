@@ -187,5 +187,6 @@ def add_parameter_progression_fig_to_doc(
             ax = axes[i_prior][col]
             ax.set_title(f"{descriptions[prior]}, {column_names[col]}", fontsize=20)
             ax.xaxis.set_tick_params(labelsize=15)
+            ax.yaxis.set_tick_params(labelsize=15)
     with doc.create(pl.Figure()) as plot:
         plot.add_plot(width=NoEscape(r"1\textwidth"))

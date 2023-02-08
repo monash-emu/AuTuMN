@@ -132,3 +132,20 @@ def add_calib_table_to_doc(
             calib_table_row = (prior_desc, dist_type, dist_params, dist_range)
             calibration_table.add_row(calib_table_row)
         calibration_table.add_hline()
+
+
+def add_calib_metric_table_to_doc(supplement, calib_summary, param_descriptions):
+
+    headers = ["Para-meter", "Mean (SD)", "3-97% high-density interval", "MCSE mean (SD)", "ESS bulk", "ESS tail", "R_hat"]
+    with supplement.create(pl.Tabular("p{1.3cm} " * 7)) as calib_metrics_table:
+        calib_metrics_table.add_hline()
+        calib_metrics_table.add_row([bold(i) for i in headers])
+        for param in calib_summary.index:
+            calib_metrics_table.add_hline()
+            summary_row = calib_summary.loc[param]
+            name = param_descriptions[param]
+            mean_sd = f"{summary_row['mean']} ({summary_row['sd']})"
+            hdi = f"{summary_row['hdi_3%']} to {summary_row['hdi_97%']}"
+            mcse = f"{summary_row['mcse_mean']} ({summary_row['mcse_sd']})"
+            calib_metrics_table.add_row([name, mean_sd, hdi, mcse] + [str(metric) for metric in summary_row[6:]])
+        calib_metrics_table.add_hline()

@@ -1,5 +1,7 @@
 import pylatex as pl
 from pylatex.utils import NoEscape, bold
+import arviz as az
+import pandas as pd
 
 from summer2 import CompartmentalModel
 
@@ -134,18 +136,56 @@ def add_calib_table_to_doc(
         calibration_table.add_hline()
 
 
-def add_calib_metric_table_to_doc(supplement, calib_summary, param_descriptions):
+def add_calib_metric_table_to_doc(
+    doc: pl.document.Document,
+    calib_summary: pd.DataFrame, 
+    descriptions: dict,
+):
+    """
+    Include a table of the summary outputs from the calibration algorithm in the document.
+
+    Args:
+        doc: The document to modify
+        calib_summary: Grid of outputs from arviz's summary function
+        descriptions: The longer parameter names
+    """
 
     headers = ["Para-meter", "Mean (SD)", "3-97% high-density interval", "MCSE mean (SD)", "ESS bulk", "ESS tail", "R_hat"]
-    with supplement.create(pl.Tabular("p{1.3cm} " * 7)) as calib_metrics_table:
+    with doc.create(pl.Tabular("p{1.3cm} " * 7)) as calib_metrics_table:
         calib_metrics_table.add_hline()
         calib_metrics_table.add_row([bold(i) for i in headers])
         for param in calib_summary.index:
             calib_metrics_table.add_hline()
             summary_row = calib_summary.loc[param]
-            name = param_descriptions[param]
+            name = descriptions[param]
             mean_sd = f"{summary_row['mean']} ({summary_row['sd']})"
             hdi = f"{summary_row['hdi_3%']} to {summary_row['hdi_97%']}"
             mcse = f"{summary_row['mcse_mean']} ({summary_row['mcse_sd']})"
             calib_metrics_table.add_row([name, mean_sd, hdi, mcse] + [str(metric) for metric in summary_row[6:]])
         calib_metrics_table.add_hline()
+
+
+def add_parameter_progression_fig_to_doc(
+    outputs: az.data.inference_data.InferenceData,
+    doc: pl.document.Document,
+    priors: list,
+    descriptions: dict,
+):
+    """
+    Include a figure of the parameter posteriors and trace in document.
+
+    Args:
+        outputs: Results of inference algorithm in arviz format
+        doc: The document to modify
+        priors: The priors being used in calibration
+        descriptions: The longer parameter names
+    """
+    axes = az.plot_trace(outputs, figsize=(15, 10))
+    for i_prior, prior in enumerate(priors):
+        column_names = ["posterior", "trace"]
+        for col in range(2):
+            ax = axes[i_prior][col]
+            ax.set_title(f"{descriptions[prior]}, {column_names[col]}", fontsize=20)
+            ax.xaxis.set_tick_params(labelsize=15)
+    with doc.create(pl.Figure()) as plot:
+        plot.add_plot(width=NoEscape(r"1\textwidth"))

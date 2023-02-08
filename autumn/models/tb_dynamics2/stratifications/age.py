@@ -207,21 +207,6 @@ def bcg_multiplier_func(t, tfunc, fmultiplier, faverage_age):
     return 1.0 - tfunc(t - faverage_age) / 100.0 * (1.0 - fmultiplier)
 
 
-# def make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age):
-#     def bcg_multiplier_func(t, computed_values):
-#         return 1.0 - bcg_coverage_func(t - average_age) / 100.0 * (1.0 - multiplier)
-
-#     return bcg_multiplier_func
-
-
-    
-
-# def make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age):
-#     def bcg_multiplier_func(t, computed_values):
-#         return 1.0 - bcg_coverage_func(t - average_age) / 100.0 * (1.0 - multiplier)
-
-#     return bcg_multiplier_func
-
 
 
 

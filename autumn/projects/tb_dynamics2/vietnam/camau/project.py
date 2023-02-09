@@ -10,7 +10,7 @@ from autumn.calibration.targets import NormalTarget
 from autumn.models.tb_dynamics2 import get_base_params, build_model
 
 from autumn.settings import Region, Models
-from pathlib import Path
+import json
 
 # Load and configure model parameters.
 base_params = get_base_params()
@@ -46,10 +46,16 @@ calibration = Calibration(
     using_summer2=True,
 )
 
+plot_spec_filepath = build_rel_path("timeseries.json")
+with open(plot_spec_filepath) as f:
+    plot_spec = json.load(f)
+plot_spec
+
 project = Project(
     Region.CAMAU,
     Models.TBD2,
     build_model,
     param_set,
     calibration,
+    plots=plot_spec
 )

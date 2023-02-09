@@ -55,7 +55,8 @@ def get_age_strat(
 
     # Set age-specific latency parameters (early/late activation + stabilisation).
     for flow_name, latency_params in params.age_stratification.items():
-        is_activation_flow = flow_name in ["early_activation", "late_activation"]
+        is_activation_flow = flow_name in ["late_activation"]
+        #is_activation_flow = flow_name in ["early_activation", "late_activation"]
         latency_mapped = map_params_to_model_agegroups(latency_params, age_breakpoints)
         if is_activation_flow:
             # Apply progression multiplier.

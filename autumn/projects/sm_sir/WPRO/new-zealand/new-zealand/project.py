@@ -7,7 +7,7 @@ from autumn.core.project import (
     get_all_available_scenario_paths,
 )
 from autumn.calibration import Calibration
-
+from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.sm_sir.WPRO.common import get_WPRO_priors, get_targets, variant_start_time
@@ -41,7 +41,18 @@ priors = priors + [
     UniformPrior("contact_rate", (0.01, 0.1)),
 ]
 
-targets = get_targets(calibration_start_time, "new-zealand", "new-zealand")
+ts_set = get_targets(calibration_start_time, "new-zealand", "new-zealand")
+
+# smoothing data to remove reporting day effect
+notifications_s = ts_set["notifications"].loc['2022-09-01':].rolling(14).mean()
+notifications = ts_set["notifications"].loc[:'2022-09-01']
+notifications_ts = notifications.append(notifications_s)
+
+infection_deaths_s = ts_set["infection_deaths"].loc['2022-07-01':].rolling(7).mean()
+infection_deaths = ts_set["infection_deaths"].loc[:'2022-07-01']
+infection_deaths_ts = infection_deaths.append(infection_deaths_s)
+
+targets = [NormalTarget(infection_deaths_ts), NormalTarget(notifications_ts)]
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=None, metropolis_init="current_params"

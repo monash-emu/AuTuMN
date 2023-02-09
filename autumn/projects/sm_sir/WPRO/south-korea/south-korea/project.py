@@ -7,7 +7,7 @@ from autumn.core.project import (
     get_all_available_scenario_paths,
 )
 from autumn.calibration import Calibration
-
+from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.sm_sir.WPRO.common import get_WPRO_priors, get_targets, variant_start_time
@@ -45,7 +45,11 @@ priors = priors + [
     UniformPrior("vaccine_effects.ve_death", (0.5, 1.0)),
     UniformPrior("voc_emergence.omicron.death_protection", (0.5, 0.95))
 ]
-targets = get_targets(calibration_start_time, "south-korea", "south-korea")
+ts_set = get_targets(calibration_start_time, "south-korea", "south-korea")
+
+infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
+notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+targets = [NormalTarget(infection_deaths_ts), NormalTarget(notifications_ts)]
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=None, metropolis_init="current_params"

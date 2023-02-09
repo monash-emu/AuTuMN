@@ -8,6 +8,7 @@ from autumn.core.project import (
 )
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
+from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
 from autumn.projects.sm_sir.WPRO.common import get_WPRO_priors, get_targets, variant_start_time
@@ -41,7 +42,10 @@ priors = priors + [
     UniformPrior("age_stratification.cfr.multiplier", (0.001, 0.15)),
     UniformPrior("contact_rate", (0.05, 0.13)),
 ]
-targets = get_targets(calibration_start_time, "philippines", "philippines")
+ts_set = get_targets(calibration_start_time, "philippines", "philippines")
+infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
+notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
+targets = [NormalTarget(infection_deaths_ts), NormalTarget(notifications_ts)]
 
 calibration = Calibration(
     priors=priors, targets=targets, random_process=None, metropolis_init="current_params"

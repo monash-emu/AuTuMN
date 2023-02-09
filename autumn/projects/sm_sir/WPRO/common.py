@@ -1,5 +1,4 @@
 from autumn.calibration.priors import UniformPrior
-from autumn.calibration.targets import NormalTarget
 from autumn.core.project import load_timeseries, build_rel_path
 from autumn.models.sm_covid.stratifications.strains import get_first_variant_report_date
 from autumn.settings.constants import COVID_BASE_DATETIME
@@ -73,10 +72,7 @@ def get_targets(calibration_start_time, country_name, region_name):
     )
     ts_set = load_timeseries(time_series_path)
 
-    infection_deaths_ts = ts_set["infection_deaths"].loc[calibration_start_time:]
-    notifications_ts = ts_set["notifications"].loc[calibration_start_time:]
-    targets = [NormalTarget(infection_deaths_ts), NormalTarget(notifications_ts)]
-    return targets
+    return ts_set
 
 
 def variant_start_time(variants: list, region_name: str):

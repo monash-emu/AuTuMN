@@ -80,10 +80,8 @@ data/outputs
 # TeX stuff (all the automatically generated files, except .log which is included above)
 docs/tex/user/
 
-# Random stuff
-
+# Project-specific
 saved_*
-
 data/test_get_sample/opti_sample.csv
 data/xls/data_liberia.csv
 data/pbi_outputs_for_opti/by_age/fully_immune/output_table_fully_immune_by_age.csv
@@ -91,3 +89,6 @@ data/pbi_outputs_for_opti/by_location/fully_immune/output_table_fully_immune_by_
 
 # ignoring marshall islands figures and databases
 autumn/projects/tuberculosis/marshall_islands/outputs/all_outputs/*
+
+# austcovid project
+autumn/projects/austcovid/supplement/aust_supp*

@@ -91,21 +91,25 @@ def get_age_strat(
             inf_adjs[str(age_low)] = Multiply(average_infectiousness)
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
-    #Set age-specific treatment recovery, relapse and treatment death rates
+    # Set age-specific treatment recovery, relapse and treatment death rates. Since the non-TB-related mortality rate varies by age, the values of the treatment-induced recovery 
+    # relapse rate and mortality rate of individuals on TB treatment also vary by age.
+    # The treatment success rate TSR = 𝜑 / (𝜑 + 𝜌 +  𝜇t + 𝜇') where 𝜌 is the relapse rate, 𝜇t is the excess mortality rate of individuals on TB treatment, and 𝜇 is the non-TB-related mortality rate
+    # π is the observed proportion of deaths among all negative treatment outcomes, π = (𝜇t + 𝜇)/(𝜌 +  𝜇t + 𝜇)
+    
     time_variant_tsr = Function(
         build_static_sigmoidal_multicurve(
             list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
         ),
         [Time],
-    )
+    ) # Scaling up the time-variant treatment success rate based on observed values
+
     treatment_recovery_funcs = {}
-    treatment_death_funcs = {}
-    treatment_relapse_funcs = {}
     def get_treatment_recovery_rate(treatment_duration, prop_death, death_rate, tsr):
         floor_val = 1 / treatment_duration
         dynamic_val = death_rate / prop_death * (1.0 / (1.0 - tsr) - 1.0)
         return jnp.max(jnp.array((floor_val, dynamic_val)))
-
+    
+    treatment_death_funcs = {}
     def get_treatment_death_rate(prop_death, death_rate, trr, tsr):
         return (
             prop_death
@@ -114,7 +118,7 @@ def get_age_strat(
                 / tsr
                 - death_rate
         )
-
+    treatment_relapse_funcs = {}
     def get_treatment_relapse_rate(prop_death, trr, tsr):
         return (
                 trr
@@ -159,15 +163,12 @@ def get_age_strat(
     strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
 
     #Add BCG effect without stratifying for BCG
-
     bcg_multilier_dict = {'0': 0.3, '5': 0.3, '15': 0.7375, '35': 1.0, '50': 1.0}
     bcg_coverage_func = build_static_sigmoidal_multicurve(
         list(params.time_variant_bcg_perc.keys()),
         list(params.time_variant_bcg_perc.values()),
     )
     bcg_adjs = {}
-  
-
     for age, multiplier in bcg_multilier_dict.items():
         if multiplier < 1.0:
             average_age = get_average_age_for_bcg(age, params.age_breakpoints)
@@ -176,8 +177,6 @@ def get_age_strat(
             )
         else:
             bcg_adjs[str(age)] = None
-
-
     if params.bcg_effect == "infection":
         flow_affected_by_bcg = "infection"
     elif params.bcg_effect == "mortality":

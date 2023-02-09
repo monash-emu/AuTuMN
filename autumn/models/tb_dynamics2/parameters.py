@@ -79,9 +79,9 @@ class Parameters(ParamStruct):
     rr_infection_latent: pclass()
     rr_infection_recovered: pclass()
     progression_multiplier: pclass()
-    self_recovery_rate: float
-    infect_death_rate: float
-
+    infect_death_rate_dict: dict
+    self_recovery_rate_dict: dict
+    
     # Characterising age stratification
     age_infectiousness_switch: float
     age_stratification: dict
@@ -102,6 +102,10 @@ class Parameters(ParamStruct):
 
     time_variant_bcg_perc: dict
     bcg_effect: str
+    incidence_props_pulmonary: float
+    incidence_props_smear_positive_among_pulmonary: float
+    smear_negative_infect_multiplier: float
+    extrapulmonary_infect_multiplier: float
 
 
 

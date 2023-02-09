@@ -115,21 +115,24 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
+    # Latency-related flows
     stabilisation_rate = 1
-    early_activation_rate = 1
-    late_activation_rate = 1
     model.add_transition_flow(
         "stabilisation",
         stabilisation_rate,
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
     )
+
+    early_activation_rate = 1
     model.add_transition_flow(
         "early_activation",
         early_activation_rate,
         Compartment.EARLY_LATENT,
         Compartment.INFECTIOUS,
     )
+
+    late_activation_rate = 1
     model.add_transition_flow(
         "late_activation",
         late_activation_rate,
@@ -139,14 +142,15 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # Add post-diseases flows
     model.add_transition_flow(
         "self_recovery",
-        params.self_recovery_rate,
+        params.self_recovery_rate_dict['unstratified'],
         Compartment.INFECTIOUS,
         Compartment.RECOVERED,
     )
   
  
     tfunc =  build_static_sigmoidal_multicurve([k for k in params.time_variant_tb_screening_rate.keys()], [v for v in params.time_variant_tb_screening_rate.values()])
-    detection_rate = params.cdr_adjustment * Function(tfunc, [Time])
+    detection_rate = params.cdr_adjustment * Function(tfunc, [Time]) * params.passive_screening_sensitivity['unstratified']
+    #detection_rate = params.cdr_adjustment * Function(tfunc, [Time])
     model.add_transition_flow(
         "detection",
         detection_rate,
@@ -155,21 +159,21 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     #Treatment recovery, releapse, death flows.
-
-    treatment_recovery_rate = 1.0
-    treatment_death_rate = 1.0
-    relapse_rate = 1.0
+    treatment_recovery_rate = 1.0 #will be adjusted later
     model.add_transition_flow(
         "treatment_recovery",
         treatment_recovery_rate,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
     )
+
+    treatment_death_rate = 1.0
     model.add_death_flow(
         "treatment_death",
         treatment_death_rate,
         Compartment.ON_TREATMENT,
     )
+    relapse_rate = 1.0
     model.add_transition_flow(
         "relapse",
         relapse_rate,
@@ -179,7 +183,6 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # Entry flows
     birth_rates, years = inputs.get_crude_birth_rate(iso3)
     birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
-
     tfunc = build_static_sigmoidal_multicurve(years.to_list(), birth_rates.to_list())
     crude_birth_rate = Function(tfunc, [Time])
     model.add_crude_birth_flow(
@@ -188,12 +191,13 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.SUSCEPTIBLE,
     )
 
+    # Death flows
     universal_death_rate = 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
       # Infection death
     model.add_death_flow(
         "infect_death",
-        params.infect_death_rate,
+        params.infect_death_rate_dict['unstratified'],
         Compartment.INFECTIOUS,
     )
     # model.add_computed_value_func("sigmoid_param", crude_birth_rate)

@@ -1,3 +1,4 @@
+* text=auto
 *.xlsx filter=lfs diff=lfs merge=lfs -text
 *.csv filter=lfs diff=lfs merge=lfs -text
 *.CSV filter=lfs diff=lfs merge=lfs -text
@@ -8,3 +9,4 @@ data/inputs/inputs.db filter=lfs diff=lfs merge=lfs -text
 *.zpln filter=nbstripout
 *.ipynb diff=ipynb
 movement-range*.txt filter=lfs diff=lfs merge=lfs -text
+notebooks/capacity_building/malaysia/malaysia-allfiles.rar filter=lfs diff=lfs merge=lfs -text

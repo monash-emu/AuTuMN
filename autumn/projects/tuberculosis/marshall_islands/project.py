@@ -1,4 +1,10 @@
-from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path, use_tuned_proposal_sds
+from autumn.core.project import (
+    Project,
+    ParameterSet,
+    load_timeseries,
+    build_rel_path,
+    use_tuned_proposal_sds,
+)
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
 from autumn.calibration.targets import (
@@ -28,7 +34,8 @@ else:
     all_scenario_dicts = make_sa_scenario_list(ANALYSIS)
     scenario_params = [baseline_params.update(p) for p in all_scenario_dicts]
 
-param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
+# Disable scenarios for tests
+param_set = ParameterSet(baseline=baseline_params)
 
 # Load and configure calibration targets
 ts_set = load_timeseries(build_rel_path("timeseries.json"))
@@ -36,8 +43,8 @@ targets = [
     NormalTarget(ts_set["prevalence_infectiousXlocation_majuro"], stdev=80.0),
     NormalTarget(ts_set["prevalence_infectiousXlocation_ebeye"], stdev=120.0),
     NormalTarget(ts_set["percentage_latentXlocation_majuro"], stdev=10.0),
-    NormalTarget(ts_set["notificationsXlocation_majuro"], stdev=40.),
-    NormalTarget(ts_set["notificationsXlocation_ebeye"], stdev=9.),
+    NormalTarget(ts_set["notificationsXlocation_majuro"], stdev=40.0),
+    NormalTarget(ts_set["notificationsXlocation_ebeye"], stdev=9.0),
     NormalTarget(ts_set["population_size"], stdev=2500.0),
 ]
 

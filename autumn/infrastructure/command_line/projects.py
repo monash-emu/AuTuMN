@@ -39,7 +39,7 @@ def calibrate_model(model, project, max_seconds, run_id, num_chains):
     from autumn.core.project import get_project
 
     project = get_project(model, project)
-    project.calibrate(max_seconds, run_id, num_chains)
+    project._calibrate(max_seconds, run_id, num_chains)
 
 
 @project.command("plotrmi")

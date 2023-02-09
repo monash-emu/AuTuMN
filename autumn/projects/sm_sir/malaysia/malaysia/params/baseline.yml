@@ -38,6 +38,9 @@ vaccination:
   data_thinning: 4
   scenario: 0
 
+vaccination:
+  data_thinning: 4
+
 voc_emergence:
   beta:
     starting_strain: true
@@ -126,8 +129,7 @@ age_stratification:
   cfr:
     multiplier: 0.15
   prop_hospital:
-    multiplier: 0.25
-
+    multiplier: 0.385
 mobility:
   lockdown_1_mobility: 0.8 #national lockdown in june, 2021
   lockdown_2_mobility: 0.9 # state wide lockdown in jan, 2021

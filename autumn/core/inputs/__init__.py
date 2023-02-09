@@ -20,6 +20,7 @@ from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.inputs.owid.fetch import fetch_owid_data
 from autumn.core.inputs.school_closure.fetch import fetch_school_closure_data
 from autumn.core.inputs.social_mixing.queries import get_country_mixing_matrix
+from autumn.core.inputs.sero_survey.fetch import fetch_covid_serosurvey_data
 from autumn.core.utils.timer import Timer
 
 
@@ -37,7 +38,7 @@ def fetch_input_data():
     with Timer("Fetching COVID PHL data."):
         fetch_covid_phl_data()
 
-    with Timer("Fetching COVID PHL data."):
+    with Timer("Fetching COVID MYS data."):
         fetch_covid_mys_data()
 
     with Timer("Fetching OWID data."):
@@ -51,3 +52,6 @@ def fetch_input_data():
 
     with Timer("Fetching school closure data."):
         fetch_school_closure_data()
+
+    with Timer("Fetching COVID sero-survey data."):
+        fetch_covid_serosurvey_data()

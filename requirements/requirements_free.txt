@@ -11,7 +11,8 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-summerepi==3.1.4
+summerepi==3.6.2
+summerepi2==1.0.3
 
 # Interaction
 jupyterlab
@@ -33,7 +34,7 @@ pyDOE
 numba
 scipy
 networkx
-computegraph
+numpyro
 
 # Database access
 SQLAlchemy

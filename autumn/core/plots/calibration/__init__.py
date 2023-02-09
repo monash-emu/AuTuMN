@@ -7,6 +7,8 @@ from typing import List
 
 import yaml
 
+import pandas as pd
+
 from autumn.core import db
 from autumn.core.plots.plotter import FilePlotter
 
@@ -29,6 +31,10 @@ def plot_pre_calibration(priors: List[dict], directory: str):
 
 
 def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: list):
+
+    # Ensure we're not using plotly
+    pd.options.plotting.backend = "matplotlib"
+
     logger.info(f"Plotting {mcmc_dir} into {plot_dir}")
     plotter = FilePlotter(plot_dir, targets)
     mcmc_tables = db.load.load_mcmc_tables(mcmc_dir)
@@ -70,30 +76,36 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     logger.info("Plotting loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-loglikelihood")
     for chosen_param in param_options:
-        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=False)
+        plots.plot_single_param_loglike(
+            subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=False
+        )
 
     logger.info("Plotting posterior loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-posterior-loglikelihood")
     for chosen_param in param_options:
-        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=True)
+        plots.plot_single_param_loglike(
+            subplotter, mcmc_tables, mcmc_params, 0, chosen_param, posterior=True
+        )
 
     logger.info("Plotting parameter traces")
     subplotter = _get_sub_plotter(plot_dir, "params-traces")
     for chosen_param in param_options:
         plots.plot_mcmc_parameter_trace(subplotter, mcmc_params, 0, chosen_param)
 
-    logger.info("Plotting autocorrelations")
-    subplotter = _get_sub_plotter(plot_dir, "autocorrelations")
-    for chosen_param in param_options:
-        plots.plot_autocorrelation(subplotter, mcmc_params, mcmc_tables, 0, chosen_param)
-    plots.plot_effective_sample_size(subplotter, mcmc_params, mcmc_tables, 0)
+    # logger.info("Plotting autocorrelations")
+    # subplotter = _get_sub_plotter(plot_dir, "autocorrelations")
+    # for chosen_param in param_options:
+    #     plots.plot_autocorrelation(subplotter, mcmc_params, mcmc_tables, 0, chosen_param)
+    # plots.plot_effective_sample_size(subplotter, mcmc_params, mcmc_tables, 0)
 
     logger.info("Plotting acceptance ratios")
     plots.plot_acceptance_ratio(plotter, mcmc_tables, 0)
 
     logger.info("Plotting loglikelihood traces")
     for variable_key in ["loglikelihood", "ap_loglikelihood", "acceptance_quantity"]:
-        plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN, variable_key=variable_key)
+        plots.plot_loglikelihood_trace(
+            plotter, mcmc_tables, PLOT_BURN_IN, variable_key=variable_key
+        )
 
     logger.info("MCMC plots complete")
 

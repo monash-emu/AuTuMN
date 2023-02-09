@@ -162,9 +162,7 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
 
     # Add BCG effect without stratifying for BCG
     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
-    bcg_multilier_dict = get_parameter_dict_from_function(
-        bcg_wane, params.age_breakpoints
-    )
+    bcg_multilier_dict = get_parameter_dict_from_function(bcg_wane, params.age_breakpoints)
     bcg_coverage_func = scale_up_function(
         list(params.time_variant_bcg_perc.keys()),
         list(params.time_variant_bcg_perc.values()),
@@ -177,13 +175,11 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     for age, multiplier in bcg_multilier_dict.items():
         if multiplier < 1.0:
             average_age = get_average_age_for_bcg(age, params.age_breakpoints)
-            bcg_adjs[age] = make_bcg_multiplier_func(
-                bcg_coverage_func, multiplier, average_age
+            bcg_adjs[str(age)] = Multiply(
+                make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age)
             )
         else:
-            bcg_adjs[age] = None
-
-    bcg_adjs = {str(k): Multiply(v) for k, v in bcg_adjs.items()}
+            bcg_adjs[str(age)] = None
 
     if params.bcg_effect == "infection":
         flow_affected_by_bcg = "infection"

@@ -1,27 +1,56 @@
-\documentclass{article}
+% ---------------------------------------- %
+%       Preamble / options / packages      %
+% ---------------------------------------- %
+\documentclass[10pt,a4paper]{article}
 \author{
-    Add Authors List here!
+    ---------------  Add Authors List here  ---------------
 }
 \usepackage{graphicx}
-\usepackage{biblatex}
+\usepackage{biblatex} 
 \usepackage{threeparttable}
 \usepackage{tabularx}
 \usepackage[hidelinks]{hyperref}
-\usepackage[left=2.5cm,right=2.5cm]{geometry}
+\usepackage[left=2.5cm,right=2.5cm,top=3cm,bottom=3cm]{geometry}
+\usepackage{amsmath}
+\usepackage{bbm}
+
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+
+% code below is to add a new sectioning level (e.g. 2.1.3.4)
+% this new level will be requested using the \paragraph{} command
+\usepackage{titlesec}
+\setcounter{secnumdepth}{4}
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+ 
+\setlength{\abovecaptionskip}{-8pt}  % reduce the margin between figures and captions
 \input{../../tex_utils/inline_code.tex}  % Manual creation of an inline code command
 
-\bibliography{../../references/emu_library}
+\bibliography{../../references/emu_library} 
 
-\title{Estimating the impact of school closures on COVID-19 disease burden}
+
+\title{
+    Estimating the impact of school closures on COVID-19 disease burden\\
+    \Large Supplementary Appendix
+}
 
 \date{\vspace{-5ex}} % This removes the date from the title page
 
+
+% ---------------------------------------- %
+%       Document really starting here      %
+% ---------------------------------------- %
 \begin{document}
 \maketitle
 \tableofcontents
 \newpage
 
 \input{../../tex_descriptions/models/sm_covid/model_description.tex}
+
+\input{../../tex_descriptions/projects/sm_covid/school_closures/calibration_description.tex}
 
 \newpage
 \printbibliography

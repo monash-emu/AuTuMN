@@ -137,7 +137,7 @@ def get_crude_birth_rate(country_iso_code: str):
     input_db = get_input_db()
     birth_df = input_db.query("birth_rates", conditions={"iso3": country_iso_code})
     birth_df = birth_df.sort_values(["mean_year"])
-    return birth_df["birth_rate"].tolist(), birth_df["mean_year"].tolist()
+    return birth_df["birth_rate"], birth_df["mean_year"]
 
 
 def get_population_by_agegroup(

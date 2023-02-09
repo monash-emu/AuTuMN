@@ -53,10 +53,9 @@ mobility:
     work:
       workplaces: 1.
     other_locations:
-      retail_and_recreation: 0.25
-      grocery_and_pharmacy: 0.25
-      parks: 0.25
-      transit_stations: 0.25
+      retail_and_recreation: 0.33334
+      grocery_and_pharmacy: 0.33333
+      transit_stations: 0.33333
   smooth_google_data: true  # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
@@ -236,7 +235,7 @@ activate_random_process: True
 random_process: 
   order: 1
   noise_sd: .5
-  values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+  delta_values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
   time: 
     start: 92  # 1 Apr 2020. Need to make sure this is greater than the seed time to prevent identifiability issues with contact rate
     end: 731  # 31 Dec 2021

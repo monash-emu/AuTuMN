@@ -11,8 +11,10 @@
 # - networkx
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
-summerepi==3.6.0
-summerepi2==1.0.1a6
+
+summerepi==3.6.2
+summerepi2==1.0.3
+
 
 # Jax for Windows (summer2 requirement)
 # Linux/OSX already installed via computegraph
@@ -39,11 +41,10 @@ pyDOE
 numba
 scipy==1.8.1
 networkx
-computegraph
-numpyro
+numpyro==0.10.1
 
 # Database access
-SQLAlchemy
+SQLAlchemy==1.4.46
 pyarrow
 
 # Utility
@@ -56,7 +57,7 @@ fpdf2
 gitpython
 
 # Testing
-pytest
+pytest==7.1.3
 pytest-parallel
 pytest-benchmark
 isort

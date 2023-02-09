@@ -47,7 +47,7 @@ priors = [
     UniformPrior("voc_emergence.omicron.new_voc_seed.start_time", (520, 675)),
     UniformPrior("voc_emergence.omicron.relative_latency", (0.45, 0.75)),
     UniformPrior("voc_emergence.omicron.relative_active_period", (0.5, 1.5)),
-    UniformPrior("sojourns.recovered", (150, 300)),
+    UniformPrior("sojourns.recovered", (150, 450)),
     UniformPrior("immunity_stratification.infection_risk_reduction.low", (0.5, 0.64)),
     UniformPrior("immunity_stratification.infection_risk_reduction.high", (0.65, 0.8)),
     UniformPrior("mobility.lockdown_2_mobility", [0.8, 1.0], sampling="lhs"),  # jan lockdown

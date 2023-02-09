@@ -19,7 +19,7 @@ sojourns:
 
 time:
   start: 367. #jan 01, 2021
-  end: 1003.
+  end: 1096
 
 activate_random_process: False
 
@@ -37,9 +37,6 @@ immunity_stratification:
 vaccination:
   data_thinning: 4
   scenario: 0
-
-vaccination:
-  data_thinning: 4
 
 voc_emergence:
   beta:
@@ -129,7 +126,7 @@ age_stratification:
   cfr:
     multiplier: 0.15
   prop_hospital:
-    multiplier: 0.385
+    multiplier: 0.25
 mobility:
   lockdown_1_mobility: 0.8 #national lockdown in june, 2021
   lockdown_2_mobility: 0.9 # state wide lockdown in jan, 2021

@@ -1,6 +1,6 @@
 contact_rate: 0.07689019847878767
 sojourns.latent.total_time: 14.92805083726854
-sojourns.recovered: 255.57173105856202
+sojourns.recovered: 400.57173105856202
 voc_emergence.delta.contact_rate_multiplier: 2.0502624410103785
 voc_emergence.delta.new_voc_seed.start_time: 411.1513588249815
 voc_emergence.omicron.contact_rate_multiplier: 2.3522775375100484

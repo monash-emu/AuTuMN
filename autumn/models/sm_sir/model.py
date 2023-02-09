@@ -515,7 +515,7 @@ def build_model(
 
     # Apply vaccination coverage if available - Malaysia now supported by adding MYS to the following list
 
-    if iso3 in ["PHL", "AUS"]:
+    if iso3 in ["PHL", "AUS", "MYS"]:
         apply_vacc_coverage(
             model,
             iso3,

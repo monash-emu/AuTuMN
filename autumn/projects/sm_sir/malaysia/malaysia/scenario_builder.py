@@ -10,7 +10,7 @@ lockdown_title = ["No vaccination",
 
 def get_all_scenario_dicts(country: str):
 
-    num_scenarios = 6
+    num_scenarios = 1
     all_scenario_dicts = []
 
     for i_lockdown_scenario in [*range(0, num_scenarios)]:

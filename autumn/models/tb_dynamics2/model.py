@@ -15,7 +15,7 @@ from .constants import Compartment
 from .stratifications.age import get_age_strat
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from summer2.parameters.params import Function
-from autumn.model_features.curve import tanh_based_scaleup
+from .stratifications.organ import get_organ_strat
 
 from .constants import BASE_COMPARTMENTS, INFECTIOUS_COMPS, LATENT_COMPS
 from summer2.parameters import Time, DerivedOutput
@@ -228,6 +228,11 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
             compartments=BASE_COMPARTMENTS,
         )
     model.stratify_with(age_strat)
+
+        # Organ stratifications
+    if "organ" in params.stratify_by:
+        organ_strat = get_organ_strat(params)
+        model.stratify_with(organ_strat)
 
     """
     Get the applicable outputs

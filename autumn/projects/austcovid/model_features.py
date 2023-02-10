@@ -1,7 +1,8 @@
 import pylatex as pl
+from pylatex.section import Section
 from datetime import datetime
 
-from summer2 import CompartmentalModel
+from summer2 import CompartmentalModel, Stratification
 from summer2.parameters import Parameter, DerivedOutput
 
 REF_DATE = datetime(2019, 12, 31)
@@ -38,6 +39,7 @@ def build_base_model(
         "representing fully susceptible, infected (and infectious) and recovered persons. "
 
     if isinstance(doc, pl.document.Document):
+        doc.create(Section("General model construction"))
         doc.append(description)
 
     return model
@@ -149,4 +151,34 @@ def add_notifications_output_to_model(
         "multiplied by the case detection rate. "
 
     if isinstance(doc, pl.document.Document):
+        doc.append(description)
+
+
+def add_age_stratification_to_model(
+    model: CompartmentalModel,
+    doc: pl.document.Document,
+):
+    """
+    Add age stratification to the model as described below,
+    using summer's Stratification class rather than AgeStratification
+    because we are not requesting ageing between age brackets.
+
+    Args:
+        model: The model object
+        doc: The description document
+    """
+    age_strat = Stratification(
+        "agegroup", 
+        range(0, 80, 5), 
+        model.compartments,
+    )
+    model.stratify_with(age_strat)
+
+    description = "We stratified all compartments of the base model " \
+        "into sequential age brackets in five year " \
+        "bands from age 0 to 4 through to age 70 to 74 " \
+        "with a final age band to represent those aged 75 and above. "
+
+    if isinstance(doc, pl.document.Document):
+        doc.create(Section("Age stratification"))
         doc.append(description)

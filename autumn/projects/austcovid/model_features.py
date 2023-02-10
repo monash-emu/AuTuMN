@@ -39,8 +39,8 @@ def build_base_model(
         "representing fully susceptible, infected (and infectious) and recovered persons. "
 
     if isinstance(doc, pl.document.Document):
-        doc.create(Section("General model construction"))
-        doc.append(description)
+        with doc.create(Section("General model construction")):
+            doc.append(description)
 
     return model
 
@@ -180,5 +180,5 @@ def add_age_stratification_to_model(
         "with a final age band to represent those aged 75 and above. "
 
     if isinstance(doc, pl.document.Document):
-        doc.create(Section("Age stratification"))
-        doc.append(description)
+        with doc.create(Section("Age stratification")):
+            doc.append(description)

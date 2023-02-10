@@ -37,7 +37,7 @@ def build_base_model(
     description = "The base model consists of just three states, " \
         "representing fully susceptible, infected (and infectious) and recovered persons. "
 
-    if type(doc) == pl.document.Document:
+    if isinstance(doc, pl.document.Document):
         doc.append(description)
 
     return model
@@ -65,7 +65,7 @@ def set_model_starting_conditions(
     description = "The simulation starts with 26 million susceptible persons " \
         "and one infectious person to seed the epidemic. "
 
-    if type(doc) == pl.document.Document:
+    if isinstance(doc, pl.document.Document):
         doc.append(description)
 
 
@@ -92,7 +92,7 @@ def add_infection_to_model(
         "compartment to the infectious compartment, " \
         "under the frequency-dependent transmission assumption. "
 
-    if type(doc) == pl.document.Document:
+    if isinstance(doc, pl.document.Document):
         doc.append(description)
 
 
@@ -118,7 +118,7 @@ def add_recovery_to_model(
     description = "The process recovery process moves " \
         "people directly from the infectious state to a recovered compartment. "
 
-    if type(doc) == pl.document.Document:
+    if isinstance(doc, pl.document.Document):
         doc.append(description)
 
 
@@ -148,5 +148,5 @@ def add_notifications_output_to_model(
         "the absolute rate of infection in the community " \
         "multiplied by the case detection rate. "
 
-    if type(doc) == pl.document.Document:
+    if isinstance(doc, pl.document.Document):
         doc.append(description)

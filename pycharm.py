@@ -5,8 +5,8 @@ Entry point for IDE users to run an application.
 from autumn.settings import Region, Models
 from autumn.core.project import get_project, run_project_locally
 
-region = Region.NORTHERN_TERRITORY
-model = Models.SM_SIR
+region = Region.CAMAU
+model = Models.TBD2
 
 project = get_project(model, region)
 

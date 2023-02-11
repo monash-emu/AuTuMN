@@ -33,15 +33,13 @@ LATENT_COMPS = [
     Compartment.LATE_LATENT,
 ]
 
+class OrganStratum:
+    """
+    A classification of TB active disease, based on the organ affected and smear-status
+    """
 
-LOCATIONS = ["home", "other_locations", "school", "work"]
+    SMEAR_POSITIVE = "smear_positive"
+    SMEAR_NEGATIVE = "smear_negative"
+    EXTRAPULMONARY = "extrapulmonary"
 
-class FlowName:
-    INFECTION = "infection"
-    WITHIN_LATENT = "within_latent"
-    PROGRESSION = "progression"
-    WITHIN_INFECTIOUS = "within_infectious"
-    RECOVERY = "recovery"
-    WANING = "waning"
-    EARLY_REINFECTION = "early_reinfection"
-    LATE_REINFECTION = "late_reinfection"
+

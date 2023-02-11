@@ -148,9 +148,10 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
   
  
-    tfunc =  build_static_sigmoidal_multicurve([k for k in params.time_variant_tb_screening_rate.keys()], [v for v in params.time_variant_tb_screening_rate.values()])
-    detection_rate = params.cdr_adjustment * Function(tfunc, [Time]) * params.passive_screening_sensitivity['unstratified'] # passive detection rate
+    #tfunc =  build_static_sigmoidal_multicurve([k for k in params.time_variant_tb_screening_rate.keys()], [v for v in params.time_variant_tb_screening_rate.values()])
+    #detection_rate = params.cdr_adjustment * Function(tfunc, [Time]) * params.passive_screening_sensitivity['unstratified'] # passive detection rate
     #detection_rate = params.cdr_adjustment * Function(tfunc, [Time])
+    detection_rate = 1.0 # later adjusted by organ
     model.add_transition_flow(
         "detection",
         detection_rate,

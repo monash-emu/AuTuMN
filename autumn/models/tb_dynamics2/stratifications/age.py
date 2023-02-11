@@ -4,7 +4,6 @@ from summer2 import AgeStratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
-from autumn.models.tb_dynamics.parameters import Parameters
 
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
@@ -14,7 +13,7 @@ from jax import numpy as jnp
 
 
 def get_age_strat(
-    params: Parameters,
+    params,
     compartments: List[str],
     age_pops: pd.Series = None,
     age_mixing_matrix=None,

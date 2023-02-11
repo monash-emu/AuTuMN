@@ -15,7 +15,7 @@ age_breakpoints: [0, 5, 15, 35, 50]
 age_mixing:
   source_iso3: VNM
   age_adjust: true
-stratify_by: ["age"]
+stratify_by: ["age", "organ"]
 
 age_infectiousness_switch: 15.
 

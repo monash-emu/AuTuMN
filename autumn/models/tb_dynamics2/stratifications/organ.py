@@ -1,7 +1,6 @@
 from summer2 import Stratification, Multiply, Overwrite
 
-from autumn.models.tuberculosis.constants import INFECTIOUS_COMPS, OrganStratum
-from autumn.models.tuberculosis.parameters import Parameters
+from autumn.models.tb_dynamics2.constants import INFECTIOUS_COMPS, OrganStratum
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from summer2.parameters import Time, Function
 
@@ -13,7 +12,7 @@ ORGAN_STRATA = [
 ]
 
 
-def get_organ_strat(params: Parameters) -> Stratification:
+def get_organ_strat(params) -> Stratification:
     strat = Stratification("organ", ORGAN_STRATA, INFECTIOUS_COMPS)
 
     #Define infectiousness adjustment by organ status
@@ -55,15 +54,16 @@ def get_organ_strat(params: Parameters) -> Stratification:
 
     strat.set_flow_adjustments("self_recovery", self_recovery_adjs)
 
-    # Define different detection rates by organ status.
-    screening_rate_func = build_static_sigmoidal_multicurve([k for k in params.time_variant_tb_screening_rate.keys()], [v for v in params.time_variant_tb_screening_rate.values()])
+    # # Define different detection rates by organ status.
+    sensitivity = params.passive_screening_sensitivity
+    screening_rate_func = build_static_sigmoidal_multicurve(list(params.time_variant_tb_screening_rate.keys()), 
+                                                            list(params.time_variant_tb_screening_rate.values())
+                                                            )
     detection_adjs = {}
     for organ_stratum in ORGAN_STRATA:
-        detection_adjs[organ_stratum] = Function(
-             make_detection_func,
-             [Time, screening_rate_func, organ_stratum, params]
-        )
-
+        adj_vals = sensitivity[organ_stratum]
+        detection_adjs[organ_stratum] = params.cdr_adjustment * Function(detection_func,[Time, screening_rate_func, adj_vals])
+        
     detection_adjs = {k: Multiply(v) for k, v in detection_adjs.items()}
     strat.set_flow_adjustments("detection", detection_adjs)
 
@@ -82,5 +82,5 @@ def get_organ_strat(params: Parameters) -> Stratification:
     return strat
 
 
-def make_detection_func(t, screening_rate_func, organ_stratum, params):
-    return screening_rate_func(t) * params.passive_screening_sensitivity[organ_stratum]
+def detection_func(t, tfunc, val):
+    return tfunc(t) * val

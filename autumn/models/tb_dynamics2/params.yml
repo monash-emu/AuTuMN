@@ -162,8 +162,8 @@ infect_death_rate_dict:
   smear_negative: 0.025 # Ragonent et al. (CID 2020)
 self_recovery_rate_dict:
   unstratified: .2
-  smear_positive: 0.231 # Ragonent et al. (CID 2020)
-  smear_negative: 0.130 # Ragonent et al. (CID 2020)
+  smear_positive: .231 # Ragonent et al. (CID 2020)
+  smear_negative: .130 # Ragonent et al. (CID 2020)
 passive_screening_sensitivity:
   unstratified: .75
   smear_positive: 1. # dummy value

@@ -3,7 +3,7 @@ Type definition for model parameters
 """
 from pydantic import BaseModel as _BaseModel, Extra, validator
 from pydantic.dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict
 
 from summer2.experimental.model_builder import (
     ParamStruct,
@@ -41,6 +41,7 @@ class Country(BaseModel):
     def check_length(iso3):
         assert len(iso3) == 3, f"ISO3 codes should have three digits, code is: {iso3}"
         return iso3
+    
 
 
 class ParamConfig:
@@ -79,8 +80,8 @@ class Parameters(ParamStruct):
     rr_infection_latent: pclass()
     rr_infection_recovered: pclass()
     progression_multiplier: pclass()
-    infect_death_rate_dict: dict
-    self_recovery_rate_dict: dict
+    infect_death_rate_dict: Dict[str, pclass()]
+    self_recovery_rate_dict: Dict[str, pclass()]
     
     # Characterising age stratification
     age_infectiousness_switch: float

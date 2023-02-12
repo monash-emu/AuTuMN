@@ -3,6 +3,7 @@ from summer2 import Stratification, Multiply, Overwrite
 from autumn.models.tb_dynamics2.constants import INFECTIOUS_COMPS, OrganStratum
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from summer2.parameters import Time, Function
+#from operator import attrgetter
 
 
 ORGAN_STRATA = [
@@ -32,14 +33,13 @@ def get_organ_strat(params) -> Stratification:
             if organ_stratum == OrganStratum.EXTRAPULMONARY
             else organ_stratum
         )
-
         infect_death_adjs[organ_stratum] = Overwrite(
-            params.infect_death_rate_dict[effective_stratum]
+            getattr(params.infect_death_rate_dict, effective_stratum, None).value
         )
 
     strat.set_flow_adjustments("infect_death", infect_death_adjs)
 
-    # Define different natural history (self recovery) by organ status
+    #Define different natural history (self recovery) by organ status
     self_recovery_adjs = {}
     for organ_stratum in ORGAN_STRATA:
         effective_stratum = (
@@ -49,7 +49,7 @@ def get_organ_strat(params) -> Stratification:
         )
 
         self_recovery_adjs[organ_stratum] = Overwrite(
-            params.self_recovery_rate_dict[effective_stratum]
+            getattr(params.self_recovery_rate_dict, effective_stratum, None).value
         )
 
     strat.set_flow_adjustments("self_recovery", self_recovery_adjs)
@@ -61,7 +61,8 @@ def get_organ_strat(params) -> Stratification:
                                                             )
     detection_adjs = {}
     for organ_stratum in ORGAN_STRATA:
-        adj_vals = sensitivity[organ_stratum]
+        #adj_vals = sensitivity[organ_stratum]
+        adj_vals = getattr(sensitivity, organ_stratum, 1.0)
         detection_adjs[organ_stratum] = params.cdr_adjustment * Function(detection_func,[Time, screening_rate_func, adj_vals])
         
     detection_adjs = {k: Multiply(v) for k, v in detection_adjs.items()}

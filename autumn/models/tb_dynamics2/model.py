@@ -142,7 +142,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # Add post-diseases flows
     model.add_transition_flow(
         "self_recovery",
-        params.self_recovery_rate_dict['unstratified'],
+        params.self_recovery_rate_dict.unstratified,
         Compartment.INFECTIOUS,
         Compartment.RECOVERED,
     )
@@ -198,7 +198,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
       # Infection death
     model.add_death_flow(
         "infect_death",
-        params.infect_death_rate_dict['unstratified'],
+        params.infect_death_rate_dict.unstratified,
         Compartment.INFECTIOUS,
     )
     
@@ -230,7 +230,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         )
     model.stratify_with(age_strat)
 
-        # Organ stratifications
+    # Organ stratifications
     if "organ" in params.stratify_by:
         organ_strat = get_organ_strat(params)
         model.stratify_with(organ_strat)

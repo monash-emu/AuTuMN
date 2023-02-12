@@ -43,6 +43,11 @@ class Country(BaseModel):
         return iso3
     
 
+class StatifiedRate(BaseModel):
+    unstratified: pclass()
+    smear_positive: pclass()
+    smear_negative: pclass()
+
 
 class ParamConfig:
     """
@@ -80,8 +85,8 @@ class Parameters(ParamStruct):
     rr_infection_latent: pclass()
     rr_infection_recovered: pclass()
     progression_multiplier: pclass()
-    infect_death_rate_dict: Dict[str, pclass()]
-    self_recovery_rate_dict: Dict[str, pclass()]
+    infect_death_rate_dict: StatifiedRate
+    self_recovery_rate_dict: StatifiedRate
     
     # Characterising age stratification
     age_infectiousness_switch: float

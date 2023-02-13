@@ -4,10 +4,9 @@ from pylatex.utils import NoEscape
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 import plotly.express as px
 
-from summer2 import CompartmentalModel, Stratification
+from summer2 import CompartmentalModel, Stratification, StrainStratification
 from summer2.parameters import Parameter, DerivedOutput
 
 REF_DATE = datetime(2019, 12, 31)
@@ -16,6 +15,7 @@ REF_DATE = datetime(2019, 12, 31)
 def build_base_model(
     start_date: datetime,
     end_date: datetime,
+    compartments: list,
     doc: pl.document.Document,
 ):
     """
@@ -31,11 +31,7 @@ def build_base_model(
             (start_date - REF_DATE).days, 
             (end_date - REF_DATE).days,
         ),
-        compartments=(
-            "susceptible",
-            "infectious",
-            "recovered",
-        ),
+        compartments=compartments,
         infectious_compartments=("infectious",),
         ref_date=REF_DATE,
     )
@@ -161,6 +157,7 @@ def add_notifications_output_to_model(
 
 def add_age_stratification_to_model(
     model: CompartmentalModel,
+    compartments: list,
     strata,
     matrix,
     doc: pl.document.Document,
@@ -178,7 +175,7 @@ def add_age_stratification_to_model(
     age_strat = Stratification(
         "agegroup", 
         strata, 
-        model.compartments,
+        compartments,
     )
     age_strat.set_mixing_matrix(matrix)
     model.stratify_with(age_strat)
@@ -298,3 +295,10 @@ def adapt_gb_matrix_to_aust(
             plot.add_caption("Matrices adjusted to Australian population. Values are contacts per person per day.")
     
     return adjusted_matrix
+
+
+def add_strain_stratification_to_model(model):
+    strain_strat = StrainStratification("strain", ["ba1", "ba2"], ["infectious"])
+    population_split = {"ba1": 1.0, "ba2": 0.0}
+    strain_strat.set_population_split(population_split)
+    model.stratify_with(strain_strat)

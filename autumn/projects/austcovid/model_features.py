@@ -189,8 +189,7 @@ def add_age_stratification_to_model(
         "These age brackets were chosen to match those used by the POLYMOD survey. "
 
     if isinstance(doc, pl.document.Document):
-        with doc.create(Section("Age stratification")):
-            doc.append(description)
+        doc.append(description)
 
 
 def build_polymod_britain_matrix(
@@ -236,12 +235,13 @@ def build_polymod_britain_matrix(
         "`age of contact' for the rows and `age group of participant' for the columns."
 
     if isinstance(doc, pl.document.Document):
-        doc.append(description)
-        matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
-        matrix_plotly_fig.write_image("supplement/raw_matrix.jpg")
-        with doc.create(pl.Figure()) as plot:
-            plot.add_image("raw_matrix.jpg", width="350px")
-            plot.add_caption("Raw matrices from Great Britain POLYMOD. Values are contacts per person per day.")
+        with doc.create(Section("Age stratification")):
+            doc.append(description)
+            matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
+            matrix_plotly_fig.write_image("supplement/raw_matrix.jpg")
+            with doc.create(pl.Figure()) as plot:
+                plot.add_image("raw_matrix.jpg", width="350px")
+                plot.add_caption("Raw matrices from Great Britain POLYMOD. Values are contacts per person per day.")
 
     return matrix
 

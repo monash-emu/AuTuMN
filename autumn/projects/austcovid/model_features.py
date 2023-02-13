@@ -3,6 +3,7 @@ from pylatex.section import Section
 from datetime import datetime
 import numpy as np
 from matplotlib import pyplot as plt
+import plotly.express as px
 
 from summer2 import CompartmentalModel, Stratification
 from summer2.parameters import Parameter, DerivedOutput
@@ -198,7 +199,7 @@ def build_polymod_britain_matrix(
         15 by 15 matrix with daily contact rates for age groups
     """
 
-    matrix = [
+    values = [
         [1.92, 0.65, 0.41, 0.24, 0.46, 0.73, 0.67, 0.83, 0.24, 0.22, 0.36, 0.20, 0.20, 0.26, 0.13],
         [0.95, 6.64, 1.09, 0.73, 0.61, 0.75, 0.95, 1.39, 0.90, 0.16, 0.30, 0.22, 0.50, 0.48, 0.20],
         [0.48, 1.31, 6.85, 1.52, 0.27, 0.31, 0.48, 0.76, 1.00, 0.69, 0.32, 0.44, 0.27, 0.41, 0.33],
@@ -216,6 +217,8 @@ def build_polymod_britain_matrix(
         [0.14, 0.15, 0.21, 0.10, 0.24, 0.17, 0.15, 0.41, 0.50, 0.71, 0.53, 0.76, 0.47, 0.74, 1.47],
     ]
 
+    matrix = np.array(values).T  # Transpose
+
     description = "We took unadjusted estimates for interpersonal rates of contact by age " \
         "from the United Kingdom data provided by Mossong et al.'s POLYMOD study. " \
         "The data were obtained from https://doi.org/10.1371/journal.pmed.0050074.st005 " \
@@ -226,16 +229,11 @@ def build_polymod_britain_matrix(
 
     if isinstance(doc, pl.document.Document):
         doc.append(description)
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.matshow(matrix)
         age_strata = model.stratifications["agegroup"].strata
-        for axis in [ax.xaxis, ax.yaxis]:
-            axis.set_ticks(range(len(age_strata)))
-            axis.set_ticklabels(age_strata)
-        fig.savefig("supplement/raw_matrix.jpg")
+        matrix_plotly_fig = px.imshow(matrix, x=age_strata, y=age_strata)
+        matrix_plotly_fig.write_image("supplement/raw_matrix.jpg")
         with doc.create(pl.Figure()) as plot:
             plot.add_image("raw_matrix.jpg", width="350px")
             plot.add_caption("Raw matrices from Great Britain POLYMOD.")
 
-    return np.array(matrix).T
+    return matrix

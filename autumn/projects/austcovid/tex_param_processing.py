@@ -190,3 +190,4 @@ def add_parameter_progression_fig_to_doc(
             ax.yaxis.set_tick_params(labelsize=15)
     with doc.create(pl.Figure()) as plot:
         plot.add_plot(width=NoEscape(r"1\textwidth"))
+        plot.add_caption("Parameter posteriors and progression.")

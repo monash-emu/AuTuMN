@@ -2,6 +2,7 @@ import pylatex as pl
 from pylatex.section import Section
 from datetime import datetime
 import numpy as np
+from matplotlib import pyplot as plt
 
 from summer2 import CompartmentalModel, Stratification
 from summer2.parameters import Parameter, DerivedOutput
@@ -187,13 +188,14 @@ def add_age_stratification_to_model(
 
 
 def build_polymod_britain_matrix(
+    model: CompartmentalModel,
     doc: pl.document.Document,
 ) -> np.array:
     """
     Get the raw data for Great Britain as described below.
 
     Returns:
-        16 by 16 matrix with daily contact rates for age groups
+        15 by 15 matrix with daily contact rates for age groups
     """
 
     matrix = [
@@ -224,5 +226,16 @@ def build_polymod_britain_matrix(
 
     if isinstance(doc, pl.document.Document):
         doc.append(description)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.matshow(matrix)
+        age_strata = model.stratifications["agegroup"].strata
+        for axis in [ax.xaxis, ax.yaxis]:
+            axis.set_ticks(range(len(age_strata)))
+            axis.set_ticklabels(age_strata)
+        fig.savefig("supplement/raw_matrix.jpg")
+        with doc.create(pl.Figure()) as plot:
+            plot.add_image("raw_matrix.jpg", width="350px")
+            plot.add_caption("Raw matrices from Great Britain POLYMOD.")
 
     return np.array(matrix).T

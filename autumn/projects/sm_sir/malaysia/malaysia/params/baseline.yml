@@ -155,7 +155,7 @@ mobility:
         - 0.
 
 
-requested_cumulative_outputs: ['infection_deaths']
+requested_cumulative_outputs: ['infection_deaths', 'hospital_occupancy', 'icu_occupancy']
 cumulative_start_time: 367
 
 request_notifications_by_age: true

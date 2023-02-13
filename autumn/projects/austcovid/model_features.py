@@ -1,5 +1,6 @@
 import pylatex as pl
 from pylatex.section import Section
+from pylatex.utils import NoEscape
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -227,7 +228,7 @@ def build_polymod_britain_matrix(
     matrix = np.array(values).T  # Transpose
 
     description = "We took unadjusted estimates for interpersonal rates of contact by age " \
-        "from the United Kingdom data provided by Mossong et al.'s POLYMOD study. " \
+        "from the United Kingdom data provided by Mossong et al.'s POLYMOD study \cite{mossong2008}. " \
         "The data were obtained from https://doi.org/10.1371/journal.pmed.0050074.st005 " \
         "on 12th February 2023 (downloaded in their native docx format). " \
         "The matrix is transposed because summer assumes that rows represent infectees " \
@@ -236,7 +237,7 @@ def build_polymod_britain_matrix(
 
     if isinstance(doc, pl.document.Document):
         with doc.create(Section("Age stratification")):
-            doc.append(description)
+            doc.append(NoEscape(description))
             matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
             matrix_plotly_fig.write_image("supplement/raw_matrix.jpg")
             with doc.create(pl.Figure()) as plot:

@@ -12,40 +12,6 @@ from summer2.parameters import Parameter, DerivedOutput
 REF_DATE = datetime(2019, 12, 31)
 
 
-def build_base_model(
-    start_date: datetime,
-    end_date: datetime,
-    compartments: list,
-    doc: pl.document.Document,
-):
-    """
-    Generate the base compartmental model.
-
-    Args:
-        model: The model object
-        doc: The description document
-    """
-
-    model = CompartmentalModel(
-        times=(
-            (start_date - REF_DATE).days, 
-            (end_date - REF_DATE).days,
-        ),
-        compartments=compartments,
-        infectious_compartments=("infectious",),
-        ref_date=REF_DATE,
-    )
-    
-    description = "The base model consists of just three states, " \
-        "representing fully susceptible, infected (and infectious) and recovered persons. "
-
-    if isinstance(doc, pl.document.Document):
-        with doc.create(Section("General model construction")):
-            doc.append(description)
-
-    return model
-
-
 class DocumentedModel:
 
     def build_base_model(
@@ -71,10 +37,8 @@ class DocumentedModel:
         description = "The base model consists of just three states, " \
             "representing fully susceptible, infected (and infectious) and recovered persons. "
 
-        if isinstance(self.doc, pl.document.Document):
-            with self.doc.create(Section("General model construction")):
-                self.doc.append(description)
-
+        self.doc_sections = {}
+        self.doc_sections["General model construction"] = [description]
 
     def set_model_starting_conditions(self):
         """
@@ -91,9 +55,7 @@ class DocumentedModel:
         description = "The simulation starts with 26 million susceptible persons " \
             "and one infectious person to seed the epidemic. "
 
-        if isinstance(self.doc, pl.document.Document):
-            self.doc.append(description)
-
+        self.doc_sections["General model construction"].append(description)
 
     def add_infection_to_model(self):
         """
@@ -111,9 +73,7 @@ class DocumentedModel:
             "compartment to the infectious compartment, " \
             "under the frequency-dependent transmission assumption. "
 
-        if isinstance(self.doc, pl.document.Document):
-            self.doc.append(description)
-
+        self.doc_sections["General model construction"].append(description)
 
     def add_recovery_to_model(self):  
         """
@@ -130,9 +90,7 @@ class DocumentedModel:
         description = "The process recovery process moves " \
             "people directly from the infectious state to a recovered compartment. "
 
-        if isinstance(self.doc, pl.document.Document):
-            self.doc.append(description)
-
+        self.doc_sections["General model construction"].append(description)
 
     def add_notifications_output_to_model(self):
         """
@@ -153,8 +111,14 @@ class DocumentedModel:
             "the absolute rate of infection in the community " \
             "multiplied by the case detection rate. "
 
-        if isinstance(self.doc, pl.document.Document):
-            self.doc.append(description)
+        self.doc_sections["General model construction"].append(description)
+
+    def compile_doc(self):
+        
+        for section in self.doc_sections:
+            with self.doc.create(Section(section)):
+                for text in self.doc_sections[section]:
+                    self.doc.append(text)
 
 
 def add_age_stratification_to_model(

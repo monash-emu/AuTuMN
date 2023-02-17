@@ -20,6 +20,17 @@ class TextElement:
         doc.append(self.text)
 
 
+class FigElement:
+    def __init__(self, fig_name, caption=""):
+        self.fig_name = fig_name
+        self.caption = caption
+    
+    def emit_latex(self, doc):
+        with doc.create(pl.Figure()) as plot:
+            plot.add_image(self.fig_name, width="350px")
+            plot.add_caption(self.caption)
+
+
 class DocumentedModel:
 
     def __init__(self, doc=None, add_documentation=False):
@@ -175,13 +186,14 @@ class DocumentedModel:
             element = TextElement(description)
             self.add_element_to_doc("General model construction", element)
            
-        # if isinstance(doc, pl.document.Document):
-        #     with doc.create(Section("Age stratification")):
-                # matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
-                # matrix_plotly_fig.write_image("supplement/raw_matrix.jpg")
-                # with doc.create(pl.Figure()) as plot:
-                #     plot.add_image("raw_matrix.jpg", width="350px")
-                #     plot.add_caption("Raw matrices from Great Britain POLYMOD. Values are contacts per person per day.")
+            matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
+            matrix_plotly_fig.write_image("supplement/raw_matrix.jpg")
+
+            caption = "Raw matrices from Great Britain POLYMOD. Values are contacts per person per day."
+            self.add_element_to_doc(
+                "General model construction", 
+                FigElement("raw_matrix.jpg", caption=caption)
+            )
 
         return matrix
 

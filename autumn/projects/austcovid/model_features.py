@@ -234,8 +234,7 @@ class DocumentedModel:
                 "The matrix is transposed because summer assumes that rows represent infectees " \
                 "and columns represent infectors, whereas the POLYMOD data are labelled " \
                 "`age of contact' for the rows and `age group of participant' for the columns."
-            element = TextElement(description)
-            self.add_element_to_doc("General model construction", element)
+            self.add_element_to_doc("General model construction", TextElement(description))
             location = "raw_matrix.jpg"
             matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
             matrix_plotly_fig.write_image(SUPPLEMENT_PATH / location)
@@ -243,6 +242,88 @@ class DocumentedModel:
             self.add_element_to_doc("Age stratification", FigElement(location, caption=caption))
 
         return matrix
+
+    def adapt_gb_matrix_to_aust(
+        self,
+        unadjusted_matrix: np.array, 
+        strata: list, 
+    ) -> np.array:
+        """
+        Adjust the Great Britain matrix to Australia's population distribution,
+        as described below.
+
+        Args:
+            matrix: The unadjusted matrix
+        Returns:
+            Matrix adjusted to target population
+        """
+        
+        # UK population distributions
+        uk_pops_list = [
+            3458060, 3556024, 3824317, 3960916, 3911291, 3762213, 4174675, 4695853, 
+            4653082, 3986098, 3620216, 3892985, 3124676, 2706365, 6961183,
+        ]
+        uk_age_pops = pd.Series(uk_pops_list, index=strata)
+        uk_age_props = uk_age_pops / uk_age_pops.sum()
+        
+        # Australian distributions from https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/jun-2022/31010do002_202206.xlsx, 13/2/23
+        aust_percs_list = [
+            5.8, 6.2, 6.3, 5.9, 6.3, 7.0, 7.3, 7.3, 6.6, 6.2, 6.4, 5.9, 5.7, 5.0, 4.4, 3.4, 2.2, 2.1,
+        ]
+        aust_percs_list = aust_percs_list[:14] + [sum(aust_percs_list[14:])]  # Adapt to our age groups
+        aust_age_percs = pd.Series(aust_percs_list, index=strata)
+        aust_age_props = aust_age_percs / aust_age_percs.sum()  # Sum is just 100
+        
+        # Calculation
+        aust_uk_ratios = aust_age_props / uk_age_props
+        adjusted_matrix = np.dot(unadjusted_matrix, np.diag(aust_uk_ratios))
+        
+        description = "Matrices were adjusted to account for the differences in the age distribution of the " \
+            "Australian population distribution in 2022 compared to the population of Great Britain in 2008. " \
+            "The matrices were adjusted by taking the dot product of the unadjusted matrices and the diagonal matrix " \
+            "containing the vector of the ratios between the proportion of the British and Australian populations " \
+            "within each age bracket as its diagonal elements. "
+
+        if self.add_documentation:
+            self.add_element_to_doc("Age stratification", TextElement(description))
+            location = "adjusted_matrix.jpg"
+            matrix_plotly_fig = px.imshow(unadjusted_matrix, x=strata, y=strata)
+            matrix_plotly_fig.write_image(SUPPLEMENT_PATH / location)
+            caption = "Matrices adjusted to Australian population. Values are contacts per person per day."
+            self.add_element_to_doc("Age stratification", FigElement(location, caption=caption))
+
+        return adjusted_matrix
+
+    # def add_age_stratification_to_model(self,
+    #     compartments: list,
+    #     strata,
+    #     matrix,
+    # ):
+    #     """
+    #     Add age stratification to the model as described below,
+    #     using summer's Stratification class rather than AgeStratification
+    #     because we are not requesting ageing between age brackets.
+
+    #     Args:
+    #         doc: The description document
+    #     """
+
+    #     age_strat = Stratification(
+    #         "agegroup", 
+    #         strata, 
+    #         compartments,
+    #     )
+    #     age_strat.set_mixing_matrix(matrix)
+    #     self.model.stratify_with(age_strat)
+
+    #     description = "We stratified all compartments of the base model " \
+    #         "into sequential age brackets in five year " \
+    #         "bands from age 0 to 4 through to age 65 to 69 " \
+    #         "with a final age band to represent those aged 70 and above. " \
+    #         "These age brackets were chosen to match those used by the POLYMOD survey. "
+
+    #     if isinstance(doc, pl.document.Document):
+    #         doc.append(description)
 
     def add_element_to_doc(
             self, 
@@ -268,94 +349,6 @@ class DocumentedModel:
             with self.doc.create(Section(section)):
                 for element in self.doc_sections[section]:
                     element.emit_latex(self.doc)
-
-
-def add_age_stratification_to_model(
-    model: CompartmentalModel,
-    compartments: list,
-    strata,
-    matrix,
-    doc: pl.document.Document,
-):
-    """
-    Add age stratification to the model as described below,
-    using summer's Stratification class rather than AgeStratification
-    because we are not requesting ageing between age brackets.
-
-    Args:
-        model: The model object
-        doc: The description document
-    """
-
-    age_strat = Stratification(
-        "agegroup", 
-        strata, 
-        compartments,
-    )
-    age_strat.set_mixing_matrix(matrix)
-    model.stratify_with(age_strat)
-
-    description = "We stratified all compartments of the base model " \
-        "into sequential age brackets in five year " \
-        "bands from age 0 to 4 through to age 65 to 69 " \
-        "with a final age band to represent those aged 70 and above. " \
-        "These age brackets were chosen to match those used by the POLYMOD survey. "
-
-    if isinstance(doc, pl.document.Document):
-        doc.append(description)
-
-
-def adapt_gb_matrix_to_aust(
-    matrix: np.array, 
-    strata: list, 
-    doc: pl.document.Document,
-) -> np.array:
-    """
-    Adjust the Great Britain matrix to Australia's population distribution,
-    as described below.
-
-    Args:
-        model: The model object
-        doc: The description document
-    Returns:
-        Matrix adjusted to target population
-    """
-    
-    # UK population distributions
-    uk_pops_list = [
-        3458060, 3556024, 3824317, 3960916, 3911291, 3762213, 4174675, 4695853, 
-        4653082, 3986098, 3620216, 3892985, 3124676, 2706365, 6961183,
-    ]
-    uk_age_pops = pd.Series(uk_pops_list, index=strata)
-    uk_age_props = uk_age_pops / uk_age_pops.sum()
-    
-    # Australian distributions from https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/jun-2022/31010do002_202206.xlsx, 13/2/23
-    aust_percs_list = [
-        5.8, 6.2, 6.3, 5.9, 6.3, 7.0, 7.3, 7.3, 6.6, 6.2, 6.4, 5.9, 5.7, 5.0, 4.4, 3.4, 2.2, 2.1,
-    ]
-    aust_percs_list = aust_percs_list[:14] + [sum(aust_percs_list[14:])]  # Adapt to our age groups
-    aust_age_percs = pd.Series(aust_percs_list, index=strata)
-    aust_age_props = aust_age_percs / aust_age_percs.sum()  # Sum is just 100
-    
-    # Calculation
-    aust_uk_ratios = aust_age_props / uk_age_props
-    adjusted_matrix = np.dot(matrix, np.diag(aust_uk_ratios))
-    
-    description = "Matrices were adjusted to account for the differences in the age distribution of the " \
-        "Australian population distribution in 2022 compared to the population of Great Britain in 2008. " \
-        "The matrices were adjusted by taking the dot product of the unadjusted matrices and the diagonal matrix " \
-        "containing the vector of the ratios between the proportion of the British and Australian populations " \
-        "within each age bracket as its diagonal elements. "
-
-    if isinstance(doc, pl.document.Document):
-        doc.append(description)
-        matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
-        matrix_plotly_fig.write_image("supplement/adjusted_matrix.jpg")
-        with doc.create(pl.Figure()) as plot:
-            plot.add_image("adjusted_matrix.jpg", width="350px")
-            plot.add_caption("Matrices adjusted to Australian population. Values are contacts per person per day.")
-    
-    return adjusted_matrix
 
 
 def add_strain_stratification_to_model(model):

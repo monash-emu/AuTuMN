@@ -18,6 +18,7 @@ class DocumentedModel:
         self.doc = doc
         self.add_documentation = add_documentation
         self.doc_sections = {}
+        self.blank_doc_section = {"text": [], "figures": []}
 
     def build_base_model(
         self,
@@ -42,7 +43,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The base model consists of just three states, " \
                 "representing fully susceptible, infected (and infectious) and recovered persons. "
-            self.doc_sections["General model construction"] = {"text": [description]}
+            self.add_text_to_doc("General model construction", description)
 
     def set_model_starting_conditions(self):
         """
@@ -59,7 +60,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The simulation starts with 26 million susceptible persons " \
                 "and one infectious person to seed the epidemic. "
-            self.doc_sections["General model construction"]["text"].append(description)
+            self.add_text_to_doc("General model construction", description)
 
     def add_infection_to_model(self):
         """
@@ -77,7 +78,7 @@ class DocumentedModel:
             description = "Infection moves people from the fully susceptible " \
                 "compartment to the infectious compartment, " \
                 "under the frequency-dependent transmission assumption. "
-            self.doc_sections["General model construction"]["text"].append(description)
+            self.add_text_to_doc("General model construction", description)
 
     def add_recovery_to_model(self):
         """
@@ -94,7 +95,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The process recovery process moves " \
                 "people directly from the infectious state to a recovered compartment. "
-            self.doc_sections["General model construction"]["text"].append(description)
+            self.add_text_to_doc("General model construction", description)
 
     def add_notifications_output_to_model(self):
         """
@@ -115,7 +116,7 @@ class DocumentedModel:
             description = "Notifications are calculated as " \
                 "the absolute rate of infection in the community " \
                 "multiplied by the case detection rate. "
-            self.doc_sections["General model construction"]["text"].append(description)
+            self.add_text_to_doc("General model construction", description)
 
 
     def build_polymod_britain_matrix(
@@ -160,7 +161,7 @@ class DocumentedModel:
             "The matrix is transposed because summer assumes that rows represent infectees " \
             "and columns represent infectors, whereas the POLYMOD data are labelled " \
             "`age of contact' for the rows and `age group of participant' for the columns."
-           self.doc_sections["Age stratification"] = {"text": [NoEscape(description)]}
+           self.add_text_to_doc("Age stratification", NoEscape(description))
 
         # if isinstance(doc, pl.document.Document):
         #     with doc.create(Section("Age stratification")):
@@ -172,7 +173,11 @@ class DocumentedModel:
 
         return matrix
 
-
+    def add_text_to_doc(self, section_name, text):
+        if section_name not in self.doc_sections:
+            self.doc_sections[section_name] = self.blank_doc_section
+        self.doc_sections[section_name]["text"].append(text)
+        
     def compile_doc(self):
         
         for section in self.doc_sections:

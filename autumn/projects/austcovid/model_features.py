@@ -195,13 +195,13 @@ class DocumentedModel:
 
     def build_polymod_britain_matrix(
         self,
-        strata,
+        strata: list,
     ) -> np.array:
         """
         Get the raw data for Great Britain as described below.
 
         Args:
-            strata: The age groups being applied in the model
+            strata: The strata to apply in age stratification
         Returns:
             15 by 15 matrix with daily contact rates for age groups
         """
@@ -253,7 +253,8 @@ class DocumentedModel:
         as described below.
 
         Args:
-            matrix: The unadjusted matrix
+            unadjusted_matrix: The unadjusted matrix
+            strata: The strata to apply in age stratification
         Returns:
             Matrix adjusted to target population
         """
@@ -278,13 +279,12 @@ class DocumentedModel:
         aust_uk_ratios = aust_age_props / uk_age_props
         adjusted_matrix = np.dot(unadjusted_matrix, np.diag(aust_uk_ratios))
         
-        description = "Matrices were adjusted to account for the differences in the age distribution of the " \
-            "Australian population distribution in 2022 compared to the population of Great Britain in 2008. " \
-            "The matrices were adjusted by taking the dot product of the unadjusted matrices and the diagonal matrix " \
-            "containing the vector of the ratios between the proportion of the British and Australian populations " \
-            "within each age bracket as its diagonal elements. "
-
         if self.add_documentation:
+            description = "Matrices were adjusted to account for the differences in the age distribution of the " \
+                "Australian population distribution in 2022 compared to the population of Great Britain in 2008. " \
+                "The matrices were adjusted by taking the dot product of the unadjusted matrices and the diagonal matrix " \
+                "containing the vector of the ratios between the proportion of the British and Australian populations " \
+                "within each age bracket as its diagonal elements. "
             self.add_element_to_doc("Age stratification", TextElement(description))
             location = "adjusted_matrix.jpg"
             matrix_plotly_fig = px.imshow(unadjusted_matrix, x=strata, y=strata)
@@ -294,36 +294,36 @@ class DocumentedModel:
 
         return adjusted_matrix
 
-    # def add_age_stratification_to_model(self,
-    #     compartments: list,
-    #     strata,
-    #     matrix,
-    # ):
-    #     """
-    #     Add age stratification to the model as described below,
-    #     using summer's Stratification class rather than AgeStratification
-    #     because we are not requesting ageing between age brackets.
+    def add_age_stratification_to_model(self,
+        compartments: list,
+        strata: list,
+        matrix: np.array,
+    ):
+        """
+        Add age stratification to the model as described below,
+        using summer's Stratification class rather than AgeStratification
+        because we are not requesting ageing between age brackets.
 
-    #     Args:
-    #         doc: The description document
-    #     """
+        Args:
+            compartments: All the unstratified model compartments
+            strata: The strata to apply
+            matrix: The mixing matrix to apply
+        """
+        age_strat = Stratification(
+            "agegroup", 
+            strata, 
+            compartments,
+        )
+        age_strat.set_mixing_matrix(matrix)
+        self.model.stratify_with(age_strat)
 
-    #     age_strat = Stratification(
-    #         "agegroup", 
-    #         strata, 
-    #         compartments,
-    #     )
-    #     age_strat.set_mixing_matrix(matrix)
-    #     self.model.stratify_with(age_strat)
-
-    #     description = "We stratified all compartments of the base model " \
-    #         "into sequential age brackets in five year " \
-    #         "bands from age 0 to 4 through to age 65 to 69 " \
-    #         "with a final age band to represent those aged 70 and above. " \
-    #         "These age brackets were chosen to match those used by the POLYMOD survey. "
-
-    #     if isinstance(doc, pl.document.Document):
-    #         doc.append(description)
+        if self.add_documentation:
+            description = "We stratified all compartments of the base model " \
+                "into sequential age brackets in five year " \
+                "bands from age 0 to 4 through to age 65 to 69 " \
+                "with a final age band to represent those aged 70 and above. " \
+                "These age brackets were chosen to match those used by the POLYMOD survey. "
+            self.add_element_to_doc("Age stratification", TextElement(description))
 
     def add_element_to_doc(
             self, 

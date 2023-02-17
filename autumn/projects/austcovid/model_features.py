@@ -21,13 +21,14 @@ class TextElement:
 
 
 class FigElement:
-    def __init__(self, fig_name, caption=""):
+    def __init__(self, fig_name, caption="", resolution="350px"):
         self.fig_name = fig_name
         self.caption = caption
+        self.resolution = resolution
     
     def emit_latex(self, doc):
         with doc.create(pl.Figure()) as plot:
-            plot.add_image(self.fig_name, width="350px")
+            plot.add_image(self.fig_name, width=self.resolution)
             plot.add_caption(self.caption)
 
 

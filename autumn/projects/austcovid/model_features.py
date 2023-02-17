@@ -96,6 +96,35 @@ class DocumentedModel:
         self.add_documentation = add_documentation
         self.doc_sections = {}
 
+    def add_element_to_doc(
+        self, 
+        section_name: str, 
+        element: DocElement,
+    ):
+        """
+        Add a new element to the list of elements to be included in a document section.
+
+        Args:
+            section_name: Name of the section to add to
+            element: The object to include in the section
+        """
+        if section_name not in self.doc_sections:
+            self.doc_sections[section_name] = []
+        self.doc_sections[section_name].append(element)
+
+    def compile_doc(self):
+        """
+        Apply all the document elements to the document,
+        looping through each section and using each element's emit_latex method.
+        """
+        for section in self.doc_sections:
+            with self.doc.create(Section(section)):
+                for element in self.doc_sections[section]:
+                    element.emit_latex(self.doc)
+
+
+class DocumentedAustModel(DocumentedModel):
+
     def build_base_model(
         self,
         start_date: datetime,
@@ -332,28 +361,3 @@ class DocumentedModel:
         population_split = {"ba1": 1.0, "ba2": 0.0}
         strain_strat.set_population_split(population_split)
         self.model.stratify_with(strain_strat)
-
-    def add_element_to_doc(
-            self, 
-            section_name: str, 
-            element: DocElement,
-        ):
-        """
-        Add a new element to the list of elements to be included in a document section.
-
-        Args:
-            section_name: Name of the section to add to
-            element: The object to include in the section
-        """
-        if section_name not in self.doc_sections:
-            self.doc_sections[section_name] = []
-        self.doc_sections[section_name].append(element)
-
-    def compile_doc(self):
-        """
-        Apply all the document elements to the document, using their emit_latex method.
-        """
-        for section in self.doc_sections:
-            with self.doc.create(Section(section)):
-                for element in self.doc_sections[section]:
-                    element.emit_latex(self.doc)

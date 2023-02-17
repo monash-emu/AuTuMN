@@ -46,113 +46,115 @@ def build_base_model(
     return model
 
 
-def set_model_starting_conditions(
-    model: CompartmentalModel,
-    doc: pl.document.Document,
-):
-    """
-    Add the starting populations to the model as described below.
+class DocumentedModel:
 
-    Args:
-        model: The model object
-        doc: The description document
-    """
+    def build_base_model(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        compartments: list,
+        doc: pl.document.Document,
+    ):
 
-    model.set_initial_population(
-        {
-            "susceptible": 2.6e7,
-            "infectious": 1.0,
-        }
-    )
-    
-    description = "The simulation starts with 26 million susceptible persons " \
-        "and one infectious person to seed the epidemic. "
+        self.model = CompartmentalModel(
+            times=(
+                (start_date - REF_DATE).days, 
+                (end_date - REF_DATE).days,
+            ),
+            compartments=compartments,
+            infectious_compartments=("infectious",),
+            ref_date=REF_DATE,
+        )
 
-    if isinstance(doc, pl.document.Document):
-        doc.append(description)
+        self.doc = doc
+        
+        description = "The base model consists of just three states, " \
+            "representing fully susceptible, infected (and infectious) and recovered persons. "
 
-
-def add_infection_to_model(
-    model: CompartmentalModel,
-    doc: pl.document.Document,
-):
-    """
-    Add infection as described below.
-
-    Args:
-        model: The model object
-        doc: The description document
-    """
-
-    model.add_infection_frequency_flow(
-        "infection",
-        Parameter("contact_rate"),
-        "susceptible",
-        "infectious",
-    )
-    
-    description = "Infection moves people from the fully susceptible " \
-        "compartment to the infectious compartment, " \
-        "under the frequency-dependent transmission assumption. "
-
-    if isinstance(doc, pl.document.Document):
-        doc.append(description)
+        if isinstance(self.doc, pl.document.Document):
+            with self.doc.create(Section("General model construction")):
+                self.doc.append(description)
 
 
-def add_recovery_to_model(
-    model: CompartmentalModel,
-    doc: pl.document.Document,
-):  
-    """
-    Add recovery as described below.
+    def set_model_starting_conditions(self):
+        """
+        Add the starting populations to the model as described below.
+        """
 
-    Args:
-        model: The model object
-        doc: The description document
-    """
+        self.model.set_initial_population(
+            {
+                "susceptible": 2.6e7,
+                "infectious": 1.0,
+            }
+        )
+        
+        description = "The simulation starts with 26 million susceptible persons " \
+            "and one infectious person to seed the epidemic. "
 
-    model.add_transition_flow(
-        "recovery",
-        1.0 / Parameter("infectious_period"),
-        "infectious",
-        "recovered",
-    )
-
-    description = "The process recovery process moves " \
-        "people directly from the infectious state to a recovered compartment. "
-
-    if isinstance(doc, pl.document.Document):
-        doc.append(description)
+        if isinstance(self.doc, pl.document.Document):
+            self.doc.append(description)
 
 
-def add_notifications_output_to_model(
-    model: CompartmentalModel,
-    doc: pl.document.Document,
-):
-    """
-    Track notifications as described below.
+    def add_infection_to_model(self):
+        """
+        Add infection as described below.
+        """
 
-    Args:
-        model: The model object
-        doc: The description document
-    """
+        self.model.add_infection_frequency_flow(
+            "infection",
+            Parameter("contact_rate"),
+            "susceptible",
+            "infectious",
+        )
+        
+        description = "Infection moves people from the fully susceptible " \
+            "compartment to the infectious compartment, " \
+            "under the frequency-dependent transmission assumption. "
 
-    model.request_output_for_flow(
-        "onset",
-        "infection",
-        save_results=False,
-    )
-    model.request_function_output(
-        "notifications",
-        func=DerivedOutput("onset") * Parameter("cdr"),
-    )
+        if isinstance(self.doc, pl.document.Document):
+            self.doc.append(description)
 
-    description = "Notifications are calculated as " \
-        "the absolute rate of infection in the community " \
-        "multiplied by the case detection rate. "
 
-    if isinstance(doc, pl.document.Document):
-        doc.append(description)
+    def add_recovery_to_model(self):  
+        """
+        Add recovery as described below.
+        """
+
+        self.model.add_transition_flow(
+            "recovery",
+            1.0 / Parameter("infectious_period"),
+            "infectious",
+            "recovered",
+        )
+
+        description = "The process recovery process moves " \
+            "people directly from the infectious state to a recovered compartment. "
+
+        if isinstance(self.doc, pl.document.Document):
+            self.doc.append(description)
+
+
+    def add_notifications_output_to_model(self):
+        """
+        Track notifications as described below.
+        """
+
+        self.model.request_output_for_flow(
+            "onset",
+            "infection",
+            save_results=False,
+        )
+        self.model.request_function_output(
+            "notifications",
+            func=DerivedOutput("onset") * Parameter("cdr"),
+        )
+
+        description = "Notifications are calculated as " \
+            "the absolute rate of infection in the community " \
+            "multiplied by the case detection rate. "
+
+        if isinstance(self.doc, pl.document.Document):
+            self.doc.append(description)
 
 
 def add_age_stratification_to_model(

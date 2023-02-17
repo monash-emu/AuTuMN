@@ -12,6 +12,14 @@ from summer2.parameters import Parameter, DerivedOutput
 REF_DATE = datetime(2019, 12, 31)
 
 
+class TextElement:
+    def __init__(self, text):
+        self.text = text
+
+    def emit_latex(self, doc):
+        doc.append(self.text)
+
+
 class DocumentedModel:
 
     def __init__(self, doc=None, add_documentation=False):
@@ -42,7 +50,8 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The base model consists of just three states, " \
                 "representing fully susceptible, infected (and infectious) and recovered persons. "
-            self.add_element_to_doc("General model construction", description)
+            element = TextElement(description)
+            self.add_element_to_doc("General model construction", element)
 
     def set_model_starting_conditions(self):
         """
@@ -59,7 +68,8 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The simulation starts with 26 million susceptible persons " \
                 "and one infectious person to seed the epidemic. "
-            self.add_element_to_doc("General model construction", description)
+            element = TextElement(description)
+            self.add_element_to_doc("General model construction", element)
 
     def add_infection_to_model(self):
         """
@@ -77,8 +87,9 @@ class DocumentedModel:
             description = "Infection moves people from the fully susceptible " \
                 "compartment to the infectious compartment, " \
                 "under the frequency-dependent transmission assumption. "
-            self.add_element_to_doc("General model construction", description)
-
+            element = TextElement(description)
+            self.add_element_to_doc("General model construction", element)
+            
     def add_recovery_to_model(self):
         """
         Add recovery as described below.
@@ -94,7 +105,8 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The process recovery process moves " \
                 "people directly from the infectious state to a recovered compartment. "
-            self.add_element_to_doc("General model construction", description)
+            element = TextElement(description)
+            self.add_element_to_doc("General model construction", element)
 
     def add_notifications_output_to_model(self):
         """
@@ -115,8 +127,8 @@ class DocumentedModel:
             description = "Notifications are calculated as " \
                 "the absolute rate of infection in the community " \
                 "multiplied by the case detection rate. "
-            self.add_element_to_doc("General model construction", description)
-
+            element = TextElement(description)
+            self.add_element_to_doc("General model construction", element)
 
     def build_polymod_britain_matrix(
         self,
@@ -153,15 +165,16 @@ class DocumentedModel:
         matrix = np.array(values).T  # Transpose
 
         if self.add_documentation:
-           description = "We took unadjusted estimates for interpersonal rates of contact by age " \
-            "from the United Kingdom data provided by Mossong et al.'s POLYMOD study \cite{mossong2008}. " \
-            "The data were obtained from https://doi.org/10.1371/journal.pmed.0050074.st005 " \
-            "on 12th February 2023 (downloaded in their native docx format). " \
-            "The matrix is transposed because summer assumes that rows represent infectees " \
-            "and columns represent infectors, whereas the POLYMOD data are labelled " \
-            "`age of contact' for the rows and `age group of participant' for the columns."
-           self.add_element_to_doc("Age stratification", NoEscape(description))
-
+            description = "We took unadjusted estimates for interpersonal rates of contact by age " \
+                "from the United Kingdom data provided by Mossong et al.'s POLYMOD study \cite{mossong2008}. " \
+                "The data were obtained from https://doi.org/10.1371/journal.pmed.0050074.st005 " \
+                "on 12th February 2023 (downloaded in their native docx format). " \
+                "The matrix is transposed because summer assumes that rows represent infectees " \
+                "and columns represent infectors, whereas the POLYMOD data are labelled " \
+                "`age of contact' for the rows and `age group of participant' for the columns."
+            element = TextElement(description)
+            self.add_element_to_doc("General model construction", element)
+           
         # if isinstance(doc, pl.document.Document):
         #     with doc.create(Section("Age stratification")):
                 # matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
@@ -180,8 +193,8 @@ class DocumentedModel:
     def compile_doc(self):
         for section in self.doc_sections:
             with self.doc.create(Section(section)):
-                for text in self.doc_sections[section]:
-                    self.doc.append(text)
+                for element in self.doc_sections[section]:
+                    element.emit_latex(self.doc)
 
 
 def add_age_stratification_to_model(

@@ -42,7 +42,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The base model consists of just three states, " \
                 "representing fully susceptible, infected (and infectious) and recovered persons. "
-            self.doc_sections["General model construction"] = [description]
+            self.doc_sections["General model construction"] = {"text": [description]}
 
     def set_model_starting_conditions(self):
         """
@@ -59,7 +59,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The simulation starts with 26 million susceptible persons " \
                 "and one infectious person to seed the epidemic. "
-            self.doc_sections["General model construction"].append(description)
+            self.doc_sections["General model construction"]["text"].append(description)
 
     def add_infection_to_model(self):
         """
@@ -77,7 +77,7 @@ class DocumentedModel:
             description = "Infection moves people from the fully susceptible " \
                 "compartment to the infectious compartment, " \
                 "under the frequency-dependent transmission assumption. "
-            self.doc_sections["General model construction"].append(description)
+            self.doc_sections["General model construction"]["text"].append(description)
 
     def add_recovery_to_model(self):
         """
@@ -94,7 +94,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The process recovery process moves " \
                 "people directly from the infectious state to a recovered compartment. "
-            self.doc_sections["General model construction"].append(description)
+            self.doc_sections["General model construction"]["text"].append(description)
 
     def add_notifications_output_to_model(self):
         """
@@ -115,13 +115,12 @@ class DocumentedModel:
             description = "Notifications are calculated as " \
                 "the absolute rate of infection in the community " \
                 "multiplied by the case detection rate. "
-            self.doc_sections["General model construction"].append(description)
+            self.doc_sections["General model construction"]["text"].append(description)
 
 
     def build_polymod_britain_matrix(
         self,
         strata,
-        doc: pl.document.Document,
     ) -> np.array:
         """
         Get the raw data for Great Britain as described below.
@@ -161,7 +160,7 @@ class DocumentedModel:
             "The matrix is transposed because summer assumes that rows represent infectees " \
             "and columns represent infectors, whereas the POLYMOD data are labelled " \
             "`age of contact' for the rows and `age group of participant' for the columns."
-           self.doc_sections["Age stratification"] = [NoEscape(description)]
+           self.doc_sections["Age stratification"] = {"text": [NoEscape(description)]}
 
         # if isinstance(doc, pl.document.Document):
         #     with doc.create(Section("Age stratification")):

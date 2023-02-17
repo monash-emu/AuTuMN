@@ -14,6 +14,7 @@ REF_DATE = datetime(2019, 12, 31)
 BASE_PATH = Path(__file__).parent.resolve()
 SUPPLEMENT_PATH = BASE_PATH / "supplement"
 
+
 class DocElement:
     def __init__():
         pass
@@ -116,7 +117,7 @@ class DocumentedModel:
         )
 
         if self.add_documentation:
-            description = "The base model consists of just three states, " \
+            description = "The base model consists of three states, " \
                 "representing fully susceptible, infected (and infectious) and recovered persons. "
             self.add_element_to_doc("General model construction", TextElement(description))
 
@@ -294,7 +295,8 @@ class DocumentedModel:
 
         return adjusted_matrix
 
-    def add_age_stratification_to_model(self,
+    def add_age_stratification_to_model(
+        self,
         compartments: list,
         strata: list,
         matrix: np.array,
@@ -325,6 +327,12 @@ class DocumentedModel:
                 "These age brackets were chosen to match those used by the POLYMOD survey. "
             self.add_element_to_doc("Age stratification", TextElement(description))
 
+    def add_strain_stratification_to_model(self):
+        strain_strat = StrainStratification("strain", ["ba1", "ba2"], ["infectious"])
+        population_split = {"ba1": 1.0, "ba2": 0.0}
+        strain_strat.set_population_split(population_split)
+        self.model.stratify_with(strain_strat)
+
     def add_element_to_doc(
             self, 
             section_name: str, 
@@ -349,10 +357,3 @@ class DocumentedModel:
             with self.doc.create(Section(section)):
                 for element in self.doc_sections[section]:
                     element.emit_latex(self.doc)
-
-
-def add_strain_stratification_to_model(model):
-    strain_strat = StrainStratification("strain", ["ba1", "ba2"], ["infectious"])
-    population_split = {"ba1": 1.0, "ba2": 0.0}
-    strain_strat.set_population_split(population_split)
-    model.stratify_with(strain_strat)

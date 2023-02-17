@@ -5,16 +5,22 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from pathlib import Path
 
 from summer2 import CompartmentalModel, Stratification, StrainStratification
 from summer2.parameters import Parameter, DerivedOutput
 
 REF_DATE = datetime(2019, 12, 31)
+BASE_PATH = Path(__file__).parent.resolve()
+SUPPLEMENT_PATH = BASE_PATH / "supplement"
 
 
 class TextElement:
     def __init__(self, text):
-        self.text = text
+        if "\cite{" in text:
+            self.text = NoEscape(text)
+        else:
+            self.text = text
 
     def emit_latex(self, doc):
         doc.append(self.text)
@@ -62,8 +68,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The base model consists of just three states, " \
                 "representing fully susceptible, infected (and infectious) and recovered persons. "
-            element = TextElement(description)
-            self.add_element_to_doc("General model construction", element)
+            self.add_element_to_doc("General model construction", TextElement(description))
 
     def set_model_starting_conditions(self):
         """
@@ -80,8 +85,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The simulation starts with 26 million susceptible persons " \
                 "and one infectious person to seed the epidemic. "
-            element = TextElement(description)
-            self.add_element_to_doc("General model construction", element)
+            self.add_element_to_doc("General model construction", TextElement(description))
 
     def add_infection_to_model(self):
         """
@@ -99,8 +103,7 @@ class DocumentedModel:
             description = "Infection moves people from the fully susceptible " \
                 "compartment to the infectious compartment, " \
                 "under the frequency-dependent transmission assumption. "
-            element = TextElement(description)
-            self.add_element_to_doc("General model construction", element)
+            self.add_element_to_doc("General model construction", TextElement(description))
             
     def add_recovery_to_model(self):
         """
@@ -117,8 +120,7 @@ class DocumentedModel:
         if self.add_documentation:
             description = "The process recovery process moves " \
                 "people directly from the infectious state to a recovered compartment. "
-            element = TextElement(description)
-            self.add_element_to_doc("General model construction", element)
+            self.add_element_to_doc("General model construction", TextElement(description))
 
     def add_notifications_output_to_model(self):
         """
@@ -139,8 +141,7 @@ class DocumentedModel:
             description = "Notifications are calculated as " \
                 "the absolute rate of infection in the community " \
                 "multiplied by the case detection rate. "
-            element = TextElement(description)
-            self.add_element_to_doc("General model construction", element)
+            self.add_element_to_doc("General model construction", TextElement(description))
 
     def build_polymod_britain_matrix(
         self,
@@ -183,18 +184,13 @@ class DocumentedModel:
                 "The matrix is transposed because summer assumes that rows represent infectees " \
                 "and columns represent infectors, whereas the POLYMOD data are labelled " \
                 "`age of contact' for the rows and `age group of participant' for the columns."
-            element = TextElement(NoEscape(description))
+            element = TextElement(description)
             self.add_element_to_doc("General model construction", element)
-           
             location = "raw_matrix.jpg"
             matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
-            matrix_plotly_fig.write_image("supplement" + location)
-
+            matrix_plotly_fig.write_image(SUPPLEMENT_PATH / location)
             caption = "Raw matrices from Great Britain POLYMOD. Values are contacts per person per day."
-            self.add_element_to_doc(
-                "General model construction", 
-                FigElement(location, caption=caption)
-            )
+            self.add_element_to_doc("Age stratification", FigElement(location, caption=caption))
 
         return matrix
 

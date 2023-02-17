@@ -14,25 +14,75 @@ REF_DATE = datetime(2019, 12, 31)
 BASE_PATH = Path(__file__).parent.resolve()
 SUPPLEMENT_PATH = BASE_PATH / "supplement"
 
+class DocElement:
+    def __init__():
+        pass
 
-class TextElement:
-    def __init__(self, text):
-        if "\cite{" in text:
-            self.text = NoEscape(text)
-        else:
-            self.text = text
+    def emit_latex():
+        pass
 
-    def emit_latex(self, doc):
+
+class TextElement(DocElement):
+    """
+    Write text input to TeX document using PyLaTeX commands.
+    """
+    def __init__(
+            self, 
+            text: str,
+        ):
+        """
+        Set up object with text input.
+
+        Args:
+            text: The text to write
+        """
+        self.text = NoEscape(text) if "\cite{" in text else text
+
+    def emit_latex(
+            self, 
+            doc: pl.document.Document,
+        ):
+        """
+        Write the text to the document.
+
+        Args:
+            doc: The PyLaTeX object to add to
+        """
         doc.append(self.text)
 
 
-class FigElement:
-    def __init__(self, fig_name, caption="", resolution="350px"):
+class FigElement(DocElement):
+    """
+    Add a figure to a TeX document using PyLaTeX commands.
+    """
+    def __init__(
+            self, 
+            fig_name: str,
+            caption: str="",
+            resolution: str="350px",
+        ):
+        """
+        Set up object with figure input and other requests.
+
+        Args:
+            fig_name: The name of the figure to write
+            caption: Figure caption
+            resolution: Resolution to write to
+        """
         self.fig_name = fig_name
         self.caption = caption
         self.resolution = resolution
     
-    def emit_latex(self, doc):
+    def emit_latex(
+            self, 
+            doc: pl.document.Document,
+        ):
+        """
+        Write the figure to the document.
+
+        Args:
+            doc: The PyLaTeX object to add to
+        """
         with doc.create(pl.Figure()) as plot:
             plot.add_image(self.fig_name, width=self.resolution)
             plot.add_caption(self.caption)
@@ -194,12 +244,26 @@ class DocumentedModel:
 
         return matrix
 
-    def add_element_to_doc(self, section_name, element):
+    def add_element_to_doc(
+            self, 
+            section_name: str, 
+            element: DocElement,
+        ):
+        """
+        Add a new element to the list of elements to be included in a document section.
+
+        Args:
+            section_name: Name of the section to add to
+            element: The object to include in the section
+        """
         if section_name not in self.doc_sections:
             self.doc_sections[section_name] = []
         self.doc_sections[section_name].append(element)
 
     def compile_doc(self):
+        """
+        Apply all the document elements to the document, using their emit_latex method.
+        """
         for section in self.doc_sections:
             with self.doc.create(Section(section)):
                 for element in self.doc_sections[section]:

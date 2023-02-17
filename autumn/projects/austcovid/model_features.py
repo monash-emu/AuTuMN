@@ -14,13 +14,20 @@ REF_DATE = datetime(2019, 12, 31)
 
 class DocumentedModel:
 
+    def __init__(self, doc=None, add_documentation=False):
+        self.doc = doc
+        self.add_documentation = add_documentation
+        self.doc_sections = {}
+
     def build_base_model(
         self,
         start_date: datetime,
         end_date: datetime,
         compartments: list,
-        doc: pl.document.Document,
     ):
+        """
+        Build the base model object with no features yet, as described below.
+        """
 
         self.model = CompartmentalModel(
             times=(
@@ -32,13 +39,10 @@ class DocumentedModel:
             ref_date=REF_DATE,
         )
 
-        self.doc = doc
-        
-        description = "The base model consists of just three states, " \
-            "representing fully susceptible, infected (and infectious) and recovered persons. "
-
-        self.doc_sections = {}
-        self.doc_sections["General model construction"] = [description]
+        if self.add_documentation:
+            description = "The base model consists of just three states, " \
+                "representing fully susceptible, infected (and infectious) and recovered persons. "
+            self.doc_sections["General model construction"] = [description]
 
     def set_model_starting_conditions(self):
         """
@@ -52,10 +56,10 @@ class DocumentedModel:
             }
         )
         
-        description = "The simulation starts with 26 million susceptible persons " \
-            "and one infectious person to seed the epidemic. "
-
-        self.doc_sections["General model construction"].append(description)
+        if self.add_documentation:
+            description = "The simulation starts with 26 million susceptible persons " \
+                "and one infectious person to seed the epidemic. "
+            self.doc_sections["General model construction"].append(description)
 
     def add_infection_to_model(self):
         """
@@ -69,11 +73,11 @@ class DocumentedModel:
             "infectious",
         )
         
-        description = "Infection moves people from the fully susceptible " \
-            "compartment to the infectious compartment, " \
-            "under the frequency-dependent transmission assumption. "
-
-        self.doc_sections["General model construction"].append(description)
+        if self.add_documentation:
+            description = "Infection moves people from the fully susceptible " \
+                "compartment to the infectious compartment, " \
+                "under the frequency-dependent transmission assumption. "
+            self.doc_sections["General model construction"].append(description)
 
     def add_recovery_to_model(self):  
         """
@@ -87,10 +91,10 @@ class DocumentedModel:
             "recovered",
         )
 
-        description = "The process recovery process moves " \
-            "people directly from the infectious state to a recovered compartment. "
-
-        self.doc_sections["General model construction"].append(description)
+        if self.add_documentation:
+            description = "The process recovery process moves " \
+                "people directly from the infectious state to a recovered compartment. "
+            self.doc_sections["General model construction"].append(description)
 
     def add_notifications_output_to_model(self):
         """
@@ -107,11 +111,11 @@ class DocumentedModel:
             func=DerivedOutput("onset") * Parameter("cdr"),
         )
 
-        description = "Notifications are calculated as " \
-            "the absolute rate of infection in the community " \
-            "multiplied by the case detection rate. "
-
-        self.doc_sections["General model construction"].append(description)
+        if self.add_documentation:
+            description = "Notifications are calculated as " \
+                "the absolute rate of infection in the community " \
+                "multiplied by the case detection rate. "
+            self.doc_sections["General model construction"].append(description)
 
     def compile_doc(self):
         

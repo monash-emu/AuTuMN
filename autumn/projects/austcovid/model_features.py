@@ -150,7 +150,6 @@ class DocumentedModel:
 
         Args:
             strata: The age groups being applied in the model
-            doc: The description document
         Returns:
             15 by 15 matrix with daily contact rates for age groups
         """
@@ -183,16 +182,17 @@ class DocumentedModel:
                 "The matrix is transposed because summer assumes that rows represent infectees " \
                 "and columns represent infectors, whereas the POLYMOD data are labelled " \
                 "`age of contact' for the rows and `age group of participant' for the columns."
-            element = TextElement(description)
+            element = TextElement(NoEscape(description))
             self.add_element_to_doc("General model construction", element)
            
+            location = "raw_matrix.jpg"
             matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
-            matrix_plotly_fig.write_image("supplement/raw_matrix.jpg")
+            matrix_plotly_fig.write_image("supplement" + location)
 
             caption = "Raw matrices from Great Britain POLYMOD. Values are contacts per person per day."
             self.add_element_to_doc(
                 "General model construction", 
-                FigElement("raw_matrix.jpg", caption=caption)
+                FigElement(location, caption=caption)
             )
 
         return matrix

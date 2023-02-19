@@ -1,7 +1,6 @@
 from summer2 import CompartmentalModel
 from summer2.experimental.model_builder import ModelBuilder
 
-from autumn.core import inputs
 from autumn.core.inputs.demography.queries import get_crude_birth_rate_series
 from autumn.core.project import Params
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices

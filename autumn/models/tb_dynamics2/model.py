@@ -92,7 +92,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     Add intercompartmental flows
     """
     contact_rate = params.contact_rate
-    contact_rate_latent = contact_rate * params.rr_infection_latent
+    contact_rate_latent = contact_rate * params.rr_infection_latent  # Probably no need for a new variable name here - only used once
     contact_rate_recovered = contact_rate * params.rr_infection_recovered
 
     # Add the process of infecting the susceptibles
@@ -118,7 +118,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     # Latency-related flows
-    stabilisation_rate = 1.0
+    stabilisation_rate = 1.0  # Probably better to be explicit that this is a float, even though it's just a dummy value
     model.add_transition_flow(
         "stabilisation",
         stabilisation_rate,

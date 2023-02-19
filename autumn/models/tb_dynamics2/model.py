@@ -1,12 +1,8 @@
-from typing import List
-import pandas as pd
-
 from summer2 import CompartmentalModel
 from summer2.experimental.model_builder import ModelBuilder
 
-from jax import numpy as jnp
-
 from autumn.core import inputs
+from autumn.core.inputs.demography.queries import get_crude_birth_rate_series
 from autumn.core.project import Params
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from .outputs import TbOutputsBuilder
@@ -186,9 +182,9 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     # Entry flows
-    birth_rates, years = inputs.get_crude_birth_rate(iso3)
-    birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
-    tfunc = build_static_sigmoidal_multicurve(years.to_list(), birth_rates.to_list())
+    birth_rates = get_crude_birth_rate_series("VNM")
+    birth_rates /= 1000.0  # Birth rates are provided / 1000 population
+    tfunc = build_static_sigmoidal_multicurve(birth_rates.index, birth_rates)
     crude_birth_rate = Function(tfunc, [Time])
     model.add_crude_birth_flow(
         "birth",
@@ -196,10 +192,11 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.SUSCEPTIBLE,
     )
 
-    # Death flows
+    # Universal death
     universal_death_rate = 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
-      # Infection death
+
+    # Infection death
     model.add_death_flow(
         "infect_death",
         params.infect_death_rate_dict.unstratified,

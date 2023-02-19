@@ -181,7 +181,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     # Entry flows
-    birth_rates = get_crude_birth_rate_series("VNM")
+    birth_rates = get_crude_birth_rate_series(iso3)
     birth_rates /= 1000.0  # Birth rates are provided / 1000 population
     tfunc = build_static_sigmoidal_multicurve(birth_rates.index, birth_rates)
     crude_birth_rate = Function(tfunc, [Time])

@@ -87,8 +87,6 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     Add intercompartmental flows
     """
     contact_rate = params.contact_rate
-    contact_rate_latent = contact_rate * params.rr_infection_latent  # Probably no need for a new variable name here - only used once
-    contact_rate_recovered = contact_rate * params.rr_infection_recovered
 
     # Add the process of infecting the susceptibles
     model.add_infection_frequency_flow(
@@ -101,19 +99,19 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # And those with partial immunity
     model.add_infection_frequency_flow(
         "infection_from_latent",
-        contact_rate_latent,
+        contact_rate * params.rr_infection_latent ,
         Compartment.LATE_LATENT,
         Compartment.EARLY_LATENT,
     )
     model.add_infection_frequency_flow(
         "infection_from_recovered",
-        contact_rate_recovered,
+        contact_rate * params.rr_infection_recovered,
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
 
     # Latency-related flows
-    stabilisation_rate = 1.0  # Probably better to be explicit that this is a float, even though it's just a dummy value
+    stabilisation_rate = 1.0  
     model.add_transition_flow(
         "stabilisation",
         stabilisation_rate,
@@ -158,7 +156,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     #Treatment recovery, releapse, death flows.
-    treatment_recovery_rate = 1.0 #will be adjusted later
+    treatment_recovery_rate = 1.0 # will be adjusted later
     model.add_transition_flow(
         "treatment_recovery",
         treatment_recovery_rate,

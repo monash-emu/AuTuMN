@@ -356,7 +356,7 @@ class DocumentedAustModel(DocumentedModel):
                 "These age brackets were chosen to match those used by the POLYMOD survey. "
             self.add_element_to_doc("Age stratification", TextElement(description))
 
-    def add_strain_stratification_to_model(self):
+    def get_strain_stratification(self):
         """
         Add strain stratification to the model as described below.
         """
@@ -374,20 +374,27 @@ class DocumentedAustModel(DocumentedModel):
         population_split.update({strain: 0.0 for strain in other_strains})
         strain_strat.set_population_split(population_split)
 
-        # Infectiousness
-        infectiousness_adjs = {starting_strain: None}
-        infectiousness_adjs.update({strain: Parameter(f"{strain}_rel_infness") for strain in other_strains})
-        strain_strat.set_flow_adjustments("infection", infectiousness_adjs)
-
-        # Apply the stratification
-        self.model.stratify_with(strain_strat)
-
         if self.add_documentation:
             description = "We stratified the infectious compartment according to strain, " \
                 "including compartments to represent strain BA.1 and BA.2. " \
                 "This was implemented using summer's `StrainStratication' class. " \
-                "All of the starting infectious seed was assigned to the BA.1 category, " \
-                "and no parameters were modified to distinguish these two strains. " \
-                "The relative infectiousness of each strain is adjusted relative " \
+                "All of the starting infectious seed was assigned to the BA.1 category. "
+            self.add_element_to_doc("Strain stratification", TextElement(description))
+
+        return strain_strat, starting_strain, other_strains
+
+    def adjust_strain_infectiousness(self, strat, starting_strain, other_strains):
+        """
+        Adjust the infectiousness of the SARS-CoV-2 sub-variants modelled.
+        """
+        
+        infectiousness_adjs = {starting_strain: None}
+        infectiousness_adjs.update({strain: Parameter(f"{strain}_rel_infness") for strain in other_strains})
+        strat.set_flow_adjustments("infection", infectiousness_adjs)
+
+        if self.add_documentation:
+            description = "The relative infectiousness of the BA.2 strain was adjusted relative " \
                 "to the starting strain (BA.1) as indicated in the parameters table. "
             self.add_element_to_doc("Strain stratification", TextElement(description))
+        
+        return strat

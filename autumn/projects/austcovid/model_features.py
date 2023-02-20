@@ -357,7 +357,19 @@ class DocumentedAustModel(DocumentedModel):
             self.add_element_to_doc("Age stratification", TextElement(description))
 
     def add_strain_stratification_to_model(self):
+        """
+        Add strain stratification to the model as described below.
+        """
+
         strain_strat = StrainStratification("strain", ["ba1", "ba2"], ["infectious"])
         population_split = {"ba1": 1.0, "ba2": 0.0}
         strain_strat.set_population_split(population_split)
         self.model.stratify_with(strain_strat)
+
+        if self.add_documentation:
+            description = "We stratified the infectious compartment according to strain, " \
+                "including compartments to represent strain BA.1 and BA.2. " \
+                "This was implemented using summer's `StrainStratication' class. " \
+                "All of the starting infectious seed was assigned to the BA.1 category, " \
+                "and no parameters were modified to distinguish these two strains. "
+            self.add_element_to_doc("Strain stratification", TextElement(description))

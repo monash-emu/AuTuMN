@@ -16,6 +16,9 @@ SUPPLEMENT_PATH = BASE_PATH / "supplement"
 
 
 class DocElement:
+    """
+    Abstract class for creating a model with accompanying TeX documentation.
+    """
     def __init__():
         pass
 

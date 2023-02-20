@@ -92,7 +92,7 @@ class FigElement(DocElement):
             plot.add_caption(self.caption)
 
 
-class DocumentedModel:
+class DocumentedProcess:
 
     def __init__(self, doc=None, add_documentation=False):
         self.doc = doc
@@ -126,7 +126,7 @@ class DocumentedModel:
                     element.emit_latex(self.doc)
 
 
-class DocumentedAustModel(DocumentedModel):
+class DocumentedAustModel(DocumentedProcess):
 
     def build_base_model(
         self,

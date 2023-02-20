@@ -361,9 +361,25 @@ class DocumentedAustModel(DocumentedModel):
         Add strain stratification to the model as described below.
         """
 
-        strain_strat = StrainStratification("strain", ["ba1", "ba2"], ["infectious"])
-        population_split = {"ba1": 1.0, "ba2": 0.0}
+        # The strains we're working with
+        all_strains = ["ba1", "ba2"]
+        starting_strain = all_strains[0]  # BA.1
+        other_strains = all_strains[1:]  # The others, currently just BA.2
+
+        # The stratification object
+        strain_strat = StrainStratification("strain", all_strains, ["infectious"])
+
+        # The starting population split
+        population_split = {starting_strain: 1.0}
+        population_split.update({strain: 0.0 for strain in other_strains})
         strain_strat.set_population_split(population_split)
+
+        # Infectiousness
+        infectiousness_adjs = {starting_strain: None}
+        infectiousness_adjs.update({strain: Parameter(f"{strain}_rel_infness") for strain in other_strains})
+        strain_strat.set_flow_adjustments("infection", infectiousness_adjs)
+
+        # Apply the stratification
         self.model.stratify_with(strain_strat)
 
         if self.add_documentation:
@@ -371,5 +387,7 @@ class DocumentedAustModel(DocumentedModel):
                 "including compartments to represent strain BA.1 and BA.2. " \
                 "This was implemented using summer's `StrainStratication' class. " \
                 "All of the starting infectious seed was assigned to the BA.1 category, " \
-                "and no parameters were modified to distinguish these two strains. "
+                "and no parameters were modified to distinguish these two strains. " \
+                "The relative infectiousness of each strain is adjusted relative " \
+                "to the starting strain (BA.1) as indicated in the parameters table. "
             self.add_element_to_doc("Strain stratification", TextElement(description))

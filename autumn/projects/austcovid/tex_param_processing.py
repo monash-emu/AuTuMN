@@ -1,10 +1,15 @@
 import pylatex as pl
 from pylatex.utils import NoEscape, bold
 import arviz as az
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 from summer2 import CompartmentalModel
-from autumn.projects.austcovid.model_features import DocumentedProcess
+from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement
 from estival.calibration.mcmc.adaptive import AdaptiveChain
+
+BASE_PATH = Path(__file__).parent.resolve()
+SUPPLEMENT_PATH = BASE_PATH / "supplement"
 
 
 def get_fixed_param_value_text(
@@ -117,9 +122,18 @@ class DocumentedCalibration(DocumentedProcess):
                 ax.set_title(f"{self.descriptions[prior_name]}, {column_names[col]}", fontsize=20)
                 ax.xaxis.set_tick_params(labelsize=15)
                 ax.yaxis.set_tick_params(labelsize=15)
-        with self.doc.create(pl.Figure()) as plot:
-            plot.add_plot(width=NoEscape(r"1\textwidth"))
-            plot.add_caption("Parameter posteriors and progression.")
+        
+        location = "progression.jpg"
+        plt.savefig(SUPPLEMENT_PATH / location)
+
+        caption = "Parameter posteriors and progression."
+
+        self.add_element_to_doc("Calibration", FigElement(location, caption=caption))
+
+
+        # with self.doc.create(pl.Figure()) as plot:
+        #     plot.add_plot(width=NoEscape(r"1\textwidth"))
+        #     plot.add_caption("Parameter posteriors and progression.")
 
     def add_calib_table_to_doc(self):
         self.doc.append("Input parameters varied through calibration with uncertainty distribution parameters and support.\n")

@@ -6,13 +6,21 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 from pathlib import Path
+from jax import numpy as jnp
 
 from summer2 import CompartmentalModel, Stratification, StrainStratification
-from summer2.parameters import Parameter, DerivedOutput
+from summer2.parameters import Parameter, DerivedOutput, Function, Time
 
 REF_DATE = datetime(2019, 12, 31)
 BASE_PATH = Path(__file__).parent.resolve()
 SUPPLEMENT_PATH = BASE_PATH / "supplement"
+
+
+def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: float):
+    def voc_seed_func(time, entry_rate, start_time, seed_duration):
+        offset = time - start_time
+        return jnp.where(offset > 0, jnp.where(offset < seed_duration, entry_rate, 0.0), 0.0)
+    return Function(voc_seed_func, [Time, entry_rate, start_time, seed_duration])
 
 
 class DocElement:
@@ -404,3 +412,20 @@ class DocumentedAustModel(DocumentedProcess):
             self.add_element_to_doc("Strain stratification", TextElement(description))
         
         return strat
+
+    def seed_vocs(self):
+
+        for strain in self.model.stratifications["strain"].strata:
+            voc_seed_func = make_voc_seed_func(
+                Parameter("seed_rate"), 
+                Parameter(f"{strain}_seed_time"), 
+                Parameter("seed_duration")
+            )
+            self.model.add_importation_flow(
+                "seed_{strain}",
+                voc_seed_func,
+                "infectious",
+                dest_strata={"strain": strain},
+                split_imports=True,
+            )
+            

@@ -161,13 +161,13 @@ class DocumentedAustModel(DocumentedProcess):
         self.model.set_initial_population(
             {
                 "susceptible": 2.6e7,
-                "infectious": 1.0,
+                "infectious": 0.0,
             }
         )
         
         if self.add_documentation:
             description = "The simulation starts with 26 million susceptible persons " \
-                "and one infectious person to seed the epidemic. "
+                "and no infectious people to seed the epidemic. "
             self.add_element_to_doc("General model construction", TextElement(description))
 
     def add_infection_to_model(self):

@@ -1,9 +1,11 @@
+import pandas as pd
 import pylatex as pl
 from pylatex.utils import NoEscape, bold
 from pylatex.section import Section
 import arviz as az
 import matplotlib.pyplot as plt
 from pathlib import Path
+from random import sample
 
 from summer2 import CompartmentalModel
 from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement
@@ -88,6 +90,7 @@ class DocumentedCalibration(DocumentedProcess):
         targets, 
         iterations, 
         burn_in, 
+        parameters,
         descriptions, 
         units, 
         evidence, 
@@ -99,6 +102,7 @@ class DocumentedCalibration(DocumentedProcess):
         self.priors = priors
         self.prior_names = [priors[i_prior].name for i_prior in range(len(priors))]
         self.targets = targets
+        self.params = parameters,
         self.descriptions = descriptions
         self.units = units
         self.evidence = evidence
@@ -179,3 +183,28 @@ class DocumentedCalibration(DocumentedProcess):
                     param_table_row = (self.descriptions[param], param_value_text, NoEscape(self.evidence[param]))
                     parameters_table.add_row(param_table_row)
                 parameters_table.add_hline()
+
+
+    def show_sample_outputs(self, model, cases, params):
+
+        # How many parameter samples to run through again (suppress warnings if 100+)
+        n_samples = 50
+        samples = sorted(sample(range(self.burn_in, self.iterations - 200), n_samples))
+
+        # Parameter values from sampled runs
+        sample_params = pd.DataFrame(
+            {p.name: self.uncertainty_outputs.posterior[p.name][0, samples].to_numpy() for p in self.priors},
+            index=samples,
+        )
+
+        # Model outputs from sampled parameter sets
+        sample_outputs = pd.DataFrame(
+            index=model.get_derived_outputs_df().index, 
+            columns=samples,
+        )
+        for i_param_set in samples:
+            params.update(sample_params.loc[i_param_set, :].to_dict())
+            model.run(parameters=params)
+            sample_outputs[i_param_set] = model.get_derived_outputs_df()["notifications"]
+        
+        return pd.concat((cases, sample_outputs), axis=1)

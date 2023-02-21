@@ -185,19 +185,18 @@ class DocumentedCalibration(DocumentedProcess):
                 parameters_table.add_hline()
 
 
-    def show_sample_outputs(self, model, cases, params):
+    def show_sample_outputs(self, n_samples, model, cases, params):
 
         # How many parameter samples to run through again (suppress warnings if 100+)
-        n_samples = 50
         samples = sorted(sample(range(self.burn_in, self.iterations - 200), n_samples))
 
-        # Parameter values from sampled runs
+        # Sample parameters from accepted runs
         sample_params = pd.DataFrame(
             {p.name: self.uncertainty_outputs.posterior[p.name][0, samples].to_numpy() for p in self.priors},
             index=samples,
         )
 
-        # Model outputs from sampled parameter sets
+        # Get model outputs for sampled parameters
         sample_outputs = pd.DataFrame(
             index=model.get_derived_outputs_df().index, 
             columns=samples,

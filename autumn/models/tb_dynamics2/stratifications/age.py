@@ -4,6 +4,7 @@ from summer2 import AgeStratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
+from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 
@@ -15,17 +16,14 @@ from jax import numpy as jnp
 def get_age_strat(
     params,
     compartments: List[str],
-    age_pops: pd.Series = None,
-    age_mixing_matrix=None,
 ) -> AgeStratification:
 
     """
-     Function to create the age group stratification object..
+    Function to create the age group stratification object..
 
     Args:
         params: Parameter class
         age_pops: The population distribution by age
-        age_mixing_matrix: The age-specific mixing matrix
         compartments: All the model compartments
 
     Returns:
@@ -34,13 +32,17 @@ def get_age_strat(
     age_breakpoints = params.age_breakpoints
     iso3 = params.country.iso3
     strat = AgeStratification("age", age_breakpoints, compartments)
-    # set age mixing matrix
-    if age_mixing_matrix is not None:
-        strat.set_mixing_matrix(age_mixing_matrix)
-    # set age prop split
-    if age_pops is not None:
-        age_split_props = age_pops / age_pops.sum()
-        strat.set_population_split(age_split_props.to_dict())
+
+    # Get and set age-specific mixing matrix
+    age_mixing_matrix = build_synthetic_matrices(
+        iso3,
+        params.age_mixing.source_iso3,
+        params.age_breakpoints,
+        params.age_mixing.age_adjust,
+        requested_locations=["all_locations"],
+    )["all_locations"]
+    age_mixing_matrix *= 365.251
+    strat.set_mixing_matrix(age_mixing_matrix)
 
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breakpoints, iso3)
     universal_death_funcs = {}

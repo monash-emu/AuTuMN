@@ -3,7 +3,6 @@ from summer2.experimental.model_builder import ModelBuilder
 
 from autumn.core.inputs.demography.queries import get_crude_birth_rate_series
 from autumn.core.project import Params
-from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from .outputs import TbOutputsBuilder
 from .parameters import Parameters
 from .constants import Compartment
@@ -201,34 +200,19 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
     
     """
-    Apply age stratification
+    Age stratification
     """
-    # Set mixing matrix
-    if params.age_mixing:
-        age_mixing_matrices = build_synthetic_matrices(
-            iso3,
-            params.age_mixing.source_iso3,
-            params.age_breakpoints,
-            params.age_mixing.age_adjust,
-            requested_locations=["all_locations"],
-        )
-        age_mixing_matrix = age_mixing_matrices["all_locations"]
-        # convert daily contact rates to yearly rates
-        age_mixing_matrix *= 365.251
-        # Add Age stratification to the model
-        age_strat = get_age_strat(
-            params=params,
-            compartments=BASE_COMPARTMENTS,
-            age_mixing_matrix = age_mixing_matrix,
-        )
-    else:
-        age_strat = get_age_strat(
-            params=params,
-            compartments=BASE_COMPARTMENTS,
-        )
+
+    age_strat = get_age_strat(
+        params=params,
+        compartments=BASE_COMPARTMENTS,
+    )
     model.stratify_with(age_strat)
 
-    # Organ stratifications
+    """
+    Organ stratification
+    """
+    
     if "organ" in params.stratify_by:
         organ_strat = get_organ_strat(params)
         model.stratify_with(organ_strat)

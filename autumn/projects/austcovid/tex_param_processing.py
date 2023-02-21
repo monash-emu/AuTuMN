@@ -114,26 +114,20 @@ class DocumentedCalibration(DocumentedProcess):
         self.uncertainty_outputs = uncertainty_analysis.to_arviz(self.burn_in)
     
     def graph_param_progression(self):
-        axes = az.plot_trace(self.uncertainty_outputs, figsize=(16, 12))
-        for i_prior, prior_name in enumerate(self.prior_names):
-            column_names = ["posterior", "trace"]
-            for col in range(2):
-                ax = axes[i_prior][col]
-                ax.set_title(f"{self.descriptions[prior_name]}, {column_names[col]}", fontsize=20)
-                ax.xaxis.set_tick_params(labelsize=15)
-                ax.yaxis.set_tick_params(labelsize=15)
-        
-        location = "progression.jpg"
-        plt.savefig(SUPPLEMENT_PATH / location)
 
-        caption = "Parameter posteriors and progression."
-
-        self.add_element_to_doc("Calibration", FigElement(location, caption=caption))
-
-
-        # with self.doc.create(pl.Figure()) as plot:
-        #     plot.add_plot(width=NoEscape(r"1\textwidth"))
-        #     plot.add_caption("Parameter posteriors and progression.")
+        if self.add_documentation:
+            axes = az.plot_trace(self.uncertainty_outputs, figsize=(16, 12))
+            for i_prior, prior_name in enumerate(self.prior_names):
+                column_names = ["posterior", "trace"]
+                for col in range(2):
+                    ax = axes[i_prior][col]
+                    ax.set_title(f"{self.descriptions[prior_name]}, {column_names[col]}", fontsize=20)
+                    ax.xaxis.set_tick_params(labelsize=15)
+                    ax.yaxis.set_tick_params(labelsize=15)
+            location = "progression.jpg"
+            plt.savefig(SUPPLEMENT_PATH / location)
+            caption = "Parameter posteriors and progression."
+            self.add_element_to_doc("Calibration", FigElement(location, caption=caption))
 
     def add_calib_table_to_doc(self):
         self.doc.append("Input parameters varied through calibration with uncertainty distribution parameters and support.\n")

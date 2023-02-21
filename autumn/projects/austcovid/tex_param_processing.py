@@ -92,7 +92,6 @@ class DocumentedCalibration(DocumentedProcess):
         units, 
         evidence, 
         doc=None,
-        add_documentation=False, 
     ):
         self.doc_sections = {}
         self.iterations = iterations
@@ -104,7 +103,6 @@ class DocumentedCalibration(DocumentedProcess):
         self.units = units
         self.evidence = evidence
         self.doc = doc
-        self.add_documentation = add_documentation
         
     def get_analysis(self, model, params, start, end):
         uncertainty_analysis = AdaptiveChain(
@@ -115,20 +113,20 @@ class DocumentedCalibration(DocumentedProcess):
         self.uncertainty_outputs = uncertainty_analysis.to_arviz(self.burn_in)
     
     def graph_param_progression(self):
-
-        if self.add_documentation:
-            axes = az.plot_trace(self.uncertainty_outputs, figsize=(16, 12))
-            for i_prior, prior_name in enumerate(self.prior_names):
-                column_names = ["posterior", "trace"]
-                for col in range(2):
-                    ax = axes[i_prior][col]
-                    ax.set_title(f"{self.descriptions[prior_name]}, {column_names[col]}", fontsize=20)
-                    ax.xaxis.set_tick_params(labelsize=15)
-                    ax.yaxis.set_tick_params(labelsize=15)
-            location = "progression.jpg"
-            plt.savefig(SUPPLEMENT_PATH / location)
-            caption = "Parameter posteriors and progression."
-            self.add_element_to_doc("Calibration", FigElement(location, caption=caption))
+        """
+        Plot progression of parameters over model iterations with posterior density plots.
+        """
+        axes = az.plot_trace(self.uncertainty_outputs, figsize=(16, 12))
+        for i_prior, prior_name in enumerate(self.prior_names):
+            for i_col, column in enumerate(["posterior", "trace"]):
+                ax = axes[i_prior][i_col]
+                ax.set_title(f"{self.descriptions[prior_name]}, {column}", fontsize=20)
+                for axis in [ax.xaxis, ax.yaxis]:
+                    axis.set_tick_params(labelsize=15)
+        location = "progression.jpg"
+        plt.savefig(SUPPLEMENT_PATH / location)
+        caption = "Parameter posteriors and progression."
+        self.add_element_to_doc("Calibration", FigElement(location, caption=caption))
 
     def add_calib_table_to_doc(self):
 

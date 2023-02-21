@@ -1,5 +1,6 @@
 import pylatex as pl
 from pylatex.utils import NoEscape, bold
+from pylatex.section import Section
 import arviz as az
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -130,49 +131,53 @@ class DocumentedCalibration(DocumentedProcess):
             self.add_element_to_doc("Calibration", FigElement(location, caption=caption))
 
     def add_calib_table_to_doc(self):
-        self.doc.append("Input parameters varied through calibration with uncertainty distribution parameters and support.\n")
-        calib_headers = ["Name", "Distribution", "Distribution parameters", "Support"]
-        with self.doc.create(pl.Tabular("p{2.7cm} " * 4)) as calibration_table:
-            calibration_table.add_hline()
-            calibration_table.add_row([bold(i) for i in calib_headers])
-            for prior in self.priors:
-                prior_desc = self.descriptions[prior.name]
-                dist_type = get_prior_dist_type(prior)
-                dist_params = get_prior_dist_param_str(prior)
-                dist_range = get_prior_dist_support(prior)
+
+        with self.doc.create(Section("Calibration algorithm")):
+            self.doc.append("Input parameters varied through calibration with uncertainty distribution parameters and support.\n")
+            calib_headers = ["Name", "Distribution", "Distribution parameters", "Support"]
+            with self.doc.create(pl.Tabular("p{2.7cm} " * 4)) as calibration_table:
                 calibration_table.add_hline()
-                calib_table_row = (prior_desc, dist_type, dist_params, dist_range)
-                calibration_table.add_row(calib_table_row)
-            calibration_table.add_hline()
+                calibration_table.add_row([bold(i) for i in calib_headers])
+                for prior in self.priors:
+                    prior_desc = self.descriptions[prior.name]
+                    dist_type = get_prior_dist_type(prior)
+                    dist_params = get_prior_dist_param_str(prior)
+                    dist_range = get_prior_dist_support(prior)
+                    calibration_table.add_hline()
+                    calib_table_row = (prior_desc, dist_type, dist_params, dist_range)
+                    calibration_table.add_row(calib_table_row)
+                calibration_table.add_hline()
             
     def table_param_results(self):
-        calib_summary = az.summary(self.uncertainty_outputs)
-        headers = ["Para-meter", "Mean (SD)", "3-97% high-density interval", "MCSE mean (SD)", "ESS bulk", "ESS tail", "R_hat"]
-        with self.doc.create(pl.Tabular("p{1.3cm} " * 7)) as calib_metrics_table:
-            calib_metrics_table.add_hline()
-            calib_metrics_table.add_row([bold(i) for i in headers])
-            for param in calib_summary.index:
+        with self.doc.create(Section("Calibration metrics")):
+            calib_summary = az.summary(self.uncertainty_outputs)
+            headers = ["Para-meter", "Mean (SD)", "3-97% high-density interval", "MCSE mean (SD)", "ESS bulk", "ESS tail", "R_hat"]
+            with self.doc.create(pl.Tabular("p{1.3cm} " * 7)) as calib_metrics_table:
                 calib_metrics_table.add_hline()
-                summary_row = calib_summary.loc[param]
-                name = self.descriptions[param]
-                mean_sd = f"{summary_row['mean']} ({summary_row['sd']})"
-                hdi = f"{summary_row['hdi_3%']} to {summary_row['hdi_97%']}"
-                mcse = f"{summary_row['mcse_mean']} ({summary_row['mcse_sd']})"
-                calib_metrics_table.add_row([name, mean_sd, hdi, mcse] + [str(metric) for metric in summary_row[6:]])
-            calib_metrics_table.add_hline()
+                calib_metrics_table.add_row([bold(i) for i in headers])
+                for param in calib_summary.index:
+                    calib_metrics_table.add_hline()
+                    summary_row = calib_summary.loc[param]
+                    name = self.descriptions[param]
+                    mean_sd = f"{summary_row['mean']} ({summary_row['sd']})"
+                    hdi = f"{summary_row['hdi_3%']} to {summary_row['hdi_97%']}"
+                    mcse = f"{summary_row['mcse_mean']} ({summary_row['mcse_sd']})"
+                    calib_metrics_table.add_row([name, mean_sd, hdi, mcse] + [str(metric) for metric in summary_row[6:]])
+                calib_metrics_table.add_hline()
             
     def add_param_table_to_doc(self,
         model: CompartmentalModel,
         params: list, 
     ):
-        self.doc.append("Parameter interpretation, with value (for parameters not included in calibration algorithm) and summary of evidence.\n")
-        param_headers = ["Name", "Value", "Evidence"]
-        with self.doc.create(pl.Tabular("p{2.7cm} " * 2 + "p{5.8cm}")) as parameters_table:
-            parameters_table.add_hline()
-            parameters_table.add_row([bold(i) for i in param_headers])
-            for param in model.get_input_parameters():
-                param_value_text = get_fixed_param_value_text(param, params, self.units, self.prior_names)
+        with self.doc.create(Section("Calibration metrics")):
+            self.doc.append("Parameter interpretation, with value (for parameters not included in calibration algorithm) and summary of evidence.\n")
+            param_headers = ["Name", "Value", "Evidence"]
+            with self.doc.create(pl.Tabular("p{2.7cm} " * 2 + "p{5.8cm}")) as parameters_table:
                 parameters_table.add_hline()
-                param_table_row = (self.descriptions[param], param_value_text, NoEscape(self.evidence[param]))
-                parameters_table.add_row(param_table_row)
-            parameters_table.add_hline()
+                parameters_table.add_row([bold(i) for i in param_headers])
+                for param in model.get_input_parameters():
+                    param_value_text = get_fixed_param_value_text(param, params, self.units, self.prior_names)
+                    parameters_table.add_hline()
+                    param_table_row = (self.descriptions[param], param_value_text, NoEscape(self.evidence[param]))
+                    parameters_table.add_row(param_table_row)
+                parameters_table.add_hline()

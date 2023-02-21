@@ -94,7 +94,7 @@ class FigElement(DocElement):
 
 class DocumentedProcess:
 
-    def __init__(self, doc=None, add_documentation=False):
+    def __init__(self, doc, add_documentation):
         self.doc = doc
         self.add_documentation = add_documentation
         self.doc_sections = {}
@@ -127,6 +127,9 @@ class DocumentedProcess:
 
 
 class DocumentedAustModel(DocumentedProcess):
+
+    def __init__(self, doc=None, add_documentation=False):
+        super().__init__(doc, add_documentation)
 
     def build_base_model(
         self,

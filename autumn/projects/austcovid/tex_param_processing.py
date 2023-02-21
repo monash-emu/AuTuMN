@@ -96,7 +96,7 @@ class DocumentedCalibration(DocumentedProcess):
         evidence, 
         doc=None,
     ):
-        self.doc_sections = {}
+        super().__init__(doc, True)
         self.iterations = iterations
         self.burn_in = burn_in
         self.priors = priors
@@ -106,7 +106,6 @@ class DocumentedCalibration(DocumentedProcess):
         self.descriptions = descriptions
         self.units = units
         self.evidence = evidence
-        self.doc = doc
         
     def get_analysis(self, model, params, start, end):
         uncertainty_analysis = AdaptiveChain(

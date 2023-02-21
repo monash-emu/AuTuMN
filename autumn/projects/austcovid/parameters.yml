@@ -3,7 +3,7 @@ descriptions:
   infectious_period: "Infectious period"
   cdr: "Case detection rate (proportion of infections captured through surveillance)"
   seed_rate: "Rate of introduction of persons infected with each new variant"
-  seed_duration": "Duration of introductino of persons infected with each new variant"
+  seed_duration: "Duration of introduction of persons infected with each new variant"
   ba2_rel_infness: "Relative infectiousness of BA.2 relative to BA.1"
   ba1_seed_time: "Time BA.1 infectious seed begins"
   ba2_seed_time: "Time BA.2 infectious seed begins"

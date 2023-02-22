@@ -1,7 +1,4 @@
 import pylatex as pl
-from pylatex import LineBreak
-from pylatex.section import Section
-from pylatex.utils import NoEscape, bold
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -11,6 +8,9 @@ from jax import numpy as jnp
 
 from summer2 import CompartmentalModel, Stratification, StrainStratification
 from summer2.parameters import Parameter, DerivedOutput, Function, Time
+
+from autumn.projects.austcovid.doc_utils import TextElement, FigElement, DocumentedProcess
+
 
 REF_DATE = datetime(2019, 12, 31)
 BASE_PATH = Path(__file__).parent.resolve()
@@ -22,203 +22,6 @@ def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: floa
         offset = time - start_time
         return jnp.where(offset > 0, jnp.where(offset < seed_duration, entry_rate, 0.0), 0.0)
     return Function(voc_seed_func, [Time, entry_rate, start_time, seed_duration])
-
-
-def get_fixed_param_value_text(
-    param: str,
-    parameters: dict,
-    param_units: dict,
-    prior_names: list,
-    decimal_places=2,
-    calibrated_string="Calibrated, see priors table",
-) -> str:
-    """
-    Get the value of a parameter being used in the model for the parameters table,
-    except indicate that it is calibrated if it's one of the calibration parameters.
-    
-    Args:
-        param: Parameter name
-        parameters: All parameters expected by the model
-        param_units: The units for the parameter being considered
-        prior_names: The names of the parameters used in calibration
-        decimal_places: How many places to round the value to
-        calibrated_string: The text to use if the parameter is calibrated
-    Return:
-        Description of the parameter value
-    """
-    return calibrated_string if param in prior_names else f"{round(parameters[param], decimal_places)} {param_units[param]}"
-
-
-def get_prior_dist_type(
-    prior,
-) -> str:
-    """
-    Clunky way to extract the type of distribution used for a prior.
-    
-    Args:
-        The prior object
-    Return:
-        Description of the distribution
-    """
-    dist_type = str(prior.__class__).replace(">", "").replace("'", "").split(".")[-1].replace("Prior", "")
-    return f"{dist_type} distribution"
-
-
-def get_prior_dist_param_str(
-    prior,
-) -> str:
-    """
-    Extract the parameters to the distribution used for a prior.
-    
-    Args:
-        prior: The prior object
-    Return:
-        The parameters to the prior's distribution joined together
-    """
-    return " ".join([f"{param}: {prior.distri_params[param]}" for param in prior.distri_params])
-
-
-def get_prior_dist_support(
-    prior,
-) -> str:
-    """
-    Extract the bounds to the distribution used for a prior.
-    
-    Args:
-        prior: The prior object
-    Return:        
-        The bounds to the prior's distribution joined together
-    """
-    return " to ".join([str(i) for i in prior.bounds()])
-
-
-class DocElement:
-    """
-    Abstract class for creating a model with accompanying TeX documentation.
-    """
-    def __init__():
-        pass
-
-    def emit_latex():
-        pass
-
-
-class TextElement(DocElement):
-    """
-    Write text input to TeX document using PyLaTeX commands.
-    """
-    def __init__(
-            self, 
-            text: str,
-        ):
-        """
-        Set up object with text input.
-
-        Args:
-            text: The text to write
-        """
-        self.text = NoEscape(text) if "\cite{" in text else text
-
-    def emit_latex(
-            self, 
-            doc: pl.document.Document,
-        ):
-        """
-        Write the text to the document.
-
-        Args:
-            doc: The PyLaTeX object to add to
-        """
-        doc.append(self.text)
-
-
-class FigElement(DocElement):
-    """
-    Add a figure to a TeX document using PyLaTeX commands.
-    """
-    def __init__(
-            self, 
-            fig_name: str,
-            caption: str="",
-            resolution: str="350px",
-        ):
-        """
-        Set up object with figure input and other requests.
-
-        Args:
-            fig_name: The name of the figure to write
-            caption: Figure caption
-            resolution: Resolution to write to
-        """
-        self.fig_name = fig_name
-        self.caption = caption
-        self.resolution = resolution
-    
-    def emit_latex(
-            self, 
-            doc: pl.document.Document,
-        ):
-        """
-        Write the figure to the document.
-
-        Args:
-            doc: The PyLaTeX object to add to
-        """
-        with doc.create(pl.Figure()) as plot:
-            plot.add_image(self.fig_name, width=self.resolution)
-            plot.add_caption(self.caption)
-
-
-class TableElement(DocElement):
-    
-    def __init__(self, col_widths, headers, rows):
-        self.col_widths = col_widths
-        self.headers = headers
-        self.rows = rows
-
-    def emit_latex(self, doc):
-        with doc.create(pl.Tabular(self.col_widths)) as calibration_table:
-            calibration_table.add_hline()
-            calibration_table.add_row([bold(i) for i in self.headers])
-            for row in self.rows:
-                calibration_table.add_hline()
-                calibration_table.add_row(row)
-            calibration_table.add_hline()
-        doc.append(LineBreak())
-
-
-class DocumentedProcess:
-
-    def __init__(self, doc, add_documentation):
-        self.doc = doc
-        self.add_documentation = add_documentation
-        self.doc_sections = {}
-
-    def add_element_to_doc(
-        self, 
-        section_name: str, 
-        element: DocElement,
-    ):
-        """
-        Add a new element to the list of elements to be included in a document section.
-
-        Args:
-            section_name: Name of the section to add to
-            element: The object to include in the section
-        """
-        if section_name not in self.doc_sections:
-            self.doc_sections[section_name] = []
-        self.doc_sections[section_name].append(element)
-
-    def compile_doc(self):
-        """
-        Apply all the document elements to the document,
-        looping through each section and using each element's emit_latex method.
-        """
-        for section in self.doc_sections:
-            with self.doc.create(Section(section)):
-                for element in self.doc_sections[section]:
-                    element.emit_latex(self.doc)
 
 
 class DocumentedAustModel(DocumentedProcess):
@@ -524,26 +327,33 @@ def build_aust_model(
     Returns:
         The model object
     """
+
+    # Basic model construction
     compartments = [
         "susceptible",
         "infectious",
         "recovered",
     ]
     aust_model = DocumentedAustModel(doc, add_documentation)
-    model = aust_model.build_base_model(start_date, end_date, compartments)
+    aust_model.build_base_model(start_date, end_date, compartments)
     aust_model.set_model_starting_conditions()
     aust_model.add_infection_to_model()
     aust_model.add_recovery_to_model()
     aust_model.add_notifications_output_to_model()
+
+    # Age stratification
     age_strata = list(range(0, 75, 5))
     matrix = aust_model.build_polymod_britain_matrix(age_strata)
     adjusted_matrix = aust_model.adapt_gb_matrix_to_aust(matrix, age_strata)
     aust_model.add_age_stratification_to_model(compartments, age_strata, adjusted_matrix)
+    
+    # Strain stratification
     strain_strat, starting_strain, other_strains = aust_model.get_strain_stratification()
     aust_model.adjust_strain_infectiousness(strain_strat, starting_strain, other_strains)
     aust_model.model.stratify_with(strain_strat)
     aust_model.seed_vocs()
 
+    # Documentation
     if add_documentation:
         aust_model.compile_doc()
     return aust_model.model

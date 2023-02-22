@@ -1,12 +1,14 @@
 import pandas as pd
+import pylatex as pl
 from pylatex.utils import NoEscape
 import arviz as az
 import matplotlib.pyplot as plt
 from pathlib import Path
 from random import sample
 import copy
+from datetime import datetime
 
-from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement, TextElement, TableElement, build_aust_model
+from autumn.projects.austcovid.model import DocumentedProcess, FigElement, TextElement, TableElement, build_aust_model
 from estival.calibration.mcmc.adaptive import AdaptiveChain
 
 BASE_PATH = Path(__file__).parent.resolve()
@@ -84,19 +86,38 @@ def get_prior_dist_support(
 class DocumentedCalibration(DocumentedProcess):
     def __init__(
         self, 
-        priors, 
-        targets, 
-        iterations, 
-        burn_in, 
-        model_func,
-        parameters,
-        descriptions, 
-        units, 
-        evidence, 
-        start,
-        end,
-        doc=None,
+        priors: list, 
+        targets: list, 
+        iterations: int, 
+        burn_in: int, 
+        model_func: callable,
+        parameters: dict,
+        descriptions: dict, 
+        units: dict, 
+        evidence: dict, 
+        start: datetime,
+        end: datetime,
+        doc: pl.Document=None,
     ):
+        """
+        Supports calibration of a summer model,
+        with documentation to TeX document as the processes proceed.
+        Most of this should be general enough to use for any summer calibration.
+
+        Args:
+            priors: The prior objects
+            targets: The targets to fit to
+            iterations: The number of iterations to run
+            burn_in: The number of iterations to discard as burn-in
+            model_func: The function to build the model
+            parameters: The base parameter requests before updating through calibration
+            descriptions: Strings to describe the parameters properly
+            units: Strings for the units of each parameter
+            evidence: Strings with a more detailed description of the evidence for each parameter
+            start: Starting date for simulation
+            end: Finish date for simulation
+            doc: The TeX document to populate
+        """
         super().__init__(doc, True)
         self.iterations = iterations
         self.burn_in = burn_in

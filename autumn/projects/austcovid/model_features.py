@@ -1,6 +1,6 @@
 import pylatex as pl
 from pylatex.section import Section
-from pylatex.utils import NoEscape
+from pylatex.utils import NoEscape, bold
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -21,6 +21,74 @@ def make_voc_seed_func(entry_rate: float, start_time: float, seed_duration: floa
         offset = time - start_time
         return jnp.where(offset > 0, jnp.where(offset < seed_duration, entry_rate, 0.0), 0.0)
     return Function(voc_seed_func, [Time, entry_rate, start_time, seed_duration])
+
+
+def get_fixed_param_value_text(
+    param: str,
+    parameters: dict,
+    param_units: dict,
+    prior_names: list,
+    decimal_places=2,
+    calibrated_string="Calibrated, see priors table",
+) -> str:
+    """
+    Get the value of a parameter being used in the model for the parameters table,
+    except indicate that it is calibrated if it's one of the calibration parameters.
+    
+    Args:
+        param: Parameter name
+        parameters: All parameters expected by the model
+        param_units: The units for the parameter being considered
+        prior_names: The names of the parameters used in calibration
+        decimal_places: How many places to round the value to
+        calibrated_string: The text to use if the parameter is calibrated
+    Return:
+        Description of the parameter value
+    """
+    return calibrated_string if param in prior_names else f"{round(parameters[param], decimal_places)} {param_units[param]}"
+
+
+def get_prior_dist_type(
+    prior,
+) -> str:
+    """
+    Clunky way to extract the type of distribution used for a prior.
+    
+    Args:
+        The prior object
+    Return:
+        Description of the distribution
+    """
+    dist_type = str(prior.__class__).replace(">", "").replace("'", "").split(".")[-1].replace("Prior", "")
+    return f"{dist_type} distribution"
+
+
+def get_prior_dist_param_str(
+    prior,
+) -> str:
+    """
+    Extract the parameters to the distribution used for a prior.
+    
+    Args:
+        prior: The prior object
+    Return:
+        The parameters to the prior's distribution joined together
+    """
+    return " ".join([f"{param}: {prior.distri_params[param]}" for param in prior.distri_params])
+
+
+def get_prior_dist_support(
+    prior,
+) -> str:
+    """
+    Extract the bounds to the distribution used for a prior.
+    
+    Args:
+        prior: The prior object
+    Return:        
+        The bounds to the prior's distribution joined together
+    """
+    return " to ".join([str(i) for i in prior.bounds()])
 
 
 class DocElement:
@@ -100,6 +168,25 @@ class FigElement(DocElement):
             plot.add_caption(self.caption)
 
 
+class Table4Col(DocElement):
+    
+    def __init__(self, priors, descriptions, headers, rows):
+        self.priors = priors
+        self.descriptions = descriptions
+        self.headers = headers
+        self.rows = rows
+
+    def emit_latex(self, doc):
+        doc.append("Input parameters varied through calibration with uncertainty distribution parameters and support.\n")
+        with doc.create(pl.Tabular("p{2.7cm} " * 4)) as calibration_table:
+            calibration_table.add_hline()
+            calibration_table.add_row([bold(i) for i in self.headers])
+            for row in self.rows:
+                calibration_table.add_hline()
+                calibration_table.add_row(row)
+            calibration_table.add_hline()
+
+
 class DocumentedProcess:
 
     def __init__(self, doc, add_documentation):
@@ -169,21 +256,16 @@ class DocumentedAustModel(DocumentedProcess):
         Add the starting populations to the model as described below.
         """
 
-        self.model.set_initial_population(
-            {
-                "susceptible": 2.6e7,
-                "infectious": 0.0,
-            }
-        )
+        self.model.set_initial_population({"susceptible": 2.6e7})
         
         if self.add_documentation:
-            description = "The simulation starts with 26 million susceptible persons " \
-                "and no infectious people to seed the epidemic. "
+            description = "The simulation starts with 26 million susceptible persons only, " \
+                "with infectious persons only introduced through strain seeding as described below. "
             self.add_element_to_doc("General model construction", TextElement(description))
 
     def add_infection_to_model(self):
         """
-        Add infection as described below.
+        Add the infection process as described below.
         """
 
         self.model.add_infection_frequency_flow(

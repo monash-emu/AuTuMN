@@ -8,7 +8,7 @@ from pathlib import Path
 from random import sample
 
 from summer2 import CompartmentalModel
-from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement
+from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement, Table4Col
 from estival.calibration.mcmc.adaptive import AdaptiveChain
 
 BASE_PATH = Path(__file__).parent.resolve()
@@ -133,22 +133,17 @@ class DocumentedCalibration(DocumentedProcess):
 
     def add_calib_table_to_doc(self):
 
-        with self.doc.create(Section("Calibration algorithm")):
-            self.doc.append("Input parameters varied through calibration with uncertainty distribution parameters and support.\n")
-            calib_headers = ["Name", "Distribution", "Distribution parameters", "Support"]
-            with self.doc.create(pl.Tabular("p{2.7cm} " * 4)) as calibration_table:
-                calibration_table.add_hline()
-                calibration_table.add_row([bold(i) for i in calib_headers])
-                for prior in self.priors:
-                    prior_desc = self.descriptions[prior.name]
-                    dist_type = get_prior_dist_type(prior)
-                    dist_params = get_prior_dist_param_str(prior)
-                    dist_range = get_prior_dist_support(prior)
-                    calibration_table.add_hline()
-                    calib_table_row = (prior_desc, dist_type, dist_params, dist_range)
-                    calibration_table.add_row(calib_table_row)
-                calibration_table.add_hline()
-            
+        headers = ["Name", "Distribution", "Distribution parameters", "Support"]
+        rows = []
+        for prior in self.priors:
+            prior_desc = self.descriptions[prior.name]
+            dist_type = get_prior_dist_type(prior)
+            dist_params = get_prior_dist_param_str(prior)
+            dist_range = get_prior_dist_support(prior)
+            rows.append([prior_desc, dist_type, dist_params, dist_range])
+
+        self.add_element_to_doc("Calibration", Table4Col(self.priors, self.descriptions, headers, rows))
+
     def table_param_results(self):
         with self.doc.create(Section("Calibration metrics")):
             calib_summary = az.summary(self.uncertainty_outputs)
@@ -182,7 +177,6 @@ class DocumentedCalibration(DocumentedProcess):
                     param_table_row = (self.descriptions[param], param_value_text, NoEscape(self.evidence[param]))
                     parameters_table.add_row(param_table_row)
                 parameters_table.add_hline()
-
 
     def show_sample_outputs(self, n_samples, model, cases, params):
 

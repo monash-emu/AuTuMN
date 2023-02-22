@@ -1,4 +1,5 @@
 import pylatex as pl
+from pylatex import LineBreak
 from pylatex.section import Section
 from pylatex.utils import NoEscape, bold
 from datetime import datetime
@@ -183,6 +184,7 @@ class TableElement(DocElement):
                 calibration_table.add_hline()
                 calibration_table.add_row(row)
             calibration_table.add_hline()
+        doc.append(LineBreak())
 
 
 class DocumentedProcess:

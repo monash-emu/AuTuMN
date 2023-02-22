@@ -148,21 +148,18 @@ class DocumentedCalibration(DocumentedProcess):
         self.add_element_to_doc("Calibration", TableElement(col_widths, headers, rows))
 
     def table_param_results(self):
-        with self.doc.create(Section("Calibration metrics")):
-            calib_summary = az.summary(self.uncertainty_outputs)
-            headers = ["Para-meter", "Mean (SD)", "3-97% high-density interval", "MCSE mean (SD)", "ESS bulk", "ESS tail", "R_hat"]
-            with self.doc.create(pl.Tabular("p{1.3cm} " * 7)) as calib_metrics_table:
-                calib_metrics_table.add_hline()
-                calib_metrics_table.add_row([bold(i) for i in headers])
-                for param in calib_summary.index:
-                    calib_metrics_table.add_hline()
-                    summary_row = calib_summary.loc[param]
-                    name = self.descriptions[param]
-                    mean_sd = f"{summary_row['mean']} ({summary_row['sd']})"
-                    hdi = f"{summary_row['hdi_3%']} to {summary_row['hdi_97%']}"
-                    mcse = f"{summary_row['mcse_mean']} ({summary_row['mcse_sd']})"
-                    calib_metrics_table.add_row([name, mean_sd, hdi, mcse] + [str(metric) for metric in summary_row[6:]])
-                calib_metrics_table.add_hline()
+
+        calib_summary = az.summary(self.uncertainty_outputs)
+        headers = ["Para-meter", "Mean (SD)", "3-97% high-density interval", "MCSE mean (SD)", "ESS bulk", "ESS tail", "R_hat"]
+        rows = []
+        for param in calib_summary.index:
+            summary_row = calib_summary.loc[param]
+            name = self.descriptions[param]
+            mean_sd = f"{summary_row['mean']} ({summary_row['sd']})"
+            hdi = f"{summary_row['hdi_3%']} to {summary_row['hdi_97%']}"
+            mcse = f"{summary_row['mcse_mean']} ({summary_row['mcse_sd']})"
+            rows.append([name, mean_sd, hdi, mcse] + [str(metric) for metric in summary_row[6:]])
+        self.add_element_to_doc("Calibration", TableElement("p{1.3cm} " * 7, headers, rows))
             
     def add_param_table_to_doc(self,
         model: CompartmentalModel,

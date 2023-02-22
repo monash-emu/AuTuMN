@@ -163,20 +163,18 @@ class DocumentedCalibration(DocumentedProcess):
             
     def add_param_table_to_doc(self,
         model: CompartmentalModel,
-        params: list, 
     ):
-        with self.doc.create(Section("Calibration metrics")):
-            self.doc.append("Parameter interpretation, with value (for parameters not included in calibration algorithm) and summary of evidence.\n")
-            param_headers = ["Name", "Value", "Evidence"]
-            with self.doc.create(pl.Tabular("p{2.7cm} " * 2 + "p{5.8cm}")) as parameters_table:
-                parameters_table.add_hline()
-                parameters_table.add_row([bold(i) for i in param_headers])
-                for param in model.get_input_parameters():
-                    param_value_text = get_fixed_param_value_text(param, params, self.units, self.prior_names)
-                    parameters_table.add_hline()
-                    param_table_row = (self.descriptions[param], param_value_text, NoEscape(self.evidence[param]))
-                    parameters_table.add_row(param_table_row)
-                parameters_table.add_hline()
+        
+        text = "Parameter interpretation, with value (for parameters not included in calibration algorithm) and summary of evidence. \n"
+        self.add_element_to_doc("Calibration", TextElement(text))
+
+        headers = ["Name", "Value", "Evidence"]
+        col_widths = "p{2.7cm} " * 2 + "p{5.8cm}"
+        rows = []
+        for param in model.get_input_parameters():
+            param_value_text = get_fixed_param_value_text(param, self.params, self.units, self.prior_names)
+            rows.append([self.descriptions[param], param_value_text, NoEscape(self.evidence[param])])
+        self.add_element_to_doc("Calibration", TableElement(col_widths, headers, rows))
 
     def show_sample_outputs(self, n_samples, model, cases, params):
 

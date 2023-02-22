@@ -4,9 +4,9 @@ import arviz as az
 import matplotlib.pyplot as plt
 from pathlib import Path
 from random import sample
+import copy
 
-from summer2 import CompartmentalModel
-from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement, TextElement, TableElement
+from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement, TextElement, TableElement, build_aust_model
 from estival.calibration.mcmc.adaptive import AdaptiveChain
 
 BASE_PATH = Path(__file__).parent.resolve()
@@ -88,15 +88,19 @@ class DocumentedCalibration(DocumentedProcess):
         targets, 
         iterations, 
         burn_in, 
+        model_func,
         parameters,
         descriptions, 
         units, 
         evidence, 
+        start,
+        end,
         doc=None,
     ):
         super().__init__(doc, True)
         self.iterations = iterations
         self.burn_in = burn_in
+        self.model_func = model_func
         self.priors = priors
         self.prior_names = [priors[i_prior].name for i_prior in range(len(priors))]
         self.targets = targets
@@ -104,19 +108,17 @@ class DocumentedCalibration(DocumentedProcess):
         self.descriptions = descriptions
         self.units = units
         self.evidence = evidence
+        self.start = start
+        self.end = end
+        self.model = build_aust_model(start, end, None, add_documentation=False)
         
-    def get_analysis(self, model_func, start, end):
+    def get_analysis(self):
         """
         Run the uncertainty analysis and get outputs in arviz format.
-
-        Args:
-            model_func: Function for building the model
-            start: Start time
-            end: End time
         """
         uncertainty_analysis = AdaptiveChain(
-            model_func, self.params, self.priors, self.targets, self.params,
-            build_model_kwargs={"start_date": start, "end_date": end, "doc": None},
+            self.model_func, self.params, self.priors, self.targets, self.params,
+            build_model_kwargs={"start_date": self.start, "end_date": self.end, "doc": None},
         )
         uncertainty_analysis.run(max_iter=self.iterations)
         self.uncertainty_outputs = uncertainty_analysis.to_arviz(self.burn_in)
@@ -173,14 +175,9 @@ class DocumentedCalibration(DocumentedProcess):
             rows.append([name, mean_sd, hdi, mcse] + [str(metric) for metric in summary_row[6:]])
         self.add_element_to_doc("Calibration", TableElement("p{1.3cm} " * 7, headers, rows))
             
-    def add_param_table_to_doc(self,
-        model: CompartmentalModel,
-    ):
+    def add_param_table_to_doc(self):
         """
         Describe all the parameters used in the model, regardless of whether 
-
-        Args:
-            model: The summer model being used
         """
         
         text = "Parameter interpretation, with value (for parameters not included in calibration algorithm) and summary of evidence. \n"
@@ -189,7 +186,7 @@ class DocumentedCalibration(DocumentedProcess):
         headers = ["Name", "Value", "Evidence"]
         col_widths = "p{2.7cm} " * 2 + "p{5.8cm}"
         rows = []
-        for param in model.get_input_parameters():
+        for param in self.model.get_input_parameters():
             param_value_text = get_fixed_param_value_text(param, self.params, self.units, self.prior_names)
             rows.append([self.descriptions[param], param_value_text, NoEscape(self.evidence[param])])
         self.add_element_to_doc("Calibration", TableElement(col_widths, headers, rows))
@@ -197,16 +194,12 @@ class DocumentedCalibration(DocumentedProcess):
     def get_sample_outputs(
             self, 
             n_samples: int, 
-            model: CompartmentalModel, 
-            params: dict,
         ):
         """
         Get a selection of the model runs obtained during calibration in the notebook.
 
         Args:
             n_samples: Number of samples to choose
-            model: The model being used
-            params: All the model parameters (to update)
 
         Returns:
             The outputs from consecutive runs
@@ -223,12 +216,13 @@ class DocumentedCalibration(DocumentedProcess):
 
         # Get model outputs for sampled parameters
         sample_outputs = pd.DataFrame(
-            index=model.get_derived_outputs_df().index, 
+            index=self.model.get_derived_outputs_df().index, 
             columns=samples,
         )
+        params = copy.deepcopy(self.params)
         for i_param_set in samples:
             params.update(sample_params.loc[i_param_set, :].to_dict())
-            model.run(parameters=params)
-            sample_outputs[i_param_set] = model.get_derived_outputs_df()["notifications"]
+            self.model.run(parameters=params)
+            sample_outputs[i_param_set] = self.model.get_derived_outputs_df()["notifications"]
         
         return sample_outputs

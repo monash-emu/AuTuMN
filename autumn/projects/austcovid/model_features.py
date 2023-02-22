@@ -510,4 +510,40 @@ class DocumentedAustModel(DocumentedProcess):
                 dest_strata={"strain": strain},
                 split_imports=True,
             )
-            
+
+
+def build_aust_model(
+    start_date: datetime,
+    end_date: datetime,
+    doc: pl.document.Document,
+    add_documentation: bool=False,
+) -> CompartmentalModel:
+    """
+    Build a fairly basic model, as described in the component functions called.
+    
+    Returns:
+        The model object
+    """
+    compartments = [
+        "susceptible",
+        "infectious",
+        "recovered",
+    ]
+    aust_model = DocumentedAustModel(doc, add_documentation)
+    model = aust_model.build_base_model(start_date, end_date, compartments)
+    aust_model.set_model_starting_conditions()
+    aust_model.add_infection_to_model()
+    aust_model.add_recovery_to_model()
+    aust_model.add_notifications_output_to_model()
+    age_strata = list(range(0, 75, 5))
+    matrix = aust_model.build_polymod_britain_matrix(age_strata)
+    adjusted_matrix = aust_model.adapt_gb_matrix_to_aust(matrix, age_strata)
+    aust_model.add_age_stratification_to_model(compartments, age_strata, adjusted_matrix)
+    strain_strat, starting_strain, other_strains = aust_model.get_strain_stratification()
+    aust_model.adjust_strain_infectiousness(strain_strat, starting_strain, other_strains)
+    aust_model.model.stratify_with(strain_strat)
+    aust_model.seed_vocs()
+
+    if add_documentation:
+        aust_model.compile_doc()
+    return aust_model.model

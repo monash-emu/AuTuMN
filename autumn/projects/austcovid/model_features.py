@@ -168,17 +168,15 @@ class FigElement(DocElement):
             plot.add_caption(self.caption)
 
 
-class Table4Col(DocElement):
+class TableElement(DocElement):
     
-    def __init__(self, priors, descriptions, headers, rows):
-        self.priors = priors
-        self.descriptions = descriptions
+    def __init__(self, col_widths, headers, rows):
+        self.col_widths = col_widths
         self.headers = headers
         self.rows = rows
 
     def emit_latex(self, doc):
-        doc.append("Input parameters varied through calibration with uncertainty distribution parameters and support.\n")
-        with doc.create(pl.Tabular("p{2.7cm} " * 4)) as calibration_table:
+        with doc.create(pl.Tabular(self.col_widths)) as calibration_table:
             calibration_table.add_hline()
             calibration_table.add_row([bold(i) for i in self.headers])
             for row in self.rows:

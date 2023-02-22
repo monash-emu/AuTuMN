@@ -8,7 +8,7 @@ from pathlib import Path
 from random import sample
 
 from summer2 import CompartmentalModel
-from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement, Table4Col
+from autumn.projects.austcovid.model_features import DocumentedProcess, FigElement, TextElement, TableElement
 from estival.calibration.mcmc.adaptive import AdaptiveChain
 
 BASE_PATH = Path(__file__).parent.resolve()
@@ -133,7 +133,11 @@ class DocumentedCalibration(DocumentedProcess):
 
     def add_calib_table_to_doc(self):
 
+        text = "Input parameters varied through calibration with uncertainty distribution parameters and support. \n"
+        self.add_element_to_doc("Calibration", TextElement(text))
+
         headers = ["Name", "Distribution", "Distribution parameters", "Support"]
+        col_widths = "p{2.7cm} " * 4
         rows = []
         for prior in self.priors:
             prior_desc = self.descriptions[prior.name]
@@ -141,8 +145,7 @@ class DocumentedCalibration(DocumentedProcess):
             dist_params = get_prior_dist_param_str(prior)
             dist_range = get_prior_dist_support(prior)
             rows.append([prior_desc, dist_type, dist_params, dist_range])
-
-        self.add_element_to_doc("Calibration", Table4Col(self.priors, self.descriptions, headers, rows))
+        self.add_element_to_doc("Calibration", TableElement(col_widths, headers, rows))
 
     def table_param_results(self):
         with self.doc.create(Section("Calibration metrics")):

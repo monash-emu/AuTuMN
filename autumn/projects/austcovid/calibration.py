@@ -8,7 +8,8 @@ from random import sample
 import copy
 from datetime import datetime
 
-from autumn.projects.austcovid.model import DocumentedProcess, FigElement, TextElement, TableElement, build_aust_model
+from autumn.projects.austcovid.doc_utils import DocumentedProcess, FigElement, TextElement, TableElement
+from autumn.projects.austcovid.model import build_aust_model
 from estival.calibration.mcmc.adaptive import AdaptiveChain
 
 BASE_PATH = Path(__file__).parent.resolve()

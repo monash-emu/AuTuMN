@@ -60,10 +60,11 @@ class DocumentedAustModel(DocumentedProcess):
         Add the starting populations to the model as described below.
         """
 
-        self.model.set_initial_population({"susceptible": 2.6e7})
+        population = 2.6e7
+        self.model.set_initial_population({"susceptible": population})
         
         if self.add_documentation:
-            description = "The simulation starts with 26 million susceptible persons only, " \
+            description = f"The simulation starts with {str(population / 1e6)} million susceptible persons only, " \
                 "with infectious persons only introduced through strain seeding as described below. "
             self.add_element_to_doc("General model construction", TextElement(description))
 
@@ -72,16 +73,19 @@ class DocumentedAustModel(DocumentedProcess):
         Add the infection process as described below.
         """
 
+        process = "infection"
+        origin = "susceptible"
+        destination = "infectious"
         self.model.add_infection_frequency_flow(
-            "infection",
+            process,
             Parameter("contact_rate"),
-            "susceptible",
-            "infectious",
+            origin,
+            destination,
         )
         
         if self.add_documentation:
-            description = "Infection moves people from the fully susceptible " \
-                "compartment to the infectious compartment, " \
+            description = f"The {process} moves people from the {origin} " \
+                f"compartment to the {destination} compartment, " \
                 "under the frequency-dependent transmission assumption. "
             self.add_element_to_doc("General model construction", TextElement(description))
             
@@ -90,16 +94,15 @@ class DocumentedAustModel(DocumentedProcess):
         Add recovery as described below.
         """
 
-        self.model.add_transition_flow(
-            "recovery",
-            1.0 / Parameter("infectious_period"),
-            "infectious",
-            "recovered",
-        )
+        process = "recovery"
+        origin = "infectious"
+        destination = "recovered"
+        self.model.add_transition_flow(process, 1.0 / Parameter("infectious_period"), origin, destination)
 
         if self.add_documentation:
-            description = "The process recovery process moves " \
-                "people directly from the infectious state to a recovered compartment. "
+            description = f"The {process} process moves " \
+                f"people directly from the {origin} state to the {destination} compartment, " \
+                "with the rate of transition calculated as the reciprocal of the infectious period."
             self.add_element_to_doc("General model construction", TextElement(description))
 
     def add_notifications_output_to_model(self):
@@ -107,19 +110,15 @@ class DocumentedAustModel(DocumentedProcess):
         Track notifications as described below.
         """
 
-        self.model.request_output_for_flow(
-            "onset",
-            "infection",
-            save_results=False,
-        )
-        self.model.request_function_output(
-            "notifications",
-            func=DerivedOutput("onset") * Parameter("cdr"),
-        )
+        process = "onset"
+        output = "notifications"
+        transition = "infection"
+        self.model.request_output_for_flow(process, transition, save_results=False)
+        self.model.request_function_output(output, func=DerivedOutput(process) * Parameter("cdr"))
 
         if self.add_documentation:
-            description = "Notifications are calculated as " \
-                "the absolute rate of infection in the community " \
+            description = f"Modelled {output} are calculated as " \
+                f"the absolute rate of {transition} in the community " \
                 "multiplied by the case detection rate. "
             self.add_element_to_doc("General model construction", TextElement(description))
 
@@ -240,11 +239,8 @@ class DocumentedAustModel(DocumentedProcess):
             strata: The strata to apply
             matrix: The mixing matrix to apply
         """
-        age_strat = Stratification(
-            "agegroup", 
-            strata, 
-            compartments,
-        )
+
+        age_strat = Stratification("agegroup", strata, compartments)
         age_strat.set_mixing_matrix(matrix)
         self.model.stratify_with(age_strat)
 

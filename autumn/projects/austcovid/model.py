@@ -374,4 +374,5 @@ def build_aust_model(
     # Documentation
     if add_documentation:
         aust_model.compile_doc()
+        
     return aust_model.model

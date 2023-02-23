@@ -252,18 +252,29 @@ class DocumentedAustModel(DocumentedProcess):
                 "These age brackets were chosen to match those used by the POLYMOD survey. "
             self.add_element_to_doc("Age stratification", TextElement(description))
 
-    def get_strain_stratification(self):
+    def get_strain_stratification(
+        self, 
+        strains: list,
+    ):
         """
         Add strain stratification to the model as described below.
+
+        Args:
+            strains: The names of the strains to use
         """
 
+        strain_names_dict = {
+            "ba1": "BA.1",
+            "ba2": "BA.2",
+        }
+        strain_names = " ".join([strain_names_dict[i_strain] for i_strain in strains])
+
         # The strains we're working with
-        all_strains = ["ba1", "ba2"]
-        starting_strain = all_strains[0]  # BA.1
-        other_strains = all_strains[1:]  # The others, currently just BA.2
+        starting_strain = strains[0]  # BA.1
+        other_strains = strains[1:]  # The others, currently just BA.2
 
         # The stratification object
-        strain_strat = StrainStratification("strain", all_strains, ["infectious"])
+        strain_strat = StrainStratification("strain", strains, ["infectious"])
 
         # The starting population split
         population_split = {starting_strain: 1.0}
@@ -272,9 +283,9 @@ class DocumentedAustModel(DocumentedProcess):
 
         if self.add_documentation:
             description = "We stratified the infectious compartment according to strain, " \
-                "including compartments to represent strain BA.1 and BA.2. " \
+                f"including compartments to represent strains: {strain_names}. " \
                 "This was implemented using summer's `StrainStratication' class. " \
-                "All of the starting infectious seed was assigned to the BA.1 category. "
+                f"All of the starting infectious seed was assigned to the {strain_names_dict[starting_strain]} category. "
             self.add_element_to_doc("Strain stratification", TextElement(description))
 
         return strain_strat, starting_strain, other_strains
@@ -296,6 +307,9 @@ class DocumentedAustModel(DocumentedProcess):
         return strat
 
     def seed_vocs(self):
+        """
+        Seed each new strain into the model as described below.
+        """
 
         for strain in self.model.stratifications["strain"].strata:
             voc_seed_func = make_voc_seed_func(
@@ -310,6 +324,12 @@ class DocumentedAustModel(DocumentedProcess):
                 dest_strata={"strain": strain},
                 split_imports=True,
             )
+
+        if self.add_documentation:
+            description = "Each strain (including the starting wild-type) is seeded through " \
+                "a step function that allows the introduction of a constant rate of new infectious " \
+                "persons into the system over a fixed seeding duration. "
+            self.add_element_to_doc("Strain stratification", TextElement(description))
 
 
 def build_aust_model(
@@ -345,7 +365,8 @@ def build_aust_model(
     aust_model.add_age_stratification_to_model(compartments, age_strata, adjusted_matrix)
     
     # Strain stratification
-    strain_strat, starting_strain, other_strains = aust_model.get_strain_stratification()
+    strain_strata = ["ba1", "ba2"]
+    strain_strat, starting_strain, other_strains = aust_model.get_strain_stratification(strain_strata)
     aust_model.adjust_strain_infectiousness(strain_strat, starting_strain, other_strains)
     aust_model.model.stratify_with(strain_strat)
     aust_model.seed_vocs()

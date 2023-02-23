@@ -51,7 +51,8 @@ class DocumentedAustModel(DocumentedProcess):
 
         if self.add_documentation:
             description = "The base model consists of three states, " \
-                "representing fully susceptible, infected (and infectious) and recovered persons. "
+                "representing fully susceptible, infected (and infectious) and recovered persons. " \
+                f"The model is run from {str(start_date.date())} to {str(end_date.date())}. "
             self.add_element_to_doc("General model construction", TextElement(description))
 
     def set_model_starting_conditions(self):

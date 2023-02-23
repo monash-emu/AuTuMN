@@ -45,7 +45,7 @@ class DocumentedAustModel(DocumentedProcess):
                 (end_date - REF_DATE).days,
             ),
             compartments=compartments,
-            infectious_compartments=("infectious",),
+            infectious_compartments=["infectious"],
             ref_date=REF_DATE,
         )
 
@@ -274,7 +274,8 @@ class DocumentedAustModel(DocumentedProcess):
         other_strains = strains[1:]  # The others, currently just BA.2
 
         # The stratification object
-        strain_strat = StrainStratification("strain", strains, ["infectious"])
+        starting_compartment = "infectious"
+        strain_strat = StrainStratification("strain", strains, [starting_compartment])
 
         # The starting population split
         population_split = {starting_strain: 1.0}
@@ -284,8 +285,9 @@ class DocumentedAustModel(DocumentedProcess):
         if self.add_documentation:
             description = "We stratified the infectious compartment according to strain, " \
                 f"including compartments to represent strains: {strain_names}. " \
-                "This was implemented using summer's `StrainStratication' class. " \
-                f"All of the starting infectious seed was assigned to the {strain_names_dict[starting_strain]} category. "
+                f"This was implemented using summer's `{StrainStratification.__name__}' class. " \
+                f"All of the starting infectious seed was assigned to the {strain_names_dict[starting_strain]} category " \
+                f"within the {starting_compartment} category. "
             self.add_element_to_doc("Strain stratification", TextElement(description))
 
         return strain_strat, starting_strain, other_strains
@@ -374,5 +376,5 @@ def build_aust_model(
     # Documentation
     if add_documentation:
         aust_model.compile_doc()
-        
+
     return aust_model.model

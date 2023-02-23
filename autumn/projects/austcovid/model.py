@@ -164,11 +164,11 @@ class DocumentedAustModel(DocumentedProcess):
                 "and columns represent infectors, whereas the POLYMOD data are labelled " \
                 "`age of contact' for the rows and `age group of participant' for the columns."
             self.add_element_to_doc("General model construction", TextElement(description))
-            location = "raw_matrix.jpg"
+            filename = "raw_matrix.jpg"
             matrix_plotly_fig = px.imshow(matrix, x=strata, y=strata)
-            matrix_plotly_fig.write_image(SUPPLEMENT_PATH / location)
+            matrix_plotly_fig.write_image(SUPPLEMENT_PATH / filename)
             caption = "Raw matrices from Great Britain POLYMOD. Values are contacts per person per day."
-            self.add_element_to_doc("Age stratification", FigElement(location, caption=caption))
+            self.add_element_to_doc("Age stratification", FigElement(filename, caption=caption))
 
         return matrix
 
@@ -215,11 +215,11 @@ class DocumentedAustModel(DocumentedProcess):
                 "containing the vector of the ratios between the proportion of the British and Australian populations " \
                 "within each age bracket as its diagonal elements. "
             self.add_element_to_doc("Age stratification", TextElement(description))
-            location = "adjusted_matrix.jpg"
+            filename = "adjusted_matrix.jpg"
             matrix_plotly_fig = px.imshow(unadjusted_matrix, x=strata, y=strata)
-            matrix_plotly_fig.write_image(SUPPLEMENT_PATH / location)
+            matrix_plotly_fig.write_image(SUPPLEMENT_PATH / filename)
             caption = "Matrices adjusted to Australian population. Values are contacts per person per day."
-            self.add_element_to_doc("Age stratification", FigElement(location, caption=caption))
+            self.add_element_to_doc("Age stratification", FigElement(filename, caption=caption))
 
         return adjusted_matrix
 

@@ -44,13 +44,13 @@ def get_age_strat(
     age_mixing_matrix *= 365.251
     strat.set_mixing_matrix(age_mixing_matrix)
 
+    # Set non-TB-related mortality rates
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breakpoints, iso3)
     universal_death_funcs = {}
     for age in age_breakpoints:
         universal_death_funcs[age] = Function(
             build_static_sigmoidal_multicurve(death_rate_years, death_rates_by_age[age]), [Time]
         )
-
     death_adjs = {str(k): Overwrite(v) for k, v in universal_death_funcs.items()}
     strat.set_flow_adjustments("universal_death", death_adjs)
 

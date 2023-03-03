@@ -140,6 +140,20 @@ def get_crude_birth_rate(country_iso_code: str):
     return birth_df["birth_rate"], birth_df["mean_year"]
 
 
+def get_crude_birth_rate_series(country_iso_code: str):
+    """
+    Get the crude birth rate in a similar way to the previous function,
+    but as a more sensible pandas series structure.
+    """
+    if country_iso_code in MAPPING_ISO_CODE:
+        country_iso_code = MAPPING_ISO_CODE[country_iso_code]
+    input_db = get_input_db()
+    birth_df = input_db.query("birth_rates", conditions={"iso3": country_iso_code})
+    birth_series = pd.Series(birth_df["birth_rate"])
+    birth_series.index = birth_df["mean_year"]
+    return birth_series
+
+
 def get_population_by_agegroup(
     age_breakpoints: List[int], country_iso_code: str, region: str = None, year: int = 2020
 ):

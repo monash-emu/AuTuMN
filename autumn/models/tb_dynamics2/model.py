@@ -1,12 +1,7 @@
-from typing import List
-import pandas as pd
-
 from summer2 import CompartmentalModel
 from summer2.experimental.model_builder import ModelBuilder
 
-from jax import numpy as jnp
-
-from autumn.core import inputs
+from autumn.core.inputs.demography.queries import get_crude_birth_rate_series
 from autumn.core.project import Params
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
 from .outputs import TbOutputsBuilder
@@ -42,8 +37,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         build_options:
 
     Returns:
-        The "SM-SIR" model, currently being used only for COVID-19
-
+        The TB dynamics 2 model
     """
 
     # Get the parameters and extract some of the more used ones to have simpler names
@@ -94,8 +88,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     Add intercompartmental flows
     """
     contact_rate = params.contact_rate
-    contact_rate_latent = params.contact_rate * params.rr_infection_latent
-    contact_rate_recovered = params.contact_rate * params.rr_infection_recovered
+
     # Add the process of infecting the susceptibles
     model.add_infection_frequency_flow(
         name="infection",
@@ -104,20 +97,22 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         dest=Compartment.EARLY_LATENT,
     )
 
+    # And those with partial immunity
     model.add_infection_frequency_flow(
         "infection_from_latent",
-        contact_rate_latent,
+        contact_rate * params.rr_infection_latent ,
         Compartment.LATE_LATENT,
         Compartment.EARLY_LATENT,
     )
     model.add_infection_frequency_flow(
         "infection_from_recovered",
-        contact_rate_recovered,
+        contact_rate * params.rr_infection_recovered,
         Compartment.RECOVERED,
         Compartment.EARLY_LATENT,
     )
+
     # Latency-related flows
-    stabilisation_rate = 1
+    stabilisation_rate = 1.0  
     model.add_transition_flow(
         "stabilisation",
         stabilisation_rate,
@@ -125,7 +120,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.LATE_LATENT,
     )
 
-    early_activation_rate = 1
+    early_activation_rate = 1.0
     model.add_transition_flow(
         "early_activation",
         early_activation_rate,
@@ -133,13 +128,14 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.INFECTIOUS,
     )
 
-    late_activation_rate = 1
+    late_activation_rate = 1.0
     model.add_transition_flow(
         "late_activation",
         late_activation_rate,
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
     )
+
     # Add post-diseases flows
     model.add_transition_flow(
         "self_recovery",
@@ -161,7 +157,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     #Treatment recovery, releapse, death flows.
-    treatment_recovery_rate = 1.0 #will be adjusted later
+    treatment_recovery_rate = 1.0 # will be adjusted later
     model.add_transition_flow(
         "treatment_recovery",
         treatment_recovery_rate,
@@ -182,10 +178,11 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.ON_TREATMENT,
         Compartment.INFECTIOUS,
     )
+
     # Entry flows
-    birth_rates, years = inputs.get_crude_birth_rate(iso3)
-    birth_rates = birth_rates / 1000.0  # Birth rates are provided / 1000 population
-    tfunc = build_static_sigmoidal_multicurve(years.to_list(), birth_rates.to_list())
+    birth_rates = get_crude_birth_rate_series(iso3)
+    birth_rates /= 1000.0  # Birth rates are provided / 1000 population
+    tfunc = build_static_sigmoidal_multicurve(birth_rates.index, birth_rates)
     crude_birth_rate = Function(tfunc, [Time])
     model.add_crude_birth_flow(
         "birth",
@@ -193,10 +190,11 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.SUSCEPTIBLE,
     )
 
-    # Death flows
+    # Universal death
     universal_death_rate = 1.0
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
-      # Infection death
+
+    # Infection death
     model.add_death_flow(
         "infect_death",
         params.infect_death_rate_dict.unstratified,

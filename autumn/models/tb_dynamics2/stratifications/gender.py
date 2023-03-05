@@ -1,12 +1,11 @@
 from summer2 import Stratification, Multiply
-
 from autumn.models.tb_dynamics2.constants import BASE_COMPARTMENTS
 from autumn.models.tb_dynamics2.parameters import Parameters
 
 
 def get_gender_strat(
         params: Parameters
-        ) -> Stratification:
+    ) -> Stratification:
     """
     Stratify all model compartments based on a user-defined stratification request.
     """
@@ -17,7 +16,7 @@ def get_gender_strat(
     # Pre-process generic flow adjustments:
     # IF infection is adjusted and other infection flows NOT adjusted
     # THEN use the infection adjustment for the other infection flows
-    
+
     adjustments = vars(params.gender.adjustments)
     adjs = {}
     if 'infection' in adjustments.keys():

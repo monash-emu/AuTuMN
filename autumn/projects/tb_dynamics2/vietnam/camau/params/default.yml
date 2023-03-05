@@ -15,7 +15,7 @@ age_breakpoints: [0, 5, 15, 35, 50]
 age_mixing:
   source_iso3: VNM
   age_adjust: true
-stratify_by: ["age", "organ"]
+stratify_by: ["age", "organ", "gender"]
 
 age_infectiousness_switch: 15.
 
@@ -44,6 +44,19 @@ age_stratification:
     0: 6.939769e-9
     5: 0.0023
     15: 0.0012
+
+gender:
+  strata: ["male", "female"]
+  proportions:
+    male: .5
+    female: .5
+  adjustments:
+    infection:
+      male: 1.5
+      female: 1.0
+    detection: 
+      male: 1.5
+      female: 1.0
 
 
 # requested outputs

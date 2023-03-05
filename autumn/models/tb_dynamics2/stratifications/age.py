@@ -11,11 +11,11 @@ from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 from math import log, exp
 
 from jax import numpy as jnp
+from autumn.models.tb_dynamics2.constants import BASE_COMPARTMENTS
 
 
 def get_age_strat(
     params,
-    compartments: List[str],
 ) -> AgeStratification:
 
     """
@@ -31,7 +31,7 @@ def get_age_strat(
     """
     age_breakpoints = params.age_breakpoints
     iso3 = params.country.iso3
-    strat = AgeStratification("age", age_breakpoints, compartments)
+    strat = AgeStratification("age", age_breakpoints, BASE_COMPARTMENTS)
 
     # Get and set age-specific mixing matrix
     age_mixing_matrix = build_synthetic_matrices(
@@ -92,6 +92,7 @@ def get_age_strat(
             inf_adjs[str(age_low)] = Multiply(average_infectiousness)
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
+
     # Set age-specific treatment recovery, relapse and treatment death rates. Since the non-TB-related mortality rate varies by age, the values of the treatment-induced recovery 
     # relapse rate and mortality rate of individuals on TB treatment also vary by age.
     # The treatment success rate TSR = 𝜑 / (𝜑 + 𝜌 +  𝜇t + 𝜇') where 𝜌 is the relapse rate, 𝜇t is the excess mortality rate of individuals on TB treatment, and 𝜇 is the non-TB-related mortality rate

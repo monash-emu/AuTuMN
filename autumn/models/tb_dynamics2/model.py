@@ -10,7 +10,7 @@ from .stratifications.age import get_age_strat
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from summer2.parameters.params import Function
 from .stratifications.organ import get_organ_strat
-from .stratifications.custom_strat import get_custom_strat
+from .stratifications.gender import get_gender_strat
 
 from .constants import BASE_COMPARTMENTS, INFECTIOUS_COMPS, LATENT_COMPS
 from summer2.parameters import Time, DerivedOutput
@@ -205,25 +205,13 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     """
 
     age_strat = get_age_strat(
-        params=params,
-        compartments=BASE_COMPARTMENTS,
+        params=params
     )
     model.stratify_with(age_strat)
 
-    # Custom, user-defined stratifications
-    user_defined_strats = [
-        s for s in params.user_defined_stratifications.keys() if s in params.stratify_by
-    ]
-    for strat_name in user_defined_strats:
-        assert "_" not in strat_name, "Stratification name should not include '_'"
-        strat_details = params.user_defined_stratifications[strat_name]
-        user_defined_strat = get_user_defined_strat(strat_name, strat_details, params)
-        model.stratify_with(user_defined_strat)
-
-    if "location" in params.user_defined_stratifications:
-        location_strata = params.user_defined_stratifications["location"]["strata"]
-    else:
-        location_strata = []
+    # Set gender stratification
+    gender_strat = get_gender_strat(params)
+    model.stratify_with(gender_strat)
 
 
     """

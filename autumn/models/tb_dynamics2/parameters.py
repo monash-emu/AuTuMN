@@ -48,6 +48,26 @@ class StatifiedRate(BaseModel):
     smear_positive: pclass()
     smear_negative: pclass()
 
+class Props(BaseModel):
+    male: float
+    female: float
+
+class Multipliers(BaseModel):
+    male: pclass()
+    female: pclass()
+
+
+class Adjustments(BaseModel):
+    infection: Multipliers
+    detection: Multipliers
+
+class GenderStrat(BaseModel):
+    strata: list
+    proportions: dict
+    adjustments: Adjustments
+
+
+
 
 class ParamConfig:
     """
@@ -112,6 +132,7 @@ class Parameters(ParamStruct):
     incidence_props_smear_positive_among_pulmonary: float
     smear_negative_infect_multiplier: float
     extrapulmonary_infect_multiplier: float
+    gender: GenderStrat
 
 
 

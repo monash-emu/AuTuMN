@@ -119,7 +119,6 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     treatment_death_funcs = {}
     treatment_relapse_funcs = {}
     for age in params.age_breakpoints:
-
         def get_treatment_recovery_rate(t, computed_values, age=age):
             death_rate = universal_death_funcs[age](t)
             floor_val = 1 / params.treatment_duration
@@ -175,7 +174,6 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
     for age, multiplier in bcg_multilier_dict.items():
         if multiplier < 1.0:
             average_age = get_average_age_for_bcg(age, params.age_breakpoints)
-            print(average_age)
             bcg_adjs[str(age)] = Multiply(
                 make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age)
             )

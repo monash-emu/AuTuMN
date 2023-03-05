@@ -41,7 +41,7 @@ def get_user_defined_strat(name: str, details: dict, params: Parameters) -> Stra
             flow_name = f"infection_from_{stage}"
             if flow_name not in details["adjustments"]:
                 details["adjustments"][flow_name] = details["adjustments"]["infection"]
-
+    print(details["adjustments"])
     # Adjust crude birth rate according to the strata proportions
     details["adjustments"]["birth"] = details["proportions"]
 

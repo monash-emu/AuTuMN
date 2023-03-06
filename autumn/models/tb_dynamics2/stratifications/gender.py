@@ -21,7 +21,6 @@ def get_gender_strat(
     adjs = {}
     if 'infection' in adjustments.keys():
         inf_adjs = vars(params.gender.adjustments.infection)
-        
         item = {'infection': {k: v.value for k,v in inf_adjs.items()}}
         adjs.update(item)
         for stage in ["latent", "recovered"]:
@@ -33,6 +32,7 @@ def get_gender_strat(
     adjs["birth"] = props
 
     # # # Set generic flow adjustments
+    # # # Do not adjust for Aage under 15
     for age in params.age_breakpoints:
         if age <= 15:
             for flow_name, adjustment in adjs.items():

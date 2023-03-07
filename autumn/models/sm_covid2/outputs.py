@@ -208,7 +208,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     # )
 
                     # Request the output
-                    self.model.request_param_function_output(
+                    self.model.request_function_output(
                         name=output_name,
                         func=death_risk * DerivedOutput(f"incidence{strata_string}"),
                         save_results=False,
@@ -227,7 +227,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             ],
         )
 
-        self.model.request_param_function_output(
+        self.model.request_function_output(
             name="infection_deaths",
             func=infection_deaths_func,
         )
@@ -333,7 +333,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     # )
 
                     # Request the output
-                    self.model.request_param_function_output(
+                    self.model.request_function_output(
                         name=output_name,
                         func=hospital_risk_given_infection
                         * DerivedOutput(f"incidence{strata_string}"),
@@ -355,7 +355,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             ],
         )
 
-        self.model.request_param_function_output(
+        self.model.request_function_output(
             name="hospital_admissions",
             func=hospital_admissions_func,
             save_results=True,
@@ -374,7 +374,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             ],
         )
 
-        self.model.request_param_function_output(
+        self.model.request_function_output(
             name="hospital_occupancy", func=hospital_occupancy_func
         )
 

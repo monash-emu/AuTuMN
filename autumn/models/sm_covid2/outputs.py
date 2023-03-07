@@ -479,8 +479,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         )
         self.model.request_function_output(
             "prop_ever_infected",
-            lambda infected, total: infected / total,
-            sources=["ever_infected", "total_population"],
+            func=DerivedOutput("ever_infected") / DerivedOutput("total_population")
         )
 
     def request_random_process_outputs(
@@ -510,8 +509,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             )
             self.model.request_function_output(
                 prop_immune_name,
-                lambda num, total: num / total,
-                [n_immune_name, "total_population"],
+                func=DerivedOutput(n_immune_name) / DerivedOutput("total_population")
             )
 
             # Calculate age-specific proportions if requested
@@ -527,8 +525,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     )
                     self.model.request_function_output(
                         prop_age_immune_name,
-                        make_age_immune_prop_func(popsize),
-                        [n_age_immune_name],
+                        func=make_age_immune_prop_func(popsize)(DerivedOutput(n_age_immune_name))
                     )
 
     def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
@@ -549,10 +546,12 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
         Store the number of students*weeks of school missed. This is a single float that will be stored as a derived output
         """
+
+        #FIXME this is broken
+
         self.model.request_function_output(
             "student_weeks_missed",
-            lambda total: np.repeat(n_student_weeks_missed, total.size),  # constant function
-            ["total_population"],  # could be anything here, really...
+            func=np.repeat(n_student_weeks_missed, DerivedOutput("total_population").size)  # constant function
         )
 
 

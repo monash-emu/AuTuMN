@@ -388,8 +388,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         
         self.model.request_function_output(
             "peak_hospital_occupancy",
-            lambda hosp_occupancy: np.repeat(hosp_occupancy.max(), hosp_occupancy.size),
-            ["hospital_occupancy"],
+            func=np.repeat(max(DerivedOutput("hospital_occupancy")), len(DerivedOutput("hospital_occupancy")))
         )
 
     # def request_icu_outputs(

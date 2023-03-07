@@ -1,5 +1,5 @@
 import pytest
-from summer import CompartmentalModel
+from summer2 import CompartmentalModel
 
 from autumn.settings import Models, Region
 from autumn.core.project.project import get_project

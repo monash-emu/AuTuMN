@@ -440,7 +440,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         voc_params,
     )
 
-    outputs_builder.request_peak_hospital_occupancy()
+    # outputs_builder.request_peak_hospital_occupancy()
 
     outputs_builder.request_infection_deaths(
         model_times,

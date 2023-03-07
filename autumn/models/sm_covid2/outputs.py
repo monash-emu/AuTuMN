@@ -383,6 +383,9 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         Create an output for the peak hospital occupancy. This is stored as a timeseries, although this is
         actually a constant output.
         """
+
+        #FIXME: This is currently broken
+        
         self.model.request_function_output(
             "peak_hospital_occupancy",
             lambda hosp_occupancy: np.repeat(hosp_occupancy.max(), hosp_occupancy.size),

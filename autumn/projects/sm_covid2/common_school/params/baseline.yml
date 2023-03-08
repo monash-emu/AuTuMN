@@ -19,7 +19,7 @@ infectious_seed_time: 15.108933833045329
 random_process: 
   delta_values: [0.0]  # length will be automatically adjusted to match periods requests
   time:
-    step: 14
+    step: 60 #14
 
 voc_emergence:
   delta:

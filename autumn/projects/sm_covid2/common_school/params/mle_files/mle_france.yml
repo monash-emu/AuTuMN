@@ -2,52 +2,52 @@ age_stratification.ifr.multiplier: 1.4810942082046838
 contact_rate: 0.06491331379822295
 infection_deaths_dispersion_param: 63.792080301615314
 infectious_seed_time: 36.32073813402284
-random_process.delta_values(1): -1.9644215603578905
-random_process.delta_values(10): -0.31613667945607427
-random_process.delta_values(11): 1.5158999867549032
-random_process.delta_values(12): -1.4401649522810032
-random_process.delta_values(13): 1.5587263297543243
-random_process.delta_values(14): -1.1584048431477845
-random_process.delta_values(15): -0.33914933149587556
-random_process.delta_values(16): 0.5404716788766613
-random_process.delta_values(17): 0.9495672902394432
-random_process.delta_values(18): -1.1523851587986533
-random_process.delta_values(19): -1.1824002983250739
-random_process.delta_values(2): 1.2391248708709495
-random_process.delta_values(20): 1.8998270843963159
-random_process.delta_values(21): -0.3953214888301506
-random_process.delta_values(22): 1.246228488398386
-random_process.delta_values(23): -1.8610197659990755
-random_process.delta_values(24): -0.37678813564603986
-random_process.delta_values(25): -1.610923204886912
-random_process.delta_values(26): 1.9964905713552374
-random_process.delta_values(27): 1.6053054643061242
-random_process.delta_values(28): -0.4205346513632724
-random_process.delta_values(29): -1.1320942883548126
-random_process.delta_values(3): -0.23544825521416546
-random_process.delta_values(30): 1.0813715535785668
-random_process.delta_values(31): -1.9636098419861912
-random_process.delta_values(32): 0.49397869431513275
-random_process.delta_values(33): 1.4409605794493294
-random_process.delta_values(34): -1.9023991063646404
-random_process.delta_values(35): 1.9845470142650008
-random_process.delta_values(36): -1.787327956833559
-random_process.delta_values(37): -0.23006320541121217
-random_process.delta_values(38): 1.6456533853013715
-random_process.delta_values(39): -0.4761820895867235
-random_process.delta_values(4): -1.1799055033787322
-random_process.delta_values(40): -0.08968777295445651
-random_process.delta_values(41): -1.3351281674809867
-random_process.delta_values(42): 0.5343848707983567
-random_process.delta_values(43): 1.2572622258883799
-random_process.delta_values(44): 1.2500089891785193
-random_process.delta_values(45): -1.9735800748929007
-random_process.delta_values(46): -0.49345198800790735
-random_process.delta_values(47): -0.4177365098297279
-random_process.delta_values(5): 0.7086935290736225
-random_process.delta_values(6): -0.6910040689722923
-random_process.delta_values(7): -1.3101733490074017
-random_process.delta_values(8): 1.5402676635136183
-random_process.delta_values(9): 0.22836339296952834
+# random_process.delta_values(1): -1.9644215603578905
+# random_process.delta_values(10): -0.31613667945607427
+# random_process.delta_values(11): 1.5158999867549032
+# random_process.delta_values(12): -1.4401649522810032
+# random_process.delta_values(13): 1.5587263297543243
+# random_process.delta_values(14): -1.1584048431477845
+# random_process.delta_values(15): -0.33914933149587556
+# random_process.delta_values(16): 0.5404716788766613
+# random_process.delta_values(17): 0.9495672902394432
+# random_process.delta_values(18): -1.1523851587986533
+# random_process.delta_values(19): -1.1824002983250739
+# random_process.delta_values(2): 1.2391248708709495
+# random_process.delta_values(20): 1.8998270843963159
+# random_process.delta_values(21): -0.3953214888301506
+# random_process.delta_values(22): 1.246228488398386
+# random_process.delta_values(23): -1.8610197659990755
+# random_process.delta_values(24): -0.37678813564603986
+# random_process.delta_values(25): -1.610923204886912
+# random_process.delta_values(26): 1.9964905713552374
+# random_process.delta_values(27): 1.6053054643061242
+# random_process.delta_values(28): -0.4205346513632724
+# random_process.delta_values(29): -1.1320942883548126
+# random_process.delta_values(3): -0.23544825521416546
+# random_process.delta_values(30): 1.0813715535785668
+# random_process.delta_values(31): -1.9636098419861912
+# random_process.delta_values(32): 0.49397869431513275
+# random_process.delta_values(33): 1.4409605794493294
+# random_process.delta_values(34): -1.9023991063646404
+# random_process.delta_values(35): 1.9845470142650008
+# random_process.delta_values(36): -1.787327956833559
+# random_process.delta_values(37): -0.23006320541121217
+# random_process.delta_values(38): 1.6456533853013715
+# random_process.delta_values(39): -0.4761820895867235
+# random_process.delta_values(4): -1.1799055033787322
+# random_process.delta_values(40): -0.08968777295445651
+# random_process.delta_values(41): -1.3351281674809867
+# random_process.delta_values(42): 0.5343848707983567
+# random_process.delta_values(43): 1.2572622258883799
+# random_process.delta_values(44): 1.2500089891785193
+# random_process.delta_values(45): -1.9735800748929007
+# random_process.delta_values(46): -0.49345198800790735
+# random_process.delta_values(47): -0.4177365098297279
+# random_process.delta_values(5): 0.7086935290736225
+# random_process.delta_values(6): -0.6910040689722923
+# random_process.delta_values(7): -1.3101733490074017
+# random_process.delta_values(8): 1.5402676635136183
+# random_process.delta_values(9): 0.22836339296952834
 random_process.noise_sd: 0.675623597864819
 voc_emergence.delta.new_voc_seed.time_from_gisaid_report: 20.121608945720823

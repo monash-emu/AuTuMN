@@ -46,12 +46,11 @@ def get_age_strat(
 
     # Set non-TB-related mortality rates
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breakpoints, iso3)
-    universal_death_funcs = {}
+    universal_death_funcs, death_adjs = {}, {}
     for age in age_breakpoints:
-        universal_death_funcs[age] = Function(
-            build_static_sigmoidal_multicurve(death_rate_years, death_rates_by_age[age]), [Time]
-        )
-    death_adjs = {str(k): Overwrite(v) for k, v in universal_death_funcs.items()}
+        age_specific_death_func = build_static_sigmoidal_multicurve(death_rate_years, death_rates_by_age[age])
+        universal_death_funcs[age] = Function(age_specific_death_func, [Time])
+        death_adjs[str(age)] = Overwrite(universal_death_funcs[age])
     strat.set_flow_adjustments("universal_death", death_adjs)
 
     # Set age-specific latency parameters (early/late activation + stabilisation).

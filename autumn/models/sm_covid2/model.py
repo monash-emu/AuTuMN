@@ -440,7 +440,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         voc_params,
     )
 
-    # outputs_builder.request_peak_hospital_occupancy()
+    outputs_builder.request_peak_hospital_occupancy()
 
     outputs_builder.request_infection_deaths(
         model_times,
@@ -467,7 +467,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         outputs_builder.request_random_process_outputs()
 
     # request extra output to store the number of students*weeks of school missed
-    # outputs_builder.request_student_weeks_missed_output(student_weeks_missed)
+    outputs_builder.request_student_weeks_missed_output(student_weeks_missed)
 
     builder.set_model(model)
     if ret_builder:

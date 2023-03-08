@@ -25,7 +25,7 @@ EXTRA_UNCERTAINTY_OUTPUTS = {
     "transformed_random_process": "Transformed random process",
     # "prop_ever_infected": "Proportion ever infected",
     "hospital_occupancy": "Hospital beds occupied with COVID-19 patients",
-    # "peak_hospital_occupancy": "Peak COVID-19 hospital occupancy",
+    "peak_hospital_occupancy": "Peak COVID-19 hospital occupancy",
     "death_missed_school_ratio": "Deaths averted per student-week of school missed",
     "abs_diff_cumulative_incidence": "COVID-19 infections averted",
     "abs_diff_cumulative_infection_deaths": "COVID-19 deaths averted",

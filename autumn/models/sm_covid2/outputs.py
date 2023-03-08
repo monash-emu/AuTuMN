@@ -384,11 +384,14 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         actually a constant output.
         """
 
-        #FIXME: This is currently broken
-        
+        def array_max(x):
+            return jnp.repeat(jnp.max(x), jnp.size(x))
+ 
+        peak_func = Function(array_max, [DerivedOutput("hospital_occupancy")])
+
         self.model.request_function_output(
             "peak_hospital_occupancy",
-            func=np.repeat(max(DerivedOutput("hospital_occupancy")), len(DerivedOutput("hospital_occupancy")))
+            func=peak_func
         )
 
     # def request_icu_outputs(
@@ -545,13 +548,17 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
         Store the number of students*weeks of school missed. This is a single float that will be stored as a derived output
         """
-
         #FIXME this is broken
+        def repeat_val(example_output):
+            return jnp.repeat(n_student_weeks_missed, jnp.size(example_output))
+ 
+        student_weeks_missed_func = Function(repeat_val, [DerivedOutput("total_population")])
 
         self.model.request_function_output(
             "student_weeks_missed",
-            func=np.repeat(n_student_weeks_missed, DerivedOutput("total_population").size)  # constant function
+            func=student_weeks_missed_func
         )
+
 
 
 def build_statistical_distribution(distribution_details: TimeDistribution):

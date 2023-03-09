@@ -1,4 +1,4 @@
-age_stratification.ifr.multiplier: 1.4810942082046838
+age_stratification.ifr.multiplier: 1. # 1.4810942082046838
 contact_rate: 0.06491331379822295
 infection_deaths_dispersion_param: 63.792080301615314
 infectious_seed_time: 36.32073813402284

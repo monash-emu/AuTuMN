@@ -127,10 +127,9 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         Compartment.INFECTIOUS,
     )
 
-    late_activation_rate = 1.0
     model.add_transition_flow(
         "late_activation",
-        late_activation_rate * params.progression_multiplier,
+        params.progression_multiplier,  # Set to the adjuster, rather than one
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
     )

@@ -53,14 +53,6 @@ def get_age_strat(
         death_adjs[str(age)] = Overwrite(universal_death_funcs[age])
     strat.set_flow_adjustments("universal_death", death_adjs)
 
-    # Set age-specific latency parameters (early/late activation + stabilisation).
-    for flow_name, latency_params in params.age_stratification.items():
-        is_activation_flow = flow_name in ["late_activation"]  # Toggle which flows we apply this to
-        latency_mapped = map_params_to_model_agegroups(latency_params, age_breakpoints)
-        if is_activation_flow:
-            latency_mapped = {str(k): Multiply(v * params.progression_multiplier) for k, v in latency_mapped.items()}
-        strat.set_flow_adjustments(flow_name, latency_mapped)
-
     for comp in INFECTIOUS_COMPS:
         # We assume that infectiousness increases with age
         # A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase  with  age.

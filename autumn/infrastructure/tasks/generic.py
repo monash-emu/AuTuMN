@@ -65,4 +65,5 @@ def generic_task(run_id: str, task_key: str, task_kwargs: dict = None, verbose: 
     finally:
         storage.store(JOB_OUTDATA)
         storage.store(JOB_LOGDIR)
+        logging.shutdown()
         shutil.rmtree(TEMP_BASE_DIR)

@@ -38,7 +38,7 @@ def update():
         full_pipeline.pipeline,
         powerbi_pipeline.pipeline,
         resume_pipeline.pipeline,
-        generic_pipeline,pipeline,
+        generic_pipeline.pipeline,
         trigger_philippines_pipeline.pipeline,
         trigger_victoria_pipeline.pipeline,
         trigger_europe_pipeline.pipeline,

@@ -22,7 +22,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 targets = [
     NormalTarget(ts_set["total_population"], stdev=2500.0),
     NormalTarget(ts_set["notifications"], stdev=20.0),
-    NormalTarget(ts_set["percentage_latent"], stdev=2.0),
+    #NormalTarget(ts_set["percentage_latent"], stdev=2.0),
     NormalTarget(ts_set["prevalence_infectious"], stdev=20)
     #NormalTarget(ts_set["incidence"], stdev=5.0)
 ]

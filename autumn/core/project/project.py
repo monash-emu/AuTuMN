@@ -72,10 +72,20 @@ class LocalTaskRunner:
         full_model_run_task(run_id, burn_in, samples, False, "local")
         return ManagedRun(run_id)
 
-    def powerbi(self, run_id):
+    def powerbi(self, run_id: str):
         from autumn.infrastructure.tasks.powerbi import powerbi_task
 
         powerbi_task(run_id, "mle", False, "local")
+
+        return ManagedRun(run_id)
+    
+    def generic(self, task_key, task_kwargs=None):
+        from autumn.infrastructure.tasks.generic import generic_task
+
+        run_id = self.project._gen_run_id()
+        logger.info(f"Running {task_key}")
+
+        generic_task(run_id, task_key=task_key, task_kwargs=task_kwargs, store="local")
 
         return ManagedRun(run_id)
 

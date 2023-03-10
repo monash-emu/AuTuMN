@@ -19,5 +19,12 @@
       "times": [2016.0],
       "values": [36.8],
       "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "prevalence_infectious": {
+      "title": "Prevalence per 100,000 population",
+      "output_key": "percentage_latent",
+      "times": [2017.0],
+      "values": [322],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
     }
   }

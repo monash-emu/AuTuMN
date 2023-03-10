@@ -36,9 +36,8 @@ CID_ESTIMATES = {
 
 
 priors = [
-    UniformPrior("start_population_size", [300000, 400000]),
+    UniformPrior("start_population_size", [250000, 400000]),
     UniformPrior("contact_rate", [0.0001, 0.01]),
-    #UniformPrior("infectious_seed", [100, 2000]),
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.1, 0.5]),
     UniformPrior("progression_multiplier", [0.1, 2.0]),

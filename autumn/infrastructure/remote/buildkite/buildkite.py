@@ -16,7 +16,7 @@ def get_metadata(key: str, required=True):
     """Read in a Buildkite metadata key value pair"""
     logger.info("Fetching Buildkite metadata %s", key)
     cmd = f"buildkite-agent meta-data get {key}"
-    proc = sp.run(cmd, shell=True, check=False, stdout=sp.PIPE, encoding="utf-8")
+    proc = sp.run(cmd, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
     stdout = proc.stdout.strip() if proc.stdout else ""
     stderr = proc.stderr.strip() if proc.stderr else ""
     if stderr:

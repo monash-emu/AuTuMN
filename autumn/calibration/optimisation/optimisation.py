@@ -1,4 +1,4 @@
-from pyswarm import pso
+from autumn.calibration.optimisation.pyswarm_source import pso
 from autumn.calibration.calibration import get_parameter_bounds_from_priors
 
 

@@ -12,6 +12,7 @@ from .buildkite import trigger_pipeline
 from .pipelines import calibrate as calibrate_pipeline
 from .pipelines import resume as resume_pipeline
 from .pipelines import full as full_pipeline
+from .pipelines import generic as generic_pipeline
 from .pipelines import powerbi as powerbi_pipeline
 from .pipelines import trigger_europe as trigger_europe_pipeline
 from .pipelines import trigger_philippines as trigger_philippines_pipeline
@@ -37,6 +38,7 @@ def update():
         full_pipeline.pipeline,
         powerbi_pipeline.pipeline,
         resume_pipeline.pipeline,
+        generic_pipeline,pipeline,
         trigger_philippines_pipeline.pipeline,
         trigger_victoria_pipeline.pipeline,
         trigger_europe_pipeline.pipeline,
@@ -44,6 +46,37 @@ def update():
     ]
     for pipeline in pipelines:
         pipeline.save()
+
+@buildkite_cli.command()
+def generic():
+    """Run a generic job in Buildkite"""
+    logger.info("Gathering data for calibration.")
+    build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
+    model_name = generic_pipeline.model_field.get_value()
+    task_key = generic_pipeline.task_field.get_value()
+    cores = generic_pipeline.cores_field.get_value()
+    task_kwargs = generic_pipeline.kwargs_field.get_value()
+    commit = generic_pipeline.commit_field.get_value()
+
+    params_str = pprint.pformat({f.key: f.get_value() for f in generic_pipeline.fields}, indent=2)
+
+    # Decode combined app + model name from user input.
+    app_name, region_name = model_name.split(":")
+    job_name = f"{app_name}-{region_name}-{build_number}"
+
+    logger.info("Running generic task %s with params:\n%s\n", job_name, params_str)
+    run_id = aws.run_generic(
+        job=job_name,
+        app=app_name,
+        region=region_name,
+        commit=commit,
+        cores=cores,
+        task_key=task_key,
+        task_kwargs=task_kwargs
+    )
+
+    logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
+    logger.info("Results available at %s", get_run_url(run_id))
 
 
 @buildkite_cli.command()

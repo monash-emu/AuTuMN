@@ -26,8 +26,6 @@ def tasks():
 @click.option("--task_key", type=str, required=True)
 @click.option("--task_kwargs", type=str, required=True)
 def run_generic(run: str, task_key: str, task_kwargs: str):
-    pre_task_setup()
-
     kwargs_dict = json.loads(task_kwargs)
 
     from autumn.infrastructure.tasks.generic import generic_task

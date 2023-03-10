@@ -143,7 +143,7 @@ def run_generic(
     pipeline_args = {
         "run": run_id,
         "task_key": task_key,
-        "task_kwargs": task_kwargs
+        "task_kwargs": f"'{task_kwargs}'"
     }
     runner.run_task_pipeline(pipeline_name, pipeline_args)
     logger.info("Generic task completed for %s", run_id)

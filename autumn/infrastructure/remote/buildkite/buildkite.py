@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 PIPELINE_PATH = os.path.join(DATA_PATH, "buildkite")
 
 
-def get_metadata(key: str):
+def get_metadata(key: str, required=True):
     """Read in a Buildkite metadata key value pair"""
     logger.info("Fetching Buildkite metadata %s", key)
     cmd = f"buildkite-agent meta-data get {key}"
@@ -22,7 +22,10 @@ def get_metadata(key: str):
     if stderr:
         logger.info("stderr for metadata fetch: %s", stderr)
     if not stdout:
-        raise ValueError(f"No stdout returned for metadata key: {key}")
+        if required:
+            raise ValueError(f"No stdout returned for metadata key: {key}")
+        else:
+            return None
 
     return stdout
 
@@ -124,19 +127,20 @@ class InputStep:
 
 
 class BaseInputField:
-    def __init__(self, key: str, title: str, hint: str, type, default=None):
+    def __init__(self, key: str, title: str, hint: str, type, default=None, required=True):
         self.key = key
         self.hint = hint
         self.default = default
         self.type = type
         self.title = title
+        self.required = required
         self._value = None
 
     def to_dict(self):
         input_dict = {
             "key": self.key,
             "hint": self.hint,
-            "required": True,
+            "required": self.required,
         }
         if self.default is not None:
             input_dict["default"] = str(self.default)
@@ -147,7 +151,7 @@ class BaseInputField:
         if self._value is not None:
             return self._value
 
-        val_str = get_metadata(self.key)
+        val_str = get_metadata(self.key, self.required)
         self._value = self.type(val_str)
         return self._value
 

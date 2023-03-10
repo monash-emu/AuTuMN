@@ -36,6 +36,7 @@ kwargs_field = TextInputField(
     title="Additional task arguments",
     hint="Enter a JSON string for the kwargs dict",
     type=str,
+    required=False
 )
 
 

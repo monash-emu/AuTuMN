@@ -15,7 +15,7 @@ steps:
     text: Project (model:region)
   - hint: Enter a JSON string for the kwargs dict
     key: kwargs
-    required: true
+    required: false
     text: Additional task arguments
   - default: '1'
     hint: How many CPU cores do you require?

@@ -115,6 +115,25 @@ def run():
     """
 
 
+def run_generic(job, app, region, commit, cores, task_key, task_kwargs):
+    """
+    Run a MCMC calibration on an AWS server.
+    """
+    job_id = f"generic-{job}"
+    instance_type = aws.get_instance_type(cores, 4)
+
+    kwargs = {
+        "app_name": app,
+        "region_name": region,
+        "commit": commit,
+        "task_key": task_key,
+        "task_kwargs": task_kwargs
+    }
+    job_func = functools.partial(remote.run_generic, **kwargs)
+    return _run_job(job_id, [instance_type], False, job_func)
+
+
+
 @run.command("calibrate")
 @click.option("--job", type=str, required=True)
 @click.option("--app", type=str, required=True)

@@ -121,6 +121,34 @@ def run_calibration(
 
     return run_id
 
+def run_generic(
+    runner: SSHRunner,
+    app_name: str,
+    region_name: str,
+    task_key: str,
+    task_kwargs: str,
+    commit: str,
+):
+    """Run calibration job on the remote server"""
+    msg = "Running generic task %s for project %s:%s with kwargs %s on AWS instance %s."
+    logger.info(msg, task_key, app_name, region_name, task_kwargs, runner.instance["InstanceId"])
+    run_id = None
+    
+    runner.print_hostname()
+    runner.set_repo_to_commit(commit=commit)
+    runner.install_requirements()
+    runner.read_secrets()
+    run_id = runner.get_run_id(app_name, region_name)
+    pipeline_name = "generic"
+    pipeline_args = {
+        "run": run_id,
+        "task_key": task_key,
+        "task_kwargs": task_kwargs
+    }
+    runner.run_task_pipeline(pipeline_name, pipeline_args)
+    logger.info("Generic task completed for %s", run_id)
+
+    return run_id
 
 
 LOGS_URL = "https://monashemu.grafana.net/explore?orgId=1&left=%5B%22now-1h%22,%22now%22,%22grafanacloud-monashemu-logs%22,%7B%22expr%22:%22%7Bjob%3D%5C%22app%5C%22%7D%20%7C%3D%20%5C%22${HOSTNAME}%5C%22%22%7D%5D"

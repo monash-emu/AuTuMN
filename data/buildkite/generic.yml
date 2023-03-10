@@ -1,3 +1,31 @@
 steps:
-  - label: ":pipeline: Metadata Test"
-    command: buildkite-agent meta-data get "test_meta"
+    - block: Generic task settings
+      fields:
+      - hint: Which task do you want to run?
+        key: task-key
+        text: Task key
+        required: true
+      - hint: Which model:region do you want to run?
+        key: model-name
+        text: Project (model:region)
+        required: true
+      - default: '1'
+        hint: How many CPU cores do you require?
+        key: num-cpu
+        required: true
+        text: Number of CPU cores
+      - hint: Which git commit do you want to use to run the task?
+        key: commit
+        required: true
+        text: Model git commit SHA
+      - hint: Enter a JSON string that will be passed as kwargs
+        key: kwargs
+        required: false
+        text: Additional keyword arguments to task
+      if: build.env("SKIP_INPUT") == null
+      key: task-settings
+    - command: ./scripts/buildkite.sh generic
+      key: run-generic
+      label: Run Generic
+
+    

@@ -22,9 +22,9 @@
     },
     "prevalence_infectious": {
       "title": "Prevalence per 100,000 population",
-      "output_key": "percentage_latent",
+      "output_key": "prevalence_infectious",
       "times": [2017.0],
-      "values": [322],
+      "values": [322.0],
       "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
     }
   }

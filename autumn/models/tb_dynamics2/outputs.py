@@ -29,14 +29,3 @@ class TbOutputsBuilder(OutputsBuilder):
             output_name, DerivedOutput(source) / self.model.timestep, save_results=save_results
         )
 
-
-def calculate_percentage(sub_pop_size, total_pop_size):
-    return 100 * sub_pop_size / total_pop_size
-
-
-def calculate_per_hundred_thousand(sub_pop_size, total_pop_size):
-    return 1e5 * sub_pop_size / total_pop_size
-
-
-def calculate_proportion(sub_pop_size, total_pop_size):
-    return sub_pop_size / total_pop_size

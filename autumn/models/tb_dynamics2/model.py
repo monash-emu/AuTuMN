@@ -278,7 +278,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
     
     outputs_builder.request_function_output_notifs(
-        "notifications",
+        "notifications"
     )
 
     builder.set_model(model)

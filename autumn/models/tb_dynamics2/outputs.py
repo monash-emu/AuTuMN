@@ -26,6 +26,7 @@ class TbOutputsBuilder(OutputsBuilder):
 
 
     def request_function_output_notifs(self, output_name):
+        self.model.request_function_output(output_name, DerivedOutput("passive_notifications_raw") / self.model.timestep, save_results=True)
         for gender_stratum in self.gender_strata:
             gender_output_name = f"{output_name}Xgender_{gender_stratum}"
             source = f"passive_notifications_rawXgender_{gender_stratum}" 

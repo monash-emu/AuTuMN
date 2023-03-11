@@ -212,6 +212,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     gender_strat = get_gender_strat(params)
     model.stratify_with(gender_strat)
 
+    gender_strata = params.gender.strata
+
 
     """
     Organ stratification
@@ -225,14 +227,14 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     Get the applicable outputs
     """
 
-    outputs_builder = TbOutputsBuilder(model)
+    outputs_builder = TbOutputsBuilder(model, gender_strata)
     outputs_builder.request_compartment_output("total_population", BASE_COMPARTMENTS)
     # Latency
     outputs_builder.request_compartment_output(
         "latent_population_size", LATENT_COMPS, save_results=False
     )
 
-    outputs_builder.request_function_output(
+    model.request_function_output(
         "percentage_latent",
         100.0 * DerivedOutput("latent_population_size") / DerivedOutput("total_population"),
     )
@@ -242,7 +244,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         "infectious_population_size", INFECTIOUS_COMPS, save_results=False
     )
 
-    outputs_builder.request_function_output(
+    model.request_function_output(
         "prevalence_infectious",
         1e5 * DerivedOutput("infectious_population_size") / DerivedOutput("total_population"),
     )
@@ -270,12 +272,13 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     outputs_builder.request_normalise_flow_output("incidence_late", "incidence_late_raw")
     outputs_builder.request_normalise_flow_output("incidence_norm", "incidence_raw", save_results=False)
     # outputs_builder.request_output_func("incidence", calculate_per_hundred_thousand, sources)
-    outputs_builder.request_function_output(
+    model.request_function_output(
         "incidence", 1e5 * DerivedOutput("incidence_norm") / DerivedOutput("total_population")
     )
     outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
-    outputs_builder.request_function_output(
-        "notifications", DerivedOutput("passive_notifications_raw") / time_params.step
+    
+    outputs_builder.request_function_output_notifs(
+        "notifications",
     )
 
     builder.set_model(model)

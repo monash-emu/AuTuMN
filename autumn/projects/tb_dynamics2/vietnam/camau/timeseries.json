@@ -6,13 +6,21 @@
       "values": [1207100, 1194300],
       "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
     },
-    "notifications": {
+    "notificationsXgender_male": {
       "title": "Notifications",
-      "output_key": "notifications",
-      "times": [2011.0, 2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0],
-      "values": [1495, 1485, 1369, 1405, 1642, 1555, 1440, 1468, 1417],
+      "output_key": "notificationsXgender_male",
+      "times": [2017.0, 2018.0, 2019.0],
+      "values": [909, 888, 855],
       "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
     },
+    "notificationsXgender_female": {
+      "title": "Notifications",
+      "output_key": "notificationsXgender_female",
+      "times": [2017.0, 2018.0, 2019.0],
+      "values": [255, 289, 286],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    
     "percentage_latent": {
       "title": "Percentage Latent",
       "output_key": "percentage_latent",

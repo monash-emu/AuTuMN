@@ -59,7 +59,6 @@ class Multipliers(BaseModel):
 
 class Adjustments(BaseModel):
     infection: Multipliers
-    detection: Multipliers
 
 class GenderStrat(BaseModel):
     strata: list

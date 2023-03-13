@@ -1,5 +1,6 @@
 from . import (
     calibrate,
+    generic,
     full,
     resume,
     powerbi,

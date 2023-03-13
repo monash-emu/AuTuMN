@@ -21,8 +21,7 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 
 targets = [
     NormalTarget(ts_set["total_population"], stdev=2500.0),
-    NormalTarget(ts_set["notificationsXgender_male"], stdev=20.0),
-    NormalTarget(ts_set["notificationsXgender_female"], stdev=20.0),
+    NormalTarget(ts_set["notifications"], stdev=20.0),
 ]
 
 priors = [

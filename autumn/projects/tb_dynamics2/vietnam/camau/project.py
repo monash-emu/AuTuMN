@@ -29,7 +29,7 @@ priors = [
     UniformPrior("contact_rate", [0.0001, 0.02]),
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.1, 0.5]),
-    UniformPrior("progression_multiplier", [0.5, 2.0]),
+    UniformPrior("progression_multiplier", [0.5, 3.0]),
     UniformPrior("cdr_adjustment", [0.6, 1.0]),
     UniformPrior("infect_death_rate_dict.smear_positive", [0.335, 0.449]),
     UniformPrior("infect_death_rate_dict.smear_negative", [0.017, 0.035]),

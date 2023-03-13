@@ -17,14 +17,14 @@ def get_calibration_object(project):
     return calib
 
 
-def calculate_objective_to_minimize(calib, params_dict):
+def calculate_objective_to_minimize(calib, params_dict, account_for_priors):
     loglikelihood = calib.loglikelihood(params_dict)
-    logprior = calib.logprior(params_dict)
-
+    logprior = calib.logprior(params_dict) if account_for_priors else 0.
+    
     return - (loglikelihood + logprior)
 
 
-def optimise_posterior_with_pso(project, n_particles, max_iterations):
+def optimise_posterior_with_pso(project, n_particles, max_iterations, account_for_priors=True):
     """
     Performs an optimisation of the posterior likelihood using PSO.
 
@@ -46,7 +46,7 @@ def optimise_posterior_with_pso(project, n_particles, max_iterations):
     # Objective function
     def obj_func(param_list):    
         params_dict = {par_name: param_list[i] for i, par_name in enumerate(var_list)}
-        return calculate_objective_to_minimize(calib, params_dict)
+        return calculate_objective_to_minimize(calib, params_dict, account_for_priors)
     
     # Bounds around parameters
     lb = [bounds[0] for bounds in var_bounds_list]

@@ -209,10 +209,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     model.stratify_with(age_strat)
 
     # Set gender stratification
-    gender_strat = get_gender_strat(params)
-    model.stratify_with(gender_strat)
-
-    gender_strata = params.gender.strata
+    # gender_strat = get_gender_strat(params)
+    # model.stratify_with(gender_strat)
 
 
     """
@@ -227,7 +225,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     Get the applicable outputs
     """
 
-    outputs_builder = TbOutputsBuilder(model, gender_strata)
+    outputs_builder = TbOutputsBuilder(model)
     outputs_builder.request_compartment_output("total_population", BASE_COMPARTMENTS)
     # Latency
     outputs_builder.request_compartment_output(
@@ -277,8 +275,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
     outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
     
-    outputs_builder.request_function_output_notifs(
-        "notifications"
+    model.request_function_output(
+        "notifications",1e5 *  DerivedOutput("passive_notifications_raw") / DerivedOutput("total_population")
     )
 
     builder.set_model(model)

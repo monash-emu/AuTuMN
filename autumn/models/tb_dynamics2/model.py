@@ -276,7 +276,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
     
     model.request_function_output(
-        "notifications",1e5 *  DerivedOutput("passive_notifications_raw") / DerivedOutput("total_population")
+        "notifications",1e5 *  DerivedOutput("passive_notifications_raw") / time_params.step
     )
 
     builder.set_model(model)

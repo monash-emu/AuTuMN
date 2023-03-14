@@ -70,7 +70,8 @@ def get_age_strat(
             else:
                 age_up = params.age_breakpoints[i + 1]
                 transition_age = params.age_infectiousness_switch
-                # Calculate the average of the sigmoidal function between the age bounds
+                # Average value equal to definite integral from age_low to age_up divided by width 
+                # (multiply top and bottom by exp(transition_age-x) to allow for integration with log function)
                 age_infectiousness = (
                     log(1.0 + exp(age_up - transition_age))
                     - log(1.0 + exp(age_low - transition_age))

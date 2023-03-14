@@ -1,5 +1,8 @@
 from autumn.calibration.optimisation.pyswarm_source import pso
 from autumn.calibration.calibration import get_parameter_bounds_from_priors
+from autumn.infrastructure.tasks.utils import get_project_from_run_id
+
+import yaml
 import logging
 
 
@@ -64,11 +67,11 @@ def fit_model_with_pso(project, n_particles, max_iterations, account_for_priors=
 def pso_optimisation_task(run_id, out_path, swarm_size, max_iter, include_priors):
     
     logger = logging.getLogger(__name__)
-    logger.info(f"Running PSO optimisation with run_id {run_id}, out path {out_path}, and kwargs {kwargs}")
+    logger.info(f"Running PSO optimisation with run_id {run_id}, out path {out_path}")
 
     project = get_project_from_run_id(run_id)
     best_dict = fit_model_with_pso(project, swarm_size, max_iter, include_priors)
 
     logger.info(f"Best parameters: \n {best_dict}")
     with open(out_path / "pso-params.yml", 'w') as out_file:
-        out_file.write(best_dict)
+        yaml.dump(best_dict, out_file)

@@ -72,8 +72,8 @@ def get_age_strat(
                 transition_age = params.age_infectiousness_switch
                 # Calculate the average of the sigmoidal function between the age bounds
                 age_infectiousness = (
-                    log(1 + exp(age_up - transition_age))
-                    - log(1 + exp(age_low - transition_age))
+                    log(1.0 + exp(age_up - transition_age))
+                    - log(1.0 + exp(age_low - transition_age))
                 ) / (age_up - age_low)
 
             # Apply infectiousness multiplier for people on treatment - can we set this just for the compartment?

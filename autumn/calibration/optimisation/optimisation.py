@@ -19,12 +19,13 @@ def get_calibration_object(project):
 
 def calculate_objective_to_minimize(calib, params_dict, account_for_priors):
     loglikelihood = calib.loglikelihood(params_dict)
+
     logprior = calib.logprior(params_dict) if account_for_priors else 0.
     
     return - (loglikelihood + logprior)
 
 
-def optimise_posterior_with_pso(project, n_particles, max_iterations, account_for_priors=True):
+def fit_model_with_pso(project, n_particles, max_iterations, account_for_priors=True):
     """
     Performs an optimisation of the posterior likelihood using PSO.
 
@@ -57,3 +58,14 @@ def optimise_posterior_with_pso(project, n_particles, max_iterations, account_fo
 
     best_param_dict = {par_name: xopt[i] for i, par_name in enumerate(var_list)}
     return best_param_dict
+
+
+def pso_optimisation_task(run_id, out_path, swarm_size, max_iter, include_priors):
+    logger.info(f"Running PSO optimisation with run_id {run_id}, out path {out_path}, and kwargs {kwargs}")
+
+    project = get_project_from_run_id(run_id)
+    best_dict = fit_model_with_pso(project, swarm_size, max_iter, include_priors)
+
+    logger.info(f"Best parameters: \n {best_dict}")
+    with open(out_path / "pso-params.yml", 'w') as out_file:
+        out_file.write(best_dict)

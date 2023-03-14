@@ -13,6 +13,8 @@ from autumn.core.utils.timer import Timer
 from .utils import get_project_from_run_id, set_logging_config
 from .storage import StorageMode, MockStorage, S3Storage, LocalStorage
 
+from autumn.calibration.optimisation.optimisation import pso_optimisation_task as _pso_optimisation_task
+
 logger = logging.getLogger(__name__)
 
 def _test_stub(run_id, out_path, **kwargs):
@@ -20,8 +22,10 @@ def _test_stub(run_id, out_path, **kwargs):
     with open(out_path / "output.txt", 'w') as out_file:
         out_file.write(f"Running with run_id {run_id}, out path {out_path}, and kwargs {kwargs}")
 
+
 TASK_CONFIG = {
-    "test_stub": _test_stub 
+    "test_stub": _test_stub,
+    "pso_opti": _pso_optimisation_task,
 }
 
 

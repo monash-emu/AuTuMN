@@ -1,5 +1,6 @@
 from autumn.calibration.optimisation.pyswarm_source import pso
 from autumn.calibration.calibration import get_parameter_bounds_from_priors
+import logging
 
 
 def get_calibration_object(project):
@@ -61,6 +62,8 @@ def fit_model_with_pso(project, n_particles, max_iterations, account_for_priors=
 
 
 def pso_optimisation_task(run_id, out_path, swarm_size, max_iter, include_priors):
+    
+    logger = logging.getLogger(__name__)
     logger.info(f"Running PSO optimisation with run_id {run_id}, out path {out_path}, and kwargs {kwargs}")
 
     project = get_project_from_run_id(run_id)

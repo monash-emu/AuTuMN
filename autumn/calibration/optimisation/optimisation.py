@@ -58,7 +58,7 @@ def fit_model_with_pso(project, n_particles, max_iterations, account_for_priors=
     ub = [bounds[1] for bounds in var_bounds_list]
 
     # Run the PSO
-    xopt, _ = pso(obj_func, lb, ub, swarmsize=n_particles, maxiter=max_iterations, minstep=1e-16)
+    xopt, _ = pso(obj_func, lb, ub, swarmsize=n_particles, maxiter=max_iterations, minstep=1e-16, minfunc=1e-16, omega=.8, phip=2, phig=2)
 
     best_param_dict = {par_name: xopt[i] for i, par_name in enumerate(var_list)}
     return best_param_dict

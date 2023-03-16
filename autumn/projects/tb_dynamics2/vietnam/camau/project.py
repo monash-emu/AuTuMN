@@ -22,32 +22,25 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 targets = [
     NormalTarget(ts_set["total_population"], stdev=2500.0),
     NormalTarget(ts_set["notifications"], stdev=20.0),
-    NormalTarget(ts_set["percentage_latent"], stdev=2.0),
-    #NormalTarget(ts_set["incidence"], stdev=5.0)
+    NormalTarget(ts_set["percentage_latent"], stdev=20.0)
 ]
 
-CID_ESTIMATES = {
-    "infect_death_rate": {
-        "smear_positive": [0.335, 0.449],
-        "smear_negative": [0.017, 0.035],
-    },
-    "self_recovery_rate": {"smear_positive": [0.177, 0.288], "smear_negative": [0.073, 0.209]},
-}
-
-
 priors = [
-    UniformPrior("start_population_size", [300000, 400000]),
-    UniformPrior("contact_rate", [0.0001, 0.01]),
-    #UniformPrior("infectious_seed", [100, 2000]),
+    UniformPrior("start_population_size", [100000, 400000]),
+    UniformPrior("contact_rate", [0.0001, 0.02]),
     UniformPrior("rr_infection_latent", [0.2, 0.5]),
     UniformPrior("rr_infection_recovered", [0.1, 0.5]),
-    UniformPrior("progression_multiplier", [0.1, 2.0]),
-    UniformPrior("cdr_adjustment", [0.6, 1.4]),
+    UniformPrior("progression_multiplier", [0.5, 3.0]),
+    UniformPrior("cdr_adjustment", [0.6, 1.0]),
     UniformPrior("infect_death_rate_dict.smear_positive", [0.335, 0.449]),
     UniformPrior("infect_death_rate_dict.smear_negative", [0.017, 0.035]),
     UniformPrior("self_recovery_rate_dict.smear_positive", [0.177, 0.288]),
     UniformPrior("self_recovery_rate_dict.smear_negative", [0.073, 0.209]),
+<<<<<<< HEAD
     UniformPrior("gender.adjustments.infection.male", [1.0, 5.0])
+=======
+    #UniformPrior("gender.adjustments.infection.male", [1.0, 4.0])
+>>>>>>> tb-cm-jt2
 ]
 calibration = Calibration(
     priors=priors,

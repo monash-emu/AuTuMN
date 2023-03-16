@@ -48,13 +48,10 @@ age_stratification:
 gender:
   strata: ["male", "female"]
   proportions:
-    male: .5
-    female: .5
+    male: .51
+    female: .49
   adjustments:
     infection:
-      male: 1.5
-      female: 1.0
-    detection: 
       male: 1.5
       female: 1.0
 

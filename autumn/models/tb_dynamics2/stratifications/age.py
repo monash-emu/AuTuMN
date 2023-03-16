@@ -93,63 +93,61 @@ def get_age_strat(
         [Time],
     )
 
-    # Set age-specific treatment recovery, relapse and treatment death rates. Since the non-TB-related mortality rate varies by age, the values of the treatment-induced recovery 
-    # relapse rate and mortality rate of individuals on TB treatment also vary by age.
-    # The treatment success rate TSR = 𝜑 / (𝜑 + 𝜌 +  𝜇t + 𝜇') where 𝜌 is the relapse rate, 𝜇t is the excess mortality rate of individuals on TB treatment, and 𝜇 is the non-TB-related mortality rate
-    # π is the observed proportion of deaths among all negative treatment outcomes, π = (𝜇t + 𝜇)/(𝜌 +  𝜇t + 𝜇)
+    def get_treatment_outcome_props(duration, prop_death_among_non_success, natural_death_rate, tsr, death_or_relapse):
+        
+        # Calculate the proportion of people dying from natural causes while on treatment
+        prop_natural_death_while_on_treatment = natural_death_rate * duration
+        
+        # Calculate the target proportion of treatment outcomes resulting in death based on requests
+        target_prop_death_on_treatment = (1.0 - tsr) * prop_death_among_non_success
+        
+        # Calculate the actual rate of deaths on treatment
+        prop_death_on_treatment = jnp.max([target_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0])
+        
+        # Calculate the proportion of treatment episodes resulting in relapse
+        relapse_prop = (1.0 - tsr) * (1.0 - prop_death_on_treatment)
+        return prop_death_on_treatment if death_or_relapse == "death" else relapse_prop
     
-    treatment_recovery_funcs = {}
-    def get_treatment_recovery_rate(treatment_duration, prop_death, death_rate, tsr):
-        floor_val = 1 / treatment_duration
-        dynamic_val = death_rate / prop_death * (1.0 / (1.0 - tsr) - 1.0)
-        return jnp.max(jnp.array((floor_val, dynamic_val)))
-    
-    treatment_death_funcs = {}
-    def get_treatment_death_rate(prop_death, death_rate, trr, tsr):
-        return (
-            prop_death
-                * trr
-                * (1.0 - tsr)
-                / tsr
-                - death_rate
-        )
-    treatment_relapse_funcs = {}
-    def get_treatment_relapse_rate(prop_death, trr, tsr):
-        return (
-                trr
-                * (1.0 / tsr - 1.0)
-                * (1.0 - prop_death)
-            )
+    def get_treatment_success_rate(duration, tsr):
+        return duration * tsr
+        
 
+    treatment_recovery_funcs = {}
+    treatment_death_funcs = {}
+    treatment_relapse_funcs = {}
+    
     for age in params.age_breakpoints:
+        treatment_recovery_funcs[age] = 1.
+        # Function(
+        #     get_treatment_success_rate,
+        #     [
+        #         params.treatment_duration,
+        #         time_variant_tsr,
+        #     ],
+        # )
         death_rate = universal_death_funcs[age]
-        treatment_recovery_funcs[age] = Function(
-            get_treatment_recovery_rate,
+        treatment_relapse_funcs[age] = Function(
+            get_treatment_outcome_props,
             [
                 params.treatment_duration,
                 params.prop_death_among_negative_tx_outcome,
                 death_rate,
                 time_variant_tsr,
+                "relapse",
             ],
         )
         treatment_death_funcs[age] = Function(
-            get_treatment_death_rate,
+            get_treatment_outcome_props,
             [
                 params.prop_death_among_negative_tx_outcome,
                 death_rate,
                 treatment_recovery_funcs[age],
-                time_variant_tsr
+                time_variant_tsr,
+                "death",
             ],
         )
-        treatment_relapse_funcs[age] = Function(
-            get_treatment_relapse_rate,
-            [
-                params.prop_death_among_negative_tx_outcome,
-                treatment_recovery_funcs[age],
-                time_variant_tsr
-            ]
-        )
 
+    # Could probably make these overwrites just as easily
     treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
     treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}
     treatment_relapse_adjs = {str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()}

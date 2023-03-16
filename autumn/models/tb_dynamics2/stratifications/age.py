@@ -85,18 +85,19 @@ def get_age_strat(
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
 
-    # Set age-specific treatment recovery, relapse and treatment death rates. Since the non-TB-related mortality rate varies by age, the values of the treatment-induced recovery 
-    # relapse rate and mortality rate of individuals on TB treatment also vary by age.
-    # The treatment success rate TSR = 𝜑 / (𝜑 + 𝜌 +  𝜇t + 𝜇') where 𝜌 is the relapse rate, 𝜇t is the excess mortality rate of individuals on TB treatment, and 𝜇 is the non-TB-related mortality rate
-    # π is the observed proportion of deaths among all negative treatment outcomes, π = (𝜇t + 𝜇)/(𝜌 +  𝜇t + 𝜇)
-    
+    # Get treatment success rates, function will return starting treatment success rate before data available
     time_variant_tsr = Function(
         build_static_sigmoidal_multicurve(
             list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
         ),
         [Time],
-    ) # Scaling up the time-variant treatment success rate based on observed values
+    )
 
+    # Set age-specific treatment recovery, relapse and treatment death rates. Since the non-TB-related mortality rate varies by age, the values of the treatment-induced recovery 
+    # relapse rate and mortality rate of individuals on TB treatment also vary by age.
+    # The treatment success rate TSR = 𝜑 / (𝜑 + 𝜌 +  𝜇t + 𝜇') where 𝜌 is the relapse rate, 𝜇t is the excess mortality rate of individuals on TB treatment, and 𝜇 is the non-TB-related mortality rate
+    # π is the observed proportion of deaths among all negative treatment outcomes, π = (𝜇t + 𝜇)/(𝜌 +  𝜇t + 𝜇)
+    
     treatment_recovery_funcs = {}
     def get_treatment_recovery_rate(treatment_duration, prop_death, death_rate, tsr):
         floor_val = 1 / treatment_duration

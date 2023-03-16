@@ -96,7 +96,7 @@ def get_age_strat(
     def get_treatment_outcome_props(duration, prop_death_among_non_success, natural_death_rate, tsr, death_or_relapse):
         
         # Calculate the proportion of people dying from natural causes while on treatment
-        prop_natural_death_while_on_treatment = natural_death_rate * duration
+        prop_natural_death_while_on_treatment = prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-duration * natural_death_rate)
         
         # Calculate the target proportion of treatment outcomes resulting in death based on requests
         target_prop_death_on_treatment = (1.0 - tsr) * prop_death_among_non_success

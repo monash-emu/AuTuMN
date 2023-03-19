@@ -98,9 +98,11 @@ def get_age_strat(
 
     treatment_recovery_funcs = {}
     def get_treatment_recovery_rate(treatment_duration, prop_death, death_rate, tsr):
-        floor_val = 1 / treatment_duration
-        dynamic_val = death_rate / prop_death * (1.0 / (1.0 - tsr) - 1.0)
-        return jnp.max(jnp.array((floor_val, dynamic_val)))
+        prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-treatment_duration * death_rate)
+        # Calculate the target proportion of treatment outcomes resulting in death based on requests
+        target_prop_death_on_treatment = (1.0 - tsr) * prop_death
+        # Calculate the actual rate of deaths on treatment
+        return jnp.max(jnp.array((target_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0)))
     
     treatment_death_funcs = {}
     def get_treatment_death_rate(prop_death, death_rate, trr, tsr):

@@ -122,9 +122,7 @@ def get_age_strat(
     ) # Scaling up the time-variant treatment success rate based on observed values
 
     # Get the treatment outcomes, using the get_treatment_outcomes function above and apply to model
-    treatment_recovery_funcs = {}
-    treatment_death_funcs = {}
-    treatment_relapse_funcs = {}
+    treatment_recovery_funcs, treatment_death_funcs, treatment_relapse_funcs = {}, {}, {}
     for age in params.age_breakpoints:
         death_rate = universal_death_funcs[age]
         treatment_outcomes = Function(

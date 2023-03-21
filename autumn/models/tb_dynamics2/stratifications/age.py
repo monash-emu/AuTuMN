@@ -28,7 +28,7 @@ def get_average_sigmoid(low_val, upper_val, inflection):
     A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase with age.
     This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
     """
-    return (log(1 + exp(upper_val - inflection)) - log(1 + exp(low_val - inflection))) / (upper_val - low_val)
+    return (log(1.0 + exp(upper_val - inflection)) - log(1.0 + exp(low_val - inflection))) / (upper_val - low_val)
 
 
 def map_params_to_model_agegroups(input_dict, targets):

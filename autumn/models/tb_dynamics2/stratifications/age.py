@@ -67,8 +67,8 @@ def get_age_strat(
     # Set age-specific late activation rate
     for flow_name, latency_params in params.age_stratification.items():
         latency_mapped = map_params_to_model_agegroups(latency_params, age_breakpoints)
-        adjs = {k: Multiply(v) for k, v in latency_mapped.items()}
-        strat.set_flow_adjustments(flow_name, adjs)
+        # adjs = {k: Multiply(v) for k, v in latency_mapped.items()}
+        strat.set_flow_adjustments(flow_name, latency_mapped)
 
     for comp in INFECTIOUS_COMPS:
         # We assume that infectiousness increases with age
@@ -152,7 +152,7 @@ def get_age_strat(
 def map_params_to_model_agegroups(input_dict, targets):
     results = {}
     for t in targets:
-        results[str(t)] = input_dict[max([k for k in input_dict.keys() if k <= t])] 
+        results[str(t)] = Multiply(input_dict[max([k for k in input_dict.keys() if k <= t])])
     return results
 
 

@@ -12,15 +12,21 @@ from jax import numpy as jnp
 from autumn.models.tb_dynamics2.constants import BASE_COMPARTMENTS
 
 
-def get_treatment_outcomes(treatment_duration, observed_prop_death, natural_death_rate, tsr):
-    prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-treatment_duration * natural_death_rate)
+def get_treatment_outcomes(duration, prop_death_among_non_success, natural_death_rate, tsr):
+    
+    # Calculate the proportion of people dying from natural causes while on treatment
+    prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-duration * natural_death_rate)
+
     # Calculate the target proportion of treatment outcomes resulting in death based on requests
-    target_prop_death_on_treatment = (1.0 - tsr) * observed_prop_death
-    # Calculate the actual rate of deaths on treatment
-    treatment_recovery_rate = jnp.max(jnp.array((target_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0)))
-    treatment_death_rate = observed_prop_death * treatment_recovery_rate * (1.0 - tsr) / tsr - natural_death_rate
-    treatment_recvery_rate = treatment_recovery_rate * (1.0 / 1.0 -  treatment_recovery_rate) * (1.0 - observed_prop_death)
-    return treatment_recovery_rate, treatment_death_rate, treatment_recvery_rate
+    requested_prop_death_on_treatment = (1.0 - tsr) * prop_death_among_non_success
+    
+    # Calculate the actual rate of deaths on treatment, with floor of zero
+    prop_death_from_treatment = jnp.max(jnp.array((requested_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0)))
+    
+    # Calculate the proportion of treatment episodes resulting in relapse
+    relapse_prop = 1.0 - tsr - prop_death_from_treatment - prop_natural_death_while_on_treatment
+    
+    return tuple([param * duration for param in [tsr, prop_death_from_treatment, relapse_prop]])
 
 
 def get_average_sigmoid(low_val, upper_val, inflection):
@@ -66,9 +72,9 @@ def get_age_strat(
     Returns:
         The age stratification summer object
     """
-    age_breakpoints = params.age_breakpoints
+    age_breaks = params.age_breakpoints
     iso3 = params.country.iso3
-    strat = AgeStratification("age", age_breakpoints, BASE_COMPARTMENTS)
+    strat = AgeStratification("age", age_breaks, BASE_COMPARTMENTS)
 
     # Get and set age-specific mixing matrix
     age_mixing_matrix = build_synthetic_matrices(
@@ -82,9 +88,9 @@ def get_age_strat(
     strat.set_mixing_matrix(age_mixing_matrix)
 
     # Set non-TB-related mortality rates
-    death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breakpoints, iso3)
+    death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breaks, iso3)
     universal_death_funcs, death_adjs = {}, {}
-    for age in age_breakpoints:
+    for age in age_breaks:
         age_specific_death_func = build_static_sigmoidal_multicurve(death_rate_years, death_rates_by_age[age])
         universal_death_funcs[age] = Function(age_specific_death_func, [Time])
         death_adjs[str(age)] = Overwrite(universal_death_funcs[age])
@@ -92,20 +98,20 @@ def get_age_strat(
 
     # Set age-specific late activation rate
     for flow_name, latency_params in params.age_stratification.items():
-        strat.set_flow_adjustments(flow_name, map_params_to_model_agegroups(latency_params, age_breakpoints))
+        strat.set_flow_adjustments(flow_name, map_params_to_model_agegroups(latency_params, age_breaks))
 
     # Increasing infectiousness with age
+    inf_switch_age = params.age_infectiousness_switch
     for comp in INFECTIOUS_COMPS:
         inf_adjs = {}
-        for i, age_low in enumerate(age_breakpoints):
-            inf_switch_age = params.age_infectiousness_switch
-            average_infectiousness = 1.0 if age_low == age_breakpoints[-1] else get_average_sigmoid(age_low, age_breakpoints[i + 1], inf_switch_age)
+        for i, age_low in enumerate(age_breaks):
+            infectiousness = 1.0 if age_low == age_breaks[-1] else get_average_sigmoid(age_low, age_breaks[i + 1], inf_switch_age)
 
             # Infectiousness multiplier for treatment (ideally move to model.py, but has to be set in stratification with current summer)
             if comp == Compartment.ON_TREATMENT:
-                average_infectiousness *= params.on_treatment_infect_multiplier
+                infectiousness *= params.on_treatment_infect_multiplier
 
-            inf_adjs[str(age_low)] = Multiply(average_infectiousness)
+            inf_adjs[str(age_low)] = Multiply(infectiousness)
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
 
@@ -119,7 +125,7 @@ def get_age_strat(
 
     # Get the treatment outcomes, using the get_treatment_outcomes function above and apply to model
     treatment_recovery_funcs, treatment_death_funcs, treatment_relapse_funcs = {}, {}, {}
-    for age in age_breakpoints:
+    for age in age_breaks:
         death_rate = universal_death_funcs[age]
         treatment_outcomes = Function(
             get_treatment_outcomes,
@@ -146,7 +152,7 @@ def get_age_strat(
     bcg_adjs = {}
     for age, multiplier in bcg_multiplier_dict.items():
         if multiplier < 1.0:
-            average_age = get_average_age_for_bcg(age, age_breakpoints)
+            average_age = get_average_age_for_bcg(age, age_breaks)
             bcg_adjs[age] = Multiply(
                 Function(bcg_multiplier_func, [Time, bcg_coverage_func, multiplier, average_age])
             )

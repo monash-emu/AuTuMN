@@ -97,34 +97,39 @@ def get_age_strat(
     ) # Scaling up the time-variant treatment success rate based on observed values
 
     treatment_recovery_funcs = {}
-    def get_treatment_recovery_rate(treatment_duration, prop_death, death_rate, tsr):
-        prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-treatment_duration * death_rate)
-        # Calculate the target proportion of treatment outcomes resulting in death based on requests
-        target_prop_death_on_treatment = (1.0 - tsr) * prop_death
-        # Calculate the actual rate of deaths on treatment
-        return jnp.max(jnp.array((target_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0)))
-    
     treatment_death_funcs = {}
-    def get_treatment_death_rate(prop_death, death_rate, trr, tsr):
-        return (
-            prop_death
-                * trr
-                * (1.0 - tsr)
-                / tsr
-                - death_rate
-        )
     treatment_relapse_funcs = {}
-    def get_treatment_relapse_rate(prop_death, trr, tsr):
-        return (
-                trr
-                * (1.0 / tsr - 1.0)
-                * (1.0 - prop_death)
-            )
+    def get_treatment_outcomes(treatment_duration, observed_prop_death, natural_death_rate, tsr):
+        prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-treatment_duration * natural_death_rate)
+        # Calculate the target proportion of treatment outcomes resulting in death based on requests
+        target_prop_death_on_treatment = (1.0 - tsr) * observed_prop_death
+        # Calculate the actual rate of deaths on treatment
+        treatment_recovery_rate = jnp.max(jnp.array((target_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0)))
+        treatment_death_rate = observed_prop_death * treatment_recovery_rate * (1.0 - tsr) / tsr - natural_death_rate
+        treatment_recvery_rate = treatment_recovery_rate * (1.0 / 1.0 -  treatment_recovery_rate) * (1.0 - observed_prop_death)
+        return treatment_recovery_rate, treatment_death_rate, treatment_recvery_rate
+    
+    # treatment_death_funcs = {}
+    # def get_treatment_death_rate(prop_death, death_rate, trr, tsr):
+    #     return (
+    #         prop_death
+    #             * trr
+    #             * (1.0 - tsr)
+    #             / tsr
+    #             - death_rate
+    #     )
+    # treatment_relapse_funcs = {}
+    # def get_treatment_relapse_rate(prop_death, trr, tsr):
+    #     return (
+    #             trr
+    #             * (1.0 / tsr - 1.0)
+    #             * (1.0 - prop_death)
+    #         )
 
     for age in params.age_breakpoints:
         death_rate = universal_death_funcs[age]
-        treatment_recovery_funcs[age] = Function(
-            get_treatment_recovery_rate,
+        treatment_outcomes = Function(
+            get_treatment_outcomes,
             [
                 params.treatment_duration,
                 params.prop_death_among_negative_tx_outcome,
@@ -132,23 +137,26 @@ def get_age_strat(
                 time_variant_tsr,
             ],
         )
-        treatment_death_funcs[age] = Function(
-            get_treatment_death_rate,
-            [
-                params.prop_death_among_negative_tx_outcome,
-                death_rate,
-                treatment_recovery_funcs[age],
-                time_variant_tsr
-            ],
-        )
-        treatment_relapse_funcs[age] = Function(
-            get_treatment_relapse_rate,
-            [
-                params.prop_death_among_negative_tx_outcome,
-                treatment_recovery_funcs[age],
-                time_variant_tsr
-            ]
-        )
+        treatment_recovery_funcs[age] = treatment_outcomes[0]
+        treatment_death_funcs[age] = treatment_outcomes[1]
+        treatment_relapse_funcs[age] = treatment_outcomes[2]
+        # treatment_death_funcs[age] = Function(
+        #     get_treatment_death_rate,
+        #     [
+        #         params.prop_death_among_negative_tx_outcome,
+        #         death_rate,
+        #         treatment_recovery_funcs[age],
+        #         time_variant_tsr
+        #     ],
+        # )
+        # treatment_relapse_funcs[age] = Function(
+        #     get_treatment_relapse_rate,
+        #     [
+        #         params.prop_death_among_negative_tx_outcome,
+        #         treatment_recovery_funcs[age],
+        #         time_variant_tsr
+        #     ]
+        # )
 
     treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
     treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}

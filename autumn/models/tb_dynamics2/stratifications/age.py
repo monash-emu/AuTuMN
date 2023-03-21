@@ -96,9 +96,7 @@ def get_age_strat(
         [Time],
     ) # Scaling up the time-variant treatment success rate based on observed values
 
-    treatment_recovery_funcs = {}
-    treatment_death_funcs = {}
-    treatment_relapse_funcs = {}
+
     def get_treatment_outcomes(treatment_duration, observed_prop_death, natural_death_rate, tsr):
         prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-treatment_duration * natural_death_rate)
         # Calculate the target proportion of treatment outcomes resulting in death based on requests
@@ -109,23 +107,9 @@ def get_age_strat(
         treatment_recvery_rate = treatment_recovery_rate * (1.0 / 1.0 -  treatment_recovery_rate) * (1.0 - observed_prop_death)
         return treatment_recovery_rate, treatment_death_rate, treatment_recvery_rate
     
-    # treatment_death_funcs = {}
-    # def get_treatment_death_rate(prop_death, death_rate, trr, tsr):
-    #     return (
-    #         prop_death
-    #             * trr
-    #             * (1.0 - tsr)
-    #             / tsr
-    #             - death_rate
-    #     )
-    # treatment_relapse_funcs = {}
-    # def get_treatment_relapse_rate(prop_death, trr, tsr):
-    #     return (
-    #             trr
-    #             * (1.0 / tsr - 1.0)
-    #             * (1.0 - prop_death)
-    #         )
-
+    treatment_recovery_funcs = {}
+    treatment_death_funcs = {}
+    treatment_relapse_funcs = {}
     for age in params.age_breakpoints:
         death_rate = universal_death_funcs[age]
         treatment_outcomes = Function(
@@ -137,33 +121,12 @@ def get_age_strat(
                 time_variant_tsr,
             ],
         )
-        treatment_recovery_funcs[age] = treatment_outcomes[0]
-        treatment_death_funcs[age] = treatment_outcomes[1]
-        treatment_relapse_funcs[age] = treatment_outcomes[2]
-        # treatment_death_funcs[age] = Function(
-        #     get_treatment_death_rate,
-        #     [
-        #         params.prop_death_among_negative_tx_outcome,
-        #         death_rate,
-        #         treatment_recovery_funcs[age],
-        #         time_variant_tsr
-        #     ],
-        # )
-        # treatment_relapse_funcs[age] = Function(
-        #     get_treatment_relapse_rate,
-        #     [
-        #         params.prop_death_among_negative_tx_outcome,
-        #         treatment_recovery_funcs[age],
-        #         time_variant_tsr
-        #     ]
-        # )
-
-    treatment_recovery_adjs = {str(k): Multiply(v) for k, v in treatment_recovery_funcs.items()}
-    treatment_death_adjs = {str(k): Multiply(v) for k, v in treatment_death_funcs.items()}
-    treatment_relapse_adjs = {str(k): Multiply(v) for k, v in treatment_relapse_funcs.items()}
-    strat.set_flow_adjustments("treatment_recovery", treatment_recovery_adjs)
-    strat.set_flow_adjustments("treatment_death", treatment_death_adjs)
-    strat.set_flow_adjustments("relapse", treatment_relapse_adjs)
+        treatment_recovery_funcs[str(age)] = Multiply(treatment_outcomes[0])
+        treatment_death_funcs[str(age)] = Multiply(treatment_outcomes[1])
+        treatment_relapse_funcs[str(age)] = Multiply(treatment_outcomes[2])
+    strat.set_flow_adjustments("treatment_recovery", treatment_recovery_funcs)
+    strat.set_flow_adjustments("treatment_death", treatment_death_funcs)
+    strat.set_flow_adjustments("relapse", treatment_relapse_funcs)
 
     #Add BCG effect without stratifying for BCG
     bcg_multilier_dict = {'0': 0.3, '5': 0.3, '15': 0.7375, '35': 1.0, '50': 1.0}

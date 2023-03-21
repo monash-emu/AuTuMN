@@ -97,10 +97,9 @@ def get_age_strat(
     # Increasing infectiousness with age
     for comp in INFECTIOUS_COMPS:
         inf_adjs = {}
-        for i, age_low in enumerate(params.age_breakpoints):
+        for i, age_low in enumerate(age_breakpoints):
             inf_switch_age = params.age_infectiousness_switch
-            age_up = params.age_breakpoints[i + 1]
-            average_infectiousness = 1.0 if age_low == params.age_breakpoints[-1] else get_average_sigmoid(age_low, age_up, inf_switch_age)
+            average_infectiousness = 1.0 if age_low == age_breakpoints[-1] else get_average_sigmoid(age_low, age_breakpoints[i + 1], inf_switch_age)
 
             # Infectiousness multiplier for treatment (ideally move to model.py, but has to be set in stratification with current summer)
             if comp == Compartment.ON_TREATMENT:
@@ -120,7 +119,7 @@ def get_age_strat(
 
     # Get the treatment outcomes, using the get_treatment_outcomes function above and apply to model
     treatment_recovery_funcs, treatment_death_funcs, treatment_relapse_funcs = {}, {}, {}
-    for age in params.age_breakpoints:
+    for age in age_breakpoints:
         death_rate = universal_death_funcs[age]
         treatment_outcomes = Function(
             get_treatment_outcomes,
@@ -147,7 +146,7 @@ def get_age_strat(
     bcg_adjs = {}
     for age, multiplier in bcg_multiplier_dict.items():
         if multiplier < 1.0:
-            average_age = get_average_age_for_bcg(age, params.age_breakpoints)
+            average_age = get_average_age_for_bcg(age, age_breakpoints)
             bcg_adjs[age] = Multiply(
                 Function(bcg_multiplier_func, [Time, bcg_coverage_func, multiplier, average_age])
             )

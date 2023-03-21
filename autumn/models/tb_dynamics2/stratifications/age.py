@@ -23,6 +23,14 @@ def get_treatment_outcomes(treatment_duration, observed_prop_death, natural_deat
     return treatment_recovery_rate, treatment_death_rate, treatment_recvery_rate
 
 
+def get_average_sigmoid(low_val, upper_val, inflection):
+    """
+    A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase with age.
+    This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
+    """
+    return (log(1 + exp(upper_val - inflection)) - log(1 + exp(low_val - inflection))) / (upper_val - low_val)
+
+
 def map_params_to_model_agegroups(input_dict, targets):
     results = {}
     for t in targets:
@@ -88,23 +96,14 @@ def get_age_strat(
 
     # Increasing infectiousness with age
     for comp in INFECTIOUS_COMPS:
-        # A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase with age.
-        # This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
         inf_adjs = {}
         for i, age_low in enumerate(params.age_breakpoints):
-            if i < len(params.age_breakpoints) - 1:
-                age_up = params.age_breakpoints[i + 1]
-                # Calculate the average of the sigmoidal function(x -> 1 / (1 + exp(-(x-alpha)))) between the age bounds
-                average_infectiousness = (
-                    log(1 + exp(age_up - params.age_infectiousness_switch))
-                    - log(1 + exp(age_low - params.age_infectiousness_switch))
-                ) / (age_up - age_low)
-            else:
-                # Set infectiousness to 1. for the oldest age group
-                average_infectiousness = 1.0
+            inf_switch_age = params.age_infectiousness_switch
+            age_up = params.age_breakpoints[i + 1]
+            average_infectiousness = 1.0 if age_low == params.age_breakpoints[-1] else get_average_sigmoid(age_low, age_up, inf_switch_age)
 
+            # Infectiousness multiplier for treatment (ideally move to model.py, but has to be set in stratification with current summer)
             if comp == Compartment.ON_TREATMENT:
-                # Apply infectiousness multiplier for people on treatment,
                 average_infectiousness *= params.on_treatment_infect_multiplier
 
             inf_adjs[str(age_low)] = Multiply(average_infectiousness)

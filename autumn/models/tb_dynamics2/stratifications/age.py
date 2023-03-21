@@ -67,12 +67,12 @@ def get_age_strat(
     # Set age-specific late activation rate
     for flow_name, latency_params in params.age_stratification.items():
         latency_mapped = map_params_to_model_agegroups(latency_params, age_breakpoints)
-        adjs = {str(k): Multiply(v) for k, v in latency_mapped.items()}
+        adjs = {k: Multiply(v) for k, v in latency_mapped.items()}
         strat.set_flow_adjustments(flow_name, adjs)
 
     for comp in INFECTIOUS_COMPS:
         # We assume that infectiousness increases with age
-        # A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase  with  age.
+        # A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase with age.
         # This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
         inf_adjs = {}
         for i, age_low in enumerate(params.age_breakpoints):

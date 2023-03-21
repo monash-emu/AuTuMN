@@ -1,5 +1,3 @@
-from typing import List
-import pandas as pd
 from summer2 import AgeStratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
@@ -25,6 +23,27 @@ def get_treatment_outcomes(treatment_duration, observed_prop_death, natural_deat
     return treatment_recovery_rate, treatment_death_rate, treatment_recvery_rate
 
 
+def map_params_to_model_agegroups(input_dict, targets):
+    results = {}
+    for t in targets:
+        results[str(t)] = Multiply(input_dict[max([k for k in input_dict.keys() if k <= t])])
+    return results
+
+        
+def get_average_age_for_bcg(agegroup, age_breakpoints):
+    agegroup_idx = age_breakpoints.index(int(agegroup))
+    if agegroup_idx == len(age_breakpoints) - 1:
+        # We should normally never be in this situation because the last agegroup is not affected by BCG anyway.
+        print("Warning: the agegroup name is being used to represent the average age of the group")
+        return float(agegroup)
+    else:
+        return 0.5 * (age_breakpoints[agegroup_idx] + age_breakpoints[agegroup_idx + 1])
+
+
+def bcg_multiplier_func(t, tfunc, fmultiplier, faverage_age):
+    return 1.0 - tfunc(t - faverage_age) / 100.0 * (1.0 - fmultiplier)
+
+
 def get_age_strat(
     params,
 ) -> AgeStratification:
@@ -36,7 +55,6 @@ def get_age_strat(
         params: Parameter class
         age_pops: The population distribution by age
         compartments: All the model compartments
-
     Returns:
         The age stratification summer object
     """
@@ -146,31 +164,4 @@ def get_age_strat(
         flow_affected_by_bcg = "infect_death"
     strat.set_flow_adjustments(flow_affected_by_bcg, bcg_adjs)
 
-
     return strat
-
-def map_params_to_model_agegroups(input_dict, targets):
-    results = {}
-    for t in targets:
-        results[str(t)] = Multiply(input_dict[max([k for k in input_dict.keys() if k <= t])])
-    return results
-
-
-        
-def get_average_age_for_bcg(agegroup, age_breakpoints):
-    agegroup_idx = age_breakpoints.index(int(agegroup))
-    if agegroup_idx == len(age_breakpoints) - 1:
-        # We should normally never be in this situation because the last agegroup is not affected by BCG anyway.
-        print("Warning: the agegroup name is being used to represent the average age of the group")
-        return float(agegroup)
-    else:
-        return 0.5 * (age_breakpoints[agegroup_idx] + age_breakpoints[agegroup_idx + 1])
-
-def bcg_multiplier_func(t, tfunc, fmultiplier, faverage_age):
-    return 1.0 - tfunc(t - faverage_age) / 100.0 * (1.0 - fmultiplier)
-
-
-
-
-
-

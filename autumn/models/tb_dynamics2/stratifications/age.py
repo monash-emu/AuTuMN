@@ -14,6 +14,17 @@ from jax import numpy as jnp
 from autumn.models.tb_dynamics2.constants import BASE_COMPARTMENTS
 
 
+def get_treatment_outcomes(treatment_duration, observed_prop_death, natural_death_rate, tsr):
+    prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-treatment_duration * natural_death_rate)
+    # Calculate the target proportion of treatment outcomes resulting in death based on requests
+    target_prop_death_on_treatment = (1.0 - tsr) * observed_prop_death
+    # Calculate the actual rate of deaths on treatment
+    treatment_recovery_rate = jnp.max(jnp.array((target_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0)))
+    treatment_death_rate = observed_prop_death * treatment_recovery_rate * (1.0 - tsr) / tsr - natural_death_rate
+    treatment_recvery_rate = treatment_recovery_rate * (1.0 / 1.0 -  treatment_recovery_rate) * (1.0 - observed_prop_death)
+    return treatment_recovery_rate, treatment_death_rate, treatment_recvery_rate
+
+
 def get_age_strat(
     params,
 ) -> AgeStratification:
@@ -84,11 +95,7 @@ def get_age_strat(
 
         strat.add_infectiousness_adjustments(comp, inf_adjs)
 
-    # Set age-specific treatment recovery, relapse and treatment death rates. Since the non-TB-related mortality rate varies by age, the values of the treatment-induced recovery 
-    # relapse rate and mortality rate of individuals on TB treatment also vary by age.
-    # The treatment success rate TSR = 𝜑 / (𝜑 + 𝜌 +  𝜇t + 𝜇') where 𝜌 is the relapse rate, 𝜇t is the excess mortality rate of individuals on TB treatment, and 𝜇 is the non-TB-related mortality rate
-    # π is the observed proportion of deaths among all negative treatment outcomes, π = (𝜇t + 𝜇)/(𝜌 +  𝜇t + 𝜇)
-    
+    # Get the time-varying treatment success proportions
     time_variant_tsr = Function(
         build_static_sigmoidal_multicurve(
             list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
@@ -96,17 +103,7 @@ def get_age_strat(
         [Time],
     ) # Scaling up the time-variant treatment success rate based on observed values
 
-
-    def get_treatment_outcomes(treatment_duration, observed_prop_death, natural_death_rate, tsr):
-        prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-treatment_duration * natural_death_rate)
-        # Calculate the target proportion of treatment outcomes resulting in death based on requests
-        target_prop_death_on_treatment = (1.0 - tsr) * observed_prop_death
-        # Calculate the actual rate of deaths on treatment
-        treatment_recovery_rate = jnp.max(jnp.array((target_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0)))
-        treatment_death_rate = observed_prop_death * treatment_recovery_rate * (1.0 - tsr) / tsr - natural_death_rate
-        treatment_recvery_rate = treatment_recovery_rate * (1.0 / 1.0 -  treatment_recovery_rate) * (1.0 - observed_prop_death)
-        return treatment_recovery_rate, treatment_death_rate, treatment_recvery_rate
-    
+    # Get the treatment outcomes, using the get_treatment_outcomes function above and apply to model
     treatment_recovery_funcs = {}
     treatment_death_funcs = {}
     treatment_relapse_funcs = {}

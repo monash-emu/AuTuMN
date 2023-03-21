@@ -37,13 +37,6 @@ def get_average_sigmoid(low_val, upper_val, inflection):
     return (log(1.0 + exp(upper_val - inflection)) - log(1.0 + exp(low_val - inflection))) / (upper_val - low_val)
 
 
-def map_params_to_model_agegroups(input_dict, targets):
-    results = {}
-    for t in targets:
-        results[str(t)] = Multiply(input_dict[max([k for k in input_dict.keys() if k <= t])])
-    return results
-
-        
 def get_average_age_for_bcg(agegroup, age_breakpoints):
     agegroup_idx = age_breakpoints.index(int(agegroup))
     if agegroup_idx == len(age_breakpoints) - 1:
@@ -98,7 +91,8 @@ def get_age_strat(
 
     # Set age-specific late activation rate
     for flow_name, latency_params in params.age_stratification.items():
-        strat.set_flow_adjustments(flow_name, map_params_to_model_agegroups(latency_params, age_breaks))
+        adjs = {str(t): Multiply(latency_params[max([k for k in latency_params if k <= t])]) for t in age_breaks}
+        strat.set_flow_adjustments(flow_name, adjs)
 
     # Increasing infectiousness with age
     inf_switch_age = params.age_infectiousness_switch
@@ -121,7 +115,7 @@ def get_age_strat(
             list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
         ),
         [Time],
-    ) # Scaling up the time-variant treatment success rate based on observed values
+    )
 
     # Get the treatment outcomes, using the get_treatment_outcomes function above and apply to model
     treatment_recovery_funcs, treatment_death_funcs, treatment_relapse_funcs = {}, {}, {}

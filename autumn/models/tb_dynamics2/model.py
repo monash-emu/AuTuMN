@@ -209,8 +209,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     model.stratify_with(age_strat)
 
     # Set gender stratification
-    # gender_strat = get_gender_strat(params)
-    # model.stratify_with(gender_strat)
+    gender_strat = get_gender_strat(params)
+    model.stratify_with(gender_strat)
 
 
     """

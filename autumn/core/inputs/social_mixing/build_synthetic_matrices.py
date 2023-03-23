@@ -358,7 +358,7 @@ def get_conmat_matrix(iso3: str, setting: str, age_groups: list):
     conmat_data = pd.read_csv(os.path.join(SOURCE_MATRICES_PATHS['conmat'], iso3, f"{setting}.csv"))
 
     # check that the conmat matrices use the same age breaks as the model
-    conmat_agebreaks = [s[1:].split(",")[0] for s in conmat_data['age_group_from'].unique()]
+    conmat_agebreaks = [int(s[1:].split(",")[0]) for s in conmat_data['age_group_from'].unique()]
     assert set(conmat_agebreaks) == set(age_groups), "conmat age bands not matching model age bands"
 
     matrix = np.zeros((len(age_groups), len(age_groups)))

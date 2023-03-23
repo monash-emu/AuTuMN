@@ -4,8 +4,8 @@ library(ggplot2)
 setwd("C:/Users/rrag0004/Models/AuTuMN_new/notebooks/user/rragonnet/utils/conmat")
 
 # User options
-ISO3s = c("JPN")  # list of countries for which matrices are requested
-AGE_BREAKS = c(0, 10, 30, 50, 70)  # lower age limits
+ISO3s = c("PHL")  # list of countries for which matrices are requested
+AGE_BREAKS = c(0, 15, 25, 50, 70)  # lower age limits
 SETTINGS = c("all", "home", "work", "school", "other")
 PLOT_MATRICES = TRUE
 

@@ -30,15 +30,13 @@ def get_gender_strat(
    
    # Set birth flow adjustments
     adjs['birth'] = params.gender.proportions
+    # # # Set generic flow adjustments. Do not adjust for age under 15    
     for flow_name, adjustment in adjs.items():
         if flow_name == 'birth':
             adj = {k : Multiply(v) for k,v in adjustment.items()} 
             strat.set_flow_adjustments(flow_name, adj)
-
-    # # # Set generic flow adjustments. Do not adjust for age under 15    
-    for age in params.age_breakpoints:
-        for flow_name, adjustment in adjs.items():
-            if flow_name != 'birth':
+        else:
+            for age in params.age_breakpoints:
                 if age < 15:
                     adj = {k: Multiply(1.0) for k in adjustment.keys()}
                 else:

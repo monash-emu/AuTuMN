@@ -22,18 +22,11 @@ param_set = ParameterSet(baseline=baseline_params, scenarios=[])
 targets = [
     NormalTarget(ts_set["total_population"], stdev=2500.0),
     NormalTarget(ts_set["notifications"], stdev=20.0),
-    NormalTarget(ts_set["percentage_latent"], stdev=2.0),
+    # NormalTarget(ts_set["notificationsXgender_female"], stdev=20.0),
+    # NormalTarget(ts_set["notificationsXgender_male"], stdev=20.0),
+    #NormalTarget(ts_set["percentage_latent"], stdev=2.0),
     #NormalTarget(ts_set["incidence"], stdev=5.0)
 ]
-
-CID_ESTIMATES = {
-    "infect_death_rate": {
-        "smear_positive": [0.335, 0.449],
-        "smear_negative": [0.017, 0.035],
-    },
-    "self_recovery_rate": {"smear_positive": [0.177, 0.288], "smear_negative": [0.073, 0.209]},
-}
-
 
 priors = [
     UniformPrior("start_population_size", [200, 300000]),

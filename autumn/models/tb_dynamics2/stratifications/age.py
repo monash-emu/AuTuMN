@@ -60,8 +60,6 @@ def get_age_strat(
 
     Args:
         params: Parameter class
-        age_pops: The population distribution by age
-        compartments: All the model compartments
     Returns:
         The age stratification summer object
     """
@@ -138,7 +136,7 @@ def get_age_strat(
     strat.set_flow_adjustments("relapse", treatment_relapse_funcs)
 
     # Add BCG effect without stratifying for BCG
-    bcg_multiplier_dict = {'0': 0.3, '5': 0.3, '15': 0.7375, '35': 1.0, '50': 1.0}
+    bcg_multiplier_dict = {'0': 0.3, '5': 0.3, '15': 0.7375, '35': 1.0, '50': 1.0} # Ragonnet et al. (IJE, 2020)
     bcg_coverage_func = build_static_sigmoidal_multicurve(
         list(params.time_variant_bcg_perc.keys()),
         list(params.time_variant_bcg_perc.values()),
@@ -146,9 +144,8 @@ def get_age_strat(
     bcg_adjs = {}
     for age, multiplier in bcg_multiplier_dict.items():
         if multiplier < 1.0:
-            average_age = get_average_age_for_bcg(age, age_breaks)
-            bcg_adjs[age] = Multiply(
-                Function(bcg_multiplier_func, [Time, bcg_coverage_func, multiplier, average_age])
+            bcg_adjs[str(age)] = Multiply(
+                Function(bcg_multiplier_func, [Time, bcg_coverage_func, multiplier, get_average_age_for_bcg(age, age_breaks)])
             )
         else:
             bcg_adjs[str(age)] = None

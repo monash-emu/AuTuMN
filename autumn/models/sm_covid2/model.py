@@ -8,7 +8,7 @@ from jax import numpy as jnp
 
 from autumn.core import inputs
 from autumn.core.project import Params, build_rel_path
-from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
+from autumn.core.inputs.social_mixing.build_synthetic_matrices import get_matrices_from_conmat
 from autumn.model_features.jax.random_process import get_random_process
 from .outputs import SmCovidOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn
@@ -309,13 +309,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         sympt_props = sympt_req  # In which case it should be None or a float
 
     # Get the age-specific mixing matrices
-    mixing_matrices = build_synthetic_matrices(
-        iso3,
-        params.ref_mixing_iso3,
-        [int(age) for age in age_groups],
-        True,  # Always age-adjust, could change this to being a parameter
-        region,
-    )
+    mixing_matrices = get_matrices_from_conmat(iso3, [int(age) for age in age_groups])
 
     # Apply UNESCO school closure data. This will update the school mixing params
     student_weeks_missed = process_unesco_data(params)

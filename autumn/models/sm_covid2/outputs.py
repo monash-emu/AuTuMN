@@ -208,7 +208,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     # )
 
                     # Request the output
-                    self.model.request_param_function_output(
+                    self.model.request_function_output(
                         name=output_name,
                         func=death_risk * DerivedOutput(f"incidence{strata_string}"),
                         save_results=False,
@@ -227,7 +227,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             ],
         )
 
-        self.model.request_param_function_output(
+        self.model.request_function_output(
             name="infection_deaths",
             func=infection_deaths_func,
         )
@@ -333,7 +333,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     # )
 
                     # Request the output
-                    self.model.request_param_function_output(
+                    self.model.request_function_output(
                         name=output_name,
                         func=hospital_risk_given_infection
                         * DerivedOutput(f"incidence{strata_string}"),
@@ -355,7 +355,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             ],
         )
 
-        self.model.request_param_function_output(
+        self.model.request_function_output(
             name="hospital_admissions",
             func=hospital_admissions_func,
             save_results=True,
@@ -374,7 +374,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             ],
         )
 
-        self.model.request_param_function_output(
+        self.model.request_function_output(
             name="hospital_occupancy", func=hospital_occupancy_func
         )
 
@@ -383,10 +383,15 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         Create an output for the peak hospital occupancy. This is stored as a timeseries, although this is
         actually a constant output.
         """
+
+        def array_max(x):
+            return jnp.repeat(jnp.max(x), jnp.size(x))
+ 
+        peak_func = Function(array_max, [DerivedOutput("hospital_occupancy")])
+
         self.model.request_function_output(
             "peak_hospital_occupancy",
-            lambda hosp_occupancy: np.repeat(hosp_occupancy.max(), hosp_occupancy.size),
-            ["hospital_occupancy"],
+            func=peak_func
         )
 
     # def request_icu_outputs(
@@ -476,8 +481,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         )
         self.model.request_function_output(
             "prop_ever_infected",
-            lambda infected, total: infected / total,
-            sources=["ever_infected", "total_population"],
+            func=DerivedOutput("ever_infected") / DerivedOutput("total_population")
         )
 
     def request_random_process_outputs(
@@ -507,8 +511,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             )
             self.model.request_function_output(
                 prop_immune_name,
-                lambda num, total: num / total,
-                [n_immune_name, "total_population"],
+                func=DerivedOutput(n_immune_name) / DerivedOutput("total_population")
             )
 
             # Calculate age-specific proportions if requested
@@ -524,8 +527,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     )
                     self.model.request_function_output(
                         prop_age_immune_name,
-                        make_age_immune_prop_func(popsize),
-                        [n_age_immune_name],
+                        func=make_age_immune_prop_func(popsize)(DerivedOutput(n_age_immune_name))
                     )
 
     def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
@@ -546,11 +548,17 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
         Store the number of students*weeks of school missed. This is a single float that will be stored as a derived output
         """
+        #FIXME this is broken
+        def repeat_val(example_output):
+            return jnp.repeat(n_student_weeks_missed, jnp.size(example_output))
+ 
+        student_weeks_missed_func = Function(repeat_val, [DerivedOutput("total_population")])
+
         self.model.request_function_output(
             "student_weeks_missed",
-            lambda total: np.repeat(n_student_weeks_missed, total.size),  # constant function
-            ["total_population"],  # could be anything here, really...
+            func=student_weeks_missed_func
         )
+
 
 
 def build_statistical_distribution(distribution_details: TimeDistribution):

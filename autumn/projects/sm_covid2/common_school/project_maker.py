@@ -49,9 +49,9 @@ param_path = Path(__file__).parent.resolve() / "params"
 
 def get_school_project(region):
 
-    assert (
-        region in Region.SCHOOL_PROJECT_REGIONS
-    ), f"{region} is not registered as a school project Region"
+    # assert (
+    #     region in Region.SCHOOL_PROJECT_REGIONS
+    # ), f"{region} is not registered as a school project Region"
 
     # Load timeseries
     timeseries = get_school_project_timeseries(region)

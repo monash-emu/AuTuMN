@@ -381,7 +381,6 @@ class Parameters(ParamStruct):
     description: Optional[str]
     country: Country
     population: Population
-    ref_mixing_iso3: str
     age_groups: List[int]
     time: Time
     infectious_seed_time: pclass()

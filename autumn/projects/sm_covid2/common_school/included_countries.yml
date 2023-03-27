@@ -1,0 +1,194 @@
+all:
+  AFG: Afghanistan
+  AGO: Angola
+  ALB: Albania
+  ARE: United Arab Emirates
+  ARG: Argentina
+  ARM: Armenia
+  AUS: Australia
+  AUT: Austria
+  AZE: Azerbaijan
+  BEL: Belgium
+  BEN: Benin
+  BFA: Burkina Faso
+  BGD: Bangladesh
+  BGR: Bulgaria
+  BIH: Bosnia and Herzegovina
+  BLR: Belarus
+  BOL: Bolivia, Plurinational State of
+  BRA: Brazil
+  CAF: Central African Republic
+  CAN: Canada
+  CHE: Switzerland
+  CHL: Chile
+  CHN: China
+  CIV: "Cote d'Ivoire"
+  CMR: Cameroon
+  COD: Congo, The Democratic Republic of the
+  COG: Congo
+  COL: Colombia
+  CPV: Cabo Verde
+  CUB: Cuba
+  CYP: Cyprus
+  CZE: Czechia
+  DEU: Germany
+  DNK: Denmark
+  DOM: Dominican Republic
+  ECU: Ecuador
+  EGY: Egypt
+  ESP: Spain
+  EST: Estonia
+  ETH: Ethiopia
+  FIN: Finland
+  FJI: Fiji
+  FRA: France
+  GAB: Gabon
+  GBR: United Kingdom
+  GEO: Georgia
+  GHA: Ghana
+  GIN: Guinea
+  GRC: Greece
+  GTM: Guatemala
+  HND: Honduras
+  HRV: Croatia
+  HTI: Haiti
+  HUN: Hungary
+  IDN: Indonesia
+  IND: India
+  IRL: Ireland
+  IRN: Iran, Islamic Republic of
+  IRQ: Iraq
+  ISL: Iceland
+  ISR: Israel
+  ITA: Italy
+  JAM: Jamaica
+  JOR: Jordan
+  JPN: Japan
+  KAZ: Kazakhstan
+  KEN: Kenya
+  KGZ: Kyrgyzstan
+  KOR: Korea, Republic of
+  KWT: Kuwait
+  LAO: Lao People's Democratic Republic
+  LBN: Lebanon
+  LBY: Libya
+  LKA: Sri Lanka
+  LTU: Lithuania
+  LUX: Luxembourg
+  LVA: Latvia
+  MDV: Maldives
+  MEX: Mexico
+  MKD: North Macedonia
+  MLI: Mali
+  MNG: Mongolia
+  MOZ: Mozambique
+  MRT: Mauritania
+  MWI: Malawi
+  MYS: Malaysia
+  NGA: Nigeria
+  NIC: Nicaragua
+  NLD: Netherlands
+  NOR: Norway
+  NPL: Nepal
+  NZL: New Zealand
+  OMN: Oman
+  PAK: Pakistan
+  PAN: Panama
+  PER: Peru
+  PHL: Philippines
+  POL: Poland
+  PRT: Portugal
+  PRY: Paraguay
+  PSE: Palestine, State of
+  QAT: Qatar
+  ROU: Romania
+  RUS: Russian Federation
+  SAU: Saudi Arabia
+  SDN: Sudan
+  SEN: Senegal
+  SGP: Singapore
+  SLE: Sierra Leone
+  SLV: El Salvador
+  SRB: Serbia
+  SSD: South Sudan
+  SVK: Slovakia
+  SVN: Slovenia
+  SWE: Sweden
+  SYR: Syrian Arab Republic
+  TCD: Chad
+  TGO: Togo
+  THA: Thailand
+  TLS: Timor-Leste
+  TUN: Tunisia
+  TUR: Turkey
+  TZA: Tanzania, United Republic of
+  UGA: Uganda
+  UKR: Ukraine
+  USA: United States
+  UZB: Uzbekistan
+  VEN: Venezuela, Bolivarian Republic of
+  VNM: Viet Nam
+  ZAF: South Africa
+  ZMB: Zambia
+  ZWE: Zimbabwe
+national:
+  AUS: Australia
+  AUT: Austria
+  BEL: Belgium
+  BFA: Burkina Faso
+  BGD: Bangladesh
+  BRA: Brazil
+  CAN: Canada
+  CHE: Switzerland
+  CHL: Chile
+  CHN: China
+  COD: Congo, The Democratic Republic of the
+  COG: Congo
+  COL: Colombia
+  CZE: Czechia
+  DEU: Germany
+  DNK: Denmark
+  DOM: Dominican Republic
+  ECU: Ecuador
+  ESP: Spain
+  EST: Estonia
+  ETH: Ethiopia
+  FIN: Finland
+  FRA: France
+  GBR: United Kingdom
+  GRC: Greece
+  GTM: Guatemala
+  HND: Honduras
+  HRV: Croatia
+  HUN: Hungary
+  IND: India
+  IRN: Iran, Islamic Republic of
+  ISL: Iceland
+  ISR: Israel
+  ITA: Italy
+  JOR: Jordan
+  JPN: Japan
+  KEN: Kenya
+  KOR: Korea, Republic of
+  LBN: Lebanon
+  LTU: Lithuania
+  LUX: Luxembourg
+  MEX: Mexico
+  MNG: Mongolia
+  MWI: Malawi
+  NLD: Netherlands
+  NOR: Norway
+  NPL: Nepal
+  OMN: Oman
+  PAK: Pakistan
+  PRT: Portugal
+  QAT: Qatar
+  SEN: Senegal
+  SGP: Singapore
+  SLE: Sierra Leone
+  SVN: Slovenia
+  SWE: Sweden
+  USA: United States
+  UZB: Uzbekistan
+  ZAF: South Africa
+  ZMB: Zambia

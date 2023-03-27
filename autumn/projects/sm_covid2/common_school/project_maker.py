@@ -18,7 +18,6 @@ from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 from autumn.core.inputs.database import get_input_db
 from autumn.settings.constants import COVID_BASE_DATETIME
 
-MIXING_PROXY = {"philippines": "HKG", "france": "BEL", "australia": "GBR"}
 
 EXTRA_UNCERTAINTY_OUTPUTS = {
     "cumulative_incidence": "Cumulative number of infections",
@@ -50,9 +49,9 @@ param_path = Path(__file__).parent.resolve() / "params"
 
 def get_school_project(region):
 
-    assert (
-        region in Region.SCHOOL_PROJECT_REGIONS
-    ), f"{region} is not registered as a school project Region"
+    # assert (
+    #     region in Region.SCHOOL_PROJECT_REGIONS
+    # ), f"{region} is not registered as a school project Region"
 
     # Load timeseries
     timeseries = get_school_project_timeseries(region)
@@ -84,7 +83,7 @@ def get_school_project(region):
         # NegativeBinomialTarget(
         #     data=cumulative_deaths_target #, dispersion_param=100, #40.0
         # ),  # dispersion param from Watson et al. Lancet ID
-        BinomialTarget(
+        BinomialTarget(  #FIXME! Needs to connect to Serotracker data
             data=pd.Series(data=[.051], index=[199], name="prop_ever_infected") , 
             sample_sizes = [82126]
         )
@@ -174,7 +173,6 @@ def get_school_project_parameter_set(region, first_date_with_death):
     country_name = region.title()
     country_params = {
         "country": {"iso3": get_iso3_from_country_name(country_name), "country_name": country_name},
-        "ref_mixing_iso3": MIXING_PROXY[region],
     }
 
     # build full set of country-specific baseline parameters

@@ -83,7 +83,7 @@ def get_school_project(region):
         # NegativeBinomialTarget(
         #     data=cumulative_deaths_target #, dispersion_param=100, #40.0
         # ),  # dispersion param from Watson et al. Lancet ID
-        BinomialTarget(
+        BinomialTarget(  #FIXME! Needs to connect to Serotracker data
             data=pd.Series(data=[.051], index=[199], name="prop_ever_infected") , 
             sample_sizes = [82126]
         )

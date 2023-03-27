@@ -18,7 +18,6 @@ from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 from autumn.core.inputs.database import get_input_db
 from autumn.settings.constants import COVID_BASE_DATETIME
 
-MIXING_PROXY = {"philippines": "HKG", "france": "BEL", "australia": "GBR"}
 
 EXTRA_UNCERTAINTY_OUTPUTS = {
     "cumulative_incidence": "Cumulative number of infections",
@@ -174,7 +173,6 @@ def get_school_project_parameter_set(region, first_date_with_death):
     country_name = region.title()
     country_params = {
         "country": {"iso3": get_iso3_from_country_name(country_name), "country_name": country_name},
-        "ref_mixing_iso3": MIXING_PROXY[region],
     }
 
     # build full set of country-specific baseline parameters

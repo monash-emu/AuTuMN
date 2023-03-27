@@ -13,8 +13,6 @@ age_groups:
   - 50
   - 70
 
-ref_mixing_iso3: HKG
-
 population:
   region: null
   year: 2020

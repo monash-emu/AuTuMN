@@ -14,7 +14,7 @@ INF = float("inf")
 MAPPING_ISO_CODE = {
     "MHL": "FSM",
 }
-
+MAPPING_COUNTRY_ISO = {'bosnia and herzegovina': 'BIH', 'bolivia, plurinational state of': 'BOL', "cote d'ivoire": 'CIV', 'congo, the democratic republic of the': 'COD', 'iran, islamic republic of': 'IRN', 'korea, republic of': 'KOR', "lao people's democratic republic": 'LAO', 'palestine, state of': 'PSE', 'tanzania, united republic of': 'TZA', 'united states': 'USA', 'venezuela, bolivarian republic of': 'VEN'}
 
 def _get_death_rates(country_iso_code: str):
     if country_iso_code in MAPPING_ISO_CODE:
@@ -118,13 +118,16 @@ def get_iso3_from_country_name(country_name: str):
     """
     Return the iso3 code matching with a given country name.
     """
-    input_db = get_input_db()
-    country_df = input_db.query("countries", conditions={"country": country_name})
-    results = country_df["iso3"].tolist()
-    if results:
-        return results[0]
+    if country_name.lower() in MAPPING_COUNTRY_ISO:
+        return MAPPING_COUNTRY_ISO[country_name.lower()]
     else:
-        raise ValueError(f"Country name {country_name} not found")
+        input_db = get_input_db()
+        country_df = input_db.query("countries", conditions={"country": country_name})
+        results = country_df["iso3"].tolist()
+        if results:
+            return results[0]
+        else:
+            raise ValueError(f"Country name {country_name} not found")
 
 
 def get_crude_birth_rate(country_iso_code: str):

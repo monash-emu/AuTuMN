@@ -243,6 +243,9 @@ def get_school_project_timeseries(region):
     timeseries = {}
     iso3 = get_iso3_from_country_name(region.title())
 
+    """ 
+    Start with OWID data
+    """
     # read new daily deaths from inputs
     data = input_db.query(
         table_name="owid", conditions={"iso_code": iso3}, columns=["date", "new_deaths"]
@@ -275,12 +278,17 @@ def get_school_project_timeseries(region):
         "quantiles": REQUESTED_UNC_QUANTILES,
     }
 
+    """ 
+    Read and process Serotracker data
+    """
     # add sero data (hard-coded for now)
+    sero_data = get_sero_data(input_db, iso3)
+
     timeseries["prop_ever_infected"] = {
         "output_key": "prop_ever_infected",
         "title": "Proportion ever infected",
-        "times": [199.],
-        "values": [.051],
+        "times": sero_data['times'],  # [199.],
+        "values": sero_data['values'],  # [.051],
         "quantiles": REQUESTED_UNC_QUANTILES,
     }
 
@@ -326,3 +334,13 @@ def get_school_project_priors(first_date_with_death):
     ]
 
     return priors
+
+
+def get_sero_data(input_db, iso3):
+    #FIXME: just a placeholder for now
+    sero_data = {
+        "times": [199],
+        "values": [0.051]
+    }
+
+    return sero_data

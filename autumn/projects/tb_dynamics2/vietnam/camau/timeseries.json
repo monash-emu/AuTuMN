@@ -13,11 +13,32 @@
       "values": [1495, 1485, 1369, 1405, 1642, 1555, 1440, 1468, 1417],
       "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
     },
+    "notificationsXgender_male": {
+      "title": "Notifications Male",
+      "output_key": "notificationsXgender_male",
+      "times": [2017.0, 2018.0, 2019.0],
+      "values": [909.0, 888.0, 855.0],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "notificationsXgender_female": {
+      "title": "Notifications Female",
+      "output_key": "notificationsXgender_female",
+      "times": [2017.0, 2018.0, 2019.0],
+      "values": [255.0, 289.0, 286.0],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
     "percentage_latent": {
       "title": "Percentage Latent",
       "output_key": "percentage_latent",
       "times": [2016.0],
-      "values": [36.8],
+      "values": [30.8],
+      "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+    },
+    "prevalence_infectious": {
+      "title": "Percentage Latent",
+      "output_key": "prevalence_infectious",
+      "times": [2016.0],
+      "values": [300.8],
       "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
     }
   }

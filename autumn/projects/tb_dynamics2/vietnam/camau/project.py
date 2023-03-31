@@ -26,6 +26,7 @@ targets = [
     # NormalTarget(ts_set["notificationsXgender_male"], stdev=20.0),
     NormalTarget(ts_set["percentage_latent"], stdev=2.0),
     #NormalTarget(ts_set["incidence"], stdev=5.0)
+    NormalTarget(ts_set["prevalence_infectious"], stdev=20.0),
 ]
 
 priors = [

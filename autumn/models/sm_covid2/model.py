@@ -5,6 +5,7 @@ from summer2 import CompartmentalModel
 from summer2.experimental.model_builder import ModelBuilder
 
 from jax import numpy as jnp
+from computegraph.types import Function
 
 from autumn.core import inputs
 from autumn.core.project import Params, build_rel_path
@@ -121,6 +122,30 @@ def process_unesco_data(params: Parameters):
     )
 
     return student_weeks_missed
+
+
+def scale_school_contacts(raw_matrices, school_multiplier):
+    """
+    Adjust the contact rates in schools according to the "school_multiplier" parameter.
+    The "all_locations" matrix is also adjusted automatically to remain equal to the sum of the four 
+    location-specific matrices.
+    """
+    # First, copy matrix values for "home", "work" and "other_locations" settings
+    adjusted_matrices = {location: jnp.array(matrix) for location, matrix in raw_matrices.items() if location not in ['school', 'all_locations']}    
+    
+    # Then scale the school matrix according to the multiplier parameter
+    def scale_school_matrix(multiplier):
+        return jnp.array(raw_matrices['school']) * multiplier
+
+    adjusted_matrices['school'] = Function(scale_school_matrix, [school_multiplier])
+    
+    # We now need to compute the "all_locations" matrix, as the sum of all setting-specific matrices 
+    # FIXME: This is not working as, we are summing jnp arrays with a Function object
+    adjusted_matrices['all_locations'] = jnp.array(adjusted_matrices['home'] + adjusted_matrices['work'] + adjusted_matrices['school'] + adjusted_matrices['other_locations'])
+
+    # FIXME: But even after fixing the issue above, the code will still crash at a later point. This is because in the dynamic matrix code, subtractions will be applied to a Function object.
+
+    return adjusted_matrices
 
 
 def build_model(params: dict, build_options: dict = None, ret_builder=False) -> CompartmentalModel:
@@ -308,8 +333,11 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     else:
         sympt_props = sympt_req  # In which case it should be None or a float
 
-    # Get the age-specific mixing matrices
-    mixing_matrices = get_matrices_from_conmat(iso3, [int(age) for age in age_groups])
+    # Get the age-specific mixing matrices using conmat R package
+    raw_mixing_matrices = get_matrices_from_conmat(iso3, [int(age) for age in age_groups])
+    # scale school contacts
+    school_multiplier = params.school_multiplier    
+    mixing_matrices = scale_school_contacts(raw_mixing_matrices, school_multiplier)
 
     # Apply UNESCO school closure data. This will update the school mixing params
     student_weeks_missed = process_unesco_data(params)

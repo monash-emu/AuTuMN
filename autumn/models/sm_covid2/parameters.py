@@ -391,7 +391,8 @@ class Parameters(ParamStruct):
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
-
+    school_multiplier: pclass()
+    
     compartment_replicates: Dict[str, int]
     latency_infectiousness: LatencyInfectiousness
 

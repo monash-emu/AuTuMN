@@ -1,12 +1,19 @@
 import pytest
 from summer2 import CompartmentalModel
+import os
+import yaml
 
-from autumn.settings import Models, Region
+from autumn.settings import Models, Region, PROJECTS_PATH
 from autumn.core.project.project import get_project
 
+REGIONS_FOR_TEST_RUNS = ["france", "australia"]
+
+source = os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")
+country_dict = yaml.load(open(source), Loader=yaml.UnsafeLoader)
+ALL_SCHOOL_REGIONS = list(country_dict["all"].values())
 
 @pytest.mark.local_only
-@pytest.mark.parametrize("region", Region.SCHOOL_PROJECT_REGIONS)
+@pytest.mark.parametrize("region", REGIONS_FOR_TEST_RUNS)
 def test_run_models_partial(region):
     """
     Smoke test: ensure we can build and run each default model with nothing crashing.
@@ -25,7 +32,7 @@ def test_run_models_partial(region):
 
 @pytest.mark.run_models
 @pytest.mark.github_only
-@pytest.mark.parametrize("region", Region.SCHOOL_PROJECT_REGIONS)
+@pytest.mark.parametrize("region", ALL_SCHOOL_REGIONS)
 def test_build_scenario_models(region):
     """
     Smoke test: ensure we can build the each model with nothing crashing.
@@ -38,7 +45,7 @@ def test_build_scenario_models(region):
 
 @pytest.mark.run_models
 @pytest.mark.github_only
-@pytest.mark.parametrize("region", Region.SCHOOL_PROJECT_REGIONS)
+@pytest.mark.parametrize("region", REGIONS_FOR_TEST_RUNS)
 def test_run_models_full(region):
     """
     Smoke test: ensure our models run to completion without crashing.

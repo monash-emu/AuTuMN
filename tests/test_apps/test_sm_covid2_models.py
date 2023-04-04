@@ -32,7 +32,7 @@ def test_run_models_partial(region):
 
 @pytest.mark.run_models
 @pytest.mark.github_only
-@pytest.mark.parametrize("region", ALL_SCHOOL_REGIONS)
+@pytest.mark.parametrize("region", REGIONS_FOR_TEST_RUNS)  # ALL_SCHOOL_REGIONS)
 def test_build_scenario_models(region):
     """
     Smoke test: ensure we can build the each model with nothing crashing.

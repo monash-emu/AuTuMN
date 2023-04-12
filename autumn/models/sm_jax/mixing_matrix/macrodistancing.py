@@ -6,7 +6,6 @@ import pandas as pd
 from autumn.models.sm_jax.constants import LOCATIONS
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.models.sm_jax.parameters import Country, MixingLocation
-from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.utils.utils import apply_moving_average
 
@@ -90,7 +89,7 @@ def get_mobility_funcs(
 
     """
 
-    power = 2 if square_mobility_effect else 1
+    
     mob_df, google_mobility_days = get_mobility_data(country.iso3, region, COVID_BASE_DATETIME)
     model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
@@ -105,14 +104,19 @@ def get_mobility_funcs(
         mobility_requests, model_loc_mobility_values, google_mobility_days
     )
 
+    from summer2.functions.time import get_sigmoidal_interpolation_function
+    from summer2.functions.util import capture_dict
+
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
     for location, timeseries in mobility_requests.items():
-        mobility_funcs[location] = build_static_sigmoidal_multicurve(
-            timeseries.index, timeseries**power
+        if square_mobility_effect:
+            timeseries = timeseries * timeseries
+        mobility_funcs[location] = get_sigmoidal_interpolation_function(
+            timeseries.index, timeseries
         )
 
-    return mobility_funcs
+    return capture_dict(**mobility_funcs)
 
 
 def update_mixing_data(

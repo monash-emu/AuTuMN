@@ -134,14 +134,19 @@ def scale_school_contacts(raw_matrices, school_multiplier):
     adjusted_matrices = {location: jnp.array(matrix) for location, matrix in raw_matrices.items() if location not in ['school', 'all_locations']}    
     
     # Then scale the school matrix according to the multiplier parameter
-    def scale_school_matrix(multiplier):
-        return jnp.array(raw_matrices['school']) * multiplier
+    #def scale_school_matrix(multiplier):
+    #    return jnp.array(raw_matrices['school']) * multiplier
 
-    adjusted_matrices['school'] = Function(scale_school_matrix, [school_multiplier])
-    
+    adjusted_matrices['school'] = raw_matrices['school'] * school_multiplier
+    adjusted_matrices['school'].node_name = "school_matrix"
     # We now need to compute the "all_locations" matrix, as the sum of all setting-specific matrices 
     # FIXME: This is not working as, we are summing jnp arrays with a Function object
-    adjusted_matrices['all_locations'] = jnp.array(adjusted_matrices['home'] + adjusted_matrices['work'] + adjusted_matrices['school'] + adjusted_matrices['other_locations'])
+    
+    from summer2.parameters import Data
+
+    non_school = Data(adjusted_matrices['home'] + adjusted_matrices['work'] + adjusted_matrices['other_locations'])
+    non_school.node_name = "non_school_matrix"
+    adjusted_matrices['all_locations'] = non_school + adjusted_matrices['school']
 
     # FIXME: But even after fixing the issue above, the code will still crash at a later point. This is because in the dynamic matrix code, subtractions will be applied to a Function object.
 
@@ -352,6 +357,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         params.is_dynamic_mixing_matrix,
         suscept_adjs,
     )
+
+    #age_strat.set_mixing_matrix(mixing_matrices["all_locations"])
 
     # adjust the infectiousness of the infectious latent compartments using this stratification (summer design flaw, we should be able to do this with no stratification)
     for infectious_latent_comp in infectious_latent_comps:

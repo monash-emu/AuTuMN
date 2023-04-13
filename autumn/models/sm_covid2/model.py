@@ -87,20 +87,22 @@ def process_unesco_data(params: Parameters):
     )
 
     # Update the school mixing data if requested
-    if params.mobility.apply_unesco_school_data:
-        # Convert the categorical data into a numerical timeseries
-        unesco_data.replace(
-            {
-                "Academic break": 0.0,
-                "Fully open": 1.0,
-                "Partially open": params.mobility.unesco_partial_opening_value,  # switched to 1. to model counterfactual no-closure scenario
-                "Closed due to COVID-19": params.mobility.unesco_full_closure_value,  # switched to 1. to model counterfactual no-closure scenario
-            },
-            inplace=True,
-        )
+    if params.mobility.apply_unesco_school_data:      
+        # Convert the categorical data to a single timeseries representing the school attendance proportion
+        status_values = {
+            "Academic break": 0.,
+            "Fully open": 1.,
+            "Partially open": params.mobility.unesco_partial_opening_value,
+            "Closed due to COVID-19": params.mobility.unesco_full_closure_value
+        }
 
-        # Remove rows where status values are repeated (only keeps first and last timepoints for each plateau phase)
-        unesco_data = unesco_data[unesco_data["status"].diff(periods=-1).diff() != 0]
+        attendance_prop = jnp.zeros(len(unesco_data))
+        for status, value in status_values.items():
+            attendance_prop += jnp.array((unesco_data['status'] == status).astype(int)) * value
+
+        #FIXME: the next line of code is not essential but would probably speed up computation. This was previously implemented using pandas but now needs to be jaxified
+        # Remove rows where status values are repeated (only keeps first and last timepoints for each plateau phase
+        # unesco_data = unesco_data[unesco_data["attendance_prop"].diff(periods=-1).diff() != 0]  # previous pandas code
 
         # Override the baseline school mixing data with the UNESCO timeseries
         params.mobility.mixing[
@@ -109,7 +111,8 @@ def process_unesco_data(params: Parameters):
         params.mobility.mixing["school"].times = (
             pd.to_datetime(unesco_data["date"]) - COVID_BASE_DATETIME
         ).dt.days.to_list()
-        params.mobility.mixing["school"].values = unesco_data["status"].to_list()
+
+        params.mobility.mixing["school"].values = attendance_prop
 
     # read n_weeks_closed, n_weeks_partial
     n_weeks_closed, n_weeks_partial = (

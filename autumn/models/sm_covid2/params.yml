@@ -61,6 +61,8 @@ mobility:
   unesco_partial_opening_value: .2
   unesco_full_closure_value: 0.
 
+school_multiplier: 1.
+
 # Age-related parameters
 age_stratification:
   susceptibility:  # zhang-2020-a, ORs converted to RRs using Tables S14 and S15

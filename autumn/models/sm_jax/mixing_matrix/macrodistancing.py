@@ -67,7 +67,7 @@ def weight_mobility_data(
 def get_mobility_funcs(
     country: Country,
     region: str,
-    mobility_requests: Dict[str, MixingLocation],
+    additional_mobility: Dict[str, Tuple[np.ndarray, np.ndarray]],
     google_mobility_locations: Dict[str, Dict[str, float]],
     square_mobility_effect: bool,
     smooth_google_data: bool,
@@ -99,9 +99,13 @@ def get_mobility_funcs(
             model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
     # Build mixing data timeseries (change to dict, rather than parameters object)
-    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
-    mobility_requests = update_mixing_data(
-        mobility_requests, model_loc_mobility_values, google_mobility_days
+    #mobility_requests = {}#{k: v.dict() for k, v in mobility_requests.items()}
+    
+    # OK, so this is now just a glorified and irritating way to convert our lists to pandas series
+    # We don't do anything to our additional series - these are already correct, we're just converting
+    # the google series we obtained above
+    google_mobility_series = update_mixing_data(
+        {}, model_loc_mobility_values, google_mobility_days
     )
 
     from summer2.functions.time import get_sigmoidal_interpolation_function
@@ -109,11 +113,18 @@ def get_mobility_funcs(
 
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
-    for location, timeseries in mobility_requests.items():
+    for location, timeseries in google_mobility_series.items():
         if square_mobility_effect:
             timeseries = timeseries * timeseries
         mobility_funcs[location] = get_sigmoidal_interpolation_function(
             timeseries.index, timeseries
+        )
+
+    for location, (idx, timeseries) in additional_mobility.items():
+        if square_mobility_effect:
+            timeseries = timeseries * timeseries
+        mobility_funcs[location] = get_sigmoidal_interpolation_function(
+            idx, timeseries
         )
 
     return capture_dict(**mobility_funcs)

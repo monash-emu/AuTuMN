@@ -89,30 +89,53 @@ def process_unesco_data(params: Parameters):
     # Update the school mixing data if requested
     if params.mobility.apply_unesco_school_data:      
         # Convert the categorical data to a single timeseries representing the school attendance proportion
-        status_values = {
-            "Academic break": 0.,
-            "Fully open": 1.,
-            "Partially open": params.mobility.unesco_partial_opening_value,
-            "Closed due to COVID-19": params.mobility.unesco_full_closure_value
-        }
 
-        attendance_prop = jnp.zeros(len(unesco_data))
-        for status, value in status_values.items():
-            attendance_prop += jnp.array((unesco_data['status'] == status).astype(int)) * value
+        # Build a function that we can embed in the model graph
 
+        def build_unesco_mobility_array(partial_opening_value, full_closure_value):
+            
+            # Build this map inside the function so that we capture the arguments
+            status_values = {
+                "Academic break": 0.,
+                "Fully open": 1.,
+                "Partially open": partial_opening_value,
+                "Closed due to COVID-19": full_closure_value
+            }
+            attendance_prop = jnp.zeros(len(unesco_data))
+            
+            for status, value in status_values.items():
+                # Infill with value where we match this status
+                # Note that it's ok to use this pandas series inside this JIT function, since it is not a dynamic argument
+                # to the function, and we convert to a numpy type before being consumed by jax
+                attendance_prop = jnp.where(unesco_data['status'].to_numpy() == status, value, attendance_prop)
+            
+            return attendance_prop
+        
+        # Wrap this as a computegraph Function so that it consumes the params
+        # Note these can be full Parameter values (ie declared as pclass), or just constants
+        attendance_prop_f = Function(build_unesco_mobility_array, [params.mobility.unesco_partial_opening_value,
+                                               params.mobility.unesco_full_closure_value])
+        
         #FIXME: the next line of code is not essential but would probably speed up computation. This was previously implemented using pandas but now needs to be jaxified
         # Remove rows where status values are repeated (only keeps first and last timepoints for each plateau phase
         # unesco_data = unesco_data[unesco_data["attendance_prop"].diff(periods=-1).diff() != 0]  # previous pandas code
 
         # Override the baseline school mixing data with the UNESCO timeseries
-        params.mobility.mixing[
-            "school"
-        ].append = False  # to override the baseline data rather than append
-        params.mobility.mixing["school"].times = (
+        school_mobility_index = (
             pd.to_datetime(unesco_data["date"]) - COVID_BASE_DATETIME
-        ).dt.days.to_list()
+        ).dt.days.to_numpy()
 
-        params.mobility.mixing["school"].values = attendance_prop
+        school_mobility_data = attendance_prop_f
+
+        additional_mobility = {
+            "school": (
+                school_mobility_index,
+                school_mobility_data
+            )
+        }
+
+    else:
+        additional_mobility = {}
 
     # read n_weeks_closed, n_weeks_partial
     n_weeks_closed, n_weeks_partial = (
@@ -124,7 +147,7 @@ def process_unesco_data(params: Parameters):
         n_weeks_closed + n_weeks_partial * (1.0 - params.mobility.unesco_partial_opening_value)
     )
 
-    return student_weeks_missed
+    return student_weeks_missed, additional_mobility
 
 
 def scale_school_contacts(raw_matrices, school_multiplier):
@@ -348,7 +371,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     mixing_matrices = scale_school_contacts(raw_mixing_matrices, school_multiplier)
 
     # Apply UNESCO school closure data. This will update the school mixing params
-    student_weeks_missed = process_unesco_data(params)
+    student_weeks_missed, additional_mobility = process_unesco_data(params)
 
     # Get the actual age stratification now
     age_strat = get_agegroup_strat(
@@ -359,6 +382,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         base_compartments,
         params.is_dynamic_mixing_matrix,
         suscept_adjs,
+        additional_mobility
     )
 
     #age_strat.set_mixing_matrix(mixing_matrices["all_locations"])

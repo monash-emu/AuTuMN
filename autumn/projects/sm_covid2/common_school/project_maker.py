@@ -330,6 +330,10 @@ def get_school_project_priors(first_date_with_death):
         UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
         UniformPrior("voc_emergence.delta.new_voc_seed.time_from_gisaid_report", [-30, 30]),
 
+        # Account for mixing matrix uncertainty
+        # UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.3]),
+        # UniformPrior("school_multiplier", [0.8, 1.2]),
+
         # dispersion params for targets
         UniformPrior("infection_deaths_dispersion_param", [50., 200.]),
     ]

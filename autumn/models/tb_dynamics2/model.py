@@ -212,9 +212,6 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     if "organ" in params.stratify_by:
         organ_strat = get_organ_strat(params)
         model.stratify_with(organ_strat)
-    
-    # Set gender stratification
-    #model.stratify_with(get_gender_strat(params))
 
     """
     Get the applicable outputs
@@ -222,38 +219,24 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     outputs_builder = TbOutputsBuilder(model)
     outputs_builder.request_compartment_output("total_population", BASE_COMPARTMENTS)
-    # Latency
-    outputs_builder.request_compartment_output(
+ 
+    model.request_output_for_compartments(
         "latent_population_size", LATENT_COMPS, save_results=False
     )
-
-    model.request_function_output(
-        "percentage_latent",
-        100.0 * DerivedOutput("latent_population_size") / DerivedOutput("total_population"),
-    )
+    # latency
+    model.request_function_output("percentage_latent", 100.0 * DerivedOutput("latent_population_size") / DerivedOutput("total_population"))
 
     # Prevalence
-    outputs_builder.request_compartment_output(
-        "infectious_population_size", INFECTIOUS_COMPS, save_results=False
-    )
+    model.request_output_for_compartments("infectious_population_size", INFECTIOUS_COMPS, save_results=True)
 
-    model.request_function_output(
-        "prevalence_infectious",
-        1e5 * DerivedOutput("infectious_population_size") / DerivedOutput("total_population"),
-    )
+    model.request_function_output("prevalence_infectious", 1e5 * DerivedOutput("infectious_population_size") / DerivedOutput("total_population"),)
 
     # Death
-    outputs_builder.request_flow_output(
-        "mortality_infectious_raw", "infect_death", save_results=False
-    )
+    model.request_output_for_flow("mortality_infectious_raw", "infect_death", save_results=True)
 
     sources = ["mortality_infectious_raw"]
     outputs_builder.request_aggregation_output("mortality_raw", sources, save_results=False)
-    model.request_cumulative_output(
-        "cumulative_deaths",
-        "mortality_raw",
-        start_time=cumulative_start_time,
-    )
+    model.request_cumulative_output("cumulative_deaths", "mortality_raw", start_time=cumulative_start_time)
     # Disease incidence
     outputs_builder.request_flow_output("incidence_early_raw", "early_activation", save_results=False)
     outputs_builder.request_flow_output("incidence_late_raw", "late_activation", save_results=False)
@@ -269,10 +252,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
     outputs_builder.request_flow_output("passive_notifications_raw", "detection", save_results=False)
     # request notifications
-    outputs_builder.request_output_func(
-        "notifications", "passive_notifications_raw"
-    )
-    # request notification for gender strata
+    outputs_builder.request_normalise_flow_output("notifications", "passive_notifications_raw")
 
 
     builder.set_model(model)

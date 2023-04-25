@@ -89,7 +89,7 @@ time_variant_tb_screening_rate:
   2000.0: .87
 
 time_variant_tsr: # should always be > 0
-  1986: .62
+  1986: .40
   2000: .92
   2001: .93
   2002: .92
@@ -117,7 +117,7 @@ on_treatment_infect_multiplier: 0.08
 
 bcg_effect: "infection"
 time_variant_bcg_perc:
-  1981: 0.
+  1981: 0.1
   1990: 49.
   1991: 71.
   1992: 72.

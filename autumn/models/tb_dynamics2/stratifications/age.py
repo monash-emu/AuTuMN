@@ -3,54 +3,10 @@ from summer2.parameters import Time, Function
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
-
 from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
-
 from math import log, exp
-
-from jax import numpy as jnp
 from autumn.models.tb_dynamics2.constants import BASE_COMPARTMENTS
-
-
-def get_treatment_outcomes(duration, prop_death_among_non_success, natural_death_rate, tsr):
-    
-    # Calculate the proportion of people dying from natural causes while on treatment
-    prop_natural_death_while_on_treatment = 1.0 - jnp.exp(-duration * natural_death_rate)
-
-    # Calculate the target proportion of treatment outcomes resulting in death based on requests
-    requested_prop_death_on_treatment = (1.0 - tsr) * prop_death_among_non_success
-    
-    # Calculate the actual rate of deaths on treatment, with floor of zero
-    prop_death_from_treatment = jnp.max(jnp.array((requested_prop_death_on_treatment - prop_natural_death_while_on_treatment, 0.0)))
-    
-    # Calculate the proportion of treatment episodes resulting in relapse
-    relapse_prop = 1.0 - tsr - prop_death_from_treatment - prop_natural_death_while_on_treatment
-    
-    return tuple([param * duration for param in [tsr, prop_death_from_treatment, relapse_prop]])
-
-
-def get_average_sigmoid(low_val, upper_val, inflection):
-    """
-    A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase with age.
-    This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
-    """
-    return (log(1.0 + exp(upper_val - inflection)) - log(1.0 + exp(low_val - inflection))) / (upper_val - low_val)
-
-
-def get_average_age_for_bcg(agegroup, age_breakpoints):
-    agegroup_idx = age_breakpoints.index(int(agegroup))
-    if agegroup_idx == len(age_breakpoints) - 1:
-        # We should normally never be in this situation because the last agegroup is not affected by BCG anyway.
-        print("Warning: the agegroup name is being used to represent the average age of the group")
-        return float(agegroup)
-    else:
-        return 0.5 * (age_breakpoints[agegroup_idx] + age_breakpoints[agegroup_idx + 1])
-
-
-def bcg_multiplier_func(t, tfunc, fmultiplier, faverage_age):
-    return 1.0 - tfunc(t - faverage_age) / 100.0 * (1.0 - fmultiplier)
-
-
+from autumn.models.tb_dynamics2.utils import *
 def get_age_strat(
     params,
 ) -> AgeStratification:
@@ -112,7 +68,7 @@ def get_age_strat(
         build_static_sigmoidal_multicurve(
             list(params.time_variant_tsr.keys()), list(params.time_variant_tsr.values())
         ),
-        [Time],
+        [Time]
     )
 
     # Get the treatment outcomes, using the get_treatment_outcomes function above and apply to model

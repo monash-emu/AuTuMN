@@ -256,7 +256,7 @@ class Mobility(BaseModel):
         dict
     ]  # this is not used for the sm_covid model. Still included to prevent crash in mixing matrix code
     apply_unesco_school_data: bool
-    unesco_partial_opening_value: Optional[float]
+    unesco_partial_opening_value: pclass()
     unesco_full_closure_value: Optional[float]
 
     @validator("google_mobility_locations", allow_reuse=True)
@@ -391,7 +391,8 @@ class Parameters(ParamStruct):
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
-
+    school_multiplier: pclass()
+    
     compartment_replicates: Dict[str, int]
     latency_infectiousness: LatencyInfectiousness
 

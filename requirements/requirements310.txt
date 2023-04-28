@@ -12,12 +12,12 @@
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
 summerepi==3.6.2
-summerepi2==1.1.1
+summerepi2==1.2.2
 
 # Jax for Windows (summer2 requirement)
 # Linux/OSX already installed via computegraph
 -f https://whls.blob.core.windows.net/unstable/index.html
-jax[cpu]===0.3.14; sys_platform == 'win32'
+jax[cpu]===0.3.25; sys_platform == 'win32'
 
 # Interaction
 jupyterlab==3.2.0

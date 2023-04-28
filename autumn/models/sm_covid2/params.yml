@@ -19,7 +19,7 @@ population:
 
 time:
   start: 0
-  end: 731  # 31 Dec 2021
+  end: 1096  # 31 Dec 2022
   step: 1
 
 compartment_replicates:
@@ -60,6 +60,8 @@ mobility:
   apply_unesco_school_data: true  # if true, will override school mixing inputs
   unesco_partial_opening_value: .2
   unesco_full_closure_value: 0.
+
+school_multiplier: 1.
 
 # Age-related parameters
 age_stratification:
@@ -163,7 +165,7 @@ voc_emergence:
     cross_protection:
       wild_type: 1.
       delta: 0.68 # 32% immune escape   DOI: 10.1503/cmaj.211248
-      # omicron: .45  # 55% immune escape  DOI: 10.1503/cmaj.211248
+      omicron: .45  # 55% immune escape  DOI: 10.1503/cmaj.211248
   delta:
     starting_strain: false
     seed_prop: 0.
@@ -179,23 +181,23 @@ voc_emergence:
     cross_protection:
       wild_type: 1.
       delta: 1.
-      # omicron: .45  # 55% immune escape  DOI: 10.1503/cmaj.211248
-  # omicron:
-  #   starting_strain: false
-  #   seed_prop: 0.
-  #   new_voc_seed:
-  #     time_from_gisaid_report: 0.
-  #     seed_duration: 10.
-  #   contact_rate_multiplier: 1.92 # DOI: 10.1503/cmaj.211248
-  #   incubation_overwrite_value: 3.42 # Wu et al. doi:10.1001/jamanetworkopen.2022.28008
-  #   vacc_immune_escape: .55  # DOI: 10.1503/cmaj.211248
-  #   hosp_risk_adjuster: 0.861 # 2.1 * .41 using HR of Omicron vs Delta (Nyberg doi.org/10.1016/S0140-6736(22)00462-7)
-  #   death_risk_adjuster: 0.713 # 2.3 * 0.31 using HR of Omicron vs Delta (Nyberg doi.org/10.1016/S0140-6736(22)00462-7)
-  #   icu_risk_adjuster: 1. # FIXME dummy value for now but not used at the moment
-  #   cross_protection:
-  #     wild_type: 1.
-  #     delta: 1.
-  #     omicron: 1.
+      omicron: .45  # 55% immune escape  DOI: 10.1503/cmaj.211248
+  omicron:
+    starting_strain: false
+    seed_prop: 0.
+    new_voc_seed:
+      time_from_gisaid_report: 0.
+      seed_duration: 10.
+    contact_rate_multiplier: 1.92 # DOI: 10.1503/cmaj.211248
+    incubation_overwrite_value: 3.42 # Wu et al. doi:10.1001/jamanetworkopen.2022.28008
+    vacc_immune_escape: .55  # DOI: 10.1503/cmaj.211248
+    hosp_risk_adjuster: 0.861 # 2.1 * .41 using HR of Omicron vs Delta (Nyberg doi.org/10.1016/S0140-6736(22)00462-7)
+    death_risk_adjuster: 0.713 # 2.3 * 0.31 using HR of Omicron vs Delta (Nyberg doi.org/10.1016/S0140-6736(22)00462-7)
+    icu_risk_adjuster: 1. # FIXME dummy value for now but not used at the moment
+    cross_protection:
+      wild_type: 1.
+      delta: 1.
+      omicron: 1.
 
 time_from_onset_to_event:  # using time of symptom onset as reference 
   hospitalisation:
@@ -231,7 +233,7 @@ random_process:
   delta_values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
   time: 
     start: 92  # 1 Apr 2020. Need to make sure this is greater than the seed time to prevent identifiability issues with contact rate
-    end: 731  # 31 Dec 2021
+    end: 1096  # 31 Dec 2022
     step: 60
 
 requested_cumulative_outputs: ["incidence", "infection_deaths"]

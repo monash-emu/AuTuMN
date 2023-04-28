@@ -49,9 +49,10 @@ param_path = Path(__file__).parent.resolve() / "params"
 
 def get_school_project(region):
 
-    # assert (
-    #     region in Region.SCHOOL_PROJECT_REGIONS
-    # ), f"{region} is not registered as a school project Region"
+    
+    ## assert (
+    ##     region in Region.SCHOOL_PROJECT_REGIONS
+    ## ), f"{region} is not registered as a school project Region"
 
     # Load timeseries
     timeseries = get_school_project_timeseries(region)
@@ -243,6 +244,9 @@ def get_school_project_timeseries(region):
     timeseries = {}
     iso3 = get_iso3_from_country_name(region.title())
 
+    """ 
+    Start with OWID data
+    """
     # read new daily deaths from inputs
     data = input_db.query(
         table_name="owid", conditions={"iso_code": iso3}, columns=["date", "new_deaths"]
@@ -275,12 +279,17 @@ def get_school_project_timeseries(region):
         "quantiles": REQUESTED_UNC_QUANTILES,
     }
 
+    """ 
+    Read and process Serotracker data
+    """
     # add sero data (hard-coded for now)
+    sero_data = get_sero_data(input_db, iso3)
+
     timeseries["prop_ever_infected"] = {
         "output_key": "prop_ever_infected",
         "title": "Proportion ever infected",
-        "times": [199.],
-        "values": [.051],
+        "times": sero_data['times'],  # [199.],
+        "values": sero_data['values'],  # [.051],
         "quantiles": REQUESTED_UNC_QUANTILES,
     }
 
@@ -319,10 +328,27 @@ def get_school_project_priors(first_date_with_death):
         UniformPrior("contact_rate", [0.01, 0.1]),
         UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
         UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
+
+        # VOC-related parameters
         UniformPrior("voc_emergence.delta.new_voc_seed.time_from_gisaid_report", [-30, 30]),
+        UniformPrior("voc_emergence.omicron.new_voc_seed.time_from_gisaid_report", [-30, 30]),
+
+        # Account for mixing matrix uncertainty
+        # UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.3]),
+        # UniformPrior("school_multiplier", [0.8, 1.2]),
 
         # dispersion params for targets
         UniformPrior("infection_deaths_dispersion_param", [50., 200.]),
     ]
 
     return priors
+
+
+def get_sero_data(input_db, iso3):
+    #FIXME: just a placeholder for now
+    sero_data = {
+        "times": [199],
+        "values": [0.051]
+    }
+
+    return sero_data

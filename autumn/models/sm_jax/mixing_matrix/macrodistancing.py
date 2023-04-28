@@ -6,7 +6,6 @@ import pandas as pd
 from autumn.models.sm_jax.constants import LOCATIONS
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.models.sm_jax.parameters import Country, MixingLocation
-from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.utils.utils import apply_moving_average
 
@@ -68,7 +67,7 @@ def weight_mobility_data(
 def get_mobility_funcs(
     country: Country,
     region: str,
-    mobility_requests: Dict[str, MixingLocation],
+    additional_mobility: Dict[str, Tuple[np.ndarray, np.ndarray]],
     google_mobility_locations: Dict[str, Dict[str, float]],
     square_mobility_effect: bool,
     smooth_google_data: bool,
@@ -90,7 +89,7 @@ def get_mobility_funcs(
 
     """
 
-    power = 2 if square_mobility_effect else 1
+    
     mob_df, google_mobility_days = get_mobility_data(country.iso3, region, COVID_BASE_DATETIME)
     model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
@@ -100,19 +99,35 @@ def get_mobility_funcs(
             model_loc_mobility_values[loc] = apply_moving_average(model_loc_mobility_values[loc], 7)
 
     # Build mixing data timeseries (change to dict, rather than parameters object)
-    mobility_requests = {k: v.dict() for k, v in mobility_requests.items()}
-    mobility_requests = update_mixing_data(
-        mobility_requests, model_loc_mobility_values, google_mobility_days
+    #mobility_requests = {}#{k: v.dict() for k, v in mobility_requests.items()}
+    
+    # OK, so this is now just a glorified and irritating way to convert our lists to pandas series
+    # We don't do anything to our additional series - these are already correct, we're just converting
+    # the google series we obtained above
+    google_mobility_series = update_mixing_data(
+        {}, model_loc_mobility_values, google_mobility_days
     )
+
+    from summer2.functions.time import get_sigmoidal_interpolation_function
+    from summer2.functions.util import capture_dict
 
     # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
     mobility_funcs = {}
-    for location, timeseries in mobility_requests.items():
-        mobility_funcs[location] = build_static_sigmoidal_multicurve(
-            timeseries.index, timeseries**power
+    for location, timeseries in google_mobility_series.items():
+        if square_mobility_effect:
+            timeseries = timeseries * timeseries
+        mobility_funcs[location] = get_sigmoidal_interpolation_function(
+            timeseries.index, timeseries
         )
 
-    return mobility_funcs
+    for location, (idx, timeseries) in additional_mobility.items():
+        if square_mobility_effect:
+            timeseries = timeseries * timeseries
+        mobility_funcs[location] = get_sigmoidal_interpolation_function(
+            idx, timeseries
+        )
+
+    return capture_dict(**mobility_funcs)
 
 
 def update_mixing_data(

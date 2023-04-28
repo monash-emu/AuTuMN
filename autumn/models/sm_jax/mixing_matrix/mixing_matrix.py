@@ -10,10 +10,12 @@ from .macrodistancing import get_mobility_funcs
 
 from computegraph.types import Function
 from summer2.parameters import Time
+from summer2.functions.util import capture_dict
 
 
 def build_dynamic_mixing_matrix(
-    base_matrices: Dict[str, np.ndarray], mobility: Mobility, country: Country
+    base_matrices: Dict[str, np.ndarray], mobility: Mobility, country: Country,
+    additional_mobility: dict = None
 ) -> Callable[[float], np.ndarray]:
     """
     Master function that builds the time-varying mixing matrix.
@@ -28,34 +30,44 @@ def build_dynamic_mixing_matrix(
 
     """
 
-    microdistancing_funcs = get_microdistancing_funcs(
-        mobility.microdistancing, mobility.square_mobility_effect, country.iso3
-    )
+    #microdistancing_funcs = get_microdistancing_funcs(
+    #    mobility.microdistancing, mobility.square_mobility_effect, country.iso3
+    #)
 
     square, smooth, locs = (
         mobility.square_mobility_effect,
         mobility.smooth_google_data,
         mobility.google_mobility_locations,
     )
-    mobility_funcs = get_mobility_funcs(
-        country, mobility.region, mobility.mixing, locs, square, smooth
+
+    additional_mobility = additional_mobility or {}
+
+    # A graphobject dict of timeseries for locations
+    location_ts = get_mobility_funcs(
+        country, mobility.region, additional_mobility, locs, square, smooth
     )
+    location_ts.node_name = "mm_location_adj"
 
     # Get adjusters
-    location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
-    age_adjuster = AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None
+    #location_adjuster = LocationMixingAdjuster(base_matrices, mobility_funcs, microdistancing_funcs)
+    #age_adjuster = AgeMixingAdjuster(mobility.age_mixing) if mobility.age_mixing else None
+    base_matrices = capture_dict(**base_matrices)
+    base_matrices.node_name = "mm_base_matrices"
 
-    def mixing_matrix_function(time: float) -> np.ndarray:
+    def mixing_matrix_adjust(base_matrices: dict, location_ts: dict) -> np.ndarray:
         """
         The function to be called at model run-time to get the matrix.
         """
 
-        mixing_matrix = jnp.array(base_matrices["all_locations"])
+        mixing_matrix = base_matrices["all_locations"]
         # Base matrix
         # mixing_matrix = np.copy(base_matrices["all_locations"])
 
         # Apply adjustments - *** note that the order of these adjustments can't be reversed ***
-        mixing_matrix = location_adjuster.get_adjustment(time, mixing_matrix)
-        return age_adjuster.get_adjustment(time, mixing_matrix) if age_adjuster else mixing_matrix
 
-    return Function(mixing_matrix_function, [Time])
+        for loc_key, adj_ts in location_ts.items():
+            adj_amount = adj_ts - 1.0
+            mixing_matrix += adj_amount * base_matrices[loc_key]
+        return mixing_matrix
+
+    return Function(mixing_matrix_adjust, [base_matrices, location_ts])

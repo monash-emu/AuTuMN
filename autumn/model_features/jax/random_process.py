@@ -38,7 +38,7 @@ class RandomProcess:
         # initialise update times and values
         n_updates = ceil((end_time - start_time) / period)
         self.update_times = [start_time + i * period for i in range(n_updates)]
-        self.delta_values = [0.0] * n_updates
+        self.delta_values = [0.0] * (n_updates - 1)
 
     def update_config_from_params(self, rp_params):
         if rp_params.delta_values:
@@ -59,7 +59,7 @@ class RandomProcess:
         :param transform_func: function used to transform the R interval into the desired interval
         :return: a time-variant function
         """
-        process_values = np.cumsum(self.delta_values)
+        process_values = np.append(0. , np.cumsum(self.delta_values))
         if transform_func is None:
             values = process_values
         else:
@@ -81,7 +81,7 @@ class RandomProcess:
         Evaluate the log-likelihood of the process's values, given the AR coefficients and a value of noise standard deviation
         :return: the loglikelihood (float)
         """
-        process_values = np.cumsum(self.delta_values).tolist()
+        process_values = np.append(0., np.cumsum(self.delta_values)).tolist()
         # calculate the centre of the normal distribution followed by each W_t
         normal_means = [
             sum(

@@ -386,6 +386,8 @@ class Parameters(ParamStruct):
     infectious_seed_time: pclass()
     seed_duration: float
 
+    serodata_age: dict
+
     # Values
     contact_rate: pclass()
     sojourns: Sojourns

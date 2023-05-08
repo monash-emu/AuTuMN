@@ -13,6 +13,10 @@ age_groups:
   - 50
   - 70
 
+serodata_age:
+  min: null
+  max: null
+
 population:
   region: null
   year: 2020

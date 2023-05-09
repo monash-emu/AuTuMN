@@ -511,6 +511,13 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     outputs_builder.request_recovered_proportion(base_compartments)
+    outputs_builder.request_age_specific_recovered_proportion(
+        base_compartments, 
+        age_groups, 
+        params.serodata_age['min'], 
+        params.serodata_age['max']
+    )
+
     outputs_builder.request_immunity_props(
         immunity_strat.strata, age_pops, params.request_immune_prop_by_age
     )

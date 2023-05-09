@@ -63,7 +63,13 @@ def get_school_project(region):
     positive_prop, adjusted_sample_size, midpoint_as_int, sero_age_min, sero_age_max = get_sero_estimate(iso3)
 
     # Load timeseries
-    timeseries = get_school_project_timeseries(region, sero_data={"times": [midpoint_as_int], "values": [positive_prop]})
+    timeseries = get_school_project_timeseries(region, sero_data={
+        "times": [midpoint_as_int], 
+        "values": [positive_prop],
+        "age_min": sero_age_min,
+        "age_max": sero_age_max
+        }
+    )
     # format timeseries using pandas Series
     pd_timeseries = {
         k: pd.Series(data=v["values"], index=v["times"], name=v["output_key"], dtype=float)
@@ -89,9 +95,9 @@ def get_school_project(region):
     targets = [
         NegativeBinomialTarget(
             data=infection_deaths_target
-        ),  # dispersion param from Watson et al. Lancet ID
-        BinomialTarget(  #FIXME! Needs to connect to Serotracker data
-            data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected"), 
+        ),
+        BinomialTarget(
+            data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected_age_matched"), 
             sample_sizes = [adjusted_sample_size]
         )
     ]
@@ -298,11 +304,13 @@ def get_school_project_timeseries(region, sero_data):
     """ 
     Add sero data
     """
-    timeseries["prop_ever_infected"] = {
-        "output_key": "prop_ever_infected",
-        "title": "Proportion ever infected",
-        "times": sero_data['times'],  # [199.],
-        "values": sero_data['values'],  # [.051],
+    min_text = str(int(sero_data['age_min'])) if sero_data['age_min'] is not None else "0"
+    max_text = f"-{str(int(sero_data['age_max']))}" if sero_data['age_max'] is not None else "+"
+    timeseries["prop_ever_infected_age_matched"] = {
+        "output_key": "prop_ever_infected_age_matched",
+        "title": f"Proportion ever infected (age_matched {min_text}{max_text})",
+        "times": sero_data['times'],
+        "values": sero_data['values'],
         "quantiles": REQUESTED_UNC_QUANTILES,
     }
 
@@ -363,7 +371,8 @@ def get_sero_estimate(iso3):
     """
     level = "national" if iso3 in INCLUDED_COUNTRIES['national'] else "subnational"
     df = pd.read_csv(os.path.join(SERO_DATA_FOLDER, f"serodata_{level}.csv"))
-
+    df = df.replace({np.nan: None})
+    
     country_data = df[df['alpha_3_code'] == iso3].to_dict(orient="records")[0]
 
     # work out the adjusted sample size, accounting for survey sample size, risk of bias and geographic level (national/subnational)

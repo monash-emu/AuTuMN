@@ -86,6 +86,13 @@ def process_unesco_data(params: Parameters):
         ],
     )
 
+    # remove rows with identical closure status to make dataframe lighter
+    def map_func(key):
+        return ['Fully open', 'Partially open', 'Closed due to COVID-19', 'Academic break'].index(key)
+
+    unesco_data['status_coded'] = unesco_data['status'].transform(map_func)
+    unesco_data = unesco_data[unesco_data["status_coded"].diff(periods=-1).diff() != 0]
+    
     # Update the school mixing data if requested
     if params.mobility.apply_unesco_school_data:      
         # Convert the categorical data to a single timeseries representing the school attendance proportion
@@ -116,10 +123,6 @@ def process_unesco_data(params: Parameters):
         attendance_prop_f = Function(build_unesco_mobility_array, [params.mobility.unesco_partial_opening_value,
                                                params.mobility.unesco_full_closure_value])
         
-        #FIXME: the next line of code is not essential but would probably speed up computation. This was previously implemented using pandas but now needs to be jaxified
-        # Remove rows where status values are repeated (only keeps first and last timepoints for each plateau phase
-        # unesco_data = unesco_data[unesco_data["attendance_prop"].diff(periods=-1).diff() != 0]  # previous pandas code
-
         # Override the baseline school mixing data with the UNESCO timeseries
         school_mobility_index = (
             pd.to_datetime(unesco_data["date"]) - COVID_BASE_DATETIME
@@ -133,7 +136,6 @@ def process_unesco_data(params: Parameters):
                 school_mobility_data
             )
         }
-
     else:
         additional_mobility = {}
 

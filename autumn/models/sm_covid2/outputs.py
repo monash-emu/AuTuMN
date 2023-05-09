@@ -627,7 +627,6 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
         Store the number of students*weeks of school missed. This is a single float that will be stored as a derived output
         """
-        #FIXME this is broken
         def repeat_val(example_output, n_student_weeks_missed):
             return jnp.repeat(n_student_weeks_missed, jnp.size(example_output))
  

@@ -511,7 +511,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     outputs_builder.request_recovered_proportion(base_compartments)
-    outputs_builder.request_age_specific_recovered_proportion(
+    outputs_builder.request_age_matched_recovered_proportion(
         base_compartments, 
         age_groups, 
         params.serodata_age['min'], 

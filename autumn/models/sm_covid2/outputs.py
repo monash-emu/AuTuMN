@@ -485,7 +485,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         )
 
 
-    def request_age_specific_recovered_proportion(self, base_comps: List[str], age_groups: List[str], sero_age_min, sero_age_max):
+    def request_age_matched_recovered_proportion(self, base_comps: List[str], age_groups: List[str], sero_age_min, sero_age_max):
         """
         Track the total population ever infected and the proportion of the total population.
 

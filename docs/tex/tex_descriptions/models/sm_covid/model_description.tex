@@ -9,7 +9,7 @@ We use a semi-mechanistic compartmental model of COVID-19 transmission governed 
 Our model captures important factors of COVID-19 transmission and disease such as age-specific characteristics, 
 heterogeneous mixing, vaccination and the emergence of different variants of concern. 
 The ODE-based model is used to capture only states relevant to transmission, whereas hospitalisations and deaths are
-estimated through a convolution process. This process combines the model-estimated disease incidence with 
+estimated through a convolution process based on the ODE-based model's outputs. This process combines the model-estimated disease incidence with 
 statistical distributions modelling the time to hospitalisation, the hospital stay duration and the time to death.
 This approach presents two main advantages. First it reduces the complexity of the dynamic system relying on 
 numerical solving of ODEs, which is computationally expensive. Second, the convolution approach allows for more flexibility 

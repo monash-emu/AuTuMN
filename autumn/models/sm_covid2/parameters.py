@@ -394,7 +394,8 @@ class Parameters(ParamStruct):
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
     school_multiplier: pclass()
-    
+    hh_contact_increase: pclass()
+
     compartment_replicates: Dict[str, int]
     latency_infectiousness: LatencyInfectiousness
 

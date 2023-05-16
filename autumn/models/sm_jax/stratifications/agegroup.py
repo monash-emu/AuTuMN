@@ -99,7 +99,8 @@ def get_agegroup_strat(
     compartments: List[str],
     is_dynamic_matrix: bool,
     age_suscept: Optional[pd.Series],
-    additional_mobility: Optional[dict]
+    additional_mobility: Optional[dict],
+    random_process_func
 ) -> Stratification:
     """
     Function to create the age group stratification object.
@@ -126,7 +127,7 @@ def get_agegroup_strat(
     age_strat = Stratification("agegroup", age_groups, compartments)
 
     # Heterogeneous mixing by age
-    dynamic_args = matrices, params.mobility, params.country, additional_mobility
+    dynamic_args = matrices, params.mobility, params.country, additional_mobility, random_process_func, params.hh_contact_increase
     final_matrix = (
         build_dynamic_mixing_matrix(*dynamic_args)
         if is_dynamic_matrix

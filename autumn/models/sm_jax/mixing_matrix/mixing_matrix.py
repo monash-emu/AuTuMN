@@ -15,7 +15,7 @@ from summer2.functions.util import capture_dict
 
 def build_dynamic_mixing_matrix(
     base_matrices: Dict[str, np.ndarray], mobility: Mobility, country: Country,
-    additional_mobility: dict = None
+    additional_mobility: dict = None, random_process_func=None
 ) -> Callable[[float], np.ndarray]:
     """
     Master function that builds the time-varying mixing matrix.
@@ -44,7 +44,7 @@ def build_dynamic_mixing_matrix(
 
     # A graphobject dict of timeseries for locations
     location_ts = get_mobility_funcs(
-        country, mobility.region, additional_mobility, locs, square, smooth
+        country, mobility.region, additional_mobility, locs, square, smooth, random_process_func
     )
     location_ts.node_name = "mm_location_adj"
 

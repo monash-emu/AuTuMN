@@ -304,15 +304,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     # Transmission
     infection_dest, infectious_entry_flow = latent_compartments[0], FlowName.PROGRESSION
-
-    if params.activate_random_process:
-
-        # Store random process as a computed value to make it available as an output
-        rp_function, contact_rate = get_random_process(params.random_process, params.contact_rate)
-        model.add_computed_value_func("transformed_random_process", rp_function)
-
-    else:
-        contact_rate = params.contact_rate
+    contact_rate = params.contact_rate
 
     # Add the process of infecting the susceptibles
     model.add_infection_frequency_flow(
@@ -369,6 +361,14 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # Apply UNESCO school closure data. This will update the school mixing params
     student_weeks_missed, additional_mobility = process_unesco_data(params)
 
+    # Random process
+    if params.activate_random_process:
+        # Store random process as a computed value to make it available as an output
+        rp_function = get_random_process(params.random_process)
+        model.add_computed_value_func("transformed_random_process", rp_function)
+    else:
+        rp_function = None
+
     # Get the actual age stratification now
     age_strat = get_agegroup_strat(
         params,
@@ -378,7 +378,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         base_compartments,
         params.is_dynamic_mixing_matrix,
         suscept_adjs,
-        additional_mobility
+        additional_mobility,
+        rp_function
     )
 
     #age_strat.set_mixing_matrix(mixing_matrices["all_locations"])

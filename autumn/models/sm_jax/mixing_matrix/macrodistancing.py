@@ -71,6 +71,7 @@ def get_mobility_funcs(
     google_mobility_locations: Dict[str, Dict[str, float]],
     square_mobility_effect: bool,
     smooth_google_data: bool,
+    random_process_func
 ) -> Dict[str, Callable[[float], float]]:
     """
     Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
@@ -83,6 +84,7 @@ def get_mobility_funcs(
         google_mobility_locations: The mapping to model locations from Google mobility locations
         square_mobility_effect: See update_mixing_data
         smooth_google_data: Whether to smooth the raw Google mobility data for that location
+        random_process_func: Random process function
 
     Returns:
         The final mobility functions for each modelled location
@@ -126,6 +128,11 @@ def get_mobility_funcs(
         mobility_funcs[location] = get_sigmoidal_interpolation_function(
             idx, timeseries
         )
+
+    if random_process_func:
+        rp_adjustment = random_process_func * random_process_func if square_mobility_effect else random_process_func
+        for location in ["work", "other_locations"]:
+            mobility_funcs[location] = mobility_funcs[location] * rp_adjustment
 
     return capture_dict(**mobility_funcs)
 

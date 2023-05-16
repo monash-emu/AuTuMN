@@ -1,8 +1,5 @@
 import yaml
 import os
-
-import country_converter as coco
-
 from autumn.settings.folders import PROJECTS_PATH
 
 
@@ -14,6 +11,11 @@ def get_school_country_list(nationbal_only=False):
     return country_dict[primary_key]   
 
 
-def get_school_iso2_list(national_only=False):
-    country_dict = get_school_country_list(national_only)
-    return coco.convert(names=list(country_dict.keys()), to='ISO2') 
+SCHOOL_ISO2_LIST = [
+    'AL', 'AE', 'AR', 'AU', 'AT', 'BE', 'BJ', 'BF', 'BD', 'BA', 'BR', 'CA', 'CH', 'CL', 'CN', 
+    'CM', 'CD', 'CG', 'CO', 'CZ', 'DE', 'DK', 'DO', 'EC', 'EG', 'ES', 'EE', 'ET', 'FI', 'FR',
+    'GA', 'GB', 'GH', 'GR', 'HN', 'HR', 'HU', 'ID', 'IN', 'IE', 'IR', 'IQ', 'IS', 'IL', 'IT', 
+    'JO', 'JP', 'KZ', 'KE', 'KR', 'LB', 'LT', 'LU', 'MV', 'MX', 'MK', 'ML', 'MN', 'MZ', 'MW', 
+    'MY', 'NG', 'NL', 'NO', 'NP', 'OM', 'PK', 'PE', 'PH', 'PL', 'PT', 'PY', 'PS', 'QA', 'RO', 
+    'RU', 'SA', 'SN', 'SG', 'SL', 'SS', 'SI', 'SE', 'US', 'UZ', 'ZA', 'ZM', 'ZW'
+]

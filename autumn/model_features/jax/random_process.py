@@ -110,15 +110,13 @@ def set_up_random_process(start_time, end_time, order, period):
 
 
 def get_random_process(
-    process_params,
-    contact_rate_value,
+    process_params
 ) -> Tuple[callable, callable]:
     """
     Work out the process that will contribute to the random process.
 
     Args:
         process_params: Parameters relating to the random process
-        contact_rate_value: The risk of transmission per contact
 
     Returns:
         The random process function and the contact rate (here a summer-ready format transition function)
@@ -139,6 +137,4 @@ def get_random_process(
     # Create function returning exp(W), where W is the random process
     rp_time_variant_func = rp.create_random_process_function(transform_func=np.exp)
 
-    contact_rate_func = contact_rate_value * rp_time_variant_func
-
-    return rp_time_variant_func, contact_rate_func
+    return rp_time_variant_func

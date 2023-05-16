@@ -71,7 +71,8 @@ def get_mobility_funcs(
     google_mobility_locations: Dict[str, Dict[str, float]],
     square_mobility_effect: bool,
     smooth_google_data: bool,
-    random_process_func
+    random_process_func,
+    hh_contact_increase
 ) -> Dict[str, Callable[[float], float]]:
     """
     Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
@@ -85,7 +86,7 @@ def get_mobility_funcs(
         square_mobility_effect: See update_mixing_data
         smooth_google_data: Whether to smooth the raw Google mobility data for that location
         random_process_func: Random process function
-
+        hh_contact_increase: relative household contact increase when schools are closed
     Returns:
         The final mobility functions for each modelled location
 
@@ -128,6 +129,16 @@ def get_mobility_funcs(
         mobility_funcs[location] = get_sigmoidal_interpolation_function(
             idx, timeseries
         )
+
+    # Increase household contacts when schools are closed
+    if "school" in additional_mobility:
+        (idx, timeseries) = additional_mobility["school"]
+        prop_at_school = get_sigmoidal_interpolation_function(idx, timeseries)
+        hh_adjustment = 1. + (1. - prop_at_school) * hh_contact_increase
+        if "home" in mobility_funcs:
+            mobility_funcs["home"] = mobility_funcs["home"] * hh_adjustment
+        else:
+            mobility_funcs["home"] = hh_adjustment
 
     if random_process_func:
         rp_adjustment = random_process_func * random_process_func if square_mobility_effect else random_process_func

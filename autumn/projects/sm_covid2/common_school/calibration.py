@@ -46,7 +46,7 @@ def make_rp_loglikelihood_func(len_rp_delta_values):
 
 def get_bcm_object(region):
     project = get_project("sm_covid2", region)
-    death_target = project.calibration.targets[0]
+    death_target, sero_target = project.calibration.targets
 
     default_configuration = project.param_set.baseline
     m = project.build_model(default_configuration.to_dict()) 
@@ -56,6 +56,11 @@ def get_bcm_object(region):
             "infection_deaths", 
             death_target.data, 
             dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (50, 200))
+        ),
+        est.BinomialTarget(
+            "prop_ever_infected_age_matched", 
+            sero_target.data, 
+            sample_sizes=sero_target.sample_sizes
         )
     ]
 

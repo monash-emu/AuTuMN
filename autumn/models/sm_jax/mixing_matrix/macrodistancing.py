@@ -141,9 +141,8 @@ def get_mobility_funcs(
             mobility_funcs["home"] = hh_adjustment
 
     if random_process_func:
-        rp_adjustment = random_process_func * random_process_func if square_mobility_effect else random_process_func
         for location in ["work", "other_locations"]:
-            mobility_funcs[location] = mobility_funcs[location] * rp_adjustment
+            mobility_funcs[location] = mobility_funcs[location] * random_process_func
 
     return capture_dict(**mobility_funcs)
 

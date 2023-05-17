@@ -98,7 +98,7 @@ def get_school_project(region):
         ),
         BinomialTarget(
             data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected_age_matched"), 
-            sample_sizes = [adjusted_sample_size]
+            sample_sizes = pd.Series(data=[adjusted_sample_size], index=[midpoint_as_int])
         )
     ]
 

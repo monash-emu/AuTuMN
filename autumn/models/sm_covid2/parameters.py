@@ -364,6 +364,7 @@ class RandomProcessParams(BaseModel):
     delta_values: Optional[parray()]
     order: int
     time: Time
+    affected_locations: List[str]
 
 
 class ParamConfig:

@@ -72,7 +72,8 @@ def get_mobility_funcs(
     square_mobility_effect: bool,
     smooth_google_data: bool,
     random_process_func,
-    hh_contact_increase
+    hh_contact_increase,
+    rp_affected_locations
 ) -> Dict[str, Callable[[float], float]]:
     """
     Loads Google mobility data, combines it with user requested timeseries data and then returns a mobility function for
@@ -141,7 +142,7 @@ def get_mobility_funcs(
             mobility_funcs["home"] = hh_adjustment
 
     if random_process_func:
-        for location in ["work", "other_locations"]:
+        for location in rp_affected_locations:
             if location in mobility_funcs:
                 mobility_funcs[location] = mobility_funcs[location] * random_process_func * random_process_func
             else:

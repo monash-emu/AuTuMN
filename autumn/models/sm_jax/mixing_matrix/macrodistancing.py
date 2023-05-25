@@ -142,7 +142,10 @@ def get_mobility_funcs(
 
     if random_process_func:
         for location in ["work", "other_locations"]:
-            mobility_funcs[location] = mobility_funcs[location] * random_process_func
+            if location in mobility_funcs:
+                mobility_funcs[location] = mobility_funcs[location] * random_process_func * random_process_func
+            else:
+                mobility_funcs[location] = random_process_func * random_process_func
 
     return capture_dict(**mobility_funcs)
 

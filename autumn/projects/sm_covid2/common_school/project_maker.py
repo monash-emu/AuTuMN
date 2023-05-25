@@ -349,14 +349,15 @@ def get_school_project_priors(first_date_with_death):
         UniformPrior("contact_rate", [0.01, 0.1]),
         UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
         UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
+        UniformPrior("sojourns.active", [4., 10.]),
 
         # VOC-related parameters
         UniformPrior("voc_emergence.delta.new_voc_seed.time_from_gisaid_report", [-30, 30]),
         UniformPrior("voc_emergence.omicron.new_voc_seed.time_from_gisaid_report", [-30, 30]),
 
         # Account for mixing matrix uncertainty
-        UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.3]),
-        UniformPrior("school_multiplier", [0.8, 1.2]),
+        # UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.3]),
+        # UniformPrior("school_multiplier", [0.8, 1.2]),
     ]
 
     return priors

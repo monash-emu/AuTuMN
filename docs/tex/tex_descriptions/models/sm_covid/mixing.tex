@@ -14,13 +14,15 @@ multiplied by the factor $m_S$ that is varied during model calibration (see Sect
 the relative contribution of school contacts to overall mixing.
 
 \paragraph{Modifications of contact rates over time}
+\label{time_var_mixing}
 To capture mobility changes over time, the contributions of the matrices \(C_{S}\), \(C_{W}\) and \(C_{L}\) vary with time such that the input contact matrix can be written as:
 
 \begin{equation}
-  C(t)= C_{H}+ s(t)^{2} m_S C_{S}+ w(t)^{2}C_{W}+l(t)^{2}C_{L}
+\label{eq_mixing}
+  C(t)= h(t)^{2}C_{H}+ s(t)^{2} m_S C_{S}+ w(t)^{2}C_{W}+l(t)^{2}C_{L}
 \end{equation}
 
-The modifying functions $s$ (for schools), $w$ (for work) and $l$ (for other-locations) are each squared to capture the effect of the mobility changes on 
+The modifying functions $h$ (for households), $s$ (for schools), $w$ (for work) and $l$ (for other-locations) are each squared to capture the effect of the mobility changes on 
 both the infector and the infectee in any given interaction that could potentially result in transmission. 
 
 \vspace{5pt}
@@ -79,11 +81,17 @@ indicators across the following Google categories: ``Retail and recreation'', ``
 \vspace{5pt}
 \textbf{Household contacts}
 
-The contribution of household contacts to the overall mixing matrix is fixed over time. Although Google provides mobility 
+In the base case analysis, the contribution of household contacts to the overall mixing matrix is fixed over time 
+(i.e. $h(t) = 1$ in Equation \ref{eq_mixing}). Although Google provides mobility 
 estimates for residential contacts, the nature of these data is different from that of each of the other Google mobility 
 types. They represent the time spent in that location, as opposed to other categories, which measure a change in total visitors 
 rather than the duration. The daily frequency with which people attend their residence is likely to be close to one and we 
 considered that household members likely have a daily opportunity for infection with each other household member regardless of
 the background level of mobility. Therefore, we did not implement a function to scale the contribution of household contacts 
 to the mixing matrix with time.
+
+In a Sensitivity Analysis, we consider an alternative assumption where the effective contact rates within households are increased during
+periods of school closure. In that case, the household component of the mixing matrix is modified by the following function:
+$$ h(t) = 1 + 0.20(1 - s(t)) \quad ,$$ 
+where $s$ is the function modifying school contacts as introduced in Section \ref{time_var_mixing}.
 

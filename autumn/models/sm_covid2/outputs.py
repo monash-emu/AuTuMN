@@ -496,8 +496,8 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         # if no age restriction in the survey, just copy the overall sero-prevalence
         if sero_age_min is None and sero_age_max is None:
             self.model.request_aggregate_output(
-                output_name,
-                sources =DerivedOutput("prop_ever_infected")
+                "prop_ever_infected_age_matched",
+                sources =[DerivedOutput("prop_ever_infected")]
             )
         # otherwise, we need to workout out the matching modelled age bands and create the relevant output 
         else:

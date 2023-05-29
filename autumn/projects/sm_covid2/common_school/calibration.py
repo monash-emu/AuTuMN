@@ -104,4 +104,6 @@ def plot_model_fit(bcm, params, region):
 
     # Sero data
     run_model.derived_outputs["prop_ever_infected_age_matched"].plot(ax=sero_ax, ylabel="Prop. seropositive\n(age-matched)")
-    targets["prop_ever_infected_age_matched"].plot(style='.', ax=sero_ax)
+    # targets["prop_ever_infected_age_matched"].plot(style='.', ax=sero_ax)
+
+    return fig

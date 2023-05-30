@@ -55,7 +55,7 @@ from pathlib import Path
 param_path = Path(__file__).parent.resolve() / "params"
 
 
-def get_school_project(iso3):
+def get_school_project(iso3, analysis="main"):
 
     # read seroprevalence data (needed to specify the sero age range params and then to define the calibration targets)
     positive_prop, adjusted_sample_size, midpoint_as_int, sero_age_min, sero_age_max = get_sero_estimate(iso3)
@@ -80,7 +80,7 @@ def get_school_project(iso3):
     first_date_with_death = infection_deaths[round(infection_deaths) >= 1].index[0]
 
     # Get parameter set
-    param_set = get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max)
+    param_set = get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max, analysis)
 
     # Define priors
     priors = get_school_project_priors(first_date_with_death)
@@ -165,7 +165,7 @@ def get_school_project(iso3):
     return project
 
 
-def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max):
+def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max, analysis="main"):
     """
     Get the country-specific parameter sets.
 
@@ -217,6 +217,10 @@ def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, 
     mle_path= param_path / "mle_files" /  f"mle_{iso3}.yml"
     if exists(mle_path):
         baseline_params = baseline_params.update(mle_path, calibration_format=True)
+
+    # update using potential Sensitivity Analysis params
+    sa_params_path = param_path / "SA_analyses" / f"{analysis}.yml"
+    baseline_params = baseline_params.update(sa_params_path, calibration_format=True)
 
     # get scenario parameters
     scenario_dir_path = param_path

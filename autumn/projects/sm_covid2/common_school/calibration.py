@@ -12,7 +12,8 @@ from estival import targets as est
 from estival import priors as esp
 from estival.model import BayesianCompartmentalModel
 
-from autumn.core.project import get_project
+from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
+from autumn.projects.sm_covid2.common_school.runner_tools import ANALYSES_NAMES
 
 
 def get_estival_uniform_priors(autumn_priors):
@@ -44,8 +45,11 @@ def make_rp_loglikelihood_func(len_rp_delta_values):
     return rp_loglikelihood
 
 
-def get_bcm_object(iso3):
-    project = get_project("sm_covid2", iso3)
+def get_bcm_object(iso3, analysis="main"):
+
+    assert analysis in ANALYSES_NAMES, "wrong analysis name requested"
+
+    project = get_school_project(iso3, analysis)
     targets = [
         est.NegativeBinomialTarget(
             "infection_deaths", 

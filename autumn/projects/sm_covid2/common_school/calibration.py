@@ -46,23 +46,25 @@ def make_rp_loglikelihood_func(len_rp_delta_values):
 
 def get_bcm_object(region):
     project = get_project("sm_covid2", region)
-    death_target, sero_target = project.calibration.targets
-
-    default_configuration = project.param_set.baseline
-    m = project.build_model(default_configuration.to_dict()) 
-
     targets = [
         est.NegativeBinomialTarget(
             "infection_deaths", 
-            death_target.data, 
+            project.calibration.targets[0].data, 
             dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (50, 200))
-        ),
-        est.BinomialTarget(
-            "prop_ever_infected_age_matched", 
-            sero_target.data, 
-            sample_sizes=sero_target.sample_sizes
         )
     ]
+    if len(project.calibration.targets) > 1:
+        sero_target = project.calibration.targets[1]
+        targets.append(
+            est.BinomialTarget(
+                "prop_ever_infected_age_matched", 
+                sero_target.data, 
+                sample_sizes=sero_target.sample_sizes
+            )
+        )
+
+    default_configuration = project.param_set.baseline
+    m = project.build_model(default_configuration.to_dict()) 
 
     priors = get_estival_uniform_priors(project.calibration.all_priors)
 
@@ -78,7 +80,7 @@ def plot_model_fit(bcm, params, region):
     REF_DATE = datetime.date(2019,12,31)
 
     targets = {}
-    for output in ["infection_deaths", "prop_ever_infected_age_matched"]:
+    for output in bcm.targets:
         t = copy(bcm.targets[output].data)
         t.index = ref_times_to_dti(REF_DATE, t.index)
         targets[output] = t
@@ -103,7 +105,10 @@ def plot_model_fit(bcm, params, region):
     rp_ax.hlines(y=1., xmin=xmin, xmax=xmax, linestyle="dotted", color="grey")
 
     # Sero data
-    run_model.derived_outputs["prop_ever_infected_age_matched"].plot(ax=sero_ax, ylabel="Prop. seropositive\n(age-matched)")
-    # targets["prop_ever_infected_age_matched"].plot(style='.', ax=sero_ax)
+    if "prop_ever_infected_age_matched" in targets:
+        run_model.derived_outputs["prop_ever_infected_age_matched"].plot(ax=sero_ax, ylabel="Prop. ever infected\n(age-matched)")
+        targets["prop_ever_infected_age_matched"].plot(style='.', ax=sero_ax)
+    else:
+        run_model.derived_outputs["prop_ever_infected"].plot(ax=sero_ax, ylabel="Prop. ever infected")
 
     return fig

@@ -95,12 +95,15 @@ def get_school_project(region):
     targets = [
         NegativeBinomialTarget(
             data=infection_deaths_target
-        ),
-        BinomialTarget(
-            data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected_age_matched"), 
-            sample_sizes = pd.Series(data=[adjusted_sample_size], index=[midpoint_as_int])
+        )]
+        
+    if positive_prop is not None:
+        targets.append(
+            BinomialTarget(
+                data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected_age_matched"), 
+                sample_sizes = pd.Series(data=[adjusted_sample_size], index=[midpoint_as_int])
+            )
         )
-    ]
 
     # set up random process if relevant
     if param_set.baseline.to_dict()["activate_random_process"]:
@@ -304,16 +307,16 @@ def get_school_project_timeseries(region, sero_data):
     """ 
     Add sero data
     """
-    min_text = str(int(sero_data['age_min'])) if sero_data['age_min'] is not None else "0"
-    max_text = f"-{str(int(sero_data['age_max']))}" if sero_data['age_max'] is not None else "+"
-    timeseries["prop_ever_infected_age_matched"] = {
-        "output_key": "prop_ever_infected_age_matched",
-        "title": f"Proportion ever infected (age_matched {min_text}{max_text})",
-        "times": sero_data['times'],
-        "values": sero_data['values'],
-        "quantiles": REQUESTED_UNC_QUANTILES,
-    }
-
+    if sero_data['times'] != [None]:
+        min_text = str(int(sero_data['age_min'])) if sero_data['age_min'] is not None else "0"
+        max_text = f"-{str(int(sero_data['age_max']))}" if sero_data['age_max'] is not None else "+"
+        timeseries["prop_ever_infected_age_matched"] = {
+            "output_key": "prop_ever_infected_age_matched",
+            "title": f"Proportion ever infected (age_matched {min_text}{max_text})",
+            "times": sero_data['times'],
+            "values": sero_data['values'],
+            "quantiles": REQUESTED_UNC_QUANTILES,
+        }
 
     # add extra derived output with no data to request uncertainty
     for output_key, title in EXTRA_UNCERTAINTY_OUTPUTS.items():
@@ -367,8 +370,10 @@ def get_sero_estimate(iso3):
     """
     Read seroprevalence data for the modelled country
     """
-    level = "national" if iso3 in INCLUDED_COUNTRIES['national'] else "subnational"
-    df = pd.read_csv(os.path.join(SERO_DATA_FOLDER, f"serodata_{level}.csv"))
+    if iso3 not in INCLUDED_COUNTRIES['national_sero']:
+        return None, None, None, None, None
+
+    df = pd.read_csv(os.path.join(SERO_DATA_FOLDER, f"serodata_national.csv"))
     df = df.replace({np.nan: None})
     
     country_data = df[df['alpha_3_code'] == iso3].to_dict(orient="records")[0]
@@ -379,12 +384,7 @@ def get_sero_estimate(iso3):
         1: 2./3., # moderate risk of bias
         2: 1., # low risk of bias
     }
-    adjusted_sample_size = country_data['denominator_value'] * bias_risk_adjustment[country_data['overall_risk_of_bias']]
-
-    if level == 'subnational':
-        adjusted_sample_size *= .5
-
-    adjusted_sample_size = round(adjusted_sample_size)
+    adjusted_sample_size = round(country_data['denominator_value'] * bias_risk_adjustment[country_data['overall_risk_of_bias']])
 
     # work out the survey midpoint
     start_date = datetime.fromisoformat(country_data['sampling_start_date'])
@@ -394,5 +394,3 @@ def get_sero_estimate(iso3):
     midpoint_as_int = (midpoint - datetime(2019, 12, 31)).days
 
     return country_data["serum_pos_prevalence"], adjusted_sample_size, midpoint_as_int, country_data['age_min'], country_data['age_max']
-
-positive_prop, adjusted_sample_size, midpoint_as_int, age_min, age_max = get_sero_estimate("BEN")

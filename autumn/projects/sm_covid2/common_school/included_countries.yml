@@ -1,68 +1,133 @@
 all:
+  ABW: Aruba
+  AFG: Afghanistan
+  AGO: Angola
   ALB: Albania
   ARE: United Arab Emirates
   ARG: Argentina
+  ARM: Armenia
+  ATG: Antigua and Barbuda
   AUS: Australia
   AUT: Austria
+  AZE: Azerbaijan
+  BDI: Burundi
   BEL: Belgium
   BEN: Benin
   BFA: Burkina Faso
   BGD: Bangladesh
+  BGR: Bulgaria
+  BHR: Bahrain
+  BHS: Bahamas
   BIH: Bosnia and Herzegovina
+  BLR: Belarus
+  BLZ: Belize
+  BOL: Bolivia, Plurinational State of
   BRA: Brazil
+  BRB: Barbados
+  BRN: Brunei Darussalam
+  BWA: Botswana
+  CAF: Central African Republic
   CAN: Canada
   CHE: Switzerland
   CHL: Chile
   CHN: China
+  CIV: "C\xF4te d'Ivoire"
   CMR: Cameroon
   COD: Congo, The Democratic Republic of the
+  COG: Congo
   COL: Colombia
+  COM: Comoros
+  CPV: Cabo Verde
+  CRI: Costa Rica
+  CUB: Cuba
+  CUW: "Cura\xE7ao"
+  CYP: Cyprus
   CZE: Czechia
   DEU: Germany
+  DJI: Djibouti
   DNK: Denmark
+  DOM: Dominican Republic
+  DZA: Algeria
   ECU: Ecuador
   EGY: Egypt
   ESP: Spain
   EST: Estonia
   ETH: Ethiopia
+  FIN: Finland
+  FJI: Fiji
   FRA: France
   GAB: Gabon
   GBR: United Kingdom
+  GEO: Georgia
   GHA: Ghana
+  GIN: Guinea
+  GMB: Gambia
+  GNQ: Equatorial Guinea
   GRC: Greece
+  GRD: Grenada
+  GTM: Guatemala
+  GUY: Guyana
   HND: Honduras
   HRV: Croatia
+  HTI: Haiti
   HUN: Hungary
   IDN: Indonesia
   IND: India
   IRL: Ireland
   IRN: Iran, Islamic Republic of
   IRQ: Iraq
+  ISL: Iceland
   ISR: Israel
   ITA: Italy
+  JAM: Jamaica
   JOR: Jordan
   JPN: Japan
   KAZ: Kazakhstan
   KEN: Kenya
+  KGZ: Kyrgyzstan
+  KHM: Cambodia
+  KIR: Kiribati
   KOR: Korea, Republic of
+  KWT: Kuwait
+  LAO: Lao People's Democratic Republic
   LBN: Lebanon
+  LBR: Liberia
+  LBY: Libya
+  LCA: Saint Lucia
+  LKA: Sri Lanka
+  LSO: Lesotho
   LTU: Lithuania
+  LUX: Luxembourg
+  LVA: Latvia
+  MAR: Morocco
+  MDA: Moldova, Republic of
   MDV: Maldives
   MEX: Mexico
   MKD: North Macedonia
   MLI: Mali
+  MLT: Malta
+  MMR: Myanmar
+  MNE: Montenegro
   MNG: Mongolia
   MOZ: Mozambique
+  MRT: Mauritania
+  MUS: Mauritius
   MWI: Malawi
   MYS: Malaysia
+  NAM: Namibia
+  NER: Niger
   NGA: Nigeria
+  NIC: Nicaragua
   NLD: Netherlands
   NOR: Norway
   NPL: Nepal
+  NZL: New Zealand
   OMN: Oman
   PAK: Pakistan
+  PAN: Panama
   PER: Peru
   PHL: Philippines
+  PNG: Papua New Guinea
   POL: Poland
   PRT: Portugal
   PRY: Paraguay
@@ -70,19 +135,44 @@ all:
   QAT: Qatar
   ROU: Romania
   RUS: Russian Federation
+  RWA: Rwanda
   SAU: Saudi Arabia
+  SDN: Sudan
   SEN: Senegal
   SGP: Singapore
+  SLB: Solomon Islands
   SLE: Sierra Leone
+  SLV: El Salvador
+  SRB: Serbia
   SSD: South Sudan
+  STP: Sao Tome and Principe
+  SUR: Suriname
+  SVK: Slovakia
   SVN: Slovenia
   SWE: Sweden
+  SWZ: Eswatini
+  SYC: Seychelles
+  SYR: Syrian Arab Republic
+  TCD: Chad
+  TGO: Togo
+  THA: Thailand
+  TLS: Timor-Leste
+  TTO: Trinidad and Tobago
+  TUN: Tunisia
+  TUR: Turkey
+  TZA: Tanzania, United Republic of
+  UGA: Uganda
+  UKR: Ukraine
+  URY: Uruguay
   USA: United States
   UZB: Uzbekistan
+  VCT: Saint Vincent and the Grenadines
+  VEN: Venezuela, Bolivarian Republic of
+  VNM: Viet Nam
   ZAF: South Africa
   ZMB: Zambia
   ZWE: Zimbabwe
-national:
+national_sero:
   AUS: Australia
   AUT: Austria
   BEL: Belgium

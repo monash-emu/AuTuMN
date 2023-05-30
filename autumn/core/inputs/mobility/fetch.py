@@ -6,6 +6,9 @@ from pathlib import Path
 import pandas as pd
 from autumn.settings import INPUT_DATA_PATH
 
+from autumn.projects.sm_covid2.common_school.utils import SCHOOL_ISO2_LIST
+
+
 GOOGLE_MOBILITY_URL = "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv"
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
@@ -44,7 +47,7 @@ COUNTRY_FILTER = {
 
 def fetch_mobility_data() -> None:
     df = pd.read_csv(GOOGLE_MOBILITY_URL)
-    filter_mob = set(COUNTRY_FILTER.keys())
+    filter_mob = set(list(COUNTRY_FILTER.keys()) + SCHOOL_ISO2_LIST)
     df[df.country_region_code.isin(filter_mob)].to_csv(MOBILITY_CSV_PATH)
 
     filter_fb_mov = {"BTN"}

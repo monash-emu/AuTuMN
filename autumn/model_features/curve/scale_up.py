@@ -8,7 +8,6 @@ from scipy.interpolate import UnivariateSpline
 
 
 def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multiplier=1.0):
-
     """
     Base function to make sigmoidal curves. Not sure whether currently in use.
     Args:
@@ -60,7 +59,6 @@ def make_linear_curve(x_0, x_1, y_0, y_1):
 
 
 def test_a(a, x_min, x_max, x_peak, bound_low, bound_up):
-
     """
     Test function used to check that the cubic function defined by the parameter set 'a'
     will not overcome the bounds 'bound_low' and 'bound_up' on the interval [x_min, x_max]
@@ -71,12 +69,12 @@ def test_a(a, x_min, x_max, x_peak, bound_low, bound_up):
     test = 1
     delta = 4.0 * a[2] ** 2 - 12.0 * a[1] * a[3]
     if delta > 0:
-        zero_1 = (-2 * a[2] + delta ** 0.5) / (6.0 * a[3])
-        zero_2 = (-2 * a[2] - delta ** 0.5) / (6.0 * a[3])
+        zero_1 = (-2 * a[2] + delta**0.5) / (6.0 * a[3])
+        zero_2 = (-2 * a[2] - delta**0.5) / (6.0 * a[3])
         zero = zero_1
         if abs(zero_2 - x_peak) > abs(zero_1 - x_peak):
             zero = zero_2
-        y_zero = a[0] + a[1] * zero + a[2] * zero ** 2 + a[3] * zero ** 3
+        y_zero = a[0] + a[1] * zero + a[2] * zero**2 + a[3] * zero**3
 
         if x_min < zero < x_max:
             if (y_zero > bound_up) or (y_zero < bound_low):
@@ -87,7 +85,6 @@ def test_a(a, x_min, x_max, x_peak, bound_low, bound_up):
 def get_spare_fit(
     indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound_up, a_init, a_f, x, y
 ):
-
     """
     When a portion of the curve was detected outside of the bounds, we have tried to replace it by a portion that will
     reach an extremum on the bound that was overcome. However, in some cases, this new fit presents a singularity where
@@ -119,15 +116,15 @@ def get_spare_fit(
                 a = out["a1"]
             else:
                 a = out["a2"]
-            y_spare = a[0] + a[1] * x_spare + a[2] * x_spare ** 2 + a[3] * x_spare ** 3
-            v_spare = a[1] + 2.0 * a[2] * x_spare + 3.0 * a[3] * x_spare ** 2
+            y_spare = a[0] + a[1] * x_spare + a[2] * x_spare**2 + a[3] * x_spare**3
+            v_spare = a[1] + 2.0 * a[2] * x_spare + 3.0 * a[3] * x_spare**2
         else:
             if spare_indice == 0:
                 y_spare = y[0]
                 v_spare = 0
             elif spare_indice == len(x) - 2:
-                y_spare = a_f[0] + a_f[1] * x_spare + a_f[2] * x_spare ** 2 + a_f[3] * x_spare ** 3
-                v_spare = a_f[1] + 2.0 * a_f[2] * x_spare + 3.0 * a_f[3] * x_spare ** 2
+                y_spare = a_f[0] + a_f[1] * x_spare + a_f[2] * x_spare**2 + a_f[3] * x_spare**3
+                v_spare = a_f[1] + 2.0 * a_f[2] * x_spare + 3.0 * a_f[3] * x_spare**2
             elif spare_indice == len(x) - 1:
                 y_spare = y[-1]
                 v_spare = 0
@@ -137,10 +134,10 @@ def get_spare_fit(
 
         g = np.array(
             [
-                [x_spare ** 3, x_spare ** 2, x_spare, 1],
-                [x_peak ** 3, x_peak ** 2, x_peak, 1],
-                [3.0 * x_spare ** 2, 2.0 * x_spare, 1, 0],
-                [3.0 * x_peak ** 2, 2.0 * x_peak, 1, 0],
+                [x_spare**3, x_spare**2, x_spare, 1],
+                [x_peak**3, x_peak**2, x_peak, 1],
+                [3.0 * x_spare**2, 2.0 * x_spare, 1, 0],
+                [3.0 * x_peak**2, 2.0 * x_peak, 1, 0],
             ]
         )
         d = np.array([y_spare, bound, v_spare, 0.0])
@@ -153,7 +150,6 @@ def get_spare_fit(
 
 
 def derivatives(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-
     """
     Defines the slopes at each data point
     Should be 0 for the first and last points (x_0 and x_n)
@@ -227,8 +223,8 @@ def scale_up_function(
     # Ensure that every element of x is unique.
     assert len(x) == len(set(x)), "There are duplicate values in x."
 
-    x = np.array(x, dtype=np.float)
-    y = np.array(y, dtype=np.float)
+    x = np.array(x, dtype=np.float64)
+    y = np.array(y, dtype=np.float64)
 
     # Ensure that the arrays are ordered
     order = x.argsort()
@@ -278,10 +274,10 @@ def scale_up_function(
             x0, x1 = x[i - 1], x[i]
             g = np.array(
                 [
-                    [x0 ** 3, x0 ** 2, x0, 1],
-                    [x1 ** 3, x1 ** 2, x1, 1],
-                    [3 * x0 ** 2, 2 * x0, 1, 0],
-                    [3 * x1 ** 2, 2 * x1, 1, 0],
+                    [x0**3, x0**2, x0, 1],
+                    [x1**3, x1**2, x1, 1],
+                    [3 * x0**2, 2 * x0, 1, 0],
+                    [3 * x1**2, 2 * x1, 1, 0],
                 ]
             )
             # Bound conditions:  f(x0) = y0   f(x1) = y1  f'(x0) = v0  f'(x1) = v1
@@ -302,17 +298,17 @@ def scale_up_function(
                 else:
                     # Get former polynomial to get left velocity condition. Derivative has to be continuous
                     p = m[i - 1, :]
-                    v = 3 * p[0] * x0 ** 2 + 2 * p[1] * x0 + p[2]
+                    v = 3 * p[0] * x0**2 + 2 * p[1] * x0 + p[2]
 
                 if vel[i + 1] == 0:  # Define only one section
                     x1 = x[i + 1]
                     y1 = y[i + 1]
                     g = np.array(
                         [
-                            [x0 ** 3, x0 ** 2, x0, 1],
-                            [x1 ** 3, x1 ** 2, x1, 1],
-                            [3 * x0 ** 2, 2 * x0, 1, 0],
-                            [3 * x1 ** 2, 2 * x1, 1, 0],
+                            [x0**3, x0**2, x0, 1],
+                            [x1**3, x1**2, x1, 1],
+                            [3 * x0**2, 2 * x0, 1, 0],
+                            [3 * x1**2, 2 * x1, 1, 0],
                         ]
                     )
                     # Bound conditions: f(x0) = y0  f(x1) = y1   f'(x0) = v0  f'(x1) = 0
@@ -323,10 +319,10 @@ def scale_up_function(
                     y1, y2 = y[i + 1], y[i + 2]
                     g = np.array(
                         [
-                            [x0 ** 3, x0 ** 2, x0, 1],
-                            [x2 ** 3, x2 ** 2, x2, 1],
-                            [3 * x0 ** 2, 2 * x0, 1, 0],
-                            [3 * x2 ** 2, 2 * x2, 1, 0],
+                            [x0**3, x0**2, x0, 1],
+                            [x2**3, x2**2, x2, 1],
+                            [3 * x0**2, 2 * x0, 1, 0],
+                            [3 * x2**2, 2 * x2, 1, 0],
                         ]
                     )
                     # Bound conditions: f(x0) = y0  f(x2) = y2   f'(x0) = v0  f'(x2) = 0
@@ -340,10 +336,10 @@ def scale_up_function(
                     y1, y2 = y[i + 1], y[i + 2]
                     g = np.array(
                         [
-                            [x0 ** 3, x0 ** 2, x0, 1],
-                            [x1 ** 3, x1 ** 2, x1, 1],
-                            [x2 ** 3, x2 ** 2, x2, 1],
-                            [3 * x0 ** 2, 2 * x0, 1, 0],
+                            [x0**3, x0**2, x0, 1],
+                            [x1**3, x1**2, x1, 1],
+                            [x2**3, x2**2, x2, 1],
+                            [3 * x0**2, 2 * x0, 1, 0],
                         ]
                     )
                     # Bound conditions: f(x0) = y0  f(x1) = y1 f(x2) = y2   f'(x0) = v0
@@ -368,17 +364,17 @@ def scale_up_function(
                 else:
                     # Get former polynomial to get left velocity condition
                     p = m[i - 1, :]
-                    v = 3 * p[0] * x0 ** 2 + 2 * p[1] * x0 + p[2]
+                    v = 3 * p[0] * x0**2 + 2 * p[1] * x0 + p[2]
 
                 if vel[i + 1] == 0:
                     x1 = x[i + 1]
                     y1 = y[i + 1]
                     g = np.array(
                         [
-                            [x0 ** 3, x0 ** 2, x0, 1],
-                            [x1 ** 3, x1 ** 2, x1, 1],
-                            [3 * x0 ** 2, 2 * x0, 1, 0],
-                            [3 * x1 ** 2, 2 * x1, 1, 0],
+                            [x0**3, x0**2, x0, 1],
+                            [x1**3, x1**2, x1, 1],
+                            [3 * x0**2, 2 * x0, 1, 0],
+                            [3 * x1**2, 2 * x1, 1, 0],
                         ]
                     )
 
@@ -390,10 +386,10 @@ def scale_up_function(
                     y1, y2 = y[i + 1], y[i + 2]
                     g = np.array(
                         [
-                            [x0 ** 3, x0 ** 2, x0, 1],
-                            [x1 ** 3, x1 ** 2, x1, 1],
-                            [x2 ** 3, x2 ** 2, x2, 1],
-                            [3 * x0 ** 2, 2 * x0, 1, 0],
+                            [x0**3, x0**2, x0, 1],
+                            [x1**3, x1**2, x1, 1],
+                            [x2**3, x2**2, x2, 1],
+                            [3 * x0**2, 2 * x0, 1, 0],
                         ]
                     )
                     # Bound conditions: f(x0) = y0  f(x1) = y1  f(x2) = y2  f'(x0) = v0
@@ -436,7 +432,6 @@ def scale_up_function(
         return curve
 
     elif method == 5:
-
         """
         This method produces an approximation (or interpolation when smoothness=0.0) using cubic splines. When the
         arguments 'bound_low' or 'bound_up' are not None, the approximation is constrained so that the curve does not
@@ -495,10 +490,10 @@ def scale_up_function(
 
         g = np.array(
             [
-                [x0 ** 3, x0 ** 2, x0, 1],
-                [x1 ** 3, x1 ** 2, x1, 1],
-                [3 * x0 ** 2, 2 * x0, 1, 0],
-                [3 * x1 ** 2, 2 * x1, 1, 0],
+                [x0**3, x0**2, x0, 1],
+                [x1**3, x1**2, x1, 1],
+                [3 * x0**2, 2 * x0, 1, 0],
+                [3 * x1**2, 2 * x1, 1, 0],
             ]
         )
         d_init = np.array([y[0], f(x1), 0, v1])
@@ -507,10 +502,10 @@ def scale_up_function(
 
         h = np.array(
             [
-                [x_a ** 3, x_a ** 2, x_a, 1],
-                [x_f ** 3, x_f ** 2, x_f, 1],
-                [3 * x_a ** 2, 2 * x_a, 1, 0],
-                [3 * x_f ** 2, 2 * x_f, 1, 0],
+                [x_a**3, x_a**2, x_a, 1],
+                [x_f**3, x_f**2, x_f, 1],
+                [3 * x_a**2, 2 * x_a, 1, 0],
+                [3 * x_f**2, 2 * x_f, 1, 0],
             ]
         )
         d_f = np.array([f(x_a), y[-1], v_a, 0])
@@ -607,10 +602,10 @@ def scale_up_function(
                 if x0 != x_peak:
                     g = np.array(
                         [
-                            [x0 ** 3, x0 ** 2, x0, 1],
-                            [x_peak ** 3, x_peak ** 2, x_peak, 1],
-                            [3.0 * x0 ** 2, 2.0 * x0, 1, 0],
-                            [3.0 * x_peak ** 2, 2.0 * x_peak, 1, 0],
+                            [x0**3, x0**2, x0, 1],
+                            [x_peak**3, x_peak**2, x_peak, 1],
+                            [3.0 * x0**2, 2.0 * x0, 1, 0],
+                            [3.0 * x_peak**2, 2.0 * x_peak, 1, 0],
                         ]
                     )
                     d = np.array([y0, bound, v0, 0.0])
@@ -620,10 +615,10 @@ def scale_up_function(
                 if x1 != x_peak:
                     g = np.array(
                         [
-                            [x_peak ** 3, x_peak ** 2, x_peak, 1],
-                            [x1 ** 3, x1 ** 2, x1, 1],
-                            [3.0 * x_peak ** 2, 2.0 * x_peak, 1, 0],
-                            [3.0 * x1 ** 2, 2.0 * x1, 1, 0],
+                            [x_peak**3, x_peak**2, x_peak, 1],
+                            [x1**3, x1**2, x1, 1],
+                            [3.0 * x_peak**2, 2.0 * x_peak, 1, 0],
+                            [3.0 * x1**2, 2.0 * x1, 1, 0],
                         ]
                     )
                     d = np.array([bound, y1, 0.0, v1])
@@ -689,13 +684,13 @@ def scale_up_function(
                 if t == x[0]:
                     y_t = y[0]
                 elif t < x[1]:
-                    y_t = a_init[0] + a_init[1] * t + a_init[2] * t ** 2 + a_init[3] * t ** 3
+                    y_t = a_init[0] + a_init[1] * t + a_init[2] * t**2 + a_init[3] * t**3
                 elif t < x[-2]:
                     y_t = f(t)
                 elif t == x[-1]:
                     y_t = y[-1]
                 else:
-                    y_t = a_f[0] + a_f[1] * t + a_f[2] * t ** 2 + a_f[3] * t ** 3
+                    y_t = a_f[0] + a_f[1] * t + a_f[2] * t**2 + a_f[3] * t**3
 
                 if bound_low is not None:
                     if y_t < bound_low:
@@ -729,9 +724,9 @@ def scale_up_function(
                 else:
                     y_t = y[-1]
             elif x[0] < t < x[1]:
-                y_t = a_init[0] + a_init[1] * t + a_init[2] * t ** 2 + a_init[3] * t ** 3
+                y_t = a_init[0] + a_init[1] * t + a_init[2] * t**2 + a_init[3] * t**3
             elif x[-2] < t < x[-1]:
-                y_t = a_f[0] + a_f[1] * t + a_f[2] * t ** 2 + a_f[3] * t ** 3
+                y_t = a_f[0] + a_f[1] * t + a_f[2] * t**2 + a_f[3] * t**3
             else:
                 y_t = f(t)
 
@@ -743,7 +738,7 @@ def scale_up_function(
                         a = out["a1"]
                     else:
                         a = out["a2"]
-                    y_t = a[0] + a[1] * t + a[2] * t ** 2 + a[3] * t ** 3
+                    y_t = a[0] + a[1] * t + a[2] * t**2 + a[3] * t**3
 
             if (bound_low is not None) and (t <= x[-1]):
                 y_t = max((y_t, bound_low))  # Security check. Normally not needed
@@ -772,7 +767,7 @@ def scale_up_function(
         else:
             index = len(x[x <= t]) - 1
             p = m[index, :]  # Corresponding coefficients
-            y_t = p[0] * t ** 3 + p[1] * t ** 2 + p[2] * t + p[3]
+            y_t = p[0] * t**3 + p[1] * t**2 + p[2] * t + p[3]
             return float(y_t)
 
     return curve

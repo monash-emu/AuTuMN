@@ -364,6 +364,7 @@ class RandomProcessParams(BaseModel):
     delta_values: Optional[parray()]
     order: int
     time: Time
+    affected_locations: List[str]
 
 
 class ParamConfig:
@@ -386,13 +387,16 @@ class Parameters(ParamStruct):
     infectious_seed_time: pclass()
     seed_duration: float
 
+    serodata_age: dict
+
     # Values
     contact_rate: pclass()
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
     school_multiplier: pclass()
-    
+    hh_contact_increase: pclass()
+
     compartment_replicates: Dict[str, int]
     latency_infectiousness: LatencyInfectiousness
 

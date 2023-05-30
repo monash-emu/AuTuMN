@@ -80,7 +80,7 @@ APPS = [
     "tuberculosis",
     "sm_sir",
     "hierarchical_sir",
-    "sm_covid",
+    "sm_covid2",
     "sm_jax",
     "tb_dynamics",
 ]

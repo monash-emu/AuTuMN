@@ -13,6 +13,10 @@ age_groups:
   - 50
   - 70
 
+serodata_age:
+  min: null
+  max: null
+
 population:
   region: null
   year: 2020
@@ -61,7 +65,8 @@ mobility:
   unesco_partial_opening_value: .2
   unesco_full_closure_value: 0.
 
-school_multiplier: 1.
+school_multiplier: 1.  # just adds uncertainty around school contribution
+hh_contact_increase: 0.  #.20  # relative increase in household contact rates when schools are fully closed
 
 # Age-related parameters
 age_stratification:
@@ -228,6 +233,7 @@ hospital_stay:
 
 activate_random_process: True
 random_process: 
+  affected_locations: ["home", "school", "work", "other_locations"]
   order: 1
   noise_sd: .5
   delta_values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]

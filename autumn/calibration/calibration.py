@@ -196,7 +196,7 @@ class Calibration:
             {
                 "param_name": "random_process.noise_sd",
                 "distribution": "uniform",
-                "distri_params": [0.01, 1.0],
+                "distri_params": [0.1, 1.0],
             }
         )
 
@@ -209,7 +209,7 @@ class Calibration:
                 "distri_params": [-2.0, 2.0],
                 "skip_evaluation": True,
             }
-            for i_val in range(1, n_delta_values)  # the very first value will be fixed to 0.
+            for i_val in range(n_delta_values)
         ]
 
     def split_priors_by_type(self):
@@ -453,9 +453,9 @@ class Calibration:
                     for i in range(self.random_process.order)
                 ]
             self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
-            self.random_process.delta_values = [0.0] + [
+            self.random_process.delta_values = [
                 proposed_params[f"random_process.delta_values({k})"]
-                for k in range(1, len(self.random_process.delta_values))
+                for k in range(len(self.random_process.delta_values))
             ]
 
         if self._is_first_run:

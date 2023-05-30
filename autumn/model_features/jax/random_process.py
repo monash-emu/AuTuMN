@@ -37,8 +37,8 @@ class RandomProcess:
 
         # initialise update times and values
         n_updates = ceil((end_time - start_time) / period)
-        self.update_times = [start_time + i * period for i in range(n_updates)]
-        self.delta_values = [0.0] * n_updates
+        self.update_times = [start_time + i * period for i in range(n_updates + 1)]
+        self.delta_values = [0.0] * (n_updates - 1)
 
     def update_config_from_params(self, rp_params):
         if rp_params.delta_values:
@@ -59,7 +59,7 @@ class RandomProcess:
         :param transform_func: function used to transform the R interval into the desired interval
         :return: a time-variant function
         """
-        process_values = np.cumsum(self.delta_values)
+        process_values = np.append(0. , np.cumsum(self.delta_values))
         if transform_func is None:
             values = process_values
         else:
@@ -81,7 +81,7 @@ class RandomProcess:
         Evaluate the log-likelihood of the process's values, given the AR coefficients and a value of noise standard deviation
         :return: the loglikelihood (float)
         """
-        process_values = np.cumsum(self.delta_values).tolist()
+        process_values = np.append(0., np.cumsum(self.delta_values)).tolist()
         # calculate the centre of the normal distribution followed by each W_t
         normal_means = [
             sum(
@@ -110,15 +110,13 @@ def set_up_random_process(start_time, end_time, order, period):
 
 
 def get_random_process(
-    process_params,
-    contact_rate_value,
+    process_params
 ) -> Tuple[callable, callable]:
     """
     Work out the process that will contribute to the random process.
 
     Args:
         process_params: Parameters relating to the random process
-        contact_rate_value: The risk of transmission per contact
 
     Returns:
         The random process function and the contact rate (here a summer-ready format transition function)
@@ -139,6 +137,4 @@ def get_random_process(
     # Create function returning exp(W), where W is the random process
     rp_time_variant_func = rp.create_random_process_function(transform_func=np.exp)
 
-    contact_rate_func = contact_rate_value * rp_time_variant_func
-
-    return rp_time_variant_func, contact_rate_func
+    return rp_time_variant_func

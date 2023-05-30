@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 from os.path import exists 
 from math import ceil
+from datetime import datetime
+import os
+import yaml
+
 from autumn.core.project import (
     Project,
     ParameterSet,
@@ -17,7 +21,11 @@ from autumn.settings import Region, Models
 from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 from autumn.core.inputs.database import get_input_db
 from autumn.settings.constants import COVID_BASE_DATETIME
+from autumn.settings.folders import INPUT_DATA_PATH, PROJECTS_PATH
 
+SERO_DATA_FOLDER = os.path.join(INPUT_DATA_PATH, "school-closure")
+with open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml"), "r") as stream:
+    INCLUDED_COUNTRIES = yaml.safe_load(stream)
 
 EXTRA_UNCERTAINTY_OUTPUTS = {
     "cumulative_incidence": "Cumulative number of infections",
@@ -49,13 +57,19 @@ param_path = Path(__file__).parent.resolve() / "params"
 
 def get_school_project(region):
 
-    
-    ## assert (
-    ##     region in Region.SCHOOL_PROJECT_REGIONS
-    ## ), f"{region} is not registered as a school project Region"
+    iso3 = get_iso3_from_country_name(region.title())
+
+    # read seroprevalence data (needed to specify the sero age range params and then to define the calibration targets)
+    positive_prop, adjusted_sample_size, midpoint_as_int, sero_age_min, sero_age_max = get_sero_estimate(iso3)
 
     # Load timeseries
-    timeseries = get_school_project_timeseries(region)
+    timeseries = get_school_project_timeseries(region, sero_data={
+        "times": [midpoint_as_int], 
+        "values": [positive_prop],
+        "age_min": sero_age_min,
+        "age_max": sero_age_max
+        }
+    )
     # format timeseries using pandas Series
     pd_timeseries = {
         k: pd.Series(data=v["values"], index=v["times"], name=v["output_key"], dtype=float)
@@ -68,7 +82,7 @@ def get_school_project(region):
     first_date_with_death = infection_deaths[round(infection_deaths) >= 1].index[0]
 
     # Get parameter set
-    param_set = get_school_project_parameter_set(region, first_date_with_death)
+    param_set = get_school_project_parameter_set(region, first_date_with_death, sero_age_min, sero_age_max)
 
     # Define priors
     priors = get_school_project_priors(first_date_with_death)
@@ -77,18 +91,19 @@ def get_school_project(region):
     model_end_time = param_set.baseline.to_dict()["time"]["end"]
     infection_deaths_target = infection_deaths.loc[first_date_with_death:model_end_time][::14]
     cumulative_deaths_target = cumulative_infection_deaths.loc[:model_end_time][-1:]
+
     targets = [
         NegativeBinomialTarget(
-            data=infection_deaths_target #, dispersion_param=100, #7.0
-        ),  # dispersion param from Watson et al. Lancet ID
-        # NegativeBinomialTarget(
-        #     data=cumulative_deaths_target #, dispersion_param=100, #40.0
-        # ),  # dispersion param from Watson et al. Lancet ID
-        BinomialTarget(  #FIXME! Needs to connect to Serotracker data
-            data=pd.Series(data=[.051], index=[199], name="prop_ever_infected") , 
-            sample_sizes = [82126]
+            data=infection_deaths_target
+        )]
+        
+    if positive_prop is not None:
+        targets.append(
+            BinomialTarget(
+                data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected_age_matched"), 
+                sample_sizes = pd.Series(data=[adjusted_sample_size], index=[midpoint_as_int])
+            )
         )
-    ]
 
     # set up random process if relevant
     if param_set.baseline.to_dict()["activate_random_process"]:
@@ -152,7 +167,7 @@ def get_school_project(region):
     return project
 
 
-def get_school_project_parameter_set(region, first_date_with_death):
+def get_school_project_parameter_set(region, first_date_with_death, sero_age_min, sero_age_max):
     """
     Get the country-specific parameter sets.
 
@@ -192,6 +207,15 @@ def get_school_project_parameter_set(region, first_date_with_death):
     # make sure length of random process' delta_values is consistent with requested time-period
     baseline_params = resize_rp_delta_values(baseline_params)  
 
+    # Serodata age range
+    sero_age_params = {
+        "serodata_age": {
+            "min": sero_age_min,
+            "max": sero_age_max
+        }
+    }
+    baseline_params = baseline_params.update(sero_age_params)
+
     # update using MLE params, if available
     mle_path= param_path / "mle_files" /  f"mle_{region}.yml"
     if exists(mle_path):
@@ -228,13 +252,14 @@ def resize_rp_delta_values(params):
         return params
         
 
-def get_school_project_timeseries(region):
+def get_school_project_timeseries(region, sero_data):
     """
     Create a dictionary containing country-specific timeseries. This equivalent to loading data from the timeseries json file in
     other projects.
 
     Args:
         region: The modelled region
+        sero_data: country sero data
 
     Returns:
         timeseries: A dictionary containing the timeseries
@@ -280,19 +305,18 @@ def get_school_project_timeseries(region):
     }
 
     """ 
-    Read and process Serotracker data
+    Add sero data
     """
-    # add sero data (hard-coded for now)
-    sero_data = get_sero_data(input_db, iso3)
-
-    timeseries["prop_ever_infected"] = {
-        "output_key": "prop_ever_infected",
-        "title": "Proportion ever infected",
-        "times": sero_data['times'],  # [199.],
-        "values": sero_data['values'],  # [.051],
-        "quantiles": REQUESTED_UNC_QUANTILES,
-    }
-
+    if sero_data['times'] != [None]:
+        min_text = str(int(sero_data['age_min'])) if sero_data['age_min'] is not None else "0"
+        max_text = f"-{str(int(sero_data['age_max']))}" if sero_data['age_max'] is not None else "+"
+        timeseries["prop_ever_infected_age_matched"] = {
+            "output_key": "prop_ever_infected_age_matched",
+            "title": f"Proportion ever infected (age_matched {min_text}{max_text})",
+            "times": sero_data['times'],
+            "values": sero_data['values'],
+            "quantiles": REQUESTED_UNC_QUANTILES,
+        }
 
     # add extra derived output with no data to request uncertainty
     for output_key, title in EXTRA_UNCERTAINTY_OUTPUTS.items():
@@ -328,6 +352,7 @@ def get_school_project_priors(first_date_with_death):
         UniformPrior("contact_rate", [0.01, 0.1]),
         UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
         UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
+        UniformPrior("sojourns.active", [4., 10.]),
 
         # VOC-related parameters
         UniformPrior("voc_emergence.delta.new_voc_seed.time_from_gisaid_report", [-30, 30]),
@@ -336,19 +361,36 @@ def get_school_project_priors(first_date_with_death):
         # Account for mixing matrix uncertainty
         # UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.3]),
         # UniformPrior("school_multiplier", [0.8, 1.2]),
-
-        # dispersion params for targets
-        UniformPrior("infection_deaths_dispersion_param", [50., 200.]),
     ]
 
     return priors
 
 
-def get_sero_data(input_db, iso3):
-    #FIXME: just a placeholder for now
-    sero_data = {
-        "times": [199],
-        "values": [0.051]
-    }
+def get_sero_estimate(iso3):
+    """
+    Read seroprevalence data for the modelled country
+    """
+    if iso3 not in INCLUDED_COUNTRIES['national_sero']:
+        return None, None, None, None, None
 
-    return sero_data
+    df = pd.read_csv(os.path.join(SERO_DATA_FOLDER, f"serodata_national.csv"))
+    df = df.replace({np.nan: None})
+    
+    country_data = df[df['alpha_3_code'] == iso3].to_dict(orient="records")[0]
+
+    # work out the adjusted sample size, accounting for survey sample size, risk of bias and geographic level (national/subnational)
+    bias_risk_adjustment = {
+        0: 1./3., # high risk of bias
+        1: 2./3., # moderate risk of bias
+        2: 1., # low risk of bias
+    }
+    adjusted_sample_size = round(country_data['denominator_value'] * bias_risk_adjustment[country_data['overall_risk_of_bias']])
+
+    # work out the survey midpoint
+    start_date = datetime.fromisoformat(country_data['sampling_start_date'])
+    end_date = datetime.fromisoformat(country_data['sampling_end_date'])
+
+    midpoint = start_date + (end_date - start_date) / 2
+    midpoint_as_int = (midpoint - datetime(2019, 12, 31)).days
+
+    return country_data["serum_pos_prevalence"], adjusted_sample_size, midpoint_as_int, country_data['age_min'], country_data['age_max']

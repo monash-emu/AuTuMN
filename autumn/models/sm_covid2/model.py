@@ -86,6 +86,13 @@ def process_unesco_data(params: Parameters):
         ],
     )
 
+    # remove rows with identical closure status to make dataframe lighter
+    def map_func(key):
+        return ['Fully open', 'Partially open', 'Closed due to COVID-19', 'Academic break'].index(key)
+
+    unesco_data['status_coded'] = unesco_data['status'].transform(map_func)
+    unesco_data = unesco_data[unesco_data["status_coded"].diff(periods=-1).diff() != 0]
+    
     # Update the school mixing data if requested
     if params.mobility.apply_unesco_school_data:      
         # Convert the categorical data to a single timeseries representing the school attendance proportion
@@ -116,10 +123,6 @@ def process_unesco_data(params: Parameters):
         attendance_prop_f = Function(build_unesco_mobility_array, [params.mobility.unesco_partial_opening_value,
                                                params.mobility.unesco_full_closure_value])
         
-        #FIXME: the next line of code is not essential but would probably speed up computation. This was previously implemented using pandas but now needs to be jaxified
-        # Remove rows where status values are repeated (only keeps first and last timepoints for each plateau phase
-        # unesco_data = unesco_data[unesco_data["attendance_prop"].diff(periods=-1).diff() != 0]  # previous pandas code
-
         # Override the baseline school mixing data with the UNESCO timeseries
         school_mobility_index = (
             pd.to_datetime(unesco_data["date"]) - COVID_BASE_DATETIME
@@ -133,7 +136,6 @@ def process_unesco_data(params: Parameters):
                 school_mobility_data
             )
         }
-
     else:
         additional_mobility = {}
 
@@ -160,21 +162,15 @@ def scale_school_contacts(raw_matrices, school_multiplier):
     adjusted_matrices = {location: jnp.array(matrix) for location, matrix in raw_matrices.items() if location not in ['school', 'all_locations']}    
     
     # Then scale the school matrix according to the multiplier parameter
-    #def scale_school_matrix(multiplier):
-    #    return jnp.array(raw_matrices['school']) * multiplier
-
     adjusted_matrices['school'] = raw_matrices['school'] * school_multiplier
     adjusted_matrices['school'].node_name = "school_matrix"
-    # We now need to compute the "all_locations" matrix, as the sum of all setting-specific matrices 
-    # FIXME: This is not working as, we are summing jnp arrays with a Function object
-    
+
+    # We now need to compute the "all_locations" matrix, as the sum of all setting-specific matrices   
     from summer2.parameters import Data
 
     non_school = Data(adjusted_matrices['home'] + adjusted_matrices['work'] + adjusted_matrices['other_locations'])
     non_school.node_name = "non_school_matrix"
     adjusted_matrices['all_locations'] = non_school + adjusted_matrices['school']
-
-    # FIXME: But even after fixing the issue above, the code will still crash at a later point. This is because in the dynamic matrix code, subtractions will be applied to a Function object.
 
     return adjusted_matrices
 
@@ -308,15 +304,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     # Transmission
     infection_dest, infectious_entry_flow = latent_compartments[0], FlowName.PROGRESSION
-
-    if params.activate_random_process:
-
-        # Store random process as a computed value to make it available as an output
-        rp_function, contact_rate = get_random_process(params.random_process, params.contact_rate)
-        model.add_computed_value_func("transformed_random_process", rp_function)
-
-    else:
-        contact_rate = params.contact_rate
+    contact_rate = params.contact_rate
 
     # Add the process of infecting the susceptibles
     model.add_infection_frequency_flow(
@@ -373,6 +361,14 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     # Apply UNESCO school closure data. This will update the school mixing params
     student_weeks_missed, additional_mobility = process_unesco_data(params)
 
+    # Random process
+    if params.activate_random_process:
+        # Store random process as a computed value to make it available as an output
+        rp_function = get_random_process(params.random_process)
+        model.add_computed_value_func("transformed_random_process", rp_function)
+    else:
+        rp_function = None
+
     # Get the actual age stratification now
     age_strat = get_agegroup_strat(
         params,
@@ -382,7 +378,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         base_compartments,
         params.is_dynamic_mixing_matrix,
         suscept_adjs,
-        additional_mobility
+        additional_mobility,
+        rp_function
     )
 
     #age_strat.set_mixing_matrix(mixing_matrices["all_locations"])
@@ -511,6 +508,13 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     outputs_builder.request_recovered_proportion(base_compartments)
+    outputs_builder.request_age_matched_recovered_proportion(
+        base_compartments, 
+        age_groups, 
+        params.serodata_age['min'], 
+        params.serodata_age['max']
+    )
+
     outputs_builder.request_immunity_props(
         immunity_strat.strata, age_pops, params.request_immune_prop_by_age
     )

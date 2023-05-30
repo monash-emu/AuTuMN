@@ -2,7 +2,7 @@ The risk of SARS-CoV2 transmission per contact is adjusted by a time-variant ran
 the model semi-mechanistic. This random process reflects the fact that all the variations observed in the transmission
 risk in the real world cannot be explained solely by the factors that are included explicitly in the model such as vaccination, dynamic mobility or new variants' emergence.
 We therefore allow for random perturbations to the risk of transmission over time, although these perturbations are highly auto-correlated
-to avoid significant changes over a short period of time.
+to avoid unrealistic changes over a short period of time.
 
 We use a random walk with gaussian update defined by:
 
@@ -15,4 +15,4 @@ We use a random walk with gaussian update defined by:
 \end{equation}
 
 where $\mathcal{N}$ denotes the normal distribution and where the standard deviation $\epsilon$ is automatically calibrated by the MCMC.
-The random process $W$ is updated on a fortnightly basis and is transformed using the exponential function before being applied to the risk of transmission per contact (see Equation \ref{foi}).
+The random process $W$ is updated every two months and is transformed using the exponential function before being applied to the risk of transmission per contact (see Equation \ref{foi}).

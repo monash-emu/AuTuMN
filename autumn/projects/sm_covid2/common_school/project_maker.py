@@ -55,15 +55,13 @@ from pathlib import Path
 param_path = Path(__file__).parent.resolve() / "params"
 
 
-def get_school_project(region):
-
-    iso3 = get_iso3_from_country_name(region.title())
+def get_school_project(iso3):
 
     # read seroprevalence data (needed to specify the sero age range params and then to define the calibration targets)
     positive_prop, adjusted_sample_size, midpoint_as_int, sero_age_min, sero_age_max = get_sero_estimate(iso3)
 
     # Load timeseries
-    timeseries = get_school_project_timeseries(region, sero_data={
+    timeseries = get_school_project_timeseries(iso3, sero_data={
         "times": [midpoint_as_int], 
         "values": [positive_prop],
         "age_min": sero_age_min,
@@ -82,7 +80,7 @@ def get_school_project(region):
     first_date_with_death = infection_deaths[round(infection_deaths) >= 1].index[0]
 
     # Get parameter set
-    param_set = get_school_project_parameter_set(region, first_date_with_death, sero_age_min, sero_age_max)
+    param_set = get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max)
 
     # Define priors
     priors = get_school_project_priors(first_date_with_death)
@@ -154,7 +152,7 @@ def get_school_project(region):
 
     # create the project object to be returned
     project = Project(
-        region,
+        iso3,
         Models.SM_COVID2,
         build_model,
         param_set,
@@ -167,12 +165,12 @@ def get_school_project(region):
     return project
 
 
-def get_school_project_parameter_set(region, first_date_with_death, sero_age_min, sero_age_max):
+def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max):
     """
     Get the country-specific parameter sets.
 
     Args:
-        region: Modelled region
+        iso3: Modelled country's iso3
         first_date_with_death: first time when COVID-19 deaths were observed
 
     Returns:
@@ -186,9 +184,8 @@ def get_school_project_parameter_set(region, first_date_with_death, sero_age_min
     )
 
     # get country-specific parameters
-    country_name = region.title()
     country_params = {
-        "country": {"iso3": get_iso3_from_country_name(country_name), "country_name": country_name},
+        "country": {"iso3": iso3},
     }
 
     # build full set of country-specific baseline parameters
@@ -217,7 +214,7 @@ def get_school_project_parameter_set(region, first_date_with_death, sero_age_min
     baseline_params = baseline_params.update(sero_age_params)
 
     # update using MLE params, if available
-    mle_path= param_path / "mle_files" /  f"mle_{region}.yml"
+    mle_path= param_path / "mle_files" /  f"mle_{iso3}.yml"
     if exists(mle_path):
         baseline_params = baseline_params.update(mle_path, calibration_format=True)
 
@@ -252,13 +249,13 @@ def resize_rp_delta_values(params):
         return params
         
 
-def get_school_project_timeseries(region, sero_data):
+def get_school_project_timeseries(iso3, sero_data):
     """
     Create a dictionary containing country-specific timeseries. This equivalent to loading data from the timeseries json file in
     other projects.
 
     Args:
-        region: The modelled region
+        iso3: The modelled country's iso3
         sero_data: country sero data
 
     Returns:
@@ -267,8 +264,6 @@ def get_school_project_timeseries(region, sero_data):
 
     input_db = get_input_db()
     timeseries = {}
-    iso3 = get_iso3_from_country_name(region.title())
-
     """ 
     Start with OWID data
     """

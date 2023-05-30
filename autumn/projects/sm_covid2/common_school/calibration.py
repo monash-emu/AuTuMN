@@ -44,8 +44,8 @@ def make_rp_loglikelihood_func(len_rp_delta_values):
     return rp_loglikelihood
 
 
-def get_bcm_object(region):
-    project = get_project("sm_covid2", region)
+def get_bcm_object(iso3):
+    project = get_project("sm_covid2", iso3)
     targets = [
         est.NegativeBinomialTarget(
             "infection_deaths", 

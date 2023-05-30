@@ -176,7 +176,6 @@ class Country(BaseModel):
     """
 
     iso3: str
-    country_name: str
 
     @validator("iso3", pre=True, allow_reuse=True)
     def check_length(iso3):

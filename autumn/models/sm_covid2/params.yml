@@ -4,7 +4,6 @@ description: BASELINE
 
 country:
   iso3: PHL
-  country_name: Philippines
 
 age_groups:
   - 0

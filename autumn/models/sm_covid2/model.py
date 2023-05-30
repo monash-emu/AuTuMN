@@ -409,7 +409,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
         # Seed the VoCs from the requested point in time
         seed_vocs_using_gisaid(
-            model, voc_params, infectious_compartments[0], country.country_name, infectious_seed
+            model, voc_params, infectious_compartments[0], iso3, infectious_seed
         )
 
         # Keep track of the strain strata, which are needed for various purposes below

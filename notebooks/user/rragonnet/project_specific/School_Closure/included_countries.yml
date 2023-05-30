@@ -172,6 +172,133 @@ all:
   ZAF: South Africa
   ZMB: Zambia
   ZWE: Zimbabwe
+google_mobility:
+  ABW: Aruba
+  AFG: Afghanistan
+  AGO: Angola
+  ARE: United Arab Emirates
+  ARG: Argentina
+  ATG: Antigua and Barbuda
+  AUS: Australia
+  AUT: Austria
+  BEL: Belgium
+  BEN: Benin
+  BFA: Burkina Faso
+  BGD: Bangladesh
+  BGR: Bulgaria
+  BHR: Bahrain
+  BHS: Bahamas
+  BIH: Bosnia and Herzegovina
+  BLR: Belarus
+  BLZ: Belize
+  BOL: Bolivia, Plurinational State of
+  BRA: Brazil
+  BRB: Barbados
+  BWA: Botswana
+  CAN: Canada
+  CHE: Switzerland
+  CHL: Chile
+  CIV: "C\xF4te d'Ivoire"
+  CMR: Cameroon
+  COL: Colombia
+  CPV: Cabo Verde
+  CRI: Costa Rica
+  CZE: Czechia
+  DEU: Germany
+  DNK: Denmark
+  DOM: Dominican Republic
+  ECU: Ecuador
+  EGY: Egypt
+  ESP: Spain
+  EST: Estonia
+  FIN: Finland
+  FJI: Fiji
+  FRA: France
+  GAB: Gabon
+  GBR: United Kingdom
+  GEO: Georgia
+  GHA: Ghana
+  GRC: Greece
+  GTM: Guatemala
+  HND: Honduras
+  HRV: Croatia
+  HTI: Haiti
+  HUN: Hungary
+  IDN: Indonesia
+  IND: India
+  IRL: Ireland
+  IRQ: Iraq
+  ISR: Israel
+  ITA: Italy
+  JAM: Jamaica
+  JOR: Jordan
+  JPN: Japan
+  KAZ: Kazakhstan
+  KEN: Kenya
+  KGZ: Kyrgyzstan
+  KHM: Cambodia
+  KOR: Korea, Republic of
+  KWT: Kuwait
+  LAO: Lao People's Democratic Republic
+  LBN: Lebanon
+  LBY: Libya
+  LKA: Sri Lanka
+  LTU: Lithuania
+  LUX: Luxembourg
+  LVA: Latvia
+  MAR: Morocco
+  MDA: Moldova, Republic of
+  MEX: Mexico
+  MKD: North Macedonia
+  MLI: Mali
+  MLT: Malta
+  MMR: Myanmar
+  MNG: Mongolia
+  MOZ: Mozambique
+  MUS: Mauritius
+  MYS: Malaysia
+  NER: Niger
+  NGA: Nigeria
+  NIC: Nicaragua
+  NLD: Netherlands
+  NOR: Norway
+  NPL: Nepal
+  NZL: New Zealand
+  OMN: Oman
+  PAK: Pakistan
+  PAN: Panama
+  PER: Peru
+  PHL: Philippines
+  PNG: Papua New Guinea
+  POL: Poland
+  PRT: Portugal
+  PRY: Paraguay
+  QAT: Qatar
+  ROU: Romania
+  RUS: Russian Federation
+  RWA: Rwanda
+  SAU: Saudi Arabia
+  SEN: Senegal
+  SGP: Singapore
+  SLV: El Salvador
+  SRB: Serbia
+  SVK: Slovakia
+  SVN: Slovenia
+  SWE: Sweden
+  TGO: Togo
+  THA: Thailand
+  TTO: Trinidad and Tobago
+  TUR: Turkey
+  TZA: Tanzania, United Republic of
+  UGA: Uganda
+  UKR: Ukraine
+  URY: Uruguay
+  USA: United States
+  VEN: Venezuela, Bolivarian Republic of
+  VNM: Viet Nam
+  ZAF: South Africa
+  ZMB: Zambia
+  ZWE: Zimbabwe
 national_sero:
   AUS: Australia
   AUT: Austria

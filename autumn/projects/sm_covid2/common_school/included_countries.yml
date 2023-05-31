@@ -28,7 +28,6 @@ all:
   BWA: Botswana
   CAF: Central African Republic
   CAN: Canada
-  CHE: Switzerland
   CHL: Chile
   CHN: China
   CIV: "C\xF4te d'Ivoire"
@@ -196,7 +195,6 @@ google_mobility:
   BRB: Barbados
   BWA: Botswana
   CAN: Canada
-  CHE: Switzerland
   CHL: Chile
   CIV: "C\xF4te d'Ivoire"
   CMR: Cameroon
@@ -307,7 +305,6 @@ national_sero:
   BGD: Bangladesh
   BRA: Brazil
   CAN: Canada
-  CHE: Switzerland
   CHL: Chile
   COL: Colombia
   CZE: Czechia

@@ -12,8 +12,6 @@ from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 
 INCLUDED_COUNTRIES  = yaml.load(open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")), Loader=yaml.UnsafeLoader)
 
-ANALYSES_NAMES = ["main", "no_google_mobility", "increased_hh_contacts"]
-
 def optimise_model_fit(bcm, warmup_iterations: int = 2000, search_iterations: int = 5000):
 
     # Build optimizer

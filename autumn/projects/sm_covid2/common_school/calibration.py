@@ -13,7 +13,8 @@ from estival import priors as esp
 from estival.model import BayesianCompartmentalModel
 
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
-from autumn.projects.sm_covid2.common_school.runner_tools import ANALYSES_NAMES
+
+ANALYSES_NAMES = ["main", "no_google_mobility", "increased_hh_contacts"]
 
 
 def get_estival_uniform_priors(autumn_priors):

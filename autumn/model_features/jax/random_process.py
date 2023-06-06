@@ -37,7 +37,7 @@ class RandomProcess:
 
         # initialise update times and values
         n_updates = ceil((end_time - start_time) / period)
-        self.update_times = [start_time + i * period for i in range(n_updates)]
+        self.update_times = [start_time + i * period for i in range(n_updates + 1)]
         self.delta_values = [0.0] * (n_updates - 1)
 
     def update_config_from_params(self, rp_params):

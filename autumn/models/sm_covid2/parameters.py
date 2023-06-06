@@ -176,7 +176,6 @@ class Country(BaseModel):
     """
 
     iso3: str
-    country_name: str
 
     @validator("iso3", pre=True, allow_reuse=True)
     def check_length(iso3):
@@ -364,6 +363,7 @@ class RandomProcessParams(BaseModel):
     delta_values: Optional[parray()]
     order: int
     time: Time
+    affected_locations: List[str]
 
 
 class ParamConfig:

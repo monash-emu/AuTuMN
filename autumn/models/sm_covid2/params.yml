@@ -4,7 +4,6 @@ description: BASELINE
 
 country:
   iso3: PHL
-  country_name: Philippines
 
 age_groups:
   - 0
@@ -233,6 +232,7 @@ hospital_stay:
 
 activate_random_process: True
 random_process: 
+  affected_locations: ["home", "school", "work", "other_locations"]
   order: 1
   noise_sd: .5
   delta_values: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]

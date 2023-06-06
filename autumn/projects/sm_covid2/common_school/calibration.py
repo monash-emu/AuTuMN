@@ -1,19 +1,20 @@
 from copy import copy 
 import datetime
-
+from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-
 from jax import numpy as jnp
 
 import summer2
 from summer.utils import ref_times_to_dti
 
-from autumn.core.project import get_project
-
 from estival import targets as est
 from estival import priors as esp
 from estival.model import BayesianCompartmentalModel
+
+from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
+
+ANALYSES_NAMES = ["main", "no_google_mobility", "increased_hh_contacts"]
 
 
 def get_estival_uniform_priors(autumn_priors):
@@ -44,25 +45,31 @@ def make_rp_loglikelihood_func(len_rp_delta_values):
 
     return rp_loglikelihood
 
-def get_bcm_object(region):
-    project = get_project("sm_covid2", region)
-    death_target, sero_target = project.calibration.targets
 
-    default_configuration = project.param_set.baseline
-    m = project.build_model(default_configuration.to_dict()) 
+def get_bcm_object(iso3, analysis="main"):
 
+    assert analysis in ANALYSES_NAMES, "wrong analysis name requested"
+
+    project = get_school_project(iso3, analysis)
     targets = [
         est.NegativeBinomialTarget(
             "infection_deaths", 
-            death_target.data, 
+            project.calibration.targets[0].data, 
             dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (50, 200))
-        ),
-        est.BinomialTarget(
-            "prop_ever_infected_age_matched", 
-            sero_target.data, 
-            sample_sizes=sero_target.sample_sizes
         )
     ]
+    if len(project.calibration.targets) > 1:
+        sero_target = project.calibration.targets[1]
+        targets.append(
+            est.BinomialTarget(
+                "prop_ever_infected_age_matched", 
+                sero_target.data, 
+                sample_sizes=sero_target.sample_sizes
+            )
+        )
+
+    default_configuration = project.param_set.baseline
+    m = project.build_model(default_configuration.to_dict()) 
 
     priors = get_estival_uniform_priors(project.calibration.all_priors)
 
@@ -72,3 +79,41 @@ def get_bcm_object(region):
     bcm = BayesianCompartmentalModel(m, default_params, priors, targets, extra_ll=rp_ll)
 
     return bcm
+
+
+def plot_model_fit(bcm, params, region):
+    REF_DATE = datetime.date(2019,12,31)
+
+    targets = {}
+    for output in bcm.targets:
+        t = copy(bcm.targets[output].data)
+        t.index = ref_times_to_dti(REF_DATE, t.index)
+        targets[output] = t
+
+    run_model = bcm.run(params)
+    ll = bcm.loglikelihood(**params)  # not ideal...
+
+    fig, axs = plt.subplots(3, 1, figsize=(10, 8), height_ratios=(2., 1., 2.), sharex=True)
+    fig.suptitle(region.title())
+    death_ax, rp_ax, sero_ax = axs[0], axs[1], axs[2]
+
+    # Deaths
+    run_model.derived_outputs["infection_deaths"].plot(ax=death_ax, ylabel="COVID-19 deaths")
+    targets["infection_deaths"].plot(style='.', ax=death_ax)
+    plt.text(0.8, 0.9, f"ll={round(ll, 4)}", transform=death_ax.transAxes)
+
+    # Random Process
+    run_model.derived_outputs["transformed_random_process"].plot(ax=rp_ax, ylabel="Random Process")
+    y_max = max(rp_ax.get_ylim()[1], 1.1)
+    xmin, xmax = rp_ax.get_xlim()
+    rp_ax.set_ylim(0, y_max)
+    rp_ax.hlines(y=1., xmin=xmin, xmax=xmax, linestyle="dotted", color="grey")
+
+    # Sero data
+    if "prop_ever_infected_age_matched" in targets:
+        run_model.derived_outputs["prop_ever_infected_age_matched"].plot(ax=sero_ax, ylabel="Prop. ever infected\n(age-matched)")
+        targets["prop_ever_infected_age_matched"].plot(style='.', ax=sero_ax)
+    else:
+        run_model.derived_outputs["prop_ever_infected"].plot(ax=sero_ax, ylabel="Prop. ever infected")
+
+    return fig

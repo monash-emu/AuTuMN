@@ -196,7 +196,7 @@ class Calibration:
             {
                 "param_name": "random_process.noise_sd",
                 "distribution": "uniform",
-                "distri_params": [0.01, 1.0],
+                "distri_params": [0.1, 1.0],
             }
         )
 

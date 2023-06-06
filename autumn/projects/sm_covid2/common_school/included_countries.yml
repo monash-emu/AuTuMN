@@ -106,7 +106,6 @@ all:
   POL: Poland
   PRT: Portugal
   PRY: Paraguay
-  QAT: Qatar
   ROU: Romania
   RUS: Russian Federation
   SAU: Saudi Arabia
@@ -221,7 +220,6 @@ google_mobility:
   POL: Poland
   PRT: Portugal
   PRY: Paraguay
-  QAT: Qatar
   ROU: Romania
   RUS: Russian Federation
   SAU: Saudi Arabia
@@ -278,7 +276,6 @@ national_sero:
   OMN: Oman
   PAK: Pakistan
   PRT: Portugal
-  QAT: Qatar
   SGP: Singapore
   SLE: Sierra Leone
   SVN: Slovenia

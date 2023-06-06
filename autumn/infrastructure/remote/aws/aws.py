@@ -30,15 +30,16 @@ client = session.client("ec2")
 DESCRIBE_KEYS = ["InstanceId", "InstanceType", "LaunchTime", "State"]
 
 
-def get_instance_type(min_cores: int, min_ram: int, category: str = settings.EC2InstanceCategory.GENERAL):
-
+def get_instance_type(
+    min_cores: int, min_ram: int, category: str = settings.EC2InstanceCategory.GENERAL
+):
     specs = settings.EC2_INSTANCE_SPECS[category]
 
-    matching_specs = {k:v for k,v in specs.items() if v.cores >= min_cores and v.ram >= min_ram}
+    matching_specs = {k: v for k, v in specs.items() if v.cores >= min_cores and v.ram >= min_ram}
 
     assert matching_specs, "Could not find an instance to match specs"
 
-    return min(matching_specs.items(), key = lambda kv : kv[1].cores)[0]
+    return min(matching_specs.items(), key=lambda kv: kv[1].cores)[0]
 
 
 def download_s3(s3_key, dest):
@@ -102,12 +103,13 @@ def cleanup_instances():
         logger.info("No instances to stop.")
 
 
-def run_instance(job_id: str, instance_type: str, is_spot: bool):
+def run_instance(job_id: str, instance_type: str, is_spot: bool, ami_name=None):
     logger.info(f"Creating EC2 instance {instance_type} for job {job_id}... ")
+    ami_name = ami_name or settings.EC2_AMI["310conda"]
     kwargs = {
         "MaxCount": 1,
         "MinCount": 1,
-        "ImageId": settings.EC2_AMI["310conda"],
+        "ImageId": ami_name,
         "InstanceType": instance_type,
         "SecurityGroupIds": [settings.EC2_SECURITY_GROUP],
         "IamInstanceProfile": {"Name": settings.EC2_IAM_INSTANCE_PROFILE},

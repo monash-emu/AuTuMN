@@ -1,40 +1,26 @@
 all:
-  ABW: Aruba
   AGO: Angola
   ALB: Albania
   ARG: Argentina
   ARM: Armenia
-  ATG: Antigua and Barbuda
   AUS: Australia
   AUT: Austria
   AZE: Azerbaijan
-  BDI: Burundi
   BEL: Belgium
-  BEN: Benin
   BGD: Bangladesh
   BGR: Bulgaria
-  BHS: Bahamas
   BIH: Bosnia and Herzegovina
   BLR: Belarus
-  BLZ: Belize
   BOL: Bolivia, Plurinational State of
   BRA: Brazil
-  BRB: Barbados
-  BRN: Brunei Darussalam
   BWA: Botswana
-  CAF: Central African Republic
   CAN: Canada
   CHL: Chile
   CHN: China
-  CIV: "C\xF4te d'Ivoire"
   CMR: Cameroon
   COL: Colombia
-  COM: Comoros
-  CPV: Cabo Verde
   CRI: Costa Rica
-  CUW: "Cura\xE7ao"
   CZE: Czechia
-  DJI: Djibouti
   DNK: Denmark
   DOM: Dominican Republic
   ECU: Ecuador
@@ -45,20 +31,15 @@ all:
   FRA: France
   GEO: Georgia
   GHA: Ghana
-  GIN: Guinea
-  GMB: Gambia
-  GNQ: Equatorial Guinea
   GRC: Greece
   GTM: Guatemala
   GUY: Guyana
   HND: Honduras
   HRV: Croatia
-  HTI: Haiti
   HUN: Hungary
   IRL: Ireland
   IRN: Iran, Islamic Republic of
   IRQ: Iraq
-  ISL: Iceland
   ISR: Israel
   ITA: Italy
   JAM: Jamaica
@@ -69,21 +50,14 @@ all:
   KHM: Cambodia
   KOR: Korea, Republic of
   KWT: Kuwait
-  LAO: Lao People's Democratic Republic
   LBN: Lebanon
-  LBR: Liberia
-  LCA: Saint Lucia
   LKA: Sri Lanka
-  LSO: Lesotho
   LTU: Lithuania
   LUX: Luxembourg
   LVA: Latvia
   MAR: Morocco
   MDA: Moldova, Republic of
-  MDV: Maldives
   MKD: North Macedonia
-  MLI: Mali
-  MLT: Malta
   MMR: Myanmar
   MNE: Montenegro
   MNG: Mongolia
@@ -92,7 +66,6 @@ all:
   MWI: Malawi
   MYS: Malaysia
   NAM: Namibia
-  NER: Niger
   NGA: Nigeria
   NLD: Netherlands
   NOR: Norway
@@ -110,57 +83,42 @@ all:
   RUS: Russian Federation
   SAU: Saudi Arabia
   SGP: Singapore
-  SLB: Solomon Islands
-  SLE: Sierra Leone
   SLV: El Salvador
   SRB: Serbia
-  SSD: South Sudan
   SUR: Suriname
   SVK: Slovakia
   SVN: Slovenia
   SWE: Sweden
   SWZ: Eswatini
-  SYC: Seychelles
   SYR: Syrian Arab Republic
-  TCD: Chad
-  TGO: Togo
   THA: Thailand
   TTO: Trinidad and Tobago
   TUR: Turkey
   UGA: Uganda
   UKR: Ukraine
   URY: Uruguay
-  VCT: Saint Vincent and the Grenadines
   VEN: Venezuela, Bolivarian Republic of
   VNM: Viet Nam
   ZAF: South Africa
   ZMB: Zambia
   ZWE: Zimbabwe
 google_mobility:
-  ABW: Aruba
   AGO: Angola
   ARG: Argentina
-  ATG: Antigua and Barbuda
   AUS: Australia
   AUT: Austria
   BEL: Belgium
-  BEN: Benin
   BGD: Bangladesh
   BGR: Bulgaria
-  BHS: Bahamas
   BIH: Bosnia and Herzegovina
   BLR: Belarus
-  BLZ: Belize
   BOL: Bolivia, Plurinational State of
   BRA: Brazil
-  BRB: Barbados
   BWA: Botswana
   CAN: Canada
   CHL: Chile
-  CIV: "C\xF4te d'Ivoire"
   CMR: Cameroon
   COL: Colombia
-  CPV: Cabo Verde
   CRI: Costa Rica
   CZE: Czechia
   DNK: Denmark
@@ -176,7 +134,6 @@ google_mobility:
   GTM: Guatemala
   HND: Honduras
   HRV: Croatia
-  HTI: Haiti
   HUN: Hungary
   IRL: Ireland
   IRQ: Iraq
@@ -190,7 +147,6 @@ google_mobility:
   KHM: Cambodia
   KOR: Korea, Republic of
   KWT: Kuwait
-  LAO: Lao People's Democratic Republic
   LBN: Lebanon
   LKA: Sri Lanka
   LTU: Lithuania
@@ -199,14 +155,11 @@ google_mobility:
   MAR: Morocco
   MDA: Moldova, Republic of
   MKD: North Macedonia
-  MLI: Mali
-  MLT: Malta
   MMR: Myanmar
   MNG: Mongolia
   MOZ: Mozambique
   MUS: Mauritius
   MYS: Malaysia
-  NER: Niger
   NGA: Nigeria
   NLD: Netherlands
   NOR: Norway
@@ -229,7 +182,6 @@ google_mobility:
   SVK: Slovakia
   SVN: Slovenia
   SWE: Sweden
-  TGO: Togo
   THA: Thailand
   TTO: Trinidad and Tobago
   TUR: Turkey
@@ -277,7 +229,6 @@ national_sero:
   PAK: Pakistan
   PRT: Portugal
   SGP: Singapore
-  SLE: Sierra Leone
   SVN: Slovenia
   SWE: Sweden
   ZAF: South Africa

@@ -275,6 +275,7 @@ def get_school_project_timeseries(iso3, sero_data):
     data = input_db.query(
         table_name="owid", conditions={"iso_code": iso3}, columns=["date", "new_deaths"]
     )
+    data = remove_death_outliers(iso3, data)
 
     # apply moving average
     data["smoothed_new_deaths"] = data["new_deaths"].rolling(7).mean()[6:]
@@ -328,6 +329,21 @@ def get_school_project_timeseries(iso3, sero_data):
         }
 
     return timeseries
+
+def remove_death_outliers(iso3, data):
+    outlier_idx = {
+        "BLR": [19497],
+        "CHL": [42919],
+        "ECU": [62179, 62496],
+        "GHA": [79535],
+        "NGA": [145513]
+    }
+
+    if iso3 in outlier_idx:
+        outliers = outlier_idx[iso3]
+        return data.drop(outliers)
+    else:
+        return data
 
 
 def get_school_project_priors(first_date_with_death):

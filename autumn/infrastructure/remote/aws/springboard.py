@@ -22,10 +22,6 @@ from autumn.infrastructure.tasks.storage import S3Storage
 from autumn.core.utils.s3 import get_s3_client
 from autumn.core.utils.parallel import gather_exc_plus
 
-# Create CloudWatch client
-# Used to set automatic termination conditions for EC2 jobs
-cloudwatch = boto3.client("cloudwatch")
-
 
 @dataclass
 class EC2MachineSpec:
@@ -95,6 +91,9 @@ def set_cpu_termination_alarm(
     instance_id, time_minutes: int = 5, min_cpu=1.0, region=aws_settings.AWS_REGION
 ):
     # Create alarm
+
+    cloudwatch = get_s3_client()
+
     alarm = cloudwatch.put_metric_alarm(
         AlarmName="CPU_Utilization",
         ComparisonOperator="LessThanThreshold",
@@ -249,7 +248,7 @@ def launch_synced_autumn_task(task_spec, mspec: EC2MachineSpec, run_path, branch
         f"{conda_preamble} python -m autumn tasks springboard --run {run_path} --shutdown"
     )
 
-    return s3task, runner
+    return s3task, runner, (stdin, stdout, stderr)
 
 
 def set_rtask_logging_config(log_path: Path, verbose=False):

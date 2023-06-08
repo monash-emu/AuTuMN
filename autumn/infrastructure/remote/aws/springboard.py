@@ -92,7 +92,7 @@ def set_cpu_termination_alarm(
 ):
     # Create alarm
 
-    cloudwatch = get_s3_client()
+    cloudwatch = boto3.client("cloudwatch")
 
     alarm = cloudwatch.put_metric_alarm(
         AlarmName="CPU_Utilization",

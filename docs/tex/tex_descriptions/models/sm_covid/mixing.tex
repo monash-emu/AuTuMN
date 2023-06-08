@@ -1,6 +1,6 @@
 The model captures changes in social interactions over time through a dynamic age-specific mixing matrix. The following
 sections describe how this matrix is defined and how it captures the different non-pharmaceutical interventions implemented
-in the analysed countries, including school closures.
+in the analysed countries, including school closures. The overall approach is also illustrated by Figure \ref{fig:mixing}.
 
 \paragraph{Reference mixing matrices}
 We extracted country-specific contact matrices using the \textit{conmat} R package which derives social mixing matrices from 
@@ -63,7 +63,7 @@ Figure \ref{fig:unesco} summarises the UNESCO data on school closure for the ana
 
 \begin{figure}[p]
   \begin{center}
-  \includegraphics[width=0.73\textwidth]{../../tex_descriptions/projects/sm_covid/school_closures/unesco.png}
+  \includegraphics[width=1.0\textwidth]{../../tex_descriptions/projects/sm_covid/unesco.png}
   \end{center}
   \caption{UNESCO data on school closures during the COVID-19 pandemic.
   } 
@@ -90,8 +90,30 @@ considered that household members likely have a daily opportunity for infection 
 the background level of mobility. Therefore, we did not implement a function to scale the contribution of household contacts 
 to the mixing matrix with time.
 
-In a Sensitivity Analysis, we consider an alternative assumption where the effective contact rates within households are increased during
+\paragraph{Sensitivity analyses around dynamic social mixing}
+In addition to the Base Case analysis described above, we performed two sensitivity analyses considering
+different assumptions for the modelled social mixing.
+
+\vspace{5pt}
+\label{sa_descriptions}
+\textbf{SA1: No Google mobility data}
+In a first sensitivity analysis (SA1), we remove the contribution of the Google mobility data to the modelled social mixing (see Figure \ref{fig:mixing}). 
+In this configuration, the calibrated random process ($W(t)$) is expected to capture mobility changes implicitly.
+
+\vspace{5pt}
+\textbf{SA2: School closures increase household contact rates}
+In another sensitivity analysis (SA2), we consider an alternative assumption where the effective contact rates within households are increased during
 periods of school closure. In that case, the household component of the mixing matrix is modified by the following function:
 $$ h(t) = 1 + 0.20(1 - s(t)) \quad ,$$ 
-where $s$ is the function modifying school contacts as introduced in Section \ref{time_var_mixing}.
+where $s$ is the function modifying school contacts as introduced in Section \ref{time_var_mixing}. This is equivalent to assuming
+that each individual has 20\% more household contact potential when schools are fully closed.
 
+
+\begin{figure}[h]
+  \begin{center}
+  \includegraphics[width=1.0\textwidth]{../../tex_descriptions/projects/sm_covid/mixing_multi.pdf}
+  \end{center}
+  \caption{Modelled social mixing under Base Case and Sensitivity Analyses.
+  } 
+  \label{fig:mixing}
+\end{figure}

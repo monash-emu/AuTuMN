@@ -77,7 +77,7 @@ class S3TaskManager:
         return self._read_taskdata("STATUS")
 
     def set_status(self, status):
-        self._write_taskdata("STATUS", str(status))
+        self._write_taskdata("STATUS", status.value)
 
     def set_instance(self, rinst):
         instance_json = json.dumps(rinst, default=str)
@@ -121,43 +121,84 @@ def wait_instance(instance_id):
     return state
 
 
-def gen_run_name(desc):
+def gen_run_name(description: str) -> str:
+    """Generate a run name consisting of a timestamp and user supplied description
+    This is used as the final segment of a run_path
+
+    Args:
+        desc: Short descriptive name; don't use special characters!
+
+    Returns:
+        Run name (timestamp + desc)
+    """
     t = datetime.now()
     tstr = t.strftime("%Y-%m-%dT%H%M")
-    return f"{tstr}-{desc}"
+    return f"{tstr}-{description}"
 
 
-def get_autumn_project_run_path(project, region, run_desc):
+def get_autumn_project_run_path(project, region, run_desc) -> str:
+    """Generate a full run_path of the format
+       projects/{project}/{region}/run_name
+       This is the canonical "run_id" that can be used by
+       launch_synced_autumn_task, ManagedRun etc
+
+    Args:
+        project: Model/application name
+        region: Region name
+        run_desc: Short description of run - no special characters
+
+    Returns:
+        The complete identifying run_path
+    """
     run_name = gen_run_name(run_desc)
     return f"projects/{project}/{region}/{run_name}"
 
 
 class TaskSpec:
-    def __init__(self, run_func, func_kwargs):
+    def __init__(self, run_func, func_kwargs: dict = None):
         self.run_func = run_func
-        self.func_kwargs = func_kwargs
+        self.func_kwargs = func_kwargs or {}
 
 
 class TaskBridge:
-    def __init__(self, local_base, project_path):
+    def __init__(self, local_base: Path, run_path: str):
+        """A simple wrapper that exposes logging and storage to
+        remote tasks.  An object of this type will always be
+        available as the first argument in wrapped tasks.
+
+        The primary entry points for user code (wrapped tasks) are
+        TaskBridge.out_path: The (task-machine local) path whose data will be
+                             synced at the end of the run
+        TaskBridge.logger:   A python logging.logger whose output is stored with the run
+
+        Args:
+            local_base: The 'working directory' which is local to the machine
+                        where the task is running
+            run_path: Full identifying path to the remote run
+        """
         self.out_path = local_base / "output"
         set_rtask_logging_config(local_base / "log")
         self.logger = logging.getLogger()
         self._log_f = local_base / "log/task.log"
 
         s3_client = get_s3_client()
-        self._storage = S3Storage(s3_client, project_path, local_base)
+        self._storage = S3Storage(s3_client, run_path, local_base)
 
     def sync_logs(self):
+        """Can be called by the task during a run to ensure remote log files are up to
+        date with current run state
+        """
         sys.stdout.flush()
         sys.stderr.flush()
         self._storage.store(self._log_f)
 
-    def sync_data(self):
-        pass
-
 
 def test_stub_task(bridge: TaskBridge, **kwargs):
+    """A simple validation stub, which serves as a reference for writing wrapped tasks
+
+    Args:
+        bridge: _description_
+    """
     logger = bridge.logger
     logger.info("Test stub entry")
     bridge.sync_logs()
@@ -168,7 +209,9 @@ def test_stub_task(bridge: TaskBridge, **kwargs):
     logger.info("Test stub exit")
 
 
-def launch_synced_autumn_task(task_spec, mspec: EC2MachineSpec, run_path, branch="master"):
+def launch_synced_autumn_task(
+    task_spec, mspec: EC2MachineSpec, run_path, branch="master", verbose=False
+):
     # create an S3 task
     # check if it exists already then fail if so
 
@@ -192,8 +235,10 @@ def launch_synced_autumn_task(task_spec, mspec: EC2MachineSpec, run_path, branch
 
     rinst = aws.find_instance_by_id(iid)
 
+    # Store the instance data as part of the run
     s3task.set_instance(rinst)
 
+    # Set a cloudwatch alarm to auto-terminate hanging jobs
     set_cpu_termination_alarm(iid)
 
     # init the S3 task (call this locally, but have the task init on s3)
@@ -202,7 +247,7 @@ def launch_synced_autumn_task(task_spec, mspec: EC2MachineSpec, run_path, branch
     # Grab an SSH runner
     runner = cli.runner.get_runner(rinst)
     # Give it a dummy command to make sure it's initialised
-
+    # retry a few times to give it a chance...
     for retry in range(5):
         try:
             runner.conn.run("")
@@ -210,26 +255,26 @@ def launch_synced_autumn_task(task_spec, mspec: EC2MachineSpec, run_path, branch
         except:
             pass
 
-    # do any required preamble (repo pulls, pip installs etc)
+    # conda environment activation preamble
     conda_preamble = (
         'eval "$(/home/ubuntu/miniconda/bin/conda shell.bash hook)"; conda activate autumn310;'
     )
 
     cd_autumn = "cd code/autumn;"
-
     print(f"Checking out autumn {branch}")
-    print(
-        runner.conn.run(
-            f"cd code/autumn; git fetch --quiet; git checkout --quiet {branch}; git pull --quiet"
-        )
+
+    git_res = runner.conn.run(
+        f"cd code/autumn; git fetch --quiet; git checkout --quiet {branch}; git pull --quiet"
     )
+    if verbose:
+        print(git_res)
 
     print(f"Installing requirements")
-    print(
-        runner.conn.run(
-            f"{conda_preamble} {cd_autumn} pip install -r requirements/requirements310.txt"
-        )
+    pip_res = runner.conn.run(
+        f"{conda_preamble} {cd_autumn} pip install -r requirements/requirements310.txt"
     )
+    if verbose:
+        print(pip_res)
 
     # put the cpkl on the remote machine
     # launch the job via ssh with reference to cpkl
@@ -316,7 +361,7 @@ def autumn_task_entry(run_path, shutdown=False):
             task_spec = cloudpickle.load(taskcpkl_f)
 
         task_spec.run_func(bridge, **task_spec.func_kwargs)
-        bridge.logger.error("Task completed")
+        bridge.logger.info("Task completed")
         task_manager.set_status(TaskStatus.SUCCESS)
 
     except:

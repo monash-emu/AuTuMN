@@ -77,7 +77,9 @@ class S3TaskManager:
         return self._read_taskdata("STATUS")
 
     def set_status(self, status):
-        self._write_taskdata("STATUS", str(status))
+        if isinstance(status, TaskStatus):
+            status = status.value
+        self._write_taskdata("STATUS", status)
 
     def set_instance(self, rinst):
         instance_json = json.dumps(rinst, default=str)

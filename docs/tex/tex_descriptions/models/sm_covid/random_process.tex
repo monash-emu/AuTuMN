@@ -16,3 +16,5 @@ We use a random walk with gaussian update defined by:
 
 where $\mathcal{N}$ denotes the normal distribution and where the standard deviation $\epsilon$ is automatically calibrated by the MCMC.
 The random process $W$ is updated every two months and is transformed using the exponential function before being applied to the risk of transmission per contact (see Equation \ref{foi}).
+Finally, the contribution of the random process to the risk of transmission is squared in order to capture its effect
+on both the susceptible and the infectious individuals (see Equation \ref{foi}). 

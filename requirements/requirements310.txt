@@ -14,7 +14,7 @@
 summerepi==3.6.4
 summerepi2==1.2.3
 
-estival==0.2.4
+estival==0.2.5
 
 # Jax for Windows (summer2 requirement)
 # Linux/OSX already installed via computegraph

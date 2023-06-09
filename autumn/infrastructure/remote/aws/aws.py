@@ -131,8 +131,8 @@ def run_instance(job_id: str, instance_type: str, is_spot: bool, ami_name=None):
     else:
         logger.info(f"Not using a spot EC2 instance. ")
 
-    client.run_instances(**kwargs)
     logger.info("Create request sent.")
+    return client.run_instances(**kwargs)
 
 
 def find_instance(name):
@@ -140,6 +140,13 @@ def find_instance(name):
     for instance in instances:
         if instance["name"] == name:
             return instance
+
+
+def find_instance_by_id(instance_id):
+    for instance in describe_instances():
+        if instance["InstanceId"] == instance_id:
+            return instance
+    raise KeyError("No instance found for instance_id", instance_id)
 
 
 def start_instance(instance):

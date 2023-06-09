@@ -8,21 +8,22 @@ from autumn.core.utils.runs import build_run_id, read_run_id
 
 logger = logging.getLogger(__name__)
 
+
 def get_runner(instance):
-    """Consider this a bit of a hack - will match the type of runner based on ImageId and 
-    the EC2_AMI table in autumn.settings.aws 
+    """Consider this a bit of a hack - will match the type of runner based on ImageId and
+    the EC2_AMI table in autumn.settings.aws
     +++FIXME Not working (yet), just return hardcoded Conda310 runner for now
     """
 
     return CondaRunner(instance)
-    
-class SSHRunner:
 
+
+class SSHRunner:
     _python_preamble = None
     _python_bin = None
     _pip_bin = None
     _requirements = None
-    
+
     def __init__(self, instance):
         self.instance = instance
         self.conn = get_connection(instance)
@@ -36,7 +37,7 @@ class SSHRunner:
         logger.info(f"Updating git repository to use commit {commit}")
 
         if commit.startswith("branch:"):
-            commit = commit.split(':')[-1]
+            commit = commit.split(":")[-1]
             is_branch = True
         else:
             is_branch = False
@@ -47,7 +48,7 @@ class SSHRunner:
             self.conn.run(f"git checkout --quiet {commit}", echo=True)
             if is_branch:
                 self.conn.run("git pull --quiet", echo=True)
-                
+
         logger.info("Done updating repo.")
 
     def update_repo(self, branch: str = "master"):
@@ -70,7 +71,6 @@ class SSHRunner:
             self.conn.run(f"git checkout --quiet {commit}", echo=True)
 
         logger.info("Done updating repo.")
-
 
     def get_run_id(self, app_name: str, region_name: str):
         """Get the run ID for a given job name name"""
@@ -114,6 +114,7 @@ class SSHRunner:
         full_str = f"{self._python_preamble} {self._python_bin} {command}"
         self.conn.run(full_str, echo=True)
 
+
 class VEnvRunner(SSHRunner):
     """
     Run on the original AuTuMN preactivated environment AMI
@@ -127,6 +128,7 @@ class VEnvRunner(SSHRunner):
         self._pip_bin = "./env/bin/pip"
         self._requirements = "requirements.txt"
 
+
 class CondaRunner(SSHRunner):
     """
     Run on a new style Conda AMI with the specified environment
@@ -139,6 +141,7 @@ class CondaRunner(SSHRunner):
         self._python_bin = "python"
         self._pip_bin = "pip"
         self._requirements = "requirements/requirements310.txt"
+
 
 def get_connection(instance):
     ip = instance["ip"]
@@ -157,7 +160,7 @@ SSH_OPTIONS = {
     "ServerAliveInterval": "30",
 }
 SSH_OPT_STR = " ".join([f"-o {k}={v}" for k, v in SSH_OPTIONS.items()])
-SSH_KEYS_TO_TRY = ["buildkite", "id_rsa"]
+SSH_KEYS_TO_TRY = ["buildkite", "id_rsa", "springboard_rsa"]
 
 
 def ssh_interactive(instance):

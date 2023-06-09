@@ -515,9 +515,9 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         params.serodata_age['max']
     )
 
-    outputs_builder.request_immunity_props(
-        immunity_strat.strata, age_pops, params.request_immune_prop_by_age
-    )
+    # outputs_builder.request_immunity_props(
+    #     immunity_strat.strata, age_pops, params.request_immune_prop_by_age
+    # )
 
     outputs_builder.request_cumulative_outputs(
         params.requested_cumulative_outputs, params.cumulative_start_time

@@ -1,0 +1,4 @@
+---
+# Remove google mobility data
+mobility.google_mobility_locations: {}
+

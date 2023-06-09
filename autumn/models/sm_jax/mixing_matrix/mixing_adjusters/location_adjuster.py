@@ -46,7 +46,6 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
 
         # Start the adjustment value for each location from a value of one, representing no adjustment
         for loc_key in LOCATIONS:
-
             # Adjust for macrodistancing/mobility
             mobility_func = self.mobility_funcs.get(loc_key)
             macro_effect = mobility_func(time) if mobility_func else 1.0
@@ -57,7 +56,6 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
 
             # Apply the adjustment by subtracting the contacts that need to come off
             if microdistancing_func or mobility_func:
-
                 mobility_reduction = 1.0 - macro_effect * micro_effect
                 mixing_matrix -= mobility_reduction * self.base_matrices[loc_key]
 

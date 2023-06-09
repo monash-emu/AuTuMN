@@ -11,6 +11,7 @@ from autumn.models.sm_covid2.constants import FlowName, Compartment, ImmunityStr
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.model_features.strains import broadcast_infection_flows_over_source
 
+from autumn.core.inputs.demography.queries import get_gisaid_country_name_from_iso3
 
 def voc_seed_func(time, entry_rate, start_time, seed_duration):
     offset = time - start_time
@@ -89,13 +90,13 @@ def get_strain_strat(
     return strain_strat
 
 
-def get_first_variant_report_date(variant: str, country: str):
+def get_first_variant_report_date(variant: str, iso3: str):
     """
     Determines the first report date of a given variant in a given country
 
     Args:
         variant: Name of the variant ('delta', 'omicron')
-        country: Full name of the country
+        iso3: country's iso3
 
     Returns:
         Date of first report
@@ -115,7 +116,7 @@ def get_first_variant_report_date(variant: str, country: str):
     input_db = get_input_db()
     report_dates = input_db.query(
         table_name="gisaid",
-        conditions={"Country": country, "Value": variants_map[variant]},
+        conditions={"Country": get_gisaid_country_name_from_iso3(iso3), "Value": variants_map[variant]},
         columns=["Week prior to"],
     )["Week prior to"]
 
@@ -134,7 +135,7 @@ def seed_vocs_using_gisaid(
     model: CompartmentalModel,
     all_voc_params: Dict[str, VocComponent],
     seed_compartment: str,
-    country_name: str,
+    iso3: str,
     infectious_seed: float,
 ):
     """
@@ -150,7 +151,7 @@ def seed_vocs_using_gisaid(
         model: The summer model object
         all_voc_params: The VoC-related parameters
         seed_compartment: The compartment that VoCs should be seeded to
-        country_name: The modelled country's name
+        iso3: The modelled country's iso3
         infectious_seed: The total size of the infectious seed
     """
 
@@ -158,7 +159,7 @@ def seed_vocs_using_gisaid(
         voc_seed_params = this_voc_params.new_voc_seed
         if voc_seed_params:
             # work out seed time using gisaid data
-            first_report_date = get_first_variant_report_date(voc_name, country_name)
+            first_report_date = get_first_variant_report_date(voc_name, iso3)
             first_report_date_as_int = (first_report_date - COVID_BASE_DATETIME).days
             seed_time = first_report_date_as_int + voc_seed_params.time_from_gisaid_report
 

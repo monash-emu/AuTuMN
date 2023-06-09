@@ -70,7 +70,7 @@ EC2_INSTANCE_SPECS = {
         "c6i.16xlarge": EC2Instance(32, 128),
         "c6i.24xlarge": EC2Instance(48, 192),
         "c6i.32xlarge": EC2Instance(64, 256),
-    }
+    },
 }
 
 
@@ -79,7 +79,8 @@ AWS_REGION = "ap-southeast-2"
 EC2_SPOT_MAX_PRICE = "1.2"
 EC2_AMI = {
     "36venv": "ami-0d27c531f813ff1cf",
-    "310conda": "ami-0dbd9adffb9f07a62"
+    "310conda": "ami-0dbd9adffb9f07a62",
+    "springboard310": "ami-02ee8f059b67898ee",
 }
 EC2_SECURITY_GROUP = "sg-0b2fe230ac8853538"
 EC2_IAM_INSTANCE_PROFILE = "worker-profile"

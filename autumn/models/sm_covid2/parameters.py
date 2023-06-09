@@ -176,7 +176,6 @@ class Country(BaseModel):
     """
 
     iso3: str
-    country_name: str
 
     @validator("iso3", pre=True, allow_reuse=True)
     def check_length(iso3):
@@ -256,7 +255,7 @@ class Mobility(BaseModel):
         dict
     ]  # this is not used for the sm_covid model. Still included to prevent crash in mixing matrix code
     apply_unesco_school_data: bool
-    unesco_partial_opening_value: Optional[float]
+    unesco_partial_opening_value: pclass()
     unesco_full_closure_value: Optional[float]
 
     @validator("google_mobility_locations", allow_reuse=True)
@@ -364,6 +363,7 @@ class RandomProcessParams(BaseModel):
     delta_values: Optional[parray()]
     order: int
     time: Time
+    affected_locations: List[str]
 
 
 class ParamConfig:
@@ -381,17 +381,20 @@ class Parameters(ParamStruct):
     description: Optional[str]
     country: Country
     population: Population
-    ref_mixing_iso3: str
     age_groups: List[int]
     time: Time
     infectious_seed_time: pclass()
     seed_duration: float
+
+    serodata_age: dict
 
     # Values
     contact_rate: pclass()
     sojourns: Sojourns
     is_dynamic_mixing_matrix: bool
     mobility: Mobility
+    school_multiplier: pclass()
+    hh_contact_increase: pclass()
 
     compartment_replicates: Dict[str, int]
     latency_infectiousness: LatencyInfectiousness

@@ -21,6 +21,7 @@ def tasks():
     Run remote task pipelines.
     """
 
+
 @tasks.command("generic")
 @click.option("--run", type=str, required=True)
 @click.option("--task_key", type=str, required=True)
@@ -31,6 +32,15 @@ def run_generic(run: str, task_key: str, task_kwargs: str):
     from autumn.infrastructure.tasks.generic import generic_task
 
     generic_task(run, task_key, kwargs_dict)
+
+
+@tasks.command("springboard")
+@click.option("--run", type=str, required=True)
+@click.option("--shutdown", is_flag=True)
+def run_springboard(run: str, shutdown: bool):
+    from autumn.infrastructure.remote.aws.springboard import autumn_task_entry
+
+    autumn_task_entry(run, shutdown)
 
 
 @tasks.command("calibrate")
@@ -44,6 +54,7 @@ def run_calibrate(run, chains, runtime, verbose):
     from autumn.infrastructure.tasks.calibrate import calibrate_task
 
     calibrate_task(run, runtime, chains, verbose)
+
 
 @tasks.command("resume_calibration")
 @click.option("--run", type=str, required=True)
@@ -105,7 +116,6 @@ def setup_warnings():
 
 
 def setup_logging():
-
     from autumn.settings import LOGGING_DIR, REMOTE_BASE_DIR
 
     # Configure logging for the Boto3 library

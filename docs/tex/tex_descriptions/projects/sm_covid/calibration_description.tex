@@ -1,0 +1,175 @@
+\section{Model calibration and uncertainty propagation}
+\label{calibration}
+\textcolor{red}{REVISE THE SECTION BELOW WHEN FINALISED}
+The model was calibrated using a Bayesian approach. In particular, we used the adaptive 
+Metropolis algorithm introduced by Haario \textit{et al.} to sample parameters from their 
+posterior distributions \cite{haario-2001}. For each country, we ran 8 independent Metropolis 
+chains initialised using Latin Hypercube Sampling based on the parameter priors. 
+We ran simulations for 1 hour per chain yielding at least 60,000 iterations per 
+chain. We discarded the first 30,000 iterations of each chain as burn-in and combined the 
+samples of the 8 chains to project epidemic trajectories over time. 
+For each modelled country, the epidemic projections presented in our analysis are associated with 1000 parameter sets 
+randomly sampled from the posterior distributions obtained from MCMC sampling. 
+The definitions of the prior distributions and the likelihood are detailed in the following sections.
+
+\subsection{Parameters varied during calibration}
+
+The parameters varied during calibration along with their associated prior distributions 
+are listed in Table (\textcolor{red}{add ref to table here}) and indicated with the superscript \textsuperscript{c}.
+We used uniform prior distributions for all calibrated parameters. The primary parameters varied during calibration are 
+the unadjusted risk of transmission per contact ($\beta$), the IFR multiplier ($m_C$), the infection seeding times of 
+each strain and the proportion of students on-site during ``Partially open'' periods. Note that the values of the random 
+process $W_t$ described in Section \ref{random_process} are also treated like calibrated parameters by the MCMC. The Gaussian 
+auto-regressive component described in Equation \ref{eq:random_process} is incorporated in the posterior likelihood 
+computation (Section \ref{likelihood}).
+
+\subsection{Calibration targets}
+\label{targets}
+Model calibration is performed independently for each country. All models are fitted to the reported number of COVID-19 deaths over time.
+We used the daily number of COVID-19 deaths reported by Our World in Data and applied a 7-day moving average to the observed data. 
+
+In addition, for countries where a nationally representative seroprevalence survey had been conducted (n=39), we include
+seroprevalence data in the calibration likelihood. We used the online platform SeroTracker to extract country-specific seroprevalence estimates.
+
+\textcolor{red}{Use Angus' description here.}
+\textcolor{red}{Also mention how we match age-specific estimates in the model}
+
+\begin{table}[!ht]  
+    \footnotesize
+    \begin{center}
+        \begin{tabular}{p{2cm} | p{1.6cm} | p{1.6cm} | p{0.8cm} | p{0.8cm} | p{1cm} | p{1.3cm} | p{1.2cm} | p{1.2cm}}
+           \hline            
+           
+           \textbf{country} & \textbf{sampling start date} & \textbf{sampling end date} & \textbf{age min} & \textbf{age max} & \textbf{denom. value} & \textbf{serum pos prevalence} & \textbf{estimate grade} & \textbf{overall risk of bias} \\ 
+\hline 
+\href{https://dx.doi.org/10.5694/mja2.51542}{\textcolor{blue}{Australia}} & 2020-11-03 & 2021-03-12 &  & 19 & 1685 & 0.0023 & National & High \\ 
+\hline 
+\href{https://dx.doi.org/10.1007/s15010-021-01639-0}{\textcolor{blue}{Austria}} & 2020-06-05 & 2020-12-04 & 18 & 72 & 20228 & 0.025 & National & High \\ 
+\hline 
+\href{https://dx.doi.org/10.1371/journal.pone.0268093}{\textcolor{blue}{Bangladesh}} & 2020-10-15 & 2021-02-15 & 10 &  & 3220 & 0.673 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.2807/1560-7917.ES.2022.27.9.2100419}{\textcolor{blue}{Belgium}} & 2020-05-18 & 2020-05-25 &  & 101 & 3242 & 0.062 & National & Low \\ 
+\hline 
+\href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8225319/}{\textcolor{blue}{Brazil}} & 2020-05-14 & 2020-06-23 &  &  & 89362 & 0.023 & National & Moderate \\ 
+\hline 
+\href{http://dx.doi.org/10.1111/trf.16296}{\textcolor{blue}{Canada}} & 2020-05-09 & 2020-07-21 & 17 &  & 74642 & 0.007 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.1186/s12879-022-07045-7}{\textcolor{blue}{Chile}} & 2020-09-25 & 2020-11-25 & 7 & 94 & 2493 & 0.104 & National & Low \\ 
+\hline 
+\href{https://dx.doi.org/10.1016/j.lana.2022.100195}{\textcolor{blue}{Colombia}} & 2020-09-21 & 2020-12-11 & 5 & 80 & 17863 & 0.3253 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.3390/pathogens10060774}{\textcolor{blue}{Croatia}} & 2020-12-15 & 2021-02-15 &  &  & 1436 & 0.251 & National & High \\ 
+\hline 
+\href{https://doi.org/10.1038/s43856-022-00080-0}{\textcolor{blue}{Czechia}} & 2021-02-01 & 2021-03-31 & 18 &  & 19548 & 0.51 & National & High \\ 
+\hline 
+\href{https://dx.doi.org/10.1007/s10654-021-00796-8}{\textcolor{blue}{Denmark}} & 2020-08-15 & 2020-09-30 & 12 &  & 11478 & 0.02 & National & Low \\ 
+\hline 
+\href{https://dx.doi.org/10.3389/fmed.2022.933260}{\textcolor{blue}{Ecuador}} & 2020-10-12 & 2020-10-19 &  &  & 1250 & 0.1168 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.1080/23744235.2021.1974540}{\textcolor{blue}{Estonia}} & 2021-02-08 & 2021-03-25 &  &  & 2517 & 0.201 & National & High \\ 
+\hline 
+\href{http://dx.doi.org/10.1016/j.ijid.2021.08.028}{\textcolor{blue}{Ethiopia}} & 2020-06-24 & 2020-07-08 & 15 &  & 16932 & 0.035 & National & Low \\ 
+\hline 
+\href{https://dx.doi.org/10.1038/s41467-021-23233-6}{\textcolor{blue}{France}} & 2020-05-11 & 2020-05-17 &  &  & 3592 & 0.0493 & National & Low \\ 
+\hline 
+\href{https://revistas.ucr.ac.cr/index.php/psm/article/view/43261/46175}{\textcolor{blue}{Honduras}} & 2020-06-16 & 2020-06-23 & 5 &  & 792 & 0.062 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.1007/s11357-020-00226-9}{\textcolor{blue}{Hungary}} & 2020-05-01 & 2020-05-16 & 14 &  & 10474 & 0.0068 & National & Low \\ 
+\hline 
+\href{http://dx.doi.org/10.1016/j.cmi.2021.06.002}{\textcolor{blue}{Iran}} & 2020-08-03 & 2020-10-31 & 6 & 109 & 11256 & 0.142 & National & Low \\ 
+\hline 
+\href{https://dx.doi.org/10.1007/s10654-021-00749-1}{\textcolor{blue}{Israel}} & 2020-06-28 & 2020-09-14 &  &  & 54357 & 0.046 & National & Moderate \\ 
+\hline 
+\href{https://www.istat.it/it/files//2020/08/ReportPrimiRisultatiIndagineSiero.pdf}{\textcolor{blue}{Italy}} & 2020-05-25 & 2020-07-15 &  &  & 64660 & 0.025 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.3201/eid2702.204088}{\textcolor{blue}{Japan}} & 2020-06-01 & 2020-06-07 & 20 &  & 7950 & 0.001 & National & Moderate \\ 
+\hline 
+\href{http://dx.doi.org/10.1016/j.onehlt.2021.100292}{\textcolor{blue}{Jordan}} & 2020-10-01 & 2020-10-31 &  &  & 5470 & 0.07 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.1001/jama.2021.15265}{\textcolor{blue}{Kenya}} & 2021-01-03 & 2021-03-15 & 16 & 64 & 3018 & 0.485 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.1186/s12879-022-07031-z}{\textcolor{blue}{Lebanon}} & 2020-12-07 & 2021-01-15 &  &  & 2058 & 0.185 & National & Low \\ 
+\hline 
+\href{https://www.journals.vu.lt/AML/article/view/22344}{\textcolor{blue}{Lithuania}} & 2020-08-10 & 2020-09-10 & 18 & 92 & 3089 & 0.014 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.3201/eid2813.212348}{\textcolor{blue}{Malawi}} & 2020-10-14 & 2020-12-08 &  &  & 4261 & 0.078 & National & Low \\ 
+\hline 
+\href{https://dx.doi.org/10.1016/j.lanwpc.2021.100317}{\textcolor{blue}{Mongolia}} & 2020-10-13 & 2020-12-04 &  &  & 5000 & 0.0136 & National & Low \\ 
+\hline 
+\href{https://mohp.gov.np/attachments/article/708/First%20Sero-prevalence\_final\_report\_04-04-2021.pdf}{\textcolor{blue}{Nepal}} & 2020-10-09 & 2020-10-22 &  &  & 3040 & 0.144 & National & Low \\ 
+\hline 
+\href{https://dx.doi.org/10.1111/irv.12932}{\textcolor{blue}{Norway}} & 2020-12-27 & 2021-02-13 &  &  & 1912 & 0.032 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.1016/j.ijid.2021.09.062}{\textcolor{blue}{Oman}} & 2020-09-13 & 2020-09-24 & 5 &  & 4780 & 0.164 & National & Moderate \\ 
+\hline 
+\href{https://dx.doi.org/10.1007/s15010-021-01629-2}{\textcolor{blue}{Pakistan}} & 2020-07-15 & 2020-07-31 &  &  & 15390 & 0.424 & National & Moderate \\ 
+\hline 
+\href{https://europepmc.org/article/PPR/PPR359402}{\textcolor{blue}{Portugal}} & 2021-03-01 & 2021-03-17 &  &  & 2435 & 0.173 & National & Low \\ 
+\hline 
+\href{https://papers.ssrn.com/sol3/papers.cfm?abstract\_id=3826194}{\textcolor{blue}{Singapore}} & 2020-11-15 & 2020-12-15 & 23 & 83 & 937 & 0.0016 & National & High \\ 
+\hline 
+\href{https://dx.doi.org/10.1016/j.cmi.2021.03.009}{\textcolor{blue}{Slovenia}} & 2020-10-17 & 2020-11-10 &  & 99 & 1211 & 0.0429 & National & Low \\ 
+\hline 
+\href{https://dx.doi.org/10.1093/cid/ciac198}{\textcolor{blue}{South Africa}} & 2020-11-15 & 2021-04-15 &  &  & 7577 & 0.4523 & National & Moderate \\ 
+\hline 
+\href{https://bmjopen.bmj.com/content/11/4/e049837.abstract}{\textcolor{blue}{Rep. of Korea}} & 2020-09-24 & 2020-12-09 & 18 & 86 & 4085 & 0.0039 & National & Moderate \\ 
+\hline 
+\href{https://www.mscbs.gob.es/ciudadanos/ene-covid/docs/ESTUDIO\_ENE-COVID19\_INFORME\_FINAL.pdf}{\textcolor{blue}{Spain}} & 2020-06-08 & 2020-06-22 &  &  & 62167 & 0.052 & National & Low \\ 
+\hline 
+\href{https://www.folkhalsomyndigheten.se/contentassets/376f9021a4c84da08de18ac597284f0c/pavisning-antikroppar-genomgangen-covid-19-blodgivare-delrapport-2.pdf}{\textcolor{blue}{Sweden}} & 2020-11-23 & 2020-12-04 &  &  & 3183 & 0.07 & National & Moderate \\ 
+\hline 
+\href{https://www.thelancet.com/journals/langlo/article/PIIS2214-109X(21)00053-X/fulltext}{\textcolor{blue}{Zambia}} & 2020-07-04 & 2020-07-27 &  &  & 2704 & 0.021 & National & Low \\ 
+\hline 
+
+    \end{tabular}
+    \end{center}
+    \caption{Seroprevalence data extracted from SeroTracker (national surveys).}
+    \label{tab:sero_national}
+\end{table}
+
+
+\subsection{Likelihood definition}
+\label{likelihood}
+Let $d_w$ denote the rounded average daily number of COVID-19 deaths during week $w$, and $\hat{d_w}^\theta$ 
+the associated predicted number of deaths according to the model with parameter set $\theta$. 
+
+For countries with seroprevalence data, let us denote $m$ the sample size associated with the seroprevalence survey selected from SeroTracker (Section \ref{targets}), 
+and $k$ the number of seropositive individuals observed in the survey.
+Let $\hat{\pi}^\theta$ denote the modelled age-matched proportion ever infected by the time the survey was conducted (using midpoint date) 
+associated with the parameter set $\theta$. 
+The likelihood was defined as follows for coutnries with seroprevalence data:
+
+\begin{equation}
+    \label{eq:likelihood}
+    \mathcal{L}(\theta) := f_{m,\hat{\pi}^\theta}(k) \times \prod_w g_r(d_w | \:\hat{d_w}^\theta) \quad ,
+\end{equation}
+where $f_{n,p}(.)$ is the probability mass function of a binomial distribution $\mathcal{B}(n,p)$, and 
+$g_r(. | \mu)$ is the probability mass function of a negative binomial distribution with mean $\mu$ and 
+overdispersion parameter $r$. The parameter $r$ is automatically estimated by the MCMC algorithm.
+
+For countries without seroprevalence data, the likelihood equation is reduced to:
+\begin{equation}
+    \label{eq:likelihood}
+    \mathcal{L}(\theta) := \prod_w g_r(d_w | \:\hat{d_w}^\theta) \quad.
+\end{equation}
+
+The likelihood described above represents the goodness of fit of a particular model parameterisation with regards to the targeted data. 
+This quantity needs to be adjusted for the prior likelihood of the parameter set in order to compute the MCMC acceptance quantity $\mathcal{Q}(\theta)$.
+As we used uniform priors for all the parameters, the inclusion of the individual parameters' priors in the acceptance quantity is not necessary. 
+Indeed, their respective contributions would cancel out as the same quantity would appear in the numerator and the denominator of the 
+MCMC acceptance quantity ratio. However, the auto-regressive relationship described in Equation \ref{eq:random_process}
+must be accounted for as part of the combined prior likelihood of a parameter set. This is what prevents unrealistic fluctuations of the random process.
+If $W^\theta$ represents the random process associated with the parameter set $\theta$, the overall MCMC acceptance quantity is obtained by:
+
+\begin{equation}
+    \label{eq:acc_qtt}
+    \begin{split}
+    \mathcal{Q}(\theta) & = \mathcal{L}(\theta) \times \prod_{i=1}^{n} z_{W^\theta_{i-1},\sigma}(W^\theta_i) \\
+                        & = f_{m,\hat{\pi}^\theta}(k) \times \prod_w g_r(d_w | \:\hat{d_w}^\theta) \times \prod_{i=1}^{n} z_{W^\theta_{i-1},\sigma}(W^\theta_i) \quad ,
+    \end{split}
+\end{equation}
+where $z_{\mu,\sigma}(.)$ represents the probability density function of the normal distribution $\mathcal{N}(\mu, \sigma)$, and $n$ is the number 
+of random process updates. The standard deviation $\sigma$ is automatically estimated by the MCMC.
+
+\subsection{Software implementation}
+\input{../../tex_descriptions/models/sm_covid/runtime.tex}

@@ -1,5 +1,9 @@
 from autumn.calibration.optimisation.pyswarm_source import pso
 from autumn.calibration.calibration import get_parameter_bounds_from_priors
+from autumn.infrastructure.tasks.utils import get_project_from_run_id
+
+import yaml
+import logging
 
 
 def get_calibration_object(project):
@@ -17,14 +21,15 @@ def get_calibration_object(project):
     return calib
 
 
-def calculate_objective_to_minimize(calib, params_dict):
+def calculate_objective_to_minimize(calib, params_dict, account_for_priors):
     loglikelihood = calib.loglikelihood(params_dict)
-    logprior = calib.logprior(params_dict)
 
+    logprior = calib.logprior(params_dict) if account_for_priors else 0.
+    
     return - (loglikelihood + logprior)
 
 
-def optimise_posterior_with_pso(project, n_particles, max_iterations):
+def fit_model_with_pso(project, n_particles, max_iterations, account_for_priors=True):
     """
     Performs an optimisation of the posterior likelihood using PSO.
 
@@ -46,14 +51,27 @@ def optimise_posterior_with_pso(project, n_particles, max_iterations):
     # Objective function
     def obj_func(param_list):    
         params_dict = {par_name: param_list[i] for i, par_name in enumerate(var_list)}
-        return calculate_objective_to_minimize(calib, params_dict)
+        return calculate_objective_to_minimize(calib, params_dict, account_for_priors)
     
     # Bounds around parameters
     lb = [bounds[0] for bounds in var_bounds_list]
     ub = [bounds[1] for bounds in var_bounds_list]
 
     # Run the PSO
-    xopt, _ = pso(obj_func, lb, ub, swarmsize=n_particles, maxiter=max_iterations)
+    xopt, _ = pso(obj_func, lb, ub, swarmsize=n_particles, maxiter=max_iterations, minstep=1e-16, minfunc=1e-16, omega=.8, phip=2, phig=2)
 
     best_param_dict = {par_name: xopt[i] for i, par_name in enumerate(var_list)}
     return best_param_dict
+
+
+def pso_optimisation_task(run_id, out_path, swarm_size, max_iter, include_priors):
+    
+    logger = logging.getLogger(__name__)
+    logger.info(f"Running PSO optimisation with run_id {run_id}, out path {out_path}")
+
+    project = get_project_from_run_id(run_id)
+    best_dict = fit_model_with_pso(project, swarm_size, max_iter, include_priors)
+
+    logger.info(f"Best parameters: \n {best_dict}")
+    with open(out_path / "pso-params.yml", 'w') as out_file:
+        yaml.dump(best_dict, out_file)

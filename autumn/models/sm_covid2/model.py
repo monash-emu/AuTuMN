@@ -5,10 +5,11 @@ from summer2 import CompartmentalModel
 from summer2.experimental.model_builder import ModelBuilder
 
 from jax import numpy as jnp
+from computegraph.types import Function
 
 from autumn.core import inputs
 from autumn.core.project import Params, build_rel_path
-from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
+from autumn.core.inputs.social_mixing.build_synthetic_matrices import get_matrices_from_conmat
 from autumn.model_features.jax.random_process import get_random_process
 from .outputs import SmCovidOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn
@@ -85,30 +86,58 @@ def process_unesco_data(params: Parameters):
         ],
     )
 
+    # remove rows with identical closure status to make dataframe lighter
+    def map_func(key):
+        return ['Fully open', 'Partially open', 'Closed due to COVID-19', 'Academic break'].index(key)
+
+    unesco_data['status_coded'] = unesco_data['status'].transform(map_func)
+    unesco_data = unesco_data[unesco_data["status_coded"].diff(periods=-1).diff() != 0]
+    
     # Update the school mixing data if requested
-    if params.mobility.apply_unesco_school_data:
-        # Convert the categorical data into a numerical timeseries
-        unesco_data.replace(
-            {
-                "Academic break": 0.0,
-                "Fully open": 1.0,
-                "Partially open": params.mobility.unesco_partial_opening_value,  # switched to 1. to model counterfactual no-closure scenario
-                "Closed due to COVID-19": params.mobility.unesco_full_closure_value,  # switched to 1. to model counterfactual no-closure scenario
-            },
-            inplace=True,
-        )
+    if params.mobility.apply_unesco_school_data:      
+        # Convert the categorical data to a single timeseries representing the school attendance proportion
 
-        # Remove rows where status values are repeated (only keeps first and last timepoints for each plateau phase)
-        unesco_data = unesco_data[unesco_data["status"].diff(periods=-1).diff() != 0]
+        # Build a function that we can embed in the model graph
 
+        def build_unesco_mobility_array(partial_opening_value, full_closure_value):
+            
+            # Build this map inside the function so that we capture the arguments
+            status_values = {
+                "Academic break": 0.,
+                "Fully open": 1.,
+                "Partially open": partial_opening_value,
+                "Closed due to COVID-19": full_closure_value
+            }
+            attendance_prop = jnp.zeros(len(unesco_data))
+            
+            for status, value in status_values.items():
+                # Infill with value where we match this status
+                # Note that it's ok to use this pandas series inside this JIT function, since it is not a dynamic argument
+                # to the function, and we convert to a numpy type before being consumed by jax
+                attendance_prop = jnp.where(unesco_data['status'].to_numpy() == status, value, attendance_prop)
+            
+            return attendance_prop
+        
+        # Wrap this as a computegraph Function so that it consumes the params
+        # Note these can be full Parameter values (ie declared as pclass), or just constants
+        attendance_prop_f = Function(build_unesco_mobility_array, [params.mobility.unesco_partial_opening_value,
+                                               params.mobility.unesco_full_closure_value])
+        
         # Override the baseline school mixing data with the UNESCO timeseries
-        params.mobility.mixing[
-            "school"
-        ].append = False  # to override the baseline data rather than append
-        params.mobility.mixing["school"].times = (
+        school_mobility_index = (
             pd.to_datetime(unesco_data["date"]) - COVID_BASE_DATETIME
-        ).dt.days.to_list()
-        params.mobility.mixing["school"].values = unesco_data["status"].to_list()
+        ).dt.days.to_numpy()
+
+        school_mobility_data = attendance_prop_f
+
+        additional_mobility = {
+            "school": (
+                school_mobility_index,
+                school_mobility_data
+            )
+        }
+    else:
+        additional_mobility = {}
 
     # read n_weeks_closed, n_weeks_partial
     n_weeks_closed, n_weeks_partial = (
@@ -120,7 +149,30 @@ def process_unesco_data(params: Parameters):
         n_weeks_closed + n_weeks_partial * (1.0 - params.mobility.unesco_partial_opening_value)
     )
 
-    return student_weeks_missed
+    return student_weeks_missed, additional_mobility
+
+
+def scale_school_contacts(raw_matrices, school_multiplier):
+    """
+    Adjust the contact rates in schools according to the "school_multiplier" parameter.
+    The "all_locations" matrix is also adjusted automatically to remain equal to the sum of the four 
+    location-specific matrices.
+    """
+    # First, copy matrix values for "home", "work" and "other_locations" settings
+    adjusted_matrices = {location: jnp.array(matrix) for location, matrix in raw_matrices.items() if location not in ['school', 'all_locations']}    
+    
+    # Then scale the school matrix according to the multiplier parameter
+    adjusted_matrices['school'] = raw_matrices['school'] * school_multiplier
+    adjusted_matrices['school'].node_name = "school_matrix"
+
+    # We now need to compute the "all_locations" matrix, as the sum of all setting-specific matrices   
+    from summer2.parameters import Data
+
+    non_school = Data(adjusted_matrices['home'] + adjusted_matrices['work'] + adjusted_matrices['other_locations'])
+    non_school.node_name = "non_school_matrix"
+    adjusted_matrices['all_locations'] = non_school + adjusted_matrices['school']
+
+    return adjusted_matrices
 
 
 def build_model(params: dict, build_options: dict = None, ret_builder=False) -> CompartmentalModel:
@@ -252,15 +304,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     # Transmission
     infection_dest, infectious_entry_flow = latent_compartments[0], FlowName.PROGRESSION
-
-    if params.activate_random_process:
-
-        # Store random process as a computed value to make it available as an output
-        rp_function, contact_rate = get_random_process(params.random_process, params.contact_rate)
-        model.add_computed_value_func("transformed_random_process", rp_function)
-
-    else:
-        contact_rate = params.contact_rate
+    contact_rate = params.contact_rate
 
     # Add the process of infecting the susceptibles
     model.add_infection_frequency_flow(
@@ -308,17 +352,22 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     else:
         sympt_props = sympt_req  # In which case it should be None or a float
 
-    # Get the age-specific mixing matrices
-    mixing_matrices = build_synthetic_matrices(
-        iso3,
-        params.ref_mixing_iso3,
-        [int(age) for age in age_groups],
-        True,  # Always age-adjust, could change this to being a parameter
-        region,
-    )
+    # Get the age-specific mixing matrices using conmat R package
+    raw_mixing_matrices = get_matrices_from_conmat(iso3, [int(age) for age in age_groups])
+    # scale school contacts
+    school_multiplier = params.school_multiplier    
+    mixing_matrices = scale_school_contacts(raw_mixing_matrices, school_multiplier)
 
     # Apply UNESCO school closure data. This will update the school mixing params
-    student_weeks_missed = process_unesco_data(params)
+    student_weeks_missed, additional_mobility = process_unesco_data(params)
+
+    # Random process
+    if params.activate_random_process:
+        # Store random process as a computed value to make it available as an output
+        rp_function = get_random_process(params.random_process)
+        model.add_computed_value_func("transformed_random_process", rp_function)
+    else:
+        rp_function = None
 
     # Get the actual age stratification now
     age_strat = get_agegroup_strat(
@@ -329,7 +378,11 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         base_compartments,
         params.is_dynamic_mixing_matrix,
         suscept_adjs,
+        additional_mobility,
+        rp_function
     )
+
+    #age_strat.set_mixing_matrix(mixing_matrices["all_locations"])
 
     # adjust the infectiousness of the infectious latent compartments using this stratification (summer design flaw, we should be able to do this with no stratification)
     for infectious_latent_comp in infectious_latent_comps:
@@ -356,7 +409,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
         # Seed the VoCs from the requested point in time
         seed_vocs_using_gisaid(
-            model, voc_params, infectious_compartments[0], country.country_name, infectious_seed
+            model, voc_params, infectious_compartments[0], iso3, infectious_seed
         )
 
         # Keep track of the strain strata, which are needed for various purposes below
@@ -455,9 +508,16 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     outputs_builder.request_recovered_proportion(base_compartments)
-    outputs_builder.request_immunity_props(
-        immunity_strat.strata, age_pops, params.request_immune_prop_by_age
+    outputs_builder.request_age_matched_recovered_proportion(
+        base_compartments, 
+        age_groups, 
+        params.serodata_age['min'], 
+        params.serodata_age['max']
     )
+
+    # outputs_builder.request_immunity_props(
+    #     immunity_strat.strata, age_pops, params.request_immune_prop_by_age
+    # )
 
     outputs_builder.request_cumulative_outputs(
         params.requested_cumulative_outputs, params.cumulative_start_time

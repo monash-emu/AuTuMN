@@ -1,4 +1,4 @@
-from autumn.settings.folders import BASE_PATH
+from autumn.settings.folders import BASE_PATH, PROJECTS_PATH
 from matplotlib import pyplot as plt
 import os
 import yaml
@@ -12,5 +12,6 @@ def set_up_style():
     plt.rcParams["font.family"] = "Times New Roman"
 
 
-with open('included_countries.yml') as file:
-    INCLUDED_COUNTRIES = yaml.load(file, Loader=yaml.FullLoader)
+school_country_source = os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")
+school_country_dict = yaml.load(open(school_country_source), Loader=yaml.UnsafeLoader)
+INCLUDED_COUNTRIES = school_country_dict['all']

@@ -257,12 +257,7 @@ def get_project(model_name: str, project_name: str, reload=False) -> Project:
     Returns a project
     """
     # If a school closure project is requested, will call the relevant project builder function
-    if model_name == Models.SM_COVID and project_name in Region.SCHOOL_PROJECT_REGIONS:
-        # Ugly import within function definition to avoid circular imports
-        from autumn.projects.sm_covid.common_school.project_maker import get_school_project
-
-        project = get_school_project(project_name)
-    elif model_name == Models.SM_COVID2 and project_name in Region.SCHOOL_PROJECT_REGIONS:
+    if model_name == Models.SM_COVID2: # and project_name in Region.SCHOOL_PROJECT_REGIONS:
         # Ugly import within function definition to avoid circular imports
         from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 

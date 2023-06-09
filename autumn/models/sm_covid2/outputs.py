@@ -484,6 +484,85 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             func=DerivedOutput("ever_infected") / DerivedOutput("total_population")
         )
 
+
+    def request_age_matched_recovered_proportion(self, base_comps: List[str], age_groups: List[str], sero_age_min, sero_age_max):
+        """
+        Track the total population ever infected and the proportion of the total population.
+
+        Args:
+             base_comps: The unstratified model compartments
+
+        """
+        # if no age restriction in the survey, just copy the overall sero-prevalence
+        if sero_age_min is None and sero_age_max is None:
+            self.model.request_aggregate_output(
+                "prop_ever_infected_age_matched",
+                sources =[DerivedOutput("prop_ever_infected")]
+            )
+        # otherwise, we need to workout out the matching modelled age bands and create the relevant output 
+        else:
+            # All the compartments other than the fully susceptible have been infected at least once
+            ever_infected_compartments = [
+                comp for comp in base_comps if comp != Compartment.SUSCEPTIBLE
+            ]
+
+            # Work out the modelled age_bands to be included
+            if sero_age_min is not None:  # find the largest lower bound that is smaller than or equal to sero_age_min
+                youngest_model_agegroup = max([int(age) for age in age_groups if int(age) <= sero_age_min])
+            else: 
+                youngest_model_agegroup = 0
+
+            if sero_age_max is not None:
+                oldest_model_agegroup = max([int(age) for age in age_groups if int(age) < sero_age_max])
+            else:
+                oldest_model_agegroup = max([int(age) for age in age_groups])
+
+            included_age_strats = [age for age in age_groups if youngest_model_agegroup <= int(age) and int(age) <= oldest_model_agegroup]
+
+            # Loop through all included age groups to calculate their respective number of recovered and popsize
+            infected_output_names = []
+            total_pop_output_names = []
+            for age_strat in included_age_strats:
+                this_infected_output = f"ever_infected_age_{age_strat}"
+                this_total_pop_output = f"total_pop_age_{age_strat}"
+
+                age_strata_filter = {"agegroup": age_strat}
+
+                self.model.request_output_for_compartments(
+                    this_infected_output,
+                    compartments=ever_infected_compartments,
+                    strata=age_strata_filter,
+                    save_results=False
+                )
+                infected_output_names.append(this_infected_output)
+
+                self.model.request_output_for_compartments(
+                    this_total_pop_output,
+                    compartments=base_comps,
+                    strata=age_strata_filter,
+                    save_results=False
+                )
+                total_pop_output_names.append(this_total_pop_output)
+
+
+            self.model.request_aggregate_output(
+                "ever_infected_age_matched",
+                sources=infected_output_names,
+                save_results=False
+            )
+            
+            self.model.request_aggregate_output(
+                "total_population_age_matched",
+                sources=total_pop_output_names,
+                save_results=False
+            )
+
+            self.model.request_function_output(
+                "prop_ever_infected_age_matched",
+                func=DerivedOutput("ever_infected_age_matched") / DerivedOutput("total_population_age_matched")
+            )
+
+
     def request_random_process_outputs(
         self,
     ):
@@ -548,11 +627,10 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         """
         Store the number of students*weeks of school missed. This is a single float that will be stored as a derived output
         """
-        #FIXME this is broken
-        def repeat_val(example_output):
+        def repeat_val(example_output, n_student_weeks_missed):
             return jnp.repeat(n_student_weeks_missed, jnp.size(example_output))
  
-        student_weeks_missed_func = Function(repeat_val, [DerivedOutput("total_population")])
+        student_weeks_missed_func = Function(repeat_val, [DerivedOutput("total_population"), n_student_weeks_missed])
 
         self.model.request_function_output(
             "student_weeks_missed",

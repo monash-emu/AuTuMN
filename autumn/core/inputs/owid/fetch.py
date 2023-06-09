@@ -4,7 +4,9 @@ This file imports OWID data and saves it to disk as a CSV.
 from pathlib import Path
 
 import pandas as pd
-from autumn.settings import INPUT_DATA_PATH
+import yaml
+import os
+from autumn.settings import INPUT_DATA_PATH, PROJECTS_PATH
 
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
@@ -41,6 +43,11 @@ COUNTRY_FILTER = {
 
 filter_iso3 = set(COUNTRY_FILTER.values())
 
+# add countries from school closure project
+school_country_source = os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")
+school_country_dict = yaml.load(open(school_country_source), Loader=yaml.UnsafeLoader)
+school_iso3s = set(school_country_dict['all'].keys())
+filter_iso3.update(school_iso3s)
 
 def fetch_owid_data() -> None:
     df = pd.read_csv(OWID_URL)

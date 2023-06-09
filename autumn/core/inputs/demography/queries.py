@@ -14,7 +14,32 @@ INF = float("inf")
 MAPPING_ISO_CODE = {
     "MHL": "FSM",
 }
-
+MAPPING_COUNTRY_ISO = {'bosnia and herzegovina': 'BIH', 'Bolivia': 'BOL', 'bolivia, plurinational state of': 'BOL', "cote d'ivoire": 'CIV', 'congo, the democratic republic of the': 'COD', 'iran, islamic republic of': 'IRN', 'korea, republic of': 'KOR', "lao people's democratic republic": 'LAO', 'palestine, state of': 'PSE', 'tanzania, united republic of': 'TZA', 'united states': 'USA', 'venezuela, bolivarian republic of': 'VEN',
+    "Bonaire": "BES",
+    "Brunei": "BRN",
+    "Curacao": "CUW",
+    "Czech Republic": "CZE",
+    "Hong Kong": "KKG",
+    "Iran": "IRN",
+    "Laos": "LAO",
+    "Moldova": "MDA",
+    "Palestine": "PSE",
+    "Republic of the Congo": "COD",
+    "Reunion": "REU",
+    "Russia": "RUS",
+    "Saint Barthelemy": "BLM",
+    "Saint Martin": "MAF",
+    "Sint Maarten": "SXM",
+    "South Korea": "KOR", 
+    "Syria": "SYR",
+    "Taiwan": "TWN",
+    "Tanzania": "TZA",
+    "The Bahamas": "BHS",
+    "U.S. Virgin Islands": "VIR",
+    "USA": "USA",
+    "Venezuela": "VEN",
+    "Vietnam": "VNM"
+}
 
 def _get_death_rates(country_iso_code: str):
     if country_iso_code in MAPPING_ISO_CODE:
@@ -118,14 +143,33 @@ def get_iso3_from_country_name(country_name: str):
     """
     Return the iso3 code matching with a given country name.
     """
-    input_db = get_input_db()
-    country_df = input_db.query("countries", conditions={"country": country_name})
-    results = country_df["iso3"].tolist()
-    if results:
-        return results[0]
+    if country_name.lower() in MAPPING_COUNTRY_ISO:
+        return MAPPING_COUNTRY_ISO[country_name.lower()]
+    elif country_name in MAPPING_COUNTRY_ISO:
+        return MAPPING_COUNTRY_ISO[country_name]
     else:
-        raise ValueError(f"Country name {country_name} not found")
+        input_db = get_input_db()
+        country_df = input_db.query("countries", conditions={"country": country_name})
+        results = country_df["iso3"].tolist()
+        if results:
+            return results[0]
+        else:
+            raise ValueError(f"Country name {country_name} not found")
 
+def get_gisaid_country_name_from_iso3(iso3):
+    input_db = get_input_db()
+    gisaid_countries = input_db.query(table_name='gisaid', conditions= {}).Country.unique()
+    
+    keep_going = True
+    i = -1
+    while keep_going:
+        i += 1
+        c = gisaid_countries[i]
+        try:
+            if get_iso3_from_country_name(c) == iso3:
+                return c
+        except:
+            keep_going = True
 
 def get_crude_birth_rate(country_iso_code: str):
     """

@@ -77,7 +77,7 @@ class S3TaskManager:
         return self._read_taskdata("STATUS")
 
     def set_status(self, status):
-        self._write_taskdata("STATUS", status.value)
+        self._write_taskdata("STATUS", str(status))
 
     def set_instance(self, rinst):
         instance_json = json.dumps(rinst, default=str)
@@ -225,7 +225,7 @@ def launch_synced_autumn_task(
 
     instance_name = run_path.split("/")[-1]
     inst_req = aws.run_instance(
-        instance_name, instance_type, False, ami_name="ami-0ae381d77d59ca5c4"
+        instance_name, instance_type, False, ami_name=aws_settings.EC2_AMI["springboard310"]
     )
     iid = inst_req["Instances"][0]["InstanceId"]
 

@@ -96,7 +96,10 @@ def get_sampled_results(sampled_df, output_names):
 
 def run_full_runs(sampled_df, iso3, analysis):
 
-    output_names=["cumulative_incidence", "cumulative_infection_deaths", 'peak_hospital_occupancy', 'student_weeks_missed']
+    output_names=[
+        "infection_deaths", "prop_ever_infected_age_matched", "prop_ever_infected", "cumulative_incidence",
+        "cumulative_infection_deaths", 'peak_hospital_occupancy', 'student_weeks_missed'
+    ]
 
     project = get_school_project(iso3, analysis)
     default_params = project.param_set.baseline
@@ -174,7 +177,9 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
       
     times = sorted(outputs_df.index.unique())
     scenarios = outputs_df["scenario"].unique()
-    output_names = [c for c in outputs_df.columns if c not in ["scenario", "urun"]]
+    unc_output_names = [
+        "infection_deaths", "prop_ever_infected_age_matched", "prop_ever_infected", "cumulative_incidence", "cumulative_infection_deaths"
+    ]
 
     uncertainty_data = []
     for scenario in scenarios:
@@ -184,7 +189,7 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
             masked_df = scenario_df.loc[time]
             if masked_df.empty:
                 continue
-            for output_name in output_names:          
+            for output_name in unc_output_names:          
                 quantile_vals = np.quantile(masked_df[output_name], quantiles)
                 for q_idx, q_value in enumerate(quantile_vals):
                     datum = {
@@ -203,27 +208,62 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
     return uncertainty_df, diff_quantiles_df
 
 
+"""
+    Master function combining functions above
+"""
+def run_full_analysis(
+    iso3, 
+    analysis="main", 
+    opti_params={'warmup_iterations': 2000, 'search_iterations': 5000},
+    mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8},
+    full_run_params={'samples': 100, 'burn_in': 0},
+    output_folder="test_outputs"
+):
+   
+    # Create BayesianCompartmentalModel object
+    bcm = get_bcm_object(iso3, analysis)
+
+    # Perform optimisation
+    best_params, opt = optimise_model_fit(bcm, warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'])
+    with open(os.path.join(output_folder, "best_params.yml"), "w") as f:
+        yaml.dump(best_params, f)
+
+    # Run MCMC
+    idata = sample_with_pymc(bcm, initvals=best_params, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'])
+    idata.to_netcdf(os.path.join(output_folder, "idata.nc"))
+
+    # Post-MCMC processes
+    sample_df = extract_sample_subset(idata, full_run_params['samples'], full_run_params['burn_in'])
+    outputs_df = run_full_runs(sample_df, iso3, analysis)
+    diff_outputs_df = calculate_diff_outputs(outputs_df)
+    uncertainty_df, diff_quantiles_df = get_quantile_outputs(outputs_df, diff_outputs_df)
+    uncertainty_df.to_csv(os.path.join(output_folder, "uncertainty_df.csv"))
+    diff_quantiles_df.to_csv(os.path.join(output_folder, "diff_quantiles_df.csv"))
+
+    return idata, uncertainty_df, diff_quantiles_df
+
+
 # def plot_from_model_runs_df(
 #     model_results, 
 #     output_name
 # ) -> go.Figure:
-    """
-    Create interactive plot of model outputs by draw and chain
-    from standard data structures.
+#     """
+#     Create interactive plot of model outputs by draw and chain
+#     from standard data structures.
     
-    Args:
-        model_results: Model outputs generated from run_samples_through_model
-        sampled_df: Inference data converted to dataframe in output format of convert_idata_to_df
-    """
-    melted = model_results[output_name].melt(ignore_index=False)
-    melted.columns = ["chain", "draw", output]
-    melted.index = (melted.index  - COVID_BASE_DATETIME).days
+#     Args:
+#         model_results: Model outputs generated from run_samples_through_model
+#         sampled_df: Inference data converted to dataframe in output format of convert_idata_to_df
+#     """
+#     melted = model_results[output_name].melt(ignore_index=False)
+#     melted.columns = ["chain", "draw", output]
+#     melted.index = (melted.index  - COVID_BASE_DATETIME).days
 
-    fig = px.line(melted, y=output, color="chain", line_group="draw", hover_data=melted.columns)
+#     fig = px.line(melted, y=output, color="chain", line_group="draw", hover_data=melted.columns)
 
-    if output_name in bcm.targets:
-        fig.add_trace(
-            go.Scattergl(x=bcm.targets[output_name].data.index, y=bcm.targets[output_name].data, marker=dict(color="black"), name="target", mode="markers"),
-        )
+#     if output_name in bcm.targets:
+#         fig.add_trace(
+#             go.Scattergl(x=bcm.targets[output_name].data.index, y=bcm.targets[output_name].data, marker=dict(color="black"), name="target", mode="markers"),
+#         )
 
-    return fig
+#     return fig

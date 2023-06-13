@@ -1,7 +1,13 @@
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
+import datetime
 
 from autumn.core.inputs.database import get_input_db
+from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
+from summer.utils import ref_times_to_dti
+
+REF_DATE = datetime.date(2019,12,31)
+
 
 
 def update_rcparams():
@@ -42,6 +48,8 @@ title_lookup = {
     "icu_occupancy": "total ICU beds",
     "prop_ever_infected": "ever infected with Delta or Omicron",
 
+    "transformed_random_process": "Transformed random process",
+
     "peak_hospital_occupancy": "Peak COVID-19 hospital occupancy"
 }
 sc_colours = ["black", "crimson"]
@@ -70,21 +78,28 @@ def add_school_closure_patches(ax, iso3, ymax, school_colors=SCHOOL_COLORS):
     ax.vlines(closed_dates_str, ymin=0, ymax=ymax, lw=1, alpha=1, color=school_colors['full'], zorder = 1)
 
 
+def plot_model_fit(axis, uncertainty_df, output_name, iso3):
 
-def plot_model_fit(axis, uncertainty_df, output_name):
+    bcm = get_bcm_object(iso3, "main")
+
     update_rcparams() 
    
     df = uncertainty_df[(uncertainty_df["scenario"] == "baseline") & (uncertainty_df["type"] == output_name)]
 
-    # if output_name in all_targets and len(all_targets[output_name]) > 0:
-    #     axis.scatter(x_target, y_target, marker=".", color='black', label='observations', zorder=11, s=.5)
+    if output_name in bcm.targets:
+        t = bcm.targets[output_name].data
+        t.index = ref_times_to_dti(REF_DATE, t.index)
+        axis.scatter(list(t.index), t, marker=".", color='black', label='observations', zorder=11, s=3.)
+        
     colour = unc_sc_colours[0]      
 
     median_df = df[df["quantile"] == .5]
-    axis.plot(median_df['time'], median_df['value'], color=colour, zorder=10, label="model (median)")
+
+    time = [datetime.datetime.strptime(s, "%Y-%m-%d") for s in median_df['time']]
+    axis.plot(time, median_df['value'], color=colour, zorder=10, label="model (median)")
 
     axis.fill_between(
-        median_df['time'], 
+        time, 
         df[df["quantile"] == .25]['value'], df[df["quantile"] == .75]['value'], 
         color=colour, 
         alpha=0.5, 
@@ -92,20 +107,21 @@ def plot_model_fit(axis, uncertainty_df, output_name):
         label="model (IQR)"
     )
     axis.fill_between(
-        median_df['time'], 
+        time, 
         df[df["quantile"] == .025]['value'], df[df["quantile"] == .975]['value'], 
         color=colour, 
         alpha=0.3,
         edgecolor=None,
         label="model (95% CI)",
     )
-    # axis.tick_params(axis="x", labelrotation=45)
+
+    if output_name == "transformed_random_process":
+        axis.set_ylim((0., axis.get_ylim()[1]))
+
+    axis.tick_params(axis="x", labelrotation=45)
     title = output_name if output_name not in title_lookup else title_lookup[output_name]
     axis.set_ylabel(title)
-    # axis.set_xlim((model_start, model_end))
     plt.tight_layout()
-
-    axis.set_xticks(["2020-01-01", "2021-01-01", "2022-01-01", "2023-01-01"], ["Jan 2020", "Jan 2021", "Jan 2022", "Jan 2023"])
 
     plt.legend(markerscale=2.)
 
@@ -117,14 +133,15 @@ def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=Fals
     for i_sc, scenario in enumerate(["baseline", "scenario_1"]):
         df = uncertainty_df[(uncertainty_df["scenario"] == scenario) & (uncertainty_df["type"] == output_name)]
         median_df = df[df["quantile"] == .5]
-
+        time = [datetime.datetime.strptime(s, "%Y-%m-%d") for s in median_df['time']]
+        
         colour = unc_sc_colours[i_sc]
         label = "baseline" if i_sc == 0 else "schools open"
         scenario_zorder = 10 if i_sc == 0 else i_sc + 2
 
         if include_unc:
             axis.fill_between(
-                median_df['time'], 
+                time, 
                 df[df["quantile"] == .25]['value'], df[df["quantile"] == .75]['value'], 
                 color=colour, alpha=0.7, 
                 # label=interval_label,
@@ -134,7 +151,7 @@ def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=Fals
         else:
             ymax = median_df['value'].max()
 
-        axis.plot(median_df['time'], median_df['value'], color=colour, label=label, lw=1.)
+        axis.plot(time, median_df['value'], color=colour, label=label, lw=1.)
         
     plot_ymax = ymax * 1.1    
     add_school_closure_patches(axis, iso3, ymax=plot_ymax)
@@ -144,8 +161,6 @@ def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=Fals
     axis.set_ylabel(title)
     # axis.set_xlim((model_start, model_end))
     axis.set_ylim((0, plot_ymax))
-
-    axis.set_xticks(["2020-01-01", "2021-01-01", "2022-01-01", "2023-01-01"], ["Jan 2020", "Jan 2021", "Jan 2022", "Jan 2023"])
 
     axis.legend()
     plt.tight_layout()

@@ -178,7 +178,8 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
     times = sorted(outputs_df.index.unique())
     scenarios = outputs_df["scenario"].unique()
     unc_output_names = [
-        "infection_deaths", "prop_ever_infected_age_matched", "prop_ever_infected", "transformed_random_process", "cumulative_incidence", "cumulative_infection_deaths"
+        "infection_deaths", "prop_ever_infected_age_matched", "prop_ever_infected", "transformed_random_process", "cumulative_incidence", "cumulative_infection_deaths",
+        "peak_hospital_occupancy"
     ]
 
     uncertainty_data = []

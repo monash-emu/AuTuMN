@@ -204,8 +204,8 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
 
     uncertainty_df = pd.DataFrame(uncertainty_data)
 
-    diff_quantiles_df = diff_outputs_df.quantile(q=quantiles)
-
+    diff_quantiles_df = pd.DataFrame(index=quantiles, data={col: np.quantile(diff_outputs_df[col], quantiles) for col in diff_outputs_df.columns})   
+    
     return uncertainty_df, diff_quantiles_df
 
 

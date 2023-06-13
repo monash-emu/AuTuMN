@@ -98,7 +98,7 @@ def run_full_runs(sampled_df, iso3, analysis):
 
     output_names=[
         "infection_deaths", "prop_ever_infected_age_matched", "prop_ever_infected", "cumulative_incidence",
-        "cumulative_infection_deaths", 'peak_hospital_occupancy', 'student_weeks_missed', "transformed_random_process"
+        "cumulative_infection_deaths", "hospital_occupancy", 'peak_hospital_occupancy', 'student_weeks_missed', "transformed_random_process"
     ]
 
     project = get_school_project(iso3, analysis)
@@ -138,37 +138,37 @@ def run_full_runs(sampled_df, iso3, analysis):
     return outputs_df
 
 
-def diff_max_output(outputs_df, column, relative=False):
+def diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, column, relative=False):
     if not relative:     
-        return [
-            outputs_df[(outputs_df["urun"] == urun) & (outputs_df["scenario"] == "baseline")][column].max() - 
-            outputs_df[(outputs_df["urun"] == urun) & (outputs_df["scenario"] == "scenario_1")][column].max()
-            for urun in outputs_df['urun'].unique()
-        ]
+        return outputs_df_latest_0[column] - outputs_df_latest_1[column]
     else:
-        return [
-            (outputs_df[(outputs_df["urun"] == urun) & (outputs_df["scenario"] == "baseline")][column].max() - 
-            outputs_df[(outputs_df["urun"] == urun) & (outputs_df["scenario"] == "scenario_1")][column].max()) / 
-            outputs_df[(outputs_df["urun"] == urun) & (outputs_df["scenario"] == "scenario_1")][column].max()
-            for urun in outputs_df['urun'].unique()
-        ]
-
+        return (outputs_df_latest_0[column] - outputs_df_latest_1[column]) / outputs_df_latest_1[column]
+        
 
 def calculate_diff_outputs(outputs_df):
+
     index = outputs_df['urun'].unique()
+    latest_time = outputs_df.index.max()
+
+    outputs_df_latest_0 = outputs_df[outputs_df['scenario'] == "baseline"].loc[latest_time]
+    outputs_df_latest_0.index = outputs_df_latest_0['urun']
+
+    outputs_df_latest_1 = outputs_df[outputs_df['scenario'] == "scenario_1"].loc[latest_time]
+    outputs_df_latest_1.index = outputs_df_latest_1['urun']
+    
     diff_outputs_df = pd.DataFrame(index=index)
     diff_outputs_df.index.name = "urun"    
 
-    diff_outputs_df["cases_averted"] = diff_max_output(outputs_df, "cumulative_incidence")
-    diff_outputs_df["cases_averted_relative"] = diff_max_output(outputs_df, "cumulative_incidence", relative=True)
+    diff_outputs_df["cases_averted"] = diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, "cumulative_incidence")
+    diff_outputs_df["cases_averted_relative"] = diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, "cumulative_incidence", relative=True)
 
-    diff_outputs_df["deaths_averted"] = diff_max_output(outputs_df, "cumulative_infection_deaths")
-    diff_outputs_df["deaths_averted_relative"] = diff_max_output(outputs_df, "cumulative_infection_deaths", relative=True)
+    diff_outputs_df["deaths_averted"] = diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, "cumulative_infection_deaths")
+    diff_outputs_df["deaths_averted_relative"] = diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, "cumulative_infection_deaths", relative=True)
 
-    diff_outputs_df["delta_hospital_peak"] = diff_max_output(outputs_df, "peak_hospital_occupancy")
-    diff_outputs_df["delta_hospital_peak_relative"] = diff_max_output(outputs_df, "peak_hospital_occupancy", relative=True)
-
-    diff_outputs_df["delta_student_weeks_missed"] = diff_max_output(outputs_df, "student_weeks_missed")
+    diff_outputs_df["delta_student_weeks_missed"] = diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, "student_weeks_missed")
+ 
+    diff_outputs_df["delta_hospital_peak"] = diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, "peak_hospital_occupancy")
+    diff_outputs_df["delta_hospital_peak_relative"] = diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, "peak_hospital_occupancy", relative=True)
 
     return diff_outputs_df
 
@@ -179,7 +179,7 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
     scenarios = outputs_df["scenario"].unique()
     unc_output_names = [
         "infection_deaths", "prop_ever_infected_age_matched", "prop_ever_infected", "transformed_random_process", "cumulative_incidence", "cumulative_infection_deaths",
-        "peak_hospital_occupancy"
+        "peak_hospital_occupancy", "hospital_occupancy"
     ]
 
     uncertainty_data = []

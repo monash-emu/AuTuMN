@@ -43,7 +43,7 @@ title_lookup = {
     "icu_admissions": "new daily admissions to ICU",
     "incidence": "daily new infections",
     "hospital_admissions": "daily hospital admissions",
-    "hospital_occupancy": "total hospital beds",
+    "hospital_occupancy": "Hospital pressure",
     "icu_admissions": "daily ICU admissions",
     "icu_occupancy": "total ICU beds",
     "prop_ever_infected": "ever infected with Delta or Omicron",

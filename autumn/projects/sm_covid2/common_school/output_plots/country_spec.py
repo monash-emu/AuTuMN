@@ -82,7 +82,7 @@ def plot_model_fit(axis, uncertainty_df, output_name, iso3):
 
     bcm = get_bcm_object(iso3, "main")
 
-    update_rcparams() 
+    # update_rcparams() 
    
     df = uncertainty_df[(uncertainty_df["scenario"] == "baseline") & (uncertainty_df["type"] == output_name)]
 
@@ -127,7 +127,7 @@ def plot_model_fit(axis, uncertainty_df, output_name, iso3):
 
 
 def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=False):
-    update_rcparams()
+    # update_rcparams()
 
     ymax = 0.
     for i_sc, scenario in enumerate(["baseline", "scenario_1"]):
@@ -167,7 +167,7 @@ def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=Fals
 
 
 def plot_final_size_compare(axis, uncertainty_df, output_name):
-    update_rcparams()
+    # update_rcparams()
     # plt.rcParams.update({'font.size': 12})    
     box_width = .7
     color = 'black'
@@ -200,3 +200,60 @@ def plot_final_size_compare(axis, uncertainty_df, output_name):
 
     axis.set_xlim((0., 3.))
     axis.set_ylim((0, y_max * 1.2))
+
+
+def plot_diff_outputs(axis, diff_quantiles_df, output_names):
+
+    xlab_lookup = {
+        "cases_averted_relative": "infections", 
+        "deaths_averted_relative": "deaths",
+        "delta_hospital_peak_relative": "hospital occupancy"
+    }
+
+    box_width = .2
+    med_color = 'white'
+    box_color= 'black'
+    y_max_abs = 0.
+    for i, diff_output in enumerate(output_names): 
+
+        data = - 100. * diff_quantiles_df[diff_output] # use %. And use "-" so positive nbs indicate positive effect of closures
+        x = 1 + i
+        # median
+        axis.hlines(y=data.loc[0.5], xmin=x - box_width / 2. , xmax= x + box_width / 2., lw=2., color=med_color, zorder=3)    
+        
+        # IQR
+        q_75 = data.loc[0.75]
+        q_25 = data.loc[0.25]
+        rect = Rectangle(xy=(x - box_width / 2., q_25), width=box_width, height=q_75 - q_25, zorder=2, facecolor=box_color)
+        axis.add_patch(rect)
+
+        # 95% CI
+        q_025 = data.loc[0.025]
+        q_975 = data.loc[0.975]
+        axis.vlines(x=x, ymin=q_025 , ymax=q_975, lw=1.5, color=box_color, zorder=1)
+
+        y_max_abs = max(abs(q_975), y_max_abs)
+        y_max_abs = max(abs(q_025), y_max_abs)
+ 
+    # title = output_name if output_name not in title_lookup else title_lookup[output_name]
+    
+    y_label = "% peak reduction" if "delta_hospital_peak_relative" in output_names else "% averted by school closure"
+    axis.set_ylabel(y_label)
+    
+
+    labels = [xlab_lookup[o] for o in output_names]
+    axis.set_xticks(ticks=range(1, len(output_names) + 1), labels=labels) #, fontsize=15)
+
+    axis.set_xlim((0.5, len(output_names) + 1.5))
+    axis.set_ylim(-1.2*y_max_abs, 1.2*y_max_abs)
+    
+    # add coloured backgorund patches
+    xmin, xmax = axis.get_xlim()
+    ymin, ymax = axis.get_ylim() 
+    rect_up = Rectangle(xy=(xmin, 0.), width=xmax - xmin, height=(ymax - ymin)/2., zorder=-1, facecolor="honeydew")
+    axis.add_patch(rect_up)
+    rect_low = Rectangle(xy=(xmin, ymin), width=xmax - xmin, height=(ymax - ymin)/2., zorder=-1, facecolor="mistyrose")
+    axis.add_patch(rect_low)
+
+    axis.text(len(output_names) + .5, ymax / 2., s="Positive effect of\nschool closures")
+    axis.text(len(output_names) + .5, ymin / 2., s="Negative effect of\nschool closures")

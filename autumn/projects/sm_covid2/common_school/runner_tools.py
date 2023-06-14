@@ -242,29 +242,3 @@ def run_full_analysis(
     diff_quantiles_df.to_csv(os.path.join(output_folder, "diff_quantiles_df.csv"))
 
     return idata, uncertainty_df, diff_quantiles_df
-
-
-# def plot_from_model_runs_df(
-#     model_results, 
-#     output_name
-# ) -> go.Figure:
-#     """
-#     Create interactive plot of model outputs by draw and chain
-#     from standard data structures.
-    
-#     Args:
-#         model_results: Model outputs generated from run_samples_through_model
-#         sampled_df: Inference data converted to dataframe in output format of convert_idata_to_df
-#     """
-#     melted = model_results[output_name].melt(ignore_index=False)
-#     melted.columns = ["chain", "draw", output]
-#     melted.index = (melted.index  - COVID_BASE_DATETIME).days
-
-#     fig = px.line(melted, y=output, color="chain", line_group="draw", hover_data=melted.columns)
-
-#     if output_name in bcm.targets:
-#         fig.add_trace(
-#             go.Scattergl(x=bcm.targets[output_name].data.index, y=bcm.targets[output_name].data, marker=dict(color="black"), name="target", mode="markers"),
-#         )
-
-#     return fig

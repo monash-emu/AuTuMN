@@ -1,6 +1,8 @@
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 import datetime
+import os
+import matplotlib.gridspec as gridspec
 
 from autumn.core.inputs.database import get_input_db
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
@@ -257,3 +259,103 @@ def plot_diff_outputs(axis, diff_quantiles_df, output_names):
 
     axis.text(len(output_names) + .5, ymax / 2., s="Positive effect of\nschool closures")
     axis.text(len(output_names) + .5, ymin / 2., s="Negative effect of\nschool closures")
+
+
+
+def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_folder):
+    country_name = iso3  #FIXME
+
+    update_rcparams()
+    plt.style.use("default")
+    fig = plt.figure(figsize=(8.3, 11.7), dpi=300) # crete an A4 figure
+    outer = gridspec.GridSpec(
+        3, 1, hspace=.1, height_ratios=(3, 62, 35), 
+        left=0.07, right=0.97, bottom=0.03, top =.97   # this affects the outer margins of the saved figure 
+    )
+
+    #### Top row with country name
+    ax1 = fig.add_subplot(outer[0, 0])
+    t = ax1.text(0.5,0.5, country_name, fontsize=16)
+    t.set_ha('center')
+    t.set_va('center')
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+
+    #### Second row will need to be split
+    outer_cell = outer[1, 0]
+    # first split in left/right panels
+    inner_grid = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=outer_cell, wspace=.2, width_ratios=(70, 30))
+    left_grid = inner_grid[0, 0]  # will contain timeseries plots
+    right_grid = inner_grid[0, 1]  # will contain final size plots
+
+    #### Split left panel into 3 panels
+    inner_left_grid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=left_grid, hspace=.05, height_ratios=(1, 1, 1))
+    # calibration
+    ax2 = fig.add_subplot(inner_left_grid[0, 0])
+    plot_model_fit(ax2, uncertainty_df, "infection_deaths", iso3)
+    plt.setp(ax2.get_xticklabels(), visible=False)
+    # scenario compare deaths
+    ax3 = fig.add_subplot(inner_left_grid[1, 0], sharex=ax2)
+    plot_two_scenarios(ax3, uncertainty_df, "infection_deaths", iso3, True)
+    plt.setp(ax3.get_xticklabels(), visible=False)
+    # scenario compare hosp
+    ax4 = fig.add_subplot(inner_left_grid[2, 0], sharex=ax2)
+    plot_two_scenarios(ax4, uncertainty_df, "hospital_occupancy", iso3, True)
+
+    ## Split right panel into 3 panels
+    inner_right_grid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=right_grid, hspace=.1, height_ratios=(1, 1, 1))
+    # final size incidence
+    ax5 = fig.add_subplot(inner_right_grid[0, 0])
+    plot_final_size_compare(ax5, uncertainty_df, "cumulative_incidence")
+    # final size deaths
+    ax6 = fig.add_subplot(inner_right_grid[1, 0])
+    plot_final_size_compare(ax6, uncertainty_df, "cumulative_infection_deaths")
+    # # hosp peak
+    ax7 = fig.add_subplot(inner_right_grid[2, 0])
+    plot_final_size_compare(ax7, uncertainty_df, "peak_hospital_occupancy")
+
+    #### Third row will need to be split into 6 panels
+    outer_cell = outer[2, 0]
+    inner_grid = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=outer_cell, wspace=.2, hspace=.05, width_ratios=(50, 50), height_ratios=(6, 42, 42))
+
+    # top left
+    ax_tl = fig.add_subplot(inner_grid[0, 0])
+    # t = ax_tl.text(0.5,0.5, "Age-specific incidence (baseline scenario)", fontsize=12)
+    t = ax_tl.text(0.5,0.5, "Relative impact of school closure", fontsize=12)
+    t.set_ha('center')
+    t.set_va('center')
+    ax_tl.set_xticks([])
+    ax_tl.set_yticks([])
+
+    # top right
+    ax_tr = fig.add_subplot(inner_grid[0, 1])
+    # t = ax_tr.text(0.5,0.5, "Age-specific incidence (schools open)", fontsize=12)
+    t = ax_tr.text(0.5,0.5, "Relative impact of school closure", fontsize=12)
+    t.set_ha('center')
+    t.set_va('center')
+    ax_tr.set_xticks([])
+    ax_tr.set_yticks([])
+
+    # middle left
+    ax8 = fig.add_subplot(inner_grid[1, 0])
+    plot_diff_outputs(ax8, diff_quantiles_df, ["cases_averted_relative", "deaths_averted_relative"])
+    # plot_incidence_by_age(derived_outputs, ax8, 0, as_proportion=False)
+    # plt.setp(ax8.get_xticklabels(), visible=False)
+
+    # middle right
+    ax9 = fig.add_subplot(inner_grid[1, 1])
+    plot_diff_outputs(ax9, diff_quantiles_df, ["delta_hospital_peak_relative"])
+    # plot_incidence_by_age(derived_outputs, ax9, 1, as_proportion=False)
+    # plt.setp(ax9.get_xticklabels(), visible=False)
+
+    # # bottom left
+    # ax10 = fig.add_subplot(inner_grid[2, 0], sharex=ax8)
+    # plot_incidence_by_age(derived_outputs, ax10, 0, as_proportion=True)
+    # # bottom right
+    # ax11 = fig.add_subplot(inner_grid[2, 1], sharex=ax9)
+    # plot_incidence_by_age(derived_outputs, ax11, 1, as_proportion=True)
+
+    fig.savefig(os.path.join(output_folder, "tiling.png"), facecolor="white")
+    fig.savefig(os.path.join(output_folder, "tiling.pdf"), facecolor="white")
+
+    plt.close()

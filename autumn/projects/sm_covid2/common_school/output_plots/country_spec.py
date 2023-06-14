@@ -97,7 +97,7 @@ def plot_model_fit(axis, uncertainty_df, output_name, iso3):
 
     median_df = df[df["quantile"] == .5]
 
-    time = [datetime.datetime.strptime(s, "%Y-%m-%d") for s in median_df['time']]
+    time = median_df['time']
     axis.plot(time, median_df['value'], color=colour, zorder=10, label="model (median)")
 
     axis.fill_between(
@@ -135,7 +135,7 @@ def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=Fals
     for i_sc, scenario in enumerate(["baseline", "scenario_1"]):
         df = uncertainty_df[(uncertainty_df["scenario"] == scenario) & (uncertainty_df["type"] == output_name)]
         median_df = df[df["quantile"] == .5]
-        time = [datetime.datetime.strptime(s, "%Y-%m-%d") for s in median_df['time']]
+        time = median_df['time']
         
         colour = unc_sc_colours[i_sc]
         label = "baseline" if i_sc == 0 else "schools open"

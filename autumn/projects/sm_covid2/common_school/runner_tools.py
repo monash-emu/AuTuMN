@@ -238,7 +238,7 @@ def run_full_analysis(
     outputs_df = run_full_runs(sample_df, iso3, analysis)
     diff_outputs_df = calculate_diff_outputs(outputs_df)
     uncertainty_df, diff_quantiles_df = get_quantile_outputs(outputs_df, diff_outputs_df)
-    uncertainty_df.to_csv(os.path.join(output_folder, "uncertainty_df.csv"))
-    diff_quantiles_df.to_csv(os.path.join(output_folder, "diff_quantiles_df.csv"))
+    uncertainty_df.to_parquet(os.path.join(output_folder, "uncertainty_df.parquet"))
+    diff_quantiles_df.to_parquet(os.path.join(output_folder, "diff_quantiles_df.parquet"))
 
     return idata, uncertainty_df, diff_quantiles_df

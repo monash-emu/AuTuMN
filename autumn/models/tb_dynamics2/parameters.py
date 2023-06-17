@@ -134,6 +134,10 @@ class Parameters(ParamStruct):
     extrapulmonary_infect_multiplier: float
     gender: GenderStrat
 
+    future_diabetes_multiplier: pclass()
+    rr_progression_diabetes: pclass()
+    prop_diabetes: dict
+
 
 
 

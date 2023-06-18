@@ -134,9 +134,12 @@ class Parameters(ParamStruct):
     extrapulmonary_infect_multiplier: float
     gender: GenderStrat
 
+    inflate_reactivation_for_diabetes: bool
     future_diabetes_multiplier: pclass()
     rr_progression_diabetes: pclass()
     prop_diabetes: dict
+    acf_screening_sensitivity: float
+    time_variant_screening_rate: dict
 
 
 

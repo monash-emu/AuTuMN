@@ -171,5 +171,26 @@ passive_screening_sensitivity:
   extrapulmonary: 0.5 # dummy value
 
 
+inflate_reactivation_for_diabetes: True
+future_diabetes_multiplier: 1.
+rr_progression_diabetes: 5.643402828077587
+prop_diabetes:
+    0: 0.01
+    5: 0.05
+    15: 0.2
+    35: 0.4
+    50: 0.7
+
+
+time_variant_screening_rate:
+  2017: 0.
+  2017.01: 1.9
+  2018.: 1.9
+  2018.01: 0.
+
+acf_screening_sensitivity: .75
+
+
+
 
 

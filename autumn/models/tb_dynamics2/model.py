@@ -195,6 +195,28 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         params.infect_death_rate_dict.unstratified,
         Compartment.INFECTIOUS,
     )
+
+    # acf implementation
+    implement_acf = len(params.time_variant_screening_rate.keys()) > 0
+    if implement_acf:
+        # Default value
+        acf_detection_rate = 1.0
+
+            # Universal active case funding is applied
+        times = list(params.time_variant_screening_rate.keys())
+        vals = [
+                v * params.acf_screening_sensitivity
+                for v in list(params.time_variant_screening_rate.values())
+            ]
+        acf_detection_rate = Function(build_static_sigmoidal_multicurve(times, vals), [Time])
+
+        model.add_transition_flow(
+            "acf_detection",
+            acf_detection_rate,
+            Compartment.INFECTIOUS,
+            Compartment.ON_TREATMENT,
+        )
+
     
     """
     Age stratification

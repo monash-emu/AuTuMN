@@ -1,5 +1,6 @@
 from summer2 import AgeStratification, Overwrite, Multiply
 from summer2.parameters import Time, Function
+from summer2.functions.interpolate import build_linear_interpolator
 from autumn.core.inputs import get_death_rates_by_agegroup
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import build_synthetic_matrices
@@ -7,6 +8,7 @@ from autumn.models.tb_dynamics2.constants import Compartment, INFECTIOUS_COMPS
 from math import log, exp
 from autumn.models.tb_dynamics2.constants import BASE_COMPARTMENTS
 from autumn.models.tb_dynamics2.utils import *
+
 def get_age_strat(
     params,
 ) -> AgeStratification:
@@ -45,9 +47,35 @@ def get_age_strat(
 
     # Set age-specific late activation rate
     for flow_name, latency_params in params.age_stratification.items():
+        #is_activation_flow = flow_name in ["late_activation"]
+        #if is_activation_flow:
         adjs = {str(t): Multiply(latency_params[max([k for k in latency_params if k <= t])]) for t in age_breaks}
         strat.set_flow_adjustments(flow_name, adjs)
 
+    is_activation_flow = flow_name in ["early_activation", "late_activation"]
+
+    if params.inflate_reactivation_for_diabetes and is_activation_flow:
+            # Inflate reactivation rate to account for diabetes.
+            diabetes_scale_up = tanh_based_scaleup(
+                shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0
+            )
+
+            for age in params.age_breakpoints:
+                def get_latency_with_diabetes(
+                    t,
+                    prop_diabetes=params.prop_diabetes[age],
+                    previous_progression_rate=adjs[str(age)],
+                    rr_progression_diabetes=params.rr_progression_diabetes,
+                ):
+                    return (
+                        1.0
+                        - diabetes_scale_up(t)
+                        * prop_diabetes
+                        * (1.0 - rr_progression_diabetes)
+                    ) * previous_progression_rate
+
+                adjs[age] = Function(get_latency_with_diabetes, [Time])
+        
     # Increasing infectiousness with age
     inf_switch_age = params.age_infectiousness_switch
     for comp in INFECTIOUS_COMPS:

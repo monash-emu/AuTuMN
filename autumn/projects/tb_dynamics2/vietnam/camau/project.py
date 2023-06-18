@@ -27,6 +27,7 @@ targets = [
     NormalTarget(ts_set["percentage_latent"], stdev=2.0),
     #NormalTarget(ts_set["incidence"], stdev=5.0)
     NormalTarget(ts_set["prevalence_infectious"], stdev=20.0),
+    
 ]
 
 priors = [
@@ -41,7 +42,8 @@ priors = [
     UniformPrior("infect_death_rate_dict.smear_negative", [0.017, 0.035]),
     UniformPrior("self_recovery_rate_dict.smear_positive", [0.177, 0.288]),
     UniformPrior("self_recovery_rate_dict.smear_negative", [0.073, 0.209]),
-    UniformPrior("gender.adjustments.infection.male", [1.0, 3.0])
+    UniformPrior("rr_progression_diabetes", [1, 10]),
+    #UniformPrior("gender.adjustments.infection.male", [1.0, 3.0])
 ]
 calibration = Calibration(
     priors=priors,

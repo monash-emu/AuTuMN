@@ -11,10 +11,10 @@ class TbOutputsBuilder(OutputsBuilder):
         self.strata = strata
 
 
-    # def request_compartment_output(self, output_name, compartments, save_results=True):
-    #     self.model.request_output_for_compartments(
-    #         output_name, compartments, save_results=save_results
-    #     )
+    def request_compartment_output(self, output_name, compartments, save_results=True):
+        self.model.request_output_for_compartments(
+            output_name, compartments, save_results=save_results
+        )
 
     def request_flow_output(self, output_name, flow_name, save_results=True):
         self.model.request_output_for_flow(output_name, flow_name, save_results=save_results)

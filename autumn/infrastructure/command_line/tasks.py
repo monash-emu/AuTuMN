@@ -36,11 +36,10 @@ def run_generic(run: str, task_key: str, task_kwargs: str):
 
 @tasks.command("springboard")
 @click.option("--run", type=str, required=True)
-@click.option("--shutdown", is_flag=True)
-def run_springboard(run: str, shutdown: bool):
-    from autumn.infrastructure.remote.aws.springboard import autumn_task_entry
+def run_springboard(run: str):
+    from autumn.infrastructure.remote.springboard.runners import autumn_task_entry
 
-    autumn_task_entry(run, shutdown)
+    autumn_task_entry(run)
 
 
 @tasks.command("calibrate")

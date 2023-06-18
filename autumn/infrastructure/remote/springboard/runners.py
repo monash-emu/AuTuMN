@@ -347,6 +347,7 @@ def autumn_task_entry(run_path):
         task_manager.set_status(TaskStatus.FAILED)
         success = False
     finally:
+        bridge.sync_logs()
         bridge._storage.store(local_base / "output")
         bridge._storage.store(local_base / "log")
         logging.shutdown()
@@ -361,6 +362,8 @@ class SpringboardTaskRunner:
     def __init__(self, rinst, run_path):
         self.sshr = SSHRunner(rinst["ip"])
         self.s3 = S3TaskManager(run_path)
+        self.run_path = run_path
+        self.cres = None
 
     def _script_callback(self, script_path):
         self.sshr.ftp.put(script_path, "taskscript.sh")
@@ -377,5 +380,15 @@ class SpringboardTaskRunner:
         if task_spec is not None:
             process_dumpbin(task_spec, cloudpickle.dump, self._taskpkl_callback)
 
-        cres = self.sshr.run("./taskscript.sh 2>&1 | tee iodump")
+        self.cres = cres = self.sshr.run("./taskscript.sh 2>&1 | tee iodump")
         return cres
+
+    def get_log(self, logtype="task"):
+        return (
+            self.s3.fs.open(f"autumn-data/{self.run_path}/log/{logtype}.log", "rb").read().decode()
+        )
+
+    def get_iodump(self):
+        return (
+            self.s3.fs.open(f"autumn-data/{self.run_path}/.taskmeta/iodump", "rb").read().decode()
+        )

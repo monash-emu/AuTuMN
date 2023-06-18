@@ -79,3 +79,5 @@ tabulate
 awscli==1.22.84
 fabric
 s3fs==0.4.2
+parallel-ssh
+cloudpickle

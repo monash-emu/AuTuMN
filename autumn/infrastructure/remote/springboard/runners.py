@@ -80,7 +80,7 @@ class S3TaskManager:
             f.write(value)
 
     def get_status(self):
-        return self._read_taskdata("STATUS")
+        return self._read_taskdata("STATUS").strip("\n")
 
     def set_status(self, status):
         if isinstance(status, TaskStatus):

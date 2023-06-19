@@ -50,9 +50,7 @@ def tanh_based_scaleup(shape, inflection_time, start_asymptote, end_asymptote=1.
     :return: a function
     """
     assymp_range = end_asymptote - start_asymptote
-
-    def tanh_scaleup(t):
-        return (jnp.tanh(shape * (t - inflection_time)) / 2.0 + 0.5) * assymp_range + start_asymptote
+    return (jnp.tanh(shape * (t - inflection_time)) / 2.0 + 0.5) * assymp_range + start_asymptote
 
     return tanh_scaleup
 
@@ -72,5 +70,5 @@ def get_latency_with_diabetes(
     previous_progression_rate,
     rr_progression_diabetes,
     ):
-    diabetes_scale_up = tanh_based_scaleup(shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0)
+    diabetes_scale_up = tanh_based_scaleup(t, shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0)
     return (1.0 - diabetes_scale_up(t) * prop_diabetes * (1.0 - rr_progression_diabetes)) * previous_progression_rate

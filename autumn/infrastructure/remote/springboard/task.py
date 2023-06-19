@@ -14,16 +14,19 @@ import os
 import s3fs
 import boto3
 import cloudpickle
+import yaml
 
 from autumn.settings import aws as aws_settings
-from autumn.infrastructure.remote.aws import aws
+
+# from autumn.infrastructure.remote.aws import aws
 from autumn.infrastructure.remote.aws import cli
 from autumn.infrastructure.tasks.storage import S3Storage
 from autumn.core.utils.s3 import get_s3_client
 from autumn.core.utils.parallel import gather_exc_plus
 
 from .clients import SSHRunner
-from .scripting import process_script, process_dumpbin
+from .scripting import process_script, process_dumpbin, gen_autumn_run_bash
+from . import aws
 
 
 @dataclass
@@ -75,8 +78,8 @@ class S3TaskManager:
         with self.fs.open(self._remote_taskmeta / key, "r") as f:
             return f.read()
 
-    def _write_taskdata(self, key, value):
-        with self.fs.open(self._remote_taskmeta / key, "w") as f:
+    def _write_taskdata(self, key, value, mode="w"):
+        with self.fs.open(self._remote_taskmeta / key, mode) as f:
             f.write(value)
 
     def get_status(self):
@@ -93,39 +96,6 @@ class S3TaskManager:
 
     def get_instance(self):
         return json.loads(self._read_taskdata("instance.json"))
-
-
-def gen_run_name(description: str) -> str:
-    """Generate a run name consisting of a timestamp and user supplied description
-    This is used as the final segment of a run_path
-
-    Args:
-        desc: Short descriptive name; don't use special characters!
-
-    Returns:
-        Run name (timestamp + desc)
-    """
-    t = datetime.now()
-    tstr = t.strftime("%Y-%m-%dT%H%M")
-    return f"{tstr}-{description}"
-
-
-def get_autumn_project_run_path(project, region, run_desc) -> str:
-    """Generate a full run_path of the format
-       projects/{project}/{region}/run_name
-       This is the canonical "run_id" that can be used by
-       launch_synced_autumn_task, ManagedRun etc
-
-    Args:
-        project: Model/application name
-        region: Region name
-        run_desc: Short description of run - no special characters
-
-    Returns:
-        The complete identifying run_path
-    """
-    run_name = gen_run_name(run_desc)
-    return f"projects/{project}/{region}/{run_name}"
 
 
 class TaskSpec:
@@ -183,93 +153,6 @@ def test_stub_task(bridge: TaskBridge, **kwargs):
     logger.info("Test stub exit")
 
 
-def launch_synced_autumn_task(
-    task_spec, mspec: EC2MachineSpec, run_path, branch="master", verbose=False
-):
-    # create an S3 task
-    # check if it exists already then fail if so
-
-    s3task = S3TaskManager(run_path)
-    s3task.setup_task()
-
-    # get a machine
-    # confirm that it's running, then set an alarm
-
-    instance_type = aws.get_instance_type(**asdict(mspec))
-
-    instance_name = run_path.split("/")[-1]
-    inst_req = aws.run_instance(
-        instance_name, instance_type, False, ami_name=aws_settings.EC2_AMI["springboard310"]
-    )
-    iid = inst_req["Instances"][0]["InstanceId"]
-
-    print(iid)
-    state = wait_instance(iid)
-    print(state)
-
-    rinst = aws.find_instance_by_id(iid)
-
-    # Store the instance data as part of the run
-    s3task.set_instance(rinst)
-
-    # Set a cloudwatch alarm to auto-terminate hanging jobs
-    set_cpu_termination_alarm(iid)
-
-    # init the S3 task (call this locally, but have the task init on s3)
-    s3task.set_status("LAUNCHING")
-
-    # Grab an SSH runner
-    runner = cli.runner.get_runner(rinst)
-    # Give it a dummy command to make sure it's initialised
-    # retry a few times to give it a chance...
-    for retry in range(5):
-        try:
-            runner.conn.run("")
-            break
-        except:
-            pass
-
-    # conda environment activation preamble
-    conda_preamble = (
-        'eval "$(/home/ubuntu/miniconda/bin/conda shell.bash hook)"; conda activate autumn310;'
-    )
-
-    cd_autumn = "cd code/autumn;"
-    print(f"Checking out autumn {branch}")
-
-    git_res = runner.conn.run(
-        f"cd code/autumn; git fetch --quiet; git checkout --quiet {branch}; git pull --quiet"
-    )
-    if verbose:
-        print(git_res)
-
-    print(f"Installing requirements")
-    pip_res = runner.conn.run(
-        f"{conda_preamble} {cd_autumn} pip install -r requirements/requirements310.txt"
-    )
-    if verbose:
-        print(pip_res)
-
-    # put the cpkl on the remote machine
-    # launch the job via ssh with reference to cpkl
-    # remote job will update the S3 Status
-    # you can check this via the local S3ManagedTask
-    # or try to interact with the active EC2 instance via SSH....
-
-    ftp = runner.conn.sftp()
-
-    with open("task.cpkl", "wb") as taskcpkl_f:
-        cloudpickle.dump(task_spec, taskcpkl_f)
-
-    ftp.put("task.cpkl", "task.cpkl")
-
-    stdin, stdout, stderr = runner.conn.client.exec_command(
-        f"{conda_preamble} python -m autumn tasks springboard --run {run_path} --shutdown"
-    )
-
-    return s3task, runner, (stdin, stdout, stderr)
-
-
 def set_rtask_logging_config(log_path: Path, verbose=False):
     old_factory = logging.getLogRecordFactory()
 
@@ -319,7 +202,17 @@ def set_rtask_logging_config(log_path: Path, verbose=False):
     )
 
 
-def autumn_task_entry(run_path):
+def autumn_task_entry(run_path: str) -> int:
+    """Used to run a cpickled TaskSpec
+    This handles S3 persistance/logging/cleanup via
+    the TaskBridge interface
+
+    Args:
+        run_path: The (S3) run_path of the current task
+
+    Returns:
+        Exit code - can be returned to bash callers
+    """
     local_base = Path().resolve() / "taskdata"
     local_base.mkdir(exist_ok=True)
     (local_base / "output").mkdir(exist_ok=True)

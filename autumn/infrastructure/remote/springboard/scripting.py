@@ -49,7 +49,6 @@ def gen_autumn_run_bash(
         conda_preamble,
         # "echo BASHENTRY > STATUS\n",
         # f"aws s3 cp STATUS s3://autumn-data/{run_path}/STATUS\n",
-        emit_status("BASHENTRY"),
         "git fetch",
         test_to_exit("git fetch"),
         f"git checkout {branch}",

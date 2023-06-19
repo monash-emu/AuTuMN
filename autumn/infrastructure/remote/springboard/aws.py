@@ -82,6 +82,37 @@ def start_ec2_instance(mspec: EC2MachineSpec, name: str, ami: str = None) -> dic
     return rinst
 
 
+def start_ec2_multi_instance(
+    mspec: EC2MachineSpec, name: str, n_instances: int, ami: str = None
+) -> dict:
+    """Request and launch an EC2 instance for the given machine specifications
+
+    Args:
+        mspec: EC2MachineSpec detailing requirements
+        name: The instance name
+        ami: The AMI identifier string; defaults to AuTuMN's springboard AMI
+
+    Returns:
+        The instance dictionary of the running instance (rinst)
+    """
+    instance_type = autumn_aws.get_instance_type(**asdict(mspec))
+
+    # +++: Borrow default from AuTuMN; move to springboard rcparams?
+    ami = ami or aws_settings.EC2_AMI["springboard310"]
+
+    inst_req = autumn_aws.run_multiple_instances(name, instance_type, n_instances, ami_name=ami)
+    iid = inst_req["Instances"][0]["InstanceId"]
+
+    req_instances = inst_req["Instances"]
+    instances = []
+
+    for rinst in req_instances:
+        iid = rinst["InstanceId"]
+        instances.append(wait_instance(iid))
+
+    return instances
+
+
 def set_cpu_termination_alarm(
     instance_id: str, time_minutes: int = 5, min_cpu=1.0, region=aws_settings.AWS_REGION
 ):

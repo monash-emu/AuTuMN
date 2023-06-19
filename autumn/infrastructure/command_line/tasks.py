@@ -37,7 +37,7 @@ def run_generic(run: str, task_key: str, task_kwargs: str):
 @tasks.command("springboard")
 @click.option("--run", type=str, required=True)
 def run_springboard(run: str):
-    from autumn.infrastructure.remote.springboard.runners import autumn_task_entry
+    from autumn.infrastructure.remote.springboard.task import autumn_task_entry
 
     autumn_task_entry(run)
 

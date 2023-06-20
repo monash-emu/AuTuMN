@@ -292,7 +292,9 @@ class S3TaskManager:
         fs: s3fs.S3FileSystem = None,
         bucket: PurePosixPath = PurePosixPath(aws_settings.S3_BUCKET),
     ):
-        fs = fs or s3fs.S3FileSystem()
+        # s3fs seems to have intermittent trouble accessing files created remotely
+        # use_listings_cache might (should?) help...
+        fs = fs or s3fs.S3FileSystem(use_listings_cache=False)
         self.fs = fs
         self.bucket = bucket
         self.project_path = project_path

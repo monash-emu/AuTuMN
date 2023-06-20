@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 # For dumping task metadata
 import inspect
@@ -88,7 +88,8 @@ def launch_synced_multiple_autumn_task(task_dict, mspec, branch="master", job_id
 
 def gen_run_name(description: str) -> str:
     """Generate a run name consisting of a timestamp and user supplied description
-    This is used as the final segment of a run_path
+    This is used to generate an identifying segment of run_path, but should not
+    be used as a run_path on its own
 
     Args:
         desc: Short descriptive name; don't use special characters!

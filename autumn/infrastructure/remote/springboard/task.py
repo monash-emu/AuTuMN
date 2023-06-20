@@ -1,39 +1,28 @@
-from datetime import datetime
-from dataclasses import dataclass, asdict
 from pathlib import PurePosixPath, Path
 from enum import Enum
 import json
 import sys
-import inspect
+from time import time, sleep
 
 import logging
 import logging.config
 import socket
-import os
 
 import s3fs
-import boto3
 import cloudpickle
-import yaml
 
+# autumn imports
+# Most of these should get refactored away eventually...
 from autumn.settings import aws as aws_settings
-
-# from autumn.infrastructure.remote.aws import aws
-from autumn.infrastructure.remote.aws import cli
 from autumn.infrastructure.tasks.storage import S3Storage
 from autumn.core.utils.s3 import get_s3_client
 from autumn.core.utils.parallel import gather_exc_plus
 
+# Multi-library SSH wrapper
 from .clients import SSHRunner
-from .scripting import process_script, process_dumpbin, gen_autumn_run_bash
-from . import aws
 
-
-@dataclass
-class EC2MachineSpec:
-    min_cores: int
-    min_ram: int
-    category: str
+# Callback wrappers for script/cpkl task management
+from .scripting import process_script, process_dumpbin
 
 
 class TaskStatus(str, Enum):
@@ -43,63 +32,16 @@ class TaskStatus(str, Enum):
     # Final possible states are SUCCESS or FAILED
     # Anything else is still in progress/hung
     SUCCESS = "SUCCESS"  # Everything went to according to plan
-    FAILED = "FAILURE"  # Something did not go according to plan...
-
-
-class S3TaskManager:
-    """Wrapper for a remote task syncronized via S3
-    The STATUS file on S3 is the 'ground truth' status for any given job
-    """
-
-    def __init__(
-        self,
-        project_path: str,
-        fs: s3fs.S3FileSystem = None,
-        bucket: PurePosixPath = PurePosixPath(aws_settings.S3_BUCKET),
-    ):
-        fs = fs or s3fs.S3FileSystem()
-        self.fs = fs
-        self.bucket = bucket
-        self.project_path = project_path
-        self._full_rpath = self.bucket / self.project_path
-        self._remote_taskmeta = self._full_rpath / ".taskmeta"
-        self._status_file = self._full_rpath / ".taskmeta" / "STATUS"
-
-    def exists(self):
-        """Check if this project exists on S3"""
-        return self.fs.exists(self._status_file)
-
-    def _setup_task(self):
-        if self.fs.exists(self._status_file):
-            cur_status = self.get_status()
-            raise FileExistsError(f"Existing task found with status {cur_status}", self._full_rpath)
-
-    def _read_taskdata(self, key):
-        with self.fs.open(self._remote_taskmeta / key, "r") as f:
-            return f.read()
-
-    def _write_taskdata(self, key, value, mode="w"):
-        with self.fs.open(self._remote_taskmeta / key, mode) as f:
-            f.write(value)
-
-    def get_status(self):
-        return self._read_taskdata("STATUS").strip("\n")
-
-    def set_status(self, status):
-        if isinstance(status, TaskStatus):
-            status = status.value
-        self._write_taskdata("STATUS", status)
-
-    def set_instance(self, rinst):
-        instance_json = json.dumps(rinst, default=str)
-        self._write_taskdata("instance.json", instance_json)
-
-    def get_instance(self):
-        return json.loads(self._read_taskdata("instance.json"))
+    FAILURE = "FAILURE"  # Something did not go according to plan...
 
 
 class TaskSpec:
     def __init__(self, run_func, func_kwargs: dict = None):
+        """Used to specify wrapped tasks for springboard runners
+        Args:
+            run_func: Any function taking a TaskBridge as its first argument
+            func_kwargs: Optional additional kwargs to run_func
+        """
         self.run_func = run_func
         self.func_kwargs = func_kwargs or {}
 
@@ -252,6 +194,11 @@ def autumn_task_entry(run_path: str) -> int:
 
 
 class SpringboardTaskRunner:
+    """This is primary local 'user facing' interface for running remote Springboard tasks
+    Typically a task will be created by some other method and a SpringboardTaskRunner returned
+
+    """
+
     def __init__(self, rinst, run_path):
         self.sshr = SSHRunner(rinst["ip"])
         self.s3 = S3TaskManager(run_path)
@@ -285,3 +232,102 @@ class SpringboardTaskRunner:
         return (
             self.s3.fs.open(f"autumn-data/{self.run_path}/.taskmeta/iodump", "rb").read().decode()
         )
+
+    def tail(self, n=10) -> str:
+        """Return the output of the linux 'tail' command on the remote machine; ie
+        display the last {n} lines of stdio of a running task
+
+        Will fail (raise exception) if the remote machine has terminated
+
+        Args:
+            n: Number of lines to
+
+        Returns:
+            A string capturing the stdout of the tail command
+        """
+        return self.sshr.run(f"tail -n {n} iodump").stdout
+
+    def wait(self, freq: int = 5, maxtime: int = 60 * 60) -> str:
+        """Wait for a task to complete
+        Will return the status str of the task on completion,
+        or raise a TimeoutError if maxtime exceeded
+
+        Args:
+            freq: Polling frequency in seconds (defaults to 5 seconds)
+            maxtime: Maximum wait time in seconds (defaults to 1 hour)
+
+        Raises:
+            TimeoutError: Maximum wait time exceeded - does not indicate task failure
+                          Contains current task status as its only argument
+
+        Returns:
+            Status string (one of TaskStatus.SUCCESS or TaskStatus.FAILURE)
+        """
+
+        tot_time = 0.0
+
+        cur_status = ""
+
+        while tot_time < maxtime:
+            start = time()
+            cur_status = self.s3.get_status()
+            if cur_status in [TaskStatus.SUCCESS, TaskStatus.FAILURE]:
+                return cur_status
+            sleep(freq)
+            tot_time += time() - start
+
+        raise TimeoutError(cur_status)
+
+
+class S3TaskManager:
+    """Wrapper for a remote task syncronized via S3
+    The STATUS file on S3 is the 'ground truth' status for any given job
+    This wrapper only handles sync with S3, and is usually exposed via
+    SpringboardTaskRunner which also manages SSH connections for a complete bridge
+    """
+
+    def __init__(
+        self,
+        project_path: str,
+        fs: s3fs.S3FileSystem = None,
+        bucket: PurePosixPath = PurePosixPath(aws_settings.S3_BUCKET),
+    ):
+        fs = fs or s3fs.S3FileSystem()
+        self.fs = fs
+        self.bucket = bucket
+        self.project_path = project_path
+        self._full_rpath = self.bucket / self.project_path
+        self._remote_taskmeta = self._full_rpath / ".taskmeta"
+        self._status_file = self._full_rpath / ".taskmeta" / "STATUS"
+
+    def exists(self):
+        """Check if this project exists on S3"""
+        return self.fs.exists(self._status_file)
+
+    def _setup_task(self):
+        if self.fs.exists(self._status_file):
+            cur_status = self.get_status()
+            raise FileExistsError(f"Existing task found with status {cur_status}", self._full_rpath)
+
+    def _read_taskdata(self, key):
+        with self.fs.open(self._remote_taskmeta / key, "r") as f:
+            return f.read()
+
+    def _write_taskdata(self, key, value, mode="w"):
+        with self.fs.open(self._remote_taskmeta / key, mode) as f:
+            f.write(value)
+
+    def get_status(self):
+        return self._read_taskdata("STATUS").strip("\n")
+
+    def set_status(self, status):
+        if isinstance(status, TaskStatus):
+            status = status.value
+        self._write_taskdata("STATUS", status)
+
+    def set_instance(self, rinst):
+        instance_json = json.dumps(rinst, default=str)
+        self._write_taskdata("instance.json", instance_json)
+
+    def get_instance(self):
+        return json.loads(self._read_taskdata("instance.json"))

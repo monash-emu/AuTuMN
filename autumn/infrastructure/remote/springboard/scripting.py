@@ -34,7 +34,7 @@ def gen_autumn_run_bash(
         testbad = f"""
         if [ $? -ne 0 ]; then
             echo {fail_str} failed, cleaning up
-            {emit_status("FAILED")}
+            {emit_status("FAILURE")}
             write_ios_s3
             {shutdown_str}
         fi

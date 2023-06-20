@@ -29,7 +29,7 @@ class TaskStatus(str, Enum):
     INIT = "INIT"  # Task has been created on S3, but nothing else has happened
     LAUNCHING = "LAUNCHING"  # Any machine provisioning and other setup is happening here
     RUNNING = "RUNNING"  # Task is actively running
-    # Final possible states are SUCCESS or FAILED
+    # Final possible states are SUCCESS or FAILURE
     # Anything else is still in progress/hung
     SUCCESS = "SUCCESS"  # Everything went to according to plan
     FAILURE = "FAILURE"  # Something did not go according to plan...
@@ -179,7 +179,7 @@ def autumn_task_entry(run_path: str) -> int:
     except:
         bridge.logger.error("Task failed - see crash.log")
         gather_exc_plus(local_base / "log" / "crash.log")
-        task_manager.set_status(TaskStatus.FAILED)
+        task_manager.set_status(TaskStatus.FAILURE)
         success = False
     finally:
         bridge.sync_logs()
@@ -204,6 +204,7 @@ class SpringboardTaskRunner:
         self.s3 = S3TaskManager(run_path)
         self.run_path = run_path
         self.cres = None
+        self.instance = rinst
 
     def _script_callback(self, script_path):
         self.sshr.ftp.put(script_path, "taskscript.sh")
@@ -246,6 +247,20 @@ class SpringboardTaskRunner:
             A string capturing the stdout of the tail command
         """
         return self.sshr.run(f"tail -n {n} iodump").stdout
+
+    def top(self, sort_key="+%CPU") -> str:
+        """Return the output of the linux 'top' command on the remote machine,
+        sorted by sort_key; defaults to (descending) CPU usage, to sort by (descending) memory, use
+        top(sort_key="+%MEM")
+
+        Args:
+            sort_key: Key consisting of + or - for descending or ascending, followed by the
+                      name of the column
+
+        Returns:
+            A string capturing the stdout of the top command
+        """
+        return self.sshr.run(f"top -b -n 1 -o {sort_key}").stdout
 
     def wait(self, freq: int = 5, maxtime: int = 60 * 60) -> str:
         """Wait for a task to complete

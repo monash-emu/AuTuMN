@@ -6,12 +6,17 @@ then pssh to run the actual task (due to the non-blocking reads)
 from pathlib import Path
 from typing import NamedTuple
 from dataclasses import dataclass
+from time import sleep
 
 from pssh.clients import SSHClient
 from pssh.exceptions import Timeout
 from pssh.output import HostOutput
 
 import paramiko
+
+from logging import getLogger
+
+logger = getLogger("springboard")
 
 
 @dataclass
@@ -39,10 +44,13 @@ def get_paramiko_client(ip_addr: str, retries=5):
 
     for r in range(retries):
         try:
-            client.connect(ip_addr, username="ubuntu", pkey=get_rsa_key(), auth_timeout=3.0)
+            client.connect(ip_addr, username="ubuntu", pkey=get_rsa_key())
             return client
         except Exception as e:
+            logger.warning(f"SSH connection still waiting, retrying {r+1}/{retries}")
             client_exception = e
+            sleep(5)
+
     raise client_exception
 
 

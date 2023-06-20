@@ -1,3 +1,5 @@
+from typing import Dict
+
 from datetime import datetime
 
 # For dumping task metadata
@@ -5,7 +7,7 @@ import inspect
 import yaml
 
 # Import a few type definitions for clarity in declarations
-from .task import TaskSpec, TaskStatus
+from .task import TaskSpec, TaskStatus, SpringboardTaskRunner
 from .aws import EC2MachineSpec
 
 # Import the rest of the springboard machinery
@@ -16,7 +18,7 @@ from . import scripting
 
 def launch_synced_autumn_task(
     task_spec: TaskSpec, mspec: EC2MachineSpec, run_path: str, branch="master", job_id="autumntask"
-):
+) -> SpringboardTaskRunner:
     s3t = task.S3TaskManager(run_path)
     if s3t.exists():
         raise Exception("Task already exists", run_path)
@@ -48,7 +50,9 @@ def launch_synced_autumn_task(
     return srunner
 
 
-def launch_synced_multiple_autumn_task(task_dict, mspec, branch="master", job_id="autumntask"):
+def launch_synced_multiple_autumn_task(
+    task_dict, mspec, branch="master", job_id="autumntask"
+) -> Dict[str, SpringboardTaskRunner]:
     for run_path in task_dict.keys():
         s3t = task.S3TaskManager(run_path)
         if s3t.exists():

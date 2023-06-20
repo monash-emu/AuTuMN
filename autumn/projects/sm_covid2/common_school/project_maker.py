@@ -374,8 +374,8 @@ def get_school_project_priors(first_date_with_death):
         UniformPrior("voc_emergence.omicron.new_voc_seed.time_from_gisaid_report", [-30, 30]),
 
         # Account for mixing matrix uncertainty
-        # UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.3]),
-        # UniformPrior("school_multiplier", [0.8, 1.2]),
+        UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.3]),
+        UniformPrior("school_multiplier", [0.8, 1.2]),
     ]
 
     return priors

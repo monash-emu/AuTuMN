@@ -29,7 +29,7 @@ class TaskStatus(str, Enum):
     INIT = "INIT"  # Task has been created on S3, but nothing else has happened
     LAUNCHING = "LAUNCHING"  # Any machine provisioning and other setup is happening here
     RUNNING = "RUNNING"  # Task is actively running
-    # Final possible states are SUCCESS or FAILED
+    # Final possible states are SUCCESS or FAILURE
     # Anything else is still in progress/hung
     SUCCESS = "SUCCESS"  # Everything went to according to plan
     FAILURE = "FAILURE"  # Something did not go according to plan...
@@ -179,7 +179,7 @@ def autumn_task_entry(run_path: str) -> int:
     except:
         bridge.logger.error("Task failed - see crash.log")
         gather_exc_plus(local_base / "log" / "crash.log")
-        task_manager.set_status(TaskStatus.FAILED)
+        task_manager.set_status(TaskStatus.FAILURE)
         success = False
     finally:
         bridge.sync_logs()

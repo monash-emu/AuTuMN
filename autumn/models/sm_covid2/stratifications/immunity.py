@@ -84,7 +84,9 @@ def get_time_variant_vaccination_rates(iso3: str, age_pops: pd.Series):
         columns=["date", "people_fully_vaccinated_per_hundred"],
     )
     vacc_data.dropna(inplace=True)
-    vacc_data["date_int"] = (pd.to_datetime(vacc_data.date) - COVID_BASE_DATETIME).dt.days
+
+    effect_delay = 14
+    vacc_data["date_int"] = (pd.to_datetime(vacc_data.date) - COVID_BASE_DATETIME).dt.days + effect_delay
     vacc_data["n_doses"] = total_pop * vacc_data["people_fully_vaccinated_per_hundred"] / 100.0
     vacc_data.drop(["people_fully_vaccinated_per_hundred", "date"], axis=1)
     t_min, t_max = vacc_data["date_int"].iloc[0], vacc_data["date_int"].iloc[-1]

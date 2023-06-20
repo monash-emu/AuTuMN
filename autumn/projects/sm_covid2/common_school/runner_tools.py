@@ -23,10 +23,10 @@ INCLUDED_COUNTRIES  = yaml.load(open(os.path.join(PROJECTS_PATH, "sm_covid2", "c
     Functions related to model calibration
 """
 
-def optimise_model_fit(bcm, warmup_iterations: int = 2000, search_iterations: int = 5000):
+def optimise_model_fit(bcm, warmup_iterations: int = 2000, search_iterations: int = 5000, suggested_start: dict = None):
 
     # Build optimizer
-    opt = eng.optimize_model(bcm, obj_function=bcm.loglikelihood)
+    opt = eng.optimize_model(bcm, obj_function=bcm.loglikelihood, suggested=suggested_start)
 
     # Run warm-up iterations and 
     res = opt.minimize(warmup_iterations)

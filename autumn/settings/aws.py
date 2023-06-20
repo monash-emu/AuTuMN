@@ -35,9 +35,15 @@ class EC2InstanceCategory:
     GENERAL = "general"
     MEMORY = "memory"
     COMPUTE = "compute"
+    TINY = "tiny"
 
 
 EC2_INSTANCE_SPECS = {
+    EC2InstanceCategory.TINY: {
+        "t3.micro": EC2Instance(1, 1),
+        "t3.small": EC2Instance(1, 2),
+        "t3.medium": EC2Instance(1, 4),
+    },
     EC2InstanceCategory.GENERAL: {
         "m6i.large": EC2Instance(1, 4),
         "m6i.xlarge": EC2Instance(2, 8),

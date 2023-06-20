@@ -135,6 +135,27 @@ def run_instance(job_id: str, instance_type: str, is_spot: bool, ami_name=None):
     return client.run_instances(**kwargs)
 
 
+def run_multiple_instances(job_id: str, instance_type: str, n_instances: int, ami_name=None):
+    logger.info(f"Creating EC2 instance {instance_type} for job {job_id}... ")
+    ami_name = ami_name or settings.EC2_AMI["310conda"]
+    kwargs = {
+        "MaxCount": n_instances,
+        "MinCount": n_instances,
+        "ImageId": ami_name,
+        "InstanceType": instance_type,
+        "SecurityGroupIds": [settings.EC2_SECURITY_GROUP],
+        "IamInstanceProfile": {"Name": settings.EC2_IAM_INSTANCE_PROFILE},
+        "KeyName": "autumn",
+        "InstanceInitiatedShutdownBehavior": "terminate",
+        "TagSpecifications": [
+            {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": job_id}]}
+        ],
+    }
+
+    logger.info("Create request sent.")
+    return client.run_instances(**kwargs)
+
+
 def find_instance(name):
     instances = describe_instances()
     for instance in instances:

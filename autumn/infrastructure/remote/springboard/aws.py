@@ -115,7 +115,7 @@ def start_ec2_multi_instance(
 
 
 def set_cpu_termination_alarm(
-    instance_id: str, time_minutes: int = 5, min_cpu=1.0, region=aws_settings.AWS_REGION
+    instance_id: str, time_minutes: int = 30, min_cpu=1.0, region=aws_settings.AWS_REGION
 ):
     # Create alarm
 

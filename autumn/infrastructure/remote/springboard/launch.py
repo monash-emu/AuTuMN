@@ -17,7 +17,12 @@ from . import scripting
 
 
 def launch_synced_autumn_task(
-    task_spec: TaskSpec, mspec: EC2MachineSpec, run_path: str, branch="master", job_id="autumntask"
+    task_spec: TaskSpec,
+    mspec: EC2MachineSpec,
+    run_path: str,
+    branch="master",
+    job_id="autumntask",
+    set_alarm=True,
 ) -> SpringboardTaskRunner:
     s3t = task.S3TaskManager(run_path)
     if s3t.exists():
@@ -28,7 +33,8 @@ def launch_synced_autumn_task(
     rinst = aws.start_ec2_instance(mspec, job_id)
     s3t.set_instance(rinst)
 
-    aws.set_cpu_termination_alarm(rinst["InstanceId"])
+    if set_alarm:
+        aws.set_cpu_termination_alarm(rinst["InstanceId"])
 
     srunner = task.SpringboardTaskRunner(rinst, run_path)
     script = scripting.gen_autumn_run_bash(run_path, branch)

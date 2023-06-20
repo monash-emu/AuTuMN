@@ -18,6 +18,7 @@ class EC2InstanceType(str, Enum):
     GENERAL = "general"
     COMPUTE = "compute"
     MEMORY = "memory"
+    TINY = "tiny"
 
 
 @dataclass

@@ -52,29 +52,12 @@ def get_age_strat(
         adjs = {str(t): Multiply(latency_params[max([k for k in latency_params if k <= t])]) for t in age_breaks}
         strat.set_flow_adjustments(flow_name, adjs)
 
-    is_activation_flow = flow_name in ["early_activation", "late_activation"]
+    # is_activation_flow = flow_name in ["early_activation", "late_activation"]
 
-    if params.inflate_reactivation_for_diabetes and is_activation_flow:
-            # Inflate reactivation rate to account for diabetes.
-            diabetes_scale_up = tanh_based_scaleup(
-                shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0
-            )
-
-            for age in params.age_breakpoints:
-                def get_latency_with_diabetes(
-                    t,
-                    prop_diabetes=params.prop_diabetes[age],
-                    previous_progression_rate=adjs[str(age)],
-                    rr_progression_diabetes=params.rr_progression_diabetes,
-                ):
-                    return (
-                        1.0
-                        - diabetes_scale_up(t)
-                        * prop_diabetes
-                        * (1.0 - rr_progression_diabetes)
-                    ) * previous_progression_rate
-
-                adjs[age] = Function(get_latency_with_diabetes, [Time])
+    # if params.inflate_reactivation_for_diabetes and is_activation_flow:
+    #         # Inflate reactivation rate to account for diabetes.
+    #         for age in params.age_breakpoints:
+    #             adjs[age] = Function(get_latency_with_diabetes, [Time, params.prop_diabetes[age], adjs[str(age)],params.rr_progression_diabetes])
         
     # Increasing infectiousness with age
     inf_switch_age = params.age_infectiousness_switch

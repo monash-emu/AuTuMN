@@ -218,25 +218,42 @@ def run_full_analysis(
     opti_params={'warmup_iterations': 2000, 'search_iterations': 5000},
     mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8},
     full_run_params={'samples': 100, 'burn_in': 0},
-    output_folder="test_outputs"
+    output_folder="test_outputs",
+    logger=None
 ):
    
     # Create BayesianCompartmentalModel object
     bcm = get_bcm_object(iso3, analysis)
 
     # Perform optimisation
+    if logger:
+        logger.info("Start optimisation...")
+
     best_params, opt = optimise_model_fit(bcm, warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'])
     with open(os.path.join(output_folder, "best_params.yml"), "w") as f:
         yaml.dump(best_params, f)
 
+    if logger:
+        logger.info("... optimisation completed")
+    
     # Run MCMC
+    if logger:
+        logger.info(f"Start MCMC for {mcmc_params['tune']} + {mcmc_params['draws']} iterations and {mcmc_params['chains']} chains...")
     idata = sample_with_pymc(bcm, initvals=best_params, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'])
     idata.to_netcdf(os.path.join(output_folder, "idata.nc"))
-
+    if logger:
+        logger.info("... MCMC completed")
+    
     # Post-MCMC processes
     sample_df = extract_sample_subset(idata, full_run_params['samples'], full_run_params['burn_in'])
+    if logger:
+        logger.info(f"Perform full runs for {full_run_params['samples']} samples")
     outputs_df = run_full_runs(sample_df, iso3, analysis)
+    if logger:
+        logger.info("Calculate differential outputs")    
     diff_outputs_df = calculate_diff_outputs(outputs_df)
+    if logger:
+        logger.info("Calculate quantiles") 
     uncertainty_df, diff_quantiles_df = get_quantile_outputs(outputs_df, diff_outputs_df)
     uncertainty_df.to_parquet(os.path.join(output_folder, "uncertainty_df.parquet"))
     diff_quantiles_df.to_parquet(os.path.join(output_folder, "diff_quantiles_df.parquet"))

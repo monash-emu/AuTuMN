@@ -15,7 +15,7 @@ from estival.optimization import nevergrad as eng
 from estival.calibration import pymc as epm
 
 from autumn.settings.folders import PROJECTS_PATH
-from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
+from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object, plot_model_fit
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
 from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params
@@ -274,9 +274,14 @@ def run_full_analysis(
     # Store optimal solutions
     with open(os.path.join(output_folder, "best_params.yml"), "w") as f:
         yaml.dump(best_params, f)
-
+    
     # Plot optimal solutions and starting points
     plot_opti_params(sample_as_dicts, best_params, bcm, output_folder)
+
+    # Plot optimal model fits
+    os.makedirs(os.path.join(output_folder, "optimised_fits"), exist_ok=True)
+    for j, best_p in best_params.items():
+        plot_model_fit(bcm, best_p, os.path.join(output_folder, "optimised_fits", f"best_fit_{j}.png"))
 
     if logger:
         logger.info("... optimisation completed")

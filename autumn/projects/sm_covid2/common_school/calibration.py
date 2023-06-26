@@ -81,7 +81,7 @@ def get_bcm_object(iso3, analysis="main"):
     return bcm
 
 
-def plot_model_fit(bcm, params, region):
+def plot_model_fit(bcm, params, outfile=None):
     REF_DATE = datetime.date(2019,12,31)
 
     targets = {}
@@ -94,7 +94,6 @@ def plot_model_fit(bcm, params, region):
     ll = bcm.loglikelihood(**params)  # not ideal...
 
     fig, axs = plt.subplots(3, 1, figsize=(10, 8), height_ratios=(2., 1., 2.), sharex=True)
-    fig.suptitle(region.title())
     death_ax, rp_ax, sero_ax = axs[0], axs[1], axs[2]
 
     # Deaths
@@ -115,5 +114,8 @@ def plot_model_fit(bcm, params, region):
         targets["prop_ever_infected_age_matched"].plot(style='.', ax=sero_ax)
     else:
         run_model.derived_outputs["prop_ever_infected"].plot(ax=sero_ax, ylabel="Prop. ever infected")
+
+    if outfile:
+        fig.savefig(outfile, facecolor="white")
 
     return fig

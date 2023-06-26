@@ -6,6 +6,7 @@ import datetime
 import arviz as az
 import pandas as pd
 import numpy as np
+from scipy.stats import qmc
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -17,11 +18,32 @@ from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
+from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params
+from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
+
 INCLUDED_COUNTRIES  = yaml.load(open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")), Loader=yaml.UnsafeLoader)
 
 """
     Functions related to model calibration
 """
+
+def sample_with_lhs(n_samples, bcm):
+
+    # sample using LHS in the right dimension
+    lhs_sampled_params = [p for p in bcm.priors if p != "random_process.delta_values"]  
+    d = len(lhs_sampled_params)
+    sampler = qmc.LatinHypercube(d=d)
+    regular_sample = sampler.random(n=n_samples)
+    
+    # scale the data cube to match parameter bounds
+    l_bounds = [bcm.priors[p].bounds()[0] for p in lhs_sampled_params]
+    u_bounds = [bcm.priors[p].bounds()[1] for p in lhs_sampled_params]
+    sample = qmc.scale(regular_sample, l_bounds, u_bounds)
+    
+    sample_as_dicts = [{p: sample[i][j] for j, p in enumerate(lhs_sampled_params)} for i in range(n_samples)]
+
+    return sample_as_dicts
+
 
 def optimise_model_fit(bcm, warmup_iterations: int = 2000, search_iterations: int = 5000, suggested_start: dict = None):
 
@@ -29,7 +51,8 @@ def optimise_model_fit(bcm, warmup_iterations: int = 2000, search_iterations: in
     opt = eng.optimize_model(bcm, obj_function=bcm.loglikelihood, suggested=suggested_start)
 
     # Run warm-up iterations and 
-    res = opt.minimize(warmup_iterations)
+    if warmup_iterations > 0:
+        res = opt.minimize(warmup_iterations)
 
     res = opt.minimize(search_iterations)
     best_params = res.value[1]
@@ -215,36 +238,66 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
 def run_full_analysis(
     iso3, 
     analysis="main", 
-    opti_params={'warmup_iterations': 2000, 'search_iterations': 5000},
+    opti_params={'n_searches':1, 'warmup_iterations': 2000, 'search_iterations': 5000},
     mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8},
     full_run_params={'samples': 100, 'burn_in': 0},
     output_folder="test_outputs",
     logger=None
 ):
    
+    # Check that number of requested MCMC chains is a multiple of number of optimisation searches
+    assert mcmc_params['chains'] % opti_params['n_searches'] == 0
+
     # Create BayesianCompartmentalModel object
     bcm = get_bcm_object(iso3, analysis)
 
-    # Perform optimisation
+    """ 
+        OPTIMISATION
+    """
+    # Sample optimisation starting points with LHS
     if logger:
-        logger.info("Start optimisation...")
+        logger.info("Perform LHS sampling")
+    sample_as_dicts = sample_with_lhs(opti_params['n_searches'], bcm)
+    # Store starting points
+    with open(os.path.join(output_folder, "LHS_init_points.yml"), "w") as f:
+        yaml.dump(sample_as_dicts, f)
 
-    best_params, opt = optimise_model_fit(bcm, warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'])
+    # Perform optimisation searches
+    if logger:
+        logger.info(f"Perform optimisation ({opti_params['n_searches']} searches)")
+    best_params = {}
+    for j, sample_dict in enumerate(sample_as_dicts):
+        if logger:
+            logger.info(f"Starting search #{opti_params['n_searches']}")
+        best_p, _ = optimise_model_fit(bcm, warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'])
+        best_params[j] = best_p
+    # Store optimal solutions
     with open(os.path.join(output_folder, "best_params.yml"), "w") as f:
         yaml.dump(best_params, f)
+
+    # Plot optimal solutions and starting points
+    plot_opti_params(sample_as_dicts, best_params, bcm, output_folder)
 
     if logger:
         logger.info("... optimisation completed")
     
-    # Run MCMC
+    """ 
+        MCMC
+    """
     if logger:
         logger.info(f"Start MCMC for {mcmc_params['tune']} + {mcmc_params['draws']} iterations and {mcmc_params['chains']} chains...")
-    idata = sample_with_pymc(bcm, initvals=best_params, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'])
+
+    n_repeat_seed = int(mcmc_params['chains'] / opti_params['n_searches'])
+    init_vals = [[best_p] * n_repeat_seed for i, best_p in best_params.items()]     
+    init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
+    idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'])
     idata.to_netcdf(os.path.join(output_folder, "idata.nc"))
     if logger:
         logger.info("... MCMC completed")
     
-    # Post-MCMC processes
+    """ 
+        Post-MCMC processes
+    """
     sample_df = extract_sample_subset(idata, full_run_params['samples'], full_run_params['burn_in'])
     if logger:
         logger.info(f"Perform full runs for {full_run_params['samples']} samples")
@@ -257,5 +310,7 @@ def run_full_analysis(
     uncertainty_df, diff_quantiles_df = get_quantile_outputs(outputs_df, diff_outputs_df)
     uncertainty_df.to_parquet(os.path.join(output_folder, "uncertainty_df.parquet"))
     diff_quantiles_df.to_parquet(os.path.join(output_folder, "diff_quantiles_df.parquet"))
+
+    make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_folder)
 
     return idata, uncertainty_df, diff_quantiles_df

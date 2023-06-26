@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt 
 from math import ceil
-
+import os
 
 def flatten_p_dict(p_dict):
     flat_dict = {p: val for p, val in p_dict.items() if p != 'random_process.delta_values'}
@@ -11,7 +11,7 @@ def flatten_p_dict(p_dict):
     return flat_dict
 
 
-def plot_opti_params(sample_as_dicts, best_params, bcm):
+def plot_opti_params(sample_as_dicts, best_params, bcm, output_folder):
     flat_best_params = {i: flatten_p_dict(p_dict) for i, p_dict in best_params.items()}
 
     n_params = len(flat_best_params[0])
@@ -68,5 +68,7 @@ def plot_opti_params(sample_as_dicts, best_params, bcm):
         ax.set_visible(False)
 
     fig.tight_layout()
+   
+    fig.savefig(os.path.join(output_folder, "opti_params.png"), facecolor="white")
 
-    return fig
+    plt.close()

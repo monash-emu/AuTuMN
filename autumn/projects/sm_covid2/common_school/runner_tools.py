@@ -269,7 +269,7 @@ def run_full_analysis(
     for j, sample_dict in enumerate(sample_as_dicts):
         if logger:
             logger.info(f"Starting search #{j}")
-        best_p, _ = optimise_model_fit(bcm, warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'], suggested=sample_dict)
+        best_p, _ = optimise_model_fit(bcm, warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'], suggested_start=sample_dict)
         best_params[j] = best_p
     # Store optimal solutions
     with open(os.path.join(output_folder, "best_params.yml"), "w") as f:

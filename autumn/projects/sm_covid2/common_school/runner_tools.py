@@ -286,6 +286,10 @@ def run_full_analysis(
     if logger:
         logger.info("... optimisation completed")
     
+    # Early return if MCMC not requested
+    if mcmc_params['draws'] == 0:
+        return None, None, None
+
     """ 
         MCMC
     """

@@ -15,10 +15,10 @@ from estival.optimization import nevergrad as eng
 from estival.calibration import pymc as epm
 
 from autumn.settings.folders import PROJECTS_PATH
-from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object, plot_model_fit
+from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
-from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params
+from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
 
 INCLUDED_COUNTRIES  = yaml.load(open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")), Loader=yaml.UnsafeLoader)

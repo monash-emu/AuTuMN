@@ -18,7 +18,7 @@ from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
-from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit
+from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit, plot_multiple_model_fits
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
 
 INCLUDED_COUNTRIES  = yaml.load(open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")), Loader=yaml.UnsafeLoader)
@@ -288,6 +288,8 @@ def run_full_analysis(
     os.makedirs(os.path.join(output_folder, "optimised_fits"), exist_ok=True)
     for j, best_p in best_params.items():
         plot_model_fit(bcm, best_p, os.path.join(output_folder, "optimised_fits", f"best_fit_{j}.png"))
+
+    plot_multiple_model_fits(bcm, [best_params[i] for i in best_params], os.path.join(output_folder, "optimal_fits.png"))
 
     if logger:
         logger.info("... optimisation completed")

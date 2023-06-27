@@ -30,9 +30,12 @@ def plot_opti_params(sample_as_dicts, best_params, bcm, output_folder):
         if p_name.startswith("random_process.delta_values"):
             bounds = (-1., 1.)
             start_vals = [0.] * n_samples
+        elif p_name in sample_as_dicts[0]:
+            bounds = bcm.priors[p_name].bounds()
+            start_vals = [sample_as_dicts[i][p_name] for i in range(n_samples)]
         else:
             bounds = bcm.priors[p_name].bounds()
-            start_vals = [sample_as_dicts[i][p_name] for i in range(len(sample_as_dicts))]
+            start_vals = [(bounds[0] + bounds[1]) / 2.] * n_samples
 
         ax.plot(bounds, (0,0), color="black", lw=.5, zorder=-10)       
         p_vals = [flat_best_params[i][p_name] for i in flat_best_params]

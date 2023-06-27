@@ -238,7 +238,7 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
 def run_full_analysis(
     iso3, 
     analysis="main", 
-    opti_params={'n_searches':1, 'warmup_iterations': 2000, 'search_iterations': 5000},
+    opti_params={'n_searches':1, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
     mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8},
     full_run_params={'samples': 100, 'burn_in': 0},
     output_folder="test_outputs",
@@ -257,7 +257,13 @@ def run_full_analysis(
     # Sample optimisation starting points with LHS
     if logger:
         logger.info("Perform LHS sampling")
-    sample_as_dicts = sample_with_lhs(opti_params['n_searches'], bcm)
+    if opti_params['init_method'] == "LHS":
+        sample_as_dicts = sample_with_lhs(opti_params['n_searches'], bcm)
+    elif opti_params['init_method'] == "midpoint":
+        sample_as_dicts = [{}] * opti_params['n_searches']
+    else:
+        raise ValueError('init_method optimisation argument not supported')
+        
     # Store starting points
     with open(os.path.join(output_folder, "LHS_init_points.yml"), "w") as f:
         yaml.dump(sample_as_dicts, f)

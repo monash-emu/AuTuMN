@@ -45,10 +45,10 @@ def sample_with_lhs(n_samples, bcm):
     return sample_as_dicts
 
 
-def optimise_model_fit(bcm, warmup_iterations: int = 2000, search_iterations: int = 5000, suggested_start: dict = None):
+def optimise_model_fit(bcm, num_workers: int = 8, warmup_iterations: int = 2000, search_iterations: int = 5000, suggested_start: dict = None):
 
     # Build optimizer
-    opt = eng.optimize_model(bcm, obj_function=bcm.loglikelihood, suggested=suggested_start)
+    opt = eng.optimize_model(bcm, obj_function=bcm.loglikelihood, suggested=suggested_start, num_workers=num_workers)
 
     # Run warm-up iterations and 
     if warmup_iterations > 0:
@@ -238,7 +238,7 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
 def run_full_analysis(
     iso3, 
     analysis="main", 
-    opti_params={'n_searches':1, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
+    opti_params={'n_searches': 1, 'num_workers': 8, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
     mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8},
     full_run_params={'samples': 100, 'burn_in': 0},
     output_folder="test_outputs",
@@ -275,7 +275,7 @@ def run_full_analysis(
     for j, sample_dict in enumerate(sample_as_dicts):
         if logger:
             logger.info(f"Starting search #{j}")
-        best_p, _ = optimise_model_fit(bcm, warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'], suggested_start=sample_dict)
+        best_p, _ = optimise_model_fit(bcm, num_workers=opti_params['num_workers'], warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'], suggested_start=sample_dict)
         best_params[j] = best_p
     # Store optimal solutions
     with open(os.path.join(output_folder, "best_params.yml"), "w") as f:

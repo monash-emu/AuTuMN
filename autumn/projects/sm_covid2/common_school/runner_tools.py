@@ -11,8 +11,8 @@ from scipy.stats import qmc
 import plotly.graph_objects as go
 import plotly.express as px
 
-from estival.optimization import nevergrad as eng
-from estival.calibration import pymc as epm
+from estival.wrappers import nevergrad as eng
+from estival.wrappers import pymc as epm
 
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object

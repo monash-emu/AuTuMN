@@ -199,27 +199,36 @@ class SpringboardTaskRunner:
 
     """
 
-    def __init__(self, rinst, run_path):
+    def __init__(self, rinst, run_path, shutdown=True):
         self.sshr = SSHRunner(rinst["ip"])
         self.s3 = S3TaskManager(run_path)
         self.run_path = run_path
         self.cres = None
         self.instance = rinst
+        self.shutdown = shutdown
+        self._logger = logging.getLogger("springboard")
 
     def _script_callback(self, script_path):
         self.sshr.ftp.put(script_path, "taskscript.sh")
         return self.sshr.run("chmod +x taskscript.sh")
 
     def _taskpkl_callback(self, pkl_path):
+        self.s3.fs.put(str(pkl_path.resolve()), str(self.s3._full_rpath / ".taskmeta/task.cpkl"))
         self.sshr.ftp.put(pkl_path, "task.cpkl")
 
     def run_script(self, script: str, task_spec=None):
-        chmres = process_script(script, self._script_callback)
-        # If we failed to chmod the remote script, something is wrong...
-        assert chmres.exit_status == 0
+        try:
+            chmres = process_script(script, self._script_callback)
+            # If we failed to chmod the remote script, something is wrong...
+            assert chmres.exit_status == 0
 
-        if task_spec is not None:
-            process_dumpbin(task_spec, cloudpickle.dump, self._taskpkl_callback)
+            if task_spec is not None:
+                process_dumpbin(task_spec, cloudpickle.dump, self._taskpkl_callback)
+        except Exception as e:
+            if self.shutdown:
+                self.logger.error("Processing remote script failed, shutting down remote machine")
+                self.sshr.run("sudo shutdown now")
+            raise e
 
         self.cres = cres = self.sshr.run("./taskscript.sh 2>&1 | tee iodump")
         return cres
@@ -348,3 +357,6 @@ class S3TaskManager:
 
     def get_instance(self):
         return json.loads(self._read_taskdata("instance.json"))
+
+    def put(self, lpath, rpath, absolute_rpath=False):
+        self.fs.put(lpath, self._full_rpath / rpath)

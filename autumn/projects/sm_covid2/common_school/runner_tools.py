@@ -89,13 +89,10 @@ def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, met
 
 def extract_sample_subset(idata, n_samples, burn_in):
     chain_length = idata.sample_stats.sizes['draw']
-    n_chains = idata.sample_stats.sizes['chain']
-
     burnt_idata = idata.sel(draw=range(burn_in, chain_length))  # Discard burn-in
-    calib_df = burnt_idata.to_dataframe(groups="posterior")  # Also get as dataframe
 
     param_names = list(burnt_idata.posterior.data_vars.keys())
-
+    
     sampled_idata = az.extract(burnt_idata, num_samples=n_samples)  # Sample from the inference data
     sampled_df = sampled_idata.to_dataframe()[param_names]
     

@@ -213,7 +213,9 @@ class SpringboardTaskRunner:
         return self.sshr.run("chmod +x taskscript.sh")
 
     def _taskpkl_callback(self, pkl_path):
-        self.s3.fs.put(str(pkl_path.resolve()), str(self.s3._full_rpath / ".taskmeta/task.cpkl"))
+        # FIXME: This is throwing all kinds of loopy botocore path errors for some users...
+        # Let's just leave it for now and try a non-s3fs method later (go back to the autumn helpers?)
+        # self.s3.fs.put(str(pkl_path.resolve()), str(self.s3._full_rpath / ".taskmeta/task.cpkl"))
         self.sshr.ftp.put(pkl_path, "task.cpkl")
 
     def run_script(self, script: str, task_spec=None):
@@ -226,7 +228,7 @@ class SpringboardTaskRunner:
                 process_dumpbin(task_spec, cloudpickle.dump, self._taskpkl_callback)
         except Exception as e:
             if self.shutdown:
-                self.logger.error("Processing remote script failed, shutting down remote machine")
+                self._logger.error("Processing remote script failed, shutting down remote machine")
                 self.sshr.run("sudo shutdown now")
             raise e
 

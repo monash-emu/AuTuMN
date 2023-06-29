@@ -21,7 +21,7 @@ def launch_synced_autumn_task(
     mspec: EC2MachineSpec,
     run_path: str,
     branch="master",
-    job_id="autumntask",
+    job_id=None,
     set_alarm=True,
 ) -> SpringboardTaskRunner:
     s3t = task.S3TaskManager(run_path)
@@ -29,6 +29,9 @@ def launch_synced_autumn_task(
         raise Exception("Task already exists", run_path)
 
     s3t.set_status(TaskStatus.LAUNCHING)
+
+    if job_id is None:
+        job_id = run_path
 
     rinst = aws.start_ec2_instance(mspec, job_id)
     s3t.set_instance(rinst)
@@ -57,13 +60,16 @@ def launch_synced_autumn_task(
 
 
 def launch_synced_multiple_autumn_task(
-    task_dict, mspec, branch="master", job_id="autumntask"
+    task_dict, mspec, branch="master", job_id=None
 ) -> Dict[str, SpringboardTaskRunner]:
     for run_path in task_dict.keys():
         s3t = task.S3TaskManager(run_path)
         if s3t.exists():
             raise Exception("Task already exists", run_path)
         s3t.set_status(TaskStatus.LAUNCHING)
+
+    if job_id is None:
+        job_id = gen_run_name("autumntask")
 
     instances = aws.start_ec2_multi_instance(mspec, job_id, len(task_dict))
 

@@ -87,12 +87,14 @@ def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, met
     Functions related to post-calibration processes
 """
 
-def extract_sample_subset(idata, n_samples, burn_in):
+def extract_sample_subset(idata, n_samples, burn_in, chain_filter: list = None):
     chain_length = idata.sample_stats.sizes['draw']
     burnt_idata = idata.sel(draw=range(burn_in, chain_length))  # Discard burn-in
+    
+    if chain_filter:
+        burnt_idata = burnt_idata.sel(chain=chain_filter)
 
     param_names = list(burnt_idata.posterior.data_vars.keys())
-    
     sampled_idata = az.extract(burnt_idata, num_samples=n_samples)  # Sample from the inference data
     sampled_df = sampled_idata.to_dataframe()[param_names]
     

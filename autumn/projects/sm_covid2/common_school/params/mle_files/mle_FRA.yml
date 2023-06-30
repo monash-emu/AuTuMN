@@ -1,26 +1,26 @@
 contact_rate: 0.05025523678049977
 infectious_seed_time: 38.99010495645527
 age_stratification.ifr.multiplier: 1.0418440759622547
-sojourns.active: 6.94825819668873
-voc_emergence.delta.new_voc_seed.time_from_gisaid_report: 0.12565257992224943
-voc_emergence.omicron.new_voc_seed.time_from_gisaid_report: -0.13669331477330954
+# sojourns.active: 6.94825819668873
+# voc_emergence.delta.new_voc_seed.time_from_gisaid_report: 0.12565257992224943
+# voc_emergence.omicron.new_voc_seed.time_from_gisaid_report: -0.13669331477330954
 random_process.noise_sd: 0.5721052602308326
-random_process.delta_values(0): -0.6619724115041833
-random_process.delta_values(1): -0.07994508270389103
-random_process.delta_values(2): 0.3591138197213895
-random_process.delta_values(3): -0.1476263404061474
-random_process.delta_values(4): -0.020008574140779316
-random_process.delta_values(5): 0.13005928705013942
-random_process.delta_values(6): -0.2002791078129277
-random_process.delta_values(7): -0.04841494265511002
-random_process.delta_values(8): -0.020419987623162036
-random_process.delta_values(9): 0.16429664598299018
-random_process.delta_values(10): 0.018088352877984194
-random_process.delta_values(11): -0.30581797971795954
-random_process.delta_values(12): -0.04961904789282688
-random_process.delta_values(13): 0.08248320356661606
-random_process.delta_values(14): -0.007298998804378827
-random_process.delta_values(15): 0.06488968752879051
-random_process.delta_values(16): 0.08626941641771842
-random_process.delta_values(17): 0.13835642119992267
+# random_process.delta_values(0): -0.6619724115041833
+# random_process.delta_values(1): -0.07994508270389103
+# random_process.delta_values(2): 0.3591138197213895
+# random_process.delta_values(3): -0.1476263404061474
+# random_process.delta_values(4): -0.020008574140779316
+# random_process.delta_values(5): 0.13005928705013942
+# random_process.delta_values(6): -0.2002791078129277
+# random_process.delta_values(7): -0.04841494265511002
+# random_process.delta_values(8): -0.020419987623162036
+# random_process.delta_values(9): 0.16429664598299018
+# random_process.delta_values(10): 0.018088352877984194
+# random_process.delta_values(11): -0.30581797971795954
+# random_process.delta_values(12): -0.04961904789282688
+# random_process.delta_values(13): 0.08248320356661606
+# random_process.delta_values(14): -0.007298998804378827
+# random_process.delta_values(15): 0.06488968752879051
+# random_process.delta_values(16): 0.08626941641771842
+# random_process.delta_values(17): 0.13835642119992267
 infection_deaths_dispersion_param: 129.91380621308755

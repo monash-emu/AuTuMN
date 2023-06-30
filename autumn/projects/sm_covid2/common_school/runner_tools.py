@@ -243,7 +243,7 @@ def run_full_analysis(
     iso3, 
     analysis="main", 
     opti_params={'n_searches': 1, 'num_workers': 8, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
-    mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8},
+    mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8, 'method': 'DEMetropolis'},
     full_run_params={'samples': 100, 'burn_in': 0},
     output_folder="test_outputs",
     logger=None
@@ -311,7 +311,7 @@ def run_full_analysis(
     n_repeat_seed = int(mcmc_params['chains'] / opti_params['n_searches'])
     init_vals = [[best_p] * n_repeat_seed for i, best_p in best_params.items()]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
-    idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'])
+    idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'], method=mcmc_params['method'])
     idata.to_netcdf(os.path.join(output_folder, "idata.nc"))
     if logger:
         logger.info("... MCMC completed")

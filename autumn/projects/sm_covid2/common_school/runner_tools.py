@@ -13,6 +13,7 @@ import plotly.express as px
 
 from estival.wrappers import nevergrad as eng
 from estival.wrappers import pymc as epm
+from estival.utils.parallel import map_parallel
 
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
@@ -244,9 +245,9 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
 def run_full_analysis(
     iso3, 
     analysis="main", 
-    opti_params={'n_searches': 1, 'num_workers': 8, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
-    mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8, 'method': 'DEMetropolis'},
-    full_run_params={'samples': 100, 'burn_in': 0},
+    opti_params={'n_searches': 8, 'num_workers': 8, 'parallel_opti_jobs': 4, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
+    mcmc_params={'draws': 10000, 'tune': 1000, 'cores': 32, 'chains': 32, 'method': 'DEMetropolis'},
+    full_run_params={'samples': 1000, 'burn_in': 5000},
     output_folder="test_outputs",
     logger=None
 ):
@@ -277,12 +278,13 @@ def run_full_analysis(
     # Perform optimisation searches
     if logger:
         logger.info(f"Perform optimisation ({opti_params['n_searches']} searches)")
-    best_params = {}
-    for j, sample_dict in enumerate(sample_as_dicts):
-        if logger:
-            logger.info(f"Starting search #{j}")
+
+    def opti_func(sample_dict):
         best_p, _ = optimise_model_fit(bcm, num_workers=opti_params['num_workers'], warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'], suggested_start=sample_dict)
-        best_params[j] = best_p
+        return best_p
+
+    best_params = map_parallel(opti_func, sample_as_dicts, n_workers=opti_params['parallel_opti_jobs'])
+
     # Store optimal solutions
     with open(os.path.join(output_folder, "best_params.yml"), "w") as f:
         yaml.dump(best_params, f)
@@ -292,10 +294,10 @@ def run_full_analysis(
 
     # Plot optimal model fits
     os.makedirs(os.path.join(output_folder, "optimised_fits"), exist_ok=True)
-    for j, best_p in best_params.items():
+    for j, best_p in enumerate(best_params):
         plot_model_fit(bcm, best_p, os.path.join(output_folder, "optimised_fits", f"best_fit_{j}.png"))
 
-    plot_multiple_model_fits(bcm, [best_params[i] for i in best_params], os.path.join(output_folder, "optimal_fits.png"))
+    plot_multiple_model_fits(bcm, best_params, os.path.join(output_folder, "optimal_fits.png"))
 
     if logger:
         logger.info("... optimisation completed")

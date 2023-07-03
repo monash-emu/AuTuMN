@@ -15,7 +15,7 @@ def flatten_p_dict(p_dict):
 
 
 def plot_opti_params(sample_as_dicts, best_params, bcm, output_folder):
-    flat_best_params = {i: flatten_p_dict(p_dict) for i, p_dict in best_params.items()}
+    flat_best_params = {i: flatten_p_dict(p_dict) for i, p_dict in enumerate(best_params)}
 
     n_params = len(flat_best_params[0])
     n_samples = len(sample_as_dicts)

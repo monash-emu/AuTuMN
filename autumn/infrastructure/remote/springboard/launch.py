@@ -102,6 +102,32 @@ def launch_synced_multiple_autumn_task(
     return runners
 
 
+def launch_managed_instance(
+    mspec: EC2MachineSpec,
+    run_path: str,
+    job_id=None,
+    set_alarm=True,
+) -> SpringboardTaskRunner:
+    s3t = task.S3TaskManager(run_path)
+    if s3t.exists():
+        raise Exception("Task already exists", run_path)
+
+    s3t.set_status(TaskStatus.LAUNCHING)
+
+    if job_id is None:
+        job_id = run_path
+
+    rinst = aws.start_ec2_instance(mspec, job_id)
+    s3t.set_instance(rinst)
+
+    if set_alarm:
+        aws.set_cpu_termination_alarm(rinst["InstanceId"])
+
+    srunner = task.SpringboardTaskRunner(rinst, run_path)
+
+    return srunner
+
+
 def gen_run_name(description: str) -> str:
     """Generate a run name consisting of a timestamp and user supplied description
     This is used to generate an identifying segment of run_path, but should not

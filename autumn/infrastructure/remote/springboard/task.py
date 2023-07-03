@@ -78,6 +78,10 @@ class TaskBridge:
         sys.stderr.flush()
         self._storage.store(self._log_f)
 
+    def store_all(self):
+        self._storage.store(self.local_base / "output")
+        self._storage.store(self.local_base / "log")
+
 
 def test_stub_task(bridge: TaskBridge, **kwargs):
     """A simple validation stub, which serves as a reference for writing wrapped tasks

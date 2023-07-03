@@ -14,11 +14,15 @@ import plotly.express as px
 from estival.wrappers import nevergrad as eng
 from estival.wrappers import pymc as epm
 
+from estival.utils.parallel import map_parallel
+
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
 from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit, plot_multiple_model_fits
+from autumn.projects.sm_covid2.common_school.calibration_plots.mc_plots import make_post_mc_plots
+
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
 
 INCLUDED_COUNTRIES  = yaml.load(open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")), Loader=yaml.UnsafeLoader)
@@ -87,15 +91,14 @@ def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, met
     Functions related to post-calibration processes
 """
 
-def extract_sample_subset(idata, n_samples, burn_in):
+def extract_sample_subset(idata, n_samples, burn_in, chain_filter: list = None):
     chain_length = idata.sample_stats.sizes['draw']
-    n_chains = idata.sample_stats.sizes['chain']
-
     burnt_idata = idata.sel(draw=range(burn_in, chain_length))  # Discard burn-in
-    calib_df = burnt_idata.to_dataframe(groups="posterior")  # Also get as dataframe
+    
+    if chain_filter:
+        burnt_idata = burnt_idata.sel(chain=chain_filter)
 
     param_names = list(burnt_idata.posterior.data_vars.keys())
-
     sampled_idata = az.extract(burnt_idata, num_samples=n_samples)  # Sample from the inference data
     sampled_df = sampled_idata.to_dataframe()[param_names]
     
@@ -243,9 +246,9 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
 def run_full_analysis(
     iso3, 
     analysis="main", 
-    opti_params={'n_searches': 1, 'num_workers': 8, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
-    mcmc_params={'draws': 1000, 'tune': 1000, 'cores': 8, 'chains': 8},
-    full_run_params={'samples': 100, 'burn_in': 0},
+    opti_params={'n_searches': 8, 'num_workers': 8, 'parallel_opti_jobs': 4, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
+    mcmc_params={'draws': 10000, 'tune': 1000, 'cores': 32, 'chains': 32, 'method': 'DEMetropolis'},
+    full_run_params={'samples': 1000, 'burn_in': 5000},
     output_folder="test_outputs",
     logger=None
 ):
@@ -276,12 +279,13 @@ def run_full_analysis(
     # Perform optimisation searches
     if logger:
         logger.info(f"Perform optimisation ({opti_params['n_searches']} searches)")
-    best_params = {}
-    for j, sample_dict in enumerate(sample_as_dicts):
-        if logger:
-            logger.info(f"Starting search #{j}")
+
+    def opti_func(sample_dict):
         best_p, _ = optimise_model_fit(bcm, num_workers=opti_params['num_workers'], warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'], suggested_start=sample_dict)
-        best_params[j] = best_p
+        return best_p
+
+    best_params = map_parallel(opti_func, sample_as_dicts, n_workers=opti_params['parallel_opti_jobs'])
+
     # Store optimal solutions
     with open(os.path.join(output_folder, "best_params.yml"), "w") as f:
         yaml.dump(best_params, f)
@@ -291,10 +295,10 @@ def run_full_analysis(
 
     # Plot optimal model fits
     os.makedirs(os.path.join(output_folder, "optimised_fits"), exist_ok=True)
-    for j, best_p in best_params.items():
+    for j, best_p in enumerate(best_params):
         plot_model_fit(bcm, best_p, os.path.join(output_folder, "optimised_fits", f"best_fit_{j}.png"))
 
-    plot_multiple_model_fits(bcm, [best_params[i] for i in best_params], os.path.join(output_folder, "optimal_fits.png"))
+    plot_multiple_model_fits(bcm, best_params, os.path.join(output_folder, "optimal_fits.png"))
 
     if logger:
         logger.info("... optimisation completed")
@@ -310,10 +314,11 @@ def run_full_analysis(
         logger.info(f"Start MCMC for {mcmc_params['tune']} + {mcmc_params['draws']} iterations and {mcmc_params['chains']} chains...")
 
     n_repeat_seed = int(mcmc_params['chains'] / opti_params['n_searches'])
-    init_vals = [[best_p] * n_repeat_seed for i, best_p in best_params.items()]     
+    init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(best_params)]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
-    idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'])
+    idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'], method=mcmc_params['method'])
     idata.to_netcdf(os.path.join(output_folder, "idata.nc"))
+    make_post_mc_plots(idata, full_run_params['burn_in'], output_folder)
     if logger:
         logger.info("... MCMC completed")
     

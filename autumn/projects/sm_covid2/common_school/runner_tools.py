@@ -83,7 +83,7 @@ def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, met
 
     with pm.Model() as model:    
         variables = epm.use_model(bcm)
-        idata = pm.sample(step=[sampler(variables)], draws=draws, tune=tune, cores=cores,chains=chains, initvals=initvals)
+        idata = pm.sample(step=[sampler(variables)], draws=draws, tune=tune, cores=cores,chains=chains, initvals=initvals, progressbar=False)
 
     return idata
 

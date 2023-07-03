@@ -13,7 +13,8 @@ import plotly.express as px
 
 from estival.wrappers import nevergrad as eng
 from estival.wrappers import pymc as epm
-from estival.utils.parallel import map_parallel
+
+import estival
 
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
@@ -283,7 +284,7 @@ def run_full_analysis(
         best_p, _ = optimise_model_fit(bcm, num_workers=opti_params['num_workers'], warmup_iterations=opti_params['warmup_iterations'], search_iterations=opti_params['search_iterations'], suggested_start=sample_dict)
         return best_p
 
-    best_params = map_parallel(opti_func, sample_as_dicts, n_workers=opti_params['parallel_opti_jobs'])
+    best_params = estival.utils.parallel.map_parallel(opti_func, sample_as_dicts, n_workers=opti_params['parallel_opti_jobs'])
 
     # Store optimal solutions
     with open(os.path.join(output_folder, "best_params.yml"), "w") as f:

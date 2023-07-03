@@ -19,6 +19,8 @@ from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
 from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit, plot_multiple_model_fits
+from autumn.projects.sm_covid2.common_school.calibration_plots.mc_plots import make_post_mc_plots
+
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
 
 INCLUDED_COUNTRIES  = yaml.load(open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")), Loader=yaml.UnsafeLoader)
@@ -313,6 +315,7 @@ def run_full_analysis(
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
     idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'], method=mcmc_params['method'])
     idata.to_netcdf(os.path.join(output_folder, "idata.nc"))
+    make_post_mc_plots(idata, full_run_params['burn_in'], output_folder)
     if logger:
         logger.info("... MCMC completed")
     

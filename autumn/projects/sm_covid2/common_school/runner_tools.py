@@ -1,4 +1,3 @@
-import os
 import yaml
 import nevergrad as ng
 import pymc as pm
@@ -25,7 +24,11 @@ from autumn.projects.sm_covid2.common_school.calibration_plots.mc_plots import m
 
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
 
-INCLUDED_COUNTRIES  = yaml.load(open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")), Loader=yaml.UnsafeLoader)
+from pathlib import Path
+
+countries_path = Path(PROJECTS_PATH) / "sm_covid2" / "common_school" / "included_countries.yml"
+with countries_path.open() as f:
+    INCLUDED_COUNTRIES  = yaml.unsafe_load(f)
 
 """
     Functions related to model calibration
@@ -252,7 +255,8 @@ def run_full_analysis(
     output_folder="test_outputs",
     logger=None
 ):
-   
+    out_path = Path(output_folder)
+
     # Check that number of requested MCMC chains is a multiple of number of optimisation searches
     assert mcmc_params['chains'] % opti_params['n_searches'] == 0
 
@@ -273,7 +277,7 @@ def run_full_analysis(
         raise ValueError('init_method optimisation argument not supported')
         
     # Store starting points
-    with open(os.path.join(output_folder, "LHS_init_points.yml"), "w") as f:
+    with open(out_path / "LHS_init_points.yml", "w") as f:
         yaml.dump(sample_as_dicts, f)
 
     # Perform optimisation searches
@@ -287,18 +291,19 @@ def run_full_analysis(
     best_params = map_parallel(opti_func, sample_as_dicts, n_workers=opti_params['parallel_opti_jobs'])
 
     # Store optimal solutions
-    with open(os.path.join(output_folder, "best_params.yml"), "w") as f:
+    with open(out_path / "best_params.yml", "w") as f:
         yaml.dump(best_params, f)
     
     # Plot optimal solutions and starting points
     plot_opti_params(sample_as_dicts, best_params, bcm, output_folder)
 
     # Plot optimal model fits
-    os.makedirs(os.path.join(output_folder, "optimised_fits"), exist_ok=True)
+    opt_fits_path = out_path / "optimised_fits"
+    opt_fits_path.mkdir(exist_ok=True)
     for j, best_p in enumerate(best_params):
-        plot_model_fit(bcm, best_p, os.path.join(output_folder, "optimised_fits", f"best_fit_{j}.png"))
+        plot_model_fit(bcm, best_p, opt_fits_path / f"best_fit_{j}.png")
 
-    plot_multiple_model_fits(bcm, best_params, os.path.join(output_folder, "optimal_fits.png"))
+    plot_multiple_model_fits(bcm, best_params, out_path / "optimal_fits.png")
 
     if logger:
         logger.info("... optimisation completed")
@@ -317,7 +322,7 @@ def run_full_analysis(
     init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(best_params)]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
     idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'], method=mcmc_params['method'])
-    idata.to_netcdf(os.path.join(output_folder, "idata.nc"))
+    idata.to_netcdf(out_path / "idata.nc")
     make_post_mc_plots(idata, full_run_params['burn_in'], output_folder)
     if logger:
         logger.info("... MCMC completed")
@@ -335,8 +340,8 @@ def run_full_analysis(
     if logger:
         logger.info("Calculate quantiles") 
     uncertainty_df, diff_quantiles_df = get_quantile_outputs(outputs_df, diff_outputs_df)
-    uncertainty_df.to_parquet(os.path.join(output_folder, "uncertainty_df.parquet"))
-    diff_quantiles_df.to_parquet(os.path.join(output_folder, "diff_quantiles_df.parquet"))
+    uncertainty_df.to_parquet(out_path / "uncertainty_df.parquet")
+    diff_quantiles_df.to_parquet(out_path / "diff_quantiles_df.parquet")
 
     make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_folder)
 

@@ -6,6 +6,7 @@ import arviz as az
 import pandas as pd
 import numpy as np
 from scipy.stats import qmc
+from time import sleep
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -14,6 +15,8 @@ from estival.wrappers import nevergrad as eng
 from estival.wrappers import pymc as epm
 
 from estival.utils.parallel import map_parallel
+
+from autumn.core.runs import ManagedRun
 
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
@@ -346,3 +349,28 @@ def run_full_analysis(
     make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_folder)
 
     return idata, uncertainty_df, diff_quantiles_df
+
+
+"""
+    Helper functions for remote runs
+"""
+
+def print_continuous_status(runner, update_freq=30):
+    status = runner.s3.get_status()
+    print(status)
+
+    while status in ['INIT', 'LAUNCHING']:
+        sleep(update_freq)
+        status = runner.s3.get_status()
+    print(status)
+
+    while status in ['RUNNING']:
+        sleep(update_freq)
+        status = runner.s3.get_status()
+    print(status)
+
+
+def download_analysis(run_path):
+    mr = ManagedRun(run_path)
+    for f in mr.remote.list_contents():
+        mr.remote.download(f)

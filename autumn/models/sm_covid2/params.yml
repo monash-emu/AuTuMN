@@ -239,7 +239,7 @@ random_process:
   time: 
     start: 92  # 1 Apr 2020. Need to make sure this is greater than the seed time to prevent identifiability issues with contact rate
     end: 1096   # 731 31 Dec 2021   # 1096  # 31 Dec 2022
-    step: 90
+    step: 60
 
 requested_cumulative_outputs: ["incidence", "infection_deaths"]
 cumulative_start_time: 0.

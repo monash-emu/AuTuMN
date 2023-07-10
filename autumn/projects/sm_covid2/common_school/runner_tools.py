@@ -75,10 +75,7 @@ def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers:
 
     def country_opti_wrapper(iso3):
         bcm = get_bcm_object(iso3, analysis)
-        try:
-            best_p, _ = optimise_model_fit(bcm, num_workers=num_workers, warmup_iterations=0, search_iterations=search_iterations)
-        except:
-            best_p = None
+        best_p, _ = optimise_model_fit(bcm, num_workers=num_workers, warmup_iterations=0, search_iterations=search_iterations)        
         return best_p
 
     if logger:
@@ -88,30 +85,25 @@ def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers:
         logger.info("... optimisation complete.")
     
     best_params_dict = {iso3_list[i]: best_params[i] for i in range(len(iso3_list))}
-    issues_iso3s = [iso3 for iso3, best_p in best_params_dict.items() if best_p is None]
 
-    # Store optimal solutions and countries with issues
+    # Store optimal solutions
     if out_path:
         with open(out_path / "best_params_dict.yml", "w") as f:
             yaml.dump(best_params_dict, f)
-        with open(out_path / "issues_iso3s.yml", "w") as f:
-            yaml.dump(issues_iso3s, f)
-    
+     
     # plot optimal fits
     if not out_path:  # early return if no out_path specified
         return best_params
 
     if logger:
         logger.info("Start plotting optimal fits...")
-    iso3s_to_plot = [iso3 for iso3 in iso3_list if iso3 not in issues_iso3s]
-
     opt_fits_path = out_path / "optimised_fits"
     opt_fits_path.mkdir(exist_ok=True)
     def plot_wrapper(iso3):
         bcm = get_bcm_object(iso3, analysis)
         plot_model_fit(bcm, best_params_dict[iso3], opt_fits_path / f"best_fit_{iso3}.png")
 
-    map_parallel(plot_wrapper, iso3s_to_plot, n_workers=len(iso3s_to_plot))
+    map_parallel(plot_wrapper, iso3_list, n_workers=len(iso3s_to_plot))
     if logger:
         logger.info("... finished plotting")
 

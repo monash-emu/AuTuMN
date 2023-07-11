@@ -55,4 +55,5 @@ def map_parallel(run_func: Callable, input_iterator: Iterable, n_workers: int = 
         initargs=(cloudpickle.dumps(run_func),),
     ) as pool:
         pres = pool.map(generic_cpkl_worker, input_iterator)
+        pres = list(pres)
     return pres

@@ -48,12 +48,15 @@ def map_parallel(run_func: Callable, input_iterator: Iterable, n_workers: int = 
     if n_workers is None:
         n_workers = int(cpu_count() / 2)
 
-    with ProcessPoolExecutor(
+    pool = ProcessPoolExecutor(
         n_workers,
         get_context("spawn"),
         initializer=process_init_cloudpickle,
         initargs=(cloudpickle.dumps(run_func),),
-    ) as pool:
-        pres = pool.map(generic_cpkl_worker, input_iterator)
-        pres = list(pres)
+    )
+
+    pres = pool.map(generic_cpkl_worker, input_iterator)
+    pres = list(pres)
+    pool.shutdown(wait=False)
+
     return pres

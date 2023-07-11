@@ -56,7 +56,13 @@ def map_parallel(run_func: Callable, input_iterator: Iterable, n_workers: int = 
     )
 
     pres = pool.map(generic_cpkl_worker, input_iterator)
-    pres = list(pres)
+    print("map returned")
+    pres_list = []
+    for res in pres:
+        print(res)
+        pres_list.append(res)
+    print("generator->list complete")
     pool.shutdown(wait=False)
+    print("pool shutdown complete")
 
-    return pres
+    return pres_list

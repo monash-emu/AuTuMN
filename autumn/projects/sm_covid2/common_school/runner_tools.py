@@ -67,6 +67,7 @@ def sample_with_lhs(n_samples, bcm):
 
 def optimise_model_fit(
     bcm,
+    iso3,
     num_workers: int = 8,
     warmup_iterations: int = 2000,
     search_iterations: int = 5000,
@@ -77,12 +78,22 @@ def optimise_model_fit(
         bcm, obj_function=bcm.loglikelihood, suggested=suggested_start, num_workers=num_workers
     )
 
+    print(f"Optimizer built for {iso3}")
+
     # Run warm-up iterations and
     if warmup_iterations > 0:
         res = opt.minimize(warmup_iterations)
 
-    res = opt.minimize(search_iterations)
-    best_params = res.value[1]
+    try:
+        print(f"Minimizing {iso3}")
+        res = opt.minimize(search_iterations)
+        print(f"Minimize {iso3} complete")
+        print(f"Results ({iso3}) ", res)
+        best_params = res.value[1]
+    except Exception as e:
+        print(f"Exception for {iso3}")
+        print(e)
+        best_params = {}
 
     # return optimal parameters and optimisation object in case we want to resume the search afterwards
     return best_params, opt
@@ -101,13 +112,18 @@ def multi_country_optimise(
         print(f"Optimising for {iso3}")
         bcm = get_bcm_object(iso3, analysis)
         best_p, _ = optimise_model_fit(
-            bcm, num_workers=num_workers, warmup_iterations=0, search_iterations=search_iterations
+            bcm,
+            iso3,
+            num_workers=num_workers,
+            warmup_iterations=0,
+            search_iterations=search_iterations,
         )
         return iso3, best_p
 
     logger.info(f"Starting optimisation for {len(iso3_list)} countries...")
     best_params_iter = map_parallel(country_opti_wrapper, iso3_list, n_workers=parallel_opti_jobs)
 
+    print("Optimisation complete")
     logger.info("... optimisation complete.")
 
     # best_params_dict = {iso3_list[i]: best_params[i] for i in range(len(iso3_list))}

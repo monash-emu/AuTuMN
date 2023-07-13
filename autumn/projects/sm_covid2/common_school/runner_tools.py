@@ -30,6 +30,7 @@ from autumn.projects.sm_covid2.common_school.calibration_plots.mc_plots import m
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
 
 from pathlib import Path
+from multiprocessing import cpu_count
 
 countries_path = Path(PROJECTS_PATH) / "sm_covid2" / "common_school" / "included_countries.yml"
 with countries_path.open() as f:
@@ -107,11 +108,12 @@ def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers:
         bcm = get_bcm_object(iso3, analysis)
         plot_model_fit(bcm, best_params_dict[iso3], opt_fits_path / f"best_fit_{iso3}.png")
 
-    map_parallel(plot_wrapper, iso3_list, n_workers=len(iso3_list))
+    n_workers = cpu_count()
+    map_parallel(plot_wrapper, iso3_list, n_workers=n_workers)
     if logger:
         logger.info("... finished plotting")
 
-    return best_params
+    return best_params_dict
 
 def resume_opti_search(opt, extra_iterations: int = 5000):
 

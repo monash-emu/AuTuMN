@@ -73,41 +73,43 @@ def optimise_model_fit(bcm, num_workers: int = 8, warmup_iterations: int = 2000,
     return best_params, opt
 
 
-def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers: int = 8, search_iterations: int = 7000, parallel_opti_jobs: int = 4, logger=None, out_path: str = None, opt_class=ng.optimizers.NGOpt):
+def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers: int = 8, search_iterations: int = 7000, parallel_opti_jobs: int = 4, logger=None, out_path: str = None, opt_class=ng.optimizers.NGOpt, best_params_dict=None):
 
-    def country_opti_wrapper(iso3):
+    # perform optimisation unless best params are already provided
+    if not best_params_dict:
+        def country_opti_wrapper(iso3):
+            bcm = get_bcm_object(iso3, analysis)
+            best_p, _ = optimise_model_fit(bcm, num_workers=num_workers, warmup_iterations=0, search_iterations=search_iterations, opt_class=opt_class)                
+            return best_p
+
+        if logger:
+            logger.info(f"Starting optimisation for {len(iso3_list)} countries...")
+        best_params = map_parallel(country_opti_wrapper, iso3_list, n_workers=parallel_opti_jobs)
+        if logger:
+            logger.info("... optimisation complete.")
+        
+        best_params_dict = {iso3_list[i]: best_params[i] for i in range(len(iso3_list))}
+
+        # Store optimal solutions
+        if out_path:
+            with open(out_path / "best_params_dict.yml", "w") as f:
+                yaml.dump(best_params_dict, f)
+        
+        # plot optimal fits
+        if not out_path:  # early return if no out_path specified
+            return best_params
+
+    if logger:
+        logger.info("Start plotting optimal fits...")
+    opt_fits_path = out_path / "optimised_fits"
+    opt_fits_path.mkdir(exist_ok=True)
+    def plot_wrapper(iso3):
         bcm = get_bcm_object(iso3, analysis)
-        best_p, _ = optimise_model_fit(bcm, num_workers=num_workers, warmup_iterations=0, search_iterations=search_iterations, opt_class=opt_class)                
-        return best_p
+        plot_model_fit(bcm, best_params_dict[iso3], opt_fits_path / f"best_fit_{iso3}.png")
 
+    map_parallel(plot_wrapper, iso3_list, n_workers=len(iso3_list))
     if logger:
-        logger.info(f"Starting optimisation for {len(iso3_list)} countries...")
-    best_params = map_parallel(country_opti_wrapper, iso3_list, n_workers=parallel_opti_jobs)
-    if logger:
-        logger.info("... optimisation complete.")
-    
-    best_params_dict = {iso3_list[i]: best_params[i] for i in range(len(iso3_list))}
-
-    # Store optimal solutions
-    if out_path:
-        with open(out_path / "best_params_dict.yml", "w") as f:
-            yaml.dump(best_params_dict, f)
-     
-    # plot optimal fits
-    # if not out_path:  # early return if no out_path specified
-    #     return best_params
-
-    # if logger:
-    #     logger.info("Start plotting optimal fits...")
-    # opt_fits_path = out_path / "optimised_fits"
-    # opt_fits_path.mkdir(exist_ok=True)
-    # def plot_wrapper(iso3):
-    #     bcm = get_bcm_object(iso3, analysis)
-    #     plot_model_fit(bcm, best_params_dict[iso3], opt_fits_path / f"best_fit_{iso3}.png")
-
-    # map_parallel(plot_wrapper, iso3_list, n_workers=len(iso3_list))
-    # if logger:
-    #     logger.info("... finished plotting")
+        logger.info("... finished plotting")
 
     return best_params
 

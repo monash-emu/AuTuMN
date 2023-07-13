@@ -77,7 +77,7 @@ def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers:
 
     def country_opti_wrapper(iso3):
         bcm = get_bcm_object(iso3, analysis)
-        best_p, _ = optimise_model_fit(bcm, num_workers=num_workers, warmup_iterations=0, search_iterations=search_iterations, opt_class=opt_class)        
+        best_p, _ = optimise_model_fit(bcm, num_workers=num_workers, warmup_iterations=0, search_iterations=search_iterations, opt_class=opt_class)                
         return best_p
 
     if logger:
@@ -94,20 +94,20 @@ def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers:
             yaml.dump(best_params_dict, f)
      
     # plot optimal fits
-    if not out_path:  # early return if no out_path specified
-        return best_params
+    # if not out_path:  # early return if no out_path specified
+    #     return best_params
 
-    if logger:
-        logger.info("Start plotting optimal fits...")
-    opt_fits_path = out_path / "optimised_fits"
-    opt_fits_path.mkdir(exist_ok=True)
-    def plot_wrapper(iso3):
-        bcm = get_bcm_object(iso3, analysis)
-        plot_model_fit(bcm, best_params_dict[iso3], opt_fits_path / f"best_fit_{iso3}.png")
+    # if logger:
+    #     logger.info("Start plotting optimal fits...")
+    # opt_fits_path = out_path / "optimised_fits"
+    # opt_fits_path.mkdir(exist_ok=True)
+    # def plot_wrapper(iso3):
+    #     bcm = get_bcm_object(iso3, analysis)
+    #     plot_model_fit(bcm, best_params_dict[iso3], opt_fits_path / f"best_fit_{iso3}.png")
 
-    map_parallel(plot_wrapper, iso3_list, n_workers=len(iso3_list))
-    if logger:
-        logger.info("... finished plotting")
+    # map_parallel(plot_wrapper, iso3_list, n_workers=len(iso3_list))
+    # if logger:
+    #     logger.info("... finished plotting")
 
     return best_params
 

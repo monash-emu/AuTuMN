@@ -58,10 +58,11 @@ def sample_with_lhs(n_samples, bcm):
     return sample_as_dicts
 
 
-def optimise_model_fit(bcm, num_workers: int = 8, warmup_iterations: int = 2000, search_iterations: int = 5000, suggested_start: dict = None, opt_class=ng.optimizers.NGOpt):
+def optimise_model_fit(bcm, num_workers: int = 8, warmup_iterations: int = 0, search_iterations: int = 5000, suggested_start: dict = None, opt_class=ng.optimizers.CMA):
 
     # Build optimizer
-    opt = eng.optimize_model(bcm, obj_function=bcm.loglikelihood, suggested=suggested_start, num_workers=num_workers, opt_class=opt_class)
+    full_budget = warmup_iterations + search_iterations
+    opt = eng.optimize_model(bcm, obj_function=bcm.loglikelihood, suggested=suggested_start, num_workers=num_workers, opt_class=opt_class, budget=full_budget)
 
     # Run warm-up iterations and 
     if warmup_iterations > 0:
@@ -74,7 +75,7 @@ def optimise_model_fit(bcm, num_workers: int = 8, warmup_iterations: int = 2000,
     return best_params, opt
 
 
-def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers: int = 8, search_iterations: int = 7000, parallel_opti_jobs: int = 4, logger=None, out_path: str = None, opt_class=ng.optimizers.NGOpt, best_params_dict=None):
+def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers: int = 8, search_iterations: int = 7000, parallel_opti_jobs: int = 4, logger=None, out_path: str = None, opt_class=ng.optimizers.CMA, best_params_dict=None):
 
     # perform optimisation unless best params are already provided
     if not best_params_dict:

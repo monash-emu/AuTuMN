@@ -35,9 +35,12 @@ The function $s$ is derived from the UNESCO database on school closures since th
 This database provides school opening status over time as a categorical variable taking the following values: ``Fully open'', ``Partially open'', ``Academic break'', ``Closed due to COVID-19''.
 Table \ref{tab:unesco_categories} indicates how the different categorical values are converted into the numerical function $s$.
 
+\vspace{5pt}
 \begin{table}[ht]  
   \begin{center}
-      \begin{tabular}{p{5cm} | p{5cm}}
+    \caption{Assumed percentage of students on-site for the different UNESCO school closure categories.}
+    \label{tab:unesco_categories}
+    \begin{tabular}{p{5cm} | p{5cm}}
           \hline
           \textbf{UNESCO category} & \textbf{Assumed proportion of students on-site ($s(t)$)} \\
           \hline
@@ -48,8 +51,6 @@ Table \ref{tab:unesco_categories} indicates how the different categorical values
           \hline
       \end{tabular}
     \end{center}
-      \caption{Assumed percentage of students on-site for the different UNESCO school closure categories.}
-      \label{tab:unesco_categories}
   \end{table}
 
 We included uncertainty around the value associated with the partial closure category, as there is no quantitative data available to 

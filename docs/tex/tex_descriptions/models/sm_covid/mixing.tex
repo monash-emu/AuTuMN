@@ -73,7 +73,7 @@ Figure \ref{fig:unesco} summarises the UNESCO data on school closure for the ana
 \vspace{5pt}
 \textbf{Dynamic mobility outside of schools and homes}
 
-Changes to people's mobility in places other than schools and homes are modelled using Google Mobility data. We use the ``Workplace''
+Changes to people's mobility in places other than schools and homes are modelled using Google Mobility data, after applying a seven-day moving average smoothing. We use the ``Workplace''
 category of the Google data to scale the work-related matrix contribution $C_W$ to overall mixing over time, using the adjusting function
 $w$. The ``other locations'' matrix $C_L$ is scaled through the adjusting function $l$ which is defined as the average of the Google mobility
 indicators across the following Google categories: ``Retail and recreation'', ``Grocery and pharmacy'' and ``Transit stations''.

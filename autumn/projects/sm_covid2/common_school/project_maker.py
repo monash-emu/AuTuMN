@@ -359,9 +359,8 @@ def get_school_project_priors(first_date_with_death):
     """
 
     # Work out max infectious seeding time so transmission starts before first observed deaths
-    min_seed_time = 0.0
+    min_seed_time = first_date_with_death - 100
     max_seed_time = first_date_with_death - 1
-    assert max_seed_time > min_seed_time, "Max seed time is lower than min seed time."
 
     priors = [
         UniformPrior("contact_rate", [0.01, 0.1]),

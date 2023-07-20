@@ -68,10 +68,11 @@ def plot_opti_params(sample_as_dicts, best_params, bcm, output_folder):
         if i_row == n_rows:
             i_row = 0
             i_col += 1
-
-    for remain_i_row in range(i_row, n_rows):
-        ax = axs[remain_i_row, i_col]
-        ax.set_visible(False)
+            
+    if i_row > 0:
+        for remain_i_row in range(i_row, n_rows):
+            ax = axs[remain_i_row, i_col]
+            ax.set_visible(False)
 
     fig.tight_layout()
    

@@ -120,6 +120,42 @@ def plot_model_fit(bcm, params, outfile=None):
     return fig
 
 
+def plot_model_fit_with_ll(bcm, params, outfile=None):
+    REF_DATE = datetime.date(2019,12,31)
+
+    targets = {}
+    for output in bcm.targets:
+        t = copy(bcm.targets[output].data)
+        t.index = ref_times_to_dti(REF_DATE, t.index)
+        targets[output] = t
+
+    run_model = bcm.run(params)
+    ll = bcm.loglikelihood(**params)  # not ideal...
+
+    fig, death_ax = plt.subplots(1, 1, figsize=(25, 10))
+
+    # Deaths
+    run_model.derived_outputs["infection_deaths"].plot(ax=death_ax, ylabel="COVID-19 deaths", label='model')
+    targets["infection_deaths"].plot(style='.', ax=death_ax, color='black', label='data')
+    plt.text(0.8, 0.9, f"ll={round(ll, 4)}", transform=death_ax.transAxes)
+
+
+    n = params['infection_deaths_dispersion_param']
+    for t in targets["infection_deaths"].index:
+        mu = run_model.derived_outputs["infection_deaths"].loc[t]
+
+        p = mu / (mu + n)
+
+        ci = stats.nbinom.ppf([.025, .975], n, 1.0 - p)
+        plt.plot((t, t), ci, color="grey")
+
+        ci = stats.nbinom.ppf([.25, .75], n, 1.0 - p)
+        plt.plot((t, t), ci, color="red", lw=2)
+        
+    death_ax.legend()
+    return fig
+
+
 def plot_multiple_model_fits(bcm, params_list, outfile=None):
     REF_DATE = datetime.date(2019,12,31)
 

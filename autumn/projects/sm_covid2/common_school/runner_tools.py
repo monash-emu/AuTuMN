@@ -30,6 +30,7 @@ from autumn.projects.sm_covid2.common_school.calibration_plots.mc_plots import m
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
 
 from pathlib import Path
+import os
 from multiprocessing import cpu_count
 
 countries_path = Path(PROJECTS_PATH) / "sm_covid2" / "common_school" / "included_countries.yml"
@@ -415,7 +416,11 @@ def print_continuous_status(runner, update_freq=30):
     print(status)
 
 
-def download_analysis(run_path):
+def download_analysis(run_path, open_out_dir=True):
     mr = ManagedRun(run_path)
     for f in mr.remote.list_contents():
         mr.remote.download(f)
+
+    if open_out_dir:
+        local_outpath = Path.home() / "Models" / "AuTuMN_new" / "data" / "outputs" / "runs" / run_path 
+        os.startfile(local_outpath)

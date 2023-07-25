@@ -45,6 +45,20 @@ def gen_autumn_run_bash(
         """
         return textwrap.dedent(testbad)
 
+    if branch is None:
+        git_script = []
+    else:
+        git_script = [
+            "git fetch",
+            test_to_exit("git fetch"),
+            f"git checkout {branch}",
+            test_to_exit("git checkout"),
+            "git pull",
+            test_to_exit("git pull"),
+            "pip install -r requirements/requirements310.txt",
+            test_to_exit("pip install"),
+        ]
+
     script = [
         "#!/bin/bash\n",
         define_dump_io,
@@ -53,16 +67,7 @@ def gen_autumn_run_bash(
         conda_preamble,
         # "echo BASHENTRY > STATUS\n",
         # f"aws s3 cp STATUS s3://autumn-data/{run_path}/STATUS\n",
-        "git fetch",
-        test_to_exit("git fetch"),
-        f"git checkout {branch}",
-        test_to_exit("git checkout"),
-        "git pull",
-        test_to_exit("git pull"),
-        # "echo GITCOMPLETE > STATUS\n",
-        # f"aws s3 cp STATUS s3://autumn-data/{run_path}/STATUS\n",
-        "pip install -r requirements/requirements310.txt",
-        test_to_exit("pip install"),
+        *git_script,
         cd_base_path,
         *extra_commands,
         f"echo Launching python task on {run_path}",

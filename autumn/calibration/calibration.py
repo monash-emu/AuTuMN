@@ -192,13 +192,13 @@ class Calibration:
 
         # add prior for noise sd
 
-        self.all_priors.append(
-            {
-                "param_name": "random_process.noise_sd",
-                "distribution": "uniform",
-                "distri_params": [0.1, 1.0],
-            }
-        )
+        # self.all_priors.append(
+        #     {
+        #         "param_name": "random_process.noise_sd",
+        #         "distribution": "uniform",
+        #         "distri_params": [0.49, .51],
+        #     }
+        # )
 
         # add priors for rp values
         n_delta_values = len(self.random_process.delta_values)
@@ -452,7 +452,7 @@ class Calibration:
                     proposed_params[f"random_process.coefficients({i})"]
                     for i in range(self.random_process.order)
                 ]
-            self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
+            # self.random_process.noise_sd = proposed_params["random_process.noise_sd"]
             self.random_process.delta_values = [
                 proposed_params[f"random_process.delta_values({k})"]
                 for k in range(len(self.random_process.delta_values))

@@ -5,6 +5,9 @@ from summer.utils import ref_times_to_dti
 import datetime
 from copy import copy
 
+from autumn.models.sm_covid2.stratifications.strains import get_first_variant_report_date
+
+
 def flatten_p_dict(p_dict):
     flat_dict = {p: val for p, val in p_dict.items() if p != 'random_process.delta_values'}
     rpdv = p_dict['random_process.delta_values']
@@ -81,7 +84,7 @@ def plot_opti_params(sample_as_dicts, best_params, bcm, output_folder):
     plt.close()
 
 
-def plot_model_fit(bcm, params, outfile=None):
+def plot_model_fit(bcm, params, iso3, outfile=None):
     REF_DATE = datetime.date(2019,12,31)
 
     targets = {}
@@ -100,6 +103,16 @@ def plot_model_fit(bcm, params, outfile=None):
     run_model.derived_outputs["infection_deaths"].plot(ax=death_ax, ylabel="COVID-19 deaths")
     targets["infection_deaths"].plot(style='.', ax=death_ax)
     plt.text(0.8, 0.9, f"ll={round(ll, 4)}", transform=death_ax.transAxes)
+    # Add VoC emergence
+    ax_ymax = death_ax.get_ylim()[1]
+    for voc_name in ("delta", "omicron"):
+        d = get_first_variant_report_date(voc_name, iso3)
+        death_ax.annotate(
+            voc_name.title(), 
+            xy=(d, 0.), 
+            xytext=(d, ax_ymax*.15),      
+            arrowprops=dict(facecolor='black', shrink=0.05, width=1, headwidth=6, headlength=5) 
+        )
 
     # Random Process
     run_model.derived_outputs["transformed_random_process"].plot(ax=rp_ax, ylabel="Random Process")

@@ -34,10 +34,10 @@ def get_estival_uniform_priors(autumn_priors):
     return estival_priors
 
 
-def make_rp_loglikelihood_func(len_rp_delta_values):
+def make_rp_loglikelihood_func(len_rp_delta_values, rp_noise_sd):
 
     def rp_loglikelihood(params):
-        sigma_square = params['random_process.noise_sd'] ** 2
+        sigma_square = rp_noise_sd ** 2
         sum_of_squares = jnp.sum(jnp.square(params['random_process.delta_values']))
         n = len_rp_delta_values
         
@@ -75,7 +75,10 @@ def get_bcm_object(iso3, analysis="main"):
 
     default_params = m.builder.get_default_parameters()
 
-    rp_ll = make_rp_loglikelihood_func(len(default_params['random_process.delta_values']))
+    rp_ll = make_rp_loglikelihood_func(
+        len(default_params['random_process.delta_values']), 
+        project.param_set.baseline['random_process']['noise_sd']
+    )
     bcm = BayesianCompartmentalModel(m, default_params, priors, targets, extra_ll=rp_ll)
 
     return bcm

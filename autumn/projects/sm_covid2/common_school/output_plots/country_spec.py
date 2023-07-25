@@ -109,7 +109,7 @@ def add_school_closure_patches(ax, iso3, ymax, school_colors=SCHOOL_COLORS):
     ax.vlines(closed_dates_str, ymin=0, ymax=ymax, lw=1, alpha=1, color=school_colors['full'], zorder = 1)
 
 
-def plot_model_fit(axis, uncertainty_df, output_name, iso3):
+def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3):
 
     bcm = get_bcm_object(iso3, "main")
 
@@ -336,7 +336,7 @@ def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_f
     inner_left_grid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=left_grid, hspace=.15, height_ratios=(1, 1, 1))
     # calibration
     ax2 = fig.add_subplot(inner_left_grid[0, 0])
-    plot_model_fit(ax2, uncertainty_df, "infection_deaths", iso3)
+    plot_model_fit_with_uncertainty(ax2, uncertainty_df, "infection_deaths", iso3)
     format_date_axis(ax2)
     remove_axes_box(ax2)
     # plt.setp(ax2.get_xticklabels(), visible=False)

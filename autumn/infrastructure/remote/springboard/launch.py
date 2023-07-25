@@ -23,6 +23,7 @@ def launch_synced_autumn_task(
     branch="master",
     job_id=None,
     set_alarm=True,
+    extra_commands=None,
 ) -> SpringboardTaskRunner:
     s3t = task.S3TaskManager(run_path)
     if s3t.exists():
@@ -40,7 +41,7 @@ def launch_synced_autumn_task(
         aws.set_cpu_termination_alarm(rinst["InstanceId"])
 
     srunner = task.SpringboardTaskRunner(rinst, run_path)
-    script = scripting.gen_autumn_run_bash(run_path, branch)
+    script = scripting.gen_autumn_run_bash(run_path, branch, extra_commands=extra_commands)
 
     s3t._write_taskdata("taskscript.sh", script)
 

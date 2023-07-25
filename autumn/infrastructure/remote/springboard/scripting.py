@@ -9,6 +9,7 @@ def gen_autumn_run_bash(
     branch: str,
     shutdown: bool = True,
     bucket: PurePosixPath = PurePosixPath("autumn-data"),
+    extra_commands=None,
 ) -> List[str]:
     define_dump_io = f"""
     write_ios_s3 () {{
@@ -17,6 +18,9 @@ def gen_autumn_run_bash(
     """
 
     define_dump_io = textwrap.dedent(define_dump_io)
+
+    if extra_commands is None:
+        extra_commands = []
 
     set_base_path = "export BASE_PATH=$PWD"
     cd_base_path = "cd $BASE_PATH"
@@ -60,6 +64,7 @@ def gen_autumn_run_bash(
         "pip install -r requirements/requirements310.txt",
         test_to_exit("pip install"),
         cd_base_path,
+        *extra_commands,
         f"echo Launching python task on {run_path}",
         f"python -m autumn tasks springboard --run {run_path}",
         test_to_exit("run python task"),

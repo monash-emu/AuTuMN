@@ -209,7 +209,7 @@ class SpringboardTaskRunner:
         self.run_path = run_path
         self.cres = None
         self.instance = rinst
-        self.shutdown = shutdown
+        self._shutdown = shutdown
         self._logger = logging.getLogger("springboard")
 
     def _script_callback(self, script_path):
@@ -231,7 +231,7 @@ class SpringboardTaskRunner:
             if task_spec is not None:
                 process_dumpbin(task_spec, cloudpickle.dump, self._taskpkl_callback)
         except Exception as e:
-            if self.shutdown:
+            if self._shutdown:
                 self._logger.error("Processing remote script failed, shutting down remote machine")
                 self.sshr.run("sudo shutdown now")
             raise e
@@ -276,6 +276,12 @@ class SpringboardTaskRunner:
             A string capturing the stdout of the top command
         """
         return self.sshr.run(f"top -b -n 1 -o {sort_key}").stdout
+
+    def terminate(self):
+        """
+        Immediately terminate a remote run - no logs or data will be persisted
+        """
+        return self.sshr.run("sudo shutdown now")
 
     def wait(self, freq: int = 5, maxtime: int = 60 * 60) -> str:
         """Wait for a task to complete

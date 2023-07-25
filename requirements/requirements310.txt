@@ -12,7 +12,7 @@
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
 summerepi==3.6.4
-summerepi2==1.2.6
+summerepi2==1.2.8
 
 estival==0.3.3
 

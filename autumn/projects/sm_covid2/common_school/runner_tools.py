@@ -108,7 +108,7 @@ def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers:
     opt_fits_path.mkdir(exist_ok=True)
     def plot_wrapper(iso3):
         bcm = get_bcm_object(iso3, analysis)
-        plot_model_fit(bcm, best_params_dict[iso3], opt_fits_path / f"best_fit_{iso3}.png")
+        plot_model_fit(bcm, best_params_dict[iso3], iso3, opt_fits_path / f"best_fit_{iso3}.png")
 
     n_workers = cpu_count()
     map_parallel(plot_wrapper, iso3_list, n_workers=n_workers)
@@ -350,7 +350,7 @@ def run_full_analysis(
     opt_fits_path = out_path / "optimised_fits"
     opt_fits_path.mkdir(exist_ok=True)
     for j, best_p in enumerate(best_params):
-        plot_model_fit(bcm, best_p, opt_fits_path / f"best_fit_{j}.png")
+        plot_model_fit(bcm, best_p, iso3, opt_fits_path / f"best_fit_{j}.png")
 
     plot_multiple_model_fits(bcm, best_params, out_path / "optimal_fits.png")
 

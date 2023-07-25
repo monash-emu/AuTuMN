@@ -363,7 +363,7 @@ def get_school_project_priors(first_date_with_death):
     max_seed_time = first_date_with_death - 1
 
     priors = [
-        UniformPrior("contact_rate", [0.01, 0.1]),
+        UniformPrior("contact_rate", [0.01, 0.06]),
         UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
         UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
         # UniformPrior("sojourns.active", [4., 10.]),

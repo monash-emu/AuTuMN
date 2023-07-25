@@ -77,7 +77,6 @@ boto3==1.21.29
 timeago
 click
 tabulate
-awscli==1.22.84
 fabric
 s3fs==0.4.2
 parallel-ssh

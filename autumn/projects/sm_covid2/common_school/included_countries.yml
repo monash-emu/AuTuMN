@@ -18,17 +18,22 @@ all:
   CHL: Chile
   CHN: China
   CMR: Cameroon
+  COD: Congo, The Democratic Republic of the
   COL: Colombia
   CRI: Costa Rica
   CZE: Czechia
+  DEU: Germany
   DNK: Denmark
   DOM: Dominican Republic
+  DZA: Algeria
   ECU: Ecuador
+  EGY: Egypt
   ESP: Spain
   EST: Estonia
   ETH: Ethiopia
   FIN: Finland
   FRA: France
+  GBR: United Kingdom
   GEO: Georgia
   GHA: Ghana
   GRC: Greece
@@ -37,6 +42,8 @@ all:
   HND: Honduras
   HRV: Croatia
   HUN: Hungary
+  IDN: Indonesia
+  IND: India
   IRL: Ireland
   IRN: Iran, Islamic Republic of
   IRQ: Iraq
@@ -57,6 +64,7 @@ all:
   LVA: Latvia
   MAR: Morocco
   MDA: Moldova, Republic of
+  MEX: Mexico
   MKD: North Macedonia
   MMR: Myanmar
   MNE: Montenegro
@@ -81,7 +89,9 @@ all:
   PRY: Paraguay
   ROU: Romania
   RUS: Russian Federation
+  RWA: Rwanda
   SAU: Saudi Arabia
+  SEN: Senegal
   SGP: Singapore
   SLV: El Salvador
   SRB: Serbia
@@ -93,10 +103,12 @@ all:
   SYR: Syrian Arab Republic
   THA: Thailand
   TTO: Trinidad and Tobago
+  TUN: Tunisia
   TUR: Turkey
   UGA: Uganda
   UKR: Ukraine
   URY: Uruguay
+  USA: United States
   VEN: Venezuela, Bolivarian Republic of
   VNM: Viet Nam
   ZAF: South Africa
@@ -121,13 +133,16 @@ google_mobility:
   COL: Colombia
   CRI: Costa Rica
   CZE: Czechia
+  DEU: Germany
   DNK: Denmark
   DOM: Dominican Republic
   ECU: Ecuador
+  EGY: Egypt
   ESP: Spain
   EST: Estonia
   FIN: Finland
   FRA: France
+  GBR: United Kingdom
   GEO: Georgia
   GHA: Ghana
   GRC: Greece
@@ -135,6 +150,8 @@ google_mobility:
   HND: Honduras
   HRV: Croatia
   HUN: Hungary
+  IDN: Indonesia
+  IND: India
   IRL: Ireland
   IRQ: Iraq
   ISR: Israel
@@ -154,6 +171,7 @@ google_mobility:
   LVA: Latvia
   MAR: Morocco
   MDA: Moldova, Republic of
+  MEX: Mexico
   MKD: North Macedonia
   MMR: Myanmar
   MNG: Mongolia
@@ -175,7 +193,9 @@ google_mobility:
   PRY: Paraguay
   ROU: Romania
   RUS: Russian Federation
+  RWA: Rwanda
   SAU: Saudi Arabia
+  SEN: Senegal
   SGP: Singapore
   SLV: El Salvador
   SRB: Serbia
@@ -188,6 +208,7 @@ google_mobility:
   UGA: Uganda
   UKR: Ukraine
   URY: Uruguay
+  USA: United States
   VEN: Venezuela, Bolivarian Republic of
   VNM: Viet Nam
   ZAF: South Africa
@@ -202,15 +223,18 @@ national_sero:
   CHL: Chile
   COL: Colombia
   CZE: Czechia
+  DEU: Germany
   DNK: Denmark
   ECU: Ecuador
   ESP: Spain
   EST: Estonia
   ETH: Ethiopia
   FRA: France
+  GBR: United Kingdom
   HND: Honduras
   HRV: Croatia
   HUN: Hungary
+  IND: India
   IRN: Iran, Islamic Republic of
   ISR: Israel
   ITA: Italy
@@ -220,6 +244,7 @@ national_sero:
   KOR: Korea, Republic of
   LBN: Lebanon
   LTU: Lithuania
+  MEX: Mexico
   MNG: Mongolia
   MWI: Malawi
   NOR: Norway
@@ -227,8 +252,10 @@ national_sero:
   OMN: Oman
   PAK: Pakistan
   PRT: Portugal
+  SEN: Senegal
   SGP: Singapore
   SVN: Slovenia
   SWE: Sweden
+  USA: United States
   ZAF: South Africa
   ZMB: Zambia

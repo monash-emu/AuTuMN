@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import date
+from datetime import datetime
 from summer2 import CompartmentalModel, Stratification, Multiply, StrainStratification, Overwrite
 from summer2.parameters import Function, Time
 from typing import Dict, Union, List
@@ -107,8 +107,8 @@ def get_first_variant_report_date(variant: str, iso3: str):
     }
 
     variants_global_emergence_date = {
-        "delta": date(2020, 10, 1),  # October 2020 according to WHO
-        "omicron": date(2021, 11, 1),  # November 2021 according to WHO
+        "delta": datetime(2020, 10, 1),  # October 2020 according to WHO
+        "omicron": datetime(2021, 11, 1),  # November 2021 according to WHO
     }
 
     assert variant in variants_map, f"Variant {variant} not available from current GISAID database"
@@ -120,15 +120,13 @@ def get_first_variant_report_date(variant: str, iso3: str):
         columns=["Week prior to"],
     )["Week prior to"]
 
+    # truncate data to retain only dates after WHO detection
+    report_dates = report_dates[report_dates >= variants_global_emergence_date[variant]]
+
     if len(report_dates) == 0:
         return None
 
-    first_report_date = report_dates.min()
-    assert (
-        first_report_date >= variants_global_emergence_date[variant]
-    ), "First report precedes global variant emergence"
-
-    return first_report_date
+    return report_dates.min()
 
 
 def seed_vocs_using_gisaid(

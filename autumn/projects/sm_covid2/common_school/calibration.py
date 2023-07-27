@@ -63,11 +63,17 @@ def get_bcm_object(iso3, analysis="main"):
     if len(project.calibration.targets) > 1:
         sero_target = project.calibration.targets[1]
         targets.append(
-            est.BinomialTarget(
-                "prop_ever_infected_age_matched", 
-                sero_target.data, 
-                sample_sizes=sero_target.sample_sizes
+            est.TruncatedNormalTarget(
+                "prop_ever_infected_age_matched",
+                sero_target.data,
+                trunc_range=[0., 1.],  # will reject runs with >10% attack rate before epidemic
+                stdev=.1
             )
+            # est.BinomialTarget(
+            #     "prop_ever_infected_age_matched", 
+            #     sero_target.data, 
+            #     sample_sizes=sero_target.sample_sizes
+            # )
         )
 
     # Add a safeguard target to prevent a premature epidemic occurring before the first reported death

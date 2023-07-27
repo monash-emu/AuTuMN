@@ -51,11 +51,13 @@ def get_bcm_object(iso3, analysis="main"):
     assert analysis in ANALYSES_NAMES, "wrong analysis name requested"
 
     project = get_school_project(iso3, analysis)
+    death_target_data = project.calibration.targets[0].data
+
     targets = [
         est.NegativeBinomialTarget(
             "infection_deaths", 
-            project.calibration.targets[0].data, 
-            dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (10, 200))
+            death_target_data, 
+            dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (50, 200))
         )
     ]
     if len(project.calibration.targets) > 1:
@@ -67,6 +69,18 @@ def get_bcm_object(iso3, analysis="main"):
                 sample_sizes=sero_target.sample_sizes
             )
         )
+
+    # Add a safeguard target to prevent a premature epidemic occurring before the first reported death
+    # Early calibrations sometimes produced a rapid epidemic reaching 100% attack rate before the true epidemic start
+    zero_attack_rate_series = pd.Series([0.], index=[death_target_data.index[0]])
+    targets.append(
+        est.TruncatedNormalTarget(
+            "prop_ever_infected",
+            zero_attack_rate_series,
+            trunc_range=[0., 0.10],  # will reject runs with >10% attack rate before epidemic
+            stdev=1000.  # flat distribution
+        )
+    )
 
     default_configuration = project.param_set.baseline
     m = project.build_model(default_configuration.to_dict()) 

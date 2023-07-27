@@ -5,6 +5,8 @@ from summer.utils import ref_times_to_dti
 import datetime
 from copy import copy
 
+from scipy import stats
+
 from autumn.models.sm_covid2.stratifications.strains import get_first_variant_report_date
 
 

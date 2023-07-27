@@ -401,6 +401,24 @@ def run_full_analysis(
     Helper functions for remote runs
 """
 
+def dump_runner_details(runner, out_folder_path):
+    """
+    Dumps the run_path and IP associater with a SpringboardTaskRunner object
+    Args:
+        runner: SpringboardTaskRunner object
+        out_folder_path: pathlib Path associated with directory where data should be stored
+    """
+
+    details = {
+        "run_path": runner.run_path,
+        "ip": runner.instance['ip']
+    }
+
+    out_path = out_folder_path / f"{runner.run_path.split('/')[-1]}.yml"
+    with out_path.open("w") as f:
+        yaml.dump(details, f)
+
+
 def print_continuous_status(runner, update_freq=30):
     status = runner.s3.get_status()
     print(status)

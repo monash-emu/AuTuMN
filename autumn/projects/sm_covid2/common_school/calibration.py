@@ -66,14 +66,9 @@ def get_bcm_object(iso3, analysis="main"):
             est.TruncatedNormalTarget(
                 "prop_ever_infected_age_matched",
                 sero_target.data,
-                trunc_range=[0., 1.],  # will reject runs with >10% attack rate before epidemic
-                stdev=.1
+                trunc_range=[0., 1.],
+                stdev=sero_target.stdev
             )
-            # est.BinomialTarget(
-            #     "prop_ever_infected_age_matched", 
-            #     sero_target.data, 
-            #     sample_sizes=sero_target.sample_sizes
-            # )
         )
 
     # Add a safeguard target to prevent a premature epidemic occurring before the first reported death

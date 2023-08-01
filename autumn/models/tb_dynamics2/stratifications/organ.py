@@ -3,8 +3,6 @@ from summer2 import Stratification, Multiply, Overwrite
 from autumn.models.tb_dynamics2.constants import INFECTIOUS_COMPS, OrganStratum
 from autumn.model_features.curve.interpolate import build_static_sigmoidal_multicurve
 from summer2.parameters import Time, Function
-#from operator import attrgetter
-
 
 ORGAN_STRATA = [
     OrganStratum.SMEAR_POSITIVE,
@@ -15,12 +13,15 @@ ORGAN_STRATA = [
 
 def get_organ_strat(params) -> Stratification:
     strat = Stratification("organ", ORGAN_STRATA, INFECTIOUS_COMPS)
+    print(strat)
 
     #Define infectiousness adjustment by organ status
     inf_adj = {}
     for stratum in ORGAN_STRATA:
         mult_key = f"{stratum}_infect_multiplier"
         inf_adj[stratum] = Multiply(getattr(params, mult_key, 1.0))
+
+    print(inf_adj)
 
     for comp in INFECTIOUS_COMPS:
         strat.add_infectiousness_adjustments(comp, inf_adj)

@@ -186,7 +186,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     # Universal death
-    universal_death_rate = 1.0
+    universal_death_rate = 0.2
     model.add_universal_death_flows("universal_death", death_rate=universal_death_rate)
 
     # Infection death

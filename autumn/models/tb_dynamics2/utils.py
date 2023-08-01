@@ -40,7 +40,7 @@ def get_average_age_for_bcg(agegroup, age_breakpoints):
 def bcg_multiplier_func(t, tfunc, fmultiplier, faverage_age):
     return 1.0 - tfunc(t - faverage_age) / 100.0 * (1.0 - fmultiplier)
 
-def tanh_based_scaleup(shape, inflection_time, start_asymptote, end_asymptote=1.0):
+def tanh_based_scaleup(t,shape, inflection_time, start_asymptote, end_asymptote=1.0):
     """
     return the function t: (1 - sigma) / 2 * tanh(b * (a - c)) + (1 + sigma) / 2
     :param shape: shape parameter
@@ -52,7 +52,6 @@ def tanh_based_scaleup(shape, inflection_time, start_asymptote, end_asymptote=1.
     assymp_range = end_asymptote - start_asymptote
     return (jnp.tanh(shape * (t - inflection_time)) / 2.0 + 0.5) * assymp_range + start_asymptote
 
-    return tanh_scaleup
 
 def make_linear_curve(x_0, x_1, y_0, y_1):
     assert x_1 > x_0

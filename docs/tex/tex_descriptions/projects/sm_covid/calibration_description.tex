@@ -19,13 +19,13 @@ are listed in Table \ref{param_table} and indicated with the superscript \textsu
 We used uniform prior distributions for all calibrated parameters. The primary parameters varied during calibration are 
 the unadjusted risk of transmission per contact ($\beta$), the IFR multiplier ($m_C$), the infection seeding times of 
 each strain and the proportion of students on-site during ``Partially open'' periods. Note that the values of the random 
-process $W_t$ described in Section \ref{random_process} are also treated like calibrated parameters by the MCMC. The Gaussian 
+process $W_t$ described in Section \ref{random_process} are also treated as calibrated parameters by the MCMC. The Gaussian 
 auto-regressive component described in Equation \ref{eq:random_process} is incorporated in the posterior likelihood 
 computation (Section \ref{likelihood}).
 
 \subsection{Calibration targets}
 \label{targets}
-Model calibration is performed independently for each country. All models are fitted to the reported number of COVID-19 deaths over time.
+Model calibration was performed independently for each country. All models were fitted to the reported number of COVID-19 deaths over time.
 We used the daily number of COVID-19 deaths reported by Our World in Data and applied a 7-day moving average to the observed data. 
 
 \input{../../tex_descriptions/projects/sm_covid/serodata.tex}
@@ -36,7 +36,7 @@ Let $d_w$ denote the rounded average daily number of COVID-19 deaths during week
 the associated predicted number of deaths according to the model with parameter set $\theta$. 
 
 For countries with seroprevalence data, let us denote $\pi$ the measured seroprevalence proportion extracted from SeroTracker (Section \ref{targets}). 
-Let $\hat{\pi}^\theta$ denote the modelled age-matched proportion ever infected by the time the survey was conducted (using midpoint date) 
+Let $\hat{\pi}^\theta$ denote the modelled age-matched proportion ever infected by the time the survey was conducted (using the midpoint date) 
 associated with the parameter set $\theta$. 
 The likelihood was defined as follows for countries with seroprevalence data:
 
@@ -49,18 +49,18 @@ $g_r(. | \mu)$ is the probability mass function of a negative binomial distribut
 overdispersion parameter $r$. The overdispersion parameter $r$ was automatically estimated by the MCMC algorithm, while the standard deviation $\sigma$ was set to different 
 values depending on the SeroTracker-reported risk of bias associated with the seroprevalence estimate ($\sigma=0.05$ if ``Low'', $\sigma=0.1$ if ``Moderate'', $\sigma=0.2$ if ``High''). 
 
-For countries without seroprevalence data, the likelihood equation is reduced to:
+For countries without seroprevalence data, the likelihood equation reduces to:
 \begin{equation}
     \label{eq:likelihood_nosero}
     \mathcal{L}(\theta) := \prod_w g_r(d_w | \:\hat{d_w}^\theta) \quad.
 \end{equation}
 
-The likelihood described above represents the goodness of fit of a particular model parameterisation with regards to the targeted data. 
+The likelihood functions described above represent the goodness of fit of a particular model parameterisation with regards to the targeted data. 
 This quantity needs to be adjusted for the prior likelihood of the parameter set in order to compute the MCMC acceptance quantity $\mathcal{Q}(\theta)$.
 As we used uniform priors for all the parameters, the inclusion of the individual parameters' priors in the acceptance quantity is not necessary. 
 Indeed, their respective contributions would cancel out as the same quantity would appear in the numerator and the denominator of the 
 MCMC acceptance quantity ratio. However, the auto-regressive relationship described in Equation \ref{eq:random_process}
-must be accounted for as part of the combined prior likelihood of a parameter set. This is what prevents unrealistically large fluctuations of the random process.
+must be accounted for as part of the combined prior likelihood of a parameter set. This prevents unrealistically large fluctuations of the random process.
 If $W^\theta$ represents the random process associated with the parameter set $\theta$, the overall MCMC acceptance quantity is obtained by:
 
 \begin{equation}

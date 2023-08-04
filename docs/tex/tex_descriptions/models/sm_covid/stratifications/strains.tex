@@ -1,16 +1,16 @@
 
-The model is stratified by ``strain'' to simulate the emergence of multiple variants of concern (VoC).
-This approach explicitly represents multiple competing strains, each with a separate force of infection calculation.
-We assume that VoCs can have different levels of transmissibility, incubation period's duration and disease severity 
-(hospitalisation and death risks) compared to the ancestral COVID-19 strain. In addition, VoCs are assumed to escape 
+The model was stratified by ``strain'' to simulate the emergence of multiple variants of concern (VoC).
+This approach explicitly represents multiple competing strains, each with an independent force of infection calculation.
+We assumed that VoCs can have different levels of transmissibility, incubation period and disease severity 
+(hospitalisation and death risks) compared to the ancestral COVID-19 strain. In addition, VoCs were assumed to escape 
 immunity partially for both vaccination- and infection-related immunity. 
 
-We assume that individuals previously infected with the wild-type strain can only be reinfected with the delta or 
+We assumed that individuals previously infected with the wild-type strain could only be reinfected with the delta or 
 omicron strains. However, such individuals have a reduced risk of infection with these variants compared to 
 infection-naive individuals (68\% and 45\% reduction for delta and omicron, respectively) \textcolor{red}{[REF DOI: 10.1503/cmaj.211248]}.
-We assume that individuals previously infected with the delta variant can only be reinfected with the omicron variant, 
+We assumed that individuals previously infected with the delta variant could only be reinfected with the omicron variant, 
 with an infection risk reduced by 45\% compared to infection-naive individuals \textcolor{red}{[REF DOI: 10.1503/cmaj.211248]}. 
 The other parameters used to represent strain-specific characteristics are presented in Table \ref{param_table}.
 
-Seeding of each new strain into the model is achieved through the importation of a small number (10 per million population) of new infectious persons with the relevant strain into the model.
-The seeding process is done over a ten-day period and the start of this period is set to the emergence date reported by GISAID.
+Seeding of each new strain into the model was achieved through the importation of a small number (10 per million population) of new infectious persons with the relevant strain into the model.
+The seeding process was done over a ten-day period and the start of this period was set to the emergence date reported by GISAID.

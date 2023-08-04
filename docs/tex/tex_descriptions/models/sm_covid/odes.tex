@@ -1,12 +1,12 @@
-Let us first introduce some new notations. The different age groups are indicated by the subscript $a$ and $\mathcal{A}$ represents
-the set of all modelled age groups (see Section \ref{age}). The vaccination status is represented by the subscript $v$ and $\mathcal{V}$ is the set of 
-vaccination statuses (i.e. $\mathcal{V}=$ \{``0'', ``1''\} where ``0'' represents unvaccinated people and ``1'' represents vaccinated people). The subscript $s$ is used to represent the different viral strains and $\mathcal{S}$ is the set 
+Let us first introduce some new notations. Modelled age groups are indicated by the subscript $a$, and $\mathcal{A}$ represents
+the set of all modelled age groups (see Section \ref{age}). Vaccination status is represented by the subscript $v$, and $\mathcal{V}$ is the set of 
+vaccination statuses (i.e. $\mathcal{V}=$ \{``0'', ``1''\}, where ``0'' represents unvaccinated people and ``1'' represents vaccinated people). The subscript $s$ is used to represent the different viral strains, and $\mathcal{S}$ is the set 
 of all strains (i.e. $\mathcal{S}=$ \{``wild-type'', ``delta'', ``omicron''\}). The average incubation period duration associated with strain $s$ is denoted $q_s$ and
 the average duration of active disease is denoted $w$. The relative susceptibility to infection with strain $s$ of individuals aged $a$ with 
-vaccination status $v$ is denoted $\rho_{a,v,s}$. The term $b_{a,v,s}(t)$ is used to designate the imported individuals of age $a$ and 
+vaccination status $v$ is denoted $\rho_{a,v,s}$. The term $b_{a,v,s}(t)$ designates the introduction of individuals of age $a$ and 
 with vaccination status $v$ that are infected with strain $s$ (infection seeding). Vaccination is characterised by the age-specific
 and time-variant per-capita vaccination rate $w_a$. Finally, $\chi_{s,\sigma}$ represents the relative susceptibility to infection
-with strain $\sigma$ for individuals whose most recent infection episode was with strain $s$. Using these new notations combined 
+with strain $\sigma$ for individuals whose most recent infection episode was with strain $s$. Using this new notation combined 
 with those previously introduced, we can describe the model with the following set of ordinary differential equations:
 
 \begin{equation}
@@ -22,13 +22,14 @@ with those previously introduced, we can describe the model with the following s
 \end{equation}
 
 where $\lambda_{a,s}$ represents the force of infection of strain $s$ affecting individuals of age $a$. The quantity $\Phi_v$ is a binary variable
-used to switch between plus and minus signs depending on the vaccination status. It is equal to $1$ when
+used to switch between a positive and negative multiplier depending on vaccination status. It is equal to $1$ when
 $v=$``1'' and $-1$ when $v=$``0''. In other words, $\Phi_v = 2\mathbbm{1}_{v=``1"} - 1$. 
 
-The force of infection is calculated as:
+The force of infection was calculated as:
 \begin{equation}
     \label{foi}
- \lambda_{a,s}(t) = \beta e^{2W(t)} \psi_{s} \sum_{\alpha \in \mathcal{A}} \sum_{v \in \mathcal{V}} c_{a,\alpha}(t) \Bigl( 0.5 \sum_{k=3}^{4} E_{\alpha,v,s}^{k} + \sum_{k=1}^{4} I_{\alpha,v,s}^{k} \Bigr) \quad .
+ \lambda_{a,s}(t) = \beta e^{2W(t)} \psi_{s} \sum_{\alpha \in \mathcal{A}} \sum_{v \in \mathcal{V}} \frac{c_{a,\alpha}(t)}{N_{\alpha, v}} \Bigl( 0.5 \sum_{k=3}^{4} E_{\alpha,v,s}^{k} + \sum_{k=1}^{4} I_{\alpha,v,s}^{k} \Bigr) \quad .
 \end{equation}
 In the previous equation, $\beta$ represents the unadjusted risk of transmission per contact, $\psi_{s}$ is the relative infectiousness of strain $s$, and $W(t)$ is
-the random process introduced in Section \ref{random_process}.
+the random process introduced in Section \ref{random_process}. The size of the population of age $\alpha$ with vaccination status $v$ is denoted $N_{\alpha, v}$. The term $c_{a,\alpha}(t)$ is a single element of the contact matrix $C(t)$ introduced in Equation \ref{eq_mixing}. It
+represents the average numbers of contacts per day that a individual of age $a$ has with individuals of age $\alpha$.

@@ -1,11 +1,11 @@
 \section{Model calibration and uncertainty propagation}
 \label{calibration}
 The model was calibrated using a Bayesian approach. In particular, we used the Differential Evolution Metropolis 
-(DEMetropolis) algorithm implemented with the \textit{PyMC} python package (v.5.2.0) to sample parameters from their 
+(DEMetropolis) algorithm implemented with the \textit{PyMC} Python package (v.5.2.0) to sample parameters from their 
 posterior distributions. For each country, we ran 32 independent DEMetropolis chains of 20,000 iterations, each 
 starting from a different starting point. The starting points were obtained after conducting 32 independent optimisation 
 searches performed with the Covariance Matrix Adaptation Evolution Strategy (CMA-ES) method, implemented with the
-\textit{nevergrad} python package (v.0.6.0) and with a budget of 20,000 model evaluations per search. 
+\textit{nevergrad} Python package (v.0.6.0) and with a budget of 20,000 model evaluations per search. 
 The 32 optimisation searches were initialised randomly using Latin Hypercube Sampling based on the parameter priors, 
 in order to promote broad dispersion across the parameter space. Our calibration approach required a total of 1,280,000
 model evaluations per country, which were completed in about one hour on a machine with 32 cpus and 128-GiB memory.
@@ -74,5 +74,4 @@ If $W^\theta$ represents the random process associated with the parameter set $\
 where $z_{\mu,\epsilon}(.)$ represents the probability density function of the normal distribution $\mathcal{N}(\mu, \epsilon)$, and $n$ is the number 
 of random process updates.
 
-\subsection{Software implementation}
-\input{../../tex_descriptions/models/sm_covid/runtime.tex}
+

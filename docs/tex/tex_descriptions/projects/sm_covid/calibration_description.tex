@@ -1,15 +1,17 @@
 \section{Model calibration and uncertainty propagation}
 \label{calibration}
-\textcolor{red}{REVISE THE SECTION BELOW WHEN FINALISED}
-The model was calibrated using a Bayesian approach. In particular, we used the adaptive 
-Metropolis algorithm introduced by Haario \textit{et al.} to sample parameters from their 
-posterior distributions \cite{haario-2001}. For each country, we ran 8 independent Metropolis 
-chains initialised using Latin Hypercube Sampling based on the parameter priors. 
-We ran simulations for 1 hour per chain yielding at least 60,000 iterations per 
-chain. We discarded the first 30,000 iterations of each chain as burn-in and combined the 
-samples of the 8 chains to project epidemic trajectories over time. 
-For each modelled country, the epidemic projections presented in our analysis are associated with 1000 parameter sets 
-randomly sampled from the posterior distributions obtained from MCMC sampling. 
+The model was calibrated using a Bayesian approach. In particular, we used the Differential Evolution Metropolis 
+(DEMetropolis) algorithm implemented with the \textit{PyMC} python package (v.5.2.0) to sample parameters from their 
+posterior distributions. For each country, we ran 32 independent DEMetropolis chains of 20,000 iterations, each 
+starting from a different starting point. The starting points were obtained after conducting 32 independent optimisation 
+searches performed with the Covariance Matrix Adaptation Evolution Strategy (CMA-ES) method, implemented with the
+\textit{nevergrad} python package (v.0.6.0) and with a budget of 20,000 model evaluations per search. 
+The 32 optimisation searches were initialised randomly using Latin Hypercube Sampling based on the parameter priors, 
+in order to promote broad dispersion across the parameter space. Our calibration approach required a total of 1,280,000
+model evaluations per country, which were completed in about one hour on a machine with 32 cpus and 128-GiB memory.
+
+For each country, the results presented in the manuscript are associated with 1000 parameter sets randomly sampled from 
+the posterior distributions obtained from DEMetropolis sampling (after discarding the first 10,000 iterations for each chain). 
 The definitions of the prior distributions and the likelihood are detailed in the following sections.
 
 \subsection{Parameters varied during calibration}

@@ -73,13 +73,17 @@ def get_bcm_object(iso3, analysis="main"):
 
     # Add a safeguard target to prevent a premature epidemic occurring before the first reported death
     # Early calibrations sometimes produced a rapid epidemic reaching 100% attack rate before the true epidemic start
-    zero_attack_rate_series = pd.Series([0.], index=[death_target_data.index[0]])
+    zero_series = pd.Series([0.], index=[death_target_data.index[0]]) #  could be any value, only the time index matters
+    
+    def censored_func(modelled, data, parameters, time_weights):     
+        # Returns a very large negative number if modelled value is greater than 1%. Returns 0 otherwise.
+        return jnp.where(modelled > 0.01, -1.e11, 0.)[0]
+
     targets.append(
-        est.TruncatedNormalTarget(
-            "prop_ever_infected",
-            zero_attack_rate_series,
-            trunc_range=[0., 0.10],  # will reject runs with >10% attack rate before epidemic
-            stdev=1000.  # flat distribution
+        est.CustomTarget(
+            "prop_ever_infected", 
+            zero_series, # could be any value, only the time index matters
+            censored_func
         )
     )
 

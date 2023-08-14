@@ -20,11 +20,30 @@ def launch_synced_autumn_task(
     task_spec: TaskSpec,
     mspec: EC2MachineSpec,
     run_path: str,
-    branch="master",
-    job_id=None,
-    set_alarm=True,
-    extra_commands=None,
+    branch: str = "master",
+    job_id: str = None,
+    set_alarm: bool = True,
+    extra_commands: list = None,
+    auto_shutdown_time: int = 4 * 60,  # Time in minutes
 ) -> SpringboardTaskRunner:
+    """Launch a task on an EC2 instance
+
+    Args:
+        task_spec: The task to run
+        mspec: The specifications of an EC2 instance to launch
+        run_path: The run_path (or 'run_id') of the launched job
+        branch: The branch of autumn to pull, or pass None if not using autumn
+        job_id: The EC2 instance descriptor; defaults to using run_path
+        set_alarm: Set a cloudwatch alarm to shutdown on inactivity. Defaults to True.
+        extra_commands: List of strings to add to bash script (will be run before the python task)
+        auto_shutdown_time: Time in minutes to automatically terminate this instance (defaults to 240; ie 4 hours)
+
+    Raises:
+        Exception: run_path already exists
+
+    Returns:
+        The active task runner
+    """
     s3t = task.S3TaskManager(run_path)
     if s3t.exists():
         raise Exception("Task already exists", run_path)
@@ -41,6 +60,9 @@ def launch_synced_autumn_task(
         aws.set_cpu_termination_alarm(rinst["InstanceId"])
 
     srunner = task.SpringboardTaskRunner(rinst, run_path)
+
+    sdown_res = srunner.sshr.run(f"sudo shutdown -P +{auto_shutdown_time}")
+
     script = scripting.gen_autumn_run_bash(run_path, branch, extra_commands=extra_commands)
 
     s3t._write_taskdata("taskscript.sh", script)

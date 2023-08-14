@@ -9,7 +9,7 @@ def gen_autumn_run_bash(
     branch: str,
     shutdown: bool = True,
     bucket: PurePosixPath = PurePosixPath("autumn-data"),
-    extra_commands=None,
+    extra_commands: list = None,
 ) -> List[str]:
     define_dump_io = f"""
     write_ios_s3 () {{

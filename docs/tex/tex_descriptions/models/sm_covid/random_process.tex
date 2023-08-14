@@ -1,20 +1,20 @@
-The risk of SARS-CoV2 transmission per contact is adjusted by a time-variant random process, making
+The risk of SARS-CoV-2 transmission per contact was adjusted by a time-variant random process, making
 the model semi-mechanistic. This random process reflects the fact that all the variations observed in the transmission
-risk in the real world cannot be explained solely by the factors that are included explicitly in the model such as vaccination, dynamic mobility or new variants' emergence.
-We therefore allow for random perturbations to the risk of transmission over time, although these perturbations are highly auto-correlated
+risk in the real world cannot be explained solely by the factors that are explicitly captured through model inputs such as vaccination, dynamic mobility or new variants' emergence.
+We therefore allowed for random perturbations to the risk of transmission over time, although these perturbations were highly auto-correlated
 to avoid unrealistic changes over a short period of time.
 
-We use a random walk with gaussian update defined by:
+We used a random walk with Gaussian update defined by:
 
 \begin{equation}
     \label{eq:random_process}
     \begin{split}
     W(0) & = 0 \\
-    W(t+1) & \sim \mathcal{N}(W(t), \epsilon) \quad ,
+    W(t+1) & \sim \mathcal{N}(W(t), 0.5) \quad ,
     \end{split}
 \end{equation}
 
-where $\mathcal{N}$ denotes the normal distribution and where the standard deviation $\epsilon$ is automatically calibrated by the MCMC.
-The random process $W$ is updated every two months and is transformed using the exponential function before being applied to the risk of transmission per contact (see Equation \ref{foi}).
-Finally, the contribution of the random process to the risk of transmission is squared in order to capture its effect
+where $\mathcal{N}$ denotes the normal distribution.
+The random process $W$ was updated every two months and was transformed using the exponential function before being applied to the risk of transmission per contact (see Equation \ref{foi}).
+Finally, the contribution of the random process to the risk of transmission was squared in order to capture its effect
 on both the susceptible and the infectious individuals (see Equation \ref{foi}). 

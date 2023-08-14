@@ -14,7 +14,7 @@ from autumn.core.project import (
 )
 from autumn.calibration import Calibration
 from autumn.calibration.priors import UniformPrior
-from autumn.calibration.targets import NegativeBinomialTarget, BinomialTarget
+from autumn.calibration.targets import NegativeBinomialTarget, BinomialTarget, TruncNormalTarget
 from autumn.models.sm_covid2 import get_base_params, build_model
 from autumn.model_features.jax.random_process import set_up_random_process
 from autumn.settings import Region, Models
@@ -58,7 +58,7 @@ param_path = Path(__file__).parent.resolve() / "params"
 def get_school_project(iso3, analysis="main"):
 
     # read seroprevalence data (needed to specify the sero age range params and then to define the calibration targets)
-    positive_prop, adjusted_sample_size, midpoint_as_int, sero_age_min, sero_age_max = get_sero_estimate(iso3)
+    positive_prop, sero_target_sd, midpoint_as_int, sero_age_min, sero_age_max = get_sero_estimate(iso3)
 
     # Load timeseries
     timeseries = get_school_project_timeseries(iso3, sero_data={
@@ -97,10 +97,11 @@ def get_school_project(iso3, analysis="main"):
         
     if positive_prop is not None:
         targets.append(
-            BinomialTarget(
-                data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected_age_matched"), 
-                sample_sizes = pd.Series(data=[adjusted_sample_size], index=[midpoint_as_int])
-            )
+            TruncNormalTarget(
+                data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected_age_matched"),
+                trunc_range=(0., 1.),
+                stdev=sero_target_sd
+            )          
         )
 
     # set up random process if relevant
@@ -392,13 +393,13 @@ def get_sero_estimate(iso3):
     
     country_data = df[df['alpha_3_code'] == iso3].to_dict(orient="records")[0]
 
-    # work out the adjusted sample size, accounting for survey sample size, risk of bias and geographic level (national/subnational)
-    bias_risk_adjustment = {
-        0: 1./3., # high risk of bias
-        1: 2./3., # moderate risk of bias
-        2: 1., # low risk of bias
-    }
-    adjusted_sample_size = round(country_data['denominator_value'] * bias_risk_adjustment[country_data['overall_risk_of_bias']])
+    # work out the target's standard deviation according to the risk of bias
+    sero_target_sd = {
+        0: .2, # high risk of bias
+        1: .1, # moderate risk of bias
+        2: .05, # low risk of bias
+    }[country_data['overall_risk_of_bias']]
+    # adjusted_sample_size = round(country_data['denominator_value'] * bias_risk_adjustment[country_data['overall_risk_of_bias']])
 
     # work out the survey midpoint
     start_date = datetime.fromisoformat(country_data['sampling_start_date'])
@@ -407,4 +408,4 @@ def get_sero_estimate(iso3):
     midpoint = start_date + (end_date - start_date) / 2
     midpoint_as_int = (midpoint - datetime(2019, 12, 31)).days
 
-    return country_data["serum_pos_prevalence"], adjusted_sample_size, midpoint_as_int, country_data['age_min'], country_data['age_max']
+    return country_data["serum_pos_prevalence"], sero_target_sd, midpoint_as_int, country_data['age_min'], country_data['age_max']

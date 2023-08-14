@@ -26,7 +26,7 @@ def update_rcparams():
             'axes.labelsize': "x-large",
             'xtick.labelsize': 'large',
             'ytick.labelsize': 'large',
-            'legend.fontsize': 'large',
+            'legend.fontsize': 'medium',
             'legend.title_fontsize': 'large',
             'lines.linewidth': 1.,
 
@@ -54,7 +54,8 @@ title_lookup = {
     "hospital_occupancy": "Hospital pressure",
     "icu_admissions": "daily ICU admissions",
     "icu_occupancy": "total ICU beds",
-    "prop_ever_infected": "ever infected with Delta or Omicron",
+    "prop_ever_infected": "ever infected",
+    "prop_ever_infected_age_matched": "Prop. ever infected\n(age-matched)",
 
     "transformed_random_process": "Transformed random process",
 
@@ -70,8 +71,8 @@ unesco_data = input_db.query(
 )
 
 SCHOOL_COLORS = {
-    'partial': 'azure',
-    'full': 'thistle'
+    'partial': 'silver', #  'azure',
+    'full': 'gold' # 'thistle'
 }
 
 def y_fmt(tick_val, pos):
@@ -109,7 +110,7 @@ def add_school_closure_patches(ax, iso3, ymax, school_colors=SCHOOL_COLORS):
     ax.vlines(closed_dates_str, ymin=0, ymax=ymax, lw=1, alpha=1, color=school_colors['full'], zorder = 1)
 
 
-def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3):
+def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3, include_legend=True):
 
     bcm = get_bcm_object(iso3, "main")
 
@@ -120,7 +121,7 @@ def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3):
     if output_name in bcm.targets:
         t = bcm.targets[output_name].data
         t.index = ref_times_to_dti(REF_DATE, t.index)
-        axis.scatter(list(t.index), t, marker=".", color='black', label='observations', zorder=11, s=3.)
+        axis.scatter(list(t.index), t, marker=".", color='black', label='observations', zorder=11, s=5.)
         
     colour = unc_sc_colours[0]      
 
@@ -151,14 +152,18 @@ def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3):
 
     # axis.tick_params(axis="x", labelrotation=45)
     title = output_name if output_name not in title_lookup else title_lookup[output_name]
+    if output_name == "prop_ever_infected_age_matched" and output_name not in bcm.targets:
+        title = "Prop. ever infected"
+
     axis.set_ylabel(title)
     plt.tight_layout()
 
-    plt.legend(markerscale=2.)
+    if include_legend:
+        plt.legend(markerscale=2.)
     axis.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
 
 
-def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=False):
+def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=False, include_legend=True):
     # update_rcparams()
 
     ymax = 0.
@@ -176,6 +181,7 @@ def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=Fals
                 time, 
                 df[df["quantile"] == .25]['value'], df[df["quantile"] == .75]['value'], 
                 color=colour, alpha=0.7, 
+                edgecolor=None,
                 # label=interval_label,
                 zorder=scenario_zorder
             )
@@ -194,7 +200,8 @@ def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=Fals
     # axis.set_xlim((model_start, model_end))
     axis.set_ylim((0, plot_ymax))
 
-    axis.legend()
+    if include_legend:
+        axis.legend()
 
     axis.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
 
@@ -333,23 +340,25 @@ def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_f
     right_grid = inner_grid[0, 1]  # will contain final size plots
 
     #### Split left panel into 3 panels
-    inner_left_grid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=left_grid, hspace=.15, height_ratios=(1, 1, 1))
-    # calibration
+    inner_left_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=left_grid, hspace=.15, height_ratios=(1, 1, 1, 1))
+    # calibration, deaths
     ax2 = fig.add_subplot(inner_left_grid[0, 0])
     plot_model_fit_with_uncertainty(ax2, uncertainty_df, "infection_deaths", iso3)
     format_date_axis(ax2)
     remove_axes_box(ax2)
-    # plt.setp(ax2.get_xticklabels(), visible=False)
+    # seropos prop over time
+    ax_sero = fig.add_subplot(inner_left_grid[1, 0])
+    plot_model_fit_with_uncertainty(ax_sero, uncertainty_df, "prop_ever_infected_age_matched", iso3, include_legend=False)
+    format_date_axis(ax_sero)
+    remove_axes_box(ax_sero)
     # scenario compare deaths
-    ax3 = fig.add_subplot(inner_left_grid[1, 0]) #, sharex=ax2)
+    ax3 = fig.add_subplot(inner_left_grid[2, 0]) #, sharex=ax2)
     plot_two_scenarios(ax3, uncertainty_df, "infection_deaths", iso3, True)
     format_date_axis(ax3)
     remove_axes_box(ax3)
-
-    # plt.setp(ax3.get_xticklabels(), visible=False)
     # scenario compare hosp
-    ax4 = fig.add_subplot(inner_left_grid[2, 0])  #, sharex=ax2)
-    plot_two_scenarios(ax4, uncertainty_df, "hospital_occupancy", iso3, True)
+    ax4 = fig.add_subplot(inner_left_grid[3, 0])  #, sharex=ax2)
+    plot_two_scenarios(ax4, uncertainty_df, "hospital_occupancy", iso3, True, include_legend=False)
     format_date_axis(ax4)
     remove_axes_box(ax4)
 
@@ -419,3 +428,18 @@ def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_f
     fig.savefig(os.path.join(output_folder, "tiling.pdf"), facecolor="white")
 
     plt.close()
+
+
+def test_tiling_plot():
+    from pathlib import Path
+    import pandas as pd
+
+    directory = Path.cwd() / "autumn" / "projects" / "sm_covid2" / "common_school" / "output_plots" / "test_tiling_plot"
+
+    iso3 = "FRA"
+    uncertainty_df = pd.read_parquet(directory / "uncertainty_df.parquet")
+    diff_quantiles_df = pd.read_parquet(directory / "diff_quantiles_df.parquet")
+    output_folder = directory
+    make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_folder)
+
+# test_tiling_plot()

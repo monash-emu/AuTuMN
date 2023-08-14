@@ -9,7 +9,7 @@ We use a semi-mechanistic compartmental model of COVID-19 transmission governed 
 Our model captures important factors of COVID-19 transmission and disease such as age-specific characteristics, 
 heterogeneous mixing, vaccination and the emergence of different variants of concern. 
 The ODE-based model is used to capture only states relevant to transmission, whereas hospitalisations and deaths are
-estimated through a convolution process based on the ODE-based model's outputs. This process combines the model-estimated disease incidence with 
+estimated through a convolution process applied to the ODE-based model's outputs. This process combines the model-estimated disease incidence with 
 statistical distributions modelling the time to hospitalisation, the hospital stay duration and the time to death.
 This approach presents two main advantages. First it reduces the complexity of the dynamic system relying on 
 numerical solving of ODEs, which is computationally expensive. Second, the convolution approach allows for more flexibility 
@@ -38,7 +38,7 @@ infection and COVID-19 disease. The following types of compartments are implemen
 \begin{itemize}
     \item Susceptible
     \begin{itemize}
-        \item Persons never previously infected with SARS-CoV-2 during or before the model simulation period
+        \item Persons not previously infected with SARS-CoV-2 during or before the model simulation period
     \end{itemize}
     \item Latent
     \begin{itemize}
@@ -70,7 +70,7 @@ The base model structure consists of a sequence of one susceptible compartment (
 \end{figure}
 
 The main rationale for using four serial compartments for both the latent and active states is to achieve an Erlang distribution for the time spent in each of these states. This distribution is more realistic than
-the exponential distribution that would have been associated with a single compartment, because the Erlang distribution does not have a large density mass around 0 and is not heavy-tailed. Figure \ref{fig:sojourn} 
+the exponential distribution which is the consequence of a single compartment assumption, because the Erlang distribution does not have a large density mass around 0 and is not heavy-tailed. Figure \ref{fig:sojourn} 
 illustrates the modelled distributions of the incubation period and the active disease period. 
 
 \begin{figure}[ht]
@@ -82,7 +82,7 @@ illustrates the modelled distributions of the incubation period and the active d
     \label{fig:sojourn}
 \end{figure}
 
-The four active disease compartments all have exactly the same characteristics. However, the last two latent compartments ($E^3$ and $E^4$) are infectious whereas the first two ($E^1$ and $E^2$) are not. We further assume that 
+The four active disease compartments all have identical characteristics. However, the last two latent compartments ($E^3$ and $E^4$) are infectious whereas the first two ($E^1$ and $E^2$) are not. We further assume that 
 the infectious latent compartments are half as infectious as the active disease compartments.
 
 \subsubsection{Model stratification by age}
@@ -94,6 +94,7 @@ the infectious latent compartments are half as infectious as the active disease 
 \input{../../tex_descriptions/models/sm_covid/stratifications/immunity.tex}
 
 \subsubsection{Modelling multiple viral strains}
+\label{strains}
 \input{../../tex_descriptions/models/sm_covid/stratifications/strains.tex} 
 
 
@@ -122,7 +123,7 @@ the infectious latent compartments are half as infectious as the active disease 
 %______________________________________________________
 \subsection{Estimation of COVID-19-related hospital pressure and deaths}
 The transmission model described in Section \ref{trans} provides estimates of COVID-19 incidence over time, disaggregated by age, vaccination status and strain. 
-We combine these incidence estimates with the age-, vaccination- and strain-specific risks of hospitalisation and deaths as well as 
+We combine these incidence estimates with the age-, vaccination- and strain-specific risks of hospitalisation and deaths, as well as 
 statistical distributions of time to events to compute COVID-19-related hospital pressure and deaths over time.
 
 \subsubsection{COVID-19-related hospital pressure}

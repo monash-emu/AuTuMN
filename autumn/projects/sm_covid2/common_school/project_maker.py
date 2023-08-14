@@ -73,11 +73,11 @@ def get_school_project(iso3, analysis="main"):
         k: pd.Series(data=v["values"], index=v["times"], name=v["output_key"], dtype=float)
         for k, v in timeseries.items()
     }
-    infection_deaths, cumulative_infection_deaths = (
-        pd_timeseries["infection_deaths"],
+    infection_deaths_ma7, cumulative_infection_deaths = (
+        pd_timeseries["infection_deaths_ma7"],
         pd_timeseries["cumulative_infection_deaths"],
     )
-    first_date_with_death = infection_deaths[round(infection_deaths) >= 1].index[0]
+    first_date_with_death = infection_deaths_ma7[round(infection_deaths_ma7) >= 1].index[0]
 
     # Get parameter set
     param_set = get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max, analysis)
@@ -87,7 +87,7 @@ def get_school_project(iso3, analysis="main"):
 
     # define calibration targets
     model_end_time = param_set.baseline.to_dict()["time"]["end"]
-    infection_deaths_target = infection_deaths.loc[first_date_with_death:model_end_time][::14]
+    infection_deaths_target = infection_deaths_ma7.loc[first_date_with_death:model_end_time][::14]
     cumulative_deaths_target = cumulative_infection_deaths.loc[:model_end_time][-1:]
 
     targets = [
@@ -283,8 +283,8 @@ def get_school_project_timeseries(iso3, sero_data):
     data.dropna(inplace=True)
 
     # add daily deaths to timeseries dict
-    timeseries["infection_deaths"] = {
-        "output_key": "infection_deaths",
+    timeseries["infection_deaths_ma7"] = {
+        "output_key": "infection_deaths_ma7",
         "title": "Daily number of deaths",
         "times": (pd.to_datetime(data["date"]) - COVID_BASE_DATETIME).dt.days.to_list(),
         "values": data["smoothed_new_deaths"].to_list(),

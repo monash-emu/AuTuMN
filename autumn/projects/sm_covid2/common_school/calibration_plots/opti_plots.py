@@ -102,8 +102,8 @@ def plot_model_fit(bcm, params, iso3, outfile=None):
     death_ax, rp_ax, sero_ax = axs[0], axs[1], axs[2]
 
     # Deaths
-    run_model.derived_outputs["infection_deaths"].plot(ax=death_ax, ylabel="COVID-19 deaths")
-    targets["infection_deaths"].plot(style='.', ax=death_ax)
+    run_model.derived_outputs["infection_deaths_ma7"].plot(ax=death_ax, ylabel="COVID-19 deaths")
+    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax)
     plt.text(0.8, 0.9, f"ll={round(ll, 4)}", transform=death_ax.transAxes)
     # Add VoC emergence
     ax_ymax = death_ax.get_ylim()[1]
@@ -151,8 +151,8 @@ def plot_model_fit_with_ll(bcm, params, outfile=None):
     fig, death_ax = plt.subplots(1, 1, figsize=(25, 10))
 
     # Deaths
-    run_model.derived_outputs["infection_deaths"].plot(ax=death_ax, ylabel="COVID-19 deaths", label='model')
-    targets["infection_deaths"].plot(style='.', ax=death_ax, color='black', label='data')
+    run_model.derived_outputs["infection_deaths_ma7"].plot(ax=death_ax, ylabel="COVID-19 deaths", label='model')
+    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax, color='black', label='data')
     plt.text(0.8, 0.9, f"ll={round(ll, 4)}", transform=death_ax.transAxes)
 
 
@@ -190,7 +190,7 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
     
     # set up the three axes
     death_ax.set_ylabel("COVID-19 deaths")
-    targets["infection_deaths"].plot(style='.', ax=death_ax, label="", zorder=20, color='black')
+    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax, label="", zorder=20, color='black')
     
     rp_ax.set_ylabel("Random process")
 
@@ -207,8 +207,8 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
 
         # Deaths
         death_ax.plot(
-            list(run_model.derived_outputs["infection_deaths"].index), 
-            run_model.derived_outputs["infection_deaths"],
+            list(run_model.derived_outputs["infection_deaths_ma7"].index), 
+            run_model.derived_outputs["infection_deaths_ma7"],
             label=f"search {i}",  #: ll={rounded_ll}",
             color=colors[i]
         )

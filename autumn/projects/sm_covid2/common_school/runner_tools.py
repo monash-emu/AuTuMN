@@ -180,7 +180,7 @@ def get_sampled_results(sampled_df, output_names):
 def run_full_runs(sampled_df, iso3, analysis):
 
     output_names=[
-        "infection_deaths", "prop_ever_infected_age_matched", "prop_ever_infected", "cumulative_incidence",
+        "infection_deaths_ma7", "prop_ever_infected_age_matched", "prop_ever_infected", "cumulative_incidence",
         "cumulative_infection_deaths", "hospital_occupancy", 'peak_hospital_occupancy', 'student_weeks_missed', "transformed_random_process"
     ]
 
@@ -261,7 +261,7 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
     times = sorted(outputs_df.index.unique())
     scenarios = outputs_df["scenario"].unique()
     unc_output_names = [
-        "infection_deaths", "prop_ever_infected_age_matched", "prop_ever_infected", "transformed_random_process", "cumulative_incidence", "cumulative_infection_deaths",
+        "infection_deaths_ma7", "prop_ever_infected_age_matched", "prop_ever_infected", "transformed_random_process", "cumulative_incidence", "cumulative_infection_deaths",
         "peak_hospital_occupancy", "hospital_occupancy"
     ]
 

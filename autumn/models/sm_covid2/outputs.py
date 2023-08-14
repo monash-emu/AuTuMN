@@ -14,6 +14,7 @@ from autumn.models.sm_jax.outputs import apply_odds_ratio_to_proportion
 
 
 from summer2.parameters import Function, Data, DerivedOutput
+from summer2.functions.derived import get_rolling_reduction
 
 
 def gamma_cdf(shape, scale, x):
@@ -231,6 +232,16 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             name="infection_deaths",
             func=infection_deaths_func,
         )
+
+
+    def request_moving_averaged_deaths(self):
+ 
+        self.model.request_function_output(
+            name="infection_deaths_ma7",
+            func=Function(get_rolling_reduction(jnp.mean, 7), [DerivedOutput("infection_deaths")])
+        )
+
+
 
     def request_hospitalisations(
         self,

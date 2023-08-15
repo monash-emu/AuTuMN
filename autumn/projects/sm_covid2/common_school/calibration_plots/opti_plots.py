@@ -157,8 +157,8 @@ def plot_model_fit_with_ll(bcm, params, outfile=None):
 
 
     n = params['infection_deaths_dispersion_param']
-    for t in targets["infection_deaths"].index:
-        mu = run_model.derived_outputs["infection_deaths"].loc[t]
+    for t in targets["infection_deaths_ma7"].index:
+        mu = run_model.derived_outputs["infection_deaths_ma7"].loc[t]
 
         p = mu / (mu + n)
 

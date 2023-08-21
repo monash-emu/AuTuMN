@@ -298,7 +298,7 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
 def run_full_analysis(
     iso3, 
     analysis="main", 
-    opti_params={'n_searches': 8, 'num_workers': 8, 'parallel_opti_jobs': 4, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
+    opti_params={'n_searches': 8, 'n_best_retained': 4, 'num_workers': 8, 'parallel_opti_jobs': 4, 'warmup_iterations': 2000, 'search_iterations': 5000, 'init_method': "LHS"},
     mcmc_params={'draws': 10000, 'tune': 1000, 'cores': 32, 'chains': 32, 'method': 'DEMetropolis'},
     full_run_params={'samples': 1000, 'burn_in': 5000},
     output_folder="test_outputs",
@@ -306,8 +306,9 @@ def run_full_analysis(
 ):
     out_path = Path(output_folder)
 
-    # Check that number of requested MCMC chains is a multiple of number of optimisation searches
-    assert mcmc_params['chains'] % opti_params['n_searches'] == 0
+    # Check we requested enough searches and number of requested MCMC chains is a multiple of number of retained optimisation searches
+    assert opti_params['n_best_retained'] <= opti_params['n_searches']
+    assert mcmc_params['chains'] % opti_params['n_best_retained'] == 0
 
     # Create BayesianCompartmentalModel object
     bcm = get_bcm_object(iso3, analysis)
@@ -338,21 +339,34 @@ def run_full_analysis(
         return best_p
 
     best_params = map_parallel(opti_func, sample_as_dicts, n_workers=opti_params['parallel_opti_jobs'])
-
     # Store optimal solutions
     with open(out_path / "best_params.yml", "w") as f:
         yaml.dump(best_params, f)
+
+    # Keep only n_best_retained best solutions
+    loglikelihoods = [bcm.loglikelihood(**p) for p in best_params]
+    ll_cutoff = sorted(loglikelihoods, reverse=True)[opti_params['n_best_retained'] - 1]
+
+    retained_init_points, retained_best_params = [], []
+    for init_sample, best_p, ll in zip(sample_as_dicts, best_params, loglikelihoods):
+        if ll >= ll_cutoff:
+            retained_init_points.append(init_sample)
+            retained_best_params.append(best_p)
+
+    # Store retained optimal solutions
+    with open(out_path / "retained_best_params.yml", "w") as f:
+        yaml.dump(retained_best_params, f)
     
     # Plot optimal solutions and starting points
-    plot_opti_params(sample_as_dicts, best_params, bcm, output_folder)
+    plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
 
     # Plot optimal model fits
     opt_fits_path = out_path / "optimised_fits"
     opt_fits_path.mkdir(exist_ok=True)
-    for j, best_p in enumerate(best_params):
+    for j, best_p in enumerate(retained_best_params):
         plot_model_fit(bcm, best_p, iso3, opt_fits_path / f"best_fit_{j}.png")
 
-    plot_multiple_model_fits(bcm, best_params, out_path / "optimal_fits.png")
+    plot_multiple_model_fits(bcm, retained_best_params, out_path / "optimal_fits.png")
 
     if logger:
         logger.info("... optimisation completed")
@@ -367,8 +381,8 @@ def run_full_analysis(
     if logger:
         logger.info(f"Start MCMC for {mcmc_params['tune']} + {mcmc_params['draws']} iterations and {mcmc_params['chains']} chains...")
 
-    n_repeat_seed = int(mcmc_params['chains'] / opti_params['n_searches'])
-    init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(best_params)]     
+    n_repeat_seed = int(mcmc_params['chains'] / opti_params['n_best_retained'])
+    init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(retained_best_params)]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
     idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'], method=mcmc_params['method'])
     idata.to_netcdf(out_path / "idata.nc")

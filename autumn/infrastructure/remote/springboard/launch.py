@@ -54,30 +54,36 @@ def launch_synced_autumn_task(
         job_id = run_path
 
     rinst = aws.start_ec2_instance(mspec, job_id)
-    s3t.set_instance(rinst)
 
-    if set_alarm:
-        aws.set_cpu_termination_alarm(rinst["InstanceId"])
+    try:
+        s3t.set_instance(rinst)
 
-    srunner = task.SpringboardTaskRunner(rinst, run_path)
+        if set_alarm:
+            aws.set_cpu_termination_alarm(rinst["InstanceId"])
 
-    sdown_res = srunner.sshr.run(f"sudo shutdown -P +{auto_shutdown_time}")
+        srunner = task.SpringboardTaskRunner(rinst, run_path)
 
-    script = scripting.gen_autumn_run_bash(run_path, branch, extra_commands=extra_commands)
+        sdown_res = srunner.sshr.run(f"sudo shutdown -P +{auto_shutdown_time}")
 
-    s3t._write_taskdata("taskscript.sh", script)
+        script = scripting.gen_autumn_run_bash(run_path, branch, extra_commands=extra_commands)
 
-    task_spec_meta = {
-        "run_func": {
-            "name": task_spec.run_func.__name__,
-            "module": task_spec.run_func.__module__,
-            "source": inspect.getsource(task_spec.run_func),
-        },
-        "func_kwargs": task_spec.func_kwargs,
-    }
-    s3t._write_taskdata("task_spec.yml", yaml.dump(task_spec_meta))
+        s3t._write_taskdata("taskscript.sh", script)
 
-    cres = srunner.run_script(script, task_spec)
+        task_spec_meta = {
+            "run_func": {
+                "name": task_spec.run_func.__name__,
+                "module": task_spec.run_func.__module__,
+                "source": inspect.getsource(task_spec.run_func),
+            },
+            "func_kwargs": {k: (type(v), str(v)) for k, v in task_spec.func_kwargs.items()},
+        }
+
+        s3t._write_taskdata("task_spec.yml", yaml.dump(task_spec_meta))
+
+        cres = srunner.run_script(script, task_spec)
+
+    except:
+        aws.autumn_aws.client.terminate_instances(InstanceIds=[rinst["InstanceId"]])
 
     return srunner
 

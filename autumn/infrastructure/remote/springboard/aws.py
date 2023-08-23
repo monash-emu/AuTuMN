@@ -73,7 +73,7 @@ def start_ec2_instance(mspec: EC2MachineSpec, name: str, ami: str = None) -> dic
     instance_type = autumn_aws.get_instance_type(**asdict(mspec))
 
     # +++: Borrow default from AuTuMN; move to springboard rcparams?
-    ami = ami or aws_settings.EC2_AMI["springboard310"]
+    ami = ami or aws_settings.EC2_AMI["springboardtest"]
 
     inst_req = autumn_aws.run_instance(name, instance_type, False, ami_name=ami)
     iid = inst_req["Instances"][0]["InstanceId"]
@@ -99,7 +99,7 @@ def start_ec2_multi_instance(
     instance_type = autumn_aws.get_instance_type(**asdict(mspec))
 
     # +++: Borrow default from AuTuMN; move to springboard rcparams?
-    ami = ami or aws_settings.EC2_AMI["springboard310"]
+    ami = ami or aws_settings.EC2_AMI["springboardtest"]
 
     inst_req = autumn_aws.run_multiple_instances(name, instance_type, n_instances, ami_name=ami)
     iid = inst_req["Instances"][0]["InstanceId"]

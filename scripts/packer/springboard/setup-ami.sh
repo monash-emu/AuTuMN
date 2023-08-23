@@ -50,6 +50,9 @@ apt-get -y install libgraphviz-dev
 # tex things - not really a core requirement but takes forever to install so may as well...
 apt-get -y install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra texlive-bibtex-extra biber
 
+# make awscli available without installing via conda
+apt-get -y install awscli
+
 # Install miniconda and set up hooks
 
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh

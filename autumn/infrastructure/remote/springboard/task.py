@@ -221,6 +221,11 @@ class SpringboardTaskRunner:
         # Let's just leave it for now and try a non-s3fs method later (go back to the autumn helpers?)
         # self.s3.fs.put(str(pkl_path.resolve()), str(self.s3._full_rpath / ".taskmeta/task.cpkl"))
         self.sshr.ftp.put(pkl_path, "task.cpkl")
+        try:
+            with open(pkl_path, "rb") as pkl_f:
+                self.s3._write_taskdata("task.cpkl", pkl_f.read(), "wb")
+        except:
+            self._logger.warning("Could not store cpkl on S3, continuing")
 
     def run_script(self, script: str, task_spec=None):
         try:
@@ -347,8 +352,8 @@ class S3TaskManager:
             cur_status = self.get_status()
             raise FileExistsError(f"Existing task found with status {cur_status}", self._full_rpath)
 
-    def _read_taskdata(self, key):
-        with self.fs.open(self._remote_taskmeta / key, "r") as f:
+    def _read_taskdata(self, key, mode="r"):
+        with self.fs.open(self._remote_taskmeta / key, mode) as f:
             return f.read()
 
     def _write_taskdata(self, key, value, mode="w"):

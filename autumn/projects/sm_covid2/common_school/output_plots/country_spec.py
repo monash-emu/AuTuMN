@@ -44,6 +44,7 @@ def update_rcparams():
 
 title_lookup = {
     "infection_deaths": "COVID-19 deaths",
+    "infection_deaths_ma7": "COVID-19 deaths",
     "cumulative_infection_deaths": "Cumulative deaths",
     "cumulative_incidence": "Cumulative incidence",
 
@@ -343,7 +344,7 @@ def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_f
     inner_left_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=left_grid, hspace=.15, height_ratios=(1, 1, 1, 1))
     # calibration, deaths
     ax2 = fig.add_subplot(inner_left_grid[0, 0])
-    plot_model_fit_with_uncertainty(ax2, uncertainty_df, "infection_deaths", iso3)
+    plot_model_fit_with_uncertainty(ax2, uncertainty_df, "infection_deaths_ma7", iso3)
     format_date_axis(ax2)
     remove_axes_box(ax2)
     # seropos prop over time
@@ -353,7 +354,7 @@ def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_f
     remove_axes_box(ax_sero)
     # scenario compare deaths
     ax3 = fig.add_subplot(inner_left_grid[2, 0]) #, sharex=ax2)
-    plot_two_scenarios(ax3, uncertainty_df, "infection_deaths", iso3, True)
+    plot_two_scenarios(ax3, uncertainty_df, "infection_deaths_ma7", iso3, True)
     format_date_axis(ax3)
     remove_axes_box(ax3)
     # scenario compare hosp

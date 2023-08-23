@@ -55,7 +55,7 @@ def get_bcm_object(iso3, analysis="main"):
 
     targets = [
         est.NegativeBinomialTarget(
-            "infection_deaths", 
+            "infection_deaths_ma7", 
             death_target_data, 
             dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (50, 200))
         )

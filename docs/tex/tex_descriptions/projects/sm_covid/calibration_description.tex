@@ -19,16 +19,18 @@ The definitions of the prior distributions and the likelihood are detailed in th
 The parameters varied during calibration along with their associated prior distributions 
 are listed in Table \ref{param_table} and indicated with the superscript \textsuperscript{C}.
 We used uniform prior distributions for all calibrated parameters. The primary parameters varied during calibration are 
-the unadjusted risk of transmission per contact ($\beta$), the IFR multiplier ($m_C$), the infection seeding times of 
-each strain and the proportion of students on-site during ``Partially open'' periods. Note that the values of the random 
-process $W_t$ described in Section \ref{random_process} are also treated as calibrated parameters by the MCMC. The Gaussian 
+the unadjusted risk of transmission per contact ($\beta$), the IFR multiplier ($m_C$), the original infection seeding time,
+the proportion of students on-site during ``Partially open'' periods, and the uncertainty multiplier modifying the school 
+contacts' contribution ($m_S$). 
+
+Note that the values of the random process $W_t$ described in Section \ref{random_process} are also treated as calibrated parameters by the MCMC. The Gaussian 
 auto-regressive component described in Equation \ref{eq:random_process} is incorporated in the posterior likelihood 
 computation (Section \ref{likelihood}).
 
 \subsection{Calibration targets}
 \label{targets}
 Model calibration was performed independently for each country. All models were fitted to the reported number of COVID-19 deaths over time.
-We used the daily number of COVID-19 deaths reported by Our World in Data and applied a 7-day moving average to the observed data. 
+We used the daily number of COVID-19 deaths reported by WHO and applied a 7-day moving average to the observed data. 
 
 \input{../../tex_descriptions/projects/sm_covid/serodata.tex}
 

@@ -125,13 +125,15 @@ def resume_opti_search(opt, extra_iterations: int = 5000):
     return best_params, opt
 
 
-def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, method="DEMetropolis", sampler_options={}):
+def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, method="DEMetropolis", sampler_options=None):
     if method == "DEMetropolis":
         sampler = pm.DEMetropolis
     elif method == "DEMetropolisZ":
         sampler = pm.DEMetropolisZ
     else:
         raise ValueError(f"Requested sampling method '{method}' not currently supported.")
+
+    sampler_options = sampler_options or {}
 
     with pm.Model() as model:    
         variables = epm.use_model(bcm)

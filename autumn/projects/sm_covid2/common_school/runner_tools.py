@@ -125,7 +125,7 @@ def resume_opti_search(opt, extra_iterations: int = 5000):
     return best_params, opt
 
 
-def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, method="DEMetropolis"):
+def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, method="DEMetropolis", sampler_options={}):
     if method == "DEMetropolis":
         sampler = pm.DEMetropolis
     elif method == "DEMetropolisZ":
@@ -135,7 +135,7 @@ def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, met
 
     with pm.Model() as model:    
         variables = epm.use_model(bcm)
-        idata = pm.sample(step=[sampler(variables)], draws=draws, tune=tune, cores=cores,chains=chains, initvals=initvals, progressbar=False)
+        idata = pm.sample(step=[sampler(variables, **sampler_options)], draws=draws, tune=tune, cores=cores,chains=chains, initvals=initvals, progressbar=False)
 
     return idata
 

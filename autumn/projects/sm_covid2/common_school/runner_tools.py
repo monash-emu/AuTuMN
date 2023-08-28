@@ -141,6 +141,16 @@ def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, met
 
     return idata
 
+
+def sample_with_pymc_smc(bcm, draws=2000, cores=8, chains=4):
+    
+    with pm.Model() as model:    
+        variables = epm.use_model(bcm)
+        idata = pm.smc.sample_smc(draws=draws, chains=chains, cores=cores, progressbar=False)
+
+    return idata
+
+
 """
     Functions related to post-calibration processes
 """
@@ -387,6 +397,53 @@ def run_full_analysis(
     init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(retained_best_params)]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
     idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['cores'], chains=mcmc_params['chains'], method=mcmc_params['method'])
+    idata.to_netcdf(out_path / "idata.nc")
+    make_post_mc_plots(idata, full_run_params['burn_in'], output_folder)
+    if logger:
+        logger.info("... MCMC completed")
+    
+    """ 
+        Post-MCMC processes
+    """
+    sample_df = extract_sample_subset(idata, full_run_params['samples'], full_run_params['burn_in'])
+    if logger:
+        logger.info(f"Perform full runs for {full_run_params['samples']} samples")
+    outputs_df = run_full_runs(sample_df, iso3, analysis)
+    if logger:
+        logger.info("Calculate differential outputs")    
+    diff_outputs_df = calculate_diff_outputs(outputs_df)
+    if logger:
+        logger.info("Calculate quantiles") 
+    uncertainty_df, diff_quantiles_df = get_quantile_outputs(outputs_df, diff_outputs_df)
+    uncertainty_df.to_parquet(out_path / "uncertainty_df.parquet")
+    diff_quantiles_df.to_parquet(out_path / "diff_quantiles_df.parquet")
+
+    make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_folder)
+
+    return idata, uncertainty_df, diff_quantiles_df
+
+
+
+def run_full_analysis_smc(
+    iso3, 
+    analysis="main", 
+    smc_params={'draws': 2000, 'cores': 32, 'chains': 4},
+    full_run_params={'samples': 1000, 'burn_in': 5000},
+    output_folder="test_outputs",
+    logger=None
+):
+    out_path = Path(output_folder)
+
+    # Create BayesianCompartmentalModel object
+    bcm = get_bcm_object(iso3, analysis)
+    
+    """ 
+        SMC
+    """
+    if logger:
+        logger.info(f"Start SMC for {smc_params['draws']} draws and {smc_params['chains']} chains...")
+
+    idata = sample_with_pymc_smc(bcm, draws=smc_params['draws'], cores=smc_params['cores'], chains=smc_params['chains'])
     idata.to_netcdf(out_path / "idata.nc")
     make_post_mc_plots(idata, full_run_params['burn_in'], output_folder)
     if logger:

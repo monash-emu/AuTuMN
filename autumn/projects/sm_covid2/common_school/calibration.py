@@ -57,8 +57,7 @@ def get_bcm_object(iso3, analysis="main"):
         est.NegativeBinomialTarget(
             "infection_deaths_ma7", 
             death_target_data, 
-            dispersion_param=200,
-            # dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (190, 200))
+            dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (200, 250))
         )
     ]
     if len(project.calibration.targets) > 1:

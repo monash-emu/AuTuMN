@@ -94,7 +94,7 @@ def start_ec2_instance(mspec: EC2MachineSpec, name: str, ami: str = None) -> dic
     iid = inst_req["Instances"][0]["InstanceId"]
 
     # Will raise exception if instance fails to start
-    rinst = wait_instance(iid)
+    rinst = wait_instance(iid, 60.0)
     return rinst
 
 
@@ -124,7 +124,7 @@ def start_ec2_multi_instance(
 
     for rinst in req_instances:
         iid = rinst["InstanceId"]
-        instances.append(wait_instance(iid))
+        instances.append(wait_instance(iid, 60.0))
 
     return instances
 

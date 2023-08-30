@@ -1,7 +1,9 @@
 import textwrap
 from tempfile import NamedTemporaryFile
 from pathlib import Path, PurePosixPath
-from typing import List, Callable
+from typing import List, Callable, Optional
+
+from autumn.infrastructure.remote.springboard.clients import CommandResult
 
 
 def gen_autumn_run_bash(
@@ -9,8 +11,8 @@ def gen_autumn_run_bash(
     branch: str,
     shutdown: bool = True,
     bucket: PurePosixPath = PurePosixPath("autumn-data"),
-    extra_commands: list = None,
-) -> List[str]:
+    extra_commands: Optional[List[str]] = None,
+) -> str:
     define_dump_io = f"""
     write_ios_s3 () {{
        aws s3 cp $BASE_PATH/iodump s3://{bucket}/{run_path}/.taskmeta/
@@ -93,7 +95,7 @@ def gen_autumn_nbserver(
     branch: str,
     shutdown: bool = True,
     bucket: PurePosixPath = PurePosixPath("autumn-data"),
-) -> List[str]:
+) -> str:
     define_dump_io = f"""
     write_ios_s3 () {{
        aws s3 cp $BASE_PATH/iodump s3://{bucket}/{run_path}/.taskmeta/
@@ -171,7 +173,9 @@ def gen_autumn_nbserver(
     return script
 
 
-def process_script(script: str, callback: Callable[[Path], None] = None):
+def process_script(
+    script: str, callback: Optional[Callable[[Path], CommandResult]] = None
+) -> Optional[CommandResult]:
     scriptfile = NamedTemporaryFile(mode="w", newline="\n", delete=False)
     scriptfile.write(script)
     scriptfile.close()
@@ -186,7 +190,7 @@ def process_script(script: str, callback: Callable[[Path], None] = None):
     return callback_res
 
 
-def process_dumpbin(dumpobj, dump_func, callback: Callable[[Path], None] = None):
+def process_dumpbin(dumpobj, dump_func, callback: Optional[Callable[[Path], None]] = None):
     dumpfile = NamedTemporaryFile(mode="wb", delete=False)
     dump_func(dumpobj, dumpfile)
     dumpfile.close()

@@ -256,7 +256,7 @@ class Mobility(BaseModel):
     ]  # this is not used for the sm_covid model. Still included to prevent crash in mixing matrix code
     apply_unesco_school_data: bool
     unesco_partial_opening_value: pclass()
-    unesco_full_closure_value: Optional[float]
+    unesco_full_closure_value: pclass() # Optional[float]
 
     @validator("google_mobility_locations", allow_reuse=True)
     def check_location_weights(val):

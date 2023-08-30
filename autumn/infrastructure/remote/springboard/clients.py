@@ -4,9 +4,9 @@ then pssh to run the actual task (due to the non-blocking reads)
 """
 
 from pathlib import Path
-from typing import NamedTuple
 from dataclasses import dataclass
 from time import sleep
+from typing import Optional
 
 from pssh.clients import SSHClient
 from pssh.exceptions import Timeout
@@ -25,7 +25,7 @@ class CommandResult:
     exit_status: int
     stdout: str
     stderr: str
-    host_output: HostOutput
+    host_output: Optional[HostOutput]
 
     def refresh(self):
         return read_pssh_output(self.host_output, self)
@@ -58,7 +58,7 @@ def run_cmd_paramiko(client: paramiko.SSHClient, cmd: str) -> CommandResult:
     _, stdout, stderr = client.exec_command(cmd)
     stdout_res = stdout.read().decode()
     stderr_res = stderr.read().decode()
-    return CommandResult(True, stdout.channel.recv_exit_status(), stdout_res, stderr_res)
+    return CommandResult(True, stdout.channel.recv_exit_status(), stdout_res, stderr_res, None)
 
 
 def get_pssh_client(ip_addr: str) -> SSHClient:
@@ -66,7 +66,7 @@ def get_pssh_client(ip_addr: str) -> SSHClient:
     return pssh_client
 
 
-def read_pssh_output(host_output, existing: CommandResult = None) -> CommandResult:
+def read_pssh_output(host_output, existing: Optional[CommandResult] = None) -> CommandResult:
     if existing is not None:
         complete = existing.complete
         if complete:

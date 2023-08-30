@@ -133,8 +133,8 @@ def plot_model_fit(bcm, params, iso3, outfile=None):
     if outfile:
         fig.savefig(outfile, facecolor="white")
 
-    return fig
-
+    plt.close()
+    
 
 def plot_model_fit_with_ll(bcm, params, outfile=None):
     REF_DATE = datetime.date(2019,12,31)
@@ -241,4 +241,4 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
     if outfile:
         fig.savefig(outfile, facecolor="white")
 
-    return fig
+    plt.close()

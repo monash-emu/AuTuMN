@@ -6,7 +6,8 @@ import logging
 import functools
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import List, Callable, Any
+from pathlib import Path
+from typing import List, Callable, Any, Union
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 MAX_WORKERS = mp.cpu_count()
 
 
-def gather_exc_plus(filename="crash.log"):
+def gather_exc_plus(filename: Union[str, Path] = "crash.log"):
     """
     Dump tracebacks and locals to a file
     Borrowed from: https://www.oreilly.com/library/view/python-cookbook/0596001673/ch14s05.html
@@ -23,6 +24,10 @@ def gather_exc_plus(filename="crash.log"):
     out_f = open(filename, "w")
 
     tb = sys.exc_info()[2]
+
+    if tb is None:
+        out_f.write("No traceback info available\n")
+        return
     while 1:
         if not tb.tb_next:
             break
@@ -41,7 +46,7 @@ def gather_exc_plus(filename="crash.log"):
             f"Frame {frame.f_code.co_name} in {frame.f_code.co_filename} at line {frame.f_lineno}\n"
         )
         for key, value in frame.f_locals.items():
-            out_f.write(f"\t{key} = \n"),
+            out_f.write(f"\t{key} = \n")
             try:
                 out_f.write(f"{value}\n")
             except:

@@ -19,7 +19,7 @@ from autumn.core.utils.s3 import get_s3_client
 from autumn.core.utils.parallel import gather_exc_plus
 
 # Multi-library SSH wrapper
-from .clients import SSHRunner
+from .clients import CommandResult, SSHRunner
 
 # Callback wrappers for script/cpkl task management
 from .scripting import process_script, process_dumpbin
@@ -212,7 +212,7 @@ class SpringboardTaskRunner:
         self._shutdown = shutdown
         self._logger = logging.getLogger("springboard")
 
-    def _script_callback(self, script_path):
+    def _script_callback(self, script_path) -> CommandResult:
         self.sshr.ftp.put(script_path, "taskscript.sh")
         return self.sshr.run("chmod +x taskscript.sh")
 
@@ -231,6 +231,7 @@ class SpringboardTaskRunner:
         try:
             chmres = process_script(script, self._script_callback)
             # If we failed to chmod the remote script, something is wrong...
+            assert chmres is not None
             assert chmres.exit_status == 0
 
             if task_spec is not None:
@@ -339,9 +340,9 @@ class S3TaskManager:
         self.fs = fs
         self.bucket = bucket
         self.project_path = project_path
-        self._full_rpath = self.bucket / self.project_path
-        self._remote_taskmeta = self._full_rpath / ".taskmeta"
-        self._status_file = self._full_rpath / ".taskmeta" / "STATUS"
+        self.remote_path = self.bucket / self.project_path
+        self._remote_taskmeta = self.remote_path / ".taskmeta"
+        self._status_file = self.remote_path / ".taskmeta" / "STATUS"
 
     def exists(self):
         """Check if this project exists on S3"""
@@ -350,9 +351,9 @@ class S3TaskManager:
     def _setup_task(self):
         if self.fs.exists(self._status_file):
             cur_status = self.get_status()
-            raise FileExistsError(f"Existing task found with status {cur_status}", self._full_rpath)
+            raise FileExistsError(f"Existing task found with status {cur_status}", self.remote_path)
 
-    def _read_taskdata(self, key, mode="r"):
+    def read_taskdata(self, key, mode="r"):
         with self.fs.open(self._remote_taskmeta / key, mode) as f:
             return f.read()
 
@@ -361,7 +362,7 @@ class S3TaskManager:
             f.write(value)
 
     def get_status(self):
-        return self._read_taskdata("STATUS").strip("\n")
+        return self.read_taskdata("STATUS").strip("\n")
 
     def set_status(self, status):
         if isinstance(status, TaskStatus):
@@ -373,7 +374,36 @@ class S3TaskManager:
         self._write_taskdata("instance.json", instance_json)
 
     def get_instance(self):
-        return json.loads(self._read_taskdata("instance.json"))
+        return json.loads(self.read_taskdata("instance.json"))
+
+    def get_log(self, logtype="task"):
+        return self.fs.open(self.remote_path / "log" / f"{logtype}.log", "rb").read().decode()
+
+    def get_iodump(self):
+        return self.fs.open(self._remote_taskmeta / "iodump", "rb").read().decode()
 
     def put(self, lpath, rpath, absolute_rpath=False):
-        self.fs.put(lpath, self._full_rpath / rpath)
+        if not absolute_rpath:
+            rpath = self.remote_path / rpath
+        self.fs.put(lpath, rpath)
+
+
+class ManagedTask(S3TaskManager):
+    def __init__(
+        self,
+        project_path: str,
+        fs: s3fs.S3FileSystem = None,
+        bucket: PurePosixPath = PurePosixPath(aws_settings.S3_BUCKET),
+    ):
+        """
+
+        Args:
+            run_path (str): Description
+            fs (s3fs.S3FileSystem, optional): Description
+            bucket (PurePosixPath, optional): Description
+        """
+
+        super().__init__(project_path, fs, bucket)
+
+    def get_runner(self):
+        return SpringboardTaskRunner(self.get_instance(), self.project_path)

@@ -1,7 +1,11 @@
+from typing import Optional
+
 from dataclasses import dataclass, asdict
 from enum import Enum
+from time import time
 
 import boto3
+import numpy as np
 
 # Keep everything we 'borrow' from autumn in this block
 # Should eventually be replaced for a free-living and independent springboard
@@ -36,12 +40,13 @@ class InstanceStateError(Exception):
     pass
 
 
-def wait_instance(instance_id: str) -> dict:
+def wait_instance(instance_id: str, timeout: Optional[float] = None) -> dict:
     """Waits for a given instance to be in a state other than 'pending'
     Used just after launch to wait for an instance to be ready
 
     Args:
         instance_id: The AWS InstanceID
+        timeout: Maximum time to wait, in seconds.  Defaults to no timeout
 
     Returns:
         The instance dictionary of the running instance (rinst)
@@ -49,10 +54,20 @@ def wait_instance(instance_id: str) -> dict:
     Raises:
         InstanceStateError: The instance entered a state other than running
     """
+
+    if timeout is None:
+        timeout = np.inf
+
+    start = time()
+    elapsed = 0.0
     state = "pending"
-    while state == "pending":
-        rinst = autumn_aws.find_instance_by_id(instance_id)
-        state = rinst["State"]["Name"]
+    while state == "pending" and (elapsed < timeout):
+        try:
+            rinst = autumn_aws.find_instance_by_id(instance_id)
+            state = rinst["State"]["Name"]
+        except:
+            pass
+        elapsed = time() - start
     if state == "running":
         return rinst
     else:
@@ -79,7 +94,7 @@ def start_ec2_instance(mspec: EC2MachineSpec, name: str, ami: str = None) -> dic
     iid = inst_req["Instances"][0]["InstanceId"]
 
     # Will raise exception if instance fails to start
-    rinst = wait_instance(iid)
+    rinst = wait_instance(iid, 60.0)
     return rinst
 
 
@@ -109,7 +124,7 @@ def start_ec2_multi_instance(
 
     for rinst in req_instances:
         iid = rinst["InstanceId"]
-        instances.append(wait_instance(iid))
+        instances.append(wait_instance(iid, 60.0))
 
     return instances
 

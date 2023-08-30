@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List, Optional
 
 from datetime import datetime
 
@@ -21,9 +21,9 @@ def launch_synced_autumn_task(
     mspec: EC2MachineSpec,
     run_path: str,
     branch: str = "master",
-    job_id: str = None,
+    job_id: Optional[str] = None,
     set_alarm: bool = True,
-    extra_commands: list = None,
+    extra_commands: Optional[List[str]] = None,
     auto_shutdown_time: int = 4 * 60,  # Time in minutes
 ) -> SpringboardTaskRunner:
     """Launch a task on an EC2 instance
@@ -63,7 +63,7 @@ def launch_synced_autumn_task(
 
         srunner = task.SpringboardTaskRunner(rinst, run_path)
 
-        sdown_res = srunner.sshr.run(f"sudo shutdown -P +{auto_shutdown_time}")
+        srunner.sshr.run(f"sudo shutdown -P +{auto_shutdown_time}")
 
         script = scripting.gen_autumn_run_bash(run_path, branch, extra_commands=extra_commands)
 
@@ -80,10 +80,11 @@ def launch_synced_autumn_task(
 
         s3t._write_taskdata("task_spec.yml", yaml.dump(task_spec_meta))
 
-        cres = srunner.run_script(script, task_spec)
+        srunner.run_script(script, task_spec)
 
-    except:
+    except Exception as e:
         aws.autumn_aws.client.terminate_instances(InstanceIds=[rinst["InstanceId"]])
+        raise (e)
 
     return srunner
 

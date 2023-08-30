@@ -32,7 +32,7 @@ DESCRIBE_KEYS = ["InstanceId", "InstanceType", "LaunchTime", "State"]
 
 def get_instance_type(
     min_cores: int, min_ram: int, category: str = settings.EC2InstanceCategory.GENERAL
-):
+) -> dict:
     specs = settings.EC2_INSTANCE_SPECS[category]
 
     matching_specs = {k: v for k, v in specs.items() if v.cores >= min_cores and v.ram >= min_ram}
@@ -163,7 +163,7 @@ def find_instance(name):
             return instance
 
 
-def find_instance_by_id(instance_id):
+def find_instance_by_id(instance_id) -> dict:
     for instance in describe_instances():
         if instance["InstanceId"] == instance_id:
             return instance

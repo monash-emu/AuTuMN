@@ -273,14 +273,15 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
     times = sorted(outputs_df.index.unique())
     scenarios = outputs_df["scenario"].unique()
     unc_output_names = [
-        "infection_deaths_ma7", "prop_ever_infected_age_matched", "prop_ever_infected", "transformed_random_process", "cumulative_incidence", "cumulative_infection_deaths",
-        "peak_hospital_occupancy", "hospital_occupancy"
+        "infection_deaths_ma7", "prop_ever_infected_age_matched", "prop_ever_infected", "transformed_random_process", "random_process_auc",
+        "cumulative_incidence", "cumulative_infection_deaths", "peak_hospital_occupancy", "hospital_occupancy"
     ]
 
     uncertainty_data = []
     for scenario in scenarios:
         scenario_mask = outputs_df["scenario"] == scenario
         scenario_df = outputs_df[scenario_mask]
+
         for time in times:
             masked_df = scenario_df.loc[time]
             if masked_df.empty:

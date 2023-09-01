@@ -193,7 +193,8 @@ def run_full_runs(sampled_df, iso3, analysis):
 
     output_names=[
         "infection_deaths_ma7", "prop_ever_infected_age_matched", "prop_ever_infected", "cumulative_incidence",
-        "cumulative_infection_deaths", "hospital_occupancy", 'peak_hospital_occupancy', 'student_weeks_missed', "transformed_random_process"
+        "cumulative_infection_deaths", "hospital_occupancy", 'peak_hospital_occupancy', 'student_weeks_missed', 
+        "transformed_random_process", "random_process_auc"
     ]
 
     project = get_school_project(iso3, analysis)

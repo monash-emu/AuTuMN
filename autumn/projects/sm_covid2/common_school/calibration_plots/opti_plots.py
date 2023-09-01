@@ -189,9 +189,7 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
     death_ax, rp_ax, sero_ax = axs[0], axs[1], axs[2]
     
     # set up the three axes
-    death_ax.set_ylabel("COVID-19 deaths")
-    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax, label="", zorder=20, color='black')
-    
+    death_ax.set_ylabel("COVID-19 deaths")   
     rp_ax.set_ylabel("Random process")
 
     if "prop_ever_infected_age_matched" in targets:
@@ -227,6 +225,8 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
             run_model.derived_outputs[output],
             color=colors[i]
         )
+
+    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax, label="", zorder=20, color='black')
 
     # Post plotting processes
     # death

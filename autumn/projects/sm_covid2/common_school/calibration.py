@@ -23,8 +23,11 @@ def get_estival_uniform_priors(autumn_priors):
         assert prior_dict["distribution"] == "uniform", "Only uniform priors are currently supported"
         
         if not "random_process.delta_values" in prior_dict["param_name"] and not "dispersion_param" in prior_dict["param_name"]:
+            p = esp.UniformPrior(prior_dict["param_name"], prior_dict["distri_params"])
+            p._pymc_transform_eps_scale = .1            
+            
             estival_priors.append(
-                esp.UniformPrior(prior_dict["param_name"], prior_dict["distri_params"]),
+                p
             )
             
     ndelta_values = len([prior_dict for prior_dict in autumn_priors if prior_dict["param_name"].startswith("random_process.delta_values")])

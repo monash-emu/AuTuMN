@@ -38,8 +38,8 @@ infectious_seed_time: 60
 seed_duration: 7
 
 sojourns:
-  latent: 6.57  # Pooled estimate from Wu et al. doi:10.1001/jamanetworkopen.2022.28008
-  active: 8.
+  latent: 6.65  # wild-type
+  active: 6.5
 
 mobility:
   region: null
@@ -150,9 +150,9 @@ is_dynamic_mixing_matrix: true
 
 # parameters related to immunity stratification (two strata: unvaccinated / vaccinated)
 vaccine_effects:
-  ve_infection: .5   #FIXME: dummy data 
-  ve_hospitalisation: .9  #FIXME: dummy data 
-  ve_death: .9  #FIXME: dummy data 
+  ve_infection: .7   
+  ve_hospitalisation: .9 
+  ve_death: .9  
 
 # voc_emergence: null
 voc_emergence:
@@ -176,11 +176,11 @@ voc_emergence:
     new_voc_seed:
       time_from_gisaid_report: 0.
       seed_duration: 10.
-    contact_rate_multiplier: 1.38 # DOI: 10.1503/cmaj.211248
+    contact_rate_multiplier: 1.5 
     incubation_overwrite_value: 4.41 # Wu et al. doi:10.1001/jamanetworkopen.2022.28008
-    vacc_immune_escape: .32 # DOI: 10.1503/cmaj.211248
-    hosp_risk_adjuster: 2.1  # Fisman et al. doi: 10.1503/cmaj.211248
-    death_risk_adjuster: 2.3 # Fisman et al. doi: 10.1503/cmaj.211248
+    vacc_immune_escape: .3
+    hosp_risk_adjuster: 2.0 
+    death_risk_adjuster: 2.3 
     icu_risk_adjuster: 3.4 # Fisman et al. doi: 10.1503/cmaj.211248
     cross_protection:
       wild_type: 1.
@@ -192,11 +192,11 @@ voc_emergence:
     new_voc_seed:
       time_from_gisaid_report: 0.
       seed_duration: 10.
-    contact_rate_multiplier: 1.92 # DOI: 10.1503/cmaj.211248
+    contact_rate_multiplier: 2. # DOI: 10.1503/cmaj.211248
     incubation_overwrite_value: 3.42 # Wu et al. doi:10.1001/jamanetworkopen.2022.28008
-    vacc_immune_escape: .55  # DOI: 10.1503/cmaj.211248
-    hosp_risk_adjuster: 0.861 # 2.1 * .41 using HR of Omicron vs Delta (Nyberg doi.org/10.1016/S0140-6736(22)00462-7)
-    death_risk_adjuster: 0.713 # 2.3 * 0.31 using HR of Omicron vs Delta (Nyberg doi.org/10.1016/S0140-6736(22)00462-7)
+    vacc_immune_escape: .6  # DOI: 10.1503/cmaj.211248
+    hosp_risk_adjuster: 0.82 # Multiply Nyberg by Fisman = 0.41*2 = 0.82
+    death_risk_adjuster: 0.71 # Multiply Nyberg by Fisman =0.31*2.3=0.713
     icu_risk_adjuster: 1. # FIXME dummy value for now but not used at the moment
     cross_protection:
       wild_type: 1.
@@ -207,7 +207,7 @@ time_from_onset_to_event:  # using time of symptom onset as reference
   hospitalisation:
     distribution: gamma
     shape: 5.
-    mean: 7.7 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
+    mean: 3.
   icu_admission:  # using time of hospitalisation as reference
     distribution: gamma
     shape: 5.
@@ -223,7 +223,7 @@ hospital_stay:
   hospital_all:
     distribution: gamma
     shape: 5.
-    mean: 12.8 # Estimates taken from ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
+    mean: 9 
 
   icu:
     distribution: gamma

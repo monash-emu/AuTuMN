@@ -282,6 +282,8 @@ def get_school_project_timeseries(iso3, sero_data):
         table_name="owid", conditions={"iso_code": iso3}, columns=["date", "new_deaths"]
     )
     data = remove_death_outliers(iso3, data)
+    if iso3 == "VNM":  # remove early data points associated with few deaths prior to local transmission 
+        data = data[pd.to_datetime(data["date"]) >= "15 May 2021"]
 
     # apply moving average
     data["smoothed_new_deaths"] = data["new_deaths"].rolling(7).mean()[6:]

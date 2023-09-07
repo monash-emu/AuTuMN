@@ -430,6 +430,67 @@ def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_f
 
     plt.close()
 
+def plot_incidence_by_age(derived_outputs, ax, scenario, as_proportion: bool):
+
+    colours = ["cornflowerblue", "slateblue", "mediumseagreen", "lightcoral", "purple"]
+
+    update_rcparams()
+    y_label = "COVID-19 incidence proportion" if as_proportion else "COVID-19 incidence"    
+
+    times = derived_outputs["incidence", scenario].index.to_list()
+    running_total = [0] * len(derived_outputs["incidence", scenario])
+    age_groups = base_params['age_groups']
+
+    y_max = 1. if as_proportion else max([derived_outputs["incidence", sc].max() for sc in [0, 1]])
+
+    for i_age, age_group in enumerate(age_groups):
+        output_name = f"incidenceXagegroup_{age_group}"
+    
+        if i_age < len(age_groups) - 1:
+            upper_age = age_groups[i_age + 1] - 1 if i_age < len(age_groups) - 1 else ""
+            age_group_name = f"{age_group}-{upper_age}"
+        else:
+            age_group_name = f"{age_group}+"
+
+        age_group_incidence = derived_outputs[output_name, scenario]
+        
+        if as_proportion:
+            numerator, denominator = age_group_incidence, derived_outputs["incidence", scenario]
+            age_group_proportion = np.divide(numerator, denominator, out=np.zeros_like(numerator), where=denominator!=0)
+            new_running_total = age_group_proportion + running_total
+        else: 
+            new_running_total = age_group_incidence + running_total 
+
+        ax.fill_between(times, running_total, new_running_total, color=colours[i_age], label=age_group_name, zorder=2, alpha=.8)
+        running_total = copy(new_running_total)
+
+    # y_max = max(new_running_total)
+    plot_ymax = y_max * 1.1
+    add_school_closure_patches(ax, ISO3, ymax=plot_ymax)
+
+    # work out first time with positive incidence
+    t_min = derived_outputs['incidence', 0].gt(0).idxmax()    
+    ax.set_xlim((t_min, model_end))
+    ax.set_ylim((0, plot_ymax))
+
+    ax.set_ylabel(y_label)
+
+    if not as_proportion and scenario == 0:
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(
+            reversed(handles),
+            reversed(labels),
+            # title="Age:",
+            # fontsize=12,
+            # title_fontsize=12,
+            labelspacing=.2,
+            handlelength=1.,
+            handletextpad=.5,
+            columnspacing=1.,
+            facecolor="white",
+            ncol=2,
+
+        )
 
 def test_tiling_plot():
     from pathlib import Path

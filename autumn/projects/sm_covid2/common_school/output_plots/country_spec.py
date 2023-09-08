@@ -93,6 +93,8 @@ def y_fmt(tick_val, pos):
         if val.is_integer():
             val = int(val)
         return f"{val}K"
+    elif 0. < tick_val < 1.:
+        return round(tick_val, 2)
     else:
         val = tick_val
         if val.is_integer():

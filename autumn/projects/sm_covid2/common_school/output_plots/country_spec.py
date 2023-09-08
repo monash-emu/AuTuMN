@@ -4,6 +4,7 @@ import datetime
 import os
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as tick
+from copy import copy
 
 from autumn.core.inputs.database import get_input_db
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
@@ -120,10 +121,10 @@ def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3, inc
     df = uncertainty_df[(uncertainty_df["scenario"] == "baseline") & (uncertainty_df["type"] == output_name)]
 
     if output_name in bcm.targets:
-        t = bcm.targets[output_name].data
+        t = copy(bcm.targets[output_name].data)
         t.index = ref_times_to_dti(REF_DATE, t.index)
         axis.scatter(list(t.index), t, marker=".", color='black', label='observations', zorder=11, s=5.)
-        
+
     colour = unc_sc_colours[0]      
 
     median_df = df[df["quantile"] == .5]
@@ -151,6 +152,10 @@ def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3, inc
     if output_name == "transformed_random_process":
         axis.set_ylim((0., axis.get_ylim()[1]))
 
+    
+    x_min = ref_times_to_dti(REF_DATE, bcm.targets["infection_deaths_ma7"].data.index - 30).min()
+    # axis.set_xlim((x_min, axis.get_xlim()[1]))
+
     # axis.tick_params(axis="x", labelrotation=45)
     title = output_name if output_name not in title_lookup else title_lookup[output_name]
     if output_name == "prop_ever_infected_age_matched" and output_name not in bcm.targets:
@@ -163,6 +168,7 @@ def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3, inc
         plt.legend(markerscale=2.)
     axis.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
 
+    return x_min
 
 def plot_two_scenarios(axis, uncertainty_df, output_name, iso3, include_unc=False, include_legend=True):
     # update_rcparams()
@@ -344,7 +350,7 @@ def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_f
     inner_left_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=left_grid, hspace=.15, height_ratios=(1, 1, 1, 1))
     # calibration, deaths
     ax2 = fig.add_subplot(inner_left_grid[0, 0])
-    plot_model_fit_with_uncertainty(ax2, uncertainty_df, "infection_deaths_ma7", iso3)
+    x_min = plot_model_fit_with_uncertainty(ax2, uncertainty_df, "infection_deaths_ma7", iso3)
     format_date_axis(ax2)
     remove_axes_box(ax2)
     # seropos prop over time
@@ -362,6 +368,9 @@ def make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_f
     plot_two_scenarios(ax4, uncertainty_df, "hospital_occupancy", iso3, True, include_legend=False)
     format_date_axis(ax4)
     remove_axes_box(ax4)
+
+    for axis in [ax2, ax_sero, ax3, ax4]:
+        axis.set_xlim((x_min, axis.get_xlim()[1]))
 
     ## Split right panel into 3 panels
     inner_right_grid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=right_grid, hspace=.15, height_ratios=(1, 1, 1))

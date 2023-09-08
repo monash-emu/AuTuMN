@@ -55,6 +55,9 @@ def launch_synced_autumn_task(
 
     rinst = aws.start_ec2_instance(mspec, job_id)
 
+    aws.set_tag(rinst["InstanceId"], "run_path", run_path)
+    rinst["tags"] = {"Name": run_path, "run_path": run_path}
+
     try:
         s3t.set_instance(rinst)
 
@@ -90,7 +93,11 @@ def launch_synced_autumn_task(
 
 
 def launch_synced_multiple_autumn_task(
-    task_dict, mspec, branch="master", job_id=None
+    task_dict: Dict[str, TaskSpec],
+    mspec: EC2MachineSpec,
+    run_group: str,
+    branch="master",
+    auto_shutdown_time: int = 4 * 60,  # Time in minutes
 ) -> Dict[str, SpringboardTaskRunner]:
     for run_path in task_dict.keys():
         s3t = task.S3TaskManager(run_path)
@@ -98,18 +105,24 @@ def launch_synced_multiple_autumn_task(
             raise Exception("Task already exists", run_path)
         s3t.set_status(TaskStatus.LAUNCHING)
 
-    if job_id is None:
-        job_id = gen_run_name("autumntask")
+    job_id = gen_run_name("autumntask")
 
-    instances = aws.start_ec2_multi_instance(mspec, job_id, len(task_dict))
+    instances = aws.start_ec2_multi_instance(mspec, job_id, len(task_dict), run_group)
 
     runners = {}
 
     for rinst, (run_path, task_spec) in zip(instances, task_dict.items()):
+        aws.set_tag(rinst["InstanceId"], "Name", run_path)
+        aws.set_tag(rinst["InstanceId"], "run_path", run_path)
+        rinst["name"] = run_path
+        rinst["tags"] = {"Name": run_path, "run_path": run_path, "run_group": run_group}
+
         s3t = task.S3TaskManager(run_path)
         s3t.set_instance(rinst)
         aws.set_cpu_termination_alarm(rinst["InstanceId"])
         srunner = task.SpringboardTaskRunner(rinst, run_path)
+
+        srunner.sshr.run(f"sudo shutdown -P +{auto_shutdown_time}")
 
         script = scripting.gen_autumn_run_bash(run_path, branch)
 

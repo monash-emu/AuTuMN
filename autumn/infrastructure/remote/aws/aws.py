@@ -32,7 +32,7 @@ DESCRIBE_KEYS = ["InstanceId", "InstanceType", "LaunchTime", "State"]
 
 def get_instance_type(
     min_cores: int, min_ram: int, category: str = settings.EC2InstanceCategory.GENERAL
-) -> dict:
+) -> str:
     specs = settings.EC2_INSTANCE_SPECS[category]
 
     matching_specs = {k: v for k, v in specs.items() if v.cores >= min_cores and v.ram >= min_ram}
@@ -135,7 +135,9 @@ def run_instance(job_id: str, instance_type: str, is_spot: bool, ami_name=None):
     return client.run_instances(**kwargs)
 
 
-def run_multiple_instances(job_id: str, instance_type: str, n_instances: int, ami_name=None):
+def run_multiple_instances(
+    job_id: str, instance_type: str, n_instances: int, run_group: str, ami_name=None
+):
     logger.info(f"Creating EC2 instance {instance_type} for job {job_id}... ")
     ami_name = ami_name or settings.EC2_AMI["310conda"]
     kwargs = {
@@ -148,7 +150,13 @@ def run_multiple_instances(job_id: str, instance_type: str, n_instances: int, am
         "KeyName": "autumn",
         "InstanceInitiatedShutdownBehavior": "terminate",
         "TagSpecifications": [
-            {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": job_id}]}
+            {
+                "ResourceType": "instance",
+                "Tags": [
+                    {"Key": "Name", "Value": job_id},
+                    {"Key": "run_group", "Value": run_group},
+                ],
+            }
         ],
     }
 

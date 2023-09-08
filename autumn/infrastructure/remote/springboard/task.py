@@ -1,8 +1,11 @@
+from typing import Optional
+
 from pathlib import PurePosixPath, Path
 from enum import Enum
 import json
 import sys
 from time import time, sleep
+from functools import wraps
 
 import logging
 import logging.config
@@ -17,6 +20,7 @@ from autumn.settings import aws as aws_settings
 from autumn.infrastructure.tasks.storage import S3Storage
 from autumn.core.utils.s3 import get_s3_client
 from autumn.core.utils.parallel import gather_exc_plus
+from autumn.core.runs.remote import RemoteRunData
 
 # Multi-library SSH wrapper
 from .clients import CommandResult, SSHRunner
@@ -36,7 +40,7 @@ class TaskStatus(str, Enum):
 
 
 class TaskSpec:
-    def __init__(self, run_func, func_kwargs: dict = None):
+    def __init__(self, run_func, func_kwargs: Optional[dict] = None):
         """Used to specify wrapped tasks for springboard runners
         Args:
             run_func: Any function taking a TaskBridge as its first argument
@@ -191,10 +195,12 @@ def autumn_task_entry(run_path: str) -> int:
         bridge._storage.store(local_base / "log")
         logging.shutdown()
 
+    print("Exiting autumn task runner")
+
     if success:
-        return 0
+        sys.exit(0)
     else:
-        return 255
+        sys.exit(255)
 
 
 class SpringboardTaskRunner:
@@ -331,7 +337,7 @@ class S3TaskManager:
     def __init__(
         self,
         project_path: str,
-        fs: s3fs.S3FileSystem = None,
+        fs: Optional[s3fs.S3FileSystem] = None,
         bucket: PurePosixPath = PurePosixPath(aws_settings.S3_BUCKET),
     ):
         # s3fs seems to have intermittent trouble accessing files created remotely
@@ -392,7 +398,7 @@ class ManagedTask(S3TaskManager):
     def __init__(
         self,
         project_path: str,
-        fs: s3fs.S3FileSystem = None,
+        fs: Optional[s3fs.S3FileSystem] = None,
         bucket: PurePosixPath = PurePosixPath(aws_settings.S3_BUCKET),
     ):
         """
@@ -404,6 +410,167 @@ class ManagedTask(S3TaskManager):
         """
 
         super().__init__(project_path, fs, bucket)
+        self.remote = RemoteTaskStore(project_path, fs, bucket)
+        from autumn.settings import DATA_PATH
+
+        local_path_base = Path(DATA_PATH) / "managed" / str(bucket) / project_path
+
+        self.local = LocalStore(local_path_base)
+        self._remotedata = RemoteRunData(project_path, local_path_base=local_path_base)
+
+    def download(self, remote_path, recursive=False):
+        full_remote = self.remote._ensure_full_path(remote_path)
+        rel_path = full_remote.relative_to(self.remote_path)
+        return self.fs.get(str(full_remote), str(self.local.path / rel_path), recursive=recursive)
+
+    def download_all(self):
+        return self.download(None, recursive=True)
 
     def get_runner(self):
         return SpringboardTaskRunner(self.get_instance(), self.project_path)
+
+
+class LocalStore:
+    def __init__(self, base_path):
+        self.path = base_path
+
+    def open(self, file, mode="r"):
+        file = self._ensure_full_path(file)
+        return open(file, mode)
+
+    def _using_root(self, path=None):
+        if path is None:
+            return False
+        if isinstance(path, str):
+            path = Path(path)
+        if isinstance(path, Path):
+            if path.parts[0] == self.path.parts[0]:
+                return True
+        return False
+
+    def _ensure_full_path(self, path=None):
+        if path is None:
+            return self.path
+        if isinstance(path, str):
+            path = Path(path)
+        if isinstance(path, Path):
+            if path.parts[0] == self.path.parts[0]:
+                return path
+            else:
+                return self.path / path
+        else:
+            raise TypeError("Path must be str or Path", path)
+
+    def ls(self, path=None, full=False, recursive=False, **kwargs):
+        using_root = self._using_root(path)
+
+        path = self._ensure_full_path(path)
+        if recursive:
+            results = path.rglob("*", **kwargs)
+        else:
+            results = path.glob("*", **kwargs)
+
+        if using_root:
+            ref_path = path
+        else:
+            ref_path = self.path
+
+        if not full:
+            results = [str(Path(res).relative_to(ref_path)) for res in results]
+        else:
+            results = [res for res in results]
+
+        return results
+
+    def __truediv__(self, divisor):
+        return self.path / divisor
+
+
+class RemoteTaskStore:
+    def __init__(
+        self, base_path: Optional[str] = None, fs=None, bucket=PurePosixPath("autumn-data")
+    ):
+        self.fs = fs or s3fs.S3FileSystem(use_listings_cache=False)
+        self.bucket = bucket
+        self.cwd = bucket
+        if base_path is not None:
+            self._set_cwd(self.bucket / base_path)
+
+        self.glob = self._wrap_ensure_path(self.fs.glob, True)
+        self.read_text = self._wrap_ensure_path(self.fs.read_text)
+
+    def _set_cwd(self, path):
+        if self.fs.exists(path):
+            self.cwd = path
+        else:
+            raise FileNotFoundError(path)
+
+    def _validate_path(self, path=None, as_str=False):
+        path = self._ensure_full_path(path)
+        if as_str:
+            return str(path)
+        else:
+            return path
+
+    def _ensure_full_path(self, path=None):
+        if path is None:
+            return self.cwd
+        if isinstance(path, str):
+            path = PurePosixPath(path)
+        if isinstance(path, PurePosixPath):
+            if path.parts[0] == str(self.bucket):
+                return path
+            else:
+                return self.cwd / path
+        else:
+            raise TypeError("Path must be str or PurePosixPath", path)
+
+    def _using_root(self, path=None):
+        if path is None:
+            return False
+        if isinstance(path, str):
+            path = PurePosixPath(path)
+        if isinstance(path, PurePosixPath):
+            if path.parts[0] == str(self.bucket):
+                return True
+        return False
+
+    def _wrap_ensure_path(self, func, as_str=False):
+        @wraps(func)
+        def wrapper(path=None, *args, **kwargs):
+            path = self._validate_path(path, as_str)
+            return func(path, *args, **kwargs)
+
+        return wrapper
+
+    def cd(self, path):
+        path = self._ensure_full_path(path)
+        self._set_cwd(path)
+
+    def ls(self, path=None, full=False, recursive=False, **kwargs):
+        using_root = self._using_root(path)
+
+        path = self._ensure_full_path(path)
+        if recursive:
+            results = self.fs.glob(str(path / "**"), **kwargs)
+        else:
+            results = self.fs.ls(path, **kwargs)
+
+        if using_root:
+            ref_path = path
+        else:
+            ref_path = self.cwd
+
+        if not full:
+            results = [str(PurePosixPath(res).relative_to(ref_path)) for res in results]
+
+        return results
+
+    def get_managed_task(self, path=None):
+        path = self._ensure_full_path(path)
+        run_path = "/".join(path.parts[1:])
+        mt = ManagedTask(run_path, self.fs, self.bucket)
+        if mt.exists():
+            return mt
+        else:
+            raise FileNotFoundError("No task exists", run_path)

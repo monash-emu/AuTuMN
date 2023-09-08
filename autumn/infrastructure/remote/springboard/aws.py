@@ -1,10 +1,11 @@
-from typing import Optional
+from typing import Optional, List, Union
 
 from dataclasses import dataclass, asdict
 from enum import Enum
 from time import time
 
 import boto3
+from cloudpickle import instance
 import numpy as np
 
 # Keep everything we 'borrow' from autumn in this block
@@ -74,7 +75,7 @@ def wait_instance(instance_id: str, timeout: Optional[float] = None) -> dict:
         raise InstanceStateError("Instance failed to launch with state", state)
 
 
-def start_ec2_instance(mspec: EC2MachineSpec, name: str, ami: str = None) -> dict:
+def start_ec2_instance(mspec: EC2MachineSpec, name: str, ami: Optional[str] = None) -> dict:
     """Request and launch an EC2 instance for the given machine specifications
 
     Args:
@@ -99,8 +100,8 @@ def start_ec2_instance(mspec: EC2MachineSpec, name: str, ami: str = None) -> dic
 
 
 def start_ec2_multi_instance(
-    mspec: EC2MachineSpec, name: str, n_instances: int, ami: str = None
-) -> dict:
+    mspec: EC2MachineSpec, name: str, n_instances: int, run_group: str, ami: Optional[str] = None
+) -> list:
     """Request and launch an EC2 instance for the given machine specifications
 
     Args:
@@ -116,7 +117,9 @@ def start_ec2_multi_instance(
     # +++: Borrow default from AuTuMN; move to springboard rcparams?
     ami = ami or aws_settings.EC2_AMI["springboardtest"]
 
-    inst_req = autumn_aws.run_multiple_instances(name, instance_type, n_instances, ami_name=ami)
+    inst_req = autumn_aws.run_multiple_instances(
+        name, instance_type, n_instances, run_group=run_group, ami_name=ami
+    )
     iid = inst_req["Instances"][0]["InstanceId"]
 
     req_instances = inst_req["Instances"]
@@ -130,7 +133,7 @@ def start_ec2_multi_instance(
 
 
 def set_cpu_termination_alarm(
-    instance_id: str, time_minutes: int = 30, min_cpu=1.0, region=aws_settings.AWS_REGION
+    instance_id: str, time_minutes: int = 15, min_cpu=5.0, region=aws_settings.AWS_REGION
 ):
     # Create alarm
 
@@ -153,3 +156,43 @@ def set_cpu_termination_alarm(
         ],
     )
     return alarm
+
+
+def get_instances_by_tag(name, value, verbose=False) -> List[dict]:
+    import boto3
+
+    ec2client = boto3.client("ec2")
+    custom_filter = [{"Name": f"tag:{name}", "Values": [value]}]
+
+    response = ec2client.describe_instances(Filters=custom_filter)
+    instances = [[i for i in r["Instances"]] for r in response["Reservations"]]
+    instances = [i for r in instances for i in r]
+    if verbose:
+        return instances
+    else:
+        concise_instances = [
+            {
+                "InstanceId": inst["InstanceId"],
+                "InstanceType": inst["InstanceType"],
+                "LaunchTime": inst["LaunchTime"],
+                "State": inst["State"],
+                "ip": inst["PublicIpAddress"],
+                "tags": {tag["Key"]: tag["Value"] for tag in inst["Tags"]},
+            }
+            for inst in instances
+        ]
+        for inst in concise_instances:
+            inst["name"] = inst["tags"]["Name"]
+        return concise_instances
+
+
+def set_tag(instance_ids: Union[str, List[str]], key: str, value):
+    import boto3
+
+    ec2client = boto3.client("ec2")
+
+    if isinstance(instance_ids, str):
+        instance_ids = [instance_ids]
+
+    resp = ec2client.create_tags(Resources=instance_ids, Tags=[{"Key": key, "Value": value}])
+    return resp

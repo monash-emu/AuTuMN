@@ -405,6 +405,21 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             func=peak_func
         )
 
+    def request_random_process_auc(self):
+        """
+        Create an output to calculate the area between the (transformed) random process and the horizontal line y=1.
+        """
+
+        def sum_diffs_to_one(x):
+            return jnp.repeat(jnp.sum(jnp.abs(1 - x)), jnp.size(x))
+ 
+        sum_diffs_to_one_func = Function(sum_diffs_to_one, [DerivedOutput("transformed_random_process")])
+
+        self.model.request_function_output(
+            "random_process_auc",
+            func=sum_diffs_to_one_func
+        )
+
     # def request_icu_outputs(
     #     self,
     #     prop_icu_among_hospitalised: float,

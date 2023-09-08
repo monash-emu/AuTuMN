@@ -17,14 +17,17 @@ from autumn.projects.sm_covid2.common_school.project_maker import get_school_pro
 ANALYSES_NAMES = ["main", "no_google_mobility", "increased_hh_contacts"]
 
 
-def get_estival_uniform_priors(autumn_priors):
+def get_estival_uniform_priors(autumn_priors, _pymc_transform_eps_scale):
     estival_priors = []
     for prior_dict in autumn_priors:
         assert prior_dict["distribution"] == "uniform", "Only uniform priors are currently supported"
         
         if not "random_process.delta_values" in prior_dict["param_name"] and not "dispersion_param" in prior_dict["param_name"]:
+            p = esp.UniformPrior(prior_dict["param_name"], prior_dict["distri_params"])
+            p._pymc_transform_eps_scale = _pymc_transform_eps_scale           
+            
             estival_priors.append(
-                esp.UniformPrior(prior_dict["param_name"], prior_dict["distri_params"]),
+                p
             )
             
     ndelta_values = len([prior_dict for prior_dict in autumn_priors if prior_dict["param_name"].startswith("random_process.delta_values")])
@@ -46,18 +49,21 @@ def make_rp_loglikelihood_func(len_rp_delta_values, rp_noise_sd):
     return rp_loglikelihood
 
 
-def get_bcm_object(iso3, analysis="main"):
+def get_bcm_object(iso3, analysis="main", _pymc_transform_eps_scale=.1):
 
     assert analysis in ANALYSES_NAMES, "wrong analysis name requested"
 
     project = get_school_project(iso3, analysis)
     death_target_data = project.calibration.targets[0].data
 
+    dispersion_prior = esp.UniformPrior("infection_deaths_dispersion_param", (200, 250))
+    dispersion_prior._pymc_transform_eps_scale = _pymc_transform_eps_scale       
+
     targets = [
         est.NegativeBinomialTarget(
             "infection_deaths_ma7", 
             death_target_data, 
-            dispersion_param=esp.UniformPrior("infection_deaths_dispersion_param", (200, 250))
+            dispersion_param=dispersion_prior
         )
     ]
     if len(project.calibration.targets) > 1:
@@ -90,7 +96,7 @@ def get_bcm_object(iso3, analysis="main"):
     default_configuration = project.param_set.baseline
     m = project.build_model(default_configuration.to_dict()) 
 
-    priors = get_estival_uniform_priors(project.calibration.all_priors)
+    priors = get_estival_uniform_priors(project.calibration.all_priors, _pymc_transform_eps_scale)
 
     default_params = m.builder.get_default_parameters()
 

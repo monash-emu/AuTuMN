@@ -214,10 +214,15 @@ def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, 
     }
     baseline_params = baseline_params.update(sero_age_params)
 
+    # Set seeding time 40 days prior first reported death
+    baseline_params = baseline_params.update(
+        {"infectious_seed_time": first_date_with_death - 40.}
+    )
+
     # update using MLE params, if available
-    mle_path= param_path / "mle_files" /  f"mle_{iso3}.yml"
-    if exists(mle_path):
-        baseline_params = baseline_params.update(mle_path, calibration_format=True)
+    # mle_path= param_path / "mle_files" /  f"mle_{iso3}.yml"
+    # if exists(mle_path):
+    #     baseline_params = baseline_params.update(mle_path, calibration_format=True)
 
     # update using potential Sensitivity Analysis params
     sa_params_path = param_path / "SA_analyses" / f"{analysis}.yml"
@@ -277,6 +282,8 @@ def get_school_project_timeseries(iso3, sero_data):
         table_name="owid", conditions={"iso_code": iso3}, columns=["date", "new_deaths"]
     )
     data = remove_death_outliers(iso3, data)
+    if iso3 == "VNM":  # remove early data points associated with few deaths prior to local transmission 
+        data = data[pd.to_datetime(data["date"]) >= "15 May 2021"]
 
     # apply moving average
     data["smoothed_new_deaths"] = data["new_deaths"].rolling(7).mean()[6:]
@@ -360,12 +367,12 @@ def get_school_project_priors(first_date_with_death):
     """
 
     # Work out max infectious seeding time so transmission starts before first observed deaths
-    min_seed_time = first_date_with_death - 100
-    max_seed_time = first_date_with_death - 1
+    # min_seed_time = first_date_with_death - 100
+    # max_seed_time = first_date_with_death - 1
 
     priors = [
         UniformPrior("contact_rate", [0.01, 0.06]),
-        UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
+        # UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
         UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
 
         # VOC-related parameters

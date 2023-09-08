@@ -133,8 +133,8 @@ def plot_model_fit(bcm, params, iso3, outfile=None):
     if outfile:
         fig.savefig(outfile, facecolor="white")
 
-    return fig
-
+    plt.close()
+    
 
 def plot_model_fit_with_ll(bcm, params, outfile=None):
     REF_DATE = datetime.date(2019,12,31)
@@ -189,9 +189,7 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
     death_ax, rp_ax, sero_ax = axs[0], axs[1], axs[2]
     
     # set up the three axes
-    death_ax.set_ylabel("COVID-19 deaths")
-    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax, label="", zorder=20, color='black')
-    
+    death_ax.set_ylabel("COVID-19 deaths")   
     rp_ax.set_ylabel("Random process")
 
     if "prop_ever_infected_age_matched" in targets:
@@ -228,6 +226,8 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
             color=colors[i]
         )
 
+    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax, label="", zorder=20, color='black')
+
     # Post plotting processes
     # death
     death_ax.legend(loc='best', ncols=2)
@@ -241,4 +241,4 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
     if outfile:
         fig.savefig(outfile, facecolor="white")
 
-    return fig
+    plt.close()

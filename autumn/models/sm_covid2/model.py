@@ -526,6 +526,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()
+        outputs_builder.request_random_process_auc()
 
     # request extra output to store the number of students*weeks of school missed
     outputs_builder.request_student_weeks_missed_output(student_weeks_missed)

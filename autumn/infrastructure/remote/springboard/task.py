@@ -421,7 +421,12 @@ class ManagedTask(S3TaskManager):
     def download(self, remote_path, recursive=False):
         full_remote = self.remote._ensure_full_path(remote_path)
         rel_path = full_remote.relative_to(self.remote_path)
-        return self.fs.get(str(full_remote), str(self.local.path / rel_path), recursive=recursive)
+
+        full_local = self.local.path / rel_path
+        if full_local.exists() and full_local.is_dir():
+            full_local = self.local.path
+
+        return self.fs.get(str(full_remote), str(full_local), recursive=recursive)
 
     def download_all(self):
         return self.download(None, recursive=True)

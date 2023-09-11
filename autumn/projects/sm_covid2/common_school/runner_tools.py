@@ -40,6 +40,7 @@ with countries_path.open() as f:
 
 
 DEFAULT_RUN_CONFIG = {
+    "N_CORES": 8,
     "N_CHAINS": 8,
     "N_OPTI_SEARCHES": 16,
     "OPTI_BUDGET": 10000,
@@ -326,6 +327,7 @@ def get_quantile_outputs(outputs_df, diff_outputs_df, quantiles=[.025, .25, .5, 
 def run_full_analysis(
     iso3, 
     analysis="main", 
+    n_cores=8,
     opti_params={'n_searches': 8, 'search_iterations': 5000},
     mcmc_params={'draws': 30000, 'tune': 5000, 'chains': 8, 'method': 'DEMetropolisZ'},
     full_run_params={'samples': 1000, 'burn_in': 20000},
@@ -358,12 +360,12 @@ def run_full_analysis(
         best_p, _ = optimise_model_fit(bcm, num_workers=n_opti_workers, search_iterations=opti_params['search_iterations'], suggested_start=sample_dict)
         return best_p
 
-    best_params = map_parallel(opti_func, sample_as_dicts, n_workers=2 * mcmc_params['chains'] / n_opti_workers)  # oversubscribing
+    best_params = map_parallel(opti_func, sample_as_dicts, n_workers=2 * n_cores / n_opti_workers)  # oversubscribing
     # Store optimal solutions
     with open(out_path / "best_params.yml", "w") as f:
         yaml.dump(best_params, f)
 
-    # Keep only n_best_retained best solutions
+    # Keep only n_chains best solutions
     loglikelihoods = [bcm.loglikelihood(**p) for p in best_params]
     ll_cutoff = sorted(loglikelihoods, reverse=True)[mcmc_params['chains'] - 1]
 
@@ -404,7 +406,7 @@ def run_full_analysis(
     n_repeat_seed = 1
     init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(retained_best_params)]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
-    idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=mcmc_params['chains'], chains=mcmc_params['chains'], method=mcmc_params['method'])
+    idata = sample_with_pymc(bcm, initvals=init_vals, draws=mcmc_params['draws'], tune=mcmc_params['tune'], cores=n_cores, chains=mcmc_params['chains'], method=mcmc_params['method'])
     idata.to_netcdf(out_path / "idata.nc")
     make_post_mc_plots(idata, full_run_params['burn_in'], output_folder)
     if logger:

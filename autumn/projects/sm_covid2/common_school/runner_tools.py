@@ -133,13 +133,6 @@ def multi_country_optimise(iso3_list: list, analysis: str = "main", num_workers:
 
     return best_params_dict
 
-def resume_opti_search(opt, extra_iterations: int = 5000):
-
-    res = opt.minimize(extra_iterations)
-    best_params = res.value[1]
-    
-    return best_params, opt
-
 
 def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, method="DEMetropolis", sampler_options=None):
     if method == "DEMetropolis":
@@ -158,15 +151,6 @@ def sample_with_pymc(bcm, initvals, draws=1000, tune=500, cores=8, chains=8, met
     return idata
 
 
-def sample_with_pymc_smc(bcm, draws=2000, cores=8, chains=4):
-    
-    with pm.Model() as model:    
-        variables = epm.use_model(bcm)
-        idata = pm.smc.sample_smc(draws=draws, chains=chains, cores=cores, progressbar=False)
-
-    return idata
-
-
 """
     Functions related to post-calibration processes
 """
@@ -176,26 +160,6 @@ def extract_sample_subset(idata, n_samples, burn_in, chain_filter: list = None):
     burnt_idata = idata.sel(draw=range(burn_in, chain_length))  # Discard burn-in
     
     return az.extract(burnt_idata, num_samples=n_samples)
-
-
-def get_sampled_results(sampled_df, output_names):
-    d2_index = pd.Index([index[:2] for index in sampled_df.index]).unique()
-
-    sampled_results = {output: pd.DataFrame(index=bcm.model._get_ref_idx(), columns=d2_index) for output in output_names}
-
-    for chain, draw in d2_index:
-        # read rp delta values
-        delta_values = sampled_df.loc[chain, draw]['random_process.delta_values']
-        
-        params_dict = sampled_df.loc[chain, draw, 0].to_dict()
-        params_dict["random_process.delta_values"] = np.array(delta_values)
-
-        run_model = bcm.run(params_dict)
-
-        for output in output_names:
-            sampled_results[output][(chain, draw)] = run_model.derived_outputs[output]
-
-    return sampled_results
 
 
 def run_full_runs(sampled_params, iso3, analysis):
@@ -208,12 +172,6 @@ def run_full_runs(sampled_params, iso3, analysis):
 
     return full_runs
 
-def diff_latest_output(outputs_df_latest_0, outputs_df_latest_1, column, relative=False):
-    if not relative:     
-        return outputs_df_latest_0[column] - outputs_df_latest_1[column]
-    else:
-        return (outputs_df_latest_0[column] - outputs_df_latest_1[column]) / outputs_df_latest_1[column]
-       
 
 def get_uncertainty_dfs(full_runs, quantiles=[.025, .25, .5, .75, .975]):
     unc_dfs = {}

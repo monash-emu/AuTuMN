@@ -55,7 +55,7 @@ from pathlib import Path
 param_path = Path(__file__).parent.resolve() / "params"
 
 
-def get_school_project(iso3, analysis="main"):
+def get_school_project(iso3, analysis="main", scenario='baseline'):
 
     # read seroprevalence data (needed to specify the sero age range params and then to define the calibration targets)
     positive_prop, sero_target_sd, midpoint_as_int, sero_age_min, sero_age_max = get_sero_estimate(iso3)
@@ -80,10 +80,10 @@ def get_school_project(iso3, analysis="main"):
     first_date_with_death = infection_deaths_ma7[round(infection_deaths_ma7) >= 1].index[0]
 
     # Get parameter set
-    param_set = get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max, analysis)
+    param_set = get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max, analysis, scenario)
 
     # Define priors
-    priors = get_school_project_priors(first_date_with_death)
+    priors = get_school_project_priors(first_date_with_death, scenario)
 
     # define calibration targets
     model_end_time = param_set.baseline.to_dict()["time"]["end"]
@@ -166,7 +166,7 @@ def get_school_project(iso3, analysis="main"):
     return project
 
 
-def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max, analysis="main"):
+def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, sero_age_max, analysis="main", scenario='baseline'):
     """
     Get the country-specific parameter sets.
 
@@ -177,6 +177,16 @@ def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, 
     Returns:
         param_set: A ParameterSet object containing parameter sets for baseline and scenarios
     """
+    scenario_params = {
+        "baseline": {},
+        "scenario_1": {
+            "mobility": {
+                "unesco_partial_opening_value": 1.,
+                "unesco_full_closure_value": 1.
+            }
+        }
+    }
+
     # get common parameters
     base_params = get_base_params()
 
@@ -219,22 +229,15 @@ def get_school_project_parameter_set(iso3, first_date_with_death, sero_age_min, 
         {"infectious_seed_time": first_date_with_death - 40.}
     )
 
-    # update using MLE params, if available
-    # mle_path= param_path / "mle_files" /  f"mle_{iso3}.yml"
-    # if exists(mle_path):
-    #     baseline_params = baseline_params.update(mle_path, calibration_format=True)
-
     # update using potential Sensitivity Analysis params
     sa_params_path = param_path / "SA_analyses" / f"{analysis}.yml"
     baseline_params = baseline_params.update(sa_params_path, calibration_format=True)
 
-    # get scenario parameters
-    scenario_dir_path = param_path
-    scenario_paths = get_all_available_scenario_paths(scenario_dir_path)
-    scenario_params = [baseline_params.update(p) for p in scenario_paths]
+    # update using scenario parameters
+    baseline_params = baseline_params.update(scenario_params[scenario])
 
     # build ParameterSet object
-    param_set = ParameterSet(baseline=baseline_params, scenarios=scenario_params)
+    param_set = ParameterSet(baseline=baseline_params)
 
     return param_set
 
@@ -354,7 +357,7 @@ def remove_death_outliers(iso3, data):
         return data
 
 
-def get_school_project_priors(first_date_with_death):
+def get_school_project_priors(first_date_with_death, scenario):
     """
     Get the list of calibration priors. This depends on the first date with death which is used to define the
     prior around the infection seed.
@@ -380,9 +383,13 @@ def get_school_project_priors(first_date_with_death):
         # UniformPrior("voc_emergence.omicron.new_voc_seed.time_from_gisaid_report", [-30, 30]),
 
         # Account for mixing matrix uncertainty
-        UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.5]),
         UniformPrior("school_multiplier", [0.8, 1.2]),
     ]
+
+    if scenario == 'baseline':
+        priors.append(
+            UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.5])
+        )
 
     return priors
 

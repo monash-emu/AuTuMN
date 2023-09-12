@@ -49,11 +49,12 @@ def make_rp_loglikelihood_func(len_rp_delta_values, rp_noise_sd):
     return rp_loglikelihood
 
 
-def get_bcm_object(iso3, analysis="main", _pymc_transform_eps_scale=.1):
+def get_bcm_object(iso3, analysis="main", scenario='baseline', _pymc_transform_eps_scale=.1):
 
     assert analysis in ANALYSES_NAMES, "wrong analysis name requested"
-
-    project = get_school_project(iso3, analysis)
+    assert scenario in ['baseline', 'scenario_1'], f"Requested scenario {scenario} not currently supported"
+    
+    project = get_school_project(iso3, analysis, scenario)
     death_target_data = project.calibration.targets[0].data
 
     dispersion_prior = esp.UniformPrior("infection_deaths_dispersion_param", (200, 250))

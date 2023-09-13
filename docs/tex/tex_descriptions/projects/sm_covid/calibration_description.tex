@@ -1,17 +1,21 @@
 \section{Model calibration and uncertainty propagation}
 \label{calibration}
-The model was calibrated using a Bayesian approach. In particular, we used the Differential Evolution Metropolis 
-(DEMetropolis) algorithm implemented with the \textit{PyMC} Python package (v.5.2.0) to sample parameters from their 
-posterior distributions. For each country, we ran 32 independent DEMetropolis chains of 20,000 iterations, each 
-starting from a different starting point. The starting points were obtained after conducting 32 independent optimisation 
-searches performed with the Covariance Matrix Adaptation Evolution Strategy (CMA-ES) method, implemented with the
-\textit{nevergrad} Python package (v.0.6.0) and with a budget of 20,000 model evaluations per search. 
-The 32 optimisation searches were initialised randomly using Latin Hypercube Sampling based on the parameter priors, 
-in order to promote broad dispersion across the parameter space. Our calibration approach required a total of 1,280,000
-model evaluations per country, which were completed in about one hour on a machine with 32 cpus and 128-GiB memory.
+The model was calibrated using a Bayesian approach. In particular, we used the Adaptive Differential Evolution Metropolis 
+(DEMetropolisZ) algorithm implemented with the \textit{PyMC} Python package (v.5.2.0) to sample parameters from their 
+posterior distributions. For each country, we ran 8 independent DEMetropolisZ chains of 35,000 iterations, each 
+starting from a different starting point and using the first 5,000 draws for algorithm tuning. 
+To determine the 8 starting points of the DEMetropolisZ chains, we conducted 8 independent optimisation 
+searches using the Covariance Matrix Adaptation Evolution Strategy (CMA-ES) method, implemented with the
+\textit{nevergrad} Python package (v.0.6.0) and with a budget of 10,000 model evaluations per search. 
+The 8 optimisation searches' initial points were randomly drawn from Latin Hypercube Sampling (LHS) based on the parameter priors shown in Table \ref{param_table}. 
+The parameters sampled with LHS were the transmission probability per contact, the IFR multiplier, 
+the uncertainty multiplier for school contacts, and the proportion of students on-site during “Partially open” periods. 
+The random process variables $W(t)$ (Section \ref{random_process}) were all set to 0 for each optimisation starting point.
+
+Our calibration approach required a total of 360,000 ($8 \times (10000 + 35000)$) model evaluations per country analysis, which were completed in about two hours on a machine with 8 cpus and 32-GiB memory.
 
 For each country, the results presented in the manuscript are associated with 1000 parameter sets randomly sampled from 
-the posterior distributions obtained from DEMetropolis sampling (after discarding the first 10,000 iterations for each chain). 
+the posterior distributions obtained from DEMetropolisZ sampling (after discarding the first 25,000 iterations for each chain). 
 The definitions of the prior distributions and the likelihood are detailed in the following sections.
 
 \subsection{Parameters varied during calibration}

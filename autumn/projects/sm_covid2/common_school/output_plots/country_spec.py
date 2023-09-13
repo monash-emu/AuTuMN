@@ -434,7 +434,7 @@ def make_country_output_tiling(iso3, uncertainty_dfs, diff_quantiles_df, output_
     # ax11 = fig.add_subplot(inner_grid[2, 1], sharex=ax9)
     # plot_incidence_by_age(derived_outputs, ax11, 1, as_proportion=True)
 
-    fig.savefig(os.path.join(output_folder, "tiling.png"), facecolor="white")
+    # fig.savefig(os.path.join(output_folder, "tiling.png"), facecolor="white")
     fig.savefig(os.path.join(output_folder, "tiling.pdf"), facecolor="white")
 
     plt.close()

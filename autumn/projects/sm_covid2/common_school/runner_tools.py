@@ -186,7 +186,7 @@ def get_uncertainty_dfs(full_runs, quantiles=[.025, .25, .5, .75, .975]):
 def calculate_diff_output_quantiles(full_runs, quantiles=[.025, .25, .5, .75, .975]):
     diff_names = {
         "cases_averted": "cumulative_incidence",
-        "death_averted": "cumulative_infection_deaths",
+        "deaths_averted": "cumulative_infection_deaths",
         "delta_hospital_peak": "peak_hospital_occupancy",
         "delta_student_weeks_missed": "student_weeks_missed"
     }
@@ -317,8 +317,8 @@ def run_full_analysis(
     diff_quantiles_df = calculate_diff_output_quantiles(full_runs)
     diff_quantiles_df.to_parquet(out_path / "diff_quantiles_df.parquet")
 
-    # Make multi-panel figure  #FIXME: not compatible with new unc_dfs format
-    # make_country_output_tiling(iso3, unc_dfs, diff_quantiles_df, output_folder)
+    # Make multi-panel figure
+    make_country_output_tiling(iso3, unc_dfs, diff_quantiles_df, output_folder)
 
     return idata, unc_dfs, diff_quantiles_df
 

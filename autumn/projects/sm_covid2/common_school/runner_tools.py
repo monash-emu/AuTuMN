@@ -215,12 +215,12 @@ def calculate_diff_output_quantiles(full_runs, quantiles=[.025, .25, .5, .75, .9
     Master function combining functions above
 """
 def run_full_analysis(
-    iso3, 
-    analysis="main", 
-    n_cores=8,
-    opti_params={'n_searches': 8, 'search_iterations': 5000},
-    mcmc_params={'draws': 30000, 'tune': 5000, 'chains': 8, 'method': 'DEMetropolisZ'},
-    full_run_params={'samples': 1000, 'burn_in': 20000},
+    iso3: str, 
+    analysis: str = "main",
+    n_cores: int = DEFAULT_RUN_CONFIG['N_CORES'],
+    opti_params: dict = {'n_searches': DEFAULT_RUN_CONFIG['N_SEARCHES'], 'search_iterations': DEFAULT_RUN_CONFIG['OPTI_BUDGET']},
+    mcmc_params: dict = {'draws': DEFAULT_RUN_CONFIG['METROPOLIS_DRAWS'], 'tune': DEFAULT_RUN_CONFIG['METROPOLIS_TUNE'], 'chains': DEFAULT_RUN_CONFIG['N_CHAINS'], 'method': DEFAULT_RUN_CONFIG['METROPOLIS_METHOD']},
+    full_run_params: dict = {'samples': DEFAULT_RUN_CONFIG['FULL_RUNS_SAMPLES'], 'burn_in': DEFAULT_RUN_CONFIG['BURN_IN']},
     output_folder="test_outputs",
     logger=None
 ):
@@ -321,6 +321,7 @@ def run_full_analysis(
     make_country_output_tiling(iso3, unc_dfs, diff_quantiles_df, output_folder)
 
     return idata, unc_dfs, diff_quantiles_df
+
 
 """
     Helper functions for remote runs

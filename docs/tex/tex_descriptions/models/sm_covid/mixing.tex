@@ -31,7 +31,7 @@ both the infector and the infectee in any given interaction that could potential
 Reduced attendance at schools was represented through the function $s$, which represents the proportion of all school students 
 currently attending on-site teaching. If schools are fully closed at time $t$, \(s(t)=0\) and \(C_{S}\) does not contribute to the overall 
 mixing matrix \(C(t)\). 
-The function $s$ was derived from the UNESCO database on school closures from the start of the COVID-19 pandemic (\textcolor{red}{ADD REF HERE}).
+The function $s$ was derived from the UNESCO database on school closures from the start of the COVID-19 pandemic \cite{unesco2023}.
 This database provides school opening status over time as a categorical variable taking the following values: ``Fully open'', ``Partially open'', ``Academic break'', ``Closed due to COVID-19''.
 Table \ref{tab:unesco_categories} indicates how the different categorical values were converted into the numerical function $s$.
 
@@ -40,12 +40,12 @@ Table \ref{tab:unesco_categories} indicates how the different categorical values
   \begin{center}
     \caption{Assumed percentage of students on-site for the different UNESCO school closure categories.}
     \label{tab:unesco_categories}
-    \begin{tabular}{p{5cm} | p{5cm}}
+    \begin{tabular}{p{5cm} | p{7cm}}
           \hline
-          \textbf{UNESCO category} & \textbf{Assumed proportion of students on-site ($s(t)$)} \\
+          \textbf{UNESCO category} & \textbf{Assumed proportion of students on-site at national level ($s(t)$)} \\
           \hline
           Fully open & 100\% \\
-          Partially open & 10-30\% \\
+          Partially open & 10-50\% \\
           Academic break & 0\% \\
           Closed due to COVID-19 & 0\% \\
           \hline
@@ -54,7 +54,7 @@ Table \ref{tab:unesco_categories} indicates how the different categorical values
   \end{table}
 
 We included uncertainty around the value associated with the partial closure category, as there was no quantitative data available to 
-inform this parameter. The partial closure periods are likely to be periods where only a small fraction of students such as children of ``essential workers'' were 
+inform this parameter \cite{unesco2023}. The partial closure periods are likely to be periods where only a small fraction of students such as children of ``essential workers'' were 
 attending school. We assumed that between 10 and 30\% of students attended on-site learning during these periods.
 
 To model the counterfactual ``no school closure'' scenario, we assumed that the schools were ``Fully open'' during the

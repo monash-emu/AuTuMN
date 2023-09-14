@@ -10,7 +10,7 @@ saturation coverage of 80\% is reached for this group. Then the next oldest cate
 are allocated. Note that in the event that the population-level vaccine coverage exceeds 80\%, the saturation coverage was set equal to the population-level coverage. 
 
 Let us consider two successive time points $t_i$ and $t_{i+1}$ for which vaccination data are available. Let us denote $r_{a, i}$ and $r_{a, i+1}$ the associated vaccine 
-coverage for age group $a$. The time-variant and age-specific vaccination rate per capita $w_a(t)$ verifies:
+coverage for age group $a$. The time-variant and age-specific vaccination rate per capita $\omega_a(t)$ verifies:
 
 \begin{equation}
     1 - r_{a, i+1} = (1 - r_{a, i})e^{-w_a(t)(t_{i+1} - t_i)} \quad, \forall t \in [t_i, t_{i+1}) .
@@ -19,7 +19,7 @@ coverage for age group $a$. The time-variant and age-specific vaccination rate p
 Then, 
 \begin{equation}
     \label{eq:vacc}
-    w_a(t) = \frac{\ln(1 - r_{a, i}) - \ln(1 - r_{a, i+1})}{t_{i+1} - t_i} \quad, \forall t \in [t_i, t_{i+1}) ,
+    \omega_a(t) = \frac{\ln(1 - r_{a, i}) - \ln(1 - r_{a, i+1})}{t_{i+1} - t_i} \quad, \forall t \in [t_i, t_{i+1}) ,
 \end{equation}
 where $\ln(x)$ represents the natural logarithm of $x$.
 

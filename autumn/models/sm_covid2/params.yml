@@ -168,8 +168,8 @@ voc_emergence:
     icu_risk_adjuster: 1.
     cross_protection:
       wild_type: 1.
-      delta: 0.68 # 32% immune escape   DOI: 10.1503/cmaj.211248
-      omicron: .45  # 55% immune escape  DOI: 10.1503/cmaj.211248
+      delta: 0.82  # https://doi.org/10.1016/S0140-6736(22)02465-5
+      omicron: 0.45 # https://doi.org/10.1016/S0140-6736(22)02465-5
   delta:
     starting_strain: false
     seed_prop: 0.
@@ -185,7 +185,7 @@ voc_emergence:
     cross_protection:
       wild_type: 1.
       delta: 1.
-      omicron: .45  # 55% immune escape  DOI: 10.1503/cmaj.211248
+      omicron: .45  # https://doi.org/10.1016/S0140-6736(22)02465-5
   omicron:
     starting_strain: false
     seed_prop: 0.

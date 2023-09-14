@@ -233,29 +233,30 @@ def run_full_analysis(
     # Sample optimisation starting points with LHS
     if logger:
         logger.info("Perform LHS sampling")
-    sample_as_dicts = bcm.sample.lhs(run_config['n_opti_searches'], out_type="list_of_dicts")
-    sample_as_dicts = [{p: val for p, val in d.items() if p != 'random_process.delta_values'} for d in sample_as_dicts] # remove random process from LHS sample
-            
+    lhs_samples = bcm.sample.lhs(run_config['n_opti_searches'])
+    lhs_samples_as_dicts = lhs_samples.convert("list_of_dicts")
+
     # Store starting points
     with open(out_path / "LHS_init_points.yml", "w") as f:
-        yaml.dump(sample_as_dicts, f)
+        yaml.dump(lhs_samples_as_dicts, f)
 
     # Perform optimisation searches
     if logger:
         logger.info(f"Perform optimisation ({run_config['n_opti_searches']} searches)")
     n_opti_workers = 8
     def opti_func(sample_dict):
-        best_p, _ = optimise_model_fit(bcm, num_workers=n_opti_workers, search_iterations=run_config['opti_budget'], suggested_start=sample_dict)
+        suggested_start = {p: v for p, v in sample_dict.items() if p != 'random_process.delta_values'}
+        best_p, _ = optimise_model_fit(bcm, num_workers=n_opti_workers, search_iterations=run_config['opti_budget'], suggested_start=suggested_start)
         return best_p
 
-    best_params = map_parallel(opti_func, sample_as_dicts, n_workers=int(2 * run_config['n_cores'] / n_opti_workers))  # oversubscribing
+    best_params = map_parallel(opti_func, lhs_samples_as_dicts, n_workers=int(2 * run_config['n_cores'] / n_opti_workers))  # oversubscribing
     # Store optimal solutions
     with open(out_path / "best_params.yml", "w") as f:
         yaml.dump(best_params, f)
 
     if logger:
         logger.info("... optimisation completed")
-
+    
     # Keep only n_chains best solutions
     loglikelihoods = [bcm.loglikelihood(**p) for p in best_params]
     ll_cutoff = sorted(loglikelihoods, reverse=True)[run_config['n_chains'] - 1]
